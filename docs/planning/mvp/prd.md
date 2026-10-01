@@ -40,6 +40,8 @@ The MVP includes everything the pilot delivers (Pilot PRD Section 7) plus every 
 ## 3. Open before the MVP
 
 - Hub operating hours and approval timeouts per disruption type (process not yet trained)
+- An overnight path for fire, evacuation and "Other" posts when no second approver is awake (accepted as pilot risk R-11)
+- Staff sign-in by email with self-service password reset (the pilot uses Admin-set usernames and Admin resets)
 - Official alert sources, terms and intake method
 - Canadian SMS provider and sender type
 - Extension beyond the 43 pilot buildings (60 further buildings in the register)

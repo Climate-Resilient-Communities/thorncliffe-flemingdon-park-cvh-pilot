@@ -102,7 +102,7 @@ Partner organizations' coordination space, building management, and people outsi
 
 | | |
 |---|---|
-| Duration | 2 months |
+| Duration | 2 months of live operation; the build happens before the pilot starts and is not counted in it |
 | Build budget | About CAD 1,000, including SMS and translation usage |
 | Buildings | 43: Thorncliffe Park 32, Flemingdon Park 11 (from the City of Toronto Apartment Building Registration) |
 | Providers | About 100 (97 organizations at 99 locations) from the TPCH community asset list v2 |
@@ -280,7 +280,7 @@ Every staff and ambassador account belongs to a named person. Residents have no 
 | Ambassador | Trusted residents assigned to buildings | Write posts for assigned buildings (sent after approval); work the check-in round for their floors; share alerts |
 
 **G2. Account lifecycle.**
-Only an Admin can create, assign, suspend or remove an account. Removal ends access immediately, including on any device where the account is signed in.
+Only an Admin can create, assign, suspend or remove an account. Staff sign in with a username set by an Admin; no email is sent in the pilot. Only an Admin resets a password or a second sign-in factor, and every reset is recorded in the audit trail. There are always at least two active Admins. Removal ends access immediately, including on any device where the account is signed in.
 
 **G3. Buildings and floors.**
 The Hub maintains the 43 pilot buildings and their floors, seeded from the City of Toronto Apartment Building Registration, each with a last-updated date. Ambassadors are assigned to buildings and floors from this list.
@@ -359,6 +359,8 @@ No targets are set; the pilot measures to set MVP targets. All measures are aggr
 | R-8 | Web push costs more effort than the pilot allows | Low | Stretch only; SMS and web app carry every alert |
 | R-9 | Residents rely on the CVH instead of 911 | High | 911 stated on every alert, guide and check-in screen; check-in explains what it is not |
 | R-10 | Residents distrust non-Canadian data processing | Medium | Named in plain-language terms; minimum data; no names |
+| R-11 | A fire, evacuation or "Other" post made when no second approver is awake reaches no one until someone approves it | High | Accepted for the pilot. The welcome text says messages are checked by Hub staff and may not be sent overnight. Carried to the MVP as a risk to resolve with Hub hours and approval timeouts |
+| R-12 | A machine translation keeps the right language but changes the meaning; approvers cannot read most languages | Medium | Accepted for the pilot. Ambassadors are trusted to report bad translations; residents can see the English original one tap away |
 
 ## 12. Decisions and Open Questions
 
@@ -369,13 +371,13 @@ No targets are set; the pilot measures to set MVP targets. All measures are aggr
 - **D-3. Unit numbers.** Ambassadors never see a unit number in the pilot; check-ins are by call or text only (C6, C7).
 - **D-4. Translation.** All translation uses Cohere models, routed by language: Pashto and Dari through North Small Translate (the only model that produced correct Pashto in the product owner's test); the other languages through the Cohere model that supports each one (addendum, "Translation routing"). Every translation is checked automatically for the expected language before it is published or sent; if the check fails, the next model in that language's route is tried, and if all fail the English original is shown, labelled, rather than text in the wrong language. Cohere is also used for search matching. Evidence: `docs/research/multilingual-program-search/research.md`.
 - **D-5. Scripts.** Punjabi in Gurmukhi; Shahmukhi readers are offered Urdu. Mandarin in Simplified Chinese, with Traditional Chinese offered as a labelled script conversion.
-- **D-6. SMS keywords.** STOP, START and HELP in English work in every language (carrier standard). Everything else uses numbered replies that need no translation, explained in the welcome message in the resident's language: 1 change building or floor, 2 change language, 3 withdraw check-in, 0 stop.
+- **D-6. SMS keywords.** STOP, START and HELP in English work in every language (carrier standard). Everything else uses numbered replies that need no translation, explained in the welcome message in the resident's language: 1 change building or floor, 2 change language, 3 withdraw check-in, 0 stop. Replies 1 and 2 open a short menu by text (street, then building, then floor; or language), written for each language so every message fits in one text message in that language; 0 goes back, 9 gives the Hub's number, and an unfinished menu resets after 10 minutes.
 - **D-7. End-of-pilot data.** Subscribers are asked by SMS at the end of the pilot whether to stay subscribed for the MVP; those who do not reply YES within 30 days are deleted. The staff audit trail (no resident data) and aggregate measures are kept for the MVP.
 - **D-8. Go / no-go.** The Hub's leadership decides at a week-8 review, using the Section 9 measures, with the Community Experts Board advising.
 
 ### Still open
 
-None blocking the pilot build.
+- **Translation time limit.** The per-language translation timeout and the total wait at submit are set from p99 latency tests against Cohere before launch. *Owner: IT.*
 
 ## 13. Review and Approval
 

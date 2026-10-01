@@ -102,7 +102,7 @@ flowchart TD
 
 - **Binds:** G1, G2, C3, D-2, E2, N5
 - **Prevents:** a leaked anon key exposing data; authorization split between SQL and TypeScript; removed staff keeping access; two readings of who may author or approve.
-- **Rule:** Supabase Auth, invite-only; accounts created by an Admin; the first Admin is created once by an audited CLI script. TOTP (`aal2`) is required for every Admin and Coordinator session; their approve, correct, withdraw, drill, publish, cap, pause and account actions therefore run at `aal2`. Ambassadors and Directors sign in at `aal1`. Every staff request loads `staff_account` and rejects unless `status = 'active'`; suspension also signs out globally. Authority is one table-driven function `identity/domain/policy.ts#can(role, action, context)`, evaluated at submit and again at approve against the author's current status and assignments:
+- **Rule:** Supabase Auth, invite-only, with no email sent in the pilot: an Admin creates each account with a unique username (stored as a non-deliverable synthetic address, confirmed at creation) and an initial password, and only an Admin resets a password or a second factor (both audited). The first Admin is created once by an audited CLI script. There are always at least two active Admins. TOTP (`aal2`) is required for every Admin and Coordinator session; their approve, correct, withdraw, drill, publish, cap, pause and account actions therefore run at `aal2`. Ambassadors and Directors sign in at `aal1`. Every staff request loads `staff_account` and rejects unless `status = 'active'`; suspension also signs out globally. Authority is one table-driven function `identity/domain/policy.ts#can(role, action, context)`, evaluated at submit and again at approve against the author's current status and assignments:
 
 | Action | Ambassador | Coordinator | Director | Admin |
 | --- | --- | --- | --- | --- |
@@ -170,13 +170,13 @@ stateDiagram-v2
 
 - **Binds:** A2, A12, C4, C6, D-6, D-7
 - **Prevents:** two handlers acting on one reply; unconfirmed numbers receiving alerts; basic-phone users unable to change choices.
-- **Rule:** one router, `subscriptions/application/handleInbound`, uses a decision table keyed by (keyword, the number's state `none|pending|active`, open prompt). A number receives alerts only after replying YES to its confirmation; pending sign-ups expire after 48 hours. Twilio Advanced Opt-Out owns STOP, START and HELP; on an opt-out event the app deletes the subscription; on START with no subscription it replies with the sign-up link. Numbered replies: 1 and 2 start an SMS dialogue (state in `sms_prompt`; building chosen by street number, floor by number, language by list number), with a single-use 30-minute web edit link offered as an alternative; 3 withdraws the check-in request and deletes its open check-in rows; 0 stops and deletes. YES resolves to the open prompt with the latest `sent_at`. Every app-sent reply is a catalog string in the subscriber's language; the STOP, START and HELP replies are Twilio's and are tested on the verified toll-free number before launch. Inbound bodies are not stored, only keyword counts. D-7: at pilot end an Admin sends a `campaign`; `subscriber.retention_state` moves `active → reconsent_pending`; YES sets `retained`; the purge job deletes `reconsent_pending` subscribers 30 days after the campaign.
+- **Rule:** one router, `subscriptions/application/handleInbound`, uses a decision table keyed by (keyword, the number's state `none|pending|active`, open prompt). A number receives alerts only after replying YES to its confirmation; pending sign-ups expire after 48 hours. Twilio Advanced Opt-Out owns STOP, START and HELP; on an opt-out event the app deletes the subscription; on START with no subscription it replies with the sign-up link. Numbered replies: 1 and 2 start an SMS menu (state in `sms_prompt`) that goes street → building on that street → floor, or language by list number; every step offers 0 to go back and 9 for the Hub's number, options page with 9 when they don't fit, and a menu idle for 10 minutes resets with a message saying so. Every menu message is a catalog string in the subscriber's language and must fit one segment in that language's encoding (AD-21). A single-use 30-minute web edit link is offered as an alternative; 3 withdraws the check-in request and deletes its open check-in rows; 0 stops and deletes. YES resolves to the open prompt with the latest `sent_at`. Every app-sent reply is a catalog string in the subscriber's language; the STOP, START and HELP replies are Twilio's and are tested on the verified toll-free number before launch. Inbound bodies are not stored, only keyword counts. D-7: at pilot end an Admin sends a `campaign`; `subscriber.retention_state` moves `active → reconsent_pending`; YES sets `retained`; the purge job deletes `reconsent_pending` subscribers 30 days after the campaign.
 
 ### AD-10 — Translation is routed, checked, cached and labelled
 
 - **Binds:** A3, D-4, D-5, D7, D2, N1
 - **Prevents:** wrong-language text reaching residents; model choices scattered in code; vendor language codes leaking into data.
-- **Rule:** all translation goes through `translation`'s `Translator` port using Cohere models only. `translation_route` (config, not code) holds per language: the ordered models and the check, which is either an `eld` code (for example `prs → fa`) plus the script check, or, for languages `eld` does not support (`ps`), the script and marker-letter check alone (Pashto letters ټ ډ ړ ږ ښ ګ ڼ ې ۍ; Urdu letters ٹ ڈ ڑ ں ے must be absent from Pashto and Dari). On failure the next model runs; if all fail, the result is `fallback_en`. Alert entries are translated once at submit, for every language present in the audience plus `en`, and frozen; approval never re-translates. A recipient whose language has no frozen text gets the English text with `translation.unavailable`, and the approver sees how many. Directory and guides are translated at publish. `zh-Hant` is produced from approved `zh` by OpenCC conversion (`script_converted`). Cache key `(source_hash, lang, model_id, prompt_version)`. Each call records its usage in `spend`. Vendor codes live only in adapters; everything else uses `LangCode` (AD-20).
+- **Rule:** all translation goes through `translation`'s `Translator` port using Cohere models only. `translation_route` (config, not code) holds per language: the ordered models and the check, which is either an `eld` code (for example `prs → fa`) plus the script check, or, for languages `eld` does not support (`ps`), the script and marker-letter check alone (Pashto letters ټ ډ ړ ږ ښ ګ ڼ ې ۍ; Urdu letters ٹ ڈ ڑ ں ے must be absent from Pashto and Dari). Every translation call has a per-language timeout (a config value, set from p99 latency measured before launch; open question) and runs in parallel with the other languages; a timeout counts as a failure. On failure the next model runs; if all fail, the result is `fallback_en`. Alert entries are translated once at submit, for every language present in the audience plus `en`, and frozen; approval never re-translates. A recipient whose language has no frozen text gets the English text with `translation.unavailable`, and the approver sees how many. Directory and guides are translated at publish. `zh-Hant` is produced from approved `zh` by OpenCC conversion (`script_converted`). Cache key `(source_hash, lang, model_id, prompt_version)`. Each call records its usage in `spend`. Vendor codes live only in adapters; everything else uses `LangCode` (AD-20).
 
 ### AD-11 — Directory publishes versioned files; search runs in memory
 
@@ -258,13 +258,13 @@ stateDiagram-v2
 
 - **Binds:** A2, A3, A5, A11, A15, A17, E2, G6
 - **Prevents:** the approver approving different text than residents receive; segment counts and costs that miss the footer; inconsistent markers across SMS, feed and share.
-- **Rule:** `messaging/domain/smsBody.ts#render(entry, lang, isDrill, slug)` is the only SMS body builder. It fixes order and wording from catalog strings: exercise marker, correction marker, verification marker ("Verified by the Hub" / "Not yet verified"), role-and-building attribution, the text, the machine-translation label, a 911 line on every alert (placed first for fire, evacuation and "Other"), the `/a/{slug}` link, and "Reply STOP". It runs at submit; its outputs are stored on the entry, counted for segments (GSM-7 160/153, UCS-2 70/67), costed, shown to the approver and sent byte-for-byte. `content_hash` = sha256 of the RFC 8785 canonical JSON of `{kind, alert_id, supersedes_id, types, phase, audience, channels, is_drill, valid_until, sms_bodies, web_texts}` with lists sorted by language, computed only in `alerting/domain/hash.ts`.
+- **Rule:** `messaging/domain/smsBody.ts#render(entry, lang, isDrill, slug)` is the only SMS body builder. It fixes order and wording from catalog strings: exercise marker, correction marker, verification marker ("Verified by the Hub" / "Not yet verified"), role-and-building attribution, the text, the machine-translation label, a 911 line on every alert (placed first for fire, evacuation and "Other"), the `/a/{slug}` link, and "Reply STOP". Every SMS the app sends (alerts, menus, prompts, replies, notifications) is built by this module; menu and prompt messages must render to one segment per language, enforced by a CI fixture per language that counts with the real encoder (Twilio Smart Encoding included). For alerts it runs at submit; its outputs are stored on the entry, counted for segments (GSM-7 160/153, UCS-2 70/67), costed, shown to the approver and sent byte-for-byte. `content_hash` = sha256 of the RFC 8785 canonical JSON of `{kind, alert_id, supersedes_id, types, phase, audience, channels, is_drill, valid_until, sms_bodies, web_texts}` with lists sorted by language, computed only in `alerting/domain/hash.ts`.
 
 ### AD-22 — Public endpoints are throttled
 
 - **Binds:** A2, D2-Q, G6, N9
 - **Prevents:** scripts using sign-up or search to send texts to arbitrary numbers or drain the budget.
-- **Rule:** sign-up accepts only Canadian `+1` numbers. The Twilio Messaging Service is limited to Canada by geo-permissions, with SMS pumping protection on. There is at most one pending confirmation per number per 48 hours. Per-client limits on sign-up and search are kept in Postgres against a salted IP hash that is deleted after 24 hours. Search questions are capped at 200 characters. A daily ceiling on `transactional` sends raises an ops alert (AD-23) when crossed.
+- **Rule:** sign-up accepts only Canadian `+1` numbers. The Twilio Messaging Service is limited to Canada by geo-permissions, with SMS pumping protection on. There is at most one pending confirmation per number per 48 hours. Per-client limits on sign-up and search are kept in Postgres against a salted IP hash that is deleted after 24 hours. Search questions are capped at 200 characters. A daily ceiling on `transactional` sends (menu and prompt traffic included) raises an ops alert (AD-23) when crossed; one number may run at most 5 menus a day.
 
 ### AD-23 — Failures are detected and recorded
 
@@ -281,6 +281,8 @@ stateDiagram-v2
   The weekly N4 review is a SQL view over `ops_event`, `delivery` and `audit_event`. Written procedures (N6) cover pause, resend of failed deliveries (an Admin action that creates new idempotency keys), cap overrun and incident ownership.
 
 ### AD-24 — Tests prove the rules where they are enforced
+
+- **Note:** the build happens before the two-month pilot starts, so this AD applies in full.
 
 - **Binds:** all ADs
 - **Prevents:** database triggers and constraints that no test exercises; vendor calls in tests.
@@ -469,6 +471,13 @@ flowchart LR
 | Canadian processing for Twilio and Cohere | Pilot accepts disclosed processors (P9); Vercel may fail over to a US region during a regional outage. MVP enforces residency. |
 | Point-in-time recovery, multi-region, SLOs | Pilot sets no reliability targets (N4); Supabase Pro daily backups with one restore rehearsal before launch. |
 
+## Pilot Risks Carried to the MVP
+
+| Risk | Pilot stance |
+| --- | --- |
+| A fire, evacuation or "Other" post made when no second approver is awake reaches no one until someone approves it (AD-5, AD-8) | Accepted for the pilot; the welcome text says messages are checked by Hub staff and may not be sent overnight; MVP must define Hub hours, approval timeouts and an overnight path |
+| Approvers cannot read most target languages; translations are machine output checked only for language, not meaning (AD-10) | Accepted: ambassadors are trusted to report bad translations, and residents can compare with the English original or their own translation tools |
+
 ## Open Questions
 
 | Question | Owner | Needed by |
@@ -479,4 +488,5 @@ flowchart LR
 | Tiny Aya CC-BY-NC terms for the Hub's use | Hub | Before launch, if Tiny Aya is routed |
 | Fire and evacuation alerts ignore topic opt-outs (safety default in AD-7; PRD A9 is silent) | Product owner | Before alert build |
 | Who receives cap-overrun and ops alerts out of hours (Admin on-call roster) | Hub | Before launch |
+| Translation timeout per language and total submit budget, from p99 latency tests against Cohere (AD-10) | IT | Before launch |
 | Keep unresolved "needs help" and "not reached" check-ins up to 24 hours after an alert closes, so the Hub can finish follow-up (AD-12; PRD C7 deletes at close). If approved, state it in the terms | Product owner | Before check-in build |
