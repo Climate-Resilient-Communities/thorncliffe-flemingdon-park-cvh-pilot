@@ -1,6 +1,6 @@
 # Spacing and container framework (CVH pilot)
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 This folder sets the rules for space and layout in the CVH app: which spacing tokens exist and where their values come from, the four layout primitives that arrange content, which component owns which space, and the checks that keep it that way in right-to-left languages and in basic mode.
 
@@ -10,7 +10,7 @@ It is written before the app is scaffolded. Nothing here is code; the stories li
 
 | File | What it answers |
 | --- | --- |
-| [`token-architecture.md`](token-architecture.md) | Spacing token layers (from `tokens.json` → semantic → component), CSS custom property names, the Tailwind v4 theme S02.01 generates, RTL, 44 px targets, breakpoints, basic mode, light and navy themes, the automated checks, and the **gaps** in `tokens.json` |
+| [`token-architecture.md`](token-architecture.md) | Spacing token layers (from `tokens.json` → semantic → component), CSS custom property names, the Tailwind v4 theme S01.16 generates, RTL, 44 px targets, breakpoints, basic mode, light and navy themes, the automated checks, and the **gaps** in `tokens.json` |
 | [`naming-conventions.md`](naming-conventions.md) | How tokens, primitives, props, CSS classes and files are named, and every place this differs from the source framework and why |
 | [`component-boundaries.md`](component-boundaries.md) | Who owns spacing: primitives, shells or content components; applied to the resident shell, Hub shell, approval view and round page |
 | [`component-inventory-mapping.md`](component-inventory-mapping.md) | Every pilot screen and component (C_*, Lib_*, R-xx, O-xx, A-xx, X-xx) mapped to primitives, tokens and the story that builds it |
@@ -52,7 +52,7 @@ The source framework's own MDX docs are not per-primitive; the per-primitive spe
 
 | Story | What it builds from this framework |
 | --- | --- |
-| S02.01 — tokens and strings from the prototype | Generated layer 1, `semantic.css`, Tailwind theme, the four primitives, the `tap` rule, and the CI checks in `token-architecture.md` section 10 (with the proposed changes below) |
+| S01.16 — shared design tokens and layout primitives (S02.01 keeps strings only) | Generated layer 1, `semantic.css`, Tailwind theme, the four primitives, the `tap` rule, and the CI checks in `token-architecture.md` section 10 (with the proposed changes below) |
 | S01.09 — phone-first Hub | Hub shell using `Screen surface="staff"`, `Grid` and the Hub breakpoint |
 | S02.02 — resident shell, RTL, 320/390/768 | Resident shell using `Screen surface="resident"`; the logical-CSS lint; RTL mirroring checks |
 | S02.14 — basic mode and accessibility | `data-basic`, `--tap-basic`, `Grid` collapse, the touch-target test |
@@ -97,7 +97,7 @@ The full list (G1–G10), with the evidence for each, is in `token-architecture.
 ## Open plan items found while mapping
 
 - **O-07** (ambassador post review) is listed in UX-DR16 but no story's Traces names it. Checked against the approval stories, it is already built by S04.07, S04.10, S05.02 and S08.03; it needs an explicit trace, not a new story. See the change proposal.
-- **Token generation comes too late for the Hub shell.** S01.09 builds the Hub shell in E01, but tokens are generated in S02.01 in E02. The change proposal moves shared token generation into an early E01 foundation story instead of making S01.09 depend on S02.01, which would reverse the epic order.
+- **Token generation came too late for the Hub shell (resolved).** S01.09 builds the Hub shell in E01, but tokens were generated in S02.01 in E02; the approved change moved token generation into S01.16. The change proposal moves shared token generation into an early E01 foundation story instead of making S01.09 depend on S02.01, which would reverse the epic order.
 
 ## Proposed plan changes
 

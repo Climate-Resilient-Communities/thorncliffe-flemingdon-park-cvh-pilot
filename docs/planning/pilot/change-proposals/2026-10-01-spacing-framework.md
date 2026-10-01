@@ -1,9 +1,9 @@
 # Change Proposal — Spacing and container framework
 
 - **Date:** 2026-10-01
-- **Status:** Proposed, not applied (revision 2). `docs/planning/pilot/epics.md` and `docs/architecture/ARCHITECTURE-SPINE.md` are unchanged. Two items (2.4, 2.5) are approved by the product owner and will be applied together with the rest once the proposal is approved.
+- **Status:** Approved 2026-10-01 and applied to `docs/planning/pilot/epics.md` and AD-16 in the spine. Unresolved token values (G1–G10) still need the design owner's decisions before S01.16.
 - **Source:** the draft framework in `docs/design-framework/spacing-container/`, adapted from `lutic1/personal-website` (`design-framework/spacing-container-framework/`).
-- **Estimate impact:** +6 h of development, **proposed, pending review**, plus about 2 h of design-owner time.
+- **Estimate impact:** +6 h of development, approved: build 488 → 494 h. Plus about 2 h of design-owner time.
 - **Not affected:** S01.01 (app skeleton) can start now, independently of every decision here.
 
 ## 1. Why
@@ -70,9 +70,9 @@ Making S01.09 depend on S02.01 would reverse the epic order, so it is not propos
 | S02.01 | 6 h | 3.5 h |
 | S02.02 | 7 h | 8 h |
 | S02.14 | 6 h | 7 h |
-| **Net** | | **+6 h** (E01 81 → 87.5 h; E02 84 → 84.5 h; build 488 → 494 h) |
+| **Net** | | **+6 h** (E01 81 → 87.5 h; E02 84 → 83.5 h; build 488 → 494 h) |
 
-All figures are proposed, pending review of the diff. The dependency check (no missing or forward declared dependencies) is re-run when the edits are applied.
+Approved 2026-10-01. (Revision 2 of this proposal said E02 would be 84.5 h; the correct figure is 83.5 h. The build total of 494 h was right.) After applying, the dependency check found no missing or forward declared dependencies, and every epic total matches its stories.
 
 ### 2.3 Keep enforcement proportionate
 

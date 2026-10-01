@@ -1,8 +1,8 @@
 # Grid
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
-**Status:** Pilot · **File:** `src/ui/layout/grid.tsx` · **Built in:** S02.01
+**Status:** Pilot · **File:** `src/ui/layout/grid.tsx` · **Built in:** S01.16
 
 ## Purpose
 

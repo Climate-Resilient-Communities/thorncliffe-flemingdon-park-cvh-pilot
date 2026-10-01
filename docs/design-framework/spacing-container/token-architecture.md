@@ -1,6 +1,6 @@
 # Spacing token architecture
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 How spacing, sizing and layout values reach CVH screens. Every value in this document is either copied from `design/prototype/ds/cvrh/tokens.json` (the only source of design tokens, AD-16) or is listed under [Gaps and decisions needed](#11-gaps-and-decisions-needed) with no value assigned.
 
@@ -12,13 +12,13 @@ The layering comes from the source framework (`_bmad/wds/data/design-system/toke
 
 | Layer | What it holds | Where it lives in CVH | Who writes it | May be used by |
 | --- | --- | --- | --- | --- |
-| 1. Primitive | The values in `tokens.json`, copied with their names unchanged | `src/ui/tokens/tokens.generated.css` | `npm run gen:tokens` (S02.01). Never edited by hand | Layer 2 only |
+| 1. Primitive | The values in `tokens.json`, copied with their names unchanged | `src/ui/tokens/tokens.generated.css` | `npm run gen:tokens` (S01.16). Never edited by hand | Layer 2 only |
 | 2. Semantic | Names for a job ("gap between icon and label"), each one a `var()` of a primitive | `src/ui/tokens/semantic.css` | A developer, reviewed against this document | Layout primitives, layer 3, the Tailwind theme |
 | 3. Component | Values one component needs ("inset of the 911 block"), each one a `var()` of a semantic token | Next to the component in `src/ui/` | A developer | That component only |
 
 Rules:
 
-1. Layer 1 is generated. A snapshot test (S02.01) fails if any generated value differs from `tokens.json`.
+1. Layer 1 is generated. A snapshot test (S01.16) fails if any generated value differs from `tokens.json`.
 2. Layer 2 and layer 3 never contain a number. Every right-hand side is `var(--…)`. A CI check enforces this (see [Automated checks](#10-automated-checks)).
 3. Components and screens use layer 2 or 3. A file under `src/app/` or a content component under `src/ui/` that references `--space-N` directly fails the check.
 4. Spacing does not change with theme, language or script. Only colour changes between light and navy (section 5). Line height changes by script (section 6), spacing does not.
@@ -58,7 +58,7 @@ Radius is listed because containers and content components share it. Layout prim
 
 ### 2.4 Values the prototype uses that are not primitives
 
-The prototype's own stylesheet adds values on top of `tokens.json`. Its header says "Additions below them come from the brief, Section 9". These are **observations, not tokens**. The S02.01 generator will not produce them, and nothing in `src/` may hard-code them. Each one is a gap in section 11.
+The prototype's own stylesheet adds values on top of `tokens.json`. Its header says "Additions below them come from the brief, Section 9". These are **observations, not tokens**. The S01.16 generator will not produce them, and nothing in `src/` may hard-code them. Each one is a gap in section 11.
 
 | Name in `cvh.css` | Observed value | Where | Gap |
 | --- | --- | --- | --- |
@@ -72,7 +72,7 @@ The prototype's own stylesheet adds values on top of `tokens.json`. Its header s
 | Raw spacing values across `cvh.css` | 8px (203 uses), 10px (187), 12px (170), 6px (131), 14px (110), 4px (99), 16px (80), 2px (57), 24px (17), 20px (17), 18px (13) | padding, margin and gap declarations | G1 |
 | Raw spacing values in screen markup (`*.dc.html` inline `--gap`) | 8px (147), 6px (106), 10px (76), 4px (45), 2px (41), 12px (17) | inline `style` attributes | G1 |
 
-Only 4, 10 and 24 px from this list are on the `tokens.json` scale. `Lib_Foundations.dc.html` says "Spacing from the design system (4, 10, 17, 24, 29, 48, 67)", but the stylesheet mostly uses a different set. This drift is the same kind the source framework records in its README ("Known drift" between `Spacing.mdx` and `globals.css`) and has to be settled before S02.01 (gap G1).
+Only 4, 10 and 24 px from this list are on the `tokens.json` scale. `Lib_Foundations.dc.html` says "Spacing from the design system (4, 10, 17, 24, 29, 48, 67)", but the stylesheet mostly uses a different set. This drift is the same kind the source framework records in its README ("Known drift" between `Spacing.mdx` and `globals.css`) and has to be settled before S01.16 (gap G1).
 
 ## 3. Layer 2: semantic tokens
 
@@ -148,7 +148,7 @@ Rule: a component token name starts with the component's file name (`--screen-�
 | Where theme values go | Light values on `:root`; navy values under `[data-theme="dark"]` (the selector the design system's `components/bundle.css` already uses). The generator keeps the theme id `dark` from `tokens.json`; docs call it "navy". |
 | Spacing per theme | None. The generator writes spacing and radius once, on `:root`. A test asserts that no `--space-*` or `--radius-*` property appears inside a `[data-theme]` block. |
 | Layout per theme | None. Changing theme must not move anything. Screenshot tests at the same width in both themes must have identical element boxes (only colours differ). |
-| Prototype status | `cvh.css` defines only the light values; no prototype screen uses navy. Generating navy is required by UX-DR1 and S02.01. Whether any pilot screen uses it is a design decision (G9), not a spacing one. |
+| Prototype status | `cvh.css` defines only the light values; no prototype screen uses navy. Generating navy is required by UX-DR1 and S01.16. Whether any pilot screen uses it is a design decision (G9), not a spacing one. |
 
 ## 6. Right to left, scripts and fonts
 
@@ -169,7 +169,7 @@ Rule: a component token name starts with the component's file name (`--screen-�
 | --- | --- |
 | `ps-*`, `pe-*`, `ms-*`, `me-*`, `px-*`, `py-*`, `mx-*`, `my-*`, `start-*`, `end-*`, `border-s`, `border-e`, `rounded-s-*`, `rounded-e-*` | `pl-*`, `pr-*`, `ml-*`, `mr-*`, `left-*`, `right-*`, `border-l`, `border-r`, `rounded-l-*`, `rounded-r-*`, `space-x-*` (relies on margins) |
 
-In Tailwind v4, `px-*` and `mx-*` compile to `padding-inline` and `margin-inline`, so they are safe. Confirm this against the pinned Tailwind 4.3.3 output in the S02.01 test.
+In Tailwind v4, `px-*` and `mx-*` compile to `padding-inline` and `margin-inline`, so they are safe. Confirm this against the pinned Tailwind 4.3.3 output in the S01.16 test.
 
 ## 7. Breakpoints and test widths
 
@@ -202,7 +202,7 @@ Basic mode (X-07) is a device choice that switches to the prototype's basic layo
 
 In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from device choices before first paint. Primitives and component tokens read it; nothing else does.
 
-## 9. Generated output and Tailwind v4 theme (S02.01)
+## 9. Generated output and Tailwind v4 theme (S01.16)
 
 `npm run gen:tokens` reads `tokens.json` and writes `src/ui/tokens/tokens.generated.css`. A hand-written `src/ui/tokens/semantic.css` adds layer 2. `src/ui/tokens/theme.css` maps layer 2 into Tailwind.
 
@@ -274,11 +274,11 @@ In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from 
 }
 ```
 
-Notes for S02.01:
+Notes for S01.16:
 
-- Tailwind v4 theme variables are themselves CSS custom properties. A theme variable may not point at a variable with the same name (`--radius-card: var(--radius-card)` is circular). Either have the generator write the radius values straight into `@theme`, or prefix the generated radius tokens. Pick one in S02.01 and add a test; the spacing namespace (`--spacing-*`) does not collide with `--space-*`.
+- Tailwind v4 theme variables are themselves CSS custom properties. A theme variable may not point at a variable with the same name (`--radius-card: var(--radius-card)` is circular). Either have the generator write the radius values straight into `@theme`, or prefix the generated radius tokens. Pick one in S01.16 and add a test; the spacing namespace (`--spacing-*`) does not collide with `--space-*`.
 - Primitives (`--space-N`) are deliberately **not** exposed as Tailwind utilities, so `p-space-2` cannot be written. This applies the source rule "never Level 1 directly" through the build rather than by review.
-- Check in the S02.01 test that the reset really removes the default scale in Tailwind 4.3.3: a fixture using `p-4`, `gap-2` and `md:flex` must produce no CSS.
+- Check in the S01.16 test that the reset really removes the default scale in Tailwind 4.3.3: a fixture using `p-4`, `gap-2` and `md:flex` must produce no CSS.
 
 ## 10. Automated checks
 
@@ -286,19 +286,19 @@ These are the testable rules behind this document. They run in CI on `src/`.
 
 | Check | Fails when | Proposed story |
 | --- | --- | --- |
-| Token snapshot | A generated value differs from `tokens.json` | S02.01 (already in its AC) |
-| Semantic purity | A declaration in `semantic.css` or a component token has a value that is not a single `var(--…)` | S02.01 |
-| No primitives outside layer 2 | `var(--space-` appears in any file except `semantic.css` | S02.01 |
-| Spacing from tokens only (proportionate) | A `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` value in `src/` is a literal length that is not `0` and not an approved spacing token; or a Tailwind spacing class uses an arbitrary value (`p-[13px]`, `gap-[1rem]`). It does **not** check border widths, icon and image sizes, positioning (`top`, `inset*`, `translate`) or line height. A reviewed exception is allowed with a `/* spacing-exception: reason */` comment, which the check lists in its report | Proposed: new early E01 story (change proposal) |
+| Token snapshot | A generated value differs from `tokens.json` | S01.16 |
+| Semantic purity | A declaration in `semantic.css` or a component token has a value that is not a single `var(--…)` | S01.16 |
+| No primitives outside layer 2 | `var(--space-` appears in any file except `semantic.css` | S01.16 |
+| Spacing from tokens only (proportionate) | A `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` value in `src/` is a literal length that is not `0` and not an approved spacing token; or a Tailwind spacing class uses an arbitrary value (`p-[13px]`, `gap-[1rem]`). It does **not** check border widths, icon and image sizes, positioning (`top`, `inset*`, `translate`) or line height. A reviewed exception is allowed with a `/* spacing-exception: reason */` comment, which the check lists in its report | S01.16 |
 | Logical CSS only | Any of `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`, `border-left*`, `border-right*`, `float: left/right`, `text-align: left/right`, a 3- or 4-value `margin`/`padding` shorthand, or a physical Tailwind utility (section 6) appears in `src/` | S02.02 (already named; widened here) |
-| No negative margins without a reason | A negative `margin*` or a `-m*` Tailwind utility appears in `src/` without a `spacing-exception` comment | Proposed: new early E01 story |
-| One value per theme | A `--space-*` or `--radius-*` appears inside a `[data-theme]` block | S02.01 |
-| No undeclared custom property | A `var(--x)` in `src/` has no matching `--x:` declaration in the generated, semantic or component token files (the check the source framework's `audit-css-custom-properties.js` runs) | S02.01 |
+| No negative margins without a reason | A negative `margin*` or a `-m*` Tailwind utility appears in `src/` without a `spacing-exception` comment | S01.16 |
+| One value per theme | A `--space-*` or `--radius-*` appears inside a `[data-theme]` block | S01.16 |
+| No undeclared custom property | A `var(--x)` in `src/` has no matching `--x:` declaration in the generated, semantic or component token files (the check the source framework's `audit-css-custom-properties.js` runs) | S01.16 |
 | Touch targets | An interactive element's box is smaller than `--tap` (44 px; 56 px in basic mode) at 320 px | S02.14 (already named for 44 px; basic size added) |
 
 ## 11. Gaps and decisions needed (all unresolved)
 
-These need a decision by the design owner (the person who maintains `tokens.json`) before or during S02.01. No value is proposed here; where the prototype shows a value, it is cited so the decision is quick.
+These need a decision by the design owner (the person who maintains `tokens.json`) before S01.16. No value is proposed here; where the prototype shows a value, it is cited so the decision is quick.
 
 | # | Gap | Evidence | Recommendation |
 | --- | --- | --- | --- |
@@ -310,7 +310,7 @@ These need a decision by the design owner (the person who maintains `tokens.json
 | G6 | Card padding disagrees | `tokens.json` says 24px "card padding on screens"; `.cvh-card` uses 16px, most cards 12–14px | Decide which wins. Until then content components use their own component tokens, flagged for review. |
 | G7 | Resident type minimums and basic-mode type sizes are not in `tokens.json` | `--fs-body: 18px`, basic `22px` etc. in `cvh.css` (brief Section 9) | Outside spacing, but it blocks basic mode the same way. Add a "screens" type set and a basic-mode set. |
 | G8 | Shell dimensions | Header min-height 60, nav item 64 (basic 80), Hub top bar 60 | Add as component tokens in `tokens.json`, or accept them as derived from `--tap` plus padding once G1 and G3 are settled. |
-| G9 | Navy theme on screens | `tokens.json` has navy; `cvh.css` and every screen are light only | Generate both (S02.01 requires it). Record that no pilot screen uses navy unless the design owner says otherwise. |
+| G9 | Navy theme on screens | `tokens.json` has navy; `cvh.css` and every screen are light only | Generate both (S01.16 requires it). Record that no pilot screen uses navy unless the design owner says otherwise. |
 | G10 | Line height by script | `cvh.css` sets 1.9 / 1.75 / 1.7 for Arabic, Indic, Chinese | Add to `tokens.json` type, so S02.02 does not hand-copy them. |
 
 Until a gap is closed, the related semantic token stays reserved and unset, and the story that needs it carries an open item rather than a hard-coded number.

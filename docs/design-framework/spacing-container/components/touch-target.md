@@ -1,8 +1,8 @@
 # Touch target (`tap` rule)
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
-**Status:** Pilot · **Files:** `src/ui/tokens/semantic.css` (tokens), `src/ui/tokens/theme.css` (`@utility tap`), `e2e/touch-targets.spec.ts` (check) · **Built in:** S02.01 (rule), checked in S02.14
+**Status:** Pilot · **Files:** `src/ui/tokens/semantic.css` (tokens), `src/ui/tokens/theme.css` (`@utility tap`), `e2e/touch-targets.spec.ts` (check) · **Built in:** S01.16 (rule), checked in S02.14
 
 ## Purpose
 
@@ -36,7 +36,7 @@ None. The rule has no options. Components never pass a size to it.
 | `--gap-target` | 2 | Blocked by G3. Prototype "8px between targets" |
 | `--tap-current` | 3 (of the rule) | `var(--tap)` or `var(--tap-basic)` |
 
-The value 44 is a requirement, not a design choice, so S02.01 may treat it as settled once it is added to `tokens.json`; the generator must still read it from there (AD-16).
+The value 44 is a requirement, not a design choice, so S01.16 may treat it as settled once it is added to `tokens.json`; the generator must still read it from there (AD-16).
 
 ## Responsive behaviour
 

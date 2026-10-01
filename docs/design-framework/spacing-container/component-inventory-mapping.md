@@ -1,6 +1,6 @@
 # Component inventory mapping
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 Every prototype screen and component in pilot scope, mapped to the layout primitives and spacing tokens it should use, and the story that builds it. Modelled on the source framework's `docs/component-inventory/component-inventory-mapping.md` (one row per inventory item, a resolution per row, a note where a decision was taken), adapted to CVH: the ids come from `design/prototype/cvh/inventory.js` and the `C_*` / `Lib_*` files; scope and stories come from `docs/planning/pilot/epics.md`.
 
@@ -15,7 +15,7 @@ How to read the table:
 
 | Prototype item | What it is | Primitives | Tokens | Owner | Story | Note |
 | --- | --- | --- | --- | --- | --- | --- |
-| `Lib_Foundations` | Token and foundation specimen | none (source of rules) | all layer 1 | — | S02.01 | States "Spacing from the design system (4, 10, 17, 24, 29, 48, 67)" and "44 by 44 minimum (56 in bigger-text mode), 8px between targets"; `cvh.css` does not follow the first statement (G1) |
+| `Lib_Foundations` | Token and foundation specimen | none (source of rules) | all layer 1 | — | S01.16 | States "Spacing from the design system (4, 10, 17, 24, 29, 48, 67)" and "44 by 44 minimum (56 in bigger-text mode), 8px between targets"; `cvh.css` does not follow the first statement (G1) |
 | `ResidentApp`, `ResidentApp_320`, `ResidentApp_768` | Resident shell at three frame widths | shell + `Screen res` | `--gutter-resident`†, `--gap-section`†, `--inset-screen-end` | shell | S02.02 | No width logic in the prototype; 320/390/768 are test widths only |
 | `C_ResidentHeader` | Resident header: logo, language button, basic-mode switch, "My choices" | `Inline justify="between"` (top row); `Inline` with `Inline.Grow` (tools row); `tap` | `--gutter-resident`†, `--gap-target`†, `--tap`† | shell | S02.02 (basic switch behaviour S02.14) | Prototype uses a 4-value padding with a `[dir="rtl"]` override and `margin-inline-start: auto`; both replaced by `Inline` |
 | `C_ResidentNav` | Bottom navigation, 4 equal items | `Grid cols={4} collapseInBasic={false}` inside the shell; `tap` | `--tap`†; nav item block size (G8) | shell | S02.02 | Active indicator is a block-axis inset shadow (allowed); item size grows in basic mode (G8) |

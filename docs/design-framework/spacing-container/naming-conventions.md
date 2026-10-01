@@ -1,6 +1,6 @@
 # Naming conventions
 
-> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 Naming rules for spacing tokens, layout primitives, their props and files. Adapted from the source framework's `_bmad/wds/data/design-system/naming-conventions.md` and `dilawriweb/packages/ui/THEMING.md`, and reconciled with the CVH spine's "Naming" convention (modules lowercase nouns, `src/ui/` holds tokens and components, generated catalogs and tokens are never edited by hand).
 
@@ -17,7 +17,7 @@ Every place where CVH differs from the source is marked **Differs** with the rea
 | Theme variants keep the same name; the theme is a selector, not part of the name | `--surface` under `:root` and under `[data-theme="dark"]` |
 
 **Differs from source.**
-- Source names spacing `--spacing-{n}` (`--spacing-4`) and its primitives carry a brand prefix (`--dilawri-*`) so that layer 1 is visible in the name. CVH keeps the `tokens.json` names (`--space-{n}`, no prefix) because AD-16 says tokens are generated from `tokens.json`, and S02.01 requires a snapshot test against that file. Renaming would break the one-to-one check. Layer 1 is told apart by file (`tokens.generated.css`), and the CI check "no primitives outside layer 2" enforces the boundary instead of a prefix.
+- Source names spacing `--spacing-{n}` (`--spacing-4`) and its primitives carry a brand prefix (`--dilawri-*`) so that layer 1 is visible in the name. CVH keeps the `tokens.json` names (`--space-{n}`, no prefix) because AD-16 says tokens are generated from `tokens.json`, and S01.16 requires a snapshot test against that file. Renaming would break the one-to-one check. Layer 1 is told apart by file (`tokens.generated.css`), and the CI check "no primitives outside layer 2" enforces the boundary instead of a prefix.
 - Source numbers its scale by multiplier (`spacing-4` = 16 px, 4 × 4 px). CVH numbers by step (`space-4` = 24 px, the fourth step). Developers used to Tailwind will expect `4` to mean 16 px. For this reason primitives are not exposed as Tailwind utilities at all (see `token-architecture.md` section 9).
 
 ### 1.2 Semantic tokens (layer 2)
@@ -127,7 +127,7 @@ Primitives and components that need their own CSS use plain classes named after 
 | --- | --- |
 | This framework's docs | `docs/design-framework/spacing-container/*.md`, kebab-case, no number prefix |
 | Primitive specs | `docs/design-framework/spacing-container/components/{primitive}.md` (`stack.md`) |
-| Generated tokens | `src/ui/tokens/tokens.generated.css` (the `.generated.` part marks a file CI regenerates and compares, the same rule S02.01 sets for `src/i18n/` catalogs) |
+| Generated tokens | `src/ui/tokens/tokens.generated.css` (the `.generated.` part marks a file CI regenerates and compares, the same rule S01.16 and S02.01 set for generated files such as `src/i18n/` catalogs) |
 | Semantic layer | `src/ui/tokens/semantic.css` |
 | Tailwind theme | `src/ui/tokens/theme.css` |
 | Layout primitives | `src/ui/layout/{primitive}.tsx`, `.css`, `.test.tsx` |
