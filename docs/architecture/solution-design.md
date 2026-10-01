@@ -295,21 +295,21 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 
 | Item | Basis | CAD |
 |---|---|---|
-| Alert texts | About 2,960 messages, about 9,500 segments | 220 |
+| Alert texts | About 2,960 messages, about 14,200 segments (full footer on every alert) | 330 |
 | Sign-up confirmation, welcome and end-of-pilot re-consent | 400 subscribers, about 9 segments each | 85 |
 | Drills, approver notifications | About 800 segments | 20 |
 | Incoming texts (YES, keywords) | About 700 | 30 |
 | Toll-free number | 2 months | 6 |
 | Vercel Pro | 1 seat, 2 months | 55 |
-| Supabase Pro | Production; staging on the free tier | 70 |
+| Supabase Pro | Production, plus staging compute in the same organisation | 100 |
 | Cohere | Directory translation and re-runs, alerts, about 4,000 questions, test-set runs | 55 |
 | Domain | — | 20 |
-| **Total** | | **about 560** |
-| Headroom within CAD 1,000 | | about 440 |
+| **Total** | | **about 700** |
+| Headroom within CAD 1,000 | | about 300 |
 
-**Assumptions.** 400 confirmed subscribers, 60% reading a non-Latin script. 25 alert entries sent by SMS: 22 at building level to about 80 people each, 3 neighbourhood-wide. Average 2 segments per text in Latin scripts and 4 in non-Latin scripts. A segment is the unit Twilio charges: 160 characters in Latin scripts but only 70 in scripts like Urdu or Tamil, so the same alert costs more in those languages. Cohere has not published prices for its translation models; the Cohere line assumes rates similar to its Command models.
+**Assumptions.** 400 confirmed subscribers, 60% reading a non-Latin script. 25 alert entries sent by SMS: 22 at building level to about 80 people each, 3 neighbourhood-wide. Average 3 segments per text in Latin scripts and 6 in non-Latin scripts, because every alert carries the full footer (verification and machine-translation labels, 911 line, link, "Reply STOP") in the pilot. A segment is the unit Twilio charges: 160 characters in Latin scripts but only 70 in scripts like Urdu or Tamil, so the same alert costs more in those languages. Cohere has not published prices for its translation models; the Cohere line assumes rates similar to its Command models.
 
-**Sensitivity.** Each extra 100 subscribers adds about CAD 75. A busy heat wave (three neighbourhood updates a day for three days to 400 people) adds about CAD 150. Above about 900 subscribers the CAD 1,000 envelope is at risk.
+**Sensitivity.** Each extra 100 subscribers adds about CAD 75. A busy heat wave (three neighbourhood updates a day for three days to 400 people) adds about CAD 150. Above about 700 subscribers the CAD 1,000 envelope is at risk. Sending speed is Twilio's toll-free default of 3 segments per second: a neighbourhood alert in a non-Latin script to 400 subscribers takes about 11 minutes to finish. A compact footer and faster sending are MVP decisions.
 
 **SMS cap.** Set a monthly SMS cap of CAD 250 and review spend weekly. When an approval would exceed the cap, the approver sees the shortfall, the overrun is recorded, and Admins are notified. The alert is still sent (AD-8). Spend to date is visible to Coordinators, Directors and Admins.
 

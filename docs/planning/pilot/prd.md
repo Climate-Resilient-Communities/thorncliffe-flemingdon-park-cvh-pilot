@@ -361,6 +361,7 @@ No targets are set; the pilot measures to set MVP targets. All measures are aggr
 | R-10 | Residents distrust non-Canadian data processing | Medium | Named in plain-language terms; minimum data; no names |
 | R-11 | A fire, evacuation or "Other" post made when no second approver is awake reaches no one until someone approves it | High | Accepted for the pilot. The welcome text says messages are checked by Hub staff and may not be sent overnight. Carried to the MVP as a risk to resolve with Hub hours and approval timeouts |
 | R-12 | A machine translation keeps the right language but changes the meaning; approvers cannot read most languages | Medium | Accepted for the pilot. Ambassadors are trusted to report bad translations; residents can see the English original one tap away |
+| R-13 | SMS sends at the toll-free default of 3 segments per second, so a neighbourhood alert in a non-Latin script to 400 people takes about 11 minutes to finish, and every alert carries a full footer that adds about two segments | Medium | Accepted for the pilot. Fire and evacuation go first, then building-level alerts. Faster sending and a compact footer are MVP decisions |
 
 ## 12. Decisions and Open Questions
 

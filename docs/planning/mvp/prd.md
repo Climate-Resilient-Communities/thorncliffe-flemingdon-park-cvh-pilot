@@ -41,6 +41,7 @@ The MVP includes everything the pilot delivers (Pilot PRD Section 7) plus every 
 
 - Hub operating hours and approval timeouts per disruption type (process not yet trained)
 - An overnight path for fire, evacuation and "Other" posts when no second approver is awake (accepted as pilot risk R-11)
+- SMS sending speed (high-throughput toll-free) and a compact one-segment footer per language (pilot risk R-13)
 - Staff sign-in by email with self-service password reset (the pilot uses Admin-set usernames and Admin resets)
 - Official alert sources, terms and intake method
 - Canadian SMS provider and sender type
