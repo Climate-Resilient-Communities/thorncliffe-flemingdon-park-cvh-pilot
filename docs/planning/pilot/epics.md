@@ -3425,8 +3425,10 @@ The Hub learns about problems before residents do, can deliberately resend texts
 | Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. Stored as `access_request` with the Admin, a salted hash of the number, timestamps and outcome, never the number. |
 | Access code | 6 digits, stored only as an HMAC (server secret, request id, code), valid 15 minutes, at most 3 attempts, used once. Verification is one atomic update that succeeds only if the request is unverified, unexpired, under its attempt limit and the code matches; a failed attempt increments the count in the same statement. |
 | Deletion ledger | A write-ahead record outside the database. Before any deletion commits, the use case writes one object `{intent id, salted number hash, requested_at, reason}` to a private Storage bucket and waits for Storage to confirm it; only then does the deletion transaction run, carrying the intent id. If the write is not confirmed, the deletion does not commit (S09.03 says what each path does instead). So every committed deletion has an external record by construction. An intent whose deletion never committed is harmless: re-applying it deletes a number whose owner asked to be deleted. Ledger objects are kept for the database backup window plus one day; the salt lives in the environment, not the database. |
-| STOP evidence | Deletions by STOP are also recorded outside the database by Twilio, which keeps the number opted out. A restore deletes every number Twilio reports as opted out. |
-| Restore-safe | The ledger bucket and Twilio's opt-out list can both be read in full. If either cannot be read, the restore is not safe and the app stays in maintenance. |
+| STOP evidence | Twilio's opt-out list cannot be read through its Console or API, so the CVH keeps its own evidence: the inbound webhook that receives `OptOutType = STOP` writes the ledger intent and waits for Storage to confirm it before deleting, exactly like every other deletion. Twilio still blocks every send to an opted-out number, so a missing record can never lead to a text reaching that person; it can only leave data that should have been deleted. |
+| Ledger seal | Every minute the health job writes a seal object to the ledger bucket: `{time, unconfirmed_deletions}`, where `unconfirmed_deletions` counts deletions that could not get their intent confirmed (held for retry in the database). A seal is written only when Storage accepts it. |
+| Restore-safe | All of: the ledger bucket can be read in full; seals exist for every minute from the backup's time up to the outside monitor's last successful heartbeat (an external record of when the system was last alive); and every one of those seals reports `unconfirmed_deletions = 0`. Then every deletion requested in that period has a confirmed intent. If any condition fails, completeness cannot be established and the restore stays in maintenance. |
+| Replay rule | A restore applies every ledger intent kept in the bucket, whatever its date: it deletes a subscriber, pending sign-up, edit link or `inbound_reply` whose number hash matches the intent and which was created at or before the intent's `requested_at`. A record created after the intent (a later, valid re-subscription) is never deleted by it. |
 | Recovery mode | A flag on `messaging_control` that an Admin at `aal2` can set only while texts are paused and the sender lease is disabled; every use is audited. It is the only state in which the restore recovery operation may run. |
 | Verified control | Proof that the person asking controls the number: they read back an access code texted to it (S09.06), or answer a call-back to it (launch-day process), or send a given one-time phrase from it by text. Nothing else counts. |
 | Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
@@ -3514,16 +3516,32 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** Storage does not confirm the intent
 **When** each path handles it
-**Then** no deletion commits, and: STOP is still effective (Twilio has opted the number out and no text can reach it), with the deletion retried every minute and a health condition raised; a double 0 is answered "We could not finish deleting right now. Reply STOP to stop at once" while the subscriber still exists; the edit page and the access-request screen show "Deletion failed, try again"; the purge retries on its next run (tests for each)
+**Then** no deletion commits, the request is held for retry in the database and counted in the next seal's `unconfirmed_deletions`, and: STOP is still effective for texting (Twilio blocks every send to the number), with the deletion retried every minute and a health condition raised; a double 0 is answered "We could not finish deleting right now. Reply STOP to stop at once" while the subscriber still exists; the edit page and the access-request screen show "Deletion failed, try again"; the purge retries on its next run (tests for each)
 
 **Given** a deletion commits and the original database is then permanently lost (the test drops the database immediately after the commit)
 **When** a fresh database is restored from a backup taken before the deletion and the restore procedure runs
 **Then** the ledger intent re-applies the deletion and the subscription is gone (test)
 
+**Given** the sequence: intent written and confirmed, backup taken, deletion commits, database permanently lost
+**When** the backup is restored and the procedure runs
+**Then** the intent, although dated before the backup, is applied by the replay rule and the subscription is gone (test)
+
+**Given** the sequence: a number is deleted, the same number signs up again and confirms, a backup is taken, the database is lost
+**When** the backup is restored and the procedure runs
+**Then** the old intent does not delete the new subscription, because it was created after the intent (test)
+
+**Given** Storage fails to confirm a STOP intent, and the database is then permanently lost before the retry succeeds
+**When** a restore is attempted
+**Then** the seals for that period report `unconfirmed_deletions > 0` (or are missing), the restore is not restore-safe, and the app stays in maintenance (test)
+
 **Given** the restore procedure
 **When** a backup is restored
-**Then** before the app serves traffic: texts are paused, the sender lease is disabled and recovery mode is set; the restore must be restore-safe, and if the ledger bucket or Twilio's opt-out list cannot be read in full, the app stays in maintenance until they can
-**And** every subscriber, pending sign-up, check-in row, edit link and `inbound_reply` whose number hash appears in a ledger intent dated after the backup's time is deleted again, and every number Twilio reports as opted out is deleted too
+**Then** before the app serves traffic: texts are paused, the sender lease is disabled and recovery mode is set; the restore must be restore-safe, otherwise the app stays in maintenance
+**And** every ledger intent is applied by the replay rule (with the check-in rows of a deleted subscriber going with it)
+
+**Given** a restore that is not restore-safe
+**When** the Hub must still bring the CVH back
+**Then** the only permitted path, approved by two Admins at `aal2` and audited, restores every subscriber and pending sign-up as unconfirmed: none receives anything except one fresh confirmation text ("Reply YES to keep getting CVH alerts"), which Twilio blocks for opted-out numbers; anyone who does not reply YES within 48 hours is deleted; until then their data is used for nothing else
 **And** the restore recovery operation sets every `queued` or `claimed` delivery to `unknown` (so nothing handed off after the backup can be sent again automatically), lists them for Admin review and audits the counts; outside recovery mode the trigger refuses that change (direct SQL test)
 **And** only then are recovery mode turned off and the lease and sending re-enabled, each audited
 
@@ -3533,7 +3551,7 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** the staging restore rehearsal
 **When** it runs
-**Then** it restores a backup taken before a test deletion and a test send, and confirms: the deleted subscription stays deleted; the sent text is not sent again; a restore with the ledger bucket made unreadable stays in maintenance; and spend shows the period's usage once
+**Then** it restores a backup taken before a test deletion and a test send, and confirms: the deleted subscription stays deleted; the sent text is not sent again; a restore with the ledger bucket made unreadable, or with a missing seal, stays in maintenance; and spend shows the period's usage once
 
 **Given** the launch-day access-request process, used until S09.06 ships
 **When** a resident asks what is held
