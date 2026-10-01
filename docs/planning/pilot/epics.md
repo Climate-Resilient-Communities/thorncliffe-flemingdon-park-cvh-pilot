@@ -774,7 +774,7 @@ Residents open the CVH in any phone browser, choose their language and what matt
 | Proposed engineering budget | A performance limit set by the team to protect older phones and slow connections (NFR-N3). It is not a PRD requirement: the PRD sets no numbers. Budgets live in `perf-budget.json` and may be changed by the team with a written reason in the change. |
 | Traceable translation | Every translated text (listings, guides, numbers) keeps its English original, the hash of the English source it was made from, the model or conversion used, and its review status (`machine` or `reviewed`, with review date). `zh-Hant` records the `zh` source hash and the OpenCC version and configuration used. |
 
-**Recorded discrepancy.** `docs/architecture/solution-design.md` ("Caching and cost") says guides are translated when the Hub publishes them. The spine (AD-10) says guides are translated once by the offline scripts and reviewed like the catalogue. This epic follows the spine; the solution design is to be corrected in the next documentation pass.
+**Resolved discrepancy.** `docs/architecture/solution-design.md` ("Caching and cost") used to say guides were translated when the Hub publishes them. It now matches the spine (AD-10): guides, like the catalogue, are translated once by the offline scripts and reviewed before loading.
 
 ### Story S02.01 — Developer generates the look and every interface string from the prototype
 

@@ -188,7 +188,7 @@ Model identifiers: `north-small-translate-09-2026` (accepted by the API; used to
 
 **The fallback label.** When every model in a route fails, the text is the English original, and the app and SMS add the "translation not available" line in the target language. If a whole language falls back, Admins are alerted (AD-23).
 
-**Caching and cost.** Each translation is stored and reused by source text, language, model and prompt version, so the same text is never paid for twice. Each call's usage is recorded in the spend module. Directory listings and guides are translated when the Hub publishes them, not when a resident reads them.
+**Caching and cost.** Each alert translation is stored and reused by source text, language, model, prompt version and check version, so the same text is never paid for twice. Each call's usage is recorded in the spend module. Directory listings and guides are never translated by the app: they are translated offline by the scripts in `scripts/`, reviewed, and committed in `data/catalogue/` before they are loaded or published (AD-10, AD-11). Publishing only loads that reviewed text, and a stale or unreviewed translation shows the English original with the "translation not available" line.
 
 ### 5.2 Directory search
 
