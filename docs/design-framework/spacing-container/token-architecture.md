@@ -279,6 +279,7 @@ Notes for S01.16:
 - Tailwind v4 theme variables are themselves CSS custom properties. A theme variable may not point at a variable with the same name (`--radius-card: var(--radius-card)` is circular). Either have the generator write the radius values straight into `@theme`, or prefix the generated radius tokens. Pick one in S01.16 and add a test; the spacing namespace (`--spacing-*`) does not collide with `--space-*`.
 - Primitives (`--space-N`) are deliberately **not** exposed as Tailwind utilities, so `p-space-2` cannot be written. This applies the source rule "never Level 1 directly" through the build rather than by review.
 - Check in the S01.16 test that the reset really removes the default scale in Tailwind 4.3.3: a fixture using `p-4`, `gap-2` and `md:flex` must produce no CSS.
+- The reset does not stop arbitrary values: Tailwind compiles `p-[13px]` whatever the theme defines. The spacing check (section 10) rejects them instead.
 
 ## 10. Automated checks
 

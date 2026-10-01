@@ -577,8 +577,12 @@ So that the Hub and resident screens share one look and nobody hard-codes spacin
 **Then** the generator writes no default value, fails, and names the missing token and its gap
 
 **Given** the Tailwind theme
-**When** a fixture using `p-4`, `gap-2`, `md:flex` and `p-[13px]` is built
-**Then** none of them produces CSS, and the token-based utilities (for example `gap-icon`, `ps-*`, `pe-*`) compile to `var()` of semantic tokens
+**When** a fixture using `p-4`, `gap-2` and `md:flex` is built
+**Then** none of them produces CSS (the default spacing scale and breakpoints are removed), and the token-based utilities (for example `gap-icon`, `ps-*`, `pe-*`) compile to `var()` of semantic tokens
+
+**Given** a fixture using an arbitrary spacing value such as `p-[13px]` (Tailwind compiles arbitrary values whatever the theme defines)
+**When** the spacing check runs
+**Then** it rejects the fixture and names the file and the class
 
 **Given** the layout primitives `Screen`, `Stack`, `Inline`, `Grid` and the `tap` rule in `src/ui/layout/`
 **When** their unit, type and Playwright tests run
