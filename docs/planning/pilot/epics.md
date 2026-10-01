@@ -725,7 +725,7 @@ So that we learn in week one whether the Twilio account and toll-free number wor
 
 Residents open the CVH in any phone browser, choose their language and what matters to them on the phone, browse the reviewed directory and map, read building facts, guides and essential numbers, switch to basic mode, install the app and read what they last loaded without signal.
 
-**Epic estimate:** 84 h across 14 stories (3 S, 11 M) · **Epic actual:** —
+**Epic estimate:** 87 h across 15 stories (4 S, 11 M) · **Epic actual:** —
 
 **Depends on E01:** S01.01 (app and CI), S01.02 (environments), S01.03 (migrations and RLS), S01.04 (audit), S01.12 (role policy and permission test list), S01.13 (buildings and floors). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -735,12 +735,17 @@ Residents open the CVH in any phone browser, choose their language and what matt
 | --- | --- |
 | Launch languages | The 15 codes in `design/prototype/cvh/data.js` (`ur ps tl prs gu ta el sk bn hi pa zh es fr en`). `ur`, `ps` and `prs` are right-to-left. Traditional Chinese (`zh-Hant`) is offered as a labelled script conversion of `zh`, never a separate translation. |
 | Language URL | Every resident page lives under `/{lang}/…` with `lang` a `LangCode`. An unknown code redirects to `/en/…` with the same path. `/` sends a first-time visitor to the language screen and a returning one to their saved language. |
-| Device choices | Language, buildings (up to 3, by `rsn`), floors (by floor id, never unit), groups, muted topics and basic mode, stored only in `localStorage` under `cvh.choices` as `{v: 1, …}` validated by a zod schema in `src/contracts`. A missing, unreadable or invalid value is treated as "no choices" and the first-run screens are offered again; the app never fails because of it. |
+| Device choices | Language, buildings (any number, by `rsn`, including a relative's), floors (by floor id, never unit), groups, muted topics and basic mode, stored only in `localStorage` under `cvh.choices` as `{v: 1, …}` validated by a zod schema in `src/contracts`. A missing, unreadable or invalid value is treated as "no choices" and the first-run screens are offered again; the app never fails because of it. |
 | Published provider | A provider in the current directory release that the Hub has published and given a last-confirmed date. Unconfirmed providers are loaded but never shown to residents. |
 | Release | One numbered, immutable set of directory files: one listing file per launch language plus `zh-Hant`, and a manifest. Only one release is current. |
 | Machine-translation label | The catalog string shown on any text that was machine-translated, with a one-tap "Show English" that reveals the English original in place. |
 | Not known | Shown (translated) wherever a provider or building detail is missing; a field is never hidden silently or shown blank. |
-| Offline-readable | After a page has been loaded once with signal, the following open without signal: home with the last feed and building status, essential numbers, guides already opened, the directory listing file of the current language, and up to 200 viewed map tiles. Each shows "Last updated {time}". |
+| Offline-readable | After the app has been loaded once with signal, the following open without signal: home with the last feed and building status, essential numbers, guides already opened, and the directory listing file of the current language. Map tiles of areas already viewed are included only if the chosen tile provider permits caching (S02.07). Each shows "Last updated {time}". |
+| Personal choices vs usage events | Personal choices (buildings, floors, groups, muted topics, basic mode) never leave the phone, except in the SMS sign-up and edit-link requests in E07. Usage events (S02.15) are a separate, fixed, aggregate-only message: `{evt, lang, nbhd?}`, no identifier of any kind, never a building, floor or group. |
+| Proposed engineering budget | A performance limit set by the team to protect older phones and slow connections (NFR-N3). It is not a PRD requirement: the PRD sets no numbers. Budgets live in `perf-budget.json` and may be changed by the team with a written reason in the change. |
+| Traceable translation | Every translated text (listings, guides, numbers) keeps its English original, the hash of the English source it was made from, the model or conversion used, and its review status (`machine` or `reviewed`, with review date). `zh-Hant` records the `zh` source hash and the OpenCC version and configuration used. |
+
+**Recorded discrepancy.** `docs/architecture/solution-design.md` ("Caching and cost") says guides are translated when the Hub publishes them. The spine (AD-10) says guides are translated once by the offline scripts and reviewed like the catalogue. This epic follows the spine; the solution design is to be corrected in the next documentation pass.
 
 ### Story S02.01 — Developer generates the look and every interface string from the prototype
 
@@ -821,9 +826,8 @@ So that the CVH shows me what matters to me without asking who I am.
 **Then** they see R-01 (language) first, then R-26 (groups) and R-35 (where I live), each skippable, then home
 
 **Given** R-35
-**When** the resident picks up to 3 buildings from the 43 (their own or a relative's) and optionally floors
-**Then** buildings are stored by `rsn` and floors by floor id; a unit number is never asked
-**And** a fourth building is refused with a message
+**When** the resident picks one or more buildings from the 43 (their own or a relative's) and optionally floors
+**Then** buildings are stored by `rsn` and floors by floor id, with no limit on how many; a unit number is never asked
 
 **Given** R-34 (what I have told the CVH)
 **When** opened
@@ -837,9 +841,10 @@ So that the CVH shows me what matters to me without asking who I am.
 **When** the app loads
 **Then** it starts as a first visit and never throws
 
-**Given** any resident request made while choices exist
-**When** inspected in the network log
-**Then** no request carries building, floor or groups (end-to-end test)
+**Given** a resident with saved personal choices uses every screen in this epic
+**When** the network log is inspected (end-to-end test)
+**Then** no request carries a building, floor, group, muted topic or basic-mode value, in the URL, headers or body
+**And** the only requests that carry anything derived from the resident are the usage events defined in S02.15, which this test checks against their fixed schema
 
 ### Story S02.04 — Hub loads the reviewed catalogue and confirms providers
 
@@ -905,7 +910,19 @@ So that every resident gets the same, complete set of listings in their language
 **When** requested
 **Then** the manifest returns `DirectoryManifestV1` for the current release, each file is served from the app's own origin with `Cache-Control: public, max-age=31536000, immutable`, and an unknown release or language returns 404
 **And** contract tests validate both against the `src/contracts` schemas
-**And** `embed_model` is null until E03 adds the meaning file to the release
+
+**Given** every release
+**When** it is written
+**Then** it records the catalogue's source version (`catalogue_hash`, the sha256 of the committed `data/catalogue/` files, and the git commit) and keeps each text's traceability fields (English original, source hash, model or conversion, review status)
+
+**Given** a release has no search data (every release until E03)
+**When** the manifest is served
+**Then** it carries `search: {status: "unavailable"}`, and the client hides the question box and shows browsing only
+
+**Given** E03 adds search data
+**When** it is built
+**Then** it is written as part of the same release number, carries the same `catalogue_hash`, and the manifest switches to `search: {status: "available", embed_model, vectors_path}` only when both match
+**And** `DirectoryManifestV1` replaces `embed_model` with this `search` field (an AD-20 contract change recorded in the spine in this story)
 
 ### Story S02.06 — Resident browses and filters the directory
 
@@ -950,9 +967,10 @@ So that I can see what is close to me.
 
 **Acceptance Criteria:**
 
-**Given** a map tile provider
-**When** this story starts
-**Then** IT chooses a free-tier provider whose terms allow browser caching of viewed tiles and require only standard attribution, and the choice closes the open question in the spine
+**Given** candidate map tile providers
+**When** IT chooses one at the start of this story
+**Then** the choice is recorded in the spine (closing the open question) with: the licence and whether it allows use in this app; whether browser caching of viewed tiles is permitted, and for how long; the attribution required; and the expected cost for the pilot's estimated tile requests against the free tier
+**And** the required attribution is shown on the map in every language
 
 **Given** the map R-14
 **When** it opens
@@ -966,9 +984,21 @@ So that I can see what is close to me.
 **When** opened from the map
 **Then** it shows the same providers as the map's current view, so the map is never the only way to reach a listing (screen readers use the list)
 
-**Given** the service worker
+**Given** the chosen provider permits caching
+**When** tiles are viewed with signal
+**Then** viewed tiles are cached up to the limit the provider allows and no more than 200 (least recently used removed first), never fetched ahead of viewing
+
+**Given** the chosen provider does not permit caching
 **When** tiles are viewed
-**Then** at most 200 viewed tiles are cached (least recently used removed first); tiles are the only cross-origin resident request (end-to-end test)
+**Then** no tile is cached, and offline the map says "The map is not available without signal" and offers the list view
+
+**Given** the map is opened offline
+**When** the resident moves between an area viewed before and one never viewed
+**Then** viewed areas show their saved tiles, unviewed areas show a plain background with "This part of the map is not saved on your phone", and pins and the list still work from the saved listing file
+
+**Given** any resident page
+**When** the end-to-end test inspects requests
+**Then** map tiles are the only cross-origin request
 
 ### Story S02.08 — Resident sees the facts about a building
 
@@ -988,7 +1018,8 @@ So that I know what my building has in a heat wave or outage.
 
 **Given** the building contact
 **When** an Admin enters or changes it on the building's staff screen
-**Then** it is saved and audited (`building.contact_changed`); residents see it on the building page and on the essential-numbers page for their chosen buildings; if none is entered they see "Not known"
+**Then** it is saved with its owner (the Hub) and last-updated date, and audited (`building.contact_changed`)
+**And** residents see it on the building page and on the essential-numbers page for their chosen buildings, labelled "Provided by the Hub, last updated {date}"; if none is entered they see "Not known"
 
 **Given** a building flagged "not in latest register" (S01.13)
 **When** a resident opens its page
@@ -1007,7 +1038,12 @@ So that residents read checked text, not a live machine translation.
 
 **Given** the English guide text in `design/prototype/cvh/data.js` (power, flood, elevator, heat, smoke, fire; before, during, after, when to call 911) and the essential numbers (911, 211, 311, Toronto Hydro, the Hub)
 **When** they are moved to `data/catalogue/guides.json` and `data/catalogue/numbers.json` and the existing offline scripts run
-**Then** each launch language gets a reviewed translation file, a null entry means English with `translation.unavailable`, and only changed text is re-translated
+**Then** each launch language gets a translation file with the traceability fields for every text, a null entry means English with `translation.unavailable`, and only changed text is re-translated
+**And** `zh-Hant` is produced from `zh` with OpenCC and records the source hash, OpenCC version and configuration
+
+**Given** a text whose English source has changed since it was translated
+**When** the seed script runs
+**Then** it refuses to load that language's stale entry and reports it, so a resident never sees a translation of old English
 
 **Given** the guide and numbers seed script
 **When** it runs
@@ -1087,7 +1123,7 @@ So that I have the numbers and my building's status when I need them most.
 
 **Given** the Serwist service worker
 **When** it caches
-**Then** it caches only `/{lang}/**`, `/api/feed`, `/api/directory/{v}/**`, static assets and viewed map tiles; `/api/directory/manifest` is network-first with the last copy as fallback
+**Then** it caches only `/{lang}/**`, `/api/feed`, `/api/directory/{v}/**`, static assets and viewed map tiles (only if the tile provider permits caching, S02.07); `/api/directory/manifest` is network-first with the last copy as fallback
 **And** a test fails if any `/staff/**` or `/api/staff/**` response is ever stored
 
 **Given** the offline-readable set has been loaded once
@@ -1098,14 +1134,57 @@ So that I have the numbers and my building's status when I need them most.
 **When** the resident next opens the app with signal
 **Then** the new service worker takes over on the next navigation and old caches are deleted; directory files of the previous release are removed once a newer release is loaded
 
-**Given** a throttled "Slow 3G" profile on a mid-range phone emulation
-**When** home is opened for the first time
-**Then** it is usable within 5 seconds, and the JavaScript sent for home is under 200 KB compressed (CI budget check)
+**Given** the service worker installs
+**When** it precaches
+**Then** it stores the shell, the numbers page and the 911 block in the current language, so that once installed the numbers are always available offline
 
-### Story S02.13 — Resident switches to basic mode and uses the CVH with a screen reader
+**Given** a first visit with no connection
+**When** the page cannot load at all
+**Then** the browser's own offline page appears (nothing can be cached before a first visit); this is documented in the resident help text, not treated as a defect
+
+**Given** a later visit to a page never loaded, with no connection
+**When** it is opened
+**Then** the app's offline page appears with the numbers and a list of what is available offline
+
+**Given** a cache update (new service worker, new release or new feed) is interrupted by losing signal
+**When** the resident continues offline
+**Then** the previous complete version is still used; a new service worker activates only after its precache completed, and a new directory release is used only once its file for the current language is fully cached
+
+**Given** storage is unavailable, full or has been cleared by the browser
+**When** the app runs
+**Then** it keeps working online, asks once for persistent storage (`navigator.storage.persist()`), treats missing caches as a first visit, and R-34 shows "This phone may not keep pages for offline use"; `localStorage` being unavailable keeps choices for the open session only, with the same note
+
+**Given** the phone returns online
+**When** the browser fires `online` or the app becomes visible
+**Then** the feed and manifest are fetched at once, "Last updated" is refreshed, and a lower `feed_version` than the highest seen is discarded
+
+### Story S02.13 — Team measures the proposed speed budgets in CI
+
+- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Traces:** NFR-N3 (proposed engineering budget, not a PRD number) · **Depends on:** S02.12 · **Branch:** `e02-s13-speed-budgets`
+
+As a developer,
+I want the resident app's speed measured the same way on every change,
+So that older phones and slow connections stay usable as later epics add features.
+
+**Acceptance Criteria:**
+
+**Given** `perf-budget.json` with the proposed budgets below, each marked "proposed engineering budget"
+**When** Lighthouse CI runs on the preview build for `/en/`, `/ur/` and the directory page, with a cold cache, Lighthouse's mobile preset (emulated mid-range phone, 4x CPU slowdown) and its default "Slow 4G" throttling (150 ms round trip, 1.6 Mbps down), taking the median of 3 runs
+**Then** it records Largest Contentful Paint, Total Blocking Time and the JavaScript transferred
+
+**Given** the proposed budgets
+**When** a run exceeds one
+**Then** CI fails, naming the page, the measure and the value. Budgets: "usable" means Largest Contentful Paint at most 4 s and Total Blocking Time at most 600 ms; JavaScript transferred for the first load at most 200 KB, measured compressed as sent over the network (gzip or brotli), counting every script the page loads
+
+**Given** the team decides a budget should change
+**When** `perf-budget.json` is edited
+**Then** the change includes a written reason, and the budgets stay labelled as engineering budgets, separate from PRD requirements
+
+### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s13-basic-mode-a11y`
+- **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s14-basic-mode-a11y`
 
 As a resident who finds the full layout hard to use,
 I want a simpler layout and full screen-reader support,
@@ -1129,13 +1208,13 @@ So that I can use the CVH in the way that works for me.
 **When** measured
 **Then** touch targets are at least 44 by 44 px and text contrast meets AA (checked in CI on the token pairs used)
 
-### Story S02.14 — Hub counts installs and directory use without tracking anyone
+### Story S02.15 — Hub counts install events and directory use without tracking anyone
 
 - **Size:** S · **Estimate:** 4 h · **Actual:** —
-- **Traces:** FR-M1 (installs), FR-M3 (browsing), AR-26 · **Depends on:** S02.12 · **Branch:** `e02-s14-usage-counts`
+- **Traces:** FR-M1 (installs), FR-M3 (browsing), AR-26 · **Depends on:** S02.12 · **Branch:** `e02-s15-usage-counts`
 
 As a Hub Director,
-I want daily counts of installs and directory and map use by language,
+I want daily counts of install events and directory and map use by language,
 So that the pilot can show use without recording who did what.
 
 **Acceptance Criteria:**
@@ -1143,14 +1222,21 @@ So that the pilot can show use without recording who did what.
 **Given** `/api/metrics` accepts `{evt, lang, nbhd?}` where `evt` is one of `install`, `directory_view`, `listing_view`, `map_view`, `guide_view`, `numbers_view`
 **When** a valid event arrives
 **Then** the daily count for `(day, evt, lang, nbhd)` in `usage_count` is incremented and nothing else is stored (no IP, no identifier, no timestamp finer than the day)
+**And** the app does not log the request's IP or user agent; the Vercel platform's own request logs are covered by the privacy notice in E07
+
+**Given** the allowed fields
+**When** an event is built on the phone
+**Then** `lang` is the page language; `nbhd` is one of the two neighbourhood ids, taken from the page being viewed (a building or neighbourhood filter), or for `install` from the resident's chosen buildings only when they are all in one neighbourhood; otherwise it is left out
+**And** no event carries a building, floor, group, device id, session id or any value that persists between events
 
 **Given** an unknown `evt` or `lang`, an extra field, or a body over 256 bytes
 **When** sent
 **Then** it returns 400 and nothing is counted
 
-**Given** the app is opened as an installed app for the first time on a phone
-**When** it starts
-**Then** one `install` event is sent and a device flag stops it from being sent again
+**Given** the browser fires `appinstalled`, or (where that event is not supported) the app is first opened in standalone display mode
+**When** that happens
+**Then** one `install` event is sent and a local flag (a true/false value, not an identifier) stops this phone sending it again
+**And** reports call these "install events observed", not unique installations: a reinstall or cleared storage counts again, and installs on browsers that report neither signal are not counted
 
 **Given** the phone is offline
 **When** an event happens
