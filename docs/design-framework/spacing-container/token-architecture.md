@@ -1,5 +1,7 @@
 # Spacing token architecture
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 How spacing, sizing and layout values reach CVH screens. Every value in this document is either copied from `design/prototype/ds/cvrh/tokens.json` (the only source of design tokens, AD-16) or is listed under [Gaps and decisions needed](#11-gaps-and-decisions-needed) with no value assigned.
 
 Where a value appears in the prototype's `design/prototype/cvh/cvh.css` but not in `tokens.json`, it is quoted as an observation, never as a token.
@@ -287,20 +289,20 @@ These are the testable rules behind this document. They run in CI on `src/`.
 | Token snapshot | A generated value differs from `tokens.json` | S02.01 (already in its AC) |
 | Semantic purity | A declaration in `semantic.css` or a component token has a value that is not a single `var(--…)` | S02.01 |
 | No primitives outside layer 2 | `var(--space-` appears in any file except `semantic.css` | S02.01 |
-| Spacing from tokens only | A `padding*`, `margin*`, `gap`, `row-gap`, `column-gap`, `inset*` declaration in `src/**/*.css` has a literal length other than `0`; or a Tailwind class uses an arbitrary spacing value (`p-[13px]`, `gap-[1rem]`); or an inline `style` sets spacing | S02.01 |
+| Spacing from tokens only (proportionate) | A `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` value in `src/` is a literal length that is not `0` and not an approved spacing token; or a Tailwind spacing class uses an arbitrary value (`p-[13px]`, `gap-[1rem]`). It does **not** check border widths, icon and image sizes, positioning (`top`, `inset*`, `translate`) or line height. A reviewed exception is allowed with a `/* spacing-exception: reason */` comment, which the check lists in its report | Proposed: new early E01 story (change proposal) |
 | Logical CSS only | Any of `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`, `border-left*`, `border-right*`, `float: left/right`, `text-align: left/right`, a 3- or 4-value `margin`/`padding` shorthand, or a physical Tailwind utility (section 6) appears in `src/` | S02.02 (already named; widened here) |
-| No negative margins | A negative `margin*` or a `-m*` Tailwind utility appears in `src/` | S02.01 |
+| No negative margins without a reason | A negative `margin*` or a `-m*` Tailwind utility appears in `src/` without a `spacing-exception` comment | Proposed: new early E01 story |
 | One value per theme | A `--space-*` or `--radius-*` appears inside a `[data-theme]` block | S02.01 |
 | No undeclared custom property | A `var(--x)` in `src/` has no matching `--x:` declaration in the generated, semantic or component token files (the check the source framework's `audit-css-custom-properties.js` runs) | S02.01 |
 | Touch targets | An interactive element's box is smaller than `--tap` (44 px; 56 px in basic mode) at 320 px | S02.14 (already named for 44 px; basic size added) |
 
-## 11. Gaps and decisions needed
+## 11. Gaps and decisions needed (all unresolved)
 
 These need a decision by the design owner (the person who maintains `tokens.json`) before or during S02.01. No value is proposed here; where the prototype shows a value, it is cited so the decision is quick.
 
 | # | Gap | Evidence | Recommendation |
 | --- | --- | --- | --- |
-| G1 | The screen spacing scale used by the prototype (2, 6, 8, 12, 14, 16, 20 px and others) is not in `tokens.json`; `tokens.json` has 4, 10, 17, 24, 29, 48, 67 | Section 2.4 counts | Add a small "screens" spacing set to `tokens.json` with the values the prototype relies on most. UX-DR1 asks the app to match the prototype "exactly", which cannot be done from the current 7-step scale. The other option, moving the prototype onto the 7-step scale, changes how every screen looks and should be a deliberate design change. Either way, decide once, in `tokens.json`. |
+| G1 | **Unresolved.** The screen spacing scale used by the prototype (2, 6, 8, 12, 14, 16, 20 px and others) is not in `tokens.json`; `tokens.json` has 4, 10, 17, 24, 29, 48, 67 | Section 2.4 counts | Reconcile `tokens.json` with the approved prototype: replace its spacing steps with the values the prototype actually uses, so the app still has exactly one spacing scale (no second "screens" set). Proposed values and the design owner's decision are in the change proposal. |
 | G2 | Resident gutter | `--gutter: 16px` in `cvh.css` | Add as a named screen token in `tokens.json`. |
 | G3 | Touch target sizes and target spacing | `--tap: 44px`, basic `56px`, "8px between targets" in `Lib_Foundations` | Add to `tokens.json` (44 is already required by the spine and UX-DR19; having it in the token file gives one source). |
 | G4 | No breakpoints | Hub switches at a frame width of 700 px (`O*.dc.html`); design system `bundle.css` uses `max-width: 767px` | Add one Hub breakpoint to `tokens.json`. No resident breakpoint is needed for the pilot. |

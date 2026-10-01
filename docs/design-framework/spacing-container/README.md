@@ -1,5 +1,7 @@
 # Spacing and container framework (CVH pilot)
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 This folder sets the rules for space and layout in the CVH app: which spacing tokens exist and where their values come from, the four layout primitives that arrange content, which component owns which space, and the checks that keep it that way in right-to-left languages and in basic mode.
 
 It is written before the app is scaffolded. Nothing here is code; the stories listed below build it.
@@ -58,7 +60,7 @@ The source framework's own MDX docs are not per-primitive; the per-primitive spe
 
 ## The main finding: `tokens.json` and the prototype's CSS disagree
 
-`tokens.json` has seven spacing steps (4, 10, 17, 24, 29, 48, 67 px) taken from slides and documents. The prototype's stylesheet `design/prototype/cvh/cvh.css` mostly uses other values (8, 12, 6, 14, 16, 2, 20 px …), plus a 16 px gutter and 44/56 px touch targets that are not in `tokens.json`. UX-DR1 asks for tokens "matching the prototype exactly", and AD-16 says tokens come only from `tokens.json`. Both cannot hold until the design owner adds the missing values to `tokens.json` (or deliberately moves the prototype onto the seven steps). There are also no breakpoints and no container widths in `tokens.json`.
+`tokens.json` has seven spacing steps (4, 10, 17, 24, 29, 48, 67 px) taken from slides and documents. The prototype's stylesheet `design/prototype/cvh/cvh.css` mostly uses other values (8, 12, 6, 14, 16, 2, 20 px …), plus a 16 px gutter and 44/56 px touch targets that are not in `tokens.json`. UX-DR1 asks for tokens "matching the prototype exactly", and AD-16 says tokens come only from `tokens.json`. Both cannot hold until `tokens.json` is reconciled with the approved prototype. The change proposal recommends doing that by replacing the seven steps with the values the prototype actually uses, so there is still only one spacing scale; the design owner decides. There are also no breakpoints and no container widths in `tokens.json`.
 
 The full list (G1–G10), with the evidence for each, is in `token-architecture.md` section 11. Until a gap is closed, the related token is reserved with no value, and no code may hard-code the prototype's number.
 
@@ -94,95 +96,9 @@ The full list (G1–G10), with the evidence for each, is in `token-architecture.
 
 ## Open plan items found while mapping
 
-- **O-07** (ambassador post review) is listed in UX-DR16 but no story's Traces names it. The plan should state which E08 story builds it.
-- **S01.09 runs before S02.01** in the current plan (it depends only on S01.07), so the Hub shell could be built before tokens and primitives exist. See the proposed dependency below.
+- **O-07** (ambassador post review) is listed in UX-DR16 but no story's Traces names it. Checked against the approval stories, it is already built by S04.07, S04.10, S05.02 and S08.03; it needs an explicit trace, not a new story. See the change proposal.
+- **Token generation comes too late for the Hub shell.** S01.09 builds the Hub shell in E01, but tokens are generated in S02.01 in E02. The change proposal moves shared token generation into an early E01 foundation story instead of making S01.09 depend on S02.01, which would reverse the epic order.
 
-## Proposed plan changes (not applied)
+## Proposed plan changes
 
-These are recommendations for `docs/planning/pilot/epics.md`. They have **not** been made; the epics, spine and prototype are unchanged.
-
-### Before S02.01 (launch-readiness item, no development time)
-
-The design owner closes gaps G1–G5 in `tokens.json` (screen spacing values, resident gutter, touch target sizes and target spacing, one Hub breakpoint, Hub page and column widths) and states a decision on G6–G10. Without this, S02.01 can generate only the seven existing steps and the primitives cannot use the tokens they need. Estimate: design owner time only, about 2 hours, outside the development estimate.
-
-### S02.01 — Developer generates the look and every interface string from the prototype
-
-Add these acceptance criteria:
-
-> **Given** `tokens.json`
-> **When** `npm run gen:tokens` runs
-> **Then** spacing and radius are written once on `:root`, colour is written for light on `:root` and for navy under `[data-theme="dark"]`, and a test fails if any `--space-*` or `--radius-*` property appears inside a `[data-theme]` block
->
-> **Given** `src/ui/tokens/semantic.css` and every component token file
-> **When** CI runs
-> **Then** every declaration's value is a single `var()` of a declared token, `var(--space-` appears in no file other than `semantic.css`, and every `var(--x)` in `src/` has a matching declaration
->
-> **Given** the Tailwind theme in `src/ui/tokens/theme.css`
-> **When** a fixture using `p-4`, `gap-2`, `md:flex` and `p-[13px]` is built
-> **Then** none of them produces CSS, and `gap-icon`, `p-card` and `ps-*`/`pe-*` utilities compile to `var()` of semantic tokens
->
-> **Given** any CSS, TSX or inline style in `src/`
-> **When** the spacing lint runs
-> **Then** it fails on a literal length other than `0` in `padding*`, `margin*`, `gap`, `row-gap`, `column-gap` or `inset*`, on a negative margin, on an arbitrary Tailwind spacing value, and on spacing classes passed to a layout primitive
->
-> **Given** the layout primitives `Screen`, `Stack`, `Inline`, `Grid` and the `tap` utility in `src/ui/layout/`
-> **When** their unit, type and Playwright tests run
-> **Then** the acceptance criteria in `docs/design-framework/spacing-container/components/*.md` pass
->
-> **Given** a token that a primitive needs and that `tokens.json` does not yet define
-> **When** `npm run gen:tokens` runs
-> **Then** the generator writes no default value, fails, and names the missing token and its gap number
-
-Estimate impact: **+3.5 h** (6 h → 9.5 h). If that is too large for an M story, split the primitives, the `tap` rule and the lints into a new story "S02.01a — Developer has layout primitives and spacing checks" (S, 3.5 h, depends on S02.01), and make S01.09 and S02.02 depend on it.
-
-### S01.09 — Staff use a phone-first Hub
-
-Add **Depends on:** S02.01 (or S02.01a), so the shell is built on generated tokens and primitives.
-
-Add these acceptance criteria:
-
-> **Given** the Hub shell
-> **When** rendered at 390 px and 1280 px
-> **Then** screen content sits in `Screen surface="staff"`, the switch between the two layouts uses only the Hub breakpoint token, and the shell's CSS contains no other breakpoint, no literal width and no `[dir]` selector
->
-> **Given** the top bar at 390 px
-> **When** the signed-in person, role and sign-out wrap
-> **Then** they stay reachable without horizontal scrolling, and the active side-nav item is marked with `border-inline-start` (not an inset shadow)
-
-Estimate impact: **+0.5 h** (4 h → 4.5 h).
-
-### S02.02 — Resident sees the CVH in their language, right to left where needed
-
-Replace the lint clause "(a lint rule fails on `left`, `right`, `margin-left` and similar physical properties in `src/`)" with the full list, and add mirroring and theme checks:
-
-> **Given** `src/`
-> **When** the logical-CSS lint runs
-> **Then** it fails on `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`, `border-left*`, `border-right*`, `float: left|right`, `text-align: left|right`, 3- and 4-value `margin`/`padding` shorthands, the Tailwind utilities `pl-* pr-* ml-* mr-* left-* right-* border-l border-r rounded-l-* rounded-r-* space-x-*`, and any `[dir=…]` selector other than the icon-mirroring rule
->
-> **Given** the resident shell and one screen in `en` and `ur`
-> **When** rendered at 320, 390 and 768 px
-> **Then** the header, `Screen` and nav insets equal `--gutter-resident`, and each element's left edge in `ur` equals the viewport width minus its right edge in `en` (±1 px)
->
-> **Given** the light and navy themes
-> **When** the resident shell is rendered at 390 px in each
-> **Then** every element's box is identical; only colours differ
-
-Estimate impact: **+1 h** (7 h → 8 h).
-
-### S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
-
-Add these acceptance criteria:
-
-> **Given** basic mode saved in device choices
-> **When** any resident page loads
-> **Then** `<html data-basic="true">` is set before first paint, every grid with `collapseInBasic` shows one column, and the computed gaps and insets equal those in normal mode
->
-> **Given** basic mode on, at 320 px, in `en`, `ur` and `ta`
-> **When** the touch-target test runs
-> **Then** every interactive element is at least `--tap-basic` in both dimensions, and adjacent targets are at least `--gap-target` apart
-
-Estimate impact: **+1 h** (6 h → 7 h).
-
-### Total
-
-**+6 h** of development (E01 +0.5 h; E02 +5.5 h, epic estimate 87 h → 92.5 h), plus about 2 h of design-owner time to close the `tokens.json` gaps before S02.01. The checks added here replace manual review of spacing and RTL on every later screen story, which is where the time is recovered.
+The plan changes are no longer listed here. They are in the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md), which is **proposed, not applied**. Its development estimate (+6 h) is also proposed, pending review.

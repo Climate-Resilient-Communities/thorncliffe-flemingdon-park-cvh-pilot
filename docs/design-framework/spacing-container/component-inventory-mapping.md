@@ -1,5 +1,7 @@
 # Component inventory mapping
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 Every prototype screen and component in pilot scope, mapped to the layout primitives and spacing tokens it should use, and the story that builds it. Modelled on the source framework's `docs/component-inventory/component-inventory-mapping.md` (one row per inventory item, a resolution per row, a note where a decision was taken), adapted to CVH: the ids come from `design/prototype/cvh/inventory.js` and the `C_*` / `Lib_*` files; scope and stories come from `docs/planning/pilot/epics.md`.
 
 How to read the table:

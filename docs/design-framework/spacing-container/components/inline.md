@@ -1,5 +1,7 @@
 # Inline
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 **Status:** Pilot · **File:** `src/ui/layout/inline.tsx` (with `Inline.Grow`) · **Built in:** S02.01
 
 ## Purpose

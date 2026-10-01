@@ -1,5 +1,7 @@
 # Naming conventions
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 Naming rules for spacing tokens, layout primitives, their props and files. Adapted from the source framework's `_bmad/wds/data/design-system/naming-conventions.md` and `dilawriweb/packages/ui/THEMING.md`, and reconciled with the CVH spine's "Naming" convention (modules lowercase nouns, `src/ui/` holds tokens and components, generated catalogs and tokens are never edited by hand).
 
 Every place where CVH differs from the source is marked **Differs** with the reason.

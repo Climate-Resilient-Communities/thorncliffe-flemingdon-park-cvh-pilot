@@ -1,5 +1,7 @@
 # Touch target (`tap` rule)
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 **Status:** Pilot · **Files:** `src/ui/tokens/semantic.css` (tokens), `src/ui/tokens/theme.css` (`@utility tap`), `e2e/touch-targets.spec.ts` (check) · **Built in:** S02.01 (rule), checked in S02.14
 
 ## Purpose
@@ -63,9 +65,9 @@ Uses only `min-block-size` and `min-inline-size`. No direction dependence.
 | Space adjacent targets with `gap="target"` | Place two 44 px targets edge to edge in a wrapping row |
 | Make "Report", "Show English" and similar controls full targets (the prototype makes them 44 px high) | Leave a 20 px-high text button inside a sentence |
 
-## Decision needed
+## Decision needed (proposed: allow the inline-link exception)
 
-- **Links inside running text.** The spine and S02.14 say "every interactive element" with no exception; WCAG allows an exception for inline links. The prototype avoids the question: links that matter are separate controls. Recommendation: keep the strict rule, and keep important links as separate controls; exclude only links inside guide body text, by marking the container `data-tap-exempt="inline-text"`, if the design owner agrees. Until then, there is no exemption.
+- **Links inside running text.** The change proposal recommends allowing an exception for links inside a sentence or block of text (for example in guide body text), marked by `data-tap-exempt="inline-text"` on the text container, while every other interactive element keeps the 44 px minimum (56 px in basic mode). This matches the inline exception in WCAG's target-size criteria (2.5.5 in WCAG 2.1, 2.5.8 in WCAG 2.2). It still has to be checked against the pilot's own accessibility requirements: NFR-N2 targets WCAG 2.1 AA, and UX-DR19 says "44 px touch targets" without listing exceptions. Until the product owner confirms that UX-DR19 means controls rather than inline text, the strict rule applies.
 
 ## Acceptance criteria
 

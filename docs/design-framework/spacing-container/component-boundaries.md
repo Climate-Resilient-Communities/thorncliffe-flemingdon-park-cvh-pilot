@@ -1,5 +1,7 @@
 # Component boundaries: who owns spacing
 
+> **Status: draft, not approved.** This framework is a proposal. It is not yet an implementation requirement. Token values marked **unresolved** have no approved value, and nothing may hard-code them. The plan changes it implies are in the separate change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) and are **proposed only**; `epics.md` and the spine are unchanged.
+
 This document says which part of the UI owns each kind of space, so that two components never both add space between the same two things, and RTL and basic mode work without per-screen fixes.
 
 It applies the source framework's "Container + Content" pattern (`_bmad/wds/data/design-system/component-boundaries.md`: "Container provides structure, content is flexible"; "Card is a container, button is an action. Different purposes.") and its "Patterns organized by spacing" idea (`design-process/D-Design-System/00-design-system.md`: spacing is relational, a decision about two object types). In CVH, the relation between two siblings belongs to their parent, never to either sibling.
