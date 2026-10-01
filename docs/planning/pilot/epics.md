@@ -3075,3 +3075,288 @@ So that the pilot can report reach without identifying anyone.
 **Given** cost per alert
 **When** reported
 **Then** it shows SMS cost by language (actual where reported, otherwise labelled estimate) and the alert's share of Cohere usage, drills apart
+
+## E08 — Ambassadors post building updates and check on neighbours
+
+Ambassadors see their buildings' alerts and post updates and incidents for their floors; lower-risk posts appear on the web at once as "Not yet verified" while every text waits for a second person. Subscribed residents can ask to be checked on during heat and outages, with honest consent and coverage; during those alerts the covering ambassadors run a round that works without signal and keeps nothing on the phone, the Hub hears at once about anyone not reached or needing help, and only counts remain when the alert closes. Posting stories come first so posting can ship even if check-ins slip.
+
+**Epic estimate:** 52 h across 9 stories (3 S, 6 M) · **Epic actual:** —
+
+**Depends on earlier epics:** S01.09 (Hub shell), S01.12 (policy), S01.14 (assignments, `coversFloor`, coverage view), S04.03 to S04.08 (lifecycle, audience, compose and submit, approval, feed), S05.02 and S05.03 (supersession, withdrawal, closing), S05.06 (status `verified`), S06.01 to S06.07 (outbox, sendability, on-call roster), S07.02, S07.03, S07.06 (sign-up and edit link), S07.04 and S07.05 (`withdrawRequest` and `deleteForSubscriber` ports). Each story creates only the tables it needs and names the stories it depends on.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Ambassador types | Types an Ambassador may post: power, water or plumbing, elevator, fire alarm or evacuation, flood or leak, and "Other" (which requires a line of text and puts 911 first). Heat, smoke and winter storm are neighbourhood alerts for Coordinators and Admins only. |
+| D-1 post | An entry for which `alerting/domain/d1.ts#isD1Eligible` is true: author role Ambassador, not a drill, kind `ack`, `update` or `correction`, and every type has `disruption_type.direct = true` (power, water, elevator, flood). It is web-published at submit as "Not yet verified"; its texts wait for approval. Fire alarm or evacuation and "Other" posts appear nowhere until approved. |
+| Unsent post | A post the ambassador pressed Submit on without signal. It is held only in the open page's memory with its submit idempotency key and submitted when signal returns while the page is open; it is never written to the phone's storage. Closing the page loses it, and the page says so. (This replaces the prototype's "Saved on your phone" wording.) |
+| Check-in request | `subscriber.checkin_method` (`call` or `text`) on one saved place marked "where I live", which must have a floor. Turning it on shows, in the resident's language, that an ambassador on her floor will see her phone number and floor, that it is not an emergency service and when to call 911, and records `consent_version`. |
+| Covered request | A request whose floor passes `identity.coversFloor(rsn, floor)` at the time it is made. A request is never saved for an uncovered floor. |
+| Round types | Disruption types with `disruption_type.checkin = true` (pilot: heat and power), editable by an Admin at `aal2` (audited). |
+| Round | One per non-drill thread of a round type: `checkin` rows `(alert_id, subscriber_id, rsn, floor, status)`, unique per thread and subscriber, created by `checkins.ensureRound` when a non-drill `ack`, `update` or `correction` in that open thread is approved. Requesters who ask after the latest approval join at the next approval. D-1 publication never creates a round. `checkin` never stores a phone number. |
+| Marks | `done`, `not_reached`, `needs_help`, each with a client-generated mark id so a resent mark is applied once. |
+| On-duty Hub number | An `ops.oncall_roster` entry with role `on_duty`. Escalations go to it; if none is set, they go to the on-call Admins and the approval view of a round-type alert warns about it. |
+| Escalation | A Hub list item for a `not_reached` or `needs_help` mark, plus a `transactional` text to the on-duty number with a staff link; never the resident's number in the text. |
+
+### Story S08.01 — Ambassadors see their buildings' alerts and their own posts
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-E1, UX-DR17 (A-01) · **Depends on:** S04.08, S01.14 · **Branch:** `e08-s01-ambassador-home`
+
+As a building ambassador,
+I want one phone screen with what is happening in my buildings,
+So that I know what residents are seeing and what I have posted.
+
+**Acceptance Criteria:**
+
+**Given** an active Ambassador signed in (`aal1`, 30-minute idle limit)
+**When** they open their home (A-01) at 390 px
+**Then** they see open alerts covering their assigned buildings, their own posts with each one's state, and, during an open round for their floors, a "Your round" entry with the count of requests
+
+**Given** an Ambassador whose assignment is removed or who is suspended
+**When** their next request arrives
+**Then** suspension returns 401 (S01.08); a removed assignment removes that building from the home at once, and their policy checks use current assignments
+
+**Given** the home and every ambassador screen
+**When** inspected
+**Then** responses are `no-store`, nothing is cached by the service worker, and every action endpoint is in the S01.12 permission test list
+
+### Story S08.02 — An ambassador posts an update or incident for their floors
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-E2, FR-A1, FR-A15, UX-DR17 (A-02) · **Depends on:** S08.01, S04.05 · **Branch:** `e08-s02-ambassador-post`
+
+As a building ambassador,
+I want to post what is happening on my floors in a few taps,
+So that the Hub and my neighbours know quickly.
+
+**Acceptance Criteria:**
+
+**Given** "Post an update" (A-02)
+**When** the ambassador chooses a building they are assigned to, floors as a range, a list or the whole building, one or more ambassador types, a phase, a valid-until and English text
+**Then** the attribution "Building ambassador, {building}" is shown before submitting, never their name
+**And** "Other" requires a line of text and the 911 line is placed first; heat, smoke and winter storm are not offered
+
+**Given** the post is submitted
+**When** the server checks it
+**Then** the policy is checked against the ambassador's current assignments at submit and again at approval; a building they are no longer assigned to is refused at either point with the reason (direct-request tests)
+**And** submit follows E04 exactly: idempotent submit, translation, rendering, frozen content, second-person approval for any text
+
+**Given** no signal when Submit is pressed
+**When** the page stays open
+**Then** the post is an unsent post: the page shows "Not sent yet. Keep this page open; it sends when you have signal", and sends it with the same idempotency key when signal returns; nothing is written to the phone's storage (test asserts no storage API is used)
+
+**Given** a drill thread
+**When** an ambassador posts in it (practice)
+**Then** the exercise marker is shown, the post is never web-published to residents, and it goes to the Hub only
+
+### Story S08.03 — Lower-risk posts appear on the web at once as "Not yet verified"
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A15 (D-1), FR-A5, AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
+
+As a resident,
+I want to see an ambassador's report about my building right away, clearly marked as unchecked,
+So that I hear about a power or water problem without waiting, and know how much to trust it.
+
+**Acceptance Criteria:**
+
+**Given** `isD1Eligible` and its table-driven tests (each type, mixed types, null `direct`, drill, each kind, each author role)
+**When** a D-1 post is submitted
+**Then** `web_published_at` is set at submit, `feed_version` is incremented, and residents see it with "Not yet verified" in the same words and place as every other surface; its texts are created only by approval
+
+**Given** a fire alarm or evacuation post, or an "Other" post
+**When** submitted
+**Then** it appears nowhere to residents until approved (feed, alert detail, share link, status all tested)
+
+**Given** a D-1 post is approved
+**When** the approval commits
+**Then** it shows "Verified by the Hub" everywhere, its texts are created, and any status resting on it becomes `verified: true`
+
+**Given** a web-published D-1 post is discarded
+**When** the discard commits
+**Then** a system `withdrawal` supersedes it in the same transaction and residents see "Withdrawn" in its place; it never returns to `draft` (trigger test)
+
+**Given** a correction of a pending, web-published D-1 post
+**When** the correction is approved
+**Then** the original becomes `superseded` and the correction shows above it; a superseded pending post stays visible until its correction is published
+
+**Given** a D-1 post in a thread of a round type
+**When** it is published
+**Then** no round is created (only approvals create rounds)
+
+### Story S08.04 — Ambassadors follow their post and mark incidents resolved
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-E2 (resolve), FR-A15, UX-DR17 (A-03) · **Depends on:** S08.03 · **Branch:** `e08-s04-post-status-resolve`
+
+As a building ambassador,
+I want to see what happened to my post and close it when the problem is fixed,
+So that residents are not left with an old problem on screen.
+
+**Acceptance Criteria:**
+
+**Given** the post status screen (A-03)
+**When** opened
+**Then** it shows one of: "Live. Not yet verified", "Waiting for the Hub", "Approved", "Returned to you" with the note, "Withdrawn", plus, once approved, the texts' progress (waiting, in flight, delivered, failed)
+
+**Given** their own pending entry
+**When** the ambassador corrects or withdraws it
+**Then** it follows E05's rules; they cannot correct or withdraw anyone else's entry (direct-request tests)
+
+**Given** an open thread in an assigned building
+**When** the ambassador chooses "Mark resolved" and writes the final message
+**Then** a `final` is submitted for second-person approval (E05), never closing the thread on its own
+
+### Story S08.05 — A subscribed resident asks for a check-in, honestly
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-C1, FR-C4, FR-C6, NFR-N5 (consent), AR-16, UX-DR14 (R-33) · **Depends on:** S07.06, S01.14 · **Branch:** `e08-s05-checkin-request`
+
+As a resident who lives alone,
+I want to ask an ambassador on my floor to check on me in heat waves and outages,
+So that someone notices if I need help.
+
+**Acceptance Criteria:**
+
+**Given** "Ask for a check-in" (R-33)
+**When** opened
+**Then** it explains in the resident's language what a check-in is and is not, that it is not an emergency service, when to call 911 (the 911 block), and that an ambassador on her floor will see her phone number and floor; it leads to the sign-up form (S07.02, S07.03) for non-subscribers or to the edit link (S07.06) for subscribers
+
+**Given** the sign-up form, staff-assisted sign-up or the edit page
+**When** the resident turns on a check-in request
+**Then** she must choose one saved place as "where I live" with a floor, and call or text, and confirm the consent wording; `consent_version` is recorded
+
+**Given** the request is submitted
+**When** the server checks `coversFloor` for that floor
+**Then** a covered floor saves the request; an uncovered floor is told at once "No ambassador covers your floor yet. Call the Hub at {number}" and the request is not saved (the rest of the sign-up or change still saves)
+
+**Given** reply 3, or "Withdraw my check-in request" on the edit page
+**When** handled
+**Then** `checkins.withdrawRequest` (implementing E07's port) calls `removeRequester`, which tallies any open rows as `withdrawn` and deletes them, then clears `checkin_method`, in one transaction, and a confirmation is sent
+
+**Given** a subscriber is deleted (STOP, double 0, edit page)
+**When** E07's deletion runs
+**Then** `checkins.deleteForSubscriber` (implementing E07's port) tallies and deletes the subscriber's check-in rows in the same transaction, and E07's deletion tests now run against the real port
+
+**Given** a covered request whose floor later loses its ambassador
+**When** the Admin opens the coverage view
+**Then** it shows the number of requests on uncovered floors per building (count only), so the Hub can assign someone or contact them
+
+### Story S08.06 — Heat and power alerts start a check-in round
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-C7, FR-E1, AR-16, AR-9 (lock order), AR-10 (no drill check-ins) · **Depends on:** S08.05, S06.05 · **Branch:** `e08-s06-round-start`
+
+As a Hub Coordinator,
+I want the round to start automatically when we approve a heat or power alert,
+So that ambassadors can start checking on people without anyone forgetting a step.
+
+**Acceptance Criteria:**
+
+**Given** an approved non-drill `ack`, `update` or `correction` in an open thread with a round type
+**When** the approval transaction runs
+**Then** it calls `checkins.ensureRound(alertId, requesters)` with subscribers whose "where I live" place matches the entry's audience by `matches` (a neighbourhood audience covers every building), on covered floors, inserting rows with `ON CONFLICT DO NOTHING` so each requester has one row per thread
+
+**Given** a later approval in the same thread
+**When** `ensureRound` runs again
+**Then** requesters who asked since are added, existing rows and marks are untouched, and requesters whose place no longer matches keep their existing row until close
+
+**Given** a drill thread
+**When** anything tries to insert a `checkin` row for it
+**Then** the trigger refuses it (direct SQL test)
+
+**Given** a requester withdraws or is deleted while an approval is creating the round
+**When** both run at the same time
+**Then** the subscriber row lock serialises them in lock order: either the row is created and then removed and tallied `withdrawn`, or it is never created; never a row left for a withdrawn requester (concurrency test)
+
+**Given** an Admin at `aal2` changes which types are round types
+**When** saved
+**Then** it is audited and applies to the next approval only
+
+### Story S08.07 — The round works without signal and leaves nothing on the phone
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-C3, FR-C7, AR-3 (round page exception), AR-16, UX-DR17 (A-04) · **Depends on:** S08.06 · **Branch:** `e08-s07-round-page`
+
+As a building ambassador,
+I want my round on one page I can use with one hand, even in a stairwell with no signal,
+So that I can check on each person quickly and nothing about them stays on my phone.
+
+**Acceptance Criteria:**
+
+**Given** "My round" (A-04)
+**When** an Ambassador opens it during an open round
+**Then** it lists only requests on floors they cover in that thread's buildings, each with phone number, floor and method (call or text) as `tel:` or `sms:` links, never a name or reason; the contacts are composed in the app layer from `subscriptions` and sent `no-store`
+**And** Ambassadors not covering a floor, Coordinators and Directors get counts only; Admins can see every request (direct-request tests)
+
+**Given** the page has loaded
+**When** inspected by an automated test
+**Then** the data is held only in page memory: nothing in the service worker cache, `localStorage`, `sessionStorage`, IndexedDB, the Cache API or cookies
+
+**Given** one tap on done, not reached or needs help
+**When** there is signal
+**Then** the mark is sent at once with its mark id and the row updates; a repeated mark id changes nothing
+
+**Given** marks made without signal
+**When** signal returns while the page is open
+**Then** the queued marks are sent in order with their mark ids; the page shows how many are waiting, and warns "Keep this page open until marks are sent"
+
+**Given** the page is closed, or in the background for 10 minutes
+**When** that happens
+**Then** the page clears its data (and any unsent marks, with a warning shown before closing when marks are waiting)
+
+**Given** a mark for a row deleted because the thread closed or the resident withdrew
+**When** it arrives
+**Then** `done` is answered "This request has ended"; `not_reached` and `needs_help` still create an escalation with the building and floor only (S08.08), and the ambassador is told "The Hub has been told; call the Hub if you can"
+
+### Story S08.08 — The Hub hears at once about anyone not reached or needing help
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-C7 (escalation), AR-16, NFR-N5 · **Depends on:** S08.07, S06.07 · **Branch:** `e08-s08-escalations`
+
+As the on-duty Hub staff member,
+I want to know immediately when an ambassador could not reach someone or found someone needing help,
+So that the Hub follows up before it is too late.
+
+**Acceptance Criteria:**
+
+**Given** a `not_reached` or `needs_help` mark
+**When** it is recorded
+**Then** in the same transaction an escalation appears on the Hub list (O-17) and a `transactional` text (purpose `escalation`) is queued to the on-duty number: "{status}: {building}, floor {n}. Open: {staff link}", never the resident's number; with no on-duty number, it goes to the on-call Admins
+
+**Given** an Admin opens the escalation
+**When** they view it
+**Then** they see the resident's number, floor and method (Admins only), and can mark it "handled" with a note; handling is audited without the number
+
+**Given** a thread closes
+**When** `closeAlert` runs
+**Then** `pending` and `done` rows are tallied and deleted in the same transaction, while `not_reached` and `needs_help` rows stay until an Admin marks them handled or 24 hours after close, when the purge job tallies and deletes them
+
+**Given** an escalation from a mark that arrived after its row was deleted
+**When** shown
+**Then** it has the building, floor and ambassador only, and asks the Hub to call the ambassador
+
+### Story S08.09 — The Hub sees round counts by building and floor
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-E3, FR-E5, FR-M4 (data apart from drills) · **Depends on:** S08.08 · **Branch:** `e08-s09-round-counts`
+
+As a Hub Coordinator,
+I want counts of requests and outcomes per building and floor,
+So that we can see how the round is going and report on it afterwards without keeping anyone's details.
+
+**Acceptance Criteria:**
+
+**Given** `checkin_tally` keyed `(alert_id, rsn, floor, status)` with statuses `requested`, `done`, `not_reached`, `needs_help`, `withdrawn`, `unmarked`
+**When** marks, withdrawals and closing happen
+**Then** the tally is updated in the same transactions, and after close the counts still add up to the requests that were in the round (test)
+
+**Given** the round progress view (O-17)
+**When** a Coordinator, Director (read-only) or Admin opens it
+**Then** it shows counts per building and floor for each status, updated every 15 seconds, and never shows a phone number
+
+**Given** the pilot measures
+**When** computed
+**Then** round counts are available per thread, building and floor after the thread closes, with no identifiers
