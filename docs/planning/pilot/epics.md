@@ -2337,13 +2337,13 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 | Term | Meaning |
 | --- | --- |
-| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`, `inbound_reply`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), an opaque random `callback_ref`, the provider id once known, attempts, state and timestamps. It never stores a phone number. |
+| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `pending_signup`, `roster`, `staff`, `oncall`, `inbound_reply`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), an opaque random `callback_ref`, the provider id once known, attempts, state and timestamps. It never stores a phone number. |
 | Unresolved states | `queued`, `claimed`, `submitted`, `unknown`. `unknown` means the outcome is unclear; it can still be resolved by a late callback. |
 | Terminal states | `delivered`, `undelivered`, `failed`, `cancelled`, `skipped`, `skipped_env`. A terminal state never changes. A resend (E09) creates a new row. |
 | Closing entry | The entry whose approval closed the thread: its `final`, or the withdrawal that left no substantive entry (E05). Its deliveries stay sendable after the thread closes; every other entry's do not. |
 | Sendable (every kind) | The row is still `claimed` by this worker under a valid sender lease, its recipient still exists, its `send_by` time (if any) has not passed, and the pause does not apply to it. The pause applies to `alert`, `campaign` and resident `transactional` texts; on-call texts to `oncall` recipients are still sent during a pause so Admins hear about problems. |
 | Sendable (`alert`) | Also: its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; for `ack`, `update` and `correction`, the entry's valid-until has not passed (finals and withdrawals have no valid-until check); drill entries only to `roster` recipients. |
-| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation, welcome, menu and prompt replies, edit links, and `signup_info` to `inbound_reply` recipients only; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to an active subscriber, on-call texts only to a number still on the on-call roster, staff texts only to an active staff account, `signup_info` only while its `inbound_reply` row exists and before its `expires_at`). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation, and the `inbound_reply` row's `expires_at`, 30 minutes, for `signup_info`). |
+| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation (to `pending_signup` recipients only), welcome, menu and prompt replies, edit links, `signup_info` to `inbound_reply` recipients only, and `access_code` (E09) to a receiving subscriber, a pending sign-up or an `inbound_reply` recipient; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to a receiving subscriber (`active`, `reconsent_pending` before the campaign deadline, or `retained`; E09), on-call texts only to a number still on the on-call roster, staff texts only to an active staff account, `signup_info` only while its `inbound_reply` row exists and before its `expires_at`). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation, and the `inbound_reply` row's `expires_at`, 30 minutes, for `signup_info`). |
 | `inbound_reply` recipient | A short-lived row in `subscriptions` holding a number with no subscription and its `expires_at` (created + 30 minutes). At the hand-off point it is locked `FOR UPDATE` (step 4 of the lock order); the dispatcher reads the number into memory only, deletes the row and commits `handed_off_at` in that same transaction, then calls the provider. If the worker stops after that commit and before the call, the number is gone, the row becomes `unknown` by lease expiry, and nothing is sent. Deleting a number's data (STOP, E07) deletes its `inbound_reply` rows too; the purge job deletes expired rows. |
 | Sendable (`campaign`) | Also: the campaign was started by an Admin at `aal2` and is not cancelled, and the recipient is a subscriber still in the campaign's target state (D-7: `reconsent_pending`). Campaign texts are created in E09. |
 | Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued` and due, and committing `claimed` with its worker id and `claimed_at` in its own short transaction. |
@@ -2716,7 +2716,7 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 | Reply to an unknown number | A number with no subscription or pending sign-up has no record to resolve, so a reply to it (the sign-up link, purpose `signup_info`) uses a short-lived `inbound_reply` row holding the number, with recipient kind `inbound_reply` and the sendability, locking and deletion rules in E06's definitions: the row is deleted in the hand-off transaction, or by the purge job after its 30-minute `expires_at`. At most one such reply per number per day (tracked by salted hash in `rate_limit`). This is the only place a number without a subscription is stored. |
 | Deletion | Hard-deletes, in one transaction, the subscriber, its places, opt-outs, prompts and edit links, any pending sign-up for that number, and its check-in records (through `checkins`' port); queued texts to it are skipped at hand-off. After deletion the app sends nothing to that number: no record could resolve it, so every warning is given before deleting. |
 | Edit link | A single-use web link valid for 30 minutes, sent by text on request, to change choices or delete the subscription. |
-| Matching subscribers | Active subscribers for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
+| Matching subscribers | Receiving subscribers (`active`, `reconsent_pending` before the campaign deadline, or `retained`; E09) for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
 | Monthly cap | An Admin-set SMS spend limit per calendar month in `America/Toronto`. Exceeding it shows the shortfall and notifies Admins; it never blocks a send. |
 | Overnight notice | The welcome text says, in the resident's language, that messages are checked by Hub staff and may not be sent overnight (accepted risk R-11). |
 
@@ -2849,7 +2849,7 @@ So that I control whether I get texts.
 **When** handled
 **Then** the app sends no reply; recovery instructions (the sign-up link) are part of Twilio's configured START and HELP replies on the Messaging Service, set and tested on the verified number before launch (launch readiness)
 
-**Given** reply 0 from an active subscriber outside a menu
+**Given** reply 0 from a receiving subscriber outside a menu
 **When** handled
 **Then** a confirmation prompt is sent while the subscriber still exists ("Reply 0 again within 10 minutes to delete your subscription. You will get no more texts."); a second 0 within 10 minutes runs the deletion and nothing more is sent; any other reply cancels it
 
@@ -2960,7 +2960,7 @@ So that every text I get matters to me.
 
 **Given** the recipient-count port used by the approval view
 **When** an entry is reviewed
-**Then** it returns the count of matching active subscribers per language
+**Then** it returns the count of matching receiving subscribers per language
 
 **Given** an entry is approved
 **When** `captureRecipients(entry, tx)` runs inside the approval transaction
@@ -3066,7 +3066,7 @@ So that the pilot can report reach without identifying anyone.
 
 **Given** the daily measures job
 **When** it runs
-**Then** it stores active subscribers, pending sign-ups, confirmations and deletions by language and neighbourhood, as counts only, with no identifiers; groups of fewer than 5 are shown as "fewer than 5"
+**Then** it stores receiving subscribers (by state), pending sign-ups, confirmations and deletions by language and neighbourhood, as counts only, with no identifiers; groups of fewer than 5 are shown as "fewer than 5"
 
 **Given** each correction, withdrawal and final sent to subscribers
 **When** measured
@@ -3402,13 +3402,13 @@ So that we can see how the round is going and report on it afterwards without ke
 
 The Hub learns about problems before residents do, can deliberately resend texts that failed, reviews reliability every week, and gives Directors a read-only view of the pilot measures for the week-8 go / no-go review. Residents can ask what the CVH holds about them, and at the end of the pilot subscribers are asked whether to stay, with everyone else deleted on schedule.
 
-**Epic estimate:** 47 h across 8 stories (2 S, 6 M) · **Epic actual:** —
+**Epic estimate:** 49 h across 8 stories (1 S, 7 M) · **Epic actual:** — (S09.03 re-estimated from S 4 h to M 6 h for the deletion ledger and restore steps)
 
-**Launch gate.** S09.01 (health and outside check) and S09.03 (written procedures, rehearsed) must be done before launch. The other stories may land during the pilot; S09.07 and S09.08 must be ready by day 60.
+**Launch gate.** Before launch: S09.01 (health and outside check), S09.02 (resend, which the procedures rehearse) and S09.03 (procedures, deletion ledger, launch-day access-request process). S09.04 to S09.06 may land during the pilot; until S09.06 ships, access requests use S09.03's launch-day process. S09.07 and S09.08 must be ready by day 60.
 
-**Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 (inbound router, YES resolution), S07.07 (subscriber matching), S07.08 (spend and reservations), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally), S01.14 (coverage). Each story creates only the tables it needs and names the stories it depends on.
+**Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.14 (coverage), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings, reviewed-count check), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 to S07.08 (inbound router, menus, edit link, matching, spend), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoff to E06's allow-list.** This epic adds two `transactional` purposes: `access_code` (created by `subscriptions` for S09.06, to an active subscriber, or to an `inbound_reply` recipient when the number has no subscription, `send_by` 15 minutes) and `resend` copies, which keep the original row's kind, purpose and sendability rules.
+**Changes to earlier epics made here** (recorded in E06 and E07): E06 gains the `pending_signup` recipient kind and the `access_code` purpose; E06 and E07 use "receiving subscriber" instead of "active subscriber"; resends are metadata on a delivery, not a purpose.
 
 **Definitions used in this epic**
 
@@ -3417,12 +3417,16 @@ The Hub learns about problems before residents do, can deliberately resend texts
 | Health conditions | Every condition in AD-23, checked by `/api/jobs/health` every minute: a delivery `queued` and due for more than 5 minutes outside a pause; a delivery that became `unknown`; a failed pg_cron run (from `cron.job_run_details`); more than 5 webhook signature failures in 10 minutes; a whole language falling back in a translation; a failed directory publish; the daily transactional ceiling crossed; a `cap_overrun`; the sender lease not renewed for 3 minutes while rows are due; Messaging Service settings wrong (S06.02, S07.09). |
 | Heartbeat | The health job records the time of its last successful run. `GET /api/health/heartbeat` returns 200 only if that time is less than 3 minutes old, else 503. It returns no other detail. |
 | Outside check | A free-tier uptime monitor outside Vercel, Supabase and Twilio (chosen by IT and recorded in the spine) that calls the heartbeat every minute and emails the on-call Admins when it fails twice in a row. It does not depend on the CVH's own texting. |
-| Resend | A deliberate Admin action that creates a new delivery for an original one that ended `failed`, `undelivered` or `unknown`, with idempotency key `resend:{original id}:{n}`, at most 2 resends per original. The original row never changes. |
+| Resend | A deliberate Admin action that creates a new delivery copying an earlier one in the same chain. The new row keeps the original's `kind`, `purpose`, body and sendability rules, and records `resend_of` (always the chain's first delivery, the root) and `resend_n` (1 or 2), with idempotency key `resend:{root id}:{n}` and a unique `(resend_of, resend_n)`. A chain has at most 2 resends in total, whichever row in it is resent. No row in the chain ever changes. |
+| Receiving subscriber | A subscriber who gets alerts, menus, edit links, check-in rounds and access codes: `active`; `reconsent_pending` before the campaign deadline; or `retained`. After the deadline a `reconsent_pending` subscriber receives nothing, even before the purge deletes them. |
+| Campaign | The end-of-pilot re-consent: a record with version, frozen text per language, terms version, deadline (Toronto time) and `content_hash` over all of them, prepared by one Admin and approved by a different Admin at `aal2`. States `draft → approved → started → ended`. |
+| Re-consent prompt | At campaign start each targeted subscriber gets an `sms_prompt` of kind `reconsent`, open until the deadline. YES from that number resolves to it (latest `sent_at`, AD-9) and moves the subscriber to `retained`. |
+| Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. Stored as `access_request` with the Admin, a salted hash of the number, timestamps and outcome, never the number. |
+| Access code | 6 digits, stored only as an HMAC (server secret, request id, code), valid 15 minutes, at most 3 attempts, used once. Verification is one atomic update that succeeds only if the request is unverified, unexpired, under its attempt limit and the code matches; a failed attempt increments the count in the same statement. |
+| Deletion ledger | Every subscription deletion also appends `(salted number hash, deleted_at)` to a daily file in a private Storage bucket outside the database, kept for the database backup window plus one day. A database restore replays it (S09.03). |
 | Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
-| Small-number rule | In every measure, any count from 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5". Zero is shown as 0. |
+| Small-number rule | In every displayed or exported measure, a count of 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5"; a percentage whose numerator or denominator is 1 to 4 is not shown; and where a total and the other visible cells would reveal a hidden cell, one more cell is hidden. Zero is shown as 0. |
 | Measures | Section 9 of the pilot PRD: subscribers and installs; acknowledgement, approval and delivery times; check-in counts; directory, map and search use; translation understood per language (survey) and fallback rates; drills, corrections and their reach; cost per alert and total spend; coverage. All aggregate, drills apart. |
-| Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA). Answered within 30 days. |
-| Re-consent campaign | The end-of-pilot `campaign` text (D-7). Subscribers move `active → reconsent_pending`; YES moves them to `retained`; those still `reconsent_pending` 30 days after the campaign starts are deleted. |
 
 ### Story S09.01 — The Hub hears about failures before residents do, even if texting is down
 
@@ -3464,11 +3468,16 @@ So that residents who missed an alert still get it, without risking duplicates b
 
 **Given** an entry's sending view
 **When** an Admin at `aal2` chooses "Resend" for one delivery, or for all `failed` and `undelivered` deliveries of an entry and language
-**Then** a new delivery is created for each with a resend idempotency key, the same frozen body, and its own spend reservation; the originals are unchanged; `delivery.resent` is audited with counts, never numbers
+**Then** for each, in one transaction that locks the chain's root delivery `FOR UPDATE`, the next `resend_n` is allocated and a new row is created with its own spend reservation; if the chain already has 2 resends it is refused; `delivery.resent` is audited with counts, never numbers
+
+**Given** two Admins resend the same chain at the same time, or resend a row that is itself a resend
+**When** both run
+**Then** the chain never exceeds 2 resends in total and never gets two rows with the same `resend_n` (concurrency test)
 
 **Given** a delivery ended `unknown`
 **When** an Admin chooses to resend it
 **Then** they must confirm "This text may already have arrived; resending may send it twice", and unknown rows are never included in a bulk resend
+**And** the confirmation carries the status the Admin saw; if a late callback has since resolved the row (for example to `delivered`), the resend is refused with the new status (test)
 
 **Given** a delivery whose error means the number cannot receive texts (for example invalid number or opted out)
 **When** a resend is attempted
@@ -3476,19 +3485,15 @@ So that residents who missed an alert still get it, without risking duplicates b
 
 **Given** a resend
 **When** it reaches hand-off
-**Then** it follows E06's sendability rules (an entry since superseded, or a thread closed when the entry is not the closing entry, is cancelled), and it is counted in spend once (E07 rules)
+**Then** it follows E06's sendability rules for its original kind and purpose, and it is counted in spend once (E07 rules)
 
-**Given** an original already resent twice
-**When** a third resend is attempted
-**Then** it is refused
+### Story S09.03 — Procedures are written and rehearsed, and a restore cannot undo a deletion
 
-### Story S09.03 — Written procedures are in place and rehearsed
-
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
-- **Traces:** NFR-N6, AR-21, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures`
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** NFR-N6, NFR-N5, AR-21, AR-17, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures-ledger`
 
 As a Hub Coordinator,
-I want short procedures I can follow under pressure,
+I want short procedures I can follow under pressure, and a restore that respects residents' choices,
 So that sending, correcting and recovering are done the same way every time.
 
 **Acceptance Criteria:**
@@ -3496,14 +3501,28 @@ So that sending, correcting and recovering are done the same way every time.
 **Given** `docs/procedures/`
 **When** this story is done
 **Then** it holds one page each, in plain steps with screen names, for: writing and approving an alert; correcting and withdrawing; closing; running a drill; pausing and resuming texts; resending failed texts; a cap overrun; a health alert and who owns the incident; changing Messaging Service settings (texts paused first); rotating secrets (at pilot start, on departures, at pilot end); restoring the database; and a resident access request
+**And** each names its owner and last-reviewed date, and each Hub screen that starts one of these tasks links to it
 
-**Given** each procedure
-**When** reviewed by the Hub
-**Then** it names its owner and last-reviewed date, and each Hub screen that starts one of these tasks links to its procedure
+**Given** the deletion ledger
+**When** any subscription is deleted (STOP, double 0, edit page, access request, purge)
+**Then** the ledger entry is written after the deletion commits, retried until stored, and a failure to store it raises a health condition; the ledger never holds a number, only its salted hash (salt in the environment, not the database)
+
+**Given** the restore procedure
+**When** a backup is restored
+**Then** before the app serves traffic: texts are paused and the sender lease is disabled; every subscriber, pending sign-up, check-in row and edit link whose number hash appears in the ledger after the backup's time is deleted again; every delivery not in a terminal state is set to `unknown` (so nothing handed off after the backup can be sent again automatically) and listed for Admin review; only then are the lease and sending re-enabled
+**And** a staging rehearsal restores a backup taken before a test deletion and a test send, and confirms the deleted subscription stays deleted and the sent text is not sent again
+
+**Given** the launch-day access-request process, used until S09.06 ships
+**When** a resident asks what is held
+**Then** an Admin verifies the resident by calling the number back, then IT runs `scripts/access-request` (service key, read-only, output shown on screen and not saved), and the request is recorded in the audit trail without the number
+
+**Given** someone whose number can no longer receive texts or calls
+**When** they ask for access or deletion
+**Then** the procedure does not show any data; it allows deletion only, after the person states the number in person at the Hub, and the deletion is audited as "unverified request"
 
 **Given** launch readiness
 **When** the procedures are rehearsed
-**Then** a production drill (S06.05), a pause and resume, a resend on staging and a database restore on staging are performed following the written steps, and any step that did not work is fixed in the procedure before launch
+**Then** a production drill (S06.05), a pause and resume, a resend on staging, the restore rehearsal and the launch-day access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
 
 ### Story S09.04 — The Hub reviews reliability every week
 
@@ -3518,20 +3537,20 @@ So that we learn from each week of the pilot.
 
 **Given** the weekly review view (a SQL view over `ops_event`, `delivery` and `audit_event`)
 **When** an Admin or Director opens a week
-**Then** it shows: health conditions with start, end and duration; failed, undelivered and unknown texts by language and reason; resends; pauses; cap overruns; translation fallbacks by language; publish failures; approval-to-first-hand-off and to-90%-delivered times per entry (or "not reached"); and slow deliveries over 10 minutes, all without personal data, drills apart
+**Then** it shows: health conditions with start, end and duration; failed, undelivered and unknown texts by language and reason; resends; pauses; cap overruns; translation fallbacks by language; publish failures; approval-to-first-hand-off and to-90%-delivered times per entry (or "not reached"); and slow deliveries over 10 minutes, all without personal data, with the small-number rule applied and drills apart
 
 **Given** the review
-**When** the Hub adds notes and actions for the week
-**Then** they are saved with the week and audited
+**When** an Admin adds notes and actions for the week
+**Then** they are saved with the week and audited; Directors can read them but every write endpoint returns 403 for them (direct-request test)
 
 **Given** an export
-**When** an Admin downloads the week as CSV
-**Then** it contains the same aggregate data with no phone numbers, subscriber ids or message bodies (test)
+**When** an Admin or Director downloads the week as CSV
+**Then** it contains the same aggregate data with the small-number rule applied and no phone numbers, subscriber ids or message bodies (test)
 
 ### Story S09.05 — Directors see the pilot measures, read-only
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-M1 to FR-M5 (view), D-8, NFR-N9 · **Depends on:** S07.10, S08.09, S06.08 · **Branch:** `e09-s05-measures-view`
+- **Traces:** FR-M1 to FR-M5 (view), D-8, NFR-N9, AR-6 (AD-4 spend visibility) · **Depends on:** S07.10, S08.09, S06.08 · **Branch:** `e09-s05-measures-view`
 
 As a Hub Director,
 I want the pilot's measures in one place,
@@ -3541,24 +3560,25 @@ So that leadership can decide at week 8 whether to continue to the MVP.
 
 **Given** the measures view
 **When** a Director, Coordinator or Admin opens it
-**Then** it shows each Section 9 measure, by language and neighbourhood where it applies, from the stored aggregates, refreshed daily, with the small-number rule applied and drills in a separate section; Directors cannot change anything (direct-request tests)
+**Then** it shows each Section 9 measure, by language and neighbourhood where it applies, from the stored aggregates, refreshed daily, with the small-number rule applied to counts and percentages and drills in a separate section; Directors cannot change anything (direct-request tests)
+
+**Given** the spend and cost-per-alert sections
+**When** requested
+**Then** only Admins and Directors receive them (AD-4); the server leaves them out of the response for Coordinators, and a direct request for them by a Coordinator returns 403 (test)
+**And** spend uses E07's spent and reserved figures, with actual and estimated amounts labelled and unknown Cohere prices shown as unknown, against the CAD 1,000 budget
 
 **Given** the translation-understood survey
-**When** a Coordinator enters the results per language (number asked, number who understood)
-**Then** they are saved as counts, shown beside each language's fallback rate, and audited
-
-**Given** spend
-**When** shown
-**Then** it uses E07's spent and reserved figures, with actual and estimated amounts labelled and unknown Cohere prices shown as unknown, against the CAD 1,000 budget
+**When** a Coordinator or Admin enters the results per language (number asked, number who understood)
+**Then** they are saved as counts, shown beside each language's fallback rate under the small-number rule, and audited
 
 **Given** the week-8 review
 **When** the Hub prepares it
-**Then** the view can be printed or saved as PDF with the date and the measures as of that date
+**Then** the view can be printed or saved as PDF with the date and the measures as of that date, with the same suppression and the same role-based sections
 
 ### Story S09.06 — Residents can ask what the CVH holds about them
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** NFR-N5 (access requests), AR-17 · **Depends on:** S07.04, S08.05 · **Branch:** `e09-s06-access-requests`
+- **Traces:** NFR-N5 (access requests), AR-17 · **Depends on:** S07.04, S08.05, S09.03 · **Branch:** `e09-s06-access-requests`
 
 As a resident,
 I want to find out what the CVH keeps about my number and correct it,
@@ -3566,26 +3586,30 @@ So that I stay in control of my information.
 
 **Acceptance Criteria:**
 
-**Given** a resident contacts the Hub (phone or in person) with an access or correction request
+**Given** a resident contacts the Hub with an access or correction request
 **When** an Admin at `aal2` opens "Access request" and enters the number
-**Then** a one-time 6-digit code is texted to that number (purpose `access_code`, valid 15 minutes), and only after the resident reads it back does the screen show what is held
+**Then** an `access_request` is created bound to the number's salted hash, and an access code is texted (purpose `access_code`, `send_by` 15 minutes) to the number's receiving subscriber, pending sign-up or, if neither exists, through an `inbound_reply` row
 
-**Given** the code is confirmed
-**When** the screen shows the data
-**Then** it lists everything held for that number: subscription choices, `consent_version`, pending sign-up, check-in request, any open check-in rows and escalations, and any `inbound_reply`; the Admin can correct choices or delete the subscription on the resident's behalf
+**Given** the resident reads the code back
+**When** the Admin enters it
+**Then** the atomic verification succeeds only for that request; the screen then shows, for 30 minutes and only to that Admin, everything held for that request's number: subscription choices and state, `consent_version`, pending sign-up, check-in request, open check-in rows and escalations, and any `inbound_reply`; the Admin can correct choices or delete the subscription on the resident's behalf
+
+**Given** a code from another request, a code already used, an expired code, or a fourth attempt
+**When** entered
+**Then** verification fails and shows nothing; a verified request for one number can never show another number's data (tests for each)
 
 **Given** each request
 **When** opened, answered or closed
 **Then** it is recorded in the audit trail with dates, outcome and the Admin, never the number, and the view shows requests open longer than 25 days in red (30-day limit)
 
 **Given** lookups
-**When** an Admin starts more than 10 in a day, or a code is entered wrongly 3 times
-**Then** further lookups are refused for the day, or the code is voided, and on-call is alerted
+**When** an Admin starts more than 10 in a day
+**Then** further lookups are refused for the day and on-call is alerted
 
 ### Story S09.07 — Subscribers are asked whether to stay after the pilot
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-D-7, AR-13 (retention states), AR-12 (`campaign`) · **Depends on:** S07.04, S06.02 · **Branch:** `e09-s07-reconsent-campaign`
+- **Traces:** FR-D-7, AR-13 (retention states), AR-12 (`campaign`) · **Depends on:** S07.04, S06.02, S09.02 · **Branch:** `e09-s07-reconsent-campaign`
 
 As a Hub Director,
 I want every subscriber asked at the end of the pilot whether to keep getting texts,
@@ -3593,30 +3617,36 @@ So that we only keep people who chose to stay.
 
 **Acceptance Criteria:**
 
-**Given** an Admin at `aal2` prepares the re-consent campaign
-**When** they review it
-**Then** they see the catalog text in each language ("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted."), the number of active subscribers per language and the estimated cost; a second Admin at `aal2` must approve it before anything is sent
+**Given** an Admin at `aal2` prepares the campaign
+**When** they save it
+**Then** it records the version, the catalog text in each language ("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted."), the terms version, the deadline and its `content_hash`, and shows the receiving subscribers per language and the estimated cost
 
-**Given** the campaign is approved
-**When** it starts
-**Then** in one transaction every `active` subscriber moves to `reconsent_pending` and one `campaign` delivery per subscriber is created in their language; new web and staff sign-ups are closed with "Sign-ups are paused while the pilot ends"; `campaign.started` is audited with counts
+**Given** a different Admin at `aal2` approves it
+**When** they approve
+**Then** approval binds to the version and `content_hash` they reviewed; the preparer cannot approve, and an edit after approval returns it to `draft`
+**And** at start, recipient counts and cost are recomputed; if they differ from what the approver reviewed, the starting Admin must confirm the new figures first
 
-**Given** a `reconsent_pending` subscriber replies YES
+**Given** an approved campaign
+**When** an Admin starts it (with an idempotency key)
+**Then** in one transaction: every `active` subscriber moves to `reconsent_pending`, gets a `reconsent` prompt and one `campaign` delivery (idempotency key `campaign:{id}:{subscriber}`) in their language; all pending sign-ups are deleted; new sign-ups are closed ("Sign-ups are paused while the pilot ends"); the campaign becomes `started`; `campaign.started` is audited with counts
+**And** starting again, or a retried request, changes nothing and creates no second delivery (test)
+
+**Given** a `reconsent_pending` subscriber replies YES before the deadline
 **When** handled
-**Then** the reply resolves to the campaign prompt (latest `sent_at`), the subscriber becomes `retained`, and a confirmation is sent; a YES after the deadline is answered with the sign-up information
+**Then** the reply resolves to the `reconsent` prompt, the subscriber becomes `retained` and a confirmation is sent; YES after the deadline is answered with "The pilot has ended; your number was not kept" through `inbound_reply`
 
 **Given** the campaign is running
-**When** alerts are approved
-**Then** `reconsent_pending` and `retained` subscribers still get alerts until the deadline
+**When** alerts are approved, or a subscriber uses a menu or an edit link
+**Then** `reconsent_pending` and `retained` subscribers are receiving subscribers until the deadline; after it, only `retained` ones are
 
-**Given** a campaign delivery that failed or is unknown
-**When** the Hub reviews the campaign
-**Then** it can resend it under S09.02's rules before the deadline
+**Given** the deadline passes
+**When** the campaign ends
+**Then** sign-ups stay closed until an Admin reopens them for the MVP (audited), and the campaign becomes `ended`
 
 ### Story S09.08 — The pilot's resident data is deleted on schedule
 
 - **Size:** S · **Estimate:** 4 h · **Actual:** —
-- **Traces:** FR-D-7, NFR-N5, AR-13 · **Depends on:** S09.07 · **Branch:** `e09-s08-end-of-pilot-purge`
+- **Traces:** FR-D-7, NFR-N5, AR-13 · **Depends on:** S09.07, S09.03 · **Branch:** `e09-s08-end-of-pilot-purge`
 
 As a Hub Director,
 I want everyone who did not say YES deleted when we said they would be,
@@ -3624,9 +3654,13 @@ So that the Hub keeps its promise to residents.
 
 **Acceptance Criteria:**
 
-**Given** 30 days after the campaign started (Toronto time)
+**Given** the deadline has passed (Toronto time; 30 days after the campaign started)
 **When** the purge job runs
-**Then** every subscriber still `reconsent_pending` is deleted with the full E07 deletion (places, opt-outs, prompts, edit links, check-in records), and the counts deleted and retained are recorded as an aggregate `ops_event`
+**Then** for each subscriber it locks the row, re-checks that it is still `reconsent_pending` and that the deadline has passed by the database clock, and runs the full E07 deletion with a ledger entry; the counts deleted and retained are recorded as an aggregate `ops_event`
+
+**Given** a YES arriving at the moment of the deadline
+**When** it races the purge
+**Then** both use the same database clock and the subscriber row lock: a YES committed before the deadline makes the subscriber `retained` and the purge skips them; a YES after the deadline is refused; a retained subscriber is never deleted (concurrency test)
 
 **Given** the purge
 **When** it is interrupted
