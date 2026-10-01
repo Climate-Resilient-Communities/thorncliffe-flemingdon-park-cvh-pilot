@@ -2643,18 +2643,30 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 **Then** its interval is exact and stated in UTC: for a month, `[first instant of the month, first instant of the next month)` in `America/Toronto`, converted to UTC, with id `month:{YYYY-MM}`; for a restore, `[backup's timestamp, moment sending was re-enabled)`, with id `restore:{backup timestamp}:{re-enable timestamp}` (S09.03)
 **And** it lists every outbound message in the interval from the Twilio Messages API, following `next_page_uri` until it is empty, and records each message's actual price once, keyed by its `MessageSid` (unique across all reconciliations), converted to CAD at the configured rate and labelled
 
+**Given** the matching rule
+**When** an actual price is recorded, or a delivery's provider id is recorded later (for example by a late callback), or any reconciliation runs
+**Then** every estimate whose delivery's provider id equals the `MessageSid` of an imported actual is retired by that actual (marked with the actual's `MessageSid` and no longer counted), whatever interval or timestamp either one falls in; an estimate is retired at most once and an actual retires at most one estimate
+**And** each reconciliation first re-runs this matching over all unretired estimates, so an actual imported earlier still retires a matching estimate found later
+
 **Given** the same reconciliation run again, or a message already imported by another reconciliation
 **When** it imports
-**Then** nothing changes: the reconciliation id and each `MessageSid` are unique, so a repeated import adds no actual and replaces no further estimate (test)
+**Then** nothing changes: the reconciliation id and each `MessageSid` are unique, so a repeated import adds no actual and retires no further estimate (test)
 
 **Given** a reconciliation whose listing completed and every message has a price
 **When** it is applied
-**Then** it replaces only the estimates attributable to its interval: for a month, the estimates of deliveries whose outcome was recorded in that interval and that are not attributed to a restore reconciliation; for a restore, the estimates of the deliveries its recovery operation set to `unknown`; each replaced estimate is marked with the reconciliation id and is no longer counted, so no text is counted twice
-**And** the reconciliation is marked complete and reports the actual total and its difference from the replaced estimates
+**Then** it is marked complete and reports, for its interval: the actual total; the estimates its actuals retired; unmatched actuals (messages with no delivery carrying that `MessageSid`, for example texts sent after a backup whose rows were lost), counted at their actual price and labelled; and the difference from the retired estimates
+
+**Given** an estimate whose delivery has no provider id, or whose `MessageSid` has not been imported by any complete reconciliation
+**When** spend is reported
+**Then** it stays counted at its estimate and is labelled "unresolved estimate", shown separately from actuals, never zero and never silently dropped; reports also show the unresolved-estimate and unmatched-actual totals side by side, because an ambiguous send with no recorded provider id may appear in both
 
 **Given** a reconciliation whose listing failed, was cut short, or includes a message with no price yet
 **When** it is checked
-**Then** nothing is replaced, the interval is shown as "pending reconciliation" with its estimates still counted (never zero), and the reconciliation is retried later (tests for each)
+**Then** no actual from it is recorded, the interval is shown as "pending reconciliation" with its estimates still counted (never zero), and the reconciliation is retried later (tests for each)
+
+**Given** the boundary and overlap cases
+**When** the tests run
+**Then** they cover: Twilio records a message at 23:59:59 Toronto time on the last day of a month while the app records its acceptance at 00:00:01 on the first day of the next, with the earlier month reconciled first (its actual retires the estimate recorded in the next month) and with the later month reconciled first (the estimate stays unresolved until the earlier month's import retires it); and a message inside both a month and a restore interval, with the month imported first and with the restore imported first, counted once and retiring its estimate once in both orders
 
 **Given** an alert entry's deliveries
 **When** the pilot measures are computed
@@ -2994,7 +3006,7 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 **Given** the spend view
 **When** an Admin or Director opens it
-**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000): actual where a reconciliation is complete (S06.08), otherwise labelled estimates, with intervals awaiting reconciliation labelled "pending reconciliation"; Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured, never as zero; Directors see it read-only
+**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000): actual where a reconciliation is complete (S06.08), with unmatched actuals, unresolved estimates and intervals pending reconciliation each labelled and shown separately (never zero); Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured, never as zero; Directors see it read-only
 
 **Given** an Admin at `aal2`
 **When** they set or change the monthly cap
@@ -3567,8 +3579,9 @@ So that sending, correcting and recovering are done the same way every time.
 **Given** spend after a restore
 **When** recovery ends
 **Then** deliveries set to `unknown` by the recovery operation keep their estimates, counted as spent and labelled "pending reconciliation" (never zero)
-**And** a restore reconciliation (S06.08) runs for the interval `[backup's timestamp, moment sending was re-enabled)` with id `restore:{backup timestamp}:{re-enable timestamp}`; when it is complete it replaces exactly those estimates with the actual prices of the messages Twilio sent in that interval, each `MessageSid` counted once; until then the interval stays pending reconciliation
-**And** tests cover: importing the same restore reconciliation twice (no change); a message also falling in the month's reconciliation (counted once); and a message with no price yet (interval stays pending, estimates still counted)
+**And** a restore reconciliation (S06.08) runs for the interval `[backup's timestamp, moment sending was re-enabled)` with id `restore:{backup timestamp}:{re-enable timestamp}`; it imports each message Twilio sent in that interval once by `MessageSid`, and its actuals retire estimates only by matching `MessageSid` (S06.08 matching rule)
+**And** messages with no matching delivery (texts sent after the backup whose rows were lost) are counted as unmatched actuals, and recovery-`unknown` estimates with no provider id stay counted as unresolved estimates, both shown side by side; until the reconciliation is complete the interval stays pending reconciliation
+**And** tests cover: importing the same restore reconciliation twice (no change); a message also falling in the month's reconciliation, in both import orders (counted once); and a message with no price yet (interval stays pending, estimates still counted)
 
 **Given** the staging restore rehearsal
 **When** it runs
