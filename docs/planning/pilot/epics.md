@@ -2694,19 +2694,24 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 
 **Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.13 (buildings and floors), S02.03 (device choices), S03.04 (`rate_limit`), S04.04 (`matches`), S04.06 (renderer), S04.07 (approval, reviewed-count check, `captureRecipients` hook), S05.02 and S05.03 (correction and final recipient rules), S06.01 to S06.07 (outbox, sendability by kind, sender, callbacks, pause, on-call), S06.08 (cost data). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoffs.** Reply 3 (withdraw a check-in request) is routed to `checkins`' `withdrawRequest(subscriberId)` port; until E08 implements it, it replies "You have no check-in request". The sign-up form's optional check-in request is added in E08. Re-consent campaigns at the end of the pilot are E09.
+**Handoffs.** Reply 3 (withdraw a check-in request) is routed to `checkins`' `withdrawRequest(subscriberId)` port; until E08 implements it, it replies "You have no check-in request". The sign-up form's optional check-in request is added in E08. Re-consent campaigns at the end of the pilot are E09. Deleting a subscriber calls `checkins`' `deleteForSubscriber(subscriberId, tx)` port in the same transaction; E08 implements it, and E07's deletion tests already call it.
 
 **Definitions used in this epic**
 
 | Term | Meaning |
 | --- | --- |
 | Canadian number | An E.164 `+1` number whose area code is on the Canadian area-code list in config. Anything else is refused. |
-| Pending sign-up | A `pending_signup` holding the number, language, neighbourhood, optional places, groups and topics, `consent_version` and how it started (`web` or `staff`). It expires 48 hours after its confirmation text was created. At most one per number per 48 hours. |
+| Pending sign-up | A `pending_signup` holding the number, language, neighbourhood, optional places, groups and topics, `consent_version`, how it started (`web` or `staff`), `created_at` and `expires_at` = `created_at` + 48 hours. The confirmation text's `send_by` is `expires_at`, and YES is accepted only before `expires_at`. At most one per number at a time. |
 | Subscriber | A confirmed number with language, neighbourhood (required), places (`subscriber_place`: buildings, each with optional floors; any number of buildings), groups, topic opt-outs, `consent_version` and `retention_state`. No name, unit, email or password is ever stored. |
 | Confirmation | Only the resident replying YES from that number confirms. YES is accepted as `YES` or `Y` in any case, or the catalog's word for yes in the pending sign-up's language. YES resolves to the open prompt with the latest `sent_at` for that number. |
 | Reply normalisation | Inbound text is trimmed and case-folded; Arabic-Indic, Extended Arabic-Indic, Bengali, Devanagari, Gujarati, Gurmukhi, Tamil and full-width digits are mapped to 0–9 before matching. Inbound bodies are never stored, only daily keyword counts. |
+| Inbound order | Each inbound message is handled in this order: (1) signature check; (2) de-duplication by `MessageSid`, so a Twilio retry is answered 200 and does nothing; (3) opt-out events and delete requests; (4) rate limits; (5) the decision table. De-duplication keeps only a hash of the `MessageSid` and the time received in `inbound_seen`, deleted after 48 hours. |
 | Decision table | One router, `subscriptions/application/handleInbound`, chooses the action from (keyword, the number's state `none`, `pending` or `active`, open prompt). Every row has a test. |
-| Menu | Reply 1 (street → building on that street → floor) or 2 (language by list number), state in `sms_prompt`. Every step offers 0 to go back and 9 for the Hub's number; options that do not fit page with 9 → "more" replaced by 8 (so 9 always means the Hub); a menu idle for 10 minutes resets with a message saying so; at most 5 menus per number per day. Every menu message is a catalog string that fits one segment in its language's encoding. |
+| Menu | Reply 1 (street → building on that street → floor) or 2 (language by list number), state in `sms_prompt`. Selectable options are numbered 1 to 7 on each page; 0, 8 and 9 are reserved: 0 goes back, 8 shows more options, 9 gives the Hub's number. A menu idle for 10 minutes resets with a message saying so; at most 5 menus per number per day. Every menu message is a catalog string that fits one segment in its language's encoding. |
+| Reply 0 | Inside a menu, 0 means Back. Outside a menu, 0 asks for confirmation ("Reply 0 again within 10 minutes to delete your subscription. You will get no more texts."); a second 0 deletes. STOP always deletes at once, handled by Twilio. |
+| Building change by text | Menu 1 sets one building (and optional floor) and replaces all saved buildings. When more than one building is saved, the menu warns first ("This replaces your {n} saved buildings. 1 Continue, 0 Back"). Adding several buildings is done with the edit link. |
+| Reply to an unknown number | A number with no subscription or pending sign-up has no record to resolve, so a reply to it (the sign-up link) uses a short-lived `inbound_reply` row holding the number, deleted as soon as the text is handed off or after 30 minutes, whichever is first. At most one such reply per number per day (tracked by salted hash in `rate_limit`). This is the only place a number without a subscription is stored. |
+| Deletion | Hard-deletes, in one transaction, the subscriber, its places, opt-outs, prompts and edit links, any pending sign-up for that number, and its check-in records (through `checkins`' port); queued texts to it are skipped at hand-off. After deletion the app sends nothing to that number: no record could resolve it, so every warning is given before deleting. |
 | Edit link | A single-use web link valid for 30 minutes, sent by text on request, to change choices or delete the subscription. |
 | Matching subscribers | Active subscribers for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
 | Monthly cap | An Admin-set SMS spend limit per calendar month in `America/Toronto`. Exceeding it shows the shortfall and notifies Admins; it never blocks a send. |
@@ -2749,7 +2754,8 @@ So that I get alerts even when I am not using the app.
 
 **Given** "Get text alerts" (R-05)
 **When** opened
-**Then** the form is filled from the device choices (language, neighbourhood from chosen buildings, buildings, floors, groups) and asks only for the phone number; the resident can change any choice, must agree to the terms (linked, version shown) and confirm the minimum-age statement
+**Then** the form is filled from the device choices (language, buildings, floors, groups) and asks for the phone number; the resident can change any choice, must agree to the terms (linked, version shown) and confirm the minimum-age statement
+**And** the neighbourhood is pre-selected only when every saved building is in the same neighbourhood; with no saved buildings, or buildings in both neighbourhoods, the resident must choose Thorncliffe Park or Flemingdon Park explicitly (no default)
 
 **Given** the form is submitted
 **When** the number is not a Canadian number, the neighbourhood is missing, or the terms are not agreed
@@ -2760,17 +2766,22 @@ So that I get alerts even when I am not using the app.
 **Then** a pending sign-up is created and one `transactional` confirmation text (purpose `confirmation`, `send_by` 48 hours) is queued in the chosen language: "Reply YES to get CVH alerts. Reply STOP to stop."; R-06 shows what to expect, how to stop and how to change choices
 **And** this POST is the only resident request that carries places or groups (AD-3 exception), and it sets no cookie
 
-**Given** a number with a pending sign-up in the last 48 hours, or already subscribed
-**When** submitted again
-**Then** the response is a success body with `status: already_pending` or `already_subscribed` and the same neutral wording ("If this number can get texts, a message is on its way"), so the form never reveals whether a number is subscribed; no second confirmation is sent
+**Given** an accepted submission for a new number, a number with an unexpired pending sign-up, or a number already subscribed
+**When** the API responds
+**Then** all three return HTTP 202 with the identical body `{v, status: "accepted"}` and the page shows "If this number can get texts, a message is on its way"; only a new number gets a confirmation text
+**And** an API test compares the three responses byte for byte (status, headers that vary by content, and body) and checks each does the same database work before responding
 
 **Given** one client (salted IP hash) submits more than 5 sign-ups in an hour
 **When** the next arrives
 **Then** it returns 429 and nothing is stored
 
-**Given** the confirmation is refused by the provider because the number earlier texted STOP (permanent error)
-**When** the callback arrives
-**Then** the pending sign-up is deleted, and R-06 has told the resident in advance: "No text within 5 minutes? Text START to {number}, then sign up again"
+**Given** the confirmation is refused because the number earlier texted STOP (Twilio error 21610)
+**When** the refusal is reported synchronously by the sender (S06.02 permanent error) or later by a callback
+**Then** in either path the pending sign-up is deleted (tests for both), and R-06 has told the resident in advance: "No text within 5 minutes? Text START to {number}, then sign up again"
+
+**Given** a pending sign-up whose `expires_at` has passed
+**When** its confirmation reaches hand-off, or YES arrives
+**Then** the confirmation is skipped (`send_by` passed) and YES is answered with the sign-up link through `inbound_reply`; the expired row is deleted by the purge job
 
 ### Story S07.03 — Staff help a resident sign up at an event or the Hub desk
 
@@ -2812,7 +2823,11 @@ So that I control whether I get texts.
 
 **Given** `POST /api/twilio/inbound`
 **When** a message arrives
-**Then** the signature is validated against `PUBLIC_BASE_URL` before any work; the body is normalised and passed to the decision table, then discarded; only the daily keyword count is stored
+**Then** it is handled in the inbound order; the body is normalised and passed on, then discarded; only the daily keyword count is stored, once per `MessageSid`
+
+**Given** Twilio retries the same message (same `MessageSid`)
+**When** the retry arrives
+**Then** it returns 200 and changes nothing: no menu step advances, no reply is sent, no count increases (test)
 
 **Given** a pending sign-up and the reply YES from that number before it expires
 **When** it is handled
@@ -2821,20 +2836,31 @@ So that I control whether I get texts.
 
 **Given** YES with no pending sign-up, or after it expired
 **When** handled
-**Then** the reply gives the sign-up link and no subscriber is created
+**Then** the reply (through `inbound_reply`) gives the sign-up link and no subscriber is created
 
 **Given** Twilio Advanced Opt-Out handles STOP, START and HELP
-**When** the inbound webhook reports an opt-out (`OptOutType = STOP`)
-**Then** the subscriber, its places, opt-outs, prompts, edit links and any pending sign-up for that number are hard-deleted in one transaction; the app sends no reply of its own; queued texts to that subscriber are skipped at hand-off
-**And** START with no subscription is answered with the sign-up link; HELP replies are Twilio's and are tested on the verified number before launch
+**When** the inbound webhook carries `OptOutType = STOP`
+**Then** the deletion runs; the app sends no reply of its own, because Twilio has already replied
 
-**Given** reply 0 from an active subscriber
+**Given** any inbound message carrying `OptOutType` (`STOP`, `START` or `HELP`)
 **When** handled
-**Then** the subscription is deleted as for STOP, and one final text confirms it in the subscriber's language
+**Then** the app sends no reply; recovery instructions (the sign-up link) are part of Twilio's configured START and HELP replies on the Messaging Service, set and tested on the verified number before launch (launch readiness)
+
+**Given** reply 0 from an active subscriber outside a menu
+**When** handled
+**Then** a confirmation prompt is sent while the subscriber still exists ("Reply 0 again within 10 minutes to delete your subscription. You will get no more texts."); a second 0 within 10 minutes runs the deletion and nothing more is sent; any other reply cancels it
+
+**Given** a number that has exceeded the inbound limit (S07.09)
+**When** it sends STOP or the deletion's second 0
+**Then** the deletion still runs, because deletion is handled before rate limits
+
+**Given** the deletion tests
+**When** they run
+**Then** they check that the subscriber, places, opt-outs, prompts, edit links, any pending sign-up for that number and its check-in records (through a fake `deleteForSubscriber` until E08) are gone, its queued texts are skipped, and its past deliveries keep no reference to it
 
 **Given** any other text from a number with no state
 **When** handled
-**Then** it is answered at most once a day with the sign-up link and "Reply STOP to stop"; otherwise ignored
+**Then** it is answered at most once a day with the sign-up link and "Reply STOP to stop" (through `inbound_reply`); otherwise ignored
 
 **Given** every row of the decision table
 **When** the tests run
@@ -2853,8 +2879,9 @@ So that I can keep my alerts right without a smartphone.
 
 **Given** reply 1
 **When** the menu runs
-**Then** it lists streets with the 43 pilot buildings by number, then buildings on the chosen street, then floors (or "whole building"); each step offers 0 to go back and 9 for the Hub's number; long lists page with 8 for more
-**And** the chosen building and floor replace the subscriber's places only when the last step is completed, with a confirmation text
+**Then** it lists streets with the 43 pilot buildings, then buildings on the chosen street, then floors (or "whole building"), each page numbering options 1 to 7, with 0 Back, 8 More and 9 Hub's number
+**And** when more than one building is saved, the warning step comes before any change
+**And** the chosen building and floor replace all saved buildings only when the last step is completed, with a confirmation text
 
 **Given** reply 2
 **When** the menu runs
@@ -2891,10 +2918,19 @@ So that I don't have to step through text menus.
 **When** the resident asks for it
 **Then** a single-use token valid for 30 minutes is created (stored hashed) and texted as `/{lang}/subscription/{token}`
 
+**Given** any request to `/{lang}/subscription/**` or `/api/subscription/**`
+**When** answered
+**Then** it carries `Cache-Control: no-store` and `Referrer-Policy: no-referrer`, the service worker never caches it (exclusion added to its rules, tested), no usage event is sent from it, and the token is redacted from application logs (logger test)
+**And** the page GET returns a generic shell with no personal data; the current choices load only through `POST /api/subscription/view {token}`, so a link-preview fetch sees nothing and consumes nothing
+
 **Given** the link opened in time
 **When** the resident changes language, places, groups or topic opt-outs, or chooses "Delete my subscription"
-**Then** the change is saved (or the subscription hard-deleted), the token is used up, and a confirmation text is queued
+**Then** the token is consumed atomically with the change (`used_at` set only if unused and unexpired, in the same transaction); a change queues a confirmation text, while a deletion shows its confirmation on the page only and sends nothing
 **And** the page sets no cookie and shows no phone number beyond its last two digits
+
+**Given** two submissions with the same token at the same time, and a link-preview GET before them
+**When** they run
+**Then** exactly one change applies, the other gets `status: expired`, and the GET changed nothing (test)
 
 **Given** an expired or used token
 **When** opened
@@ -2953,7 +2989,8 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 **Given** the spend view
 **When** an Admin or Director opens it
-**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000), using actual prices where Twilio reported them and labelled estimates otherwise; Directors see it read-only
+**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000), split into spent (actual price where Twilio reported it, otherwise a labelled estimate) and reserved (outstanding reservations); Directors see it read-only
+**And** Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured; it is never shown as zero
 
 **Given** an Admin at `aal2`
 **When** they set or change the monthly cap
@@ -2961,8 +2998,17 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 **Given** an approval
 **When** it runs
-**Then** after the recipient snapshot it takes the `spend_cap` lock (last in lock order), writes a `spend_reservation` for the estimate, and if month-to-date plus the estimate exceeds the cap, the approver has already been shown the shortfall on the approval view, the approval still succeeds, `cap_overrun` is audited, and Admins are notified by a `transactional` text
+**Then** after the recipient snapshot it takes the `spend_cap` lock (last in lock order), recomputes month-to-date (spent plus outstanding reservations) plus this estimate, and writes a `spend_reservation` for the estimate
+**And** if the shortfall differs from the one shown on the approval view, approval asks the approver to confirm the new figure (as for a changed recipient count); once confirmed it always succeeds, `cap_overrun` is audited when over the cap, and Admins are notified by a `transactional` text
 **And** two approvals at the same time each see the other's reservation (concurrency test)
+
+**Given** a reservation
+**When** its deliveries are handed off, cancelled, skipped or fail without being accepted
+**Then** each handed-off delivery moves its estimate from the reservation to `spend_event` in the hand-off transaction, each cancelled, skipped or not-accepted delivery releases its share, and when every delivery is terminal the reservation closes; an amount is counted in exactly one of reserved or spent at any time (test with a mix of outcomes)
+
+**Given** Twilio later reports an actual price
+**When** the price job stores it
+**Then** the spend total uses the actual price instead of the estimate for that delivery, never both
 
 **Given** the month boundary in `America/Toronto`
 **When** spend is totalled
