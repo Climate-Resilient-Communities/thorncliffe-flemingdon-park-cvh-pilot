@@ -2337,13 +2337,14 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 | Term | Meaning |
 | --- | --- |
-| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), an opaque random `callback_ref`, the provider id once known, attempts, state and timestamps. It never stores a phone number. |
+| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`, `inbound_reply`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), an opaque random `callback_ref`, the provider id once known, attempts, state and timestamps. It never stores a phone number. |
 | Unresolved states | `queued`, `claimed`, `submitted`, `unknown`. `unknown` means the outcome is unclear; it can still be resolved by a late callback. |
 | Terminal states | `delivered`, `undelivered`, `failed`, `cancelled`, `skipped`, `skipped_env`. A terminal state never changes. A resend (E09) creates a new row. |
 | Closing entry | The entry whose approval closed the thread: its `final`, or the withdrawal that left no substantive entry (E05). Its deliveries stay sendable after the thread closes; every other entry's do not. |
 | Sendable (every kind) | The row is still `claimed` by this worker under a valid sender lease, its recipient still exists, its `send_by` time (if any) has not passed, and the pause does not apply to it. The pause applies to `alert`, `campaign` and resident `transactional` texts; on-call texts to `oncall` recipients are still sent during a pause so Admins hear about problems. |
 | Sendable (`alert`) | Also: its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; for `ack`, `update` and `correction`, the entry's valid-until has not passed (finals and withdrawals have no valid-until check); drill entries only to `roster` recipients. |
-| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation, welcome, menu and prompt replies, edit links; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to an active subscriber, on-call texts only to a number still on the on-call roster, staff texts only to an active staff account). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation). |
+| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation, welcome, menu and prompt replies, edit links, and `signup_info` to `inbound_reply` recipients only; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to an active subscriber, on-call texts only to a number still on the on-call roster, staff texts only to an active staff account, `signup_info` only while its `inbound_reply` row exists and before its `expires_at`). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation, and the `inbound_reply` row's `expires_at`, 30 minutes, for `signup_info`). |
+| `inbound_reply` recipient | A short-lived row in `subscriptions` holding a number with no subscription and its `expires_at` (created + 30 minutes). At the hand-off point it is locked `FOR UPDATE` (step 4 of the lock order); the dispatcher reads the number into memory only, deletes the row and commits `handed_off_at` in that same transaction, then calls the provider. If the worker stops after that commit and before the call, the number is gone, the row becomes `unknown` by lease expiry, and nothing is sent. Deleting a number's data (STOP, E07) deletes its `inbound_reply` rows too; the purge job deletes expired rows. |
 | Sendable (`campaign`) | Also: the campaign was started by an Admin at `aal2` and is not cancelled, and the recipient is a subscriber still in the campaign's target state (D-7: `reconsent_pending`). Campaign texts are created in E09. |
 | Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued` and due, and committing `claimed` with its worker id and `claimed_at` in its own short transaction. |
 | Hand-off point | Immediately before the provider call, one short transaction takes these locks in this order, re-checks that the row is sendable, and commits `handed_off_at`: (1) the sender lease row `FOR SHARE`, checking this worker's token; (2) the `messaging_control` row (which holds the pause) `FOR SHARE`; (3) for `alert` rows, the thread `FOR SHARE`, then the entry `FOR SHARE`; (4) the recipient's row `FOR SHARE` (subscriber, roster entry, on-call entry or staff account); (5) the delivery row `FOR UPDATE`. Competing changes take conflicting locks on the same rows: pause and resume lock `messaging_control` `FOR UPDATE`; supersession, discard, merge and close lock the thread `FOR UPDATE`; deleting a recipient locks its row. So a change committed before the hand-off transaction takes its locks stops the send, and a change that waits behind the hand-off sees the text as already handed off and cannot recall it. |
@@ -2410,6 +2411,7 @@ So that we can always see what went out and nothing is submitted twice automatic
 **Given** the `ContactResolver` port, wired in the composition root to `subscriptions`, `identity` and `ops`
 **When** the dispatcher needs a number
 **Then** it resolves it at the hand-off point and never stores it; logs mask numbers to the last two digits (test)
+**And** for `inbound_reply` recipients it follows the `inbound_reply` rule: the row is deleted in the hand-off transaction, so the number exists only in the sender's memory until the provider call (test)
 
 ### Story S06.02 — One sender submits each text at most once, in priority order and at a shared pace
 
@@ -2646,9 +2648,10 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 **Acceptance Criteria:**
 
-**Given** a delivery handed off
-**When** it is recorded
-**Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` with kind `sms`, language, entry id and `is_drill`
+**Given** a delivery whose provider call ends in acceptance (`submitted`) or an ambiguous outcome (`unknown`, counted because it may have been charged)
+**When** that outcome is recorded
+**Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` once, with kind `sms`, language, entry id and `is_drill`, in the same transaction as the outcome
+**And** a not-accepted outcome that requeues the row writes nothing, so a retried text is counted once, when it is finally accepted
 
 **Given** a delivery with a provider id reaches a terminal state
 **When** the price job runs (hourly)
@@ -2710,7 +2713,7 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 | Menu | Reply 1 (street → building on that street → floor) or 2 (language by list number), state in `sms_prompt`. Selectable options are numbered 1 to 7 on each page; 0, 8 and 9 are reserved: 0 goes back, 8 shows more options, 9 gives the Hub's number. A menu idle for 10 minutes resets with a message saying so; at most 5 menus per number per day. Every menu message is a catalog string that fits one segment in its language's encoding. |
 | Reply 0 | Inside a menu, 0 means Back. Outside a menu, 0 asks for confirmation ("Reply 0 again within 10 minutes to delete your subscription. You will get no more texts."); a second 0 deletes. STOP always deletes at once, handled by Twilio. |
 | Building change by text | Menu 1 sets one building (and optional floor) and replaces all saved buildings. When more than one building is saved, the menu warns first ("This replaces your {n} saved buildings. 1 Continue, 0 Back"). Adding several buildings is done with the edit link. |
-| Reply to an unknown number | A number with no subscription or pending sign-up has no record to resolve, so a reply to it (the sign-up link) uses a short-lived `inbound_reply` row holding the number, deleted as soon as the text is handed off or after 30 minutes, whichever is first. At most one such reply per number per day (tracked by salted hash in `rate_limit`). This is the only place a number without a subscription is stored. |
+| Reply to an unknown number | A number with no subscription or pending sign-up has no record to resolve, so a reply to it (the sign-up link, purpose `signup_info`) uses a short-lived `inbound_reply` row holding the number, with recipient kind `inbound_reply` and the sendability, locking and deletion rules in E06's definitions: the row is deleted in the hand-off transaction, or by the purge job after its 30-minute `expires_at`. At most one such reply per number per day (tracked by salted hash in `rate_limit`). This is the only place a number without a subscription is stored. |
 | Deletion | Hard-deletes, in one transaction, the subscriber, its places, opt-outs, prompts and edit links, any pending sign-up for that number, and its check-in records (through `checkins`' port); queued texts to it are skipped at hand-off. After deletion the app sends nothing to that number: no record could resolve it, so every warning is given before deleting. |
 | Edit link | A single-use web link valid for 30 minutes, sent by text on request, to change choices or delete the subscription. |
 | Matching subscribers | Active subscribers for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
@@ -2853,6 +2856,10 @@ So that I control whether I get texts.
 **Given** a number that has exceeded the inbound limit (S07.09)
 **When** it sends STOP or the deletion's second 0
 **Then** the deletion still runs, because deletion is handled before rate limits
+
+**Given** an outstanding `inbound_reply` for a number
+**When** that number texts STOP before the reply is handed off, or the reply's 30 minutes pass first
+**Then** the reply is skipped at hand-off, no text is sent, and the row is gone (tests for both)
 
 **Given** the deletion tests
 **When** they run
@@ -3003,8 +3010,13 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 **And** two approvals at the same time each see the other's reservation (concurrency test)
 
 **Given** a reservation
-**When** its deliveries are handed off, cancelled, skipped or fail without being accepted
-**Then** each handed-off delivery moves its estimate from the reservation to `spend_event` in the hand-off transaction, each cancelled, skipped or not-accepted delivery releases its share, and when every delivery is terminal the reservation closes; an amount is counted in exactly one of reserved or spent at any time (test with a mix of outcomes)
+**When** its deliveries progress
+**Then** a delivery's estimate stays reserved while it is `queued`, `claimed` or requeued after a not-accepted outcome; it moves from reserved to spent, in the same transaction as the outcome, when the provider accepts it or the outcome is `unknown` (S06.08); it is released when the delivery ends `cancelled`, `skipped`, `skipped_env`, or `failed` without ever being accepted (permanent error or retries exhausted); the reservation closes when every delivery is terminal
+**And** an amount is counted in exactly one of reserved or spent at any time
+
+**Given** a delivery that gets a 429, is requeued, and is then accepted
+**When** spend is checked after each step
+**Then** its estimate is reserved after the 429 and the requeue, and spent exactly once after acceptance; a second test with 429 three times then failure shows it released, never spent (tests)
 
 **Given** Twilio later reports an actual price
 **When** the price job stores it
