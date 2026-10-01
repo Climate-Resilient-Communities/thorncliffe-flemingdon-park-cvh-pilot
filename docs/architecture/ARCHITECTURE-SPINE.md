@@ -365,15 +365,15 @@ scripts/                   # seed loaders, string and token generators, search t
 | --- | --- |
 | identity | `staff_account`, `ambassador_assignment` |
 | places | `neighbourhood`, `building`, `building_floor`, `disruption_type` |
-| alerting | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` |
-| subscriptions | `subscriber`, `subscriber_place`, `subscriber_topic_optout`, `pending_signup`, `sms_prompt`, `subscription_edit_token`, `inbound_keyword_count`, `inbound_seen`, `inbound_reply`, `drill_roster`, `rate_limit` |
+| alerting | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version`, `official_source` (stretch) |
+| subscriptions | `subscriber`, `subscriber_place`, `subscriber_topic_optout`, `pending_signup`, `sms_prompt`, `subscription_edit_token`, `inbound_keyword_count`, `inbound_seen`, `inbound_reply`, `drill_roster`, `rate_limit`, `access_request`, `campaign` |
 | messaging | `delivery`, `messaging_control` (pause), `dispatcher_lease` |
 | checkins | `checkin`, `checkin_tally` |
 | translation | `translation_cache`, `translation_route` |
 | directory | `provider`, `provider_location`, `category`, `provider_category`, `guide`, `essential_number`, `directory_release`, `search_log`, `usage_count` |
 | audit | `audit_event` |
 | spend | `spend_cap`, `spend_reservation`, `spend_event` |
-| ops | `ops_event`, `oncall_roster` |
+| ops | `ops_event`, `oncall_roster`, `weekly_review_note`, `survey_result` |
 
 Partial entity view (relationships only):
 

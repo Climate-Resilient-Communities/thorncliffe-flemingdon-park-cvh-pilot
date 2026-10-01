@@ -1,5 +1,5 @@
 ---
-stepsCompleted: [1, 2]
+stepsCompleted: [1, 2, 3, 4]
 requirementCounts: {functional: 42, nonFunctional: 8, architecture: 27, uxDesign: 19}
 inputDocuments:
   - docs/planning/pilot/prd.md
@@ -244,6 +244,32 @@ The full health job and on-call alerts, resend of failed texts, the weekly revie
 ### E10 (optional stretch) — Hub staff relay an official alert
 An official alert from a named source, with a link, through normal approval.
 **Covers:** FR-A10 · UX-DR16 (O-18)
+
+### Table Creation Map
+
+Each table is created by the first story that needs it, in that story's migration; later stories only add what they need. Owners follow the spine's ownership table.
+
+| Table (owner) | Created in | Table (owner) | Created in |
+| --- | --- | --- | --- |
+| `audit_event` (audit) | S01.04 | `subscriber`, `subscriber_place`, `subscriber_topic_optout` (subscriptions) | S07.04 |
+| `staff_account` (identity) | S01.05 | `pending_signup` (subscriptions) | S07.02 |
+| `neighbourhood`, `building`, `building_floor` (places) | S01.13 | `inbound_seen`, `inbound_reply`, `inbound_keyword_count` (subscriptions) | S07.04 |
+| `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.05 |
+| `provider`, `provider_location`, `category`, `provider_category` (directory) | S02.04 | `subscription_edit_token` (subscriptions) | S07.06 |
+| `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap`, `spend_reservation` (spend) | S07.08 |
+| `guide`, `essential_number` (directory) | S02.09 | `checkin`, `checkin_tally` (checkins) | S08.05 |
+| `usage_count` (directory) | S02.15 | `weekly_review_note` (ops) | S09.04 |
+| `spend_event` (spend) | S03.02 | `survey_result` (ops) | S09.05 |
+| `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | `access_request` (subscriptions) | S09.06 |
+| `translation_route` (translation) | S04.01 | `campaign` (subscriptions) | S09.07 |
+| `translation_cache` (translation) | S04.02 | `official_source` (alerting) | S10.01 |
+| `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` (alerting), `disruption_type` (places) | S04.03 | | |
+| `delivery` (messaging) | S06.01 | | |
+| `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
+| `drill_roster` (subscriptions) | S06.05 | | |
+| `oncall_roster` (ops) | S06.07 | | |
+
+The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the table.
 
 ## E01 — Hub staff sign in and run the pilot's foundations
 
