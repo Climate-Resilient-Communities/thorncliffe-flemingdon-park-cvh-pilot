@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Resident and ambassador app</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="position:relative;width:{{w}}px;height:{{h}}px;overflow:hidden;background:var(--surface)">
+  <sc-if value="{{is.R01}}"><dc-import name="R01_Language" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R26}}"><dc-import name="R26_Groups" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R35}}"><dc-import name="R35_WhereILive" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R03}}"><dc-import name="R03_Home" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R34}}"><dc-import name="R34_MyChoices" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R04}}"><dc-import name="R04_TextMessage" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R05}}"><dc-import name="R05_TextSignup" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R06}}"><dc-import name="R06_SignupConfirm" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R07}}"><dc-import name="R07_AlertDetail" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R28}}"><dc-import name="R28_Verified" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R29}}"><dc-import name="R29_Share" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R30}}"><dc-import name="R30_WhatsApp" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R08}}"><dc-import name="R08_Archive" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R09}}"><dc-import name="R09_SearchEntry" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R10}}"><dc-import name="R10_SearchResults" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R27}}"><dc-import name="R27_Filters" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R11}}"><dc-import name="R11_NoResults" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R12}}"><dc-import name="R12_Listing" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R13}}"><dc-import name="R13_Organisation" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R14}}"><dc-import name="R14_MapView" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R15}}"><dc-import name="R15_MapList" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R16}}"><dc-import name="R16_MapPreview" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R17}}"><dc-import name="R17_AddEntryPoint" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R18}}"><dc-import name="R18_Rules" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R19}}"><dc-import name="R19_AddForm" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R20}}"><dc-import name="R20_Locate" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R21}}"><dc-import name="R21_Submitted" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R22}}"><dc-import name="R22_CorrectEntry" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R23}}"><dc-import name="R23_Declined" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R24}}"><dc-import name="R24_BeReady" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R25}}"><dc-import name="R25_HazardGuide" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R31}}"><dc-import name="R31_Numbers" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R32}}"><dc-import name="R32_HeadsUp" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.R33}}"><dc-import name="R33_CheckIn" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.A01}}"><dc-import name="A01_AmbHome" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.A02}}"><dc-import name="A02_PostUpdate" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.A03}}"><dc-import name="A03_PostStatus" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.A04}}"><dc-import name="A04_Round" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.A05}}"><dc-import name="A05_Connect" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{ov.lang}}">
+    <dc-import name="R02_LanguageControl" app="{{app}}" embedded="{{true}}" hint-size="100%,100%"></dc-import>
+  </sc-if>
+  <sc-if value="{{ov.np}}">
+    <div class="cvh-overlay" role="dialog" aria-modal="true" aria-labelledby="np-title">
+      <div class="cvh-sheet">
+        <div class="cvh-sheet__head">
+          <span class="cvh-ico cvh-ico--prototype" aria-hidden="true"></span>
+          <h2 class="cvh-h3 cvh-grow" id="np-title">{{s.shell.notInPrototype}}</h2>
+          <button type="button" class="cvh-iconbtn" onClick="{{app.closeOverlay}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+        </div>
+        <div class="cvh-sheet__body">
+          <p>{{npText}}</p>
+          <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{app.closeOverlay}}">{{s.shell.ok}}</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ov.about}}">
+    <div class="cvh-overlay" role="dialog" aria-modal="true" aria-labelledby="about-title">
+      <div class="cvh-sheet">
+        <div class="cvh-sheet__head">
+          <h2 class="cvh-h3 cvh-grow" id="about-title">{{s.shell.about}}</h2>
+          <button type="button" class="cvh-iconbtn" onClick="{{app.closeOverlay}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+        </div>
+        <div class="cvh-sheet__body">
+          <img src="{{logo}}" alt="{{s.shell.hubLogoAlt}}" style="height:44px;width:auto;align-self:flex-start">
+          <p>{{s.shell.aboutBody}}</p>
+          <div class="cvh-row" style="--gap:12px;padding-top:8px;border-top:1px solid var(--border)">
+            <span class="cvh-caption cvh-muted">{{s.shell.builtBy}}</span>
+            <img src="{{sprout}}" alt="Sprout Climate" style="height:22px;width:auto">
+          </div>
+          <p class="cvh-caption cvh-muted">{{s.meta.aiNote}}</p>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ov.controls}}">
+    <div class="cvh-overlay" role="dialog" aria-modal="true" aria-labelledby="pc-title" lang="en" dir="ltr">
+      <div class="cvh-sheet" style="max-height:94%">
+        <div class="cvh-sheet__head">
+          <span class="cvh-ico cvh-ico--prototype" aria-hidden="true"></span>
+          <h2 class="cvh-h3 cvh-grow" id="pc-title">Prototype controls</h2>
+          <button type="button" class="cvh-iconbtn" onClick="{{app.closeOverlay}}" aria-label="Close"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+        </div>
+        <div class="cvh-sheet__body" style="font-size:16px">
+          <p class="cvh-caption cvh-muted">For facilitators. Not part of the CVH. Nothing is stored or sent.</p>
+          <p class="cvh-strong">View as</p>
+          <div class="cvh-stack" style="--gap:6px">
+            <sc-for list="{{personas}}" as="pp" hint-placeholder-count="7">
+              <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block cvh-btn--start {{pp.cls}}" style="font-size:16px;flex-direction:column;align-items:flex-start;gap:2px" onClick="{{pp.pick}}">
+                <span>{{pp.name}}</span><span class="cvh-caption cvh-muted" style="font-weight:400">{{pp.note}}</span>
+              </button>
+            </sc-for>
+          </div>
+          <button type="button" class="cvh-switch {{enOn}}" role="switch" aria-checked="{{enAria}}" onClick="{{toggleEnglish}}"><span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>Show every persona in English (Phase 2)</button>
+          <sc-if value="{{chosenNote}}"><p class="cvh-caption cvh-muted">{{chosenNote}}</p></sc-if>
+          <p class="cvh-strong">Start from</p>
+          <div class="cvh-stack" style="--gap:6px">
+            <sc-for list="{{entries}}" as="e" hint-placeholder-count="5">
+              <sc-if value="{{e.group}}"><p class="cvh-caption cvh-muted" style="padding-top:6px">{{e.group}}</p></sc-if>
+              <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block cvh-btn--start" style="font-size:16px" onClick="{{e.go}}">{{e.label}}</button>
+            </sc-for>
+          </div>
+          <p class="cvh-strong">Scenario</p>
+          <div class="cvh-row cvh-wrap" style="--gap:6px">
+            <sc-for list="{{scenarios}}" as="sc" hint-placeholder-count="7">
+              <button type="button" class="cvh-chip {{sc.cls}}" style="padding-inline-end:14px" onClick="{{sc.pick}}" aria-pressed="{{sc.pressed}}" title="{{sc.name}}">{{sc.id}}</button>
+            </sc-for>
+          </div>
+          <p class="cvh-caption">{{scenarioName}}</p>
+          <p class="cvh-strong">Session with the Hub</p>
+          <p class="cvh-caption">{{sessionLine}}</p>
+          <div class="cvh-row cvh-wrap" style="--gap:6px"><button type="button" class="cvh-btn cvh-btn--secondary" style="font-size:16px" onClick="{{startLive}}">Start Scenario A live</button><button type="button" class="cvh-btn cvh-btn--secondary" style="font-size:16px" onClick="{{clearSession}}">Clear the session</button></div>
+          <button type="button" class="cvh-switch {{sigOn}}" role="switch" aria-checked="{{sigAria}}" onClick="{{toggleSignal}}"><span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>Ambassador's phone has no signal</button>
+          <button type="button" class="cvh-switch {{mapFailOn}}" role="switch" aria-checked="{{mapFailAria}}" onClick="{{toggleMapFail}}"><span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>Map tiles fail to load (R-14 hands over to the list)</button>
+          <button type="button" class="cvh-switch {{exOn}}" role="switch" aria-checked="{{exAria}}" onClick="{{app.toggleExercise}}"><span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>Exercise running (ambassador screens)</button>
+          <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{app.openAbout}}">About the CVH (credit screen, not numbered in the brief)</button>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{toast}}">
+    <div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"int","default":360},"h":{"editor":"int","default":640},"start":{"editor":"text","default":""},"persona":{"editor":"enum","options":["new","amina","george","nasrin","yusuf","devon","rashid"],"default":"new"},"scenario":{"editor":"enum","options":["","A","B","C","D","E","F","G"],"default":""},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { screen: null, params: {}, history: [], visit: 0, lang: null, chosenLang: null, basic: null, basicState: 'off', overlay: null,
+      npText: '', persona: null, scenario: null, exercise: false, toast: null, choices: null, english: true, flags: { mapFail: false } };
+  }
+  componentDidMount() { var self = this; this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  flash(msg) { var self = this; if (this._tt) clearTimeout(this._tt); this.setState({ toast: msg }); this._tt = setTimeout(function () { self.setState({ toast: null }); }, 2800); }
+  start(patch) {
+    // Reset the whole session for a facilitator entry point, then apply the patch.
+    this.setState(Object.assign({ lang: null, chosenLang: null, basic: null, basicState: 'off', choices: null, overlay: null, history: [], params: {},
+      visit: this.state.visit + 1 }, patch));
+  }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data(), st = this.state;
+    var personaId = st.persona || p.persona || 'new', persona = C.persona(personaId) || {};
+    var chosen = st.chosenLang || persona.lang || null;
+    // Phase 2 is drawn in English. With the facilitator switch on, the resident's own language is kept
+    // (chosenLang) and shown in the prototype bar, but screens render in English unless someone picks a
+    // language from the language control during the session.
+    var lang = st.lang || (st.english ? 'en' : (chosen || 'en'));
+    var basic = st.basic !== null ? st.basic : !!persona.basic;
+    var screen = st.screen || p.start || (personaId === 'new' ? 'R-01' : (persona.role === 'ambassador' ? 'A-01' : 'R-03'));
+    var s = C.strings(lang), w = p.w || 360, h = p.h || 640;
+    var sess = C.session.get(), smodel = C.session.model() || { signal: true };
+    var scen = st.scenario || p.scenario || (C.session.active() ? sess.scenario : null) || D.defaultScenario;
+    var go = function (id, params) {
+      if (!id) return;
+      if (id[0] === 'O' || id[0] === 'P') { self.setState({ overlay: 'np', npText: 'That screen belongs to the Hub and partner space, a separate application. There is no route to it from the resident app.' }); return; }
+      if (id[0] === 'X') { self.setState({ overlay: 'np', npText: id + ' is a shared artefact on its own artboard.' }); return; }
+      if (id === 'R-02') { self.setState({ overlay: 'lang' }); return; }
+      self.setState({ screen: id, params: params || {}, visit: self.state.visit + 1, overlay: null,
+        history: self.state.history.concat([{ id: screen, params: self.state.params }]).slice(-40) });
+    };
+    var replace = function (id, params) { self.setState({ screen: id, params: params || {}, visit: self.state.visit + 1, overlay: null }); };
+    var choices = st.choices || C.choicesFor(persona);
+    var ambId = persona.role === 'ambassador' ? 'AMB-' + String(persona.name || '').toUpperCase() : null;
+    var exercise = !!st.exercise || (!!ambId && C.session.exerciseFor(ambId));
+    var app = {
+      screen: screen, params: st.params || {}, visit: st.visit, lang: lang, chosenLang: chosen, english: st.english, basic: basic,
+      basicState: basic ? (st.basicState === 'off' ? 'on' : st.basicState) : 'off',
+      persona: persona, personaId: personaId, scenario: scen, exercise: exercise, run: C.session.run(), choices: choices, flags: st.flags, w: w, h: h,
+      go: go, replace: replace, signal: smodel.signal !== false,
+      act: function (a) { return C.session.act(Object.assign({ exercise: exercise, by: ambId }, a)); },
+      back: function () { var hh = self.state.history.slice(); var prev = hh.pop(); if (prev) self.setState({ screen: prev.id, params: prev.params || {}, history: hh, visit: self.state.visit + 1, overlay: null }); else go('R-03'); },
+      canBack: st.history.length > 0,
+      setLang: function (code) { self.setState({ lang: code, chosenLang: code, overlay: null }); self.flash(C.fill(C.strings(code).R02.changed, { lang: C.lang(code).native })); },
+      chooseFirstLang: function (code) {
+        // R-01: the resident's choice is kept; the screen language follows it unless the English switch is on.
+        self.setState({ chosenLang: code, lang: self.state.english ? null : code });
+        if (self.state.english && code !== 'en') self.flash('Prototype: ' + C.lang(code).native + ' chosen. Phase 2 screens are drawn in English, so they stay in English.');
+      },
+      toggleBasic: function () { self.setState({ basic: !basic, basicState: !basic ? 'on' : 'off' }); },
+      setBasicByHelper: function (on) { self.setState({ basic: on !== false, basicState: on !== false ? 'helper' : 'off' }); },
+      setChoices: function (c) { self.setState({ choices: Object.assign({}, choices, c) }); },
+      openLang: function () { self.setState({ overlay: 'lang' }); },
+      openChoices: function () { go('R-34'); },
+      openControls: function () { self.setState({ overlay: 'controls' }); },
+      openAbout: function () { self.setState({ overlay: 'about' }); },
+      closeOverlay: function () { self.setState({ overlay: null }); },
+      notInPrototype: function (msg) { self.setState({ overlay: 'np', npText: msg || s.shell.notInPrototypeBody }); },
+      toggleExercise: function () { self.setState({ exercise: !self.state.exercise }); },
+      flash: function (m) { self.flash(m); }
+    };
+    var is = {}; is[screen.replace('-', '')] = true;
+    var ov = { lang: st.overlay === 'lang', np: st.overlay === 'np', about: st.overlay === 'about', controls: st.overlay === 'controls' };
+    var personas = (D.personas || []).map(function (pp) {
+      return { name: pp.name + (pp.lang ? ' · ' + C.lang(pp.lang).english : ''), note: pp.note, cls: pp.id === personaId ? 'cvh-chip--on' : '',
+        pick: function () { self.start({ persona: pp.id, basicState: pp.basic ? 'persisted' : 'off',
+          screen: pp.id === 'new' ? 'R-01' : (pp.role === 'ambassador' ? 'A-01' : 'R-03') }); } };
+    });
+    var entries = [
+      { group: 'Section 6 entry points', label: 'Printed notice: scan the Greek notice made for Building 25 (new visitor)', go: function () { self.start({ persona: 'george', screen: 'R-01', basic: false, choices: Object.assign(C.choicesFor({}), { building: 'B25', nbhd: 'FP' }), params: { notice: { lang: 'el', building: 'B25' } } }); } },
+      { label: 'Text message: Amina’s basic phone gets the power alert, then opens its link', go: function () { self.start({ persona: 'amina', scenario: 'A', screen: 'R-04', params: { alert: 'AL-05', kind: 'alert' } }); } },
+      { label: 'WhatsApp: Yusuf’s floor group, a new neighbour opens the forwarded link later', go: function () { self.start({ persona: 'new', scenario: 'A', screen: 'R-30', params: { alert: 'AL-05', sharedBy: 'yusuf' } }); } },
+      { label: 'WhatsApp: the same link opened by a returning visitor', go: function () { self.start({ persona: 'yusuf', scenario: 'A', screen: 'R-07', params: { alert: 'AL-05', from: 'forwarded' } }); } },
+      { group: 'Scenario B: one heat alert, three people', label: 'Heat alert as Amina (seniors, check-in covered)', go: function () { self.start({ persona: 'amina', scenario: 'B', screen: 'R-07', params: { alert: 'AL-06' } }); } },
+      { label: 'Heat alert as George (seniors, bigger text, no check-in asked for)', go: function () { self.start({ persona: 'george', scenario: 'B', screen: 'R-07', params: { alert: 'AL-06' } }); } },
+      { label: 'Heat alert as Nasrin (newcomers)', go: function () { self.start({ persona: 'nasrin', scenario: 'B', screen: 'R-07', params: { alert: 'AL-06' } }); } },
+      { group: 'Other starts', label: 'Returning visitor, straight to home', go: function () { go('R-03'); } },
+      { label: 'Returning in bigger text, fewer things', go: function () { self.setState({ basic: true, basicState: 'persisted', screen: 'R-03', overlay: null, visit: self.state.visit + 1 }); } },
+      { label: 'Ambassador home (Rashid)', go: function () { self.start({ persona: 'rashid', screen: 'A-01' }); } }
+    ];
+    var scenarios = Object.keys(D.scenarios || {}).map(function (k) {
+      return { id: k, name: D.scenarios[k].name, cls: k === scen ? 'cvh-chip--on' : '', pressed: k === scen ? 'true' : 'false', pick: function () { self.setState({ scenario: k, visit: self.state.visit + 1 }); } };
+    });
+    var flag = function (k) { return function () { var f = Object.assign({}, self.state.flags); f[k] = !f[k]; self.setState({ flags: f, visit: self.state.visit + 1 }); }; };
+    return { app: app, is: is, ov: ov, s: s, w: w, h: h, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: basic ? 'cvh-basic' : '',
+      npText: st.npText, toast: st.toast, logo: C.logo.hub, sprout: C.logo.sprout,
+      personas: personas, entries: entries, scenarios: scenarios, scenarioName: 'Scenario ' + scen + ': ' + ((D.scenarios || {})[scen] || {}).name,
+      exOn: st.exercise ? 'is-on' : '', exAria: st.exercise ? 'true' : 'false',
+      enOn: st.english ? 'is-on' : '', enAria: st.english ? 'true' : 'false', toggleEnglish: function () { self.setState({ english: !self.state.english, lang: null }); },
+      sigOn: smodel.signal !== false ? '' : 'is-on', sigAria: smodel.signal !== false ? 'false' : 'true',
+      toggleSignal: function () { var sig = (C.session.model() || {}).signal !== false; C.session.act({ t: 'signal', on: !sig }); },
+      sessionLine: sess.live === 'A' ? 'Scenario A is running live (' + sess.log.length + ' actions). Hub actions show here as they happen.' : sess.log.length ? sess.log.length + ' actions from the Hub or an ambassador are showing on top of the drawn scenarios.' : 'No Hub actions yet in this session.',
+      startLive: function () { C.session.reset({ live: 'A', scenario: 'A' }); self.setState({ scenario: 'A', overlay: null, visit: self.state.visit + 1 }); },
+      clearSession: function () { C.session.reset({}); self.setState({ overlay: null, visit: self.state.visit + 1 }); },
+      mapFailOn: st.flags.mapFail ? 'is-on' : '', mapFailAria: st.flags.mapFail ? 'true' : 'false', toggleMapFail: flag('mapFail'),
+      chosenNote: chosen && chosen !== lang ? 'Resident’s language: ' + C.lang(chosen).english + ' (screens shown in ' + C.lang(lang).english + ')' : '' };
+  }
+}
+</script>
+</body>
+</html>

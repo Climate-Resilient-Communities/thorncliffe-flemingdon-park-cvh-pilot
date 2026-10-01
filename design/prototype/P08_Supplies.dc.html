@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-08 Supplies and space capacity</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-08" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-08" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-08" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-pc">
+  <div class="cvh-stack" style="--gap:6px">
+    <h2 class="cvh-h2">{{x.title}}</h2>
+    <p>{{x.lead}}</p>
+    <p class="cvh-row cvh-muted" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span>{{x.partnerOnly}}</span></p>
+    <sc-if value="{{exercise}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{x.exercise}}</span></p></sc-if>
+  </div>
+
+  <section class="cvh-pc-panel" aria-labelledby="p08-ours">
+    <div class="cvh-row cvh-wrap" style="--gap:10px">
+      <span class="cvh-origin__mark" aria-hidden="true">{{mine.mono}}</span>
+      <h3 class="cvh-pc-panel__title cvh-grow" id="p08-ours">{{mine.title}}</h3>
+      <span class="cvh-cap {{mine.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{mine.capWord}}</span>
+    </div>
+    <sc-if value="{{mine.empty}}"><p class="cvh-pc-empty">{{mine.emptyLine}}</p></sc-if>
+    <sc-for list="{{mine.sites}}" as="st" hint-placeholder-count="2">
+      <div class="cvh-pc-site">
+        <div class="cvh-pc-site__head"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong" style="color:var(--ink)">{{st.location}}</span></div>
+        <sc-if value="{{st.hasSpace}}">
+          <div class="cvh-pc-sitecap">
+            <span class="cvh-strong" style="color:var(--ink)">{{st.spaceName}}</span>
+            <dc-import name="X09_SpaceStatus" space="{{st.spaceId}}" lang="en" embedded="{{true}}" hint-size="240px,64px"></dc-import>
+            <span>{{st.cap}}</span>
+            <button type="button" class="cvh-link" onClick="{{toSpaces}}">{{x.setOn}}</button>
+          </div>
+        </sc-if>
+        <sc-for list="{{st.items}}" as="it" hint-placeholder-count="2">
+          <div class="cvh-pc-sup {{supCls}}">
+            <div class="cvh-stack" style="--gap:2px">
+              <p class="cvh-row cvh-wrap" style="--gap:8px"><span class="cvh-pc-sup__name">{{it.name}}</span><span>{{it.amount}}</span><sc-if value="{{it.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if></p>
+              <p class="cvh-muted">{{it.updated}}</p>
+              <sc-if value="{{it.attached}}"><p class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{it.attached}}</p></sc-if>
+            </div>
+            <div class="cvh-row cvh-wrap" style="--gap:8px">
+              <div class="cvh-pc-seg" role="group" aria-label="{{it.segLabel}}">
+                <sc-for list="{{it.qtys}}" as="q" hint-placeholder-count="3">
+                  <button type="button" class="{{q.cls}}" aria-pressed="{{q.pressed}}" onClick="{{q.pick}}"><span class="cvh-pc-meter {{q.meter}}" aria-hidden="true"><i></i><i></i><i></i></span>{{q.word}}</button>
+                </sc-for>
+              </div>
+              <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{it.confirm}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.stillCorrect}}</button>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-for>
+    <sc-if value="{{notAdding}}"><button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{openAdd}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.add}}</button></sc-if>
+    <sc-if value="{{adding}}">
+      <form class="cvh-pc-form" onSubmit="{{save}}" aria-labelledby="p08-add">
+        <p class="cvh-h3" id="p08-add">{{x.addTitle}}</p>
+        <div class="cvh-pc-form__row {{formCls}}">
+          <label class="cvh-field"><span class="cvh-label">{{x.what}}</span>
+            <select class="cvh-select" onChange="{{pickItem}}">
+              <sc-for list="{{itemOpts}}" as="io" hint-placeholder-count="5"><option value="{{io.id}}" selected="{{io.sel}}">{{io.label}}</option></sc-for>
+            </select></label>
+          <label class="cvh-field"><span class="cvh-label">{{x.where}}</span><input class="cvh-input" type="text" value="{{loc.where}}" onInput="{{typeWhere}}"></label>
+          <div class="cvh-field"><span class="cvh-label">{{x.howMuch}}</span>
+            <div class="cvh-pc-seg" role="group" aria-label="{{x.howMuch}}">
+              <sc-for list="{{newQty}}" as="q" hint-placeholder-count="3"><button type="button" class="{{q.cls}}" aria-pressed="{{q.pressed}}" onClick="{{q.pick}}">{{q.word}}</button></sc-for>
+            </div></div>
+        </div>
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <button type="submit" class="cvh-btn cvh-btn--primary">{{x.save}}</button>
+          <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{closeAdd}}">{{x.cancel}}</button>
+        </div>
+      </form>
+    </sc-if>
+  </section>
+
+  <h3 class="cvh-h3">{{x.others}}</h3>
+  <div class="cvh-pc-orggrid {{gridCls}}">
+    <sc-for list="{{others}}" as="o" hint-placeholder-count="3">
+      <section class="cvh-pc-panel" aria-label="{{o.name}}">
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <span class="cvh-origin__mark" aria-hidden="true">{{o.mono}}</span>
+          <span class="cvh-strong cvh-grow" style="color:var(--ink)">{{o.name}}</span>
+          <span class="cvh-cap {{o.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{o.capWord}}</span>
+        </div>
+        <sc-if value="{{o.empty}}"><p class="cvh-pc-empty">{{o.emptyLine}}</p></sc-if>
+        <sc-for list="{{o.sites}}" as="st" hint-placeholder-count="1">
+          <div class="cvh-pc-site">
+            <div class="cvh-pc-site__head"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong" style="color:var(--ink)">{{st.location}}</span></div>
+            <sc-if value="{{st.hasSpace}}">
+              <div class="cvh-pc-sitecap"><span class="cvh-strong" style="color:var(--ink)">{{st.spaceName}}</span>
+                <dc-import name="X09_SpaceStatus" space="{{st.spaceId}}" lang="en" embedded="{{true}}" hint-size="240px,64px"></dc-import><span>{{st.cap}}</span></div>
+            </sc-if>
+            <sc-for list="{{st.items}}" as="it" hint-placeholder-count="1">
+              <div class="cvh-pc-sup cvh-pc-sup--one">
+                <p class="cvh-row cvh-wrap" style="--gap:8px"><span class="cvh-pc-sup__name">{{it.name}}</span>
+                  <span class="cvh-pc-qty"><span class="cvh-pc-meter {{it.meter}}" aria-hidden="true"><i></i><i></i><i></i></span>{{it.qtyWord}}</span>
+                  <sc-if value="{{it.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if></p>
+                <p>{{it.amount}}</p>
+                <p class="cvh-muted">{{it.updated}}</p>
+                <sc-if value="{{it.attached}}"><p class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{it.attached}}</p></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </section>
+    </sc-for>
+  </div>
+  <div class="cvh-pc-links">
+    <button type="button" class="cvh-link" onClick="{{toSpaces}}">{{x.toSpaces}}</button>
+    <button type="button" class="cvh-link" onClick="{{toCoverage}}">{{x.toCoverage}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Daniel, TNO: our supplies and the community room&#39;s capacity", "Priya, the Hub: Hub storage beside the Hub space", "Adding an item", "Exercise running", "Phone width, 390"], "default": "Daniel, TNO: our supplies and the community room&#39;s capacity"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Daniel, TNO: our supplies and the community room's capacity": {"persona": "DANIEL", "h": 1500}, "Priya, the Hub: Hub storage beside the Hub space": {"persona": "PRIYA", "h": 1500}, "Adding an item": {"persona": "DANIEL", "h": 1500, "loc": {"adding": true}}, "Exercise running": {"persona": "DANIEL", "exercise": true, "h": 1500}, "Phone width, 390": {"persona": "DANIEL", "w": 390, "h": 2400}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-08', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P08, P = D.partner || {}, fill = C.fill, loc = b.loc || {};
+    var me = b.persona || {}, myOrg = me.org || 'HUB';
+    var capWords = (s.P05 || {}).words || {};
+    var capOf = function (o) { var v = (P.capacity || {})[o] || 'notSet'; return { capCls: 'cvh-cap--' + v, capWord: capWords[v] || v }; };
+    var lvl = { few: 1, some: 2, plenty: 3 };
+    var stmts = P.statements || [];
+    var typeWord = s.x06 || {};
+    var spaceFor = function (org, location) {
+      var l = String(location || '').toLowerCase(), hit = null;
+      (D.spaces || []).forEach(function (z) {
+        if (z.org !== org || hit) return;
+        var a = C.asset(z.assetId) || {}, nm = String(a.name || '').toLowerCase(), addr = String(a.address || '').toLowerCase().split(' ').slice(0, 2).join(' ');
+        if ((z.room && l.indexOf(z.room.toLowerCase()) >= 0) || (addr && l.indexOf(addr.split(' ')[1] || '~') >= 0 && l.indexOf(addr.split(' ')[0]) >= 0) || (/\bhub\b/.test(l) && /\bhub\b/.test(nm))) hit = z;
+      });
+      return hit;
+    };
+    var self = this;
+    var itemView = function (u, editable) {
+      var name = x.items[u.item] || u.item, q = u.qty;
+      var att = stmts.filter(function (t) { return t.supply === u.id; })[0];
+      var v = { name: name, illus: !u._session, qtyWord: x.qty[q] || q, meter: 'cvh-pc-meter--' + (lvl[q] || 0),
+        amount: u.qtyNum != null ? fill(x.about, { n: u.qtyNum, unit: u.unit || '' }) : '', updated: fill(x.updated, { t: b.ago(u.updatedMinsAgo || 0) }),
+        attached: att ? fill(x.attached, { id: att.id, type: typeWord[att.type] || att.type }) : '' };
+      if (editable) {
+        v.segLabel = x.howMuch + ': ' + name;
+        v.qtys = ['few', 'some', 'plenty'].map(function (k) {
+          var on = q === k;
+          return { word: x.qty[k], meter: 'cvh-pc-meter--' + lvl[k], cls: on ? 'is-on' : '', pressed: on ? 'true' : 'false',
+            pick: function () { b.act({ t: 'partner', kind: 'supply', item: { supplyId: u.id, changes: { qty: k, qtyNum: on ? u.qtyNum : null } } }); b.toast(fill(x.updatedToast, { item: name, qty: x.qty[k].toLowerCase() })); } };
+        });
+        v.confirm = function () { b.act({ t: 'partner', kind: 'supply', item: { supplyId: u.id, changes: { qty: q } } }); b.toast(fill(x.confirmedToast, { item: name })); };
+      }
+      return v;
+    };
+    var orgBlock = function (org, editable) {
+      var o = C.org(org) || { name: org, monogram: org }, cp = capOf(org);
+      var list = (P.supplies || []).filter(function (u) { return u.org === org; });
+      var sites = [], byLoc = {};
+      list.forEach(function (u) { var k = u.location || '?'; if (!byLoc[k]) { byLoc[k] = { location: k, items: [] }; sites.push(byLoc[k]); } byLoc[k].items.push(itemView(u, editable)); });
+      sites.forEach(function (st) {
+        var z = spaceFor(org, st.location), a = z ? C.asset(z.assetId) || {} : null, cap = z ? z.capacity || {} : {};
+        st.hasSpace = !!z; st.spaceId = z ? z.id : ''; st.spaceName = z ? (z.room ? z.room + ', ' : '') + (a.name || '') : '';
+        st.cap = z ? (cap.now != null ? fill(x.capNow, { now: cap.now, max: cap.max }) : fill(x.capUnknown, { max: cap.max })) : '';
+      });
+      sites.sort(function (p, q) { return (q.hasSpace ? 1 : 0) - (p.hasSpace ? 1 : 0); });
+      return { mono: o.monogram, name: o.name, title: fill(x.ours, { org: o.name }), capCls: cp.capCls, capWord: cp.capWord, sites: sites, empty: !sites.length, emptyLine: fill(x.noneYet, { org: o.name }) };
+    };
+    var mine = orgBlock(myOrg, true);
+    var others = ['HUB', 'TNO', 'CRC', 'CITY'].filter(function (o) { return o !== myOrg; }).map(function (o) { return orgBlock(o, false); });
+    var mySpace = (D.spaces || []).filter(function (z) { return z.org === myOrg; })[0], msa = mySpace ? C.asset(mySpace.assetId) || {} : null;
+    var defWhere = mySpace ? (mySpace.room ? (msa.address || '').split(' ').slice(0, 2).join(' ') + ' ' + mySpace.room.toLowerCase() : msa.name) : '';
+    var cur = { item: loc.item || 'water', where: loc.where != null ? loc.where : defWhere, qty: loc.qty || 'some' };
+    var sp = (b.params || {}).space;
+    return { x: x, exercise: b.exercise, mine: mine, others: others, gridCls: b.narrow ? 'cvh-pc-orggrid--one' : '', supCls: b.narrow ? 'cvh-pc-sup--one' : '',
+      formCls: b.narrow ? 'cvh-pc-form__row--one' : '', adding: !!loc.adding, notAdding: !loc.adding, loc: cur,
+      itemOpts: Object.keys(x.items).map(function (k) { return { id: k, label: x.items[k], sel: cur.item === k }; }),
+      newQty: ['few', 'some', 'plenty'].map(function (k) { return { word: x.qty[k], cls: cur.qty === k ? 'is-on' : '', pressed: cur.qty === k ? 'true' : 'false', pick: function () { b.setLoc({ qty: k }); } }; }),
+      openAdd: function () { b.setLoc({ adding: true }); }, closeAdd: function () { b.setLoc({ adding: false }); },
+      pickItem: function (e) { b.setLoc({ item: e.target.value }); }, typeWhere: function (e) { b.setLoc({ where: e.target.value }); },
+      save: function (e) { if (e && e.preventDefault) e.preventDefault();
+        b.act({ t: 'partner', kind: 'supply', item: { changes: { item: cur.item, qty: cur.qty, qtyNum: null, unit: '', location: cur.where || defWhere, org: myOrg } } });
+        b.setLoc({ adding: false, where: null }); b.toast(x.added); },
+      toSpaces: function () { b.go('P-07', sp ? { space: sp } : {}); }, toCoverage: function () { b.go('P-04', sp ? { space: sp } : {}); } };
+  }
+
+}
+</script>
+</body>
+</html>

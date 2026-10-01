@@ -1,0 +1,175 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-26 Which groups do I belong to?</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-26" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Which groups do I belong to?">
+
+<div class="cvh-screen">
+  <div class="cvh-row" style="--gap:8px">
+    <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+    <sc-if value="{{firstRun}}"><span class="cvh-steps" style="margin-inline-start:auto">{{s.R26.step}}</span></sc-if>
+  </div>
+  <div class="cvh-stack" style="--gap:8px">
+    <h1 class="cvh-h1">{{s.R26.title}}</h1>
+    <p>{{s.R26.lead}}</p>
+  </div>
+  <div class="cvh-stack" style="--gap:10px" role="group" aria-label="{{s.R26.choose}}">
+    <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+      <button type="button" class="cvh-option {{o.cls}}" role="checkbox" aria-checked="{{o.aria}}" onClick="{{o.toggle}}">
+        <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+        <span class="cvh-option__text"><span class="cvh-option__label">{{o.label}}</span><span class="cvh-option__line">{{o.line}}</span></span>
+      </button>
+    </sc-for>
+  </div>
+  <sc-if value="{{checkinNext}}">
+    <div class="cvh-note" role="status"><span class="cvh-ico cvh-ico--info" aria-hidden="true"></span><span class="cvh-grow">{{s.R26.checkinNext}}</span></div>
+  </sc-if>
+  <sc-if value="{{showHelperLink}}">
+    <button type="button" class="cvh-link" onClick="{{openHelper}}"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{s.R26.helping}}</button>
+  </sc-if>
+  <sc-if value="{{showHelper}}">
+    <div class="cvh-stack" style="--gap:6px">
+      <button type="button" class="cvh-option {{helperCls}}" style="border-style:dashed" role="checkbox" aria-checked="{{helperAria}}" onClick="{{toggleHelper}}">
+        <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{helperOk}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+        <span class="cvh-option__text"><span class="cvh-option__label">{{s.R26.helperConfirm}}</span><span class="cvh-option__line">{{s.R26.helperNote}}</span></span>
+      </button>
+      <sc-if value="{{err}}"><p class="cvh-error" role="alert"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{s.R26.helperNeeded}}</span></p></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{firstRun}}">
+    <div class="cvh-stack" style="--gap:8px">
+      <div class="cvh-pair">
+        <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg" onClick="{{skip}}">{{s.shell.skip}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg" onClick="{{cont}}">{{s.shell.next}}</button>
+      </div>
+      <p class="cvh-caption cvh-muted">{{s.R26.skipLine}}</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{later}}">
+    <div class="cvh-pair">
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg" onClick="{{goBack}}">{{s.shell.cancel}}</button>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" onClick="{{cont}}">{{s.R26.save}}</button>
+    </div>
+  </sc-if>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["First run, none chosen", "One chosen (Nasrin, newcomers)", "Check-in chosen (continues to where I live, then check-in)", "Helper confirming the resident agreed", "Helper has not confirmed yet", "Changed later from My choices", "Basic mode, none chosen"], "default": "First run, none chosen"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"First run, none chosen": {"persona": "new", "scenario": "C", "params": {"firstRun": true}}, "One chosen (Nasrin, newcomers)": {"persona": "nasrin", "scenario": "C", "choices": {"groups": []}, "params": {"firstRun": true}, "loc": {"picked": ["newcomers"]}}, "Check-in chosen (continues to where I live, then check-in)": {"persona": "amina", "scenario": "C", "basic": false, "choices": {"groups": [], "checkin": null}, "params": {"firstRun": true}, "loc": {"picked": ["seniors", "checkin"]}}, "Helper confirming the resident agreed": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "choices": {"groups": []}, "params": {"firstRun": true}, "loc": {"picked": ["seniors"], "helperOk": true}}, "Helper has not confirmed yet": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "choices": {"groups": []}, "params": {"firstRun": true}, "loc": {"picked": ["seniors"], "err": true}}, "Changed later from My choices": {"persona": "nasrin", "scenario": "C", "params": {"from": "choices"}}, "Basic mode, none chosen": {"persona": "new", "scenario": "C", "basic": true, "basicState": "on", "params": {"firstRun": true}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'firstRun';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'none', showExercise: 'R-26'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-26'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var s = b.s, ch = b.ch, prm = b.params, app = b.app, loc = b.loc;
+    var firstRun = !!prm.firstRun;
+    var picked = loc.picked || (ch.groups || []).slice();
+    if (!loc.picked && ch.checkin && picked.indexOf('checkin') < 0) picked.push('checkin');
+    var opts = (b.D.groups || ['seniors', 'newcomers', 'families', 'checkin']).map(function (g) {
+      var on = picked.indexOf(g) >= 0, gs = s.groups[g] || {};
+      return { label: gs.label, line: gs.line, on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        toggle: function () { var p = picked.filter(function (x) { return x !== g; }); if (!on) p.push(g); b.setLoc({ picked: p, err: false }); } };
+    });
+    var hasCheckin = picked.indexOf('checkin') >= 0;
+    // A helper is known to be present when they turned on bigger text on R-01; then agreement must be confirmed.
+    var helperKnown = app.basicState === 'helper';
+    var helperOk = !!loc.helperOk;
+    var goBack = function () { if (app.canBack) b.back(); else b.go(firstRun ? 'R-01' : 'R-34'); };
+    var cont = function () {
+      if (helperKnown && picked.length && !helperOk) { b.setLoc({ err: true }); return; }
+      var needsCheckin = hasCheckin && !ch.checkin;
+      var patch = { groups: picked.slice() };
+      if (!hasCheckin) patch.checkin = null;
+      app.setChoices(patch);
+      if (firstRun) { b.go('R-35', { firstRun: true, checkin: needsCheckin, notice: prm.notice || null }); return; }
+      if (needsCheckin) { b.go('R-33', { from: 'choices' }); return; }
+      if (app.canBack) b.back(); else b.go('R-34');
+      b.toast(s.R26.saved);
+    };
+    return {
+      firstRun: firstRun, later: !firstRun, opts: opts, checkinNext: firstRun && hasCheckin && !ch.checkin,
+      showHelper: picked.length > 0 && (helperKnown || !!loc.helperOpen), showHelperLink: picked.length > 0 && !helperKnown && !loc.helperOpen,
+      openHelper: function () { b.setLoc({ helperOpen: true }); }, helperOk: helperOk, helperCls: helperOk ? 'is-on' : '', helperAria: helperOk ? 'true' : 'false',
+      toggleHelper: function () { b.setLoc({ helperOk: !helperOk, err: false }); }, err: !!loc.err,
+      goBack: goBack, cont: cont,
+      skip: function () { b.go('R-35', { firstRun: true, notice: prm.notice || null }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

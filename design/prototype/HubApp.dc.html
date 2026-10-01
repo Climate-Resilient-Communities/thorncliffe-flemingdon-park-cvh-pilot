@@ -1,0 +1,204 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub and partner space</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="position:relative;width:{{w}}px;height:{{h}}px;overflow:hidden;background:var(--surface)">
+  <sc-if value="{{is.O01}}"><dc-import name="O01_OperatorHome" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O11}}"><dc-import name="O11_LogDisruption" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O12}}"><dc-import name="O12_AckComposer" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O13}}"><dc-import name="O13_Promote" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O02}}"><dc-import name="O02_Compose" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O03}}"><dc-import name="O03_AudiencePlace" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O04}}"><dc-import name="O04_AudienceGroup" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O05}}"><dc-import name="O05_PreSend" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O06}}"><dc-import name="O06_Published" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O14}}"><dc-import name="O14_Update" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O15}}"><dc-import name="O15_Correct" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O16}}"><dc-import name="O16_Resolve" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O07}}"><dc-import name="O07_AmbReview" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O17}}"><dc-import name="O17_CheckinProgress" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O18}}"><dc-import name="O18_OfficialReceived" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O08}}"><dc-import name="O08_ModQueue" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O09}}"><dc-import name="O09_ModReview" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.O10}}"><dc-import name="O10_Decline" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P06}}"><dc-import name="P06_Activation" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P01}}"><dc-import name="P01_OpenSpace" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P02}}"><dc-import name="P02_SharedSpace" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P03}}"><dc-import name="P03_Statement" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P04}}"><dc-import name="P04_Coverage" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P05}}"><dc-import name="P05_Capacity" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P07}}"><dc-import name="P07_OurSpaces" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P08}}"><dc-import name="P08_Supplies" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P09}}"><dc-import name="P09_Decisions" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P10}}"><dc-import name="P10_Handover" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P11}}"><dc-import name="P11_Readiness" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P12}}"><dc-import name="P12_Playbook" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P13}}"><dc-import name="P13_Teams" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P14}}"><dc-import name="P14_Exercise" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P15}}"><dc-import name="P15_Indicators" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{is.P16}}"><dc-import name="P16_LookBack" app="{{app}}" embedded="{true}" hint-size="100%,100%"></dc-import></sc-if>
+  <sc-if value="{{ov.menu}}">
+    <div class="cvh-overlay" style="justify-content:flex-start;flex-direction:row" role="dialog" aria-modal="true" aria-label="Menu">
+      <div style="width:280px;max-width:86%;height:100%;background:#fff;display:flex;flex-direction:column">
+        <div class="cvh-row" style="justify-content:flex-end;padding:8px"><button type="button" class="cvh-iconbtn" onClick="{{app.closeOverlay}}" aria-label="Close"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button></div>
+        <div style="flex:1;min-height:0"><dc-import name="C_HubSide" active="{{app.screen}}" in-disruption="{{app.inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,100%"></dc-import></div>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ov.np}}">
+    <div class="cvh-overlay" style="justify-content:center;align-items:center" role="dialog" aria-modal="true" aria-labelledby="np-title">
+      <div class="cvh-card" style="width:min(460px,90%);display:flex;flex-direction:column;gap:14px;padding:24px">
+        <h2 class="cvh-h3" id="np-title">Not in this prototype</h2>
+        <p>{{npText}}</p>
+        <button type="button" class="cvh-btn cvh-btn--primary" style="align-self:flex-start" onClick="{{app.closeOverlay}}">OK</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ov.controls}}">
+    <div class="cvh-overlay" style="justify-content:center;align-items:center" role="dialog" aria-modal="true" aria-labelledby="hc-title">
+      <div class="cvh-card" style="width:min(640px,94%);max-height:94%;overflow:auto;display:flex;flex-direction:column;gap:12px;padding:24px">
+        <div class="cvh-row"><h2 class="cvh-h3 cvh-grow" id="hc-title">Prototype controls</h2><button type="button" class="cvh-iconbtn" onClick="{{app.closeOverlay}}" aria-label="Close"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button></div>
+        <p class="cvh-muted">For facilitators. Not part of the CVH. Actions are kept in this browser only, and nothing is sent.</p>
+        <p class="cvh-strong">Signed in as</p>
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <sc-for list="{{people}}" as="pp" hint-placeholder-count="2">
+            <button type="button" class="cvh-chip {{pp.cls}}" style="padding-inline-end:14px" onClick="{{pp.pick}}" aria-pressed="{{pp.pressed}}">{{pp.label}}</button>
+          </sc-for>
+        </div>
+        <button type="button" class="cvh-switch {{exOn}}" role="switch" aria-checked="{{exAria}}" onClick="{{app.toggleExercise}}" style="align-self:flex-start"><span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>Exercise running (nothing reaches residents)</button>
+        <p class="cvh-strong">Session</p>
+        <p class="cvh-caption">{{sessionLine}}</p>
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <sc-for list="{{sessionBtns}}" as="sb" hint-placeholder-count="2">
+            <button type="button" class="cvh-btn cvh-btn--secondary" style="font-size:16px" onClick="{{sb.go}}">{{sb.label}}</button>
+          </sc-for>
+        </div>
+        <p class="cvh-strong">Something happens</p>
+        <div class="cvh-stack" style="--gap:6px">
+          <sc-for list="{{events}}" as="ev" hint-placeholder-count="4">
+            <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--start" style="font-size:16px" onClick="{{ev.go}}">{{ev.label}}</button>
+          </sc-for>
+        </div>
+        <p class="cvh-strong">Jump to</p>
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <sc-for list="{{jumps}}" as="j" hint-placeholder-count="4">
+            <button type="button" class="cvh-btn cvh-btn--secondary" style="font-size:16px" onClick="{{j.go}}">{{j.label}}</button>
+          </sc-for>
+        </div>
+        <sc-if value="{{hasLog}}">
+          <p class="cvh-strong">What has happened in this session</p>
+          <ol class="cvh-caption" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:2px">
+            <sc-for list="{{log}}" as="lg" hint-placeholder-count="3"><li>{{lg}}</li></sc-for>
+          </ol>
+        </sc-if>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{toast}}">
+    <div class="cvh-toast" role="status" style="inset-inline:auto 24px;bottom:24px;max-width:520px"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"w":{"editor":"int","default":1280},"h":{"editor":"int","default":800},"start":{"editor":"text","default":"O-01"},"persona":{"editor":"enum","options":["PRIYA","DANIEL"],"default":"PRIYA"},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { screen: null, params: {}, history: [], visit: 0, overlay: null, npText: '', persona: null, exercise: false, inDisruption: false, toast: null, srev: 0 }; }
+  componentDidMount() { var self = this; this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._off) this._off(); if (this._tt) clearTimeout(this._tt); }
+  flash(msg) { var self = this; if (this._tt) clearTimeout(this._tt); this.setState({ toast: msg }); this._tt = setTimeout(function () { self.setState({ toast: null }); }, 3200); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data(), st = this.state, S = C.session;
+    var screen = st.screen || p.start || 'O-01';
+    var w = p.w || 1280, h = p.h || 800, narrow = w < 700;
+    var num = parseInt(screen.slice(2), 10);
+    var inDisruption = st.inDisruption || (screen[0] === 'P' && num <= 10);
+    var persona = st.persona || p.persona || 'PRIYA';
+    var exercise = !!st.exercise || S.exerciseFor(persona);
+    var go = function (id, params) {
+      if (!id) return;
+      if (id[0] === 'R' || id[0] === 'A') { self.setState({ overlay: 'np', npText: id + ' is in the resident and ambassador app, a separate application. Open the Resident app artboard, or the Scenario A walkthrough, to see it change.' }); return; }
+      if (id[0] === 'X') { self.setState({ overlay: 'np', npText: id + ' is a shared component on its own artboard.' }); return; }
+      var n = parseInt(id.slice(2), 10);
+      self.setState({ screen: id, params: params || {}, visit: self.state.visit + 1, overlay: null,
+        history: self.state.history.concat([{ id: screen, params: self.state.params }]).slice(-40),
+        inDisruption: (id[0] === 'P' && n <= 10) ? true : (id === 'O-01' || id[0] === 'P' && n >= 11) ? false : self.state.inDisruption });
+    };
+    var app = { screen: screen, params: st.params || {}, visit: st.visit, persona: persona, exercise: exercise, run: S.run(), narrow: narrow, w: w, h: h, inDisruption: inDisruption,
+      go: go, replace: function (id, params) { self.setState({ screen: id, params: params || {}, visit: self.state.visit + 1, overlay: null }); },
+      back: function () { var hh = self.state.history.slice(); var prev = hh.pop(); if (prev) self.setState({ screen: prev.id, params: prev.params || {}, history: hh, visit: self.state.visit + 1 }); else go('O-01'); },
+      canBack: st.history.length > 0,
+      act: function (a) { return S.act(Object.assign({ exercise: exercise, by: persona }, a)); },
+      flash: function (m) { self.flash(m); },
+      openMenu: function () { self.setState({ overlay: 'menu' }); }, openControls: function () { self.setState({ overlay: 'controls' }); },
+      closeOverlay: function () { self.setState({ overlay: null }); },
+      notInPrototype: function (msg) { self.setState({ overlay: 'np', npText: msg || 'This part is not built in the prototype. Nothing has changed.' }); },
+      toggleExercise: function () { self.setState({ exercise: !self.state.exercise }); } };
+    var is = {}; is[screen.replace('-', '')] = true;
+    var people = ['PRIYA', 'DANIEL'].map(function (id) {
+      var pr = C.person(id) || {}, org = C.org(pr.org) || {};
+      return { label: pr.name + ', ' + org.short, cls: id === persona ? 'cvh-chip--on' : '', pressed: id === persona ? 'true' : 'false',
+        pick: function () { self.setState({ persona: id }); } };
+    });
+    var sst = S.get(), model = S.model() || { n: 0 };
+    var runNow = S.run();
+    var sessionLine = runNow ? 'Exercise running: ' + runNow.name + '. Enrolled: ' + runNow.enrolled.join(', ') + '. Nothing reaches residents.' : sst.live === 'A' ? 'Scenario A is running live: it began at 7:40 pm with nothing posted. ' + sst.log.length + ' actions so far.'
+      : sst.log.length ? sst.log.length + ' actions taken on top of the drawn scenarios.' : 'Showing the drawn scenarios. Nothing has been done in this session yet.';
+    var sessionBtns = [
+      { label: 'Start Scenario A live (7:40 pm, nothing posted)', go: function () { S.reset({ live: 'A', scenario: 'A' }); self.setState({ screen: 'O-01', params: {}, history: [], overlay: null, visit: self.state.visit + 1 }); self.flash('Scenario A is live. Log the outage from O-01.'); } },
+      { label: 'Scenario D: a practice run and a look back', go: function () { S.reset({ scenario: 'D' }); self.setState({ screen: 'P-14', params: {}, history: [], overlay: null, visit: self.state.visit + 1 }); } },
+      { label: 'Scenario G: elevators out for three weeks', go: function () { S.reset({ scenario: 'G' }); self.setState({ screen: 'O-01', params: {}, history: [], overlay: null, visit: self.state.visit + 1 }); } },
+      { label: 'Clear the session (drawn scenarios)', go: function () { S.reset({}); self.setState({ overlay: null, visit: self.state.visit + 1 }); self.flash('Session cleared.'); } }
+    ];
+    var incoming = function (id, label) { return { label: label, go: function () { app.act({ t: 'official', alert: id, state: 'incoming' }); self.setState({ screen: 'O-01', params: {}, overlay: null, visit: self.state.visit + 1 }); } }; };
+    var events = [
+      incoming('AL-01', 'An official alert arrives: heat warning (Environment and Climate Change Canada)'),
+      incoming('AL-03', 'An official alert arrives: winter storm warning'),
+      incoming('AL-04', 'An official alert arrives: Amber Alert (fictional placeholder)'),
+      { label: 'Rashid posts from the stairwell: elevator and water, floors 10 to 22 (goes out directly)', go: function () { S.act({ t: 'ambPost', post: { id: 'AP-S' + (sst.rev + 1), by: 'AMB-RASHID', building: 'SA', types: ['elevator', 'water'], floors: [10, 22], line: { lang: 'bn', text: 'লিফট বন্ধ এবং ১০ থেকে ২২ তলায় পানি নেই।', mt: { en: 'The elevator has stopped and there is no water on floors 10 to 22.' } } } }); self.setState({ screen: 'O-01', overlay: null, visit: self.state.visit + 1 }); } },
+      { label: 'Rashid posts a fire alarm on floor 15 (waits for the Hub)', go: function () { S.act({ t: 'ambPost', post: { id: 'AP-S' + (sst.rev + 1), by: 'AMB-RASHID', building: 'SA', types: ['fire'], floors: [15, 15], line: { lang: 'bn', text: '১৫ তলায় ফায়ার অ্যালার্ম বাজছে।', mt: { en: 'The fire alarm is ringing on floor 15.' } } } }); self.setState({ screen: 'O-01', overlay: null, visit: self.state.visit + 1 }); } }
+    ];
+    var jumps = [['O-01', 'Operator home'], ['O-11', 'Log a disruption'], ['O-02', 'Compose'], ['O-07', 'Ambassador post'], ['O-17', 'Check-in round'], ['O-08', 'Moderation'], ['O-18', 'Official alert received'],
+      ['P-02', 'Shared space (power)'], ['P-04', 'Coverage'], ['P-10', 'Join and hand over'], ['P-11', 'Standing commitments'], ['P-14', 'Exercises'], ['P-15', 'Indicators'], ['P-16', 'Look back']].map(function (j) {
+      return { label: j[0] + ' ' + j[1], go: function () { go(j[0]); } };
+    });
+    var log = sst.log.slice(-10).map(function (a) { return new Date(a.at).toTimeString().slice(0, 5) + '  ' + S.label(a); });
+    return { app: app, is: is, w: w, h: h, npText: st.npText, people: people, jumps: jumps, events: events, sessionBtns: sessionBtns, sessionLine: sessionLine,
+      log: log, hasLog: log.length > 0, toast: st.toast,
+      ov: { menu: st.overlay === 'menu', np: st.overlay === 'np', controls: st.overlay === 'controls' },
+      exOn: exercise ? 'is-on' : '', exAria: exercise ? 'true' : 'false' };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-28 What "verified" means</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-28" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="What "verified" means">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <h1 class="cvh-h1">{{s.R28.title}}</h1>
+
+  <section class="cvh-card cvh-stack" style="--gap:10px;border:2px solid var(--ink)" aria-labelledby="r28-this">
+    <p class="cvh-eyebrow" style="color:var(--ink)" id="r28-this">{{s.R28.thisAlert}}</p>
+    <dc-import name="X13_DisruptionType" types="{{a.types}}" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+    <p class="cvh-h2">{{a.headline}}</p>
+    <dc-import name="X02_Origin" dc-props="{{origin}}" surface="print" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,80px"></dc-import>
+    <sc-for list="{{lines}}" as="ln" hint-placeholder-count="2">
+      <p class="{{ln.cls}}">{{ln.text}}</p>
+    </sc-for>
+  </section>
+
+  <p class="cvh-lead">{{s.R28.body}}</p>
+
+  <section class="cvh-section cvh-hide-basic" aria-labelledby="r28-legend">
+    <h2 class="cvh-h3" id="r28-legend">{{s.R28.legendTitle}}</h2>
+    <ul class="cvh-list">
+      <sc-for list="{{legend}}" as="lg" hint-placeholder-count="3">
+        <li class="cvh-row" style="--gap:12px;align-items:flex-start">
+          <span class="cvh-verify cvh-verify--{{lg.state}}" style="cursor:default;flex:none"><span class="cvh-ico cvh-ico--{{lg.icon}}" aria-hidden="true"></span></span>
+          <span class="cvh-stack cvh-grow" style="--gap:2px">
+            <span class="cvh-strong">{{lg.word}}<sc-if value="{{lg.current}}"> <span class="cvh-tag">{{s.R28.thisOne}}</span></sc-if></span>
+            <span class="cvh-caption">{{lg.line}}</span>
+          </span>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+
+  <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+  <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.R28.backToAlert}}</button>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Checked by the Hub, then corrected (power outage)", "Checked by the Hub (heat)", "Checked by a partner (TNO, Scenario G)", "Ambassador post, not yet verified", "Ambassador post, verified later by the Hub", "Official alert (ECCC)", "Basic mode: not yet verified", "Basic mode: checked by the Hub"], "default": "Checked by the Hub, then corrected (power outage)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Checked by the Hub, then corrected (power outage)": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05"}}, "Checked by the Hub (heat)": {"persona": "nasrin", "scenario": "B", "params": {"alert": "AL-06"}}, "Checked by a partner (TNO, Scenario G)": {"persona": "george", "scenario": "G", "basic": false, "choices": {"building": "SB", "floor": 6}, "params": {"alert": "AL-08"}}, "Ambassador post, not yet verified": {"persona": "rashid", "scenario": "A", "params": {"alert": "AL-07", "unverified": true}}, "Ambassador post, verified later by the Hub": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-07"}}, "Official alert (ECCC)": {"persona": "george", "scenario": "B", "basic": false, "params": {"alert": "AL-01"}}, "Basic mode: not yet verified": {"persona": "amina", "scenario": "A", "basic": true, "basicState": "persisted", "params": {"alert": "AL-07", "unverified": true}}, "Basic mode: checked by the Hub": {"persona": "george", "scenario": "B", "basic": true, "basicState": "helper", "params": {"alert": "AL-06"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'R-28'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-28'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R28, prm = b.params, go = b.go;
+    var id = prm.alert || 'AL-05';
+    var sn = C.snap(C.refFor(id, b.scn), b.scn);
+    if (!sn) return { a: { headline: '', types: ['other'] }, origin: {}, lines: [], legend: [], goBack: b.back };
+    var a = sn.a, o = C.originProps(sn, { unverified: !!prm.unverified });
+    var bld = (C.building((a.origin || {}).building) || {}).name || '';
+    var lines = [], strong = 'cvh-strong', plain = '';
+    if (o.state === 'official') {
+      lines.push({ text: C.fill(x.official, { source: s.x02.sources[o.source] || o.source }), cls: strong });
+      lines.push({ text: x.officialAdds, cls: plain });
+    } else if (o.state === 'unverified') {
+      lines.push({ text: C.fill(x.ambPosted, { t: b.ago(sn.postedMins), building: bld }), cls: strong });
+      lines.push({ text: x.notYet, cls: plain });
+      lines.push({ text: x.notFalse, cls: strong });
+      lines.push({ text: x.notYetAct, cls: plain });
+    } else {
+      // Checked: who verified it and when. Hub and partner alerts are checked before they go out;
+      // an ambassador post is checked when the Hub promotes it.
+      var who = o.origin === 'partner' ? ((C.org(o.org) || {}).name || o.org) : s.x02.theHub;
+      var when = o.origin === 'ambassador' ? a.promotedMinsAgo : sn.postedMins;
+      lines.push({ text: C.fill(x.who, { org: who, t: b.ago(when) }), cls: strong });
+      if (o.origin === 'ambassador') lines.push({ text: C.fill(x.ambFirst, { t: b.ago(sn.postedMins), building: bld }), cls: plain });
+      if (o.state === 'corrected') lines.push({ text: C.fill(x.correctedLine, { t: b.ago(o.correctedMins) }), cls: plain });
+    }
+    var cur = o.state === 'corrected' ? 'verified' : o.state;
+    var legend = [
+      { state: 'verified', icon: 'verified', word: C.fill(s.x02.verifiedBy, { org: s.x02.hub }), line: x.legendVerified },
+      { state: 'unverified', icon: 'unverified', word: s.x02.notYetVerified, line: x.legendUnverified },
+      { state: 'official', icon: 'shield', word: s.x02.levelOfficial, line: x.legendOfficial }
+    ].map(function (l) { l.current = l.state === cur; return l; });
+    return { a: a, origin: o, lines: lines, legend: legend,
+      goBack: function () { if (b.app.canBack) b.back(); else go('R-07', { alert: a.id, unverified: !!prm.unverified }); } };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,150 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-32 Seasonal heads-up</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-32" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Seasonal heads-up">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h1 class="cvh-h1">{{s.R32.title}}</h1>
+    <p>{{s.R32.lead}}</p>
+  </div>
+
+  <div class="cvh-card cvh-stack" style="--gap:12px;border:2px solid var(--ink)">
+    <button type="button" class="cvh-switch {{swCls}}" role="switch" aria-checked="{{swAria}}" onClick="{{toggle}}" style="align-self:stretch">
+      <span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>
+      <span class="cvh-grow cvh-stack" style="--gap:0;text-align:start"><span>{{s.R32.switchLabel}}</span><span class="cvh-switch__state">{{stateWord}}</span></span>
+    </button>
+    <p class="cvh-row cvh-strong" style="--gap:8px;align-items:flex-start;color:var(--ink)"><span class="cvh-ico cvh-ico--lock" aria-hidden="true"></span><span class="cvh-grow">{{s.R32.never}}</span></p>
+    <p class="cvh-caption">{{stateLine}}</p>
+  </div>
+
+  <section class="cvh-section" aria-labelledby="r32-what">
+    <h2 class="cvh-section__title" id="r32-what">{{whatTitle}}</h2>
+    <sc-for list="{{items}}" as="h" hint-placeholder-count="3">
+      <article class="cvh-hu" aria-label="{{h.title}}">
+        <p class="cvh-eyebrow cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--{{h.icon}} cvh-ico--sm" aria-hidden="true"></span>{{h.when}}</p>
+        <h3 class="cvh-h3">{{h.title}}</h3>
+        <ul class="cvh-tailored__list">
+          <sc-for list="{{h.actions}}" as="t" hint-placeholder-count="2">
+            <li class="cvh-tailored__item" style="font-size:var(--fs-body)"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span><span>{{t}}</span></li>
+          </sc-for>
+        </ul>
+        <div class="cvh-row cvh-wrap" style="--gap:8px">
+          <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{h.guide}}">{{h.guideLabel}}</button>
+          <sc-if value="{{h.showPlace}}"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{h.place}}">{{h.placeName}}</button></sc-if>
+        </div>
+      </article>
+    </sc-for>
+  </section>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Off (default, Nasrin)", "On, never a text message (George)", "Basic mode (George)"], "default": "Off (default, Nasrin)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Off (default, Nasrin)": {"persona": "nasrin", "scenario": "C"}, "On, never a text message (George)": {"persona": "george", "scenario": "C", "basic": false}, "Basic mode (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted"}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'ready', showExercise: 'R-32'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-32'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R32, D = b.D, go = b.go;
+    // Off until chosen. The screen keeps its own copy so the artboard shows the change too.
+    var on = b.loc.on !== undefined ? !!b.loc.on : !!b.ch.headsUp;
+    var toggle = function () {
+      var next = !on;
+      b.setLoc({ on: next });
+      b.app.setChoices({ headsUp: next });
+      b.toast(next ? x.turnedOn : x.turnedOff);
+    };
+    var icons = { heat: 'heat', smoke: 'smoke', winter: 'winter' };
+    var items = (D.headsUps || []).map(function (h) {
+      var l = h.listing ? C.listingFor(h.listing) : null;
+      return { icon: icons[h.id] || h.hazard, when: C.fill(x.season, { season: h.season }), title: (x.titles || {})[h.id] || h.id,
+        actions: b.basic ? h.actions.slice(0, 1) : h.actions,
+        guideLabel: C.fill(x.readGuide, { hazard: ((s.hazards || {})[h.hazard] || h.hazard).toLowerCase() }),
+        guide: function () { go('R-25', { hazard: h.hazard, stage: 'before', from: 'headsUp' }); },
+        showPlace: !b.basic && !!l, placeName: l ? l.name : '', place: function () { go('R-12', { id: h.listing, from: 'list' }); } };
+    });
+    return { swCls: on ? 'is-on' : '', swAria: on ? 'true' : 'false', stateWord: on ? s.x07.on : s.x07.off, toggle: toggle,
+      stateLine: on ? x.whereLine : x.offLine, whatTitle: on ? x.whatOn : x.what, items: items,
+      goBack: function () { if (b.app.canBack) b.back(); else go('R-24'); } };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-10 Exercise marker</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{isBanner}}" hint-placeholder-val="{{true}}">
+    <div class="cvh-exercise {{endedClass}}" role="status">
+      <span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span>
+      <span class="cvh-stack" style="--gap:0">
+        <span>{{title}}</span>
+        <sc-if value="{{isRunning}}"><span class="cvh-exercise__sub">{{s.x10.runningSub}}</span></sc-if>
+      </span>
+      <sc-if value="{{showEnglish}}"><span class="cvh-exercise__sub" lang="en" style="margin-inline-start:auto">Exercise</span></sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{isLine}}">
+    <p class="cvh-origin--sms cvh-exercise-line">{{s.x10.sms}}</p>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["running","ended"],"default":"running"},"variant":{"editor":"enum","options":["banner","line"],"default":"banner"},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var running = (p.state || 'running') === 'running';
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:100px;padding:16px;background:#fafafa;',
+      isBanner: (p.variant || 'banner') === 'banner', isLine: p.variant === 'line',
+      isRunning: running, endedClass: running ? '' : 'cvh-exercise--ended',
+      title: running ? s.x10.running : s.x10.ended, showEnglish: lang !== 'en' && running };
+  }
+}
+</script>
+</body>
+</html>

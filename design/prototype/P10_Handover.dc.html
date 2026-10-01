@@ -1,0 +1,326 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-10 Handover on leaving</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-10" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-10" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-10" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-ps">
+  <button type="button" class="cvh-back" style="align-self:flex-start" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h2 class="cvh-h2">{{x.title}}</h2>
+    <p class="cvh-ps-muted">{{inSpace}}</p>
+    <p class="cvh-row cvh-wrap" style="--gap:6px 8px"><span class="cvh-origin__mark" aria-hidden="true">{{mono}}</span><span class="cvh-strong">{{leavingLine}}</span><sc-if value="{{isEx}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{s.x10.word}}</span></sc-if></p>
+  </div>
+
+  <sc-if value="{{isDone}}">
+    <div class="cvh-ps-done" role="status">
+      <span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>
+      <div class="cvh-stack" style="--gap:8px">
+        <p>{{x.doneTitle}}</p>
+        <p style="font-weight:400">{{doneLine}}</p>
+        <ul class="cvh-ps-sumlist" style="font-weight:400">
+          <sc-for list="{{summary}}" as="sm" hint-placeholder-count="3"><li>{{sm}}</li></sc-for>
+        </ul>
+      </div>
+    </div>
+    <div class="cvh-ps-acts">
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toSpace}}">{{x.toSpace}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toCoverage}}"><span class="cvh-ico cvh-ico--dashboard cvh-ico--sm" aria-hidden="true"></span>{{x.toCoverage}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isForm}}">
+    <p>{{lead}}</p>
+    <div class="cvh-ps-cols cvh-ps-cols--form">
+      <div class="cvh-stack" style="--gap:18px;min-width:0">
+        <section class="cvh-stack" style="--gap:8px">
+          <h3 class="cvh-ps-panel__title" id="p10-to"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>{{x.toTitle}}</h3>
+          <p class="cvh-ps-muted">{{x.toHint}}</p>
+          <div class="cvh-field">
+            <select class="cvh-select" id="p10-tosel" aria-labelledby="p10-to" onChange="{{pickTo}}">
+              <sc-for list="{{people}}" as="pp" hint-placeholder-count="5"><option value="{{pp.id}}" selected="{{pp.on}}">{{pp.label}}</option></sc-for>
+            </select>
+          </div>
+        </section>
+
+        <section class="cvh-stack" style="--gap:8px" aria-labelledby="p10-held">
+          <h3 class="cvh-ps-panel__title" id="p10-held"><span class="cvh-ico cvh-ico--handshake" aria-hidden="true"></span>{{heldTitle}}<sc-if value="{{hasHeld}}"><span class="cvh-tag">{{heldCount}}</span></sc-if></h3>
+          <sc-if value="{{noHeld}}"><p>{{heldNone}}</p></sc-if>
+          <sc-for list="{{held}}" as="h" hint-placeholder-count="3">
+            <div class="cvh-ps-held {{h.cls}}">
+              <div class="cvh-ps-item__head">
+                <sc-if value="{{h.isStmt}}"><dc-import name="X06_Statement" variant="chip" statement="{{h.id}}" type="{{h.type}}" embedded="{{true}}" hint-size="210px,32px"></dc-import></sc-if>
+                <sc-if value="{{h.isCom}}"><span class="cvh-ps-kind"><span class="cvh-ico cvh-ico--handshake cvh-ico--sm" aria-hidden="true"></span>{{x.commitment}}</span></sc-if>
+                <sc-if value="{{h.illus}}"><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></sc-if>
+                <span class="cvh-ps-when">{{h.when}}</span>
+              </div>
+              <p>{{h.text}}</p>
+              <sc-if value="{{h.by}}"><p class="cvh-ps-muted">{{h.by}}</p></sc-if>
+              <div class="cvh-ps-choice {{h.choiceCls}}" role="radiogroup" aria-label="{{h.text}}">
+                <sc-for list="{{h.opts}}" as="o" hint-placeholder-count="3">
+                  <button type="button" class="{{o.cls}}" role="radio" aria-checked="{{o.aria}}" onClick="{{o.pick}}"><span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>{{o.label}}</button>
+                </sc-for>
+              </div>
+              <sc-if value="{{h.pickingOrg}}">
+                <div class="cvh-field">
+                  <label class="cvh-label" for="{{h.selId}}">{{x.pickOrg}}</label>
+                  <select class="cvh-select" id="{{h.selId}}" onChange="{{h.pickOrg}}">
+                    <sc-for list="{{h.orgOpts}}" as="oo" hint-placeholder-count="4"><option value="{{oo.id}}" selected="{{oo.on}}">{{oo.label}}</option></sc-for>
+                  </select>
+                </div>
+              </sc-if>
+              <p class="cvh-ps-sub"><span class="cvh-ico cvh-ico--{{h.stateIcon}} cvh-ico--sm" aria-hidden="true"></span><span class="{{h.stateCls}}">{{h.state}}</span></p>
+            </div>
+          </sc-for>
+        </section>
+
+        <sc-if value="{{hasOpen}}">
+          <section class="cvh-stack" style="--gap:8px" aria-labelledby="p10-open">
+            <h3 class="cvh-ps-panel__title" id="p10-open"><span class="cvh-ico cvh-ico--flag" aria-hidden="true"></span>{{openTitle}}</h3>
+            <p class="cvh-ps-muted">{{x.openLine}}</p>
+            <sc-for list="{{openItems}}" as="oi" hint-placeholder-count="1">
+              <div class="cvh-ps-com">
+                <div class="cvh-ps-item__head"><dc-import name="X06_Statement" variant="chip" statement="{{oi.id}}" type="{{oi.type}}" embedded="{{true}}" hint-size="210px,32px"></dc-import><sc-if value="{{oi.illus}}"><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></sc-if></div>
+                <p>{{oi.text}}</p>
+              </div>
+            </sc-for>
+          </section>
+        </sc-if>
+
+        <div class="cvh-field">
+          <label class="cvh-label" for="p10-note">{{x.noteLabel}}</label>
+          <input class="cvh-input" id="p10-note" value="{{note}}" placeholder="{{x.notePh}}" onInput="{{onNote}}">
+          <span class="cvh-hint">{{x.noteHint}}</span>
+        </div>
+      </div>
+
+      <aside class="cvh-stack" style="--gap:12px">
+        <section class="cvh-ps-panel" aria-labelledby="p10-prev">
+          <h3 class="cvh-ps-panel__title" id="p10-prev">{{x.prevTitle}}<sc-if value="{{prevIllus}}"><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></sc-if></h3>
+          <sc-if value="{{hasPrev}}"><p class="cvh-ps-muted">{{prevFrom}}</p><p>{{prevNote}}</p></sc-if>
+          <sc-if value="{{noPrev}}"><p class="cvh-ps-muted">{{x.prevNone}}</p></sc-if>
+        </section>
+        <section class="cvh-ps-panel" aria-labelledby="p10-what">
+          <h3 class="cvh-ps-panel__title" id="p10-what">{{x.whatTitle}}</h3>
+          <ul class="cvh-ps-sumlist"><sc-for list="{{what}}" as="w" hint-placeholder-count="3"><li>{{w}}</li></sc-for></ul>
+        </section>
+      </aside>
+    </div>
+
+    <div class="cvh-ps-bar">
+      <p class="cvh-ps-bar__line {{reasonCls}}">{{reason}}</p>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{cannot}}" onClick="{{finish}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{doneLabel}}</button>
+    </div>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Pre-filled with what TNO holds (Daniel leaving)", "Each one reassigned or released, one line written", "Done", "Scenario G: Daniel hands over to Hanna in week 3", "Holding nothing: one line and go", "Exercise: practice handover", "Phone 390: pre-filled", "Phone 390: Scenario G, week 3", "Phone 390: done"], "default": "Pre-filled with what TNO holds (Daniel leaving)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Pre-filled with what TNO holds (Daniel leaving)": {"persona": "DANIEL", "params": {"space": "SPC-A"}}, "Each one reassigned or released, one line written": {"persona": "DANIEL", "params": {"space": "SPC-A"}, "loc": {"to": "HANNA", "ch": {"ST-09": "release", "ST-14": "org:CITY"}, "note": "Room closes at 9. Hanna has the charging room; the City is watching the late count at Jenner Jean-Marie."}}, "Done": {"persona": "DANIEL", "params": {"space": "SPC-A"}, "loc": {"done": {"to": "HANNA", "note": "Room closes at 9. Hanna has the charging room; the City is watching the late count at Jenner Jean-Marie.", "passed": ["Community room at 10 Gateway open for charging until 9 pm.", "Community room still open; 9 people charging now."], "moved": [], "released": ["We can call Dari- and Urdu-speaking seniors on our list."]}}}, "Scenario G: Daniel hands over to Hanna in week 3": {"persona": "DANIEL", "params": {"space": "SPC-G"}, "loc": {"to": "HANNA", "note": "Repair date is Friday next week. Friday grocery carry for floors 15 to 20 still needs volunteers."}}, "Holding nothing: one line and go": {"persona": "PRIYA", "params": {"sample": {"type": "power", "level": 2, "location": "Sample Towers A, B and C", "purpose": "coordinate", "playbook": "power", "openedBy": "PRIYA"}}}, "Exercise: practice handover": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A"}, "loc": {"to": "HANNA"}}, "Phone 390: pre-filled": {"persona": "DANIEL", "w": 390, "h": 1500, "params": {"space": "SPC-A"}, "loc": {"to": "HANNA"}}, "Phone 390: Scenario G, week 3": {"persona": "DANIEL", "w": 390, "h": 1500, "params": {"space": "SPC-G"}, "loc": {"to": "HANNA", "note": "Repair date is Friday next week. Friday grocery carry for floors 15 to 20 still needs volunteers."}}, "Phone 390: done": {"persona": "DANIEL", "w": 390, "h": 900, "params": {"space": "SPC-A"}, "loc": {"done": {"to": "HANNA", "note": "Room closes at 9. Hanna has the charging room.", "passed": ["Community room at 10 Gateway open for charging until 9 pm."], "moved": [], "released": ["We can call Dari- and Urdu-speaking seniors on our list."]}}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-10', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  psSpace(b) {
+    var P = b.D.partner || {}, list = P.sharedSpaces || [], prm = b.params || {};
+    if (prm.sample && typeof prm.sample === 'object') return Object.assign({ id: 'SPC-SAMPLE', openedMinsAgo: 0 }, prm.sample);
+    var find = function (id) { return list.filter(function (x) { return x.id === id; })[0] || null; };
+    if (prm.space) { var f = find(prm.space); if (f) return f; }
+    var scn = (b.C.session.get() || {}).scenario || 'A';
+    var sess = list.filter(function (x) { return x._session && !x.closed; });
+    if (b.exercise) { var ex = sess.filter(function (x) { return x.exercise; })[0]; if (ex) return ex; }
+    if (scn === 'G') return find('SPC-G') || sess[0] || null;
+    return sess[0] || find('SPC-A') || list[0] || null;
+  }
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P10, loc = b.loc, P = D.partner || {}, fill = C.fill, go = b.go;
+    var me = b.persona || {}, myOrg = me.org || 'HUB', org = C.org(myOrg) || {};
+    var sp = this.psSpace(b) || { id: null, type: 'other', location: '' };
+    var hz = (s.hazards || {})[sp.type] || s.x13[sp.type] || sp.type;
+    var orgOf = function (id) { return C.org(id) || { name: id || '', short: id || '' }; };
+    var now = Date.now(), tOf = function (it) { return it._session && it.at ? Math.max(0, (now - it.at) / 60000) : (it.minsAgo || 0); };
+    var toSpace = function () { go('P-02', { space: sp.id }); };
+    var goBack = function () { if (b.app.canBack) b.back(); else toSpace(); };
+    var base = { x: x, s: s, goBack: goBack, toSpace: toSpace, toCoverage: function () { go('P-04', { space: sp.id }); }, mono: org.monogram, isEx: b.exercise || !!sp.exercise,
+      inSpace: (function () { var om = sp._session && sp.openedAt ? (Date.now() - sp.openedAt) / 60000 : (sp.openedMinsAgo || 0);
+        return om >= 2880 ? fill(x.inSpaceWeek, { hazard: hz, where: sp.location || '', n: Math.floor(om / 10080) + 1 }) : fill(x.inSpace, { hazard: hz, where: sp.location || '' }); })(), leavingLine: fill(x.leaving, { name: me.name, role: String(me.role || '').toLowerCase(), org: org.short }),
+      held: [], openItems: [], people: [], summary: [], what: [] };
+    var personName = function (id) { var p = C.person(id); return p ? p.name : ''; };
+
+    if (loc.done) {
+      var dn = loc.done, toName = dn.to ? personName(dn.to) : x.whatNobody, sum = [];
+      var j = function (l) { return l.map(function (z) { return String(z).replace(/[.]\s*$/, ''); }).join('; ') + '.'; };
+      if ((dn.passed || []).length) sum.push(fill(x.passedTo, { name: toName, list: j(dn.passed) }));
+      if ((dn.moved || []).length) sum.push(fill(x.movedTo, { list: j(dn.moved) }));
+      if ((dn.released || []).length) sum.push(fill(x.releasedList, { list: j(dn.released) }));
+      if (dn.note) sum.push(fill(x.noteWas, { note: dn.note }));
+      return Object.assign(base, { isDone: true, isForm: false, doneLine: fill(x.doneLine, { to: toName }), summary: sum });
+    }
+
+    // What this organisation holds in the space: its doing and can-take statements, gaps it took on, and its confirmed commitment
+    var inSp = function (z) { return z.sp === sp.id; };
+    var released = {};
+    (P.handovers || []).filter(inSp).forEach(function (h) { (h.released || []).forEach(function (id) { released[typeof id === 'object' ? id.id : id] = 1; }); });
+    var stmts = (P.statements || []).filter(inSp);
+    var heldRaw = stmts.filter(function (z) {
+      if (released[z.id]) return false;
+      if (z.org === myOrg && (z.type === 'doing' || z.type === 'canTake')) return !z.claimedBy || z.claimedBy === myOrg;
+      return z.claimedBy === myOrg && z.org !== myOrg;
+    }).map(function (z) { return { id: z.id, kind: 'statement', type: z.type, text: z.text, t: tOf(z), person: z.person, illus: !z._session, claimed: z.claimedBy === myOrg && z.org !== myOrg, org: z.org }; });
+    (P.commitments || []).forEach(function (c) {
+      if (c.org === myOrg && c.space === sp.id && c.state === 'confirmed') heldRaw.push({ id: c.id, kind: 'commitment', text: c.text, t: c.confirmedMinsAgo || 0, illus: !c._session });
+    });
+    heldRaw.sort(function (p, q) { return p.t - q.t; });
+    var openRaw = stmts.filter(function (z) { return z.org === myOrg && (z.type === 'need' || z.type === 'cannotCover') && !z.claimedBy; });
+
+    var to = loc.to || null, toP = to ? C.person(to) : null;
+    var people = [{ id: '', label: x.nobody, on: !to }].concat((D.people || []).filter(function (p) { return p.id !== me.id; }).map(function (p) {
+      return { id: p.id, label: p.name + ', ' + p.role + ', ' + orgOf(p.org).short, on: p.id === to };
+    }));
+    var ch = loc.ch || {};
+    var decided = 0;
+    var held = heldRaw.map(function (h) {
+      var c = ch[h.id] || (toP ? 'succ' : null);
+      if (c === 'succ' && !toP) c = null;
+      var pickingOrg = !!c && c.indexOf('org:') === 0, chosenOrg = pickingOrg ? c.slice(4) : '';
+      var isDecided = c === 'succ' || c === 'release' || (pickingOrg && !!chosenOrg);
+      if (isDecided) decided++;
+      var set = function (v) { return function () { var n = Object.assign({}, ch); n[h.id] = v; b.setLoc({ ch: n }); }; };
+      var opts = [];
+      if (toP) opts.push({ key: 'succ', label: fill(x.handTo, { name: toP.name }) });
+      if (h.kind === 'statement') opts.push({ key: 'org', label: x.otherOrg });
+      opts.push({ key: 'release', label: x.release });
+      opts = opts.map(function (o) {
+        var on = o.key === 'org' ? pickingOrg : o.key === c;
+        return { label: o.label, on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: set(o.key === 'org' ? 'org:' + (chosenOrg || '') : o.key) };
+      });
+      var orgOpts = [{ id: '', label: x.choose, on: !chosenOrg }].concat((D.orgs || []).filter(function (o) { return o.id !== myOrg && o.id !== 'TPL'; }).map(function (o) { return { id: o.id, label: o.name, on: o.id === chosenOrg }; }));
+      var state = c === 'succ' ? fill(x.stays, { org: toP ? orgOf(toP.org).short : '', name: toP ? toP.name : '' }) : c === 'release' ? x.released : pickingOrg && chosenOrg ? fill(x.moves, { org: orgOf(chosenOrg).name }) : x.undecided;
+      var who = h.person ? C.person(h.person) : null;
+      return { id: h.id, isStmt: h.kind === 'statement', isCom: h.kind === 'commitment', type: h.type || 'doing', text: h.text, illus: h.illus, when: b.ago(Math.round(h.t)),
+        by: h.claimed ? fill(s.x06.claimed, { org: org.name }) : who ? who.name + ', ' + who.role : '',
+        cls: isDecided ? '' : 'cvh-ps-held--todo', choiceCls: opts.length === 2 ? 'cvh-ps-choice--2' : '', opts: opts,
+        pickingOrg: pickingOrg, selId: 'p10-org-' + h.id, orgOpts: orgOpts, pickOrg: function (e) { var n = Object.assign({}, ch); n[h.id] = 'org:' + e.target.value; b.setLoc({ ch: n }); },
+        state: state, stateIcon: isDecided ? (c === 'release' ? 'clock' : 'check') : 'flag', stateCls: isDecided ? '' : 'cvh-strong', _c: c, _org: chosenOrg, _raw: h };
+    });
+    var note = loc.note || '';
+    var left = held.length - decided;
+    var cannot = left > 0 || !note.trim();
+    var reason = left > 1 ? fill(x.leftN, { n: left }) : left === 1 ? x.leftOne : !note.trim() ? x.needNote : '';
+    var toWord = toP ? toP.name : x.whatNobody;
+    var finish = function () {
+      if (cannot) return;
+      var rel = [], reas = [], passed = [], moved = [], relT = [];
+      held.forEach(function (h) {
+        var raw = h._raw;
+        if (h._c === 'release') {
+          rel.push(raw.id); relT.push(raw.text);
+          if (raw.kind === 'commitment') b.act({ t: 'partner', kind: 'commitment', space: sp.id, item: { commitmentId: raw.id, org: myOrg, person: me.id, changes: { state: 'released', space: sp.id } } });
+          else if (raw.claimed) b.act({ t: 'partner', kind: 'claim', space: sp.id, item: { statement: raw.id, org: null } });
+        } else if (h._c === 'succ') {
+          passed.push(raw.text);
+          reas.push({ id: raw.id, org: toP.org, person: toP.id });
+          if (raw.kind === 'statement' && toP.org !== myOrg) b.act({ t: 'partner', kind: 'claim', space: sp.id, item: { statement: raw.id, org: toP.org } });
+        } else {
+          moved.push(raw.text + ' (' + orgOf(h._org).short + ')');
+          reas.push({ id: raw.id, org: h._org });
+          b.act({ t: 'partner', kind: 'claim', space: sp.id, item: { statement: raw.id, org: h._org } });
+        }
+      });
+      b.act({ t: 'partner', kind: 'handover', space: sp.id, item: { org: myOrg, person: me.id, from: me.id, to: toP ? toP.id : null, note: note.trim(),
+        open: rel.concat(openRaw.map(function (z) { return z.id; })), released: rel, reassigned: reas } });
+      b.toast(x.toast);
+      b.setLoc({ done: { to: toP ? toP.id : null, note: note.trim(), passed: passed, moved: moved, released: relT } });
+    };
+    // What this person was handed last time
+    var prev = (P.handovers || []).filter(function (h) { return inSp(h) && h.to === me.id; }).sort(function (p, q) { return tOf(p) - tOf(q); })[0];
+    return Object.assign(base, { isDone: false, isForm: true, lead: fill(x.lead, { org: org.short }),
+      people: people, pickTo: function (e) { b.setLoc({ to: e.target.value || null }); },
+      heldTitle: fill(x.heldTitle, { org: org.short }), heldCount: fill(x.heldCount, { n: held.length }), hasHeld: held.length > 0, noHeld: held.length === 0,
+      heldNone: fill(x.heldNone, { org: org.short.charAt(0).toUpperCase() + org.short.slice(1) }), held: held,
+      hasOpen: openRaw.length > 0, openTitle: fill(x.openTitle, { org: org.short }),
+      openItems: openRaw.map(function (z) { return { id: z.id, type: z.type, text: z.text, illus: !z._session }; }),
+      note: note, onNote: function (e) { b.setLoc({ note: e.target.value }); },
+      hasPrev: !!prev, noPrev: !prev, prevIllus: !!prev && !prev._session, prevNote: prev ? prev.note : '',
+      prevFrom: prev ? fill(x.prevFrom, { from: personName(prev.from), t: b.ago(Math.round(tOf(prev))) }) : '',
+      what: x.what.map(function (w) { return fill(w, { to: toWord }); }),
+      reason: reason, reasonCls: cannot ? 'cvh-strong' : '', cannot: cannot, finish: finish, doneLabel: base.isEx ? x.doneEx : x.done });
+  }
+
+}
+</script>
+</body>
+</html>

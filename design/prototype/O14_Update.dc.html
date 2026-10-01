@@ -1,0 +1,295 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-14 Post an update to a running alert</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-14" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-14" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-14" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage" style="max-width:980px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+
+  <section class="cvh-hrow cvh-hrow--priority" aria-labelledby="o14-alert">
+    <p class="cvh-eyebrow" style="color:var(--ink)">{{x.running}}</p>
+    <div class="cvh-hrow__head">
+      <dc-import name="X13_DisruptionType" types="{{a.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+      <dc-import name="C_IncidentStatus" status="active" lang="en" embedded="{{true}}" hint-size="160px,32px"></dc-import>
+    </div>
+    <h2 class="cvh-hrow__title" id="o14-alert">{{a.headline}}</h2>
+    <dc-import name="X02_Origin" dc-props="{{origin}}" lang="en" embedded="{{true}}" hint-size="100%,90px"></dc-import>
+    <p>{{where}}</p>
+    <p class="cvh-muted">{{postedLine}}</p>
+    <sc-if value="{{staleNote}}"><span class="cvh-flag cvh-flag--stale" style="align-self:flex-start"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{staleNote}}</span></sc-if>
+    <p class="cvh-strong">{{x.latest}}</p>
+    <ol class="cvh-thread">
+      <sc-for list="{{thread}}" as="e" hint-placeholder-count="2">
+        <li class="cvh-entry {{e.cls}}" style="padding-block:6px">
+          <span class="cvh-entry__kind"><span>{{e.kind}}</span><span class="cvh-entry__time">{{e.time}}</span></span>
+          <p>{{e.text}}</p>
+        </li>
+      </sc-for>
+    </ol>
+  </section>
+
+  <sc-if value="{{done}}">
+    <section class="cvh-confirm is-done" aria-labelledby="o14-done" role="status">
+      <p class="cvh-done" id="o14-done"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{x.doneTitle}}</span></p>
+      <p>{{doneLine}}</p>
+      <div class="cvh-hrow__actions">
+        <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toCorrect}}">{{x.toCorrect}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toResolve}}">{{x.toResolve}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{again}}">{{x.again}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toHome}}">{{x.toHome}}</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <div class="cvh-stack" style="--gap:22px;{{formStyle}}">
+    <section class="cvh-hsec" aria-labelledby="o14-compose">
+      <h3 class="cvh-hsec__title" id="o14-compose">{{x.compose}}</h3>
+      <p class="cvh-muted">{{x.composeLead}}</p>
+      <div class="cvh-chiprow" role="radiogroup" aria-label="{{x.compose}}">
+        <sc-for list="{{tpls}}" as="t" hint-placeholder-count="4">
+          <button type="button" class="cvh-chip cvh-chip--pick {{t.cls}}" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}"><sc-if value="{{t.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{t.label}}</button>
+        </sc-for>
+      </div>
+      <div class="cvh-field">
+        <label class="cvh-label" for="o14-text">{{x.textLabel}}<span class="cvh-tag cvh-tag--required">{{x.required}}</span></label>
+        <textarea id="o14-text" class="cvh-textarea" value="{{text}}" onInput="{{onText}}"></textarea>
+        <p class="cvh-hint">{{x.textHint}}</p>
+      </div>
+      <div class="cvh-field">
+        <label class="cvh-label" for="o14-nyk">{{x.nykLabel}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></label>
+        <input id="o14-nyk" class="cvh-input" type="text" value="{{nyk}}" onInput="{{onNyk}}">
+      </div>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="o14-offer">
+      <h3 class="cvh-hsec__title" id="o14-offer">{{x.offerTitle}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></h3>
+      <p class="cvh-muted">{{x.offerLead}}</p>
+      <sc-if value="{{offer}}">
+        <div class="cvh-card cvh-stack" style="--gap:8px;border:2px solid var(--ink)">
+          <p class="cvh-row cvh-strong" style="--gap:6px"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span><span>{{offer.title}}</span></p>
+          <sc-if value="{{offer.space}}"><dc-import name="X09_SpaceStatus" space="{{offer.space}}" variant="badge" lang="en" embedded="{{true}}" hint-size="100%,44px"></dc-import></sc-if>
+          <sc-if value="{{offer.line}}"><p>{{offer.line}}</p></sc-if>
+          <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{removeOffer}}">{{x.remove}}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{noOffer}}">
+        <p class="cvh-strong">{{x.spacesOpen}}</p>
+        <ul class="cvh-stack" style="--gap:8px;margin:0;padding:0;list-style:none">
+          <sc-for list="{{spaces}}" as="sp" hint-placeholder-count="3">
+            <li class="cvh-hrow" style="padding:10px 14px">
+              <div class="cvh-row cvh-wrap" style="--gap:10px">
+                <span class="cvh-strong cvh-grow">{{sp.name}}</span>
+                <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{sp.attach}}">{{x.attach}}</button>
+              </div>
+              <dc-import name="X09_SpaceStatus" space="{{sp.id}}" variant="badge" lang="en" embedded="{{true}}" hint-size="100%,44px"></dc-import>
+            </li>
+          </sc-for>
+        </ul>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o14-q">{{x.searchLabel}}</label>
+          <input id="o14-q" class="cvh-input" type="search" value="{{q}}" onInput="{{onQ}}" placeholder="{{x.searchPh}}">
+        </div>
+        <sc-if value="{{hasResults}}">
+          <ul class="cvh-hresults">
+            <sc-for list="{{results}}" as="r" hint-placeholder-count="3">
+              <li class="cvh-row cvh-wrap" style="--gap:10px;padding:6px 0;border-bottom:1px solid var(--border)"><span class="cvh-grow cvh-stack" style="--gap:0"><span class="cvh-strong">{{r.name}}</span><span class="cvh-muted">{{r.line}}</span></span><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{r.attach}}">{{x.attach}}</button></li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{noResults}}"><p class="cvh-muted">{{x.noResults}}</p></sc-if>
+      </sc-if>
+    </section>
+
+    <div class="cvh-hcols cvh-hcols--even {{colsCls}}">
+      <section class="cvh-hsec" aria-labelledby="o14-off">
+        <label class="cvh-hsec__title" id="o14-off" for="o14-off-s">{{x.officialTitle}}</label>
+        <select id="o14-off-s" class="cvh-select" value="{{officialVal}}" onChange="{{onOfficial}}"><sc-for list="{{officialOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select>
+        <p class="cvh-hint">{{x.officialHint}}</p>
+      </section>
+      <section class="cvh-hsec" aria-labelledby="o14-valid">
+        <label class="cvh-hsec__title" id="o14-valid" for="o14-valid-s">{{x.validTitle}}</label>
+        <select id="o14-valid-s" class="cvh-select" value="{{validVal}}" onChange="{{onValid}}"><sc-for list="{{validOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select>
+        <p class="cvh-hint">{{validNow}}</p>
+      </section>
+    </div>
+  </div>
+
+  <div class="cvh-pubbar" style="{{formStyle}}">
+    <div class="cvh-stack cvh-grow" style="--gap:2px">
+      <sc-if value="{{b_exercise}}"><span class="cvh-row cvh-strong" style="--gap:6px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.exercise}}</span></sc-if>
+      <span class="cvh-muted">{{sms}}</span>
+      <sc-if value="{{empty}}"><span class="cvh-disabled-reason" style="margin:0">{{emptyWhy}}</span></sc-if>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{empty}}" onClick="{{onPost}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{postLabel}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Existing alert opened, update from a template", "Support offer attached (open space)", "Support offer from the directory (a listing)", "Official alert linked, valid until a time", "Published", "Exercise running"], "default": "Existing alert opened, update from a template"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Existing alert opened, update from a template": {"params": {"alert": "AL-05", "next": "e2"}}, "Support offer attached (open space)": {"params": {"alert": "AL-05", "next": "e3"}}, "Support offer from the directory (a listing)": {"params": {"alert": "AL-05"}, "loc": {"tpl": "support", "text": "Free groceries are available this week. See the listing for times.", "offer": "L01", "q": "food"}}, "Official alert linked, valid until a time": {"params": {"alert": "AL-06"}, "loc": {"official": "AL-01", "valid": "tonight"}}, "Published": {"params": {"alert": "AL-05", "next": "e5"}, "loc": {"done": true}}, "Exercise running": {"exercise": true, "params": {"alert": "AL-05", "next": "e2"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-14', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O14, loc = b.loc, prm = b.params, model = b.session || {};
+    var scn = (C.session.get() || {}).scenario || 'A';
+    var id = prm.alert || 'AL-05';
+    var sn = C.snap(C.refFor(id, scn), scn);
+    if (!sn) return { x: h, a: { headline: 'Alert not found', types: ['other'] }, thread: [], tpls: [], spaces: [], results: [], officialOpts: [], validOpts: [], goBack: function () { b.go('O-01'); } };
+    var a = sn.a;
+    // Next scripted entry for the Scenario A walkthrough (the drawn AL-05 wording), editable
+    var have = sn.entries.map(function (e) { return e.text; });
+    var next = null;
+    if (id === 'AL-08' && have.indexOf(h.script.g5.text) < 0) next = h.script.g5;
+    if (id === 'AL-05') {
+      var order = ['e2', 'e3', 'e5'];
+      if (prm.next && h.script[prm.next]) next = h.script[prm.next];
+      else for (var i = 0; i < order.length; i++) { if (have.indexOf(h.script[order[i]].text) < 0) { next = h.script[order[i]]; break; } }
+    }
+    var tplKey = loc.tpl || (next ? next.tpl : 'known');
+    var text = loc.text !== undefined ? loc.text : (next ? next.text : h.tplText[tplKey]);
+    var nyk = loc.nyk !== undefined ? loc.nyk : (next && next.nyk ? next.nyk : '');
+    var offerId = loc.offer !== undefined ? loc.offer : (next && next.offer ? next.offer : null);
+    var tpls = ['known', 'support', 'partly', 'blank'].map(function (k) {
+      var on = k === tplKey;
+      return { label: h.tpls[k], isOn: on, on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '',
+        pick: function () { b.setLoc({ tpl: k, text: next && next.tpl === k ? next.text : h.tplText[k] }); } };
+    });
+    // Support offer: an open space, or any listing from the directory
+    var spaceName = function (sp) { var l = C.spaceListing(sp), as = C.asset(sp.assetId); return (sp.room ? sp.room + ', ' : '') + ((l && l.name) || (as && as.name) || sp.id); };
+    var offer = null;
+    if (offerId) {
+      var sp0 = C.space(offerId);
+      if (sp0) offer = { space: sp0.id, name: spaceName(sp0), line: '' };
+      if (offer) offer.title = h.attached + ': ' + offer.name;
+      else { var l0 = C.listingFor(offerId); if (l0) offer = { space: '', name: l0.name, line: l0.firstLine || '', title: h.attached + ': ' + l0.name }; }
+    }
+    var spaces = (D.spaces || []).filter(function (sp) { return sp.status === 'open'; }).map(function (sp) {
+      return { id: sp.id, name: spaceName(sp), attach: function () { b.setLoc({ offer: sp.id }); } };
+    });
+    var q = loc.q || '';
+    var results = q.trim().length > 1 ? (C.search({ q: q, lang: 'en', scn: scn }).shown || []).slice(0, 6).map(function (r) {
+      var l = r.listing; return { name: l.name, line: l.firstLine || '', attach: function () { b.setLoc({ offer: l.id }); } };
+    }) : [];
+    // Official alert on the same event, prefilled from a relay on O-18
+    var sources = s.x02.sources, off = model.official || {};
+    var officials = (D.alerts || []).filter(function (o) { return o.level === 'official' && !o.fictional; });
+    var relayedSame = officials.filter(function (o) { return off[o.id] && off[o.id].relayed && o.hazard === a.hazard; })[0];
+    var officialVal = loc.official !== undefined ? loc.official : ((a.officialLink && a.officialLink.alert) || (relayedSame && relayedSame.id) || '');
+    var officialOpts = [{ v: '', label: h.officialNone, sel: officialVal === '' }].concat(officials.map(function (o) {
+      return { v: o.id, sel: o.id === officialVal, label: C.fill(off[o.id] && off[o.id].relayed ? h.officialRelayed : h.officialOpt, { headline: o.headline, source: sources[o.origin.source] }) };
+    }));
+    var curValid = a.validUntil || 'until resolved';
+    var validKey = loc.valid || (/tonight|11 pm/.test(curValid) ? 'tonight' : /9 am/.test(curValid) ? 'morning' : 'resolved');
+    var validOpts = ['resolved', 'tonight', 'morning'].map(function (k) { return { v: k, label: h.valid[k], sel: k === validKey }; });
+    // The running alert
+    var kinds = s.R07.kinds;
+    var thread = sn.entries.slice(0, 3).map(function (e, k) { return { kind: kinds[e.kind] || e.kind, time: b.ago(e.minsAgo), text: e.text || (a.ambassadorLine ? ((a.ambassadorLine.mt || {}).en || a.ambassadorLine.text) : ''), cls: k === 0 ? 'cvh-entry--latest' : (e.kind === 'correction' ? 'cvh-entry--correction' : '') }; });
+    var period = (D.staleAfter || {})[a.hazard] || 60;
+    var staleNote = sn.updatedMins >= period ? C.fill(h.staleNote, { t: b.dur(sn.updatedMins), hazard: (s.hazards || {})[a.hazard] || a.hazard, period: b.dur(period) }) : '';
+    var empty = !String(text || '').trim();
+    var done = !!loc.done;
+    return { x: h, a: a, origin: (function (o) { if (o.state === 'corrected' && !o.correctedMins) o.correctedMins = 1; return o; })(C.originProps(sn)), where: sn.where, b_exercise: b.exercise, staleNote: staleNote,
+      postedLine: C.fill(sn.entries.length > 1 ? h.postedLine : h.entries1, { posted: b.ago(sn.postedMins), n: sn.entries.length, until: curValid }),
+      thread: thread, tpls: tpls, text: text, nyk: nyk, onText: function (e) { b.setLoc({ text: e.target.value }); }, onNyk: function (e) { b.setLoc({ nyk: e.target.value }); },
+      offer: offer, noOffer: !offer, spaces: spaces, removeOffer: function () { b.setLoc({ offer: null }); },
+      q: q, onQ: function (e) { b.setLoc({ q: e.target.value }); }, results: results, hasResults: results.length > 0, noResults: q.trim().length > 1 && results.length === 0,
+      officialOpts: officialOpts, officialVal: officialVal, onOfficial: function (e) { b.setLoc({ official: e.target.value }); },
+      validOpts: validOpts, validVal: validKey, validNow: C.fill(h.validNow, { until: curValid }), onValid: function (e) { b.setLoc({ valid: e.target.value }); },
+      colsCls: b.narrow ? 'cvh-hcols--one' : '', sms: C.fill(b.exercise ? h.smsEx : h.sms, { headline: a.headline }), empty: (empty) || /\[[^\]]+\]/.test(text), emptyWhy: /\[[^\]]+\]/.test(text) && !(empty) ? h.bracketText : h.emptyText,
+      postLabel: b.exercise ? h.postEx : h.post, done: done, doneLine: b.exercise ? h.doneEx : h.doneLine, formStyle: done ? 'display:none' : '',
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); }, toHome: function () { b.go('O-01'); },
+      toCorrect: function () { b.go('O-15', { alert: id }); }, toResolve: function () { b.go('O-16', { alert: id }); },
+      again: function () { b.setLoc({ done: false, text: undefined, nyk: undefined, offer: undefined, tpl: undefined, q: '' }); },
+      onPost: function () {
+        if (empty) return;
+        var entry = { kind: 'update', text: String(text).trim() };
+        if (String(nyk || '').trim()) entry.notYetKnown = String(nyk).trim();
+        if (offer) entry.supportOffer = offer.space ? { space: offer.space } : { listing: offerId };
+        if (officialVal) entry.officialLink = { alert: officialVal };
+        var vu = h.valid[validKey].replace(/^Until /, 'until ');
+        if (vu !== curValid) entry.validUntil = vu;
+        b.act({ t: 'entry', alert: id, entry: entry });
+        b.setLoc({ done: true });
+      } };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,62 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prototype marker and screen label</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh" style="{{rootStyle}}">
+  <div class="cvh-proto" role="note" aria-label="{{aria}}">
+    <span class="cvh-proto__word" lang="{{bcp}}" dir="{{dir}}"><span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span>{{s.shell.prototype}}</span>
+    <span class="cvh-muted" lang="{{bcp}}" dir="{{dir}}" style="white-space:nowrap;overflow:hidden;text-overflow:ellipsis">{{note}}</span>
+    <span class="cvh-proto__id" lang="en">{{label}}</span>
+    <sc-if value="{{hasControls}}"><button type="button" class="cvh-proto__btn" lang="en" onClick="{{controls}}" aria-label="Prototype controls">Test</button></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"screenId":{"editor":"text","default":"R-03"},"wide":{"editor":"boolean","default":false},"onControls":{"editor":null},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"embedded":{"editor":null},"$preview":{"width":360,"height":40}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var sc = C.screen(p.screenId || 'R-03');
+    var label = sc ? sc.id + ' · ' + sc.name : (p.screenId || '');
+    if (!p.wide && label.length > 26) label = label.slice(0, 25) + '…';
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootStyle: p.embedded ? '' : 'width:360px;height:40px;',
+      note: p.wide ? s.shell.prototypeNote : '',
+      label: label, aria: s.shell.prototype + '. ' + s.shell.prototypeNote + ' ' + (sc ? sc.id + ' ' + sc.name : ''),
+      hasControls: !!p.onControls, controls: function () { if (self.props.onControls) self.props.onControls(); } };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,387 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-14 Exercise — start, schedule, end</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-14" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-14" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-14" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-rd" style="max-width:960px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h2 class="cvh-hhead__title">{{x.title}}</h2>
+    <p>{{x.lead}}</p>
+  </div>
+
+  <sc-if value="{{isSetup}}">
+    <section class="cvh-hsec" aria-labelledby="p14-type">
+      <h3 class="cvh-hsec__title" id="p14-type">{{x.step1}}</h3>
+      <div class="cvh-rd-pick" role="radiogroup" aria-labelledby="p14-type">
+        <sc-for list="{{types}}" as="t" hint-placeholder-count="6">
+          <button type="button" class="cvh-typeopt {{t.cls}}" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}"><dc-import name="X13_DisruptionType" type="{{t.id}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import><sc-if value="{{t.isOn}}"><span class="cvh-ico cvh-ico--check cvh-typeopt__check" aria-hidden="true"></span></sc-if></button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="p14-level">
+      <h3 class="cvh-hsec__title cvh-rd-title" id="p14-level">{{x.step2}}<span class="cvh-tag cvh-tag--illustrative">{{ill}}</span></h3>
+      <div class="cvh-rd-pick cvh-rd-pick--two" role="radiogroup" aria-labelledby="p14-level">
+        <sc-for list="{{levels}}" as="l" hint-placeholder-count="2">
+          <button type="button" class="cvh-option {{l.cls}}" role="radio" aria-checked="{{l.on}}" onClick="{{l.pick}}">
+            <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"></span>
+            <span class="cvh-option__text"><span class="cvh-option__label">{{l.label}}</span><span class="cvh-option__line">{{l.line}}</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="p14-who">
+      <div class="cvh-stack" style="--gap:2px">
+        <h3 class="cvh-hsec__title" id="p14-who">{{x.step3}}</h3>
+        <p class="cvh-muted">{{x.enrolledOnly}}</p>
+      </div>
+      <p class="cvh-rd-line"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span><span>{{youLine}}</span></p>
+      <p class="cvh-strong">{{x.staff}}</p>
+      <div class="cvh-rd-people">
+        <sc-for list="{{staff}}" as="p" hint-placeholder-count="5">
+          <button type="button" class="cvh-option {{p.cls}}" role="checkbox" aria-checked="{{p.on}}" onClick="{{p.pick}}">
+            <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{p.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+            <span class="cvh-option__text"><span class="cvh-option__label">{{p.name}}</span><span class="cvh-option__line">{{p.line}}</span></span>
+          </button>
+        </sc-for>
+      </div>
+      <p class="cvh-strong">{{x.ambassadors}}</p>
+      <div class="cvh-rd-people">
+        <sc-for list="{{ambs}}" as="p" hint-placeholder-count="5">
+          <button type="button" class="cvh-option {{p.cls}}" role="checkbox" aria-checked="{{p.on}}" onClick="{{p.pick}}">
+            <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{p.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+            <span class="cvh-option__text"><span class="cvh-option__label">{{p.name}}</span><span class="cvh-option__line">{{p.line}}</span></span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <p class="cvh-rd-line cvh-muted"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{firstNote}}</span></p>
+    <div class="cvh-rd-bar">
+      <div class="cvh-stack cvh-grow" style="--gap:2px">
+        <sc-if value="{{canStart}}"><span class="cvh-muted">{{x.summary}}</span><span class="cvh-strong">{{summary}}</span></sc-if>
+        <sc-if value="{{cannotStart}}"><span class="cvh-disabled-reason" style="margin:0">{{x.summaryNone}}</span></sc-if>
+      </div>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{cannotStart}}" onClick="{{onStart}}"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span>{{x.start}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isRunning}}">
+    <section class="cvh-hrow cvh-hrow--priority" aria-labelledby="p14-run">
+      <div class="cvh-hrow__head">
+        <span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{run.word}}</span>
+        <dc-import name="X13_DisruptionType" type="{{run.hazard}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+        <span class="cvh-pill">{{run.levelLine}}</span>
+      </div>
+      <h3 class="cvh-hrow__title" id="p14-run">{{x.runTitle}}: {{run.name}}</h3>
+      <p class="cvh-muted">{{run.started}}. {{run.where}}</p>
+    </section>
+    <div class="cvh-rd-safe" role="note">
+      <span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span>
+      <span class="cvh-stack" style="--gap:2px"><span class="cvh-strong">{{x.safeTitle}}</span><span>{{x.safeLine}}</span></span>
+    </div>
+
+    <section class="cvh-hsec" aria-labelledby="p14-who2">
+      <h3 class="cvh-hsec__title" id="p14-who2">{{x.enrolledTitle}}<span class="cvh-hsec__count">{{run.count}}</span></h3>
+      <ul class="cvh-rd-list">
+        <sc-for list="{{run.people}}" as="p" hint-placeholder-count="2"><li><span class="cvh-strong">{{p.name}}</span>, {{p.role}}. {{p.sees}}</li></sc-for>
+      </ul>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="p14-next">
+      <div class="cvh-stack" style="--gap:2px">
+        <h3 class="cvh-hsec__title" id="p14-next">{{x.nextTitle}}</h3>
+        <p class="cvh-muted">{{x.nextLead}}</p>
+      </div>
+      <ol class="cvh-rd-steps">
+        <sc-for list="{{steps}}" as="st" hint-placeholder-count="6">
+          <li class="cvh-rd-step">
+            <span class="cvh-rd-check__box {{st.boxCls}}" aria-hidden="true"><sc-if value="{{st.done}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+            <span class="cvh-rd-step__text"><span class="cvh-strong">{{st.title}}</span><sc-if value="{{st.line}}"><span class="cvh-muted">{{st.line}}</span></sc-if></span>
+            <sc-if value="{{st.hasGo}}"><button type="button" class="cvh-btn {{st.btnCls}}" onClick="{{st.go}}" disabled="{{st.off}}">{{st.label}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+          </li>
+        </sc-for>
+      </ol>
+    </section>
+
+    <div class="cvh-rd-bar">
+      <span class="cvh-grow">{{x.endLine}}</span>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" onClick="{{onEnd}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span>{{x.end}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isEnded}}">
+    <dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,56px"></dc-import>
+    <section class="cvh-rd-record" aria-labelledby="p14-rec">
+      <span class="cvh-muted">{{x.recordLabel}}</span>
+      <h3 class="cvh-rd-record__name" id="p14-rec">{{recordName}}</h3>
+      <dl class="cvh-kv">
+        <sc-for list="{{recordKv}}" as="kv" hint-placeholder-count="5"><div class="cvh-kv__row"><dt class="cvh-kv__k">{{kv.k}}</dt><dd class="cvh-kv__v">{{kv.v}}</dd></div></sc-for>
+      </dl>
+      <p>{{x.recordLine}}</p>
+      <p class="cvh-muted">{{x.recordStatic}}</p>
+      <div class="cvh-hrow__actions">
+        <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toRecord}}"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span>{{x.toLookBack}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{again}}">{{x.again}}</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{showSched}}">
+    <section class="cvh-hsec" aria-labelledby="p14-sched">
+      <div class="cvh-stack" style="--gap:2px">
+        <h3 class="cvh-hsec__title cvh-rd-title" id="p14-sched"><span class="cvh-ico cvh-ico--calendar" aria-hidden="true"></span>{{x.schedTitle}}<span class="cvh-tag cvh-tag--illustrative">{{ill}}</span></h3>
+        <p class="cvh-muted">{{x.schedLead}}</p>
+      </div>
+      <sc-for list="{{scheduled}}" as="sc" hint-placeholder-count="2">
+        <div class="cvh-hrow">
+          <div class="cvh-hrow__head">
+            <dc-import name="X13_DisruptionType" type="{{sc.hazard}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+            <sc-if value="{{sc.mine}}"><span class="cvh-tag">{{x.schedYours}}</span></sc-if>
+          </div>
+          <p class="cvh-strong">{{sc.name}}</p>
+          <p class="cvh-rd-line"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span><span>{{sc.line}}</span></p>
+        </div>
+      </sc-for>
+      <sc-if value="{{schedClosed}}"><button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{openSched}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.schedOpen}}</button></sc-if>
+      <sc-if value="{{schedIsOpen}}">
+        <div class="cvh-card cvh-stack" style="--gap:12px">
+          <div class="cvh-rd-form">
+            <div class="cvh-field"><label class="cvh-label" for="p14-st">{{x.schedType}}</label>
+              <select id="p14-st" class="cvh-select" onChange="{{onSchedType}}"><sc-for list="{{schedTypes}}" as="o" hint-placeholder-count="6"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+            <div class="cvh-field"><label class="cvh-label" for="p14-sd">{{x.schedDate}}</label>
+              <input id="p14-sd" class="cvh-input" type="date" value="{{schedDate}}" onInput="{{onSchedDate}}"></div>
+            <div class="cvh-field"><label class="cvh-label" for="p14-sr">{{x.schedRepeat}}</label>
+              <select id="p14-sr" class="cvh-select" onChange="{{onSchedRepeat}}"><sc-for list="{{schedRepeats}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+          </div>
+          <p class="cvh-muted">{{x.schedNote}}</p>
+          <div class="cvh-hrow__actions">
+            <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{saveSched}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.schedSave}}</button>
+            <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{closeSched}}">{{x.schedCancel}}</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+
+    <sc-if value="{{past}}">
+      <section class="cvh-card cvh-stack" style="--gap:6px" aria-labelledby="p14-past">
+        <h3 class="cvh-hsec__title cvh-rd-title" id="p14-past">{{x.pastTitle}}<span class="cvh-tag cvh-tag--illustrative">{{ill}}</span></h3>
+        <p><span class="cvh-strong">{{past.title}}</span>, {{past.when}}.</p>
+        <sc-for list="{{past.lessons}}" as="ls" hint-placeholder-count="1"><p class="cvh-muted">{{ls}}</p></sc-for>
+        <button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{past.go}}">{{x.pastOpen}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+      </section>
+    </sc-if>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Start: power outage, level 2, Daniel and Rashid enrolled", "Type and level chosen: extreme heat, level 2, Hanna added", "Running: nothing reaches residents", "Ended with the record named", "Scheduled and repeating", "Phone width, 390, running"], "default": "Start: power outage, level 2, Daniel and Rashid enrolled"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Start: power outage, level 2, Daniel and Rashid enrolled": {}, "Type and level chosen: extreme heat, level 2, Hanna added": {"loc": {"type": "heat", "level": 2, "enrolled": ["DANIEL", "HANNA", "AMB-RASHID"]}}, "Running: nothing reaches residents": {"exercise": true, "params": {"view": "running"}}, "Ended with the record named": {"params": {"view": "ended"}}, "Scheduled and repeating": {"loc": {"schedOpen": true, "demoSched": true}}, "Phone width, 390, running": {"exercise": true, "params": {"view": "running"}, "w": 390, "h": 2200}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-14', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.P14, P = D.partner || {}, loc = b.loc, S = C.session;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var fmtIso = function (d) { if (!d) return ''; var p = String(d).split('-'); return (p[2] ? +p[2] + ' ' : '') + MONTHS[+p[1] - 1] + ' ' + p[0]; };
+    var clock = function (t) { var d = new Date(t), hh = d.getHours(), mm = d.getMinutes(); return (hh % 12 || 12) + ':' + (mm < 10 ? '0' : '') + mm + (hh < 12 ? ' am' : ' pm'); };
+    var HAZ = ['power', 'flood', 'elevator', 'heat', 'smoke', 'fire'], NBHD = ['heat', 'smoke'];
+    var hz = function (t) { return (s.hazards || {})[t] || t; };
+    var set = function (p) { b.setLoc(p); };
+    var me = b.persona || {};
+    var orgShort = function (id) { var o = C.org(id) || { short: id }; return o.id === 'HUB' ? 'the Hub' : o.short; };
+    var who = function (id) {
+      var p = C.person(id);
+      if (p) return { name: p.name, role: p.role + ', ' + orgShort(p.org), sees: h.staffSees, amb: false };
+      var a = C.byId(D.ambassadors, id) || { name: id };
+      var bl = (a.buildings || [])[0], fl = ((a.floors || {})[bl] || []);
+      return { name: a.name, role: C.fill(h.ambLine, { building: (C.building(bl) || { name: bl }).name, floors: fl.length ? fl[0] + ' to ' + fl[fl.length - 1] : 'all' }), sees: h.ambSees, amb: true };
+    };
+    // Where the practice disruption is: Scenario A's three Sample Towers, or both neighbourhoods for heat and smoke
+    var place = function (t) {
+      return NBHD.indexOf(t) >= 0 ? { buildings: [], floors: null, where: 'Thorncliffe Park and Flemingdon Park', nbhd: 'both', nbhds: ['TP', 'FP'] }
+        : { buildings: ['SA', 'SB', 'SC'], floors: [1, 6], where: 'Sample Tower A, B and C, floors 1 to 6', nbhd: 'TP', nbhds: [] };
+    };
+    var today = new Date();
+    var drillName = function (t) { return hz(t) + ' drill, ' + today.getDate() + ' ' + MONTHS[today.getMonth()]; };
+
+    // Which state: the session's run (running or ended), or a forced view on the standalone artboard
+    var model = b.session || {}, mrun = model.run || null, prun = P.run || null;
+    var view = b.params.view || (mrun && mrun.state === 'running' ? 'running' : (mrun && mrun.state === 'ended' && !loc.fresh ? 'ended' : 'setup'));
+    var fake = !mrun || (b.params.view && mrun.state !== b.params.view);
+    var runLog = null;
+    (S.get().log || []).forEach(function (a) { if (a.t === 'exercise' && a.state === 'running') runLog = a; });
+    var run = fake ? { state: view, name: 'Power outage drill, 30 September', hazard: 'power', level: 2, enrolled: ['DANIEL', 'AMB-RASHID'],
+      startedAt: Date.now() - (view === 'ended' ? 52 : 14) * 60000, endedAt: view === 'ended' ? Date.now() - 60000 : null }
+      : Object.assign({}, mrun, { level: (runLog && runLog.level) || 2 });
+
+    // Setup
+    var type = loc.type || 'power', level = loc.level || 2;
+    var enrolled = loc.enrolled || ['DANIEL', 'AMB-RASHID'];
+    var toggle = function (id) { set({ enrolled: enrolled.indexOf(id) >= 0 ? enrolled.filter(function (x) { return x !== id; }) : enrolled.concat([id]) }); };
+    var types = HAZ.map(function (id) { var on = id === type; return { id: id, isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { set({ type: id }); } }; });
+    var levels = [1, 2].map(function (lv) {
+      var team = ((P.teams || {})[type] || {})[lv], on = lv === level;
+      return { label: h.levelLine[lv], line: team ? C.fill(h.levelTeam, { team: team.team }) : h.levelGap, cls: on ? 'is-on' : '', on: on ? 'true' : 'false', pick: function () { set({ level: lv }); } };
+    });
+    var opt = function (id) { var w = who(id), on = enrolled.indexOf(id) >= 0; return { name: w.name, line: w.role, isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { toggle(id); } }; };
+    var staff = (D.people || []).filter(function (p) { return p.id !== me.id; }).map(function (p) { return opt(p.id); });
+    var ambs = (D.ambassadors || []).map(function (a) { return opt(a.id); });
+    var pl = place(type);
+    var onStart = function () {
+      if (!enrolled.length) return;
+      var name = drillName(type), id = 'INC-X' + Date.now();
+      b.act({ t: 'exercise', state: 'running', name: name, scenario: type === 'power' ? 'A' : null, hazard: type, level: level, enrolled: enrolled.slice() });
+      b.act({ t: 'incident', exercise: true, incident: { id: id, type: type, types: [type], buildings: pl.buildings, floors: pl.floors, where: pl.where, nbhd: pl.nbhd, nbhds: pl.nbhds, exercise: true } });
+      if (!b.standalone && b.app.replace) b.app.replace('P-14', {}); else b.setLoc({ fresh: false });
+      b.toast(h.startedToast);
+    };
+
+    // Running: the practice disruption, and what has happened in it so far
+    var exLog = model.exercise || [];
+    var inc = null, pub = null;
+    exLog.forEach(function (a) { if (a.t === 'incident' && a.at >= (run.startedAt || 0) - 1000) inc = a.incident; });
+    if (inc) exLog.forEach(function (a) { if (a.t === 'publish' && a.incident === inc.id) pub = a; });
+    var space = null;
+    (P.sharedSpaces || []).forEach(function (x) { if (!space && x.exercise && !x.closed && (x.openedMinsAgo || 0) <= Math.round((Date.now() - run.startedAt) / 60000) + 1) space = x; });
+    var incId = inc ? inc.id : (fake ? 'INC-X-DEMO' : null);
+    var mkStep = function (title, line, done, label, go, off, primary) {
+      return { title: title, line: line || '', done: !!done, boxCls: done ? 'is-done' : '', hasGo: !!go, label: label || h.open, go: go || null, off: !!off,
+        btnCls: primary ? 'cvh-btn--primary' : 'cvh-btn--secondary' };
+    };
+    var runWhere = inc ? hz(inc.type) + ', ' + inc.where : hz(run.hazard) + ', ' + place(run.hazard).where;
+    var steps = [
+      mkStep(h.sDisruption, runWhere, true),
+      mkStep(h.tAck, pub ? h.sAckDone : h.sAckNot, !!pub, pub ? h.sAckOpen : h.sAck, function () { b.go('O-12', { incident: incId }); }, !incId, !pub),
+      mkStep(h.tNotice, h.sNoticeLine, false, h.sNotice, function () { b.go('P-06', { channel: 'text', space: space ? space.id : undefined }); }, false, false),
+      mkStep(h.tSpace, space ? h.sSpaceDone : h.sSpaceNot, !!space, space ? h.sSpaceGo : h.sSpace,
+        space ? function () { b.go('P-02', { space: space.id }); } : function () { b.go('P-01', { incident: incId, exercise: true }); }, !incId, !space && !!pub),
+      mkStep(h.tCoverage, space ? h.sCoverageLine : h.sCoverageWait, false, h.sCoverage, function () { b.go('P-04', { space: space ? space.id : null }); }, !space && !fake, false),
+      mkStep(h.sRound, h.sRoundLine, false)
+    ];
+    var startedMins = Math.round((Date.now() - run.startedAt) / 60000);
+    var runV = { word: s.x10.word, name: run.name, hazard: run.hazard || 'power', levelLine: C.fill(h.runLevel, { level: run.level }),
+      started: startedMins < 1 ? h.runStartedNow : C.fill(h.runStarted, { t: b.ago(startedMins) }), where: runWhere,
+      count: (run.enrolled || []).length, people: (run.enrolled || []).map(who) };
+
+    // Ended: the record, named
+    var endedAt = run.endedAt || Date.now();
+    var actions = (S.get().log || []).filter(function (a) { return a.exercise && a.at >= run.startedAt && a.at <= endedAt; }).length;
+    var recordKv = [
+      { k: h.recordStarted, v: clock(run.startedAt) }, { k: h.recordEnded, v: clock(endedAt) },
+      { k: h.recordLength, v: b.dur(Math.max(1, Math.round((endedAt - run.startedAt) / 60000))) },
+      { k: h.recordWho, v: (run.enrolled || []).map(function (id) { return who(id).name; }).join(', ') },
+      { k: h.recordActions, v: String(fake ? 9 : actions) }
+    ];
+
+    // Schedule: one drawn illustrative schedule, plus any saved in the session
+    var addMonths = function (n) { var d = new Date(today.getFullYear(), today.getMonth() + n, today.getDate()); return d.getFullYear() + '-' + ('0' + (d.getMonth() + 1)).slice(-2) + '-' + ('0' + d.getDate()).slice(-2); };
+    var sched = [{ hazard: 'heat', name: 'Extreme heat tabletop exercise', line: C.fill(h.schedLine, { date: '12 May 2027', repeat: h.repeats.y, level: 2 }), mine: false }];
+    var saved = (P.other || []).filter(function (o) { return o.kind === 'schedule'; });
+    if (loc.demoSched && !saved.length) saved = [{ hazard: 'power', level: 2, date: addMonths(3), repeat: 'q' }];
+    saved.forEach(function (o) { sched.unshift({ hazard: o.hazard, name: hz(o.hazard) + ' drill', line: C.fill(h.schedLine, { date: fmtIso(o.date), repeat: h.repeats[o.repeat] || h.repeats.none, level: o.level || 2 }), mine: true }); });
+    var sType = loc.sType || 'power', sDate = loc.sDate || addMonths(3), sRepeat = loc.sRepeat || 'q';
+    var rec = (P.pastRecords || []).filter(function (r) { return r.kind === 'exercise'; })[0];
+    var past = rec ? { title: rec.title, when: fmtIso(rec.period), lessons: rec.lessons || [], go: function () { b.go('P-16', { record: rec.id }); } } : null;
+
+    return { x: h, ill: s.shell.illustrative,
+      isSetup: view === 'setup', isRunning: view === 'running', isEnded: view === 'ended', showSched: view !== 'running',
+      types: types, levels: levels, staff: staff, ambs: ambs, youLine: (me.name || 'Priya') + ', ' + (me.role || '') + '. ' + h.you,
+      canStart: enrolled.length > 0, cannotStart: enrolled.length === 0,
+      summary: C.fill(h.summaryLine, { name: drillName(type), level: level, n: enrolled.length }),
+      firstNote: C.fill(h.firstNote, { what: hz(type).toLowerCase() + ', ' + pl.where }), onStart: onStart,
+      run: runV, steps: steps,
+      onEnd: function () { b.act({ t: 'exercise', state: 'ended', exercise: false }); if (!b.standalone && b.app.replace) b.app.replace('P-14', {}); b.toast(h.endedToast); },
+      recordName: C.fill(h.recordName, { name: run.name }), recordKv: recordKv,
+      toRecord: function () { b.go('P-16', { record: rec ? rec.id : null, exercise: run.name }); }, again: function () { set({ fresh: true }); },
+      scheduled: sched, schedIsOpen: !!loc.schedOpen, schedClosed: !loc.schedOpen,
+      openSched: function () { set({ schedOpen: true }); }, closeSched: function () { set({ schedOpen: false }); },
+      schedTypes: HAZ.map(function (t) { return { v: t, label: hz(t), sel: t === sType }; }), schedDate: sDate,
+      schedRepeats: ['none', 'q', 'h', 'y'].map(function (r) { return { v: r, label: h.repeats[r], sel: r === sRepeat }; }),
+      onSchedType: function (e) { set({ sType: e.target.value }); }, onSchedDate: function (e) { set({ sDate: e.target.value }); }, onSchedRepeat: function (e) { set({ sRepeat: e.target.value }); },
+      saveSched: function () { b.act({ t: 'partner', kind: 'schedule', item: { hazard: sType, level: 2, date: sDate, repeat: sRepeat } }); set({ schedOpen: false }); b.toast(h.schedSaved); },
+      past: past,
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('P-11'); } };
+  }
+
+}
+</script>
+</body>
+</html>

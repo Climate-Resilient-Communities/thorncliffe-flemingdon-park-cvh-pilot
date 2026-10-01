@@ -1,0 +1,259 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-17 Check-in round progress and escalations</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-17" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-17" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-17" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-stack" style="--gap:20px">
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-strong" style="color:var(--ink)">{{forLine}}</p>
+    <sc-if value="{{exercise}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span>{{s.O17.exercise}}</span></p></sc-if>
+    <p class="cvh-caption cvh-muted">{{s.O17.deleted}}</p>
+  </div>
+
+  <div class="cvh-o17__sum" role="list">
+    <sc-for list="{{sum}}" as="n" hint-placeholder-count="4">
+      <div class="cvh-o17__num" role="listitem"><span class="cvh-o17__n">{{n.n}}</span><span>{{n.label}}</span></div>
+    </sc-for>
+  </div>
+
+  <div class="cvh-o17">
+    <section class="cvh-stack" style="--gap:12px" aria-labelledby="o17-fu">
+      <h2 class="cvh-h2" id="o17-fu">{{s.O17.followUp}}</h2>
+      <p class="cvh-caption">{{s.O17.catOnly}}</p>
+      <sc-if value="{{none}}">
+        <div class="cvh-o17__item cvh-o17__item--taken"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span class="cvh-strong">{{s.O17.noneWaiting}}</span></p></div>
+      </sc-if>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+        <div class="cvh-stack" style="--gap:8px">
+          <h3 class="cvh-h3">{{g.label}}</h3>
+          <sc-for list="{{g.items}}" as="it" hint-placeholder-count="1">
+            <article class="cvh-o17__item">
+              <div class="cvh-o17__head">
+                <span class="cvh-o17__kind"><span class="cvh-ico cvh-ico--{{it.icon}}" aria-hidden="true"></span>{{it.kind}}</span>
+                <span class="cvh-o17__when">{{it.when}}</span>
+              </div>
+              <p>{{it.where}}</p>
+              <p class="cvh-caption cvh-muted">{{it.from}}</p>
+              <button type="button" class="cvh-btn cvh-btn--primary" style="align-self:flex-start" onClick="{{it.take}}">{{s.O17.take}}</button>
+            </article>
+          </sc-for>
+        </div>
+      </sc-for>
+      <sc-if value="{{hasTaken}}">
+        <div class="cvh-stack" style="--gap:8px">
+          <h3 class="cvh-h3">{{s.O17.taken}}</h3>
+          <sc-for list="{{taken}}" as="it" hint-placeholder-count="1">
+            <article class="cvh-o17__item cvh-o17__item--taken">
+              <div class="cvh-o17__head"><span class="cvh-o17__kind"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>{{it.kind}}</span><span class="cvh-o17__when">{{it.was}}</span></div>
+              <p>{{it.where}}</p>
+            </article>
+          </sc-for>
+        </div>
+      </sc-if>
+      <p class="cvh-caption cvh-muted">{{s.O17.queuedNote}}</p>
+    </section>
+
+    <section class="cvh-stack" style="--gap:12px" aria-labelledby="o17-pr">
+      <h2 class="cvh-h2" id="o17-pr">{{s.O17.progress}}</h2>
+      <sc-if value="{{wide}}">
+        <table class="cvh-o17__table">
+          <thead><tr><th scope="col">{{s.O17.floors}}</th><th scope="col">{{s.O17.done}}</th><th scope="col">{{s.O17.nr}}</th><th scope="col">{{s.O17.conn}}</th><th scope="col">{{s.O17.todo}}</th></tr></thead>
+          <tbody>
+            <sc-for list="{{blds}}" as="bd" hint-placeholder-count="3">
+              <tr><td class="cvh-o17__bld" colspan="5">{{bd.name}}</td></tr>
+              <sc-for list="{{bd.bands}}" as="r" hint-placeholder-count="2">
+                <sc-if value="{{r.covered}}">
+                  <tr><td><span class="cvh-strong">{{r.floors}}</span><br><span class="cvh-muted">{{r.amb}}</span><sc-if value="{{r.tag}}"><br><span class="cvh-muted">{{r.tag}}</span></sc-if></td><td>{{r.done}}</td><td>{{r.nr}}</td><td>{{r.conn}}</td><td>{{r.todo}}</td></tr>
+                </sc-if>
+                <sc-if value="{{r.gap}}">
+                  <tr><td colspan="5"><span class="cvh-o17__gap cvh-row" style="--gap:6px;align-items:flex-start"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{r.floors}}: {{s.O17.uncovered}}</span></span></td></tr>
+                </sc-if>
+              </sc-for>
+            </sc-for>
+          </tbody>
+        </table>
+      </sc-if>
+      <sc-if value="{{narrow}}">
+        <sc-for list="{{blds}}" as="bd" hint-placeholder-count="3">
+          <div class="cvh-stack" style="--gap:8px">
+            <h3 class="cvh-h3">{{bd.name}}</h3>
+            <sc-for list="{{bd.bands}}" as="r" hint-placeholder-count="2">
+              <div class="cvh-o17__card">
+                <p><span class="cvh-strong">{{r.floors}}</span> <span class="cvh-muted">{{r.amb}}</span></p>
+                <sc-if value="{{r.covered}}">
+                  <div class="cvh-o17__kv">
+                    <span>{{s.O17.done}}: <b>{{r.done}}</b></span><span>{{s.O17.nr}}: <b>{{r.nr}}</b></span>
+                    <span>{{s.O17.conn}}: <b>{{r.conn}}</b></span><span>{{s.O17.todo}}: <b>{{r.todo}}</b></span>
+                  </div>
+                  <sc-if value="{{r.tag}}"><p class="cvh-caption cvh-muted">{{r.tag}}</p></sc-if>
+                </sc-if>
+                <sc-if value="{{r.gap}}"><p class="cvh-o17__gap">{{s.O17.uncovered}}</p></sc-if>
+              </div>
+            </sc-for>
+          </div>
+        </sc-for>
+      </sc-if>
+      <button type="button" class="cvh-link" onClick="{{toPartner}}">{{s.O17.partner}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </section>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Round in progress: waiting items and counts (Priya)", "Connected to a service, category only", "Taken by the Hub", "None waiting", "Exercise running", "Narrow, 390 wide"], "default": "Round in progress: waiting items and counts (Priya)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Round in progress: waiting items and counts (Priya)": {"persona": "PRIYA"}, "Connected to a service, category only": {"persona": "PRIYA", "params": {"sample": {"CI-7": {"status": "connected", "category": "food", "mins": 1}}}}, "Taken by the Hub": {"persona": "PRIYA", "params": {"sample": {"CI-5": {"status": "passed", "was": "notReached", "by": "PRIYA", "mins": 2}}}}, "None waiting": {"persona": "PRIYA", "params": {"sample": {"CI-5": {"status": "passed", "was": "notReached", "by": "PRIYA", "mins": 6}, "CI-7": {"status": "passed", "was": "needsHelp", "by": "PRIYA", "mins": 3}}}}, "Exercise running": {"persona": "PRIYA", "exercise": true}, "Narrow, 390 wide": {"persona": "PRIYA", "w": 390}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-17', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.O17, prm = b.params, m = b.session || C.session.model() || {};
+    var sess = C.session.get(), scn = sess.scenario || 'A';
+    var cats = s.categories || {};
+    var now = Date.now();
+    // Round alerts running now
+    var ra = C.scenarioAlerts(scn).active.filter(function (sn) { return sn.a.hazard === 'power' || sn.a.hazard === 'heat'; });
+    var forLine = ra.length ? C.fill(x.forLine, { alerts: ra.map(function (sn) { return sn.a.headline + ' (' + sn.where + ')'; }).join('; ') }) : x.noRound;
+    // Individual marks: session log (or exercise log when the exercise is running), with artboard samples over them
+    var hist = {};
+    (sess.log || []).forEach(function (a) { if (a.t === 'checkin' && !!a.exercise === b.exercise) (hist[a.id] = hist[a.id] || []).push(a); });
+    var sample = prm.sample || {};
+    var markOf = function (id, base) {
+      if (sample[id]) return sample[id];
+      var h = hist[id];
+      if (h && h.length) {
+        var last = h[h.length - 1], prev = h.slice(0, -1).reverse().filter(function (y) { return y.status !== 'passed' && y.status !== 'waiting'; })[0];
+        var mm = (m.checkins || {})[id];
+        return { status: last.status, category: last.category || (prev && prev.category) || null, was: last.was || (prev ? prev.status : (base !== 'passed' ? base : null)), by: last.by, mins: Math.round((now - last.at) / 60000),
+          queued: !b.exercise && mm && mm.queued && m.signal === false };
+      }
+      return { status: base || 'waiting', mins: null };
+    };
+    var ambFor = function (bid, floor) { var r = null; (D.ambassadors || []).forEach(function (a) { if (((a.floors || {})[bid] || []).indexOf(+floor) >= 0) r = a; }); return r; };
+    var bname = function (bid) { return (C.building(bid) || { name: bid }).name; };
+    var records = (D.checkins || []).map(function (c) { return { c: c, unr: false }; }).concat((D.unreachable || []).map(function (u) { return { c: u, unr: true }; }));
+    var items = records.map(function (r) {
+      var c = r.c, mk = markOf(c.id, c.status), a = ambFor(c.building, c.floor);
+      var where = r.unr ? C.fill(x.whereUnr, { building: bname(c.building), floor: c.floor, door: c.door })
+        : c.method === 'knock' || !c.phone ? C.fill(x.whereKnock, { building: bname(c.building), floor: c.floor, door: c.door || '' })
+        : C.fill(x.wherePhone, { building: bname(c.building), floor: c.floor, method: (s.A04.method || {})[c.method] || c.method, phone: c.phone });
+      var kindOf = function (st, cat) { return st === 'needsHelp' ? x.needsHelp : st === 'notReached' ? x.notReached : st === 'connected' ? C.fill(x.connected, { category: cats[cat] || cat || '' }) : ''; };
+      return { id: c.id, st: mk.status, queued: !!mk.queued, where: where, kind: kindOf(mk.status, mk.category),
+        icon: { needsHelp: 'flag', notReached: 'close', connected: 'handshake' }[mk.status] || 'info',
+        when: mk.mins == null ? x.earlier : b.ago(mk.mins), from: a ? C.fill(x.from, { name: a.name }) : '',
+        was: mk.was ? C.fill(x.was, { status: kindOf(mk.was, mk.category) || mk.was }) : '',
+        takenKind: C.fill(x.takenBy, { name: (C.person(mk.by || 'PRIYA') || {}).name || 'the Hub', t: mk.mins == null ? '' : b.ago(mk.mins) }).trim(),
+        take: function () { b.act({ t: 'checkin', id: c.id, status: 'passed', category: mk.category || undefined, was: mk.status }); } };
+    }).filter(function (it) { return !it.queued; });
+    var pick = function (st) { return items.filter(function (it) { return it.st === st; }); };
+    var help = pick('needsHelp'), nr = pick('notReached'), conn = pick('connected');
+    var groups = [[x.needsHelp, help], [x.notReached, nr], [C.fill(x.connected, { category: '' }).replace(/:\s*$/, ''), conn]]
+      .filter(function (g) { return g[1].length; }).map(function (g) { return { label: g[0], items: g[1] }; });
+    var taken = pick('passed').map(function (it) { return { kind: it.takenKind, was: it.was, where: it.where }; });
+    // Counts by building and floor: live for bands with individual records, illustrative for the rest
+    var liveCount = function (bid, a, z) {
+      var n = { done: 0, nr: 0, conn: 0, help: 0, todo: 0 }, any = false;
+      records.forEach(function (r) {
+        var c = r.c; if (c.building !== bid || +c.floor < a || +c.floor > z) return; any = true;
+        var st = markOf(c.id, c.status); var k = st.status === 'passed' ? st.was : st.status;
+        if (st.queued) k = 'waiting';
+        if (k === 'done') n.done++; else if (k === 'notReached') n.nr++; else if (k === 'connected') n.conn++; else if (k === 'needsHelp') { n.help++; n.todo++; } else n.todo++;
+      });
+      return any ? n : null;
+    };
+    var rc = D.roundCounts || {}, done = 0, sumConn = 0;
+    var blds = Object.keys(rc).map(function (bid) {
+      var bands = Object.keys(rc[bid]).map(function (band) {
+        var v = rc[bid][band], ab = band.split('-'), a0 = +ab[0], z0 = +ab[1];
+        var fl = C.fill(s.A03.floorsRange, { a: a0, b: z0 });
+        if (v.uncovered) return { floors: fl, amb: '', covered: false, gap: true };
+        var live = liveCount(bid, a0, z0), amb = ambFor(bid, a0);
+        var n = live || { done: v.done, nr: v.notReached, conn: v.connected, todo: v.waiting };
+        done += n.done;
+        return { floors: fl, amb: amb ? amb.name : '', covered: true, gap: false, done: n.done, nr: n.nr, conn: n.conn, todo: n.todo, tag: live ? x.liveBand : x.illustrative };
+      });
+      return { name: bname(bid), bands: bands };
+    });
+    var sum = [{ n: help.length, label: x.sumHelp }, { n: nr.length, label: x.sumNr }, { n: conn.length, label: x.sumConn }, { n: done, label: x.sumDone }];
+    return { s: s, narrow: b.narrow, wide: !b.narrow, exercise: b.exercise, forLine: forLine, sum: sum,
+      groups: groups, none: groups.length === 0, taken: taken, hasTaken: taken.length > 0, blds: blds,
+      toPartner: function () { b.go('P-04'); } };
+  }
+
+}
+</script>
+</body>
+</html>

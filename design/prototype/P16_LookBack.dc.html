@@ -1,0 +1,404 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-16 Look back and actions</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-16" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-16" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-16" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-rv">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-rv-head">
+    <div class="cvh-rv-head__text">
+      <h2 class="cvh-hhead__title">{{x.title}}</h2>
+      <p class="cvh-muted">{{x.lead}}</p>
+    </div>
+    <div class="cvh-rv-head__acts">
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toIndicators}}"><span class="cvh-ico cvh-ico--dashboard cvh-ico--sm" aria-hidden="true"></span>{{x.toIndicators}}</button>
+    </div>
+  </div>
+
+  <section class="cvh-rv-band" aria-label="{{reviewLine}}">
+    <span class="cvh-ico cvh-ico--calendar cvh-ico--lg" aria-hidden="true"></span>
+    <div class="cvh-rv-band__text">
+      <p class="cvh-hrow__title">{{reviewLine}}</p>
+      <p>{{x.reviewLine}}</p>
+    </div>
+  </section>
+  <sc-if value="{{b_exercise}}"><p class="cvh-note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{x.exerciseNow}}</span></p></sc-if>
+
+  <sc-if value="{{hasAdded}}">
+    <div class="cvh-confirm is-done" role="status">
+      <p class="cvh-done"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{addedTitle}}</span></p>
+      <p class="cvh-strong">{{added.action}}</p>
+      <p>{{addedLine}}</p>
+      <sc-if value="{{added.practice}}"><p class="cvh-rv-line"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span>{{x.addedPractice}}</span></p></sc-if>
+      <div class="cvh-hrow__actions"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toPlaybook}}"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{playbookLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></div>
+    </div>
+  </sc-if>
+
+  <section class="cvh-hsec" aria-labelledby="p16-gaps">
+    <h3 class="cvh-hsec__title" id="p16-gaps"><span class="cvh-ico cvh-ico--retry" aria-hidden="true"></span>{{x.gapsTitle}}<span class="cvh-tag cvh-tag--illustrative">{{illus}}</span></h3>
+    <p class="cvh-muted">{{x.gapsLead}}</p>
+    <div class="cvh-rv-cols">
+      <sc-for list="{{gaps}}" as="g" hint-placeholder-count="2">
+        <article class="cvh-rv-gap {{g.cls}}">
+          <p class="cvh-rv-gap__title">{{g.gap}}</p>
+          <p class="cvh-strong">{{x.cameUp}}</p>
+          <ul class="cvh-rv-recs">
+            <sc-for list="{{g.recs}}" as="r" hint-placeholder-count="2">
+              <li class="cvh-row cvh-wrap" style="--gap:6px 8px"><span class="{{r.kindCls}}"><span class="cvh-ico cvh-ico--{{r.kindIcon}} cvh-ico--sm" aria-hidden="true"></span>{{r.kind}}</span><span>{{r.label}}</span></li>
+            </sc-for>
+          </ul>
+          <sc-if value="{{g.hasAction}}">
+            <div class="cvh-stack" style="--gap:2px">
+              <span class="cvh-rv-status {{g.act.statusCls}}" style="align-self:flex-start"><span class="cvh-ico cvh-ico--{{g.act.statusIcon}} cvh-ico--sm" aria-hidden="true"></span>{{g.act.status}}</span>
+              <p class="cvh-strong">{{g.act.line}}</p>
+              <p>{{g.act.ownerDue}}</p>
+            </div>
+          </sc-if>
+          <sc-if value="{{g.canMake}}">
+            <p class="cvh-muted">{{x.noAction}}</p>
+            <button type="button" class="cvh-btn cvh-btn--primary" style="align-self:flex-start" onClick="{{g.make}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.makeAction}}</button>
+          </sc-if>
+          <sc-if value="{{g.editing}}">
+            <div class="cvh-rv-form" role="group" aria-labelledby="p16-form-{{g.i}}">
+              <p class="cvh-hsec__title" id="p16-form-{{g.i}}">{{x.formTitle}}</p>
+              <p>{{form.fromLine}}</p>
+              <div class="cvh-field"><label class="cvh-label" for="p16-act-{{g.i}}">{{x.formAction}}</label><p class="cvh-hint">{{x.formActionHint}}</p>
+                <textarea id="p16-act-{{g.i}}" class="cvh-textarea" rows="3" value="{{form.action}}" onInput="{{form.onAction}}"></textarea></div>
+              <div class="cvh-rv-form__row">
+                <div class="cvh-field"><label class="cvh-label" for="p16-own-{{g.i}}">{{x.formOwner}}</label>
+                  <select id="p16-own-{{g.i}}" class="cvh-select" value="{{form.owner}}" onChange="{{form.onOwner}}"><sc-for list="{{form.owners}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+                <div class="cvh-field"><label class="cvh-label" for="p16-due-{{g.i}}">{{x.formDue}}</label>
+                  <select id="p16-due-{{g.i}}" class="cvh-select" value="{{form.due}}" onChange="{{form.onDue}}"><sc-for list="{{form.dues}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+              </div>
+              <sc-if value="{{form.needOwner}}"><p class="cvh-hint">{{x.formNeed}}</p></sc-if>
+              <div class="cvh-hrow__actions">
+                <button type="button" class="cvh-btn cvh-btn--primary" disabled="{{form.cannot}}" onClick="{{form.onAdd}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.add}}</button>
+                <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{form.onCancel}}">{{x.cancel}}</button>
+              </div>
+            </div>
+          </sc-if>
+        </article>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-hsec" aria-labelledby="p16-recs">
+    <h3 class="cvh-hsec__title" id="p16-recs"><span class="cvh-ico cvh-ico--doc" aria-hidden="true"></span>{{x.recordsTitle}}</h3>
+    <p class="cvh-muted">{{x.recordsLead}}</p>
+    <div class="cvh-rv-filters" role="group" aria-label="{{x.recordsTitle}}">
+      <div class="cvh-field"><label class="cvh-label" for="p16-ft">{{x.fType}}</label>
+        <select id="p16-ft" class="cvh-select" value="{{fType}}" onChange="{{onType}}"><sc-for list="{{typeOpts}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+      <div class="cvh-field"><label class="cvh-label" for="p16-fb">{{x.fBuilding}}</label>
+        <select id="p16-fb" class="cvh-select" value="{{fBuilding}}" onChange="{{onBuilding}}"><sc-for list="{{bldOpts}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+      <div class="cvh-field"><label class="cvh-label" for="p16-fp">{{x.fPeriod}}</label>
+        <select id="p16-fp" class="cvh-select" value="{{fPeriod}}" onChange="{{onPeriod}}"><sc-for list="{{perOpts}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+      <button type="button" class="cvh-btn cvh-btn--quiet" disabled="{{noFilters}}" onClick="{{clearFilters}}">{{x.clear}}</button>
+    </div>
+    <p class="cvh-strong" role="status">{{showing}}</p>
+    <sc-if value="{{noRecords}}">
+      <div class="cvh-card cvh-stack" style="--gap:6px"><p class="cvh-h3">{{x.none}}</p><p>{{x.noneLine}}</p>
+        <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{clearFilters}}">{{x.clear}}</button></div>
+    </sc-if>
+    <sc-for list="{{records}}" as="r" hint-placeholder-count="4">
+      <article class="cvh-hrow {{r.cls}}" aria-label="{{r.title}}">
+        <div class="cvh-hrow__head">
+          <span class="{{r.kindCls}}"><span class="cvh-ico cvh-ico--{{r.kindIcon}} cvh-ico--sm" aria-hidden="true"></span>{{r.kind}}</span>
+          <dc-import name="X13_DisruptionType" type="{{r.type}}" surface="screen" lang="en" embedded="{{true}}" hint-size="160px,44px"></dc-import>
+          <sc-if value="{{r.illustrative}}"><span class="cvh-tag cvh-tag--illustrative">{{illus}}</span></sc-if>
+          <sc-if value="{{r.session}}"><span class="cvh-tag">{{x.fromSession}}</span></sc-if>
+        </div>
+        <p class="cvh-hrow__title">{{r.title}}</p>
+        <div class="cvh-hrow__meta"><span class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span>{{r.where}}</span><span class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span>{{r.when}}</span></div>
+        <sc-if value="{{r.session}}">
+          <p>{{r.sessionLine}}</p>
+          <p class="cvh-muted">{{r.sessionNote}}</p>
+        </sc-if>
+        <sc-if value="{{r.hasLessons}}">
+          <ul class="cvh-rv-lessons" aria-label="{{x.lessons}}">
+            <sc-for list="{{r.lessons}}" as="l" hint-placeholder-count="2">
+              <li class="cvh-rv-lesson">
+                <div class="cvh-rv-lesson__row">
+                  <span class="cvh-rv-lesson__text">{{l.text}}</span>
+                  <sc-if value="{{l.hasAction}}"><span class="cvh-rv-status {{l.act.statusCls}}"><span class="cvh-ico cvh-ico--{{l.act.statusIcon}} cvh-ico--sm" aria-hidden="true"></span>{{l.act.short}}</span></sc-if>
+                  <sc-if value="{{l.canMake}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{l.make}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.makeAction}}</button></sc-if>
+                </div>
+                <sc-if value="{{l.editing}}">
+                  <div class="cvh-rv-form" role="group" aria-labelledby="p16-lform-{{l.i}}">
+                    <p class="cvh-hsec__title" id="p16-lform-{{l.i}}">{{x.formTitle}}</p>
+                    <p>{{form.fromLine}}</p>
+                    <div class="cvh-field"><label class="cvh-label" for="p16-lact-{{l.i}}">{{x.formAction}}</label><p class="cvh-hint">{{x.formActionHint}}</p>
+                      <textarea id="p16-lact-{{l.i}}" class="cvh-textarea" rows="3" value="{{form.action}}" onInput="{{form.onAction}}"></textarea></div>
+                    <div class="cvh-rv-form__row">
+                      <div class="cvh-field"><label class="cvh-label" for="p16-lown-{{l.i}}">{{x.formOwner}}</label>
+                        <select id="p16-lown-{{l.i}}" class="cvh-select" value="{{form.owner}}" onChange="{{form.onOwner}}"><sc-for list="{{form.owners}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+                      <div class="cvh-field"><label class="cvh-label" for="p16-ldue-{{l.i}}">{{x.formDue}}</label>
+                        <select id="p16-ldue-{{l.i}}" class="cvh-select" value="{{form.due}}" onChange="{{form.onDue}}"><sc-for list="{{form.dues}}" as="o" hint-placeholder-count="4"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select></div>
+                    </div>
+                    <sc-if value="{{form.needOwner}}"><p class="cvh-hint">{{x.formNeed}}</p></sc-if>
+                    <div class="cvh-hrow__actions">
+                      <button type="button" class="cvh-btn cvh-btn--primary" disabled="{{form.cannot}}" onClick="{{form.onAdd}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.add}}</button>
+                      <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{form.onCancel}}">{{x.cancel}}</button>
+                    </div>
+                  </div>
+                </sc-if>
+              </li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-for list="{{r.also}}" as="al" hint-placeholder-count="1"><p class="cvh-rv-line"><span class="cvh-ico cvh-ico--retry cvh-ico--sm" aria-hidden="true"></span><span>{{al}}</span></p></sc-for>
+      </article>
+    </sc-for>
+  </section>
+
+  <section class="cvh-hsec" aria-labelledby="p16-acts">
+    <h3 class="cvh-hsec__title" id="p16-acts"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>{{x.actionsTitle}}</h3>
+    <p class="cvh-muted">{{actionsLead}}</p>
+    <div class="cvh-rv-acts">
+      <sc-for list="{{actions}}" as="a" hint-placeholder-count="3">
+        <article class="cvh-rv-act {{a.cls}}">
+          <div class="cvh-rv-act__head">
+            <span class="cvh-rv-status {{a.statusCls}}"><span class="cvh-ico cvh-ico--{{a.statusIcon}} cvh-ico--sm" aria-hidden="true"></span>{{a.status}}</span>
+            <sc-if value="{{a.illustrative}}"><span class="cvh-tag cvh-tag--illustrative">{{illus}}</span></sc-if>
+            <sc-if value="{{a.isNew}}"><span class="cvh-tag">{{x.newTag}}</span></sc-if>
+            <sc-if value="{{a.practice}}"><span class="cvh-rv-ex"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.kindExercise}}</span></sc-if>
+          </div>
+          <p class="cvh-rv-act__title">{{a.action}}</p>
+          <p class="cvh-muted">{{a.from}}</p>
+          <div class="cvh-hrow__meta"><span>{{a.owner}}</span><span>{{a.due}}</span></div>
+          <sc-if value="{{a.hasLink}}"><button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{a.open}}"><span class="cvh-ico cvh-ico--external cvh-ico--sm" aria-hidden="true"></span>{{a.linkLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+        </article>
+      </sc-for>
+    </div>
+  </section>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Records, recurring gaps and actions", "Filtered: power outages in Sample Tower A", "No records match the filters", "Making the recurring gap an action", "Action added with an owner and a date", "After this session drill ended (new exercise record)", "Opened from Exercises with the sample exercise record", "Exercise running", "Phone width, 390"], "default": "Records, recurring gaps and actions"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Records, recurring gaps and actions": {}, "Filtered: power outages in Sample Tower A": {"loc": {"fType": "power", "fBuilding": "SA"}}, "No records match the filters": {"loc": {"fType": "smoke"}}, "Making the recurring gap an action": {"loc": {"making": "gap:Floors with no ambassador for check-ins", "owner": "Hub ambassador coordinator"}}, "Action added with an owner and a date": {"loc": {"demoAdded": true}}, "After this session drill ended (new exercise record)": {"params": {"demoRun": "ended"}}, "Opened from Exercises with the sample exercise record": {"params": {"record": "REC-X"}}, "Exercise running": {"exercise": true, "params": {"demoRun": "running"}}, "Phone width, 390": {"w": 390, "h": 1400}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-16', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P16, P = D.partner || {}, loc = b.loc;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var fmt = function (iso) { if (!iso) return ''; var p = String(iso).split('-'); return (p[2] ? (+p[2]) + ' ' : '') + MONTHS[(+p[1]) - 1] + ' ' + p[0]; };
+    var illus = s.shell && s.shell.illustrative ? s.shell.illustrative : 'Illustrative';
+    var hazardName = function (t) { return (s.hazards || {})[t] || s.x13[t] || t; };
+    var bname = function (id) { return (C.building(id) || { name: id }).name; };
+    var today = P.today || '2026-09-29';
+    var monthNo = function (ym) { var p = String(ym).split('-'); return (+p[0]) * 12 + (+p[1]); };
+    var nowMonth = monthNo(today);
+    var kindOf = function (k) {
+      return k === 'exercise' ? { kind: x.kindExercise, kindCls: 'cvh-rv-ex', kindIcon: 'exercise' } : { kind: x.kindReal, kindCls: 'cvh-rv-real', kindIcon: 'flag' };
+    };
+
+    // Records: the drawn ones (illustrative), plus this session's ended exercise, named as P-14 names it
+    var run = P.run || null;
+    if (!run && b.params.demoRun) run = { state: b.params.demoRun, name: x.demoRunName, hazard: 'power', startedMinsAgo: 58, endedMinsAgo: b.params.demoRun === 'ended' ? 12 : null, demo: true };
+    var recs = (P.pastRecords || []).map(function (r) { return Object.assign({}, r, { buildings: r.building ? [r.building] : [], illustrative: true }); });
+    if (run && run.state === 'ended') {
+      var log = (C.session.get() || {}).log || [];
+      var nAct = run.demo ? 9 : log.filter(function (a) { return a.exercise && (!run.startedAt || a.at >= run.startedAt) && (!run.endedAt || a.at <= run.endedAt); }).length;
+      var ran = Math.max(1, (run.startedMinsAgo || 0) - (run.endedMinsAgo || 0));
+      recs.unshift({ id: 'REC-S', kind: 'exercise', type: run.hazard || 'power', buildings: ['SA', 'SB', 'SC'], period: today.slice(0, 7), session: true,
+        title: run.record || C.fill(x.recordPrefix, { name: run.name }), where: x.sessionWhere, lessons: [],
+        sessionLine: C.fill(nAct === 1 ? x.sessionOne : x.sessionRan, { t: b.dur(ran), n: nAct }), sessionNote: x.sessionDebrief });
+    }
+    var recById = {}; recs.forEach(function (r) { recById[r.id] = r; });
+
+    // Actions: drawn (illustrative) and this session's
+    var acts = (P.actions || []).slice();
+    if (loc.demoAdded) acts.push({ id: 'ACT-DEMO', lesson: 'Floors with no ambassador for check-ins', action: x.suggest['Floors with no ambassador for check-ins'],
+      ownerRole: 'Hub ambassador coordinator', due: '2026-11-30', status: 'open', _session: true, minsAgo: 0 });
+    var LESSON_KEYS = [[/Pashto/, 'No Pashto interpreter available'], [/no ambassador/i, 'Floors with no ambassador for check-ins'], [/manager/, 'Staff learned of activation from a manager'], [/14 minutes/, 'Acknowledgement took 14 minutes']];
+    var keyOf = function (text) { for (var i = 0; i < LESSON_KEYS.length; i++) if (LESSON_KEYS[i][0].test(text)) return LESSON_KEYS[i][1]; return text; };
+    var actionFor = function (text) {
+      var k = keyOf(text), hit = null;
+      acts.forEach(function (a) { if (a.lesson === text || a.lesson === k || keyOf(a.lesson || '') === k) hit = a; });
+      return hit;
+    };
+    var actView = function (a) {
+      var done = a.status === 'done';
+      return { status: done ? x.done : x.open, statusCls: done ? 'cvh-rv-status--done' : '', statusIcon: done ? 'check' : 'clock',
+        line: C.fill(x.actionLine, { action: a.action }), ownerDue: C.fill(x.ownerDue, { owner: a.ownerRole, due: fmt(a.due) }),
+        short: (done ? x.done : x.open) + ': ' + a.ownerRole + ', ' + fmt(a.due) };
+    };
+
+    // The shared "make this an action" form (one open at a time)
+    var making = loc.making || null;
+    var lessonText = making ? making.replace(/^(gap|lesson):/, '').replace(/^REC-[A-Z0-9]+:\d+:/, '') : '';
+    var ownerVal = loc.owner || '', dueVal = loc.due || '2026-11-30';
+    var actionVal = loc.actionText != null ? loc.actionText : ((x.suggest || {})[keyOf(lessonText)] || '');
+    var practice = !!b.exercise;
+    var form = {
+      fromLine: C.fill(x.formFrom, { lesson: lessonText }), action: actionVal, owner: ownerVal, due: dueVal,
+      owners: [{ v: '', label: x.formOwnerPick, sel: !ownerVal }].concat((x.owners || []).map(function (o) { return { v: o, label: o, sel: o === ownerVal }; })),
+      dues: (x.dues || []).map(function (d) { return { v: d[0], label: fmt(d[0]) + d[1], sel: d[0] === dueVal }; }),
+      needOwner: !ownerVal, cannot: !ownerVal || !String(actionVal).trim(),
+      onAction: function (e) { b.setLoc({ actionText: e.target.value }); },
+      onOwner: function (e) { b.setLoc({ owner: e.target.value }); },
+      onDue: function (e) { b.setLoc({ due: e.target.value }); },
+      onCancel: function () { b.setLoc({ making: null, actionText: null, owner: '', due: null }); },
+      onAdd: function () {
+        if (!ownerVal || !String(actionVal).trim()) return;
+        var item = { lesson: keyOf(lessonText), action: String(actionVal).trim(), ownerRole: ownerVal, due: dueVal, status: 'open' };
+        b.act({ t: 'partner', kind: 'action', item: item });
+        b.setLoc({ making: null, actionText: null, owner: '', due: null, justAdded: { lesson: item.lesson, action: item.action, ownerRole: ownerVal, due: dueVal, practice: practice,
+          hazard: (making.indexOf('lesson:') === 0 ? (recById[making.split(':')[1]] || {}).type : null) || 'power' } });
+        b.toast(x.addedToast);
+      } };
+    var startMaking = function (key) { return function () { b.setLoc({ making: key, actionText: null, owner: '', due: null, justAdded: null }); }; };
+
+    // Recurring gaps
+    var gaps = (P.recurringGaps || []).map(function (g, i) {
+      var a = actionFor(g.gap), key = 'gap:' + g.gap;
+      return { i: i, gap: g.gap, cls: a ? 'cvh-rv-gap--done' : '',
+        recs: (g.records || []).map(function (id) { var r = recById[id] || { title: id, period: '' }; return Object.assign({ label: r.title + ', ' + fmt(r.period) }, kindOf(r.kind)); }),
+        hasAction: !!a, act: a ? actView(a) : {}, canMake: !a && making !== key, editing: !a && making === key, make: startMaking(key) };
+    });
+
+    // Filters
+    var fType = loc.fType || '', fBuilding = loc.fBuilding || '', fPeriod = loc.fPeriod || '';
+    var opt = function (v, label, cur) { return { v: v, label: label, sel: v === cur }; };
+    var typeOpts = [opt('', x.allTypes, fType)].concat(['power', 'elevator', 'heat', 'flood', 'smoke', 'fire'].map(function (t) { return opt(t, hazardName(t), fType); }));
+    var bldOpts = [opt('', x.allBuildings, fBuilding), opt('SA', bname('SA'), fBuilding), opt('SB', bname('SB'), fBuilding), opt('SC', bname('SC'), fBuilding), opt('nbhd', x.nbhdWide, fBuilding)];
+    var perOpts = [opt('', x.allPeriods, fPeriod), opt('3', x.periods.p3, fPeriod), opt('6', x.periods.p6, fPeriod), opt('12', x.periods.p12, fPeriod)];
+    var shown = recs.filter(function (r) {
+      if (fType && r.type !== fType) return false;
+      if (fBuilding === 'nbhd' && r.buildings.length) return false;
+      if (fBuilding && fBuilding !== 'nbhd' && r.buildings.indexOf(fBuilding) < 0) return false;
+      if (fPeriod && nowMonth - monthNo(r.period) >= +fPeriod) return false;
+      return true;
+    });
+    // Opened from P-14 (or a link) with a record: that record comes first and is marked
+    var focus = b.params.record || null;
+    if (focus) shown.sort(function (p, q) { return (q.id === focus || (focus === 'session' && q.session) ? 1 : 0) - (p.id === focus || (focus === 'session' && p.session) ? 1 : 0); });
+    var records = shown.map(function (r) {
+      var lessons = (r.lessons || []).map(function (t, k) {
+        var a = actionFor(t), key = 'lesson:' + r.id + ':' + k + ':' + t;
+        return { i: r.id + '-' + k, text: t, hasAction: !!a, act: a ? actView(a) : {}, canMake: !a && making !== key, editing: !a && making === key, make: startMaking(key) };
+      });
+      var lessonKeys = (r.lessons || []).map(keyOf);
+      var also = (P.recurringGaps || []).filter(function (g) { return (g.records || []).indexOf(r.id) >= 0 && lessonKeys.indexOf(g.gap) < 0; })
+        .map(function (g) { return C.fill(x.alsoRecurring, { gap: g.gap }); });
+      var where = r.where || (r.buildings.length ? r.buildings.map(bname).join(', ') : x.bothNbhds);
+      return Object.assign({ title: r.title, type: r.type, where: where, when: fmt(r.period), illustrative: !!r.illustrative, session: !!r.session,
+        sessionLine: r.sessionLine || '', sessionNote: r.sessionNote || '', lessons: lessons, hasLessons: lessons.length > 0, also: also,
+        cls: r.session || r.id === focus ? 'cvh-hrow--priority' : '' }, kindOf(r.kind));
+    });
+
+    // Actions list: this session's first, then open, then done
+    var screens = { 'P-13': function () { b.go('P-13', { hazard: 'power', level: 2 }); },
+      'O-12': function () { b.go('O-12', { draft: { type: 'flood', types: ['flood'], buildings: ['SC'], floors: null, where: 'Sample Tower C, whole building', nbhd: 'TP', firstLoggedMinsAgo: 1 }, from: 'P-16' }); },
+      'P-12': function () { b.go('P-12', { hazard: 'power' }); }, 'P-11': function () { b.go('P-11'); } };
+    var ordered = acts.slice().sort(function (p, q) {
+      var r = function (a) { return a._session ? 0 : a.status === 'open' ? 1 : 2; };
+      return r(p) - r(q);
+    });
+    var actions = ordered.map(function (a) {
+      var v = actView(a), link = a.links && a.status === 'done' ? a.links : null;
+      return { status: v.status, statusCls: v.statusCls, statusIcon: v.statusIcon, action: a.action, from: C.fill(x.from, { lesson: a.lesson }),
+        owner: C.fill(x.owner, { owner: a.ownerRole }), due: C.fill(x.due, { due: fmt(a.due) }), illustrative: !a._session, isNew: !!a._session, practice: !!a.exercise,
+        cls: a._session ? 'cvh-rv-act--new' : '', hasLink: !!link, linkLabel: link ? C.fill(x.changed, { label: link.label }) + ' (' + link.screen + ')' : '',
+        open: link ? (screens[link.screen] || function () { b.go(link.screen); }) : null };
+    });
+    var nOpen = acts.filter(function (a) { return a.status !== 'done'; }).length;
+
+    // Confirmation after adding
+    var justAdded = loc.justAdded || (loc.demoAdded ? { action: x.suggest['Floors with no ambassador for check-ins'], ownerRole: 'Hub ambassador coordinator', due: '2026-11-30', hazard: 'power' } : null);
+    var hz = justAdded ? (justAdded.hazard || 'power') : 'power';
+    var total = recs.length, noFilters = !fType && !fBuilding && !fPeriod;
+    return { x: x, illus: illus, b_exercise: b.exercise, form: form,
+      reviewLine: C.fill(x.nextReview, { date: fmt(P.nextReview) }),
+      hasAdded: !!justAdded, added: justAdded || {}, addedTitle: justAdded ? C.fill(x.added, { owner: justAdded.ownerRole, due: fmt(justAdded.due) }) : '',
+      addedLine: C.fill(x.addedLine, { review: fmt(P.nextReview) }), playbookLabel: C.fill(x.toPlaybook, { hazard: hazardName(hz).toLowerCase() }),
+      toPlaybook: function () { b.go('P-12', { hazard: hz }); },
+      gaps: gaps, records: records, noRecords: records.length === 0,
+      showing: records.length === 1 ? C.fill(x.showingOne, { total: total }) : C.fill(x.showing, { n: records.length, total: total }),
+      typeOpts: typeOpts, bldOpts: bldOpts, perOpts: perOpts, fType: fType, fBuilding: fBuilding, fPeriod: fPeriod, noFilters: noFilters,
+      onType: function (e) { b.setLoc({ fType: e.target.value }); }, onBuilding: function (e) { b.setLoc({ fBuilding: e.target.value }); },
+      onPeriod: function (e) { b.setLoc({ fPeriod: e.target.value }); }, clearFilters: function () { b.setLoc({ fType: '', fBuilding: '', fPeriod: '' }); },
+      actions: actions, actionsLead: C.fill(x.actionsLead, { open: nOpen, done: acts.length - nOpen }),
+      toIndicators: function () { b.go('P-15'); },
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('P-11'); } };
+  }
+
+}
+</script>
+</body>
+</html>

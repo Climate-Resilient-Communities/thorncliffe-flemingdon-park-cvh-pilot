@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub and partner top bar</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="{{rootStyle}}">
+  <header class="cvh-top">
+    <sc-if value="{{narrow}}"><button type="button" class="cvh-iconbtn" onClick="{{menu}}" aria-label="Menu"><span class="cvh-ico cvh-ico--menu" aria-hidden="true"></span></button></sc-if>
+    <sc-if value="{{narrow}}"><img src="{{symbol}}" alt="" style="height:28px;width:auto"></sc-if>
+    <h1 class="cvh-top__title">{{title}}</h1>
+    <div class="cvh-top__who">
+      <span class="cvh-origin__mark" aria-hidden="true">{{mono}}</span>
+      <sc-if value="{{wide}}"><span>{{who}}</span></sc-if>
+    </div>
+  </header>
+  <sc-if value="{{isPartner}}">
+    <div class="cvh-partner-band" role="note"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span class="cvh-partner-band__word">{{h.partnerBand}}</span><sc-if value="{{wide}}"><span>{{h.partnerBandLine}}</span></sc-if></div>
+  </sc-if>
+  <sc-if value="{{isReadiness}}">
+    <div class="cvh-readiness-band" role="note"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{h.readinessBand}}</span><sc-if value="{{wide}}"><span>{{h.readinessBandLine}}</span></sc-if></div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"screenId":{"editor":"text","default":"O-01"},"persona":{"editor":"enum","options":["PRIYA","DANIEL"],"default":"PRIYA"},"narrow":{"editor":"boolean","default":false},"onMenu":{"editor":null},"embedded":{"editor":null},"$preview":{"width":1040,"height":100}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, h = C.strings('en').hub;
+    var sid = p.screenId || 'O-01', sc = C.screen(sid) || { name: '' };
+    var person = C.person(p.persona || 'PRIYA') || {}, org = C.org(person.org) || {};
+    var num = parseInt(sid.slice(2), 10);
+    return { h: h, title: String(sc.name || '').replace(/\s+\u2014\s+/g, ': '), narrow: !!p.narrow, wide: !p.narrow, symbol: C.logo.symbol,
+      mono: org.monogram, who: C.fill(h.signedInAs, { name: person.name, org: org.name }),
+      isPartner: sid[0] === 'P' && num <= 10, isReadiness: sid[0] === 'P' && num >= 11,
+      menu: function () { if (self.props.onMenu) self.props.onMenu(); },
+      rootStyle: p.embedded ? '' : 'width:1040px;height:100px;' };
+  }
+}
+</script>
+</body>
+</html>

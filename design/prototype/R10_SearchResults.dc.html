@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-10 Search results</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-10" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Search results">
+
+<sc-if value="{{hasFilters}}">
+  <dc-import name="X11_FilterBar" filters="{{chips}}" hiding="{{hidden}}" on-remove="{{removeFilter}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,150px"></dc-import>
+</sc-if>
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <section class="cvh-section" aria-labelledby="r10-h">
+    <sc-if value="{{helpMode}}">
+      <dc-import name="X13_DisruptionType" type="{{hazard}}" size="md" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="160px,44px"></dc-import>
+    </sc-if>
+    <h1 class="cvh-section__title" id="r10-h"><span>{{titlePre}}</span><sc-if value="{{titleQ}}"><bdi lang="{{titleBcp}}">{{titleQ}}</bdi></sc-if><span>{{titlePost}}</span></h1>
+    <sc-if value="{{inCat}}"><p class="cvh-caption cvh-muted">{{inCat}}</p></sc-if>
+    <sc-if value="{{helpMode}}"><p class="cvh-caption cvh-hide-basic">{{s.R10.helpListNote}}</p></sc-if>
+    <div class="cvh-find-bar">
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toFilters}}"><span class="cvh-ico cvh-ico--filter cvh-ico--sm" aria-hidden="true"></span>{{filtersLabel}}</button>
+      <sc-if value="{{canChange}}"><button type="button" class="cvh-link" onClick="{{toEntry}}">{{s.R10.changeSearch}}</button></sc-if>
+    </div>
+  </section>
+
+  <sc-if value="{{emergency}}">
+    <dc-import name="X01_Not911" variant="block" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,84px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{noMatch}}">
+    <section class="cvh-find-nomatch" role="status" aria-labelledby="r10-nm">
+      <p class="cvh-h3" id="r10-nm">{{noMatch.line}}</p>
+      <sc-if value="{{noMatch.suggest}}"><p>{{noMatch.suggest}}</p></sc-if>
+      <sc-if value="{{noMatch.apply}}"><button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{noMatch.apply}}">{{noMatch.applyLabel}}</button></sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{nothing}}">
+    <section class="cvh-find-nomatch" aria-labelledby="r10-none">
+      <p class="cvh-h3" id="r10-none">{{s.R10.noneTitle}}</p>
+      <p>{{s.R10.noneBody}}</p>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{toPerson}}"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{s.R10.toPerson}}</button>
+    </section>
+  </sc-if>
+
+  <ul class="cvh-list" aria-labelledby="r10-h">
+    <sc-for list="{{items}}" as="r" hint-placeholder-count="3">
+      <li class="cvh-result">
+        <sc-if value="{{r.contributed}}">
+          <div class="cvh-find-tags">
+            <span class="cvh-tag"><span class="cvh-ico cvh-ico--communityOffer cvh-ico--sm" aria-hidden="true"></span>{{s.R10.communityOffer}}</span>
+            <span class="cvh-tag"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{s.R10.contributed}}</span>
+          </div>
+        </sc-if>
+        <button type="button" class="cvh-result__name" onClick="{{r.open}}"><span class="cvh-grow">{{r.name}}</span><span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+        <p class="cvh-result__line">{{r.firstLine}}</p>
+        <sc-if value="{{r.help}}">
+          <dc-import name="X14_HowTheyHelp" hazard="{{hazard}}" text="{{r.help}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,70px"></dc-import>
+        </sc-if>
+        <sc-if value="{{r.reason}}">
+          <p class="cvh-find-reason"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span><span>{{r.reason}}</span></p>
+        </sc-if>
+        <sc-if value="{{r.mt}}">
+          <dc-import name="X04_MachineTranslation" state="labelled" from="{{r.mt}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,48px"></dc-import>
+        </sc-if>
+        <sc-if value="{{r.crossLine}}">
+          <p class="cvh-find-reason"><span class="cvh-ico cvh-ico--language cvh-ico--sm" aria-hidden="true"></span><span>{{r.crossLine}}</span></p>
+        </sc-if>
+        <div class="cvh-result__facts">
+          <span class="cvh-fact cvh-strong"><span class="cvh-ico cvh-ico--{{r.openIcon}} cvh-ico--sm" aria-hidden="true"></span>{{r.openText}}</span>
+          <sc-if value="{{r.dist}}"><span class="cvh-fact"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{r.dist}}</span></sc-if>
+        </div>
+      </li>
+    </sc-for>
+  </ul>
+  <sc-if value="{{moreLabel}}"><button type="button" class="cvh-link" onClick="{{showMore}}">{{moreLabel}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+
+  <sc-if value="{{showInline911}}">
+    <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+  </sc-if>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Results matched on need, not on name", "Test query: renoviction", "Test query: building construction", "Test query: accident, 911 first", "Test query: mental health support", "Test query: money for rent", "Cross-language result labelled (Dari query)", "Includes a contributed entry", "Filters applied with X-11", "No match, with the nearest alternative", "Help list from an alert: power outage (Yusuf)", "Filtered from an alert, own filters named (Nasrin)", "Topic chosen, step-free (George)", "Basic mode: money for rent (George)", "Basic mode: help list, heat (Amina)"], "default": "Results matched on need, not on name"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Results matched on need, not on name": {"persona": "nasrin", "scenario": "C", "params": {"q": "my landlord wants me out so he can fix up the unit", "from": "search"}}, "Test query: renoviction": {"persona": "nasrin", "scenario": "C", "params": {"q": "renoviction", "from": "search"}}, "Test query: building construction": {"persona": "nasrin", "scenario": "C", "params": {"q": "building construction", "from": "search"}}, "Test query: accident, 911 first": {"persona": "nasrin", "scenario": "C", "params": {"q": "accident", "from": "search"}}, "Test query: mental health support": {"persona": "nasrin", "scenario": "C", "params": {"q": "mental health support", "from": "search"}}, "Test query: money for rent": {"persona": "nasrin", "scenario": "C", "params": {"q": "money for rent", "from": "search"}}, "Cross-language result labelled (Dari query)": {"persona": "nasrin", "scenario": "C", "params": {"q": "کمک برای کرایه خانه", "from": "search"}}, "Includes a contributed entry": {"persona": "nasrin", "scenario": "C", "params": {"q": "too hot in my apartment", "from": "search"}}, "Filters applied with X-11": {"persona": "nasrin", "scenario": "C", "params": {"q": "money for rent", "from": "search", "filters": [{"id": "free"}, {"id": "noId"}]}}, "No match, with the nearest alternative": {"persona": "nasrin", "scenario": "C", "params": {"q": "money for rent", "from": "search", "filters": [{"id": "free"}, {"id": "noId"}, {"id": "openNow"}]}}, "Help list from an alert: power outage (Yusuf)": {"persona": "yusuf", "scenario": "A", "params": {"hazard": "power", "from": "alert", "alert": "AL-05"}}, "Filtered from an alert, own filters named (Nasrin)": {"persona": "nasrin", "scenario": "A", "params": {"hazard": "power", "from": "alert", "alert": "AL-05", "filters": [{"id": "noId", "fromChoices": true}]}}, "Topic chosen, step-free (George)": {"persona": "george", "scenario": "C", "basic": false, "params": {"cat": "housing", "from": "search", "filters": [{"id": "stepFree"}]}}, "Basic mode: money for rent (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "params": {"q": "money for rent", "from": "search"}}, "Basic mode: help list, heat (Amina)": {"persona": "amina", "scenario": "B", "basic": true, "basicState": "persisted", "params": {"hazard": "heat", "from": "alert", "alert": "AL-06", "filters": [{"id": "stepFree", "fromChoices": true}]}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'help', showExercise: 'R-10'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-10'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R10, go = b.go, prm = b.params, lang = b.lang;
+    var rep = b.app.replace || b.go;
+    var filters = prm.filters || [];
+    var hazard = prm.hazard || null, q = prm.q || '', cat = prm.cat || null;
+    var res = C.search({ q: q, cat: cat, filters: filters, lang: lang, scn: b.scn, choices: b.ch, hazard: hazard });
+    var withFilters = function (fs) { var p = Object.assign({}, prm, { filters: fs }); delete p.returnTo; return p; };
+    // Titles
+    var n = res.shown.length, title;
+    if (hazard) title = C.fill(x.helpListTitle, { hazard: (s.hazards || {})[hazard] || hazard });
+    else if (q) title = n === 1 ? C.fill(x.resultsForOne, { q: q }) : C.fill(x.resultsFor, { n: n, q: q });
+    else if (cat) title = C.fill(n === 1 ? x.catTitleOne : x.catTitle, { cat: (s.categories || {})[cat], n: n });
+    else title = x.title;
+    var qLang = res.demo ? res.demo.lang : lang;
+    var parts = q && !hazard ? title.split(q) : [title];
+    var titlePre = parts[0], titleQ = parts.length > 1 ? q : '', titlePost = parts.length > 1 ? parts.slice(1).join(q) : '';
+    // Results
+    var strip = function (t) { return t ? String(t).replace(/^(Matches|Matched):\s*/i, '').replace(/\s*\((listing )?written in [^)]*\)/i, '') : ''; };
+    var icons = { open: 'check', closed: 'clock', unknown: 'info' };
+    var items = res.shown.map(function (r) {
+      var l = r.listing, src = l.sourceLang || 'en';
+      var mt = r.cross && src !== lang ? src : '';
+      var crossLine = r.cross && !mt && qLang !== src ? C.fill(x.crossQuery, { qlang: C.lang(qLang).english, lang: C.lang(src).english }) : '';
+      return { name: l.name, firstLine: l.firstLine, contributed: !!(r.contributed || l.kind === 'communityOffer'),
+        reason: r.reason ? C.fill(x.matched, { reason: strip(r.reason) }) : '', mt: mt, crossLine: crossLine,
+        help: hazard ? (r.help || '') : '', openIcon: icons[r.open.state] || 'info',
+        openText: r.open.state === 'unknown' ? x.hoursUnknown : r.open.text,
+        dist: r.dist != null ? C.fill(x.distance, { d: r.dist.toFixed(1) }) : '',
+        open: function () { go('R-12', { id: l.id, from: hazard ? (prm.from === 'guide' ? 'guide' : 'alert') : 'search', hazard: hazard || undefined }); } };
+    });
+    var cap = b.basic && !b.loc.all ? 5 : 999;
+    var moreLabel = items.length > cap ? C.fill(x.showMore, { n: items.length - cap }) : '';
+    items = items.slice(0, cap);
+    // No match with filters: name the nearest alternative, apply it in one tap
+    var noMatch = null;
+    if (!res.shown.length && res.all.length && filters.length) {
+      var ids = filters.map(function (f) { return f.id; }).sort().join(',');
+      var line = hazard ? x.helpEmpty : (ids === 'free,noId,openNow' ? x.noMatch : x.noMatchAny);
+      var sg = res.suggestion;
+      if (sg) {
+        var fl = C.filterLabel(sg.filter, lang);
+        var suggest = sg.filter.id === 'openNow' && sg.when ? C.fill(x.noMatchSuggest, { f: fl, n: sg.count, when: sg.when }) : C.fill(x.noMatchSuggestShort, { f: fl, n: sg.count });
+        noMatch = { line: line, suggest: suggest, applyLabel: C.fill(x.applySuggestion, { f: fl }),
+          apply: function () { rep('R-10', withFilters(filters.filter(function (f) { return f !== sg.filter && f.id !== sg.filter.id; }))); } };
+      } else noMatch = { line: line, suggest: '', applyLabel: x.removeAll, apply: function () { rep('R-10', withFilters([])); } };
+    }
+    var chips = filters.map(function (f) { return { id: f.id, value: f.value, fromChoices: !!f.fromChoices, label: C.filterLabel(f, lang) }; });
+    return {
+      inCat: q && cat && !hazard ? C.fill(x.inCat, { cat: (s.categories || {})[cat] }) : '',
+      titlePre: titlePre, titleQ: titleQ, titlePost: titlePost, titleBcp: C.bcp(qLang), helpMode: !!hazard, hazard: hazard || 'power', items: items, moreLabel: moreLabel,
+      showMore: function () { b.setLoc({ all: true }); },
+      hasFilters: filters.length > 0, chips: chips, hidden: res.hidden,
+      filtersLabel: filters.length ? C.fill(x.filtersCount, { n: filters.length }) : x.filters,
+      emergency: !!(res.demo && res.demo.emergencyNote), showInline911: !(res.demo && res.demo.emergencyNote),
+      noMatch: noMatch, nothing: !res.all.length && !hazard,
+      canChange: !hazard,
+      removeFilter: function (id) { rep('R-10', withFilters(filters.filter(function (f) { return f.id !== id; }))); },
+      toFilters: function () { go('R-27', Object.assign({}, prm, { returnTo: 'R-10' })); },
+      toEntry: function () { go('R-09', { q: q, cat: cat }); },
+      toPerson: function () { go('R-11', { q: q, cat: cat }); },
+      goBack: function () { if (b.app.canBack) b.back(); else if (prm.from === 'alert' && prm.alert) go('R-07', { alert: prm.alert }); else if (prm.from === 'guide') go('R-25', { hazard: hazard, stage: 'during' }); else go('R-09', { q: q, cat: cat }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

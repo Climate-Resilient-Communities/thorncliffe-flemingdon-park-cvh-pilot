@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-06 Activation notification (device frame)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-06" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-06" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-06" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-ps">
+  <button type="button" class="cvh-back" style="align-self:flex-start" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h2 class="cvh-h2">{{x.title}}</h2>
+    <p class="cvh-ps-muted">{{x.lead}}</p>
+  </div>
+  <div class="cvh-segment" role="group" aria-label="{{x.channelAria}}" style="max-width:420px">
+    <button type="button" class="{{textCls}}" aria-pressed="{{textAria}}" onClick="{{toText}}"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{x.text}}</button>
+    <button type="button" class="{{emailCls}}" aria-pressed="{{emailAria}}" onClick="{{toEmail}}"><span class="cvh-ico cvh-ico--inbox cvh-ico--sm" aria-hidden="true"></span>{{x.email}}</button>
+  </div>
+
+  <div class="cvh-ps-frames {{framesCls}}">
+    <div class="cvh-stack" style="--gap:0">
+      <div class="cvh-devlabel cvh-devlabel--wrap" role="note" style="border-radius:12px 12px 0 0">
+        <span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span><span class="cvh-devlabel__text">{{x.specimen}}</span>
+      </div>
+      <sc-if value="{{isText}}">
+        <div class="cvh-ps-phone">
+          <div class="cvh-device">
+            <div class="cvh-device__screen">
+              <div class="cvh-device__bar">
+                <span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span>
+                <span class="cvh-stack" style="--gap:0"><span class="cvh-strong" style="font-size:18px">{{fromName}}</span><span style="font-size:16px;color:var(--text-muted)">{{fromNumber}}</span></span>
+              </div>
+              <div class="cvh-device__body" role="log" aria-label="{{fromName}}">
+                <div class="cvh-bubble cvh-ps-sms">
+                  <sc-if value="{{isEx}}"><p class="cvh-ps-sms__ex">{{s.x10.sms}}</p></sc-if>
+                  <p>{{smsDisruption}}</p>
+                  <p>{{smsLevel}}</p>
+                  <p>{{smsAsked}}</p>
+                  <p>{{x.join}} <button type="button" class="cvh-link" style="min-height:0;font-weight:400;display:inline" onClick="{{join}}">{{link}}</button></p>
+                  <span class="cvh-bubble__time">{{now}}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="cvh-ps-muted" style="margin-top:8px">{{smsTo}} · {{lengthLine}}</p>
+      </sc-if>
+      <sc-if value="{{isEmail}}">
+        <div class="cvh-ps-mail">
+          <div class="cvh-ps-mail__bar"><span class="cvh-ico cvh-ico--inbox cvh-ico--sm" aria-hidden="true"></span>{{x.inbox}}</div>
+          <p class="cvh-ps-mail__subject">{{subject}}</p>
+          <div class="cvh-ps-mail__head">
+            <span class="cvh-ps-mail__k">{{x.mailFrom}}</span><span>{{fromName}} ({{fromNumber}})</span>
+            <span class="cvh-ps-mail__k">{{x.mailTo}}</span><span>{{toLine}}</span>
+          </div>
+          <div class="cvh-ps-mail__body">
+            <sc-if value="{{isEx}}"><p class="cvh-ps-mail__ex">{{s.x10.sms}}</p></sc-if>
+            <div class="cvh-ps-mail__sec"><span class="cvh-ps-mail__k2">1. {{x.kDisruption}}</span><span>{{mailDisruption}}</span></div>
+            <div class="cvh-ps-mail__sec"><span class="cvh-ps-mail__k2">2. {{x.kLevel}}</span><span>{{mailLevel}}</span></div>
+            <div class="cvh-ps-mail__sec"><span class="cvh-ps-mail__k2">3. {{kAsked}}</span><span>{{ask}}</span></div>
+            <div class="cvh-ps-mail__sec"><span class="cvh-ps-mail__k2">4. {{x.kJoin}}</span>
+              <button type="button" class="cvh-btn cvh-btn--primary" style="align-self:flex-start;margin-top:4px" onClick="{{join}}">{{x.joinBtn}}</button>
+              <span class="cvh-ps-muted" style="font-size:16px">{{joinLine}}</span></div>
+            <p class="cvh-ps-mail__foot">{{foot}}</p>
+          </div>
+        </div>
+      </sc-if>
+    </div>
+
+    <aside class="cvh-ps-panel">
+      <h3 class="cvh-ps-panel__title">{{x.orderTitle}}</h3>
+      <ol class="cvh-ps-order"><sc-for list="{{x.order}}" as="o" hint-placeholder-count="4"><li>{{o}}</li></sc-for></ol>
+      <p>{{x.why}}</p>
+      <sc-if value="{{isEx}}"><p class="cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span>{{x.exNote}}</span></p></sc-if>
+      <sc-if value="{{notOpen}}"><p class="cvh-ps-muted">{{x.notOpenYet}}</p></sc-if>
+      <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{join}}">{{joinLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </aside>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["By text message", "By email", "Exercise, by text message", "Exercise, by email", "From an official alert (O-18): heat warning, text", "Scenario G: elevator, level 1, text", "Phone 390: by text message", "Phone 390: by email", "Phone 390: exercise, by text message"], "default": "By text message"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"By text message": {"persona": "DANIEL", "params": {"space": "SPC-A", "channel": "text"}}, "By email": {"persona": "DANIEL", "params": {"space": "SPC-A", "channel": "email"}}, "Exercise, by text message": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A", "channel": "text", "exercise": true}}, "Exercise, by email": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A", "channel": "email", "exercise": true}}, "From an official alert (O-18): heat warning, text": {"persona": "PRIYA", "params": {"alert": "AL-01", "channel": "text"}}, "Scenario G: elevator, level 1, text": {"persona": "DANIEL", "params": {"space": "SPC-G", "channel": "text"}}, "Phone 390: by text message": {"persona": "DANIEL", "w": 390, "h": 1200, "params": {"space": "SPC-A", "channel": "text"}}, "Phone 390: by email": {"persona": "DANIEL", "w": 390, "h": 1200, "params": {"space": "SPC-A", "channel": "email"}}, "Phone 390: exercise, by text message": {"persona": "DANIEL", "exercise": true, "w": 390, "h": 1200, "params": {"space": "SPC-A", "channel": "text", "exercise": true}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-06', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P06, prm = b.params, loc = b.loc, P = D.partner || {}, fill = C.fill, go = b.go;
+    var me = b.persona || {}, model = b.session || {};
+    var list = P.sharedSpaces || [];
+    var find = function (id) { return list.filter(function (z) { return z.id === id; })[0] || null; };
+    var scn = (C.session.get() || {}).scenario || 'A';
+    // What the message is about: a space, an official alert acted on at O-18, or a preview from P-01
+    var sp = prm.space ? find(prm.space) : null, alert = prm.alert ? C.alert(prm.alert) : null, pv = prm.preview || null;
+    if (!sp && alert) sp = list.filter(function (z) { return z.alert === alert.id && !z.closed; })[0] || null;
+    if (!sp && !alert && !pv) {
+      var sess = list.filter(function (z) { return z._session && !z.closed; });
+      sp = (b.exercise && sess.filter(function (z) { return z.exercise; })[0]) || (scn === 'G' ? find('SPC-G') : null) || sess[0] || find('SPC-A') || list[0];
+    }
+    var info = sp ? { type: sp.type, level: sp.level, where: sp.location, playbook: sp.playbook || sp.type, exercise: !!sp.exercise, alert: sp.alert,
+        started: sp.startedAt ? (Date.now() - sp.startedAt) / 60000 : ((P.disruptions || []).filter(function (d) { return d.id === sp.disruption; })[0] || {}).startedMinsAgo || sp.openedMinsAgo || 0 }
+      : alert ? { type: alert.hazard, level: 2, where: alert.where, playbook: alert.hazard, alert: alert.id, started: ((alert.entries || [])[(alert.entries || []).length - 1] || {}).minsAgo || 0 }
+      : { type: pv.type, level: pv.level, where: pv.location, playbook: pv.playbook || pv.type, exercise: !!pv.exercise, started: 0 };
+    var exLog = (model.exercise || []).some(function (e) { return e.t === 'official' && alert && e.alert === alert.id; });
+    var isEx = b.exercise || !!prm.exercise || !!info.exercise || exLog;
+    var hz = (s.hazards || {})[info.type] || s.x13[info.type] || info.type;
+    var plural = ((s.P02 || {}).plural || {})[info.playbook] || hz.toLowerCase();
+    var pb = (P.playbooks || {})[info.playbook] || {};
+    var team = ((P.teams || {})[info.type] || {})[String(info.level)] || null;
+    // Who receives this specimen: the signed-in partner, otherwise the first partner on the team
+    var parts = team ? team.team.split(';').map(function (t) { return t.trim(); }) : [];
+    var words = { TNO: 'TNO', CRC: 'Red Cross', CITY: 'City', HUB: 'Hub' };
+    var rOrg = me.org && me.org !== 'HUB' ? me.org : (['TNO', 'CRC', 'CITY'].filter(function (o) { return parts.some(function (t) { return t.indexOf(words[o]) >= 0; }); })[0] || 'TNO');
+    var org = C.org(rOrg) || {};
+    var part = parts.filter(function (t) { return t.indexOf(words[rOrg]) >= 0; })[0] || '';
+    var person = (D.people || []).filter(function (p) { return p.org === rOrg && part && part.toLowerCase().indexOf(String(p.role).toLowerCase()) >= 0; })[0]
+      || (me.org === rOrg ? me : null);
+    var role = part || (org.short + ' ' + String((person || {}).role || 'coordinator').toLowerCase());
+    var who = person && person.name ? person.name + ', ' + role : role;
+    var cm = (P.commitments || []).filter(function (c) { return c.org === rOrg && c.type === info.type && c.mode !== 'everyday'; })[0];
+    var askRaw = (pb.asks || {})[rOrg] || (cm ? cm.text : '') || x.askDefault;
+    var ask = askRaw.charAt(0).toLowerCase() + askRaw.slice(1);
+    ask = /[.]$/.test(ask) ? ask : ask + '.';
+    var askCap = ask.charAt(0).toUpperCase() + ask.slice(1);
+    var seed = String(sp ? sp.id : info.type + info.where), hsh = 7;
+    for (var ci = 0; ci < seed.length; ci++) hsh = (hsh * 31 + seed.charCodeAt(ci)) % 60466176;
+    var code = ('0000' + hsh.toString(36)).slice(-5);
+    var link = 'cvh.example/j/' + code;
+    var notOpen = !sp;
+    var join = function () {
+      if (sp) go('P-02', { space: sp.id, from: 'activation' });
+      else if (alert) go('P-01', { alert: alert.id });
+      else { b.toast(x.notOpenYet); if (b.app.canBack) b.back(); }
+    };
+    var smsDisruption = fill(x.activated, { hazard: hz.toLowerCase(), where: info.where }), smsLevel = fill(x.level, { n: info.level }), smsAsked = fill(x.asked, { org: org.short, ask: ask });
+    var smsText = (isEx ? s.x10.sms + ' ' : '') + [smsDisruption, smsLevel, smsAsked, x.join + ' ' + link].join(' ');
+    var n = smsText.length, k = n <= 160 ? 1 : Math.ceil(n / 153);
+    var channel = loc.channel || prm.channel || 'text';
+    var goBack = function () { if (b.app.canBack) b.back(); else if (sp) go('P-02', { space: sp.id }); else go('O-01'); };
+    return { x: x, s: s, goBack: goBack, isEx: isEx, framesCls: channel === 'email' ? 'cvh-ps-frames--mail' : '', isText: channel !== 'email', isEmail: channel === 'email',
+      textCls: channel !== 'email' ? 'is-on' : '', emailCls: channel === 'email' ? 'is-on' : '', textAria: channel !== 'email' ? 'true' : 'false', emailAria: channel === 'email' ? 'true' : 'false',
+      toText: function () { b.setLoc({ channel: 'text' }); }, toEmail: function () { b.setLoc({ channel: 'email' }); },
+      fromName: s.R04.from, fromNumber: s.R04.fromNumber, now: 'now',
+      smsDisruption: smsDisruption, smsLevel: smsLevel, smsAsked: smsAsked, link: link, join: join,
+      smsTo: fill(x.smsTo, { who: who }), lengthLine: k === 1 ? fill(x.length, { n: n }) : fill(x.lengthMore, { n: n, k: k }),
+      subject: (isEx ? s.x10.sms + ' ' : '') + fill(x.mailSubject, { hazard: hz, n: info.level, where: info.where }), toLine: who + ', ' + org.name,
+      mailDisruption: fill(x.disruptionLine, { hazard: hz, where: info.where, t: b.dur(Math.round(info.started)) }),
+      mailLevel: team ? fill(x.levelLine, { n: info.level, teams: team.team }) : fill(x.levelNoTeam, { n: info.level }),
+      kAsked: fill(x.kAsked, { org: org.short }), ask: askCap, joinLine: fill(x.joinLine, { link: link }),
+      foot: fill(x.foot, { org: org.short, plural: plural, n: info.level }),
+      notOpen: notOpen, joinLabel: notOpen && alert ? x.toP01 : x.toSpace };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Partner-space components: X-06, X-10, incident status</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-sheetpage" lang="en" dir="ltr" style="width:1440px;height:2320px;overflow:hidden">
+  <div class="cvh-stack" style="--gap:8px">
+    <p class="cvh-eyebrow">Component library · phase 1</p>
+    <h1 style="font-size:40px;line-height:1.1;margin:0;color:var(--ink)">Partner-space components: X-06, X-10, incident status</h1>
+    <p class="cvh-spec__note" style="font-size:17px">Three signal sets never borrow from each other or from the brand. The foundations sheet repeats each set in greyscale to show they hold without colour.</p>
+  </div>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-06</span><h2 class="cvh-spec__title">Structured statement chip</h2></div>
+    <p class="cvh-spec__note">Shape, position and label first; colour last. Every statement names the organisation and the person. All partner content is illustrative.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells0}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X06_Statement" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-10</span><h2 class="cvh-spec__title">Exercise marker</h2></div>
+    <p class="cvh-spec__note">A standing banner with its own pattern, never the incident red. Distinct from the grey Prototype marker.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells1}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X10_Exercise" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Status</span><h2 class="cvh-spec__title">Incident status indicator (reserved signal set)</h2></div>
+    <p class="cvh-spec__note">Colour plus icon plus word, always all three. Red is reserved for an active problem.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells2}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="C_IncidentStatus" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":2320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {"cells0": [{"label": "We are doing this (chip)", "w": 240, "props": {"type": "doing", "variant": "chip", "embedded": true}}, {"label": "We can take this on (chip)", "w": 240, "props": {"type": "canTake", "variant": "chip", "embedded": true}}, {"label": "We cannot cover this (chip)", "w": 240, "props": {"type": "cannotCover", "variant": "chip", "embedded": true}}, {"label": "We need this (chip)", "w": 240, "props": {"type": "need", "variant": "chip", "embedded": true}}, {"label": "Need, pointing at a supply", "w": 420, "props": {"statement": "ST-03", "variant": "card", "embedded": true}}, {"label": "Can take, answering the need", "w": 420, "props": {"statement": "ST-04", "variant": "card", "embedded": true}}, {"label": "Need, claimed live", "w": 420, "props": {"statement": "ST-12", "variant": "card", "claimedBy": "CITY", "embedded": true}}, {"label": "Cannot cover (a gap)", "w": 420, "props": {"statement": "ST-06", "variant": "card", "embedded": true}}, {"label": "Doing, with a space", "w": 420, "props": {"statement": "ST-02", "variant": "card", "embedded": true}}], "cells1": [{"label": "Running", "w": 420, "props": {"state": "running", "embedded": true}}, {"label": "Ended", "w": 420, "props": {"state": "ended", "embedded": true}}, {"label": "First line of a specimen message", "w": 420, "props": {"variant": "line", "embedded": true}}, {"label": "Bengali (ambassador screens)", "w": 420, "props": {"state": "running", "lang": "bn", "embedded": true}}, {"label": "Urdu", "w": 420, "props": {"state": "running", "lang": "ur", "embedded": true}}, {"label": "Tagalog", "w": 420, "props": {"state": "running", "lang": "tl", "embedded": true}}], "cells2": [{"label": "Active problem", "w": 240, "props": {"status": "active", "embedded": true}}, {"label": "Work in progress", "w": 240, "props": {"status": "progress", "embedded": true}}, {"label": "Resolved", "w": 240, "props": {"status": "resolved", "embedded": true}}, {"label": "Not known", "w": 240, "props": {"status": "unknown", "embedded": true}}, {"label": "Urdu", "w": 240, "props": {"status": "active", "lang": "ur", "embedded": true}}, {"label": "Bigger text", "w": 240, "props": {"status": "progress", "basic": true, "embedded": true}}]};
+  }
+}
+</script>
+</body>
+</html>

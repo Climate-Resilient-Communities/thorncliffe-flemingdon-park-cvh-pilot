@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-01 Ambassador home — my building</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="A-01" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--amb" aria-label="Ambassador home — my building">
+
+<div class="cvh-screen" style="--gap:14px">
+  <sc-if value="{{offline}}">
+    <div class="cvh-offline" role="status"><span class="cvh-ico cvh-ico--noSignal" aria-hidden="true"></span><span class="cvh-grow">{{s.A01.offline}}</span></div>
+  </sc-if>
+
+  <section class="cvh-assign" aria-labelledby="a01-h">
+    <div class="cvh-assign__who">
+      <span class="cvh-ico cvh-ico--building cvh-ico--lg" aria-hidden="true" style="color:var(--ink)"></span>
+      <div class="cvh-stack cvh-grow" style="--gap:0">
+        <p class="cvh-eyebrow">{{s.A01.role}}</p>
+        <h1 class="cvh-h2" id="a01-h">{{bname}}</h1>
+      </div>
+    </div>
+    <p>{{assigned}}</p>
+    <p class="cvh-caption">{{canPost}}</p>
+  </section>
+
+  <section class="cvh-section" style="--gap:10px" aria-labelledby="a01-act">
+    <h2 class="cvh-h3" id="a01-act">{{s.A01.active}}</h2>
+    <sc-for list="{{rows}}" as="r" hint-placeholder-count="2">
+      <article class="cvh-arow">
+        <dc-import name="X13_DisruptionType" types="{{r.types}}" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+        <button type="button" class="cvh-arow__open" onClick="{{r.open}}"><span class="cvh-grow">{{r.headline}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+        <p class="cvh-caption cvh-muted">{{r.meta}}</p>
+      </article>
+    </sc-for>
+    <sc-if value="{{nothing}}">
+      <div class="cvh-card cvh-row" style="--gap:10px"><span class="cvh-ico cvh-ico--check" aria-hidden="true" style="color:var(--ink)"></span><p class="cvh-grow">{{s.A01.nothing}}</p></div>
+    </sc-if>
+  </section>
+
+  <sc-if value="{{hasPosts}}">
+    <section class="cvh-section" style="--gap:8px" aria-labelledby="a01-mine">
+      <h2 class="cvh-h3" id="a01-mine">{{s.A01.myPosts}}</h2>
+      <sc-for list="{{posts}}" as="p" hint-placeholder-count="1">
+        <button type="button" class="cvh-mypost" onClick="{{p.open}}">
+          <span class="cvh-ico cvh-ico--{{p.icon}}" aria-hidden="true"></span>
+          <span class="cvh-grow cvh-stack" style="--gap:0"><span class="cvh-strong">{{p.what}}</span><span class="cvh-caption">{{p.state}}</span></span>
+          <span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+        </button>
+      </sc-for>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{hasRound}}">
+    <button type="button" class="cvh-round" style="cursor:pointer;text-align:start;width:100%;font:inherit;color:inherit" onClick="{{toRound}}" aria-labelledby="a01-round">
+      <sc-if value="{{practice}}"><span class="cvh-tag" style="align-self:flex-start"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{s.A01.practice}}</span></sc-if>
+      <span class="cvh-round__count" id="a01-round"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span><span class="cvh-grow">{{roundLine}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></span>
+      <span class="cvh-caption">{{roundSub}}</span>
+    </button>
+  </sc-if>
+  <sc-if value="{{noRound}}">
+    <p class="cvh-caption cvh-muted cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span><span>{{s.A01.noRound}}</span></p>
+  </sc-if>
+</div>
+<div class="cvh-ambbar">
+  <div class="{{barCls}}">
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg cvh-btn--block" onClick="{{toPost}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span><span>{{s.A01.post}}</span></button>
+    <sc-if value="{{hasRound}}">
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg cvh-btn--block" style="flex-direction:column;gap:0;line-height:1.15" onClick="{{toRound}}"><span>{{s.A01.myRound}}</span><span class="cvh-caption" style="font-weight:400">{{roundShort}}</span></button>
+    </sc-if>
+  </div>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Power outage: active in my building, round waiting (Scenario A)", "Heat wave: round waiting (Scenario B)", "Nothing active in my building (ordinary Tuesday)", "Exercise marker, practice round", "No signal on the ambassador phone"], "default": "Power outage: active in my building, round waiting (Scenario A)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Power outage: active in my building, round waiting (Scenario A)": {"persona": "rashid", "scenario": "A"}, "Heat wave: round waiting (Scenario B)": {"persona": "rashid", "scenario": "B"}, "Nothing active in my building (ordinary Tuesday)": {"persona": "rashid", "scenario": "C"}, "Exercise marker, practice round": {"persona": "rashid", "scenario": "D", "exercise": true}, "No signal on the ambassador phone": {"persona": "rashid", "scenario": "A", "params": {"offline": true}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'A-01'[0] === 'A' && !!app.exercise,
+      exEnded: 'A-01'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  ambCtx(b) {
+    var C = b.C, D = b.D, m = C.session.model() || {};
+    var amb = (D.ambassadors || []).filter(function (a) { return a.id === 'AMB-RASHID'; })[0] || (D.ambassadors || [])[0];
+    var bid = amb.buildings[0], bo = C.building(bid) || { name: bid }, fl = amb.floors[bid] || [];
+    var nbName = ((b.s.neighbourhoods || {})[bo.nbhd]) || 'Thorncliffe Park';
+    var affects = function (a) {
+      if (C.affectsBuilding(a, bid)) return true;
+      var pl = a.audience && a.audience.place;
+      if (pl && pl.buildings) return false;
+      var w = a.where || '';
+      return w.indexOf(nbName) >= 0 || w.indexOf('All of Toronto') >= 0;
+    };
+    var active = C.scenarioAlerts(b.scn).active.filter(function (sn) { return affects(sn.a); });
+    var roundAlert = active.filter(function (sn) { return sn.a.hazard === 'power' || sn.a.hazard === 'heat' || (sn.a.types || []).indexOf('power') >= 0; })[0] || null;
+    var ex = !!b.app.exercise;
+    var exMarks = {};
+    (m.exercise || []).forEach(function (a) { if (a.t === 'checkin') exMarks[a.id] = { status: a.status, category: a.category || null }; });
+    var inFloors = function (r) { return r.building === bid && fl.indexOf(+r.floor) >= 0; };
+    var mark = function (id, base) {
+      if (ex && exMarks[id]) return exMarks[id];
+      var x = (m.checkins || {})[id];
+      if (x) return { status: x.status, category: x.category, queued: x.queued };
+      return { status: base || 'waiting' };
+    };
+    return { C: C, D: D, m: m, amb: amb, bid: bid, bo: bo, fl: fl, active: active, roundAlert: roundAlert, exercise: ex,
+      hasRound: !!roundAlert || ex, offline: !!b.params.offline || m.signal === false,
+      checkins: (D.checkins || []).filter(inFloors), unreachable: (D.unreachable || []).filter(inFloors), mark: mark };
+  }
+  screenVals(b) {
+    var x = this.ambCtx(b), C = b.C, s = b.s, go = b.go, D = b.D;
+    var o = s.A01;
+    var floorsText = x.fl.length ? C.fill(o.roundFloors, { a: x.fl[0], b: x.fl[x.fl.length - 1] }) : '';
+    var rows = x.active.map(function (sn) {
+      var op = C.originProps(sn), from = { official: o.fromOfficial, hub: o.fromHub, ambassador: o.fromAmb, partner: o.fromPartner }[op.origin] || o.fromHub;
+      var st = op.state === 'official' ? '' : (op.state === 'unverified' ? o.notVerifiedWord : o.verifiedWord);
+      return { types: sn.a.types, headline: sn.a.headline, meta: from + (st ? ' · ' + st : '') + ' · ' + C.fill(o.postedAgo, { t: b.ago(sn.postedMins) }),
+        open: function () { go('R-07', { alert: sn.a.id, from: 'home' }); } };
+    });
+    // Rashid's own posts (drawn posts carry no author and are his)
+    var sts = s.A03.states;
+    var exPosts = (x.m.exercise || []).filter(function (a) { return a.t === 'ambPost'; }).map(function (a) { return Object.assign({}, a.post, { state: 'exercise', minsAgo: Math.max(0, Math.round((Date.now() - a.at) / 60000)) }); });
+    var mine = (D.ambassadorPosts || []).filter(function (p) { return (p.by || 'AMB-RASHID') === 'AMB-RASHID' && p.building === x.bid; }).concat(exPosts);
+    mine.sort(function (p, q) { return (p.minsAgo || 0) - (q.minsAgo || 0); });
+    var posts = mine.slice(0, b.basic ? 1 : 2).map(function (p) {
+      var sn = p.alert ? C.snap(p.alert, b.scn) : null;
+      var state = p.state;
+      if ((state === 'live' || state === 'approved' || state === 'verified') && sn && sn.corrected) state = 'corrected';
+      var what = (p.types || []).map(function (t) { return (s.x13 || {})[t] || t; }).join(', ') + ' · ' + C.fill(o.postedAgo, { t: b.ago(p.minsAgo || 0) });
+      var icon = { queued: 'noSignal', waiting: 'clock', live: 'unverified', approved: 'check', verified: 'verified', declined: 'info', withdrawn: 'info', corrected: 'corrected', exercise: 'exercise' }[state] || 'info';
+      return { what: what, state: sts[state] || state, icon: icon, open: function () { go('A-03', { post: p.id }); } };
+    });
+    // The round: requests on his floors, and households he tells in person
+    var todo = 0, unr = 0;
+    x.checkins.forEach(function (c) { if (x.mark(c.id, c.status).status === 'waiting') todo++; });
+    x.unreachable.forEach(function (u) { if (x.mark(u.id).status === 'waiting') unr++; });
+    var roundSub = C.fill(o.toDo, { n: todo }) + (unr ? ' · ' + C.fill(o.tellInPerson, { n: unr }) : '');
+    return {
+      offline: x.offline, bname: x.bo.name,
+      assigned: floorsText, canPost: C.fill(o.canPost, { building: x.bo.name }),
+      rows: rows, nothing: rows.length === 0,
+      hasPosts: posts.length > 0, posts: posts,
+      hasRound: x.hasRound, noRound: !x.hasRound, practice: x.exercise && !x.roundAlert,
+      roundLine: C.fill(o.round, { n: x.checkins.length }), roundSub: roundSub,
+      toRound: function () { go('A-04'); }, toPost: function () { go('A-02'); },
+      barCls: x.hasRound ? 'cvh-btnrow cvh-btnrow--post' : 'cvh-stack', roundShort: C.fill(o.toDo, { n: todo + unr })
+    };
+  }
+
+}
+</script>
+</body>
+</html>

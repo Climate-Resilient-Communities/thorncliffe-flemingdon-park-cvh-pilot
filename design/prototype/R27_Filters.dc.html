@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-27 Filters</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-27" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Filters">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.R27.cancel}}</button>
+  <section class="cvh-section" aria-labelledby="r27-h">
+    <div class="cvh-row" style="justify-content:space-between">
+      <h1 class="cvh-section__title" id="r27-h">{{s.R27.title}}</h1>
+      <sc-if value="{{anyChosen}}"><button type="button" class="cvh-link" onClick="{{clearAll}}">{{s.R27.clear}}</button></sc-if>
+    </div>
+    <p class="cvh-hide-basic">{{s.R27.lead}}</p>
+  </section>
+
+  <sc-for list="{{questions}}" as="qq" hint-placeholder-count="7">
+    <fieldset class="cvh-find-q">
+      <legend><span class="cvh-ico cvh-ico--{{qq.icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{qq.label}}</span><sc-if value="{{qq.fromChoices}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--choices cvh-ico--sm" aria-hidden="true"></span>{{s.R27.fromChoices}}</span></sc-if></legend>
+      <sc-if value="{{qq.isSelect}}">
+        <select class="cvh-select" aria-label="{{qq.label}}" onChange="{{qq.onSelect}}" value="{{qq.selected}}">
+          <sc-for list="{{qq.options}}" as="o" hint-placeholder-count="4"><option value="{{o.value}}">{{o.label}}</option></sc-for>
+        </select>
+      </sc-if>
+      <sc-if value="{{qq.isChips}}">
+        <div class="cvh-find-answers">
+          <sc-for list="{{qq.answers}}" as="a" hint-placeholder-count="2">
+            <button type="button" class="cvh-chip {{a.cls}}" aria-pressed="{{a.pressed}}" onClick="{{a.pick}}"><sc-if value="{{a.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{a.label}}</button>
+          </sc-for>
+        </div>
+      </sc-if>
+      <sc-if value="{{qq.hint}}"><p class="cvh-caption">{{qq.hint}}</p></sc-if>
+    </fieldset>
+  </sc-for>
+  <sc-if value="{{moreQ}}"><button type="button" class="cvh-link" onClick="{{showMoreQ}}">{{moreQ}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+  <p class="cvh-caption cvh-muted"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span> {{s.R27.private}}</p>
+</div>
+<div class="cvh-find-apply">
+  <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{apply}}">{{applyLabel}}</button>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Seven filters as plain questions", "Some chosen: free, no ID, open now (Nasrin)", "Applied, reopened from an alert (one from your choices)", "Basic mode: step-free chosen (George)"], "default": "Seven filters as plain questions"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Seven filters as plain questions": {"persona": "nasrin", "scenario": "C", "params": {"q": "money for rent", "from": "search", "returnTo": "R-10"}}, "Some chosen: free, no ID, open now (Nasrin)": {"persona": "nasrin", "scenario": "C", "params": {"q": "money for rent", "from": "search", "returnTo": "R-10"}, "loc": {"filters": [{"id": "free"}, {"id": "noId"}, {"id": "openNow"}]}}, "Applied, reopened from an alert (one from your choices)": {"persona": "nasrin", "scenario": "A", "params": {"hazard": "power", "from": "alert", "alert": "AL-05", "returnTo": "R-10", "filters": [{"id": "noId", "fromChoices": true}, {"id": "language", "value": "prs"}]}}, "Basic mode: step-free chosen (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "params": {"cat": "housing", "from": "search", "returnTo": "R-10"}, "loc": {"filters": [{"id": "stepFree"}]}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'help', showExercise: 'R-27'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-27'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R27, prm = b.params, lang = b.lang, D = b.D;
+    var sf = s.filters, ans = sf.answers, sh = sf.short;
+    var rep = b.app.replace || b.go;
+    var cur = b.loc.filters !== undefined ? b.loc.filters : (prm.filters || []);
+    var has = function (id) { for (var i = 0; i < cur.length; i++) if (cur[i].id === id) return cur[i]; return null; };
+    // One answer per question: set replaces every filter id this question owns
+    var setQ = function (ids, f) {
+      var next = cur.filter(function (g) { return ids.indexOf(g.id) < 0; });
+      if (f) { var old = has(f.id); next.push(Object.assign({}, f, old && old.value === f.value && old.fromChoices ? { fromChoices: true } : {})); }
+      b.setLoc({ filters: next });
+    };
+    var chipQ = function (key, icon, opts, hint) {
+      var ids = opts.filter(function (o) { return o.id; }).map(function (o) { return o.id; });
+      var chosen = null; ids.forEach(function (id) { if (has(id)) chosen = has(id); });
+      return { label: sf[key], icon: icon, isChips: true, isSelect: false, hint: hint || '', fromChoices: !!(chosen && chosen.fromChoices),
+        answers: opts.map(function (o) {
+          var on = o.id ? !!(chosen && chosen.id === o.id) : !chosen;
+          return { label: o.label, on: on, cls: on ? 'cvh-chip--on' : '', pressed: on ? 'true' : 'false', pick: function () { setQ(ids, o.id ? { id: o.id } : null); } };
+        }) };
+    };
+    var own = b.app.chosenLang || (b.persona || {}).lang || null;
+    var langOpts = ((D.filters || []).filter(function (f) { return f.id === 'language'; })[0] || { options: [] }).options.slice();
+    if (own && langOpts.indexOf(own) > 0) { langOpts.splice(langOpts.indexOf(own), 1); langOpts.unshift(own); }
+    var lf = has('language');
+    var langQ = { label: sf.language, icon: 'language', isChips: false, isSelect: true, hint: b.basic ? '' : x.langHint, fromChoices: !!(lf && lf.fromChoices),
+      selected: lf ? lf.value : '',
+      options: [{ value: '', label: x.anyLang }].concat(langOpts.map(function (c) { var L = C.lang(c); return { value: c, label: L.native + (L.english && L.english !== L.native ? ' (' + L.english + ')' : '') }; })),
+      onSelect: function (e) { var v = e.target.value; setQ(['language'], v ? { id: 'language', value: v } : null); } };
+    var nb = s.neighbourhoods || {};
+    var questions = [
+      chipQ('openNow', 'clock', [{ label: ans.any }, { id: 'openNow', label: x.openNowOnly }]),
+      chipQ('nbhd', 'map', [{ label: ans.any }, { id: 'nbhdTP', label: nb.TP }, { id: 'nbhdFP', label: nb.FP }]),
+      langQ,
+      chipQ('cost', 'cost', [{ label: ans.any }, { id: 'free', label: ans.free }, { id: 'lowCost', label: ans.lowCost }]),
+      chipQ('noId', 'idCard', [{ label: ans.any }, { id: 'noId', label: ans.noIdOnly }], x.noIdHint),
+      chipQ('stepFree', 'stepFree', [{ label: ans.any }, { id: 'stepFree', label: ans.stepFreeOnly }]),
+      chipQ('noAppointment', 'appointment', [{ label: ans.any }, { id: 'noAppointment', label: ans.walkIn }])
+    ];
+    // Bigger text, fewer things: five questions first; the other two stay one tap away (and always show when answered)
+    var hiddenQ = [];
+    if (b.basic && !b.loc.allQ) {
+      hiddenQ = [questions[1], questions[6]].filter(function (qq) { return !qq.answers.some(function (a) { return a.on && a.label !== ans.any; }); });
+      questions = questions.filter(function (qq) { return hiddenQ.indexOf(qq) < 0; });
+    }
+    // Live count: the same search the results screen runs, with these answers
+    var n;
+    if (prm.returnTo === 'R-15') n = C.applyFilters((D.listings || []).map(function (l) { return { listing: l }; }), cur, { scn: b.scn }).length;
+    else n = C.search({ q: prm.q, cat: prm.cat, hazard: prm.hazard, filters: cur, lang: lang, scn: b.scn, choices: b.ch }).shown.length;
+    var target = prm.returnTo || 'R-10';
+    return {
+      moreQ: hiddenQ.length ? C.fill(x.moreQuestions, { n: hiddenQ.length }) : '', showMoreQ: function () { b.setLoc({ allQ: true }); },
+      questions: questions, anyChosen: cur.length > 0,
+      applyLabel: n === 0 ? x.applyNone : n === 1 ? x.applyOne : C.fill(x.apply, { n: n }),
+      clearAll: function () { b.setLoc({ filters: [] }); },
+      apply: function () { var p = Object.assign({}, prm, { filters: cur }); delete p.returnTo; rep(target, p); },
+      goBack: function () { if (b.app.canBack) b.back(); else b.go(target, prm); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

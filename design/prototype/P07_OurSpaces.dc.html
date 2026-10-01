@@ -1,0 +1,226 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-07 Our spaces</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-07" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-07" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-07" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-pc">
+  <div class="cvh-stack" style="--gap:6px">
+    <h2 class="cvh-h2">{{title}}</h2>
+    <p>{{lead}}</p>
+    <p class="cvh-row cvh-muted" style="--gap:8px"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span>{{onlyOwn}}</span></p>
+  </div>
+  <sc-if value="{{noneOwn}}"><p class="cvh-pc-empty">{{noneLine}}</p></sc-if>
+  <sc-for list="{{cards}}" as="c" hint-placeholder-count="1">
+    <article class="cvh-pc-spacecard {{cardCls}}" aria-label="{{c.name}}">
+      <div class="cvh-stack" style="--gap:14px">
+        <div class="cvh-stack" style="--gap:4px">
+          <h3 class="cvh-h3">{{c.name}}</h3>
+          <p class="cvh-muted">{{c.address}}</p>
+        </div>
+        <div class="cvh-row cvh-wrap" style="--gap:10px">
+          <dc-import name="X09_SpaceStatus" status="{{c.st}}" purpose="{{c.purpose}}" confirmed-mins="{{c.mins}}" lang="en" embedded="{{true}}" hint-size="260px,64px"></dc-import>
+          <sc-if value="{{c.practice}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{c.practiceLabel}}</span></sc-if>
+        </div>
+        <sc-if value="{{c.stale}}">
+          <div class="cvh-stack" style="--gap:8px;padding:12px 14px;border-radius:12px;border:2px solid var(--ink);background:var(--yellow-tint)">
+            <span class="cvh-flag cvh-flag--stale" style="align-self:flex-start"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{c.staleWord}}</span>
+            <p>{{x.staleLine}}</p>
+            <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" style="align-self:flex-start" onClick="{{c.confirm}}"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>{{x.stillCorrect}}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{c.due}}">
+          <div class="cvh-row cvh-wrap" style="--gap:10px">
+            <span class="cvh-flag cvh-flag--due"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{c.dueWord}}</span>
+            <span class="cvh-muted">{{c.dueLine}}</span>
+            <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{c.confirm}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.stillCorrect}}</button>
+          </div>
+        </sc-if>
+        <fieldset class="cvh-stack" style="--gap:8px;border:0;padding:0;margin:0">
+          <legend class="cvh-strong" style="color:var(--ink);margin-bottom:8px">{{x.state}}</legend>
+          <div class="cvh-pc-states">
+            <sc-for list="{{c.states}}" as="o" hint-placeholder-count="3">
+              <button type="button" class="cvh-pc-state {{o.cls}}" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">
+                <span class="cvh-ico cvh-ico--{{o.icon}}" aria-hidden="true"></span><span>{{o.word}}</span>
+                <sc-if value="{{o.on}}"><span class="cvh-pc-state__now">{{x.stateNow}}</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </fieldset>
+        <div class="cvh-stack" style="--gap:6px">
+          <p class="cvh-muted">{{x.confirmsToo}}</p>
+          <ul class="cvh-pc-facts">
+            <sc-for list="{{c.facts}}" as="f" hint-placeholder-count="5"><li><span class="cvh-ico cvh-ico--{{f.icon}} cvh-ico--sm" aria-hidden="true"></span>{{f.text}}</li></sc-for>
+          </ul>
+          <button type="button" class="cvh-link" onClick="{{changeFacts}}">{{x.changeFacts}}</button>
+        </div>
+        <div class="cvh-stack" style="--gap:6px">
+          <p class="cvh-strong" style="color:var(--ink)">{{x.capacity}}</p>
+          <div class="cvh-row cvh-wrap" style="--gap:12px">
+            <div class="cvh-pc-stepper">
+              <button type="button" class="cvh-iconbtn" aria-label="{{x.capLess}}" onClick="{{c.less}}" disabled="{{c.noLess}}"><span class="cvh-ico cvh-ico--minus" aria-hidden="true"></span></button>
+              <span class="cvh-pc-stepper__n" aria-live="polite">{{c.now}}</span>
+              <button type="button" class="cvh-iconbtn" aria-label="{{x.capMore}}" onClick="{{c.more}}" disabled="{{c.noMore}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span></button>
+            </div>
+            <span>{{c.ofMax}}</span>
+            <span class="cvh-tag cvh-tag--illustrative">Illustrative</span>
+          </div>
+          <sc-if value="{{c.atMax}}"><p class="cvh-strong" style="color:var(--ink)">{{x.capAtMax}}</p></sc-if>
+        </div>
+        <p class="cvh-muted">{{c.last}}</p>
+      </div>
+      <aside class="cvh-pc-resprev" aria-label="{{x.residentsTitle}}">
+        <p class="cvh-pc-resprev__label"><span class="cvh-ico cvh-ico--eye cvh-ico--sm" aria-hidden="true"></span>{{x.residentsTitle}}</p>
+        <p style="font-size:16px" class="cvh-muted">{{c.resLine}}</p>
+        <p class="cvh-pc-resprev__name">{{c.name}}</p>
+        <dc-import name="X09_SpaceStatus" space="{{c.id}}" variant="block" lang="en" embedded="{{true}}" hint-size="100%,300px"></dc-import>
+      </aside>
+    </article>
+  </sc-for>
+  <div class="cvh-pc-links">
+    <button type="button" class="cvh-link" onClick="{{toCoverage}}">{{x.toCoverage}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    <button type="button" class="cvh-link" onClick="{{toSupplies}}">{{x.toSupplies}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Daniel, TNO: the community room, open for charging", "Kwame, the City: open, full, closed and one not confirmed (stale)", "Priya, the Hub: only the Hub space", "Marisol, Red Cross: runs no space", "Exercise running: nothing reaches residents", "Phone width, 390", "Phone width, 390: stale, still correct"], "default": "Daniel, TNO: the community room, open for charging"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Daniel, TNO: the community room, open for charging": {"persona": "DANIEL"}, "Kwame, the City: open, full, closed and one not confirmed (stale)": {"persona": "KWAME", "h": 2600}, "Priya, the Hub: only the Hub space": {"persona": "PRIYA"}, "Marisol, Red Cross: runs no space": {"persona": "MARISOL"}, "Exercise running: nothing reaches residents": {"persona": "DANIEL", "exercise": true}, "Phone width, 390": {"persona": "DANIEL", "w": 390, "h": 1700}, "Phone width, 390: stale, still correct": {"persona": "KWAME", "w": 390, "h": 1700, "params": {"only": "S5"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-07', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P07, x9 = s.x09, fill = C.fill, prm = b.params || {};
+    var me = b.persona || {}, myOrg = me.org || 'HUB', org = C.org(myOrg) || { name: myOrg };
+    var model = b.session || {}, now = Date.now(), after = D.unconfirmedAfterMins || 240;
+    var log = (C.session.get() || {}).log || [];
+    // Practice changes made during an exercise stay in the exercise log
+    var practice = {}; if (b.exercise) (model.exercise || []).forEach(function (a) { if (a.t === 'spaceStatus') practice[a.spaceId] = a; });
+    var lastAct = {}; log.forEach(function (a) { if (a.t === 'spaceStatus' && !!a.exercise === !!b.exercise) lastAct[a.spaceId] = a; });
+    var mine = (D.spaces || []).filter(function (z) { return z.org === myOrg && (!prm.only || z.id === prm.only); });
+    var words = { open: x.open, full: x.full, closed: x.closed, unconfirmed: x9.unconfirmed };
+    var yn = function (v) { return v === true ? x9.yes : v === false ? x9.no : x9.unknown; };
+    var cards = mine.map(function (z) {
+      var pr = practice[z.id];
+      var status = pr ? pr.status : z.status;
+      var cap = pr && pr.capacity ? pr.capacity : (z.capacity || {});
+      var mins = pr ? Math.round((now - pr.at) / 60000) : (z.confirmedMinsAgo || 0);
+      var st = mins > after ? 'unconfirmed' : status;
+      var a = C.asset(z.assetId) || {};
+      var name = (z.room ? z.room + ', ' : '') + (a.name || z.id);
+      var max = cap.max || 0, cur = cap.now;
+      var setTo = function (stNew, capNew, msg) {
+        b.act({ t: 'spaceStatus', spaceId: z.id, status: stNew, capacity: capNew });
+        b.toast(msg || fill(b.exercise ? x.setExercise : x.set, { status: words[stNew].toLowerCase() }));
+      };
+      var states = ['open', 'full', 'closed'].map(function (k) {
+        var on = status === k;
+        return { word: words[k], icon: { open: 'spaceOpen', full: 'spaceFull', closed: 'spaceClosed' }[k], on: on, cls: on ? 'is-on' : '', pressed: on ? 'true' : 'false',
+          pick: function () {
+            var c = k === 'full' ? { now: max, max: max } : k === 'closed' ? { now: 0, max: max } : { now: Math.min(cur == null ? 0 : cur, Math.max(0, max - 1)), max: max };
+            setTo(k, c);
+          } };
+      });
+      var la = lastAct[z.id];
+      var last = la ? fill(x.lastBy, { status: words[la.status].toLowerCase(), name: (C.person(la.by) || { name: me.name }).name, t: b.ago(Math.round((now - la.at) / 60000)) }) : fill(x.lastDrawn, { t: b.ago(mins) });
+      var facts = [{ icon: 'clock', text: z.hoursToday ? fill(x9.hoursToday, { from: z.hoursToday[0], to: z.hoursToday[1] }) : x9.closedToday },
+        { icon: 'drinkingWater', text: x9.water + ': ' + yn(z.water) }, { icon: 'seating', text: x9.seating + ': ' + yn(z.seating) },
+        { icon: 'charging', text: x9.charging + ': ' + yn(z.charging) }, { icon: 'washrooms', text: x9.washrooms + ': ' + yn(z.washrooms) },
+        { icon: 'stepFree', text: z.stepFree === false ? x9.notStepFree : x9.stepFree }, { icon: 'idCard', text: z.idAsked ? x9.idAsked : x9.noId }];
+      return { id: z.id, name: name, address: (a.address || '') + ' · ' + fill(x.purpose, { purpose: (x9.purpose || {})[z.purpose] || z.purpose }),
+        st: st, purpose: z.purpose, mins: mins, practice: !!pr, practiceLabel: pr ? fill(x.practice, { status: words[pr.status].toLowerCase() }) : '',
+        stale: st === 'unconfirmed', staleWord: fill(x.stale, { t: b.dur(mins) }),
+        due: st !== 'unconfirmed' && mins >= after * 0.75, dueWord: fill(x.due, { t: b.dur(after - mins) }), dueLine: fill(x.dueLine, { limit: b.dur(after) }),
+        confirm: function () { b.act({ t: 'spaceStatus', spaceId: z.id, status: status, capacity: cap.max ? { now: cur == null ? null : cur, max: max } : undefined }); b.toast(b.exercise ? fill(x.setExercise, { status: words[status].toLowerCase() }) : x.confirmed); },
+        states: states, facts: facts,
+        now: cur == null ? '?' : String(cur), ofMax: cur == null ? x.capUnknown + ', ' + fill(x.capOf, { max: max }) : fill(x.capOf, { max: max }),
+        noLess: cur == null || cur <= 0 ? true : false, noMore: cur != null && cur >= max ? true : false, atMax: status === 'open' && cur != null && max > 0 && cur >= max,
+        less: function () { var n = Math.max(0, (cur || 0) - 1); setTo(status, { now: n, max: max }, fill(x.capSet, { now: n, max: max })); },
+        more: function () { var n = Math.min(max, (cur || 0) + 1); setTo(status, { now: n, max: max }, fill(x.capSet, { now: n, max: max })); },
+        last: last, resLine: b.exercise ? x.residentsExercise : x.residentsLine };
+    });
+    var sp = prm.space;
+    return { x: x, lead: b.exercise ? x.practiceLine + ' ' + s.x10.runningSub : x.lead, title: fill(x.title, { org: org.name }), onlyOwn: fill(x.onlyOwn, { org: org.name }), cards: cards, noneOwn: cards.length === 0,
+      noneLine: fill(x.none, { org: org.name }), cardCls: b.narrow ? 'cvh-pc-spacecard--one' : '',
+      changeFacts: function () { if (b.app.notInPrototype) b.app.notInPrototype(x.changeFactsNote); else b.toast(x.changeFactsNote); },
+      toCoverage: function () { b.go('P-04', sp ? { space: sp } : {}); }, toSupplies: function () { b.go('P-08', sp ? { space: sp } : {}); } };
+  }
+
+}
+</script>
+</body>
+</html>

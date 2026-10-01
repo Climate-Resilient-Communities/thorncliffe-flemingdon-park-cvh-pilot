@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-09 Decision log</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-09" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-09" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-09" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-pc" style="max-width:900px">
+  <div class="cvh-stack" style="--gap:6px">
+    <h2 class="cvh-h2">{{title}}</h2>
+    <p>{{x.lead}}</p>
+  </div>
+  <div class="cvh-pc-kept"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span>{{x.kept}}</span></div>
+  <sc-if value="{{exercise}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{x.exercise}}</span></p></sc-if>
+
+  <sc-if value="{{notForm}}"><button type="button" class="cvh-btn cvh-btn--primary" style="{{btnStyle}}" onClick="{{openForm}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.record}}</button></sc-if>
+  <sc-if value="{{showForm}}">
+    <form class="cvh-pc-form" onSubmit="{{save}}" aria-labelledby="p09-f">
+      <p class="cvh-h3" id="p09-f">{{x.recordTitle}}</p>
+      <sc-if value="{{err}}"><p class="cvh-error" role="alert">{{err}}</p></sc-if>
+      <label class="cvh-field"><span class="cvh-label">{{x.decision}}</span><textarea class="cvh-textarea" style="min-height:72px" value="{{f.decision}}" onInput="{{typeDecision}}"></textarea></label>
+      <label class="cvh-field"><span class="cvh-label">{{x.why}}</span><input class="cvh-input" type="text" value="{{f.why}}" onInput="{{typeWhy}}"></label>
+      <label class="cvh-field"><span class="cvh-label">{{x.from}}</span>
+        <select class="cvh-select" onChange="{{pickFrom}}">
+          <sc-for list="{{fromOpts}}" as="o" hint-placeholder-count="4"><option value="{{o.id}}" selected="{{o.sel}}">{{o.label}}</option></sc-for>
+        </select></label>
+      <sc-if value="{{f.fromText}}"><p class="cvh-pc-quote">{{f.fromText}}</p></sc-if>
+      <div class="cvh-row cvh-wrap" style="--gap:8px">
+        <button type="submit" class="cvh-btn cvh-btn--primary">{{x.save}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{closeForm}}">{{x.cancel}}</button>
+      </div>
+    </form>
+  </sc-if>
+
+  <sc-if value="{{empty}}">
+    <div class="cvh-pc-panel"><p class="cvh-h3">{{x.emptyTitle}}</p><p>{{x.emptyLine}}</p></div>
+  </sc-if>
+  <sc-for list="{{weeks}}" as="w" hint-placeholder-count="1">
+    <section class="cvh-stack" style="--gap:10px" aria-label="{{w.label}}">
+      <sc-if value="{{w.label}}"><h3 class="cvh-pc-week">{{w.label}}</h3></sc-if>
+      <sc-if value="{{w.none}}"><p class="cvh-pc-empty">{{x.weekNone}}</p></sc-if>
+      <sc-for list="{{w.items}}" as="d" hint-placeholder-count="2">
+        <article class="cvh-pc-dec {{d.cls}}">
+          <div class="cvh-row cvh-wrap" style="--gap:8px">
+            <span class="cvh-pc-id">{{d.id}}</span>
+            <span class="cvh-muted">{{d.when}}</span>
+            <sc-if value="{{d.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if>
+            <sc-if value="{{d.practice}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>Exercise</span></sc-if>
+          </div>
+          <p class="cvh-pc-dec__text">{{d.text}}</p>
+          <p class="cvh-pc-dec__why"><span class="cvh-strong" style="color:var(--ink)">{{x.whyLabel}}:</span><span>{{d.why}}</span></p>
+          <div class="cvh-pc-who">
+            <span class="cvh-origin__mark" aria-hidden="true">{{d.mono}}</span><span>{{d.who}}</span>
+            <span class="cvh-cap {{d.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{d.capWord}}</span>
+          </div>
+          <p class="cvh-row" style="--gap:6px;align-items:flex-start"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span><span class="cvh-strong" style="color:var(--ink)">{{x.fromLabel}}:</span> {{d.from}}</span></p>
+        </article>
+      </sc-for>
+    </section>
+  </sc-for>
+  <div class="cvh-pc-links">
+    <button type="button" class="cvh-link" onClick="{{toSpace}}">{{x.toSpace}}</button>
+    <button type="button" class="cvh-link" onClick="{{toCoverage}}">{{x.toCoverage}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Scenario A: decisions newest first, with who, when, why and where from", "Scenario G: three weeks of decisions", "Recording a decision from a message", "Empty: nothing decided yet", "Exercise running", "Phone width, 390", "Phone width, 390: Scenario G"], "default": "Scenario A: decisions newest first, with who, when, why and where from"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Scenario A: decisions newest first, with who, when, why and where from": {"persona": "DANIEL", "params": {"space": "SPC-A"}}, "Scenario G: three weeks of decisions": {"persona": "PRIYA", "params": {"space": "SPC-G"}, "h": 1300}, "Recording a decision from a message": {"persona": "DANIEL", "params": {"space": "SPC-A", "from": "MSG-1"}, "loc": {"decision": "Tell residents power may not be back before midnight.", "why": "Hydro says the transformer needs replacing."}}, "Empty: nothing decided yet": {"persona": "PRIYA", "params": {"space": "SPC-A", "view": "empty"}}, "Exercise running": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A"}}, "Phone width, 390": {"persona": "DANIEL", "w": 390, "h": 1500, "params": {"space": "SPC-A"}}, "Phone width, 390: Scenario G": {"persona": "PRIYA", "w": 390, "h": 1700, "params": {"space": "SPC-G"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-09', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P09, P = D.partner || {}, fill = C.fill, prm = b.params || {}, loc = b.loc || {};
+    var me = b.persona || {}, myOrg = me.org || 'HUB';
+    var list = P.sharedSpaces || [], scn = (C.session.get() || {}).scenario || 'A';
+    var find = function (k) { return list.filter(function (z) { return z.id === k; })[0] || null; };
+    var sp = prm.space ? find(prm.space) : null;
+    if (!sp && b.exercise) sp = list.filter(function (z) { return z._session && z.exercise && !z.closed; })[0] || null;
+    if (!sp && scn === 'G') sp = find('SPC-G');
+    if (!sp) sp = list.filter(function (z) { return z._session && !z.closed && !z.exercise; })[0] || find('SPC-A') || list[0] || { id: 'none', type: 'power', location: '' };
+    var spId = sp.id, hazName = (s.hazards || {})[sp.type] || sp.type;
+    var capWords = (s.P05 || {}).words || {};
+    var capOf = function (o) { var v = (P.capacity || {})[o] || 'notSet'; return { capCls: 'cvh-cap--' + v, capWord: capWords[v] || v }; };
+    var short = function (o) { var r = C.org(o) || { short: o }; return r.short.charAt(0).toUpperCase() + r.short.slice(1); };
+    var sources = [];
+    (P.statements || []).forEach(function (t) { if (t.sp === spId) sources.push({ id: t.id, kind: 'st', t: t }); });
+    (P.conversation || []).forEach(function (m) { if (m.sp === spId) sources.push({ id: m.id, kind: 'msg', t: m }); });
+    sources.sort(function (p, q) { return (p.t.minsAgo || 0) - (q.t.minsAgo || 0); });
+    var srcText = function (id) {
+      var sc = sources.filter(function (z) { return z.id === id; })[0]; if (!sc) return id ? id : x.fromDirect;
+      var t = sc.t, pn = (C.person(t.person) || { name: t.person || '' }).name;
+      return sc.kind === 'msg' ? fill(x.fromMsg, { id: t.id, text: t.text, name: pn, org: short(t.org) }) : fill(x.fromSt, { id: t.id, type: ((s.x06 || {})[t.type] || t.type).toLowerCase(), text: t.text, name: pn, org: short(t.org) });
+    };
+    var decs = prm.view === 'empty' ? [] : (P.decisions || []).filter(function (d) { return d.sp === spId; }).slice().sort(function (p, q) { return (p.minsAgo || 0) - (q.minsAgo || 0); });
+    var opened = sp.openedMinsAgo || 0, long = opened > 10080;
+    var weekOf = function (m) { return Math.floor(Math.max(0, opened - (m || 0)) / 10080) + 1; };
+    var curWeek = weekOf(0);
+    var weeks = [], byW = {};
+    if (long && decs.length) for (var wk = curWeek; wk >= 1; wk--) { byW[wk] = { label: fill(wk === curWeek ? x.thisWeek : x.week, { n: wk }), items: [], none: false }; weeks.push(byW[wk]); }
+    decs.forEach(function (d) {
+      var pr = C.person(d.person) || { name: d.person, role: '' }, o = C.org(d.org) || { name: d.org, monogram: d.org }, cp = capOf(d.org);
+      var item = { id: d._session ? 'New' : d.id, text: d.decision, why: d.why || '', when: b.ago(d.minsAgo || 0), illus: !d._session, practice: !!d.exercise,
+        who: fill(x.who, { name: pr.name, role: pr.role, org: o.name }), mono: o.monogram, capCls: cp.capCls, capWord: cp.capWord,
+        from: srcText(d.from), cls: d._session && (d.minsAgo || 0) <= 1 ? 'cvh-pc-item--fresh' : '' };
+      var k = long ? weekOf(d.minsAgo) : 0;
+      if (!byW[k]) { byW[k] = { label: long ? fill(k === curWeek ? x.thisWeek : x.week, { n: k }) : '', items: [] }; weeks.push(byW[k]); }
+      byW[k].items.push(item);
+    });
+    weeks.forEach(function (w) { w.none = w.items.length === 0; });
+    var formOpen = !!loc.form || (prm.from && loc.form !== false);
+    var f = { decision: loc.decision || '', why: loc.why || '', from: loc.from != null ? loc.from : (prm.from || '') };
+    f.fromText = f.from ? srcText(f.from) : '';
+    var fromOpts = [{ id: '', label: x.fromNone, sel: !f.from }].concat(sources.map(function (z) {
+      var t = z.t; return { id: z.id, sel: f.from === z.id, label: z.id + ': ' + (t.text.length > 60 ? t.text.slice(0, 58) + '...' : t.text) };
+    }));
+    var err = loc.err || '';
+    return { x: x, title: fill(x.title, { what: hazName.toLowerCase() + ', ' + (sp.location || '') }), exercise: b.exercise,
+      weeks: weeks, empty: decs.length === 0, showForm: !!formOpen, notForm: !formOpen, f: f, fromOpts: fromOpts, err: err, btnStyle: b.narrow ? 'width:100%' : 'align-self:flex-start',
+      openForm: function () { b.setLoc({ form: true }); }, closeForm: function () { b.setLoc({ form: false, err: '' }); },
+      typeDecision: function (e) { b.setLoc({ decision: e.target.value }); }, typeWhy: function (e) { b.setLoc({ why: e.target.value }); },
+      pickFrom: function (e) { b.setLoc({ from: e.target.value }); },
+      save: function (e) {
+        if (e && e.preventDefault) e.preventDefault();
+        if (!f.decision.trim()) { b.setLoc({ err: x.needDecision }); return; }
+        if (!f.why.trim()) { b.setLoc({ err: x.needWhy }); return; }
+        b.act({ t: 'partner', kind: 'decision', space: spId, item: { org: myOrg, person: me.id, decision: f.decision.trim(), why: f.why.trim(), from: f.from || null } });
+        b.setLoc({ form: false, decision: '', why: '', from: null, err: '' });
+        b.toast(b.exercise ? x.recordedExercise : x.recorded);
+      },
+      toSpace: function () { b.go('P-02', { space: spId }); }, toCoverage: function () { b.go('P-04', { space: spId }); } };
+  }
+
+}
+</script>
+</body>
+</html>

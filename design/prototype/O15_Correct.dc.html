@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-15 Correct an alert</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-15" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-15" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-15" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage" style="max-width:980px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <section class="cvh-hrow cvh-hrow--priority" aria-labelledby="o15-alert">
+    <div class="cvh-hrow__head">
+      <dc-import name="X13_DisruptionType" types="{{a.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+      <h2 class="cvh-hrow__title" id="o15-alert">{{a.headline}}</h2>
+    </div>
+    <dc-import name="X02_Origin" dc-props="{{origin}}" lang="en" embedded="{{true}}" hint-size="100%,90px"></dc-import>
+    <p>{{where}}</p>
+    <p class="cvh-muted">{{x.lead}}</p>
+  </section>
+
+  <sc-if value="{{done}}">
+    <section class="cvh-confirm is-done" aria-labelledby="o15-done" role="status">
+      <p class="cvh-done" id="o15-done"><span class="cvh-ico cvh-ico--corrected" aria-hidden="true"></span><span>{{x.doneTitle}}</span></p>
+      <p>{{doneLine}}</p>
+      <div class="cvh-hrow__actions">
+        <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toResolve}}">{{x.toResolve}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toUpdate}}">{{x.toUpdate}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toHome}}">{{x.toHome}}</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <div class="cvh-stack" style="--gap:22px;{{formStyle}}">
+    <section class="cvh-hsec" aria-labelledby="o15-s1">
+      <h3 class="cvh-hsec__title" id="o15-s1">{{x.step1}}</h3>
+      <div class="cvh-stack" style="--gap:8px" role="radiogroup" aria-labelledby="o15-s1">
+        <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+          <button type="button" class="cvh-option {{e.cls}}" role="radio" aria-checked="{{e.on}}" onClick="{{e.pick}}">
+            <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{e.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+            <span class="cvh-option__text"><span class="cvh-option__label">{{e.kind}} · {{e.time}}</span><span>{{e.text}}</span><sc-if value="{{e.whereLine}}"><span class="cvh-option__line">{{e.whereLine}}</span></sc-if></span>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="o15-s2">
+      <h3 class="cvh-hsec__title" id="o15-s2">{{x.step2}}</h3>
+      <div class="cvh-chiprow" role="radiogroup" aria-labelledby="o15-s2">
+        <sc-for list="{{fields}}" as="f" hint-placeholder-count="2">
+          <button type="button" class="cvh-chip cvh-chip--pick {{f.cls}}" role="radio" aria-checked="{{f.on}}" onClick="{{f.pick}}"><sc-if value="{{f.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{f.label}}</button>
+        </sc-for>
+      </div>
+      <sc-if value="{{isWhere}}">
+        <div class="cvh-kv"><span class="cvh-kv__k">{{x.itSaid}}</span><span class="cvh-strike">{{oldWhere}}</span></div>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o15-where">{{x.shouldSay}}</label>
+          <input id="o15-where" class="cvh-input" type="text" value="{{newWhere}}" onInput="{{onWhere}}">
+        </div>
+      </sc-if>
+      <sc-if value="{{isText}}">
+        <div class="cvh-kv"><span class="cvh-kv__k">{{x.itSaid}}</span><span class="cvh-strike">{{oldText}}</span></div>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o15-wording">{{x.wordingLabel}}</label>
+          <textarea id="o15-wording" class="cvh-textarea" value="{{wording}}" onInput="{{onWording}}"></textarea>
+        </div>
+      </sc-if>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="o15-s3">
+      <label class="cvh-hsec__title" id="o15-s3" for="o15-line">{{x.step3}}<span class="cvh-tag cvh-tag--required">{{x.required}}</span></label>
+      <input id="o15-line" class="cvh-input {{lineErrCls}}" type="text" value="{{line}}" onInput="{{onLine}}" aria-describedby="o15-line-h">
+      <p class="cvh-hint" id="o15-line-h">{{x.lineHint}}</p>
+    </section>
+
+    <section class="cvh-hsec" aria-labelledby="o15-prev">
+      <h3 class="cvh-hsec__title" id="o15-prev">{{x.preview}}</h3>
+      <div class="cvh-hpreview" lang="en">
+        <span class="cvh-entry__kind"><span class="cvh-ico cvh-ico--corrected cvh-ico--sm" aria-hidden="true"></span><span>{{s.R07.kinds.correction}}</span><span class="cvh-tag">{{s.R07.latestTag}}</span></span>
+        <p class="cvh-entry__text">{{linePreview}}</p>
+        <sc-if value="{{changed}}"><p><span class="cvh-strong">{{x.changedLabel}}</span> <span class="cvh-strike">{{changed.from}}</span> <span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span> <span class="cvh-strong">{{changed.to}}</span></p></sc-if>
+      </div>
+      <p class="cvh-muted">{{x.previewLine}}</p>
+      <p class="cvh-muted">{{sms}}</p>
+    </section>
+  </div>
+
+  <div class="cvh-pubbar" style="{{formStyle}}">
+    <div class="cvh-stack cvh-grow" style="--gap:2px">
+      <sc-if value="{{b_exercise}}"><span class="cvh-row cvh-strong" style="--gap:6px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.exercise}}</span></sc-if>
+      <sc-if value="{{blocked}}"><span class="cvh-disabled-reason" style="margin:0">{{blocked}}</span></sc-if>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{cannot}}" onClick="{{onPublish}}"><span class="cvh-ico cvh-ico--corrected cvh-ico--sm" aria-hidden="true"></span>{{pubLabel}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Entry chosen: the floors were wrong", "Corrected wording (something else was wrong)", "One line saying what changed is missing", "Published as a correction", "Exercise running"], "default": "Entry chosen: the floors were wrong"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Entry chosen: the floors were wrong": {"params": {"alert": "AL-05", "upto": "e3"}}, "Corrected wording (something else was wrong)": {"params": {"alert": "AL-05", "upto": "e3"}, "loc": {"field": "text", "entry": "e2", "wording": "Toronto Hydro is on site. A transformer failed. Power may be back after 11 pm.", "line": "It was a transformer, not a piece of equipment."}}, "One line saying what changed is missing": {"params": {"alert": "AL-05", "upto": "e3"}, "loc": {"line": ""}}, "Published as a correction": {"params": {"alert": "AL-05", "upto": "e3"}, "loc": {"done": true}}, "Exercise running": {"exercise": true, "params": {"alert": "AL-05", "upto": "e3"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-15', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, h = s.O15, loc = b.loc, prm = b.params;
+    var scn = (C.session.get() || {}).scenario || 'A';
+    var id = prm.alert || 'AL-05';
+    var ref = Object.assign({}, C.refFor(id, scn)); if (prm.upto) ref.upto = prm.upto;
+    var sn = C.snap(ref, scn);
+    if (!sn) return { x: h, s: s, a: { headline: 'Alert not found', types: ['other'] }, entries: [], fields: [], goBack: function () { b.go('O-01'); } };
+    var a = sn.a, kinds = s.R07.kinds;
+    var pickable = sn.entries.filter(function (e) { return e.kind !== 'correction' && e.kind !== 'final'; });
+    var byFloors = pickable.filter(function (e) { return /floors 1 to 6/.test(e.whereAtTime || e.text || ''); })[0];
+    var entryId = loc.entry || (byFloors || pickable[pickable.length - 1] || {}).id;
+    var entry = pickable.filter(function (e) { return e.id === entryId; })[0] || pickable[0] || {};
+    var entries = pickable.map(function (e) {
+      var on = e.id === entryId;
+      return { kind: kinds[e.kind] || e.kind, time: b.ago(e.minsAgo), text: e.text || '', whereLine: e.whereAtTime ? C.fill(h.whereAtTime, { where: e.whereAtTime }) : '',
+        isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { b.setLoc({ entry: e.id, wording: undefined }); } };
+    });
+    var field = loc.field || 'where';
+    var fields = ['where', 'text'].map(function (k) { var on = k === field; return { label: h.fields[k], isOn: on, on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '', pick: function () { b.setLoc({ field: k }); } }; });
+    var oldWhere = entry.whereAtTime || sn.where || '';
+    var scripted = /floors 1 to 6/.test(oldWhere);
+    var newWhere = loc.newWhere !== undefined ? loc.newWhere : (scripted ? oldWhere.replace(h.script.from, h.script.to) : oldWhere);
+    var oldText = entry.text || '';
+    var wording = loc.wording !== undefined ? loc.wording : oldText;
+    var line = loc.line !== undefined ? loc.line : (scripted && field === 'where' ? h.script.line : '');
+    // What changed, stated from the difference, never typed twice
+    var diff = function (p, q) {
+      if (p === q) return null;
+      var i = 0; while (i < p.length && i < q.length && p[i] === q[i]) i++;
+      var k = p.lastIndexOf(', ', i); k = k < 0 ? 0 : k + 2;
+      return { from: p.slice(k), to: q.slice(k) };
+    };
+    var changed = field === 'where' ? diff(oldWhere, String(newWhere).trim()) : diff(oldText, String(wording).trim());
+    var lineOk = !!String(line || '').trim();
+    var blocked = !changed ? h.needChange : !lineOk ? h.needLine : '';
+    var done = !!loc.done;
+    return { x: h, s: s, a: a, origin: (function (o) { if (o.state === 'corrected' && !o.correctedMins) o.correctedMins = 1; return o; })(C.originProps(sn)), where: sn.where, b_exercise: b.exercise, entries: entries, fields: fields,
+      isWhere: field === 'where', isText: field === 'text', oldWhere: oldWhere, newWhere: newWhere, oldText: oldText, wording: wording, line: line,
+      onWhere: function (e) { b.setLoc({ newWhere: e.target.value }); }, onWording: function (e) { b.setLoc({ wording: e.target.value }); }, onLine: function (e) { b.setLoc({ line: e.target.value }); },
+      lineErrCls: lineOk ? '' : 'is-error', changed: changed, linePreview: lineOk ? line : '…',
+      sms: C.fill(b.exercise ? h.smsEx : h.sms, { headline: a.headline, line: lineOk ? line : '…' }),
+      blocked: blocked, cannot: !!blocked, pubLabel: b.exercise ? h.publishEx : h.publish,
+      done: done, doneLine: b.exercise ? h.doneEx : h.doneLine, formStyle: done ? 'display:none' : '',
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); }, toHome: function () { b.go('O-01'); },
+      toResolve: function () { b.go('O-16', { alert: id }); }, toUpdate: function () { b.go('O-14', { alert: id }); },
+      onPublish: function () {
+        if (blocked) return;
+        var e = { kind: 'correction', corrects: entry.id, text: String(line).trim(), changed: { field: field, from: changed.from, to: changed.to } };
+        if (field === 'where') e.where = String(newWhere).trim();
+        b.act({ t: 'entry', alert: id, entry: e });
+        b.setLoc({ done: true });
+      } };
+  }
+
+}
+</script>
+</body>
+</html>

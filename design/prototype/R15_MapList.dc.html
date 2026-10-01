@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-15 Asset map — list view</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-15" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Asset map — list view">
+
+<sc-if value="{{hasApplied}}">
+  <dc-import name="X11_FilterBar" filters="{{applied}}" hiding="{{hidden}}" on-remove="{{removeFilter}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,130px"></dc-import>
+</sc-if>
+<div class="cvh-screen">
+  <sc-if value="{{showBack}}">
+    <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  </sc-if>
+  <div class="cvh-row" style="--gap:8px">
+    <div class="cvh-segment cvh-grow cvh-hide-basic" role="group" aria-label="{{s.R14.title}}">
+      <button type="button" aria-pressed="false" onClick="{{toMap}}"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{s.R14.mapView}}</button>
+      <button type="button" class="is-on" aria-pressed="true"><span class="cvh-ico cvh-ico--list cvh-ico--sm" aria-hidden="true"></span>{{s.R14.list}}</button>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toAdd}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{s.R15.add}}</button>
+  </div>
+  <h1 class="cvh-h1">{{s.R15.title}}</h1>
+  <sc-if value="{{hazardLine}}">
+    <div class="cvh-mapband" role="status" style="border-radius:12px;border:1px solid var(--help-box-edge)">
+      <span class="cvh-ico cvh-ico--{{hazardIcon}}" aria-hidden="true"></span>
+      <span class="cvh-grow cvh-stack" style="--gap:0"><span class="cvh-strong">{{hazardLine}}</span><button type="button" class="cvh-link" onClick="{{clearHazard}}">{{s.R14.allPlaces}}</button></span>
+    </div>
+  </sc-if>
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-strong">{{s.R14.filters}}</p>
+    <div class="cvh-hscroll" role="group" aria-label="{{s.R14.filters}}">
+      <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+        <button type="button" class="cvh-chip cvh-fchip {{c.cls}}" aria-pressed="{{c.pressed}}" onClick="{{c.toggle}}"><span class="cvh-ico cvh-ico--{{c.icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{c.label}}</span><sc-if value="{{c.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if></button>
+      </sc-for>
+    </div>
+    <select class="cvh-select" aria-label="{{s.R14.subLabel}}" value="{{subVal}}" onChange="{{pickSub}}">
+      <sc-for list="{{subOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+    </select>
+  </div>
+
+  <sc-if value="{{hasResults}}">
+    <p class="cvh-caption cvh-muted"><span class="cvh-strong" style="color:var(--ink)">{{countLine}}</span> · {{s.R15.byDistance}}</p>
+    <ul class="cvh-list">
+      <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+        <li class="cvh-result">
+          <button type="button" class="cvh-result__name" onClick="{{e.open}}"><span class="cvh-grow">{{e.name}}</span><span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+          <p class="cvh-kindline"><span class="cvh-pinmini cvh-pin--{{e.shape}} {{e.spaceCls}}"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{e.icon}}" aria-hidden="true"></span></span></span><span class="cvh-strong">{{e.kind}}</span><span class="cvh-muted">· {{e.dist}}</span></p>
+          <p class="cvh-row" style="--gap:6px;align-items:flex-start"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span>{{e.hours}}</span></p>
+          <sc-if value="{{e.space}}">
+            <dc-import name="X09_SpaceStatus" space="{{e.space}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,64px"></dc-import>
+            <div class="cvh-result__facts"><sc-for list="{{e.spaceFacts}}" as="f" hint-placeholder-count="2"><span class="cvh-fact"><span class="cvh-ico cvh-ico--{{f.icon}} cvh-ico--sm" aria-hidden="true"></span>{{f.label}}</span></sc-for></div>
+          </sc-if>
+          <sc-if value="{{e.help}}"><dc-import name="X14_HowTheyHelp" hazard="{{e.hazard}}" text="{{e.help}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,80px"></dc-import></sc-if>
+          <sc-if value="{{e.hasFacts}}">
+            <div class="cvh-result__facts cvh-hide-basic"><sc-for list="{{e.facts}}" as="f" hint-placeholder-count="2"><span class="cvh-fact"><span class="cvh-ico cvh-ico--{{f.icon}} cvh-ico--sm" aria-hidden="true"></span>{{f.label}}</span></sc-for></div>
+          </sc-if>
+          <sc-if value="{{e.contributed}}"><span class="cvh-tag" style="align-self:flex-start"><span class="cvh-ico cvh-ico--communityOffer cvh-ico--sm" aria-hidden="true"></span>{{s.R16.contributed}}</span></sc-if>
+        </li>
+      </sc-for>
+    </ul>
+    <sc-if value="{{moreLabel}}"><button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{showMore}}">{{moreLabel}}</button></sc-if>
+  </sc-if>
+  <sc-if value="{{empty}}">
+    <div class="cvh-card cvh-stack" style="--gap:10px" role="status">
+      <p class="cvh-h3">{{s.R15.empty}}</p>
+      <sc-if value="{{suggest}}">
+        <p>{{suggest.line}}</p>
+        <button type="button" class="cvh-btn cvh-btn--primary" style="align-self:flex-start" onClick="{{suggest.apply}}">{{suggest.button}}</button>
+      </sc-if>
+      <sc-if value="{{noSuggest}}"><p>{{s.R15.emptyBody}}</p></sc-if>
+      <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{clearAll}}">{{s.R15.clearAll}}</button>
+    </div>
+  </sc-if>
+
+  <div class="cvh-stack" style="--gap:4px;padding-top:8px;border-top:1px solid var(--border)">
+    <dc-import name="X03_Rules" variant="link" on-open="{{openRules}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,48px"></dc-import>
+    <button type="button" class="cvh-link" onClick="{{toMissing}}"><span class="cvh-ico cvh-ico--pencil cvh-ico--sm" aria-hidden="true"></span>{{s.R15.missing}}</button>
+  </div>
+</div>
+
+<sc-if value="{{rules}}">
+  <div class="cvh-overlay" role="dialog" aria-modal="true" aria-label="{{s.x03.title}}">
+    <div class="cvh-sheet">
+      <div class="cvh-sheet__head">
+        <span class="cvh-grow"></span>
+        <button type="button" class="cvh-iconbtn" onClick="{{closeSheet}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <div class="cvh-sheet__body">
+        <dc-import name="X03_Rules" variant="full" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,420px"></dc-import>
+        <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{toAdd}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{s.R14.add}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet cvh-btn--block" onClick="{{closeSheet}}">{{s.shell.close}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Ordered by distance (Devon)", "From the heat alert: Nasrin, her filters named", "Open-as-a-space filter with X-09 on each entry (George)", "Utility filters: charging and washrooms", "Preparedness-kit filter", "Disruption view: power outage, each says how", "Empty: no places match", "Basic mode: open spaces (George)", "Basic mode: everything nearest first", "The rules of this space, from the list"], "default": "Ordered by distance (Devon)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Ordered by distance (Devon)": {"persona": "devon", "scenario": "C", "basic": false}, "From the heat alert: Nasrin, her filters named": {"persona": "nasrin", "scenario": "B", "params": {"spaces": "cooling", "hazard": "heat", "filters": [{"id": "noId", "fromChoices": true}], "from": "alert", "alert": "AL-06"}}, "Open-as-a-space filter with X-09 on each entry (George)": {"persona": "george", "scenario": "B", "basic": false, "params": {"spaces": true}}, "Utility filters: charging and washrooms": {"persona": "yusuf", "scenario": "C", "params": {"utility": ["charging", "washrooms"]}}, "Preparedness-kit filter": {"persona": "nasrin", "scenario": "C", "params": {"kit": true}}, "Disruption view: power outage, each says how": {"persona": "yusuf", "scenario": "A", "params": {"hazard": "power", "from": "alert", "alert": "AL-05"}}, "Empty: no places match": {"persona": "devon", "scenario": "C", "params": {"kit": true, "utility": ["food"]}}, "Basic mode: open spaces (George)": {"persona": "george", "scenario": "B", "basic": true, "basicState": "persisted", "params": {"spaces": true}}, "Basic mode: everything nearest first": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper"}, "The rules of this space, from the list": {"persona": "devon", "scenario": "C", "loc": {"rules": true}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'map', showExercise: 'R-15'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-15'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var self = this, C = b.C, s = b.s, x = s.R15, loc = b.loc, go = b.go, prm = b.params;
+    var SID = 'R-15';
+    var F = this.readF(b), P = this.places(b, F);
+    var setF = function (patch) { self.setF(b, SID, patch, null); };
+    var ui = this.filterUi(b, F, setF);
+    var rows = P.shown.slice().sort(function (p, q) { return p.d - q.d; });
+    // Basic mode: five at a time. Default: twenty at a time. Informal entries are never sorted below formal ones: distance only.
+    var page = b.basic ? 5 : 20, n = loc.shown || page;
+    var entries = rows.slice(0, n).map(function (r) {
+      var kd = self.kindOf(b, r), a = r.a, sp = r.sp;
+      var facts = (a.utilities || []).map(function (u) { return { icon: self.UICON[u], label: s.utilities[u] }; });
+      if (a.kit) facts.push({ icon: 'kit', label: s.utilities.kit });
+      return { name: a.name, kind: kd.word, icon: kd.icon, shape: kd.shape, spaceCls: r.st === 'open' ? 'cvh-pin--space' : '',
+        dist: C.fill(x.distanceHome, { d: r.d.toFixed(1) }), hours: self.hoursLine(b, r),
+        space: sp ? sp.id : '', spaceFacts: sp ? [{ icon: 'stepFree', label: sp.stepFree ? s.x09.stepFree : s.x09.notStepFree }, { icon: 'idCard', label: sp.idAsked ? s.x09.idAsked : s.x09.noId }] : [],
+        help: F.hazard && a.helps ? (a.helps[F.hazard] || '') : '', hazard: F.hazard || 'power',
+        facts: facts, hasFacts: facts.length > 0 && !F.hazard, contributed: a.source === 'contribution',
+        open: function () { go('R-12', { id: r.l.id, from: 'list', hazard: F.hazard || undefined }); } };
+    });
+    var rest = rows.length - entries.length;
+    // Empty: name the one filter whose removal brings places back, and how near the nearest would be
+    var suggest = null;
+    if (!rows.length && ui.applied.length) {
+      var best = null;
+      ui.applied.forEach(function (ap) {
+        var G = JSON.parse(JSON.stringify(F));
+        if (ap.id === 'space') G.spaces = false; else if (ap.id === 'kit') G.kit = false; else if (ap.id === 'sub') G.subcat = '';
+        else if (ap.id.indexOf('u:') === 0) G.utility = G.utility.filter(function (v) { return v !== ap.id.slice(2); });
+        else if (ap.id.indexOf('f:') === 0) G.filters = G.filters.filter(function (f) { return f.id !== ap.id.slice(2); });
+        var got = self.places(b, G).shown;
+        if (got.length && (!best || got.length > best.n.length)) best = { ap: ap, n: got };
+      });
+      if (best) {
+        var near = best.n.reduce(function (m, r) { return r.d < m ? r.d : m; }, 99);
+        suggest = { line: C.fill(best.n.length === 1 ? x.suggestOne : x.suggest, { f: best.ap.label, n: best.n.length, d: C.fill(x.distanceHome, { d: near.toFixed(1) }) }),
+          button: C.fill(x.suggestButton, { f: best.ap.label }), apply: function () { ui.removeFilter(best.ap.id); } };
+      }
+    }
+    var mapParams = this.paramsOf(F, { from: prm.from, alert: prm.alert });
+    return Object.assign(ui, {
+      hasApplied: ui.applied.length > 0, hidden: P.hidden,
+      showBack: prm.from === 'alert' || prm.from === 'guide', goBack: function () { if (b.app.canBack) b.back(); else go(prm.alert ? 'R-07' : 'R-03', prm.alert ? { alert: prm.alert } : undefined); },
+      toMap: function () { if (b.app.replace && !b.standalone) b.app.replace('R-14', mapParams); else go('R-14', mapParams); },
+      toAdd: function () { go('R-18', { mode: 'add', from: 'list' }); },
+      toMissing: function () { go('R-17', { from: 'list' }); },
+      hasResults: rows.length > 0, empty: rows.length === 0, suggest: suggest, noSuggest: !suggest,
+      countLine: rows.length === 1 ? x.countOne : C.fill(x.count, { n: rows.length }), entries: entries,
+      moreLabel: rest > 0 ? C.fill(x.more, { n: Math.min(page, rest) }) : '', showMore: function () { b.setLoc({ shown: n + page }); },
+      clearAll: function () { setF({ spaces: false, utility: [], kit: false, subcat: '', filters: [] }); },
+      rules: !!loc.rules, openRules: function () { b.setLoc({ rules: true }); }, closeSheet: function () { b.setLoc({ rules: false }); }
+    });
+  }
+
+  /* ---- Shared by R-14, R-15 and R-16 (the same filter model in both views) ---- */
+  get UICON() { return { ac: 'ac', wifi: 'wifi', charging: 'charging', washrooms: 'washrooms', water: 'drinkingWater', food: 'food' }; }
+  readF(b) {
+    var p = b.params || {};
+    var F = { spaces: p.spaces || false, utility: [].concat(p.utility || []), kit: !!p.kit, subcat: p.subcat || '', hazard: p.hazard || '', filters: (p.filters || []).slice() };
+    return Object.assign(F, b.loc.f || {});
+  }
+  paramsOf(F, extra) {
+    var o = { spaces: F.spaces || undefined, utility: F.utility.length ? F.utility.slice() : undefined, kit: F.kit || undefined, subcat: F.subcat || undefined,
+      hazard: F.hazard || undefined, filters: F.filters.length ? F.filters.slice() : undefined };
+    return Object.assign(o, extra || {});
+  }
+  setF(b, sid, patch, V) {
+    var F = Object.assign(this.readF(b), patch);
+    if (b.standalone || !b.app.replace) { b.setLoc({ f: F, sel: null, many: null }); return; }
+    var keep = V ? { lat: V.lat, lng: V.lng, z: V.z } : { shown: b.loc.shown };
+    b.app.replace(sid, this.paramsOf(F, { from: b.params.from, alert: b.params.alert, loc: keep }));
+  }
+  places(b, F) {
+    var C = b.C, self = this, home = C.home(b.ch);
+    var all = (b.D.assets || []).map(function (a) {
+      var l = C.listingFor(a.id), sp = a.space ? C.space(a.space) : null;
+      return { a: a, l: l, sp: sp, st: sp ? C.spaceState(sp) : null, d: C.km(home, { lat: a.lat, lng: a.lng }) };
+    });
+    var base = F.hazard ? all.filter(function (r) { return r.a.helps && r.a.helps[F.hazard]; }) : all;
+    var shown = base.filter(function (r) { return self.passes(b, r, F); });
+    return { all: all, base: base, shown: shown, hidden: base.length - shown.length };
+  }
+  passes(b, r, F) {
+    var C = b.C, a = r.a, l = r.l, sp = r.sp;
+    if (F.spaces) { if (!sp) return false; if (F.spaces !== true && sp.purpose !== F.spaces) return false; }
+    for (var i = 0; i < F.utility.length; i++) if ((a.utilities || []).indexOf(F.utility[i]) < 0) return false;
+    if (F.kit && !a.kit) return false;
+    if (F.subcat && (a.subcats || []).indexOf(F.subcat) < 0) return false;
+    for (var j = 0; j < F.filters.length; j++) {
+      var f = F.filters[j];
+      // A space's own record answers step-free and ID when the listing does not
+      if (f.id === 'noId') { if (!(l.idRequired === 'no' || (sp && sp.idAsked === false))) return false; }
+      else if (f.id === 'stepFree') { if (!(l.stepFree === 'yes' || (sp && sp.stepFree === true))) return false; }
+      else if (f.id === 'openNow') { if (!(C.openNow(l.hours, b.scn) === true || r.st === 'open')) return false; }
+      else if (C.FILTER[f.id] && !C.FILTER[f.id](l, f.value, { scn: b.scn })) return false;
+    }
+    return true;
+  }
+  kindOf(b, r) {
+    var k = r.a.kind;
+    return { icon: k, word: (b.s.orgKinds || {})[k] || k, shape: k === 'communityOffer' ? 'offer' : (r.a.informal ? 'informal' : 'formal') };
+  }
+  hoursLine(b, r) {
+    var C = b.C, o = C.openInfo(r.l, b.scn);
+    if (o.state === 'unknown' && r.sp && r.sp.hoursToday) return C.fill(b.s.R16.hoursToday, { hours: C.hhmm12(r.sp.hoursToday[0]) + ' to ' + C.hhmm12(r.sp.hoursToday[1]) });
+    return o.text;
+  }
+  filterUi(b, F, setF) {
+    var C = b.C, s = b.s, x = s.R14, self = this;
+    var spaceLabel = F.spaces && F.spaces !== true ? C.fill(x.spaceFor, { purpose: (s.x09.purpose || {})[F.spaces] || '' }) : s.utilities.space;
+    var chips = [{ icon: 'building', label: spaceLabel, on: !!F.spaces, toggle: function () { setF({ spaces: F.spaces ? false : true }); } }];
+    (b.D.utilities || []).forEach(function (u) {
+      var on = F.utility.indexOf(u) >= 0;
+      chips.push({ icon: self.UICON[u], label: s.utilities[u], on: on,
+        toggle: function () { setF({ utility: on ? F.utility.filter(function (v) { return v !== u; }) : F.utility.concat([u]) }); } });
+    });
+    chips.push({ icon: 'kit', label: s.utilities.kit, on: F.kit, toggle: function () { setF({ kit: !F.kit }); } });
+    chips.forEach(function (c) { c.cls = c.on ? 'cvh-chip--on' : ''; c.pressed = c.on ? 'true' : 'false'; });
+    var subOpts = [{ v: '', label: x.subAll }].concat((b.D.subcategories || []).map(function (k) { return { v: k, label: (s.subcats || {})[k] || k }; }));
+    // Named, removable filters for X-11 (the list view)
+    var applied = [];
+    if (F.spaces) applied.push({ id: 'space', label: spaceLabel });
+    F.utility.forEach(function (u) { applied.push({ id: 'u:' + u, label: s.utilities[u] }); });
+    if (F.kit) applied.push({ id: 'kit', label: s.utilities.kit });
+    if (F.subcat) applied.push({ id: 'sub', label: (s.subcats || {})[F.subcat] || F.subcat });
+    F.filters.forEach(function (f) { applied.push({ id: 'f:' + f.id, label: C.filterLabel(f, b.lang), fromChoices: !!f.fromChoices }); });
+    var remove = function (id) {
+      if (id === 'space') setF({ spaces: false }); else if (id === 'kit') setF({ kit: false }); else if (id === 'sub') setF({ subcat: '' });
+      else if (id.indexOf('u:') === 0) setF({ utility: F.utility.filter(function (v) { return v !== id.slice(2); }) });
+      else if (id.indexOf('f:') === 0) setF({ filters: F.filters.filter(function (f) { return f.id !== id.slice(2); }) });
+    };
+    return { chips: chips, subOpts: subOpts, subVal: F.subcat || '', pickSub: function (e) { setF({ subcat: e.target.value }); },
+      applied: applied, removeFilter: remove,
+      hazardLine: F.hazard ? C.fill(x.disruptionView, { hazard: (s.hazards || {})[F.hazard] || F.hazard }) : '', hazardIcon: F.hazard || 'other',
+      clearHazard: function () { setF({ hazard: '' }); } };
+  }
+
+}
+</script>
+</body>
+</html>

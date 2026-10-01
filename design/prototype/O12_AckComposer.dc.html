@@ -1,0 +1,309 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-12 Acknowledgement composer</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-12" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-12" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-12" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-elapsed" role="timer" aria-live="off">
+    <span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span>
+    <span class="cvh-elapsed__time">{{elapsed}}</span>
+    <span>{{x.benchmark}}</span>
+  </div>
+  <div class="cvh-stack" style="--gap:6px">
+    <div class="cvh-row cvh-wrap" style="--gap:10px">
+      <dc-import name="X13_DisruptionType" types="{{types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+      <span class="cvh-hrow__title">{{summary}}</span>
+    </div>
+    <div class="cvh-row cvh-wrap" style="--gap:8px"><span class="cvh-tag">{{templateLine}}</span><span class="cvh-tag cvh-tag--ai">{{x.aiTag}}</span></div>
+    <sc-if value="{{notPublished}}"><p>{{x.lead}}</p></sc-if>
+  </div>
+
+  <sc-if value="{{published}}">
+    <section class="cvh-confirm is-done" aria-labelledby="o12-pub">
+      <p class="cvh-done" id="o12-pub"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{publishedTitle}}</span></p>
+      <p>{{x.publishedLine}}</p>
+      <div class="cvh-hrow__actions">
+        <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toConfirm}}">{{x.toConfirm}}</button>
+        <sc-if value="{{canUpdate}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toUpdate}}">{{x.toUpdate}}</button></sc-if>
+        <sc-if value="{{canUpdate}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toPromote}}">{{x.toPromote}}</button></sc-if>
+      </div>
+    </section>
+  </sc-if>
+
+  <div class="cvh-hcols {{colsCls}}">
+    <section class="cvh-hsec" aria-labelledby="o12-prev">
+      <h3 class="cvh-hsec__title" id="o12-prev">{{x.preview}}</h3>
+      <article class="cvh-hpreview cvh-hpreview--ack" lang="en">
+        <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" variant="line" lang="en" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if>
+        <dc-import name="X13_DisruptionType" types="{{types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+        <p class="cvh-hpreview__headline">{{ack.headline}}</p>
+        <span class="cvh-more-coming"><span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span>{{s.R07.moreComing}}</span>
+        <p class="cvh-alert__unknown"><span class="cvh-strong">{{s.R07.notYetKnownLabel}}:</span> {{ack.nyk}}</p>
+        <dc-import name="X02_Origin" dc-props="{{origin}}" lang="en" embedded="{{true}}" hint-size="100%,90px"></dc-import>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{s.R07.whereLabel}}</span><span>{{where}}</span></div>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{s.R07.kinds.ack}}</span><span>{{ack.text}}</span></div>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{s.R07.actionLabel}}</span><p class="cvh-alert__action">{{ack.action}}</p></div>
+      </article>
+      <p class="cvh-muted">{{x.previewNote}}</p>
+    </section>
+    <div class="cvh-stack" style="--gap:18px">
+      <section class="cvh-hsec" aria-labelledby="o12-ch">
+        <h3 class="cvh-hsec__title" id="o12-ch">{{x.channelsTitle}}</h3>
+        <p class="cvh-muted">{{x.channelsLead}}</p>
+        <ul class="cvh-stack" style="--gap:8px;margin:0;padding:0;list-style:none">
+          <sc-for list="{{channels}}" as="c" hint-placeholder-count="4"><li class="cvh-pill" style="justify-content:flex-start"><span class="cvh-ico cvh-ico--{{c.icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{c.label}}</span></li></sc-for>
+        </ul>
+        <span class="cvh-tag cvh-tag--illustrative" style="align-self:flex-start">{{x.illustrative}}</span>
+      </section>
+      <section class="cvh-hsec" aria-labelledby="o12-valid">
+        <label class="cvh-hsec__title" id="o12-valid" for="o12-valid-s">{{x.validTitle}}</label>
+        <select id="o12-valid-s" class="cvh-select" value="{{validVal}}" onChange="{{onValid}}" disabled="{{published}}"><sc-for list="{{validOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.label}}</option></sc-for></select>
+        <p class="cvh-hint">{{x.validHint}}</p>
+      </section>
+    </div>
+  </div>
+
+  <section class="cvh-hsec" aria-labelledby="o12-langs">
+    <div class="cvh-hhead">
+      <h3 class="cvh-hsec__title cvh-grow" id="o12-langs">{{x.langsTitle}}<span class="cvh-hsec__count">{{langCount}}</span></h3>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toggleAll}}" aria-expanded="{{allOpenAria}}">{{toggleAllLabel}}</button>
+    </div>
+    <p>{{langsLead}}</p>
+    <ul class="cvh-langs {{langsCls}}">
+      <sc-for list="{{langs}}" as="l" hint-placeholder-count="15">
+        <li class="cvh-langrow">
+          <button type="button" class="cvh-langrow__btn" onClick="{{l.toggle}}" aria-expanded="{{l.aria}}">
+            <span class="cvh-grow"><span lang="{{l.bcp}}" dir="{{l.dir}}">{{l.native}}</span><sc-if value="{{l.showEn}}"><span class="cvh-muted" style="font-weight:400"> · {{l.english}}</span></sc-if></span>
+            <span class="cvh-ico cvh-ico--{{l.chev}} cvh-ico--sm" aria-hidden="true"></span>
+          </button>
+          <div class="cvh-langrow__line">
+            <span class="cvh-row" style="--gap:4px"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{l.state}}</span>
+            <span class="cvh-row" style="--gap:4px"><span class="cvh-ico cvh-ico--audio cvh-ico--sm" aria-hidden="true"></span>{{l.audio}}</span>
+          </div>
+          <sc-if value="{{l.open}}">
+            <div class="cvh-stack" style="--gap:4px;padding-top:6px;border-top:1px solid var(--border)">
+              <sc-if value="{{l.note}}"><p class="cvh-muted">{{l.note}}</p></sc-if>
+              <p lang="en"><span class="cvh-strong">{{ack.headline}}.</span> {{ack.nyk}}. {{ack.text}} {{ack.action}}</p>
+            </div>
+          </sc-if>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+
+  <section class="cvh-hsec" aria-labelledby="o12-tail">
+    <h3 class="cvh-hsec__title" id="o12-tail"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span>{{x.tailoredTitle}}</h3>
+    <p class="cvh-muted">{{x.tailoredLead}}</p>
+    <sc-if value="{{noTailored}}"><p>{{x.tailoredNone}}</p></sc-if>
+    <div class="cvh-hcols cvh-hcols--even {{tailCls}}" style="gap:10px">
+      <sc-for list="{{tailored}}" as="t" hint-placeholder-count="4">
+        <div class="cvh-card cvh-stack" style="--gap:6px">
+          <p class="cvh-strong">{{t.label}}</p>
+          <ul class="cvh-stack" style="--gap:4px;margin:0;padding-inline-start:20px"><sc-for list="{{t.lines}}" as="ln" hint-placeholder-count="2"><li>{{ln}}</li></sc-for></ul>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+    <div class="cvh-pubbar" style="{{pubStyle}}">
+      <div class="cvh-stack cvh-grow" style="--gap:2px">
+        <sc-if value="{{b_exercise}}"><span class="cvh-row cvh-strong" style="--gap:6px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.exercise}}</span></sc-if>
+        <span class="cvh-muted">{{x.oneAction}}</span>
+      </div>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{publishing}}" onClick="{{onPublish}}"><span class="cvh-ico cvh-ico--{{pubIcon}} cvh-ico--sm" aria-hidden="true"></span>{{pubLabel}}</button>
+    </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Generated in every launch language (power, Sample Towers)", "Language versions expanded", "Valid until a time", "Publishing", "Published", "Heat, whole neighbourhood", "Daniel, TNO, as a partner author", "Exercise running"], "default": "Generated in every launch language (power, Sample Towers)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Generated in every launch language (power, Sample Towers)": {}, "Language versions expanded": {"loc": {"allOpen": true}}, "Valid until a time": {"loc": {"valid": "tonight"}}, "Publishing": {"loc": {"publishing": true}}, "Published": {"params": {"incident": "INC-01"}}, "Heat, whole neighbourhood": {"params": {"draft": {"type": "heat", "types": ["heat"], "buildings": [], "floors": null, "nbhds": ["TP", "FP"], "where": "Thorncliffe Park and Flemingdon Park", "nbhd": "both", "firstLoggedMinsAgo": 2}}}, "Daniel, TNO, as a partner author": {"persona": "DANIEL"}, "Exercise running": {"exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-12', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O12, loc = b.loc, prm = b.params, model = b.session || {};
+    var SAMPLE = ['SA', 'SB', 'SC'];
+    // The incident: logged in this session, logged in an exercise, or the Scenario A default draft
+    var inc = null, exInc = null, exPub = null;
+    if (prm.incident) {
+      inc = C.byId(D.incidents, prm.incident);
+      (model.exercise || []).forEach(function (a) {
+        if (a.t === 'incident' && a.incident.id === prm.incident) exInc = Object.assign({}, a.incident, { firstLoggedMinsAgo: Math.round((Date.now() - a.at) / 60000) });
+        if (a.t === 'publish' && a.incident === prm.incident) exPub = a;
+      });
+      if (!inc) inc = exInc;
+    }
+    if (!inc) inc = Object.assign({ id: null, type: 'power', types: ['power'], buildings: SAMPLE, floors: [1, 6], where: 'Sample Tower A, B and C, floors 1 to 6', nbhd: 'TP', firstLoggedMinsAgo: 1 }, prm.draft || {});
+    if (inc.id === 'INC-01' && !inc.where) { inc = Object.assign({}, inc, { buildings: SAMPLE, floors: [1, 6], where: 'Sample Tower A, B and C, floors 1 to 6' }); }
+    var type = inc.type || 'power', types = inc.types || [type];
+    var bs = inc.buildings || [], fl = inc.floors || null;
+    var isA = type === 'power' && bs.length === 3 && SAMPLE.every(function (x) { return bs.indexOf(x) >= 0; });
+    var tpl = (D.templates || []).filter(function (t) { return t.kind === 'ack' && t.hazard === type; })[0] || null;
+    var base = h.acks[type] || h.acks.other;
+    var on = fl ? (fl[0] === fl[1] ? ' on floor ' + fl[0] : ' on floors ' + fl[0] + ' to ' + fl[1]) : '';
+    var inPlace = fl ? on : '';
+    var ack = { headline: base.headline, nyk: base.nyk, action: base.action, text: C.fill(base.text, { on: on, 'in': inPlace }) };
+    var where = inc.where || (C.byId(D.alerts, inc.alert) || {}).where || '';
+    // Published? (live incident with its alert, or a practice publish in an exercise)
+    var sn = inc.alert ? C.snap(C.refFor(inc.alert, (C.session.get() || {}).scenario || 'A'), (C.session.get() || {}).scenario || 'A') : null;
+    if (sn) where = sn.where;
+    var published = !!sn || !!exPub;
+    var pubMins = sn ? sn.postedMins : exPub ? Math.round((Date.now() - exPub.at) / 60000) : 0;
+    // Origin: the Hub, or the partner organisation of the person signed in
+    var pOrg = (b.persona || {}).org || 'HUB';
+    var origin = pOrg === 'HUB' ? { origin: 'hub', state: 'verified', org: 'HUB' } : { origin: 'partner', state: 'verified', org: pOrg };
+    // Reach, illustrative: households in the area, a share of them with text alerts
+    var hh = 0;
+    if (bs.length) bs.forEach(function (id) { var g = (D.groupOptIns || {})[id] || { households: 200 }, B = C.building(id) || { floors: 20 }; hh += g.households * (fl ? (fl[1] - fl[0] + 1) / B.floors : 1); });
+    else (D.buildings || []).forEach(function (B) { var nb = inc.nbhds || [inc.nbhd]; if (nb.indexOf('both') >= 0 || nb.indexOf(B.nbhd) >= 0) hh += ((D.groupOptIns || {})[B.id] || { households: 200 }).households; });
+    var phones = Math.max(1, Math.round(hh * 0.45));
+    var ambs = (D.ambassadors || []).filter(function (a) {
+      return (a.buildings || []).some(function (bid) {
+        if (bs.indexOf(bid) < 0) return false; var f = (a.floors || {})[bid] || [];
+        return !fl || f.some(function (n) { return n >= fl[0] && n <= fl[1]; });
+      });
+    });
+    var langsAll = D.languages || [];
+    var audioT = C.seconds((tpl && tpl.audioSecs) || 35, 'en');
+    var channels = [
+      { icon: 'now', label: h.chApp },
+      { icon: 'phone', label: C.fill(h.chText, { n: phones }) },
+      { icon: 'audio', label: C.fill(h.chAudio, { n: langsAll.length }) },
+      { icon: 'person', label: ambs.length ? C.fill(h.chAmb, { n: ambs.map(function (a) { return a.name; }).join(', ') }) : h.chAmbNone }
+    ];
+    // Languages: English source first, then every launch language
+    var ordered = langsAll.filter(function (l) { return l.code === 'en'; }).concat(langsAll.filter(function (l) { return l.code !== 'en'; }));
+    var openMap = loc.open || {}, allOpen = !!loc.allOpen;
+    var langs = ordered.map(function (l) {
+      var isEn = l.code === 'en', open = allOpen || !!openMap[l.code] || isEn;
+      return { native: l.native, english: l.english, showEn: l.native !== l.english, bcp: C.bcp(l.code), dir: C.dir(l.code),
+        state: isEn ? h.source : h.checked, audio: C.fill(h.audio, { t: audioT }), open: open, aria: open ? 'true' : 'false', chev: open ? 'chevronDown' : 'chevron',
+        note: isEn ? '' : C.fill(h.notInProto, { lang: l.english }),
+        toggle: function () { var m = Object.assign({}, openMap); m[l.code] = !open; b.setLoc({ open: m, allOpen: false }); } };
+    });
+    // Tailored blocks by group, read-only
+    var tl = (D.tailored || {})[type] || null, tailored = [];
+    if (tl) ['seniors', 'newcomers', 'families'].forEach(function (g) { if (tl[g]) tailored.push({ label: s.groups[g].label, lines: tl[g] }); });
+    if (type === 'power' || type === 'heat') tailored.push({ label: h.checkinGroup, lines: [s.x12.checkin] });
+    var validKey = loc.valid || 'resolved';
+    var validOpts = ['resolved', 'tonight', 'morning'].map(function (k) { return { v: k, label: h.valid[k], sel: k === validKey }; });
+    var publishing = !!loc.publishing;
+    var scen = (C.session.get() || {}).scenario || 'A';
+    var alertId = isA ? 'AL-05' : null;
+    var logged = inc.firstLoggedMinsAgo || 0;
+    var draftForO6 = function (id) {
+      return { id: id, types: types, headline: ack.headline, where: where, buildings: bs, floors: fl, nbhds: inc.nbhds || null, validUntil: h.valid[validKey].replace(/^Until /, 'until '),
+        audioSecs: (tpl && tpl.audioSecs) || 35, template: tpl ? tpl.id : null, text: ack.text, kind: 'ack', origin: origin };
+    };
+    return { x: h, s: s, b_exercise: b.exercise, types: types, ack: ack, where: where, origin: origin,
+      elapsed: logged >= 1 ? C.fill(h.logged, { t: b.ago(logged) }) : h.loggedNow,
+      summary: ((s.hazards || {})[type] || s.x13[type]) + ', ' + where,
+      templateLine: tpl ? C.fill(h.template, { id: tpl.id }) : h.templateNone,
+      published: published, notPublished: !published, pubStyle: published ? 'display:none' : '', publishedTitle: C.fill(h.publishedTitle, { t: b.ago(pubMins) }), canUpdate: !!sn,
+      colsCls: b.narrow ? 'cvh-hcols--one' : '', langsCls: b.narrow ? 'cvh-langs--one' : '', tailCls: b.narrow ? 'cvh-hcols--one' : '',
+      channels: channels, validOpts: validOpts, validVal: validKey, onValid: function (e) { b.setLoc({ valid: e.target.value }); },
+      langs: langs, langCount: langs.length, langsLead: C.fill(h.langsLead, { n: langs.length }), allOpenAria: allOpen ? 'true' : 'false',
+      toggleAllLabel: allOpen ? h.collapseAll : h.expandAll, toggleAll: function () { b.setLoc({ allOpen: !allOpen, open: {} }); },
+      tailored: tailored, noTailored: tailored.length === 0,
+      publishing: publishing, pubIcon: publishing ? 'clock' : 'check',
+      pubLabel: publishing ? h.publishing : (b.exercise ? h.exercisePublish : h.publish),
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); },
+      toConfirm: function () { b.go('O-06', { incident: inc.id, alert: inc.alert || (exPub && exPub.alert.id), exercise: !!exPub, draft: exPub ? draftForO6(exPub.alert.id) : null }); },
+      toUpdate: function () { b.go('O-14', { alert: inc.alert }); }, toPromote: function () { b.go('O-13', { alert: inc.alert }); },
+      onPublish: function () {
+        if (publishing) return;
+        b.setLoc({ publishing: true });
+        var id = alertId || ('AL-S' + Date.now());
+        var alert = { id: id, level: 'community', origin: pOrg === 'HUB' ? { type: 'hub' } : { type: 'partner', org: pOrg }, verified: 'verified',
+          types: types, hazard: type, template: tpl ? tpl.id : null, headline: ack.headline, notYetKnown: ack.nyk, where: where, action: ack.action,
+          audience: bs.length ? { place: { buildings: bs.slice(), floors: fl }, groups: [] } : { place: { nbhds: inc.nbhds || [inc.nbhd] }, groups: [] },
+          validUntil: h.valid[validKey].replace(/^Until /, 'until '), audioSecs: (tpl && tpl.audioSecs) || 35 };
+        var exercise = b.exercise, incId = inc.id;
+        setTimeout(function () {
+          b.act({ t: 'publish', incident: incId, alert: alert, entry: { kind: 'ack', text: ack.text, whereAtTime: where } });
+          b.setLoc({ publishing: false });
+          b.go('O-06', { incident: incId, alert: id, exercise: exercise, draft: draftForO6(id) });
+        }, 700);
+      } };
+  }
+
+}
+</script>
+</body>
+</html>

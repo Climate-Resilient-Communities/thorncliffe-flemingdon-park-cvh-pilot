@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-18 Official alert received — relay and activate</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-18" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-18" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-18" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage" style="max-width:1000px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <sc-if value="{{b_exercise}}"><p class="cvh-note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{x.exercise}}</span></p></sc-if>
+
+  <section class="cvh-hrow cvh-hrow--official" aria-labelledby="o18-h">
+    <div class="cvh-hrow__head">
+      <span class="cvh-pill"><span class="cvh-ico cvh-ico--officialMark cvh-ico--sm" aria-hidden="true"></span>{{x.received}}</span>
+      <dc-import name="X13_DisruptionType" types="{{a.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+      <span class="cvh-muted">{{receivedAt}}</span>
+    </div>
+    <sc-if value="{{fictional}}"><span class="cvh-tag cvh-tag--illustrative" style="align-self:flex-start">{{x.fictional}}</span></sc-if>
+    <h2 class="cvh-hpreview__headline" id="o18-h">{{a.headline}}</h2>
+    <dc-import name="X02_Origin" origin="official" state="official" source="{{a.origin.source}}" lang="en" embedded="{{true}}" hint-size="100%,90px"></dc-import>
+    <div class="cvh-where {{whereCls}}">
+      <div class="cvh-where__k">{{x.kSource}}</div><div class="cvh-where__v">{{source}}</div>
+      <div class="cvh-where__k">{{x.kArea}}</div><div class="cvh-where__v">{{a.where}}</div>
+      <div class="cvh-where__k">{{x.kValid}}</div><div class="cvh-where__v">{{valid}}</div>
+      <div class="cvh-where__k">{{x.kLevel}}</div><div class="cvh-where__v">{{x.levelOfficial}}</div>
+    </div>
+    <p class="cvh-strong">{{x.officialText}}</p>
+    <p class="cvh-official-text" lang="en">{{a.officialText}}</p>
+    <p class="cvh-muted">{{templateLine}}</p>
+  </section>
+
+  <p class="cvh-lead cvh-strong" style="color:var(--ink)">{{matchLine}}</p>
+
+  <sc-if value="{{isDismissed}}">
+    <div class="cvh-confirm is-done" role="status"><p class="cvh-done"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span><span>{{dismissedLine}}</span></p></div>
+  </sc-if>
+
+  <div class="cvh-hcols cvh-hcols--even {{colsCls}}" style="{{choiceStyle}}">
+    <section class="cvh-confirm {{relayCls}}" aria-labelledby="o18-relay">
+      <h3 class="cvh-hsec__title" id="o18-relay"><span class="cvh-ico cvh-ico--share" aria-hidden="true"></span>{{x.relayTitle}}</h3>
+      <p>{{relayLine1}}</p>
+      <p>{{x.relayLine2}}</p>
+      <sc-if value="{{relayed}}"><p class="cvh-done"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{relayedLine}}</span></p></sc-if>
+      <sc-if value="{{canRelay}}"><button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" onClick="{{onRelay}}">{{x.relay}}</button></sc-if>
+    </section>
+    <section class="cvh-confirm {{activateCls}}" aria-labelledby="o18-act">
+      <h3 class="cvh-hsec__title" id="o18-act"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>{{x.activateTitle}}</h3>
+      <sc-if value="{{hasTeam}}">
+        <p class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--flag cvh-ico--sm" aria-hidden="true"></span><span>{{triggerLine}}</span></p>
+        <ul class="cvh-stack" style="--gap:4px;margin:0;padding-inline-start:20px"><sc-for list="{{teams}}" as="t" hint-placeholder-count="2"><li class="cvh-strong">{{t}}</li></sc-for></ul>
+        <p class="cvh-muted">{{x.activateLine}}</p>
+        <sc-if value="{{activated}}">
+          <p class="cvh-done"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{activatedLine}}</span></p>
+          <div class="cvh-hrow__actions">
+            <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toP06}}">{{x.toP06}}</button>
+            <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toP01}}">{{x.toP01}}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{canActivate}}"><button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" onClick="{{onActivate}}">{{x.activate}}</button></sc-if>
+      </sc-if>
+      <sc-if value="{{noTeam}}">
+        <p>{{noTeamLine}}</p>
+        <sc-if value="{{showP13}}"><button type="button" class="cvh-link" onClick="{{toP13}}">{{x.toP13}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+      </sc-if>
+    </section>
+  </div>
+
+  <sc-if value="{{canDismiss}}">
+    <section class="cvh-hsec" aria-labelledby="o18-dis">
+      <sc-if value="{{notDismissing}}"><button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{startDismiss}}"><span class="cvh-ico cvh-ico--close cvh-ico--sm" aria-hidden="true"></span>{{x.dismiss}}</button></sc-if>
+      <sc-if value="{{dismissing}}">
+        <div class="cvh-card cvh-stack" style="--gap:10px">
+          <h3 class="cvh-hsec__title" id="o18-dis">{{x.dismissTitle}}</h3>
+          <div class="cvh-stack" style="--gap:6px" role="radiogroup" aria-labelledby="o18-dis">
+            <sc-for list="{{reasons}}" as="r" hint-placeholder-count="4">
+              <button type="button" class="cvh-option {{r.cls}}" role="radio" aria-checked="{{r.on}}" onClick="{{r.pick}}" style="min-height:48px;padding:8px 12px"><span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{r.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span><span class="cvh-option__label">{{r.label}}</span></button>
+            </sc-for>
+          </div>
+          <sc-if value="{{isOther}}">
+            <div class="cvh-field"><label class="cvh-label" for="o18-other">{{x.otherLabel}}</label><input id="o18-other" class="cvh-input" type="text" value="{{other}}" onInput="{{onOther}}"></div>
+          </sc-if>
+          <p class="cvh-hint">{{x.dismissHint}}</p>
+          <div class="cvh-hrow__actions">
+            <button type="button" class="cvh-btn cvh-btn--primary" disabled="{{noReason}}" onClick="{{onDismiss}}">{{x.confirmDismiss}}</button>
+            <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{cancelDismiss}}">{{x.cancel}}</button>
+          </div>
+        </div>
+      </sc-if>
+    </section>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Heat warning received: trigger and teams", "Relay confirmed", "Relay and activation confirmed (separately)", "Dismissing with a reason", "Dismissed", "Winter storm: no team designated yet", "Amber Alert (fictional placeholder)", "Exercise running"], "default": "Heat warning received: trigger and teams"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Heat warning received: trigger and teams": {"params": {"alert": "AL-01"}}, "Relay confirmed": {"params": {"alert": "AL-01"}, "loc": {"demoRelayed": true}}, "Relay and activation confirmed (separately)": {"params": {"alert": "AL-01"}, "loc": {"demoRelayed": true, "demoActivated": true}}, "Dismissing with a reason": {"params": {"alert": "AL-01"}, "loc": {"dismissing": true, "reason": "area"}}, "Dismissed": {"params": {"alert": "AL-01"}, "loc": {"demoDismissed": "Does not affect Thorncliffe Park or Flemingdon Park"}}, "Winter storm: no team designated yet": {"params": {"alert": "AL-03"}}, "Amber Alert (fictional placeholder)": {"params": {"alert": "AL-04"}}, "Exercise running": {"exercise": true, "params": {"alert": "AL-01"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-18', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O18, loc = b.loc, prm = b.params, model = b.session || {};
+    var id = prm.alert || (D.incomingOfficial || [])[0] || 'AL-01';
+    var a = C.alert(id) || C.alert('AL-01');
+    var P = D.partner || {}, sources = s.x02.sources, source = sources[a.origin.source] || a.origin.source;
+    var hz = (s.hazards || {})[a.hazard] || s.x13[a.hazard] || a.hazard || '';
+    var amber = !!a.fictional;
+    // Trigger and teams, from Teams and triggers (P-13)
+    var t2 = !amber && a.origin.source === 'ECCC' ? ((P.teams || {})[a.hazard] || {})['2'] : null;
+    var chWord = function (c) { return h.channels[c] || c; };
+    var teams = t2 ? t2.team.split(';').map(function (x) { return C.fill(h.teamLine, { team: x.trim(), channels: (t2.channels || []).map(chWord).join(' and ') }); }) : [];
+    // State: this session's decisions (live), or the exercise log, or a demo preset
+    var st = (model.official || {})[id] || {};
+    var ex = {};
+    (model.exercise || []).forEach(function (e) { if (e.t === 'official' && e.alert === id) { ex[e.state] = e; } });
+    var now = Date.now(), minsSince = function (at) { return Math.max(0, Math.round((now - at) / 60000)); };
+    var relayed = !!st.relayed || !!ex.relayed || !!loc.demoRelayed;
+    var activated = !!st.activated || !!ex.activated || !!loc.demoActivated;
+    var dismissedReason = st.state === 'dismissed' ? st.reason : ex.dismissed ? ex.dismissed.reason : loc.demoDismissed || null;
+    var relayedAt = st.relayed ? st.at : ex.relayed ? ex.relayed.at : now;
+    var isEx = b.exercise || !!ex.relayed || !!ex.activated;
+    var what = a.headline.charAt(0).toLowerCase() + a.headline.slice(1);
+    what = (/^[aeiou]/.test(what) ? 'an ' : 'a ') + what;
+    var matchLine = amber ? h.amberLine : t2 ? C.fill(h.matchLine, { source: source, what: what, hazard: hz, level: 2 }) : C.fill(h.noMatchLine, { source: source, what: what });
+    var tpl = (D.templates || []).filter(function (t) { return t.id === a.template; })[0];
+    var reasonKey = loc.reason || null;
+    var reasons = ['area', 'relayedElsewhere', 'duplicate', 'other'].map(function (k) {
+      var on = k === reasonKey; return { label: h.reasons[k], isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { b.setLoc({ reason: k }); } };
+    });
+    var other = loc.other || '';
+    var reasonText = reasonKey === 'other' ? other.trim() : reasonKey ? h.reasons[reasonKey] : '';
+    var firstIssued = ((a.entries || [])[(a.entries || []).length - 1] || {}).minsAgo || 0;
+    var dismissing = !!loc.dismissing && !dismissedReason;
+    return { x: h, a: a, source: source, fictional: amber, b_exercise: b.exercise,
+      receivedAt: C.fill(h.receivedAt, { t: b.ago(st.at ? minsSince(st.at) : firstIssued) }),
+      valid: a.validUntil || h.notStated, whereCls: b.narrow ? 'cvh-where--one' : '', colsCls: b.narrow ? 'cvh-hcols--one' : '',
+      templateLine: tpl ? C.fill(h.templateLine, { id: tpl.id }) : h.noTemplate, matchLine: matchLine,
+      relayLine1: C.fill(h.relayLine1, { source: source }), relayed: relayed, canRelay: !relayed && !dismissedReason, relayCls: relayed ? 'is-done' : '',
+      relayedLine: isEx ? h.relayedEx : C.fill(h.relayed, { t: b.ago(minsSince(relayedAt)) }),
+      hasTeam: !!t2, noTeam: !t2, teams: teams, triggerLine: t2 ? C.fill(h.trigger, { trigger: t2.trigger }) : '',
+      noTeamLine: amber ? h.amberNoTeam : C.fill(h.noTeam, { hazard: hz.toLowerCase() }), showP13: !amber,
+      activated: activated, canActivate: !!t2 && !activated && !dismissedReason, activateCls: activated ? 'is-done' : '',
+      activatedLine: isEx ? h.activatedEx : C.fill(h.activated, { t: b.ago(st.activated && st.at ? minsSince(st.at) : 0) }),
+      isDismissed: !!dismissedReason, dismissedLine: C.fill(h.dismissed, { t: b.ago(0), reason: dismissedReason || '' }), choiceStyle: dismissedReason ? 'display:none' : '',
+      canDismiss: !relayed && !activated && !dismissedReason, dismissing: dismissing, notDismissing: !dismissing,
+      reasons: reasons, isOther: reasonKey === 'other', other: other, onOther: function (e) { b.setLoc({ other: e.target.value }); }, noReason: !reasonText,
+      startDismiss: function () { b.setLoc({ dismissing: true }); }, cancelDismiss: function () { b.setLoc({ dismissing: false, reason: null }); },
+      onDismiss: function () { if (!reasonText) return; b.act({ t: 'official', alert: id, state: 'dismissed', reason: reasonText }); b.setLoc({ dismissing: false, demoDismissed: reasonText }); },
+      onRelay: function () { b.act({ t: 'official', alert: id, state: 'relayed' }); b.setLoc({ demoRelayed: true }); },
+      onActivate: function () { b.act({ t: 'official', alert: id, state: 'activated' }); b.setLoc({ demoActivated: true }); },
+      toP06: function () { b.go('P-06', { alert: id }); }, toP01: function () { b.go('P-01', isEx ? { official: id, exercise: true } : { official: id }); }, toP13: function () { b.go('P-13'); },
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); } };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-05 Printed notice</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh" lang="{{bcp}}" dir="{{dir}}" style="width:816px;height:1056px;background:#fff;color:#000;position:relative;overflow:hidden;display:flex;flex-direction:column">
+  <div class="cvh-decor" style="height:10px;background:var(--accent-bar)"></div>
+  <div style="flex:1;display:flex;flex-direction:column;gap:14px;padding:28px 52px 24px">
+    <div class="cvh-row" style="--gap:16px;justify-content:space-between">
+      <img src="{{logo}}" alt="{{s.shell.hubLogoAlt}}" style="height:56px;width:auto">
+      <span class="cvh-tag cvh-tag--illustrative" lang="en" dir="ltr">Prototype · {{s.x05.sampleLink}}</span>
+    </div>
+    <div class="cvh-stack" style="--gap:14px">
+      <h1 style="font-size:42px;line-height:1.1;color:#000;margin:0;max-width:18ch">{{s.x05.title}}</h1>
+      <p style="font-size:20px;line-height:1.45;max-width:48ch">{{s.x05.lead}}</p>
+    </div>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) 260px;gap:40px;align-items:start">
+      <ol style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:14px">
+        <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+          <li style="display:flex;gap:18px;align-items:flex-start">
+            <span style="font-size:44px;font-weight:700;line-height:1;min-width:52px;color:#000">{{st.n}}</span>
+            <span style="font-size:20px;line-height:1.4;padding-top:6px">{{st.text}}</span>
+          </li>
+        </sc-for>
+      </ol>
+      <div style="display:flex;flex-direction:column;gap:8px;align-items:center;padding:14px;border:2px solid #000;border-radius:16px">
+        <svg width="136" height="136" viewBox="-2 -2 29 29" role="img" aria-label="{{qrLabel}}" style="display:block"><rect x="-2" y="-2" width="29" height="29" fill="#fff"></rect><path d="{{qrPath}}" fill="#000"></path></svg>
+        <span style="font-size:15px;text-align:center">{{s.x05.scan}}</span>
+        <span style="font-size:15px;color:#333">{{s.x05.link}}</span>
+        <span class="cvh-ltr" style="font-size:24px;font-weight:700;font-family:ui-monospace,Menlo,monospace">{{link}}</span>
+        <span lang="en" dir="ltr" style="font-size:12px;border:1px dashed #555;border-radius:6px;padding:2px 6px">Placeholder code, not scannable</span>
+      </div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px;padding:12px 20px;border:2px dashed #000;border-radius:16px">
+      <span style="display:inline-flex;align-items:center;gap:8px;font-size:17px"><span class="cvh-ico cvh-ico--handwrite" aria-hidden="true"></span>{{s.x05.writeIn}}</span>
+      <div style="display:grid;grid-template-columns:3fr 1fr;gap:24px">
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:20px;font-weight:700">{{s.x05.building}}</span><span style="height:36px;border-bottom:2px solid #000"></span></div>
+        <div style="display:flex;flex-direction:column;gap:6px"><span style="font-size:20px;font-weight:700">{{s.x05.floor}}</span><span style="height:36px;border-bottom:2px solid #000"></span></div>
+      </div>
+    </div>
+    <p style="font-size:20px;line-height:1.45">{{s.x05.text}}</p>
+    <dc-import name="X01_Not911" variant="print" lang="{{lang}}" embedded="{{true}}" hint-size="100%,80px"></dc-import>
+    <div style="margin-top:auto;display:flex;align-items:center;justify-content:space-between;gap:16px;border-top:2px solid #000;padding-top:14px">
+      <dc-import name="X02_Origin" origin="hub" state="verified" surface="print" lang="{{lang}}" embedded="{{true}}" hint-size="340px,90px"></dc-import>
+      
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"lang":{"editor":"enum","options":["el","ur","en"],"default":"el"},"$preview":{"width":816,"height":1056}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, D = C.data(), lang = p.lang || 'el', s = C.strings(lang);
+    var steps = (s.x05.steps || []).map(function (t, i) { return { n: '0' + (i + 1), text: t }; });
+    var link = (D.notice || {}).links ? D.notice.links[lang] : '';
+    return { s: s, lang: lang, bcp: C.bcp(lang), dir: C.dir(lang), logo: C.logo.hub, steps: steps,
+      qrPath: ((D.notice || {}).qr || {})[lang] || '', link: link, qrLabel: s.x05.scan + ': ' + link };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-09 Space status badge</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <div class="cvh-space-block">
+    <div class="cvh-row cvh-wrap" style="--gap:8px">
+      <span class="cvh-space cvh-space--{{st}}">
+        <span class="cvh-ico cvh-ico--{{icon}} cvh-ico--sm" aria-hidden="true"></span>
+        <span class="cvh-space__word">{{word}}</span>
+        <span class="cvh-space__purpose">{{purpose}}</span>
+      </span>
+    </div>
+    <p class="cvh-space-meta">{{meta}}</p>
+    <sc-if value="{{showBlock}}">
+      <ul class="cvh-stack" style="--gap:8px;margin:0;padding:0;list-style:none">
+        <li class="cvh-row"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span><span>{{hoursLine}}</span></li>
+        <sc-for list="{{facts}}" as="f" hint-placeholder-count="5">
+          <li class="cvh-row"><span class="cvh-ico cvh-ico--{{f.icon}} cvh-ico--sm" aria-hidden="true"></span><span><span class="cvh-strong">{{f.label}}</span>: {{f.value}}</span></li>
+        </sc-for>
+        <li class="cvh-row"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span><span class="cvh-bdi">{{runBy}}</span></li>
+      </ul>
+    </sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"space":{"editor":"enum","options":["","S1","S2","S3","S4","S5","S6","S7"],"default":""},"status":{"editor":"enum","options":["open","full","closed","unconfirmed"],"default":"open"},"purpose":{"editor":"enum","options":["cooling","cleanAir","warming","charging"],"default":"cooling"},"confirmedMins":{"editor":"int","default":20},"variant":{"editor":"enum","options":["badge","block"],"default":"badge"},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang), x = s.x09;
+    var sp = p.space ? C.space(p.space) : null;
+    var st = sp ? C.spaceState(sp) : (p.status || 'open');
+    var purposeId = sp ? sp.purpose : (p.purpose || 'cooling');
+    var mins = sp ? sp.confirmedMinsAgo : (p.confirmedMins != null ? p.confirmedMins : (st === 'unconfirmed' ? 410 : 20));
+    var icons = { open: 'spaceOpen', full: 'spaceFull', closed: 'spaceClosed', unconfirmed: 'spaceUnconfirmed' };
+    var meta = st === 'unconfirmed' ? C.fill(x.unconfirmedNote, { t: C.duration(mins, lang) }) : C.fill(x.confirmed, { t: C.ago(mins, lang) });
+    var yn = function (v) { return v === true ? x.yes : v === false ? x.no : x.unknown; };
+    var hoursLine = sp && sp.hoursToday ? C.fill(x.hoursToday, { from: sp.hoursToday[0], to: sp.hoursToday[1] }) : x.closedToday;
+    var facts = sp ? [
+      { icon: 'drinkingWater', label: x.water, value: yn(sp.water) }, { icon: 'seating', label: x.seating, value: yn(sp.seating) },
+      { icon: 'charging', label: x.charging, value: yn(sp.charging) }, { icon: 'washrooms', label: x.washrooms, value: yn(sp.washrooms) },
+      { icon: 'stepFree', label: x.stepFree, value: yn(sp.stepFree) }, { icon: 'idCard', label: x.idAsked, value: yn(sp.idAsked) }] : [];
+    var org = sp ? C.org(sp.org) : null;
+    var block = (p.variant === 'block') && !!sp;
+    var h = block ? 380 : 150;
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:' + h + 'px;padding:16px;background:#fafafa;',
+      st: st, icon: icons[st], word: x[st], purpose: (x.purpose || {})[purposeId] || purposeId, meta: meta,
+      showBlock: block, hoursLine: hoursLine, facts: facts, runBy: org ? C.fill(x.runBy, { org: org.name }) : '' };
+  }
+}
+</script>
+</body>
+</html>

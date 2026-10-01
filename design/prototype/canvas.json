@@ -1,0 +1,1182 @@
+{
+ "v": 3,
+ "attachments": {},
+ "boards": {
+  "Main.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 5320,
+   "page": "index",
+   "title": "Index",
+   "is_interactive": true
+  },
+  "Notes.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 2400,
+   "h": 6000,
+   "page": "index",
+   "title": "Design notes and open questions"
+  },
+  "Walkthrough_A.dc.html": {
+   "x": 4000,
+   "y": 0,
+   "w": 2440,
+   "h": 940,
+   "page": "index",
+   "title": "Scenario A walkthrough: Hub, resident and ambassador",
+   "is_interactive": true
+  },
+  "Walkthrough_D.dc.html": {
+   "x": 4000,
+   "y": 1040,
+   "w": 2460,
+   "h": 940,
+   "page": "index",
+   "title": "Scenario D walkthrough: practice run and look back",
+   "is_interactive": true
+  },
+  "Lib_Foundations.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1440,
+   "h": 3960,
+   "page": "library",
+   "title": "Tokens and foundations"
+  },
+  "Lib_Alerting.dc.html": {
+   "x": 1520,
+   "y": 0,
+   "w": 1440,
+   "h": 5950,
+   "page": "library",
+   "title": "Alert components",
+   "is_interactive": true
+  },
+  "Lib_Places.dc.html": {
+   "x": 3040,
+   "y": 0,
+   "w": 1440,
+   "h": 4830,
+   "page": "library",
+   "title": "Place components",
+   "is_interactive": true
+  },
+  "Lib_Partner.dc.html": {
+   "x": 4560,
+   "y": 0,
+   "w": 1440,
+   "h": 2320,
+   "page": "library",
+   "title": "Partner components",
+   "is_interactive": true
+  },
+  "Lib_Notice.dc.html": {
+   "x": 6080,
+   "y": 0,
+   "w": 2640,
+   "h": 1180,
+   "page": "library",
+   "title": "X-05 printed notices"
+  },
+  "C_HubSide.dc.html": {
+   "x": 0,
+   "y": 6500,
+   "w": 240,
+   "h": 800,
+   "page": "library",
+   "title": "Shell · Hub navigation",
+   "is_interactive": true
+  },
+  "C_HubTop.dc.html": {
+   "x": 320,
+   "y": 6500,
+   "w": 1040,
+   "h": 100,
+   "page": "library",
+   "title": "Shell · Hub top bar",
+   "is_interactive": true
+  },
+  "C_IncidentStatus.dc.html": {
+   "x": 1440,
+   "y": 6500,
+   "w": 240,
+   "h": 70,
+   "page": "library",
+   "title": "Incident status indicator"
+  },
+  "C_Placeholder.dc.html": {
+   "x": 1760,
+   "y": 6500,
+   "w": 360,
+   "h": 520,
+   "page": "library",
+   "title": "Shell · placeholder body",
+   "is_interactive": true
+  },
+  "C_ProtoBar.dc.html": {
+   "x": 2200,
+   "y": 6500,
+   "w": 360,
+   "h": 40,
+   "page": "library",
+   "title": "Shell · Prototype marker",
+   "is_interactive": true
+  },
+  "C_ResidentHeader.dc.html": {
+   "x": 2640,
+   "y": 6500,
+   "w": 360,
+   "h": 124,
+   "page": "library",
+   "title": "Shell · resident header",
+   "is_interactive": true
+  },
+  "C_ResidentNav.dc.html": {
+   "x": 3080,
+   "y": 6500,
+   "w": 360,
+   "h": 64,
+   "page": "library",
+   "title": "Shell · resident navigation",
+   "is_interactive": true
+  },
+  "R02_LanguageControl.dc.html": {
+   "x": 3520,
+   "y": 6500,
+   "w": 360,
+   "h": 640,
+   "page": "library",
+   "title": "R-02 · Language control (overlay from anywhere)",
+   "is_interactive": true
+  },
+  "X01_Not911.dc.html": {
+   "x": 3960,
+   "y": 6500,
+   "w": 360,
+   "h": 150,
+   "page": "library",
+   "title": "X-01 · Not-911 statement"
+  },
+  "X02_Origin.dc.html": {
+   "x": 4400,
+   "y": 6500,
+   "w": 360,
+   "h": 150,
+   "page": "library",
+   "title": "X-02 · Origin and verification marker",
+   "is_interactive": true
+  },
+  "X03_Rules.dc.html": {
+   "x": 4840,
+   "y": 6500,
+   "w": 360,
+   "h": 560,
+   "page": "library",
+   "title": "X-03 · The rules of the space / code of conduct",
+   "is_interactive": true
+  },
+  "X04_MachineTranslation.dc.html": {
+   "x": 5280,
+   "y": 6500,
+   "w": 360,
+   "h": 320,
+   "page": "library",
+   "title": "X-04 · Machine-translation label and report-an-error control",
+   "is_interactive": true
+  },
+  "X05_PrintedNotice.dc.html": {
+   "x": 5720,
+   "y": 6500,
+   "w": 816,
+   "h": 1056,
+   "page": "library",
+   "title": "X-05 · Printed notice template"
+  },
+  "X06_Statement.dc.html": {
+   "x": 6616,
+   "y": 6500,
+   "w": 420,
+   "h": 230,
+   "page": "library",
+   "title": "X-06 · Structured statement chip",
+   "is_interactive": true
+  },
+  "X07_BasicMode.dc.html": {
+   "x": 7116,
+   "y": 6500,
+   "w": 360,
+   "h": 110,
+   "page": "library",
+   "title": "X-07 · Basic mode",
+   "is_interactive": true
+  },
+  "X08_Audio.dc.html": {
+   "x": 7556,
+   "y": 6500,
+   "w": 360,
+   "h": 130,
+   "page": "library",
+   "title": "X-08 · Audio control",
+   "is_interactive": true
+  },
+  "X09_SpaceStatus.dc.html": {
+   "x": 7996,
+   "y": 6500,
+   "w": 360,
+   "h": 150,
+   "page": "library",
+   "title": "X-09 · Space status badge",
+   "is_interactive": true
+  },
+  "X10_Exercise.dc.html": {
+   "x": 8436,
+   "y": 6500,
+   "w": 360,
+   "h": 100,
+   "page": "library",
+   "title": "X-10 · Exercise marker",
+   "is_interactive": true
+  },
+  "X11_FilterBar.dc.html": {
+   "x": 0,
+   "y": 7676,
+   "w": 360,
+   "h": 200,
+   "page": "library",
+   "title": "X-11 · Applied-filter bar",
+   "is_interactive": true
+  },
+  "X12_Tailored.dc.html": {
+   "x": 440,
+   "y": 7676,
+   "w": 360,
+   "h": 520,
+   "page": "library",
+   "title": "X-12 · Tailored block — \"What this means for you\"",
+   "is_interactive": true
+  },
+  "X13_DisruptionType.dc.html": {
+   "x": 880,
+   "y": 7676,
+   "w": 360,
+   "h": 220,
+   "page": "library",
+   "title": "X-13 · Disruption type icons"
+  },
+  "X14_HowTheyHelp.dc.html": {
+   "x": 1320,
+   "y": 7676,
+   "w": 360,
+   "h": 120,
+   "page": "library",
+   "title": "X-14 · \"How they can help\" box"
+  },
+  "ResidentApp.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "Resident app (360)",
+   "is_interactive": true
+  },
+  "ResidentApp_320.dc.html": {
+   "x": 440,
+   "y": 0,
+   "w": 320,
+   "h": 640,
+   "page": "resident",
+   "title": "Resident app at 320",
+   "is_interactive": true
+  },
+  "ResidentApp_768.dc.html": {
+   "x": 840,
+   "y": 0,
+   "w": 768,
+   "h": 1024,
+   "page": "resident",
+   "title": "Resident app at 768",
+   "is_interactive": true
+  },
+  "R01_Language.dc.html": {
+   "x": 0,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-01 · Language selection (first run)",
+   "is_interactive": true
+  },
+  "R26_Groups.dc.html": {
+   "x": 440,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-26 · Which groups do I belong to?",
+   "is_interactive": true
+  },
+  "R35_WhereILive.dc.html": {
+   "x": 880,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-35 · Where I live — alerts for my building",
+   "is_interactive": true
+  },
+  "R03_Home.dc.html": {
+   "x": 1320,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-03 · Home / Now",
+   "is_interactive": true
+  },
+  "R34_MyChoices.dc.html": {
+   "x": 1760,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-34 · What I have told the CVH",
+   "is_interactive": true
+  },
+  "R04_TextMessage.dc.html": {
+   "x": 2200,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-04 · Text message specimen (device frame)",
+   "is_interactive": true
+  },
+  "R05_TextSignup.dc.html": {
+   "x": 2640,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-05 · Text alert sign-up",
+   "is_interactive": true
+  },
+  "R06_SignupConfirm.dc.html": {
+   "x": 3080,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-06 · Sign-up confirmation, how to stop, how to change",
+   "is_interactive": true
+  },
+  "R07_AlertDetail.dc.html": {
+   "x": 3520,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-07 · Alert detail",
+   "is_interactive": true
+  },
+  "R28_Verified.dc.html": {
+   "x": 3960,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-28 · What \"verified\" means",
+   "is_interactive": true
+  },
+  "R29_Share.dc.html": {
+   "x": 4400,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-29 · Share an alert",
+   "is_interactive": true
+  },
+  "R30_WhatsApp.dc.html": {
+   "x": 4840,
+   "y": 1520,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-30 · Shared alert in a messaging app (device frame)",
+   "is_interactive": true
+  },
+  "R08_Archive.dc.html": {
+   "x": 0,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-08 · Archived alerts",
+   "is_interactive": true
+  },
+  "R09_SearchEntry.dc.html": {
+   "x": 440,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-09 · Search entry",
+   "is_interactive": true
+  },
+  "R10_SearchResults.dc.html": {
+   "x": 880,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-10 · Search results",
+   "is_interactive": true
+  },
+  "R27_Filters.dc.html": {
+   "x": 1320,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-27 · Filters",
+   "is_interactive": true
+  },
+  "R11_NoResults.dc.html": {
+   "x": 1760,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-11 · No results — route to a person",
+   "is_interactive": true
+  },
+  "R12_Listing.dc.html": {
+   "x": 2200,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-12 · Service / asset listing detail",
+   "is_interactive": true
+  },
+  "R13_Organisation.dc.html": {
+   "x": 2640,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-13 · Organisation page",
+   "is_interactive": true
+  },
+  "R14_MapView.dc.html": {
+   "x": 3080,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-14 · Asset map — map view",
+   "is_interactive": true
+  },
+  "R15_MapList.dc.html": {
+   "x": 3520,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-15 · Asset map — list view",
+   "is_interactive": true
+  },
+  "R16_MapPreview.dc.html": {
+   "x": 3960,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-16 · Map entry preview card",
+   "is_interactive": true
+  },
+  "R17_AddEntryPoint.dc.html": {
+   "x": 4400,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-17 · Add an entry — entry point",
+   "is_interactive": true
+  },
+  "R18_Rules.dc.html": {
+   "x": 4840,
+   "y": 2280,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-18 · The rules, at the point of submission",
+   "is_interactive": true
+  },
+  "R19_AddForm.dc.html": {
+   "x": 0,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-19 · Add an entry — template form",
+   "is_interactive": true
+  },
+  "R20_Locate.dc.html": {
+   "x": 440,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-20 · Locate without an address",
+   "is_interactive": true
+  },
+  "R21_Submitted.dc.html": {
+   "x": 880,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-21 · Submitted — which lane, how long",
+   "is_interactive": true
+  },
+  "R22_CorrectEntry.dc.html": {
+   "x": 1320,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-22 · Correct an existing entry",
+   "is_interactive": true
+  },
+  "R23_Declined.dc.html": {
+   "x": 1760,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-23 · Declined — reason and route to resubmit",
+   "is_interactive": true
+  },
+  "R24_BeReady.dc.html": {
+   "x": 2200,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-24 · Be ready — toolkit index",
+   "is_interactive": true
+  },
+  "R25_HazardGuide.dc.html": {
+   "x": 2640,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-25 · Hazard guide (before / during / after)",
+   "is_interactive": true
+  },
+  "R31_Numbers.dc.html": {
+   "x": 3080,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-31 · Numbers I might need",
+   "is_interactive": true
+  },
+  "R32_HeadsUp.dc.html": {
+   "x": 3520,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-32 · Seasonal heads-up",
+   "is_interactive": true
+  },
+  "R33_CheckIn.dc.html": {
+   "x": 3960,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "R-33 · Ask for a check-in",
+   "is_interactive": true
+  },
+  "A01_AmbHome.dc.html": {
+   "x": 4400,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "A-01 · Ambassador home — my building",
+   "is_interactive": true
+  },
+  "A02_PostUpdate.dc.html": {
+   "x": 4840,
+   "y": 3040,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "A-02 · Post a building update",
+   "is_interactive": true
+  },
+  "A03_PostStatus.dc.html": {
+   "x": 0,
+   "y": 3800,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "A-03 · Post confirmation and channel status",
+   "is_interactive": true
+  },
+  "A04_Round.dc.html": {
+   "x": 440,
+   "y": 3800,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "A-04 · My round — check-ins and follow-ups",
+   "is_interactive": true
+  },
+  "A05_Connect.dc.html": {
+   "x": 880,
+   "y": 3800,
+   "w": 360,
+   "h": 640,
+   "page": "resident",
+   "title": "A-05 · Connect to a service",
+   "is_interactive": true
+  },
+  "HubApp.dc.html": {
+   "x": 0,
+   "y": 0,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "Hub and partner space (1280)",
+   "is_interactive": true
+  },
+  "HubApp_390.dc.html": {
+   "x": 1360,
+   "y": 0,
+   "w": 390,
+   "h": 844,
+   "page": "hub",
+   "title": "Hub and partner space at 390",
+   "is_interactive": true
+  },
+  "O01_OperatorHome.dc.html": {
+   "x": 0,
+   "y": 1440,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-01 · Operator home — open incidents",
+   "is_interactive": true
+  },
+  "O11_LogDisruption.dc.html": {
+   "x": 1360,
+   "y": 1440,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-11 · Log a disruption",
+   "is_interactive": true
+  },
+  "O12_AckComposer.dc.html": {
+   "x": 2720,
+   "y": 1440,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-12 · Acknowledgement composer",
+   "is_interactive": true
+  },
+  "O13_Promote.dc.html": {
+   "x": 4080,
+   "y": 1440,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-13 · Promote acknowledgement to full alert",
+   "is_interactive": true
+  },
+  "O02_Compose.dc.html": {
+   "x": 5440,
+   "y": 1440,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-02 · Compose an alert",
+   "is_interactive": true
+  },
+  "O03_AudiencePlace.dc.html": {
+   "x": 0,
+   "y": 2360,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-03 · Audience — place",
+   "is_interactive": true
+  },
+  "O04_AudienceGroup.dc.html": {
+   "x": 1360,
+   "y": 2360,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-04 · Audience — group",
+   "is_interactive": true
+  },
+  "O05_PreSend.dc.html": {
+   "x": 2720,
+   "y": 2360,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-05 · Pre-send review",
+   "is_interactive": true
+  },
+  "O06_Published.dc.html": {
+   "x": 4080,
+   "y": 2360,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-06 · Publish confirmation and handoff",
+   "is_interactive": true
+  },
+  "O14_Update.dc.html": {
+   "x": 5440,
+   "y": 2360,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-14 · Post an update to a running alert",
+   "is_interactive": true
+  },
+  "O15_Correct.dc.html": {
+   "x": 0,
+   "y": 3280,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-15 · Correct an alert",
+   "is_interactive": true
+  },
+  "O16_Resolve.dc.html": {
+   "x": 1360,
+   "y": 3280,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-16 · Resolve and close the thread",
+   "is_interactive": true
+  },
+  "O07_AmbReview.dc.html": {
+   "x": 2720,
+   "y": 3280,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-07 · Ambassador post — approve or review",
+   "is_interactive": true
+  },
+  "O17_CheckinProgress.dc.html": {
+   "x": 4080,
+   "y": 3280,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-17 · Check-in round progress and escalations",
+   "is_interactive": true
+  },
+  "O18_OfficialReceived.dc.html": {
+   "x": 5440,
+   "y": 3280,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-18 · Official alert received — relay and activate",
+   "is_interactive": true
+  },
+  "O08_ModQueue.dc.html": {
+   "x": 0,
+   "y": 4200,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-08 · Moderation queue",
+   "is_interactive": true
+  },
+  "O09_ModReview.dc.html": {
+   "x": 1360,
+   "y": 4200,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-09 · Review a submission",
+   "is_interactive": true
+  },
+  "O10_Decline.dc.html": {
+   "x": 2720,
+   "y": 4200,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "O-10 · Decline with a reason",
+   "is_interactive": true
+  },
+  "P06_Activation.dc.html": {
+   "x": 4080,
+   "y": 4200,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-06 · Activation notification (device frame)",
+   "is_interactive": true
+  },
+  "P01_OpenSpace.dc.html": {
+   "x": 5440,
+   "y": 4200,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-01 · Open a shared space",
+   "is_interactive": true
+  },
+  "P02_SharedSpace.dc.html": {
+   "x": 0,
+   "y": 5120,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-02 · The shared space",
+   "is_interactive": true
+  },
+  "P03_Statement.dc.html": {
+   "x": 1360,
+   "y": 5120,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-03 · Post a structured statement",
+   "is_interactive": true
+  },
+  "P04_Coverage.dc.html": {
+   "x": 2720,
+   "y": 5120,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-04 · Coverage view",
+   "is_interactive": true
+  },
+  "P05_Capacity.dc.html": {
+   "x": 4080,
+   "y": 5120,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-05 · Our capacity",
+   "is_interactive": true
+  },
+  "P07_OurSpaces.dc.html": {
+   "x": 5440,
+   "y": 5120,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-07 · Our spaces",
+   "is_interactive": true
+  },
+  "P08_Supplies.dc.html": {
+   "x": 0,
+   "y": 6040,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-08 · Supplies and space capacity",
+   "is_interactive": true
+  },
+  "P09_Decisions.dc.html": {
+   "x": 1360,
+   "y": 6040,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-09 · Decision log",
+   "is_interactive": true
+  },
+  "P10_Handover.dc.html": {
+   "x": 2720,
+   "y": 6040,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-10 · Handover on leaving",
+   "is_interactive": true
+  },
+  "P11_Readiness.dc.html": {
+   "x": 4080,
+   "y": 6040,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-11 · Readiness home — standing commitments",
+   "is_interactive": true
+  },
+  "P12_Playbook.dc.html": {
+   "x": 5440,
+   "y": 6040,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-12 · Hazard playbook",
+   "is_interactive": true
+  },
+  "P13_Teams.dc.html": {
+   "x": 0,
+   "y": 6960,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-13 · Designated teams and triggers",
+   "is_interactive": true
+  },
+  "P14_Exercise.dc.html": {
+   "x": 1360,
+   "y": 6960,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-14 · Exercise — start, schedule, end",
+   "is_interactive": true
+  },
+  "P15_Indicators.dc.html": {
+   "x": 2720,
+   "y": 6960,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-15 · Indicators",
+   "is_interactive": true
+  },
+  "P16_LookBack.dc.html": {
+   "x": 4080,
+   "y": 6960,
+   "w": 1280,
+   "h": 800,
+   "page": "hub",
+   "title": "P-16 · Look back and actions",
+   "is_interactive": true
+  }
+ },
+ "createdOnFiles": {
+  "v": 1,
+  "at": "2026-09-30T20:15:31Z"
+ },
+ "designSystems": [
+  {
+   "artifact": "https://claude.ai/code/artifact/f752adb5-8d67-40e1-8a3d-890b5088f4d6",
+   "copiedAt": "2026-09-30T19:18:21Z",
+   "namespace": "cvrh",
+   "title": "Community Virtual Resilience Hub",
+   "version": "1790728770-f5f0"
+  }
+ ],
+ "launch": {
+  "page": "index",
+  "view": "canvas"
+ },
+ "notes": {
+  "happ": {
+   "kind": "title1",
+   "maxW": 2000,
+   "page": "hub",
+   "text": "Hub and partner space",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "hscr": {
+   "kind": "title1",
+   "maxW": 6800,
+   "page": "hub",
+   "text": "Hub screens O-01 to O-18, partner screens P-01 to P-16",
+   "w": 240,
+   "x": 0,
+   "y": 1144
+  },
+  "lib": {
+   "kind": "title1",
+   "maxW": 8000,
+   "page": "library",
+   "text": "Component library",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "libc": {
+   "kind": "title1",
+   "maxW": 8000,
+   "page": "library",
+   "text": "Each component on its own (default state, open Tweaks for the others)",
+   "w": 240,
+   "x": 0,
+   "y": 6200
+  },
+  "rapp": {
+   "kind": "title1",
+   "maxW": 2000,
+   "page": "resident",
+   "text": "Resident and ambassador app",
+   "w": 240,
+   "x": 0,
+   "y": -300
+  },
+  "rscr": {
+   "kind": "title1",
+   "maxW": 5200,
+   "page": "resident",
+   "text": "Resident screens R-01 to R-35, ambassador screens A-01 to A-05",
+   "w": 240,
+   "x": 0,
+   "y": 1224
+  }
+ },
+ "order": [
+  "Main.dc.html",
+  "Notes.dc.html",
+  "Walkthrough_A.dc.html",
+  "Walkthrough_D.dc.html",
+  "Lib_Foundations.dc.html",
+  "Lib_Alerting.dc.html",
+  "Lib_Places.dc.html",
+  "Lib_Partner.dc.html",
+  "Lib_Notice.dc.html",
+  "C_HubSide.dc.html",
+  "C_HubTop.dc.html",
+  "C_IncidentStatus.dc.html",
+  "C_Placeholder.dc.html",
+  "C_ProtoBar.dc.html",
+  "C_ResidentHeader.dc.html",
+  "C_ResidentNav.dc.html",
+  "R02_LanguageControl.dc.html",
+  "X01_Not911.dc.html",
+  "X02_Origin.dc.html",
+  "X03_Rules.dc.html",
+  "X04_MachineTranslation.dc.html",
+  "X05_PrintedNotice.dc.html",
+  "X06_Statement.dc.html",
+  "X07_BasicMode.dc.html",
+  "X08_Audio.dc.html",
+  "X09_SpaceStatus.dc.html",
+  "X10_Exercise.dc.html",
+  "X11_FilterBar.dc.html",
+  "X12_Tailored.dc.html",
+  "X13_DisruptionType.dc.html",
+  "X14_HowTheyHelp.dc.html",
+  "ResidentApp.dc.html",
+  "ResidentApp_320.dc.html",
+  "ResidentApp_768.dc.html",
+  "R01_Language.dc.html",
+  "R26_Groups.dc.html",
+  "R35_WhereILive.dc.html",
+  "R03_Home.dc.html",
+  "R34_MyChoices.dc.html",
+  "R04_TextMessage.dc.html",
+  "R05_TextSignup.dc.html",
+  "R06_SignupConfirm.dc.html",
+  "R07_AlertDetail.dc.html",
+  "R28_Verified.dc.html",
+  "R29_Share.dc.html",
+  "R30_WhatsApp.dc.html",
+  "R08_Archive.dc.html",
+  "R09_SearchEntry.dc.html",
+  "R10_SearchResults.dc.html",
+  "R27_Filters.dc.html",
+  "R11_NoResults.dc.html",
+  "R12_Listing.dc.html",
+  "R13_Organisation.dc.html",
+  "R14_MapView.dc.html",
+  "R15_MapList.dc.html",
+  "R16_MapPreview.dc.html",
+  "R17_AddEntryPoint.dc.html",
+  "R18_Rules.dc.html",
+  "R19_AddForm.dc.html",
+  "R20_Locate.dc.html",
+  "R21_Submitted.dc.html",
+  "R22_CorrectEntry.dc.html",
+  "R23_Declined.dc.html",
+  "R24_BeReady.dc.html",
+  "R25_HazardGuide.dc.html",
+  "R31_Numbers.dc.html",
+  "R32_HeadsUp.dc.html",
+  "R33_CheckIn.dc.html",
+  "A01_AmbHome.dc.html",
+  "A02_PostUpdate.dc.html",
+  "A03_PostStatus.dc.html",
+  "A04_Round.dc.html",
+  "A05_Connect.dc.html",
+  "HubApp.dc.html",
+  "HubApp_390.dc.html",
+  "O01_OperatorHome.dc.html",
+  "O11_LogDisruption.dc.html",
+  "O12_AckComposer.dc.html",
+  "O13_Promote.dc.html",
+  "O02_Compose.dc.html",
+  "O03_AudiencePlace.dc.html",
+  "O04_AudienceGroup.dc.html",
+  "O05_PreSend.dc.html",
+  "O06_Published.dc.html",
+  "O14_Update.dc.html",
+  "O15_Correct.dc.html",
+  "O16_Resolve.dc.html",
+  "O07_AmbReview.dc.html",
+  "O17_CheckinProgress.dc.html",
+  "O18_OfficialReceived.dc.html",
+  "O08_ModQueue.dc.html",
+  "O09_ModReview.dc.html",
+  "O10_Decline.dc.html",
+  "P06_Activation.dc.html",
+  "P01_OpenSpace.dc.html",
+  "P02_SharedSpace.dc.html",
+  "P03_Statement.dc.html",
+  "P04_Coverage.dc.html",
+  "P05_Capacity.dc.html",
+  "P07_OurSpaces.dc.html",
+  "P08_Supplies.dc.html",
+  "P09_Decisions.dc.html",
+  "P10_Handover.dc.html",
+  "P11_Readiness.dc.html",
+  "P12_Playbook.dc.html",
+  "P13_Teams.dc.html",
+  "P14_Exercise.dc.html",
+  "P15_Indicators.dc.html",
+  "P16_LookBack.dc.html"
+ ],
+ "pages": [
+  {
+   "id": "index",
+   "name": "Index"
+  },
+  {
+   "id": "library",
+   "name": "Component library"
+  },
+  {
+   "id": "resident",
+   "name": "Resident app"
+  },
+  {
+   "id": "hub",
+   "name": "Hub and partner space"
+  }
+ ],
+ "title": "CVH clickable prototype"
+}

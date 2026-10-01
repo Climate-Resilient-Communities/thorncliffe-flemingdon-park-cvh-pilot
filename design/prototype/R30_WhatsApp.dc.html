@@ -1,0 +1,220 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-30 Shared alert in a messaging app (device frame)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-30" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--rsdevice" aria-label="Shared alert in a messaging app (device frame)">
+
+<div class="cvh-devlabel cvh-devrow">
+  <span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span>
+  <span>{{s.R30.proto}}: {{s.R30.deviceLabel}}</span>
+  <button type="button" class="cvh-devbtn cvh-devbtn--end" onClick="{{backToApp}}">{{s.R30.backToApp}}</button>
+</div>
+<div class="cvh-device">
+  <div class="cvh-device__screen">
+    <div class="cvh-device__bar">
+      <span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true" style="color:#111"></span>
+      <span class="cvh-wa-avatar" aria-hidden="true">{{groupInitials}}</span>
+      <span class="cvh-wa-title"><span class="cvh-wa-title__name">{{groupName}}</span><span class="cvh-wa-title__sub">{{members}}</span></span>
+    </div>
+    <div class="cvh-device__body">
+      <span class="cvh-wa-day">{{s.R30.today}}</span>
+      <div class="cvh-bubble cvh-bubble--msg"><div class="cvh-msg"><span class="cvh-bubble__who">Maria</span><span>{{askLine}}</span><span class="cvh-bubble__time">{{askTime}}</span></div></div>
+      <div class="cvh-bubble cvh-bubble--msg {{outCls}}" aria-label="{{msgAria}}">
+        <div class="cvh-msg">
+          <sc-if value="{{showWho}}"><span class="cvh-bubble__who">{{senderName}}</span></sc-if>
+          <sc-if value="{{ex}}"><dc-import name="X10_Exercise" variant="line" lang="{{lang}}" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if>
+          <span class="cvh-msg__fwd"><span class="cvh-ico cvh-ico--share cvh-ico--sm" aria-hidden="true"></span>{{s.R30.forwarded}}</span>
+          <span class="cvh-msg__head">{{m.head}}</span>
+          <sc-if value="{{m.nyk}}"><span>{{m.nyk}}</span></sc-if>
+          <dc-import name="X02_Origin" dc-props="{{origin}}" surface="forwarded" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,56px"></dc-import>
+          <span>{{m.where}}</span>
+          <span class="cvh-strong">{{m.action}}</span>
+          <span>{{m.time}}</span>
+          <span>{{m.not911}}</span>
+          <sc-if value="{{showLink}}">
+            <span>{{m.linkLead}} <button type="button" class="cvh-msg__link" onClick="{{openLink}}">{{m.url}}</button></span>
+          </sc-if>
+          <span class="cvh-bubble__time">{{sentTime}}</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<div class="cvh-devnote" role="note">
+  <sc-if value="{{ex}}"><span class="cvh-strong">{{s.R30.exNote}}</span></sc-if>
+  <span>{{senderLangLine}}</span>
+  <sc-if value="{{linkRemoved}}"><span class="cvh-strong">{{s.R30.linkRemovedNote}}</span></sc-if>
+  <sc-if value="{{showLink}}"><span class="cvh-strong">{{laterLine}}</span></sc-if>
+  <sc-if value="{{showSinceList}}">
+    <span>{{sinceTitle}}</span>
+    <ul>
+      <sc-for list="{{since}}" as="e" hint-placeholder-count="2"><li><span class="cvh-strong">{{e.kind}}, {{e.time}}:</span> {{e.text}}</li></sc-for>
+    </ul>
+  </sc-if>
+  <div class="cvh-row cvh-wrap" style="--gap:6px">
+    <button type="button" class="cvh-devbtn" onClick="{{toggleLink}}">{{linkToggleLabel}}</button>
+    <sc-if value="{{canShowSince}}"><button type="button" class="cvh-devbtn" onClick="{{toggleSince}}">{{s.R30.showSince}}</button></sc-if>
+    <sc-if value="{{showLink}}"><button type="button" class="cvh-devbtn" onClick="{{openLink}}">{{s.R30.openLater}}</button></sc-if>
+  </div>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["As received in the floor group (a neighbour reads it)", "As sent, on Yusuf&#39;s own phone", "Link removed: still says what, where, who and what to do", "Opened later: the link shows a newer update and a correction", "Ambassador post, not yet verified (Rashid forwards it)", "Exercise: a practice alert forwarded keeps the exercise word"], "default": "As received in the floor group (a neighbour reads it)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"As received in the floor group (a neighbour reads it)": {"persona": "new", "scenario": "A", "params": {"alert": "AL-05", "sharedBy": "yusuf"}}, "As sent, on Yusuf's own phone": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05", "sharedBy": "yusuf"}}, "Link removed: still says what, where, who and what to do": {"persona": "new", "scenario": "A", "params": {"alert": "AL-05", "sharedBy": "yusuf", "linkRemoved": true}}, "Opened later: the link shows a newer update and a correction": {"persona": "new", "scenario": "A", "params": {"alert": "AL-05", "sharedBy": "yusuf"}, "loc": {"later": true}}, "Ambassador post, not yet verified (Rashid forwards it)": {"persona": "new", "scenario": "A", "params": {"alert": "AL-07", "sharedBy": "rashid", "unverified": true}}, "Exercise: a practice alert forwarded keeps the exercise word": {"persona": "rashid", "scenario": "D", "exercise": true, "params": {"alert": "AL-05", "sharedBy": "rashid"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'none';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'none', showExercise: 'R-30'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-30'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R30, prm = b.params, go = b.go, D = b.D;
+    var id = prm.alert || 'AL-05';
+    var sender = C.persona(prm.sharedBy || 'yusuf') || { id: 'yusuf', name: 'Yusuf', lang: 'ps', building: 'SA' };
+    // What was forwarded: the power alert as it stood at entry e3 (floors 1 to 6, before the correction).
+    var cur = C.refFor(id, b.scn);
+    var sentRef = Object.assign({}, cur, { upto: prm.upto || (id === 'AL-05' ? 'e3' : cur.upto) });
+    var sn = C.snap(sentRef, b.scn), now = C.snap(cur, b.scn);
+    if (!sn) return { m: {}, origin: {}, since: [], backToApp: b.back };
+    var o = C.originProps(sn, { unverified: !!prm.unverified });
+    var sentMinsAgo = Math.max(1, sn.updatedMins - 5);
+    var m = this.message(b, sn);
+    var out = b.app.personaId === sender.id;
+    // Entries posted after the message was sent: what the link shows when it is opened later
+    var seen = {}; sn.entries.forEach(function (e) { seen[e.id] = 1; });
+    var kinds = (s.R07 || {}).kinds || {};
+    var since = now ? now.entries.filter(function (e) { return !seen[e.id]; }).map(function (e) {
+      return { kind: kinds[e.kind] || e.kind, time: b.ago(e.minsAgo), text: e.text };
+    }) : [];
+    var linkRemoved = b.loc.noLink !== undefined ? !!b.loc.noLink : !!prm.linkRemoved;
+    var bld = (C.building(sender.building) || {}).name || '';
+    var groupName = sender.id === 'yusuf' ? x.group : C.fill(x.groupBuilding, { building: bld });
+    var initials = groupName.split(' ').map(function (w) { return w.charAt(0); }).join('').slice(0, 2).toUpperCase();
+    var openLink = function () {
+      // Opened later: the link always opens the alert as it is now, in the opener's own language.
+      if (b.app.personaId === 'new') go('R-01', { forwarded: id, deviceLang: 'en' });
+      else go('R-07', { alert: id, from: 'forwarded' });
+    };
+    return {
+      ex: !!b.app.exercise, m: m, origin: o, outCls: out ? 'cvh-bubble--out' : '', showWho: !out, senderName: sender.name,
+      groupName: groupName, groupInitials: initials,
+      members: out ? x.membersOut : C.fill(x.members, { name: sender.name }),
+      askLine: id === 'AL-05' ? x.askLine : x.askLineOther,
+      askTime: this.clockAt(b, sentMinsAgo + 9), sentTime: this.clockAt(b, sentMinsAgo),
+      msgAria: x.forwarded + ': ' + m.head,
+      showLink: !linkRemoved, linkRemoved: linkRemoved,
+      senderLangLine: C.fill(x.senderLang, { name: sender.name, lang: C.lang(sender.lang || 'en').english }),
+      laterLine: since.length ? x.openedLater : (prm.unverified && sn.a.promotedMinsAgo ? x.nowVerified : x.noChange),
+      since: since, canShowSince: since.length > 0 && !b.loc.later && !linkRemoved, showSinceList: since.length > 0 && !!b.loc.later && !linkRemoved,
+      sinceTitle: C.fill(x.sinceSent, { name: sender.name }),
+      toggleSince: function () { b.setLoc({ later: true }); },
+      linkToggleLabel: linkRemoved ? x.restoreLink : x.removeLink,
+      toggleLink: function () { b.setLoc({ noLink: !linkRemoved }); },
+      openLink: openLink,
+      backToApp: function () { if (b.app.canBack) b.back(); else go(b.app.personaId === 'new' ? 'R-01' : 'R-03'); }
+    };
+  }
+  clockAt(b, minsAgo) {
+    var C = b.C, clock = C.clock(b.scn), p = clock.time.split(':'), t = (+p[0]) * 60 + (+p[1]) - minsAgo;
+    while (t < 0) t += 1440;
+    var hh = Math.floor(t / 60), mm = t % 60;
+    return C.hhmm12((hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm);
+  }
+  // Same composition as R-29 (the share preview), so what was previewed is what lands.
+  message(b, sn) {
+    var C = b.C, s = b.s, x = s.R29, a = sn.a;
+    var clock = C.clock(b.scn), now = (function (t) { var p = t.split(':'); return (+p[0]) * 60 + (+p[1]); })(clock.time);
+    var days = ['sun', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat'];
+    var at = function (minsAgo) {
+      var t = now - minsAgo, d = 0;
+      while (t < 0) { t += 1440; d++; }
+      var hh = Math.floor(t / 60), mm = t % 60, time = C.hhmm12((hh < 10 ? '0' : '') + hh + ':' + (mm < 10 ? '0' : '') + mm);
+      if (!d) return C.fill(x.todayAt, { time: time });
+      var day = days[(days.indexOf(clock.day) - d + 70) % 7];
+      return C.fill(x.dayAt, { day: s.time.days7[day], time: time });
+    };
+    var types = (a.types || []).map(function (t) { return s.x13[t] || t; }).join(', ');
+    var time = C.fill(x.postedAt, { t: at(sn.postedMins) });
+    if (sn.entries.length > 1) time += '. ' + C.fill(x.updatedAt, { t: at(sn.updatedMins) });
+    var url = 'cvh.example/a/' + a.id.replace('AL-', '');
+    return { head: types + ': ' + a.headline,
+      nyk: sn.notYetKnown ? s.R07.notYetKnownLabel + ': ' + sn.notYetKnown.charAt(0).toLowerCase() + sn.notYetKnown.slice(1) + '.' : '',
+      where: sn.where + '.', action: a.action, time: time + '.', not911: s.x01.short, url: url,
+      linkLead: C.fill(x.linkLine, { url: '' }).trim() };
+  }
+
+}
+</script>
+</body>
+</html>

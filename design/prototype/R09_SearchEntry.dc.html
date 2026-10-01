@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-09 Search entry</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-09" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Search entry">
+
+<div class="cvh-screen">
+  <section class="cvh-section" aria-labelledby="r09-h">
+    <h1 class="cvh-section__title" id="r09-h">{{s.R09.title}}</h1>
+    <p class="cvh-hide-basic">{{s.R09.lead}}</p>
+    <form class="cvh-find-form" role="search" onSubmit="{{submit}}">
+      <label class="cvh-label" for="r09-q">{{fieldLabel}}</label>
+      <sc-if value="{{hasCat}}">
+        <div class="cvh-find-cat">
+          <span class="cvh-chip cvh-chip--on" style="padding-inline-end:14px"><span class="cvh-ico cvh-ico--{{catIcon}} cvh-ico--sm" aria-hidden="true"></span>{{catLine}}</span>
+          <button type="button" class="cvh-link" onClick="{{clearCat}}">{{s.R09.clearCat}}</button>
+        </div>
+      </sc-if>
+      <div class="cvh-find-field">
+        <textarea id="r09-q" class="cvh-input cvh-find-input {{inputCls}}" rows="2" enterkeyhint="search" autocomplete="off" placeholder="{{placeholder}}" value="{{q}}" onInput="{{onInput}}" onFocus="{{onFocus}}" onKeyDown="{{onKey}}"></textarea>
+        <sc-if value="{{typing}}">
+          <button type="button" class="cvh-find-clear" onClick="{{clearQ}}" aria-label="{{s.R09.clear}}"><span class="cvh-ico cvh-ico--close cvh-ico--sm" aria-hidden="true"></span></button>
+        </sc-if>
+      </div>
+      <button type="submit" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" disabled="{{noQ}}"><span class="cvh-ico cvh-ico--search" aria-hidden="true"></span>{{s.R09.search}}</button>
+    </form>
+    <sc-if value="{{showFocusHint}}">
+      <div class="cvh-stack" style="--gap:6px">
+        <p class="cvh-caption cvh-muted">{{s.R09.focusHint}}</p>
+        <sc-for list="{{examples}}" as="ex" hint-placeholder-count="2">
+          <button type="button" class="cvh-link" onClick="{{ex.use}}"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span>{{ex.text}}</button>
+        </sc-for>
+      </div>
+    </sc-if>
+    <sc-if value="{{hasCat}}">
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{seeCat}}">{{seeCatLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </sc-if>
+  </section>
+
+  <section class="cvh-section" aria-labelledby="r09-topics">
+    <h2 class="cvh-h2" id="r09-topics">{{s.R09.orChoose}}</h2>
+    <ul class="cvh-find-tiles">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="10">
+        <li><button type="button" class="cvh-find-tile {{t.cls}}" onClick="{{t.pick}}" aria-pressed="{{t.pressed}}"><span class="cvh-ico cvh-ico--{{t.icon}} cvh-ico--lg" aria-hidden="true"></span><span>{{t.label}}</span></button></li>
+      </sc-for>
+    </ul>
+    <sc-if value="{{moreTopics}}"><button type="button" class="cvh-link" onClick="{{showAllTopics}}">{{moreTopics}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+  </section>
+
+  <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+
+  <section class="cvh-find-test" aria-labelledby="r09-test" lang="en" dir="ltr">
+    <div class="cvh-row cvh-wrap" style="--gap:8px">
+      <span class="cvh-tag cvh-tag--illustrative"><span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span>{{s.shell.prototype}}</span>
+      <h2 class="cvh-h3" id="r09-test">{{s.R09.testTitle}}</h2>
+    </div>
+    <p class="cvh-caption">{{s.R09.testNote}}</p>
+    <div class="cvh-find-test__chips">
+      <sc-for list="{{tests}}" as="tq" hint-placeholder-count="9">
+        <button type="button" class="cvh-chip" onClick="{{tq.run}}"><span lang="{{tq.bcp}}" dir="{{tq.dir}}">{{tq.query}}</span><sc-if value="{{tq.gloss}}"><span class="cvh-find-gloss">{{tq.gloss}}</span></sc-if></button>
+      </sc-for>
+    </div>
+  </section>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Idle with ten topics (Nasrin)", "Topic chosen, then search within it (George)", "Focused", "Typing", "Basic mode: idle (George)", "Basic mode: topic chosen, typing (George)"], "default": "Idle with ten topics (Nasrin)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Idle with ten topics (Nasrin)": {"persona": "nasrin", "scenario": "C"}, "Topic chosen, then search within it (George)": {"persona": "george", "scenario": "C", "basic": false, "loc": {"cat": "housing", "focused": true}}, "Focused": {"persona": "nasrin", "scenario": "C", "loc": {"focused": true}}, "Typing": {"persona": "nasrin", "scenario": "C", "loc": {"focused": true, "q": "money for rent"}}, "Basic mode: idle (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper"}, "Basic mode: topic chosen, typing (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted", "loc": {"cat": "housing", "focused": true, "q": "repairs"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'help', showExercise: 'R-09'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-09'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R09, go = b.go, prm = b.params, loc = b.loc, D = b.D;
+    var cat = loc.cat !== undefined ? loc.cat : (prm.cat || null);
+    var q = loc.q !== undefined ? loc.q : (prm.q || '');
+    var catName = cat ? (s.categories || {})[cat] : '';
+    var ICONS = { food: 'food', housing: 'building', health: 'plus', money: 'cost', settlement: 'globe', jobs: 'bag', children: 'person', seniors: 'seating', legal: 'doc', mentalHealth: 'handshake' };
+    var run = function (query, c) {
+      query = String(query || '').trim();
+      var r = C.search({ q: query, cat: c, lang: b.lang, scn: b.scn, choices: b.ch });
+      if (query && !r.all.length) go('R-11', { q: query, cat: c });
+      else go('R-10', { q: query, cat: c, from: 'search' });
+    };
+    var cats = (D.categories || []);
+    var showAll = !b.basic || !!loc.allCats || (cat && cats.indexOf(cat) >= 4);
+    var tiles = cats.map(function (id) {
+      var on = id === cat;
+      return { id: id, label: (s.categories || {})[id] || id, icon: ICONS[id] || 'search', cls: on ? 'is-on' : '', pressed: on ? 'true' : 'false',
+        pick: function () { b.setLoc({ cat: on ? null : id, focused: true }); } };
+    });
+    if (!showAll) tiles = tiles.slice(0, 4);
+    var examples = (x.promptAlt || []).map(function (t) {
+      var text = String(t).replace(/^For example:\s*/, '');
+      return { text: text, use: function () { b.setLoc({ q: text, focused: true }); } };
+    });
+    var tests = (D.searchDemos || []).map(function (d) {
+      return { query: d.query, gloss: d.gloss ? ' ' + C.fill(x.testGloss, { gloss: d.gloss }) : '', bcp: C.bcp(d.lang), dir: C.dir(d.lang),
+        run: function () { run(d.query, null); } };
+    });
+    var typing = !!q;
+    return {
+      q: q, typing: typing, noQ: !String(q).trim(), hasCat: !!cat, catIcon: ICONS[cat] || 'search', catLine: C.fill(x.topic, { cat: catName }),
+      fieldLabel: cat ? C.fill(x.within, { cat: catName }) : x.searchLabel,
+      placeholder: cat ? C.fill(x.within, { cat: catName }) : x.prompt,
+      inputCls: loc.focused ? 'is-focus' : '', showFocusHint: !!loc.focused && !typing && !cat,
+      examples: b.basic ? examples.slice(0, 1) : examples, tiles: tiles, tests: tests,
+      moreTopics: showAll ? '' : C.fill(x.moreTopics, { n: cats.length }),
+      seeCatLabel: C.fill(x.seeAll, { cat: catName }),
+      onInput: function (e) { b.setLoc({ q: e.target.value, focused: true }); },
+      onKey: function (e) { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); if (String(e.target.value || '').trim()) run(e.target.value, cat); } },
+      onFocus: function () { if (!b.loc.focused) b.setLoc({ focused: true }); },
+      clearQ: function () { b.setLoc({ q: '', focused: true }); },
+      clearCat: function () { b.setLoc({ cat: null }); },
+      showAllTopics: function () { b.setLoc({ allCats: true }); },
+      seeCat: function () { go('R-10', { cat: cat, from: 'search' }); },
+      submit: function (e) { if (e && e.preventDefault) e.preventDefault(); if (String(q).trim()) run(q, cat); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

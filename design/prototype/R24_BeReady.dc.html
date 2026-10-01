@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-24 Be ready — toolkit index</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-24" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Be ready — toolkit index">
+
+<div class="cvh-screen">
+  <div class="cvh-stack" style="--gap:4px">
+    <h1 class="cvh-h1">{{s.R24.title}}</h1>
+    <p class="cvh-hide-basic">{{s.R24.lead}}</p>
+  </div>
+
+  <section class="cvh-section" aria-labelledby="r24-guides">
+    <h2 class="cvh-section__sub" id="r24-guides">{{s.R24.guides}}</h2>
+    <sc-for list="{{guides}}" as="g" hint-placeholder-count="6">
+      <button type="button" class="cvh-dest" onClick="{{g.open}}">
+        <span class="cvh-ico cvh-ico--{{g.id}}" aria-hidden="true"></span>
+        <span class="cvh-grow cvh-stack" style="--gap:2px"><span>{{g.label}}</span><span class="cvh-caption cvh-hide-basic" style="font-weight:400">{{g.read}}</span></span>
+        <span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+      </button>
+    </sc-for>
+  </section>
+
+  <section class="cvh-section" aria-labelledby="r24-more">
+    <h2 class="cvh-section__sub" id="r24-more">{{s.R24.more}}</h2>
+    <button type="button" class="cvh-dest" onClick="{{toNumbers}}">
+      <span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span>
+      <span class="cvh-grow cvh-stack" style="--gap:2px"><span>{{s.R24.numbers}}</span><span class="cvh-caption cvh-hide-basic" style="font-weight:400">{{s.R24.numbersLine}}</span></span>
+      <span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="cvh-dest" onClick="{{toHeadsUp}}">
+      <span class="cvh-ico cvh-ico--calendar" aria-hidden="true"></span>
+      <span class="cvh-grow cvh-stack" style="--gap:2px"><span>{{s.R24.headsUp}}</span><span class="cvh-caption" style="font-weight:400"><span class="cvh-strong">{{headsUpState}}</span><span class="cvh-hide-basic"> · {{s.R24.headsUpLine}}</span></span></span>
+      <span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+    </button>
+    <button type="button" class="cvh-dest" onClick="{{toCheckin}}">
+      <span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>
+      <span class="cvh-grow cvh-stack" style="--gap:2px"><span>{{s.R24.checkin}}</span><span class="cvh-caption cvh-hide-basic" style="font-weight:400">{{s.R24.checkinLine}}</span></span>
+      <span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+    </button>
+  </section>
+
+  <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Ordinary Tuesday, heads-up off (Nasrin)", "Heads-up on (George)", "Basic mode (George)"], "default": "Ordinary Tuesday, heads-up off (Nasrin)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Ordinary Tuesday, heads-up off (Nasrin)": {"persona": "nasrin", "scenario": "C"}, "Heads-up on (George)": {"persona": "george", "scenario": "C", "basic": false}, "Basic mode (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted"}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'ready', showExercise: 'R-24'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-24'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R24, go = b.go, D = b.D;
+    // Six hazards, no more (brief F11, PA-41). Winter storms use the power guide.
+    var ids = (D.hazards || []).slice(0, 6);
+    var guides = ids.map(function (h) {
+      var g = (D.guides || {})[h] || {};
+      return { id: h, label: (s.hazards || {})[h] || h, read: C.fill(x.readTime, { n: g.readMins || 3 }),
+        open: function () { go('R-25', { hazard: h, stage: 'before', from: 'ready' }); } };
+    });
+    return { guides: guides, headsUpState: b.ch.headsUp ? s.R32.on : s.R32.off,
+      toNumbers: function () { go('R-31'); }, toHeadsUp: function () { go('R-32'); },
+      toCheckin: function () { go('R-34', { focus: 'groups' }); } };
+  }
+
+}
+</script>
+</body>
+</html>

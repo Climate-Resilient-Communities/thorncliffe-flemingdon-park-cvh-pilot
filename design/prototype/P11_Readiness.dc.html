@@ -1,0 +1,285 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-11 Readiness home — standing commitments</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-11" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-11" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-11" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-rd">
+  <div class="cvh-hhead">
+    <div class="cvh-stack cvh-grow" style="--gap:4px">
+      <h2 class="cvh-hhead__title">{{x.title}}</h2>
+      <p>{{x.lead}}</p>
+    </div>
+  </div>
+
+  <nav class="cvh-stack" style="--gap:6px" aria-label="{{x.alsoTitle}}">
+    <p class="cvh-strong">{{x.alsoTitle}}</p>
+    <div class="cvh-rd-links">
+      <sc-for list="{{links}}" as="l" hint-placeholder-count="5">
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{l.go}}"><span class="cvh-ico cvh-ico--{{l.icon}} cvh-ico--sm" aria-hidden="true"></span>{{l.label}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+      </sc-for>
+    </div>
+  </nav>
+
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-strong" id="p11-show">{{x.showing}}</p>
+    <div class="cvh-chiprow" role="radiogroup" aria-labelledby="p11-show">
+      <sc-for list="{{orgChips}}" as="c" hint-placeholder-count="5">
+        <button type="button" class="cvh-chip cvh-chip--pick {{c.cls}}" role="radio" aria-checked="{{c.on}}" onClick="{{c.pick}}"><sc-if value="{{c.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{c.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <section class="cvh-hsec" aria-labelledby="p11-over">
+    <h3 class="cvh-hsec__title cvh-rd-title" id="p11-over"><span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span>{{x.overdueTitle}}<sc-if value="{{hasOverdue}}"><span class="cvh-hsec__count">{{overdueCount}}</span></sc-if><span class="cvh-tag cvh-tag--illustrative">{{ill}}</span></h3>
+    <sc-if value="{{hasOverdue}}"><p class="cvh-muted">{{x.overdueLead}}</p></sc-if>
+    <sc-if value="{{noOverdue}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span><span>{{overdueNone}}</span></p></sc-if>
+    <div class="cvh-rd-overdue">
+      <sc-for list="{{overdue}}" as="o" hint-placeholder-count="2">
+        <article class="cvh-hrow cvh-hrow--priority">
+          <div class="cvh-hrow__head">
+            <span class="cvh-flag cvh-flag--stale"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{o.dueLine}}</span>
+            <dc-import name="X13_DisruptionType" type="{{o.type}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+            <span class="cvh-pill">{{o.mode}}</span>
+          </div>
+          <p class="cvh-hrow__title">{{o.org}}: {{o.text}}</p>
+          <div class="cvh-rd-meta">
+            <span class="cvh-rd-line"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span><span>{{o.contact}}</span></span>
+            <sc-if value="{{o.hasDoc}}"><button type="button" class="cvh-rd-doc" onClick="{{docOpen}}"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{o.doc}}</button></sc-if>
+            <sc-if value="{{o.noDoc}}"><span class="cvh-muted">{{x.noDoc}}</span></sc-if>
+          </div>
+          <div class="cvh-hrow__actions">
+            <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{o.confirm}}" aria-label="{{o.aria}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.confirm}}</button>
+            <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{changeNote}}">{{x.change}}</button>
+          </div>
+        </article>
+      </sc-for>
+    </div>
+    <sc-for list="{{justConfirmed}}" as="j" hint-placeholder-count="1">
+      <p class="cvh-rd-line cvh-card"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span><span class="cvh-strong">{{j.title}}</span> {{j.line}}</span></p>
+    </sc-for>
+  </section>
+
+  <section class="cvh-hsec" aria-labelledby="p11-table">
+    <div class="cvh-stack" style="--gap:2px">
+      <h3 class="cvh-hsec__title cvh-rd-title" id="p11-table">{{x.tableTitle}}<span class="cvh-tag cvh-tag--illustrative">{{ill}}</span></h3>
+      <p class="cvh-muted">{{x.tableLead}}</p>
+    </div>
+    <div class="cvh-rd-grid" role="table" aria-labelledby="p11-table">
+      <div class="cvh-rd-grid__head" role="columnheader">{{x.typeCol}}</div>
+      <sc-for list="{{modeHeads}}" as="m" hint-placeholder-count="3"><div class="cvh-rd-grid__head" role="columnheader">{{m}}</div></sc-for>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="6">
+        <div class="cvh-rd-grid__type" role="rowheader">
+          <dc-import name="X13_DisruptionType" type="{{r.type}}" surface="screen" lang="en" embedded="{{true}}" hint-size="160px,44px"></dc-import>
+        </div>
+        <sc-if value="{{r.isGap}}">
+          <div class="cvh-rd-grid__gap" role="cell">
+            <div class="cvh-rd-gap">
+              <p class="cvh-rd-gap__title"><span class="cvh-ico cvh-ico--flag" aria-hidden="true"></span>{{r.gapTitle}}</p>
+              <p>{{x.gapLine}}</p>
+              <p class="cvh-strong">{{x.gapQuestion}}</p>
+              <p class="cvh-muted">{{x.gapContext}}</p>
+              <sc-if value="{{onAgenda}}"><p class="cvh-rd-line"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{gapOnAgenda}}</span></p></sc-if>
+              <div class="cvh-hrow__actions">
+                <sc-if value="{{notOnAgenda}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{addAgenda}}"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span>{{gapAgenda}}</button></sc-if>
+                <button type="button" class="cvh-link" onClick="{{toGapPlaybook}}">{{x.gapPlaybook}}</button>
+                <button type="button" class="cvh-link" onClick="{{toGapTeams}}">{{x.gapTeams}}</button>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+        <sc-if value="{{r.notGap}}">
+          <sc-for list="{{r.cells}}" as="c" hint-placeholder-count="3">
+            <div class="cvh-rd-grid__cell {{c.cls}}" role="cell">
+              <span class="cvh-rd-cell__mode">{{c.mode}}</span>
+              <sc-if value="{{c.empty}}"><span class="cvh-rd-none">{{c.noneLine}}</span></sc-if>
+              <sc-for list="{{c.items}}" as="i" hint-placeholder-count="1">
+                <div class="cvh-rd-item {{i.cls}}">
+                  <span class="cvh-rd-item__org">{{i.org}}</span>
+                  <span>{{i.text}}</span>
+                  <span class="cvh-rd-line"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span><span>{{i.contact}}</span></span>
+                  <sc-if value="{{i.hasDoc}}"><button type="button" class="cvh-rd-doc" onClick="{{docOpen}}"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{i.doc}}</button></sc-if>
+                  <sc-if value="{{i.noDoc}}"><span class="cvh-muted">{{x.noDoc}}</span></sc-if>
+                  <sc-if value="{{i.overdue}}"><span class="cvh-flag cvh-flag--stale" style="align-self:flex-start"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{x.overdueFlag}}</span></sc-if>
+                  <span class="cvh-rd-line"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span><span>{{i.review}}</span></span>
+                  <sc-if value="{{i.confirmed}}"><span class="cvh-rd-line cvh-strong"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span><span>{{i.confirmedLine}}</span></span></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </sc-if>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-card cvh-stack" style="--gap:6px" aria-labelledby="p11-next">
+    <h3 class="cvh-hsec__title" id="p11-next"><span class="cvh-ico cvh-ico--calendar" aria-hidden="true"></span>{{x.nextTitle}}</h3>
+    <p>{{nextLine}}</p>
+  </section>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Priya, all organisations: by type and mode, overdue at the top, the gap row", "Daniel, TNO: his own commitments", "Confirmed as still correct (COM-02, TNO power)", "Gap put on the next review", "Phone width, 390"], "default": "Priya, all organisations: by type and mode, overdue at the top, the gap row"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Priya, all organisations: by type and mode, overdue at the top, the gap row": {}, "Daniel, TNO: his own commitments": {"persona": "DANIEL"}, "Confirmed as still correct (COM-02, TNO power)": {"persona": "DANIEL", "loc": {"demoConfirmed": "COM-02"}}, "Gap put on the next review": {"loc": {"demoAgenda": true}}, "Phone width, 390": {"persona": "DANIEL", "w": 390, "h": 2600}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-11', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.P11, P = D.partner || {}, loc = b.loc;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var parse = function (d) { var p = String(d).split('-'); return new Date(Date.UTC(+p[0], +p[1] - 1, +(p[2] || 1))); };
+    var fmt = function (d) { if (!d) return ''; var x = parse(d); return x.getUTCDate() + ' ' + MONTHS[x.getUTCMonth()] + ' ' + x.getUTCFullYear(); };
+    var iso = function (x) { return x.toISOString().slice(0, 10); };
+    var today = P.today || '2026-09-29';
+    var plus6 = function () { var x = parse(today); x.setUTCMonth(x.getUTCMonth() + 6); return iso(x); };
+    var daysBetween = function (a, z) { return Math.round((parse(z) - parse(a)) / 86400000); };
+    var agoWords = function (days) { if (days < 14) return days + (days === 1 ? ' day' : ' days'); if (days < 60) return Math.round(days / 7) + ' weeks'; var m = Math.round(days / 30); return m + (m === 1 ? ' month' : ' months'); };
+    var HAZ = ['power', 'flood', 'elevator', 'heat', 'smoke', 'fire'], MODES = ['everyday', 'during', 'recovery'];
+    var hz = function (t) { return (s.hazards || {})[t] || t; };
+    var orgName = function (id) { return (C.org(id) || { name: id }).name; };
+    var orgShort = function (id) { var o = C.org(id) || { short: id }; return o.id === 'HUB' ? 'the Hub' : o.short; };
+    var me = b.persona || {};
+    var defOrg = me.org && me.org !== 'HUB' ? me.org : 'all';
+    var org = loc.org || defOrg;
+    var set = function (p) { b.setLoc(p); };
+    var ORGS = ['all', 'HUB', 'TNO', 'CRC', 'CITY'];
+    var orgChips = ORGS.map(function (id) {
+      var on = id === org;
+      return { label: id === 'all' ? h.allOrgs : orgName(id), isOn: on, on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '', pick: function () { set({ org: id }); } };
+    });
+    // Commitments, with a demo-only confirmation laid over for the standalone artboard
+    var all = (P.commitments || []).map(function (c) {
+      var x = Object.assign({}, c);
+      if (loc.demoConfirmed === c.id && !c.confirmedOn) Object.assign(x, { confirmedOn: today, reviewDue: plus6(), confirmedBy: me.id || 'DANIEL', confirmedMinsAgo: 0 });
+      return x;
+    });
+    var mine = all.filter(function (c) { return org === 'all' || c.org === org; });
+    var isOverdue = function (c) { return c.reviewDue && c.reviewDue < today; };
+    var doConfirm = function (c) {
+      var due = plus6();
+      b.act({ t: 'partner', kind: 'commitment', item: { commitmentId: c.id, changes: { confirmedOn: today, reviewDue: due, confirmedBy: me.id || null } } });
+      b.toast(C.fill(h.confirmedToast, { date: fmt(due) }));
+    };
+    var confirmedLine = function (c) {
+      var who = C.person(c.confirmedBy) || me, when = (c.confirmedMinsAgo || 0) < 1440 ? h.today : b.ago(c.confirmedMinsAgo);
+      return C.fill(h.confirmed, { when: when, name: (who.name || '') + ', ' + orgShort(who.org), date: fmt(c.reviewDue) });
+    };
+    var overdue = mine.filter(isOverdue).sort(function (a, z) { return a.reviewDue < z.reviewDue ? -1 : 1; }).map(function (c) {
+      return { type: c.type, mode: h.modes[c.mode], org: orgName(c.org), text: c.text, contact: C.fill(h.contact, { role: c.role }),
+        hasDoc: !!c.agreement, noDoc: !c.agreement, doc: c.agreement || '',
+        dueLine: C.fill(h.overdueFor, { date: fmt(c.reviewDue), ago: agoWords(daysBetween(c.reviewDue, today)) }),
+        aria: C.fill(h.confirmAria, { org: orgName(c.org), hazard: hz(c.type), mode: h.modes[c.mode] }),
+        confirm: function () { doConfirm(c); } };
+    });
+    var justConfirmed = mine.filter(function (c) { return c.confirmedOn; }).map(function (c) {
+      return { title: orgName(c.org) + ', ' + hz(c.type) + ', ' + h.modes[c.mode].toLowerCase() + '.', line: confirmedLine(c) };
+    });
+    var upcoming = mine.filter(function (c) { return !isOverdue(c); }).sort(function (a, z) { return a.reviewDue < z.reviewDue ? -1 : 1; })[0];
+    // The table: six hazards by three modes; a hazard nobody has committed to is a gap row
+    var rows = HAZ.map(function (t) {
+      var anyone = all.some(function (c) { return c.type === t; });
+      var cells = MODES.map(function (m) {
+        var items = mine.filter(function (c) { return c.type === t && c.mode === m; }).map(function (c) {
+          var od = isOverdue(c);
+          return { org: orgName(c.org), text: c.text, contact: C.fill(h.contact, { role: c.role }), hasDoc: !!c.agreement, noDoc: !c.agreement,
+            doc: c.agreement || '', overdue: od, cls: od ? 'cvh-rd-item--overdue' : '', review: C.fill(h.reviewBy, { date: fmt(c.reviewDue) }),
+            confirmed: !!c.confirmedOn, confirmedLine: c.confirmedOn ? confirmedLine(c) : '' };
+        });
+        return { mode: h.modes[m], items: items, empty: items.length === 0, cls: items.length ? '' : 'cvh-rd-grid__cell--empty',
+          noneLine: org === 'all' ? h.none : C.fill(h.noneFor, { org: orgShort(org) }) };
+      });
+      return { type: t, isGap: !anyone, notGap: anyone, cells: cells, gapTitle: C.fill(h.gapTitle, { hazard: hz(t).toLowerCase() }) };
+    });
+    var agenda = !!loc.demoAgenda || (P.other || []).some(function (o) { return o.kind === 'agenda' && o.type === 'elevator'; });
+    var next = fmt(P.nextReview || '2026-12-10');
+    var links = [['P-12', h.toPlaybooks, 'ready'], ['P-13', h.toTeams, 'person'], ['P-14', h.toExercise, 'exercise'], ['P-15', h.toIndicators, 'dashboard'], ['P-16', h.toLookBack, 'calendar']]
+      .map(function (l) { return { label: l[1], icon: l[2], go: function () { b.go(l[0]); } }; });
+    return { x: h, ill: s.shell.illustrative, links: links, orgChips: orgChips,
+      overdue: overdue, overdueCount: overdue.length, hasOverdue: overdue.length > 0, noOverdue: overdue.length === 0,
+      overdueNone: C.fill(h.overdueNone, { date: upcoming ? fmt(upcoming.reviewDue) : next }), justConfirmed: justConfirmed,
+      modeHeads: MODES.map(function (m) { return h.modes[m]; }), rows: rows,
+      onAgenda: agenda, notOnAgenda: !agenda, gapAgenda: C.fill(h.gapAgenda, { date: next }), gapOnAgenda: C.fill(h.gapOnAgenda, { date: next }),
+      addAgenda: function () { b.act({ t: 'partner', kind: 'agenda', item: { type: 'elevator', text: 'Decide who, if anyone, holds a standing commitment for elevator failure.' } }); b.toast(h.gapAgendaToast); },
+      toGapPlaybook: function () { b.go('P-12', { hazard: 'elevator' }); }, toGapTeams: function () { b.go('P-13', { hazard: 'elevator' }); },
+      docOpen: function () { b.app.notInPrototype(h.docNote); }, changeNote: function () { b.app.notInPrototype(h.changeNote); },
+      nextLine: C.fill(h.nextLine, { date: next }) };
+  }
+
+}
+</script>
+</body>
+</html>

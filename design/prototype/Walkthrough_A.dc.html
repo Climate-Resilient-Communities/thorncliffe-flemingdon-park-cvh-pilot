@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scenario A walkthrough: Hub, resident and ambassador side by side</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="width:2440px;height:940px;background:#e9ecef;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+  <div class="cvh-row" style="--gap:16px;align-items:baseline">
+    <h1 class="cvh-h2" style="font-size:24px">Scenario A, live: an evening power outage in three towers</h1>
+    <span class="cvh-muted" style="font-size:16px">The Hub and partner space, Yusuf on floor 4 and Rashid the floor ambassador share one session. What Priya does on the left changes the two phones as it happens.</span>
+  </div>
+  <div class="wt-cols" style="display:flex;gap:24px;align-items:flex-start">
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Hub and partner space · Priya · 1280</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="HubApp" w="{{1280}}" h="{{840}}" hint-size="1280px,840px"></dc-import></div></div>
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Resident app · Yusuf, Sample Tower A, floor 4</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="ResidentApp" persona="yusuf" scenario="A" w="{{360}}" h="{{840}}" hint-size="360px,840px"></dc-import></div></div>
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Resident app · Rashid, ambassador role</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="ResidentApp" persona="rashid" scenario="A" w="{{360}}" h="{{840}}" hint-size="360px,840px"></dc-import></div></div>
+    <aside class="cvh-card cvh-stack" style="--gap:10px;width:300px;height:866px;overflow:auto;margin-top:26px">
+      <p class="cvh-strong" style="font-size:18px">Facilitator</p>
+      <p class="cvh-caption">{{line}}</p>
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{start}}">Start Scenario A live</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{clear}}">Clear the session</button>
+      <p class="cvh-strong" style="font-size:16px">Suggested order</p>
+      <ol class="cvh-caption" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">
+        <li>Priya logs the outage (O-11) and publishes the acknowledgement (O-12). Yusuf's Now screen shows it.</li>
+        <li>Rashid posts from the stairwell (A-02). It goes out at once, not yet verified.</li>
+        <li>Priya verifies it in one tap (O-01 or O-07). Yusuf sees "Verified by the Hub".</li>
+        <li>Priya posts an update with a charging space (O-14), then corrects the floors (O-15).</li>
+        <li>Rashid works his round (A-04) and connects a resident to a service (A-05).</li>
+        <li>Priya resolves the alert (O-16). It moves to Yusuf's archive.</li>
+      </ol>
+      <p class="cvh-strong" style="font-size:16px">Session log</p>
+      <sc-if value="{{empty}}"><p class="cvh-caption cvh-muted">Nothing yet.</p></sc-if>
+      <ol class="cvh-caption" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{log}}" as="lg" hint-placeholder-count="3"><li>{{lg}}</li></sc-for>
+      </ol>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2440,"height":940}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { srev: 0 }; }
+  componentDidMount() { var self = this; this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._off) this._off(); }
+  renderVals() {
+    var C = window.CVH, S = C.session; C.data();
+    var st = S.get();
+    var log = st.log.map(function (a) { return new Date(a.at).toTimeString().slice(0, 5) + '  ' + S.label(a); });
+    return { log: log, empty: log.length === 0,
+      line: st.live === 'A' ? 'Scenario A is live. ' + st.log.length + ' actions so far.' : 'Press Start to begin at 7:40 pm with nothing posted. The session stays in this browser only.',
+      start: function () { S.reset({ live: 'A', scenario: 'A' }); }, clear: function () { S.reset({}); } };
+  }
+}
+</script>
+</body>
+</html>
