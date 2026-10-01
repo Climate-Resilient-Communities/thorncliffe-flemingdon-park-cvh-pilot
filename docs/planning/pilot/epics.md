@@ -2015,3 +2015,279 @@ So that nothing sits unapproved while residents wait.
 **Given** a Director
 **When** they open the Hub home
 **Then** it is read-only, and every action endpoint returns 403 (S01.12 list)
+
+## E05 — Alerts stay current: updates, corrections, closing, status and sharing
+
+A disruption stays one running thread: staff add updates, correct or withdraw what residents saw (shown in place, never quietly replaced), close it with a final entry or let it expire, and residents see building and neighbourhood status derived from those threads, a readable archive, and a one-step share that always shows the live, standard alert. With E05 done, `RESIDENT_ALERTS_ENABLED` may be turned on in production.
+
+**Epic estimate:** 47 h across 8 stories (2 S, 6 M) · **Epic actual:** —
+
+**Depends on E04:** S04.03 (lifecycle, triggers, thread lock, entry versions), S04.05 (compose and idempotent submit), S04.06 (renderer and hash), S04.07 (approval, recipient snapshot hook), S04.08 (feed, alert detail, drill isolation). Each story creates only the tables it needs and names the stories it depends on.
+
+**Handoffs.** Sending is E06 and recipients are E07. Every use case in this epic that supersedes an entry, discards entries or closes a thread calls `messaging`'s `cancelQueued(entryIds, tx)` port inside its transaction; it does nothing until E06 implements it, and E06 must keep it in the same transaction. Corrections, withdrawals and finals capture recipients at approval through `captureRecipients(entry, tx)` with the AD-7 rule (the target's recipients ∪ the entry's own audience, opt-outs never removing them); E07 implements that rule.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Update | An `update` entry added to an open thread. It does not supersede anything; earlier entries stay readable in order. Promoting an acknowledgement (O-13) is posting the first update. |
+| Phase | Required on every `ack`, `update` and `correction`: `problem` or `in_progress`. It drives derived status. |
+| Correction | A `correction` entry that names one target entry. When approved, the target becomes `superseded`; residents see the correction above the original, with the original's wording still readable and marked "Corrected". |
+| Withdrawal | A `withdrawal` entry that names one target. When approved, the target becomes `superseded` and residents see "Withdrawn" with the reason in its place. If no published, non-superseded entry remains, the thread closes `withdrawn`. |
+| Valid target | An entry that is `approved`, or `pending_approval` and web-published (the D-1 case in E08), and not already superseded. A correction itself can be corrected. |
+| Final | A `final` entry that closes the thread `resolved` when approved. "Mark resolved" by an ambassador or Hub staff submits one. |
+| Thread expiry | A thread expires when the valid-until of its latest published, non-superseded entry has passed and it has not been closed. The expire job closes it `expired` with a system `final`. "Until resolved" entries are renewed by each update (24 elapsed hours from that update). |
+| Closed thread | `closed{resolved|expired|withdrawn}`. Only `alerting.closeAlert(alertId, reason)` closes a thread; closing discards every `draft` and `pending_approval` entry and calls `cancelQueued` in the same transaction. Every later change is refused with `ALERT_CLOSED`. |
+| Derived status | Computed only by `alerting/domain/status.ts#statusOf(place, threads)` (AD-19) over non-drill threads covering the place with a web-published, non-superseded entry: `active` (open, latest phase `problem`), `in_progress` (open, latest phase `in_progress`), `resolved` (closed `resolved` within the last 12 hours), else `none`; precedence active > in_progress > resolved > none. `verified` is false when the status rests only on unverified entries. |
+| Archive | Closed non-drill threads, newest first, readable by anyone, with every entry and correction as shown when live. |
+| Share link | `/a/{slug}?l={lang}`: always the standard (untailored) alert in its current state. Sharing is never recorded. |
+
+### Story S05.01 — Hub staff post updates to a running alert
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-A7, FR-A4 (update), UX-DR16 (O-13, O-14), AR-8 · **Depends on:** S04.07 · **Branch:** `e05-s01-updates`
+
+As a Hub Coordinator,
+I want to add what we now know to the same alert,
+So that residents follow one running story instead of many separate alerts.
+
+**Acceptance Criteria:**
+
+**Given** an open thread with an approved acknowledgement
+**When** a Coordinator chooses "Add an update" (O-14), or "Promote to full alert" (O-13) for the first update
+**Then** the composer opens with the thread's audience, types and languages carried over, a required phase, and a valid-until defaulting to the previous entry's choice ("until resolved" renews to 24 hours from now)
+**And** submit, approval, translation and freezing follow E04 exactly (idempotent submit, second-person approval bound to version and hash)
+
+**Given** an update that widens the audience beyond the thread's
+**When** it is submitted
+**Then** the new audience is stored on the update and shown to the approver as "Now also for: …"; narrowing is allowed and shown the same way
+
+**Given** an approved update
+**When** a resident opens the alert
+**Then** entries appear newest first with their times and phases, earlier entries remain readable, and the thread's valid-until is the latest entry's
+
+**Given** the thread was closed while the update was being written or waited for approval
+**When** it is submitted or approved
+**Then** it is refused with `ALERT_CLOSED` ("This alert is already closed"), and a closed thread offers no "Add an update"
+
+### Story S05.02 — Hub staff correct or withdraw what residents saw, in the open
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A16 (web), FR-A15, AR-8 (supersession), AR-11 (correction recipients handoff), UX-DR16 (O-15), UX-DR6 · **Depends on:** S05.01 · **Branch:** `e05-s02-corrections-withdrawals`
+
+As a Hub Coordinator,
+I want to correct or withdraw an entry so residents see what changed,
+So that a mistake is fixed openly and nobody keeps acting on wrong information.
+
+**Acceptance Criteria:**
+
+**Given** a valid target
+**When** a Coordinator chooses "Correct" (O-15) and writes the corrected wording, or "Withdraw" with a reason chosen from a catalog list (wrong place, wrong information, duplicate, other with text)
+**Then** a `correction` or `withdrawal` entry naming the target is created and goes through submit and second-person approval
+**And** an Ambassador may correct or withdraw only their own pending entries (E08); Coordinators and Admins any valid target; Directors none (direct-request tests added to the S01.12 list)
+
+**Given** the correction or withdrawal is approved
+**When** the transaction commits
+**Then** the target becomes `superseded`, `cancelQueued` is called for the target, `feed_version` is incremented, and both changes are audited, all in one transaction under the thread lock
+
+**Given** a target that is not valid (already superseded, discarded, a draft, or in a closed thread)
+**When** a correction or withdrawal of it is submitted or approved
+**Then** it is refused with the reason; two corrections of the same target approved at the same time result in exactly one success (concurrency test)
+
+**Given** a direct SQL change that marks an entry `superseded` without an approved correction or withdrawal naming it
+**When** run with the app's credentials
+**Then** the trigger refuses it
+
+**Given** a resident opens a corrected alert (R-07)
+**When** it renders
+**Then** the correction is shown above the original with the correction marker, and the original's wording stays readable, marked "Corrected"; a withdrawn entry shows "Withdrawn" and the reason in its place
+**And** the feed, the alert detail and the share preview all show the same state
+
+**Given** a withdrawal leaves no published, non-superseded entry in the thread
+**When** it is approved
+**Then** `closeAlert(alertId, 'withdrawn')` runs in the same transaction
+
+**Given** the correction recipients rule
+**When** a correction, withdrawal or final is approved
+**Then** `captureRecipients` is called with the target and the entry's own audience (handoff to E07), and the approval view says the correction will go to everyone who got the original
+
+### Story S05.03 — Hub staff close an alert once, with a final word
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A7, AR-8 (single close path), AR-9, UX-DR16 (O-16) · **Depends on:** S05.02 · **Branch:** `e05-s03-close-thread`
+
+As a Hub Coordinator,
+I want to close an alert with a final message when the problem is fixed,
+So that residents know it is over and nothing more goes out for it.
+
+**Acceptance Criteria:**
+
+**Given** an open thread
+**When** a Coordinator or an assigned Ambassador chooses "Mark resolved" (O-16) and writes the final message
+**Then** a `final` entry is submitted, and its approval by a second person calls `closeAlert(alertId, 'resolved')` in the same transaction
+**And** the final's recipients are the thread's recipients on every channel used (handoff to E07)
+
+**Given** `closeAlert`
+**When** it runs
+**Then** under the thread lock it sets the thread `closed` with its reason and time, moves every `draft` and `pending_approval` entry to `discarded`, calls `cancelQueued`, increments `feed_version` and audits `alert.closed`, all in one transaction
+**And** no other code path can close a thread (a trigger refuses any other update of `alert.state`, tested by direct SQL)
+
+**Given** a closed thread
+**When** anyone submits, approves, corrects, withdraws or updates in it
+**Then** it is refused with `ALERT_CLOSED`, and the refusal is recorded
+
+**Given** concurrent actions on one thread (an approval and a close; a correction approval and the expire job; two finals)
+**When** they run at the same time
+**Then** the results are as if they ran one after the other in lock order, no entry is approved in a closed thread, and only one final closes it (integration tests fire each pair concurrently)
+
+**Given** a closed thread
+**When** a resident opens it
+**Then** it shows "Closed: {resolved|expired|withdrawn}" with the final message and every earlier entry, and it is no longer in the live feed
+
+### Story S05.04 — Alerts that run past their time close on their own
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-A7, AR-8 (system entries) · **Depends on:** S05.03 · **Branch:** `e05-s04-expire-job`
+
+As a resident,
+I want old alerts to close when nobody has updated them,
+So that I am not worried by a problem that is long over.
+
+**Acceptance Criteria:**
+
+**Given** `/api/jobs/expire`, called every minute by pg_cron with the environment's job secret
+**When** a thread's latest published, non-superseded entry is past its valid-until
+**Then** the job, under the thread lock, adds a system `final` (`published_system`, web-only, text from the catalog "This alert has ended. Contact the Hub if the problem continues.") and calls `closeAlert(alertId, 'expired')`
+
+**Given** the `published_system` transition
+**When** it is attempted without the session variable `cvh.system_actor` set by the expire job or the discard use case
+**Then** the trigger refuses it (direct SQL test)
+
+**Given** the job runs twice at once, or is retried after a failure
+**When** it processes the same thread
+**Then** the thread is closed once and has one system final (idempotent; concurrency test)
+
+**Given** a valid-until across the daylight-saving changes (8 March 2026 and 1 November 2026)
+**When** the job decides expiry
+**Then** it compares UTC instants only, and tests cover a valid-until set in the repeated autumn hour and "until resolved" spanning each change
+
+**Given** the job fails or a pg_cron run fails
+**When** it happens
+**Then** an `ops_event` is recorded (picked up by the health job in E09), and the next run closes any overdue thread
+
+### Story S05.05 — Hub staff merge duplicate alerts before texts go out
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-8 (duplicates), FR-A7 · **Depends on:** S05.03 · **Branch:** `e05-s05-merge-duplicates`
+
+As a Hub Coordinator,
+I want to fold a duplicate alert into the one already running,
+So that residents get one story, not two versions of the same problem.
+
+**Acceptance Criteria:**
+
+**Given** the "possible duplicate" link shown at approval (S04.05)
+**When** a Coordinator chooses "Merge into the running alert"
+**Then** in one transaction, locking both threads in id order, the newer thread's entries are discarded (web-published ones get a system `withdrawal` with reason "duplicate"), the newer thread closes `withdrawn`, and both threads record the merge in the audit trail
+
+**Given** the newer thread has an approved entry with any text already submitted to the provider (E06 state `submitted` or later)
+**When** a merge is attempted
+**Then** it is refused with "Texts have already gone out; correct or withdraw instead"
+
+**Given** a merge
+**When** a resident opens the newer thread's link
+**Then** they see "This alert was merged" with a link to the running alert
+
+### Story S05.06 — Residents see the status of each building and neighbourhood
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-D6, AR-24, FR-D4-P, UX-DR5 · **Depends on:** S05.03 · **Branch:** `e05-s06-derived-status`
+
+As a resident,
+I want to see at a glance whether my building has a problem now,
+So that I know whether to act before reading every alert.
+
+**Acceptance Criteria:**
+
+**Given** `statusOf(place, threads)`
+**When** the table-driven unit tests run
+**Then** they cover each status, the precedence, a neighbourhood thread covering every building in it, a superseded entry being ignored, a withdrawn thread giving `none`, the 12-hour resolved window measured from closing time, drills ignored, and `verified: false` when only unverified entries support the status
+
+**Given** the feed
+**When** served
+**Then** `places.buildings` and `places.neighbourhoods` carry each place's derived status and `verified`, computed at request time from the same threads as the feed (no stored status; the `building` table holds facts only)
+
+**Given** home and the building page
+**When** they render
+**Then** status shows as text and icon as well as colour ("Active problem", "Work in progress", "Resolved", or nothing), with "Not yet verified" when `verified` is false, and links to the threads behind it
+
+**Given** a resolved status
+**When** 12 hours have passed since closing (using the feed's `server_now`, not the phone's clock)
+**Then** it shows `none`
+
+### Story S05.07 — Every phone shows the latest state of each alert, and an archive
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-25, FR-A7 (archive), NFR-N3, UX-DR8 · **Depends on:** S05.03, S02.12 · **Branch:** `e05-s07-feed-currency-archive`
+
+As a resident,
+I want what I see to be the current state of each alert, even after a correction or close,
+So that I never act on something that was withdrawn or is over.
+
+**Acceptance Criteria:**
+
+**Given** the client and the service worker
+**When** a feed response arrives with a lower `feed_version` than the highest seen on this phone
+**Then** it is discarded by both, so an older cached copy can never replace a newer one (test serves versions out of order)
+
+**Given** an alert shown from the cache while offline
+**When** its valid-until has passed by the phone's clock adjusted by the last known `server_now` offset
+**Then** it is shown as "This alert may have ended. Check again when you have signal" instead of as current
+
+**Given** a thread closed, corrected or withdrawn after the phone last loaded the feed
+**When** the phone next polls successfully
+**Then** the closed thread leaves the live list and the correction or withdrawal appears in place, within the same poll
+
+**Given** `/api/feed/archive?lang=&page=`
+**When** requested
+**Then** it returns closed non-drill threads, newest first, 20 per page, with every entry as shown when live, edge-cached for at most 60 seconds, with no cookie; the archive screen (R-08) shows them with their close reason and dates
+
+**Given** a drill thread
+**When** the archive is requested
+**Then** it never appears (added to the drill isolation test)
+
+### Story S05.08 — Residents share an alert in one step
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A11, AR-25 (share URL), AR-10 (drill 404), UX-DR7 · **Depends on:** S05.02, S05.06 · **Branch:** `e05-s08-share`
+
+As a resident,
+I want to share an alert to WhatsApp or anywhere else in one step,
+So that neighbours without the app still get trustworthy information.
+
+**Acceptance Criteria:**
+
+**Given** an alert and the share control (R-29)
+**When** the resident taps Share
+**Then** the phone's share sheet opens (Web Share API) with a short text in the page language: type, place, verification marker, attribution, time and the link `/a/{slug}?l={lang}`; where the share sheet is unavailable, "Copy" and "WhatsApp" (`https://wa.me/?text=…`) are offered
+**And** the shared text is always the standard version, never tailored, and an unverified alert is shared as "Not yet verified"
+
+**Given** the share link is pasted in WhatsApp
+**When** the preview is generated (R-30)
+**Then** the server-rendered page at `/a/{slug}` gives Open Graph title and description in language `l` showing type, place, verification, correction state and time, readable without opening the link; the preview reflects the thread's current state and is cached for at most 15 seconds
+
+**Given** the link is opened
+**When** the page loads
+**Then** it shows the live alert with any correction above the original, in language `l`, then switches to the device's saved language if one is set; a closed thread shows its closed state; a merged thread shows the merge note
+
+**Given** a drill thread, an unknown slug, or a thread with no web-published entry
+**When** `/a/{slug}` is requested
+**Then** it returns 404 with no detail
+
+**Given** sharing
+**When** it happens
+**Then** nothing about it is sent to the server: no usage event, no request other than loading the shared page by the recipient, and `/a/**` sets no cookie (added to the no-cookie test)
+
+**Given** E05 is complete
+**When** the Hub decides to show alerts to residents in production
+**Then** an Admin changes `RESIDENT_ALERTS_ENABLED` to true through a production deploy, the change is recorded in the launch-readiness checklist, and the S04.08 configuration test is updated to expect it on
