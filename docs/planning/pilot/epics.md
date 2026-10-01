@@ -142,6 +142,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Submit Twilio toll-free verification (Hub business number, address, website) | Hub | Week 1 of build |
 | Get Cohere pricing for the translate models; set an organisation spend limit | Hub / IT | Before launch |
 | Confirm Cohere production access and exact model identifiers for Command A Translate and North Small Translate (both require production access); until then all routes are provisional | Hub / IT | Before launch |
+| Production STOP-evidence rehearsal: a real STOP to the production number is read back through the paginated Messages API (body, sender, timestamp) and replayed to delete a test subscription (S09.03) | IT + Hub | Before launch |
 | Search meets every Hub-approved minimum (hit rate per language, no-match accuracy, emergency accuracy) on the evaluation subset of the full test set (S03.08) | Hub + IT | Before launch |
 | Confirm Tiny Aya's licence covers the Hub's use (if routed) | Hub | Before launch |
 | Confirm each building's real floor labels (43 buildings) | Hub | Before seeding production |
@@ -3561,6 +3562,10 @@ So that sending, correcting and recovering are done the same way every time.
 **When** the procedures are rehearsed
 **Then** a production drill (S06.05), a pause and resume, a resend on staging, the restore rehearsal and the launch-day access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
 
+**Given** the production STOP-evidence rehearsal (launch gate)
+**When** a staff test phone texts STOP to the configured production number
+**Then** the message is retrieved through the paginated Twilio Messages API with its body, sender and timestamp; the replay rule, run in a restore of a staging copy using that retrieved evidence, deletes the test subscription; and the result is recorded in the launch-readiness checklist before launch
+
 ### Story S09.04 — The Hub reviews reliability every week
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
@@ -3706,3 +3711,53 @@ So that the Hub keeps its promise to residents.
 **Given** the end of the pilot
 **When** the final report is produced
 **Then** the staff audit trail and aggregate measures are kept for the MVP; the procedure for rotating secrets at pilot end is run and recorded; and the terms page states the date resident data was deleted
+
+## E10 (optional stretch) — Hub staff relay an official alert
+
+Hub staff post the content of an official alert (for example from the City of Toronto or Environment Canada) with the source named and a link to the original, through the normal approval path. Built only if effort allows; not part of the launch gate. Automated official feeds are not in the pilot.
+
+**Epic estimate:** 6 h across 1 story (1 M) · **Epic actual:** —
+
+**Depends on earlier epics:** S04.05 to S04.08 (compose, renderer, approval, feed and alert detail), S05.02 (corrections), S05.08 (share). It creates only the table it needs.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Official source | An entry in `official_source` (owned by `alerting`): name as it should appear (not translated), and the web domains its links may use. Admins at `aal2` maintain the list (audited); the pilot starts with City of Toronto, Environment and Climate Change Canada, Toronto Hydro, Toronto Public Health, Toronto Fire Services and Toronto Police Service. |
+| Official relay | An entry whose attribution is `{role: 'official', source, source_url}`: shown as "Official alert from {source}" (catalog wording in every language, source name as written) in the attribution position of every surface, with "Verified by the Hub" once approved. The web shows a "Read the original" link; texts carry only the CVH's own `/a/{slug}` link. |
+
+### Story S10.01 — Hub staff relay an official alert with its source and link
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-A10, UX-DR16 (O-18), AR-7 (attribution contract), AR-19 (renderer) · **Depends on:** S04.08, S05.08 · **Branch:** `e10-s01-official-relay`
+
+As a Hub Coordinator,
+I want to pass on an official alert in residents' languages with its source clearly named,
+So that residents can trust it and check the original.
+
+**Acceptance Criteria:**
+
+**Given** the composer (O-18, "Official alert received")
+**When** a Coordinator or Admin chooses an official source, enters the original's URL and the official text in English
+**Then** the URL must be `https` and its host must be one of that source's domains, or the entry cannot be submitted; the approval view shows the source, the URL as a link for the approver to open, and the text
+
+**Given** the `Entry.attribution` contract
+**When** this story is done
+**Then** it adds the `official` role with `source` and `source_url` (an AD-20 contract change recorded in the spine), both are part of `content_hash`, and contract tests cover it on server and client
+
+**Given** the renderer
+**When** an official relay is rendered
+**Then** step 5 (attribution) reads "Official alert from {source}" in each language; nothing else in the fixed order changes; the text carries no external link (fixture tests per language, including the one-link rule)
+
+**Given** an approved official relay
+**When** residents see it on the feed, alert detail, share text and share preview
+**Then** each shows "Official alert from {source}" and "Verified by the Hub" in the same place and words, and the web shows "Read the original" opening the source URL in a new tab with `rel="noopener noreferrer"`
+
+**Given** the official alert changes or is withdrawn by its source
+**When** the Hub learns of it
+**Then** staff use E05's update, correction or withdrawal on the relay, with the same approval and recipient rules
+
+**Given** an Ambassador or Director
+**When** they call the relay endpoints directly
+**Then** they get 403 (added to the S01.12 permission test list)
