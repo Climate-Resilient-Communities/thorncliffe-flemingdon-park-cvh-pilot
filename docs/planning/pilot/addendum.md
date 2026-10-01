@@ -25,7 +25,7 @@ Technical direction and supporting detail given by the product owner that belong
 | Urdu, Tagalog, Slovak, Bengali, Tamil, Punjabi | North Small Translate (on its official list, verified 2026-10-01) | Tiny Aya Fire (Urdu, Bengali, Tamil, Punjabi) or Tiny Aya Water (Tagalog, Slovak) via the Cohere API | Not supported by Command A Translate. Tiny Aya is CC-BY-NC; confirm the Hub's use is allowed |
 | Gujarati | Tiny Aya Fire | North Small Translate (not on its official list) | Not on North Small Translate's or Command A Translate's official lists |
 
-- **Model id to confirm:** Cohere's documentation lists `north-small-translate-1-0`; the product owner tested `north-small-translate-09-2026`. Use the tested id if the API accepts it. The official list excludes Pashto and Gujarati; Pashto stays on North Small Translate per the product owner's test.
+- **Model id:** `north-small-translate-09-2026`, accepted by the API and used to build the catalogue (Cohere's documentation also lists `north-small-translate-1-0`). The official list excludes Pashto and Gujarati; Pashto stays on North Small Translate per the product owner's test.
 - **Language check on every output.** Detect the language and script of each translation before it is published or sent (Command A Translate's Pashto→Dari swap shows this failure happens silently). The `eld` detector has no Pashto and reports Dari as Persian, so Pashto is checked by script and distinguishing letters alone (architecture spine AD-10). On failure, try the second choice; if both fail, show the English original labelled "Translation not available".
 - **Pricing.** Per-token prices for Command A Translate, North Small Translate and Tiny Aya on the API were not found on Cohere's pricing page; confirm with Cohere. Trial keys cannot be used in production.
 - **Test set.** The pilot's translation tests (native-speaker review) cover every language on its routed model, and are re-run whenever a model version changes.
@@ -34,12 +34,12 @@ Technical direction and supporting detail given by the product owner that belong
 
 Source: `docs/research/multilingual-program-search/research.md`.
 
-- **Publish step.** When the Hub publishes provider changes in Supabase, a job translates each listing into the 15 languages, embeds each English description once, and writes one JSON file: listings in every language plus one vector per provider (about 100 vectors; well under a few MB). The file is deployed with the app or fetched once and cached.
+- **Catalogue.** `data/catalogue/` is the source of truth for listings in all 15 languages, produced and reviewed offline by the scripts in `scripts/`; the app never translates listings. Publishing loads the committed catalogue, embeds each English description once, and writes the per-language listing files and one vector file (about 100 vectors).
 - **Question time.** The function holds the JSON in memory.
   1. Embed the question as typed (one call).
   2. If the question is detected as Pashto or Dari, or romanized or mixed-language, also translate it to English with the routed Cohere model (in parallel) and embed the translation.
   3. Compare against the ~100 vectors in memory and merge rankings (reciprocal rank fusion) when there are two.
-  4. Return the top three to five listings in the resident's language, straight from the JSON. **Nothing is translated back at question time.**
+  4. Return the top three to five listings in the language the question was written in (the page language when that can't be detected confidently, e.g. romanized input), straight from the catalogue files. **Nothing is translated back at question time.**
 - **No match.** Below a similarity threshold, return "no clear match" with categories and the Hub's number.
 - **No generated answers** in the pilot (safety: NYC MyCity incident; Government of Canada GenAI guidance).
 - **Latency.** One network call for 13 of 15 languages, two for the rest. Call latencies were not measured in research; log them per question.

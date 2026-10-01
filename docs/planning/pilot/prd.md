@@ -235,7 +235,7 @@ Search covers names, categories and both descriptions. [ASSUMPTION] Residents ca
 
 **D2-Q. Ask in your own words.**
 A resident can type or paste a question in any launch language, including romanized Urdu or Hindi (for example "mujhe bachon ke liye khana chahiye"), and gets the three to five best-matching listings from the directory.
-- Results are directory listings exactly as published, in the resident's language, with their "Last confirmed" date. The CVH never writes an answer of its own.
+- Results are directory listings exactly as published, in the language the question was written in (or the page language when that can't be told, for example romanized text), with their "Last confirmed" date. The CVH never writes an answer of its own.
 - Matching is by meaning, not keywords, so a question in Pashto finds an English-sourced listing.
 - When nothing matches clearly, the resident sees "We couldn't find a clear match", the category list, and the Hub's number. Results in emergency categories always show 911 first.
 - Results appear fast enough to feel immediate on a phone; the time per question is measured (Section 9).

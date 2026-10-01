@@ -180,7 +180,7 @@ All translation uses Cohere models only (product-owner decision; a suggestion to
 | Gujarati | Tiny Aya Fire | North Small Translate (not officially listed) | Language detector plus script |
 | Traditional Chinese | Converted from the approved Simplified text (OpenCC), labelled as a script conversion | — | — |
 
-Model identifiers: `north-small-translate-1-0` (the architect verified this as the production id; whether the tested `north-small-translate-09-2026` id is accepted is still open), `command-a-translate-08-2025`, `tiny-aya-fire`, `tiny-aya-water`. Shahmukhi Punjabi readers are offered Urdu (D-5).
+Model identifiers: `north-small-translate-09-2026` (accepted by the API; used to build the catalogue), `command-a-translate-08-2025`, `tiny-aya-fire`, `tiny-aya-water`. Shahmukhi Punjabi readers are offered Urdu (D-5).
 
 **The language check.** It runs inside the app, not at a translation service. A small open-source language detector (`eld`) names the language and a script check confirms the alphabet. The detector does not know Pashto, so Pashto relies on its distinctive letters.
 
@@ -192,10 +192,10 @@ Model identifiers: `north-small-translate-1-0` (the architect verified this as t
 
 **How it works** (AD-11):
 
-1. The Hub edits providers in the database. Pressing Publish creates a numbered release: one listing file per language and one file of "embeddings". An embedding is a list of numbers that represents the meaning of a text, so that texts with similar meaning have similar numbers, across languages. Each provider's English description is embedded once.
+1. Listings in all 15 languages come from the reviewed catalogue in `data/catalogue/`, produced offline by the translation scripts; the app never translates them. Pressing Publish loads the catalogue and creates a numbered release: one listing file per language and one file of "embeddings". An embedding is a list of numbers that represents the meaning of a text, so that texts with similar meaning have similar numbers, across languages. Each provider's English description is embedded once.
 2. When a resident asks a question, the server turns her question into an embedding with the same model and compares it with the roughly 100 provider embeddings held in memory.
 3. For Pashto, Dari and romanized or mixed-language questions, the server also translates the question to English, embeds that, and merges the two rankings (reciprocal rank fusion, a standard way to combine two ranked lists).
-4. The server returns only provider numbers and scores. The phone shows the listings from the language file it already has. Nothing is translated back.
+4. The server returns provider numbers, scores and the language the question was written in. The phone shows the listings in that language, from the catalogue's language file (or the page language when the question's language can't be told, such as romanized text). Nothing is translated at question time.
 5. Below a similarity threshold the answer is "no clear match". Emergency categories put 911 first. No generated text, ever.
 
 The embedding model is chosen before launch by running the test set on three Cohere candidates (`embed-multilingual-v3.0`, `embed-v4.0`, `embed-v5.0-fast`). The release records which model it used, and questions are always embedded with that same model.
@@ -302,7 +302,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Toll-free number | 2 months | 6 |
 | Vercel Pro | 1 seat, 2 months | 55 |
 | Supabase Pro | Production, plus staging compute in the same organisation | 100 |
-| Cohere | Directory translation and re-runs, alerts, about 4,000 questions, test-set runs | 55 |
+| Cohere | Catalogue translation re-runs (offline scripts), alerts, about 4,000 questions, test-set runs | 55 |
 | Domain | — | 20 |
 | **Total** | | **about 700** |
 | Headroom within CAD 1,000 | | about 300 |
@@ -368,7 +368,6 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Question | Owner | Needed by |
 |---|---|---|
 | Toll-free verification submitted and approved | Hub | Week 1 (submission) |
-| Which North Small Translate model id the API accepts (`north-small-translate-09-2026` or `north-small-translate-1-0`) | IT | Before translation build |
 | Cohere prices for Command A Translate, North Small Translate and Tiny Aya; organization spend limit | Hub and IT | Before launch |
 | Whether Tiny Aya's CC-BY-NC terms allow the Hub's use | Hub | Before launch, if routed |
 | Fire and evacuation alerts ignore topic opt-outs (a safety default in AD-7; the PRD is silent). Confirm, and tell residents at sign-up | Product owner | Before alert build |
