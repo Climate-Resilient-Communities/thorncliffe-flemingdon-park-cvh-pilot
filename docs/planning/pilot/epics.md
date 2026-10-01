@@ -3397,3 +3397,239 @@ So that we can see how the round is going and report on it afterwards without ke
 **Given** the pilot measures
 **When** computed
 **Then** round counts are available per thread, building and floor after the thread closes, with no identifiers
+
+## E09 — The Hub monitors the pilot and closes it cleanly
+
+The Hub learns about problems before residents do, can deliberately resend texts that failed, reviews reliability every week, and gives Directors a read-only view of the pilot measures for the week-8 go / no-go review. Residents can ask what the CVH holds about them, and at the end of the pilot subscribers are asked whether to stay, with everyone else deleted on schedule.
+
+**Epic estimate:** 47 h across 8 stories (2 S, 6 M) · **Epic actual:** —
+
+**Launch gate.** S09.01 (health and outside check) and S09.03 (written procedures, rehearsed) must be done before launch. The other stories may land during the pilot; S09.07 and S09.08 must be ready by day 60.
+
+**Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 (inbound router, YES resolution), S07.07 (subscriber matching), S07.08 (spend and reservations), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally), S01.14 (coverage). Each story creates only the tables it needs and names the stories it depends on.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Health conditions | Every condition in AD-23, checked by `/api/jobs/health` every minute: a delivery `queued` and due for more than 5 minutes outside a pause; a delivery that became `unknown`; a failed pg_cron run (from `cron.job_run_details`); more than 5 webhook signature failures in 10 minutes; a whole language falling back in a translation; a failed directory publish; the daily transactional ceiling crossed; a `cap_overrun`; the sender lease not renewed for 3 minutes while rows are due; Messaging Service settings wrong (S06.02, S07.09). |
+| Heartbeat | The health job records the time of its last successful run. `GET /api/health/heartbeat` returns 200 only if that time is less than 3 minutes old, else 503. It returns no other detail. |
+| Outside check | A free-tier uptime monitor outside Vercel, Supabase and Twilio (chosen by IT and recorded in the spine) that calls the heartbeat every minute and emails the on-call Admins when it fails twice in a row. It does not depend on the CVH's own texting. |
+| Resend | A deliberate Admin action that creates a new delivery for an original one that ended `failed`, `undelivered` or `unknown`, with idempotency key `resend:{original id}:{n}`, at most 2 resends per original. The original row never changes. |
+| Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
+| Small-number rule | In every measure, any count from 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5". Zero is shown as 0. |
+| Measures | Section 9 of the pilot PRD: subscribers and installs; acknowledgement, approval and delivery times; check-in counts; directory, map and search use; translation understood per language (survey) and fallback rates; drills, corrections and their reach; cost per alert and total spend; coverage. All aggregate, drills apart. |
+| Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA). Answered within 30 days. |
+| Re-consent campaign | The end-of-pilot `campaign` text (D-7). Subscribers move `active → reconsent_pending`; YES moves them to `retained`; those still `reconsent_pending` 30 days after the campaign starts are deleted. |
+
+### Story S09.01 — The Hub hears about failures before residents do, even if texting is down
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-health-outside-check`
+
+As the on-call Admin,
+I want every known failure to reach me, and a check that does not rely on the CVH itself,
+So that a silent failure cannot leave residents without alerts.
+
+**Acceptance Criteria:**
+
+**Given** the health job
+**When** any health condition is met
+**Then** it writes an `ops_event` (no personal data) and queues one on-call text per on-call number, at most once per condition per 30 minutes, and records recovery when the condition clears (extending S06.07 to every condition, each with a test that triggers it)
+
+**Given** the heartbeat
+**When** the health job has not completed for 3 minutes
+**Then** `/api/health/heartbeat` returns 503, sets no cookie and reveals nothing else
+
+**Given** the outside check
+**When** the heartbeat fails twice in a row (for example pg_cron stopped, the database is down, or the app is down)
+**Then** the on-call Admins get an email from the monitor within 5 minutes; the launch rehearsal includes stopping the health job on staging and confirming the email arrives
+
+**Given** the Hub screens
+**When** an open health condition exists
+**Then** every Admin and Coordinator screen shows a banner naming it in plain words, until it clears
+
+### Story S09.02 — An Admin resends texts that failed
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-21 (resend), AR-12, FR-G6 · **Depends on:** S06.04, S07.08 · **Branch:** `e09-s02-resend`
+
+As a Hub Admin,
+I want to resend texts that did not arrive,
+So that residents who missed an alert still get it, without risking duplicates by accident.
+
+**Acceptance Criteria:**
+
+**Given** an entry's sending view
+**When** an Admin at `aal2` chooses "Resend" for one delivery, or for all `failed` and `undelivered` deliveries of an entry and language
+**Then** a new delivery is created for each with a resend idempotency key, the same frozen body, and its own spend reservation; the originals are unchanged; `delivery.resent` is audited with counts, never numbers
+
+**Given** a delivery ended `unknown`
+**When** an Admin chooses to resend it
+**Then** they must confirm "This text may already have arrived; resending may send it twice", and unknown rows are never included in a bulk resend
+
+**Given** a delivery whose error means the number cannot receive texts (for example invalid number or opted out)
+**When** a resend is attempted
+**Then** it is refused with the reason
+
+**Given** a resend
+**When** it reaches hand-off
+**Then** it follows E06's sendability rules (an entry since superseded, or a thread closed when the entry is not the closing entry, is cancelled), and it is counted in spend once (E07 rules)
+
+**Given** an original already resent twice
+**When** a third resend is attempted
+**Then** it is refused
+
+### Story S09.03 — Written procedures are in place and rehearsed
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** NFR-N6, AR-21, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures`
+
+As a Hub Coordinator,
+I want short procedures I can follow under pressure,
+So that sending, correcting and recovering are done the same way every time.
+
+**Acceptance Criteria:**
+
+**Given** `docs/procedures/`
+**When** this story is done
+**Then** it holds one page each, in plain steps with screen names, for: writing and approving an alert; correcting and withdrawing; closing; running a drill; pausing and resuming texts; resending failed texts; a cap overrun; a health alert and who owns the incident; changing Messaging Service settings (texts paused first); rotating secrets (at pilot start, on departures, at pilot end); restoring the database; and a resident access request
+
+**Given** each procedure
+**When** reviewed by the Hub
+**Then** it names its owner and last-reviewed date, and each Hub screen that starts one of these tasks links to its procedure
+
+**Given** launch readiness
+**When** the procedures are rehearsed
+**Then** a production drill (S06.05), a pause and resume, a resend on staging and a database restore on staging are performed following the written steps, and any step that did not work is fixed in the procedure before launch
+
+### Story S09.04 — The Hub reviews reliability every week
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** NFR-N4, AR-21 (weekly view), AR-18 · **Depends on:** S09.01 · **Branch:** `e09-s04-weekly-review`
+
+As a Hub Admin,
+I want one weekly page of what went wrong and how fast things were,
+So that we learn from each week of the pilot.
+
+**Acceptance Criteria:**
+
+**Given** the weekly review view (a SQL view over `ops_event`, `delivery` and `audit_event`)
+**When** an Admin or Director opens a week
+**Then** it shows: health conditions with start, end and duration; failed, undelivered and unknown texts by language and reason; resends; pauses; cap overruns; translation fallbacks by language; publish failures; approval-to-first-hand-off and to-90%-delivered times per entry (or "not reached"); and slow deliveries over 10 minutes, all without personal data, drills apart
+
+**Given** the review
+**When** the Hub adds notes and actions for the week
+**Then** they are saved with the week and audited
+
+**Given** an export
+**When** an Admin downloads the week as CSV
+**Then** it contains the same aggregate data with no phone numbers, subscriber ids or message bodies (test)
+
+### Story S09.05 — Directors see the pilot measures, read-only
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-M1 to FR-M5 (view), D-8, NFR-N9 · **Depends on:** S07.10, S08.09, S06.08 · **Branch:** `e09-s05-measures-view`
+
+As a Hub Director,
+I want the pilot's measures in one place,
+So that leadership can decide at week 8 whether to continue to the MVP.
+
+**Acceptance Criteria:**
+
+**Given** the measures view
+**When** a Director, Coordinator or Admin opens it
+**Then** it shows each Section 9 measure, by language and neighbourhood where it applies, from the stored aggregates, refreshed daily, with the small-number rule applied and drills in a separate section; Directors cannot change anything (direct-request tests)
+
+**Given** the translation-understood survey
+**When** a Coordinator enters the results per language (number asked, number who understood)
+**Then** they are saved as counts, shown beside each language's fallback rate, and audited
+
+**Given** spend
+**When** shown
+**Then** it uses E07's spent and reserved figures, with actual and estimated amounts labelled and unknown Cohere prices shown as unknown, against the CAD 1,000 budget
+
+**Given** the week-8 review
+**When** the Hub prepares it
+**Then** the view can be printed or saved as PDF with the date and the measures as of that date
+
+### Story S09.06 — Residents can ask what the CVH holds about them
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** NFR-N5 (access requests), AR-17 · **Depends on:** S07.04, S08.05 · **Branch:** `e09-s06-access-requests`
+
+As a resident,
+I want to find out what the CVH keeps about my number and correct it,
+So that I stay in control of my information.
+
+**Acceptance Criteria:**
+
+**Given** a resident contacts the Hub (phone or in person) with an access or correction request
+**When** an Admin at `aal2` opens "Access request" and enters the number
+**Then** a one-time 6-digit code is texted to that number (purpose `access_code`, valid 15 minutes), and only after the resident reads it back does the screen show what is held
+
+**Given** the code is confirmed
+**When** the screen shows the data
+**Then** it lists everything held for that number: subscription choices, `consent_version`, pending sign-up, check-in request, any open check-in rows and escalations, and any `inbound_reply`; the Admin can correct choices or delete the subscription on the resident's behalf
+
+**Given** each request
+**When** opened, answered or closed
+**Then** it is recorded in the audit trail with dates, outcome and the Admin, never the number, and the view shows requests open longer than 25 days in red (30-day limit)
+
+**Given** lookups
+**When** an Admin starts more than 10 in a day, or a code is entered wrongly 3 times
+**Then** further lookups are refused for the day, or the code is voided, and on-call is alerted
+
+### Story S09.07 — Subscribers are asked whether to stay after the pilot
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-D-7, AR-13 (retention states), AR-12 (`campaign`) · **Depends on:** S07.04, S06.02 · **Branch:** `e09-s07-reconsent-campaign`
+
+As a Hub Director,
+I want every subscriber asked at the end of the pilot whether to keep getting texts,
+So that we only keep people who chose to stay.
+
+**Acceptance Criteria:**
+
+**Given** an Admin at `aal2` prepares the re-consent campaign
+**When** they review it
+**Then** they see the catalog text in each language ("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted."), the number of active subscribers per language and the estimated cost; a second Admin at `aal2` must approve it before anything is sent
+
+**Given** the campaign is approved
+**When** it starts
+**Then** in one transaction every `active` subscriber moves to `reconsent_pending` and one `campaign` delivery per subscriber is created in their language; new web and staff sign-ups are closed with "Sign-ups are paused while the pilot ends"; `campaign.started` is audited with counts
+
+**Given** a `reconsent_pending` subscriber replies YES
+**When** handled
+**Then** the reply resolves to the campaign prompt (latest `sent_at`), the subscriber becomes `retained`, and a confirmation is sent; a YES after the deadline is answered with the sign-up information
+
+**Given** the campaign is running
+**When** alerts are approved
+**Then** `reconsent_pending` and `retained` subscribers still get alerts until the deadline
+
+**Given** a campaign delivery that failed or is unknown
+**When** the Hub reviews the campaign
+**Then** it can resend it under S09.02's rules before the deadline
+
+### Story S09.08 — The pilot's resident data is deleted on schedule
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-D-7, NFR-N5, AR-13 · **Depends on:** S09.07 · **Branch:** `e09-s08-end-of-pilot-purge`
+
+As a Hub Director,
+I want everyone who did not say YES deleted when we said they would be,
+So that the Hub keeps its promise to residents.
+
+**Acceptance Criteria:**
+
+**Given** 30 days after the campaign started (Toronto time)
+**When** the purge job runs
+**Then** every subscriber still `reconsent_pending` is deleted with the full E07 deletion (places, opt-outs, prompts, edit links, check-in records), and the counts deleted and retained are recorded as an aggregate `ops_event`
+
+**Given** the purge
+**When** it is interrupted
+**Then** it resumes and never deletes a `retained` subscriber (test with a mix of states)
+
+**Given** the end of the pilot
+**When** the final report is produced
+**Then** the staff audit trail and aggregate measures are kept for the MVP; the procedure for rotating secrets at pilot end is run and recorded; and the terms page states the date resident data was deleted
