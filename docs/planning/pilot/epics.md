@@ -1275,3 +1275,308 @@ So that the pilot can show use without recording who did what.
 **Given** `/api/metrics`
 **When** the no-cookie test runs
 **Then** it sets no cookie
+
+## E03 — Residents ask in their own words and get the right provider
+
+Residents type a question in any launch language, romanized or mixed included, and get the three to five best-matching published listings, in the language they wrote in, with a clear route to a person when nothing matches and 911 first on emergency results. The epic starts with the test set so every later story is measured against it.
+
+**Epic estimate:** 49 h across 9 stories (4 S, 5 M) · **Epic actual:** —
+
+**Depends on E01 and E02:** S01.02 (environments and Cohere keys), S01.03 (migrations), S01.04 (audit), S02.05 (releases, manifest `search` field, atomic current-release pointer), S02.06 (directory screens and the failed-update fallback), S02.12 (offline rules), S02.15 (usage events). Each story creates only the tables it needs and names the stories it depends on.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Search text | What is embedded for each published provider: English name, categories, subcategories, day-to-day services and emergency role. Source notes and contact details are never embedded. |
+| Question language | The language the question was written in, detected by `eld` plus script checks. It is **confident** when it is a launch language and passes the per-language check (Pashto by its marker letters, since `eld` has no Pashto; Dari when `eld` reports `fa`). It is **romanized or mixed** when the question is in Latin script but not confidently `en`, `es`, `fr`, `tl` or `sk`, or mixes scripts. It is **ambiguous Arabic script** when it is in Arabic script without the marker letters that separate Urdu, Pashto and Dari. |
+| `query_lang` | The language results are shown in: the question language when confident, otherwise the page language. |
+| Translated-question leg | For Pashto, Dari, romanized or mixed, and ambiguous Arabic-script questions, the server also translates the question to English and embeds the translation; the two rankings are merged by reciprocal rank fusion (RRF, k = 60). The question is never stored, cached or logged by this leg. |
+| Search time limit | Proposed engineering budget (not a PRD number): the server answers within 2.5 s. If the translated-question leg has not returned within 1.5 s, the server answers from the first leg alone. Both are config values revisited after measurement. |
+| No clear match | The best result's similarity is below the threshold for the release's embedding model. The threshold is a config value set from the test set (S03.07). |
+| Emergency result | A result whose provider is in a category listed in `emergency_categories` (config; starts with "Support & Emergency Services"). When any result is one, `emergency_first` is true and the client puts the 911 block above the results. |
+| Hit | The expected provider (or one of the acceptable providers) for a test question appears in the top 3 results. |
+| Test set | Questions with their expected providers, stored in `data/search-test-set/`. The launch set has about 150 questions, 10 per language, written with ambassadors, including romanized Urdu, Hinglish, emergency and no-match questions. It contains no personal data. |
+| Launch bar | The minimum hit rate per language, set by the Hub from the first full measurement (S03.08) and stored in `data/search-test-set/bar.json`. |
+
+### Story S03.01 — Team can measure search with a test set from day one
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-D2-Q (acceptance), AR-24 · **Depends on:** S02.04 · **Branch:** `e03-s01-test-set-runner`
+
+As a developer,
+I want a test-set format, a runner and a starter set of about 30 questions,
+So that every search change is measured against real questions before it ships.
+
+**Acceptance Criteria:**
+
+**Given** the test-set format, a zod schema in `src/contracts`
+**When** a question is added
+**Then** it has `id`, `lang`, `q` (at most 200 characters), `kind` (`native`, `romanized`, `mixed`, `emergency`, `no_match`), `expected` (one or more provider ids, or empty for `no_match`), `author_role` and `added`
+**And** a file that fails the schema, or names a provider id not in `data/catalogue/providers.json`, fails CI with the line number
+
+**Given** about 30 starter questions written by the team (2 per language, including at least 2 romanized Urdu, 1 Hinglish, 2 emergency and 2 no-match)
+**When** they are committed
+**Then** each has been checked by a second team member, recorded in the file
+
+**Given** `scripts/search-test-set` run against a search engine (a fake in unit tests, the real `/api/search` use case later)
+**When** it finishes
+**Then** it reports per language and overall: hit rate (top 3), top-5 rate, no-match accuracy (no-match questions correctly returning `no_clear_match`), emergency accuracy (emergency questions returning `emergency_first`), and p50 and p95 time per question
+**And** it writes the report to `data/search-test-set/reports/{date}-{model}.json` with the release number, model, threshold and whether the translated-question leg was on
+
+**Given** two reports
+**When** `scripts/search-test-set --compare a b` runs
+**Then** it shows per-language differences, so a change that makes any language worse is visible
+
+### Story S03.02 — Each new release carries the search data that matches its listings
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** AR-15 (search data), FR-D2-Q, AR-20 · **Depends on:** S02.05, S03.01 · **Branch:** `e03-s02-release-search-data`
+
+As a Hub Admin,
+I want each new directory release to include the meaning data for its own listings,
+So that search can never point to a listing the resident's phone doesn't have.
+
+**Acceptance Criteria:**
+
+**Given** an Admin at `aal2` publishes a new release with search enabled
+**When** the publish job runs
+**Then** it embeds each published provider's search text once with the configured embedding model (`input_type` for documents), writes the vectors file into the same new release, and records the model, vector count and `catalogue_hash`
+**And** earlier releases are never modified (S02.05)
+
+**Given** the vectors file and the listing files of the new release
+**When** the job is about to mark it current
+**Then** it refuses unless the vectors cover exactly the providers in the listing files, with the same release number and `catalogue_hash`; on refusal the previous release stays current and the failure is recorded in `ops_event`
+
+**Given** the embedding call fails or is stopped part way
+**When** the job runs again
+**Then** it resumes from the last completed chunk, and residents keep the previous release (with or without search) until the new one is complete
+
+**Given** each embedding call
+**When** it returns
+**Then** its usage (model, tokens, release number) is recorded in `spend_event` (created in this story, owned by `spend`); the price per unit may be unknown and is left null until Cohere's pricing is recorded
+
+**Given** the manifest for a release with matching search data
+**When** served
+**Then** it shows `search: {status: "available", embed_model, vectors_path}`; the vectors file is private and never served to phones
+
+### Story S03.03 — Server tells which language a question was written in
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-D2-Q, AR-15 · **Depends on:** S01.01 · **Branch:** `e03-s03-question-language`
+
+As a resident,
+I want results in the language I wrote my question in,
+So that I can read them even when my phone is set to another language.
+
+**Acceptance Criteria:**
+
+**Given** `directory/domain/questionLanguage.ts#detect(q, pageLang)`
+**When** called
+**Then** it returns `{lang, confidence: confident | romanized_or_mixed | ambiguous_arabic | unknown, query_lang}` following the definitions, and is a pure function
+
+**Given** fixture questions for every launch language, plus romanized Urdu, Hinglish, mixed English-Urdu, Urdu without marker letters, a Dari question `eld` reports as `fa`, a Pashto question with marker letters, emoji only and numbers only
+**When** the unit tests run
+**Then** each returns the expected result; Pashto is never returned as Urdu or Dari when Pashto marker letters are present
+
+**Given** a question that is not confident
+**When** `query_lang` is chosen
+**Then** it is the page language
+
+### Story S03.04 — Search finds published providers by meaning
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-D2-Q, FR-M3 (search data), AR-15, AR-20 (`SearchV1`), AR-22, AR-26 · **Depends on:** S03.02, S03.03 · **Branch:** `e03-s04-search-endpoint`
+
+As a resident,
+I want my question matched to listings by meaning,
+So that a question in any language finds an English-sourced listing.
+
+**Acceptance Criteria:**
+
+**Given** `POST /api/search` with `{q, lang, v}`
+**When** `q` is empty, over 200 characters, or `lang` is not a `LangCode`
+**Then** it returns 400 `{error:{code, message_key}}` and calls no model
+
+**Given** a valid question
+**When** it is searched
+**Then** the server embeds the question once with the current release's model (`input_type` for queries), compares it with the release's vectors held in memory, and returns up to 5 results with scores as `SearchV1` `{v, release_v, query_lang, status, emergency_first, results}`
+**And** the results come only from providers in that release, so every id exists in the phone's listing file for `release_v`
+
+**Given** the client's `v` is older than the current release
+**When** it searches
+**Then** the response carries the current `release_v`, and the client refreshes the manifest and loads that release's listing file before showing results (falling back per S02.06 if that download fails, in which case it shows "Search results are being updated, try again" and the category list)
+
+**Given** the current release has `search: {status: "unavailable"}`
+**When** a search arrives
+**Then** it returns `status: "unavailable"` (an expected outcome) and calls no model
+
+**Given** the best score is below the threshold
+**When** results are returned
+**Then** `status` is `no_clear_match` and `results` is empty
+
+**Given** any result is an emergency result
+**When** returned
+**Then** `emergency_first` is true
+
+**Given** the embedding call fails or the search time limit is reached
+**When** the server answers
+**Then** it returns `{error:{code: "search_unavailable"}}` within the time limit, and the failure is counted in `ops_event` without the question
+
+**Given** each search
+**When** it completes
+**Then** `search_log` stores only `{at, lang, query_lang, release_v, ms, result_count, status, top_score, translated_leg}`; the question is never stored or logged (the logger rejects a `q` field, tested), and embedding usage is recorded in `spend_event`
+
+**Given** one client (salted IP hash) sends more than 30 questions in 10 minutes
+**When** the next arrives
+**Then** it returns 429 `{error:{code: "rate_limited"}}` and calls no model; the limit is checked in the route handler through `subscriptions`' rate limiter (the `rate_limit` table is created here if E07 has not), and hashes are deleted after 24 hours
+
+**Given** `/api/search`
+**When** the no-cookie test and the contract test run
+**Then** no cookie is set and every response matches `SearchV1` or the error schema
+
+### Story S03.05 — Questions in Pashto, Dari and romanized text also search through English
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
+
+As a resident who writes in Pashto, Dari or romanized Urdu,
+I want my question understood as well as anyone else's,
+So that I am not disadvantaged by the language or script I use.
+
+**Acceptance Criteria:**
+
+**Given** the `translation` module's `Translator` port and Cohere adapter (created here; E04 adds alert routes, caching and checks for alerts)
+**When** a question needs the translated-question leg
+**Then** it is translated to English with the model set in config `search_question_route` (starting with North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), in parallel with the first leg
+
+**Given** the translation returns within 1.5 s and `eld` confirms it is English
+**When** both legs are ranked
+**Then** the rankings are merged by RRF (k = 60), the threshold is applied to the higher of each provider's two scores, and `search_log.translated_leg` is `used`
+
+**Given** the translation fails, times out, or is not English
+**When** the server answers
+**Then** it answers from the first leg alone within the search time limit, and `translated_leg` is `failed` or `timed_out`
+
+**Given** the translated question
+**When** handled
+**Then** it is never written to the translation cache, any table or any log (tested), and its usage is recorded in `spend_event` without text
+
+**Given** the test-set runner
+**When** run with the leg on and off
+**Then** both reports are produced, so the leg's effect per language is visible
+
+### Story S03.06 — Resident asks a question and sees the right listings
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-D2-Q, UX-DR10, AR-27 (911 block), NFR-N2 · **Depends on:** S03.04, S02.06, S02.10 · **Branch:** `e03-s06-ask-screens`
+
+As a resident,
+I want to type my question and see a few listings I can act on,
+So that I find help without knowing the provider's name.
+
+**Acceptance Criteria:**
+
+**Given** search entry R-09
+**When** the manifest says search is available
+**Then** the question box appears with a hint in the page language and the category buttons below it
+**And** when search is unavailable, the box is hidden and only the category buttons show
+
+**Given** results R-10
+**When** the server returns `status: ok`
+**Then** 3 to 5 listings are shown exactly as published in `query_lang`, with "Last confirmed by the Hub {date}", the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
+**And** if the `query_lang` listing file is not on the phone, it is downloaded first; if that fails, the results are shown in the page language with that note
+
+**Given** `emergency_first` is true
+**When** results are shown
+**Then** the one catalog 911 block appears above the results
+
+**Given** `status: no_clear_match`
+**When** shown (R-11)
+**Then** the resident sees "We couldn't find a clear match", the category list and the Hub's number as a `tel:` link
+
+**Given** the phone is offline, the server is rate-limiting, or the server returns `search_unavailable`
+**When** the resident asks
+**Then** they see a plain message in the page language ("Search needs signal" or "Search is busy, try again in a few minutes"), the category buttons and the Hub's number, never a blank screen or a raw error; category browsing works offline from the cached listing file
+
+**Given** the CVH never writes its own answer
+**When** any result screen renders
+**Then** it shows only listing content, catalog strings and the 911 block (a test fails if any server text other than ids and scores is rendered)
+
+**Given** the screens in this story, in `en`, `ur` and `ps`, normal and basic mode
+**When** axe-core runs
+**Then** there are no serious or critical violations, and the result count and "no clear match" are announced to screen readers
+
+### Story S03.07 — Team picks the embedding model and the no-match threshold
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-D2-Q, AR-15 (embedding model open question) · **Depends on:** S03.05 · **Branch:** `e03-s07-model-threshold`
+
+As a developer,
+I want the embedding model and threshold chosen by measurement,
+So that the choice is evidence, not guesswork, and can be repeated on the full test set.
+
+**Acceptance Criteria:**
+
+**Given** the three candidates `embed-multilingual-v3.0`, `embed-v4.0` and `embed-v5.0-fast`
+**When** the runner is run on staging with each, leg on and off
+**Then** a comparison report is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage
+
+**Given** the comparison
+**When** a model is chosen
+**Then** the choice and the reason are recorded in the spine (closing the open question for now) and set as config; a later release using a different model needs a new release and a new run
+
+**Given** the scores of correct and no-match questions for the chosen model
+**When** the threshold is set
+**Then** it is the value that keeps every no-match question below it while losing the fewest hits, recorded with the report; the choice is provisional until S03.08
+
+### Story S03.08 — Ambassadors complete the test set and the Hub sets the launch bar
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-D2-Q (acceptance), Launch readiness · **Depends on:** S03.07 · **Branch:** `e03-s08-full-test-set`
+
+As a Hub Coordinator,
+I want about 150 real questions from ambassadors and a bar we agree on,
+So that we launch search knowing how well it works in every language.
+
+**Acceptance Criteria:**
+
+**Given** a question template in the format of S03.01 (a spreadsheet converted by `scripts/search-test-set import`)
+**When** ambassadors submit questions
+**Then** the import validates every row, refuses rows with personal data (phone numbers, email addresses, unit numbers, detected by pattern), and reports rows missing an expected provider
+
+**Given** the imported set
+**When** coverage is checked
+**Then** every launch language has at least 10 questions, with at least 5 romanized Urdu, 3 Hinglish, 10 emergency and 10 no-match questions overall; CI reports any gap
+
+**Given** the full set
+**When** the runner runs with the chosen model, leg and threshold
+**Then** the model and threshold choices are confirmed or revised from this run, with the report committed
+
+**Given** the first full report
+**When** the Hub sets the launch bar
+**Then** `bar.json` records the minimum hit rate per language, who set it and the date
+**And** any language whose first measurement is below the bar the Hub would accept is listed in the launch-readiness checklist with the action and owner (for example more catalogue review or a different question route)
+
+### Story S03.09 — The test set guards every search change
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-24, FR-D2-Q · **Depends on:** S03.08 · **Branch:** `e03-s09-test-set-guard`
+
+As a Hub Director,
+I want search quality checked whenever something could change it,
+So that a model or route change never quietly makes search worse for one language.
+
+**Acceptance Criteria:**
+
+**Given** a change to the embedding model, `search_question_route`, the threshold, `emergency_categories`, the search code or the catalogue
+**When** CI runs on that change
+**Then** the runner runs against staging, and CI fails if any language falls below its bar in `bar.json`, naming the language and the drop
+
+**Given** the monthly schedule and the week before launch
+**When** the scheduled run happens
+**Then** the report is committed and a drop below any bar is recorded in `ops_event` for the weekly review (E09)
+
+**Given** staging's Cohere key has a spend limit
+**When** runs happen
+**Then** each run's embedding and translation usage is recorded in `spend_event` against staging, and the runner refuses to start when the run would exceed the remaining monthly allowance set in config
