@@ -200,7 +200,7 @@ Model identifiers: `north-small-translate-09-2026` (accepted by the API; used to
 4. The server returns provider numbers, scores and the language the question was written in. The phone shows the listings in that language, from the catalogue's language file (or the page language when the question's language can't be told, such as romanized text). Nothing is translated at question time.
 5. Below a similarity threshold the answer is "no clear match". Emergency categories put 911 first. No generated text, ever.
 
-The embedding model is chosen before launch by running the test set on three Cohere candidates (`embed-multilingual-v3.0`, `embed-v4.0`, `embed-v5.0-fast`). The release records which model it used, and questions are always embedded with that same model.
+The pilot uses `embed-v4.0`, confirmed by the test set before launch; the other Cohere candidates (`embed-multilingual-v3.0`, `embed-v5.0-fast`) are compared only if it misses the launch bar. The release records which model it used, and questions are always embedded with that same model.
 
 **Why not Elasticsearch.** Elasticsearch matches words. A Pashto question shares no words with an English description. In published tests, keyword search found the right answer about 40% of the time across languages, against about 70 to 75% for multilingual embeddings. Elasticsearch also has no language support for 7 of the 15 languages. With about 100 providers, a search cluster or vector database would add cost and a network hop for no gain (research §1, §3a).
 
@@ -366,7 +366,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 - **Vector database, reranking, generated answers.**
 - **Canadian processing** for SMS and translation; data governance; 3 to 7 year retention; privacy review.
 - **Point-in-time recovery, multiple regions, reliability targets.**
-- From the PRD: native apps, email, official alert feeds (a manual "Official alert from [source]" is a pilot stretch only), partner alerts and coordination space, confirm receipt, "I need help", resident reports and moderation, trusted helpers, audio and human-checked templates, advanced directory filters, buildings outside the 43, Hub hours and approval timeouts.
+- From the PRD: native apps, email, official alert feeds (the manual "Official alert from [source]" relay is also deferred to the MVP), partner alerts and coordination space, confirm receipt, "I need help", resident reports and moderation, trusted helpers, audio and human-checked templates, advanced directory filters, buildings outside the 43, Hub hours and approval timeouts.
 
 ## 11. Open questions
 
