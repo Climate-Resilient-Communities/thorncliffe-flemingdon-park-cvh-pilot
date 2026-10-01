@@ -1,0 +1,2305 @@
+{
+  "language": "ps",
+  "compiled": "2026-10-01, Claude subagent (sourced, not a native speaker)",
+  "method": "Each Pashto form was copied from a professionally translated source, mostly with the English original side by side. Terms marked '(image)' come from the image-only Pashto PDF of IOM's Canadian Orientation Abroad workbook and were transcribed visually. PDF text extraction reverses the lam-alef ligature (e.g. 'الرې' for 'لارې'); quotes from the UK handbook and Doctors of the World PDFs were corrected for that only. A native Afghan Pashto speaker should review before publication.",
+  "terms": [
+    {
+      "en": "emergency (situation)",
+      "ps": "بیړنی حالت",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.32: 'Call 911 for the police in an emergency' = 'په بیړني حالت کې د پولیسو 911 شمېرې ته زنګ ووهئ' (transcribed from page image)"
+        },
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'In the event of a medical emergency' = 'په طبي بیړني حالت کې'; 'seek emergency treatment' = 'بیړنۍ درملنه وغواړئ'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.197: 'Emergency contact details / Emergency services' = 'د بیړني حالت د تماس جزیات / د بیړني حالت خدمتونه'"
+        },
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "emergency = بیړنی (source: DW Pashto)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Adjective form: بیړنی/بیړنۍ (urgent, emergency). The machine output used اضطراري; the professional sources here prefer بیړنی. UK handbook also uses the loanword ایمرجنسي and عاجل وضعیت."
+    },
+    {
+      "en": "emergency services (911: police, fire, ambulance)",
+      "ps": "بیړني خدمات لکه اور وژونکي او پولیس",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.157: 'Emergency services like firefighters and police' = 'بیړني خدمات لکه اور وژونکي او پولیس' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.197: 'Call 999 and ask for the police, an ambulance or the fire service' = 'ته زنګ ووهئ او د پولیسو، امبولانس یا د اطفایې د خدمت غوښتنه وکړئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "firefighters",
+      "ps": "اور وژونکي",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.80: 'Contact number for the firefighters, ambulance or the police' = 'د اور وژونکو، امبولانس یا پولیسو د اړیکې شمېرې'; 'Call 911 to contact firefighters, an ambulance or the police' = '911 ته زنګ ووهئ ترڅو د اور وژونکو، امبولانس یا پولیسو سره اړیکه ونیسئ' (image)"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.157: 'firefighters and police' = 'اور وژونکي او پولیس' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Avoid اورګاډی (train) and اور لګول (setting a fire), both produced by the machine translation."
+    },
+    {
+      "en": "fire services / fire department (e.g. Toronto Fire Services)",
+      "ps": "اطفایه (د اطفایې خدمتونه)",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.197: 'the fire service' = 'د اطفایې خدمت'; p.143: 'The police, ambulance and fire brigade: 999' = 'پولیس، امبولانس او اطفاییه: 999'"
+        },
+        {
+          "title": "Fire again breaks out in Kabul's Mandawi market",
+          "url": "https://taand.net/?p=271071",
+          "publisher": "Taand (Afghan Pashto news, quoting ministry)",
+          "evidence": "'د اطفایې د کارکوونکو د فوري او چټکو هڅو له برکته...' (thanks to the fire-brigade workers' quick efforts; ministry statement on a Kabul market fire)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "اطفایه is the established Afghan term for the fire brigade. The COA workbook prefers the descriptive اور وژونکي (firefighters). For 'fire suppression', the reviewer's 'اور وژل' matches the root of اور وژونکي."
+    },
+    {
+      "en": "fire station",
+      "ps": "اطفایه",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.143: 'fire brigade' = 'اطفاییه'"
+        },
+        {
+          "title": "Fire again breaks out in Kabul's Mandawi market",
+          "url": "https://taand.net/?p=271071",
+          "publisher": "Taand (Afghan Pashto news, quoting ministry)",
+          "evidence": "'د اطفایې کارکوونکي' (fire-brigade workers), Afghan news usage"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "No source has a separate word for the station building. In Afghan usage اطفایه means both the fire brigade and its station. The reviewer's 'د اور وژنې مرکز' is understandable but not attested in these sources. Never use اورګاډي څانګه (train department)."
+    },
+    {
+      "en": "police",
+      "ps": "پولیس",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.153: 'The police and their duties' = 'پولیس او د هغوی مسؤلیتونه'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.32: 'Call 911 for the police in an emergency' = 'په بیړني حالت کې د پولیسو 911 شمېرې ته زنګ ووهئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "police station",
+      "ps": "پولیس سټیشن",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.151: 'If you don't want to walk into a police station' = 'که تاسې نه غواړئ چې پولیس سټیشن ته لاړ شئ'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Afghan media say امنیتي حوزه for a police district (e.g. Radio Azadi: 'د کابل د اتمې امنیتي حوزې'). The reviewer's 'د پولیسو حوزه' fits that usage but is not attested verbatim. Avoid پولیسي څارنوالي (prosecutor's office)."
+    },
+    {
+      "en": "police non-emergency number",
+      "ps": "د ځايي پولیسو غیر عاجل تلیفون شمېره",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.23: 'call the local police's non-emergency phone number' = 'د ځايي پولیسو غیر عاجلي تلیفون شمیرې ته زنګ ووهئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "ambulance",
+      "ps": "امبولانس",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.80: 'firefighters, ambulance or the police' = 'اور وژونکو، امبولانس یا پولیسو' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.179: 'ask for an ambulance' = 'د امبولانس غوښتنه وکړئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "hospital",
+      "ps": "روغتون",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'approach a public hospital or clinic' = 'یو عامه روغتون یا کلینیک ته ورشئ'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.98: 'Hospitals' = 'روغتونونه' (image)"
+        },
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "hospital = روغتون (source: BBC Pashto)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Plural روغتونونه. Do NOT use it for 'health clinics' (the machine did this)."
+    },
+    {
+      "en": "clinic / health clinic",
+      "ps": "کلینیک (روغتیايي کلینیک)",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'public hospital or clinic' = 'عامه روغتون یا کلینیک'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Free mental health clinics' = 'د رواني روغتیا وړیا کلینیکونه'; p.71/98 'روغتیايي' as the adjective 'health' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Plural کلینیکونه. The attested words are کلینیک and روغتیايي. The full phrase 'روغتیايي کلینیکونه' (reviewer suggestion) combines them; it does not appear verbatim."
+    },
+    {
+      "en": "community health centre",
+      "ps": "د ټولنې روغتیايي مرکز",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.98: 'Community health centres' = 'د ټولنې د روغتیا مرکزونه'; p.99: 'visit a walk-in clinic or a community health centre' = '...یا د ټولنې روغتیايي مرکز څخه لیدنه وکړئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "emergency department / emergency room",
+      "ps": "بیړنۍ خونه",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.98: 'Emergency rooms' = 'بیړنۍ خونې'; 'The area of a hospital where you go if you have a serious and immediate health issue' = 'د روغتون ساحه، چیرې چې تاسو د جدي او سمدستي روغتیايي ستونزې د لرلو پر مهال ځئ' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.159: 'Accident and Emergency (A&E) Department' = 'د پیښې او ایمرجنسۍ (A&E) څانګې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "For 'emergency department' COA's بیړنۍ خونې is the clearest. 'Department' = څانګه (UK). The machine's اضطراري څانګه is understandable but not what these translators used."
+    },
+    {
+      "en": "family doctor / GP",
+      "ps": "د کورنۍ ډاکټر (عمومي ډاکټر)",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.98: 'Family doctors' = 'د کورنۍ ډاکټران' (image)"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'contact your GP (family doctor)' = 'له خپل عمومي ډاکټر (کورني ډاکټر) سره اړیکې ټینګې کړئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "doctor / physician",
+      "ps": "ډاکټر",
+      "sources": [
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'Doctors of the World' = 'ډاکټرز آف دي ورلډ'; 'GP' = 'عمومي ډاکټر'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.159: 'the first doctor you will usually visit' = 'هغه لومړی ډاکټر'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Watch the spelling: ډاکټر, not ډاکتر."
+    },
+    {
+      "en": "specialist (doctor)",
+      "ps": "متخصص",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'Specialists' = 'متخصصین' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "walk-in clinic",
+      "ps": "د تګ راتګ کلینیک",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'Walk-in clinics' = 'د تګ را تګ کلینیکونه'; 'You generally do not require an appointment to visit' = 'تاسو عموماً د لیدنې لپاره ټاکلې ناستې (ملاقات) ته اړتیا نه لرئ' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.171: 'walk-in centre' = 'واک ان سنټر' (transliteration)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "No settled term. When the meaning matters, add an explanation: 'بې له مخکې وخت اخیستلو' (without booking ahead). UNHCR Afghanistan uses 'دې مرکزونو ته د تګ لپاره مخکې وخت اخیستل اړین نه دي' for 'No prior appointment is required'."
+    },
+    {
+      "en": "dentist",
+      "ps": "د غاښونو ډاکټر",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'Dentists' = 'د غاښونو ډاکټران' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.185: 'your dentist' = 'ستاسې د غاښونو ډاکټر'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Teeth = غاښونه. Avoid the Persian دندان/دندانګر (machine output)."
+    },
+    {
+      "en": "dental care",
+      "ps": "د غاښونو پاملرنه",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.185: 'Dental care' = 'د غاښونو پاملرنه'; 'urgent dental care' = 'د غاښونو عاجل پاملرنه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "pharmacy",
+      "ps": "درملتون",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'Pharmacies' = 'درملتونونه' (image)"
+        },
+        {
+          "title": "COVID-19 guidance - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/07/Pashto-Covid19-Guidance.pdf",
+          "publisher": "Doctors of the World UK",
+          "evidence": "'Do not go to work, school, GP surgeries, pharmacy or hospital' = '...درملتون یا روغتون ته مه ځئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "medicine / medication",
+      "ps": "درمل",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'prescription medications' = 'د نسخې درمل' (image)"
+        },
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "medicine = دارو (درمل) (source: BBC Pashto)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "mental health",
+      "ps": "رواني روغتیا",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'Mental health services' = 'د رواني روغتیا خدمات'; p.79: 'Free mental health clinics' = 'د رواني روغتیا وړیا کلینیکونه' (image)"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'to promote better mental health for everyone' = 'د ټولو لپاره ښه رواني روغتیا ترویج کړي'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.175: 'Mental Health Services' = 'د ذهني روغتیا خدمتونه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "The UK handbook uses the synonym ذهني روغتیا. Prefer رواني روغتیا (COA, DOTW)."
+    },
+    {
+      "en": "stigma (social stigma)",
+      "ps": "ټولنیز پیغور",
+      "sources": [
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "social stigma = ټولنیز پیغور (source: IOM Afghanistan / WHO RCCE document)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "The reviewer suggested بدنامي/شرم. Avoid ننګ (honour), which the machine used."
+    },
+    {
+      "en": "counselling / counsellor",
+      "ps": "مشوره / مشاور",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.32: 'Talk to a counsellor and seek advice' = 'له مشاور سره خبرې وکړئ او مشوره وغواړئ' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'protection counseling' = 'د ساتنې مشورې'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "For psychological counselling, COA p.79 says 'Talk to someone if you are feeling sad, worried or stressed' = 'د فشار او خفګان په حالت کې د یو چا سره خبرې وکړئ'."
+    },
+    {
+      "en": "crisis",
+      "ps": "بحران",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'a safe place to stay during a crisis' = 'که تاسو د بحران پر مهال د پاتې کیدو لپاره خوندي ځای ته اړتیا لرئ' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.189: 'mental health crisis' = 'د ذهني روغتیا بحران'; p.99: 'Homelessness/Crisis support' = 'د بې کوره کیدو/بحران مرسته'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Crisis intervention: no attested phrase. Avoid 'د ژوندی حالتونو مدیریت' (machine output)."
+    },
+    {
+      "en": "helpline / crisis line",
+      "ps": "د مرستې ټیلیفوني کرښه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'call the Awaaz helpline for free' = 'د آواز په نامه د مرستې ټېلېفوني کرښې ته ... وړیا زنګ وهلی شئ'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'These helplines are free and confidential' = 'د ټلیفون دا کرښې وړیا او محرمې دي'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.143: 'Domestic Violence Helpline' = 'د کورني تشدد هیلپ لاین' (loanword)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Prefer the Pashto phrase over the loanword هیلپ لاین. 'Crisis line' could be 'د بحران ټیلیفوني کرښه' (UK p.99 uses 'د بحران تلیفون' for the 'Crisis' charity line)."
+    },
+    {
+      "en": "free and confidential",
+      "ps": "وړیا او محرم",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'Call our toll-free confidential helplines' = 'په وړیا او محرم ډول زنګ ووهئ'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'It is a free, confidential and non-judgmental service' = 'دا یو وړیا، محرم او نه قضاوت کوونکی خدمت دی' (image)"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'free and confidential' = 'وړیا او محرمې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "free (of charge)",
+      "ps": "وړیا",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'All UNHCR services are free' = 'د UNHCR ټول خدمات وړیا دي'"
+        },
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'treatment is provided free of charge' = 'وړیا درملنه کیږي'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.179: 'This service is free of charge' = 'دا خدمت وړیا دی'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "toll-free number",
+      "ps": "وړیا شمېره",
+      "sources": [
+        {
+          "title": "COVID-19 guidance - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/07/Pashto-Covid19-Guidance.pdf",
+          "publisher": "Doctors of the World UK",
+          "evidence": "'(this is a free number to call)' = '(دا د زنګ وهلو لپاره وړیا شمېره ده)'"
+        },
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'Phone: 410 (toll-free...)' = 'په 410 وړیا شمېره اړیکه ونیسئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "24 hours a day / 7 days a week",
+      "ps": "د ورځې ۲۴ ساعته / په اونۍ کې اووه ورځې",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.171: 'the service is available 24 hours a day' = 'دا خدمت د ورځې 24 ساعته موجود وي'"
+        },
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'seven days a week' = 'په اونۍ کې اووه ورځې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Midwife/on-call wording example: reviewer's 'قابلې 24 ساعته، د اونۍ ټولې ورځې ... چمتو دي'."
+    },
+    {
+      "en": "appointment",
+      "ps": "د لیدنې وخت",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.187: 'book an appointment to see your GP' = 'د خپل جي پي څخه د لیدنې وخت واخلئ'; p.171: 'when you make the appointment' = 'د لیدنې لپاره د وخت اخیستلو په موقع'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.99: 'appointment' = 'د لیدنې لپاره ټاکلې ناسته (ملاقات)' (image)"
+        },
+        {
+          "title": "Help Pakistan - My Services: viewing & managing your appointments (ps/en)",
+          "url": "https://help.unhcr.org/pakistan/ps/welcome/my-services-portal/viewing-managing-your-appointments/",
+          "publisher": "UNHCR",
+          "evidence": "'Request an appointment' = 'د ملاقات غوښتنه وکړئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "'Book an appointment' = 'د لیدنې وخت واخلئ'. UNHCR Pakistan uses ملاقات (Pakistani usage); Afghan readers know it too."
+    },
+    {
+      "en": "walk-in / drop-in (no appointment needed)",
+      "ps": "حضوري (بې له مخکې وخت اخیستلو)",
+      "sources": [
+        {
+          "title": "Help Pakistan - Contact UNHCR and partners (ps/en)",
+          "url": "https://help.unhcr.org/pakistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'Some of our partners have stopped taking walk-in appointments' = 'زموږ ځینې ملګرو په خپلو دفترونو کې د حضوري ملاقاتونو اخیستل بند کړي'"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'No prior appointment is required' = 'مخکې وخت اخیستل اړین نه دي'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "No source has a single word for 'drop-in'. Best practice: 'حضوري' plus an explanation that no appointment is needed."
+    },
+    {
+      "en": "interpreter",
+      "ps": "ترجمان (ژباړونکی)",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.171: 'If you need an interpreter' = 'که تاسې ترجمان ته اړتیا لرئ'; 'You will not be charged if you require an interpreter' = 'که تاسې ترجمان ته اړتیا لرئ، نو په دې څه لګښت نه راځي'"
+        },
+        {
+          "title": "COVID-19 guidance - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/07/Pashto-Covid19-Guidance.pdf",
+          "publisher": "Doctors of the World UK",
+          "evidence": "'You can get an interpreter in your language' = 'د خپلې ژبې ژباړونکی ...'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Both are used. ترجمان is the most common word for spoken interpreting. ژباړه = translation. Avoid 'تلیفوني ژباړه' when the service is phone advice, not translation."
+    },
+    {
+      "en": "vaccination / vaccine",
+      "ps": "واکسین",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'basic health care, vaccination' = 'د لومړنیو روغتیایي خدماتو، واکسین'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.111: 'Students who go to school must show that they have been vaccinated' = '...واکسین شوي یا ...' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "health care / health services",
+      "ps": "روغتیايي پاملرنه / روغتیايي خدمات",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'free healthcare services' = 'وړیا روغتیایي خدمات'; 'healthcare provider' = 'روغتیایي پاملرنې چمتو کوونکی'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.157: 'Health care' = 'روغتیايي پاملرنه' (image)"
+        },
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "healthcare = روغتیایی پاملرنه"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "midwife",
+      "ps": "قابله",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.187: 'tell your midwife or doctor' = 'خپل ډاکټر یا قابلې ته ووایئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "One official side-by-side source; the reviewer independently suggested قابله. Avoid the machine's 'ماماګانې' and garbled 'زاینې'."
+    },
+    {
+      "en": "pregnancy / pregnant",
+      "ps": "امیندواري / امیندواره",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'Families with pregnant women' = 'هغه کورنۍ چې امیندواره ښځې ولري'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.164: 'a pregnant woman' = 'امیدواره میرمن' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.187: 'during pregnancy, childbirth and postnatal care' = 'امیدواري، د ماشوم زیږدول او له زیږیدو وروسته پاملرنه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Both spellings, امیندواره and امیدواره, are attested. Avoid Dari حامله ګی / زچګی."
+    },
+    {
+      "en": "maternity care / maternity hospital",
+      "ps": "د زېږون پالنه / زیږون روغتون",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'Maternity care and women's health' = 'د زېږون پالنه او د ښځو روغتیا'; 'Malalai Maternity Hospital' = 'د ملالۍ زیږون روغتون'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Prenatal = 'د زېږون دمخه' (reviewer suggestion) follows the same pattern but is not attested verbatim."
+    },
+    {
+      "en": "children's hospital",
+      "ps": "د ماشومانو روغتون",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'Ataturk Children's Hospital' = 'د اتاترک د ماشومانو روغتون'; 'Medical care for children' = 'د ماشومانو لپاره طبي پاملرنه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "allergy / dietary requirements",
+      "ps": "حساسیت / غذايي رژیم",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.71: 'Inform someone you trust about any urgent medical needs, including allergies and dietary requirements' = '... د عاجلو طبي اړتیاوو (د حساسیت او غذايي رژیم اړتیاوو په ګډون) ...' (image)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Medical sense of allergy = حساسیت. Peanut-free / nut-free has no attested Pashto; see notFound."
+    },
+    {
+      "en": "halal",
+      "ps": "حلال",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Most major supermarkets and many Middle Eastern grocery stores also sell halal meat' = 'ډیری لوی سوپر مارکیټونه او د منځني ختیځ اړوند ګڼ شمېر پرچون پلورنځي حلاله غوښه هم پکې پلوري'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "food bank",
+      "ps": "د خوړو بانک",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Food banks' = 'د خوړو بانکونه'; 'Receive free food...' = 'وړیا خواړه ترلاسه کړئ...' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "free food / free food distribution",
+      "ps": "وړیا خواړه / وړیا خوراکي توکي",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Receive free food' = 'وړیا خواړه ترلاسه کړئ' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'My family needs food' = 'زما کورنۍ خوراکي توکو ته اړتیا لري'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "The machine's 'وړیا خوراکي توکي ویشل کیږي' is consistent with these sources. The error was the frequency, not the food term."
+    },
+    {
+      "en": "food assistance / emergency food support",
+      "ps": "خوراکي مرسته",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'UNHCR does not provide food assistance' = 'UNHCR د خوراکي توکو په برخه کې مرسته نه وړاندې کوي'"
+        },
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'including food assistance' = 'د خوراکي مرستې په ګډون'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "shelter (emergency shelter)",
+      "ps": "سرپناه",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Shelters and safe houses' = 'سرپناه او خوندي کورونه'; p.32: 'Find a shelter at www.sheltersafe.ca' = 'په www.sheltersafe.ca کې سرپناه ومومئ' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'Food, shelter and other assistance' = 'خواړه، سرپناه او نورې مرستې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "For women's refuges the UK handbook (p.143) uses 'پناه ګاه او شلټرې'."
+    },
+    {
+      "en": "safe place / safe house",
+      "ps": "خوندي ځای / خوندي کور",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Shelters and safe houses' = 'سرپناه او خوندي کورونه' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.143: 'There are safe places to go and stay in' = 'داسې خوندي ځایونه شته چې تاسې ورته لاړ شئ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "homelessness",
+      "ps": "بې کوره کېدل",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.99: 'If you are concerned that you may become homeless' = 'که تاسې اندیښنه لرئ چې ښایي بې کوره شئ'; 'Homelessness/Crisis support' = 'د بې کوره کیدو/بحران مرسته'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "public washroom / public toilet",
+      "ps": "عامه تشناب",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.106: 'designated places, such as public toilets' = 'ټاکلو ځایونو، لکه عامه تشنابونو کې' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Plural عامه تشنابونه."
+    },
+    {
+      "en": "hygiene",
+      "ps": "حفظ الصحه",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.106: 'Preventing health issues with hygiene' = 'د حفظ الصحې په پلي کولو سره د روغتیايي ستونزو مخنیوی' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'hygiene items' = 'د حفظ الصحې وسایل'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "extreme heat",
+      "ps": "سخته ګرمي",
+      "sources": [
+        {
+          "title": "Bodies of 14 missing youths found in Nimroz desert",
+          "url": "https://pa.azadiradio.com/a/33819643.html",
+          "publisher": "Radio Azadi (RFE/RL Pashto)",
+          "evidence": "'...د سختې ګرمۍ او تندې له امله مړه شوي دي' (died from extreme heat and thirst)"
+        },
+        {
+          "title": "Kabul experiences unprecedented heat (کابل په بې ساري ډول ګرمي ازمايي)",
+          "url": "https://pa.azadiradio.com/a/25059962.html",
+          "publisher": "Radio Azadi (RFE/RL Pashto)",
+          "evidence": "'په دې ګرمه هوا کې دې زاړه کسان او ماشومان ډیر له کوره نه وځي' (in this hot weather the elderly and children should not go out much)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Media usage only; no official heat-health leaflet in Pashto was found. 'Hot weather' = 'ګرمه هوا'. Reviewer's 'د ډېرې ګرمۍ پر مهال' (during intense heat) is consistent."
+    },
+    {
+      "en": "temperature",
+      "ps": "د تودوخې درجه",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'average daily low temperature of -18 C in January' = '...د تودوخې منځنۍ ټیټه درجه...' (Thunder Bay sheet)"
+        },
+        {
+          "title": "Kabul experiences unprecedented heat (کابل په بې ساري ډول ګرمي ازمايي)",
+          "url": "https://pa.azadiradio.com/a/25059962.html",
+          "publisher": "Radio Azadi (RFE/RL Pashto)",
+          "evidence": "'د نن لپاره د تودوخې درجه ۳۸ اټل شوې' (today's temperature forecast is 38)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "air-conditioned / air conditioning",
+      "ps": "ایرکانډیشن",
+      "sources": [
+        {
+          "title": "Hajj ceremonies (45C heat)",
+          "url": "https://pa.azadiradio.com/a/33764564.html",
+          "publisher": "Radio Azadi (RFE/RL Pashto)",
+          "evidence": "'دننه په خیمو کې ایرکانډیشنونه لګیدلي' (air conditioners are installed inside the tents)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "For 'air-conditioned indoor space' the reviewer suggested 'سړ (اېر کنډیشن لرونکي) ځایونه'; 'ایرکانډیشن لرونکی' (having AC) follows from the attested noun. Avoid هوایي کولر."
+    },
+    {
+      "en": "newcomers",
+      "ps": "نوي راغلي کسان",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Useful information for newcomers' = 'د نویو راغلو اشخاصو لپاره ګټور معلومات'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Government-funded organizations for newcomers' = 'د نویو راغلو کسانو لپاره د حکومت لخوا تمویل شوي سازمانونه' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "settlement services",
+      "ps": "د میشته کېدو خدمات",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.78: 'Other long-term settlement services in your community' = 'ستاسو په ټولنه کې د اوږدې مودې د میشته کیدو نور خدمات' (image)"
+        },
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Immigrating and Settling in Canada' = 'کډوالي او په کاناډا کې ځای پرځای کېدل'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Never use 'حل' (solution, as in settling disputes), which the machine used. The reviewer's 'د نویو راغلو د مېشتېدو مرسته' matches this root."
+    },
+    {
+      "en": "government-funded organization / agency (settlement agency)",
+      "ps": "د حکومت لخوا تمویل شوی سازمان",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Government-funded organizations for newcomers' = 'د نویو راغلو کسانو لپاره د حکومت لخوا تمویل شوي سازمانونه' (image)"
+        },
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Your service provider organization' = 'ستاسو د خدماتو چمتو کوونکې اداره'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Organization/agency = سازمان or اداره. For 'multi-service agency' the reviewer's 'څو خدمتي اداره' uses the attested اداره."
+    },
+    {
+      "en": "immigration",
+      "ps": "کډوالي",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Immigrating and Settling in Canada' = 'کډوالي او په کاناډا کې ځای پرځای کېدل'"
+        },
+        {
+          "title": "COVID-19 guidance - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/07/Pashto-Covid19-Guidance.pdf",
+          "publisher": "Doctors of the World UK",
+          "evidence": "'What to do if worried about your immigration situation?' = 'څه باید وکړئ که د خپلې کډوالۍ د وضعیت په اړه اندیښمن یاست؟'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.29: 'family reunion under the immigration rules' = 'د کډوالۍ د مقرراتو له مخې د کورنۍ بیا یوځای کیدل'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "The same root gives کډوال (refugee). The UK handbook sometimes uses مهاجرت."
+    },
+    {
+      "en": "refugee",
+      "ps": "کډوال",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'Help for refugees and asylum seekers' = 'د کډوالو او پناه غوښتونکو لپاره مرسته'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.1: 'A guide for new refugees' = 'د نوي کډوالو لپاره لارښود'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'If you are a refugee in the UK' = 'که تاسو په انګلستان کې کډوال یاست'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "asylum seeker",
+      "ps": "پناه غوښتونکی",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'refugees and asylum seekers' = 'کډوالو او پناه غوښتونکو'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'If you are an asylum seeker in the UK' = 'که تاسو په انګلستان کې پناه غوښتونکي یاست'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "permanent resident",
+      "ps": "دایمي اوسېدونکی",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.62: 'Permanent residents' = 'دایمي اوسیدونکي'; p.118: 'Why do permanent residents take language classes?' = 'ولې دایمي اوسیدونکي د ژبې ټولګي اخلي؟' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "citizenship",
+      "ps": "تابعیت",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.62: 'When can you apply for Canadian citizenship?' = 'تاسو کله د کاناډا تابعیت ته غوښتنلیک استولی شئ؟'; p.118: 'Pass the language requirements for citizenship' = 'د تابعیت لپاره د ژبې اړتیاوې پوره کړئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "language classes (English/French)",
+      "ps": "د ژبې ټولګي",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.117: 'Adult language classes' = 'د لویانو د ژبې ټولګي' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.41: 'English language class' = 'د انګلیسۍ ژبې ټولګی'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "legal aid clinic / legal clinic",
+      "ps": "د حقوقي مرستو کلینیک",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Legal aid clinics' = 'د حقوقي مرستو کلینیکونه' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Legal assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/legal-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'Legal assistance' = 'حقوقي مرسته'; 'free legal counseling' = 'وړیا حقوقي ... مشورې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "legal advice / legal assistance",
+      "ps": "حقوقي مشوره / حقوقي مرسته",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Legal assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/legal-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'I need legal assistance' = 'زه حقوقي مرستې ته اړتیا لرم'; 'Legal counselling is conducted by lawyers' = 'حقوقي مشورې د مدافع وکیلانو (حقوق پوهانو) لخوا وړاندې کېږي'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Seek advice on specific issues related to the law' = 'د قانون اړوند ځانګړو مسایلو په اړه مشوره وغواړئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "lawyer",
+      "ps": "وکیل (مدافع وکیل)",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Legal assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/legal-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'Our lawyers can help you' = 'زموږ مدافع وکیلان (حقوق پوهان) ... له تاسو سره مرسته کولی شي'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": ""
+    },
+    {
+      "en": "complaint",
+      "ps": "شکایت",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'complaint boxes' = 'د شکایتونو بکسونه'"
+        },
+        {
+          "title": "CLEAR Global PSEA glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/psea/",
+          "publisher": "CLEAR Global",
+          "evidence": "complaint = شکایت"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "tenant",
+      "ps": "کرایه دار",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.87: 'Tenant: A person who rents a place to live' = 'کرایه دار: هغه څوک چې د اوسیدو ځای په کرایه نیسي' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.105: 'the tenant' = 'د کرایه دار په توګه'; p.91: 'rights and responsibilities of both landlord and tenant' = 'د څښتن او کرایه دار دواړو حقونه او مسولیتونه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Plural کرایه داران. 'Housing & Tenant Supports' = 'د کور او کرایه دارانو ملاتړ' (reviewer). Avoid کور غړي (household members)."
+    },
+    {
+      "en": "landlord",
+      "ps": "د کور خاوند (د جایداد څښتن)",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.87: 'Landlord: A person who owns a place that is rented to others' = 'د کور خاوند: هغه شخص چې د هغه ځای مالکیت لري چې نورو ته په کرایه ورکړل شوی وي' (image)"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.105: 'your landlord' = 'د خپل جایداد د څښتن'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "rent",
+      "ps": "کرایه",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Renting a 2-bedroom apartment could cost approximately $1,200 a month' = '...اپارتمان په میاشت کې نږدې ۱٬۲۰۰ ډالره کرایه درلودلی شي'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.105: 'benefits which can pay for your rent' = 'ستاسې د کرایې ... لپاره'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "'Rent Bank' = 'د کرایې بانک' (reviewer; built on attested کرایه + بانک). Avoid 'کور مالیه بانک' (house tax bank)."
+    },
+    {
+      "en": "tenancy agreement / lease",
+      "ps": "د کرایه دارۍ قرارداد",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.91: 'Your tenancy agreement' = 'ستاسې د کرایه دارۍ قرارداد'; 'known as a tenancy agreement' = 'د کرایې قرارداد بلل کیږي'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "tenants' rights",
+      "ps": "د کرایه دارانو حقونه",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'Learn more about renting and tenants' rights from the Government of Ontario' = 'د اونټاریو له ځايي دولت څخه د کور کرایې کوونکو او کرایې ورکوونکو د حقوقو په اړه نور معلومات ترلاسه کړئ'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.91: 'rights and responsibilities of both landlord and tenant' = 'د څښتن او کرایه دار دواړو حقونه او مسولیتونه'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": ""
+    },
+    {
+      "en": "housing",
+      "ps": "استوګنځی / کور",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "Unit 4 title 'HOUSING' = 'کور جوړونه (استوګنځی)'; p.87 'Important words related to housing' = 'د استوګنې اړوند مهم ټکي' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'your current accommodation' = 'ستاسو اوسنی استوګنځی'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "school",
+      "ps": "ښوونځی",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'many schools, daycares, and after-school programs' = 'ګڼ شمېر ښوونځي، د ورځنۍ پاملرنې خدمات، او له ښوونځي وروسته پروګرامونه'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.111: 'registered in an age appropriate school' = 'د عمر سره مناسب په ښوونځي کې ثبت'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "kindergarten",
+      "ps": "وړکتون",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.111: 'Kindergarten: 3-5 years of age' = 'وړکتون: له 3-5 کلونو عمر' (image)"
+        },
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'from kindergarten (age 3 or 4) to grade 12' = 'له وړکتون (له ۳ یا ۴ کلنۍ) څخه تر ۱۲م ټولګي'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "The UK handbook uses وړکتون for 'creche' (p.41), so in Afghan usage it can also mean nursery/preschool."
+    },
+    {
+      "en": "primary / elementary school",
+      "ps": "ابتدایيه ښوونځی",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.111: 'Primary school: 6-10 years of age (grades 1-5)' = 'ابتدایيه ښوونځی: د 6-10 کلونو عمر پورې (1-5 ټولګي)' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "middle school",
+      "ps": "منځنی ښوونځی",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.111: 'Middle school: 11-13 years of age (grades 6-8)' = 'منځنی ښوونځی: د 11-13 کلونو عمر (6-8 ټولګي)' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "secondary school / high school",
+      "ps": "ثانوي ښوونځی (عالي لیسه)",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.111: 'Secondary school (high school): 14-18 years of age' = 'ثانوي ښوونځی (عالي لیسه): د 14-18 کلونو عمر' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "لیسه = high school, so 'before high school' ≠ preschool. For preschool use 'د ښوونځي دمخه' (reviewer)."
+    },
+    {
+      "en": "child care / daycare",
+      "ps": "د ماشومانو پاملرنه / د ورځنۍ پاملرنې خدمات",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.115: 'Options for child care' = 'د ماشومانو پاملرنې لپاره غوراوي'; 'Enrolling them in a licensed child care centre or nursery school' = 'د ماشومانو د پاملرنې مرکز یا نرسري ښوونځي کې چې جواز ولري، د دوی نوم لیکنه' (image)"
+        },
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'daycares' = 'د ورځنۍ پاملرنې خدمات' (Windsor sheet)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Licensed child care centre = 'جواز لرونکی د ماشومانو د پاملرنې مرکز'. Avoid 'ماشومانو پالنګونه' (children's beds)."
+    },
+    {
+      "en": "after-school programs",
+      "ps": "له ښوونځي وروسته پروګرامونه",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'after-school programs' = 'له ښوونځي وروسته پروګرامونه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "homework",
+      "ps": "کورنۍ دنده",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.115: 'Helping them with their homework' = 'د دوی سره په کورنۍ دنده کې مرسته کول' (image)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "UK handbook uses the loanword هوم ورک. Avoid garbled 'کورکاژ'."
+    },
+    {
+      "en": "library (public library)",
+      "ps": "عامه کتابتون",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.78: 'Public libraries' = 'عامه کتابتونونه' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "community centre",
+      "ps": "د ټولنې مرکز",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.78: 'Community centres' = 'د ټولنې مرکزونه' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": "COA also has 'Cultural centres' = 'کلتوري مرکزونه'."
+    },
+    {
+      "en": "public park",
+      "ps": "عامه پارک",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.78: 'Public parks' = 'عامه پارکونه' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "swimming",
+      "ps": "لامبو وهل",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "sports list: 'swimming' = 'لامبو وهنه'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Swimming lessons = 'د لامبو زده کړه' (reviewer; built on the attested root)."
+    },
+    {
+      "en": "volunteer / volunteering",
+      "ps": "رضاکار / رضاکارانه کار",
+      "sources": [
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'Samaritans volunteers will listen' = 'د ساماریانو رضاکاران به ... غوږ شي'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.115: 'Volunteering at their school' = 'د دوی په ښوونځي کې رضاکارانه کار کول' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "place of worship",
+      "ps": "د عبادت ځای",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.103: 'Places of worship' = 'د عبادت ځایونه'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.78: 'Places of worship' = 'د عبادت ځایونه' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "mosque",
+      "ps": "جومات",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.103: 'there are mosques, churches, synagogues and other places of worship' = 'جوماتونه، کلیساګانې، د یهودیانو د عبادت ځایونه ...'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Afghan Pashto says جومات; مسجد is also understood. A 'grand mosque' is 'جامع مسجد', so never use it for a chapel."
+    },
+    {
+      "en": "church",
+      "ps": "کلیسا",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.103: 'mosques, churches, synagogues' = 'جوماتونه، کلیساګانې ...'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Plural کلیساګانې. Translate 'chapel' as 'کوچنۍ کلیسا' (reviewer). 'Rev.' = 'پادري' (reviewer), not څښتن (Lord/owner)."
+    },
+    {
+      "en": "Sunday",
+      "ps": "یکشنبه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'8AM to 4PM Sunday-Thursday' = 'له یکشنبې تر پنجشنبې د سهار له 8 د مازدیګر تر 4 بجو'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.21: 'The UK weekend falls on Saturday and Sunday' = 'د بریتانیې د اونۍ رخصتۍ د شنبې او یکشنبې په ورځو وي'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Use the name of the day. Do not write 'د اونۍ لومړۍ ورځ' (first day of the week); in the Afghan calendar that is Saturday."
+    },
+    {
+      "en": "Saturday",
+      "ps": "شنبه",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.21: 'Saturday and Sunday' = 'د شنبې او یکشنبې'"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'Saturday to Friday' = 'د شنبې څخه تر جمعې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "Monday",
+      "ps": "دوشنبه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'Reception hours are Monday and Wednesday' = 'د لیدنې ساعتونه د دوشنبې او چهارشنبې په ورځ'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'Monday to Friday' = 'له دوشنبه څخه تر جمعې پورې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "Wednesday",
+      "ps": "چهارشنبه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'Monday and Wednesday' = 'دوشنبې او چهارشنبې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "Thursday",
+      "ps": "پنجشنبه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'Sunday-Thursday' = 'له یکشنبې تر پنجشنبې'"
+        },
+        {
+          "title": "Help Afghanistan - Contact us (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'Sunday to Thursday' = 'له یکشنبې تر پنجشنبې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "Friday",
+      "ps": "جمعه",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.21: 'Monday-Friday' = 'له دوشنبې نه تر جمعې'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'Monday to Friday' = 'له دوشنبه څخه تر جمعې پورې'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "weekend",
+      "ps": "د اونۍ رخصتۍ",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.21: 'Weekends and bank holidays' = 'د اونۍ رخصتۍ او بانکي رخصتۍ'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": ""
+    },
+    {
+      "en": "morning / a.m.",
+      "ps": "د سهار",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'8AM' = 'د سهار له 8'"
+        },
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'10am' = 'د سهار له 10 بجو'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Write 'د سهار 9 بجې'. Never use سهار for p.m. times (machine wrote 'د سهار 3' for 3pm)."
+    },
+    {
+      "en": "noon / midday (around 12-1 pm)",
+      "ps": "غرمه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for refugees and asylum seekers (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-refugees-and-asylum-seekers/",
+          "publisher": "UNHCR",
+          "evidence": "'8:30am to 12:30pm' = 'د سهار له 8:30 د غرمې تر 12:30 بجو'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "DOTW renders '12 midday' as 'د ماسپښین تر 12 بجو'. 12:30 = 'د غرمې 12:30'."
+    },
+    {
+      "en": "early afternoon (about 1-3 pm)",
+      "ps": "ماسپښین",
+      "sources": [
+        {
+          "title": "Wellbeing guidance for migrants - Pashto vs English",
+          "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+          "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+          "evidence": "'to 12 midday' = 'د ماسپښین تر 12 بجو'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.21: 'close on Saturday afternoon' = 'د شنبې په ورځ پس له ماسپښینه ... بندې وي'"
+        },
+        {
+          "title": "Help Pakistan - Contact UNHCR and partners (ps/en)",
+          "url": "https://help.unhcr.org/pakistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'02:00 - 04:00 pm' = 'د ماسپښین له ۲ څخه تر ۴ بجو'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "3 pm = 'د ماسپښین 3 بجې'."
+    },
+    {
+      "en": "late afternoon (about 4-5 pm)",
+      "ps": "مازدیګر",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Food, shelter and other assistance (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/food-shelter-and-other-assistance/",
+          "publisher": "UNHCR",
+          "evidence": "'to 4PM' = 'د مازدیګر تر 4 بجو'"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'8:00 am to 4:30 pm' = 'د سهار له ۰۸:۰۰ څخه تر مازدیګر ۰۴:۳۰'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "evening / night (p.m.)",
+      "ps": "ماښام / شپه",
+      "sources": [
+        {
+          "title": "Help Pakistan - Contact UNHCR and partners (ps/en)",
+          "url": "https://help.unhcr.org/pakistan/ps/contact/",
+          "publisher": "UNHCR",
+          "evidence": "'8am - 8pm' rendered 'سهار ۸:۰۰ – ماښام ۸'"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'8:00 am to 9:00 pm' = 'د سهار له ۰۸:۰۰ څخه تر شپې ۹:۰۰'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "per month / a month",
+      "ps": "په میاشت کې",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'$1,200 a month' = 'په میاشت کې نږدې ۱٬۲۰۰ ډالره'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.155: 'make the monthly payments' = 'هره میاشت ... تادیه کړئ' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "twice a month (frequency)",
+      "ps": "په میاشت کې دوه ځله",
+      "sources": [
+        {
+          "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+          "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+          "publisher": "Government of Canada (IRCC)",
+          "evidence": "'a month' = 'په میاشت کې'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.106: 'Brushing teeth 2 to 3 times daily' = 'په ورځ کې له 2 څخه تر 3 ځله د غاښونو برش کول' (image)"
+        }
+      ],
+      "confidence": "low",
+      "notes": "Built from two attested parts (په میاشت کې + N ځله); it does not appear verbatim. It matches the reviewer's correction. Do NOT use 'هره دوو ورځو وروسته' (every two days)."
+    },
+    {
+      "en": "disability / person with a disability",
+      "ps": "معلولیت / معلولیت لرونکی کس",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'Households with members with disabilities' = 'هغه کورنۍ چې یو غړی یې معلولیت لري'; 'persons with disabilities' = 'د معلولیت لرونکو کسانو'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.164: 'a person with a disability' = 'معلولیت لرونکو خلکو' (image)"
+        },
+        {
+          "title": "CLEAR Global PSEA glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/psea/",
+          "publisher": "CLEAR Global",
+          "evidence": "person with a disability = معلولیت لرونکی کس"
+        }
+      ],
+      "confidence": "high",
+      "notes": "The UK handbook uses معیوبیت. Prefer معلولیت. Never use ناڅاپي حالتونه (sudden conditions)."
+    },
+    {
+      "en": "seniors / older people",
+      "ps": "سپین ږیري / مشران",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'Single older person (60+ years old male and female)' = 'یوازې سپین ږیري کسان (۶۰ کاله او پورته، نارینه یا ښځه)'"
+        },
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.189: 'children, young people and adults including older adults' = 'د ماشومانو، ځوانانو، لویانو او مشرانو لپاره'"
+        },
+        {
+          "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+          "url": "https://glossaries.clearglobal.org/covid19/",
+          "publisher": "CLEAR Global / TWB",
+          "evidence": "older people = زاړه خلک (source: DW Pashto)"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "For 'people 65 and over' COA p.164 says 'له 65 کلونو څخه زیات عمر لرونکي خلک'. Do not translate seniors as پیرودونکي (customers)."
+    },
+    {
+      "en": "youth / young people",
+      "ps": "ځوانان",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.117: 'young people aged 16-18' = 'د ځوانانو لپاره چې عمر یې 16-18 کاله وي'; p.189 'young people' = 'ځوانان'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "children",
+      "ps": "ماشومان",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for women, children and people with specific needs (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-women-children-and-people-with-specific-needs/",
+          "publisher": "UNHCR",
+          "evidence": "'Help for women, children and people with specific needs' = 'له ښځو، ماشومانو او ځانګړو اړتیاوو لرونکو خلکو سره مرسته'"
+        }
+      ],
+      "confidence": "high",
+      "notes": "Adults = لویان (UK p.189). Avoid Dari کودکان."
+    },
+    {
+      "en": "women",
+      "ps": "ښځې",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for women, children and people with specific needs (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-women-children-and-people-with-specific-needs/",
+          "publisher": "UNHCR",
+          "evidence": "'women, children' = 'ښځو، ماشومانو'"
+        },
+        {
+          "title": "Help Afghanistan - Help if you're returning from Pakistan (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/returning-to-afghanistan/help-if-youre-returning-from-pakistan/",
+          "publisher": "UNHCR",
+          "evidence": "'Female-headed households' = 'د ښځو تر سرپرستۍ لاندې کورنۍ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "violence",
+      "ps": "تاوتریخوالی",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for women, children and people with specific needs (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-women-children-and-people-with-specific-needs/",
+          "publisher": "UNHCR",
+          "evidence": "'What is violence?' = 'تاوتریخوالی څه ته وايي؟'"
+        },
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.23: 'Discrimination sometimes leads to violence' = 'تبعیض کله کله د تاوتریخوالي لامل کیږي' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "violence against women",
+      "ps": "د ښځو پر وړاندې تاوتریخوالی",
+      "sources": [
+        {
+          "title": "UN Women Afghanistan - women's economic empowerment story (Pashto)",
+          "url": "https://asiapacific.unwomen.org/sites/default/files/Field%20Office%20ESEAsia/Docs/Publications/2016/12/09-ACO_SOC_WEE_Atefe_Pashto_6Dec_email.pdf",
+          "publisher": "UN Women",
+          "evidence": "quote 'the only way to end violence against women is to help them become economically independent' = 'د ښځو پر وړاندې د تاوتريخوالي د پايته رسيدو يوازېنۍ لار ... له ښځو سره مرسته ده څو له اقتصادي پلوه خپلواکې ...'"
+        },
+        {
+          "title": "UNAMA report on implementation of the EVAW law (Pashto)",
+          "url": "https://unama.unmissions.org/sites/default/files/harmful_traditional_practices_and_evaw_law_-_pashto.pdf",
+          "publisher": "UNAMA",
+          "evidence": "Pashto title of the EVAW law report: 'د ښځو پر علیه د تاوتریخوالي د منع ...'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "Do not add 'نړۍوال' (global) to programme names."
+    },
+    {
+      "en": "domestic violence / domestic abuse",
+      "ps": "کورنی تاوتریخوالی",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.141: 'Domestic abuse' = 'کورنی تاوتریخوالی یا تشدد'; p.143 'National Domestic Violence Helpline' = 'د کورني تشدد دولتي هیلپ لاین'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "abuse / neglect",
+      "ps": "ناوړه ګټه اخیستنه / غفلت",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help for women, children and people with specific needs (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-for-women-children-and-people-with-specific-needs/",
+          "publisher": "UNHCR",
+          "evidence": "'experiencing violence, abuse, or neglect' = 'د تاوتریخوالي، ناوړه ګټې اخیستنې یا غفلت سره مخ'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "employment centre",
+      "ps": "د کارموندنې مرکز",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.79: 'Employment centres' = 'د کارموندنې مرکزونه'; 'Get help writing a résumé ... looking for a job' = '... د دندې په لټه کې شئ ...' (image)"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "find a job / job",
+      "ps": "دنده (دنده پیدا کول)",
+      "sources": [
+        {
+          "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+          "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+          "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+          "evidence": "p.118: 'Find a job' = 'دنده پیدا کړئ' (image)"
+        },
+        {
+          "title": "Help Afghanistan - Help to find a job or start a business (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-to-find-a-job-or-start-a-business/",
+          "publisher": "UNHCR",
+          "evidence": "'Help to find a job or start a business' = 'د دندې موندلو یا د کاروبار پیلولو ... لپاره مرسته'"
+        }
+      ],
+      "confidence": "high",
+      "notes": ""
+    },
+    {
+      "en": "job / vocational training",
+      "ps": "مسلکي روزنه",
+      "sources": [
+        {
+          "title": "Help Afghanistan - Help to find a job or start a business (ps/en)",
+          "url": "https://help.unhcr.org/afghanistan/ps/support/help-to-find-a-job-or-start-a-business/",
+          "publisher": "UNHCR",
+          "evidence": "'Market-based technical and vocational training' = '... تخنیکي او مسلکي روزنو برنامې'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": "The UNHCR Pashto on this page is looser than on other pages."
+    },
+    {
+      "en": "unemployed",
+      "ps": "بې کاره",
+      "sources": [
+        {
+          "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+          "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+          "publisher": "UK Home Office (GOV.UK)",
+          "evidence": "p.41: 'if you are unemployed and looking for work' = 'که تاسې بې کاره یئ او د کار په لټون کې یئ'"
+        }
+      ],
+      "confidence": "medium",
+      "notes": ""
+    }
+  ],
+  "sourcesConsulted": [
+    {
+      "title": "Canadian Orientation Abroad Participant Workbook (Pashto edition, 2022, PUB2022/158/R) vs English edition",
+      "url": "https://publications.iom.int/books/canadian-orientation-abroad-participant-workbook-pashto",
+      "publisher": "IOM for Immigration, Refugees and Citizenship Canada",
+      "language pair": "en/ps (separate editions, same layout; Pashto PDF is image-only, obtained via web.archive.org because IOM blocks direct download)",
+      "useful": true
+    },
+    {
+      "title": "Life in Canada: Communities welcoming Afghans - city fact sheets (Thunder Bay, Windsor), Pashto vs English",
+      "url": "https://www.canada.ca/en/immigration-refugees-citizenship/services/refugees/afghanistan/fact-sheets.html",
+      "publisher": "Government of Canada (IRCC)",
+      "language pair": "en/ps PDFs (e.g. .../pdf/afghanistan/pashto/thunder-bay-pa.pdf, .../english/thunder-bay-en.pdf)",
+      "useful": true
+    },
+    {
+      "title": "UNHCR Help Afghanistan (Pashto pages)",
+      "url": "https://help.unhcr.org/afghanistan/ps/",
+      "publisher": "UNHCR",
+      "language pair": "en/ps parallel web pages",
+      "useful": true
+    },
+    {
+      "title": "UNHCR Help Pakistan (Pashto pages)",
+      "url": "https://help.unhcr.org/pakistan/ps/",
+      "publisher": "UNHCR",
+      "language pair": "en/ps parallel web pages (Pakistani-influenced Pashto, some Urdu forms like بجے، هيلپ لائن)",
+      "useful": true
+    },
+    {
+      "title": "Welcome: A guide for new refugees (bilingual English/Pashto resettlement handbook)",
+      "url": "https://assets.publishing.service.gov.uk/media/602e3e2b8fa8f5432bc23d5f/Pashto_Resettlement_handbook_-_web_accessible.pdf",
+      "publisher": "UK Home Office (GOV.UK)",
+      "language pair": "en/ps bilingual in one PDF (alternating pages)",
+      "useful": true
+    },
+    {
+      "title": "Wellbeing guidance for migrants - Pashto vs English",
+      "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/08/Pashto-wellbeing-guidance-for-migrants.pdf",
+      "publisher": "Doctors of the World UK / Thrive LDN / Mayor of London",
+      "language pair": "en/ps (English: .../2020/08/English-wellbeing-guidance-for-migrants.pdf)",
+      "useful": true
+    },
+    {
+      "title": "COVID-19 guidance - Pashto vs English",
+      "url": "https://www.doctorsoftheworld.org.uk/wp-content/uploads/2020/07/Pashto-Covid19-Guidance.pdf",
+      "publisher": "Doctors of the World UK",
+      "language pair": "en/ps (English: .../2020/07/English-Covid19-Guidance.pdf)",
+      "useful": true
+    },
+    {
+      "title": "CLEAR Global (Translators without Borders) COVID-19 glossary, Pashto column",
+      "url": "https://glossaries.clearglobal.org/covid19/",
+      "publisher": "CLEAR Global / TWB",
+      "language pair": "en/ps glossary (169 Pashto terms, mostly COVID/medical)",
+      "useful": true
+    },
+    {
+      "title": "CLEAR Global PSEA glossary, Pashto column",
+      "url": "https://glossaries.clearglobal.org/psea/",
+      "publisher": "CLEAR Global",
+      "language pair": "en/ps glossary (Pashto marked 'still being reviewed'; quality uneven, used sparingly)",
+      "useful": true
+    },
+    {
+      "title": "UN Women Afghanistan - women's economic empowerment story (Pashto)",
+      "url": "https://asiapacific.unwomen.org/sites/default/files/Field%20Office%20ESEAsia/Docs/Publications/2016/12/09-ACO_SOC_WEE_Atefe_Pashto_6Dec_email.pdf",
+      "publisher": "UN Women",
+      "language pair": "ps (English quote in English edition)",
+      "useful": true
+    },
+    {
+      "title": "UNAMA report on implementation of the EVAW law (Pashto)",
+      "url": "https://unama.unmissions.org/sites/default/files/harmful_traditional_practices_and_evaw_law_-_pashto.pdf",
+      "publisher": "UNAMA",
+      "language pair": "ps (title only checked)",
+      "useful": true
+    },
+    {
+      "title": "Radio Azadi Pashto articles on heat",
+      "url": "https://pa.azadiradio.com/a/25059962.html",
+      "publisher": "RFE/RL",
+      "language pair": "ps only (media usage)",
+      "useful": true
+    },
+    {
+      "title": "Fire again breaks out in Kabul's Mandawi market",
+      "url": "https://taand.net/?p=271071",
+      "publisher": "Taand (Afghan Pashto news, quoting ministry)",
+      "language pair": "ps only (media usage)",
+      "useful": true
+    },
+    {
+      "title": "Doctors of the World - List of multilingual resources for Afghans",
+      "url": "https://www.doctorsoftheworld.org.uk/news/list-of-multilingual-resources-for-afghans/",
+      "publisher": "Doctors of the World UK",
+      "language pair": "index",
+      "useful": true
+    },
+    {
+      "title": "CLEAR Global glossaries index (no Afghanistan-specific glossary)",
+      "url": "https://glossaries.clearglobal.org/",
+      "publisher": "CLEAR Global",
+      "language pair": "index",
+      "useful": false
+    },
+    {
+      "title": "Health Translations Victoria - Beat the heat / Life in Australia booklet",
+      "url": "https://www.healthtranslations.vic.gov.au/resources/beat-the-heat-translated-resources",
+      "publisher": "Victorian Government",
+      "language pair": "no Pashto version",
+      "useful": false
+    },
+    {
+      "title": "SA Health - Healthy in the Heat",
+      "url": "https://www.sahealth.sa.gov.au/wps/wcm/connect/public+content/sa+health+internet/healthy+living/protecting+your+health/environmental+health/healthy+in+the+heat",
+      "publisher": "SA Health",
+      "language pair": "Pashto only via ReciteMe machine translation - not used",
+      "useful": false
+    },
+    {
+      "title": "UKHSA Beat the heat translations",
+      "url": "https://www.gov.uk/government/publications/beat-the-heat-hot-weather-advice",
+      "publisher": "UKHSA",
+      "language pair": "Farsi, Urdu etc. but no Pashto",
+      "useful": false
+    },
+    {
+      "title": "UNICEF Afghanistan Pashto site",
+      "url": "https://www.unicef.org/afghanistan/ps",
+      "publisher": "UNICEF",
+      "language pair": "programme pages not available in Pashto (404)",
+      "useful": false
+    },
+    {
+      "title": "SBS Pashto - Life in Australia",
+      "url": "https://www.sbs.com.au/language/pashto/en/collection/life-in-australia",
+      "publisher": "SBS",
+      "language pair": "audio podcasts only - not used",
+      "useful": false
+    },
+    {
+      "title": "CLEO Ontario housing law publications",
+      "url": "https://www.cleo.on.ca/en/resources-and-publications/housing-law",
+      "publisher": "CLEO",
+      "language pair": "no Pashto found",
+      "useful": false
+    }
+  ],
+  "notFound": [
+    "cooling centre / cooling space (no Pashto source; reviewer suggestion 'د یخولو ځای' unverified)",
+    "heat warning / heat alert / extreme heat warning",
+    "drinking water / drinking water fountain / bottle filling station (reviewer suggestion 'د څښلو اوبه' unverified)",
+    "eviction (the COA budgeting page has 'evicted' but its Pashto is unclear; no other source)",
+    "crisis intervention",
+    "dentures / tooth extraction (only 'teeth' = غاښونه and 'dentist' are sourced)",
+    "peanut-free / nut-free",
+    "pork-free",
+    "Sunday school",
+    "every two days",
+    "Tuesday (no source found; other weekdays are sourced)",
+    "fire station as a building, distinct from fire brigade (see 'fire station' entry, medium)",
+    "swimming pool / indoor pool; swimming lessons (only 'swimming' sourced)",
+    "multi-service agency (only 'organization/agency' = سازمان/اداره sourced)",
+    "Rent Bank (only components sourced)",
+    "farmers' market",
+    "ravine"
+  ]
+}

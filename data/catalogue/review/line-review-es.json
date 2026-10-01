@@ -1,0 +1,235 @@
+{
+ "language": "es",
+ "reviewer": "Claude subagent, line-by-line, 2026-10-01 (not a native speaker)",
+ "textsRead": 140,
+ "findings": [
+  {
+   "id": "0b810534f69d",
+   "severity": "review",
+   "problem": "\"acceso a un banco de alquiler\" is a literal calque of \"rent bank\" (reads as a bank that rents things), and \"Servicios Integrados para Personas Mayores\" drops the program name; use \"acceso al Rent Bank (ayuda de emergencia para pagar el alquiler)\" and \"Integrated Services for Seniors (servicios integrados para personas mayores)\".",
+   "reviewedText": "La TNO Food Collaborative (dirigida por The Neighbourhood Organization) proporciona acceso gratuito a alimentos a miles de personas en las comunidades de Thorncliffe Park y Flemingdon Park, incluidos productos frescos, huevos y productos lácteos que se distribuyen dos veces al mes, con una distribución durante todo el año apoyada por socios comunitarios como Greenwin Cares.\n\nAgencia de asentamiento con múltiples servicios que atiende a Thorncliffe Park, Flemingdon Park, St. James Town y Taylor Massey. Los servicios incluyen apoyo para el asentamiento (evaluación de necesidades, orientación para la vida en Canadá/Ontario, clases de preparación para la ciudadanía, ayuda con los formularios de inmigración), asistencia para la vivienda (búsqueda de vivienda, solicitudes de vivienda subvencionada, acceso a un banco de alquiler, asistencia con las facturas de energía), programas para personas mayores (Servicios Integrados para Personas Mayores, servicios de apoyo personal), programas para jóvenes (por ejemplo, programas para niñas después de la escuela), servicios de empleo, formación lingüística y asesoramiento sobre violencia contra las mujeres. Gratis; llame o acuda al lugar."
+  },
+  {
+   "id": "32dfa11d6223",
+   "severity": "review",
+   "problem": "\"acceso a bancos de alquiler\" is a literal calque of \"rent bank\" and \"Servicios Integrados para Personas Mayores\" replaces the program name; use \"acceso al Rent Bank (ayuda de emergencia para el alquiler)\" and keep \"Integrated Services for Seniors\" with a Spanish gloss.",
+   "reviewedText": "Agencia de asentamiento que ofrece múltiples servicios a Thorncliffe Park, Flemingdon Park, St. James Town y Taylor Massey. Los servicios incluyen apoyo para el asentamiento (evaluación de necesidades, orientación para la vida en Canadá/Ontario, clases de preparación para la ciudadanía, ayuda con los formularios de inmigración), asistencia para la vivienda (búsqueda de vivienda, solicitudes de vivienda subvencionada, acceso a bancos de alquiler, asistencia con las facturas de energía), programas para personas mayores (Servicios Integrados para Personas Mayores, servicios de apoyo personal), programas para jóvenes (por ejemplo, programas para niñas después de la escuela), servicios de empleo, formación lingüística y asesoramiento sobre violencia contra las mujeres. Gratuito; llame o acuda en persona."
+  },
+  {
+   "id": "4c0ad54aefbb",
+   "severity": "review",
+   "problem": "\"Banco de Alquileres de Toronto\" and \"Fondo de Emergencia para la Energía\" translate the program names, so residents cannot ask for them by name; use \"Toronto Rent Bank (ayuda de emergencia para el alquiler)\" and \"Emergency Energy Fund (fondo de emergencia para facturas de energía)\".",
+   "reviewedText": "Ofrece intervención en situaciones de crisis y asesoramiento a través de su programa contra la violencia hacia las mujeres; actúa como centro de acceso al Banco de Alquileres de Toronto y como centro de llamadas del Fondo de Emergencia para la Energía (416-397-7368)."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "severity": "review",
+   "problem": "\"Banco de Alquiler de Toronto\" / \"Fondo de Emergencia para la Energía\" translate program names (use \"Toronto Rent Bank\" / \"Emergency Energy Fund\" with Spanish gloss); also \"centro de refrigeración\" means a refrigeration (cold-storage) centre - use \"centro para refrescarse\" / \"centro de enfriamiento\".",
+   "reviewedText": "Apoyo alimentario de emergencia para familias necesitadas (distribución gratuita de alimentos dos veces al mes). No se confirmó la existencia de ningún refugio, centro de refrigeración o servicio de línea de crisis específico del Food Collaborative. Ofrece intervención en situaciones de crisis y asesoramiento a través de su programa contra la violencia hacia las mujeres; actúa como centro de acceso al Banco de Alquiler de Toronto y como centro de llamadas del Fondo de Emergencia para la Energía (416-397-7368)."
+  },
+  {
+   "id": "0bf38ee19e3c",
+   "severity": "review",
+   "problem": "\"Espacios de refrigeración\" means refrigeration (fridge/cold-storage) spaces; for heat-relief cooling spaces say \"Espacios para refrescarse\" or \"Centros de enfriamiento\".",
+   "reviewedText": "Espacios de refrigeración"
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "severity": "review",
+   "problem": "\"centro de refrigeración\" means a refrigeration/cold-storage centre, not a heat-relief cooling centre; use \"centro para refrescarse\" or \"centro de enfriamiento\".",
+   "reviewedText": "Apoyo alimentario de emergencia para familias necesitadas (distribución gratuita de alimentos dos veces al mes). No se confirmó la existencia de ningún refugio, centro de refrigeración o servicio de línea de crisis específico del Food Collaborative."
+  },
+  {
+   "id": "2d84f26c9897",
+   "severity": "review",
+   "problem": "\"Espacio de refrigeración designado\" reads as a designated refrigeration (cold-storage) space; use \"Espacio designado para refrescarse\" / \"centro de enfriamiento designado\".",
+   "reviewedText": "Espacio de refrigeración designado: ofrece alivio interior con aire acondicionado durante las advertencias o alertas de calor extremo."
+  },
+  {
+   "id": "fe8809651fbc",
+   "severity": "review",
+   "problem": "\"Espacio de refrigeración designado\" reads as a refrigeration (cold-storage) space; use \"Espacio designado para refrescarse\". (Note: the English source itself is duplicated and the translation faithfully duplicates it.)",
+   "reviewedText": "La página del centro tiene un enlace que dice \"¿En crisis? Haz clic aquí\" y enumera los servicios locales de apoyo en caso de crisis: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808 y el Departamento de Emergencias del Hospital Michael Garron (825 Coxwell Ave.). Espacio de refrigeración designado: ofrece alivio en interiores con aire acondicionado durante las advertencias o alertas de calor extremo. La página del centro tiene un enlace que dice \"¿En crisis? Haz clic aquí\" y enumera los servicios locales de apoyo en caso de crisis: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808 y el Departamento de Emergencias del Hospital Michael Garron (825 Coxwell Ave.)."
+  },
+  {
+   "id": "2de0ec486420",
+   "severity": "redo",
+   "problem": "\"una pista de hockey sobre césped\" means a field-hockey pitch on grass, but the source is a ball hockey pad (street hockey on a hard surface); use \"una pista de ball hockey (hockey con pelota)\".",
+   "reviewedText": "La página toronto.ca está dedicada específicamente a la fuente de agua potable que se encuentra en Flemingdon Park (cerca de Don Mills Rd y Eglinton Ave E). La fuente está catalogada como una instalación oficial de este parque de 13,3 hectáreas, que también cuenta con campos de béisbol, una pista de hockey sobre césped, un campo de críquet, un campo polivalente, 4 pistas de baloncesto al aire libre, pistas exteriores, 4 zonas de juegos (zona de juegos renovada en 2025), una zona de juegos acuáticos, un jardín comunitario, 6 zonas de picnic, campos deportivos y aparcamientos."
+  },
+  {
+   "id": "2d4e28c7351b",
+   "severity": "review",
+   "problem": "\"Anota los ejercicios rutinarios de seguridad\" means \"writes down the routine exercises\"; \"Notes\" here means \"mentions\" and drills are \"simulacros\" - use \"Menciona simulacros de seguridad rutinarios y entrada segura\".",
+   "reviewedText": "Anota los ejercicios rutinarios de seguridad y la entrada segura; no se enumeran servicios comunitarios específicos para emergencias."
+  },
+  {
+   "id": "0f7fe1d38b46",
+   "severity": "review",
+   "problem": "\"las 24 horas del día\" drops \"7 days a week\" from 24/7 - use \"las 24 horas, los 7 días de la semana\"; also \"logopedia\" is Spain-specific, prefer \"terapia del habla y del lenguaje\" for Latin American readers.",
+   "reviewedText": "Proveedor de atención médica domiciliaria y comunitaria que ofrece servicios en el hogar y en clínicas: enfermería (RN/RPN), apoyo personal, apoyo en el hogar (preparación de comidas, limpieza, compañía, recordatorios de medicación), fisioterapia, terapia ocupacional, logopedia, trabajo social y dietética. Las enfermeras están disponibles las 24 horas del día para atender necesidades de cuidados a corto o largo plazo; también gestiona clínicas de enfermería y fisioterapia."
+  },
+  {
+   "id": "170900592261",
+   "severity": "review",
+   "problem": "\"Centro de Partos de Toronto\" translates the name of the Toronto Birth Centre so it can't be found - use \"Toronto Birth Centre (centro de partos)\"; also \"las 24 horas del día\" omits \"7 days a week\" (24/7).",
+   "reviewedText": "Clínica de partería (East York/Don Mills) que ofrece atención gratuita financiada por el Ministerio de Salud durante el embarazo, el parto y el nacimiento, y para la madre y el bebé durante las 6 semanas posteriores al parto. Los partos se atienden en casa, en el Centro de Partos de Toronto o en el Hospital Michael Garron; las parteras están disponibles las 24 horas del día para atender casos urgentes, y las complicaciones se remiten a obstetras, pediatras y consultores de lactancia. Personal multilingüe (inglés, árabe, francés, español, farsi, dari y otros) y clases prenatales que incluyen Newborn 101."
+  },
+  {
+   "id": "1be560c4691c",
+   "severity": "review",
+   "problem": "Unsure: \"las 24 horas del día\" drops the \"7 days a week\" of 24/7; suggest \"las 24 horas, los 7 días de la semana\".",
+   "reviewedText": "Estaciones del Servicio de Bomberos de Toronto que ofrecen protección contra incendios y servicios de rescate de emergencia las 24 horas del día en la zona: Estación 321 (231 McRae Dr), Estación 235 (200 Bermondsey Rd), Estación 322 (256 Cosburn Ave), Estación 224 (1313 Woodbine Ave). Línea para casos no urgentes: 416-338-9050."
+  },
+  {
+   "id": "63c710ddedbb",
+   "severity": "review",
+   "problem": "\"Enfermeras disponibles las 24 horas del día\" omits \"7 days a week\" (24/7); suggest \"las 24 horas, los 7 días de la semana\".",
+   "reviewedText": "Enfermeras disponibles las 24 horas del día para atender las necesidades de atención domiciliaria; no se indica ningún servicio de emergencia específico (no es un proveedor de servicios de emergencia 911 ni de atención urgente)."
+  },
+  {
+   "id": "f630f0f0b145",
+   "severity": "review",
+   "problem": "\"disponibles las 24 horas del día\" omits \"7 days a week\" (24/7) for an urgent-care contact; suggest \"de guardia las 24 horas, los 7 días de la semana\".",
+   "reviewedText": "Las parteras están disponibles las 24 horas del día para atender problemas urgentes relacionados con el embarazo y el parto; no se menciona ningún programa de emergencia independiente."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "severity": "review",
+   "problem": "\"cierres ilegales\" means illegal closures, not illegal lockouts of tenants - use \"desalojos ilegales / cambio ilegal de cerraduras\"; \"desahucios\" is Spain usage (prefer \"desalojos\"); \"prestación por discapacidad de Canadá\" should keep the program name \"Canada Disability Benefit\".",
+   "reviewedText": "Asesoramiento jurídico y representación gratuitos para personas de bajos ingresos en la zona de influencia (desde el lago Ontario hasta York Mills/401, desde Yonge/Don River hasta Victoria Park Ave), en cuatro áreas: derecho de la vivienda (prevención de desahucios, cierres ilegales, derechos de los inquilinos), derecho laboral (normas laborales, despido improcedente, indemnización por despido, seguro de empleo), derecho de inmigración (solicitudes de residencia permanente, permisos de trabajo, ciudadanía) y ayudas económicas (ODSP, OW, CPP, OAS, GIS, prestación por discapacidad de Canadá); también educación jurídica pública y servicios documentales limitados (declaraciones juradas, copias auténticas notariales). Línea de atención: 416-441-1764 ext. 1, de lunes a jueves de 9:00 a 12:30 h (contestador automático con devolución de llamada en 1 a 3 días laborables; no se admiten visitas sin cita previa; atención en persona con cita previa los lunes y miércoles de 13:30 a 16:30 h)."
+  },
+  {
+   "id": "1ae4b85c3a4e",
+   "severity": "review",
+   "problem": "Unsure: \"refugiados por convención\" is a literal calque of \"convention refugees\"; clearer as \"refugiados reconocidos según la Convención (convention refugees)\".",
+   "reviewedText": "Programa TNO (financiado por IRCC) que ayuda a los recién llegados de 18 años o más a seguir carreras técnicas y oficios cualificados. Ofrece vías de formación y empleo en construcción, HVAC (licencia G2/G3), TI, incluyendo ciencia de datos e IA, conducción de camiones (licencia DZ), operación de carretillas elevadoras y control del tráfico en la construcción. Abierto a residentes permanentes, refugiados por convención y ciudadanos canadienses con un nivel de inglés CLB 5-6+."
+  },
+  {
+   "id": "3dc2fd8bba11",
+   "severity": "review",
+   "problem": "\"médicos y enfermeros\" loses \"nurse practitioners\" (advanced-practice nurses who can diagnose and prescribe); use \"médicos y enfermeros especializados (nurse practitioners)\".",
+   "reviewedText": "Centro de salud comunitario sin fines de lucro (en funcionamiento desde 1975) ubicado en 10 Gateway Blvd que ofrece atención primaria gratuita a cargo de médicos y enfermeros a los residentes de su zona de influencia, sin necesidad de tarjeta OHIP ni de derivación médica. También ofrece servicios de asesoramiento individual y familiar y de salud mental, prevención y gestión de enfermedades crónicas (diabetes, salud pulmonar y cardíaca), dietistas, podología (cuidado de los pies), asesoramiento nutricional, una clínica de salud sexual (con Toronto Public Health), programas prenatales y programas de promoción de la salud (ejercicio, bienestar, cocina saludable) para personas mayores, mujeres, jóvenes y recién llegados."
+  },
+  {
+   "id": "39681ff66eee",
+   "severity": "review",
+   "problem": "\"número de llegada segura\" translates the program name Safe Arrival without the English; use \"la línea Safe Arrival (aviso de ausencias)\".",
+   "reviewedText": "Academia de aprendizaje temprano del TDSB en 82 Thorncliffe Park Dr para niños pequeños, con rutinas diarias estructuradas para la llegada, el almuerzo y la salida. Los padres informan de las ausencias a través del número de llegada segura (1-833-250-2290)."
+  },
+  {
+   "id": "d9ee2590bc2e",
+   "severity": "review",
+   "problem": "\"Programa de Llegada Segura\" replaces the program name; use \"Safe Arrival Program (programa de llegada segura)\".",
+   "reviewedText": "Opera un Programa de Llegada Segura (el personal contacta a los padres si un niño está ausente sin previo aviso); no se enumeran servicios específicos para emergencias."
+  },
+  {
+   "id": "57480d0bcd4e",
+   "severity": "review",
+   "problem": "\"Estadio municipal\" means a stadium; an arena here is an indoor ice rink - use \"Pista de hielo municipal (arena)\".",
+   "reviewedText": "Estadio municipal en 165 Grenoble Dr (renombrado en 2009 en honor a la estrella canadiense del hockey Angela James) para programas de patinaje sobre hielo y hockey, además de pistas de tenis públicas adyacentes. Nota: la ciudad anunció planes (2026) para construir una nueva estación de bomberos de Flemingdon en 165 Grenoble Dr, lo que eliminaría dos de las cuatro pistas de tenis; el estado es incierto."
+  },
+  {
+   "id": "5d864949c117",
+   "severity": "review",
+   "problem": "\"informes no urgentes\" means non-urgent reports/paperwork; non-emergency reporting means reporting incidents to police - use \"denuncias no urgentes\".",
+   "reviewedText": "Servicio de Policía de Toronto, División 55 (101 Coxwell Ave, 416-808-5500) — la división que presta servicio en el este de la ciudad, incluida la zona de Thorncliffe/Flemingdon; ofrece servicios de policía comunitaria, informes no urgentes y apoyo a las víctimas. Nota: Se prevé que las divisiones 54 y 55 se fusionen en una nueva estación consolidada en 1627 Danforth Ave (antiguo garaje de TTC Danforth)."
+  },
+  {
+   "id": "6166d8860ebc",
+   "severity": "review",
+   "problem": "\"escuela secundaria\" for grades 6-8 suggests high school in most Latin American countries; use \"escuela intermedia (middle school)\".",
+   "reviewedText": "Valley Park Middle School es una escuela secundaria del TDSB que atiende a estudiantes de los grados 6 a 8, con aproximadamente 1.100 alumnos de las comunidades de Thorncliffe Park y Flemingdon Park, ubicada en 130 Overlea Blvd, East York. Su objetivo es crear un entorno de aprendizaje seguro y de apoyo, basado en el respeto, la responsabilidad y la seguridad; en el texto de la página principal no se mencionaron programas de inmersión en francés, ESL o educación especial."
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "severity": "review",
+   "problem": "\"apoyo en el consumo de sustancias\" can read as \"help with using substances\"; use \"apoyo para problemas de consumo de sustancias\".",
+   "reviewedText": "Centro gratuito y confidencial de acceso libre para jóvenes de 12 a 25 años en Thorncliffe Park y Flemingdon Park (inaugurado por East Toronto Health Partners, TNO – The Neighbourhood Organization y Youth Wellness Hubs Ontario; no se necesita tarjeta sanitaria, médico de familia ni derivación). Servicios: asesoramiento sobre bienestar, apoyo en el consumo de sustancias, atención primaria, orientación sobre la atención, apoyo entre pares, servicios de empleo, formación profesional, banco de alimentos, ayuda para la vivienda y el asentamiento, educación, programas recreativos y sociales, desarrollo del liderazgo y oportunidades de voluntariado."
+  },
+  {
+   "id": "6ba3dd305d6e",
+   "severity": "review",
+   "problem": "\"Centro de Atención Renal de St. Michael's\" and \"Clínica Renal de Atención Múltiple\" translate the names St. Michael's Kidney Care Centre / Multi-Care Kidney Clinic; keep the English names with a Spanish gloss.",
+   "reviewedText": "unityhealth.to es la página principal de Unity Health Toronto, la red matriz del St. Joseph's Health Centre (30 The Queensway, 416-530-6000), el St. Michael's Hospital (30 Bond St., 416-360-4000) y Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). El Centro de Atención Renal de St. Michael's, ubicado en 45 Overlea Blvd. (416-867-3700), es una instalación comunitaria de hemodiálisis satélite centrada en el paciente, que cuenta con 21 estaciones de tratamiento, 6 estaciones de capacitación para diálisis en el hogar y 5 salas de examen; La Clínica Renal de Atención Múltiple de Unity ofrece apoyo en nefrología, enfermería, nutrición, farmacia, trabajo social y educación sobre modalidades para frenar la progresión de la enfermedad renal, además de opciones de diálisis peritoneal y hemodiálisis en el hogar."
+  },
+  {
+   "id": "7bd551d09cd0",
+   "severity": "review",
+   "problem": "\"disponible a petición de los supervisores\" means \"available at the supervisors' request\"; the source means it can be requested from supervisors - use \"que se puede solicitar a los supervisores\".",
+   "reviewedText": "El manual para padres menciona que hay una política de gestión de emergencias disponible a petición de los supervisores; no se enumeran servicios comunitarios específicos para emergencias públicas."
+  },
+  {
+   "id": "7e0da2420727",
+   "severity": "review",
+   "problem": "\"Cooperativas de alimentos\" means food co-ops (member-owned stores), not free food-distribution collaboratives; use \"Colaborativos de alimentos\" or \"Programas comunitarios de alimentos\".",
+   "reviewedText": "Cooperativas de alimentos"
+  },
+  {
+   "id": "88f8e20033ec",
+   "severity": "review",
+   "problem": "\"el día de desarrollo profesional\" is a literal calque of PD day that residents won't recognise as a no-school day; use \"días sin clases (PD days)\".",
+   "reviewedText": "Guardería con licencia con tres ubicaciones: 206 Laird Dr (bebés, niños pequeños, preescolar, todo el año), 31 Rolph Rd en la escuela Rolph Road (preescolar, jardín de infancia, edad escolar; club infantil antes y después de la escuela para niños de JK a 6º grado con ayuda para los deberes, meriendas y cobertura completa durante el día de desarrollo profesional, Navidad y las vacaciones de marzo) y 182 Bessborough Dr en la escuela St. Anselm (jardín de infancia, edad escolar). También organiza un campamento de verano en julio y agosto (música, baile, deportes, natación, artes y manualidades). Participa en la reducción de tarifas de CWELCC."
+  },
+  {
+   "id": "912f65f2191e",
+   "severity": "review",
+   "problem": "\"Centro de Aprendizaje Temprano y Cuidado Infantil de Flemingdon\" and \"Centro de Recursos Dennis R. Timbrell\" translate the names; keep \"Flemingdon Early Learning & Child Care Centre\" / \"Dennis R. Timbrell Resource Centre\" with a gloss. Also \"cacahuetes\" is Spain usage (\"maní\" in Latin America).",
+   "reviewedText": "El Centro de Aprendizaje Temprano y Cuidado Infantil de Flemingdon (29 St Dennis Dr, Don Mills/Eglinton; contacto: Latoya Wilson-Rose, 416-392-3170) es un centro de cuidado infantil público y autorizado por la ciudad de Toronto que atiende a niños de 0 a 4 años, ubicado en el Centro de Recursos Dennis R. Timbrell. Participa en el sistema nacional de aprendizaje y cuidado infantil de Canadá (CWELCC) y ofrece subsidios para las tarifas; el personal habla 9 idiomas, entre ellos árabe, bengalí, francés, hindi y persa, y las comidas son proporcionadas con opciones halal, sin cerdo, sin cacahuetes, veganas y vegetarianas disponibles."
+  },
+  {
+   "id": "95c8c42be839",
+   "severity": "review",
+   "problem": "\"un centro juvenil\", \"un servicio de información para recién llegados\", \"un servicio de empoderamiento financiero\" replace the named services Youth Hub, Newcomer Information Service and Financial Empowerment Service; keep the English names with a gloss.",
+   "reviewedText": "Sucursal de la Biblioteca Pública de Toronto en 48 Thorncliffe Park Drive. Ofrece préstamo de libros, Wi-Fi gratuito, computadoras públicas con Microsoft Office, impresión/copia/escaneo, un centro de alfabetización temprana KidsStop, un centro juvenil, ayuda individualizada para la lectura infantil Leading to Reading, un servicio de información para recién llegados, un servicio de empoderamiento financiero, una sala de reuniones reservable y un espacio tranquilo para estudiar."
+  },
+  {
+   "id": "97e9202b1cb6",
+   "severity": "review",
+   "problem": "\"sorteos de bicicletas\" means bike raffles/lotteries; giveaways are free handouts - use \"entregas gratuitas de bicicletas\".",
+   "reviewedText": "Centro comunitario de bicicletas en Gateway Blvd gestionado por TNO. Ofrece reparaciones de bicicletas gratuitas (con cita previa), horas de reparación por cuenta propia con herramientas y espacio, talleres de mecánica de bicicletas, clases para aprender a montar en bicicleta y paseos en grupo. Bicicletas disponibles a través del programa Earn-a-Bike, sorteos de bicicletas dos veces al año y una opción para solicitar una bicicleta."
+  },
+  {
+   "id": "ae69792878f8",
+   "severity": "review",
+   "problem": "\"La Capilla de la Iglesia Unida en el Parque\" translates the church name, so it can't be found; use \"Chapel in the Park United Church (Iglesia Unida)\".",
+   "reviewedText": "La Capilla de la Iglesia Unida en el Parque es una pequeña congregación multicultural ubicada en 16 Thorncliffe Park Drive, Toronto (416-421-0792), que presta servicios a Thorncliffe Park y Don Mills. Celebra servicios los domingos a las 10:00 a. m. en persona, por Zoom y en transmisión en vivo, e invita a los recién llegados a unirse como una 'familia de fe'."
+  },
+  {
+   "id": "b9bf5f163902",
+   "severity": "review",
+   "problem": "Unsure: \"centro comunitario de Thorncliffe Park\" replaces the name Thorncliffe Park Community Hub used elsewhere; keep \"Thorncliffe Park Community Hub\".",
+   "reviewedText": "Atención médica primaria gratuita y completa para los residentes del código postal M4H, sin necesidad de tarjeta sanitaria ni de derivación, con servicios de interpretación. Los servicios incluyen atención primaria continua, una clínica pediátrica escolar, atención podológica para personas mayores y personas con enfermedades crónicas, asesoramiento nutricional, trabajo social y asesoramiento en salud mental, talleres de educación sanitaria, apoyo familiar y derivaciones a programas de apoyo económico, de asentamiento, de vivienda, de empleo y de idiomas. Ubicado en el centro comunitario de Thorncliffe Park, 45 Overlea Blvd, 2ª planta."
+  },
+  {
+   "id": "bc208860cefc",
+   "severity": "review",
+   "problem": "\"clases del Corán para hermanas\" literally means classes for sisters (siblings/nuns); \"Sisters\" here means women - use \"clases del Corán para mujeres (Sisters)\".",
+   "reviewedText": "Toronto Hifz Academy, en 45 Overlea Blvd, Unidad 201, Toronto (M4H 1C3; 647-505-8622), es una escuela coránica que ofrece clases de Hifz (memorización del Corán) a tiempo completo y parcial, Pre-Hifz, revisión de Hafiz, árabe clásico y clases del Corán para hermanas. Las clases se imparten de lunes a jueves de 9:00 a 13:00 y de 16:00 a 19:00, y los viernes de 9:00 a 14:00 y de 16:00 a 19:00."
+  },
+  {
+   "id": "dd60669c88d7",
+   "severity": "review",
+   "problem": "\"la Organización de Mujeres Afganas, los Servicios Jurídicos Comunitarios de Don Valley y el Servicio de Acceso a la Salud de Thorncliffe Park\" translate organisation names; keep Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park (with gloss).",
+   "reviewedText": "Centro comercial del barrio en 45 Overlea Blvd con tiendas minoristas, restaurantes y servicios cotidianos (supermercado, banco, farmacia/laboratorio, gimnasio, peluquería). También alberga a inquilinos que prestan servicios comunitarios, como la Organización de Mujeres Afganas, los Servicios Jurídicos Comunitarios de Don Valley y el Servicio de Acceso a la Salud de Thorncliffe Park."
+  },
+  {
+   "id": "e0aa03a9fd6a",
+   "severity": "review",
+   "problem": "Unsure: \"el Festival de Cine Japonés de Toronto\" and \"el Centro de Patrimonio Nikkei Moriyama\" translate proper names; keep Toronto Japanese Film Festival / Moriyama Nikkei Heritage Centre.",
+   "reviewedText": "Centro cultural japonés en 6 Sakura Way, abierto a todo el mundo, que ofrece clases culturales (arreglo floral ikebana, ceremonia del té chado, caligrafía shodo, pintura sumi-e, percusión taiko, koto), artes marciales (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), clases de japonés para adultos, clubes (karaoke, hula, baile, club de mayores, ping pong), festivales estacionales, el Festival de Cine Japonés de Toronto, exposiciones y el Centro de Patrimonio Nikkei Moriyama."
+  },
+  {
+   "id": "e5edc4998f24",
+   "severity": "review",
+   "problem": "\"programas recreativos registrados\" means officially registered programs; source means programs requiring registration - use \"programas recreativos con inscripción previa\".",
+   "reviewedText": "Centro comunitario y recreativo gestionado por la ciudad en 29 St Dennis Dr con piscina cubierta (clases de natación, natación recreativa), instalaciones deportivas y una sucursal de biblioteca, que ofrece programas recreativos registrados."
+  },
+  {
+   "id": "ff411a340bcb",
+   "severity": "review",
+   "problem": "\"el descanso de fin de semana\" means a weekend break/rest; \"weekend respite\" is respite care for caregivers - use \"cuidado de relevo (respiro) los fines de semana\".",
+   "reviewedText": "Organización sin fines de lucro de base comunitaria (fundada en 2018 por padres de niños con autismo, constituida en 2020) que ofrece servicios gratuitos, basados en la comunidad y orientados a la familia para niños y jóvenes con autismo y otros trastornos del neurodesarrollo en East York. Los programas incluyen los programas juveniles Roots, que funcionan de lunes a sábado, el descanso de fin de semana, las reuniones mensuales de apoyo a los padres, el apoyo para los deberes después de la escuela, los campamentos inclusivos gratuitos de verano y de las vacaciones de marzo, los eventos de vuelta al colegio, los talleres educativos y las campañas de concienciación sobre el autismo y la discapacidad."
+  }
+ ]
+}

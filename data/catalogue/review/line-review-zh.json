@@ -1,0 +1,247 @@
+{
+ "language": "zh",
+ "reviewer": "Claude subagent, line-by-line, 2026-10-01 (not a native speaker)",
+ "textsRead": 140,
+ "findings": [
+  {
+   "id": "32dfa11d6223",
+   "severity": "redo",
+   "problem": "\"多服务结算服务\" renders 'settlement' as 结算 (financial/billing settlement), so the agency reads as a 'multi-service billing/settlement-of-accounts' office; should be \"多元服务安置机构\" (安置 as used elsewhere). Also \"针对女性的暴力咨询\" is ambiguous; better \"反对针对妇女暴力的咨询服务\".",
+   "reviewedText": "为Thorncliffe Park、Flemingdon Park、St. James Town和Taylor Massey提供多服务结算服务的机构。服务包括安置支持（需求评估、加拿大/安大略省生活指南、公民准备课程、移民表格帮助）、住房援助（住房搜索、补贴住房申请、租金银行使用、能源账单援助）、老年人项目（老年人综合服务、个人支持服务）、青年项目（例如，课后女孩项目）、就业服务、语言培训和针对女性的暴力咨询。免费；请致电或到访。"
+  },
+  {
+   "id": "ff411a340bcb",
+   "severity": "redo",
+   "problem": "\"周末休息\" means 'closed / resting on weekends', the opposite of 'weekend respite' (care that gives parents a break); should be \"周末喘息照护服务\".",
+   "reviewedText": "由自闭症儿童家长于 2018 年成立的基层非营利组织（2020 年注册），为东约克地区的自闭症儿童和青少年以及其他神经发育障碍患者提供免费、社区化、以家庭为中心的服务。项目包括周一至周六运营的 Roots 青年项目、周末休息、每月家长支持会议、课后作业辅导、免费包容性暑期和三月假期营地、返校活动、教育研讨会和自闭症/残疾意识宣传活动。"
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "severity": "redo",
+   "problem": "\"贸易培训\" means 'commerce/trading training'; 'trades training' means skilled trades, should be \"技工/技术行业培训\". Also partner names are translated without English (\"东多伦多健康合作伙伴\", \"TNO - 社区组织\", \"安大略省青少年健康中心\"); keep East Toronto Health Partners, The Neighbourhood Organization, Youth Wellness Hubs Ontario in English.",
+   "reviewedText": "为 Thorncliffe Park 和 Flemingdon Park 12 至 25 岁青少年提供的免费、保密、随到随诊的服务中心（由东多伦多健康合作伙伴、TNO - 社区组织和安大略省青少年健康中心推出；无需健康卡、家庭医生或转诊）。服务内容：健康咨询、药物滥用支持、初级护理、护理导航、同伴支持、就业服务、贸易培训、食品银行、住房和安置帮助、教育、娱乐/社交项目、领导力发展和志愿者机会。"
+  },
+  {
+   "id": "de5580650854",
+   "severity": "redo",
+   "problem": "\"免费的落地项目\" uses 落地 ('landing / put into practice') for 'drop-in', which is meaningless here; should be \"免费的随到随参加（无需预约）项目\".",
+   "reviewedText": "Fraser Mustard EarlyON 儿童和家庭中心（位于 Fraser Mustard 早期学习学院，地址为 82 Thorncliffe Park Dr, East York；电话：416-394-2104）是一个免费的落地项目，面向有 0 至 6 岁儿童的家长和看护者，开放时间为周一至周四上午 8:45 至下午 1:45。孩子们可以玩耍、探索、学习，并享用营养点心，而家长则可以与其他家庭联系，了解社区项目和服务信息，这些活动由合格的早期教育专业人员提供支持；无需预先注册。"
+  },
+  {
+   "id": "0b810534f69d",
+   "severity": "review",
+   "problem": "\"由社区组织运营\" translates the organisation name The Neighbourhood Organization as generic 'a community organization'; keep the name: \"由 The Neighbourhood Organization（TNO）运营\".",
+   "reviewedText": "TNO 食品合作社（由社区组织运营）为 Thorncliffe Park 和 Flemingdon Park 社区的数千名居民提供免费食品，包括新鲜农产品、鸡蛋和乳制品，每月分发两次，全年分发工作由 Greenwin Cares 等社区合作伙伴支持。\n\n为 Thorncliffe Park、Flemingdon Park、St. James Town 和 Taylor Massey 提供多服务安置服务的机构。服务包括安置支持（需求评估、加拿大/安大略省生活指南、公民入籍准备课程、移民表格帮助）、住房援助（住房搜索、补贴住房申请、租金银行使用、能源账单援助）、老年人计划（老年人综合服务、个人支持服务）、青年计划（例如，课后女孩计划）、就业服务、语言培训和反暴力侵害妇女咨询。免费；请致电或随时到访。"
+  },
+  {
+   "id": "a5c931e58836",
+   "severity": "review",
+   "problem": "\"由社区组织运营\" translates the organisation name The Neighbourhood Organization as generic 'a community organization'; keep the name: \"由 The Neighbourhood Organization（TNO）运营\".",
+   "reviewedText": "TNO 食品合作社（由社区组织运营）为 Thorncliffe Park 和 Flemingdon Park 社区的数千名居民提供免费食品，包括新鲜农产品、鸡蛋和乳制品，每月分发两次，全年分发工作由 Greenwin Cares 等社区合作伙伴支持。"
+  },
+  {
+   "id": "0baa182fc012",
+   "severity": "review",
+   "problem": "\"牧区紧急情况\" reads as 'parish-district (or grazing-area) emergency'; 'pastoral emergency' means needing urgent pastoral care, e.g. \"需要牧师紧急关怀的情况\". Name transliterated as \"保罗·谢泼德牧师博士\"; keep Rev. Dr. Paul Shepherd in English.",
+   "reviewedText": "牧区紧急情况：如有牧区紧急情况或需要预约会议，可联系保罗·谢泼德牧师博士，电话：647-700-7129。"
+  },
+  {
+   "id": "0f7fe1d38b46",
+   "severity": "review",
+   "problem": "\"语言病理学\" (language pathology) is a literal rendering of speech-language pathology; the service is usually called \"言语语言治疗\".",
+   "reviewedText": "提供家庭和社区医疗保健服务的机构，提供家庭和诊所服务：护理（RN/RPN）、个人支持、家庭支持（餐饮准备、家务、陪伴、用药提醒）、物理治疗、职业治疗、语言病理学、社会工作和营养学。护士全天候提供短期或长期护理服务；还经营护理和物理治疗诊所。"
+  },
+  {
+   "id": "1330dcebcb5e",
+   "severity": "review",
+   "problem": "Neighbourhood names transliterated only (\"索恩克利夫和弗莱明顿公园\"), with no English; residents know them as Thorncliffe Park / Flemingdon Park and \"弗莱明顿公园\" reads like a park. Keep the English names.",
+   "reviewedText": "一个基层组织，由来自索恩克利夫和弗莱明顿公园的75个家庭的约80名成员组成，他们来自不同的文化和宗教。其目标是发挥领导作用，将社区组织和居民联系起来，以建立更强大的社区。"
+  },
+  {
+   "id": "313e1f70434b",
+   "severity": "review",
+   "problem": "\"R.V. 伯吉斯公园\" and \"索恩克利夫公园\" are transliterations without the English names; keep R.V. Burgess Park and Thorncliffe Park in English so people can find them.",
+   "reviewedText": "一个基层妇女社区组织领导了R.V. 伯吉斯公园的复兴工作，共同创建了社区花园、公园咖啡馆、喷水池、座椅、照明设施，以及北美公共公园中唯一的户外坦都尔烤炉等设施。该组织专注于索恩克利夫公园的社区建设和跨文化工作。"
+  },
+  {
+   "id": "68c635426ffe",
+   "severity": "review",
+   "problem": "\"索恩克利夫公园\" and \"R.V. 伯吉斯公园\" are transliterated with no English; keep Thorncliffe Park and R.V. Burgess Park in English.",
+   "reviewedText": "索恩克利夫公园一年一度最大的社区活动，过去14年来一直在R.V. 伯吉斯公园举行。一个夏日的下午和晚上，有饮料、艺术和手工艺、音乐、舞蹈、游戏、集市摊位和当地企业提供的食物。由一个独立的志愿者委员会组织；每年约有100名青年志愿者参与，培养领导能力。"
+  },
+  {
+   "id": "dddae32defdd",
+   "severity": "review",
+   "problem": "\"索恩克里夫公园\" is a transliteration (and spelled differently from 索恩克利夫 elsewhere); keep Thorncliffe Park in English.",
+   "reviewedText": "伊斯玛仪社区中心和祈祷厅（Jamatkhana）位于索恩克里夫公园的80 Overlea Boulevard。为伊斯玛仪穆斯林举办每日集体祈祷和社区聚会；该建筑包括一个体育馆、图书馆、教学空间、办公室和食品投递区。"
+  },
+  {
+   "id": "1517bf8b7dbd",
+   "severity": "review",
+   "problem": "\"东约克镇中心\" translates the mall name East York Town Centre without the English; add it, e.g. \"East York Town Centre（东约克镇中心）\".",
+   "reviewedText": "多服务社区中心位于45 Overlea Blvd，2楼（东约克镇中心内），周一至周日开放，时间为上午8:00至晚上8:00。居民可以在这个一站式空间中获得合作伙伴组织的健康和社会服务、项目和社区空间。"
+  },
+  {
+   "id": "170900592261",
+   "severity": "review",
+   "problem": "\"迈克尔·加伦医院\" and \"东约克/唐米尔斯\" are transliterated without English; keep Michael Garron Hospital (and East York/Don Mills) in English so residents can find the hospital.",
+   "reviewedText": "助产诊所（东约克/唐米尔斯）在整个怀孕、分娩和生产期间，以及产后 6 周内为父母和婴儿提供免费的卫生部资助的护理服务。分娩可在家中、多伦多分娩中心或迈克尔·加伦医院进行；助产士全天候值班，处理紧急问题，并可将并发症转诊给产科医生、儿科医生和哺乳顾问。多语言工作人员（英语、阿拉伯语、法语、西班牙语、波斯语、达里语等）和产前课程，包括新生儿 101 课程。"
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "severity": "review",
+   "problem": "\"约克磨坊\" is a literal calque of York Mills (a street/area name) and \"当河\" is an unusual rendering of Don River; keep York Mills and Don River in English (央街 for Yonge is standard and fine).",
+   "reviewedText": "为服务区域内（安大略湖至约克磨坊/401，央街/当河至维多利亚公园大道）的低收入人群提供免费法律咨询和代理服务，涵盖四个领域：住房法（防止驱逐、非法锁门、租户权利）、就业法（就业标准、不当解雇、遣散费、就业保险）、移民法（永久居留申请、工作许可、公民身份）和收入支持（ODSP、OW、CPP、OAS、GIS、加拿大残疾福利金）；此外还提供公共法律教育和有限的文件服务（宣誓书、公证副本）。 接听热线：416-441-1764 分机 1，周一至周四上午 9:00 至 12:30（语音信箱，1-3 个工作日内回电；不接受现场来访；现场接访需预约，周一/周三下午 1:30-4:30）。"
+  },
+  {
+   "id": "2d4e28c7351b",
+   "severity": "review",
+   "problem": "\"记录日常安全演习并确保入口安全\" says the service 'records drills and ensures entrance security'; the source means the page mentions routine safety drills and a secured entrance: \"提到有日常安全演习和门禁系统\".",
+   "reviewedText": "记录日常安全演习并确保入口安全；未列出针对紧急情况的社区服务。"
+  },
+  {
+   "id": "2de0ec486420",
+   "severity": "review",
+   "problem": "\"水上乐园\" means 'water park', overstating a splash pad; use \"喷水池/戏水池\" as in other texts.",
+   "reviewedText": "toronto.ca 页面专门介绍了 Flemingdon Park（靠近 Don Mills Rd 和 Eglinton Ave E）内的饮水喷泉设施。该喷泉被列为这个 13.3 公顷公园的官方设施之一，公园内还有棒球场、球类曲棍球场、板球场、多功能场地、4 个室外篮球场、室外跑道、4 个游乐场（游乐场于 2025 年更新）、水上乐园、社区花园、6 个野餐亭、运动场和停车场。"
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "severity": "review",
+   "problem": "\"泳池甲板入口平缓\" is a literal calque of 'pool deck' (甲板 = ship deck); better \"泳池周边地面无台阶，可平地进入\".",
+   "reviewedText": "多伦多市位于5 Leaside Park Drive（Leaside公园内）的户外公共游泳池，夏季季节性开放，供娱乐和泳道游泳使用。该游泳池被列为无障碍设施，设有无障碍更衣室，泳池甲板入口平缓，Wheel-Trans可在Leaside Park Drive停车场接送。"
+  },
+  {
+   "id": "3dc2fd8bba11",
+   "severity": "review",
+   "problem": "\"护士从业人员\" is a literal rendering of 'nurse practitioners'; the usual term is \"执业护士\" (or 高级执业护士).",
+   "reviewedText": "非营利性社区健康中心（自1975年开始运营）位于10 Gateway Blvd，为服务区域内的居民提供由医生和护士从业人员提供的免费初级护理服务，无需OHIP卡或医疗转诊。还提供个人和家庭咨询/心理健康服务、慢性病预防和管理（糖尿病、肺部和心脏健康）、营养师、足病护理（足部护理）、营养咨询、性健康诊所（与多伦多公共卫生局合作）、产前计划以及针对老年人、妇女、青少年和新移民的健康促进计划（运动、健康、健康烹饪）。"
+  },
+  {
+   "id": "411f70e150dd",
+   "severity": "review",
+   "problem": "Times written as \"8:30–10:00 上午\" and \"10:00 上午–12:00 中午\" are in English word order; natural Chinese is \"上午 8:30–10:00\" and \"上午 10:00–中午 12:00\".",
+   "reviewedText": "位于 30 Thorncliffe Park Drive 的希腊东正教教区（可容纳 600 多名坐席信徒，停车位充足），由教区牧师 Apostolos Gkolias 神父领导（apostolosgkolias@yahoo.com；教堂电话 +1 (416) 425-2485，info@togreekcom.org）。周日和节日服务：晨祷 8:30–10:00 上午，圣礼 10:00 上午–12:00 中午；负责主日学注册和其他教会活动。"
+  },
+  {
+   "id": "4a39ebe12219",
+   "severity": "review",
+   "problem": "\"饮水机\" usually means an indoor water dispenser; for outdoor public water fountains use \"饮水喷泉/公共饮水点\".",
+   "reviewedText": "饮水机"
+  },
+  {
+   "id": "6112e2d3ed72",
+   "severity": "review",
+   "problem": "\"门诊服务\" means 'outpatient services'; 'walk-in' means no appointment needed: \"不提供急诊或无需预约的现场服务\".",
+   "reviewedText": "提供由工作人员医生提供的免费、保密的24小时随叫随到协助服务（416-429-4991）。明确声明不提供急诊或门诊服务——在紧急情况下请拨打911。"
+  },
+  {
+   "id": "6166d8860ebc",
+   "severity": "review",
+   "problem": "\"Valley Park 中等学校\" / \"一所中学\": 中等学校 means secondary school; a grades 6-8 middle school is \"初中\".",
+   "reviewedText": "Valley Park 中等学校是 TDSB 的一所中学，为 6-8 年级的学生提供服务，约有 1,100 名学生来自 Thorncliffe Park 和 Flemingdon Park 社区，地址是东约克 130 Overlea Blvd。它的重点是建立一个以尊重、责任和安全为基础的安全、支持性的学习环境；在获取的主页文本中没有列出法语浸入式、ESL 或特殊教育项目。"
+  },
+  {
+   "id": "62d55110cf7b",
+   "severity": "review",
+   "problem": "'drop-in' was turned into a second \"免费的\" (free), so the drop-in meaning is lost; should be \"随到随参加的\". \"圣约翰二十三世学校\" has no English; keep St. John XXIII.",
+   "reviewedText": "位于 175 Grenoble Dr 的免费 TCDSB 运营的 EarlyON 儿童和家庭中心为 0-6 岁的儿童及其父母/照顾者提供免费的玩耍和学习项目（需要家长参与，无需注册）。根据 TCDSB 的时间表，圣约翰二十三世学校在周一至周四上午 8:45 至 12:45 以及周五上午 8:45 至 12:45 开放。"
+  },
+  {
+   "id": "6ba3dd305d6e",
+   "severity": "review",
+   "problem": "\"模式教育\" is a literal calque of 'modality education' (education on dialysis treatment options); better \"透析方式选择教育\". \"普罗维登斯医疗保健\" transliterates Providence Healthcare without English.",
+   "reviewedText": "unityhealth.to 是 Unity Health Toronto 的主页，该网络是圣约瑟夫健康中心（30 The Queensway，416-530-6000）、圣迈克尔医院（30 Bond St.，416-360-4000）和普罗维登斯医疗保健（3276 St. Clair Ave. E.，416-285-3666）的母公司。位于 45 Overlea Blvd. 的圣迈克尔肾病护理中心（416-867-3700）是一个以患者为中心的社区卫星血液透析设施，拥有 21 个治疗站、6 个家庭透析培训站和 5 个检查室；Unity 的 Multi-Care 肾病诊所提供肾病学、护理、营养师、药剂师、社会工作者和模式教育支持，以减缓肾病进展，并提供腹膜透析和家庭血液透析选项。"
+  },
+  {
+   "id": "7d47cf9e0e64",
+   "severity": "review",
+   "problem": "\"红苹果日托中心\" translates the daycare name without English; keep Red Apple Daycare.",
+   "reviewedText": "多伦多天主教公校教育局位于弗莱明顿公园（Flemingdon Park）格勒诺布尔大道（Grenoble Drive）175号的小学（JK 至 8年级）提供 ESL、特殊教育和 Empower Reading 支持以及运动队。该建筑还设有红苹果日托中心（课前和课后托管）、免费的 EarlyON 儿童和家庭中心（为 0 至 6 岁儿童和家长提供课程）以及为移民提供支持的安置工作人员办公室。"
+  },
+  {
+   "id": "88f8e20033ec",
+   "severity": "review",
+   "problem": "\"PD日\" is left as an English abbreviation that a Chinese reader won't understand; explain it, e.g. \"教师培训日（学校停课日，PD day）\".",
+   "reviewedText": "拥有三个地点的持证托儿服务：206 Laird Dr（婴儿、幼儿、学前班，全年开放），31 Rolph Rd at Rolph Road School（学前班、幼儿园、学龄儿童；JK-6年级课前/课后儿童俱乐部，提供作业辅导、零食，以及全天PD日/圣诞节/三月份假期托管服务），以及182 Bessborough Dr at St. Anselm School（幼儿园、学龄儿童）。还举办7月至8月的夏令营（音乐、舞蹈、体育、游泳、艺术和手工艺）。参与CWELCC费用减免计划。"
+  },
+  {
+   "id": "941791890d5c",
+   "severity": "review",
+   "problem": "Address reordered to \"Gateway Blvd 55 号\"; house rule is to keep \"55 Gateway Blvd\" exactly as in English so it can be typed into a map.",
+   "reviewedText": "Gateway 公立学校是多伦多公校教育局的一所小学，为 Flemingdon Park 的幼儿园到 6 年级的学生（约 950 名学生）提供服务，地址为北约克 Gateway Blvd 55 号。学校强调包容、多元文化的学习环境，对成绩和行为有很高的期望；在获取的主页文本中，没有列出法语浸入式、ESL 或特殊教育项目。"
+  },
+  {
+   "id": "ae69792878f8",
+   "severity": "review",
+   "problem": "Church name translated as \"公园教堂联合教会\" without English (keep Chapel in the Park United Church), and address reordered to \"Thorncliffe Park Drive 16 号\" instead of 16 Thorncliffe Park Drive.",
+   "reviewedText": "公园教堂联合教会是一个小型的多元文化教会，位于多伦多 Thorncliffe Park Drive 16 号（416-421-0792），为 Thorncliffe Park 和 Don Mills 地区服务。该教会于周日上午 10:00 举行现场、Zoom 和直播礼拜，并邀请新来者加入“信仰家庭”。"
+  },
+  {
+   "id": "ef9e53e990a8",
+   "severity": "review",
+   "problem": "Address reordered to \"Ferrand Drive 24号\"; keep \"24 Ferrand Drive\" as in English.",
+   "reviewedText": "位于北约克Ferrand Drive 24号的耶稣基督后期圣徒教会的当地会众。周日礼拜包括圣餐会，以及从18个月大及以上的所有年龄段的班级；欢迎所有人参加。"
+  },
+  {
+   "id": "e84d3a5ba49c",
+   "severity": "review",
+   "problem": "Address reordered to \"Thorncliffe Park Drive 85 号和 95 号楼\"; keep \"85 & 95 Thorncliffe Park Drive\" as in English.",
+   "reviewedText": "Leaside Towers 租户协会（Thorncliffe Park Drive 85 号和 95 号楼）页面为居民提供了一个联系方式名录：物业管理公司（Morguard）电话为 416-421-8109，楼栋保安电话为：85 号楼 647-462-0404，95 号楼 416-906-7970。"
+  },
+  {
+   "id": "9aab0433db11",
+   "severity": "review",
+   "problem": "\"瓶装水补给站\" means 'bottled-water supply station' (suggests bottles are handed out); it is a station to refill your own bottle: \"水瓶灌水站\".",
+   "reviewedText": "社区公园内设有瓶装水补给站，提供免费饮用水加水服务。"
+  },
+  {
+   "id": "f0b67cd7ba77",
+   "severity": "review",
+   "problem": "\"饮水瓶装水站\" is garbled ('drinking bottled-water station'); should be \"水瓶灌水站\".",
+   "reviewedText": "Leonard Linton 公园位于 135 Vanderhoof Ave；该市的设施清单显示，现场有一处饮水瓶装水站。无法检索到完整的设施清单。"
+  },
+  {
+   "id": "ba5f23dbc690",
+   "severity": "review",
+   "problem": "\"由家庭日\" translates the operator name (Family Day Care Services, shown as 'Family Day') as the public holiday 'Family Day'; keep the name in English: \"由 Family Day 运营\".",
+   "reviewedText": "由家庭日为有幼儿的父母和照顾者提供的免费 EarlyON 儿童和家庭中心项目，通过室内、户外和虚拟项目支持早期学习、儿童发展和积极的亲子互动。弗莱明顿公园中心位于 150 Grenoble Drive（Don Mills/Overlea）；同一页面还列出了一个 Grenoble EarlyON 站点。"
+  },
+  {
+   "id": "dd60669c88d7",
+   "severity": "review",
+   "problem": "Organisation names translated without English: \"唐谷社区法律服务\" (Don Valley Community Legal Services), \"Thorncliffe Park 健康服务中心\" (Health Access Thorncliffe Park), \"阿富汗妇女组织\" (Afghan Women's Organization); add English names.",
+   "reviewedText": "位于 45 Overlea Blvd 的社区购物中心，内有零售商店、餐厅和日常服务（杂货店、银行、药店/实验室、健身房、理发店）。此外，还设有社区服务租户，如阿富汗妇女组织、唐谷社区法律服务和 Thorncliffe Park 健康服务中心。"
+  },
+  {
+   "id": "e0aa03a9fd6a",
+   "severity": "review",
+   "problem": "\"琴\" for koto is vague (often read as guqin); use \"日本筝（koto）\". Unsure: \"长刀道\" for naginata is unusual; \"薙刀\" is the common term.",
+   "reviewedText": "位于 6 Sakura Way 的日本文化中心，向所有人开放，提供文化课程（插花、茶道、书法、水墨画、太鼓、琴）、武术（柔道、空手道、剑道、合气道、弓道、居合道、长刀道、杖道）、成人日语课程、俱乐部（卡拉 OK、呼拉舞、舞蹈、老年人俱乐部、乒乓球）、季节性节日、多伦多日本电影节、展览和 Moriyama 日裔传统中心。"
+  },
+  {
+   "id": "fa4e99c2c2ea",
+   "severity": "review",
+   "problem": "\"政府文件\" means 'government documents/files'; the category is about obtaining ID documents such as licences and health cards, e.g. \"政府证件办理\".",
+   "reviewedText": "政府文件"
+  },
+  {
+   "id": "fe8809651fbc",
+   "severity": "review",
+   "problem": "Crisis line names translated with no English (\"儿童帮助热线\" Kids Help Phone, \"加拿大自杀咨询热线\" Talk Suicide Canada, \"大多伦多地区危机中心\" Distress Centres of Greater Toronto, \"受虐妇女求助热线\", \"多伦多强奸危机中心\"); add English names. \"空调室内救济\" (救济 = charity relief) should be \"空调室内避暑\". Phone numbers are all correct.",
+   "reviewedText": "该中心的页面上有一个“遇到危机？点击这里”的链接，并列出了当地的危机支持机构：儿童帮助热线 1-800-668-6868，加拿大自杀咨询热线 1-833-456-4566，大多伦多地区危机中心 416-408-4357，Gerstein 危机中心 416-929-5200，Anishnawbe Health Toronto 心理健康危机管理服务 1-855-242-3310，Naseeha 心理健康热线 1-866-627-3342，Youthdale 治疗中心危机与流动支援小组 416-363-9990，Scarborough 健康网络社区危机热线 416-495-2891，受虐妇女求助热线 416-863-0511，多伦多强奸危机中心 416-597-8808，以及 Michael Garron 医院急诊科（825 Coxwell Ave.）。指定降温场所：在极端高温预警/警报期间提供空调室内救济。该中心的页面上有一个“遇到危机？点击这里”的链接，并列出了当地的危机支持机构：儿童帮助热线 1-800-668-6868，加拿大自杀咨询热线 1-833-456-4566，大多伦多地区危机中心 416-408-4357，Gerstein 危机中心 416-929-5200，Anishnawbe Health Toronto 心理健康危机管理服务 1-855-242-3310，Naseeha 心理健康热线 1-866-627-3342，Youthdale 治疗中心危机与流动支援小组 416-363-9990，Scarborough 健康网络社区危机热线 416-495-2891，受虐妇女求助热线 416-863-0511，多伦多强奸危机中心 416-597-8808，以及 Michael Garron 医院急诊科（825 Coxwell Ave.）。"
+  },
+  {
+   "id": "7bd551d09cd0",
+   "severity": "review",
+   "problem": "Unsure: \"针对公共紧急情况的社区服务\" attaches 'public' to emergencies; the source means no public emergency-specific services: \"未列出面向公众的紧急情况专门服务\".",
+   "reviewedText": "家长手册中提到，应急管理政策可向主管索取；未列出任何针对公共紧急情况的社区服务。"
+  },
+  {
+   "id": "a583aca46f5e",
+   "severity": "review",
+   "problem": "\"周日下午 12 点至 5 点\": 12 noon is normally \"中午 12 点\", not 下午 12 点; fix to avoid confusion.",
+   "reviewedText": "多伦多公共图书馆位于 29 St. Dennis Drive 的分馆：借书、公共电脑、儿童活动、儿童阅读能力培养计划“Leading to Reading”，以及免费的财务赋权服务（报税、福利申请、预算帮助——Thorncliffe 分馆也提供此服务）。开放时间：周一至周五上午 9 点至下午 8 点 30 分，周六上午 9 点至下午 5 点，周日下午 12 点至 5 点。注意：该分馆于 2025 年 12 月 1 日关闭，进行翻新工程，预计于 2026 年第三季度初重新开放；目前的开放时间列表显示该分馆已重新开放，但前往前请先确认。"
+  }
+ ]
+}

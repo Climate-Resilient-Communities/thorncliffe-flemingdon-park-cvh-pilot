@@ -1,0 +1,927 @@
+{
+ "failed": {},
+ "language": "fr",
+ "models": {
+  "command-a-translate-08-2025": 101,
+  "north-small-translate-09-2026": 1
+ },
+ "texts": {
+  "06c76a46e432": {
+   "model": "command-a-translate-08-2025",
+   "source": "Schools",
+   "text": "Écoles"
+  },
+  "0761f94fde45": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "La page du centre comprend un lien intitulé « En crise? Cliquez ici » et énumère les services locaux de soutien en cas de crise : Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Équipe de soutien mobile et en cas de crise des centres de traitement Youthdale 416-363-9990, Ligne communautaire de crise du réseau de santé de Scarborough 416-495-2891, Ligne d’aide aux femmes agressées 416-863-0511, Centre de crise en cas de viol de Toronto 416-597-8808 et service d’urgence de l’hôpital Michael Garron (825, avenue Coxwell). Espace de refroidissement désigné : offre un espace intérieur climatisé en cas d’avertissement ou d’alerte de chaleur extrême."
+   },
+   "model": "claude-correction",
+   "note": "crisis-lines review: Youthdale, Scarborough, Assaulted Women's Helpline, Toronto Rape Crisis Centre and Michael Garron names restored to English (were translated) and French glosses added (official French names for Kids Help Phone / Talk Suicide Canada); address restored to '825 Coxwell Ave.' (was '825, avenue Coxwell'); 'refroidissement' -> 'rafraîchissement' (cooling space in heat).",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "La page du centre comprend un lien « En crise? Cliquez ici » et énumère les ressources locales de soutien en situation de crise : Kids Help Phone (Jeunesse, J'écoute) 1-800-668-6868, Talk Suicide Canada (Parlons suicide Canada) 1-833-456-4566, Distress Centres of Greater Toronto (centres d'écoute pour personnes en détresse) 416-408-4357, Gerstein Crisis Centre (centre de crise en santé mentale) 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service (service de gestion des crises en santé mentale) 1-855-242-3310, Naseeha Mental Health Hotline (ligne d'écoute en santé mentale) 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team (équipe d'intervention de crise et de soutien mobile) 416-363-9990, Scarborough Health Network Community Crisis Line (ligne de crise communautaire) 416-495-2891, Assaulted Women's Helpline (ligne d'aide aux femmes agressées) 416-863-0511, Toronto Rape Crisis Centre (centre d'aide aux victimes de viol) 416-597-8808 et Michael Garron Hospital Emergency Department (urgences de l'hôpital) (825 Coxwell Ave.). Lieu de rafraîchissement désigné : offre un espace intérieur climatisé pour se rafraîchir lors des avertissements ou alertes de chaleur extrême."
+  },
+  "0aa48c71179d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
+   "text": "Église pentecôtiste située au 5 Grenoble Drive offrant des services religieux et une école du dimanche, avec une chapelle, un salon et des bureaux pour la vie paroissiale. Elle a récemment célébré son 50e anniversaire (septembre 2025)."
+  },
+  "0b810534f69d": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le TNO Food Collaborative (géré par The Neighbourhood Organization) fournit un accès gratuit à la nourriture à des milliers de personnes dans les communautés de Thorncliffe Park et de Flemingdon Park, y compris des produits frais, des œufs et des produits laitiers distribués deux fois par mois, avec une distribution toute l'année soutenue par des partenaires communautaires comme Greenwin Cares.\n\nAgence d'établissement multiservices desservant Thorncliffe Park, Flemingdon Park, St. James Town et Taylor Massey. Les services comprennent le soutien à l'établissement (évaluation des besoins, orientation pour la vie au Canada/en Ontario, cours de préparation à la citoyenneté, aide pour remplir les formulaires d'immigration), l'aide au logement (recherche de logement, demandes de logements subventionnés, accès à une banque de loyers, aide pour les factures d'énergie), les programmes pour les aînés (Services intégrés pour les aînés, services de soutien personnel), les programmes pour les jeunes (par exemple, les programmes pour les filles après l'école), les services d'emploi, la formation linguistique et le soutien psychologique pour les femmes victimes de violence. Gratuit ; appelez ou présentez-vous sur place."
+   },
+   "model": "claude-correction",
+   "note": "\"banque de loyers\" calque -> Rent Bank with French gloss; program name kept in English with gloss.",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Le TNO Food Collaborative (géré par The Neighbourhood Organization) fournit un accès gratuit à la nourriture à des milliers de personnes dans les communautés de Thorncliffe Park et de Flemingdon Park, y compris des produits frais, des œufs et des produits laitiers distribués deux fois par mois, avec une distribution toute l'année soutenue par des partenaires communautaires comme Greenwin Cares.\n\nAgence d'établissement multiservices desservant Thorncliffe Park, Flemingdon Park, St. James Town et Taylor Massey. Les services comprennent le soutien à l'établissement (évaluation des besoins, orientation pour la vie au Canada/en Ontario, cours de préparation à la citoyenneté, aide pour remplir les formulaires d'immigration), l'aide au logement (recherche de logement, demandes de logements subventionnés, accès à la Rent Bank (banque d'aide au loyer), aide pour les factures d'énergie), les programmes pour les aînés (Integrated Services for Seniors – services intégrés pour les aînés, services de soutien personnel), les programmes pour les jeunes (par exemple, les programmes pour les filles après l'école), les services d'emploi, la formation linguistique et le soutien psychologique pour les femmes victimes de violence. Gratuit ; appelez ou présentez-vous sur place."
+  },
+  "0baa182fc012": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Urgences pastorales : Le révérend Paul Shepherd peut être joint au 647-700-7129 en cas d’urgence pastorale ou pour réserver une rencontre."
+   },
+   "model": "claude-correction",
+   "note": "Restored the \"Dr.\" title missing from the translation.",
+   "source": "Pastoral emergencies: Rev. Dr. Paul Shepherd can be reached at 647-700-7129 for pastoral emergencies or to book a meeting.",
+   "text": "Urgences pastorales : le révérend Dr Paul Shepherd peut être joint au 647-700-7129 en cas d’urgence pastorale ou pour réserver une rencontre."
+  },
+  "0bb8b2cc1244": {
+   "model": "command-a-translate-08-2025",
+   "source": "Toronto Public Health dental clinics provide free basic dental care (examinations, x-rays, fillings, cleanings, some root canals, extractions, dentures) for eligible children and youth aged 0-17, low-income seniors 65+, and clients of select public health programs who live in Toronto and cannot afford a private dentist. Eligibility is assessed in person at a clinic; a mobile dental clinic also serves clients with difficulty accessing care.",
+   "text": "Les cliniques dentaires de Toronto Public Health offrent des soins dentaires de base gratuits (examens, radiographies, obturations, nettoyages, certains traitements de canal, extractions, prothèses dentaires) aux enfants et aux jeunes admissibles âgés de 0 à 17 ans, aux aînés à faible revenu de 65 ans et plus, ainsi qu’aux clients de certains programmes de santé publique qui vivent à Toronto et qui ne peuvent pas se permettre de consulter un dentiste privé. L’admissibilité est évaluée en personne dans une clinique; une clinique dentaire mobile dessert également les clients qui ont des difficultés à accéder aux soins."
+  },
+  "0bf38ee19e3c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Espaces de refroidissement"
+   },
+   "model": "claude-correction",
+   "note": "\"refroidissement\" (cooling of objects) -> Canadian \"lieux de rafraîchissement\".",
+   "source": "Cooling Spaces",
+   "text": "Lieux de rafraîchissement"
+  },
+  "0c3f5b3aa79a": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Soutien alimentaire d’urgence pour les familles dans le besoin (distribution gratuite de nourriture deux fois par mois). Aucun refuge, centre de rafraîchissement ou service de ligne de crise spécifique au Food Collaborative n’a été confirmé."
+   },
+   "model": "claude-correction",
+   "note": "Consistent terminology: \"lieu de rafraîchissement\", \"ligne d'écoute de crise\".",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "Soutien alimentaire d’urgence pour les familles dans le besoin (distribution gratuite de nourriture deux fois par mois). Aucun refuge, lieu de rafraîchissement ou service de ligne d’écoute de crise spécifique au Food Collaborative n’a été confirmé."
+  },
+  "0f7fe1d38b46": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Fournisseur de soins de santé à domicile et en milieu communautaire offrant des services à domicile et en clinique : soins infirmiers (infirmière autorisée/infirmière auxiliaire), soutien personnel, soutien à domicile (préparation des repas, entretien ménager, compagnie, rappels de prise de médicaments), physiothérapie, ergothérapie, orthophonie, travail social et diététique. Des infirmières sont disponibles 24 heures sur 24 pour répondre aux besoins de soins à court ou à long terme; exploite également des cliniques d'infirmières et de physiothérapie."
+   },
+   "model": "claude-correction",
+   "note": "24/7 rendered fully (7 days a week was missing).",
+   "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
+   "text": "Fournisseur de soins de santé à domicile et en milieu communautaire offrant des services à domicile et en clinique : soins infirmiers (infirmière autorisée/infirmière auxiliaire), soutien personnel, soutien à domicile (préparation des repas, entretien ménager, compagnie, rappels de prise de médicaments), physiothérapie, ergothérapie, orthophonie, travail social et diététique. Des infirmières sont disponibles 24 heures sur 24, 7 jours sur 7, pour répondre aux besoins de soins à court ou à long terme; exploite également des cliniques d'infirmières et de physiothérapie."
+  },
+  "1330dcebcb5e": {
+   "model": "command-a-translate-08-2025",
+   "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
+   "text": "Un groupe communautaire d’environ 80 membres provenant de 75 familles de Thorncliffe et de Flemingdon Parks, issus de plusieurs cultures et religions. Il vise à jouer un rôle de leader en établissant des liens entre les organismes communautaires et les résidents afin de renforcer le quartier."
+  },
+  "145d746d96ec": {
+   "model": "command-a-translate-08-2025",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "L’archidiocèse orthodoxe grec du Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) est l’organisme administratif national de l’Église orthodoxe grecque au Canada. Sa page d’accueil met l’accent sur les nouvelles et les célébrations de l’Église, le catéchisme orthodoxe et les ressources en éducation religieuse, un livret sur la liturgie divine, un livre de prières et une bibliothèque d’icônes orthodoxes — des ressources ecclésiastiques et spirituelles plutôt que des services sociaux communautaires."
+  },
+  "1517bf8b7dbd": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "Centre communautaire multiservices situé au 45 Overlea Blvd, 2e étage (à l’intérieur du East York Town Centre), ouvert du lundi au dimanche de 8 h à 20 h. Un espace unique où les résidents ont accès à des services de santé et sociaux, à des programmes et à des espaces communautaires offerts par des organismes partenaires.",
+   "warnings": [
+    "numbers missing from translation: 00"
+   ]
+  },
+  "1538ea5a988e": {
+   "model": "command-a-translate-08-2025",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "L’hôpital St. Michael’s dispose d’un service d’urgence (30 Bond St.). Les coordonnées de MyChart d’Unity Health et les lignes téléphoniques de l’hôpital sont indiquées. Aucun service d’urgence spécifique au centre de soins rénaux n’a été trouvé — en cas d’urgence médicale, composez le 911."
+  },
+  "1621e2da2a65": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Ferme communautaire située dans Flemingdon Park qui cultive des aliments sains pour les résidents. Offre des activités communautaires de culture de produits alimentaires, un marché fermier hebdomadaire en été au 150, Grenoble Drive (jeudis de 15 h à 18 h, de fin juin à début octobre) et un programme communautaire de fermiers qui donne aux résidents des occasions entrepreneuriales de gérer des microentreprises agricoles."
+   },
+   "model": "claude-correction",
+   "note": "Program name Community Farmer kept in English with gloss.",
+   "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
+   "text": "Ferme communautaire située dans Flemingdon Park qui cultive des aliments sains pour les résidents. Offre des activités communautaires de culture de produits alimentaires, un marché fermier hebdomadaire en été au 150, Grenoble Drive (jeudis de 15 h à 18 h, de fin juin à début octobre) et le programme Community Farmer (fermiers communautaires), qui donne aux résidents des occasions entrepreneuriales de gérer des microentreprises agricoles."
+  },
+  "16b01b9ea5a7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides emergency and urgent dental care for issues such as dental pain and cavities.",
+   "text": "Fournit des soins dentaires d'urgence pour des problèmes tels que les douleurs dentaires et les caries."
+  },
+  "170900592261": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Clinique de sages-femmes (East York/Don Mills) offrant des soins gratuits financés par le ministère de la Santé pendant la grossesse, l’accouchement et la naissance, ainsi que pour les parents et les bébés pendant les six semaines suivant l’accouchement. Les accouchements ont lieu à domicile, au Toronto Birth Centre ou à l’hôpital Michael Garron; les sages-femmes sont disponibles 24 heures sur 24 pour les urgences, et les complications sont référées à des obstétriciens, des pédiatres et des consultantes en lactation. Personnel multilingue (anglais, arabe, français, espagnol, farsi, dari et autres) et cours prénataux, y compris Newborn 101."
+   },
+   "model": "claude-correction",
+   "note": "24/7 rendered fully (7 days a week was missing).",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "Clinique de sages-femmes (East York/Don Mills) offrant des soins gratuits financés par le ministère de la Santé pendant la grossesse, l’accouchement et la naissance, ainsi que pour les parents et les bébés pendant les six semaines suivant l’accouchement. Les accouchements ont lieu à domicile, au Toronto Birth Centre ou à l’hôpital Michael Garron; les sages-femmes sont disponibles 24 heures sur 24, 7 jours sur 7, pour les urgences, et les complications sont référées à des obstétriciens, des pédiatres et des consultantes en lactation. Personnel multilingue (anglais, arabe, français, espagnol, farsi, dari et autres) et cours prénataux, y compris Newborn 101."
+  },
+  "1a3c95cbc0e2": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu dans la zone de desserte (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : le droit du logement (prévention des expulsions, verrouillages illégaux, droits des locataires), le droit du travail (normes d'emploi, congédiement abusif, indemnités de départ, AE), le droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et les soutiens au revenu (PDOS, AO, RPC, SV, SVG, Allocation canadienne pour personnes en situation de handicap) ; également éducation juridique publique et services de documentation limités (déclarations sous serment, copies conformes notariées). Ligne d’accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (messagerie vocale avec rappel dans un délai de 1 à 3 jours ouvrables ; pas de visites sans rendez-vous ; accueil en personne sur rendez-vous les lundi et mercredi de 13 h 30 à 16 h 30)."
+   },
+   "model": "claude-correction",
+   "note": "Fixed wrong benefit acronyms (POSPH, Ontario au travail, SRG) and official name of Canada Disability Benefit; replaced calque \"verrouillages illégaux\".",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu dans la zone de desserte (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : le droit du logement (prévention des expulsions, changements de serrures illégaux par le propriétaire, droits des locataires), le droit du travail (normes d'emploi, congédiement abusif, indemnités de départ, AE), le droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et les soutiens au revenu (POSPH, Ontario au travail, RPC, SV, SRG, Prestation canadienne pour les personnes handicapées) ; également éducation juridique publique et services de documentation limités (déclarations sous serment, copies conformes notariées). Ligne d’accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (messagerie vocale avec rappel dans un délai de 1 à 3 jours ouvrables ; pas de visites sans rendez-vous ; accueil en personne sur rendez-vous les lundi et mercredi de 13 h 30 à 16 h 30)."
+  },
+  "1ae4b85c3a4e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Programme TNO (financé par IRCC) qui aide les nouveaux arrivants de 18 ans et plus à poursuivre une carrière dans les métiers spécialisés et les domaines techniques. Offre des parcours de formation et d’emploi en construction, en HVAC (licence G2/G3), en TI, y compris en science des données et en IA, en conduite de camion (licence DZ), en conduite de chariot élévateur et en contrôle de la circulation sur les chantiers de construction. Ouvert aux résidents permanents, aux réfugiés au sens de la Convention et aux citoyens canadiens ayant un niveau d’anglais CLB 5-6+."
+   },
+   "model": "claude-correction",
+   "note": "Canadian \"permis\"/\"certificat\" instead of \"licence\"; French benchmark NCLC added; HVAC explained.",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "Programme TNO (financé par IRCC) qui aide les nouveaux arrivants de 18 ans et plus à poursuivre une carrière dans les métiers spécialisés et les domaines techniques. Offre des parcours de formation et d’emploi en construction, en chauffage, ventilation et climatisation (CVC/HVAC, certificat G2/G3), en TI, y compris en science des données et en IA, en conduite de camion (permis DZ), en conduite de chariot élévateur et en contrôle de la circulation sur les chantiers de construction. Ouvert aux résidents permanents, aux réfugiés au sens de la Convention et aux citoyens canadiens ayant un niveau d’anglais NCLC/CLB 5-6+."
+  },
+  "1be560c4691c": {
+   "model": "command-a-translate-08-2025",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "Les casernes des services d’incendie de Toronto qui offrent une protection contre les incendies et des services de sauvetage d’urgence 24 heures sur 24 dans la région sont les suivantes : Caserne 321 (231 McRae Dr), Caserne 235 (200 Bermondsey Rd), Caserne 322 (256 Cosburn Ave), Caserne 224 (1313 Woodbine Ave). Ligne non urgente : 416-338-9050.",
+   "warnings": [
+    "numbers missing from translation: 7"
+   ]
+  },
+  "235e1072c4f3": {
+   "model": "command-a-translate-08-2025",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "Centre communautaire de la ville situé au 150 Grenoble Drive dans Flemingdon Park, avec le terrain de jeux intérieur Playground Paradise (jeux libres pour les enfants jusqu'à 12 ans, 3 $ par enfant, chaussettes obligatoires, un parent ou un tuteur doit accompagner l'enfant). Il y a également des terrains de jeux intérieurs et extérieurs, une aire de pique-nique, une aire de jeux d'eau, un jardin communautaire, des terrains de sport polyvalents, des terrains de baseball, ainsi que des terrains de hockey-balle et de basketball. Au même endroit se trouve le Flemingdon Park EarlyON, qui propose des programmes gratuits pour la petite enfance et la famille, sans inscription préalable."
+  },
+  "27c968e6692b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Libraries",
+   "text": "Bibliothèques"
+  },
+  "2839a2e22b9b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Offers crisis counselling (their impact page reports 207 clients received it).",
+   "text": "Offre des services de consultation en cas de crise (leur page d'impact indique que 207 clients en ont bénéficié)."
+  },
+  "2b036077722c": {
+   "model": "command-a-translate-08-2025",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "Grand parc public situé dans un ravin au 73 Thorncliffe Park Drive, le long de la rivière Don, entre Thorncliffe Park, Flemingdon Park et l'ancien Centre des sciences de l'Ontario. Installations : parcours de disc golf de 18 trous (créé en 2011, gratuit), terrain de tir à l'arc (l'un des deux seuls terrains publics au Canada, gratuit mais non supervisé), sentiers de jogging et de vélo, sentiers de ski de fond et d'équitation, abris et zones de pique-nique, foyers, terrains de basketball, toilettes et fontaines d'eau potable (eau et toilettes fermées en hiver)."
+  },
+  "2d4e28c7351b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Notes routine safety drills and secure entry; no emergency-specific community services listed.",
+   "text": "Note les exercices de sécurité réguliers et la sécurité de l'entrée; aucun service communautaire spécifique aux situations d'urgence n'est énuméré."
+  },
+  "2d84f26c9897": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Espace de refroidissement désigné : offre un soulagement intérieur climatisé pendant les avertissements ou alertes de chaleur extrême."
+   },
+   "model": "claude-correction",
+   "note": "\"Espace de refroidissement\" -> \"Lieu de rafraîchissement\"; plainer wording than \"soulagement intérieur\".",
+   "source": "Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Lieu de rafraîchissement désigné : offre un espace intérieur climatisé pendant les avertissements ou alertes de chaleur extrême."
+  },
+  "2d9482fd50f0": {
+   "model": "command-a-translate-08-2025",
+   "source": "Social & Cultural Organizations",
+   "text": "Organisations sociales et culturelles"
+  },
+  "2de0ec486420": {
+   "model": "command-a-translate-08-2025",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "La page toronto.ca concerne spécifiquement la fontaine à boire située dans le parc Flemingdon (près de Don Mills Rd et Eglinton Ave E). La fontaine est considérée comme un équipement officiel de ce parc de 13,3 hectares, qui comprend également des terrains de balle, une surface de hockey-balle, un terrain de cricket, un terrain polyvalent, 4 terrains de basketball extérieurs, des pistes extérieures, 4 terrains de jeux (terrain de jeux rénové en 2025), une aire de jeux d'eau, un jardin communautaire, 6 abris pour pique-niques, des terrains de sport et des stationnements."
+  },
+  "2f2cb7da74f4": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Piscine publique extérieure de la ville de Toronto située au 5 Leaside Park Drive (dans le parc Leaside), ouverte saisonnièrement en été pour la baignade récréative et la baignade en couloirs. Classée comme accessible en fauteuil roulant, avec des vestiaires accessibles, un accès de plain-pied au pont de la piscine et un arrêt Wheel-Trans dans le stationnement de Leaside Park Drive."
+   },
+   "model": "claude-correction",
+   "note": "\"pont\" (ship's deck) -> \"plage de la piscine\" (pool deck).",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "Piscine publique extérieure de la ville de Toronto située au 5 Leaside Park Drive (dans le parc Leaside), ouverte saisonnièrement en été pour la baignade récréative et la baignade en couloirs. Classée comme accessible en fauteuil roulant, avec des vestiaires accessibles, un accès de plain-pied à la plage de la piscine et un arrêt Wheel-Trans dans le stationnement de Leaside Park Drive."
+  },
+  "313e1f70434b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "Une organisation communautaire féminine locale qui a mené la revitalisation du parc R.V. Burgess, en créant conjointement des installations telles qu'un jardin communautaire, un café dans le parc, une aire de jeux aquatiques, des sièges, de l'éclairage et le seul four tandoor extérieur dans un parc public nord-américain. Elle se concentre sur le renforcement de la communauté et le travail interculturel dans le quartier Thorncliffe Park."
+  },
+  "32dfa11d6223": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Agence d’établissement multiservices qui dessert Thorncliffe Park, Flemingdon Park, St. James Town et Taylor Massey. Les services comprennent le soutien à l’établissement (évaluation des besoins, orientation à la vie au Canada/en Ontario, cours de préparation à la citoyenneté, aide pour remplir les formulaires d’immigration), l’aide au logement (recherche de logement, demandes de logements subventionnés, accès à une banque de prêts pour le loyer, aide pour les factures d’énergie), les programmes pour les aînés (Services intégrés pour les aînés, services de soutien personnel), les programmes pour les jeunes (par exemple, les programmes parascolaires pour les filles), les services d’emploi, la formation linguistique et le soutien-conseil pour les femmes victimes de violence. Gratuit; appelez ou présentez-vous sur place."
+   },
+   "model": "claude-correction",
+   "note": "Consistent Rent Bank naming; program name kept in English with gloss.",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Agence d’établissement multiservices qui dessert Thorncliffe Park, Flemingdon Park, St. James Town et Taylor Massey. Les services comprennent le soutien à l’établissement (évaluation des besoins, orientation à la vie au Canada/en Ontario, cours de préparation à la citoyenneté, aide pour remplir les formulaires d’immigration), l’aide au logement (recherche de logement, demandes de logements subventionnés, accès à la Rent Bank (banque d’aide au loyer), aide pour les factures d’énergie), les programmes pour les aînés (Integrated Services for Seniors – services intégrés pour les aînés, services de soutien personnel), les programmes pour les jeunes (par exemple, les programmes parascolaires pour les filles), les services d’emploi, la formation linguistique et le soutien-conseil pour les femmes victimes de violence. Gratuit; appelez ou présentez-vous sur place."
+  },
+  "33eb20802497": {
+   "model": "command-a-translate-08-2025",
+   "source": "Health & Wellness",
+   "text": "Santé et bien-être"
+  },
+  "37155594f70b": {
+   "model": "command-a-translate-08-2025",
+   "source": "The homepage returned a 'Page Not Found' error, so services were drawn from the Thorncliffe Hub grassroots listing and third-party community resource pages. Engaged Communities is the same resident organizing group described above: started November 2019 to address youth violence, builds resident engagement in community processes, and connects residents, agencies, schools, police, and politicians. It was a 2023 City of Toronto Youth Violence Prevention Grant recipient in partnership with Flemingdon Health Centre.",
+   "text": "La page d’accueil a renvoyé une erreur « Page non trouvée », c’est pourquoi les services ont été tirés de la liste communautaire du Thorncliffe Hub et de pages de ressources communautaires de tiers. Engaged Communities est le même groupe d’organisation de résidents décrit ci-dessus : il a été créé en novembre 2019 pour lutter contre la violence chez les jeunes, renforcer l’engagement des résidents dans les processus communautaires et établir des liens entre les résidents, les organismes, les écoles, la police et les politiciens. Il a été récipiendaire d’une subvention de la Ville de Toronto pour la prévention de la violence chez les jeunes en 2023, en partenariat avec le Flemingdon Health Centre."
+  },
+  "37afb9eb8339": {
+   "model": "command-a-translate-08-2025",
+   "source": "No emergency-specific services listed. (The group has previously distributed food hampers during and after the pandemic as a charitable activity.)",
+   "text": "Aucun service spécifique aux situations d’urgence n’est indiqué. (Le groupe a déjà distribué des paniers de nourriture pendant et après la pandémie dans le cadre d’une activité caritative.)"
+  },
+  "3904b64dcef4": {
+   "model": "command-a-translate-08-2025",
+   "source": "City community recreation centre at 48 Thorncliffe Park Drive, co-located with the Thorncliffe library branch. A small (12,000 sq ft) but heavily used neighbourhood hub offering indoor courts, a daycare centre, meeting space, workshops such as mental health and wellbeing sessions, and recreation programs.",
+   "text": "Centre récréatif communautaire de la ville situé au 48 Thorncliffe Park Drive, qui partage les locaux avec la succursale de la bibliothèque de Thorncliffe. Un petit centre communautaire (12 000 pi²) très fréquenté qui offre des terrains intérieurs, une garderie, un espace de réunion, des ateliers tels que des séances sur la santé mentale et le bien-être, ainsi que des programmes récréatifs."
+  },
+  "39681ff66eee": {
+   "model": "command-a-translate-08-2025",
+   "source": "TDSB early learning academy at 82 Thorncliffe Park Dr for young children, with structured daily routines for arrival, lunch and dismissal. Parents report absences through the Safe Arrival number (1-833-250-2290).",
+   "text": "Académie d’apprentissage précoce du TDSB située au 82 Thorncliffe Park Dr pour les jeunes enfants, avec des routines quotidiennes structurées pour l’arrivée, le dîner et le départ. Les parents signalent les absences en appelant le numéro Safe Arrival (1-833-250-2290)."
+  },
+  "3dc2fd8bba11": {
+   "model": "command-a-translate-08-2025",
+   "source": "Non-profit community health centre (operating since 1975) at 10 Gateway Blvd offering free primary care from doctors and nurse practitioners for residents in its catchment area — no OHIP card or medical referral required. Also offers individual and family counselling/mental health services, chronic disease prevention and management (diabetes, lung and heart health), dietitians, chiropody (foot care), nutrition counselling, a sexual health clinic (with Toronto Public Health), prenatal programs, and health promotion programs (exercise, wellness, healthy cooking) for seniors, women, youth and newcomers.",
+   "text": "Centre de santé communautaire sans but lucratif (en activité depuis 1975) situé au 10 Gateway Blvd offrant des soins primaires gratuits dispensés par des médecins et des infirmières praticiennes aux résidents de son secteur de rattachement — aucune carte OHIP ou référence médicale n’est requise. Offre également des services de consultation individuelle et familiale/de santé mentale, de prévention et de gestion des maladies chroniques (diabète, santé pulmonaire et cardiaque), des services de diététistes, de podologie (soins des pieds), de consultation en nutrition, une clinique de santé sexuelle (avec Toronto Public Health), des programmes prénatals et des programmes de promotion de la santé (exercice, bien-être, cuisine saine) pour les personnes âgées, les femmes, les jeunes et les nouveaux arrivants."
+  },
+  "3ecbd52603f7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Health Clinics",
+   "text": "Cliniques de santé"
+  },
+  "411f70e150dd": {
+   "model": "command-a-translate-08-2025",
+   "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
+   "text": "Paroisse orthodoxe grecque située au 30 Thorncliffe Park Drive (capacité de plus de 600 fidèles assis, stationnement abondant), dirigée par le prêtre de la paroisse, le père Apostolos Gkolias (apostolosgkolias@yahoo.com; téléphone de l'église : +1 (416) 425-2485, info@togreekcom.org). Services du dimanche et des jours de fête : Orthros-Matines de 8 h 30 à 10 h 00 et Divine Liturgie de 10 h 00 à midi; organise l'inscription à l'école du dimanche et d'autres programmes paroissiaux.",
+   "warnings": [
+    "numbers missing from translation: 12"
+   ]
+  },
+  "4341d8807857": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "La page toronto.ca est spécifiquement dédiée à la fontaine à boire située dans le parc R.V. Burgess (46 Thorncliffe Park Dr, près de Thorncliffe Park Dr et Overlea Blvd). La fontaine est considérée comme un équipement officiel de ce parc de quartier de 1,5 hectare, qui comprend également un parc aquatique, deux terrains de jeux, un jardin communautaire, une aire de pique-nique couverte et le premier four tandoor public du Canada, ainsi que des installations d'eau potable remarquées par les visiteurs."
+   },
+   "model": "claude-correction",
+   "note": "\"parc aquatique\" (water park) -> \"aire de jeux d'eau\" (splash pad).",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "La page toronto.ca est spécifiquement dédiée à la fontaine à boire située dans le parc R.V. Burgess (46 Thorncliffe Park Dr, près de Thorncliffe Park Dr et Overlea Blvd). La fontaine est considérée comme un équipement officiel de ce parc de quartier de 1,5 hectare, qui comprend également une aire de jeux d'eau, deux terrains de jeux, un jardin communautaire, une aire de pique-nique couverte et le premier four tandoor public du Canada, ainsi que des installations d'eau potable remarquées par les visiteurs."
+  },
+  "4420ad1cb6b5": {
+   "model": "command-a-translate-08-2025",
+   "source": "Housing & Tenant Supports",
+   "text": "Soutien au logement et aux locataires"
+  },
+  "44a718e6efa5": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community grassroots group founded in 2019 by Thorncliffe & Flemingdon Park residents of all ages and cultures. Runs education initiatives on reducing indirect greenhouse gas emissions (buildings, waste, transportation) aligned with Toronto's TransformTO strategy, promotes 'climate-wise' sustainable living habits, and helps include seniors who became isolated during the pandemic.",
+   "text": "Groupe communautaire fondé en 2019 par des résidents de Thorncliffe et de Flemingdon Park de tous âges et de toutes cultures. Il met en œuvre des initiatives éducatives visant à réduire les émissions indirectes de gaz à effet de serre (bâtiments, déchets, transport) conformément à la stratégie TransformTO de Toronto, encourage les habitudes de vie durables « intelligentes sur le plan climatique » et aide à inclure les personnes âgées qui se sont isolées pendant la pandémie."
+  },
+  "4a39ebe12219": {
+   "model": "command-a-translate-08-2025",
+   "source": "Water Fountains",
+   "text": "Fontaines d'eau"
+  },
+  "4a8be4c87e8f": {
+   "model": "command-a-translate-08-2025",
+   "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
+   "text": "Musée avec des expositions tournantes, des concerts et des ateliers pratiques (par exemple, des ateliers d'art, des événements musicaux). Offre des programmes scolaires, y compris des excursions sur place et virtuelles, des ressources pour les enseignants et des cours en ligne, ainsi qu'une bibliothèque de contenu en ligne gratuite avec des podcasts, des visites en 3D et des conférences d'artistes."
+  },
+  "4c0ad54aefbb": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Offre des services d'intervention en cas de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d'accès à la banque de location de Toronto et comme centre d'appels pour le fonds d'urgence pour l'énergie (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "\"banque de location\" (rental bank) -> Toronto Rent Bank with official-style French gloss; program name kept in English.",
+   "source": "Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Offre des services d'intervention en cas de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d'accès de la Toronto Rent Bank (Banque d'aide au loyer de Toronto) et comme centre d'appels pour le Emergency Energy Fund (fonds d'urgence pour l'énergie) (416-397-7368)."
+  },
+  "5141105643c3": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "Cabinet de conseil multidisciplinaire qui travaille avec des organisations dans divers secteurs (ses clients ont inclus TNO, l’Université OCAD et la Société islamique de Toronto). Les services comprennent la recherche sur les marchés et les utilisateurs, la conception et la planification urbaine, la gestion de projets et de programmes, le soutien opérationnel, le conseil en gouvernance et en leadership, le conseil en affaires, l’intégration de l’IA et des technologies émergentes, le branding et les médias, l’optimisation des ventes, ainsi que la formation et les ateliers."
+  },
+  "56ab2826fe5e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare at 9 Grenoble Dr (Flemingdon Park) for toddler, preschool, kindergarten and school-age children, with CWELCC reduced fees and subsidy available. Care offered in English, Spanish, Gujarati and Ukrainian; catered meals with halal and vegetarian options.",
+   "text": "Service de garde agréé situé au 9 Grenoble Dr (Flemingdon Park) pour les enfants en bas âge, d’âge préscolaire, d’âge maternelle et d’âge scolaire, avec des frais réduits grâce au CWELCC et une subvention disponible. Les soins sont offerts en anglais, en espagnol, en gujarati et en ukrainien; des repas sont fournis, avec des options halal et végétariennes."
+  },
+  "57480d0bcd4e": {
+   "model": "command-a-translate-08-2025",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "Aréna municipal situé au 165, Grenoble Dr (renommé en 2009 en l’honneur de la vedette canadienne du hockey Angela James) pour les programmes de patinage sur glace et de hockey, ainsi que des courts de tennis publics adjacents. Remarque : la Ville a annoncé des plans (2026) pour construire une nouvelle caserne de pompiers de Flemingdon au 165, Grenoble Dr, ce qui entraînerait la suppression de deux des quatre courts de tennis — statut incertain."
+  },
+  "5b54b1c20dbc": {
+   "model": "command-a-translate-08-2025",
+   "source": "A community-led initiative raising awareness of mental health and reducing its stigma in the South Asian community, particularly for newcomers and immigrants of first and second generations.",
+   "text": "Une initiative communautaire qui sensibilise la population à la santé mentale et réduit la stigmatisation qui y est associée dans la communauté sud-asiatique, en particulier chez les nouveaux arrivants et les immigrants de première et de deuxième génération."
+  },
+  "5d864949c117": {
+   "model": "command-a-translate-08-2025",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "Service de police de Toronto, division 55 (101 Coxwell Ave, 416-808-5500) — la division qui dessert l'est de la ville, y compris le quartier Thorncliffe/Flemingdon; offre des services de police communautaire, de signalement non urgent et de soutien aux victimes. Remarque : il est prévu que les divisions 54 et 55 fusionnent pour former un nouveau poste consolidé au 1627 Danforth Ave (ancien garage Danforth du TTC)."
+  },
+  "5d959a5ff47c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le Centre pour enfants Pride In Heritage est un centre de garde d’enfants multiculturel communautaire sans but lucratif situé à l’intérieur de l’école publique Gateway, au 55 Gateway Blvd, à Toronto (416-467-5981). Il offre des services de garde inclusifs et exempts de préjugés dans un environnement sécuritaire et enrichissant, géré par un conseil d’administration bénévole; il traite tous les individus avec dignité, peu importe leur origine."
+   },
+   "model": "claude-correction",
+   "note": "Organisation and school names kept in English.",
+   "source": "Pride In Heritage Children's Centre is a non-profit, community-based multicultural child care centre located inside Gateway Public School at 55 Gateway Blvd, Toronto (416-467-5981). It offers inclusive, bias-free child care in a safe, nurturing environment, run by a volunteer Board of Directors; it treats all individuals with dignity regardless of background.",
+   "text": "Le Pride In Heritage Children’s Centre est un centre de garde d’enfants multiculturel communautaire sans but lucratif situé à l’intérieur de Gateway Public School, au 55 Gateway Blvd, à Toronto (416-467-5981). Il offre des services de garde inclusifs et exempts de préjugés dans un environnement sécuritaire et enrichissant, géré par un conseil d’administration bénévole; il traite tous les individus avec dignité, peu importe leur origine."
+  },
+  "6112e2d3ed72": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
+   "text": "Offre une assistance gratuite et confidentielle, disponible 24 heures sur 24, assurée par des médecins (416-429-4991). Indique explicitement qu'il ne s'agit pas d'un service d'urgence ou sans rendez-vous — composez le 911 en cas d'urgence."
+  },
+  "6166d8860ebc": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Valley Park Middle School est une école secondaire du TDSB qui accueille les élèves de la 6e à la 8e année et compte environ 1 100 élèves provenant des communautés de Thorncliffe Park et de Flemingdon Park, au 130 Overlea Blvd, East York. Son objectif est de créer un environnement d'apprentissage sûr et favorable, fondé sur le respect, la responsabilité et la sécurité ; aucun programme d'immersion en français, d'anglais langue seconde ou d'éducation spécialisée n'était mentionné dans le texte de la page d'accueil consulté."
+   },
+   "model": "claude-correction",
+   "note": "Middle school (grades 6-8) is \"école intermédiaire\" in Ontario, not \"école secondaire\" (high school).",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Valley Park Middle School est une école intermédiaire du TDSB qui accueille les élèves de la 6e à la 8e année et compte environ 1 100 élèves provenant des communautés de Thorncliffe Park et de Flemingdon Park, au 130 Overlea Blvd, East York. Son objectif est de créer un environnement d'apprentissage sûr et favorable, fondé sur le respect, la responsabilité et la sécurité ; aucun programme d'immersion en français, d'anglais langue seconde ou d'éducation spécialisée n'était mentionné dans le texte de la page d'accueil consulté."
+  },
+  "62d55110cf7b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
+   "text": "Le centre gratuit pour enfants et familles EarlyON, géré par le TCDSB et situé au 175 Grenoble Dr, offre des programmes de jeu et d’apprentissage libres pour les enfants de 0 à 6 ans accompagnés de leurs parents ou de leurs aidants (la participation des parents est requise, aucune inscription nécessaire). Selon l’horaire du TCDSB, St. John XXIII est ouvert du lundi au jeudi de 8 h 45 à 12 h 45 et le vendredi de 8 h 45 à 12 h 45."
+  },
+  "63c710ddedbb": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Des infirmières sont disponibles 24 heures sur 24 pour répondre aux besoins de soins à domicile; aucun service d'urgence dédié n'est indiqué (ce n'est pas un fournisseur de services d'urgence 911 ou de soins urgents)."
+   },
+   "model": "claude-correction",
+   "note": "24/7 rendered fully (7 days a week was missing).",
+   "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
+   "text": "Des infirmières sont disponibles 24 heures sur 24, 7 jours sur 7, pour répondre aux besoins de soins à domicile; aucun service d'urgence dédié n'est indiqué (ce n'est pas un fournisseur de services d'urgence 911 ou de soins urgents)."
+  },
+  "67d4ed5dfe5d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
+   "text": "La mosquée Masjid Darus Salaam, située au 20 Overlea Blvd, sert la communauté musulmane de Thorncliffe Park, de Flemingdon Park et des environs depuis 1995. Elle offre cinq prières quotidiennes et la prière du vendredi, des programmes à temps plein de Hifz et d'Alim/Alima, des cours du soir sur le Coran (Madrasah), une école du dimanche, des études sur le Tafseer et les principes de base de l'Islam, des programmes pour les jeunes, des services de Nikah et des événements communautaires."
+  },
+  "68c635426ffe": {
+   "model": "command-a-translate-08-2025",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "Le plus grand événement communautaire annuel de Thorncliffe Park, qui a lieu depuis 14 ans au parc R.V. Burgess. Une après-midi et une soirée d'été avec des rafraîchissements, des arts et de l'artisanat, de la musique, de la danse, des jeux, des tables de bazar et de la nourriture provenant d'entreprises locales. Organisé par un comité indépendant de bénévoles ; environ 100 jeunes se portent volontaires chaque année, ce qui leur permet de développer leurs compétences en leadership."
+  },
+  "6b036c3ba973": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community Resilience",
+   "text": "Résilience communautaire"
+  },
+  "6b17dc8d3ad4": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Centre gratuit et confidentiel, ouvert à tous, pour les jeunes de 12 à 25 ans de Thorncliffe Park et Flemingdon Park (lancé par East Toronto Health Partners, TNO – The Neighbourhood Organization et Youth Wellness Hubs Ontario; aucune carte de santé, médecin de famille ou référence n’est requise). Services : conseils en matière de bien-être, soutien en matière de consommation de substances, soins primaires, orientation dans les soins, soutien par les pairs, services d’emploi, formation professionnelle, banque alimentaire, aide au logement et à l’établissement, éducation, programmes récréatifs et sociaux, développement du leadership et possibilités de bénévolat."
+   },
+   "model": "claude-correction",
+   "note": "Restored walk-in meaning (\"sans rendez-vous\"); counselling is \"counseling\", not advice.",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "Centre gratuit et confidentiel, sans rendez-vous, pour les jeunes de 12 à 25 ans de Thorncliffe Park et Flemingdon Park (lancé par East Toronto Health Partners, TNO – The Neighbourhood Organization et Youth Wellness Hubs Ontario; aucune carte de santé, médecin de famille ou référence n’est requise). Services : counseling axé sur le bien-être, soutien en matière de consommation de substances, soins primaires, orientation dans les soins, soutien par les pairs, services d’emploi, formation professionnelle, banque alimentaire, aide au logement et à l’établissement, éducation, programmes récréatifs et sociaux, développement du leadership et possibilités de bénévolat."
+  },
+  "6ba3dd305d6e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "unityhealth.to est la page d’accueil de Unity Health Toronto, le réseau parent du St. Joseph's Health Centre (30 The Queensway, 416-530-6000), du St. Michael's Hospital (30 Bond St., 416-360-4000) et de Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Le Centre de soins rénaux St. Michael's, situé au 45 Overlea Blvd. (416-867-3700), est un centre communautaire d’hémodialyse axé sur les patients, qui comprend 21 postes de traitement, 6 postes de formation à la dialyse à domicile et 5 salles d’examen; la clinique rénale multisoins de Unity offre des services de néphrologie, d’infirmerie, de diététique, de pharmacie, de travail social et de soutien à l’éducation sur les modalités pour ralentir la progression de la maladie rénale, ainsi que des options de dialyse péritonéale et d’hémodialyse à domicile."
+   },
+   "model": "claude-correction",
+   "note": "\"infirmerie\" (sick bay) -> \"soins infirmiers\"; removed calque \"réseau parent\"; centre and clinic names kept in English with gloss.",
+   "source": "unityhealth.to is the homepage for Unity Health Toronto, the parent network of St. Joseph's Health Centre (30 The Queensway, 416-530-6000), St. Michael's Hospital (30 Bond St., 416-360-4000) and Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). The St. Michael's Kidney Care Centre at 45 Overlea Blvd. (416-867-3700) is a patient-centred community satellite hemodialysis facility with 21 treatment stations, 6 home-dialysis training stations and 5 exam rooms; Unity's Multi-Care Kidney Clinic offers nephrology, nursing, dietitian, pharmacist, social worker and modality-education support to slow kidney disease progression, plus peritoneal and home hemodialysis options.",
+   "text": "unityhealth.to est la page d’accueil d’Unity Health Toronto, le réseau qui regroupe le St. Joseph's Health Centre (30 The Queensway, 416-530-6000), le St. Michael's Hospital (30 Bond St., 416-360-4000) et Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Le St. Michael's Kidney Care Centre (centre de soins rénaux), situé au 45 Overlea Blvd. (416-867-3700), est un centre communautaire d’hémodialyse axé sur les patients, qui comprend 21 postes de traitement, 6 postes de formation à la dialyse à domicile et 5 salles d’examen; la Multi-Care Kidney Clinic d’Unity (clinique rénale multisoins) offre des services de néphrologie, de soins infirmiers, de diététique, de pharmacie, de travail social et de soutien à l’éducation sur les modalités pour ralentir la progression de la maladie rénale, ainsi que des options de dialyse péritonéale et d’hémodialyse à domicile."
+  },
+  "72b07ee72576": {
+   "model": "command-a-translate-08-2025",
+   "source": "Public Washrooms",
+   "text": "Toilettes publiques"
+  },
+  "7325c2c76d27": {
+   "model": "command-a-translate-08-2025",
+   "source": "Legal Services",
+   "text": "Services juridiques"
+  },
+  "7463c7451c52": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-Service Agencies",
+   "text": "Agences multiservices"
+  },
+  "7482403a5dc6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Public drinking-water access point, relevant during extreme heat events.",
+   "text": "Point d'accès public à l'eau potable, utile en cas de vague de chaleur extrême."
+  },
+  "75a5d313aef1": {
+   "model": "command-a-translate-08-2025",
+   "source": "Non-Profits",
+   "text": "Organismes sans but lucratif"
+  },
+  "78b02f992c4d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Public Spaces",
+   "text": "Espaces publics"
+  },
+  "79db95729d8c": {
+   "model": "command-a-translate-08-2025",
+   "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
+   "text": "École élémentaire du TDSB située au 9 Grenoble Drive qui accueille plus de 960 élèves de la maternelle à la 6e année (environ 93 % des familles ont immigré au Canada; plus de 73 langues sont parlées). Aucun programme spécial, comme l'immersion française, n'est mentionné sur la page d'accueil de l'école."
+  },
+  "7bd551d09cd0": {
+   "model": "command-a-translate-08-2025",
+   "source": "Parent handbook notes an Emergency Management Policy available on request from supervisors; no public emergency-specific community services listed.",
+   "text": "Le guide pour les parents mentionne une politique de gestion des urgences qui est disponible sur demande auprès des superviseurs ; aucun service communautaire spécifique aux urgences publiques n'est énuméré."
+  },
+  "7c53a90857c2": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Centre EarlyON gratuit pour les enfants et les familles destiné aux résidents de la ville de Toronto ayant des enfants âgés de 0 à 6 ans et à leurs parents ou aidants : programmes de soutien au développement de l'enfant, services de soutien aux parents, programmes de préparation à l'école, soutien en cas de retard de langage et services pour les besoins spéciaux avec gestion de cas individuels. Emplacement principal : TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, unité 200 (du lundi au vendredi de 9 h à 17 h); le vendredi, séance de jeu au gymnase au centre communautaire Jenner Jean Marie, 48 Thorncliffe Park Dr."
+   },
+   "model": "claude-correction",
+   "note": "Community centre name kept in English.",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "Centre EarlyON gratuit pour les enfants et les familles destiné aux résidents de la ville de Toronto ayant des enfants âgés de 0 à 6 ans et à leurs parents ou aidants : programmes de soutien au développement de l'enfant, services de soutien aux parents, programmes de préparation à l'école, soutien en cas de retard de langage et services pour les besoins spéciaux avec gestion de cas individuels. Emplacement principal : TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, unité 200 (du lundi au vendredi de 9 h à 17 h); le vendredi, séance de jeu au gymnase au Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+  },
+  "7d47cf9e0e64": {
+   "model": "command-a-translate-08-2025",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "École élémentaire du Toronto Catholic District School Board (maternelle à 8e année) située au 175 Grenoble Drive dans Flemingdon Park, offrant des services d’anglais langue seconde, d’éducation spécialisée et de soutien à la lecture Empower, en plus d’équipes sportives. Le bâtiment abrite également la garderie Red Apple (service de garde avant et après l’école), un centre EarlyON gratuit pour les enfants et les familles (programmes pour les enfants de la naissance à 6 ans et leurs parents) et un bureau d’aide à l’établissement pour les nouveaux arrivants."
+  },
+  "7d8fe058aabe": {
+   "model": "command-a-translate-08-2025",
+   "source": "Dixon Hall Housing Services provides shelter and housing supports for people experiencing homelessness or precariously housed: help finding adequate housing, eviction prevention, budgeting, income stabilization, health promotion, and follow-up supports to remain housed. Heyworth House (2714 Danforth Ave) is one of their housing sites. Also runs community food access sites (community meals, food banks, food skills programming).",
+   "text": "Dixon Hall Housing Services offre un hébergement et un soutien en matière de logement aux personnes sans abri ou mal logées : aide pour trouver un logement adéquat, prévention des expulsions, budgétisation, stabilisation des revenus, promotion de la santé et soutien de suivi pour rester logé. Heyworth House (2714 Danforth Ave) est l'un de leurs sites de logement. Gère également des sites communautaires d'accès à la nourriture (repas communautaires, banques alimentaires, programmes d'éducation alimentaire)."
+  },
+  "7e0da2420727": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Collaboratives alimentaires"
+   },
+   "model": "claude-correction",
+   "note": "\"Collaboratives\" is not a French noun -> \"Collectifs alimentaires\".",
+   "source": "Food Collaboratives",
+   "text": "Collectifs alimentaires"
+  },
+  "7e54c8b0e600": {
+   "model": "command-a-translate-08-2025",
+   "source": "Family & Parenting Support",
+   "text": "Soutien familial et parental"
+  },
+  "7fb923fbd9f8": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community Centres",
+   "text": "Centres communautaires"
+  },
+  "85b8d1f0296e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Operates a youth shelter for youth experiencing homelessness (emergency shelter).",
+   "text": "Gère un refuge pour les jeunes sans-abri (refuge d'urgence)."
+  },
+  "88f8e20033ec": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "Service de garde agréé avec trois sites : 206 Laird Dr (bébés, tout-petits, préscolaires, toute l'année), 31 Rolph Rd à l'école Rolph Road (préscolaire, maternelle, âge scolaire; club pour enfants avant et après l'école pour les élèves de la maternelle à la 6e année avec aide aux devoirs, collations, plus couverture complète pour les journées pédagogiques, Noël et les vacances de mars) et 182 Bessborough Dr à l'école St. Anselm (maternelle, âge scolaire). Offre également un camp d'été en juillet et août (musique, danse, sports, natation, arts et bricolage). Participe à la réduction des frais du CWELCC."
+  },
+  "899a73c04466": {
+   "model": "command-a-translate-08-2025",
+   "source": "Museums",
+   "text": "Musées"
+  },
+  "8c2075b94416": {
+   "model": "command-a-translate-08-2025",
+   "source": "Dental Clinics",
+   "text": "Cliniques dentaires"
+  },
+  "8f3b8610ff41": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
+   "text": "Bureau des services gouvernementaux provinciaux situé au 945, avenue Eglinton Est (à l’intérieur de Staples). Délivre des permis de conduire, des immatriculations de véhicules et des plaques d’immatriculation, des cartes santé de l’Ontario et des certificats de naissance. Ouvert du lundi au vendredi de 9 h à 21 h et le samedi de 9 h à 17 h.",
+   "warnings": [
+    "numbers missing from translation: 00, 5"
+   ]
+  },
+  "912f65f2191e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le Centre d’apprentissage et de garde d’enfants de Flemingdon (29 St Dennis Dr, Don Mills/Eglinton; personne-ressource : Latoya Wilson-Rose, 416-392-3170) est un centre de garde d’enfants public et agréé de la ville de Toronto qui accueille les enfants de 0 à 4 ans et qui est situé dans le Centre de ressources Dennis R. Timbrell. Il participe au système pancanadien d’apprentissage et de garde des jeunes enfants (CWELCC) qui offre des subventions pour les frais; le personnel parle 9 langues, dont l’arabe, le bengali, le français, l’hindi et le persan, et les repas sont fournis avec des options halal, sans porc, sans arachides, végétaliennes et végétariennes."
+   },
+   "model": "claude-correction",
+   "note": "Centre names kept in English so they can be found.",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "Le Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; personne-ressource : Latoya Wilson-Rose, 416-392-3170) est un centre de garde d’enfants public et agréé de la ville de Toronto qui accueille les enfants de 0 à 4 ans et qui est situé dans le Dennis R. Timbrell Resource Centre. Il participe au système pancanadien d’apprentissage et de garde des jeunes enfants (CWELCC) qui offre des subventions pour les frais; le personnel parle 9 langues, dont l’arabe, le bengali, le français, l’hindi et le persan, et les repas sont fournis avec des options halal, sans porc, sans arachides, végétaliennes et végétariennes."
+  },
+  "9229c66e10d7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Large public park adjoining Thorncliffe Park with an 18-hole disc golf course, a public archery range, jogging and cycling paths, nature trails, picnic shelters and fire pits. The drinking fountain provides free drinking water (seasonal; closed in winter).",
+   "text": "Grand parc public adjacent à Thorncliffe Park, qui comprend un parcours de disc golf de 18 trous, un terrain de tir à l’arc public, des sentiers pour la course à pied et le vélo, des sentiers de randonnée, des abris pour pique-niquer et des foyers. La fontaine à boire fournit de l’eau potable gratuite (saisonnière; fermée en hiver)."
+  },
+  "929cea5641e3": {
+   "model": "command-a-translate-08-2025",
+   "source": "Neighbourhood & Individual Empowerment",
+   "text": "Autonomisation du quartier et des individus"
+  },
+  "941791890d5c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "L’école publique Gateway est une école élémentaire du TDSB qui accueille les élèves de la maternelle à la 6e année (environ 950 élèves) dans le quartier Flemingdon Park, au 55 Gateway Blvd, North York. L’école met l’accent sur un environnement d’apprentissage inclusif et multiculturel avec des attentes élevées en matière de réussite et de comportement; aucun programme d’immersion en français, d’anglais langue seconde ou d’éducation spécialisée n’était mentionné dans le texte de la page d’accueil consulté."
+   },
+   "model": "claude-correction",
+   "note": "School name kept in English.",
+   "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Gateway Public School est une école élémentaire du TDSB qui accueille les élèves de la maternelle à la 6e année (environ 950 élèves) dans le quartier Flemingdon Park, au 55 Gateway Blvd, North York. L’école met l’accent sur un environnement d’apprentissage inclusif et multiculturel avec des attentes élevées en matière de réussite et de comportement; aucun programme d’immersion en français, d’anglais langue seconde ou d’éducation spécialisée n’était mentionné dans le texte de la page d’accueil consulté."
+  },
+  "95c8c42be839": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Bibliothèque publique de Toronto, succursale située au 48 Thorncliffe Park Drive. Offre le prêt de livres, le Wi-Fi gratuit, des ordinateurs publics avec Microsoft Office, l'impression/la copie/la numérisation, un centre d'alphabétisation précoce KidsStop, un centre pour les jeunes, un programme d'aide à la lecture individuelle pour les enfants appelé Leading to Reading, un service d'information pour les nouveaux arrivants, un service d'autonomisation financière, une salle de réunion réservable et un espace d'étude calme."
+   },
+   "model": "claude-correction",
+   "note": "Library program names kept in English with French glosses.",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "Bibliothèque publique de Toronto, succursale située au 48 Thorncliffe Park Drive. Offre le prêt de livres, le Wi-Fi gratuit, des ordinateurs publics avec Microsoft Office, l'impression/la copie/la numérisation, un centre d'alphabétisation précoce KidsStop, un Youth Hub (espace pour les jeunes), un programme d'aide à la lecture individuelle pour les enfants appelé Leading to Reading, le Newcomer Information Service (information pour les nouveaux arrivants), le Financial Empowerment Service (aide pour vos finances), une salle de réunion réservable et un espace d'étude calme."
+  },
+  "97522b6e2a71": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare centres in the neighbourhood offering infant, toddler, preschool, and before/after-school programs with play-based, inquiry-driven learning, nutritious meals (accommodating allergies and cultural/religious diets), and secure entry systems. Locations: 175 Grenoble Dr (Grenoble) and 135 Overlea Blvd (Overlea).",
+   "text": "Centres de garde d’enfants agréés dans le quartier offrant des programmes pour les nourrissons, les tout-petits, les enfants d’âge préscolaire et les enfants avant et après l’école, axés sur le jeu et l’apprentissage par la découverte, des repas nutritifs (adaptés aux allergies et aux régimes culturels/religieux) et des systèmes d’entrée sécurisés. Emplacements : 175 Grenoble Dr (Grenoble) et 135 Overlea Blvd (Overlea)."
+  },
+  "97e9202b1cb6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community bike hub on Gateway Blvd run by TNO. Offers free bike repairs (bookable appointments), do-it-yourself repair hours with tools and space, bike mechanics workshops, learn-to-ride lessons and group rides. Bikes available via the Earn-a-Bike program, twice-yearly bike giveaways, and an apply-for-a-bike option.",
+   "text": "Centre communautaire de vélos situé sur Gateway Blvd et géré par TNO. Offre des réparations de vélos gratuites (sur rendez-vous), des heures de réparation en libre-service avec outils et espace, des ateliers de mécanique de vélo, des cours d'apprentissage du vélo et des sorties en groupe. Des vélos sont disponibles via le programme Earn-a-Bike, des distributions de vélos deux fois par an et une option de demande de vélo."
+  },
+  "99a408333e20": {
+   "model": "command-a-translate-08-2025",
+   "source": "Mosque in the Flemingdon Park area (established 2001, holds 250-300 worshippers) offering five daily congregational prayers and Jummah Salah. Provides Islamic education and guidance for children and adults, and welcomes both Muslim and non-Muslim visitors.",
+   "text": "Mosquée située dans le quartier de Flemingdon Park (fondée en 2001, peut accueillir entre 250 et 300 fidèles) qui offre cinq prières quotidiennes en congrégation ainsi que la prière du Jummah Salah. Offre une éducation islamique et des conseils pour les enfants et les adultes, et accueille les visiteurs musulmans et non musulmans."
+  },
+  "9aab0433db11": {
+   "model": "command-a-translate-08-2025",
+   "source": "Neighbourhood park featuring a bottle filling station providing free drinking water refills.",
+   "text": "Parc de quartier doté d’une station de remplissage de bouteilles qui offre gratuitement de l’eau potable pour remplir les bouteilles."
+  },
+  "a1893ed621a6": {
+   "model": "command-a-translate-08-2025",
+   "source": "TDSB public elementary school at 80 Thorncliffe Park Dr, recognized as a Platinum Ecoschool with an active eco club. Provides public education in partnership with students, families and the community.",
+   "text": "École élémentaire publique du TDSB située au 80 Thorncliffe Park Dr, reconnue comme une école écologique platine avec un club écologique actif. Offre une éducation publique en partenariat avec les élèves, les familles et la communauté."
+  },
+  "a3d76b624b59": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community urban-farming group in Thorncliffe Park maintaining two communal vegetable gardens and 20+ fruit trees, with all harvests shared freely with residents and volunteers. Runs environmental education, children's nature programs, youth leadership and volunteer hours, a resident-led composting program, pollinator habitats, and woodworking and art workshops.",
+   "text": "Groupe communautaire d’agriculture urbaine à Thorncliffe Park qui entretient deux jardins potagers communautaires et plus de 20 arbres fruitiers, dont toutes les récoltes sont partagées gratuitement avec les résidents et les bénévoles. Offre des programmes d’éducation environnementale, des programmes sur la nature pour les enfants, des programmes de leadership pour les jeunes et des heures de bénévolat, un programme de compostage dirigé par les résidents, des habitats pour les pollinisateurs, ainsi que des ateliers de menuiserie et d’art."
+  },
+  "a44c76defc5c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le centre de garde d’enfants Thorncliffe Park sert les familles depuis 1969 en offrant des programmes éducatifs basés sur le jeu pour les enfants de la petite enfance jusqu’à 12 ans, y compris des programmes pour les enfants d’âge scolaire, en suivant le cadre « Comment l’apprentissage se produit-il? ». Le personnel parle 11 langues (dont l’ourdou, le farsi, le pendjabi, le bengali, l’amharique, le tagalog et le turc), les repas sont fournis par le traiteur Real Food For Real Kids et le centre participe au CWELCC, avec des informations sur les subventions disponibles pour les frais."
+   },
+   "model": "claude-correction",
+   "note": "Official Ontario French title \"Comment apprend-on?\"; organisation name kept in English.",
+   "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
+   "text": "Le Thorncliffe Park Day Care Centre (centre de garde d’enfants) sert les familles depuis 1969 en offrant des programmes éducatifs basés sur le jeu pour les enfants de la petite enfance jusqu’à 12 ans, y compris des programmes pour les enfants d’âge scolaire, en suivant le cadre « Comment apprend-on? » (How Does Learning Happen?). Le personnel parle 11 langues (dont l’ourdou, le farsi, le pendjabi, le bengali, l’amharique, le tagalog et le turc), les repas sont fournis par le traiteur Real Food For Real Kids et le centre participe au CWELCC, avec des informations sur les subventions disponibles pour les frais."
+  },
+  "a583aca46f5e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Bibliothèque publique de Toronto, succursale située au 29 St. Dennis Drive : emprunt de livres, ordinateurs publics, programmes pour enfants, programme d’alphabétisation Leading to Reading pour les enfants et le service gratuit d’autonomisation financière (déclaration de revenus, demandes de prestations, aide budgétaire — également offert à la succursale de Thorncliffe). Heures d’ouverture indiquées : du lundi au vendredi de 9 h à 20 h 30, le samedi de 9 h à 17 h et le dimanche de 12 h à 17 h. Remarque : la succursale a fermé le 1er décembre 2025 pour un projet de rénovation et sa réouverture est prévue au début du troisième trimestre de 2026; les heures d’ouverture actuelles indiquent qu’elle a rouvert, mais vérifiez avant de vous y rendre."
+   },
+   "model": "claude-correction",
+   "note": "Program name Financial Empowerment Service kept in English with gloss.",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "Bibliothèque publique de Toronto, succursale située au 29 St. Dennis Drive : emprunt de livres, ordinateurs publics, programmes pour enfants, programme d’alphabétisation Leading to Reading pour les enfants et le Financial Empowerment Service gratuit (aide pour vos finances) (déclaration de revenus, demandes de prestations, aide budgétaire — également offert à la succursale de Thorncliffe). Heures d’ouverture indiquées : du lundi au vendredi de 9 h à 20 h 30, le samedi de 9 h à 17 h et le dimanche de 12 h à 17 h. Remarque : la succursale a fermé le 1er décembre 2025 pour un projet de rénovation et sa réouverture est prévue au début du troisième trimestre de 2026; les heures d’ouverture actuelles indiquent qu’elle a rouvert, mais vérifiez avant de vous y rendre."
+  },
+  "a5c931e58836": {
+   "model": "command-a-translate-08-2025",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.",
+   "text": "Le TNO Food Collaborative (dirigé par The Neighbourhood Organization) offre un accès gratuit à la nourriture à des milliers de personnes dans les communautés de Thorncliffe Park et de Flemingdon Park, y compris des produits frais, des œufs et des produits laitiers distribués deux fois par mois, avec une distribution toute l'année soutenue par des partenaires communautaires comme Greenwin Cares."
+  },
+  "a6a63f0ab062": {
+   "model": "command-a-translate-08-2025",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "Groupe communautaire local basé au Thorncliffe Park Community Hub (45 Overlea Blvd)."
+  },
+  "a8fbb45be7f6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Shelter",
+   "text": "Refuge"
+  },
+  "aa052d1c9356": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "École secondaire publique du TDSB (niveaux 9 à 12) située au 135 Overlea Blvd, qui dessert Flemingdon Park et Thorncliffe Park (~1800 élèves). École hôte du programme TOPS (Talented Offerings for Programs in the Sciences), un programme enrichi de quatre ans en mathématiques, sciences et anglais avec des cours de niveau AP ; offre également des programmes SHSM, en horticulture, en valeurs mobilières, des services de soutien en anglais langue seconde, plus de 90 clubs dirigés par des élèves et des sports d'équipe compétitifs."
+   },
+   "model": "claude-correction",
+   "note": "Ontario usage for grades: \"de la 9e à la 12e année\".",
+   "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
+   "text": "École secondaire publique du TDSB (de la 9e à la 12e année) située au 135 Overlea Blvd, qui dessert Flemingdon Park et Thorncliffe Park (~1800 élèves). École hôte du programme TOPS (Talented Offerings for Programs in the Sciences), un programme enrichi de quatre ans en mathématiques, sciences et anglais avec des cours de niveau AP ; offre également des programmes SHSM, en horticulture, en valeurs mobilières, des services de soutien en anglais langue seconde, plus de 90 clubs dirigés par des élèves et des sports d'équipe compétitifs."
+  },
+  "ac4875864ec7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Police Station",
+   "text": "Poste de police"
+  },
+  "ae69792878f8": {
+   "model": "command-a-translate-08-2025",
+   "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
+   "text": "La chapelle de l'Église unie Chapel in the Park est une petite congrégation multiculturelle située au 16 Thorncliffe Park Drive, à Toronto (416-421-0792), qui dessert Thorncliffe Park et Don Mills. Elle organise des services religieux le dimanche à 10 h, en personne, sur Zoom et en direct, et invite les nouveaux arrivants à se joindre à elle en tant que « famille de foi ».",
+   "warnings": [
+    "numbers missing from translation: 00"
+   ]
+  },
+  "b0e486b1a83e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Support & Emergency Services",
+   "text": "Services de soutien et d’urgence"
+  },
+  "b319cef2b3a7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Schools & Child Services",
+   "text": "Écoles et services pour enfants"
+  },
+  "b8138c775adf": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Services de colonisation gratuits pour les réfugiés et les immigrants, avec une attention particulière pour les femmes et les familles : cours d'anglais LINC réservés aux femmes, services de traduction et d'interprétation, soutien à l'emploi, cours d'informatique de base et avancés, cercles de conversation en anglais, club de couture, centre d'accueil pour les jeunes et exercices à faible impact. Tous les programmes sont gratuits, offerts sur place et en ligne (appelez pour prendre rendez-vous)."
+   },
+   "model": "claude-correction",
+   "note": "\"colonisation\" (colonization) -> \"services d'établissement\"; added French LINC name CLIC; youth drop-in clarified.",
+   "source": "Free settlement services for refugees and immigrants, with a special focus on women and families: women-only LINC English classes, translation and interpretation services, employment support, basic and advanced computer classes, English conversation circles, sewing club, youth drop-in, and low-impact exercise. All programs are free, offered onsite and online (call for an appointment).",
+   "text": "Services d'établissement gratuits pour les réfugiés et les immigrants, avec une attention particulière pour les femmes et les familles : cours d'anglais LINC (CLIC) réservés aux femmes, services de traduction et d'interprétation, soutien à l'emploi, cours d'informatique de base et avancés, cercles de conversation en anglais, club de couture, activités sans rendez-vous pour les jeunes et exercices à faible impact. Tous les programmes sont gratuits, offerts sur place et en ligne (appelez pour prendre rendez-vous)."
+  },
+  "b9bf5f163902": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Soins de santé primaires complets et gratuits pour les résidents du code postal M4H, sans carte de santé ni référence requise, avec services d’interprétation. Les services comprennent des soins primaires continus, une clinique pédiatrique scolaire, des soins des pieds pour les personnes âgées et les personnes atteintes de maladies chroniques, des conseils en nutrition, du travail social et des conseils en santé mentale, des ateliers d’éducation à la santé, du soutien familial et des références à des programmes de soutien du revenu, d’établissement, de logement, d’emploi et de langues. Situé au centre communautaire de Thorncliffe Park, 45 Overlea Blvd, 2e étage."
+   },
+   "model": "claude-correction",
+   "note": "Hub name kept in English; counselling rendered as consultation/counseling, not advice.",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "Soins de santé primaires complets et gratuits pour les résidents du code postal M4H, sans carte de santé ni référence requise, avec services d’interprétation. Les services comprennent des soins primaires continus, une clinique pédiatrique scolaire, des soins des pieds pour les personnes âgées et les personnes atteintes de maladies chroniques, de la consultation en nutrition, du travail social et du counseling en santé mentale, des ateliers d’éducation à la santé, du soutien familial et des références à des programmes de soutien du revenu, d’établissement, de logement, d’emploi et de langues. Situé au Thorncliffe Park Community Hub, 45 Overlea Blvd, 2e étage."
+  },
+  "ba5f23dbc690": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free EarlyON Child and Family Centre programs run by Family Day for parents and caregivers with young children, supporting early learning, child development and positive parent-child interaction through indoor, outdoor and virtual programming. The Flemingdon Park centre is at 150 Grenoble Drive (Don Mills/Overlea); the same page also lists a Grenoble EarlyON site.",
+   "text": "Programmes gratuits du Centre pour l’enfant et la famille EarlyON, organisés par Family Day pour les parents et les aidants ayant de jeunes enfants, qui soutiennent l’apprentissage précoce, le développement de l’enfant et les interactions positives entre parents et enfants grâce à des activités en intérieur, en extérieur et en ligne. Le centre de Flemingdon Park est situé au 150 Grenoble Drive (Don Mills/Overlea); la même page mentionne également un site EarlyON à Grenoble."
+  },
+  "baf809656cc3": {
+   "model": "command-a-translate-08-2025",
+   "source": "A group of neighbours working to create accessible, engaging, and inclusive public spaces for everyone to enjoy in Thorncliffe Park.",
+   "text": "Un groupe de voisins qui travaillent à créer des espaces publics accessibles, attrayants et inclusifs pour que tout le monde puisse en profiter à Thorncliffe Park."
+  },
+  "bbec136a0a48": {
+   "model": "command-a-translate-08-2025",
+   "source": "Fire Station",
+   "text": "Caserne de pompiers"
+  },
+  "bc208860cefc": {
+   "model": "command-a-translate-08-2025",
+   "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
+   "text": "La Toronto Hifz Academy, située au 45 Overlea Blvd, unité 201, Toronto (M4H 1C3; 647-505-8622), est une école coranique qui offre des cours à temps plein et à temps partiel de Hifz (mémorisation du Coran), de pré-Hifz, de révision pour Hafiz, d'arabe classique et de cours de Coran pour les sœurs. Les cours ont lieu du lundi au jeudi de 9 h à 13 h et de 16 h à 19 h, ainsi que le vendredi de 9 h à 14 h et de 16 h à 19 h.",
+   "warnings": [
+    "numbers missing from translation: 2, 7"
+   ]
+  },
+  "c04bdbce2472": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le Leaside Park (près de la route Millwood et du boulevard Overlea) fournit de l’eau potable au public grâce à une fontaine à boire et à deux stations de remplissage de bouteilles. Le parc de 3,4 hectares comprend également un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, un terrain de jeu pour enfants, un jardin communautaire, des toilettes et la piscine extérieure de Leaside."
+   },
+   "model": "claude-correction",
+   "note": "Street and pool names kept in English so they can be found (\"route\" suggested a highway).",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "Le Leaside Park (près de Millwood Road et d’Overlea Boulevard) fournit de l’eau potable au public grâce à une fontaine à boire et à deux stations de remplissage de bouteilles. Le parc de 3,4 hectares comprend également un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, un terrain de jeu pour enfants, un jardin communautaire, des toilettes et la Leaside Outdoor Pool (piscine extérieure)."
+  },
+  "c0b5b18276a1": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "Banque alimentaire communautaire située au 10 Gateway Blvd (sous-sol), North York, qui offre de la nourriture et des ressources gratuites aux familles dans le besoin; elle est maintenant un organisme de bienfaisance enregistré. Le site indique des heures d'ouverture incohérentes (lundi et mercredi de 11 h à 15 h 30 à un endroit, lundi au jeudi de 13 h 30 à 15 h 30 à un autre endroit) - appelez le 416-422-4322 pour confirmer avant de vous rendre sur place.",
+   "warnings": [
+    "numbers missing from translation: 00, 1, 3"
+   ]
+  },
+  "c6efc2c01c02": {
+   "model": "command-a-translate-08-2025",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "Paroisse catholique romaine située au 16 Thorncliffe Park Drive qui offre des messes régulières, des sacrements et des événements paroissiaux. Elle met les familles en contact avec des possibilités de camps d'été pour les enfants et les jeunes offertes dans les paroisses de l'archidiocèse de Toronto."
+  },
+  "cd0b92c5999a": {
+   "model": "command-a-translate-08-2025",
+   "source": "Faith-Based Organizations",
+   "text": "Organismes religieux"
+  },
+  "cd66ac6101f6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Newcomer Supports",
+   "text": "Services d’aide aux nouveaux arrivants"
+  },
+  "d2f11cfaf201": {
+   "model": "command-a-translate-08-2025",
+   "source": "Midwives Clinic",
+   "text": "Clinique de sages-femmes"
+  },
+  "d33e215aebeb": {
+   "model": "command-a-translate-08-2025",
+   "source": "Food Security & Climate Resilience",
+   "text": "Sécurité alimentaire et résilience face aux changements climatiques"
+  },
+  "d6ee993d9829": {
+   "model": "command-a-translate-08-2025",
+   "source": "Emergency food assistance for families in need is its core service during operating hours; no separate emergency program is listed.",
+   "text": "Son service principal pendant les heures d'ouverture est l'aide alimentaire d'urgence pour les familles dans le besoin; aucun programme d'urgence distinct n'est mentionné."
+  },
+  "d71124b428df": {
+   "model": "command-a-translate-08-2025",
+   "source": "911 emergency response: fire suppression, rescue, and medical first response. Call 911 in an emergency.",
+   "text": "Service d’urgence 911 : extinction d’incendie, sauvetage et premiers soins médicaux. Composez le 911 en cas d’urgence."
+  },
+  "d839bdfdb1e8": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Soutien alimentaire d’urgence pour les familles dans le besoin (distribution gratuite de nourriture deux fois par mois). Aucun refuge, centre de rafraîchissement ou service de ligne d’urgence spécifique au Food Collaborative n’a été confirmé. Offre des services d’intervention en situation de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d’accès à la banque de location de Toronto et comme centre d’appels du fonds d’urgence pour l’énergie (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "Rent Bank calque fixed; crisis line is \"ligne d'écoute de crise\", not emergency line; \"lieu de rafraîchissement\" for consistency.",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Soutien alimentaire d’urgence pour les familles dans le besoin (distribution gratuite de nourriture deux fois par mois). Aucun refuge, lieu de rafraîchissement ou service de ligne d’écoute de crise spécifique au Food Collaborative n’a été confirmé. Offre des services d’intervention en situation de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d’accès de la Toronto Rent Bank (Banque d’aide au loyer de Toronto) et comme centre d’appels de l’Emergency Energy Fund (fonds d’urgence pour l’énergie) (416-397-7368)."
+  },
+  "d9ee2590bc2e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Gère un programme d'arrivée sécuritaire (le personnel contacte les parents si un enfant est absent sans préavis); aucun service spécifique en cas d'urgence n'est mentionné."
+   },
+   "model": "claude-correction",
+   "note": "Program name Safe Arrival kept in English with gloss.",
+   "source": "Operates a Safe Arrival Program (staff contact parents if a child is absent without notice); no emergency-specific services listed.",
+   "text": "Gère un programme Safe Arrival (arrivée sécuritaire) (le personnel contacte les parents si un enfant est absent sans préavis); aucun service spécifique en cas d'urgence n'est mentionné."
+  },
+  "dd60669c88d7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "Centre commercial de quartier situé au 45 Overlea Blvd, qui comprend des magasins de détail, des restaurants et des services quotidiens (épicerie, banque, pharmacie/laboratoire, salle de sport, salon de coiffure). Il abrite également des locataires offrant des services communautaires, tels que l'Afghan Women's Organization, Don Valley Community Legal Services et Health Access Thorncliffe Park."
+  },
+  "dddae32defdd": {
+   "model": "command-a-translate-08-2025",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "Centre communautaire et salle de prière ismaélienne (Jamatkhana) situé au 80 Overlea Boulevard dans Thorncliffe Park. Accueille des prières quotidiennes en congrégation et des rassemblements communautaires pour les musulmans ismaéliens ; le bâtiment comprend un gymnase, une bibliothèque, des salles d'enseignement, des bureaux et une zone de dépôt de nourriture."
+  },
+  "de5580650854": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le Centre Fraser Mustard EarlyON pour les enfants et les familles (situé à la Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) est un programme gratuit sans inscription préalable pour les parents et les aidants ayant des enfants de la naissance à 6 ans, qui a lieu du lundi au jeudi de 8 h 45 à 13 h 45. Les enfants peuvent jouer, explorer, apprendre et profiter d’une collation nutritive pendant que les parents se connectent avec d’autres familles et obtiennent des informations sur les programmes et les services communautaires, avec le soutien d’un professionnel qualifié de la petite enfance; aucune préinscription n’est requise."
+   },
+   "model": "claude-correction",
+   "note": "Anglicism \"se connectent\" -> \"tissent des liens\"; drop-in = \"sans rendez-vous\"; centre name kept in English.",
+   "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
+   "text": "Le Fraser Mustard EarlyON Child and Family Centre (centre pour l’enfant et la famille) (situé à la Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) est un programme gratuit sans rendez-vous pour les parents et les aidants ayant des enfants de la naissance à 6 ans, qui a lieu du lundi au jeudi de 8 h 45 à 13 h 45. Les enfants peuvent jouer, explorer, apprendre et profiter d’une collation nutritive pendant que les parents tissent des liens avec d’autres familles et obtiennent des informations sur les programmes et les services communautaires, avec le soutien d’un professionnel qualifié de la petite enfance; aucune préinscription n’est requise."
+  },
+  "e04d44a05f5d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-service youth agency (operating since 1971) providing day treatment, job training, and individualized care planning for youth facing challenges at school, at home and in life, including child welfare and youth justice supports.",
+   "text": "Agence multiservices pour les jeunes (en activité depuis 1971) qui offre des traitements de jour, de la formation professionnelle et des plans de soins individualisés pour les jeunes qui font face à des difficultés à l’école, à la maison et dans la vie, y compris des services de protection de l’enfance et de justice pour les jeunes."
+  },
+  "e0aa03a9fd6a": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Centre culturel japonais situé au 6 Sakura Way, ouvert à tous, offrant des cours culturels (ikebana, cérémonie du thé chado, calligraphie shodo, peinture sumi-e, tambours taiko, koto), des arts martiaux (judo, karaté, kendo, aikido, kyudo, iaido, naginata, jodo), des cours de japonais pour adultes, des clubs (karaoké, hula, danse, club des aînés, ping pong), des festivals saisonniers, le Festival du film japonais de Toronto, des expositions et le Centre du patrimoine Nikkei Moriyama."
+   },
+   "model": "claude-correction",
+   "note": "Festival and centre names kept in English.",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "Centre culturel japonais situé au 6 Sakura Way, ouvert à tous, offrant des cours culturels (ikebana, cérémonie du thé chado, calligraphie shodo, peinture sumi-e, tambours taiko, koto), des arts martiaux (judo, karaté, kendo, aikido, kyudo, iaido, naginata, jodo), des cours de japonais pour adultes, des clubs (karaoké, hula, danse, club des aînés, ping pong), des festivals saisonniers, le Toronto Japanese Film Festival, des expositions et le Moriyama Nikkei Heritage Centre."
+  },
+  "e5edc4998f24": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Centre communautaire et récréatif géré par la ville, situé au 29 St Dennis Dr, qui comprend une piscine intérieure (cours de natation, baignade récréative), des installations de conditionnement physique et une succursale de bibliothèque, offrant des programmes récréatifs inscrits."
+   },
+   "model": "claude-correction",
+   "note": "\"inscrits\" (registered programs) -> \"avec inscription\" (registration required).",
+   "source": "City-run community/recreation centre at 29 St Dennis Dr with an indoor pool (swim lessons, leisure swims), fitness facilities, and a library branch, offering registered recreation programs.",
+   "text": "Centre communautaire et récréatif géré par la ville, situé au 29 St Dennis Dr, qui comprend une piscine intérieure (cours de natation, baignade récréative), des installations de conditionnement physique et une succursale de bibliothèque, offrant des programmes récréatifs avec inscription."
+  },
+  "e6b5bb4495c9": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Le programme gratuit Employment Ontario de TNO au Thorncliffe Park Community Hub (45 Overlea Blvd, unité 200) est ouvert à tous les résidents de l'Ontario. Il offre des services d'exploration de carrière, d'évaluation des besoins en formation, de recherche d'emploi et de compétences en matière de maintien en poste, des événements de recrutement, des séances d'information, des ateliers et un soutien individuel en matière de carrière, ainsi qu'une aide gratuite en matière de ressources humaines, d'intégration et de publication d'offres d'emploi pour les employeurs."
+   },
+   "model": "claude-correction",
+   "note": "Added official French name Emploi Ontario.",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "Le programme gratuit Employment Ontario (Emploi Ontario) de TNO au Thorncliffe Park Community Hub (45 Overlea Blvd, unité 200) est ouvert à tous les résidents de l'Ontario. Il offre des services d'exploration de carrière, d'évaluation des besoins en formation, de recherche d'emploi et de compétences en matière de maintien en poste, des événements de recrutement, des séances d'information, des ateliers et un soutien individuel en matière de carrière, ainsi qu'une aide gratuite en matière de ressources humaines, d'intégration et de publication d'offres d'emploi pour les employeurs."
+  },
+  "e76c5f811246": {
+   "model": "command-a-translate-08-2025",
+   "source": "Legal & Government Services",
+   "text": "Services juridiques et gouvernementaux"
+  },
+  "e84d3a5ba49c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "La page de l’Association des locataires des Leaside Towers pour les 85 et 95 Thorncliffe Park Drive sert de répertoire de contact pour les résidents : gestionnaire immobilier (Morguard) au 416-421-8109 et agents de sécurité des bâtiments (Bâtiment 85 : 647-462-0404; Bâtiment 95 : 416-906-7970)."
+   },
+   "model": "claude-correction",
+   "note": "Association name kept in English with gloss.",
+   "source": "The Leaside Towers Tenants Association page for 85 & 95 Thorncliffe Park Drive functions as a contact directory for residents: property manager (Morguard) at 416-421-8109 and building security guards (Building 85: 647-462-0404; Building 95: 416-906-7970).",
+   "text": "La page de la Leaside Towers Tenants Association (association des locataires) pour les 85 et 95 Thorncliffe Park Drive sert de répertoire de contact pour les résidents : gestionnaire immobilier (Morguard) au 416-421-8109 et agents de sécurité des bâtiments (Bâtiment 85 : 647-462-0404; Bâtiment 95 : 416-906-7970)."
+  },
+  "e8558cfa2f76": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community network promoting cycling as empowerment for women of all backgrounds, especially newcomers to Canada whose culture prohibited them from learning to ride. Brings together new and experienced cyclists through group rides, education, advocacy and events, and connects donated bikes with women in need through BikeMatchWCN.",
+   "text": "Réseau communautaire qui encourage le vélo comme moyen d’autonomisation pour les femmes de tous les milieux, en particulier les nouvelles arrivantes au Canada dont la culture leur interdisait d’apprendre à faire du vélo. Rassemble des cyclistes débutantes et expérimentées grâce à des randonnées en groupe, à l’éducation, au militantisme et à des événements, et met en relation des vélos donnés avec des femmes dans le besoin grâce à BikeMatchWCN."
+  },
+  "e8f0c19cdab7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Macedonian Orthodox cathedral that has served Toronto's Macedonian community for over 60 years. Holds regular worship services and religious holidays, and hosts educational, cultural and charitable organizations that preserve and promote Macedonian heritage.",
+   "text": "Cathédrale orthodoxe macédonienne qui sert la communauté macédonienne de Toronto depuis plus de 60 ans. Elle organise régulièrement des services religieux et des fêtes religieuses, et accueille des organisations éducatives, culturelles et caritatives qui préservent et promeuvent le patrimoine macédonien."
+  },
+  "ea49f2274ddf": {
+   "model": "command-a-translate-08-2025",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "Paroisse catholique de Don Mills (150 Gateway Blvd) offrant des messes quotidiennes et hebdomadaires, des sacrements (baptême, réconciliation, eucharistie, confirmation, mariage, onction des malades, funérailles), des ministères, un ministère pour les jeunes et les jeunes adultes, des possibilités de bénévolat et des événements communautaires paroissiaux."
+  },
+  "ebed9e902f38": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Un groupe dirigé par des résidents qui rassemble des familles de divers horizons grâce à des rencontres, des célébrations culturelles, des activités éducatives et des initiatives de bénévolat. Il vise à lutter contre l'isolement social et la solitude et soutient l'éducation des enfants en participant activement aux conseils de parents de l'école publique Gateway, de l'école secondaire Valley Park et du Marc Garneau Collegiate Institute."
+   },
+   "model": "claude-correction",
+   "note": "Valley Park is a middle school, not \"école secondaire\"; school names kept in English.",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "Un groupe dirigé par des résidents qui rassemble des familles de divers horizons grâce à des rencontres, des célébrations culturelles, des activités éducatives et des initiatives de bénévolat. Il vise à lutter contre l'isolement social et la solitude et soutient l'éducation des enfants en participant activement aux conseils de parents de Gateway Public School, de Valley Park Middle School (école intermédiaire) et du Marc Garneau Collegiate Institute."
+  },
+  "ec5b5ffd97a8": {
+   "model": "command-a-translate-08-2025",
+   "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
+   "text": "Demandes de réparations d’urgence (soirs, fins de semaine et jours fériés) : 416-207-8253. Les coordonnées des responsables de la sécurité du bâtiment sont également indiquées ci-dessus pour les problèmes urgents liés au bâtiment."
+  },
+  "ef9e53e990a8": {
+   "model": "command-a-translate-08-2025",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "Congrégation locale de l’Église de Jésus-Christ des Saints des Derniers Jours, située au 24 Ferrand Drive, North York. Le culte du dimanche comprend une réunion de sacrement ainsi que des classes par groupes d’âge pour tous, à partir de 18 mois; tout le monde est le bienvenu."
+  },
+  "f0173151ade9": {
+   "model": "command-a-translate-08-2025",
+   "source": "Registered non-profit supporting newcomer families, refugees, asylum seekers and people moving from shelters into permanent housing. Distributes free household essentials (seasonal clothing, footwear, kitchenware, bedding, bath accessories and select furniture) and runs newcomer workshops on parenting, navigating local systems and community resources.",
+   "text": "Organisme sans but lucratif enregistré qui soutient les familles nouvellement arrivées, les réfugiés, les demandeurs d’asile et les personnes qui quittent les refuges pour s’installer dans un logement permanent. Distribue gratuitement des articles ménagers essentiels (vêtements saisonniers, chaussures, articles de cuisine, literie, accessoires de bain et certains meubles) et organise des ateliers pour les nouveaux arrivants sur la parentalité, la navigation dans les systèmes locaux et les ressources communautaires."
+  },
+  "f0b67cd7ba77": {
+   "model": "command-a-translate-08-2025",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "Le parc Leonard Linton, situé au 135 Vanderhoof Ave, est doté d’une station de remplissage de bouteilles d’eau, selon la liste des installations de la ville. Il n’a pas été possible d’obtenir la liste complète des commodités."
+  },
+  "f2e70e53d615": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
+   "text": "Offre des services d'hébergement d'urgence, y compris un centre de répit ouvert 24 heures sur 24 (351 Lake Shore Blvd East), ainsi que des services de réduction des méfaits pour les personnes dans les refuges et les programmes de logement."
+  },
+  "f53b3121ceff": {
+   "model": "command-a-translate-08-2025",
+   "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
+   "text": "Composez le 911 en cas d’urgence. Vous pouvez joindre la division 55 au 416-808-5500."
+  },
+  "f630f0f0b145": {
+   "model": "command-a-translate-08-2025",
+   "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
+   "text": "Les sages-femmes sont disponibles 24 heures sur 24 et 7 jours sur 7 pour répondre aux préoccupations urgentes liées à la grossesse et à l'accouchement; aucun programme d'urgence distinct n'est indiqué."
+  },
+  "fa4e99c2c2ea": {
+   "model": "command-a-translate-08-2025",
+   "source": "Government Documentation",
+   "text": "Documentation gouvernementale"
+  },
+  "fd53492ca165": {
+   "model": "command-a-translate-08-2025",
+   "source": "Employment & Skills Training",
+   "text": "Emploi et formation professionnelle"
+  },
+  "ff411a340bcb": {
+   "model": "command-a-translate-08-2025",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "Organisme sans but lucratif communautaire (fondé en 2018 par des parents d’enfants autistes, constitué en société en 2020) qui offre des services gratuits, communautaires et axés sur la famille aux enfants et aux jeunes atteints d’autisme et d’autres troubles du développement neurologique dans East York. Les programmes comprennent les programmes Roots pour les jeunes, qui ont lieu du lundi au samedi, les services de répit de fin de semaine, les réunions mensuelles de soutien aux parents, le soutien aux devoirs après l’école, les camps d’été et de relâche de mars gratuits et inclusifs, les événements de rentrée scolaire, les ateliers éducatifs et les campagnes de sensibilisation à l’autisme et aux handicaps."
+  },
+  "fff820dc79f3": {
+   "model": "command-a-translate-08-2025",
+   "source": "Childminding & EarlyON",
+   "text": "Garde d’enfants et EarlyON"
+  }
+ },
+ "updated": "2026-10-01T04:36:51+00:00"
+}

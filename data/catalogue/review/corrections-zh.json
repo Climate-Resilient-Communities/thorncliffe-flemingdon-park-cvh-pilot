@@ -1,0 +1,444 @@
+{
+ "language": "zh",
+ "corrector": "Claude subagent, 2026-10-01",
+ "corrections": [
+  {
+   "id": "0b810534f69d",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "TNO Food Collaborative（TNO 食品合作计划，由 The Neighbourhood Organization 运营）为 Thorncliffe Park 和 Flemingdon Park 社区的数千名居民提供免费食品，包括新鲜农产品、鸡蛋和乳制品，每月分发两次，全年分发工作由 Greenwin Cares 等社区合作伙伴支持。\n\n为 Thorncliffe Park、Flemingdon Park、St. James Town 和 Taylor Massey 提供服务的多元服务移民安置机构。服务包括安置支持（需求评估、加拿大/安大略省生活指导、入籍准备课程、移民表格帮助）、住房援助（找房、补贴住房申请、Rent Bank（租金援助）申请、能源账单援助）、老年人项目（Integrated Services for Seniors 老年人综合服务、个人护理支持服务）、青年项目（例如课后女孩项目）、就业服务、语言培训，以及针对妇女遭受暴力问题的咨询服务。免费；可致电或直接上门（无需预约）。",
+   "note": "Kept the names TNO Food Collaborative and The Neighbourhood Organization in English (was translated as generic 社区组织); clarified program names and wording."
+  },
+  {
+   "id": "0baa182fc012",
+   "source": "Pastoral emergencies: Rev. Dr. Paul Shepherd can be reached at 647-700-7129 for pastoral emergencies or to book a meeting.",
+   "text": "牧灵紧急情况：如需牧师紧急关怀或预约会面，可联系 Rev. Dr. Paul Shepherd（保罗·谢泼德牧师博士），电话：647-700-7129。",
+   "note": "牧区紧急情况 (parish-district emergency) changed to pastoral-care emergency; kept the pastor's name in English."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "为有需要的家庭提供紧急食品援助（每月免费发放两次食品）。未确认 Food Collaborative（食品合作计划）设有专门的避难所、降温中心或危机热线服务。",
+   "note": "Kept the program name Food Collaborative in English."
+  },
+  {
+   "id": "0f7fe1d38b46",
+   "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
+   "text": "提供居家和社区医疗保健服务的机构，可上门服务或在诊所服务：护理（RN 注册护士/RPN 注册实习护士）、个人护理支持、居家支持（备餐、家务、陪伴、用药提醒）、物理治疗、职业治疗、言语语言治疗、社会工作和营养咨询。护士全天候（24/7）提供短期或长期护理服务；还经营护理和物理治疗诊所。",
+   "note": "语言病理学 changed to the usual term 言语语言治疗; kept 24/7; clarified in-home vs clinic."
+  },
+  {
+   "id": "1330dcebcb5e",
+   "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
+   "text": "一个基层团体，由来自 Thorncliffe Park 和 Flemingdon Park 的 75 个家庭、约 80 名成员组成，成员来自不同的文化和宗教。其目标是发挥带头作用，把社区组织和居民联系起来，建设更强大的社区。",
+   "note": "Neighbourhood names kept in English instead of transliterations."
+  },
+  {
+   "id": "145d746d96ec",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "Greek Orthodox Archdiocese of Canada（加拿大希腊东正教大主教区，1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757）是加拿大希腊东正教会的全国行政机构。其主页主要介绍教会新闻和庆典、东正教教理和宗教教育资源、圣礼仪（Divine Liturgy）手册、祈祷书和东正教圣像库——这些是教会和灵修资源，而不是社区社会服务。",
+   "note": "Kept the organisation name in English with a Chinese gloss."
+  },
+  {
+   "id": "1517bf8b7dbd",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "多元服务社区中心，位于 45 Overlea Blvd, 2nd Floor（East York Town Centre 购物中心内，2楼），周一至周日开放，时间为上午8:00至晚上8:00。居民可在这个一站式场所获得合作伙伴组织提供的健康和社会服务、项目及社区空间。",
+   "note": "Kept the mall name East York Town Centre and the address in English."
+  },
+  {
+   "id": "1538ea5a988e",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "St. Michael's Hospital（圣迈克尔医院）设有急诊科（30 Bond St.）；网站列出了 Unity Health 的 MyChart 和医院电话。未找到肾病护理中心专门的急诊服务——如遇医疗紧急情况，请拨打 911。",
+   "note": "Kept the hospital name in English with a gloss."
+  },
+  {
+   "id": "1621e2da2a65",
+   "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
+   "text": "Flemingdon Park 由社区开发的农场，为居民种植健康食品。提供社区种植活动；夏季每周在 150 Grenoble Drive 举办农贸市场（每周四下午3点至6点，6月下旬至10月上旬）；还有 Community Farmer 项目（社区农民项目），让居民有机会创业经营小型农场。",
+   "note": "Kept the program name Community Farmer in English with a gloss; minor wording."
+  },
+  {
+   "id": "170900592261",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "助产诊所（East York/Don Mills），在怀孕、分娩期间以及产后 6 周内为父母和婴儿提供免费、由安大略省卫生部资助的护理服务。可在家中、Toronto Birth Centre（多伦多分娩中心）或 Michael Garron Hospital（迈克尔·加伦医院）分娩；助产士全天候（24/7）值班处理紧急问题，出现并发症时会转诊给产科医生、儿科医生和哺乳顾问。工作人员会说多种语言（英语、阿拉伯语、法语、西班牙语、波斯语、达里语等），并提供产前课程，包括 Newborn 101（新生儿 101）课程。",
+   "note": "Kept Michael Garron Hospital, Toronto Birth Centre, East York/Don Mills in English with glosses; kept 24/7."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "为服务区域内（Lake Ontario 至 York Mills/401，Yonge/Don River 至 Victoria Park Ave）的低收入人群提供免费法律咨询和代理服务，涵盖四个领域：住房法（防止驱逐、非法锁门、租户权利）、就业法（就业标准、不当解雇、遣散费、EI 就业保险）、移民法（永久居民申请、工作许可、公民身份）和收入支持（ODSP、OW、CPP、OAS、GIS、Canada Disability Benefit 加拿大残疾福利金）；此外还提供公众法律教育和有限的文件服务（宣誓书、公证副本）。受理热线（Intake Line）：416-441-1764 转 1，周一至周四上午9:00至中午12:30（留言后 1-3 个工作日内回电；不接待无预约来访；面谈需预约，时间为周一/周三下午1:30-4:30）。",
+   "note": "Area boundaries kept in English (约克磨坊/当河 were calques); 12:30 is noon (中午); clarified walk-ins and intake wording."
+  },
+  {
+   "id": "1ae4b85c3a4e",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "TNO 项目（由 IRCC 资助），帮助 18 岁以上的新移民进入技工行业和技术职业。提供建筑、暖通空调（G2/G3 执照）、IT（包括数据科学和人工智能）、卡车驾驶（DZ 执照）、叉车操作和建筑工地交通指挥方面的培训和就业途径。面向英语达到 CLB 5-6 级或以上的永久居民、公约难民和加拿大公民。",
+   "note": "技术行业 changed to 技工行业 for skilled trades; clarified that the CLB requirement applies to all."
+  },
+  {
+   "id": "1be560c4691c",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "Toronto Fire Services（多伦多消防局）的消防站为该地区提供全天候（24/7）消防和紧急救援服务：321号消防站（231 McRae Dr）、235号消防站（200 Bermondsey Rd）、322号消防站（256 Cosburn Ave）、224号消防站（1313 Woodbine Ave）。非紧急电话：416-338-9050。",
+   "note": "Kept Toronto Fire Services in English with a gloss; kept 24/7."
+  },
+  {
+   "id": "235e1072c4f3",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "位于 Flemingdon Park 150 Grenoble Drive 的市立社区中心，设有 Playground Paradise（“游乐场天堂”）室内游乐场（12 岁及以下儿童可随到随玩，每名儿童 3 加元，须穿袜子，必须有家长或监护人陪同）。此外还有室内和室外游乐场、野餐区、戏水池、社区花园、多功能运动场、棒球场、街头曲棍球场和篮球场。同一地址还设有 Flemingdon Park EarlyON，提供免费、随到随参加的幼儿和家庭活动。",
+   "note": "Kept Playground Paradise and Flemingdon Park EarlyON names in English; $3 as 加元; splash pad as 戏水池."
+  },
+  {
+   "id": "2b036077722c",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "位于 73 Thorncliffe Park Drive 的大型公共峡谷公园，沿 Don River（唐河）而建，位于 Thorncliffe Park、Flemingdon Park 和原 Ontario Science Centre（安大略科学中心）之间。设施：18 洞飞盘高尔夫球场（建于 2011 年，免费）、射箭场（加拿大仅有的两个公共射箭场之一，免费但无人看管）、慢跑/自行车道、越野滑雪和骑马步道、野餐亭/野餐区、火坑、篮球场、洗手间和饮水喷泉（冬季饮水和洗手间关闭）。",
+   "note": "Consistency: name-then-gloss order; Nordic skiing as 越野滑雪; drinking fountains as 饮水喷泉."
+  },
+  {
+   "id": "2d4e28c7351b",
+   "source": "Notes routine safety drills and secure entry; no emergency-specific community services listed.",
+   "text": "页面提到有日常安全演习和门禁系统；未列出针对紧急情况的社区服务。",
+   "note": "Source says the page mentions drills and secure entry, not that the service records drills and ensures security."
+  },
+  {
+   "id": "2de0ec486420",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "该 toronto.ca 页面专门介绍 Flemingdon Park（靠近 Don Mills Rd 和 Eglinton Ave E）内的饮水喷泉设施。该喷泉是这个 13.3 公顷公园的官方设施之一，公园内还有棒球场、街头曲棍球场、板球场、多功能场地、4 个室外篮球场、室外跑道、4 个游乐场（游乐场于 2025 年更新）、戏水池、社区花园、6 个野餐亭、运动场和停车场。",
+   "note": "水上乐园 (water park) changed to 戏水池 (splash pad)."
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "City of Toronto（多伦多市）位于 5 Leaside Park Drive（Leaside Park 内）的户外公共游泳池，夏季开放，可自由游泳或分道游泳。该游泳池为无障碍设施，设有无障碍更衣室，泳池周边地面无台阶、可平地进入，Wheel-Trans 可在 Leaside Park Drive 停车场上下车。",
+   "note": "泳池甲板 (ship deck calque) replaced; park name kept in English."
+  },
+  {
+   "id": "313e1f70434b",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "一个基层妇女社区组织，带头改造 R.V. Burgess Park，与各方共同建设了社区花园、公园咖啡馆、戏水池、座椅、照明，以及北美公共公园中唯一的户外坦都尔（tandoor）烤炉等设施。该组织专注于 Thorncliffe Park 的社区建设和跨文化工作。",
+   "note": "Park and neighbourhood names kept in English instead of transliterations."
+  },
+  {
+   "id": "32dfa11d6223",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "为 Thorncliffe Park、Flemingdon Park、St. James Town 和 Taylor Massey 提供服务的多元服务移民安置机构。服务包括安置支持（需求评估、加拿大/安大略省生活指导、入籍准备课程、移民表格帮助）、住房援助（找房、补贴住房申请、Rent Bank（租金援助）申请、能源账单援助）、老年人项目（Integrated Services for Seniors 老年人综合服务、个人护理支持服务）、青年项目（例如课后女孩项目）、就业服务、语言培训，以及针对妇女遭受暴力问题的咨询服务。免费；可致电或直接上门（无需预约）。",
+   "note": "结算 (billing settlement) changed to 移民安置 (immigrant settlement); clarified violence-against-women counselling."
+  },
+  {
+   "id": "37155594f70b",
+   "source": "The homepage returned a 'Page Not Found' error, so services were drawn from the Thorncliffe Hub grassroots listing and third-party community resource pages. Engaged Communities is the same resident organizing group described above: started November 2019 to address youth violence, builds resident engagement in community processes, and connects residents, agencies, schools, police, and politicians. It was a 2023 City of Toronto Youth Violence Prevention Grant recipient in partnership with Flemingdon Health Centre.",
+   "text": "主页显示“页面未找到”错误，因此服务信息取自 Thorncliffe Hub 的基层团体列表和第三方社区资源页面。Engaged Communities 就是上面提到的同一个居民组织团体：成立于 2019 年 11 月，旨在应对青少年暴力问题，促进居民参与社区事务，并联系居民、机构、学校、警察和政界人士。该组织与 Flemingdon Health Centre（Flemingdon 健康中心）合作，获得了 2023 年 City of Toronto Youth Violence Prevention Grant（多伦多市青少年暴力预防资助）。",
+   "note": "Kept Flemingdon Health Centre and the grant name in English; 政客 changed to neutral 政界人士."
+  },
+  {
+   "id": "3904b64dcef4",
+   "source": "City community recreation centre at 48 Thorncliffe Park Drive, co-located with the Thorncliffe library branch. A small (12,000 sq ft) but heavily used neighbourhood hub offering indoor courts, a daycare centre, meeting space, workshops such as mental health and wellbeing sessions, and recreation programs.",
+   "text": "位于 48 Thorncliffe Park Drive 的市立社区康乐中心，与 Thorncliffe 图书馆分馆在同一地点。这是一个小型（12,000 平方英尺）但使用率很高的社区中心，提供室内球场、日托中心、会议空间、讲座工作坊（如心理健康与身心健康讲座）以及康乐项目。",
+   "note": "Minor consistency wording."
+  },
+  {
+   "id": "39681ff66eee",
+   "source": "TDSB early learning academy at 82 Thorncliffe Park Dr for young children, with structured daily routines for arrival, lunch and dismissal. Parents report absences through the Safe Arrival number (1-833-250-2290).",
+   "text": "TDSB 幼儿早期学习学校，位于 82 Thorncliffe Park Dr，为幼儿提供有规律的日常安排，包括到校、午餐和放学。家长可拨打 Safe Arrival（安全到校）电话（1-833-250-2290）报告孩子缺勤。",
+   "note": "Kept the Safe Arrival program name in English."
+  },
+  {
+   "id": "3dc2fd8bba11",
+   "source": "Non-profit community health centre (operating since 1975) at 10 Gateway Blvd offering free primary care from doctors and nurse practitioners for residents in its catchment area — no OHIP card or medical referral required. Also offers individual and family counselling/mental health services, chronic disease prevention and management (diabetes, lung and heart health), dietitians, chiropody (foot care), nutrition counselling, a sexual health clinic (with Toronto Public Health), prenatal programs, and health promotion programs (exercise, wellness, healthy cooking) for seniors, women, youth and newcomers.",
+   "text": "非营利社区健康中心（自 1975 年开始运营），位于 10 Gateway Blvd，为服务区域内的居民提供由医生和执业护士提供的免费初级医疗服务，无需 OHIP 卡或医生转诊。还提供个人和家庭咨询/心理健康服务、慢性病预防和管理（糖尿病、肺部和心脏健康）、营养师、足病护理（足部护理）、营养咨询、性健康诊所（与 Toronto Public Health 多伦多公共卫生局合作）、产前项目，以及面向老年人、妇女、青少年和新移民的健康促进项目（运动、身心健康、健康烹饪）。",
+   "note": "护士从业人员 changed to 执业护士 (nurse practitioners); kept Toronto Public Health in English."
+  },
+  {
+   "id": "0bb8b2cc1244",
+   "source": "Toronto Public Health dental clinics provide free basic dental care (examinations, x-rays, fillings, cleanings, some root canals, extractions, dentures) for eligible children and youth aged 0-17, low-income seniors 65+, and clients of select public health programs who live in Toronto and cannot afford a private dentist. Eligibility is assessed in person at a clinic; a mobile dental clinic also serves clients with difficulty accessing care.",
+   "text": "Toronto Public Health（多伦多公共卫生局）牙科诊所为居住在多伦多、负担不起私人牙医的以下人群提供免费的基础牙科护理（检查、X 光片、补牙、洗牙、部分根管治疗、拔牙、假牙）：符合条件的 0-17 岁儿童和青少年、65 岁及以上的低收入老年人，以及特定公共卫生项目的服务对象。资格须在诊所现场评估；流动牙科诊所也为难以前往就诊的人提供服务。",
+   "note": "Kept Toronto Public Health in English with a gloss."
+  },
+  {
+   "id": "411f70e150dd",
+   "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
+   "text": "位于 30 Thorncliffe Park Drive 的希腊东正教教区（可容纳 600 多名坐席信徒，停车位充足），由教区牧师 Fr. Apostolos Gkolias 神父负责（邮箱 apostolosgkolias@yahoo.com ；教堂电话 +1 (416) 425-2485 ，邮箱 info@togreekcom.org ）。周日和节日礼拜：晨祷上午8:30–10:00，圣礼仪（事奉圣礼）上午10:00–中午12:00；负责主日学报名和其他教会活动。",
+   "note": "Times put in natural Chinese order (上午8:30–10:00, 上午10:00–中午12:00)."
+  },
+  {
+   "id": "4341d8807857",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "该 toronto.ca 页面专门介绍 R.V. Burgess Park（46 Thorncliffe Park Dr，靠近 Thorncliffe Park Dr 和 Overlea Blvd）内的饮水喷泉设施。该喷泉是这个 1.5 公顷社区公园的官方设施之一，公园内还有戏水池、两个游乐场、一个社区花园、一个有顶棚的野餐区、加拿大第一个公共坦都尔（tandoor）烤炉，以及游客提到的饮水设施。",
+   "note": "Park name kept fully in English."
+  },
+  {
+   "id": "44a718e6efa5",
+   "source": "Community grassroots group founded in 2019 by Thorncliffe & Flemingdon Park residents of all ages and cultures. Runs education initiatives on reducing indirect greenhouse gas emissions (buildings, waste, transportation) aligned with Toronto's TransformTO strategy, promotes 'climate-wise' sustainable living habits, and helps include seniors who became isolated during the pandemic.",
+   "text": "由 Thorncliffe Park 和 Flemingdon Park 各年龄段、各文化背景的居民于 2019 年成立的社区基层团体。该团体开展教育活动，配合多伦多的 TransformTO 战略，宣传减少间接温室气体排放（建筑、垃圾、交通），推广“气候友好型”可持续生活习惯，并帮助在疫情期间变得孤立的老人重新融入社会。",
+   "note": "Neighbourhood names in full English."
+  },
+  {
+   "id": "4a39ebe12219",
+   "source": "Water Fountains",
+   "text": "公共饮水点",
+   "note": "饮水机 (indoor water dispenser) changed to 公共饮水点 (public water fountains)."
+  },
+  {
+   "id": "4c0ad54aefbb",
+   "source": "Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "通过其反对针对妇女暴力的项目提供危机干预和咨询服务；同时是 Toronto Rent Bank（多伦多租金援助）申请中心和 Emergency Energy Fund（紧急能源基金）电话中心（416-397-7368）。",
+   "note": "Kept Toronto Rent Bank and Emergency Energy Fund names in English with glosses."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "为有需要的家庭提供紧急食品援助（每月免费发放两次食品）。未确认 Food Collaborative（食品合作计划）设有专门的避难所、降温中心或危机热线服务。通过其反对针对妇女暴力的项目提供危机干预和咨询；同时是 Toronto Rent Bank（多伦多租金援助）申请中心和 Emergency Energy Fund（紧急能源基金）电话中心（416-397-7368）。",
+   "note": "Kept Food Collaborative, Toronto Rent Bank and Emergency Energy Fund names in English with glosses."
+  },
+  {
+   "id": "5141105643c3",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "跨学科咨询公司，与各行业的组织合作（客户包括 TNO、OCAD University 和 Islamic Society of Toronto）。服务包括市场和用户研究、设计和城市规划、项目和计划管理、运营支持、治理和领导力咨询、商业咨询、人工智能和新兴技术整合、品牌和媒体、销售优化以及培训和工作坊。",
+   "note": "Kept client organisation names in English."
+  },
+  {
+   "id": "57480d0bcd4e",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "位于 165 Grenoble Dr 的市立冰场（2009 年以加拿大冰球明星 Angela James（安吉拉·詹姆斯）的名字重新命名），提供滑冰和冰球项目，旁边还有公共网球场。注意：市政府宣布计划（2026 年）在 165 Grenoble Dr 建造新的 Flemingdon 消防站，届时四个网球场中的两个将被拆除——目前情况未定。",
+   "note": "Name-then-gloss order; arena as 冰场."
+  },
+  {
+   "id": "5d864949c117",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "Toronto Police Service（多伦多警察局）55 Division 第55分局（101 Coxwell Ave，416-808-5500）——负责东区，包括 Thorncliffe/Flemingdon 地区；提供社区警务、非紧急报案和受害者支持。注意：54 和 55 分局计划合并到位于 1627 Danforth Ave（原 TTC Danforth 车库）的新警察局。",
+   "note": "Kept Toronto Police Service and 55 Division in English."
+  },
+  {
+   "id": "5d959a5ff47c",
+   "source": "Pride In Heritage Children's Centre is a non-profit, community-based multicultural child care centre located inside Gateway Public School at 55 Gateway Blvd, Toronto (416-467-5981). It offers inclusive, bias-free child care in a safe, nurturing environment, run by a volunteer Board of Directors; it treats all individuals with dignity regardless of background.",
+   "text": "Pride In Heritage Children's Centre 是一个非营利、以社区为基础的多元文化儿童保育中心，位于多伦多 55 Gateway Blvd 的 Gateway Public School 内（电话：416-467-5981）。该中心由志愿者董事会管理，在安全、关爱的环境中提供包容、无偏见的儿童保育服务；无论背景如何，都尊重每一个人。",
+   "note": "Kept centre and school names fully in English."
+  },
+  {
+   "id": "6112e2d3ed72",
+   "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
+   "text": "由驻院医生提供免费、保密的24小时电话值班协助（416-429-4991）。明确说明不提供急诊或无需预约的上门服务——紧急情况请拨打911。",
+   "note": "门诊 (outpatient) changed to 无需预约的上门服务 (walk-in)."
+  },
+  {
+   "id": "6166d8860ebc",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Valley Park Middle School 是 TDSB 的一所初中，面向 6-8 年级，约有 1,100 名学生，来自 Thorncliffe Park 和 Flemingdon Park 社区，地址是 130 Overlea Blvd, East York。学校注重建立以尊重、责任和安全为基础的安全、支持性学习环境；所获取的主页文本中没有列出法语沉浸式、ESL 或特殊教育项目。",
+   "note": "中等学校 (secondary school) changed to 初中 (middle school); school name and address in English order."
+  },
+  {
+   "id": "62d55110cf7b",
+   "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
+   "text": "位于 175 Grenoble Dr、由 TCDSB 运营的免费 EarlyON 儿童和家庭中心，为 0-6 岁儿童及其父母/照顾者提供随到随参加的游戏和学习项目（需要家长一同参与，无需登记）。根据 TCDSB 的时间表，St. John XXIII 学校的开放时间为周一至周四上午8:45至中午12:45，周五上午8:45至中午12:45。",
+   "note": "Drop-in restored (was a second 免费); St. John XXIII kept in English; 12:45 as 中午."
+  },
+  {
+   "id": "68c635426ffe",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "Thorncliffe Park 每年最大的社区活动，过去 14 年来一直在 R.V. Burgess Park 举行。夏日的下午和晚上，有茶点饮料、艺术和手工、音乐、舞蹈、游戏、集市摊位和当地商家提供的食物。由一个独立的志愿者委员会组织；每年约有 100 名青年参与志愿服务，培养领导能力。",
+   "note": "Neighbourhood and park names kept in English instead of transliterations."
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "为 Thorncliffe Park 和 Flemingdon Park 12 至 25 岁青少年提供的免费、保密、随到随来的服务中心（由 East Toronto Health Partners、TNO – The Neighbourhood Organization 和 Youth Wellness Hubs Ontario 共同创办；无需健康卡、家庭医生或转诊）。服务内容：身心健康咨询、物质使用（烟酒药物）支持、初级医疗、护理导航、同伴支持、就业服务、技工培训、食物银行、住房和安置帮助、教育、娱乐/社交项目、领导力培养和志愿者机会。",
+   "note": "贸易培训 (commerce training) changed to 技工培训; partner organisation names kept in English."
+  },
+  {
+   "id": "6ba3dd305d6e",
+   "source": "unityhealth.to is the homepage for Unity Health Toronto, the parent network of St. Joseph's Health Centre (30 The Queensway, 416-530-6000), St. Michael's Hospital (30 Bond St., 416-360-4000) and Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). The St. Michael's Kidney Care Centre at 45 Overlea Blvd. (416-867-3700) is a patient-centred community satellite hemodialysis facility with 21 treatment stations, 6 home-dialysis training stations and 5 exam rooms; Unity's Multi-Care Kidney Clinic offers nephrology, nursing, dietitian, pharmacist, social worker and modality-education support to slow kidney disease progression, plus peritoneal and home hemodialysis options.",
+   "text": "unityhealth.to 是 Unity Health Toronto 的主页，它是 St. Joseph's Health Centre（圣约瑟夫健康中心，30 The Queensway，416-530-6000）、St. Michael's Hospital（圣迈克尔医院，30 Bond St.，416-360-4000）和 Providence Healthcare（3276 St. Clair Ave. E.，416-285-3666）的上级医疗网络。位于 45 Overlea Blvd. 的 St. Michael's Kidney Care Centre（圣迈克尔肾病护理中心，416-867-3700）是一个以患者为中心的社区血液透析分点，拥有 21 个治疗位、6 个居家透析培训位和 5 个检查室；Unity 的 Multi-Care Kidney Clinic（肾病诊所）提供肾病科、护理、营养师、药剂师、社工以及透析方式选择教育等支持，以减缓肾病进展，并提供腹膜透析和居家血液透析选择。",
+   "note": "Hospital and clinic names kept in English; 模式教育 changed to 透析方式选择教育; 母公司 changed to 上级医疗网络."
+  },
+  {
+   "id": "7bd551d09cd0",
+   "source": "Parent handbook notes an Emergency Management Policy available on request from supervisors; no public emergency-specific community services listed.",
+   "text": "家长手册提到，可向主管索取应急管理政策（Emergency Management Policy）；未列出面向公众的紧急情况专门社区服务。",
+   "note": "'Public' now modifies the services, not the emergencies."
+  },
+  {
+   "id": "7c53a90857c2",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "为有 0-6 岁儿童的多伦多市居民及其父母/照顾者提供免费的 EarlyON 儿童和家庭中心：儿童发展支持项目、家长支持服务、入学准备项目、语言发育迟缓支持，以及提供个案管理的特殊需求服务。主要地点：TNO-Thorncliffe Park Community Hub，45 Overlea Blvd Unit 200（周一至周五上午9点至下午5点）；周五在 Jenner Jean Marie Community Centre（48 Thorncliffe Park Dr）有体育馆游戏时间。",
+   "note": "Hub and community centre names kept in English."
+  },
+  {
+   "id": "7d47cf9e0e64",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "Toronto Catholic District School Board（多伦多天主教教育局）位于 Flemingdon Park 175 Grenoble Drive 的小学（JK 至 8 年级），提供 ESL、特殊教育和 Empower Reading 阅读支持以及运动队。该建筑内还有 Red Apple Daycare（红苹果日托，提供课前和课后托管）、免费的 EarlyON 儿童和家庭中心（为 0 至 6 岁儿童和家长提供活动），以及为新移民提供支持的安置工作者办公室。",
+   "note": "Red Apple Daycare and board name kept in English; address in English order."
+  },
+  {
+   "id": "88f8e20033ec",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "拥有三个地点的持证托儿服务：206 Laird Dr（婴儿、幼儿、学前班，全年开放）；31 Rolph Rd 的 Rolph Road School 内（学前班、幼儿园、学龄儿童；为 JK-6 年级提供课前/课后 Kids Club，含作业辅导和零食，并在 PD day（教师培训日，学校停课）、圣诞假期和三月假期提供全天托管）；以及 182 Bessborough Dr 的 St. Anselm School 内（幼儿园、学龄儿童）。还举办 7 月至 8 月的夏令营（音乐、舞蹈、体育、游泳、艺术和手工）。参与 CWELCC 费用减免计划。",
+   "note": "Explained PD day (teacher training day, no school); clarified address/school wording."
+  },
+  {
+   "id": "912f65f2191e",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "Flemingdon Early Learning & Child Care Centre（地址：29 St Dennis Dr, Don Mills/Eglinton；联系人：Latoya Wilson-Rose，电话：416-392-3170）是 City of Toronto（多伦多市）一家持牌公立儿童保育中心，服务 0 至 4 岁儿童，位于 Dennis R. Timbrell Resource Centre 内。该中心参与 Canada-Wide Early Learning and Child Care（CWELCC，全加早期学习和儿童保育）系统，可申请费用补贴；员工会说 9 种语言，包括阿拉伯语、孟加拉语、法语、印地语和波斯语；餐食由外部供应，提供清真、无猪肉、无花生、纯素和素食选择。",
+   "note": "Centre names kept in English."
+  },
+  {
+   "id": "941791890d5c",
+   "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Gateway Public School 是 TDSB（多伦多公校教育局）的一所小学，服务 Flemingdon Park 初级幼儿园（JK）到 6 年级的学生（约 950 名），地址为 55 Gateway Blvd, North York。学校强调包容、多元文化的学习环境，对学业和行为有很高的期望；所获取的主页文本中没有列出法语沉浸式、ESL 或特殊教育项目。",
+   "note": "Address kept in English order (55 Gateway Blvd); school name in English."
+  },
+  {
+   "id": "95c8c42be839",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "Toronto Public Library （多伦多公共图书馆）位于 48 Thorncliffe Park Drive 的分馆。提供图书借阅、免费 Wi-Fi 、配备 Microsoft Office 的公共电脑、打印/复印/扫描、 KidsStop 幼儿早期阅读中心、青少年中心（ Youth Hub ）、 Leading to Reading 一对一儿童阅读辅导、新移民信息服务（ Newcomer Information Service ）、免费理财与报税帮助服务（ Financial Empowerment Service ）、可预订的会议室和安静的学习空间。",
+   "note": "Library and program names kept in English with glosses."
+  },
+  {
+   "id": "9aab0433db11",
+   "source": "Neighbourhood park featuring a bottle filling station providing free drinking water refills.",
+   "text": "社区公园内设有水瓶灌水站，可免费给自己的水瓶装饮用水。",
+   "note": "瓶装水补给站 (bottled-water supply) changed to bottle filling station."
+  },
+  {
+   "id": "a44c76defc5c",
+   "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
+   "text": "Thorncliffe Park Day Care Centre 自 1969 年以来一直为家庭服务，为从婴儿到 12 岁的儿童提供以游戏为基础的教育项目，包括学龄儿童项目，遵循 'How Does Learning Happen'（《学习是如何发生的》）框架。工作人员会说 11 种语言（包括乌尔都语、波斯语、旁遮普语、孟加拉语、阿姆哈拉语、他加禄语、土耳其语），餐食由 Real Food For Real Kids 餐饮公司提供；该中心参与 CWELCC 计划，可提供费用补贴信息。",
+   "note": "Centre and framework names kept in English."
+  },
+  {
+   "id": "a583aca46f5e",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "Toronto Public Library（多伦多公共图书馆）位于 29 St. Dennis Drive 的分馆：借书、公共电脑、儿童活动、儿童阅读项目 Leading to Reading，以及免费的 Financial Empowerment Service（报税、福利申请、预算帮助——Thorncliffe 分馆也提供）。开放时间：周一至周五上午9点至晚上8点30分，周六上午9点至下午5点，周日中午12点至下午5点。注意：该分馆于 2025 年 12 月 1 日关闭进行翻新，预计 2026 年第三季度初重新开放；目前列出的开放时间显示已重新开放，但前往前请先确认。",
+   "note": "下午12点 changed to 中午12点; 8:30pm as 晚上; names kept in English."
+  },
+  {
+   "id": "a5c931e58836",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.",
+   "text": "TNO Food Collaborative（TNO 食品合作计划，由 The Neighbourhood Organization 运营）为 Thorncliffe Park 和 Flemingdon Park 社区的数千名居民提供免费食品，包括新鲜农产品、鸡蛋和乳制品，每月分发两次，全年分发工作由 Greenwin Cares 等社区合作伙伴支持。",
+   "note": "Kept The Neighbourhood Organization name in English (was generic 社区组织)."
+  },
+  {
+   "id": "a6a63f0ab062",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "以 Thorncliffe Park Community Hub（45 Overlea Blvd）为基地的基层社区团体。",
+   "note": "Hub name kept in English."
+  },
+  {
+   "id": "ae69792878f8",
+   "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
+   "text": "Chapel in the Park United Church 是一个小型多元文化教会，位于 16 Thorncliffe Park Drive, Toronto（416-421-0792），服务 Thorncliffe Park 和 Don Mills 地区。每周日上午10:00 举行礼拜，可现场参加，也可通过 Zoom 或网络直播参加，欢迎新来者加入这个“信仰家庭”。",
+   "note": "Church name kept in English; address in English order."
+  },
+  {
+   "id": "b9bf5f163902",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "为 M4H 邮政编码区域的居民提供免费的综合初级医疗服务，无需健康卡或转诊，并提供口译服务。服务包括持续的初级医疗、设在学校的儿童诊所、老年人和慢性病患者的足部护理、营养咨询、社工和心理健康咨询、健康教育讲座、家庭支持，以及转介至收入支持、安置、住房、就业和语言项目。位于 Thorncliffe Park Community Hub，45 Overlea Blvd, 2nd Floor（2楼）。",
+   "note": "Hub name and address kept in English."
+  },
+  {
+   "id": "ba5f23dbc690",
+   "source": "Free EarlyON Child and Family Centre programs run by Family Day for parents and caregivers with young children, supporting early learning, child development and positive parent-child interaction through indoor, outdoor and virtual programming. The Flemingdon Park centre is at 150 Grenoble Drive (Don Mills/Overlea); the same page also lists a Grenoble EarlyON site.",
+   "text": "由 Family Day 运营的免费 EarlyON 儿童和家庭中心项目，面向有幼儿的父母和照顾者，通过室内、户外和线上活动支持早期学习、儿童发展和积极的亲子互动。Flemingdon Park 中心位于 150 Grenoble Drive（Don Mills/Overlea）；同一页面还列出了 Grenoble EarlyON 地点。",
+   "note": "家庭日 (the holiday) replaced by the operator name Family Day in English."
+  },
+  {
+   "id": "c04bdbce2472",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "Leaside Park（靠近 Millwood Road 和 Overlea Boulevard）有 1 个饮水喷泉和 2 个水瓶灌水站，提供公共饮用水。这个占地 3.4 公顷的公园还有一个带灯光的棒球场、六个带灯光的网球场、一个多功能运动场、一个儿童游乐场、一个社区花园、洗手间和 Leaside Outdoor Pool（户外游泳池）。",
+   "note": "Park and pool names kept in English; fountain/bottle-filling terms fixed."
+  },
+  {
+   "id": "c0b5b18276a1",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "位于 10 Gateway Blvd（地下室），North York 的社区食物银行，为有需要的家庭提供免费食品和资源；现已注册为慈善机构。网站列出的时间不一致（一处写周一和周三上午11:00至下午3:30，另一处写周一至周四下午1:30至3:30）——前往前请致电 416-422-4322 确认。",
+   "note": "North York kept in English."
+  },
+  {
+   "id": "c6efc2c01c02",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "位于 16 Thorncliffe Park Drive 的罗马天主教堂区，提供定期弥撒、圣事和堂区活动。为家庭介绍 Archdiocese of Toronto（多伦多总教区）各堂区举办的儿童和青少年夏令营。",
+   "note": "Archdiocese name kept in English."
+  },
+  {
+   "id": "dd60669c88d7",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "位于 45 Overlea Blvd 的社区购物中心，有零售商店、餐厅和日常服务（超市、银行、药房/化验室、健身房、理发店）。商场内还有社区服务机构，如 Afghan Women's Organization（阿富汗妇女组织）、Don Valley Community Legal Services（法律服务）和 Health Access Thorncliffe Park（健康服务）。",
+   "note": "Organisation names kept in English with glosses."
+  },
+  {
+   "id": "dddae32defdd",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "伊斯玛仪派社区中心和祈祷厅（Jamatkhana），位于 Thorncliffe Park 的 80 Overlea Boulevard。为伊斯玛仪派穆斯林举办每日集体祈祷和社区聚会；建筑内有体育馆、图书馆、教室、办公室和食品捐赠投放区。",
+   "note": "Neighbourhood name kept in English (was a different transliteration)."
+  },
+  {
+   "id": "de5580650854",
+   "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
+   "text": "Fraser Mustard EarlyON Child and Family Centre（位于 Fraser Mustard Early Learning Academy，地址：82 Thorncliffe Park Dr, East York；电话：416-394-2104）是一个免费、随到随参加的项目，面向有婴儿至 6 岁儿童的家长和照顾者，开放时间为周一至周四上午8:45至下午1:45。孩子们可以玩耍、探索、学习并享用营养点心，家长可以结识其他家庭、了解社区项目和服务信息，由合格的幼儿教育专业人员提供支持；无需预先登记。",
+   "note": "落地项目 (meaningless) changed to 随到随参加 (drop-in); names kept in English."
+  },
+  {
+   "id": "e0aa03a9fd6a",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "位于 6 Sakura Way 的日本文化中心，向所有人开放，提供文化课程（插花 ikebana、茶道 chado、书法 shodo、水墨画 sumi-e、太鼓 taiko、日本筝 koto）、武术（柔道、空手道、剑道、合气道、弓道、居合道、薙刀 naginata、杖道）、成人日语课程、俱乐部（卡拉 OK、夏威夷草裙舞、舞蹈、老年人俱乐部、乒乓球）、季节性节日、Toronto Japanese Film Festival（多伦多日本电影节）、展览，以及 Moriyama Nikkei Heritage Centre（日裔传统中心）。",
+   "note": "琴 changed to 日本筝 (koto); 长刀道 to 薙刀; festival and heritage centre names kept in English."
+  },
+  {
+   "id": "e6b5bb4495c9",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "TNO 在 Thorncliffe Park Community Hub（45 Overlea Blvd, Unit 200）开办的免费 Employment Ontario（安大略就业服务）项目，面向所有安大略省居民。提供职业探索、培训需求评估、求职和保住工作的技能、招聘活动、信息讲座、工作坊和一对一职业支持，并为雇主免费提供人力资源、新员工入职和职位发布方面的帮助。",
+   "note": "Employment Ontario and hub names kept in English."
+  },
+  {
+   "id": "e84d3a5ba49c",
+   "source": "The Leaside Towers Tenants Association page for 85 & 95 Thorncliffe Park Drive functions as a contact directory for residents: property manager (Morguard) at 416-421-8109 and building security guards (Building 85: 647-462-0404; Building 95: 416-906-7970).",
+   "text": "Leaside Towers Tenants Association（租户协会）关于 85 & 95 Thorncliffe Park Drive 的页面为居民提供联系方式：物业管理公司（Morguard）电话 416-421-8109；楼栋保安电话：85 号楼 647-462-0404，95 号楼 416-906-7970。",
+   "note": "Address kept in English order; association name in English."
+  },
+  {
+   "id": "ea49f2274ddf",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "Don Mills 的天主教堂区（150 Gateway Blvd），提供每日和每周弥撒、圣事（洗礼、和好圣事、圣体圣事、坚振、婚配、病人傅油、葬礼）、各类服务事工、青少年和青年事工、志愿者机会以及堂区社区活动。",
+   "note": "Don Mills kept in English; standard Catholic sacrament terms."
+  },
+  {
+   "id": "ebed9e902f38",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "一个由居民主导的团体，通过聚会、文化庆祝活动、教育和志愿者活动，把不同背景的家庭聚在一起。旨在消除社会孤立和孤独感，并通过积极参与 Gateway Public School、Valley Park Middle School 和 Marc Garneau Collegiate Institute 的家长委员会来支持孩子的教育。",
+   "note": "School names kept fully in English."
+  },
+  {
+   "id": "ef9e53e990a8",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "耶稣基督后期圣徒教会位于 24 Ferrand Drive, North York 的当地会众。周日礼拜包括圣餐聚会，以及为 18 个月大及以上所有年龄段开设的分班课程；欢迎所有人参加。",
+   "note": "Address kept in English order (24 Ferrand Drive)."
+  },
+  {
+   "id": "f0b67cd7ba77",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "Leonard Linton Park 位于 135 Vanderhoof Ave；市政府的设施清单显示，公园内有一个水瓶灌水站。无法获取完整的设施清单。",
+   "note": "饮水瓶装水站 (garbled) changed to 水瓶灌水站; park name in English."
+  },
+  {
+   "id": "fa4e99c2c2ea",
+   "source": "Government Documentation",
+   "text": "政府证件办理",
+   "note": "政府文件 (government files) changed to 政府证件办理 (getting ID documents)."
+  },
+  {
+   "id": "ff411a340bcb",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "由自闭症儿童家长于 2018 年创办的基层非营利组织（2020 年注册），为 East York 地区患有自闭症及其他神经发育障碍的儿童和青少年提供免费、以社区为基础、以家庭为中心的服务。项目包括周一至周六开展的 Roots 青年项目、周末喘息照护（让家长休息）、每月家长支持聚会、课后作业辅导、免费的包容性暑期营和三月假期营、返校活动、教育讲座以及自闭症/残障意识宣传活动。",
+   "note": "周末休息 (closed on weekends) changed to 周末喘息照护 (weekend respite care); East York in English."
+  },
+  {
+   "id": "9229c66e10d7",
+   "source": "Large public park adjoining Thorncliffe Park with an 18-hole disc golf course, a public archery range, jogging and cycling paths, nature trails, picnic shelters and fire pits. The drinking fountain provides free drinking water (seasonal; closed in winter).",
+   "text": "一个大型公共公园，毗邻 Thorncliffe Park，有 18 洞飞盘高尔夫球场、公共射箭场、慢跑和自行车道、自然步道、野餐亭和火坑。饮水喷泉提供免费饮用水（季节性开放；冬季关闭）。",
+   "note": "饮水机 changed to 饮水喷泉 (outdoor drinking fountain) for consistency."
+  },
+  {
+   "id": "0761f94fde45",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "该中心的页面上有一个“遇到危机？点击这里”的链接，并列出了本地危机支援服务：Kids Help Phone （儿童及青少年求助热线） 1-800-668-6868，Talk Suicide Canada （加拿大自杀预防热线） 1-833-456-4566，Distress Centres of Greater Toronto （大多伦多危机援助中心） 416-408-4357，Gerstein Crisis Centre （心理危机中心） 416-929-5200，Anishnawbe Health Toronto Mental Health Crisis Management Service （心理健康危机处理服务） 1-855-242-3310，Naseeha Mental Health Hotline （心理健康热线） 1-866-627-3342，Youthdale Treatment Centres Crisis & Mobile Support Team （危机及流动支援小组） 416-363-9990，Scarborough Health Network Community Crisis Line （社区危机热线） 416-495-2891，Assaulted Women's Helpline （受虐妇女求助热线） 416-863-0511，Toronto Rape Crisis Centre （强奸危机中心） 416-597-8808，以及 Michael Garron Hospital Emergency Department （医院急诊科）（825 Coxwell Ave.）。指定避暑降温场所：在极端高温警告/警报期间，提供有空调的室内场所，帮助人们避暑降温。",
+   "note": "crisis-lines review: All hotline/organisation names restored to English (were translated into Chinese) with Chinese glosses; cooling-space sentence unchanged in meaning."
+  }
+ ]
+}

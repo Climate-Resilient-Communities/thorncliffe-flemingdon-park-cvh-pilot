@@ -1,0 +1,252 @@
+{
+ "language": "ta",
+ "corrector": "Claude subagent, 2026-10-01 (not native; needs native review)",
+ "corrections": [
+  {
+   "id": "d2f11cfaf201",
+   "source": "Midwives Clinic",
+   "text": "மருத்துவச்சிகள் சிகிச்சையகம் (Midwives Clinic)",
+   "note": "Was 'பார்வையாளர் மருத்துவமனை' (visitors' hospital); now 'midwives clinic'."
+  },
+  {
+   "id": "929cea5641e3",
+   "source": "Neighbourhood & Individual Empowerment",
+   "text": "சுற்றுப்புறம் மற்றும் தனிநபர் வலுவூட்டல்",
+   "note": "Was 'neighbour support and individual development'; now 'neighbourhood and individual empowerment'."
+  },
+  {
+   "id": "235e1072c4f3",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "ஃபிளெமிங்டன் பார்க்கில் உள்ள 150 Grenoble Drive முகவரியில் அமைந்துள்ள நகர சமூக மையத்தில் Playground Paradise என்ற உட்புற விளையாட்டு மைதானம் உள்ளது (12 வயது வரையிலான குழந்தைகள் முன்பதிவு இல்லாமல் வந்து விளையாடலாம், ஒரு குழந்தைக்கு $3 கட்டணம், காலுறைகள் அணிய வேண்டும், பெற்றோர் அல்லது பாதுகாவலர் உடன் வர வேண்டும்). இங்கு உட்புற மற்றும் வெளிப்புற விளையாட்டு மைதானங்கள், சுற்றுலா மற்றும் உணவருந்தும் இடம் (picnic area), நீர் விளையாட்டு பகுதி (splash pad), சமூகத் தோட்டம், பல்நோக்கு விளையாட்டு மைதானங்கள், பேஸ்பால் மைதானங்கள் மற்றும் பால் ஹாக்கி மற்றும் கூடைப்பந்து மைதானங்கள் உள்ளன. இதே முகவரியில் Flemingdon Park EarlyON செயல்படுகிறது; இது சிறு குழந்தைகள் மற்றும் குடும்பங்களுக்கான, முன்பதிவு இல்லாமல் வந்து கலந்துகொள்ளக்கூடிய இலவச நிகழ்ச்சிகளை வழங்குகிறது.",
+   "note": "'drop-in' had been translated as 'free', which contradicted the $3 fee; now 'no booking needed'. Address and program names put back in English."
+  },
+  {
+   "id": "c0b5b18276a1",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "North York-இல் உள்ள 10 Gateway Blvd (அடித்தளம் / basement) முகவரியில் இயங்கும் சமூக உணவு வங்கி, தேவையுள்ள குடும்பங்களுக்கு இலவச உணவு மற்றும் உதவிகளைக் வழங்குகிறது; இது தற்போது ஒரு பதிவு செய்யப்பட்ட தொண்டு நிறுவனமாகும். இந்த இடத்திற்கான வேலை நேரங்கள் முரணாகக் குறிப்பிடப்பட்டுள்ளன (ஒரு இடத்தில் திங்கள் மற்றும் புதன்கிழமைகளில் காலை 11:00 முதல் மாலை 3:30 வரை என்றும், மற்றொரு இடத்தில் திங்கள் முதல் வியாழன் வரை மதியம் 1:30 முதல் மாலை 3:30 வரை என்றும் குறிப்பிடப்பட்டுள்ளது) - அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக்கொள்ள 416-422-4322 என்ற எண்ணிற்கு அழைக்கவும்.",
+   "note": "'basement' had been translated as 'ground floor'; also North York in English."
+  },
+  {
+   "id": "2de0ec486420",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "toronto.ca பக்கம் குறிப்பாக Flemingdon Park-இல் (Don Mills Rd மற்றும் Eglinton Ave E அருகில்) உள்ள குடிநீர் ஊற்று வசதிக்காக உருவாக்கப்பட்டது. இந்த 13.3 ஹெக்டேர் பரப்பளவு கொண்ட பூங்காவின் அதிகாரப்பூர்வ வசதிகளில் இந்த நீரூற்றும் ஒன்றாகும்; இங்கு பேஸ்பால் மைதானங்கள், பால் ஹாக்கி களம், கிரிக்கெட் மைதானம், பல்நோக்கு விளையாட்டு மைதானம், 4 வெளிப்புற கூடைப்பந்து மைதானங்கள், வெளிப்புற ஓட்டப்பாதைகள், 4 விளையாட்டு மைதானங்கள் (விளையாட்டு மைதானம் 2025-இல் புதுப்பிக்கப்பட்டது), நீர் விளையாட்டு மையம் (splash pad), சமூகத் தோட்டம், 6 சுற்றுலா நிழற்குடைகள், விளையாட்டு மைதானங்கள் மற்றும் வாகன நிறுத்துமிடங்கள் உள்ளன.",
+   "note": "'ball diamonds' had been translated as basketball courts; now baseball diamonds. Park and street names in English."
+  },
+  {
+   "id": "c04bdbce2472",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "Leaside Park (Millwood Road மற்றும் Overlea Boulevard அருகில்) ஒரு குடிநீர் ஊற்று மற்றும் 2 பாட்டில் நிரப்பும் நிலையங்கள் மூலம் பொதுமக்களுக்கான குடிநீரை வழங்குகிறது. 3.4 ஹெக்டேர் பரப்பளவு கொண்ட இந்தப் பூங்காவில் மின்விளக்கு வசதி கொண்ட ஒரு பேஸ்பால் மைதானம், ஆறு மின்விளக்கு வசதி கொண்ட டென்னிஸ் மைதானங்கள், பல்நோக்கு விளையாட்டு மைதானம், குழந்தைகளுக்கான விளையாட்டு பூங்கா, சமூகத் தோட்டம், கழிப்பறைகள் மற்றும் Leaside Outdoor Pool (வெளிப்புற நீச்சல் குளம்) ஆகியவை உள்ளன.",
+   "note": "'lit ball diamond' had been translated as a cricket ground; now baseball. Park, street and pool names in English."
+  },
+  {
+   "id": "ff411a340bcb",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "சமூக அடிமட்டத்தில் உருவான இலாப நோக்கற்ற அமைப்பு (2018-இல் ஆட்டிசம் பாதித்த குழந்தைகளின் பெற்றோர்களால் தொடங்கப்பட்டது, 2020-இல் பதிவு செய்யப்பட்டது), ஈஸ்ட் யார்க் (East York) பகுதியில் ஆட்டிசம் மற்றும் பிற நரம்பியல் வளர்ச்சிக் குறைபாடுகள் உள்ள குழந்தைகள் மற்றும் இளைஞர்களுக்கு இலவசமாக, சமூக அடிப்படையிலான, குடும்பத்தினருக்கான சேவைகளை வழங்குகிறது. இதன் திட்டங்களில் திங்கள் முதல் சனிக்கிழமை வரை நடைபெறும் 'ரூட்ஸ்' (Roots) இளைஞர் திட்டங்கள், வார இறுதி ஓய்வு மற்றும் பராமரிப்பு சேவை, மாதந்தோறும் நடைபெறும் பெற்றோர் ஆதரவு கூட்டங்கள், பள்ளி முடிந்த பிறகு வீட்டுப் பாட உதவி, இலவச உள்ளடக்கிய கோடைக்கால மற்றும் மார்ச் விடுமுறை முகாம்கள், பள்ளித் தொடக்க நிகழ்வுகள், கல்வி பயிலரங்குகள் மற்றும் ஆட்டிசம்/மாற்றுத்திறனாளிகள் குறித்த விழிப்புணர்வுப் பிரச்சாரங்கள் ஆகியவை அடங்கும்.",
+   "note": "'Grassroots' had been presented as the organisation's name; it describes the group."
+  },
+  {
+   "id": "1517bf8b7dbd",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "பல சேவைகளை ஒரே இடத்தில் வழங்கும் சமூக மையம் (community hub), 45 Overlea Blvd, 2nd Floor (2-வது மாடி, East York Town Centre உள்ளே); திங்கள் முதல் ஞாயிறு வரை காலை 8:00 மணி முதல் மாலை 8:00 மணி வரை திறந்திருக்கும். பங்குதாரர் அமைப்புகளின் சுகாதாரம் மற்றும் சமூக சேவைகள், நிகழ்ச்சிகள் மற்றும் சமூக இடங்களைக் குடியிருப்பாளர்கள் ஒரே இடத்தில் அணுகலாம்.",
+   "note": "Added the missing 'multi-service community hub' and 'open'; address back in English; 'citizens' corrected to 'residents'."
+  },
+  {
+   "id": "88f8e20033ec",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "அங்கீகரிக்கப்பட்ட குழந்தைப் பராமரிப்பு மையம், மூன்று இடங்களில் இயங்குகிறது: 206 Laird Dr (குழந்தைகள், சிறு குழந்தைகள், முன்பள்ளி, ஆண்டு முழுவதும் இயங்கும்), 31 Rolph Rd, Rolph Road School வளாகம் (முன்பள்ளி, மழலையர் பள்ளி (kindergarten), பள்ளி வயது குழந்தைகள்; JK முதல் 6-ஆம் வகுப்பு வரையிலான மாணவர்களுக்கான பள்ளி நேரத்திற்கு முந்தைய மற்றும் பிந்தைய 'Kids Club' வசதி, இதில் வீட்டுப் பாட உதவி, சிற்றுண்டி மற்றும் முழு நாள் PD விடுமுறை/கிறிஸ்துமஸ்/மார்ச் விடுமுறை காலப் பராமரிப்பு ஆகியவை உண்டு), மற்றும் 182 Bessborough Dr, St. Anselm School வளாகம் (மழலையர் பள்ளி (kindergarten), பள்ளி வயது குழந்தைகள்). மேலும், ஜூலை-ஆகஸ்ட் மாதங்களில் கோடைக்கால முகாம் (இசை, நடனம், விளையாட்டு, நீச்சல், கைவினைத் தொழில்கள்) நடத்தப்படுகிறது. CWELCC கட்டணக் குறைப்புத் திட்டத்தில் இதுவும் இணைக்கப்பட்டுள்ளது.",
+   "note": "'kindergarten' had been translated as 'primary school'; program and school names in English."
+  },
+  {
+   "id": "ef9e53e990a8",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "North York-இல் உள்ள 24 Ferrand Drive-இல் அமைந்துள்ள The Church of Jesus Christ of Latter-day Saints உள்ளூர் சபை. ஞாயிற்றுக்கிழமை வழிபாட்டில் திருவிருந்துக் கூட்டம் (sacrament meeting) மற்றும் 18 மாதங்கள் முதல் அனைத்து வயதினருக்கும் ஏற்ற வயதுக்குரிய வகுப்புகள் இடம்பெறுகின்றன; அனைவரும் இதில் கலந்துகொள்ள வரவேற்கப்படுகிறார்கள்.",
+   "note": "Removed the invented bread-and-wine detail; church name and North York in English."
+  },
+  {
+   "id": "32dfa11d6223",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Thorncliffe Park, Flemingdon Park, St. James Town மற்றும் Taylor Massey பகுதிகளில் சேவை வழங்கும் பன்முக சேவை குடியேற்ற மையம். இதில் குடியேற்ற ஆதரவு (தேவைகள் மதிப்பீடு, கனடா/ஒன்டாரியோ வாழ்க்கை குறித்த வழிகாட்டுதல், குடியுரிமை தயாரிப்பு வகுப்புகள், குடிவரவு படிவங்களுக்கான உதவி), வீட்டுவசதி உதவி (வீடு தேடுதல், மானிய வீடுகளுக்கான விண்ணப்பங்கள், ரென்ட் பேங்க் (Rent Bank) வசதி, மின்சாரக் கட்டண உதவி), முதியோர் திட்டங்கள் (Integrated Services for Seniors (முதியோருக்கான ஒருங்கிணைந்த சேவைகள்), தனிநபர் ஆதரவு சேவைகள்), இளைஞர் திட்டங்கள் (உதாரணமாக, பள்ளி முடிந்த பிறகான பெண்களுக்கான திட்டங்கள்), வேலைவாய்ப்பு சேவைகள், மொழிப் பயிற்சி மற்றும் பெண்களுக்கு எதிரான வன்முறை குறித்த ஆலோசனை ஆகியவை அடங்கும். இலவச சேவை; தொலைபேசியில் தொடர்பு கொள்ளவும் அல்லது நேரடியாக வந்து சந்திக்கவும்.",
+   "note": "Fixed 'Thorcliffe' misspelling; program name in English."
+  },
+  {
+   "id": "e6b5bb4495c9",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "Thorncliffe Park Community Hub-இல் (45 Overlea Blvd, Unit 200) TNO-வின் இலவச Employment Ontario திட்டம் அனைத்து ஒன்டாரியோ குடியிருப்பாளர்களுக்கும் திறந்திருக்கும். இதன் மூலம் தொழில் வாய்ப்புகளை ஆராய்தல், பயிற்சித் தேவைகளை மதிப்பீடு செய்தல், வேலை தேடுதல் மற்றும் வேலையைத் தக்கவைத்துக் கொள்ளும் திறன்கள், வேலைவாய்ப்பு முகாம்கள், தகவல் அமர்வுகள், பயிற்சிப் பட்டறைகள் மற்றும் தனிப்பட்ட தொழில் வழிகாட்டுதல் ஆகியவை வழங்கப்படுகின்றன. மேலும், வேலை வழங்குநர்களுக்கு மனிதவள மேலாண்மை (HR), பணியாளர்களை இணைத்தல் மற்றும் வேலை விளம்பரங்கள் பதிவேற்றம் செய்வதற்கான இலவச உதவியும் கிடைக்கும்.",
+   "note": "Fixed 'Thorcliffe' misspelling; hub name in English as in source."
+  },
+  {
+   "id": "0b810534f69d",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "TNO Food Collaborative (The Neighbourhood Organization அமைப்பால் நடத்தப்படுகிறது) தோர்ன்கிளிஃப் பார்க் மற்றும் ஃபிளெமிங்டன் பார்க் சமூகங்களைச் சேர்ந்த ஆயிரக்கணக்கான நபர்களுக்கு இலவச உணவு வசதியை வழங்குகிறது; இதில் புதிய காய்கறிகள், முட்டைகள் மற்றும் பால் பொருட்கள் மாதம் இருமுறை விநியோகிக்கப்படுகின்றன. மேலும், Greenwin Cares போன்ற சமூகக் கூட்டாளிகளின் ஆதரவுடன் ஆண்டு முழுவதும் உணவு விநியோகம் நடைபெறுகிறது.\n\nதோர்ன்கிளிஃப் பார்க், ஃபிளெமிங்டன் பார்க், செயின்ட் ஜேம்ஸ் டவுன் மற்றும் டெய்லர் மெசி ஆகிய பகுதிகளுக்கு சேவை வழங்கும் பன்முக குடியேற்ற உதவி மையம். இங்கு வழங்கப்படும் சேவைகளில் குடியேற்ற ஆதரவு (தேவைகளைக் கண்டறிதல், கனடா/ஒன்டாரியோ வாழ்க்கை முறை பற்றிய அறிமுகம், குடியுரிமை தயாரிப்பு வகுப்புகள், குடிவரவு படிவங்களுக்கான உதவி), வீட்டுவசதி உதவி (வீடு தேடுதல், மானிய வீடுகளுக்கான விண்ணப்பங்கள், Rent Bank வசதி, மின்சாரக் கட்டண உதவி), முதியோர் திட்டங்கள் (Integrated Services for Seniors (முதியோருக்கான ஒருங்கிணைந்த சேவைகள்), தனிநபர் பராமரிப்பு சேவைகள்), இளைஞர் திட்டங்கள் (உதாரணமாக, பள்ளி முடிந்த பிறகு பெண்களுக்கான திட்டங்கள்), வேலைவாய்ப்பு சேவைகள், மொழிப் பயிற்சி மற்றும் பெண்களுக்கு எதிரான வன்முறை தொடர்பான ஆலோசனை ஆகியவை அடங்கும். இலவச சேவை; தொலைபேசியில் அழைக்கவும் அல்லது நேரடியாக வந்து அணுகவும்.",
+   "note": "Program names (Rent Bank, Integrated Services for Seniors) in English."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "தேவையுள்ள குடும்பங்களுக்கான அவசர உணவு உதவி (மாதம் இருமுறை இலவச உணவு விநியோகம்). Food Collaborative அமைப்பின் சார்பாக தங்குமிடம், குளிர்சாதன வசதி கொண்ட பாதுகாப்பு மையங்கள் அல்லது அவசர உதவி தொலைபேசி சேவைகள் எதுவும் இருப்பதாக உறுதிப்படுத்தப்படவில்லை.",
+   "note": "Said 'confirmed there are none'; source says none were confirmed."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "தேவையுள்ள குடும்பங்களுக்கான அவசர உணவு உதவி (மாதம் இருமுறை இலவச உணவு விநியோகம்). Food Collaborative அமைப்பின் கீழ் தங்குமிடம், குளிர்சாதன வசதி கொண்ட பாதுகாப்பு மையம் அல்லது அவசர உதவி தொலைபேசி சேவைகள் எதுவும் இருப்பதாக உறுதிப்படுத்தப்படவில்லை. பெண்களுக்கு எதிரான வன்முறை தடுப்புத் திட்டத்தின் மூலம் அவசர கால தலையீடு மற்றும் ஆலோசனை சேவைகளை வழங்குகிறது; டொராண்டோ ரென்ட் பேங்க் (Toronto Rent Bank) உதவி மையமாகவும், அவசர மின் ஆற்றல் நிதி உதவி அழைப்பு மையமாகவும் (416-397-7368) செயல்படுகிறது.",
+   "note": "Said 'there are none'; source says none were confirmed."
+  },
+  {
+   "id": "1538ea5a988e",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "St. Michael's Hospital-இல் அவசர சிகிச்சைப் பிரிவு செயல்படுகிறது (30 Bond St.); Unity Health-இன் MyChart மற்றும் மருத்துவமனை தொலைபேசி எண்கள் கொடுக்கப்பட்டுள்ளன. சிறுநீரக சிகிச்சை மையத்திற்கென பிரத்யேக அவசர சிகிச்சை சேவைகள் எதுவும் கண்டறியப்படவில்லை — மருத்துவ அவசரநிலை ஏற்பட்டால் 911-க்கு அழையுங்கள்.",
+   "note": "Hospital, network and address back in English; 'none exist' changed to 'none found'."
+  },
+  {
+   "id": "57480d0bcd4e",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "பனிக்கட்டி ஸ்கேட்டிங் மற்றும் ஹாக்கி நிகழ்ச்சிகளுக்கான நகர அரீனா (ice arena), 165 Grenoble Dr முகவரியில் உள்ளது (கனடிய ஹாக்கி நட்சத்திரமான Angela James-ஐ கௌரவிக்கும் வகையில் 2009-இல் அவர் பெயர் சூட்டப்பட்டது); அதன் அருகில் பொது டென்னிஸ் மைதானங்களும் உள்ளன. குறிப்பு: 165 Grenoble Dr-இல் புதிய Flemingdon தீயணைப்பு நிலையத்தை அமைக்கும் திட்டத்தை நகர நிர்வாகம் (2026-இல்) அறிவித்துள்ளது; இதனால் நான்கு டென்னிஸ் மைதானங்களில் இரண்டு நீக்கப்படக்கூடும் — இதன் தற்போதைய நிலை உறுதியாகத் தெரியவில்லை.",
+   "note": "'in memory of' (implies she died) changed to 'in honour of'; 'City arena' no longer reads as a proper name; address in English; 'would remove' kept conditional."
+  },
+  {
+   "id": "dddae32defdd",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "தோர்ன்கிளிஃப் பார்க்கில் உள்ள 80 Overlea Boulevard-இல் அமைந்துள்ள இஸ்மாயிலி சமூக மையம் மற்றும் தொழுகை மண்டபம் (ஜமாத்கானா). இஸ்மாயிலி முஸ்லிம்களுக்கான தினசரி கூட்டுத் தொழுகைகள் மற்றும் சமூகக் கூட்டங்களை இங்கு நடத்துகிறார்கள்; இந்தக் கட்டிடத்தில் உடற்பயிற்சி கூடம், நூலகம், வகுப்பறைகள், அலுவலகங்கள் மற்றும் உணவுப் பொருட்களைக் கொண்டுவந்து ஒப்படைக்கும் (drop-off) பகுதி உள்ளன.",
+   "note": "'food drop-off' had been translated as 'food distribution'; address in English."
+  },
+  {
+   "id": "c6efc2c01c02",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "16 Thorncliffe Park Drive-இல் அமைந்துள்ள ரோமன் கத்தோலிக்க பங்குத் தேவாலயம். இங்கு வழக்கமான திருப்பலிகள், திருச்சடங்குகள் மற்றும் பங்கு நிகழ்வுகள் நடைபெறுகின்றன. Archdiocese of Toronto-வின் (டொரண்டோ பேராயம்) பல்வேறு பங்குகளில் குழந்தைகள் மற்றும் இளைஞர்களுக்காக வழங்கப்படும் கோடைக்கால முகாம் வாய்ப்புகளை குடும்பங்களுக்கு இது அறிமுகப்படுத்துகிறது.",
+   "note": "'திருப்பீடம்' (Holy See) replaced with 'பங்கு' (parish); Archdiocese name in English."
+  },
+  {
+   "id": "ea49f2274ddf",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "டான் மில்ஸில் (150 Gateway Blvd) உள்ள கத்தோலிக்க பங்குத் தேவாலயம், தினசரி மற்றும் வாராந்திர திருப்பலிகள், திருச்சடங்குகள் (ஞானஸ்நானம், மனமாற்ற ஒப்புரவு, நற்கருணை, உறுதிப்படுத்துதல், திருமணம், நோயாளிகளுக்கு அபிஷேகம், இறுதிச் சடங்குகள்), சேவைப் பணிகள், இளைஞர் மற்றும் இளம் பெரியோர் சேவை, தன்னார்வ வாய்ப்புகள் மற்றும் பங்கு சமூக நிகழ்வுகளை வழங்குகிறது.",
+   "note": "'திருப்பீடம்' (Holy See) replaced with 'பங்கு' (parish)."
+  },
+  {
+   "id": "ebed9e902f38",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "பல்வேறு பின்னணிகளைச் சேர்ந்த குடும்பங்களை ஒன்றிணைக்கும் ஒரு குடியிருப்புவாசிகளின் குழு; இது கூட்டங்கள், கலாச்சாரக் கொண்டாட்டங்கள், கல்வி மற்றும் தன்னார்வத் திட்டங்கள் மூலம் இதைச் செய்கிறது. சமூகத் தனிமைப்படுத்தல் மற்றும் தனிமை உணர்வை நீக்குவதை நோக்கமாகக் கொண்டுள்ள இக்குழு, Gateway Public School, Valley Park Middle School மற்றும் Marc Garneau Collegiate Institute ஆகிய பள்ளிகளின் பெற்றோர் குழுக்களில் தீவிரமாகப் பங்கேற்று குழந்தைகளின் கல்விக்கு ஆதரவளிக்கிறது.",
+   "note": "'loneliness' had been translated as 'depression'."
+  },
+  {
+   "id": "a583aca46f5e",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "29 St. Dennis Drive-ல் உள்ள Toronto Public Library கிளை: புத்தகங்கள் இரவல் பெறுதல், பொதுக் கணினிகள், குழந்தைகளுக்கான நிகழ்ச்சிகள், குழந்தைகளுக்கான 'Leading to Reading' கல்வியறிவுத் திட்டம் மற்றும் இலவச Financial Empowerment Service எனும் நிதி மேம்பாட்டு சேவை (வரி தாக்கல் செய்தல், உதவித்தொகை விண்ணப்பங்கள், பட்ஜெட் திட்டமிடல் உதவி — இவை Thorncliffe கிளையிலும் கிடைக்கின்றன). வேலை நேரம்: திங்கள் முதல் வெள்ளி வரை காலை 9 மணி முதல் இரவு 8:30 மணி வரை, சனிக்கிழமை காலை 9 மணி முதல் மாலை 5 மணி வரை, ஞாயிற்றுக்கிழமை மதியம் 12 மணி முதல் மாலை 5 மணி வரை. குறிப்பு: புதுப்பிப்பு பணிகளுக்காக இந்தக் கிளை டிசம்பர் 1, 2025 அன்று மூடப்பட்டது; 2026-ஆம் ஆண்டின் மூன்றாம் காலாண்டின் தொடக்கத்தில் மீண்டும் திறக்கப்படும் என எதிர்பார்க்கப்படுகிறது. தற்போதைய தகவல்களில் அது மீண்டும் திறக்கப்பட்டதாகக் குறிப்பிடப்பட்டுள்ளது, இருப்பினும் அங்கு செல்வதற்கு முன் உறுதிப்படுத்திக் கொள்ளுங்கள்.",
+   "note": "Closure was in future tense ('will close'); now past. Library and service names in English."
+  },
+  {
+   "id": "313e1f70434b",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "R.V. Burgess Park பூங்காவை மீண்டும் புத்துயிர் பெறச் செய்த, சாதாரண பெண்களால் உருவாக்கப்பட்ட ஒரு சமூக அமைப்பு. இவர்கள் சமூகத் தோட்டம், பூங்கா கஃபே, நீரூற்று விளையாட்டுப் பகுதி, அமரும் இடங்கள், மின்விளக்குகள் மற்றும் வட அமெரிக்க பொதுப் பூங்காக்களிலேயே ஒரே ஒரு வெளிப்புற டாண்டூர் அடுப்பு போன்ற வசதிகளை உருவாக்கியுள்ளனர். தோர்ன்கிளிஃப் பார்க் (Thorncliffe Park) பகுதியில் சமூக மேம்பாடு மற்றும் பல கலாச்சாரங்களுக்கு இடையிலான ஒற்றுமைக்கான பணிகளில் இவ்வமைப்பு கவனம் செலுத்துகிறது.",
+   "note": "Thorncliffe Park (neighbourhood) had been translated as 'Thorncliffe park'; park name in English."
+  },
+  {
+   "id": "4341d8807857",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "toronto.ca பக்கம், R.V. Burgess Park பூங்காவில் (46 Thorncliffe Park Dr, Thorncliffe Park Dr மற்றும் Overlea Blvd அருகில்) உள்ள குடிநீர் ஊற்று வசதிக்காகவே உருவாக்கப்பட்டது. இந்த 1.5 ஹெக்டேர் பரப்பளவு கொண்ட சுற்றுப்புறப் பூங்காவின் அதிகாரப்பூர்வ வசதிகளில் இந்த நீரூற்றும் ஒன்றாக இடம்பெற்றுள்ளது. இங்கே நீர் விளையாட்டுப் பகுதி, இரண்டு விளையாட்டு மைதானங்கள், ஒரு சமூகத் தோட்டம், கூரை வசதி கொண்ட சுற்றுலா மற்றும் உணவருந்தும் பகுதி மற்றும் கனடாவின் முதல் பொதுத் தந்தூர் அடுப்பு ஆகியவையும் உள்ளன; மேலும் இங்கு குடிநீர் வசதிகள் இருப்பதாகப் பார்வையாளர்கள் குறிப்பிட்டுள்ளனர்.",
+   "note": "Park name in English."
+  },
+  {
+   "id": "68c635426ffe",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "தோர்ன்கிளிஃப் பார்க்கின் மிகப்பெரிய ஆண்டு சமூக நிகழ்வு, இது கடந்த 14 ஆண்டுகளாக R.V. Burgess Park பூங்காவில் நடைபெற்று வருகிறது. சிற்றுண்டிகள், கைவினைப் பொருட்கள், இசை, நடனம், விளையாட்டுகள், விற்பனை அரங்குகள் மற்றும் உள்ளூர் வணிகங்களின் உணவுகளுடன் கூடிய ஒரு கோடைக்கால மதிய மற்றும் மாலை நேர நிகழ்வு. ஒரு சுதந்திரமான தன்னார்வலர் குழுவால் ஏற்பாடு செய்யப்படுகிறது; ஒவ்வொரு ஆண்டும் சுமார் 100 இளைஞர்கள் தன்னார்வலர்களாகப் பங்கேற்று, தலைமைத்துவத் திறன்களை வளர்த்துக் கொள்கிறார்கள்.",
+   "note": "Park name in English."
+  },
+  {
+   "id": "67d4ed5dfe5d",
+   "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
+   "text": "20 Overlea Blvd-இல் அமைந்துள்ள Masjid Darus Salaam (மஸ்ஜித் தாருஸ் ஸலாம்), 1995 முதல் Thorncliffe Park, Flemingdon Park மற்றும் அதைச் சுற்றியுள்ள முஸ்லிம் சமூகத்தினருக்கு சேவை செய்து வருகிறது. இங்கு ஐந்து நேரத் தொழுகைகளும் ஜும்ஆ தொழுகையும் நடைபெறுகின்றன; முழுநேர ஹிஃப்ஸ் மற்றும் ஆலிம்/ஆலிமா கல்வித் திட்டங்கள், மாலை நேர குர்ஆன் வகுப்புகள் (மதரஸா), ஞாயிறு பள்ளி, திருக்குர்ஆன் விளக்கவுரை மற்றும் இஸ்லாமிய அடிப்படைப் பாடங்கள், இளைஞர் திட்டங்கள், திருமண சேவைகள் மற்றும் சமூக நிகழ்வுகள் ஆகியவை வழங்கப்படுகின்றன.",
+   "note": "Mosque name in English; Tamil spelling fixed (was 'ஸலாமம்')."
+  },
+  {
+   "id": "170900592261",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "மகப்பேறு பராமரிப்பு மையம் (East York/Don Mills). கர்ப்ப காலம், பிரசவ காலம் மற்றும் குழந்தை பிறப்பு வரையிலான சேவைகளையும், பிரசவத்திற்குப் பிந்தைய 6 வாரங்கள் வரை தாய்க்கும் குழந்தைக்கும் தேவையான சேவைகளையும் இலவசமாக வழங்குகிறது; இவை சுகாதார அமைச்சகத்தின் நிதியுதவியுடன் அளிக்கப்படுகின்றன. பிரசவங்கள் வீட்டிலோ, Toronto Birth Centre-இலோ அல்லது Michael Garron Hospital-இலோ மேற்கொள்ளப்படுகின்றன; அவசரத் தேவைகளுக்கு மகப்பேறு செவிலியர்கள் (midwives) 24 மணிநேரமும் தொடர்பில் இருப்பார்கள்; சிக்கல்கள் ஏற்பட்டால் மகப்பேறு மருத்துவர்கள், குழந்தை நல மருத்துவர்கள் மற்றும் தாய்ப்பால் ஆலோசகர்களிடம் பரிந்துரைக்கப்படுவார்கள். ஆங்கிலம், அரபு, பிரஞ்சு, ஸ்பானிஷ், பார்சி, டாரி மற்றும் பிற மொழிகளைப் பேசும் பணியாளர்கள் உள்ளனர்; மேலும் 'Newborn 101' உள்ளிட்ட பிரசவத்திற்கு முந்தைய வகுப்புகளும் வழங்கப்படுகின்றன.",
+   "note": "Hospital, birth centre, class and area names in English."
+  },
+  {
+   "id": "7d47cf9e0e64",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "ஃபிளெமிங்டன் பார்க்கில் உள்ள 175 Grenoble Drive முகவரியில் அமைந்துள்ள Toronto Catholic District School Board-இன் (டொராண்டோ கத்தோலிக்க மாவட்ட பள்ளி வாரியம்) ஆரம்பப் பள்ளி (முன் வகுப்பு முதல் 8-ஆம் வகுப்பு வரை), இங்கு ESL, சிறப்புக் கல்வி மற்றும் 'எம்பவர் ரீடிங்' (Empower Reading) உதவிகள் மற்றும் விளையாட்டு அணிகள் வழங்கப்படுகின்றன. இந்தக் கட்டிடத்தில் Red Apple Daycare (பள்ளிக்கு முன்னும் பின்னும் குழந்தைகளுக்கான பராமரிப்பு மையம்), இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம் (பிறந்த குழந்தைகள் முதல் 6 வயது வரையிலான குழந்தைகள் மற்றும் பெற்றோருக்கான திட்டங்கள்), மற்றும் புதிதாக குடிபெயர்ந்தவர்களுக்கு உதவி வழங்கும் குடியேற்ற உதவியாளர் அலுவலகமும் உள்ளன.",
+   "note": "Address, school board and daycare names in English."
+  },
+  {
+   "id": "f0b67cd7ba77",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "135 Vanderhoof Ave-இல் உள்ள Leonard Linton Park பூங்கா; நகரத்தின் வசதிகள் பட்டியலில், அங்குள்ள வசதிகளில் ஒன்றாக தண்ணீர் பாட்டில் நிரப்பும் நிலையம் குறிப்பிடப்பட்டுள்ளது. முழு வசதிகள் பட்டியலையும் பெற முடியவில்லை.",
+   "note": "Address (was truncated 'Vanderhoo') and park name in English."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "குறிப்பிட்ட பகுதியில் (Lake Ontario முதல் York Mills/401 வரை, Yonge/Don River முதல் Victoria Park Ave வரை) குறைந்த வருமானம் கொண்டவர்களுக்கு நான்கு துறைகளில் இலவச சட்ட ஆலோசனையும் பிரதிநிதித்துவமும் வழங்கப்படுகின்றன: வீட்டுவசதி சட்டம் (வீட்டிலிருந்து வெளியேற்றப்படுவதைத் தடுத்தல், சட்டவிரோதமாக கதவுகளை பூட்டி வெளியேற்றுதல், வாடகைதாரர்களின் உரிமைகள்), வேலைவாய்ப்பு சட்டம் (வேலைவாய்ப்பு தரநிலைகள், நியாயமற்ற பணிநீக்கம், இழப்பீடு, EI), குடிவரவு சட்டம் (நிரந்தர குடியிருப்பு விண்ணப்பங்கள், வேலை அனுமதிச் சீட்டுகள், குடியுரிமை) மற்றும் வருமான உதவிகள் (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); மேலும் பொதுமக்களுக்கான சட்ட விழிப்புணர்வு மற்றும் வரையறுக்கப்பட்ட ஆவண சேவைகளும் (உறுதிமொழி ஆவணங்கள், நோட்டரி சான்றளிக்கப்பட்ட நகல்கள்) வழங்கப்படுகின்றன. Intake Line (பதிவுக்கான தொலைபேசி): 416-441-1764 எக்ஸ்டென்ஷன் 1, திங்கள்–வியாழன் காலை 9:00 மணி முதல் மதியம் 12:30 மணி வரை (குரல் அஞ்சலில் (voicemail) செய்தி விட்டால் 1–3 வேலை நாட்களுக்குள் திரும்ப அழைப்பார்கள்; நேரடியாக வந்து சந்திக்க முடியாது; முன்கூட்டியே நேரம் ஒதுக்கி திங்கள்/புதன் மதியம் 1:30–4:30 மணி வரை நேரில் சந்திக்கலாம்).",
+   "note": "Catchment street names, benefit and line names in English; restored the missing voicemail/callback detail."
+  },
+  {
+   "id": "a6a63f0ab062",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "Thorncliffe Park Community Hub-இல் (45 Overlea Blvd) இயங்கும் அடிமட்ட சமூகக் குழு.",
+   "note": "Hub name and address in English (address was garbled); 'basic' corrected to 'grassroots'."
+  },
+  {
+   "id": "145d746d96ec",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "Greek Orthodox Archdiocese of Canada (கனடாவின் கிரேக்க ஆர்த்தடாக்ஸ் பேராயம்; 1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) கனடாவில் உள்ள கிரேக்க ஆர்த்தடாக்ஸ் திருச்சபையின் தேசிய நிர்வாக அமைப்பாகும். இதன் முகப்புப் பக்கம் திருச்சபை செய்திகள் மற்றும் கொண்டாட்டங்கள், ஆர்த்தடாக்ஸ் மதக்கல்வி மற்றும் மதக் கல்வி ஆதாரங்கள், தெய்வீக வழிபாட்டு (Divine Liturgy) கையேடு, பிரார்த்தனை புத்தகம் மற்றும் ஆர்த்தடாக்ஸ் புனித உருவப்படங்களின் தொகுப்பு ஆகியவற்றை மையமாகக் கொண்டுள்ளது; இது சமூக சேவைகளை விட திருச்சபை மற்றும் ஆன்மீக ஆதாரங்களுக்கு அதிக முக்கியத்துவம் அளிக்கிறது.",
+   "note": "Organisation name in English."
+  },
+  {
+   "id": "1be560c4691c",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "இந்தப் பகுதிக்கு 24 மணிநேர தீயணைப்பு மற்றும் அவசர கால மீட்புப் பணிகளை வழங்கும் Toronto Fire Services (டொராண்டோ தீயணைப்பு சேவை) நிலையங்கள்: நிலையம் 321 (231 McRae Dr), நிலையம் 235 (200 Bermondsey Rd), நிலையம் 322 (256 Cosburn Ave), நிலையம் 224 (1313 Woodbine Ave). அவசரமில்லாத அழைப்புகளுக்கான தொலைபேசி எண்: 416-338-9050.",
+   "note": "Organisation name in English."
+  },
+  {
+   "id": "2b036077722c",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "தோர்ன்கிளிஃப் பார்க், ஃபிளெமிங்டன் பார்க் மற்றும் முன்னாள் Ontario Science Centre-க்கு இடையே டான் ஆற்றின் கரையில், 73 Thorncliffe Park Drive-இல் அமைந்துள்ள ஒரு பெரிய பொது பள்ளத்தாக்குப் பூங்கா. வசதிகள்: 18 துளைகள் கொண்ட டிஸ்க் கோல்ஃப் மைதானம் (2011-இல் அமைக்கப்பட்டது, இலவசம்), அம்பு எய்தல் பயிற்சி மைதானம் (கனடாவில் உள்ள இரண்டே இரண்டு பொது மைதானங்களில் ஒன்று, இலவசம் ஆனால் கண்காணிப்பு இல்லை), நடைப்பயிற்சி மற்றும் மிதிவண்டிப் பாதைகள், நார்டிக் ஸ்கீயிங் மற்றும் குதிரை சவாரிப் பாதைகள், சுற்றுலா மற்றும் உணவருந்தும் நிழற்குடைகள், நெருப்பு மூட்டும் இடங்கள், கூடைப்பந்து மைதானங்கள், கழிப்பறைகள் மற்றும் குடிநீர் ஊற்றுகள் (குளிர்காலத்தில் தண்ணீர் மற்றும் கழிப்பறைகள் பயன்பாட்டில் இருக்காது).",
+   "note": "Ontario Science Centre in English; neighbourhood spelling made consistent; restored 'only' (one of only two)."
+  },
+  {
+   "id": "5141105643c3",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "பல்வேறு துறைகளில் உள்ள நிறுவனங்களுடன் இணைந்து பணியாற்றும் பன்முக ஆலோசனை நிறுவனம் (TNO, OCAD University மற்றும் Islamic Society of Toronto ஆகியவை இதன் வாடிக்கையாளர்களாக உள்ளனர்). சந்தை மற்றும் பயனர் ஆராய்ச்சி, வடிவமைப்பு மற்றும் நகர்ப்புற திட்டமிடல், திட்டம் மற்றும் திட்ட மேலாண்மை, செயல்பாட்டு ஆதரவு, நிர்வாகம் மற்றும் தலைமைத்துவ ஆலோசனை, வணிக ஆலோசனை, AI மற்றும் புதிய தொழில்நுட்ப ஒருங்கிணைப்பு, பிராண்டிங் மற்றும் ஊடகம், விற்பனை மேம்பாடு, பயிற்சி மற்றும் பட்டறைகள் ஆகியவை இதன் சேவைகளில் அடங்கும்.",
+   "note": "Client organisation names in English."
+  },
+  {
+   "id": "5d864949c117",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — தோர்ன்கிளிஃப்/ஃபிளெமிங்டன் பகுதி உட்பட கிழக்கு பகுதிக்கு சேவை வழங்கும் பிரிவு; இதில் சமூகக் காவல் பணி, அவசரமற்ற புகார்களைப் பதிவு செய்தல் மற்றும் பாதிக்கப்பட்டவர்களுக்கான ஆதரவு ஆகியவை வழங்கப்படுகின்றன. குறிப்பு: 54 மற்றும் 55 பிரிவுகள் இணைக்கப்பட்டு, 1627 Danforth Ave-ல் (முன்னாள் TTC Danforth பணிமனை / garage) ஒரு புதிய ஒருங்கிணைந்த காவல் நிலையமாக மாற்ற திட்டமிடப்பட்டுள்ளது.",
+   "note": "Police service and division name in English; 'garage' had been translated as 'car park'."
+  },
+  {
+   "id": "f53b3121ceff",
+   "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
+   "text": "அவசர காலங்களுக்கு 911-க்கு அழையுங்கள். 55 Division-ஐ 416-808-5500 என்ற எண்ணில் தொடர்பு கொள்ளலாம்.",
+   "note": "Division name in English."
+  },
+  {
+   "id": "7c53a90857c2",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "டொரண்டோ நகரில் வசிக்கும் 0-6 வயதுக்குட்பட்ட குழந்தைகள் மற்றும் அவர்களின் பெற்றோர்/பராமரிப்பாளர்களுக்கான இலவச EarlyON குழந்தைகள் மற்றும் குடும்ப மையம்: குழந்தைகளின் வளர்ச்சிக்கான ஆதரவு திட்டங்கள், பெற்றோருக்கான ஆதரவு சேவைகள், பள்ளிக்குத் தயாராகும் திட்டங்கள், பேச்சுத் தாமதத்திற்கான ஆதரவு மற்றும் தனிப்பட்ட வழிகாட்டுதலுடன் கூடிய சிறப்புத் தேவை சேவைகள். முதன்மை மையம்: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (திங்கள்-வெள்ளி காலை 9 மணி முதல் மாலை 5 மணி வரை); வெள்ளிக்கிழமை உடற்பயிற்சி மற்றும் விளையாட்டு நேரம்: Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "note": "Hub and centre names in English."
+  },
+  {
+   "id": "95c8c42be839",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "48 Thorncliffe Park Drive-இல் அமைந்துள்ள Toronto Public Library கிளை நூலகம். இங்கு புத்தகங்கள் இரவல் பெறும் வசதி, இலவச வைஃபை (Wi-Fi), மைக்ரோசாஃப்ட் ஆபிஸ் வசதியுடன் கூடிய பொதுக் கணினிகள், அச்சிடுதல்/நகலெடுத்தல்/ஸ்கேன் செய்தல் வசதிகள், சிறுவர்களுக்கான KidsStop ஆரம்பக்கால எழுத்தறிவு மையம், Youth Hub, குழந்தைகளுக்கு தனிப்பட்ட முறையில் வாசிப்பு உதவி வழங்கும் 'Leading to Reading' திட்டம், Newcomer Information Service (புதிதாகக் குடியேறியவர்களுக்கான தகவல் சேவை), Financial Empowerment Service (நிதி மேம்பாட்டு சேவை), முன்பதிவு செய்து பயன்படுத்தக்கூடிய கூட்ட அரங்கு மற்றும் அமைதியான படிப்பு இடம் ஆகியவை உள்ளன.",
+   "note": "Program names in English."
+  },
+  {
+   "id": "e0aa03a9fd6a",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "6 Sakura Way-இல் அமைந்துள்ள ஜப்பானிய கலாச்சார மையம் அனைவருக்கும் திறந்திருக்கும்; இங்கு கலாச்சார வகுப்புகள் (இகேபானா மலர் அலங்காரம், சாடோ தேநீர் விருந்து, ஷோடோ எழுத்துக்கலை, சுமி-இ ஓவியம், தைகோ டிரம்ஸ், கோட்டோ), தற்காப்புக் கலைகள் (ஜுடோ, கராட்டே, கென்டோ, ஐகிடோ, கியுடோ, இயாய்டோ, நகினாட்டா, ஜோடோ), பெரியவர்களுக்கான ஜப்பானிய மொழி வகுப்புகள், கழகங்கள் (கரோக்கி, ஹுலா, நடனம், முதியோர் கழகம், பிங்க் பாங்), பருவகாலத் திருவிழாக்கள், Toronto Japanese Film Festival, கண்காட்சிகள் மற்றும் Moriyama Nikkei Heritage Centre ஆகியவை உள்ளன.",
+   "note": "Festival and heritage centre names in English."
+  },
+  {
+   "id": "6166d8860ebc",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Valley Park Middle School என்பது 130 Overlea Blvd, East York-ல் அமைந்துள்ள TDSB-யின் ஒரு இடைநிலைப் பள்ளியாகும். இது Thorncliffe Park மற்றும் Flemingdon Park பகுதிகளைச் சேர்ந்த சுமார் 1,100 மாணவர்களுடன் 6 முதல் 8 ஆம் வகுப்பு வரையிலான கல்வியை வழங்குகிறது. மரியாதை, பொறுப்பு மற்றும் பாதுகாப்பின் அடிப்படையில் உருவாக்கப்பட்ட பாதுகாப்பான மற்றும் ஆதரவான கற்றல் சூழலையே இந்தப் பள்ளி நோக்கமாகக் கொண்டுள்ளது; எடுக்கப்பட்ட முகப்புப் பக்கத் தகவலில் பிரெஞ்சு மொழிப் பயிற்சி (French immersion), ESL அல்லது சிறப்புக் கல்வித் திட்டங்கள் பற்றி எதுவும் குறிப்பிடப்படவில்லை.",
+   "note": "Address (East York) in English as in source."
+  }
+ ]
+}
