@@ -27,7 +27,7 @@ This document breaks the CVH pilot into epics and stories, built from the pilot 
 
 **Pilot lean cut (approved 2026-10-01).** This is the lean pilot plan from the approved Sprint Change Proposal. Some stories were simplified to pilot scale and some deferred to the MVP (see "Deferred to MVP" at the end). The approved full plan is kept unchanged as the MVP reference in `docs/planning/mvp/reference/pilot-epics-full.md`.
 
-**Totals.** Build 488 h across 90 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). Only the build saving against the full plan (532 h → 488 h) is comparable, because the full plan left operations unstated.
+**Totals.** Build 494 h across 91 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated.
 
 ## Requirements Inventory
 
@@ -158,6 +158,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Rehearse a full drill in production; rehearse one database restore with `scripts/restore-reconcile` (S09.03) | Hub + IT | Before launch |
 | Manual Lighthouse run (mobile preset, Slow 4G, cold cache, median of 3) on `/en/`, `/ur/` and the directory page; record Largest Contentful Paint, Total Blocking Time and JavaScript transferred against the proposed budgets (LCP ≤ 4 s, TBT ≤ 600 ms, JS ≤ 200 KB compressed); note any miss with an action | IT | Before launch |
 | Rehearse the re-consent campaign on the drill roster in production (S09.07) | Hub + IT | By day 55 |
+| Reconcile `tokens.json` with the approved prototype: one spacing scale from the prototype's values; each rare value kept as a named step where an approved screen needs it, or changed by a recorded design decision; resident gutter, touch targets, target spacing, Hub breakpoint and container widths added (gaps G1–G10 in `docs/design-framework/spacing-container/token-architecture.md`) | Design owner | Before S01.16 |
 | Storage decision for the deletion ledger: confirm Supabase Storage exposes and enforces a retention policy of at least the database backup window plus one day with no early deletion or overwrite (configuration readable at run time), or record an alternative store with the same guarantees (S09.03) | IT | **Before S09.03 implementation starts** |
 | Verified ledger enforcement in production: with the app's credentials, deleting or overwriting a ledger object before its retention expires is refused, and the configured retention matches the procedures (S09.03) | IT + Hub | **Before launch (launch gate)** |
 | Plan launch events with staff-assisted sign-up | Hub | Before launch |
@@ -214,12 +215,12 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 **Optional soft launch.** Once E02 and E03 are done, they may be opened to ambassadors during the build to collect translation and search feedback for the catalogue and the search test set.
 
 ### E01 — Hub staff sign in and run the pilot's foundations
-Admins create staff accounts; staff sign in safely; the 43 buildings and floors are seeded (floor labels marked unconfirmed until the Hub confirms them) and ambassadors assigned; coverage and the audit trail work; a first text arrives from production (labelled spike, removed in E06).
-**Covers:** FR-G1, G2, G3, G5, E5 · NFR-N5 (staff) · AR-1–6, 18, 22, 23 · UX-DR15
+Admins create staff accounts; staff sign in safely; the 43 buildings and floors are seeded (floor labels marked unconfirmed until the Hub confirms them) and ambassadors assigned; coverage and the audit trail work; shared design tokens and layout primitives are generated (S01.16); a first text arrives from production (labelled spike, removed in E06).
+**Covers:** FR-G1, G2, G3, G5, E5 · NFR-N5 (staff) · AR-1–6, 18, 22, 23, 27 (tokens) · UX-DR1, UX-DR15
 
 ### E02 — Residents use the CVH every day in their own language
 The installable resident app in 15 languages with first-run choices on the phone, the reviewed directory, map, building facts, guides, numbers, basic mode and offline reading.
-**Covers:** FR-A3 (interface, guides), A9 (phone), A12, D2, D3, D4-P, D7, G4, M1 (installs), M3 (browsing) · NFR-N1, N2, N3, N7 · AR-3, 15 (publish), 26, 27 · UX-DR1–5, 10–13, 18, 19
+**Covers:** FR-A3 (interface, guides), A9 (phone), A12, D2, D3, D4-P, D7, G4, M1 (installs), M3 (browsing) · NFR-N1, N2, N3, N7 · AR-3, 15 (publish), 26, 27 (strings) · UX-DR2–5, 10–13, 18, 19
 
 ### E03 — Residents ask in their own words and get the right provider
 Starts with the search test-set format, runner and a starter set of about 30 questions (the full 150 come from ambassadors before launch). Meaning-based search in any language, romanized included, answered in the question's language, with a no-match route, 911 first on emergency results and the test set in CI.
@@ -282,9 +283,9 @@ The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the t
 
 Admins create staff accounts; staff sign in safely; the 43 buildings and floors are seeded and ambassadors assigned; coverage and the audit trail work; a first text arrives from production.
 
-**Epic estimate:** 81 h across 15 stories (5 S, 10 M) · **Epic actual:** —
+**Epic estimate:** 87.5 h across 16 stories (4 S, 12 M) · **Epic actual:** —
 
-**Shared foundations reused by later stories and epics:** environment configuration (S01.02), migrations and RLS (S01.03), the audit trail (S01.04), accounts and sessions (S01.05–S01.11), the role policy (S01.12), buildings and floors (S01.13), coverage (S01.14). Each story creates only the tables it needs and names the stories it depends on.
+**Shared foundations reused by later stories and epics:** environment configuration (S01.02), design tokens and layout primitives (S01.16), migrations and RLS (S01.03), the audit trail (S01.04), accounts and sessions (S01.05–S01.11), the role policy (S01.12), buildings and floors (S01.13), coverage (S01.14). Each story creates only the tables it needs and names the stories it depends on.
 
 **Definitions used in this epic**
 
@@ -555,10 +556,47 @@ So that a lost phone or a departed volunteer cannot keep access.
 **Then** a new starting password is issued with the same 24-hour rule, all sessions are revoked, and `password.reset` is audited; there is no self-service reset in the pilot
 **And** resetting an Admin's password is a recovery action: it is allowed even if it leaves fewer than two usable Admins (S01.06 exception)
 
+### Story S01.16 — Developer generates the shared design tokens and layout primitives
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** UX-DR1, UX-DR19 (spacing, targets), AR-27 (tokens), NFR-N2 · **Depends on:** S01.01 · **Branch:** `e01-s16-tokens-layout`
+- **Note:** placed before S01.09 in this document because S01.09 depends on it; story IDs are not renumbered, and execution order follows declared dependencies.
+
+As a developer,
+I want the design tokens and a small set of layout primitives generated and enforced before any screen is built,
+So that the Hub and resident screens share one look and nobody hard-codes spacing.
+
+**Acceptance Criteria:**
+
+**Given** `design/prototype/ds/cvrh/tokens.json`, reconciled with the approved prototype (Launch Readiness)
+**When** `npm run gen:tokens` runs
+**Then** it writes CSS custom properties and a Tailwind v4 theme for light and navy, spacing and radius written once on `:root` and colour per theme, and a snapshot test fails if any generated value differs from `tokens.json`
+
+**Given** a token that a primitive needs and that `tokens.json` does not define yet (an unresolved gap in `docs/design-framework/spacing-container/token-architecture.md` §11)
+**When** `npm run gen:tokens` runs
+**Then** the generator writes no default value, fails, and names the missing token and its gap
+
+**Given** the Tailwind theme
+**When** a fixture using `p-4`, `gap-2` and `md:flex` is built
+**Then** none of them produces CSS (the default spacing scale and breakpoints are removed), and the token-based utilities (for example `gap-icon`, `ps-*`, `pe-*`) compile to `var()` of semantic tokens
+
+**Given** a fixture using an arbitrary spacing value such as `p-[13px]` (Tailwind compiles arbitrary values whatever the theme defines)
+**When** the spacing check runs
+**Then** it rejects the fixture and names the file and the class
+
+**Given** the layout primitives `Screen`, `Stack`, `Inline`, `Grid` and the `tap` rule in `src/ui/layout/`
+**When** their unit, type and Playwright tests run
+**Then** the acceptance criteria in `docs/design-framework/spacing-container/components/*.md` pass
+
+**Given** the spacing check (proportionate)
+**When** it runs in CI on `src/`
+**Then** it fails on a literal length in `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` that is not `0` and not an approved spacing token, on an arbitrary Tailwind spacing value, and on a negative margin, unless the line carries a reviewed `/* spacing-exception: reason */` comment, which the check lists in its report
+**And** it does not check border widths, icon and image sizes, positioning (`top`, `inset*`, `translate`) or line height (fixture tests for each)
+
 ### Story S01.09 — Staff use a phone-first Hub
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
-- **Traces:** UX-DR15, NFR-N5, AR-3 · **Depends on:** S01.07 · **Branch:** `e01-s09-hub-shell`
+- **Size:** M · **Estimate:** 4.5 h · **Actual:** —
+- **Traces:** UX-DR15, NFR-N5, AR-3 · **Depends on:** S01.07, S01.16 · **Branch:** `e01-s09-hub-shell`
 
 As a Coordinator approving from my phone,
 I want the Hub's screens built for a phone first,
@@ -578,6 +616,14 @@ So that I can act quickly away from a desk.
 **Given** a screen reader
 **When** it reads the shell
 **Then** every control has an accessible name, and the current page is announced
+
+**Given** the Hub shell at 390 px and 1280 px
+**When** it is rendered
+**Then** screen content sits in `Screen` for the staff surface, the switch between the two layouts uses only the Hub breakpoint token, and the shell's CSS has no other breakpoint and no literal width
+
+**Given** the top bar at 390 px
+**When** the signed-in person, role and sign-out wrap
+**Then** they stay reachable without horizontal scrolling
 
 ### Story S01.10 — Admins and Coordinators must use an authenticator code
 
@@ -761,7 +807,7 @@ So that we learn in week one whether the Twilio account and toll-free number wor
 
 Residents open the CVH in any phone browser, choose their language and what matters to them on the phone, browse the reviewed directory and map, read building facts, guides and essential numbers, switch to basic mode, install the app and read what they last loaded without signal.
 
-**Epic estimate:** 84 h across 14 stories (3 S, 11 M) · S02.13 (speed checks in CI) deferred to the MVP; a manual Lighthouse run is in Launch Readiness · **Epic actual:** —
+**Epic estimate:** 83.5 h across 14 stories (4 S, 10 M) · S02.13 (speed checks in CI) deferred to the MVP; a manual Lighthouse run is in Launch Readiness · **Epic actual:** —
 
 **Depends on E01:** S01.01 (app and CI), S01.02 (environments), S01.03 (migrations and RLS), S01.04 (audit), S01.12 (role policy and permission test list), S01.13 (buildings and floors). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -783,20 +829,16 @@ Residents open the CVH in any phone browser, choose their language and what matt
 
 **Resolved discrepancy.** `docs/architecture/solution-design.md` ("Caching and cost") used to say guides were translated when the Hub publishes them. It now matches the spine (AD-10): guides, like the catalogue, are translated once by the offline scripts and reviewed before loading.
 
-### Story S02.01 — Developer generates the look and every interface string from the prototype
+### Story S02.01 — Developer generates every interface string from the prototype
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** UX-DR1, UX-DR2, AR-27, NFR-N1 · **Depends on:** S01.01 · **Branch:** `e02-s01-tokens-strings`
+- **Size:** S · **Estimate:** 3.5 h · **Actual:** —
+- **Traces:** UX-DR2, AR-27 (strings), NFR-N1 · **Depends on:** S01.01 · **Branch:** `e02-s01-strings`
 
 As a developer,
-I want design tokens and strings generated from the approved prototype,
-So that the app matches the prototype exactly and no string is re-authored by hand.
+I want every interface string generated from the approved prototype,
+So that no string is re-authored by hand (design tokens are generated in S01.16).
 
 **Acceptance Criteria:**
-
-**Given** `design/prototype/ds/cvrh/tokens.json`
-**When** `npm run gen:tokens` runs
-**Then** it writes CSS custom properties and a Tailwind v4 theme for light and navy, and a snapshot test fails if any generated value differs from `tokens.json`
 
 **Given** `design/prototype/cvh/strings.*.js` (15 languages) and `strings.en.screens.js`
 **When** `npm run gen:strings` runs
@@ -813,8 +855,8 @@ So that the app matches the prototype exactly and no string is re-authored by ha
 
 ### Story S02.02 — Resident sees the CVH in their language, right to left where needed
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** UX-DR3, UX-DR19 (RTL, fonts), AR-3, AR-26, NFR-N1, FR-A3 (interface) · **Depends on:** S02.01 · **Branch:** `e02-s02-resident-shell`
+- **Size:** M · **Estimate:** 8 h · **Actual:** —
+- **Traces:** UX-DR3, UX-DR19 (RTL, fonts), AR-3, AR-26, NFR-N1, FR-A3 (interface) · **Depends on:** S02.01, S01.16 · **Branch:** `e02-s02-resident-shell`
 
 As a resident,
 I want every screen in my language and laid out the right way for my script,
@@ -828,7 +870,15 @@ So that I can use the CVH without English.
 
 **Given** `ur`, `ps` or `prs`
 **When** any resident page renders
-**Then** `<html dir="rtl" lang="…">` is set and layout uses logical CSS only (a lint rule fails on `left`, `right`, `margin-left` and similar physical properties in `src/`)
+**Then** `<html dir="rtl" lang="…">` is set and layout uses logical CSS only: a lint fails on `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`, `border-left*`, `border-right*`, `float: left|right`, `text-align: left|right`, 3- and 4-value `margin`/`padding` shorthands, the Tailwind utilities `pl-* pr-* ml-* mr-* left-* right-* border-l border-r rounded-l-* rounded-r-* space-x-*`, and any `[dir=…]` selector other than the icon-mirroring rule
+
+**Given** the resident shell and one screen in `en` and `ur`
+**When** rendered at 320, 390 and 768 px
+**Then** each element's left edge in `ur` equals the viewport width minus its right edge in `en` (±1 px)
+
+**Given** the light and navy themes
+**When** the resident shell is rendered at 390 px in each
+**Then** every element's box is identical; only colours differ
 
 **Given** the language control (R-02)
 **When** it is opened from any resident screen and a language chosen
@@ -1226,7 +1276,7 @@ So that I have the numbers and my building's status when I need them most.
 
 ### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s14-basic-mode-a11y`
 
 As a resident who finds the full layout hard to use,
@@ -1247,9 +1297,18 @@ So that I can use the CVH in the way that works for me.
 **When** a tester follows a written script (choose language, choose building, open directory, open a listing, open numbers)
 **Then** every control is announced with a name and role, status is announced in words, and the result is recorded in the story with the device and date
 
-**Given** every interactive element
-**When** measured
-**Then** touch targets are at least 44 by 44 px and text contrast meets AA (checked in CI on the token pairs used)
+**Given** every control (buttons, form controls, and links that stand alone)
+**When** measured at 320 px
+**Then** touch targets are at least 44 by 44 px (the basic-mode size in basic mode), adjacent targets are at least the target spacing apart, and text contrast meets AA (checked in CI on the token pairs used)
+**And** links inside running text, in a container marked `data-tap-exempt="inline-text"` (for example guide body text), are exempt from the target size, matching the inline exception in WCAG's target-size criteria; important links are separate controls, never inline (approved 2026-10-01)
+
+**Given** basic mode saved in device choices
+**When** any resident page loads
+**Then** `<html data-basic="true">` is set before first paint, every grid marked to collapse in basic mode shows one column, and gaps and insets equal those in normal mode
+
+**Given** basic mode on, at 320 px, in `en`, `ur` and `ta`
+**When** the touch-target test runs
+**Then** every control meets the basic-mode target size
 
 ### Story S02.15 — Hub counts install events and directory use without tracking anyone
 
@@ -1909,7 +1968,7 @@ So that what I approve is what residents get, byte for byte.
 ### Story S04.07 — A second person approves exactly what they reviewed, on a phone
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A15, FR-A3 (recipients per language), AR-19 (approval view), UX-DR16 (O-05), FR-M2 · **Depends on:** S04.03, S04.05, S04.06 · **Branch:** `e04-s07-approval`
+- **Traces:** FR-A15, FR-A3 (recipients per language), AR-19 (approval view), UX-DR16 (O-05, O-07), FR-M2 · **Depends on:** S04.03, S04.05, S04.06 · **Branch:** `e04-s07-approval`
 
 As a Hub Coordinator,
 I want to approve an alert in one action from my phone, seeing exactly what goes out,
@@ -1945,6 +2004,10 @@ So that a mistake is caught by a second person before residents see it.
 **Given** the timestamps on the thread and entry
 **When** an entry is approved
 **Then** time from `reported_at` to the first approved acknowledgement, and from the author's first save to approval, are recorded for the pilot measures (FR-M2), with drills kept apart
+
+**Given** the approval view for any entry, including an ambassador post (O-07)
+**When** it renders
+**Then** it offers Approve, "Return to author" with a note and Discard, and never an "edit and approve" action, because whoever edits becomes an editor and cannot approve (two-person rule)
 
 ### Story S04.08 — Residents read approved alerts in their language, with origin and verification
 
@@ -3159,7 +3222,7 @@ So that the Hub and my neighbours know quickly.
 ### Story S08.03 — Lower-risk posts appear on the web at once as "Not yet verified"
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A15 (D-1), FR-A5, AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
+- **Traces:** FR-A15 (D-1), FR-A5, UX-DR16 (O-07), AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
 
 As a resident,
 I want to see an ambassador's report about my building right away, clearly marked as unchecked,
