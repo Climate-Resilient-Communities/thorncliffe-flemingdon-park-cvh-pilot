@@ -1626,3 +1626,332 @@ So that a model or route change never quietly makes search worse for one languag
 **When** the runner checks the usage allowance
 **Then** it refuses to start unless every model used has a known per-unit price or the config holds a usage allowance (calls and tokens per month); it estimates the run's usage from the question count and refuses if that would exceed what remains this month, counted from `spend_event` units (not money) while prices are unknown
 **And** each run's usage is recorded in `spend_event` against staging
+
+## E04 — Hub staff write, translate and approve alerts residents can trust
+
+Hub staff log a disruption, post a short acknowledgement, and write an alert for a place and optional groups; the CVH translates it into every launch language with checks, renders the exact texts, and a second person approves exactly what they saw. Approved alerts appear on the web in every language, with origin and verification shown the same way everywhere, ordered and tailored on each resident's phone. Texts are rendered and frozen here but sent in E06; updates, corrections, closing, status and sharing are E05; ambassador posting and the D-1 web-first path are E08.
+
+**Epic estimate:** 59 h across 10 stories (3 S, 7 M) · **Epic actual:** —
+
+**Depends on earlier epics:** S01.04 (audit, refusal records), S01.08 (sessions), S01.10 (`aal2`), S01.12 (policy and permission test list), S01.13 (buildings and floors), S02.02 (resident shell), S02.03 (device choices), S02.10 (guides with `#during`, 911 block), S02.11 (feed contract and home), S03.05 (`Translator` port and Cohere adapter), S03.02 (`spend_event`, usage allowance). Each story creates only the tables it needs and names the stories it depends on.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Thread | An `alert`: one disruption, `open` until closed. Created when a disruption is logged, with `reported_at` (the time the first report reached the Hub, entered by staff, never later than now). `is_drill` is set at creation and never changes. |
+| Entry | An `alert_entry` (`ack`, `update`, `correction`, `withdrawal`, `final`) with the state machine in AD-5. This epic implements `ack` and `update` from `draft` to `approved`, plus return and discard; E05 adds supersession, corrections, withdrawals and closing. |
+| Authoring language | Staff write entries in English (`original.lang = 'en'`). |
+| Submit | Moves a `draft` to `pending_approval`: translates, renders the SMS bodies, counts segments and recipients, estimates cost and computes `content_hash`, in that order, then freezes all of it. Nothing frozen is recomputed at approval. |
+| Translated languages | Every launch language except English, because web readers may use any of them (FR-A3); `zh-Hant` is converted from `zh` with OpenCC. This clarifies AD-10's "every language present in the audience": for web, every language is present. |
+| Fallback language | A language whose translation failed every model in its route; its text is English with `translation.unavailable`. |
+| Editor | The author and every account that changed the entry's content (`editor_ids`). |
+| Approval binding | Approval names the `content_hash` the approver was shown. If the entry's hash differs (it was edited, returned or re-translated since), approval is refused with "This alert changed. Review it again." |
+| Web-published | `web_published_at` is set. In this epic only approval sets it (D-1 web-first posting is E08). |
+| Valid until | Required on every entry; staff enter it in Toronto time. "Until resolved" means now + 24 hours, renewed by each update (Consistency Conventions). |
+| Verification marker | "Verified by the Hub" or "Not yet verified", in the same words and position on every surface, with an icon and text, never colour alone. Every entry approved by Hub staff in this epic is verified. |
+| Attribution | Role and building only ("Hub", "Building ambassador, {building}"), never a person's name. |
+| Neighbourhood-only types | Heat, smoke and winter storm: neighbourhood audience only, authored by Coordinators and Admins only. |
+| Translation timeout | Per language, from the measurement in S04.01; a timeout counts as a failed attempt and the next model in the route is tried. |
+| Submit budget | Proposed engineering budget (not a PRD number): submit finishes within the longest route's total timeouts plus 5 s; the author sees progress per language and is never left without a result. |
+
+### Story S04.01 — Team measures translation latency and sets the timeouts
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-14 (p99-derived timeout), Launch readiness (p99) · **Depends on:** S03.05, S03.02 · **Branch:** `e04-s01-translation-latency`
+
+As a developer,
+I want measured translation times for every language and model in its route,
+So that timeouts are set from evidence before alerts depend on them.
+
+**Acceptance Criteria:**
+
+**Given** 20 representative English alert texts (10 short acknowledgements, 10 full alerts of 300 to 600 characters, drawn from the prototype's examples) and the provisional routes
+**When** `scripts/translation-latency` runs on staging within the usage allowance
+**Then** each text is translated into each launch language with every model in that language's route, 3 times, and the report records p50, p95 and p99 latency, failure count and usage per language and model
+**And** the report is committed under `data/translation-latency/{date}.json`
+
+**Given** the report
+**When** timeouts are set
+**Then** each language's timeout is its first model's p99 multiplied by 1.25 and rounded up to the next second, capped at 20 s, and stored in `translation_route`; the rule and values are recorded in the spine, closing the open question provisionally until production access and model identifiers are confirmed
+
+**Given** a model that failed more than 2 of 60 attempts for a language
+**When** the report is reviewed
+**Then** it is listed in the launch-readiness checklist with the language and the action (reorder the route or accept fallback)
+
+### Story S04.02 — Alerts are translated by route, checked and never sent in the wrong language
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S04.01 · **Branch:** `e04-s02-translation-routes`
+
+As a resident who reads Pashto,
+I want alert translations checked before anyone sees them,
+So that I never receive text in the wrong language presented as mine.
+
+**Acceptance Criteria:**
+
+**Given** `translation_route`, seeded by migration from the addendum's routing table (config, not code)
+**When** an entry's English text is translated
+**Then** every translated language runs in parallel, each trying its route's models in order with its timeout, and returns `Translated {lang, body, machine, model, status, source_hash}`
+
+**Given** a model's output
+**When** it is checked
+**Then** it passes only if the language check passes (`eld` code where supported, `prs` accepted as `fa`) and the script check passes; Pashto output must contain at least one Pashto marker letter, and Pashto and Dari output must contain none of the Urdu-only letters
+**And** a failed check counts as a failure and the next model runs; when every model fails, the status is `fallback_en`
+
+**Given** fixtures that make the fake return Dari for Pashto, Urdu for Pashto, English for Tamil, empty text, a timeout, and an error
+**When** the tests run
+**Then** each is rejected and the next model is tried, and the last case of each ends in `fallback_en`
+
+**Given** a `zh` translation that passed its checks
+**When** `zh-Hant` is produced
+**Then** it is converted with OpenCC, marked `script_converted`, and records the `zh` source hash
+
+**Given** the cache key `(source_hash, lang, model_id, prompt_version)`
+**When** the same English text is translated again
+**Then** cached results are reused, and only passing results are cached; failures are never cached
+
+**Given** each call
+**When** it returns
+**Then** its usage is recorded in `spend_event` without text, and vendor language codes never leave the adapter
+
+### Story S04.03 — Alert threads and entries follow one lifecycle
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** AR-8, AR-9, FR-A15, AR-24 · **Depends on:** S01.04, S01.12, S01.13 · **Branch:** `e04-s03-alert-lifecycle`
+
+As a Hub Coordinator,
+I want the system to allow only the agreed steps for an alert,
+So that nothing reaches residents without the checks we promised.
+
+**Acceptance Criteria:**
+
+**Given** `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` and `disruption_type` (seeded by migration with `direct` per type: power, water, elevator, flood true; fire, other false; heat, smoke, winter null)
+**When** the migrations run
+**Then** the tables exist with RLS locked down, `alert.is_drill` cannot be updated (trigger), and the `nondrill_alert` view exists
+
+**Given** `alerting/domain/lifecycle.ts`
+**When** a transition is requested
+**Then** only these are allowed in this epic: `[*] → draft`, `draft → pending_approval` (submit), `pending_approval → draft` (edit or return, only if not web-published), `draft|pending_approval → discarded`, `pending_approval → approved`; a database trigger rejects any other transition, tested by direct SQL with the app's credentials
+
+**Given** an approval
+**When** the approver's id is in `editor_ids`
+**Then** it is refused by the use case and by a trigger (tested both ways), and recorded as a refusal
+
+**Given** two approvals of the same entry at the same time
+**When** both run
+**Then** exactly one succeeds; every thread-changing use case starts with `SELECT … FROM alert WHERE id = $1 FOR UPDATE` and locks in the order `alert → alert_entry`, re-reads the thread and refuses with `ALERT_CLOSED` if closed (integration test fires both approvals concurrently)
+
+**Given** an edit made while another person is viewing the entry for approval
+**When** the approver approves
+**Then** the approval binding refuses it because the hash changed
+
+**Given** every successful transition
+**When** it commits
+**Then** it is audited (`alert.created`, `entry.submitted`, `entry.returned`, `entry.discarded`, `entry.approved`) with entry id and outcome, and refusals are recorded per S01.04
+
+### Story S04.04 — Staff choose who an alert is for with one shared rule
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-A1, AR-11 (matcher), AR-7, UX-DR16 (O-03, O-04) · **Depends on:** S04.03 · **Branch:** `e04-s04-audience-matcher`
+
+As a Hub Coordinator,
+I want to pick the neighbourhood, buildings, floors and optional groups for an alert,
+So that the web and, later, texts reach exactly the people it is for.
+
+**Acceptance Criteria:**
+
+**Given** `src/contracts/audience.ts` with the `Audience` type and `matches(audience, profile)`
+**When** the property tests run (thousands of generated audiences and profiles)
+**Then** they confirm the AD-7 rules: neighbourhood matches everyone there; a building matches that building, and with floors those floors or a profile with no floor; a profile with no building matches neighbourhood alerts only; groups intersect; several matching places match once; topic opt-outs apply except the fire and evacuation override
+**And** `matches` is pure and imported unchanged by the server and the phone (no copy exists, checked by the dependency rules)
+
+**Given** the place picker (O-03)
+**When** a Coordinator chooses the neighbourhood, or buildings with whole building or floors (ranges like "4-9" expanded)
+**Then** floors are stored sorted and deduplicated by floor id; a floor not in that building, an empty selection, or a reversed range is refused with a message
+
+**Given** the group picker (O-04)
+**When** groups are chosen
+**Then** they are stored on the audience, and the screen notes that groups narrow texts but every web reader can still see the alert
+
+**Given** heat, smoke or winter storm
+**When** the audience is buildings, or the author is not a Coordinator or Admin
+**Then** submit is refused with the reason, by the policy check on the server (direct-request tests added to the S01.12 list)
+
+**Given** an Ambassador author (used in E08)
+**When** the audience includes a building they are not assigned to
+**Then** it is refused at submit and again at approval against their current assignments
+
+### Story S04.05 — Hub staff log a disruption and write an acknowledgement or alert
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A4, FR-A1, UX-DR16 (O-11, O-12, O-02), FR-M2 · **Depends on:** S04.02, S04.04 · **Branch:** `e04-s05-log-and-compose`
+
+As a Hub Coordinator,
+I want to log a disruption and post a short acknowledgement within minutes,
+So that residents know we are on it before we have the details.
+
+**Acceptance Criteria:**
+
+**Given** "Log a disruption" (O-11)
+**When** a Coordinator chooses one or more types, the place and the time of the first report
+**Then** a thread is created with `reported_at`, and the acknowledgement composer (O-12) opens with a suggested English text built from the type and place, which the author may edit
+
+**Given** the composer (O-12) or the full alert composer (O-02)
+**When** the author enters English text (at most 600 characters), the valid-until and the audience
+**Then** the draft is saved and the author is added to `editor_ids`
+**And** for fire, evacuation or "Other", the 911 line is placed first
+
+**Given** the author presses Submit
+**When** submit runs
+**Then** it translates, renders, counts, estimates and hashes in that order, shows progress per language, finishes within the submit budget, and moves the entry to `pending_approval` with everything frozen
+**And** if any language fell back, the author sees which, with "Try translation again" (which re-runs those languages, changes the hash and requires a fresh review)
+
+**Given** a submit that fails part way (server error or lost connection)
+**When** the author returns
+**Then** the entry is still a `draft` with its text, nothing half-frozen is stored, and Submit can be pressed again
+
+**Given** a thread with a possible duplicate (an open non-drill thread overlapping in audience and type)
+**When** the author submits
+**Then** the approver will see a "possible duplicate" link (merging is E05)
+
+### Story S04.06 — Each text is rendered once and frozen at submit
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-19 (renderer), FR-A5, FR-A3 · **Depends on:** S04.02 · **Branch:** `e04-s06-sms-renderer`
+
+As a Hub Coordinator approving an alert,
+I want to see the exact text each person will receive,
+So that what I approve is what residents get, byte for byte.
+
+**Acceptance Criteria:**
+
+**Given** `messaging/domain/smsBody.ts#render(entry, lang, isDrill, slug)`
+**When** an entry is submitted
+**Then** for each language it builds the body in the fixed order from catalog strings: exercise marker (drills only), correction marker (corrections only), verification marker, attribution, the text, the machine-translation label, the 911 line (first for fire, evacuation and "Other"), the `/a/{slug}` link built from `PUBLIC_BASE_URL`, and "Reply STOP"
+**And** no other code builds an SMS body (a dependency rule forbids imports of the Twilio adapter outside `messaging`)
+
+**Given** each rendered body
+**When** it is counted
+**Then** encoding (GSM-7 or UCS-2, after Twilio Smart Encoding) and segments (160/153 or 70/67) are computed with the real encoder and stored with the body; fixtures per language check the count
+
+**Given** the frozen bodies and web texts
+**When** `content_hash` is computed in `alerting/domain/hash.ts`
+**Then** it is sha256 of the RFC 8785 canonical JSON of `{kind, alert_id, supersedes_id, types, phase, audience, channels, is_drill, valid_until, sms_bodies, web_texts}` with lists sorted by language; a fixture test pins the hash for a known entry
+
+**Given** a fallback language
+**When** its body is rendered
+**Then** it is the English text with `translation.unavailable` in that language
+
+**Given** the estimated cost
+**When** shown
+**Then** it is segments × recipients × the configured price per segment (integer cents CAD), labelled an estimate
+
+### Story S04.07 — A second person approves exactly what they reviewed, on a phone
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A15, FR-A3 (recipients per language), AR-19 (approval view), UX-DR16 (O-05), FR-M2 · **Depends on:** S04.03, S04.05, S04.06 · **Branch:** `e04-s07-approval`
+
+As a Hub Coordinator,
+I want to approve an alert in one action from my phone, seeing exactly what goes out,
+So that a mistake is caught by a second person before residents see it.
+
+**Acceptance Criteria:**
+
+**Given** the approval view (O-05) at 390 px
+**When** a Coordinator or Admin who is not an editor opens a pending entry
+**Then** above the fold they see the English text, the audience in words, the channels, the SMS recipient count, the estimated cost and any fallback languages; every other language's web text and SMS body is one tap away; Approve is within thumb reach
+
+**Given** SMS recipients per language
+**When** shown
+**Then** they come from `subscriptions`' recipient-count port; until E07 provides it, the view shows "Text sign-up is not open yet" and a count of 0, and the channels list web only
+
+**Given** the approver presses Approve
+**When** the session is `aal2`, the approver is not an editor, the policy allows it at approval time, and the content hash matches what was shown
+**Then** the entry becomes `approved`, `web_published_at` is set, `feed_version` is incremented in the same transaction, `revalidateTag('feed')` runs after commit, and `entry.approved` is audited with the hash
+**And** if any condition fails, nothing changes and the refusal is recorded with the reason shown
+
+**Given** the approver chooses "Return to author" with a note, or "Discard"
+**When** confirmed
+**Then** the entry returns to `draft` (keeping its text) or becomes `discarded`, the author sees the note on their incidents list, and the action is audited
+
+**Given** the timestamps on the thread and entry
+**When** an entry is approved
+**Then** time from `reported_at` to the first approved acknowledgement, and from the author's first save to approval, are recorded for the pilot measures (FR-M2), with drills kept apart
+
+### Story S04.08 — Residents read approved alerts in their language, with origin and verification
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A1 (web), FR-A3, FR-A5, AR-7 (`FeedV1`), AR-6 (drill isolation), UX-DR6 · **Depends on:** S04.07, S02.11, S02.10 · **Branch:** `e04-s08-feed-and-alert-detail`
+
+As a resident,
+I want each alert in my language with who sent it and whether it is verified,
+So that I can trust what I read and act on it.
+
+**Acceptance Criteria:**
+
+**Given** `/api/feed?lang=`
+**When** requested
+**Then** it returns `FeedV1` with open threads that have a web-published entry, each entry's text in the requested language (or the fallback), the English original, attribution, verification and `published_at`, with `feed_version` and `server_now`; the response is edge-cached for at most 15 seconds and sets no cookie
+
+**Given** a drill thread inserted directly in the database
+**When** an integration test calls every resident route and API (feed, home, alert detail, building page)
+**Then** the drill appears nowhere; resident queries read only `nondrill_alert` (a lint rule forbids other alert relations in those files)
+
+**Given** alert detail (R-07)
+**When** opened
+**Then** it shows the type words and icons (X-13), the origin and verification marker (X-02) with a link to "what verified means" (R-28), the text with the machine-translation label (X-04) and "Show English", valid-until, the not-911 statement (X-01) and the 911 block, and a link to the matching guide opened at "During"
+
+**Given** an approved entry
+**When** the feed is next polled
+**Then** the resident sees it within 75 seconds of approval (15-second cache plus 60-second poll), measured in an end-to-end test with the clock controlled
+
+**Given** a fallback language
+**When** a resident reads the alert in it
+**Then** they see the English text with "Translation not available" in their language
+
+### Story S04.09 — Each phone puts the alerts that matter to its owner first
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-A13, FR-A9 (on the phone), AR-26, UX-DR5 (X-12) · **Depends on:** S04.08, S04.04 · **Branch:** `e04-s09-tailored-order`
+
+As a resident,
+I want alerts for my buildings, floors and groups shown first,
+So that I see what affects me without missing anything else.
+
+**Acceptance Criteria:**
+
+**Given** the feed and the device choices
+**When** home renders
+**Then** alerts matching the device profile (by `matches`) come first and are highlighted, the rest follow, and nothing is hidden
+
+**Given** a matching alert and a chosen group with advice for that type
+**When** shown
+**Then** one line of advice from the catalog is added (X-12), never naming the group or the reason it was shown
+
+**Given** the end-to-end privacy test from S02.03
+**When** it runs with alerts present
+**Then** no request carries the saved selection
+
+### Story S04.10 — Hub staff see what is waiting and what went where
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** UX-DR16 (O-01, O-06), FR-M2 · **Depends on:** S04.07 · **Branch:** `e04-s10-hub-home`
+
+As a Hub Coordinator,
+I want one screen with open incidents and anything waiting for me,
+So that nothing sits unapproved while residents wait.
+
+**Acceptance Criteria:**
+
+**Given** the Hub home (O-01)
+**When** a Coordinator or Admin opens it
+**Then** entries waiting for their approval (excluding ones they edited) are at the top with how long they have waited, then open threads, most recent first; drills are in a separate labelled section
+
+**Given** the published confirmation (O-06)
+**When** an entry is approved
+**Then** it shows what went where: web in which languages, fallback languages, and the texts that will go out once texting is live (E06)
+
+**Given** a Director
+**When** they open the Hub home
+**Then** it is read-only, and every action endpoint returns 403 (S01.12 list)
