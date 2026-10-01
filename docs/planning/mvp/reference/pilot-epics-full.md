@@ -1,3 +1,5 @@
+> **MVP reference — do not edit.** This is the approved full pilot plan as merged in `3984421` (including `ef37e10`), kept unchanged as the reference for the MVP. The pilot builds the lean version in `docs/planning/pilot/epics.md`.
+
 ---
 stepsCompleted: [1, 2, 3, 4]
 requirementCounts: {functional: 42, nonFunctional: 8, architecture: 27, uxDesign: 19}
@@ -24,10 +26,6 @@ conventions:
 ## Overview
 
 This document breaks the CVH pilot into epics and stories, built from the pilot PRD, the architecture spine (AD-1 to AD-25) and the clickable prototype. The build happens before the two-month pilot and is not counted in it. Every story records an estimate and, when done, the actual time taken.
-
-**Pilot lean cut (approved 2026-10-01).** This is the lean pilot plan from the approved Sprint Change Proposal. Some stories were simplified to pilot scale and some deferred to the MVP (see "Deferred to MVP" at the end). The approved full plan is kept unchanged as the MVP reference in `docs/planning/mvp/reference/pilot-epics-full.md`.
-
-**Totals.** Build 488 h across 90 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). Only the build saving against the full plan (532 h → 488 h) is comparable, because the full plan left operations unstated.
 
 ## Requirements Inventory
 
@@ -155,11 +153,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Name the privacy contact; counsel review of consent and terms wording | Hub | Before launch |
 | Written procedures (N6): sending, approving, correcting, withdrawing, drills, pause, resend, cap overrun | Hub | Before launch |
 | Name the Admin on-call roster and on-duty Hub number; enter drill roster | Hub | Before launch |
-| Rehearse a full drill in production; rehearse one database restore with `scripts/restore-reconcile` (S09.03) | Hub + IT | Before launch |
-| Manual Lighthouse run (mobile preset, Slow 4G, cold cache, median of 3) on `/en/`, `/ur/` and the directory page; record Largest Contentful Paint, Total Blocking Time and JavaScript transferred against the proposed budgets (LCP ≤ 4 s, TBT ≤ 600 ms, JS ≤ 200 KB compressed); note any miss with an action | IT | Before launch |
-| Rehearse the re-consent campaign on the drill roster in production (S09.07) | Hub + IT | By day 55 |
-| Storage decision for the deletion ledger: confirm Supabase Storage exposes and enforces a retention policy of at least the database backup window plus one day with no early deletion or overwrite (configuration readable at run time), or record an alternative store with the same guarantees (S09.03) | IT | **Before S09.03 implementation starts** |
-| Verified ledger enforcement in production: with the app's credentials, deleting or overwriting a ledger object before its retention expires is refused, and the configured retention matches the procedures (S09.03) | IT + Hub | **Before launch (launch gate)** |
+| Rehearse a full drill in production; rehearse one database restore | Hub + IT | Before launch |
 | Plan launch events with staff-assisted sign-up | Hub | Before launch |
 
 ### FR Coverage Map
@@ -173,7 +167,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | FR-A5 verification marker | E04 |
 | FR-A7 running threads, valid-until, archive | E05 |
 | FR-A9 buildings and topics | E02 (on the phone), E07 (SMS subscription) |
-| FR-A10 official alerts (stretch) | Deferred to MVP (reference: E10 in the MVP reference copy) |
+| FR-A10 official alerts (stretch) | E10 |
 | FR-A11 share | E05 |
 | FR-A12 first-use choices | E02 |
 | FR-A13 tailoring | E04 |
@@ -194,11 +188,11 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | FR-G6 spend and cap | E07 |
 | FR-D-6 keywords and menus | E07 |
 | FR-D-7 end of pilot | E09 |
-| FR-M1 subscribers and installs | E02 (installs), E07 (subscribers), E09 (SQL views and export) |
-| FR-M2 timings | E04, E06 (data), E09 (SQL views and export) |
-| FR-M3 directory and search use | E02, E03 (data), E09 (SQL views and export) |
-| FR-M4 drills and correction reach | E06, E07 (data), E09 (SQL views and export) |
-| FR-M5 cost per alert | E06, E07 (data), E09 (SQL views and export) |
+| FR-M1 subscribers and installs | E02 (installs), E07 (subscribers), E09 (view) |
+| FR-M2 timings | E04, E06 (data), E09 (view) |
+| FR-M3 directory and search use | E02, E03 (data), E09 (view) |
+| FR-M4 drills and correction reach | E06, E07 (data), E09 (view) |
+| FR-M5 cost per alert | E06, E07 (data), E09 (view) |
 | NFR-N1, N2, N3, N7 | E02 (carried by every later epic) |
 | NFR-N4 weekly review | E09 |
 | NFR-N5 privacy and security | E01 (staff), E07 (terms, consent), E08 (check-in consent), E09 (access requests) |
@@ -207,9 +201,9 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 
 ## Epic List
 
-**Conventions.** Epics `E01`–`E09` (E10 deferred to the MVP); stories `S<epic>.<nn>` (e.g. `S04.03`); branches `e04-s03-<short-slug>`. Story size S (up to 4 hours) or M (1 day) by default; L (2 days) only with a written reason in the story. Every story records **Estimate** and **Actual** time.
+**Conventions.** Epics `E01`–`E10`; stories `S<epic>.<nn>` (e.g. `S04.03`); branches `e04-s03-<short-slug>`. Story size S (up to 4 hours) or M (1 day) by default; L (2 days) only with a written reason in the story. Every story records **Estimate** and **Actual** time.
 
-**Launch gate.** The pilot launches only when E01–E08 are done, plus E09's S09.01 (health alerts and outside check), S09.02 (resend) and S09.03 (procedures, deletion ledger, restore reconciliation and rehearsals, including the production STOP-evidence rehearsal). E09's SQL views and the end-of-pilot process may land during the pilot (D-7 must be ready by day 60). Residents never get E04 without E05.
+**Launch gate.** The pilot launches only when E01–E08 are done, plus E09's health alerts and written procedures. E09's Director measures view and end-of-pilot process may land during the pilot (D-7 must be ready by day 60). E10 is optional. Residents never get E04 without E05.
 
 **Optional soft launch.** Once E02 and E03 are done, they may be opened to ambassadors during the build to collect translation and search feedback for the catalogue and the search test set.
 
@@ -246,11 +240,12 @@ Posting stories come first (ambassador home, web-first "Not yet verified" posts)
 **Covers:** FR-E1, E2, E3, C1, C3, C4, C6, C7, A15 (D-1 path) · NFR-N5 (check-in consent) · AR-16 · UX-DR14, 17
 
 ### E09 — The Hub monitors the pilot and closes it cleanly
-The full health job and on-call alerts, resend of failed texts, written procedures with restore reconciliation, the weekly review and the pilot measures as SQL views and exports, access requests by call-back, and end-of-pilot re-consent and deletion.
-**Covers:** FR-D-7, M1–M5 (views and export) · NFR-N4, N5 (access requests), N6, N9 · AR-17, 21
+The full health job and on-call alerts, resend of failed texts, the weekly review, the Director's read-only pilot measures view, privacy access requests, and end-of-pilot re-consent and deletion.
+**Covers:** FR-D-7, M1–M5 (view) · NFR-N4, N5 (access requests), N6, N9 · AR-17, 21
 
-### E10 — Deferred to MVP
-The official alert relay (FR-A10, O-18) is not built in the pilot; see the MVP reference copy.
+### E10 (optional stretch) — Hub staff relay an official alert
+An official alert from a named source, with a link, through normal approval.
+**Covers:** FR-A10 · UX-DR16 (O-18)
 
 ### Table Creation Map
 
@@ -263,13 +258,13 @@ Each table is created by the first story that needs it, in that story's migratio
 | `neighbourhood`, `building`, `building_floor` (places) | S01.13 | `inbound_seen`, `inbound_reply`, `inbound_keyword_count` (subscriptions) | S07.04 |
 | `ambassador_assignment` (identity) | S01.14 | `sms_prompt` (subscriptions) | S07.05 |
 | `provider`, `provider_location`, `category`, `provider_category` (directory) | S02.04 | `subscription_edit_token` (subscriptions) | S07.06 |
-| `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap` (spend) | S07.08 |
+| `directory_release` (directory), `ops_event` (ops) | S02.05 | `spend_cap`, `spend_reservation` (spend) | S07.08 |
 | `guide`, `essential_number` (directory) | S02.09 | `checkin`, `checkin_tally` (checkins) | S08.05 |
-| `usage_count` (directory) | S02.15 | `campaign` (subscriptions) | S09.07 |
-| `spend_event` (spend) | S03.02 | | |
-| `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | | |
-| `translation_route` (translation) | S04.01 | | |
-| `translation_cache` (translation) | S04.02 | | |
+| `usage_count` (directory) | S02.15 | `weekly_review_note` (ops) | S09.04 |
+| `spend_event` (spend) | S03.02 | `survey_result` (ops) | S09.05 |
+| `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | `access_request` (subscriptions) | S09.06 |
+| `translation_route` (translation) | S04.01 | `campaign` (subscriptions) | S09.07 |
+| `translation_cache` (translation) | S04.02 | `official_source` (alerting) | S10.01 |
 | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` (alerting), `disruption_type` (places) | S04.03 | | |
 | `delivery` (messaging) | S06.01 | | |
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
@@ -761,7 +756,7 @@ So that we learn in week one whether the Twilio account and toll-free number wor
 
 Residents open the CVH in any phone browser, choose their language and what matters to them on the phone, browse the reviewed directory and map, read building facts, guides and essential numbers, switch to basic mode, install the app and read what they last loaded without signal.
 
-**Epic estimate:** 84 h across 14 stories (3 S, 11 M) · S02.13 (speed checks in CI) deferred to the MVP; a manual Lighthouse run is in Launch Readiness · **Epic actual:** —
+**Epic estimate:** 87 h across 15 stories (4 S, 11 M) · **Epic actual:** —
 
 **Depends on E01:** S01.01 (app and CI), S01.02 (environments), S01.03 (migrations and RLS), S01.04 (audit), S01.12 (role policy and permission test list), S01.13 (buildings and floors). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -1224,6 +1219,29 @@ So that I have the numbers and my building's status when I need them most.
 **When** the browser fires `online` or the app becomes visible
 **Then** the feed and manifest are fetched at once, "Last updated" is refreshed, and a lower `feed_version` than the highest seen is discarded
 
+### Story S02.13 — Team measures the proposed speed budgets in CI
+
+- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Traces:** NFR-N3 (proposed engineering budget, not a PRD number) · **Depends on:** S02.12 · **Branch:** `e02-s13-speed-budgets`
+
+As a developer,
+I want the resident app's speed measured the same way on every change,
+So that older phones and slow connections stay usable as later epics add features.
+
+**Acceptance Criteria:**
+
+**Given** `perf-budget.json` with the proposed budgets below, each marked "proposed engineering budget"
+**When** Lighthouse CI runs on the preview build for `/en/`, `/ur/` and the directory page, with a cold cache, Lighthouse's mobile preset (emulated mid-range phone, 4x CPU slowdown) and its default "Slow 4G" throttling (150 ms round trip, 1.6 Mbps down), taking the median of 3 runs
+**Then** it records Largest Contentful Paint, Total Blocking Time and the JavaScript transferred
+
+**Given** the proposed budgets
+**When** a run exceeds one
+**Then** CI fails, naming the page, the measure and the value. Budgets: "usable" means Largest Contentful Paint at most 4 s and Total Blocking Time at most 600 ms; JavaScript transferred for the first load at most 200 KB, measured compressed as sent over the network (gzip or brotli), counting every script the page loads
+
+**Given** the team decides a budget should change
+**When** `perf-budget.json` is edited
+**Then** the change includes a written reason, and the budgets stay labelled as engineering budgets, separate from PRD requirements
+
 ### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
@@ -1293,7 +1311,7 @@ So that the pilot can show use without recording who did what.
 
 Residents type a question in any launch language, romanized or mixed included, and get up to five published listings that clearly match, in the language they wrote in, with a clear route to a person when nothing matches and 911 first on emergency results. The epic starts with the test set so every later story is measured against it.
 
-**Epic estimate:** 44 h across 9 stories (4 S, 5 M), plus about 3 h contingent (S03.07) · **Epic actual:** —
+**Epic estimate:** 49 h across 9 stories (4 S, 5 M) · **Epic actual:** —
 
 **Depends on E01 and E02:** S01.02 (environments and Cohere keys), S01.03 (migrations), S01.04 (audit), S02.05 (releases, manifest `search` field, atomic current-release pointer), S02.06 (directory screens and the failed-update fallback), S02.12 (offline rules), S02.15 (usage events). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -1309,7 +1327,7 @@ Residents type a question in any launch language, romanized or mixed included, a
 | Request snapshot | At request start the server captures one release's `release_v`, embedding model, vectors, threshold, `emergency_categories` and `catalogue_hash`, and uses only that snapshot to the end of the request. The threshold and `emergency_categories` are recorded on the release when it is published, so changing either means publishing a new release (which reuses existing vectors when the model and `catalogue_hash` are unchanged). |
 | Qualifying provider | A provider whose qualifying similarity (the higher of its similarities from the legs that completed) is at or above the snapshot's threshold. |
 | Ranking sequence | (1) Compute each provider's similarity in each completed leg. (2) Keep only qualifying providers. (3) If both legs completed, order the qualifying providers by reciprocal rank fusion (RRF, k = 60) of their ranks within each leg's qualifying list; otherwise order by similarity. (4) Return the top 5. An RRF score is never compared with the threshold. |
-| Search time limit | Proposed engineering budget (not a PRD number), measured from request start: the whole server operation, including ranking and the response, finishes within 2.5 s. Any leg (the direct leg, or the translated-question leg including its translation and embedding) still running at 2.2 s is cancelled and its result ignored; the answer uses the legs that completed, and if none completed it is `search_unavailable`. Config values revisited after measurement. |
+| Search deadlines | Proposed engineering budgets (not PRD numbers), measured from request start: the translated-question leg (translation and its embedding) must finish by 1.8 s; the direct leg by 2.2 s; the whole server operation, including ranking and the response, by 2.5 s. A leg that misses its deadline is cancelled and its result ignored. All are config values revisited after measurement. |
 | No clear match | Zero qualifying providers. One to five qualifying providers are shown as they are, never padded with providers below the threshold. |
 | Provisional routes | The Cohere models and routes named in this epic are provisional until production access, exact model identifiers, pricing and measured performance are confirmed (Launch Readiness). |
 | Usage allowance | For live test-set runs: known per-unit prices for every model used, or, while prices are unknown, a conservative allowance of calls and tokens per month in config. Runs are checked against it before they start. |
@@ -1410,7 +1428,7 @@ So that I can read them even when my phone is set to another language.
 
 ### Story S03.04 — Search finds published providers by meaning
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** FR-D2-Q, FR-M3 (search data), AR-15, AR-20 (`SearchV1`), AR-22, AR-26 · **Depends on:** S03.02, S03.03 · **Branch:** `e03-s04-search-endpoint`
 
 As a resident,
@@ -1454,13 +1472,13 @@ So that a question in any language finds an English-sourced listing.
 **When** returned
 **Then** `emergency_first` is true
 
-**Given** the direct leg fails or is still running at 2.2 s and no translated leg completed
+**Given** the direct leg fails or misses its deadline and no translated leg completed
 **When** the server answers
 **Then** it returns `{error:{code: "search_unavailable"}}` within 2.5 s of request start, the leg's call is cancelled, and the failure is counted in `ops_event` without the question
 
-**Given** a fake that makes the direct embedding slow (3 s)
+**Given** fakes that make the direct embedding slow (3 s)
 **When** a search runs
-**Then** the response arrives within 2.5 s with `search_unavailable` (or with translated-leg results if that leg completed), and the slow call is cancelled (the fake records the abort)
+**Then** the response arrives within 2.5 s and the slow call is cancelled (the fake records the abort)
 
 **Given** each search
 **When** it completes
@@ -1480,7 +1498,7 @@ So that a question in any language finds an English-sourced listing.
 
 ### Story S03.05 — Questions in Pashto, Dari and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
 As a resident who writes in Pashto, Dari or romanized Urdu,
@@ -1493,19 +1511,19 @@ So that I am not disadvantaged by the language or script I use.
 **When** a question needs the translated-question leg
 **Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
 
-**Given** the translation and its embedding complete before 2.2 s from request start and `eld` confirms the translation is English
+**Given** the translation and its embedding finish within 1.8 s of request start and `eld` confirms the translation is English
 **When** results are ranked
 **Then** the ranking sequence is applied to both legs (threshold first, then RRF over qualifying providers), and `search_log.translated_leg` is `used`
 
-**Given** the translation fails, is not English, or the translated leg is still running at 2.2 s
+**Given** the translation fails, is not English, or the translated leg misses its deadline
 **When** the server answers
 **Then** the leg is cancelled, results come from the direct leg alone, the whole response still arrives within 2.5 s, and `translated_leg` is `failed` or `timed_out`
 
-**Given** the direct leg fails or is still running at 2.2 s but the translated leg completed
+**Given** the direct leg fails or misses its deadline but the translated leg completed
 **When** the server answers
 **Then** results come from the translated leg alone
 
-**Given** fakes for a slow translation (2 s) and for a slow translated embedding (translation 0.5 s, embedding 2 s)
+**Given** fakes for a slow translation (2 s), a fast translation with a slow translated embedding (translation 0.5 s, embedding 2 s), and a slow direct embedding
 **When** each test runs
 **Then** the response arrives within 2.5 s, cancelled calls record their abort, and late results are never used
 
@@ -1561,27 +1579,27 @@ So that I find help without knowing the provider's name.
 
 ### Story S03.07 — Team picks the embedding model and the no-match threshold
 
-- **Size:** S · **Estimate:** 2 h (+ about 3 h contingent) · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
 - **Traces:** FR-D2-Q, AR-15 (embedding model open question) · **Depends on:** S03.05 · **Branch:** `e03-s07-model-threshold`
 
 As a developer,
-I want the embedding model confirmed and the threshold chosen by measurement,
+I want the embedding model and threshold chosen by measurement,
 So that the choice is evidence, not guesswork, and can be repeated on the full test set.
 
 **Acceptance Criteria:**
 
-**Given** the pilot uses one embedding model, `embed-v4.0`
-**When** the runner is run on staging with the translated-question leg on and off, within the usage allowance
-**Then** a report for the tuning subset is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage; the choice is recorded in the spine and set as config
+**Given** the three candidates `embed-multilingual-v3.0`, `embed-v4.0` and `embed-v5.0-fast`
+**When** the runner is run on staging with each, leg on and off, within the usage allowance
+**Then** a comparison report is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage, for the tuning subset
 
-**Given** the scores of correct and no-match questions
+**Given** the comparison
+**When** a model is chosen
+**Then** the choice and the reason are recorded in the spine (closing the open question for now) and set as config; a later release using a different model needs a new release and a new run
+
+**Given** the scores of correct and no-match questions for the chosen model
 **When** the threshold is set
 **Then** it is chosen on the tuning subset only, as the value that keeps every tuning no-match question below it while losing the fewest hits, and is recorded with the report; the choice is provisional until S03.08
 **And** the evaluation subset is not run until S03.08, so it stays independent of tuning
-
-**Given** S03.08's evaluation run misses the launch bar
-**When** the team reviews it
-**Then** the comparison of the three candidates (`embed-multilingual-v3.0`, `embed-v4.0`, `embed-v5.0-fast`) from the MVP reference runs before launch, as contingent effort of about 3 h (2 h comparison, 1 h re-running the evaluation), recorded against this story's Actual
 
 ### Story S03.08 — Ambassadors complete the test set and the Hub sets the launch bar
 
@@ -1616,7 +1634,7 @@ So that we launch search knowing how well it works in every language.
 
 ### Story S03.09 — The test set guards every search change
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
 - **Traces:** AR-24, FR-D2-Q · **Depends on:** S03.08 · **Branch:** `e03-s09-test-set-guard`
 
 As a Hub Director,
@@ -1625,13 +1643,13 @@ So that a model or route change never quietly makes search worse for one languag
 
 **Acceptance Criteria:**
 
-**Given** a change to the embedding model, `search_question_route`, the threshold, `emergency_categories` or the catalogue
+**Given** a change to the embedding model, `search_question_route`, the threshold, `emergency_categories`, the search code or the catalogue
 **When** CI runs on that change
 **Then** the runner runs the evaluation subset against staging, and CI fails if any language's hit rate, the no-match accuracy or the emergency accuracy falls below its minimum in `bar.json`, naming the measure and the drop
 
-**Given** the week before launch and the middle of the pilot (week 4)
-**When** the team runs the test set manually
-**Then** the report is committed and a drop below any minimum is recorded in `ops_event` for the weekly review (E09)
+**Given** the monthly schedule and the week before launch
+**When** the scheduled run happens
+**Then** the report is committed and a drop below any bar is recorded in `ops_event` for the weekly review (E09)
 
 **Given** a live run is about to start
 **When** the runner checks the usage allowance
@@ -1858,7 +1876,7 @@ So that residents know we are on it before we have the details.
 
 **Given** a thread with a possible duplicate (an open non-drill thread overlapping in audience and type)
 **When** the author submits
-**Then** the approver will see a "possible duplicate" link; a duplicate is handled by withdrawing it with reason "duplicate" (S05.02; merging is deferred to the MVP)
+**Then** the approver will see a "possible duplicate" link (merging is E05)
 
 ### Story S04.06 — Each text is rendered once and frozen at submit
 
@@ -2031,11 +2049,11 @@ So that nothing sits unapproved while residents wait.
 
 A disruption stays one running thread: staff add updates, correct or withdraw what residents saw (shown in place, never quietly replaced), close it with a final entry or let it expire, and residents see building and neighbourhood status derived from those threads, a readable archive, and a one-step share that always shows the live, standard alert. With E05 done, `RESIDENT_ALERTS_ENABLED` may be turned on in production.
 
-**Epic estimate:** 43 h across 7 stories (1 S, 6 M) · S05.05 (merging duplicates) deferred to the MVP; duplicates are withdrawn with reason "duplicate" · **Epic actual:** —
+**Epic estimate:** 47 h across 8 stories (2 S, 6 M) · **Epic actual:** —
 
 **Depends on E04:** S04.03 (lifecycle, triggers, thread lock, entry versions), S04.05 (compose and idempotent submit), S04.06 (renderer and hash), S04.07 (approval, recipient snapshot hook), S04.08 (feed, alert detail, drill isolation). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoffs.** Sending is E06 and recipients are E07. Every use case in this epic that supersedes an entry, discards entries or closes a thread calls `messaging`'s `cancelQueued(entryIds, tx)` port inside its transaction; it does nothing until E06 implements it, and E06 must keep it in the same transaction. Corrections and withdrawals capture recipients at approval through `captureRecipients(entry, tx)` with the AD-7 rule (the target's recipients ∪ the entry's own audience, opt-outs never removing them); a final has no target and captures the thread union (definitions). E07 implements these rules. The dispatcher (E06) must claim a delivery only by locking its row and re-checking that it is still `queued`, and every cancellation must lock and update the delivery rows it stops, so a close or correction cannot be overtaken (E06 hand-off point).
+**Handoffs.** Sending is E06 and recipients are E07. Every use case in this epic that supersedes an entry, discards entries or closes a thread calls `messaging`'s `cancelQueued(entryIds, tx)` port inside its transaction; it does nothing until E06 implements it, and E06 must keep it in the same transaction. Corrections and withdrawals capture recipients at approval through `captureRecipients(entry, tx)` with the AD-7 rule (the target's recipients ∪ the entry's own audience, opt-outs never removing them); a final has no target and captures the thread union (definitions). E07 implements these rules. The dispatcher (E06) must claim a delivery only by locking its row and re-checking that it is still `queued`, so a merge or close that holds the row lock cannot be overtaken (S05.05).
 
 **Definitions used in this epic**
 
@@ -2202,6 +2220,37 @@ So that I am not worried by a problem that is long over.
 **When** it happens
 **Then** an `ops_event` is recorded (picked up by the health job in E09), and the next run closes any overdue thread
 
+### Story S05.05 — Hub staff merge duplicate alerts before texts go out
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-8 (duplicates), FR-A7 · **Depends on:** S05.03 · **Branch:** `e05-s05-merge-duplicates`
+
+As a Hub Coordinator,
+I want to fold a duplicate alert into the one already running,
+So that residents get one story, not two versions of the same problem.
+
+**Acceptance Criteria:**
+
+**Given** the "possible duplicate" link shown at approval (S04.05)
+**When** a Coordinator chooses "Merge into the running alert"
+**Then** in one transaction it locks both threads in id order, then locks every delivery row of the newer thread (`FOR UPDATE`, waiting for any claim in progress), and only if every one is `queued` or `cancelled` does it cancel the queued ones, discard the newer thread's entries (web-published ones get a system `withdrawal` with reason "duplicate"), close the newer thread `withdrawn`, and record the merge on both threads in the audit trail
+
+**Given** any delivery of the newer thread is `claimed`, `submitted` or in any later state
+**When** a merge is attempted
+**Then** it is refused with "Texts have already gone out or are going out; correct or withdraw instead", and nothing changes
+
+**Given** a merge and a dispatcher claim on the same delivery at the same time
+**When** both run
+**Then** either the claim wins and the merge is refused, or the merge wins and the claim finds the row `cancelled` and skips it; never both (concurrency test with a fake dispatcher that claims by row lock and re-checks `queued`, the rule E06 must follow)
+
+**Given** a merge of a thread into itself, into a closed thread, of a closed thread, or between a drill and a real thread
+**When** it is attempted
+**Then** it is refused with the reason, and the refusal is recorded
+
+**Given** a merge
+**When** a resident opens the newer thread's link
+**Then** they see "This alert was merged" with a link to the running alert
+
 ### Story S05.06 — Residents see the status of each building and neighbourhood
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
@@ -2287,7 +2336,7 @@ So that neighbours without the app still get trustworthy information.
 
 **Given** the link is opened
 **When** the page loads
-**Then** it always shows the alert's current state: the live alert with any correction above the original, in language `l`, then switches to the device's saved language if one is set; a closed thread shows its closed state
+**Then** it always shows the alert's current state: the live alert with any correction above the original, in language `l`, then switches to the device's saved language if one is set; a closed thread shows its closed state; a merged thread shows the merge note
 
 **Given** a drill thread, an unknown slug, or a thread with no web-published entry
 **When** `/a/{slug}` is requested
@@ -2305,11 +2354,11 @@ So that neighbours without the app still get trustworthy information.
 
 Every outbound text goes through one queue and one sender: in a fixed priority order, at a shared, controlled pace, with no automatic duplicate submissions, never after it was cancelled before hand-off, and with delivery status tracked from signed callbacks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.
 
-**Epic estimate:** 45 h across 9 stories (4 S, 5 M) · **Epic actual:** —
+**Epic estimate:** 48 h across 9 stories (4 S, 5 M) · **Epic actual:** —
 
-**Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.04 (`cancelQueued`, closing entry, final recipients), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
+**Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.05 (`cancelQueued`, closing entry, final recipients, merge guard), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim and hand-off rules, and repeats E05's final-delivery test with real deliveries. `captureRecipients` is implemented here for drills only (drill roster); E07 adds subscribers.
+**Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim rule that E05's merge relies on, and repeats E05's merge and final-delivery tests with real deliveries. `captureRecipients` is implemented here for drills only (drill roster); E07 adds subscribers.
 
 **What the sender guarantees.** It prevents automatic duplicate submissions: a text is handed to the provider at most once unless an Admin deliberately resends it (E09). It does not guarantee exactly-once delivery: a text whose outcome is unclear is marked `unknown`, never re-sent automatically, and may or may not have arrived.
 
@@ -2323,12 +2372,12 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | Closing entry | The entry whose approval closed the thread: its `final`, or the withdrawal that left no substantive entry (E05). Its deliveries stay sendable after the thread closes; every other entry's do not. |
 | Sendable (every kind) | The row is still `claimed` by this worker under a valid sender lease, its recipient still exists, its `send_by` time (if any) has not passed, and the pause does not apply to it. The pause applies to `alert`, `campaign` and resident `transactional` texts; on-call texts to `oncall` recipients are still sent during a pause so Admins hear about problems. |
 | Sendable (`alert`) | Also: its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; for `ack`, `update` and `correction`, the entry's valid-until has not passed (finals and withdrawals have no valid-until check); drill entries only to `roster` recipients. |
-| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation (to `pending_signup` recipients only), welcome, menu and prompt replies, edit links, `signup_info` to `inbound_reply` recipients only, `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to a receiving subscriber (`active`, `reconsent_pending` before the campaign deadline, or `retained`; E09), on-call texts only to a number still on the on-call roster, staff texts only to an active staff account, `signup_info` only while its `inbound_reply` row exists and before its `expires_at`). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation, and the `inbound_reply` row's `expires_at`, 30 minutes, for `signup_info`). |
-| `inbound_reply` recipient | A short-lived row in `subscriptions` holding a number with no subscription and its `expires_at` (created + 30 minutes). At the hand-off point, after the delivery row, it is locked `FOR UPDATE`; the dispatcher reads the number into memory only, deletes the row and commits `handed_off_at` in that same transaction, then calls the provider. If the worker stops after that commit and before the call, the number is gone, the row becomes `unknown` by lease expiry, and nothing is sent. Deleting a number's data (STOP, E07) deletes its `inbound_reply` rows too; the purge job deletes expired rows. |
+| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation (to `pending_signup` recipients only), welcome, menu and prompt replies, edit links, `signup_info` to `inbound_reply` recipients only, and `access_code` (E09) to a receiving subscriber, a pending sign-up or an `inbound_reply` recipient; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to a receiving subscriber (`active`, `reconsent_pending` before the campaign deadline, or `retained`; E09), on-call texts only to a number still on the on-call roster, staff texts only to an active staff account, `signup_info` only while its `inbound_reply` row exists and before its `expires_at`). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation, and the `inbound_reply` row's `expires_at`, 30 minutes, for `signup_info`). |
+| `inbound_reply` recipient | A short-lived row in `subscriptions` holding a number with no subscription and its `expires_at` (created + 30 minutes). At the hand-off point it is locked `FOR UPDATE` (step 4 of the lock order); the dispatcher reads the number into memory only, deletes the row and commits `handed_off_at` in that same transaction, then calls the provider. If the worker stops after that commit and before the call, the number is gone, the row becomes `unknown` by lease expiry, and nothing is sent. Deleting a number's data (STOP, E07) deletes its `inbound_reply` rows too; the purge job deletes expired rows. |
 | Sendable (`campaign`) | Also: the campaign was started by an Admin at `aal2` and is not cancelled, and the recipient is a subscriber still in the campaign's target state (D-7: `reconsent_pending`). Campaign texts are created in E09. |
 | Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued` and due, and committing `claimed` with its worker id and `claimed_at` in its own short transaction. |
-| Hand-off point | Immediately before the provider call, one short transaction locks the delivery row `FOR UPDATE`, checks this worker's lease token, re-reads the pause flag, the entry, the thread and the recipient, and commits `handed_off_at` only if the row is still sendable. Every change that must stop a send writes the affected delivery rows itself, in the same transaction as the change: a correction or withdrawal approval, a discard and a close call `cancelQueued`, which locks and sets every `queued` and claimed-but-not-handed-off row of the affected entries to `cancelled` (except the closing entry's rows); a recipient deletion locks and sets that recipient's `queued` and claimed-but-not-handed-off rows to `skipped` before the recipient row is deleted. Because both sides lock the same delivery row, the change either commits first (the send is stopped) or waits for the hand-off to commit (the text is in flight and reported as such). A pause writes no delivery rows: a pause committed while a hand-off transaction is open lets that one text go, and it is shown as in flight (disclosed allowance). |
-| Lock order | AD-18: `alert` → `alert_entry` → `delivery` → recipient row → `checkin` → `checkin_tally` → `spend_cap`. The hand-off locks only its delivery row (and an `inbound_reply` row after it). |
+| Hand-off point | Immediately before the provider call, one short transaction takes these locks in this order, re-checks that the row is sendable, and commits `handed_off_at`: (1) the sender lease row `FOR SHARE`, checking this worker's token; (2) the `messaging_control` row (which holds the pause) `FOR SHARE`; (3) for `alert` rows, the thread `FOR SHARE`, then the entry `FOR SHARE`; (4) the recipient's row `FOR SHARE` (subscriber, roster entry, on-call entry or staff account); (5) the delivery row `FOR UPDATE`. Competing changes take conflicting locks on the same rows: pause and resume lock `messaging_control` `FOR UPDATE`; supersession, discard, merge and close lock the thread `FOR UPDATE`; deleting a recipient locks its row. So a change committed before the hand-off transaction takes its locks stops the send, and a change that waits behind the hand-off sees the text as already handed off and cannot recall it. |
+| Lock order | Extends AD-18: sender lease → `messaging_control` → `alert` → `alert_entry` → recipient row → `delivery` → `checkin` → `checkin_tally` → `spend_cap`. Every use case that touches more than one of these takes them in this order. |
 | Claim order | Fire and evacuation alert entries first, then on-call and other transactional texts, then building-level before neighbourhood-level alerts, then oldest first. |
 | Sender lease | Only one dispatcher sends at a time, across every function instance and pg_cron run. It holds the single `dispatcher_lease` row, taken by a conditional update when the previous lease has expired, which writes a new random ownership token and an expiry 60 s ahead. Every renewal, claim and hand-off includes `token = mine AND expires_at > now()`; a renewal that updates no row, or a claim or hand-off that finds the token changed or expired, makes that worker stop at once without calling the provider. Each claimed row records the token that claimed it. |
 | Send pace | The lease holder submits at most the configured segments per second (default 3, Twilio's default toll-free rate) and claims only as many rows as it can send at that pace before its time limit, leaving 10 s of margin. |
@@ -2345,11 +2394,10 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | From | To | Cause |
 | --- | --- | --- |
 | `queued` | `claimed` | claim |
-| `queued` | `cancelled` | `cancelQueued` in the transaction of a correction, withdrawal, discard or close |
-| `queued` | `skipped` | recipient deletion, in the deletion's transaction |
+| `queued` | `cancelled` | `cancelQueued` (supersession, discard, merge, close) |
 | `claimed` | `queued` | not accepted (retry with backoff), pause before hand-off, claim expired before hand-off, or claimed under a lease token that is no longer current (requeued by the new lease holder) |
-| `claimed` | `cancelled` | `cancelQueued` in the transaction of a correction, withdrawal, discard or close, before hand-off; or not sendable at the hand-off point for the same reasons |
-| `claimed` | `skipped` | recipient deletion, in the deletion's transaction, before hand-off; or not sendable at the hand-off point because the recipient is no longer eligible, the valid-until or `send_by` passed, or the campaign was cancelled |
+| `claimed` | `cancelled` | not sendable at the hand-off point because the entry was superseded, discarded or its thread closed |
+| `claimed` | `skipped` | not sendable at the hand-off point because the recipient was deleted or is no longer eligible, the valid-until or `send_by` passed, or the campaign was cancelled |
 | `claimed` | `skipped_env` | `SMS_MODE=log` |
 | `claimed` | `submitted` | provider accepted |
 | `claimed` | `failed` | permanent error, or retries exhausted |
@@ -2397,7 +2445,7 @@ So that we can always see what went out and nothing is submitted twice automatic
 
 ### Story S06.02 — One sender submits each text at most once, in priority order and at a shared pace
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** AR-12, AR-19 (byte-for-byte), FR-M2 (delivery data) · **Depends on:** S06.01 · **Branch:** `e06-s02-dispatcher`
 
 As a Hub Coordinator,
@@ -2411,21 +2459,10 @@ So that residents get the most urgent text first and nobody gets duplicates from
 **Then** it sends only if it takes the sender lease; otherwise it exits without claiming
 **And** three runs started at once result in one sender, and over a 60-second window with a fake clock and fake provider the total submitted never exceeds 3 segments per second (concurrency test)
 
-**Given** a lease holder that stalls for more than 60 seconds (fake clock) and a replacement that takes the lease
-**When** the old worker resumes
-**Then** the replacement has requeued the old worker's claimed rows that were not handed off, and the old worker's next renewal, claim or hand-off finds its token changed and stops without calling the provider (test)
-
-**Given** a claimed-but-not-handed-off row, and separately a correction approval, a close and a recipient deletion, each committing first on a second database connection while the hand-off waits
-**When** the hand-off runs
-**Then** the row is already `cancelled` or `skipped`, the hand-off commits nothing, and the provider fake records no call (three focused integration tests)
-
-**Given** the same three changes starting while a hand-off transaction holds the row
-**When** both complete
-**Then** the change waits, sees the row handed off, leaves it unchanged and reports it as in flight (tests)
-
-**Given** a pause committed first
-**When** the hand-off runs
-**Then** the row returns to `queued`; a pause committed during an open hand-off lets that one text go and it is shown as in flight
+**Given** a lease holder that stalls for more than 60 seconds (fake clock)
+**When** a replacement takes the lease and the old worker then resumes
+**Then** the replacement requeues the old worker's claimed rows that were not handed off; the old worker's next renewal, claim or hand-off finds its token changed and stops without calling the provider; no row is handed off twice (test)
+**And** a row the old worker had already handed off before stalling keeps its hand-off and is left for its callback or the lease-expiry sweep
 
 **Given** the lease holder
 **When** it sends
@@ -2457,10 +2494,10 @@ So that residents get the most urgent text first and nobody gets duplicates from
 **Then** it reads the service's Smart Encoding setting and raises an on-call alert if it is on; this is defence in depth, because every request already sets `SmartEncoded=false`
 **And** the procedures state the configuration-control assumption: only named Admins change the Messaging Service, and texts are paused while they do
 
-### Story S06.03 — Cancelled and closed alerts never send stale texts
+### Story S06.03 — Cancelled, merged and closed alerts never send stale texts
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
-- **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.03 · **Branch:** `e06-s03-cancel-queued`
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.05 · **Branch:** `e06-s03-cancel-queued`
 
 As a Hub Coordinator,
 I want texts for withdrawn, corrected or closed alerts stopped before they are handed off,
@@ -2469,8 +2506,8 @@ So that nobody receives something we already took back, while the final word sti
 **Acceptance Criteria:**
 
 **Given** `cancelQueued(entryIds, tx)`
-**When** called by a correction or withdrawal approval, a discard or a close
-**Then** in the caller's transaction it locks the entries' `queued` and claimed-but-not-handed-off rows (lock order: after `alert_entry`, before any recipient row) and sets them `cancelled`, except the closing entry's rows; rows already handed off are left and reported to the caller
+**When** called by supersession, discard, merge or close
+**Then** it locks the entries' `queued` rows in lock order (after `alert_entry`, before `checkin`) and sets them `cancelled` in the caller's transaction; `claimed` rows not yet handed off are stopped at the hand-off point by the sendable check; rows already handed off are left and reported to the caller
 
 **Given** E05's final-delivery test with real deliveries
 **When** a thread with an update whose texts are still queued gets its final approved, including while texts are paused and after resuming
@@ -2480,9 +2517,17 @@ So that nobody receives something we already took back, while the final word sti
 **When** it is approved
 **Then** it is the closing entry, its rows are created and sent after the close, and the withdrawn entry's queued rows are cancelled
 
+**Given** E05's merge race with the real dispatcher
+**When** a merge and a claim of the same row run at the same time
+**Then** either the claim wins and the merge is refused, or the merge wins and the claim skips the cancelled row; never both (concurrency test repeated 50 times)
+
+**Given** the hand-off transaction and each competing change (a pause, a resident or roster entry being deleted, a correction approval, a close, a merge)
+**When** they race with controlled interleaving on two database connections, in both orders
+**Then** if the change commits first the row is not handed off (returned to `queued`, `skipped` or `cancelled`), and if the hand-off commits first the change waits, then sees the row as in flight; no deadlock occurs with a 5-second lock timeout, and each case follows the lock order (integration tests)
+
 **Given** a correction approved while the original's texts are part-sent
 **When** it commits
-**Then** the original's queued and claimed-but-not-handed-off rows are cancelled in the correction's transaction, handed-off and submitted rows are untouched, and the correction goes to every recipient of the original (drill roster in this epic; subscribers in E07)
+**Then** the original's queued rows are cancelled, claimed rows not yet handed off become `cancelled` at the hand-off point, handed-off and submitted rows are untouched, and the correction goes to every recipient of the original (drill roster in this epic; subscribers in E07)
 
 ### Story S06.04 — Delivery status comes only from signed provider callbacks
 
@@ -2552,7 +2597,7 @@ So that we practise sending without any chance of reaching residents.
 **Then** the trigger refuses it (direct SQL tests)
 
 **Given** a drill thread
-**When** anyone tries to change `is_drill` or open its share link
+**When** anyone tries to change `is_drill`, merge it with a real thread, or open its share link
 **Then** it is refused, and `/a/{slug}` returns 404
 
 **Given** a drill completes
@@ -2624,7 +2669,7 @@ So that a problem is fixed before residents miss an alert.
 
 ### Story S06.08 — Each text records its cost and timing
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
 - **Traces:** FR-M2, FR-M5 (cost data), FR-M4 · **Depends on:** S06.04 · **Branch:** `e06-s08-cost-timing`
 
 As a Hub Director,
@@ -2638,35 +2683,10 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 **Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` once, with kind `sms`, language, entry id and `is_drill`, in the same transaction as the outcome
 **And** a not-accepted outcome that requeues the row writes nothing, so a retried text is counted once, when it is finally accepted
 
-**Given** a reconciliation, identified by a stable reconciliation id
-**When** it runs
-**Then** its interval is exact and stated in UTC: for a month, `[first instant of the month, first instant of the next month)` in `America/Toronto`, converted to UTC, with id `month:{YYYY-MM}`; for a restore, `[backup's timestamp, moment sending was re-enabled)`, with id `restore:{backup timestamp}:{re-enable timestamp}` (S09.03)
-**And** it lists every outbound message in the interval from the Twilio Messages API, following `next_page_uri` until it is empty, and records each message's actual price once, keyed by its `MessageSid` (unique across all reconciliations), converted to CAD at the configured rate and labelled
-
-**Given** the matching rule
-**When** an actual price is recorded, or a delivery's provider id is recorded later (for example by a late callback), or any reconciliation runs
-**Then** every estimate whose delivery's provider id equals the `MessageSid` of an imported actual is retired by that actual (marked with the actual's `MessageSid` and no longer counted), whatever interval or timestamp either one falls in; an estimate is retired at most once and an actual retires at most one estimate
-**And** each reconciliation first re-runs this matching over all unretired estimates, so an actual imported earlier still retires a matching estimate found later
-
-**Given** the same reconciliation run again, or a message already imported by another reconciliation
-**When** it imports
-**Then** nothing changes: the reconciliation id and each `MessageSid` are unique, so a repeated import adds no actual and retires no further estimate (test)
-
-**Given** a reconciliation whose listing completed and every message has a price
-**When** it is applied
-**Then** it is marked complete and reports, for its interval: the actual total; the estimates its actuals retired; unmatched actuals (messages with no delivery carrying that `MessageSid`, for example texts sent after a backup whose rows were lost), counted at their actual price and labelled; and the difference from the retired estimates
-
-**Given** an estimate whose delivery has no provider id, or whose `MessageSid` has not been imported by any complete reconciliation
-**When** spend is reported
-**Then** it stays counted at its estimate and is labelled "unresolved estimate", shown separately from actuals, never zero and never silently dropped; reports also show the unresolved-estimate and unmatched-actual totals side by side, because an ambiguous send with no recorded provider id may appear in both
-
-**Given** a reconciliation whose listing failed, was cut short, or includes a message with no price yet
-**When** it is checked
-**Then** no actual from it is recorded, the interval is shown as "pending reconciliation" with its estimates still counted (never zero), and the reconciliation is retried later (tests for each)
-
-**Given** the boundary and overlap cases
-**When** the tests run
-**Then** they cover: Twilio records a message at 23:59:59 Toronto time on the last day of a month while the app records its acceptance at 00:00:01 on the first day of the next, with the earlier month reconciled first (its actual retires the estimate recorded in the next month) and with the later month reconciled first (the estimate stays unresolved until the earlier month's import retires it); and a message inside both a month and a restore interval, with the month imported first and with the restore imported first, counted once and retiring its estimate once in both orders
+**Given** a delivery with a provider id reaches a terminal state
+**When** the price job runs (hourly)
+**Then** it fetches the Message resource from Twilio and stores `price`, `price_unit` and `num_segments` beside the estimate; while `price` is still empty it retries hourly for up to 72 hours, then records "price not reported"
+**And** reports use the actual price when present (converted to CAD at the configured rate, labelled), otherwise the estimate, labelled as an estimate
 
 **Given** an alert entry's deliveries
 **When** the pilot measures are computed
@@ -2689,7 +2709,7 @@ So that I know who has been reached and no test path can send by accident.
 
 **Given** the E01 spike (S01.15)
 **When** this story is done
-**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher and the reconciliation and restore scripts (dependency rule); a test fails if any other module calls it
+**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher and the price job (dependency rule); a test fails if any other module calls it
 
 **Given** the published confirmation (O-06) and the alert's staff view
 **When** an entry is sending
@@ -2703,7 +2723,7 @@ So that I know who has been reached and no test path can send by accident.
 
 Residents read plain-language terms, sign up for texts on the web or with a staff member's help, and confirm by replying YES themselves. They change their choices or leave by text or a short-lived web link, approved alerts reach exactly the matching subscribers in their language, corrections and finals reach everyone who got the original, and Admins see spend against the budget with a cap that warns but never blocks.
 
-**Epic estimate:** 52 h across 10 stories (6 S, 4 M) · **Epic actual:** —
+**Epic estimate:** 54 h across 10 stories (5 S, 5 M) · **Epic actual:** —
 
 **Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.13 (buildings and floors), S02.03 (device choices), S03.04 (`rate_limit`), S04.04 (`matches`), S04.06 (renderer), S04.07 (approval, reviewed-count check, `captureRecipients` hook), S05.02 and S05.03 (correction and final recipient rules), S06.01 to S06.07 (outbox, sendability by kind, sender, callbacks, pause, on-call), S06.08 (cost data). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -2724,7 +2744,7 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 | Reply 0 | Inside a menu, 0 means Back. Outside a menu, 0 asks for confirmation ("Reply 0 again within 10 minutes to delete your subscription. You will get no more texts."); a second 0 deletes. STOP always deletes at once, handled by Twilio. |
 | Building change by text | Menu 1 sets one building (and optional floor) and replaces all saved buildings. When more than one building is saved, the menu warns first ("This replaces your {n} saved buildings. 1 Continue, 0 Back"). Adding several buildings is done with the edit link. |
 | Reply to an unknown number | A number with no subscription or pending sign-up has no record to resolve, so a reply to it (the sign-up link, purpose `signup_info`) uses a short-lived `inbound_reply` row holding the number, with recipient kind `inbound_reply` and the sendability, locking and deletion rules in E06's definitions: the row is deleted in the hand-off transaction, or by the purge job after its 30-minute `expires_at`. At most one such reply per number per day (tracked by salted hash in `rate_limit`). This is the only place a number without a subscription is stored. |
-| Deletion | Hard-deletes, in one transaction, the subscriber, its places, opt-outs, prompts and edit links, any pending sign-up for that number, and its check-in records (through `checkins`' port); in the same transaction its `queued` and claimed-but-not-handed-off deliveries are locked and set to `skipped` before the subscriber row is deleted (lock order: round threads' `alert` rows, then `delivery`, then the subscriber row, then `checkin`, then `checkin_tally`). After deletion the app sends nothing to that number: no record could resolve it, so every warning is given before deleting. |
+| Deletion | Hard-deletes, in one transaction, the subscriber, its places, opt-outs, prompts and edit links, any pending sign-up for that number, and its check-in records (through `checkins`' port); queued texts to it are skipped at hand-off. After deletion the app sends nothing to that number: no record could resolve it, so every warning is given before deleting. |
 | Edit link | A single-use web link valid for 30 minutes, sent by text on request, to change choices or delete the subscription. |
 | Matching subscribers | Receiving subscribers (`active`, `reconsent_pending` before the campaign deadline, or `retained`; E09) for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
 | Monthly cap | An Admin-set SMS spend limit per calendar month in `America/Toronto`. Exceeding it shows the shortfall and notifies Admins; it never blocks a send. |
@@ -2995,7 +3015,7 @@ So that every text I get matters to me.
 
 ### Story S07.08 — Admins see spend against the budget and set a monthly cap
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** FR-G6, NFR-N9, FR-M5, AR-12 (spend cap) · **Depends on:** S07.07, S06.08 · **Branch:** `e07-s08-spend-cap`
 
 As a Hub Admin,
@@ -3006,23 +3026,35 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 **Given** the spend view
 **When** an Admin or Director opens it
-**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000): actual where a reconciliation is complete (S06.08), with unmatched actuals, unresolved estimates and intervals pending reconciliation each labelled and shown separately (never zero); Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured, never as zero; Directors see it read-only
+**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000), split into spent (actual price where Twilio reported it, otherwise a labelled estimate) and reserved (outstanding reservations); Directors see it read-only
+**And** Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured; it is never shown as zero
 
 **Given** an Admin at `aal2`
 **When** they set or change the monthly cap
 **Then** it is saved in `spend_cap` and audited
 
-**Given** an approval view
-**When** month-to-date spend plus this entry's estimate would exceed the cap
-**Then** the shortfall is shown before approval; on approval the overrun is audited as `cap_overrun` and Admins are notified by a `transactional` text; approval is never blocked
+**Given** an approval
+**When** it runs
+**Then** after the recipient snapshot it takes the `spend_cap` lock (last in lock order), recomputes month-to-date (spent plus outstanding reservations) plus this estimate, and writes a `spend_reservation` for the estimate
+**And** if the shortfall differs from the one shown on the approval view, approval asks the approver to confirm the new figure (as for a changed recipient count); once confirmed it always succeeds, `cap_overrun` is audited when over the cap, and Admins are notified by a `transactional` text
+**And** two approvals at the same time each see the other's reservation (concurrency test)
+
+**Given** a reservation
+**When** its deliveries progress
+**Then** a delivery's estimate stays reserved while it is `queued`, `claimed` or requeued after a not-accepted outcome; it moves from reserved to spent, in the same transaction as the outcome, when the provider accepts it or the outcome is `unknown` (S06.08); it is released when the delivery ends `cancelled`, `skipped`, `skipped_env`, or `failed` without ever being accepted (permanent error or retries exhausted); the reservation closes when every delivery is terminal
+**And** an amount is counted in exactly one of reserved or spent at any time
+
+**Given** a delivery that gets a 429, is requeued, and is then accepted
+**When** spend is checked after each step
+**Then** its estimate is reserved after the 429 and the requeue, and spent exactly once after acceptance; a second test with 429 three times then failure shows it released, never spent (tests)
+
+**Given** Twilio later reports an actual price
+**When** the price job stores it
+**Then** the spend total uses the actual price instead of the estimate for that delivery, never both
 
 **Given** the month boundary in `America/Toronto`
 **When** spend is totalled
 **Then** a send at 23:59 and one at 00:01 Toronto time fall in different months (test)
-
-**Given** a retried text
-**When** spend is totalled
-**Then** it is counted once, when the provider accepts it or its outcome becomes `unknown` (S06.08); a text that was never accepted is not counted (tests: 429 then accepted; 429 three times then failed)
 
 ### Story S07.09 — Abuse of sign-up and texting is limited
 
@@ -3078,7 +3110,7 @@ So that the pilot can report reach without identifying anyone.
 
 Ambassadors see their buildings' alerts and post updates and incidents for their floors; lower-risk posts appear on the web at once as "Not yet verified" while every text waits for a second person. Subscribed residents can ask to be checked on during heat and outages, with honest consent and coverage; during those alerts the covering ambassadors run a round that works without signal and keeps nothing on the phone, the Hub hears at once about anyone not reached or needing help, and only counts remain when the alert closes. Posting stories come first so posting can ship even if check-ins slip; the full-pilot launch gate still requires every story in this epic.
 
-**Epic estimate:** 47 h across 9 stories (3 S, 6 M) · **Epic actual:** —
+**Epic estimate:** 52 h across 9 stories (3 S, 6 M) · **Epic actual:** —
 
 **Depends on earlier epics:** S01.09 (Hub shell), S01.12 (policy), S01.14 (assignments, `coversFloor`, coverage view), S04.03 to S04.08 (lifecycle, audience, compose and submit, approval, feed), S05.02 and S05.03 (supersession, withdrawal, closing), S05.06 (status `verified`), S06.01 to S06.07 (outbox, sendability, on-call roster), S07.02, S07.03, S07.06 (sign-up and edit link), S07.04 and S07.05 (`withdrawRequest` and `deleteForSubscriber` ports). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -3094,15 +3126,14 @@ Ambassadors see their buildings' alerts and post updates and incidents for their
 | Personalised check-in responses | Request state, submission responses and coverage results are returned only by `POST` responses with `Cache-Control: no-store`, are never cached by the service worker and never sent as usage events. Only R-33's general explanation is a public, cacheable page. |
 | Covered request | A request whose floor passes `identity.coversFloor(rsn, floor)` at the time it is made. A request is never saved for an uncovered floor. |
 | Round types | Disruption types with `disruption_type.checkin = true` (pilot: heat and power), editable by an Admin at `aal2` (audited). |
-| Round | One per non-drill thread of a round type: `checkin` rows `(round_ref, alert_id, subscriber_id, rsn, floor, method, status)`, unique per thread and subscriber, never storing a phone number. `round_ref` is a stable, opaque random UUID, never derived from the subscriber, time or location, and is what the round page and marks use. Rows are created by `checkins.ensureRound` when a non-drill `ack`, `update` or `correction` in that open thread is approved, and also at once when a covered request is activated while a matching round is open (`checkins.joinActiveRounds`). A round matches a request when the "where I live" place matches the audience of the thread's latest approved, non-superseded substantive entry. D-1 publication never creates a round. |
-| Changed location | Changing the "where I live" building or floor, on the edit page or by SMS menu 1, withdraws the check-in request: its open round rows are tallied `withdrawn` and become closed stubs, and `checkin_method` is cleared. The edit page then offers to ask again for the new floor with the consent shown again; the SMS confirmation says the request was withdrawn and offers the edit link. A change of method only updates the request and its open rows. |
-| Request lock order | A use case that changes a request (activate, withdraw, delete) first reads the candidate open round threads, then locks those `alert` rows in id order, then the subscriber's deliveries if it is a deletion, then the subscriber row, then its `checkin` rows, then `checkin_tally`, matching AD-18. `ensureRound` in an approval holds its thread first, then the subscriber rows, in the same order. |
+| Round | One per non-drill thread of a round type: `checkin` rows `(alert_id, subscriber_id, rsn, floor, method, status)`, unique per thread and subscriber, never storing a phone number. Rows are created by `checkins.ensureRound` when a non-drill `ack`, `update` or `correction` in that open thread is approved, and also at once when a covered request is activated or changed while a matching round is open (`checkins.joinActiveRounds`). A round matches a request when the "where I live" place matches the audience of the thread's latest approved, non-superseded substantive entry. D-1 publication never creates a round. |
+| Reconciling a changed request | When "where I live", floor or method changes, each of the subscriber's open round rows is updated in the same transaction: a new location that still matches and is covered moves the row (old location tallied `moved`, row reset to `pending` at the new location); a location that no longer matches removes the row (tallied `moved`); a method change updates the row. A building change by SMS menu 1 that replaces "where I live" withdraws the request instead (fresh consent cannot be given by text), and the confirmation text says so and offers the edit link. |
+| Request lock order | A use case that changes a request (activate, change, withdraw, delete) first reads the candidate open round threads, then locks those `alert` rows in id order, then the subscriber row, then its `checkin` rows, then `checkin_tally`, matching AD-18. `ensureRound` in an approval holds its thread first, then the subscriber rows, in the same order. |
 | Marks | `done`, `not_reached`, `needs_help`, each with a client-generated mark id so a resent mark is applied once. A later mark on the same row replaces the earlier one. |
-| Closed stub | When a round row is removed (close, withdrawal, deletion or location change), its `subscriber_id` is set to null and it is kept as a stub `(round_ref, alert_id, rsn, floor, closed_at)`, which holds no resident data. Stubs are deleted 2 hours after `closed_at` (an approved pilot scope change; the MVP reference keeps 24-hour signed tickets). `not_reached` and `needs_help` rows kept for Hub follow-up keep their subscriber link until handled or 24 hours after close, then become stubs. |
-| Late mark | A mark naming the `round_ref` of a stub. It is accepted only from a signed-in, active Ambassador who currently covers the stub's floor (or an Admin), and only while the stub exists. After the stub has expired the mark is refused and the Ambassador is told: "This round has ended. If someone needs help, call the Hub at {number}". |
+| Mark ticket | Each row on the round page carries a ticket: an HMAC, with a server secret, over `(row id, alert id, rsn, floor, staff id, issued at)`. It holds no resident data. Every mark sends the row id and ticket; the server checks the signature, that the ticket's staff id is the signed-in account and that account is active, and that the ticket is for a thread still open or closed less than 24 hours ago. A late mark (row already deleted) is trusted only through its ticket. |
 | On-duty Admin | An `ops.oncall_roster` entry with role `on_duty`, linked to an active Admin account. Escalations go to them; with none set they go to the on-call Admins, and the approval view of a round-type alert warns about it. |
-| Escalation | Created on the Hub list at once, in the same transaction as the mark, unique per (`round_ref`, status). It also queues a `transactional` text (purpose `escalation`, recipient kind `oncall`) to the on-duty Admin, never containing the resident's number. Like other on-call texts it is exempt from the pause, and it is sent through the paced queue after fire and evacuation alerts, so arrival can take seconds to minutes during a large send. |
-| Round tally | `checkin_tally` keyed `(alert_id, rsn, floor, status)`. `requested` is cumulative: +1 when a row is created at that location, never decreased. Outcomes are mutually exclusive, one per row, recorded when the row leaves the round (close, withdrawal, deletion or location change): the row's latest mark (`done`, `not_reached`, `needs_help`), else `withdrawn` or `unmarked`. Rows kept after close for follow-up are tallied at close and flagged so their later change to a stub adds nothing. After close, for each location, `requested` equals the sum of the outcomes. |
+| Escalation | Created on the Hub list at once, in the same transaction as the mark, unique per (row id, status). It also queues a `transactional` text (purpose `escalation`, recipient kind `oncall`) to the on-duty Admin, never containing the resident's number. Like other on-call texts it is exempt from the pause, and it is sent through the paced queue after fire and evacuation alerts, so arrival can take seconds to minutes during a large send. |
+| Round tally | `checkin_tally` keyed `(alert_id, rsn, floor, status)`. `requested` is cumulative: +1 when a row is created at that location, never decreased. Outcomes are mutually exclusive, one per row per location, recorded when the row leaves that location (close, withdrawal, deletion or move): the row's latest mark (`done`, `not_reached`, `needs_help`), else `withdrawn`, `moved` or `unmarked`. Rows kept after close for follow-up are tallied at close and flagged so their later deletion adds nothing. After close, for each location, `requested` equals the sum of the outcomes. |
 
 ### Story S08.01 — Ambassadors see their buildings' alerts and their own posts
 
@@ -3216,7 +3247,7 @@ So that residents are not left with an old problem on screen.
 
 ### Story S08.05 — A subscribed resident asks for a check-in, honestly
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** FR-C1, FR-C4, FR-C6, NFR-N5 (consent), AR-16, UX-DR14 (R-33) · **Depends on:** S07.06, S01.14 · **Branch:** `e08-s05-checkin-request`
 
 As a resident who lives alone,
@@ -3242,21 +3273,21 @@ So that someone notices if I need help.
 **When** it is saved
 **Then** `joinActiveRounds` adds the requester to that round in the same transaction, and the ambassador's round page shows them on its next refresh; the Hub never has to post another update for them to be included
 
-**Given** a subscriber with an active request changes "where I live" or floor on the edit page, or changes building by SMS menu 1
-**When** the change is saved
-**Then** the request is withdrawn as defined in "Changed location", and the edit page offers to ask again for the new floor with the consent shown again; a change of method only updates the request and its open rows
+**Given** a subscriber with an active request changes "where I live", floor or method on the edit page, or changes building by SMS menu 1
+**When** saved
+**Then** the change follows the reconciling rule; a building or floor change on the edit page asks for the consent again before saving
 
-**Given** a withdrawal or a deletion racing an approval that creates a round
-**When** both run
-**Then** the request lock order serialises them, and no live row is left for a withdrawn request or a deleted subscriber (concurrency test)
+**Given** two open round threads covering the subscriber and an approval in each
+**When** a change, a withdrawal or a deletion races those approvals
+**Then** the request lock order serialises them: no row is left at an old location, for a withdrawn request, or for a deleted subscriber (concurrency tests for each)
 
 **Given** reply 3, or "Withdraw my check-in request" on the edit page
 **When** handled
-**Then** `checkins.withdrawRequest` (implementing E07's port) calls `removeRequester`, which tallies any open rows (`withdrawn` unless already marked) and turns them into closed stubs, then clears `checkin_method`, in one transaction, and a confirmation is sent
+**Then** `checkins.withdrawRequest` (implementing E07's port) calls `removeRequester`, which tallies any open rows as `withdrawn` and deletes them, then clears `checkin_method`, in one transaction, and a confirmation is sent
 
 **Given** a subscriber is deleted (STOP, double 0, edit page)
 **When** E07's deletion runs
-**Then** `checkins.deleteForSubscriber` (implementing E07's port) tallies the subscriber's check-in rows and turns them into closed stubs in the same transaction, and E07's deletion tests now run against the real port
+**Then** `checkins.deleteForSubscriber` (implementing E07's port) tallies and deletes the subscriber's check-in rows in the same transaction, and E07's deletion tests now run against the real port
 
 **Given** a covered request whose floor later loses its ambassador
 **When** the Admin opens the coverage view
@@ -3264,7 +3295,7 @@ So that someone notices if I need help.
 
 ### Story S08.06 — Heat and power alerts start a check-in round
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** FR-C7, FR-E1, AR-16, AR-9 (lock order), AR-10 (no drill check-ins) · **Depends on:** S08.05, S06.05 · **Branch:** `e08-s06-round-start`
 
 As a Hub Coordinator,
@@ -3279,7 +3310,7 @@ So that ambassadors can start checking on people without anyone forgetting a ste
 
 **Given** a later approval in the same thread
 **When** `ensureRound` runs again
-**Then** matching requesters without a row are added, and existing rows and marks are untouched until close
+**Then** any matching requester without a row is added, existing rows and marks are untouched, and rows whose place no longer matches the newest approved audience are removed and tallied `moved`
 
 **Given** a drill thread
 **When** anything tries to insert a `checkin` row for it
@@ -3287,7 +3318,7 @@ So that ambassadors can start checking on people without anyone forgetting a ste
 
 **Given** a requester withdraws or is deleted while an approval is creating the round
 **When** both run at the same time
-**Then** the subscriber row lock serialises them in lock order: either the row is created and then turned into a stub tallied `withdrawn`, or it is never created; never a live row left for a withdrawn requester (concurrency test)
+**Then** the subscriber row lock serialises them in lock order: either the row is created and then removed and tallied `withdrawn`, or it is never created; never a row left for a withdrawn requester (concurrency test)
 
 **Given** an Admin at `aal2` changes which types are round types
 **When** saved
@@ -3295,7 +3326,7 @@ So that ambassadors can start checking on people without anyone forgetting a ste
 
 ### Story S08.07 — The round works without signal and leaves nothing on the phone
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** FR-C3, FR-C7, AR-3 (round page exception), AR-16, UX-DR17 (A-04) · **Depends on:** S08.06 · **Branch:** `e08-s07-round-page`
 
 As a building ambassador,
@@ -3306,7 +3337,7 @@ So that I can check on each person quickly and nothing about them stays on my ph
 
 **Given** "My round" (A-04)
 **When** an Ambassador opens it during an open round
-**Then** it lists only requests on floors they cover in that thread's buildings, each with phone number, floor and method (call or text) as `tel:` or `sms:` links and its `round_ref`, never a name, reason or row id; the contacts are composed in the app layer from `subscriptions` and sent `no-store`
+**Then** it lists only requests on floors they cover in that thread's buildings, each with phone number, floor and method (call or text) as `tel:` or `sms:` links and a mark ticket, never a name or reason; the contacts are composed in the app layer from `subscriptions` and sent `no-store`
 **And** Ambassadors not covering a floor, Coordinators and Directors get counts only; Admins can see every request (direct-request tests)
 
 **Given** the page has loaded
@@ -3328,21 +3359,13 @@ So that I can check on each person quickly and nothing about them stays on my ph
 **And** tests cover a background period with suspended timers (clock jump), a return at 9 and at 10 minutes, and back navigation after leaving the page
 
 **Given** any mark
-**When** it arrives
-**Then** it is accepted only from a signed-in, active Ambassador who currently covers the row's floor (or an Admin), naming a `round_ref` that matches an open row or an unexpired stub; an unknown `round_ref` or an unauthorised sender is refused (401 or 403) and the refusal is recorded
+**When** it arrives without a valid ticket, with a ticket for another account, from a suspended account, or for a thread closed more than 24 hours ago
+**Then** it is refused (401 or 403), changes nothing and the refusal is recorded; fabricated tickets are counted in `ops_event`
 
-**Given** a late `not_reached` or `needs_help` mark for an unexpired stub
-**When** it is accepted
-**Then** one escalation is created with the stub's building and floor and the ambassador only (S08.08), and the ambassador is told "The Hub has been told; call the Hub if you can"
-**And** repeating it, with the same or a new mark id, creates no second escalation (unique per `round_ref` and status) (tests)
-
-**Given** a late `done` mark for an unexpired stub
+**Given** a mark with a valid ticket for a row deleted because the thread closed or the resident withdrew
 **When** it arrives
-**Then** it is answered "This request has ended" and changes nothing
-
-**Given** a mark naming a stub older than 2 hours, or one already purged
-**When** it arrives
-**Then** it is refused, nothing is recorded against the round, and the Ambassador sees "This round has ended. If someone needs help, call the Hub at {number}" with a `tel:` link; the refusal is recorded without resident data
+**Then** `done` is answered "This request has ended"; `not_reached` and `needs_help` create one escalation with the ticket's building, floor and ambassador only (S08.08), and the ambassador is told "The Hub has been told; call the Hub if you can"
+**And** repeating the same late mark, or sending it again with a new mark id, creates no second escalation (unique per row id and status)
 
 ### Story S08.08 — The Hub hears at once about anyone not reached or needing help
 
@@ -3370,16 +3393,16 @@ So that the Hub follows up before it is too late.
 
 **Given** a thread closes
 **When** `closeAlert` runs
-**Then** every row is tallied in the same transaction; `pending` and `done` rows become closed stubs, while `not_reached` and `needs_help` rows are flagged as tallied and keep their subscriber link until an Admin marks them handled or 24 hours after close, when the purge job turns them into stubs without tallying again; stubs are deleted 2 hours after they are created
+**Then** every row is tallied in the same transaction; `pending` and `done` rows are deleted, while `not_reached` and `needs_help` rows are flagged as tallied and stay until an Admin marks them handled or 24 hours after close, when the purge job deletes them without tallying again
 **And** the terms (S07.01) state this exception before check-ins launch: "If an ambassador could not reach you or found you needed help, the Hub keeps your number and floor for up to 24 hours after the alert ends, to follow up"
 
-**Given** an escalation from a late mark on a stub
+**Given** an escalation from a mark that arrived after its row was deleted
 **When** shown
 **Then** it has the building, floor and ambassador only, and asks the Hub to call the ambassador
 
 ### Story S08.09 — The Hub sees round counts by building and floor
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
 - **Traces:** FR-E3, FR-E5, FR-M4 (data apart from drills) · **Depends on:** S08.08 · **Branch:** `e08-s09-round-counts`
 
 As a Hub Coordinator,
@@ -3388,10 +3411,10 @@ So that we can see how the round is going and report on it afterwards without ke
 
 **Acceptance Criteria:**
 
-**Given** the round tally rule, with statuses `requested`, `done`, `not_reached`, `needs_help`, `withdrawn`, `unmarked`
-**When** rows are created, marked, re-marked, withdrawn, deleted, closed and purged
+**Given** the round tally rule, with statuses `requested`, `done`, `not_reached`, `needs_help`, `withdrawn`, `moved`, `unmarked`
+**When** rows are created, marked, re-marked, moved, withdrawn, deleted, closed and purged
 **Then** the tally is updated in the same transactions, and after close, for each location, `requested` equals the sum of the outcomes
-**And** tests cover a resent mark, a changed mark (done then needs help), a withdrawal after a mark, a location change (counted `withdrawn`), deletion during the round, and the purge of a kept row, each counted once
+**And** tests cover a resent mark, a changed mark (done then needs help), a withdrawal after a mark, a move between floors, deletion during the round, and the purge of a kept row, each counted once
 
 **Given** the live round view during the round
 **When** shown
@@ -3407,15 +3430,15 @@ So that we can see how the round is going and report on it afterwards without ke
 
 ## E09 — The Hub monitors the pilot and closes it cleanly
 
-The Hub learns about problems before residents do, can deliberately resend texts that failed, reviews reliability every week from SQL views, and gives Directors the pilot measures as an export for the week-8 go / no-go review. Residents can ask what the CVH holds about them through a call-back process, and at the end of the pilot subscribers are asked whether to stay, with everyone else deleted on schedule.
+The Hub learns about problems before residents do, can deliberately resend texts that failed, reviews reliability every week, and gives Directors a read-only view of the pilot measures for the week-8 go / no-go review. Residents can ask what the CVH holds about them, and at the end of the pilot subscribers are asked whether to stay, with everyone else deleted on schedule.
 
-**Epic estimate:** 33 h across 7 stories (3 S, 4 M) · **Epic actual:** — · S09.06 (access-request screen) deferred to the MVP
+**Epic estimate:** 49 h across 8 stories (1 S, 7 M) · **Epic actual:** — (S09.03 re-estimated from S 4 h to M 6 h for the deletion ledger and restore steps)
 
-**Launch gate.** Before launch: S09.01 (health and outside check), S09.02 (resend, which the procedures rehearse) and S09.03 (procedures, deletion ledger, restore reconciliation, the access-request process and the rehearsals, including the production STOP-evidence rehearsal). S09.04 and S09.05 may land during the pilot. S09.07 and S09.08 must be ready by day 60.
+**Launch gate.** Before launch: S09.01 (health and outside check), S09.02 (resend, which the procedures rehearse) and S09.03 (procedures, deletion ledger, launch-day access-request process). S09.04 to S09.06 may land during the pilot; until S09.06 ships, access requests use S09.03's launch-day process. S09.07 and S09.08 must be ready by day 60.
 
 **Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.14 (coverage), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings, reviewed-count check), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 to S07.08 (inbound router, menus, edit link, matching, spend), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally). Each story creates only the tables it needs and names the stories it depends on.
 
-**Changes to earlier epics made here** (recorded in E06 and E07): E06 gains the `pending_signup` recipient kind; E06 and E07 use "receiving subscriber" instead of "active subscriber"; resends are metadata on a delivery, not a purpose.
+**Changes to earlier epics made here** (recorded in E06 and E07): E06 gains the `pending_signup` recipient kind and the `access_code` purpose; E06 and E07 use "receiving subscriber" instead of "active subscriber"; resends are metadata on a delivery, not a purpose.
 
 **Definitions used in this epic**
 
@@ -3425,15 +3448,16 @@ The Hub learns about problems before residents do, can deliberately resend texts
 | Heartbeat | The health job records the time of its last successful run. `GET /api/health/heartbeat` returns 200 only if that time is less than 3 minutes old, else 503. It returns no other detail. |
 | Outside check | A free-tier uptime monitor outside Vercel, Supabase and Twilio (chosen by IT and recorded in the spine) that calls the heartbeat every minute and emails the on-call Admins when it fails twice in a row. It does not depend on the CVH's own texting. |
 | Resend | A deliberate Admin action that creates a new delivery copying an earlier one in the same chain. The new row keeps the original's `kind`, `purpose`, body and sendability rules, and records `resend_of` (always the chain's first delivery, the root) and `resend_n` (1 or 2), with idempotency key `resend:{root id}:{n}` and a unique `(resend_of, resend_n)`. A chain has at most 2 resends in total, whichever row in it is resent. No row in the chain ever changes. |
-| Receiving subscriber | A subscriber who gets alerts, menus, edit links and check-in rounds: `active`; `reconsent_pending` before the campaign deadline; or `retained`. After the deadline a `reconsent_pending` subscriber receives nothing, even before the purge deletes them. |
-| Campaign | The end-of-pilot re-consent: a record with the frozen catalog text per language (reviewed before the pilot), the terms version and the deadline (Toronto time), started by one Admin at `aal2` after a rehearsal on the drill roster. States `started → ended`. |
+| Receiving subscriber | A subscriber who gets alerts, menus, edit links, check-in rounds and access codes: `active`; `reconsent_pending` before the campaign deadline; or `retained`. After the deadline a `reconsent_pending` subscriber receives nothing, even before the purge deletes them. |
+| Campaign | The end-of-pilot re-consent: a record with version, frozen text per language, terms version, deadline (Toronto time) and `content_hash` over all of them, prepared by one Admin and approved by a different Admin at `aal2`. States `draft → approved → started → ended`. |
 | Re-consent prompt | At campaign start each targeted subscriber gets an `sms_prompt` of kind `reconsent`, open until the deadline. YES from that number resolves to it (latest `sent_at`, AD-9) and moves the subscriber to `retained`. |
-| Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. In the pilot it is handled by the call-back process in S09.03 and recorded in the audit trail with dates, outcome and the Admin, never the number. |
+| Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. Stored as `access_request` with the Admin, a salted hash of the number, timestamps and outcome, never the number. |
+| Access code | 6 digits, stored only as an HMAC (server secret, request id, code), valid 15 minutes, at most 3 attempts, used once. Verification is one atomic update that succeeds only if the request is unverified, unexpired, under its attempt limit and the code matches; a failed attempt increments the count in the same statement. |
 | Deletion ledger | A write-ahead record outside the database. Before any deletion commits, the use case writes one object `{intent id, salted number hash, requested_at, reason}` to a private Storage bucket and waits for Storage to confirm it; only then does the deletion transaction run. An intent whose deletion never committed is harmless: re-applying it deletes a number whose owner asked to be deleted. Ledger objects are kept for the database backup window plus one day; the salt lives in the environment, not the database. |
-| Unconfirmed deletion | When Storage does not confirm the intent, no deletion commits. Double 0, the edit page and the access-request process fail visibly and the resident or Admin is asked to try again (or, for double 0, to reply STOP); they are never held. The purge simply runs again, because who it deletes follows from the subscriber states. Only STOP, which Twilio has already acted on, is held for retry in the database, so only STOP can be committed to nowhere outside the database. |
+| Unconfirmed deletion | When Storage does not confirm the intent, no deletion commits. Double 0, the edit page and the access-request screen fail visibly and the resident or Admin is asked to try again (or, for double 0, to reply STOP); they are never held. The purge simply runs again, because who it deletes follows from the subscriber states. Only STOP, which Twilio has already acted on, is held for retry in the database, so only STOP can be committed to nowhere outside the database. |
 | STOP evidence | Twilio's opt-out list cannot be read through its Console or API, but every inbound message, including each STOP, is kept in Twilio's message log and can be listed through the Messages API. That log is the durable outside evidence for STOP. The daily configuration check (S07.09) confirms message body redaction is off and log retention covers the backup window; the terms name Twilio as keeping these logs. |
-| Restore complete | `scripts/restore-reconcile` reports complete only when all seven completeness checks in S09.03 pass and every boundary case has been resolved from evidence. Otherwise deletion completeness is unknown and the restore stays in maintenance; there is no override that contacts anyone. |
-| Replay rule | A restore (through `scripts/restore-reconcile`) deletes a subscriber, pending sign-up, edit link or `inbound_reply` whose number matches either a ledger intent (by salted hash, whatever the intent's date) or a STOP-keyword inbound message in the Twilio log since the backup (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT and any opt-out keyword configured on the service), and which was created at or before that intent or message. A record created afterwards (a later, valid re-subscription) is never deleted by it; a record created within 2 minutes either side is a boundary case for review (check 7). The purge then runs again. |
+| Restore-safe | Both of: the ledger bucket can be read in full; and Twilio's inbound message log for the CVH number can be listed in full, with bodies, from the backup's time to the moment of restore. If either cannot be established, deletion completeness is unknown and the restore stays in maintenance; there is no override that contacts anyone. |
+| Replay rule | A restore deletes a subscriber, pending sign-up, edit link or `inbound_reply` whose number matches either a ledger intent (by salted hash, whatever the intent's date) or a STOP-keyword inbound message in the Twilio log since the backup (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT and any opt-out keyword configured on the service), and which was created at or before that intent or message. A record created afterwards (a later, valid re-subscription) is never deleted by it. The purge then runs again. |
 | Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
 | Small-number rule | In every displayed or exported measure, a count of 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5"; a percentage whose numerator or denominator is 1 to 4 is not shown; and where a total and the other visible cells would reveal a hidden cell, one more cell is hidden. Zero is shown as 0. |
 | Measures | Section 9 of the pilot PRD: subscribers and installs; acknowledgement, approval and delivery times; check-in counts; directory, map and search use; translation understood per language (survey) and fallback rates; drills, corrections and their reach; cost per alert and total spend; coverage. All aggregate, drills apart. |
@@ -3478,7 +3502,7 @@ So that residents who missed an alert still get it, without risking duplicates b
 
 **Given** an entry's sending view
 **When** an Admin at `aal2` chooses "Resend" for one delivery, or for all `failed` and `undelivered` deliveries of an entry and language
-**Then** for each, in one transaction that locks the chain's root delivery `FOR UPDATE`, the next `resend_n` is allocated and a new row is created (counted in spend once, when accepted, per S06.08); if the chain already has 2 resends it is refused; `delivery.resent` is audited with counts, never numbers
+**Then** for each, in one transaction that locks the chain's root delivery `FOR UPDATE`, the next `resend_n` is allocated and a new row is created with its own spend reservation; if the chain already has 2 resends it is refused; `delivery.resent` is audited with counts, never numbers
 
 **Given** two Admins resend the same chain at the same time, or resend a row that is itself a resend
 **When** both run
@@ -3499,7 +3523,7 @@ So that residents who missed an alert still get it, without risking duplicates b
 
 ### Story S09.03 — Procedures are written and rehearsed, and a restore cannot undo a deletion
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** NFR-N6, NFR-N5, AR-21, AR-17, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures-ledger`
 
 As a Hub Coordinator,
@@ -3507,16 +3531,6 @@ I want short procedures I can follow under pressure, and a restore that respects
 So that sending, correcting and recovering are done the same way every time.
 
 **Acceptance Criteria:**
-
-**Given** the deletion ledger's store
-**When** S09.03's implementation is about to start
-**Then** the Storage decision in Launch Readiness has been recorded: either Supabase Storage is confirmed to expose and enforce a retention policy of at least the database backup window plus one day, with no early deletion or overwrite and with that configuration readable at run time; or an alternative store is chosen that preserves the deletion evidence with the same guarantees
-**And** until that decision is recorded, S09.03 is not started
-**And** any alternative keeps the same contract: deletions are not committed without confirmed evidence, completeness check 2 reads the alternative's controls, and recovery stays blocked when completeness is unknown
-
-**Given** launch readiness
-**When** ledger enforcement is verified in production
-**Then** an attempt with the app's credentials to delete or overwrite a ledger object before its retention expires is refused, the configured retention is read back and matches the procedures, and the result is recorded in Launch Readiness; without that record the pilot does not launch
 
 **Given** `docs/procedures/`
 **When** this story is done
@@ -3529,32 +3543,15 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** Storage does not confirm the intent
 **When** each path handles it
-**Then** no deletion commits; a double 0 is answered "We could not finish deleting right now. Reply STOP to stop at once" while the subscriber still exists; the edit page and the access-request process report "Deletion failed, try again"; the purge retries on its next run; a STOP is held for retry in the database and retried every minute, and a health condition is raised (tests for each)
+**Then** no deletion commits; a double 0 is answered "We could not finish deleting right now. Reply STOP to stop at once" while the subscriber still exists; the edit page and the access-request screen show "Deletion failed, try again"; the purge retries on its next run; a STOP is held for retry in the database and retried every minute, and a health condition is raised (tests for each)
 
 **Given** the restore procedure, for every restore
 **When** a backup is restored
-**Then** before the app serves traffic: texts are paused, the sender lease is disabled, recovery mode is on, and the app stays in maintenance until an Admin and IT complete `scripts/restore-reconcile` and it reports complete
-
-**Given** `scripts/restore-reconcile`
-**When** it runs
-**Then** it first runs the seven completeness checks below, changing nothing; only if every check passes does it apply the replay rule (with the check-in rows of a deleted subscriber going with it), re-run the purge, set every `queued` or `claimed` delivery to `unknown` through the recovery operation (outside recovery mode the trigger refuses that change; direct SQL test), and print its report
-**And** if any check fails, it reports "incomplete" with the failing check, makes no changes, the app stays in maintenance, and nobody is contacted
-
-**Completeness checks (all must pass):**
-
-1. **Ledger listing complete:** the bucket is listed page by page until Storage returns no continuation token; the number of objects read equals the number listed; every object parses against the intent schema. Any listing error, timeout or unparsable object fails the check.
-2. **Ledger retention controls verified:** the bucket's configured retention policy keeps every object for at least the database backup window plus one day; the bucket and its credentials forbid deleting or overwriting objects before that age (the app's key can only create new objects; object keys are unique intent ids, so a write never replaces another); and these controls are read from Storage's configuration at run time and match the values recorded in the procedures. The age of any object (a launch marker or an old intent) is not accepted as evidence. A missing, unreadable or weaker control fails the check.
-3. **Twilio log listing complete:** inbound messages to the CVH number are listed from 1 hour before the backup's time to now, following `next_page_uri` until it is empty; every page returns successfully; the run records the page count and message count.
-4. **Twilio log not redacted:** every inbound SMS listed has a non-empty body that is not the redaction placeholder, and the daily configuration check (S07.09) for redaction off and retention covering the backup window passed on its most recent run before the incident. Any redacted body, or a failed or missing configuration check, fails the check.
-5. **Twilio log retention covers the range:** the start of the range (backup time minus 1 hour) is within the account's message retention period recorded by the configuration check.
-6. **Keyword list current:** the STOP keywords used by the replay match the opt-out keywords recorded for the Messaging Service in the procedures, as last confirmed by the configuration check.
-7. **Boundary cases resolved from evidence:** a record created within 2 minutes either side of a matching intent or STOP is listed as "needs review" and is neither deleted nor kept automatically. An Admin resolves each only from evidence of the order of deletion and re-subscription (for example the Twilio message log showing the STOP and the later YES, with message ids and timestamps, or the ledger intent and the audit record of the re-subscription), and records that evidence with the decision (audited). If the order cannot be established from evidence, the item stays unresolved, the report stays incomplete, and recovery stays blocked.
-
-**And** the report lists: intents read, Twilio pages and messages read, deletions applied, records kept as later re-subscriptions, boundary cases and their evidence, and deliveries set to `unknown`
-
-**Given** the script reports complete
-**When** recovery ends
-**Then** an Admin at `aal2` turns recovery mode off and re-enables the lease and sending, each audited
+**Then** before the app serves traffic: texts are paused, the sender lease is disabled and recovery mode is set
+**And** the restore must be restore-safe; otherwise the app stays in maintenance, nobody is contacted, and the Hub is told what evidence is missing
+**And** the replay rule is applied (with the check-in rows of a deleted subscriber going with it)
+**And** the restore recovery operation sets every `queued` or `claimed` delivery to `unknown` (so nothing handed off after the backup can be sent again automatically), lists them for Admin review and audits the counts; outside recovery mode the trigger refuses that change (direct SQL test)
+**And** only then are recovery mode turned off and the lease and sending re-enabled, each by an Admin at `aal2` and audited
 
 **Given** a deletion commits and the original database is then permanently lost (the test drops the database immediately after the commit)
 **When** a fresh database is restored from a backup taken before the deletion and the procedure runs
@@ -3569,27 +3566,21 @@ So that sending, correcting and recovering are done the same way every time.
 **Then** the old intent does not delete the new subscription, because it was created after the intent (test)
 
 **Given** the sequence: a successful health run and heartbeat, then a STOP arrives, its ledger write is not confirmed, and the database is permanently lost immediately afterwards
-**When** a backup is restored and the script runs with a fake Twilio message log containing that STOP
+**When** a backup is restored and the procedure runs with a fake Twilio message log containing that STOP
 **Then** the STOP in the log re-applies the deletion and the subscription is gone (test)
-
-**Given** fakes for each completeness check
-**When** the script runs
-**Then** these cases are tested: a Twilio log of three pages (all read, complete); a page that errors (incomplete); a redacted body (incomplete); a ledger listing error (incomplete); a retention policy shorter than the backup window plus one day, or one that allows early deletion or overwrite (incomplete); a re-subscription 1 minute after a STOP resolved with order evidence (complete); and the same case with no order evidence (stays incomplete)
+**And** when the fake log cannot be listed in full, or returns redacted bodies, the restore stays in maintenance and nobody is contacted (test)
 
 **Given** spend after a restore
-**When** recovery ends
-**Then** deliveries set to `unknown` by the recovery operation keep their estimates, counted as spent and labelled "pending reconciliation" (never zero)
-**And** a restore reconciliation (S06.08) runs for the interval `[backup's timestamp, moment sending was re-enabled)` with id `restore:{backup timestamp}:{re-enable timestamp}`; it imports each message Twilio sent in that interval once by `MessageSid`, and its actuals retire estimates only by matching `MessageSid` (S06.08 matching rule)
-**And** messages with no matching delivery (texts sent after the backup whose rows were lost) are counted as unmatched actuals, and recovery-`unknown` estimates with no provider id stay counted as unresolved estimates, both shown side by side; until the reconciliation is complete the interval stays pending reconciliation
-**And** tests cover: importing the same restore reconciliation twice (no change); a message also falling in the month's reconciliation, in both import orders (counted once); and a message with no price yet (interval stays pending, estimates still counted)
+**When** reconciled
+**Then** reservations of deliveries moved to `unknown` by the recovery operation are released, not counted as spent; Twilio's usage records for the period from the backup's time to the restore are fetched and recorded as one actual `spend_event` for that period; nothing is assumed charged without that record
 
 **Given** the staging restore rehearsal
 **When** it runs
-**Then** it restores a backup taken before a test deletion, a test STOP and a test send, and confirms: the deleted subscriptions stay deleted; the sent text is not sent again; a restore with the ledger bucket made unreadable stays in maintenance; a boundary case is resolved from evidence; and spend shows the period's usage once
+**Then** it restores a backup taken before a test deletion, a test STOP and a test send, and confirms: the deleted subscriptions stay deleted; the sent text is not sent again; a restore with the ledger bucket made unreadable stays in maintenance; and spend shows the period's usage once
 
-**Given** the access-request process (the pilot has no access-request screen)
+**Given** the launch-day access-request process, used until S09.06 ships
 **When** a resident asks what is held
-**Then** an Admin establishes verified control by calling the number back, then IT runs `scripts/access-request` (service key, read-only, output shown on screen and not saved); a deletion on the resident's behalf is done the same way only after verified control; the request is recorded in the audit trail without the number, with requests open longer than 25 days flagged in the weekly review (30-day limit)
+**Then** an Admin establishes verified control by calling the number back, then IT runs `scripts/access-request` (service key, read-only, output shown on screen and not saved); a deletion on the resident's behalf is done the same way only after verified control; the request is recorded in the audit trail without the number
 
 **Given** someone who cannot show verified control of the number (it can no longer receive texts or calls)
 **When** they ask for access or deletion
@@ -3597,7 +3588,7 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** launch readiness
 **When** the procedures are rehearsed
-**Then** a production drill (S06.05), a pause and resume, a resend on staging, the restore rehearsal with `scripts/restore-reconcile` and the access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
+**Then** a production drill (S06.05), a pause and resume, a resend on staging, the restore rehearsal and the launch-day access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
 
 **Given** the production STOP-evidence rehearsal (launch gate)
 **When** a staff test phone texts STOP to the configured production number
@@ -3605,55 +3596,90 @@ So that sending, correcting and recovering are done the same way every time.
 
 ### Story S09.04 — The Hub reviews reliability every week
 
-- **Size:** S · **Estimate:** 2 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** NFR-N4, AR-21 (weekly view), AR-18 · **Depends on:** S09.01 · **Branch:** `e09-s04-weekly-review`
 
 As a Hub Admin,
-I want one weekly view of what went wrong and how fast things were,
+I want one weekly page of what went wrong and how fast things were,
 So that we learn from each week of the pilot.
 
 **Acceptance Criteria:**
 
-**Given** the SQL view `weekly_review` over `ops_event`, `delivery` and `audit_event`
-**When** an Admin or Director queries it for a week
-**Then** it returns: health conditions with start, end and duration; failed, undelivered and unknown texts by language and reason; resends; pauses; cap overruns; translation fallbacks by language; publish failures; approval-to-first-hand-off and to-90%-delivered times per entry (or "not reached"); slow deliveries over 10 minutes; and access requests open longer than 25 days, all without personal data, with the small-number rule applied and drills apart
+**Given** the weekly review view (a SQL view over `ops_event`, `delivery` and `audit_event`)
+**When** an Admin or Director opens a week
+**Then** it shows: health conditions with start, end and duration; failed, undelivered and unknown texts by language and reason; resends; pauses; cap overruns; translation fallbacks by language; publish failures; approval-to-first-hand-off and to-90%-delivered times per entry (or "not reached"); and slow deliveries over 10 minutes, all without personal data, with the small-number rule applied and drills apart
 
-**Given** the weekly review meeting
-**When** the Hub records notes and actions
-**Then** an Admin keeps them in `docs/procedures/weekly-notes/{week}.md`; there is no notes table and no write endpoint
+**Given** the review
+**When** an Admin adds notes and actions for the week
+**Then** they are saved with the week and audited; Directors can read them but every write endpoint returns 403 for them (direct-request test)
 
 **Given** an export
-**When** an Admin runs `scripts/export-weekly`
-**Then** it writes a CSV with the small-number rule applied and no phone numbers, subscriber ids or message bodies (test)
+**When** an Admin or Director downloads the week as CSV
+**Then** it contains the same aggregate data with the small-number rule applied and no phone numbers, subscriber ids or message bodies (test)
 
 ### Story S09.05 — Directors see the pilot measures, read-only
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** FR-M1 to FR-M5 (view), D-8, NFR-N9, AR-6 (AD-4 spend visibility) · **Depends on:** S07.10, S08.09, S06.08 · **Branch:** `e09-s05-measures-view`
 
 As a Hub Director,
-I want the pilot's measures in one export,
+I want the pilot's measures in one place,
 So that leadership can decide at week 8 whether to continue to the MVP.
 
 **Acceptance Criteria:**
 
-**Given** SQL views for each Section 9 measure, by language and neighbourhood where it applies
-**When** an Admin runs `scripts/export-measures` (daily, and for the week-8 review)
-**Then** it writes a CSV and a printable HTML file with the date, the small-number rule applied to counts and percentages, and drills in a separate section
+**Given** the measures view
+**When** a Director, Coordinator or Admin opens it
+**Then** it shows each Section 9 measure, by language and neighbourhood where it applies, from the stored aggregates, refreshed daily, with the small-number rule applied to counts and percentages and drills in a separate section; Directors cannot change anything (direct-request tests)
 
-**Given** spend and cost per alert
-**When** exported
-**Then** they appear only in the Admin and Director edition of the export (AD-4); the Coordinator edition leaves them out (test)
-**And** spend uses actual amounts where reconciled and labelled estimates otherwise, with unknown Cohere prices shown as unknown, against the CAD 1,000 budget
+**Given** the spend and cost-per-alert sections
+**When** requested
+**Then** only Admins and Directors receive them (AD-4); the server leaves them out of the response for Coordinators, and a direct request for them by a Coordinator returns 403 (test)
+**And** spend uses E07's spent and reserved figures, with actual and estimated amounts labelled and unknown Cohere prices shown as unknown, against the CAD 1,000 budget
 
 **Given** the translation-understood survey
-**When** a Coordinator records results per language (number asked, number who understood)
-**Then** they are kept as counts in `docs/procedures/survey-results.csv` and included in the export under the small-number rule
+**When** a Coordinator or Admin enters the results per language (number asked, number who understood)
+**Then** they are saved as counts, shown beside each language's fallback rate under the small-number rule, and audited
+
+**Given** the week-8 review
+**When** the Hub prepares it
+**Then** the view can be printed or saved as PDF with the date and the measures as of that date, with the same suppression and the same role-based sections
+
+### Story S09.06 — Residents can ask what the CVH holds about them
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** NFR-N5 (access requests), AR-17 · **Depends on:** S07.04, S08.05, S09.03 · **Branch:** `e09-s06-access-requests`
+
+As a resident,
+I want to find out what the CVH keeps about my number and correct it,
+So that I stay in control of my information.
+
+**Acceptance Criteria:**
+
+**Given** a resident contacts the Hub with an access or correction request
+**When** an Admin at `aal2` opens "Access request" and enters the number
+**Then** an `access_request` is created bound to the number's salted hash, and an access code is texted (purpose `access_code`, `send_by` 15 minutes) to the number's receiving subscriber, pending sign-up or, if neither exists, through an `inbound_reply` row
+
+**Given** the resident reads the code back
+**When** the Admin enters it
+**Then** the atomic verification succeeds only for that request; the screen then shows, for 30 minutes and only to that Admin, everything held for that request's number: subscription choices and state, `consent_version`, pending sign-up, check-in request, open check-in rows and escalations, and any `inbound_reply`; the Admin can correct choices or delete the subscription on the resident's behalf
+
+**Given** a code from another request, a code already used, an expired code, or a fourth attempt
+**When** entered
+**Then** verification fails and shows nothing; a verified request for one number can never show another number's data (tests for each)
+
+**Given** each request
+**When** opened, answered or closed
+**Then** it is recorded in the audit trail with dates, outcome and the Admin, never the number, and the view shows requests open longer than 25 days in red (30-day limit)
+
+**Given** lookups
+**When** an Admin starts more than 10 in a day
+**Then** further lookups are refused for the day and on-call is alerted
 
 ### Story S09.07 — Subscribers are asked whether to stay after the pilot
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
-- **Traces:** FR-D-7, AR-13 (retention states), AR-12 (`campaign`) · **Depends on:** S07.04, S06.05, S09.02 · **Branch:** `e09-s07-reconsent-campaign`
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-D-7, AR-13 (retention states), AR-12 (`campaign`) · **Depends on:** S07.04, S06.02, S09.02 · **Branch:** `e09-s07-reconsent-campaign`
 
 As a Hub Director,
 I want every subscriber asked at the end of the pilot whether to keep getting texts,
@@ -3661,9 +3687,18 @@ So that we only keep people who chose to stay.
 
 **Acceptance Criteria:**
 
-**Given** the campaign text, a frozen catalog string in each language ("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted."), reviewed before the pilot, and a rehearsal on the drill roster in production
-**When** an Admin at `aal2` starts the campaign (with an idempotency key)
-**Then** the deadline, the receiving subscribers per language and the estimated cost are shown for confirmation, and then in one transaction: every `active` subscriber moves to `reconsent_pending`, gets a `reconsent` prompt and one `campaign` delivery (idempotency key `campaign:{id}:{subscriber}`) in their language; all pending sign-ups are deleted; new sign-ups are closed ("Sign-ups are paused while the pilot ends"); the campaign becomes `started`; `campaign.started` is audited with counts
+**Given** an Admin at `aal2` prepares the campaign
+**When** they save it
+**Then** it records the version, the catalog text in each language ("The CVH pilot is ending. Reply YES to keep getting alerts. If you do not reply by {date}, your number will be deleted."), the terms version, the deadline and its `content_hash`, and shows the receiving subscribers per language and the estimated cost
+
+**Given** a different Admin at `aal2` approves it
+**When** they approve
+**Then** approval binds to the version and `content_hash` they reviewed; the preparer cannot approve, and an edit after approval returns it to `draft`
+**And** at start, recipient counts and cost are recomputed; if they differ from what the approver reviewed, the starting Admin must confirm the new figures first
+
+**Given** an approved campaign
+**When** an Admin starts it (with an idempotency key)
+**Then** in one transaction: every `active` subscriber moves to `reconsent_pending`, gets a `reconsent` prompt and one `campaign` delivery (idempotency key `campaign:{id}:{subscriber}`) in their language; all pending sign-ups are deleted; new sign-ups are closed ("Sign-ups are paused while the pilot ends"); the campaign becomes `started`; `campaign.started` is audited with counts
 **And** starting again, or a retried request, changes nothing and creates no second delivery (test)
 
 **Given** a `reconsent_pending` subscriber replies YES before the deadline
@@ -3705,31 +3740,52 @@ So that the Hub keeps its promise to residents.
 **When** the final report is produced
 **Then** the staff audit trail and aggregate measures are kept for the MVP; the procedure for rotating secrets at pilot end is run and recorded; and the terms page states the date resident data was deleted
 
-## Deferred to MVP
+## E10 (optional stretch) — Hub staff relay an official alert
 
-These stories are not built in the pilot. Their approved criteria are kept unchanged in `docs/planning/mvp/reference/pilot-epics-full.md`, and their story IDs are not reused.
+Hub staff post the content of an official alert (for example from the City of Toronto or Environment Canada) with the source named and a link to the original, through the normal approval path. Built only if effort allows; not part of the launch gate. Automated official feeds are not in the pilot.
 
-| Story | Deferred | Pilot replacement |
-| --- | --- | --- |
-| S02.13 Speed budgets in CI | Lighthouse CI on every change | Manual Lighthouse run in Launch Readiness |
-| S05.05 Merge duplicate alerts | Merging threads before texts go out | Withdraw the duplicate with reason "duplicate" (S05.02) |
-| S09.06 Access-request screen | Screen with texted access codes | Call-back and `scripts/access-request` process (S09.03) |
-| S10.01 Official alert relay (E10) | Relaying official alerts with source and link | None in the pilot |
+**Epic estimate:** 6 h across 1 story (1 M) · **Epic actual:** —
 
-The full versions of these simplified stories are also in the reference copy: S03.04, S03.05, S03.07, S03.09, S06.02, S06.03, S06.08, S07.08, S08.05–S08.09, S09.03–S09.05 and S09.07.
+**Depends on earlier epics:** S04.05 to S04.08 (compose, renderer, approval, feed and alert detail), S05.02 (corrections), S05.08 (share). It creates only the table it needs.
 
-## Manual operations during the pilot
+**Definitions used in this epic**
 
-| Task | When | Effort |
-| --- | --- | --- |
-| Manual Lighthouse run on `/en/`, `/ur/` and the directory page, recorded in Launch Readiness | Before launch | 1 h |
-| Running the staging restore rehearsal and the production STOP-evidence rehearsal (launch gates) | Before launch | 3 h |
-| Twilio usage reconciliation (S06.08) | Monthly, twice | 1 h |
-| Access requests by call-back and script | About 4 expected | 3 h |
-| Weekly reliability review from SQL views, notes in `docs/procedures/weekly-notes/` | Weekly, 8 times | 6 h |
-| Week-8 measures export for the go / no-go review | Once | 1 h |
-| Re-consent campaign rehearsal on the drill roster, then the real run | Once | 2 h |
-| Handling duplicate alerts by withdrawal | Occasional | 1 h |
-| **Total** | | **18 h** |
-| Restore reconciliation, only if a restore is ever needed | Contingency | about 4 h (not in the total) |
-| Three-model embedding comparison, only if `embed-v4.0` misses the launch bar (S03.07) | Contingency | about 3 h (not in the total) |
+| Term | Meaning |
+| --- | --- |
+| Official source | An entry in `official_source` (owned by `alerting`): name as it should appear (not translated), and the web domains its links may use. Admins at `aal2` maintain the list (audited); the pilot starts with City of Toronto, Environment and Climate Change Canada, Toronto Hydro, Toronto Public Health, Toronto Fire Services and Toronto Police Service. |
+| Official relay | An entry whose attribution is `{role: 'official', source, source_url}`: shown as "Official alert from {source}" (catalog wording in every language, source name as written) in the attribution position of every surface, with "Verified by the Hub" once approved. The web shows a "Read the original" link; texts carry only the CVH's own `/a/{slug}` link. |
+
+### Story S10.01 — Hub staff relay an official alert with its source and link
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-A10, UX-DR16 (O-18), AR-7 (attribution contract), AR-19 (renderer) · **Depends on:** S04.08, S05.08 · **Branch:** `e10-s01-official-relay`
+
+As a Hub Coordinator,
+I want to pass on an official alert in residents' languages with its source clearly named,
+So that residents can trust it and check the original.
+
+**Acceptance Criteria:**
+
+**Given** the composer (O-18, "Official alert received")
+**When** a Coordinator or Admin chooses an official source, enters the original's URL and the official text in English
+**Then** the URL must be `https` and its host must be one of that source's domains, or the entry cannot be submitted; the approval view shows the source, the URL as a link for the approver to open, and the text
+
+**Given** the `Entry.attribution` contract
+**When** this story is done
+**Then** it adds the `official` role with `source` and `source_url` (an AD-20 contract change recorded in the spine), both are part of `content_hash`, and contract tests cover it on server and client
+
+**Given** the renderer
+**When** an official relay is rendered
+**Then** step 5 (attribution) reads "Official alert from {source}" in each language; nothing else in the fixed order changes; the text carries no external link (fixture tests per language, including the one-link rule)
+
+**Given** an approved official relay
+**When** residents see it on the feed, alert detail, share text and share preview
+**Then** each shows "Official alert from {source}" and "Verified by the Hub" in the same place and words, and the web shows "Read the original" opening the source URL in a new tab with `rel="noopener noreferrer"`
+
+**Given** the official alert changes or is withdrawn by its source
+**When** the Hub learns of it
+**Then** staff use E05's update, correction or withdrawal on the relay, with the same approval and recipient rules
+
+**Given** an Ambassador or Director
+**When** they call the relay endpoints directly
+**Then** they get 403 (added to the S01.12 permission test list)
