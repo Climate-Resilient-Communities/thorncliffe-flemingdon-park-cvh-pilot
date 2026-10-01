@@ -141,6 +141,8 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | --- | --- | --- |
 | Submit Twilio toll-free verification (Hub business number, address, website) | Hub | Week 1 of build |
 | Get Cohere pricing for the translate models; set an organisation spend limit | Hub / IT | Before launch |
+| Confirm Cohere production access and exact model identifiers for Command A Translate and North Small Translate (both require production access); until then all routes are provisional | Hub / IT | Before launch |
+| Search meets every Hub-approved minimum (hit rate per language, no-match accuracy, emergency accuracy) on the evaluation subset of the full test set (S03.08) | Hub + IT | Before launch |
 | Confirm Tiny Aya's licence covers the Hub's use (if routed) | Hub | Before launch |
 | Confirm each building's real floor labels (43 buildings) | Hub | Before seeding production |
 | Write the search test set with ambassadors: about 10 real questions per language, 150 in total, each with the expected provider | Hub + ambassadors | Before search tuning |
@@ -1278,7 +1280,7 @@ So that the pilot can show use without recording who did what.
 
 ## E03 — Residents ask in their own words and get the right provider
 
-Residents type a question in any launch language, romanized or mixed included, and get the three to five best-matching published listings, in the language they wrote in, with a clear route to a person when nothing matches and 911 first on emergency results. The epic starts with the test set so every later story is measured against it.
+Residents type a question in any launch language, romanized or mixed included, and get up to five published listings that clearly match, in the language they wrote in, with a clear route to a person when nothing matches and 911 first on emergency results. The epic starts with the test set so every later story is measured against it.
 
 **Epic estimate:** 49 h across 9 stories (4 S, 5 M) · **Epic actual:** —
 
@@ -1291,13 +1293,22 @@ Residents type a question in any launch language, romanized or mixed included, a
 | Search text | What is embedded for each published provider: English name, categories, subcategories, day-to-day services and emergency role. Source notes and contact details are never embedded. |
 | Question language | The language the question was written in, detected by `eld` plus script checks. It is **confident** when it is a launch language and passes the per-language check (Pashto by its marker letters, since `eld` has no Pashto; Dari when `eld` reports `fa`). It is **romanized or mixed** when the question is in Latin script but not confidently `en`, `es`, `fr`, `tl` or `sk`, or mixes scripts. It is **ambiguous Arabic script** when it is in Arabic script without the marker letters that separate Urdu, Pashto and Dari. |
 | `query_lang` | The language results are shown in: the question language when confident, otherwise the page language. |
-| Translated-question leg | For Pashto, Dari, romanized or mixed, and ambiguous Arabic-script questions, the server also translates the question to English and embeds the translation; the two rankings are merged by reciprocal rank fusion (RRF, k = 60). The question is never stored, cached or logged by this leg. |
-| Search time limit | Proposed engineering budget (not a PRD number): the server answers within 2.5 s. If the translated-question leg has not returned within 1.5 s, the server answers from the first leg alone. Both are config values revisited after measurement. |
-| No clear match | The best result's similarity is below the threshold for the release's embedding model. The threshold is a config value set from the test set (S03.07). |
+| Direct leg | The question as typed is embedded and compared with the release's vectors (cosine similarity). |
+| Translated-question leg | For Pashto, Dari, romanized or mixed, and ambiguous Arabic-script questions, the server also translates the question to English, embeds the translation and compares it with the same vectors. The leg covers both the translation and the embedding. The question and its translation are never stored, cached or logged. |
+| Request snapshot | At request start the server captures one release's `release_v`, embedding model, vectors, threshold, `emergency_categories` and `catalogue_hash`, and uses only that snapshot to the end of the request. The threshold and `emergency_categories` are recorded on the release when it is published, so changing either means publishing a new release (which reuses existing vectors when the model and `catalogue_hash` are unchanged). |
+| Qualifying provider | A provider whose qualifying similarity (the higher of its similarities from the legs that completed) is at or above the snapshot's threshold. |
+| Ranking sequence | (1) Compute each provider's similarity in each completed leg. (2) Keep only qualifying providers. (3) If both legs completed, order the qualifying providers by reciprocal rank fusion (RRF, k = 60) of their ranks within each leg's qualifying list; otherwise order by similarity. (4) Return the top 5. An RRF score is never compared with the threshold. |
+| Search deadlines | Proposed engineering budgets (not PRD numbers), measured from request start: the translated-question leg (translation and its embedding) must finish by 1.8 s; the direct leg by 2.2 s; the whole server operation, including ranking and the response, by 2.5 s. A leg that misses its deadline is cancelled and its result ignored. All are config values revisited after measurement. |
+| No clear match | Zero qualifying providers. One to five qualifying providers are shown as they are, never padded with providers below the threshold. |
+| Provisional routes | The Cohere models and routes named in this epic are provisional until production access, exact model identifiers, pricing and measured performance are confirmed (Launch Readiness). |
+| Usage allowance | For live test-set runs: known per-unit prices for every model used, or, while prices are unknown, a conservative allowance of calls and tokens per month in config. Runs are checked against it before they start. |
 | Emergency result | A result whose provider is in a category listed in `emergency_categories` (config; starts with "Support & Emergency Services"). When any result is one, `emergency_first` is true and the client puts the 911 block above the results. |
-| Hit | The expected provider (or one of the acceptable providers) for a test question appears in the top 3 results. |
+| Hit | The expected provider (or one of the acceptable providers) for a test question appears in the top 3 results. Hit rate is computed only over questions that have expected providers; `no_match` questions are excluded from its denominator. |
+| No-match accuracy | Share of `no_match` questions that return `no_clear_match`. |
+| Emergency accuracy | Share of `emergency` questions that return `emergency_first`. |
+| Tuning and evaluation subsets | Every question carries `split`: `tuning` or `evaluation`. The model and threshold are chosen on the tuning subset only; acceptance evidence comes from the evaluation subset, which is never used for tuning. |
 | Test set | Questions with their expected providers, stored in `data/search-test-set/`. The launch set has about 150 questions, 10 per language, written with ambassadors, including romanized Urdu, Hinglish, emergency and no-match questions. It contains no personal data. |
-| Launch bar | The minimum hit rate per language, set by the Hub from the first full measurement (S03.08) and stored in `data/search-test-set/bar.json`. |
+| Launch bar | Hub-approved minimums, stored in `data/search-test-set/bar.json`: hit rate per language, no-match accuracy and emergency accuracy, all measured on the evaluation subset. Set from the first full measurement (S03.08). |
 
 ### Story S03.01 — Team can measure search with a test set from day one
 
@@ -1312,7 +1323,8 @@ So that every search change is measured against real questions before it ships.
 
 **Given** the test-set format, a zod schema in `src/contracts`
 **When** a question is added
-**Then** it has `id`, `lang`, `q` (at most 200 characters), `kind` (`native`, `romanized`, `mixed`, `emergency`, `no_match`), `expected` (one or more provider ids, or empty for `no_match`), `author_role` and `added`
+**Then** it has `id`, `lang`, `q` (at most 200 characters), `kind` (`native`, `romanized`, `mixed`, `emergency`, `no_match`), `expected`, `split` (`tuning` or `evaluation`), `author_role` and `added`
+**And** `expected` must be empty for `no_match` and must hold one or more provider ids for every other kind
 **And** a file that fails the schema, or names a provider id not in `data/catalogue/providers.json`, fails CI with the line number
 
 **Given** about 30 starter questions written by the team (2 per language, including at least 2 romanized Urdu, 1 Hinglish, 2 emergency and 2 no-match)
@@ -1321,7 +1333,7 @@ So that every search change is measured against real questions before it ships.
 
 **Given** `scripts/search-test-set` run against a search engine (a fake in unit tests, the real `/api/search` use case later)
 **When** it finishes
-**Then** it reports per language and overall: hit rate (top 3), top-5 rate, no-match accuracy (no-match questions correctly returning `no_clear_match`), emergency accuracy (emergency questions returning `emergency_first`), and p50 and p95 time per question
+**Then** it reports, separately for the tuning and evaluation subsets, per language and overall: hit rate (top 3, excluding `no_match` questions), top-5 rate, no-match accuracy, emergency accuracy, the number of results returned, and p50 and p95 time per question
 **And** it writes the report to `data/search-test-set/reports/{date}-{model}.json` with the release number, model, threshold and whether the translated-question leg was on
 
 **Given** two reports
@@ -1341,7 +1353,8 @@ So that search can never point to a listing the resident's phone doesn't have.
 
 **Given** an Admin at `aal2` publishes a new release with search enabled
 **When** the publish job runs
-**Then** it embeds each published provider's search text once with the configured embedding model (`input_type` for documents), writes the vectors file into the same new release, and records the model, vector count and `catalogue_hash`
+**Then** it embeds each published provider's search text once with the configured embedding model (`input_type` for documents), writes the vectors file into the same new release, and records the model, vector count, `catalogue_hash`, threshold and `emergency_categories` on the release
+**And** when the model and `catalogue_hash` match the previous release, the existing vectors are copied instead of embedding again
 **And** earlier releases are never modified (S02.05)
 
 **Given** the vectors file and the listing files of the new release
@@ -1355,6 +1368,7 @@ So that search can never point to a listing the resident's phone doesn't have.
 **Given** each embedding call
 **When** it returns
 **Then** its usage (model, tokens, release number) is recorded in `spend_event` (created in this story, owned by `spend`); the price per unit may be unknown and is left null until Cohere's pricing is recorded
+**And** the publish job refuses to embed when the usage allowance would be exceeded
 
 **Given** the manifest for a release with matching search data
 **When** served
@@ -1400,8 +1414,18 @@ So that a question in any language finds an English-sourced listing.
 
 **Given** a valid question
 **When** it is searched
-**Then** the server embeds the question once with the current release's model (`input_type` for queries), compares it with the release's vectors held in memory, and returns up to 5 results with scores as `SearchV1` `{v, release_v, query_lang, status, emergency_first, results}`
-**And** the results come only from providers in that release, so every id exists in the phone's listing file for `release_v`
+**Then** the server takes the request snapshot, runs the direct leg with the snapshot's model (`input_type` for queries), applies the ranking sequence, and returns 1 to 5 qualifying providers with their similarities as `SearchV1` `{v, release_v, query_lang, status, emergency_first, results}`
+**And** if only one or two providers qualify, only those are returned; providers below the threshold are never added to fill the list
+**And** every id comes from the snapshot's release, and `release_v` is that release
+
+**Given** a new release is made current while a search is running
+**When** the search completes
+**Then** it uses only its snapshot (model, vectors, threshold, categories) and returns the snapshot's `release_v` (integration test publishes during a slowed search)
+**And** the next search uses the new release
+
+**Given** the response's `release_v`
+**When** the client shows results
+**Then** it looks the ids up only in the listing file for exactly that `release_v`; if that file is not on the phone it downloads it first
 
 **Given** the client's `v` is older than the current release
 **When** it searches
@@ -1411,7 +1435,7 @@ So that a question in any language finds an English-sourced listing.
 **When** a search arrives
 **Then** it returns `status: "unavailable"` (an expected outcome) and calls no model
 
-**Given** the best score is below the threshold
+**Given** no provider qualifies
 **When** results are returned
 **Then** `status` is `no_clear_match` and `results` is empty
 
@@ -1419,13 +1443,21 @@ So that a question in any language finds an English-sourced listing.
 **When** returned
 **Then** `emergency_first` is true
 
-**Given** the embedding call fails or the search time limit is reached
+**Given** the direct leg fails or misses its deadline and no translated leg completed
 **When** the server answers
-**Then** it returns `{error:{code: "search_unavailable"}}` within the time limit, and the failure is counted in `ops_event` without the question
+**Then** it returns `{error:{code: "search_unavailable"}}` within 2.5 s of request start, the leg's call is cancelled, and the failure is counted in `ops_event` without the question
+
+**Given** fakes that make the direct embedding slow (3 s)
+**When** a search runs
+**Then** the response arrives within 2.5 s and the slow call is cancelled (the fake records the abort)
 
 **Given** each search
 **When** it completes
-**Then** `search_log` stores only `{at, lang, query_lang, release_v, ms, result_count, status, top_score, translated_leg}`; the question is never stored or logged (the logger rejects a `q` field, tested), and embedding usage is recorded in `spend_event`
+**Then** `search_log` stores only `{at, lang, query_lang, release_v, ms, result_count, status, top_score, translated_leg}`, and embedding usage is recorded in `spend_event`
+
+**Given** an integration test that searches with a unique marker string as the question, including runs where the embedding adapter throws an error that echoes its request
+**When** it completes
+**Then** the marker appears nowhere in: any database table, log output, `ops_event`, error responses, adapter error objects after wrapping, or tracing spans; vendor errors are wrapped so request bodies are dropped
 
 **Given** one client (salted IP hash) sends more than 30 questions in 10 minutes
 **When** the next arrives
@@ -1448,19 +1480,27 @@ So that I am not disadvantaged by the language or script I use.
 
 **Given** the `translation` module's `Translator` port and Cohere adapter (created here; E04 adds alert routes, caching and checks for alerts)
 **When** a question needs the translated-question leg
-**Then** it is translated to English with the model set in config `search_question_route` (starting with North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), in parallel with the first leg
+**Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
 
-**Given** the translation returns within 1.5 s and `eld` confirms it is English
-**When** both legs are ranked
-**Then** the rankings are merged by RRF (k = 60), the threshold is applied to the higher of each provider's two scores, and `search_log.translated_leg` is `used`
+**Given** the translation and its embedding finish within 1.8 s of request start and `eld` confirms the translation is English
+**When** results are ranked
+**Then** the ranking sequence is applied to both legs (threshold first, then RRF over qualifying providers), and `search_log.translated_leg` is `used`
 
-**Given** the translation fails, times out, or is not English
+**Given** the translation fails, is not English, or the translated leg misses its deadline
 **When** the server answers
-**Then** it answers from the first leg alone within the search time limit, and `translated_leg` is `failed` or `timed_out`
+**Then** the leg is cancelled, results come from the direct leg alone, the whole response still arrives within 2.5 s, and `translated_leg` is `failed` or `timed_out`
+
+**Given** the direct leg fails or misses its deadline but the translated leg completed
+**When** the server answers
+**Then** results come from the translated leg alone
+
+**Given** fakes for a slow translation (2 s), a fast translation with a slow translated embedding (translation 0.5 s, embedding 2 s), and a slow direct embedding
+**When** each test runs
+**Then** the response arrives within 2.5 s, cancelled calls record their abort, and late results are never used
 
 **Given** the translated question
 **When** handled
-**Then** it is never written to the translation cache, any table or any log (tested), and its usage is recorded in `spend_event` without text
+**Then** it is never written to the translation cache, any table, any log, any error or any tracing span (covered by the marker test in S03.04), and its usage is recorded in `spend_event` without text
 
 **Given** the test-set runner
 **When** run with the leg on and off
@@ -1481,10 +1521,11 @@ So that I find help without knowing the provider's name.
 **When** the manifest says search is available
 **Then** the question box appears with a hint in the page language and the category buttons below it
 **And** when search is unavailable, the box is hidden and only the category buttons show
+**And** a general "In an emergency, call 911" line with a `tel:` link is always visible on the ask screen, whatever the result
 
 **Given** results R-10
 **When** the server returns `status: ok`
-**Then** 3 to 5 listings are shown exactly as published in `query_lang`, with "Last confirmed by the Hub {date}", the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
+**Then** the 1 to 5 qualifying listings are shown exactly as published in `query_lang`, in the returned order, with "Last confirmed by the Hub {date}", the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
 **And** if the `query_lang` listing file is not on the phone, it is downloaded first; if that fails, the results are shown in the page language with that note
 
 **Given** `emergency_first` is true
@@ -1493,7 +1534,7 @@ So that I find help without knowing the provider's name.
 
 **Given** `status: no_clear_match`
 **When** shown (R-11)
-**Then** the resident sees "We couldn't find a clear match", the category list and the Hub's number as a `tel:` link
+**Then** the resident sees "We couldn't find a clear match", the category list, the Hub's number as a `tel:` link and the general 911 line
 
 **Given** the phone is offline, the server is rate-limiting, or the server returns `search_unavailable`
 **When** the resident asks
@@ -1519,8 +1560,8 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 **Acceptance Criteria:**
 
 **Given** the three candidates `embed-multilingual-v3.0`, `embed-v4.0` and `embed-v5.0-fast`
-**When** the runner is run on staging with each, leg on and off
-**Then** a comparison report is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage
+**When** the runner is run on staging with each, leg on and off, within the usage allowance
+**Then** a comparison report is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage, for the tuning subset
 
 **Given** the comparison
 **When** a model is chosen
@@ -1528,7 +1569,8 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 
 **Given** the scores of correct and no-match questions for the chosen model
 **When** the threshold is set
-**Then** it is the value that keeps every no-match question below it while losing the fewest hits, recorded with the report; the choice is provisional until S03.08
+**Then** it is chosen on the tuning subset only, as the value that keeps every tuning no-match question below it while losing the fewest hits, and is recorded with the report; the choice is provisional until S03.08
+**And** the evaluation subset is not run until S03.08, so it stays independent of tuning
 
 ### Story S03.08 — Ambassadors complete the test set and the Hub sets the launch bar
 
@@ -1548,14 +1590,17 @@ So that we launch search knowing how well it works in every language.
 **Given** the imported set
 **When** coverage is checked
 **Then** every launch language has at least 10 questions, with at least 5 romanized Urdu, 3 Hinglish, 10 emergency and 10 no-match questions overall; CI reports any gap
+**And** at least 4 questions per language, and at least 4 emergency and 4 no-match questions, are assigned to the evaluation subset by a fixed random seed before any run, and the assignment is committed
+**And** `no_match` rows with an empty expected-provider list are accepted; other rows without one are refused
 
 **Given** the full set
 **When** the runner runs with the chosen model, leg and threshold
-**Then** the model and threshold choices are confirmed or revised from this run, with the report committed
+**Then** the model and threshold are confirmed or revised using the tuning subset only, then the evaluation subset is run once with the final choices, and both reports are committed
 
 **Given** the first full report
 **When** the Hub sets the launch bar
-**Then** `bar.json` records the minimum hit rate per language, who set it and the date
+**Then** `bar.json` records the Hub-approved minimum hit rate per language, minimum no-match accuracy and minimum emergency accuracy, who approved them and the date
+**And** launch readiness is met only when the latest evaluation report meets every minimum
 **And** any language whose first measurement is below the bar the Hub would accept is listed in the launch-readiness checklist with the action and owner (for example more catalogue review or a different question route)
 
 ### Story S03.09 — The test set guards every search change
@@ -1571,12 +1616,13 @@ So that a model or route change never quietly makes search worse for one languag
 
 **Given** a change to the embedding model, `search_question_route`, the threshold, `emergency_categories`, the search code or the catalogue
 **When** CI runs on that change
-**Then** the runner runs against staging, and CI fails if any language falls below its bar in `bar.json`, naming the language and the drop
+**Then** the runner runs the evaluation subset against staging, and CI fails if any language's hit rate, the no-match accuracy or the emergency accuracy falls below its minimum in `bar.json`, naming the measure and the drop
 
 **Given** the monthly schedule and the week before launch
 **When** the scheduled run happens
 **Then** the report is committed and a drop below any bar is recorded in `ops_event` for the weekly review (E09)
 
-**Given** staging's Cohere key has a spend limit
-**When** runs happen
-**Then** each run's embedding and translation usage is recorded in `spend_event` against staging, and the runner refuses to start when the run would exceed the remaining monthly allowance set in config
+**Given** a live run is about to start
+**When** the runner checks the usage allowance
+**Then** it refuses to start unless every model used has a known per-unit price or the config holds a usage allowance (calls and tokens per month); it estimates the run's usage from the question count and refuses if that would exceed what remains this month, counted from `spend_event` units (not money) while prices are unknown
+**And** each run's usage is recorded in `spend_event` against staging
