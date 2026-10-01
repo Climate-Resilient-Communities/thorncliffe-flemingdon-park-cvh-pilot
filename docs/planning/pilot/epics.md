@@ -843,8 +843,10 @@ So that the CVH shows me what matters to me without asking who I am.
 
 **Given** a resident with saved personal choices uses every screen in this epic
 **When** the network log is inspected (end-to-end test)
-**Then** no request carries a building, floor, group, muted topic or basic-mode value, in the URL, headers or body
-**And** the only requests that carry anything derived from the resident are the usage events defined in S02.15, which this test checks against their fixed schema
+**Then** the saved selection itself is never sent: no request carries the list of saved buildings or floors, groups, muted topics or basic mode, in the URL, headers or body
+**And** requests for public content are allowed even when they name a building, such as opening a building page (`/{lang}/buildings/{rsn}`) or its facts; these are the same requests any visitor makes and carry no marker that the building is saved
+**And** home and the numbers page get data for saved buildings from the whole-neighbourhood feed and building list already on the phone, never by sending the saved list to the server
+**And** the only other requests derived from the resident are the usage events defined in S02.15, which this test checks against their fixed schema
 
 ### Story S02.04 — Hub loads the reviewed catalogue and confirms providers
 
@@ -898,6 +900,10 @@ So that every resident gets the same, complete set of listings in their language
 **When** that language's file is written
 **Then** the listing carries the English text with `translation.unavailable`
 
+**Given** a provider translation whose recorded source hash no longer matches the current English text
+**When** the release is written
+**Then** that stale translation is not published; the listing carries the English text with `translation.unavailable`, and the publish report lists every stale text by provider and language
+
 **Given** the job is stopped part way (function time limit or failure)
 **When** it runs again
 **Then** it resumes from the last completed file; the current release stays the previous one until every file is written, and a resident never sees a mix of two releases
@@ -919,10 +925,18 @@ So that every resident gets the same, complete set of listings in their language
 **When** the manifest is served
 **Then** it carries `search: {status: "unavailable"}`, and the client hides the question box and shows browsing only
 
+**Given** a release has been marked current
+**When** anything later changes (a provider published, a catalogue update, or E03's search data)
+**Then** that release's files and manifest entry are never modified; the change is made by publishing a new, complete release with a new number
+
 **Given** E03 adds search data
-**When** it is built
-**Then** it is written as part of the same release number, carries the same `catalogue_hash`, and the manifest switches to `search: {status: "available", embed_model, vectors_path}` only when both match
+**When** the next release is published
+**Then** that release contains its listing files and its search data built from the same `catalogue_hash`; the manifest shows `search: {status: "available", embed_model, vectors_path}` for it, and the publish job refuses to mark it current if the search data's `catalogue_hash` or release number differs from its listings
 **And** `DirectoryManifestV1` replaces `embed_model` with this `search` field (an AD-20 contract change recorded in the spine in this story)
+
+**Given** a new release is complete
+**When** it is made current
+**Then** the current-release pointer changes in a single database transaction, so every manifest request returns either the old release or the new one, never a mix
 
 ### Story S02.06 — Resident browses and filters the directory
 
@@ -954,7 +968,12 @@ So that I can find help near me in my language.
 
 **Given** the manifest reports a newer release than the one loaded
 **When** the directory is opened
-**Then** the new language file is loaded before the list renders
+**Then** the new language file is downloaded completely before it replaces the list
+
+**Given** the newer release's file fails to download, is incomplete or fails its schema
+**When** the directory is opened
+**Then** the previous complete cached release is shown with "Last updated {time}" and no error blocks the list; the download is retried on the next visit with signal (the same rule as S02.12)
+**And** if no release has ever been cached, the resident sees "The directory could not load" with the Hub's number and the numbers page link
 
 ### Story S02.07 — Resident finds providers and buildings on a map
 
@@ -1043,7 +1062,17 @@ So that residents read checked text, not a live machine translation.
 
 **Given** a text whose English source has changed since it was translated
 **When** the seed script runs
-**Then** it refuses to load that language's stale entry and reports it, so a resident never sees a translation of old English
+**Then** it does not load that stale translation; the text shows in English with `translation.unavailable`, and the report lists it, so a resident never sees a translation of old English
+
+**Given** `guides.json` and `numbers.json`
+**When** they are prepared
+**Then** each guide and the numbers list record a named owner (the Hub Coordinator responsible for that content) and a last-updated date; the English text records a review completed by that owner (reviewer and date); each number records the date it was last checked as correct
+**And** each translation records its review status (`machine` or `reviewed`, with reviewer and date)
+
+**Given** the seed script runs
+**When** a guide's English review, owner or last-updated date is missing, or a number has no last-checked date
+**Then** the script refuses to load that guide or the numbers list and reports why
+**And** a translation not marked `reviewed` is not loaded; that text shows in English with `translation.unavailable` until its review is recorded
 
 **Given** the guide and numbers seed script
 **When** it runs
@@ -1067,12 +1096,13 @@ So that I know what to do before, during and after a disruption.
 
 **Given** a guide (R-25)
 **When** opened from the list
-**Then** it shows before, during and after, with the 911 block at the top
+**Then** it shows before, during and after, with the 911 block at the top, and at the end "Reviewed by the Hub, last updated {date}"
 **And** opened from a link with `#during` (used by alerts in E04), it opens scrolled to "During" with focus on that heading
 
 **Given** the numbers page (R-31)
 **When** opened
 **Then** 911 is shown apart from the others with when to call it, then 211, 311, Toronto Hydro, the Hub and the contacts of the resident's chosen buildings, each a `tel:` link with a text label
+**And** the page shows "Checked by the Hub, last updated {date}"
 
 **Given** every guide, the numbers page and later every alert and check-in screen
 **When** rendered
