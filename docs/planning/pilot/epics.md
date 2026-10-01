@@ -3408,6 +3408,8 @@ The Hub learns about problems before residents do, can deliberately resend texts
 
 **Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 (inbound router, YES resolution), S07.07 (subscriber matching), S07.08 (spend and reservations), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally), S01.14 (coverage). Each story creates only the tables it needs and names the stories it depends on.
 
+**Handoff to E06's allow-list.** This epic adds two `transactional` purposes: `access_code` (created by `subscriptions` for S09.06, to an active subscriber, or to an `inbound_reply` recipient when the number has no subscription, `send_by` 15 minutes) and `resend` copies, which keep the original row's kind, purpose and sendability rules.
+
 **Definitions used in this epic**
 
 | Term | Meaning |
