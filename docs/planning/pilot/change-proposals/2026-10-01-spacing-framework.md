@@ -1,7 +1,7 @@
 # Change Proposal — Spacing and container framework
 
 - **Date:** 2026-10-01
-- **Status:** Proposed, not applied. `docs/planning/pilot/epics.md` and `docs/architecture/ARCHITECTURE-SPINE.md` are unchanged.
+- **Status:** Proposed, not applied (revision 2). `docs/planning/pilot/epics.md` and `docs/architecture/ARCHITECTURE-SPINE.md` are unchanged. Two items (2.4, 2.5) are approved by the product owner and will be applied together with the rest once the proposal is approved.
 - **Source:** the draft framework in `docs/design-framework/spacing-container/`, adapted from `lutic1/personal-website` (`design-framework/spacing-container-framework/`).
 - **Estimate impact:** +6 h of development, **proposed, pending review**, plus about 2 h of design-owner time.
 - **Not affected:** S01.01 (app skeleton) can start now, independently of every decision here.
@@ -29,10 +29,12 @@ Spacing values in the prototype's spacing declarations (`padding`, `margin`, `ga
 Less frequent values: 18 (25), 3 (17), 1 (15), 22 (11), 32 (9), 28 (6), 56 (6), 48 (4), 17 (4).
 
 **Recommendation:**
-- Make the spacing scale 2, 4, 6, 8, 10, 12, 14, 16, 20 and 24 px. This covers almost every use in the prototype.
-- The design owner decides each less frequent value: fold it into the nearest step, or add it as a named step.
-  - 1 px is a hairline border, not spacing.
-  - 56 px is the basic-mode touch target, which belongs with the target sizes below.
+- Make the spacing scale 2, 4, 6, 8, 10, 12, 14, 16, 20 and 24 px, the values the prototype uses most.
+- Rare values are **not** folded into the nearest step automatically. For each one, the design owner either:
+  - keeps it as a named step in the same scale where an approved screen needs it to look as approved; or
+  - records an explicit design decision in `tokens.json` (with the screens it affects) to change those screens to an existing step.
+- An inventory of where each rare value is used (screen and component) is prepared with the reconciliation, so each choice is made against the approved screens.
+- Two values are not spacing steps: 1 px is a hairline border, and 56 px is the basic-mode touch target, which belongs with the target sizes below.
 - `tokens.json`'s current steps 17, 29, 48 and 67 px are described there as slide and document spacing. If the file must keep serving slides, they stay under the slides usage and are not generated for the app.
 
 Also record in `tokens.json`:
@@ -49,13 +51,15 @@ Every value comes from the prototype, which the design owner confirms. The other
 Making S01.09 depend on S02.01 would reverse the epic order, so it is not proposed. Instead:
 
 - **New story S01.16 — Developer generates the shared design tokens and layout primitives.**
-  - **Size and order:** M, 6 h, depends on S01.01. It sits immediately before S01.09 in the document. Story IDs are not renumbered, so S01.16 appears out of numeric order on purpose.
+  - **Size and dependencies:** M, 6 h. **Depends on:** S01.01 (the app, CI and Playwright it builds on). Execution order is set by declared dependencies, not by numeric IDs: S01.01 → S01.16, and S01.16 → S01.09.
+  - **Position:** it sits immediately before S01.09 in the document. Story IDs are not renumbered, so S01.16 appears out of numeric order on purpose.
   - **Token generation** (moved from S02.01, about 2.5 h): `npm run gen:tokens` from the reconciled `tokens.json`, the light and navy themes, and a snapshot test.
   - **Layout primitives** (new, about 3.5 h): `Screen`, `Stack`, `Inline`, `Grid` and the `tap` rule, as specified in `docs/design-framework/spacing-container/components/`. Those specs say "Built in: S02.01"; they would point to S01.16 once approved.
   - **Generator behaviour:** when a token the primitives need has no value, the generator fails and names the gap; it never writes a default.
   - **Checks:** the proportionate spacing check in 2.3.
-- **S01.09:** depends on S01.07 and S01.16. Add criteria saying the Hub shell uses `Screen` and the Hub breakpoint token only. +0.5 h (4 → 4.5 h).
-- **S02.01:** keeps string generation and loses token generation. 6 → 3.5 h. Its criteria about tokens move to S01.16.
+- **S01.09:** **Depends on:** S01.07, S01.16 (explicitly added). Add criteria saying the Hub shell uses `Screen` and the Hub breakpoint token only. +0.5 h (4 → 4.5 h).
+- **S02.01:** keeps string generation and loses token generation. 6 → 3.5 h. Its criteria about tokens move to S01.16. **Depends on:** S01.01 (unchanged).
+- **S02.02:** **Depends on:** S02.01 (unchanged) and S01.16 (added), since the resident shell uses the generated tokens and primitives.
 - **S02.02:** list the banned physical CSS properties exactly, and check that right to left mirrors English (±1 px). +1 h (7 → 8 h).
 - **S02.14:** basic mode is set before first paint, grids collapse, and targets are measured at the basic-mode size in `en`, `ur` and `ta`. +1 h (6 → 7 h).
 
@@ -68,7 +72,7 @@ Making S01.09 depend on S02.01 would reverse the epic order, so it is not propos
 | S02.14 | 6 h | 7 h |
 | **Net** | | **+6 h** (E01 81 → 87.5 h; E02 84 → 84.5 h; build 488 → 494 h) |
 
-All figures are proposed, pending review.
+All figures are proposed, pending review of the diff. The dependency check (no missing or forward declared dependencies) is re-run when the edits are applied.
 
 ### 2.3 Keep enforcement proportionate
 
@@ -79,13 +83,13 @@ The spacing check catches unapproved spacing values without banning legitimate C
 - **Exceptions:** a reviewed `/* spacing-exception: reason */` comment allows one, and the check lists every exception in its report. Negative margins are flagged unless they carry such a comment.
 - **Logical CSS check (S02.02):** stays as approved, with the explicit list. It bans only properties that are physical left or right; it does not restrict borders or icons generally.
 
-### 2.4 Allow the inline-link exception, subject to the pilot's accessibility requirements
+### 2.4 Allow the inline-link exception — **approved by the product owner (2026-10-01)**
 
 - **Proposal:** links inside a sentence or block of text, such as guide body text marked `data-tap-exempt="inline-text"`, are exempt from the 44 px minimum. Every control and every important link stays a separate control of at least 44 px (56 px in basic mode).
 - **Why it fits WCAG:** this matches the inline exception in WCAG 2.5.5 (WCAG 2.1, level AAA) and 2.5.8 (WCAG 2.2, level AA). The pilot targets WCAG 2.1 AA (NFR-N2), which has no target-size criterion at AA.
-- **Still to confirm:** UX-DR19 says "44 px touch targets" without listing exceptions, so the product owner must confirm UX-DR19 means controls rather than inline text. Until then the strict rule stays in S02.14.
+- **Decision:** the product owner confirmed that UX-DR19's 44 px touch targets mean controls, with the inline-text link exception. S02.14's criterion is updated accordingly when the proposal is applied.
 
-### 2.5 O-07 needs a trace, not a story
+### 2.5 O-07 needs a trace, not a story — **approved by the product owner (2026-10-01)**
 
 The prototype's O-07 ("Ambassador post — approve or review") is already built by approved stories:
 
@@ -103,10 +107,12 @@ The prototype's O-07 ("Ambassador post — approve or review") is already built 
 
 ## 3. Decisions requested
 
-1. Approve the reconciled spacing scale (2.1), or adjust it.
-2. Approve new S01.16 and the moves in 2.2.
+1. Approve the reconciled spacing scale and the rare-value rule (2.1), or adjust it.
+2. Approve new S01.16, its dependencies and the moves in 2.2.
 3. Approve the proportionate check in 2.3.
-4. Confirm the reading of UX-DR19 in 2.4.
-5. Approve the O-07 trace in 2.5.
+4. ~~Confirm the reading of UX-DR19 in 2.4.~~ Approved.
+5. ~~Approve the O-07 trace in 2.5.~~ Approved.
+
+S01.01 proceeds independently of this proposal.
 
 When approved, the edits are applied to `epics.md` (and AD-16 in the spine notes the reconciled scale). The framework docs then drop their draft banner, except for any gap still unresolved.
