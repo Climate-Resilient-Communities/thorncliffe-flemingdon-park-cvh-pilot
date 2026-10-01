@@ -2024,7 +2024,7 @@ A disruption stays one running thread: staff add updates, correct or withdraw wh
 
 **Depends on E04:** S04.03 (lifecycle, triggers, thread lock, entry versions), S04.05 (compose and idempotent submit), S04.06 (renderer and hash), S04.07 (approval, recipient snapshot hook), S04.08 (feed, alert detail, drill isolation). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoffs.** Sending is E06 and recipients are E07. Every use case in this epic that supersedes an entry, discards entries or closes a thread calls `messaging`'s `cancelQueued(entryIds, tx)` port inside its transaction; it does nothing until E06 implements it, and E06 must keep it in the same transaction. Corrections, withdrawals and finals capture recipients at approval through `captureRecipients(entry, tx)` with the AD-7 rule (the target's recipients ∪ the entry's own audience, opt-outs never removing them); E07 implements that rule.
+**Handoffs.** Sending is E06 and recipients are E07. Every use case in this epic that supersedes an entry, discards entries or closes a thread calls `messaging`'s `cancelQueued(entryIds, tx)` port inside its transaction; it does nothing until E06 implements it, and E06 must keep it in the same transaction. Corrections and withdrawals capture recipients at approval through `captureRecipients(entry, tx)` with the AD-7 rule (the target's recipients ∪ the entry's own audience, opt-outs never removing them); a final has no target and captures the thread union (definitions). E07 implements these rules. The dispatcher (E06) must claim a delivery only by locking its row and re-checking that it is still `queued`, so a merge or close that holds the row lock cannot be overtaken (S05.05).
 
 **Definitions used in this epic**
 
@@ -2033,12 +2033,16 @@ A disruption stays one running thread: staff add updates, correct or withdraw wh
 | Update | An `update` entry added to an open thread. It does not supersede anything; earlier entries stay readable in order. Promoting an acknowledgement (O-13) is posting the first update. |
 | Phase | Required on every `ack`, `update` and `correction`: `problem` or `in_progress`. It drives derived status. |
 | Correction | A `correction` entry that names one target entry. When approved, the target becomes `superseded`; residents see the correction above the original, with the original's wording still readable and marked "Corrected". |
-| Withdrawal | A `withdrawal` entry that names one target. When approved, the target becomes `superseded` and residents see "Withdrawn" with the reason in its place. If no published, non-superseded entry remains, the thread closes `withdrawn`. |
+| Substantive entry | An `ack`, `update`, `correction` or `final`. Withdrawal notices (human or system) are never substantive. |
+| Withdrawal | A `withdrawal` entry that names one target. When approved, the target becomes `superseded` and residents see "Withdrawn" with the reason in its place. If no published, non-superseded substantive entry remains, the thread closes `withdrawn`; the withdrawal notice itself does not keep the thread open. |
 | Valid target | An entry that is `approved`, or `pending_approval` and web-published (the D-1 case in E08), and not already superseded. A correction itself can be corrected. |
-| Final | A `final` entry that closes the thread `resolved` when approved. "Mark resolved" by an ambassador or Hub staff submits one. |
-| Thread expiry | A thread expires when the valid-until of its latest published, non-superseded entry has passed and it has not been closed. The expire job closes it `expired` with a system `final`. "Until resolved" entries are renewed by each update (24 elapsed hours from that update). |
-| Closed thread | `closed{resolved|expired|withdrawn}`. Only `alerting.closeAlert(alertId, reason)` closes a thread; closing discards every `draft` and `pending_approval` entry and calls `cancelQueued` in the same transaction. Every later change is refused with `ALERT_CLOSED`. |
-| Derived status | Computed only by `alerting/domain/status.ts#statusOf(place, threads)` (AD-19) over non-drill threads covering the place with a web-published, non-superseded entry: `active` (open, latest phase `problem`), `in_progress` (open, latest phase `in_progress`), `resolved` (closed `resolved` within the last 12 hours), else `none`; precedence active > in_progress > resolved > none. `verified` is false when the status rests only on unverified entries. |
+| Final | A `final` entry that closes the thread `resolved` when approved. "Mark resolved" by an ambassador or Hub staff submits one. It has no target. |
+| Final recipients | The union, deduplicated by recipient and channel, of the recipients of every entry in the thread on the channels each was sent on, plus the final's own audience; opt-outs never remove anyone; language is each recipient's current language. |
+| Thread expiry | A thread expires when the valid-until of its latest published, non-superseded substantive entry has passed and it has not been closed. The expire job closes it `expired` with a system `final`. "Until resolved" entries are renewed by each update (24 elapsed hours from that update). Expiry never means resolved. |
+| Closed thread | `closed{resolved|expired|withdrawn}`. Only `alerting.closeAlert(alertId, reason, keepEntryId?)` closes a thread; closing discards every `draft` and `pending_approval` entry and calls `cancelQueued` for every entry except `keepEntryId` (the final being approved), in the same transaction. Every later change is refused with `ALERT_CLOSED`. |
+| Covering entry | The latest published, non-superseded substantive entry of a thread. A thread covers a place when that entry's audience covers it, so a narrowing update stops the thread covering the places it dropped. |
+| Status threads | The non-drill threads used for status: every open thread, plus threads closed `resolved` within the last 12 hours. This set is queried separately from the live feed list, which holds open threads only. |
+| Derived status | Computed only by `alerting/domain/status.ts#statusOf(place, threads)` (AD-19) over the status threads that cover the place: `active` (open, covering entry phase `problem`), `in_progress` (open, covering entry phase `in_progress`), `resolved` (closed `resolved` within the last 12 hours), else `none`; precedence active > in_progress > resolved > none. Expired and withdrawn threads never give `resolved`. `verified` is true when at least one thread giving the winning status has a verified covering entry, and false only when all of them are unverified. |
 | Archive | Closed non-drill threads, newest first, readable by anyone, with every entry and correction as shown when live. |
 | Share link | `/a/{slug}?l={lang}`: always the standard (untailored) alert in its current state. Sharing is never recorded. |
 
@@ -2103,13 +2107,17 @@ So that a mistake is fixed openly and nobody keeps acting on wrong information.
 **Then** the correction is shown above the original with the correction marker, and the original's wording stays readable, marked "Corrected"; a withdrawn entry shows "Withdrawn" and the reason in its place
 **And** the feed, the alert detail and the share preview all show the same state
 
-**Given** a withdrawal leaves no published, non-superseded entry in the thread
+**Given** a withdrawal leaves no published, non-superseded substantive entry in the thread
 **When** it is approved
-**Then** `closeAlert(alertId, 'withdrawn')` runs in the same transaction
+**Then** `closeAlert(alertId, 'withdrawn')` runs in the same transaction, even though the new withdrawal notice is itself published
+
+**Given** a thread with one approved acknowledgement, and a thread with an acknowledgement and one update
+**When** the only substantive entry is withdrawn in the first, and only the update in the second
+**Then** the first thread closes `withdrawn`, and the second stays open on its acknowledgement (integration tests)
 
 **Given** the correction recipients rule
-**When** a correction, withdrawal or final is approved
-**Then** `captureRecipients` is called with the target and the entry's own audience (handoff to E07), and the approval view says the correction will go to everyone who got the original
+**When** a correction or withdrawal is approved
+**Then** `captureRecipients` is called with the target and the entry's own audience (handoff to E07), and the approval view says it will go to everyone who got the original
 
 ### Story S05.03 — Hub staff close an alert once, with a final word
 
@@ -2124,12 +2132,16 @@ So that residents know it is over and nothing more goes out for it.
 
 **Given** an open thread
 **When** a Coordinator or an assigned Ambassador chooses "Mark resolved" (O-16) and writes the final message
-**Then** a `final` entry is submitted, and its approval by a second person calls `closeAlert(alertId, 'resolved')` in the same transaction
-**And** the final's recipients are the thread's recipients on every channel used (handoff to E07)
+**Then** a `final` entry is submitted, and its approval by a second person runs, in one transaction under the thread lock: `closeAlert(alertId, 'resolved', keepEntryId = the final)`, which cancels queued deliveries of every other entry; then the final's recipients are captured as the final recipients union (handoff to E07)
+**And** the approval view says the final goes to everyone who got any entry of this alert, on the channels they got it on
 
 **Given** `closeAlert`
 **When** it runs
-**Then** under the thread lock it sets the thread `closed` with its reason and time, moves every `draft` and `pending_approval` entry to `discarded`, calls `cancelQueued`, increments `feed_version` and audits `alert.closed`, all in one transaction
+**Then** under the thread lock it sets the thread `closed` with its reason and time, moves every `draft` and `pending_approval` entry other than `keepEntryId` to `discarded`, calls `cancelQueued` for every entry except `keepEntryId`, increments `feed_version` and audits `alert.closed`, all in one transaction
+
+**Given** a thread with an update whose texts are still queued
+**When** its final is approved
+**Then** the update's queued deliveries are cancelled and the final's deliveries are created and stay queued (integration test with a fake `cancelQueued` and `captureRecipients` recording calls; E06 repeats it with real deliveries)
 **And** no other code path can close a thread (a trigger refuses any other update of `alert.state`, tested by direct SQL)
 
 **Given** a closed thread
@@ -2142,7 +2154,7 @@ So that residents know it is over and nothing more goes out for it.
 
 **Given** a closed thread
 **When** a resident opens it
-**Then** it shows "Closed: {resolved|expired|withdrawn}" with the final message and every earlier entry, and it is no longer in the live feed
+**Then** it shows its close reason with distinct wording and icon for each ("Resolved", "Expired", "Withdrawn"), the final message and every earlier entry, and it is no longer in the live feed
 
 ### Story S05.04 — Alerts that run past their time close on their own
 
@@ -2157,7 +2169,7 @@ So that I am not worried by a problem that is long over.
 
 **Given** `/api/jobs/expire`, called every minute by pg_cron with the environment's job secret
 **When** a thread's latest published, non-superseded entry is past its valid-until
-**Then** the job, under the thread lock, adds a system `final` (`published_system`, web-only, text from the catalog "This alert has ended. Contact the Hub if the problem continues.") and calls `closeAlert(alertId, 'expired')`
+**Then** the job, under the thread lock, adds a system `final` (`published_system`, web-only, text from the catalog "This alert has expired without a further update. The problem may continue. Contact the Hub for current information.") and calls `closeAlert(alertId, 'expired')`
 
 **Given** the `published_system` transition
 **When** it is attempted without the session variable `cvh.system_actor` set by the expire job or the discard use case
@@ -2170,6 +2182,10 @@ So that I am not worried by a problem that is long over.
 **Given** a valid-until across the daylight-saving changes (8 March 2026 and 1 November 2026)
 **When** the job decides expiry
 **Then** it compares UTC instants only, and tests cover a valid-until set in the repeated autumn hour and "until resolved" spanning each change
+
+**Given** an expired thread
+**When** residents see it, its status and its share preview
+**Then** it is labelled "Expired", never "Resolved", and it gives no `resolved` status
 
 **Given** the job fails or a pg_cron run fails
 **When** it happens
@@ -2188,11 +2204,19 @@ So that residents get one story, not two versions of the same problem.
 
 **Given** the "possible duplicate" link shown at approval (S04.05)
 **When** a Coordinator chooses "Merge into the running alert"
-**Then** in one transaction, locking both threads in id order, the newer thread's entries are discarded (web-published ones get a system `withdrawal` with reason "duplicate"), the newer thread closes `withdrawn`, and both threads record the merge in the audit trail
+**Then** in one transaction it locks both threads in id order, then locks every delivery row of the newer thread (`FOR UPDATE`, waiting for any claim in progress), and only if every one is `queued` or `cancelled` does it cancel the queued ones, discard the newer thread's entries (web-published ones get a system `withdrawal` with reason "duplicate"), close the newer thread `withdrawn`, and record the merge on both threads in the audit trail
 
-**Given** the newer thread has an approved entry with any text already submitted to the provider (E06 state `submitted` or later)
+**Given** any delivery of the newer thread is `claimed`, `submitted` or in any later state
 **When** a merge is attempted
-**Then** it is refused with "Texts have already gone out; correct or withdraw instead"
+**Then** it is refused with "Texts have already gone out or are going out; correct or withdraw instead", and nothing changes
+
+**Given** a merge and a dispatcher claim on the same delivery at the same time
+**When** both run
+**Then** either the claim wins and the merge is refused, or the merge wins and the claim finds the row `cancelled` and skips it; never both (concurrency test with a fake dispatcher that claims by row lock and re-checks `queued`, the rule E06 must follow)
+
+**Given** a merge of a thread into itself, into a closed thread, of a closed thread, or between a drill and a real thread
+**When** it is attempted
+**Then** it is refused with the reason, and the refusal is recorded
 
 **Given** a merge
 **When** a resident opens the newer thread's link
@@ -2211,11 +2235,11 @@ So that I know whether to act before reading every alert.
 
 **Given** `statusOf(place, threads)`
 **When** the table-driven unit tests run
-**Then** they cover each status, the precedence, a neighbourhood thread covering every building in it, a superseded entry being ignored, a withdrawn thread giving `none`, the 12-hour resolved window measured from closing time, drills ignored, and `verified: false` when only unverified entries support the status
+**Then** they cover each status, the precedence, a neighbourhood thread covering every building in it, a superseded entry being ignored, a withdrawn or expired thread giving `none`, the 12-hour resolved window measured from closing time, drills ignored, an update that narrows the audience from buildings A and B to A (B no longer covered by that thread), and for each affected place: a verified and an unverified thread with the same winning status (`verified: true`), only unverified threads (`verified: false`), and an unverified active thread beside a verified in-progress one (active, `verified: false`)
 
 **Given** the feed
 **When** served
-**Then** `places.buildings` and `places.neighbourhoods` carry each place's derived status and `verified`, computed at request time from the same threads as the feed (no stored status; the `building` table holds facts only)
+**Then** `places.buildings` and `places.neighbourhoods` carry each place's derived status and `verified`, computed at request time from the status threads, which include threads closed `resolved` in the last 12 hours even though they are no longer in the feed's thread list (no stored status; the `building` table holds facts only)
 
 **Given** home and the building page
 **When** they render
@@ -2274,11 +2298,16 @@ So that neighbours without the app still get trustworthy information.
 
 **Given** the share link is pasted in WhatsApp
 **When** the preview is generated (R-30)
-**Then** the server-rendered page at `/a/{slug}` gives Open Graph title and description in language `l` showing type, place, verification, correction state and time, readable without opening the link; the preview reflects the thread's current state and is cached for at most 15 seconds
+**Then** the server-rendered page at `/a/{slug}` gives Open Graph title and description in language `l` showing type, place, verification, correction or close state and time, readable without opening the link
+**And** the app's guarantee covers its own server only: metadata it serves reflects the current state within 15 seconds; when WhatsApp or another app refreshes a preview it already showed is outside the app's control, and the shared message text is a snapshot from the moment of sharing
+
+**Given** a thread is corrected, an entry is withdrawn, or the thread is closed
+**When** the metadata is fetched again more than 15 seconds later
+**Then** it shows the new state (tests fetch the page after each change)
 
 **Given** the link is opened
 **When** the page loads
-**Then** it shows the live alert with any correction above the original, in language `l`, then switches to the device's saved language if one is set; a closed thread shows its closed state; a merged thread shows the merge note
+**Then** it always shows the alert's current state: the live alert with any correction above the original, in language `l`, then switches to the device's saved language if one is set; a closed thread shows its closed state; a merged thread shows the merge note
 
 **Given** a drill thread, an unknown slug, or a thread with no web-published entry
 **When** `/a/{slug}` is requested
