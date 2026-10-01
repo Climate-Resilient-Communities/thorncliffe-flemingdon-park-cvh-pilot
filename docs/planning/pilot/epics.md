@@ -2320,3 +2320,306 @@ So that neighbours without the app still get trustworthy information.
 **Given** E05 is complete
 **When** the Hub decides to show alerts to residents in production
 **Then** an Admin changes `RESIDENT_ALERTS_ENABLED` to true through a production deploy, the change is recorded in the launch-readiness checklist, and the S04.08 configuration test is updated to expect it on
+
+## E06 — Texts go out safely
+
+Every outbound text goes through one queue and one sender: in a fixed priority order, at a controlled pace, never twice, never after it was cancelled, with delivery status tracked from signed webhooks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.
+
+**Epic estimate:** 48 h across 9 stories (4 S, 5 M) · **Epic actual:** —
+
+**Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.05 (`cancelQueued`, final recipients, merge guard), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
+
+**Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim rule that E05's merge relies on, and repeats E05's merge and final-delivery tests with real deliveries. `captureRecipients` is implemented here for drills only (drill roster); E07 adds subscribers.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), state and timestamps. It never stores a phone number. |
+| States | `queued → claimed → submitted → delivered | failed | undelivered | unknown`, plus `cancelled`, `skipped` (recipient deleted or entry no longer sendable) and `skipped_env` (non-production). Allowed transitions are enforced by a trigger; final states never change. |
+| Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued`, and committing `claimed` with `claimed_at` in its own short transaction before any provider call. |
+| Claim order | Fire and evacuation entries first, then on-call and other transactional texts, then building-level before neighbourhood-level alerts, then oldest first. |
+| Send pace | The dispatcher submits at most the configured segments per second (default 3, Twilio's toll-free rate), so priority order holds instead of being lost in the provider's own queue. |
+| Ambiguous outcome | The provider call timed out or the connection dropped after the request was sent. The row becomes `unknown` and is never re-sent automatically. |
+| Retryable error | The provider answered with 429 or 5xx, so the text was not accepted. The row returns to `queued` with a backoff (30 s, 2 min, 10 min), at most 3 times, then `failed`. |
+| Permanent error | Any other provider error (for example invalid number or opted-out recipient). The row becomes `failed` with the error code; never retried. |
+| Lease expiry | A row `claimed` for more than 5 minutes becomes `unknown`; a row `submitted` with no final status after 24 hours becomes `unknown`. Neither is re-sent automatically; resend is a deliberate Admin action (E09). |
+| Pause | A `messaging_pause` row set by an Admin. While paused, nothing is claimed; queued rows stay queued. |
+| Drill roster | Staff-owned phone numbers entered by Admins, each with a label and language. Drill texts can go only to them. |
+| On-call roster | Admin phone numbers entered by Admins, for operational alerts (`ops.oncall_roster`). |
+
+### Story S06.01 — Every outbound text is one queued record, never a phone number
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-12, AR-17 (no phone in delivery), FR-A17 · **Depends on:** S04.07 · **Branch:** `e06-s01-outbox`
+
+As a Hub Admin,
+I want every text recorded once before it is sent,
+So that we can always see what went out and nothing is sent twice.
+
+**Acceptance Criteria:**
+
+**Given** the `delivery` table owned by `messaging`
+**When** the migration runs
+**Then** it has the fields in the definitions, a unique `idempotency_key` (`entry_id:recipient:channel` for alerts, `kind:subject:purpose:nonce` otherwise), no phone number column, RLS locked down, and `recipient_id` set to null if the recipient is deleted
+
+**Given** a state change
+**When** it is not an allowed transition, or changes a final state
+**Then** the trigger refuses it (direct SQL tests for each forbidden transition with the app's credentials)
+
+**Given** two inserts with the same idempotency key
+**When** they run at the same time
+**Then** exactly one row exists and the other insert returns the existing row (no error to the caller)
+
+**Given** `alert` deliveries
+**When** created
+**Then** they are created only inside an approval transaction (a trigger refuses an `alert` delivery whose entry is not being approved in the same transaction, using a transaction-local marker set by the approval use case)
+
+**Given** the `ContactResolver` port, wired in the composition root to `subscriptions`, `identity` and `ops`
+**When** the dispatcher needs a number
+**Then** it resolves it at claim time and never stores it; logs mask numbers to the last two digits (test)
+
+### Story S06.02 — The dispatcher sends each text once, in priority order
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** AR-12, AR-19 (byte-for-byte), FR-M2 (delivery data) · **Depends on:** S06.01 · **Branch:** `e06-s02-dispatcher`
+
+As a Hub Coordinator,
+I want approved texts sent quickly, fire alerts first, and never twice,
+So that residents get the most urgent text first and nobody gets duplicates.
+
+**Acceptance Criteria:**
+
+**Given** the dispatcher runs right after an approval commits and every minute by pg_cron (`/api/jobs/dispatch`, with the environment's job secret)
+**When** it runs
+**Then** it checks the pause, claims rows by the claim rule in claim order, resolves each number, calls the Twilio Messaging Service with the frozen body byte for byte and the status callback URL from `PUBLIC_BASE_URL`, and commits `submitted` with the provider id right after each call
+**And** two dispatcher runs at the same time never claim the same row (concurrency test)
+
+**Given** a burst of 300 queued texts
+**When** the dispatcher sends
+**Then** it keeps to the send pace, stops claiming before the function time limit (leaving a safety margin of 10 s), and the next run continues; a fire alert queued during the burst is claimed before the remaining lower-priority rows
+
+**Given** each provider outcome
+**When** the call returns
+**Then** acceptance gives `submitted`; a retryable error re-queues with backoff up to 3 times; a permanent error gives `failed` with the code; an ambiguous outcome gives `unknown` (fake provider tests for each, including a timeout after the request is sent)
+
+**Given** the lease rules
+**When** the sweep runs (every minute)
+**Then** rows past their lease become `unknown`, are recorded in `ops_event`, and are never re-sent automatically
+
+**Given** a row whose recipient was deleted, whose entry was superseded or discarded, whose thread closed, or whose entry's valid-until has passed
+**When** it reaches the claim
+**Then** it is `skipped` or `cancelled` with the reason and no provider call is made
+
+**Given** Twilio Smart Encoding
+**When** the dispatcher starts a run in production
+**Then** it reads the Messaging Service setting (cached for 1 hour); if Smart Encoding is on, it claims nothing, records an `ops_event` and alerts on-call (S06.07)
+
+**Given** `SMS_MODE=log` (every environment except production)
+**When** the dispatcher runs
+**Then** each row becomes `skipped_env` with its body length and segments logged, no provider call is made, and no Twilio credentials are read
+
+### Story S06.03 — Cancelled, merged and closed alerts never send stale texts
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.05 · **Branch:** `e06-s03-cancel-queued`
+
+As a Hub Coordinator,
+I want texts for withdrawn, corrected or closed alerts stopped before they go,
+So that nobody receives something we already took back.
+
+**Acceptance Criteria:**
+
+**Given** `cancelQueued(entryIds, tx)`
+**When** called by supersession, discard, merge or close
+**Then** it locks the entries' `queued` rows in lock order (after `alert_entry`, before `checkin`) and sets them `cancelled` in the caller's transaction; rows already claimed or later are left as they are and reported to the caller
+
+**Given** E05's final-delivery test with real deliveries
+**When** a thread with an update whose texts are still queued gets its final approved
+**Then** the update's queued rows are `cancelled` and the final's rows are created and stay `queued`, then are sent
+
+**Given** E05's merge race with the real dispatcher
+**When** a merge and a claim of the same row run at the same time
+**Then** either the claim wins and the merge is refused, or the merge wins and the claim skips the cancelled row; never both (concurrency test repeated 50 times)
+
+**Given** a correction approved while the original's texts are part-sent
+**When** it commits
+**Then** the original's queued rows are cancelled, its submitted rows are untouched, and the correction goes to every recipient of the original (drill roster in this epic; subscribers in E07)
+
+### Story S06.04 — Delivery status comes only from signed provider callbacks
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-12 (status webhooks), FR-M2, Consistency Conventions (webhook signatures) · **Depends on:** S06.02 · **Branch:** `e06-s04-status-webhooks`
+
+As a Hub Admin,
+I want each text's real delivery status recorded,
+So that we know who received an alert and can follow up on failures.
+
+**Acceptance Criteria:**
+
+**Given** `POST /api/twilio/status`
+**When** a callback arrives
+**Then** its `X-Twilio-Signature` is validated against `PUBLIC_BASE_URL` and the exact request before any work; an invalid signature returns 403, does nothing, and is counted in `ops_event` (more than 5 in 10 minutes raises an on-call alert, S06.07)
+
+**Given** a valid callback
+**When** it names a provider id
+**Then** the status is mapped (`queued`, `sending`, `sent` keep `submitted` and record the provider status; `delivered`, `undelivered`, `failed` set the final state with the error code) and the time is stored
+
+**Given** callbacks arriving out of order, repeated, or after a final state
+**When** processed
+**Then** a final state is never changed and a repeat changes nothing (idempotent); an earlier status arriving after a later one is ignored
+
+**Given** a callback for an unknown provider id
+**When** processed
+**Then** it returns 200, changes nothing and is counted in `ops_event`
+
+**Given** a callback for a row marked `unknown` by the lease sweep
+**When** it reports `delivered` or `failed`
+**Then** the row takes that final state and the `unknown` is resolved in `ops_event`
+
+**Given** the callback route
+**When** the no-cookie and logging tests run
+**Then** it sets no cookie and never logs the phone number or body from the request
+
+### Story S06.05 — Admins run drills that reach only the drill roster
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A17, AR-10, NFR-N6, FR-M4 (drills) · **Depends on:** S06.03, S06.04 · **Branch:** `e06-s05-drills`
+
+As a Hub Admin,
+I want to rehearse a real alert on the live system with staff phones only,
+So that we practise sending without any chance of reaching residents.
+
+**Acceptance Criteria:**
+
+**Given** the drill roster screen
+**When** an Admin at `aal2` adds, edits or removes a roster entry (label, Canadian `+1` number, language)
+**Then** the change is saved and audited without the number; numbers are never stored in the repository or CI
+
+**Given** an Admin at `aal2` chooses "Start a drill"
+**When** the thread is created
+**Then** `is_drill` is true and immutable, every screen shows the exercise marker, and staff lists show it in the separate drills section
+
+**Given** a drill entry is approved by a second person
+**When** `captureRecipients` runs
+**Then** it creates deliveries only for drill roster entries, each in the entry's frozen body for the roster member's language, with the exercise marker first
+
+**Given** any attempt to create a delivery for a drill entry to a non-roster recipient, or for a real entry to a roster recipient
+**When** it reaches the database
+**Then** the trigger refuses it (direct SQL tests)
+
+**Given** a drill thread
+**When** anyone tries to change `is_drill`, merge it with a real thread, or open its share link
+**Then** it is refused, and `/a/{slug}` returns 404
+
+**Given** a drill completes
+**When** the Hub reviews it
+**Then** the drill view shows sent, delivered, failed and unknown per roster member and language, and the drill counts are stored apart from real alert counts (FR-M4)
+
+**Given** a production drill
+**When** run as part of launch readiness
+**Then** it covers an alert, an update, a correction and a final, and each roster phone receives each text once, in its language, with the exercise marker
+
+### Story S06.06 — An Admin can pause all sending at once
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-12 (pause), NFR-N6 · **Depends on:** S06.02 · **Branch:** `e06-s06-pause`
+
+As a Hub Admin,
+I want one switch that stops every text from going out,
+So that we can stop a mistake or a provider problem immediately.
+
+**Acceptance Criteria:**
+
+**Given** an Admin at `aal2`
+**When** they choose "Pause all texts" with a reason
+**Then** a `messaging_pause` is recorded and audited, every Hub screen shows "Texts are paused" with who paused, when and why, and the dispatcher claims nothing from its next check
+
+**Given** a pause
+**When** texts are approved or created during it
+**Then** they queue normally, and the approver sees "Texts are paused; this will send when resumed"
+
+**Given** "Resume texts"
+**When** an Admin at `aal2` resumes
+**Then** the pause ends, is audited, and the dispatcher continues in claim order; rows whose entry was superseded, closed or past its valid-until during the pause are skipped or cancelled, not sent
+
+**Given** a pause is in place
+**When** texts are already claimed
+**Then** those in-flight calls complete (a pause cannot recall a text already handed to the provider), and the screen says how many were in flight
+
+**Given** anyone other than an Admin, or an Admin without `aal2`
+**When** they call pause or resume directly
+**Then** it returns 403 (S01.12 list)
+
+### Story S06.07 — A stuck queue or failing sender alerts the on-call Admin
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** AR-21 (minimal), NFR-N6 · **Depends on:** S06.04, S06.06 · **Branch:** `e06-s07-stuck-queue-alert`
+
+As the on-call Admin,
+I want a text when sending is stuck or failing,
+So that a problem is fixed before residents miss an alert.
+
+**Acceptance Criteria:**
+
+**Given** the on-call roster screen
+**When** an Admin at `aal2` adds or removes an on-call number
+**Then** it is saved in `ops.oncall_roster` and audited without the number; at least one on-call number is required before any non-drill alert can be approved in production
+
+**Given** `/api/jobs/health`, called every minute by pg_cron
+**When** a delivery is `queued` for more than 5 minutes outside a pause, a row becomes `unknown`, Smart Encoding is found on, or signature failures exceed 5 in 10 minutes
+**Then** it writes an `ops_event` (no personal data) and creates one `transactional` text per on-call number, at most once per condition per 30 minutes
+
+**Given** an on-call text
+**When** it is queued
+**Then** it is claimed ahead of alerts (claim order) and sent by the same dispatcher; if the dispatcher itself is failing, the `ops_event` and the Hub banner still record it (an independent outside check is added in E09)
+
+**Given** the condition clears
+**When** the health job next runs
+**Then** it records the recovery in `ops_event`, and no further alerts are sent for it
+
+### Story S06.08 — Each text records its cost and timing
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-M2, FR-M5 (cost data), FR-M4 · **Depends on:** S06.04 · **Branch:** `e06-s08-cost-timing`
+
+As a Hub Director,
+I want each alert's cost and delivery times recorded,
+So that the pilot can report cost per alert and how quickly texts arrived.
+
+**Acceptance Criteria:**
+
+**Given** a delivery submitted
+**When** it is recorded
+**Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` with kind `sms`, language, entry id and `is_drill`; the provider's reported price, when a callback carries it, is stored beside the estimate
+
+**Given** an alert entry's deliveries
+**When** the pilot measures are computed
+**Then** time from approval to first `submitted`, to 90% `delivered`, and to the last final state are available per entry and language, drills apart
+
+**Given** a correction
+**When** its reach is computed
+**Then** the number of recipients of the original and of the correction are available per entry (FR-M4), drills apart
+
+### Story S06.09 — The first-text spike is replaced, and the Hub sees what went where
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** UX-DR16 (O-06), AR-12 · **Depends on:** S06.05 · **Branch:** `e06-s09-remove-spike-progress`
+
+As a Hub Coordinator,
+I want to see the sending progress of an alert, and only one way texts are sent,
+So that I know who has been reached and no test path can send by accident.
+
+**Acceptance Criteria:**
+
+**Given** the E01 spike (S01.15)
+**When** this story is done
+**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher (dependency rule); a test fails if any other module calls it
+
+**Given** the published confirmation (O-06) and the alert's staff view
+**When** an entry is sending
+**Then** they show per language: queued, sent, delivered, failed, undelivered, unknown and cancelled counts, refreshed every 15 seconds, with drills in their own view
+
+**Given** a failed or unknown text
+**When** shown
+**Then** it shows the error meaning in plain words (for example "Number not in service"), without the phone number on screen
