@@ -80,6 +80,8 @@ A withdrawal works the same way. If a web-published post is discarded, the syste
 4. The ambassador marks each person done, not reached or needs help in one tap. "Not reached" and "needs help" go to the Hub's list at once, and the on-duty Hub number gets a text with a link, never the resident's number.
 5. When the alert closes, the system keeps only counts by building and floor. It deletes rows marked done or still pending. Rows marked needs help or not reached stay until an Admin marks them handled, or 24 hours after closing, whichever comes first. (pending the product owner's confirmation; see Open questions)
 
+In a stairwell with no signal, the ambassador can still mark residents: the round stays on the open page and the marks send when signal returns. Nothing is saved on the phone, and the page clears itself when closed or left in the background for 10 minutes.
+
 ### 2.6 Asking a question in your own language
 
 A resident types "mujhe bachon ke liye khana chahiye" (romanized Urdu for "I need food for my children"). The system finds the meaning of the question and returns the three to five best-matching directory listings, in her language, exactly as published, with their "Last confirmed by the Hub" date. It never writes an answer of its own. If nothing matches clearly, she sees "We couldn't find a clear match", the category list and the Hub's number. Results in emergency categories show 911 first (AD-11). Her question is not stored (AD-13).
@@ -245,10 +247,10 @@ All central data is in the Supabase database in Canada, except directory release
 | Environment | Database | Texts | Scheduled jobs |
 |---|---|---|---|
 | Production | Supabase Pro, Canada | Live, to subscribers | Yes |
-| Staging | Separate Supabase project, synthetic subscribers only | Drill roster only; everything else recorded as skipped | Yes, own secret |
+| Staging | Separate Supabase project, synthetic subscribers only | Never; every send is recorded as skipped | Yes, own secret |
 | Preview (one per code change) | Staging data | Logged only, never sent | No |
 
-Each environment has its own Twilio subaccount and number, its own Cohere key with a spend limit, and its own job secret. The application refuses to start if the text mode and environment do not match. Production data is never copied out.
+Only production has a Twilio account and a verified toll-free number, so only one verification is needed; drills are rehearsed in production against the drill roster. Each environment has its own Cohere key with a spend limit and its own job secret. The application refuses to start if the text mode and environment do not match. Production data is never copied out.
 
 ### 7.2 Deployment
 
@@ -326,7 +328,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Two-person approval delays urgent alerts | Approvers are texted; lower-risk posts show on the web at once; time to approval measured. No single-person override. |
 | SMS spending exceeds budget | Cost shown per language before approval; cap warns; weekly review. |
 | Ambassador sees phone numbers without formal vetting | Own floors only, open alerts only, never cached on the phone, no names, deleted on close, access removable at once. |
-| A drill reaches residents | Database refuses non-roster recipients; staging can only text the roster; previews cannot text. |
+| A drill reaches residents | Database refuses non-roster recipients; staging and previews cannot text. |
 | Sending stops part-way through | Outbox with unique keys; job reruns every minute; unknown outcomes are flagged, not resent. |
 | Abuse of the sign-up form to send texts | Canada-only numbers; Twilio pumping protection; one pending sign-up per number per 48 hours; rate limits; daily ceiling alert. |
 | Data processed outside Canada (Twilio, Cohere, Vercel failover) | Named in plain-language terms; minimum data; residency is MVP work. |
@@ -342,7 +344,10 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Confirm the North Small Translate model id | IT | Before translation build |
 | Create the first Admin with the audited script; set up TOTP | IT | Before staff onboarding |
 | Name the Admin on-call roster and the on-duty Hub number | Hub | Before launch |
-| Load the drill roster; rehearse a full drill on staging and production | Hub and IT | Before launch |
+| Load the drill roster; rehearse a full drill in production | Hub and IT | Before launch |
+| Confirm each building's real floor labels (no 13th floor, lobby, mezzanine) | Hub | Before launch |
+| Name the privacy contact; have counsel glance at the consent and terms wording | Hub | Before launch |
+| Plan launch events with staff-assisted sign-up; tell residents the confirmation text may take a few minutes | Hub | Before launch |
 | Rehearse a database restore from backup | IT | Before launch |
 | Build the search test set with ambassadors (about 10 questions per language, 150 total); pick the embedding model; set the "no clear match" threshold | Hub, ambassadors, IT | Before launch |
 | Native-speaker review of translations in every language on its routed model | Hub and community reviewers | Before launch, and after any model change |

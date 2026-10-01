@@ -217,10 +217,10 @@ Only the ambassadors covering her floor, and Admins, can see her check-in reques
 A resident can withdraw her check-in request, or unsubscribe and have her subscription data deleted, at any time, including by text keyword.
 
 **C6. Asking for a check-in.**
-A subscribed resident can ask to be checked on during heat waves and outages, by phone call or text message. Before confirming, she is told plainly what a check-in is and is not, that it is not an emergency service, and when to call 911. If no ambassador covers her floor she is told so at once and offered the Hub's number instead; a check-in is never promised that cannot be made.
+A subscribed resident can ask to be checked on during heat waves and outages, by phone call or text message. Before confirming, she is told plainly what a check-in is and is not, that it is not an emergency service, when to call 911, and that an ambassador on her floor will see her phone number and floor. If no ambassador covers her floor she is told so at once and offered the Hub's number instead; a check-in is never promised that cannot be made.
 
 **C7. Check-in round.**
-When a heat or outage alert is sent for a building, the ambassadors covering it see the check-in requests on their own floors only: phone number, floor and contact method, with no name and no reason. Each is marked done, not reached or needs help in one tap. "Not reached" and "needs help" pass to the Hub immediately. Individual check-in records are deleted when the alert closes; only counts are kept.
+When a heat or outage alert is sent for a building, the ambassadors covering it see the check-in requests on their own floors only: phone number, floor and contact method, with no name and no reason. Each is marked done, not reached or needs help in one tap, including where there is no signal (marks are held on the open page and sent when signal returns; nothing is saved on the phone). "Not reached" and "needs help" pass to the Hub immediately. Individual check-in records are deleted when the alert closes; only counts are kept.
 
 ### 7.3 Everyday layer
 
@@ -309,9 +309,11 @@ Admins can see SMS and translation spend to date against the pilot budget. Admin
 - Staff and ambassador sign-in is personal; Admin and Coordinator accounts use a second sign-in factor.
 - Check-in records deleted when the alert closes; reports aggregate only.
 - Plain-language terms of use naming the service providers that process data and stating that the community owns the data.
-- PIPEDA governs.
+- PIPEDA governs. The terms name a privacy contact; residents can ask the Hub what is held about them and have it corrected. Minimum age 16, or younger with a parent's or guardian's help.
+- Staff sessions end after 30 minutes idle for ambassadors and after 12 hours for other staff. Staff screens are designed for phones first.
+- Staff can sign residents up at events and at the Hub desk; the resident still confirms by replying YES.
 
-**N6. Maintainability.** Small custom codebase. Written procedures for sending, approving, correcting and withdrawing alerts, and for running drills, are part of the pilot deliverable.
+**N6. Maintainability.** Small custom codebase. Written procedures for sending, approving, correcting and withdrawing alerts, and for running drills, are part of the pilot deliverable. Drills are rehearsed on the live system against the drill roster; the test system never sends texts.
 
 **N7. Content freshness.** Buildings, providers and guides each have a named owner at the Hub and a last-updated or last-confirmed date shown to residents.
 
