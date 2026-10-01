@@ -1,0 +1,385 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-01 Operator home — open incidents</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-01" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-01" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-01" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage">
+  <sc-if value="{{exNow}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{x.exerciseNow}}</span></p></sc-if>
+  <sc-for list="{{officials}}" as="o" hint-placeholder-count="1">
+    <article class="cvh-hrow cvh-hrow--official" aria-label="{{x.officialTitle}}">
+      <div class="cvh-hrow__head">
+        <span class="cvh-pill"><span class="cvh-ico cvh-ico--officialMark cvh-ico--sm" aria-hidden="true"></span>{{x.officialTitle}}</span>
+        <dc-import name="X13_DisruptionType" types="{{o.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+        <span class="cvh-muted">{{o.received}}</span>
+      </div>
+      <p class="cvh-hrow__title">{{o.headline}}</p>
+      <div class="cvh-hrow__meta"><span class="cvh-strong">{{o.from}}</span><span>{{o.area}}</span><span>{{o.valid}}</span></div>
+      <p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--flag cvh-ico--sm" aria-hidden="true"></span><span>{{o.matches}}</span></p>
+      <sc-if value="{{o.pending}}"><p class="cvh-strong">{{o.pendingLine}}</p></sc-if>
+      <div class="cvh-hrow__actions"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{o.open}}">{{o.openLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></div>
+    </article>
+  </sc-for>
+
+  <div class="cvh-hhead">
+    <div class="cvh-stack cvh-grow" style="--gap:2px">
+      <h2 class="cvh-hhead__title">{{x.title}}</h2>
+      <p class="cvh-muted">{{x.lead}}</p>
+    </div>
+    <div class="cvh-row cvh-wrap" style="--gap:8px;{{btnWidth}}">
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" style="{{btnWidth}}" onClick="{{toLog}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span>{{x.logDisruption}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg" style="{{btnWidth}}" onClick="{{toCompose}}"><span class="cvh-ico cvh-ico--pencil" aria-hidden="true"></span>{{x.compose}}</button>
+    </div>
+  </div>
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-strong">{{x.startWith}}</p>
+    <div class="cvh-quicktypes">
+      <sc-for list="{{quick}}" as="q" hint-placeholder-count="6">
+        <button type="button" class="cvh-quicktype" onClick="{{q.go}}" aria-label="{{q.aria}}"><dc-import name="X13_DisruptionType" type="{{q.id}}" surface="screen" lang="en" embedded="{{true}}" hint-size="120px,40px"></dc-import></button>
+      </sc-for>
+    </div>
+  </div>
+
+  <div class="cvh-hcols {{colsCls}}">
+    <div class="cvh-stack" style="--gap:22px">
+      <sc-if value="{{hasPosts}}">
+        <section class="cvh-hsec" aria-labelledby="o01-posts">
+          <h3 class="cvh-hsec__title" id="o01-posts">{{x.postsTitle}}<span class="cvh-hsec__count">{{postCount}}</span></h3>
+          <sc-for list="{{posts}}" as="p" hint-placeholder-count="2">
+            <article class="cvh-hrow cvh-hrow--priority">
+              <div class="cvh-hrow__head">
+                <span class="cvh-flag {{p.flagCls}}"><span class="cvh-ico cvh-ico--{{p.flagIcon}} cvh-ico--sm" aria-hidden="true"></span>{{p.stateLabel}}</span>
+                <dc-import name="X13_DisruptionType" types="{{p.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="200px,44px"></dc-import>
+              </div>
+              <p class="cvh-hrow__title">{{p.title}}</p>
+              <p>{{p.by}}</p>
+              <sc-if value="{{p.line}}"><div class="cvh-hrow__quote cvh-stack" style="--gap:2px"><span class="cvh-muted">{{p.lineLabel}}</span><span>{{p.line}}</span></div></sc-if>
+              <p class="cvh-muted">{{p.stateLine}}</p>
+              <div class="cvh-hrow__actions">
+                <sc-if value="{{p.canApprove}}"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{p.approve}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.approve}}</button></sc-if>
+                <sc-if value="{{p.canVerify}}"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{p.verify}}"><span class="cvh-ico cvh-ico--verified cvh-ico--sm" aria-hidden="true"></span>{{x.verify}}</button></sc-if>
+                <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{p.review}}">{{x.review}}</button>
+              </div>
+            </article>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <section class="cvh-hsec" aria-labelledby="o01-inc">
+        <h3 class="cvh-hsec__title" id="o01-inc">{{x.incidentsTitle}}<span class="cvh-hsec__count">{{incCount}}</span></h3>
+        <sc-if value="{{noneOpen}}">
+          <div class="cvh-card cvh-stack" style="--gap:6px">
+            <p class="cvh-h3">{{x.noneTitle}}</p>
+            <p>{{x.noneLine}}</p>
+          </div>
+        </sc-if>
+        <sc-for list="{{incidents}}" as="i" hint-placeholder-count="3">
+          <article class="cvh-hrow {{i.cls}}">
+            <div class="cvh-hrow__head">
+              <dc-import name="X13_DisruptionType" types="{{i.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+              <dc-import name="C_IncidentStatus" status="{{i.status}}" lang="en" embedded="{{true}}" hint-size="160px,32px"></dc-import>
+              <sc-if value="{{i.ackOnly}}"><span class="cvh-tag">{{x.ackOnly}}</span></sc-if>
+            </div>
+            <p class="cvh-hrow__title">{{i.title}}</p>
+            <p>{{i.where}}</p>
+            <div class="cvh-hrow__meta"><span class="cvh-strong">{{i.openFor}}</span><span>{{i.lastUpdate}}</span></div>
+            <div class="cvh-stack" style="--gap:2px">
+              <span class="cvh-flag {{i.flagCls}}" style="align-self:flex-start"><span class="cvh-ico cvh-ico--{{i.flagIcon}} cvh-ico--sm" aria-hidden="true"></span>{{i.flag}}</span>
+              <sc-if value="{{i.flagLine}}"><span class="cvh-muted">{{i.flagLine}}</span></sc-if>
+            </div>
+            <sc-if value="{{i.noAlert}}">
+              <p class="cvh-strong">{{x.noAlert}}</p>
+              <div class="cvh-hrow__actions"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{i.toAck}}">{{x.writeAck}}</button></div>
+            </sc-if>
+            <sc-if value="{{i.hasAlert}}">
+              <div class="cvh-hrow__actions">
+                <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{i.toUpdate}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{x.update}}</button>
+                <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{i.toCorrect}}"><span class="cvh-ico cvh-ico--corrected cvh-ico--sm" aria-hidden="true"></span>{{x.correct}}</button>
+                <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{i.toResolve}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.resolve}}</button>
+                <sc-if value="{{i.ackOnly}}"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{i.toPromote}}">{{x.promote}}</button></sc-if>
+                <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{i.toSpace}}">{{x.openSpace}}</button>
+              </div>
+            </sc-if>
+          </article>
+        </sc-for>
+      </section>
+
+      <sc-if value="{{hasExercise}}">
+        <section class="cvh-hsec" aria-labelledby="o01-ex">
+          <h3 class="cvh-hsec__title" id="o01-ex"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span>{{x.exerciseTitle}}</h3>
+          <p class="cvh-muted">{{x.exerciseLine}}</p>
+          <sc-for list="{{exercises}}" as="x" hint-placeholder-count="1">
+            <article class="cvh-hrow cvh-hrow--ended">
+              <div class="cvh-hrow__head">
+                <span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.word}}</span>
+                <dc-import name="X13_DisruptionType" types="{{x.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+              </div>
+              <p>{{x.where}}</p>
+              <p class="cvh-muted">{{x.state}}</p>
+              <div class="cvh-hrow__actions">
+                <sc-if value="{{x.canAck}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{x.toAck}}">{{x.writeAck}}</button></sc-if>
+                <sc-if value="{{x.canSpace}}"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{x.toSpace}}"><span class="cvh-ico cvh-ico--handshake cvh-ico--sm" aria-hidden="true"></span>{{x.openSpaceEx}}</button></sc-if>
+              </div>
+            </article>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{hasClosed}}">
+        <section class="cvh-hsec" aria-labelledby="o01-closed">
+          <h3 class="cvh-hsec__title" id="o01-closed">{{x.closedTitle}}</h3>
+          <sc-for list="{{closed}}" as="c" hint-placeholder-count="1">
+            <article class="cvh-hrow cvh-hrow--ended">
+              <div class="cvh-hrow__head">
+                <dc-import name="X13_DisruptionType" types="{{c.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+                <dc-import name="C_IncidentStatus" status="resolved" lang="en" embedded="{{true}}" hint-size="140px,32px"></dc-import>
+              </div>
+              <p class="cvh-strong">{{c.title}}</p>
+              <p class="cvh-muted">{{c.line}}</p>
+            </article>
+          </sc-for>
+        </section>
+      </sc-if>
+
+      <sc-if value="{{hasHandled}}">
+        <section class="cvh-hsec" aria-labelledby="o01-handled">
+          <h3 class="cvh-hsec__title" id="o01-handled">{{x.handledTitle}}</h3>
+          <ul class="cvh-stack" style="--gap:4px;margin:0;padding-inline-start:20px">
+            <sc-for list="{{handled}}" as="hd" hint-placeholder-count="1"><li>{{hd}}</li></sc-for>
+          </ul>
+        </section>
+      </sc-if>
+    </div>
+
+    <aside class="cvh-stack" style="--gap:16px">
+      <sc-if value="{{showCheckins}}">
+        <section class="cvh-card cvh-stack" style="--gap:8px" aria-labelledby="o01-ci">
+          <h3 class="cvh-hsec__title" id="o01-ci"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>{{x.checkinsTitle}}<sc-if value="{{ci.waiting}}"><span class="cvh-hsec__count">{{ci.waiting}}</span></sc-if></h3>
+          <p>{{ci.line}}</p>
+          <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toRounds}}">{{x.checkinsOpen}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+        </section>
+      </sc-if>
+      <section class="cvh-card cvh-stack" style="--gap:8px" aria-labelledby="o01-sp">
+        <h3 class="cvh-hsec__title" id="o01-sp"><span class="cvh-ico cvh-ico--handshake" aria-hidden="true"></span>{{x.spaceTitle}}</h3>
+        <p>{{x.spaceLine}}</p>
+        <sc-if value="{{spaceTarget}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toSpace}}">{{spaceTarget}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+        <sc-if value="{{noSpaceTarget}}"><p class="cvh-muted">{{x.spaceNone}}</p></sc-if>
+      </section>
+      <section class="cvh-card cvh-stack" style="--gap:8px" aria-labelledby="o01-rd">
+        <h3 class="cvh-hsec__title" id="o01-rd"><span class="cvh-ico cvh-ico--calendar" aria-hidden="true"></span>{{x.readinessTitle}}</h3>
+        <p>{{x.readinessLine}}</p>
+        <button type="button" class="cvh-link" onClick="{{toReadiness}}">{{x.readinessOpen}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+      </section>
+    </aside>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Open incidents, ambassador posts and an official alert", "Nothing open (Scenario A live, before anything is logged)", "Exercise running", "Daniel, TNO, as a partner author", "Phone width, 390"], "default": "Open incidents, ambassador posts and an official alert"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Open incidents, ambassador posts and an official alert": {}, "Nothing open (Scenario A live, before anything is logged)": {"params": {"view": "none"}}, "Exercise running": {"exercise": true}, "Daniel, TNO, as a partner author": {"persona": "DANIEL"}, "Phone width, 390": {"w": 390, "h": 1400}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-01', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O01, go = b.go, act = b.act, dur = b.dur, ago = b.ago;
+    var none = b.params.view === 'none';
+    var scn = (C.session.get() || {}).scenario || 'A';
+    var model = b.session || {};
+    var P = D.partner || {};
+    var hazardName = function (t) { return (s.hazards || {})[t] || s.x13[t] || t; };
+    var sources = s.x02.sources;
+    var bname = function (id) { return (C.building(id) || { name: id }).name; };
+    var floorsText = function (fl) { return !fl || fl === 'all' ? 'all floors' : (fl[0] === fl[1] ? 'floor ' + fl[0] : 'floors ' + fl[0] + ' to ' + fl[1]); };
+    var trig = function (a) {
+      var t = (P.teams || {})[a.hazard];
+      if (!a.origin || a.origin.source !== 'ECCC' || !t || !t['2']) return null;
+      return { level: 2, team: t['2'] };
+    };
+    // Incoming official alerts, the very top
+    var officials = [];
+    if (!none) {
+      (D.incomingOfficial || []).forEach(function (id) {
+        var a = C.alert(id); if (!a) return;
+        var tg = trig(a), st = (model.official || {})[id];
+        officials.push({ types: a.types, headline: a.headline, from: C.fill(h.officialFrom, { source: sources[a.origin.source] }),
+          area: C.fill(h.officialArea, { where: a.where }), valid: C.fill(h.officialValid, { until: a.validUntil || 'not stated' }),
+          received: C.fill(h.officialReceived, { t: ago(st ? Math.round((Date.now() - st.at) / 60000) : ((a.entries || [])[a.entries.length - 1] || {}).minsAgo || 0) }),
+          matches: tg ? C.fill(h.officialMatches, { hazard: hazardName(a.hazard), level: tg.level }) : h.officialNoTrigger,
+          pending: false, pendingLine: '', openLabel: h.officialReview, open: function () { go('O-18', { alert: id }); } });
+      });
+      Object.keys(model.official || {}).forEach(function (id) {
+        var st = model.official[id], a = C.alert(id);
+        if (!a || st.state === 'dismissed' || !trig(a) || (!!st.relayed === !!st.activated)) return;
+        officials.push({ types: a.types, headline: a.headline, from: C.fill(h.officialFrom, { source: sources[a.origin.source] }), area: C.fill(h.officialArea, { where: a.where }),
+          valid: C.fill(h.officialValid, { until: a.validUntil || 'not stated' }), received: '', matches: C.fill(h.officialMatches, { hazard: hazardName(a.hazard), level: 2 }),
+          pending: true, pendingLine: st.relayed ? h.officialPending : h.officialPendingRelay, openLabel: st.relayed ? h.officialPendingOpen : h.officialPendingRelayOpen, open: function () { go('O-18', { alert: id }); } });
+      });
+    }
+    // Ambassador posts as priority reviews
+    var posts = [], handled = [];
+    (none ? [] : (D.ambassadorPosts || [])).forEach(function (p) {
+      var amb = C.byId(D.ambassadors, p.by || 'AMB-RASHID') || { name: 'Ambassador' };
+      var words = (p.types || []).map(function (t, k) { var w = s.x13[t] || t; return k ? w.toLowerCase() : w; });
+      var title = words.join(' and ') + ', ' + bname(p.building) + ', ' + floorsText(p.floors);
+      if (p.state === 'waiting' || p.state === 'live' || p.state === 'queued') {
+        var mins = p.sentMinsAgo != null ? p.sentMinsAgo : (p.minsAgo || 0);
+        var ln = p.line ? ((p.line.mt || {}).en || p.line.text) : '';
+        posts.push({ state: p.state, types: p.types, title: title, by: C.fill(h.postBy, { name: amb.name, building: bname(p.building) }),
+          line: ln, lineLabel: p.line ? C.fill(h.postLine, { lang: (C.lang(p.line.lang) || {}).english || p.line.lang }) : '',
+          stateLabel: p.state === 'waiting' ? h.postWaiting : p.state === 'live' ? h.postLive : h.postQueued,
+          flagCls: p.state === 'waiting' ? 'cvh-flag--stale' : 'cvh-flag--due', flagIcon: p.state === 'waiting' ? 'clock' : p.state === 'live' ? 'unverified' : 'noSignal',
+          stateLine: p.state === 'waiting' ? C.fill(h.postWaitingLine, { t: ago(mins) }) : p.state === 'live' ? C.fill(h.postLiveLine, { t: ago(mins) }) : h.postQueuedLine,
+          canApprove: p.state === 'waiting', canVerify: p.state === 'live' && !!p.alert,
+          approve: function () { act({ t: 'approvePost', post: p.id }); b.toast('Approved. It went out on every channel as verified by the Hub.'); },
+          verify: function () { act({ t: 'promote', alert: p.alert }); b.toast('Verified. Residents now see "Verified by the Hub" on the same post.'); },
+          review: function () { go('O-07', { post: p.id }); } });
+      } else if (h.handled[p.state]) {
+        handled.push(title + ': ' + h.handled[p.state] + (p.reason ? ' (' + p.reason + ')' : ''));
+      }
+    });
+    posts.sort(function (x, y) { return (x.state === 'waiting' ? 0 : 1) - (y.state === 'waiting' ? 0 : 1); });
+    // Incidents with elapsed time, stale flag against the playbook period
+    var open = [], closed = [];
+    (none ? [] : (D.incidents || [])).forEach(function (x) {
+      var sn = x.alert ? C.snap(C.refFor(x.alert, scn), scn) : null;
+      var a = sn ? sn.a : null;
+      var types = (a && a.types) || x.types || [x.type];
+      var type = x.type || (a && a.hazard) || types[0];
+      var where = sn ? sn.where : (x.where || '');
+      var title = a ? a.headline : hazardName(type);
+      if (x.status === 'resolved' || (a && a.status === 'resolved')) {
+        closed.push({ types: types, title: title + ', ' + where, line: C.fill(h.closedLine, { t: ago(a && a.resolvedMinsAgo != null ? a.resolvedMinsAgo : 0) }) });
+        return;
+      }
+      var period = (D.staleAfter || {})[type] || 60;
+      var last = x.lastUpdateMinsAgo != null ? x.lastUpdateMinsAgo : 0;
+      var flag, flagCls, flagIcon, flagLine = '';
+      if (!a) { flag = C.fill(h.firstLogged, { t: ago(x.firstLoggedMinsAgo || 0) }); flagCls = 'cvh-flag--due'; flagIcon = 'clock'; }
+      else if (last >= period) { flag = C.fill(h.stale, { t: dur(last) }); flagCls = 'cvh-flag--stale'; flagIcon = 'clock'; flagLine = C.fill(h.staleLine, { hazard: hazardName(type), period: dur(period) }); }
+      else if (last >= period * 0.75) { flag = C.fill(h.due, { t: dur(period - last) }); flagCls = 'cvh-flag--due'; flagIcon = 'clock'; }
+      else { flag = C.fill(period >= 1440 && x.firstLoggedMinsAgo > 1440 ? h.ongoing : h.fresh, { period: dur(period) }); flagCls = 'cvh-flag--ok'; flagIcon = 'check'; }
+      var alertId = x.alert;
+      open.push({ id: x.id, types: types, title: title, where: where, status: x.status === 'progress' ? 'progress' : 'active',
+        cls: flagCls === 'cvh-flag--stale' ? 'cvh-hrow--priority' : '', mins: x.firstLoggedMinsAgo || 0,
+        openFor: (x.firstLoggedMinsAgo || 0) < 1 ? h.openNow : C.fill(h.openFor, { t: dur(x.firstLoggedMinsAgo) }),
+        lastUpdate: a ? C.fill(h.lastUpdate, { t: ago(last) }) : '', flag: flag, flagCls: flagCls, flagIcon: flagIcon, flagLine: flagLine,
+        noAlert: !a, hasAlert: !!a, ackOnly: !!(sn && sn.isAck),
+        toAck: function () { go('O-12', { incident: x.id }); },
+        toUpdate: function () { go('O-14', { alert: alertId }); }, toCorrect: function () { go('O-15', { alert: alertId }); },
+        toResolve: function () { go('O-16', { alert: alertId }); }, toPromote: function () { go('O-13', { alert: alertId }); },
+        toSpace: function () { go('P-01', { incident: x.id }); } });
+    });
+    open.sort(function (p, q) { return p.mins - q.mins; });
+    // Exercise incidents (never reach residents)
+    var exLog = model.exercise || [];
+    var exercises = none ? [] : exLog.filter(function (e) { return e.t === 'incident'; }).map(function (e) {
+      var inc = e.incident, pub = exLog.some(function (z) { return z.t === 'publish' && z.incident === inc.id; });
+      return { word: s.x10.word, types: inc.types || [inc.type], where: hazardName(inc.type) + ', ' + (inc.where || ''), state: pub ? h.exercisePublished : h.exerciseNot,
+        canAck: !pub, canSpace: true, writeAck: h.writeAck, openSpaceEx: h.openSpaceEx, toAck: function () { go('O-12', { incident: inc.id }); }, toSpace: function () { go('P-01', { incident: inc.id, exercise: true }); } };
+    });
+    // Practice posts from enrolled ambassadors (A-02 during the exercise): shown here, never sent
+    if (!none) exLog.filter(function (e) { return e.t === 'ambPost'; }).forEach(function (e) {
+      var pp = e.post || {}, amb = C.byId(D.ambassadors, pp.by || 'AMB-RASHID') || { name: 'Ambassador' };
+      exercises.push({ word: s.x10.word, types: pp.types || ['other'], where: C.fill(h.exercisePost, { name: amb.name, where: bname(pp.building) + ', ' + floorsText(pp.floors) }),
+        state: h.exercisePostState, canAck: false, canSpace: false, writeAck: '', openSpaceEx: '', toAck: null, toSpace: null });
+    });
+    var exInc = exLog.filter(function (e) { return e.t === 'incident'; }).slice(-1)[0];
+    var spaceInc = b.exercise && exInc ? { label: hazardName(exInc.incident.type) + ' (' + s.x10.word.toLowerCase() + ')', params: { incident: exInc.incident.id, exercise: true } }
+      : open.length ? { label: open[0].title, params: { incident: open[0].id } } : null;
+    // Check-in escalations
+    var cis = D.checkins || [], cnt = function (st) { return cis.filter(function (c) { return c.status === st; }).length; };
+    var ci = { help: cnt('needsHelp'), nr: cnt('notReached'), conn: cnt('connected') };
+    ci.waiting = ci.help + ci.nr;
+    ci.line = ci.waiting || ci.conn ? ((ci.waiting ? C.fill(h.checkinsLine, ci) : '') + (ci.conn ? ' ' + C.fill(h.checkinsConn, ci) : '')).trim() : h.checkinsNone;
+    var quick = ['power', 'water', 'elevator', 'fire', 'flood', 'heat', 'smoke'].map(function (t) {
+      return { id: t, aria: h.logDisruption + ': ' + (s.x13[t] || t), go: function () { go('O-11', { type: t, startedAt: Date.now() }); } };
+    });
+    return { x: h, exNow: b.exercise, officials: officials, posts: posts, postCount: posts.length, incCount: open.length, hasPosts: posts.length > 0, incidents: open, noneOpen: open.length === 0,
+      closed: closed, hasClosed: closed.length > 0, handled: handled, hasHandled: handled.length > 0,
+      exercises: exercises, hasExercise: exercises.length > 0, ci: ci, showCheckins: open.length > 0, quick: quick,
+      colsCls: b.narrow ? 'cvh-hcols--one' : '', btnWidth: b.narrow ? 'width:100%' : '',
+      toLog: function () { go('O-11', { startedAt: Date.now() }); }, toCompose: function () { go('O-02'); },
+      toRounds: function () { go('O-17'); },
+      // No blank shared space: this control opens the space for the most recent open disruption (or the running exercise's), never an empty one
+      spaceTarget: spaceInc ? C.fill(h.openSpaceFor, { what: spaceInc.label }) : '', noSpaceTarget: !spaceInc,
+      toSpace: function () { if (spaceInc) go('P-01', spaceInc.params); }, toReadiness: function () { go('P-11'); } };
+  }
+
+}
+</script>
+</body>
+</html>

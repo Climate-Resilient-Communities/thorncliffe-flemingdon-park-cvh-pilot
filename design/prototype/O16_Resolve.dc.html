@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-16 Resolve and close the thread</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-16" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-16" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-16" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage" style="max-width:900px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <section class="cvh-hrow {{cardCls}}" aria-labelledby="o16-alert">
+    <div class="cvh-hrow__head">
+      <dc-import name="X13_DisruptionType" types="{{a.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+      <dc-import name="C_IncidentStatus" status="{{status}}" lang="en" embedded="{{true}}" hint-size="160px,32px"></dc-import>
+    </div>
+    <h2 class="cvh-hrow__title" id="o16-alert">{{a.headline}}</h2>
+    <p>{{where}}</p>
+    <p class="cvh-muted">{{meta}}</p>
+  </section>
+
+  <sc-if value="{{done}}">
+    <section class="cvh-confirm is-done" aria-labelledby="o16-done" role="status">
+      <p class="cvh-done" id="o16-done"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{x.doneTitle}}</span></p>
+      <p>{{doneLine}}</p>
+      <div class="cvh-hrow__actions"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toHome}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.toHome}}</button></div>
+    </section>
+  </sc-if>
+
+  <div class="cvh-stack" style="--gap:20px;{{formStyle}}">
+    <p>{{x.lead}}</p>
+    <div class="cvh-field">
+      <label class="cvh-label" for="o16-final">{{x.finalLabel}}<span class="cvh-tag cvh-tag--required">{{x.required}}</span></label>
+      <textarea id="o16-final" class="cvh-textarea {{finalErrCls}}" value="{{final}}" onInput="{{onFinal}}" aria-describedby="o16-final-h"></textarea>
+      <p class="cvh-hint" id="o16-final-h">{{x.finalHint}}</p>
+    </div>
+    <div class="cvh-note" role="note">
+      <span class="cvh-ico cvh-ico--lock" aria-hidden="true"></span>
+      <span class="cvh-stack" style="--gap:4px"><span class="cvh-strong">{{x.deleteTitle}}</span><span>{{x.deleteLine}}</span><span class="cvh-muted">{{counts}}</span></span>
+    </div>
+    <section class="cvh-hsec" aria-labelledby="o16-next">
+      <h3 class="cvh-hsec__title" id="o16-next">{{x.nextTitle}}</h3>
+      <ul class="cvh-stack" style="--gap:4px;margin:0;padding-inline-start:20px"><li>{{x.next1}}</li><li>{{next2}}</li><li>{{x.next3}}</li></ul>
+    </section>
+  </div>
+
+  <div class="cvh-pubbar" style="{{formStyle}}">
+    <div class="cvh-stack cvh-grow" style="--gap:2px">
+      <sc-if value="{{b_exercise}}"><span class="cvh-row cvh-strong" style="--gap:6px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.exercise}}</span></sc-if>
+      <sc-if value="{{empty}}"><span class="cvh-disabled-reason" style="margin:0">{{x.needFinal}}</span></sc-if>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{empty}}" onClick="{{onResolve}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{resLabel}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Final entry written, check-in deletion notice", "Final entry required (empty)", "Resolved and moved to archived alerts", "Exercise running"], "default": "Final entry written, check-in deletion notice"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Final entry written, check-in deletion notice": {"params": {"alert": "AL-05"}}, "Final entry required (empty)": {"params": {"alert": "AL-05"}, "loc": {"final": ""}}, "Resolved and moved to archived alerts": {"params": {"alert": "AL-05"}, "loc": {"done": true}}, "Exercise running": {"exercise": true, "params": {"alert": "AL-05"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-16', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O16, loc = b.loc, prm = b.params;
+    var scn = (C.session.get() || {}).scenario || 'A';
+    var id = prm.alert || 'AL-05';
+    var sn = C.snap(C.refFor(id, scn), scn);
+    if (!sn) return { x: h, a: { headline: 'Alert not found', types: ['other'] }, goBack: function () { b.go('O-01'); } };
+    var a = sn.a;
+    var final = loc.final !== undefined ? loc.final : (id === 'AL-05' ? h.script.e6 : id === 'AL-08' ? h.script.g6 : '');
+    var empty = !String(final || '').trim();
+    var cis = D.checkins || [], cnt = function (st) { return cis.filter(function (c) { return c.status === st; }).length; };
+    var counts = C.fill(h.counts, { done: cnt('done'), nr: cnt('notReached'), help: cnt('needsHelp'), conn: cnt('connected'), waiting: cnt('waiting') });
+    var done = !!loc.done || sn.status === 'resolved';
+    return { x: h, a: a, where: sn.where, b_exercise: b.exercise, status: done && !b.exercise ? 'resolved' : 'active', cardCls: done ? 'cvh-hrow--ended' : 'cvh-hrow--priority',
+      meta: C.fill(s.R07.timeLine, { posted: b.ago(sn.postedMins), updated: b.ago(sn.updatedMins) }),
+      final: final, onFinal: function (e) { b.setLoc({ final: e.target.value }); }, empty: empty, finalErrCls: empty ? 'is-error' : '',
+      counts: counts, next2: C.fill(h.next2, { headline: a.headline }), resLabel: b.exercise ? h.resolveEx : h.resolve,
+      done: done, doneLine: b.exercise ? h.doneEx : h.doneLine, formStyle: done ? 'display:none' : '',
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); }, toHome: function () { b.go('O-01'); },
+      onResolve: function () {
+        if (empty) return;
+        b.act({ t: 'entry', alert: id, entry: { kind: 'final', text: String(final).trim() } });
+        b.setLoc({ done: true });
+      } };
+  }
+
+}
+</script>
+</body>
+</html>

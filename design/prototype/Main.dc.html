@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CVH prototype index</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh" lang="en" dir="ltr" style="width:1440px;height:5320px;overflow:hidden;background:var(--surface)">
+  <header class="vrh-pagehead" style="max-width:none;margin-inline-end:320px;padding:48px 67px 44px 56px;display:flex;flex-direction:column;gap:12px">
+    <img src="{{logoWhite}}" alt="Thorncliffe Park Community Hub" style="height:52px;width:auto;align-self:flex-start">
+    <h1 class="vrh-pagehead__title" style="font-size:47px;line-height:1.1">Community Virtual Hub: clickable prototype</h1>
+    <p class="vrh-pagehead__sub" style="font-size:21px;max-width:60ch">For Consultation #4, community UI and UX testing, Thorncliffe Park and Flemingdon Park. Every screen and flow in the brief, with where each one stands.</p>
+  </header>
+  <div style="padding:32px 56px 56px;display:flex;flex-direction:column;gap:32px">
+    <div class="cvh-proto" style="border:1px dashed var(--proto-edge);border-radius:12px;font-size:15px;padding:10px 16px"><span class="cvh-proto__word"><span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span>Prototype</span><span>Not a live service. All content is AI-generated for the prototype and labelled. Partner statements, commitments and records are illustrative. Demo alerts use Sample Towers A, B and C.</span></div>
+
+    <section class="cvh-stack" style="--gap:14px">
+      <h2 class="cvh-h2" style="font-size:27px">Open the prototype</h2>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:17px">
+        <sc-for list="{{starts}}" as="s" hint-placeholder-count="8">
+          <a href="{{s.href}}" class="cvh-card" style="display:flex;flex-direction:column;gap:6px;text-decoration:none;color:var(--ink);min-height:120px">
+            <span class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--{{s.icon}}" aria-hidden="true"></span><strong style="font-size:19px">{{s.title}}</strong></span>
+            <span style="font-size:15px;color:var(--text)">{{s.line}}</span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+
+    <section class="cvh-stack" style="--gap:14px">
+      <div class="cvh-row cvh-wrap" style="--gap:16px;align-items:baseline"><h2 class="cvh-h2" style="font-size:27px">Status after phase 4</h2><span class="cvh-muted" style="font-size:16px">{{summary}}</span></div>
+      <div class="cvh-row cvh-wrap" style="--gap:10px">
+        <sc-for list="{{legend}}" as="l"><span class="cvh-tag {{l.cls}}" style="font-size:15px">{{l.label}}: {{l.n}}</span></sc-for>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px">
+        <sc-for list="{{phases}}" as="ph"><div class="cvh-card cvh-card--tight" style="font-size:15px"><strong>Phase {{ph.id}}: {{ph.name}}</strong><p class="cvh-muted">{{ph.items}}</p></div></sc-for>
+      </div>
+    </section>
+
+    <sc-for list="{{groups}}" as="g" hint-placeholder-count="5">
+      <section class="cvh-stack" style="--gap:10px">
+        <div class="cvh-row cvh-wrap" style="--gap:12px;align-items:baseline"><h2 class="cvh-h2" style="font-size:27px">{{g.title}}</h2><span class="cvh-muted" style="font-size:16px">{{g.line}}</span></div>
+        <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px 17px">
+          <sc-for list="{{g.rows}}" as="r">
+            <a href="{{r.href}}" style="display:grid;grid-template-columns:58px minmax(0,1fr) auto;gap:10px;align-items:center;padding:8px 12px;border-radius:12px;background:#fff;border:1px solid var(--border);text-decoration:none;color:var(--text);min-height:48px">
+              <span style="font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ink);font-size:15px">{{r.id}}</span>
+              <span style="font-size:15px;line-height:1.3">{{r.name}} <span class="cvh-muted" style="font-size:13px">· {{r.priority}}</span></span>
+              <span class="cvh-tag {{r.cls}}" style="font-size:13px;min-height:24px">{{r.statusLabel}}</span>
+            </a>
+          </sc-for>
+        </div>
+      </section>
+    </sc-for>
+
+    <section class="cvh-stack" style="--gap:10px">
+      <div class="cvh-row cvh-wrap" style="--gap:12px;align-items:baseline"><h2 class="cvh-h2" style="font-size:27px">Flows F1 to F27</h2><span class="cvh-muted" style="font-size:16px">Each opens at its first screen. All 27 flows run end to end: resident flows in the Resident app, Hub, partner and ambassador flows in the Hub and partner space, and the two walkthroughs put the apps side by side in one session.</span></div>
+      <div style="display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px 17px">
+        <sc-for list="{{flows}}" as="f" hint-placeholder-count="27">
+          <a href="{{f.href}}" style="display:flex;flex-direction:column;gap:6px;padding:12px 14px;border-radius:12px;background:#fff;border:1px solid var(--border);text-decoration:none;color:var(--text)">
+            <span class="cvh-row" style="--gap:10px"><span style="font-family:ui-monospace,Menlo,monospace;font-weight:700;color:var(--ink)">{{f.id}}</span><strong style="font-size:16px;color:var(--ink)" class="cvh-grow">{{f.name}}</strong><span class="cvh-tag {{f.cls}}" style="font-size:13px;min-height:24px">{{f.statusLabel}}</span></span>
+            <span class="cvh-muted" style="font-size:14px">{{f.personas}} · stories {{f.stories}}</span>
+            <span class="cvh-ph__steps"><sc-for list="{{f.steps}}" as="x"><span class="cvh-ph__step">{{x}}</span></sc-for></span>
+          </a>
+        </sc-for>
+      </div>
+    </section>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5320}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = window.CVH, inv = window.CVH_INVENTORY || { screens: [], flows: [] };
+    var label = { done: 'Done', partial: 'Partial', 'not-started': 'Not started' };
+    var cls = { done: 'cvh-chip--on', partial: '', 'not-started': 'cvh-tag--illustrative' };
+    var href = function (s) { return s.file + '.dc.html'; };
+    var groupsDef = [
+      ['resident', 'Resident screens', 'R-01 to R-35. Resident and ambassador app, 360 by 640.'],
+      ['ambassador', 'Ambassador screens', 'A-01 to A-05. Same app, under the ambassador role.'],
+      ['hub', 'Hub screens', 'O-01 to O-18. Hub and partner space, a separate application, 1280 wide.'],
+      ['partner', 'Partner screens', 'P-01 to P-16. Reached from a disruption or from readiness, never from the resident app.'],
+      ['shared', 'Shared components and artefacts', 'X-01 to X-14. Reusable components used by every screen.']];
+    var counts = { done: 0, partial: 0, 'not-started': 0 };
+    inv.screens.forEach(function (s) { counts[s.status] = (counts[s.status] || 0) + 1; });
+    var groups = groupsDef.map(function (g) {
+      var rows = inv.screens.filter(function (s) { return s.app === g[0]; }).map(function (s) {
+        return { id: s.id, name: s.name, priority: s.priority, href: href(s), statusLabel: label[s.status], cls: cls[s.status] };
+      });
+      return { title: g[1] + ' (' + rows.length + ')', line: g[2], rows: rows };
+    });
+    var flows = inv.flows.map(function (f) {
+      var first = C.screen(f.steps[0]);
+      return { id: f.id, name: f.name, personas: f.personas, stories: f.stories, steps: f.steps, href: first ? href(first) : 'Main.dc.html',
+        statusLabel: label[f.status], cls: cls[f.status] };
+    });
+    return {
+      logoWhite: C.logo.hubWhite,
+      starts: [
+        { title: 'Resident app', line: 'Resident flows F1 to F13, live. Use Test to pick a persona, a scenario, the printed notice, text message or WhatsApp entry, or the heat alert as Amina, George or Nasrin.', href: 'ResidentApp.dc.html', icon: 'now' },
+        { title: 'Scenario A walkthrough', line: 'The Hub, Yusuf and Rashid side by side in one session. Start Scenario A live and watch each Hub action reach the phones.', href: 'Walkthrough_A.dc.html', icon: 'now' },
+        { title: 'Scenario D walkthrough', line: 'Priya runs the power outage as an exercise with Daniel (at 390) and Rashid enrolled, ends it, then looks back. The exercise marker follows everyone enrolled.', href: 'Walkthrough_D.dc.html', icon: 'exercise' },
+        { title: 'Hub and partner space', line: 'O-01 to O-18 live, with the exercise banner. Use Test to switch who is signed in, start Scenario A live, or make an official alert or an ambassador post arrive.', href: 'HubApp.dc.html', icon: 'dashboard' },
+        { title: 'Tokens and foundations', line: 'Brand palette, the three signal sets, type, controls, spacing and icons.', href: 'Lib_Foundations.dc.html', icon: 'layers' },
+        { title: 'Alert components', line: 'X-01, X-02, X-13, X-08 and X-12 in every state, right-to-left and bigger text.', href: 'Lib_Alerting.dc.html', icon: 'now' },
+        { title: 'Place components', line: 'X-09, X-11, X-14, X-04, X-03 and X-07.', href: 'Lib_Places.dc.html', icon: 'map' },
+        { title: 'Partner components', line: 'X-06 statements, X-10 exercise marker and incident status.', href: 'Lib_Partner.dc.html', icon: 'handshake' },
+        { title: 'Printed notice X-05', line: 'Greek, Urdu and English letter-size sheets.', href: 'Lib_Notice.dc.html', icon: 'doc' },
+        { title: 'Design notes and open questions', line: 'Choices made in phases 1 to 4, and what needs a decision from the Hub.', href: 'Notes.dc.html', icon: 'info' }],
+      summary: inv.screens.length + ' items in the brief: 35 resident, 5 ambassador, 18 Hub, 16 partner, 14 shared. 27 flows.',
+      legend: [{ label: 'Done', n: counts.done, cls: 'cvh-chip--on' }, { label: 'Partial', n: counts.partial, cls: '' }, { label: 'Not started (placeholder frame)', n: counts['not-started'], cls: 'cvh-tag--illustrative' }],
+      phases: inv.phases || [], groups: groups, flows: flows };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hub and partner navigation</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="{{rootStyle}}">
+  <nav class="cvh-side" aria-label="Hub and partner space" style="height:100%;overflow:auto">
+    <img class="cvh-side__logo" src="{{logo}}" alt="Thorncliffe Park Community Hub">
+    <sc-for list="{{sections}}" as="sec" hint-placeholder-count="2">
+      <p class="cvh-side__label">{{sec.label}}</p>
+      <sc-for list="{{sec.items}}" as="i">
+        <button type="button" class="cvh-side__item {{i.cls}}" onClick="{{i.go}}" aria-current="{{i.current}}">
+          <span class="cvh-ico cvh-ico--{{i.icon}} cvh-ico--sm" aria-hidden="true"></span>
+          <span class="cvh-grow">{{i.label}}</span>
+          <sc-if value="{{i.count}}"><span class="cvh-side__count">{{i.count}}</span></sc-if>
+        </button>
+      </sc-for>
+    </sc-for>
+  </nav>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"active":{"editor":"text","default":"O-01"},"inDisruption":{"editor":"boolean","default":false},"onNav":{"editor":null},"embedded":{"editor":null},"$preview":{"width":240,"height":800}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data(), n = C.strings('en').hub.nav, S = C.strings('en').hub.sections;
+    var active = p.active || 'O-01';
+    var groupOf = { 'O-02': ['O-02','O-03','O-04','O-05'], 'O-01': ['O-01','O-06','O-07','O-11','O-12','O-13','O-14','O-15','O-16','O-18','P-01','P-06'],
+      'O-08': ['O-08','O-09','O-10'], 'O-17': ['O-17'] };
+    var isActive = function (id) { return active === id || (groupOf[id] || []).indexOf(active) >= 0; };
+    var mk = function (id, label, icon, count) {
+      var on = isActive(id);
+      return { label: label, icon: icon, count: count || '', cls: on ? 'is-active' : '', current: on ? 'page' : 'false',
+        go: function () { if (self.props.onNav) self.props.onNav(id); } };
+    };
+    var inc = (D.incidents || []).filter(function (x) { return x.status !== 'resolved'; }).length + (D.incomingOfficial || []).length + (D.ambassadorPosts || []).length;
+    var sections = [{ label: S.disruption, items: [mk('O-01', n.incidents, 'now', inc), mk('O-02', n.compose, 'pencil'), mk('O-08', n.moderation, 'inbox', (D.moderation || []).filter(function (x) { return !x.decision; }).length), mk('O-17', n.rounds, 'person', '')] }];
+    if (p.inDisruption) sections.push({ label: S.thisDisruption, items: [mk('P-02', n.space, 'handshake'), mk('P-04', n.coverage, 'dashboard'), mk('P-07', n.ourSpaces, 'building'), mk('P-08', n.supplies, 'kit'), mk('P-09', n.decisions, 'doc'), mk('P-05', n.capacity, 'signal')] });
+    sections.push({ label: S.between, items: [mk('P-11', n.commitments, 'handshake'), mk('P-12', n.playbooks, 'ready'), mk('P-13', n.teams, 'person'), mk('P-14', n.exercise, 'exercise'), mk('P-15', n.indicators, 'dashboard'), mk('P-16', n.lookBack, 'calendar')] });
+    return { logo: C.logo.hub, sections: sections, rootStyle: p.embedded ? 'height:100%' : 'width:240px;height:800px;' };
+  }
+}
+</script>
+</body>
+</html>

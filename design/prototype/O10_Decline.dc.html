@@ -1,0 +1,240 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-10 Decline with a reason</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-10" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-10" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-10" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-stack" style="--gap:20px">
+  <sc-if value="{{exNoteLine}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{exNoteLine}}</span></p></sc-if>
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{backLabel}}</button>
+
+
+  <sc-if value="{{notSent}}">
+    <div class="cvh-stack" style="--gap:6px">
+      <h2 class="cvh-h1">{{title}}</h2>
+      <p class="cvh-lead">{{x.lead}}</p>
+    </div>
+  </sc-if>
+
+  <div class="cvh-md-grid">
+    <sc-if value="{{notSent}}">
+      <fieldset class="cvh-md-reasons" style="border:0;padding:0;margin:0;min-width:0">
+        <legend class="cvh-h3" style="padding:0;margin-bottom:8px">{{x.reasonsTitle}}</legend>
+        <sc-for list="{{reasons}}" as="r" hint-placeholder-count="6">
+          <button type="button" class="cvh-option {{r.cls}}" role="radio" aria-checked="{{r.aria}}" onClick="{{r.pick}}">
+            <span class="cvh-option__box cvh-option__box--radio"><sc-if value="{{r.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true" style="color:#fff"></span></sc-if></span>
+            <span class="cvh-option__text">
+              <span class="cvh-option__label">{{r.label}}<sc-if value="{{r.suggested}}"><span class="cvh-tag" style="margin-inline-start:8px">{{x.suggested}}</span></sc-if></span>
+              <span class="cvh-option__line">{{r.line}}</span>
+            </span>
+          </button>
+        </sc-for>
+        <sc-if value="{{noReason}}"><p class="cvh-disabled-reason">{{x.pick}}</p></sc-if>
+        <div class="cvh-row cvh-wrap" style="--gap:10px;margin-top:8px">
+          <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{send}}" disabled="{{noReason}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.send}}</button>
+          <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{goBack}}">{{x.cancel}}</button>
+        </div>
+      </fieldset>
+    </sc-if>
+    <sc-if value="{{sent}}">
+      <section class="cvh-mr-card cvh-mr-card--key" role="status" aria-labelledby="o10-sent" style="align-self:start">
+        <p class="cvh-row" style="--gap:10px"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span class="cvh-h2" id="o10-sent">{{x.sentTitle}}</span></p>
+        <p>{{sentLine}}</p>
+        <p class="cvh-caption">{{sentLang}}</p>
+        <div class="cvh-row cvh-wrap" style="--gap:10px">
+          <sc-if value="{{next}}"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{next.go}}">{{next.label}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+          <sc-if value="{{noNext}}"><p class="cvh-strong">{{x.queueEmpty}}</p></sc-if>
+          <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toQueue}}">{{x.toQueue}}</button>
+        </div>
+      </section>
+    </sc-if>
+
+    <aside class="cvh-stack" style="--gap:16px" aria-label="{{x.previewTitle}}">
+      <section class="cvh-stack" style="--gap:8px" aria-labelledby="o10-prev">
+        <h3 class="cvh-h3" id="o10-prev">{{x.previewTitle}}</h3>
+        <p class="cvh-caption cvh-muted">{{previewLine}}</p>
+        <div class="cvh-md-phone">
+          <p class="cvh-h3">{{s.R23.title}}</p>
+          <sc-if value="{{chosen}}">
+            <div class="cvh-card cvh-stack" style="--gap:10px;border:2px solid var(--ink)">
+              <div class="cvh-kv"><span class="cvh-kv__k">{{s.R23.reason}}</span><p>{{chosen.why}}</p></div>
+              <div class="cvh-kv"><span class="cvh-kv__k">{{s.R23.whatToChange}}</span><p class="cvh-strong">{{chosen.change}}</p></div>
+            </div>
+            <sc-if value="{{chosen.market}}"><p class="cvh-rules__market" style="margin:0">{{s.x03.market}}</p></sc-if>
+            <span class="cvh-btn cvh-btn--primary cvh-btn--block" aria-hidden="true" style="pointer-events:none"><span class="cvh-ico cvh-ico--pencil cvh-ico--sm" aria-hidden="true"></span>{{s.R23.resubmit}}</span>
+            <p class="cvh-caption cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{s.R23.kept}}</p>
+          </sc-if>
+          <sc-if value="{{noChosen}}"><p class="cvh-caption cvh-muted">{{x.previewEmpty}}</p></sc-if>
+        </div>
+      </section>
+      <section class="cvh-stack" style="--gap:8px" aria-labelledby="o10-langs">
+        <h3 class="cvh-h3" id="o10-langs">{{x.langsTitle}}</h3>
+        <ul class="cvh-md-langs" style="margin:0;padding:0;list-style:none">
+          <sc-for list="{{langs}}" as="l" hint-placeholder-count="6"><li class="cvh-md-lang {{l.cls}}"><sc-if value="{{l.theirs}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if><span>{{l.en}}</span><sc-if value="{{l.theirs}}"><span>({{x.theirs}})</span></sc-if></li></sc-for>
+        </ul>
+        <p class="cvh-caption cvh-muted">{{protoNote}}</p>
+      </section>
+    </aside>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Pre-written reasons: SUB-10, selling suggested by the marketplace rule", "No reason chosen yet: SUB-09, written in Urdu", "Chosen: not clear what or where, their language marked", "Chosen: no location (SUB-08)", "Sent, with the next one a tap away", "Exercise running"], "default": "Pre-written reasons: SUB-10, selling suggested by the marketplace rule"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Pre-written reasons: SUB-10, selling suggested by the marketplace rule": {"persona": "PRIYA", "params": {"sub": "SUB-10", "reason": "advert"}}, "No reason chosen yet: SUB-09, written in Urdu": {"persona": "PRIYA", "params": {"sub": "SUB-09"}}, "Chosen: not clear what or where, their language marked": {"persona": "PRIYA", "params": {"sub": "SUB-09"}, "loc": {"reason": "unclear"}}, "Chosen: no location (SUB-08)": {"persona": "PRIYA", "params": {"sub": "SUB-08", "reason": "noLocation"}}, "Sent, with the next one a tap away": {"persona": "PRIYA", "params": {"sub": "SUB-10", "reason": "advert", "pre": {"SUB-10": {"decision": "declined", "reason": "advert", "mins": 0}}}, "loc": {"sent": true}}, "Exercise running": {"persona": "PRIYA", "params": {"sub": "SUB-10", "reason": "advert"}, "exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-10', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) { return Object.assign(this.screenValsX10(b), { exNoteLine: b.exercise ? b.s.O10.exNote : '' }); }
+  screenValsX10(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.O10, prm = b.params || {}, go = b.go, loc = b.loc;
+    var q = this.mq(b), R23 = (s.R23 || {}).reasons || {};
+    var t = C.byId(q.subs, prm.sub) || q.waiting[0] || q.subs[0];
+    if (!t) return { x: x, s: s, reasons: [], langs: [], goBack: function () { go('O-08'); } };
+    var f = t.fields || {};
+    var sent = !!loc.sent || (!!t.decision && t.decision === 'declined' && !!loc.sent);
+    var pick = loc.reason || prm.reason || '';
+    if ((D.declineReasons || []).indexOf(pick) < 0) pick = '';
+    // The same six ids as D.declineReasons and R-23; the wording they read is R-23's own string set
+    var reasons = (D.declineReasons || []).map(function (id) {
+      var on = pick === id, r = R23[id] || {};
+      return { id: id, label: x.labels[id] || id, line: s.O10.theyRead + (r.why || ''), on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        suggested: prm.reason === id, pick: function () { b.setLoc({ reason: id }); } };
+    });
+    var chosenR = pick ? (R23[pick] || {}) : null;
+    var their = t.sourceLang || 'en';
+    var langs = (D.languages || []).map(function (l) { var th = l.code === their; return { en: l.english || l.native, theirs: th, cls: th ? 'cvh-md-lang--theirs' : '' }; });
+    langs.sort(function (a, z) { return (z.theirs ? 1 : 0) - (a.theirs ? 1 : 0); });
+    var nx = q.nextAfter(t.id);
+    var reasonId = sent ? (t.decisionReason || pick) : pick;
+    return { x: x, s: s, title: C.fill(x.title, { name: f.name }), sent: sent, notSent: !sent,
+      reasons: reasons, noReason: !pick, chosen: chosenR ? { why: chosenR.why, change: chosenR.change, market: pick === 'advert' } : null, noChosen: !chosenR,
+      previewLine: their === 'en' ? x.previewLineEn : C.fill(x.previewLine, { lang: t.langName }), langs: langs,
+      protoNote: C.fill(x.protoNote, { n: (D.languages || []).length }),
+      sentLine: C.fill(x.sentLine, { name: f.name, reason: x.labels[reasonId] || reasonId }), sentLang: C.fill(x.sentLang, { lang: t.langName }),
+      next: nx ? { label: C.fill(x.next, { name: (nx.fields || {}).name }), go: function () { go('O-09', { sub: nx.id }); } } : null, noNext: !nx,
+      backLabel: sent ? x.toQueue : x.back,
+      goBack: function () { if (sent) go('O-08', { done: { sub: t.id, decision: 'declined' } }); else if (b.app.canBack) b.back(); else go('O-09', { sub: t.id }); },
+      toQueue: function () { go('O-08', { done: { sub: t.id, decision: 'declined' } }); },
+      send: function () {
+        if (!pick) return;
+        b.act({ t: 'moderate', sub: t.id, decision: 'declined', reason: pick });
+        b.setLoc({ sent: true, reason: pick });
+      } };
+  }
+  mq(b) {
+    // Same queue model as O-08 (kept in step by hand; lib.js is shared and not edited from a screen).
+    var C = b.C, D = b.D, x = b.s.O08, prm = b.params || {};
+    var shift = +prm.shift || 0, pre = prm.pre || {};
+    var PAYOPT = /pay what you can|give what you can|by donation/i;
+    var subs = (D.moderation || []).filter(function (r) { return !prm.only || prm.only.indexOf(r.id) >= 0; }).map(function (r) {
+      var t = Object.assign({}, r), f = r.fields || {}, lc = f.location || {};
+      if (!t.decision && pre[r.id]) { t.decision = pre[r.id].decision; t.decisionReason = pre[r.id].reason || null; t.decidedMinsAgo = pre[r.id].mins != null ? pre[r.id].mins : 2; }
+      t.age = (r.daysAgo || 0) + shift;
+      t.isCorr = r.type === 'correction';
+      t.noWhere = !t.isCorr && (!lc.kind || lc.kind === 'none' || !(lc.text || lc.textEn));
+      t.noCat = !t.isCorr && !f.category;
+      var txt = (f.name || '') + ' ' + (f.whatEn || ''), words = txt.match(/\d+\s?% off|\bstores?\b|\bshops?\b|\bdiscounts?\b|\bsale\b|\bbest prices?\b|\bcheap\b|\bbuy\b/gi) || [];
+      t.bizWords = words.filter(function (w, i) { return words.map(function (k) { return k.toLowerCase(); }).indexOf(w.toLowerCase()) === i; });
+      t.payOptional = PAYOPT.test(txt);
+      t.money = !t.isCorr && (f.cost === 'fee' || f.cost === 'lowCost' || t.payOptional || t.bizWords.length > 0);
+      t.easy = t.isCorr || (!t.noWhere && !t.noCat && f.cost === 'free' && !t.money);
+      t.mins = (t.isCorr ? 0.5 : 1) + (r.sourceLang && r.sourceLang !== 'en' ? 0.5 : 0) + (t.noWhere ? 1 : 0) + (t.noCat ? 0.5 : 0);
+      var target = r.lane === 'ambassador' ? 1 : 7, left = target - t.age;
+      t.overdue = left < 0;
+      t.due = left < 0 ? (left === -1 ? x.overdueOne : C.fill(x.overdue, { n: -left })) : left === 0 ? x.dueToday : left === 1 ? x.dueTomorrow : C.fill(x.dueIn, { n: left });
+      t.ageText = t.age <= 0 ? x.today : t.age === 1 ? x.day : C.fill(x.days, { n: t.age });
+      t.typeLabel = x.types[r.type] || r.type;
+      t.typeIcon = { service: 'public', communityOffer: 'communityOffer', correction: 'pencil' }[r.type] || 'doc';
+      var L = C.lang(r.sourceLang || 'en');
+      t.langName = L.english || L.native; t.langNative = L.native; t.bcp = L.bcp47 || r.sourceLang || 'en'; t.dir = L.dir || 'ltr';
+      t.corrOf = t.isCorr && f.correctionOf ? ((C.listing(f.correctionOf) || {}).name || f.correctionOf) : '';
+      return t;
+    });
+    subs.sort(function (a, z) { return (a.lane === z.lane ? 0 : a.lane === 'ambassador' ? -1 : 1) || (z.age - a.age) || (a.id < z.id ? -1 : 1); });
+    var waiting = subs.filter(function (t) { return !t.decision; }), done = subs.filter(function (t) { return !!t.decision; });
+    var nextAfter = function (id) {
+      var i = -1; subs.forEach(function (t, k) { if (t.id === id) i = k; });
+      for (var k = 1; k <= subs.length; k++) { var t = subs[(i + k + subs.length) % subs.length]; if (!t.decision && t.id !== id) return t; }
+      return null;
+    };
+    return { subs: subs, waiting: waiting, done: done, nextAfter: nextAfter, budget: +prm.budget || D.moderationBudgetMins || 20 };
+  }
+
+}
+</script>
+</body>
+</html>

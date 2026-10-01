@@ -1,0 +1,246 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-04 Text message specimen (device frame)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-04" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--device" aria-label="Text message specimen (device frame)">
+
+<div class="cvh-devlabel cvh-devlabel--wrap" role="note">
+  <span class="cvh-ico cvh-ico--prototype cvh-ico--sm" aria-hidden="true"></span>
+  <span class="cvh-devlabel__text">{{s.R04.deviceLabel}}. {{s.R04.sampleLabel}}</span>
+  <button type="button" class="cvh-devlabel__btn" onClick="{{toApp}}">{{s.R04.back}}</button>
+</div>
+<sc-if value="{{opened}}">
+  <div class="cvh-devlabel" role="group" aria-label="Prototype views">
+    <sc-if value="{{canAnnot}}"><button type="button" class="cvh-devlabel__btn" style="margin-inline-start:0" aria-pressed="{{annotAria}}" onClick="{{toggleAnnot}}">{{annotLabel}}</button></sc-if>
+    <button type="button" class="cvh-devlabel__btn" style="margin-inline-start:0" aria-pressed="{{bigAria}}" onClick="{{toggleBig}}">{{bigLabel}}</button>
+  </div>
+</sc-if>
+<sc-if value="{{noteLine}}"><div class="cvh-devlabel" role="note"><span class="cvh-devlabel__text">{{noteLine}}</span></div></sc-if>
+<div class="cvh-device {{devCls}}">
+  <sc-if value="{{locked}}">
+    <div class="cvh-device__screen">
+      <div class="cvh-lock">
+        <p class="cvh-lock__time">{{clock}}</p>
+        <p class="cvh-lock__date">{{day}}</p>
+        <button type="button" class="cvh-lock__note" onClick="{{open}}">
+          <span class="cvh-lock__app"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{s.R04.from}}</span><span style="font-weight:400;color:var(--text-muted)">{{s.R04.now}}</span></span>
+          <span class="cvh-lock__preview">{{preview}}</span>
+        </button>
+        <button type="button" class="cvh-lock__hint" style="border:0;background:transparent;color:inherit;cursor:pointer;min-height:var(--tap)" onClick="{{open}}">{{s.R04.tapOpen}}</button>
+      </div>
+    </div>
+  </sc-if>
+  <sc-if value="{{opened}}">
+    <div class="cvh-device__screen">
+      <div class="cvh-device__bar">
+        <span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span>
+        <span class="cvh-stack" style="--gap:0"><span class="cvh-strong" style="font-size:18px">{{s.R04.from}}</span><span style="font-size:18px;color:var(--text-muted)">{{s.R04.fromNumber}}</span></span>
+      </div>
+      <div class="cvh-device__body cvh-device__body--end" role="log" aria-label="{{s.R04.from}}">
+        <sc-for list="{{msgs}}" as="m" hint-placeholder-count="2">
+          <div class="cvh-bubble cvh-bubble--lines {{m.cls}}">
+            <sc-for list="{{m.lines}}" as="l" hint-placeholder-count="4">
+              <span class="cvh-bubline"><sc-if value="{{l.ex}}"><dc-import name="X10_Exercise" variant="line" lang="{{lang}}" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if><sc-if value="{{l.tag}}"><span class="cvh-bubline__tag" lang="en">{{l.tag}}</span></sc-if><sc-if value="{{l.plain}}">{{l.text}}</sc-if><sc-if value="{{l.link}}"><button type="button" class="cvh-link" style="min-height:0;font-weight:400;display:inline" onClick="{{l.link}}">{{l.text}}</button></sc-if><sc-if value="{{l.x01}}"><dc-import name="X01_Not911" variant="sms" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if></span>
+            </sc-for>
+            <span class="cvh-bubble__time">{{m.time}}</span>
+          </div>
+        </sc-for>
+      </div>
+    </div>
+  </sc-if>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Lock screen: power alert arrives (Amina)", "Community alert, verified, with the check-in line", "Acknowledgement: more information to come", "Update to the first message", "Correction, saying what changed", "Resolved, with the final entry", "Official alert relayed, then the community alert with the nearest open space", "Ambassador post, not yet verified", "Confirmation request (double opt-in)", "Keyword change to groups", "Check-in withdrawal by keyword", "Stop", "Urdu, Greek and English: which lines are translated", "Largest text setting on a basic phone", "Exercise: an enrolled ambassador gets the practice text (lock screen)", "Exercise: the practice text opened, exercise word as its first line"], "default": "Lock screen: power alert arrives (Amina)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Lock screen: power alert arrives (Amina)": {"persona": "amina", "scenario": "A", "basic": false, "params": {"alert": "AL-05", "kind": "alert"}}, "Community alert, verified, with the check-in line": {"persona": "amina", "scenario": "A", "basic": false, "params": {"alert": "AL-05", "kind": "alert", "opened": true}}, "Acknowledgement: more information to come": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05", "kind": "ack", "opened": true}}, "Update to the first message": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05", "kind": "update", "entry": "e5", "opened": true}}, "Correction, saying what changed": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05", "kind": "correction", "entry": "e4", "opened": true}}, "Resolved, with the final entry": {"persona": "yusuf", "scenario": "C", "params": {"alert": "AL-05", "kind": "resolved", "opened": true}}, "Official alert relayed, then the community alert with the nearest open space": {"persona": "amina", "scenario": "B", "basic": false, "params": {"alert": "AL-01", "kind": "alert", "opened": true}}, "Ambassador post, not yet verified": {"persona": "rashid", "scenario": "A", "params": {"alert": "AL-07", "kind": "alert", "opened": true}}, "Confirmation request (double opt-in)": {"persona": "amina", "scenario": "C", "basic": false, "choices": {"subscribed": false}, "params": {"kind": "confirm", "opened": true}}, "Keyword change to groups": {"persona": "amina", "scenario": "C", "basic": false, "params": {"kind": "keywordGroups", "opened": true}}, "Check-in withdrawal by keyword": {"persona": "amina", "scenario": "C", "basic": false, "params": {"kind": "checkinWithdraw", "opened": true}}, "Stop": {"persona": "amina", "scenario": "C", "basic": false, "params": {"kind": "stop", "opened": true}}, "Urdu, Greek and English: which lines are translated": {"persona": "amina", "scenario": "A", "basic": false, "params": {"alert": "AL-05", "kind": "alert", "opened": true}, "loc": {"annot": true}}, "Largest text setting on a basic phone": {"persona": "amina", "scenario": "A", "basic": false, "params": {"alert": "AL-05", "kind": "alert", "opened": true}, "loc": {"big": true}}, "Exercise: an enrolled ambassador gets the practice text (lock screen)": {"persona": "rashid", "scenario": "A", "exercise": true, "params": {"alert": "AL-05", "kind": "alert"}}, "Exercise: the practice text opened, exercise word as its first line": {"persona": "rashid", "scenario": "D", "exercise": true, "params": {"alert": "AL-05", "kind": "ack", "opened": true}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'none';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'none', showExercise: 'R-04'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-04'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.R04, ch = b.ch, prm = b.params, app = b.app, loc = b.loc, self = this;
+    var kind = prm.kind || 'alert';
+    var ex = !!app.exercise;
+    var toApp = function () { if (app.canBack) b.back(); else b.go('R-03'); };
+    var annot = !!loc.annot, big = !!loc.big;
+    var base = { toApp: toApp, lang: b.lang, basic: b.basic, devCls: big ? 'cvh-dev--large' : '',
+      annotLabel: annot ? x.annotOff : x.annotOn, annotAria: annot ? 'true' : 'false', toggleAnnot: function () { b.setLoc({ annot: !annot }); },
+      bigLabel: big ? x.bigOff : x.bigOn, bigAria: big ? 'true' : 'false', toggleBig: function () { b.setLoc({ big: !big }); } };
+    var line = function (text, tag) { return { text: text, plain: true, tag: annot ? tag : '' }; };
+    var msgs = [];
+    // Keyword exchanges (confirmation, groups, check-in, stop): the same exchange R-06 runs
+    var KW = { confirm: [], keywordGroups: ['YES', 'GROUPS', '1'], checkinWithdraw: ['YES', 'NOCHECK'], stop: ['YES', 'STOP'] };
+    if (KW[kind]) {
+      msgs = this.keywordThread(b, KW[kind]).map(function (m) { return { cls: m.cls, time: m.time, lines: m.lines.map(function (t) { return line(t, x.tagTemplate); }) }; });
+      return Object.assign(base, { locked: false, opened: true, canAnnot: true, noteLine: annot ? x.annotNote : '', msgs: msgs.reverse() });
+    }
+    // Alert messages, composed by C.sms in the fixed order
+    var id = prm.alert || 'AL-05', a = C.alert(id);
+    if (!a) return Object.assign(base, { locked: false, opened: true, canAnnot: false, noteLine: '', msgs: [] });
+    var ref = C.refFor(id, b.scn);
+    var active = ref.status === 'resolved' || ref.status === 'expired' ? { id: id } : ref;
+    var oldest = a.entries[a.entries.length - 1];
+    var wantsCi = !!ch.checkin || (ch.groups || []).indexOf('checkin') >= 0;
+    var covered = wantsCi && C.checkinCovered(ch.building, ch.floor);
+    var nearestOf = function (al) {
+      var best = null, h = C.home(ch);
+      (al.openNearYou || []).forEach(function (sid) { var sp = C.space(sid), as = sp && C.asset(sp.assetId); if (!as || sp.status !== 'open') return; var d = C.km(h, { lat: as.lat, lng: as.lng }); if (!best || d < best.d) best = { id: sid, d: d }; });
+      return best ? best.id : null;
+    };
+    var toDetail = function (p) { return function () { b.go('R-07', Object.assign({ from: 'sms' }, p)); }; };
+    var compose = function (sn, o, detail) {
+      o = o || {};
+      var official = sn.a.level === 'official';
+      var tailorable = !official && (o.kind || 'alert') === 'alert' && wantsCi && (sn.a.hazard === 'heat' || sn.a.hazard === 'power') && sn.status !== 'resolved';
+      var raw = C.sms(sn, { kind: o.kind, entry: o.entry, nearest: official ? null : o.nearest, tailored: tailorable && covered, lang: b.lang, exercise: ex });
+      var lvl = C.smsLevel(sn, s), templ = [lvl, x.ackMore, s.x12.checkin, x.stop];
+      var out = [];
+      raw.forEach(function (t, i) {
+        var isLink = i === raw.length - 2 && t.indexOf('cvh.example') >= 0;
+        if (isLink) {
+          // The not-911 statement (X-01) sits just before the link on a first message; the stop line is always last.
+          if ((o.kind || 'alert') === 'alert') out.push({ x01: true, tag: annot ? x.tagTemplate : '' });
+          out.push({ text: t, link: toDetail(detail), tag: annot ? x.tagTemplate : '' });
+          return;
+        }
+        if (sn.notYetKnown && t === sn.notYetKnown + '.' && !/not known/i.test(t)) t = C.fill(x.notKnownPrefix, { what: sn.notYetKnown.charAt(0).toLowerCase() + sn.notYetKnown.slice(1) });
+        // Exercise: the exercise word is the first line inside the message itself (X-10)
+        if (ex && i === 0 && t === s.x10.sms) { out.push({ ex: true, text: t, tag: '' }); return; }
+        var tag = templ.indexOf(t) >= 0 || t.indexOf('Nearest open space') === 0 ? x.tagTemplate : x.tagAlert;
+        out.push(line(t, tag));
+        // What an alert relaying an official one adds here, straight after its level line
+        if (t === lvl && o.adds) out.push(line(o.adds, x.tagAlert));
+      });
+      // A resident who asked for a check-in on a floor with no ambassador is told so, once, after the action
+      if (tailorable && !covered && wantsCi) out.splice(out.length - 3, 0, line(C.fill(s.x12.noCheckin, { phone: (D.hubContact || {}).phone, hours: s.x12.hubHours }), x.tagTemplate));
+      return out;
+    };
+    var ackSn = C.snap({ id: id, upto: oldest.id });
+    if (kind === 'alert') {
+      var sn = C.snap(active);
+      msgs.push({ lines: compose(sn, { nearest: nearestOf(a) }, { alert: id, upto: active.upto }), time: b.ago(sn.updatedMins) });
+      // An official alert is followed by the community alert that relays it
+      var follow = (D.alerts || []).filter(function (y) { return y.officialLink && y.officialLink.alert === id; })[0];
+      if (follow) { var fs = C.snap(C.refFor(follow.id, b.scn)); msgs.push({ lines: compose(fs, { nearest: nearestOf(follow), adds: follow.officialLink.adds }, { alert: follow.id }), time: b.ago(fs.updatedMins) }); }
+    } else if (kind === 'ack') {
+      msgs.push({ lines: compose(ackSn, {}, { alert: id, upto: oldest.id }), time: b.ago(ackSn.postedMins) });
+    } else if (kind === 'update' || kind === 'correction') {
+      var eid = prm.entry || (a.entries.filter(function (e) { return e.kind === kind; })[0] || {}).id;
+      var su = C.snap({ id: id, upto: eid });
+      msgs.push({ lines: compose(ackSn, {}, { alert: id, upto: oldest.id }), time: b.ago(ackSn.postedMins) });
+      msgs.push({ lines: compose(su, { kind: kind, entry: su.latest }, { alert: id, upto: eid }), time: b.ago(su.latest.minsAgo) });
+    } else if (kind === 'resolved') {
+      var sr = C.snap({ id: id, status: 'resolved' });
+      var fin = sr.entries.filter(function (e) { return e.kind === 'final'; })[0] || sr.latest;
+      msgs.push({ lines: compose(ackSn, {}, { alert: id, upto: oldest.id }), time: b.ago(ackSn.postedMins) });
+      msgs.push({ lines: compose(sr, { kind: 'resolved', entry: fin }, { alert: id, status: 'resolved' }), time: b.ago(fin.minsAgo) });
+    }
+    msgs.forEach(function (m) { m.cls = ''; });
+    var opened = !!prm.opened || !!loc.open || kind !== 'alert';
+    var first = msgs[0] ? msgs[0].lines.filter(function (l) { return l.plain || l.ex; }).slice(0, 2).map(function (l) { return l.text; }).join(' ') : '';
+    var ck = C.clock(b.scn);
+    return Object.assign(base, {
+      locked: !opened, opened: opened, canAnnot: opened, msgs: msgs.slice().reverse(),
+      noteLine: ex ? x.exNote : opened && annot ? x.annotNote : (opened && a.level === 'official' ? x.officialNote : ''),
+      clock: C.hhmm12(ck.time).replace(/ ?[ap]m$/, ''), day: (s.time.days7 || {})[ck.day] || '', preview: first,
+      open: function () { if (b.standalone || !app.replace) b.setLoc({ open: true }); else app.replace('R-04', Object.assign({}, prm, { opened: true })); }
+    });
+  }
+  keywordThread(b, sent) {
+    var C = b.C, s = b.s, ch = b.ch, app = b.app;
+    var langCode = app.chosenLang || (b.persona || {}).lang || b.lang;
+    var lw = b.lang === 'en' ? C.lang(langCode).english : C.lang(langCode).native;
+    var bo = ch.building ? C.building(ch.building) : null;
+    var where = bo ? (ch.floor ? bo.name + ', ' + s.R35.floor.toLowerCase() + ' ' + ch.floor : bo.name) : ((s.neighbourhoods || {})[ch.nbhd || 'TP']);
+    var groups = (ch.groups || []).filter(function (g) { return g !== 'checkin'; });
+    if (!groups.length) groups = ['seniors'];
+    var msgs = [{ cls: '', lines: [C.fill(s.R04.confirmRequest, { lang: lw, where: where })], time: b.ago(3) }];
+    var hin = function (l) { msgs.push({ cls: '', lines: l, time: s.R04.now }); };
+    sent.forEach(function (k) {
+      msgs.push({ cls: 'cvh-bubble--out', lines: [k], time: s.R04.now });
+      if (k === 'YES') hin([C.fill(s.R06.thanks, { where: where, lang: lw }), s.R06.howStop, s.R06.howChange, s.R04.checkinWithdraw]);
+      if (k === 'GROUPS') hin([C.fill(s.R06.groupsMenu, { list: groups.map(function (g, i) { return (i + 1) + ' ' + s.groups[g].label; }).join(', ') })]);
+      if (k === '1') hin([C.fill(s.R06.groupsChanged, { group: s.groups[groups[0]].label }), s.R06.howStop]);
+      if (k === 'NOCHECK') hin([s.R06.checkinWithdrawn, s.R06.howStop]);
+      if (k === 'STOP') hin([s.R06.stopped]);
+    });
+    return msgs;
+  }
+
+}
+</script>
+</body>
+</html>

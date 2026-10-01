@@ -1,0 +1,2575 @@
+{
+ "language": "ur",
+ "compiled": "2026-10-01, Claude subagent (sourced, not a native speaker)",
+ "method": "Every Urdu form is copied from a professionally translated official, health-system or established-media source. The text was extracted from PDFs or HTML; some PDF text layers break lam-alef ligatures (e.g. 'علاج' extracts as 'عالج', 'تلاش' as 'تالش'). Those were normalised in the evidence, and rendered-page checks were done where needed (US Census glossary, Ontario seniors dental brochure). Confidence: high = 2+ independent authoritative sources agree OR 1 official side-by-side translation; medium = 1 authoritative source or established media usage; low = dictionaries only.",
+ "terms": [
+  {
+   "en": "emergency (situation)",
+   "ur": "ہنگامی حالت / ہنگامی صورتحال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN: 'If it's a life or limb threatening emergency, you should call 999 or go straight to A&E.' UR: 'اگر یہ جان یا اعضاء کے لیے خطرہ والی ہنگامی حالت ہے تو آپ کو 999 پر کال کرنا چاہیے یا فوراً A&E میں جانا چاہیے۔'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'کسی بھی ہنگامی صورت حال کے لئے تیار رہنے کے ...'; 'اگر آپ کو ہنگامی اعانت درکار ہو تو 911 پر کال کریں۔'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Native ہنگامی is used for the situation/adjective (ہنگامی حالت, ہنگامی دیکھ بھال), while the English loan ایمرجنسی is used in names of services and departments (ایمرجنسی ڈیپارٹمنٹ, ایمرجنسی خدمات). Both are normal; keep that split."
+  },
+  {
+   "en": "emergency services",
+   "ur": "ایمرجنسی خدمات / ایمرجنسی سروسز",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'emergency services' = 'ایمرجنسی خدمات'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'ٹریپل زیرو (000) آسٹریلیا میں ایمرجنسی نمبر ہے' ... 'کسی بھی ایمرجنسی سروس یعنی ایمبولینس، پولیس یا فائر بریگیڈ کو فون کرنے کے لیے یہی نمبر استعمال کریں' (PDF line order reconstructed)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "emergency care",
+   "ur": "ہنگامی دیکھ بھال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN: 'These centres offer quick, direct access to emergency care.' UR: 'یہ مراکز ہنگامی دیکھ بھال تک فوری اور براہ راست رسائی فراہم کرتے ہیں۔'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "emergency department (hospital)",
+   "ur": "ایمرجنسی ڈیپارٹمنٹ",
+   "avoid": [
+    "شعبہ حادثات (UK A&E gloss; not the Canadian term)"
+   ],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "Heading 'ایمرجنسی ڈیپارٹمنٹ میں جانا'; 'ایمرجنسی ڈیپارٹمنٹ ہفتے کے ساتوں دن 24 گھنٹے کھلے ہوتے ہیں اور یہاں ہمیشہ ڈاکٹر اور نرسیں ... ہوتی ہیں'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'... ایسٹ سرے ہسپتال کے ایمرجنسی ڈیپارٹمنٹ میں ...'; 'ایمرجنسی ڈیپارٹمنٹ اور ایمبولینس طبی ہنگامی حالات کے لیے ہوتے ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "The corrector's 'ہسپتال کا ایمرجنسی ڈیپارٹمنٹ' matches. US sources say 'ایمرجنسی روم' (NYC EM: 'فوراً ہسپتال ایمرجنسی روم میں جائیں'), and NHS 24 adds '(شعبہ حادثات)' for A&E. Use ایمرجنسی ڈیپارٹمنٹ for Ontario."
+  },
+  {
+   "en": "call 911",
+   "ur": "911 پر کال کریں",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'911 پر کال کریں اگر کسی شخص کو الجھن ہو، وہ بے ہوش ہو، قے کر رہا ہو یا اس کی حالت بگڑ رہی ہو۔'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'اگر آپ کو ہنگامی اعانت درکار ہو تو 911 پر کال کریں۔'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "ambulance",
+   "ur": "ایمبولینس",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'اگر آپ کو ایمبولینس کی ضرورت ہو تو 000 پر کال کریں۔ ایمبولینس آفیسرز آپ کو ابتدائی طبی مدد دے سکتے ہیں'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'ایمرجنسی ڈیپارٹمنٹ اور ایمبولینس طبی ہنگامی حالات کے لیے ہوتے ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "police",
+   "ur": "پولیس",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'پولیس یا فائر بریگیڈ کو فون کرنے کے لیے یہی نمبر استعمال کریں۔'"
+    },
+    {
+     "title": "Domestic abuse: how to get help (Urdu)",
+     "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+     "publisher": "UK Home Office (GOV.UK)",
+     "evidence": "'اگر آپ بول نہیں سکتے تو پولیس کو کیسے فون/کال کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "police station",
+   "ur": "پولیس اسٹیشن / تھانہ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Crime prevention guide (Urdu)",
+     "url": "https://houstontx.gov/police/pdfs/brochures/urdu/Crime%20Prevention%20Guide_Urdu.pdf",
+     "publisher": "Houston Police Department",
+     "evidence": "'گاڑی چلا کر قریبی پولیس اسٹیشن، فائر اسٹیشن، کھلے گیس اسٹیشن، یا اچھی طرح سے روشن جگہ پر جائیں'"
+    },
+    {
+     "title": "BBC Urdu: Gujranwala case registered at police station",
+     "url": "https://www.bbc.com/urdu/articles/c6y4z9j718zeo",
+     "publisher": "BBC News Urdu",
+     "evidence": "'اس واقعے کا مقدمہ گوجرانوالہ کے تھانہ صدر میں ... درج کیا گیا'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "Form field 'مقامی پولیس کا دفتر:' (local police precinct)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "پولیس اسٹیشن is the plain loan used in a translated public-safety guide; تھانہ is the everyday Pakistani word (BBC Urdu). Both are fine; the corrector's 'تھانے' (5d864949c117) is consistent with BBC usage."
+  },
+  {
+   "en": "fire station",
+   "ur": "فائر اسٹیشن",
+   "avoid": [
+    "فائر ہال (not attested; use فائر اسٹیشن)"
+   ],
+   "sources": [
+    {
+     "title": "Crime prevention guide (Urdu)",
+     "url": "https://houstontx.gov/police/pdfs/brochures/urdu/Crime%20Prevention%20Guide_Urdu.pdf",
+     "publisher": "Houston Police Department",
+     "evidence": "'اپنے علاقے میں پولیس اور فائر اسٹیشن کی جائے وقوع کو جانیں۔ یہ تحفظ کی جگہیں ہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Only one translated source found. Toronto's 'fire hall' is the same thing; sources do not show 'فائر ہال'."
+  },
+  {
+   "en": "fire services / fire and rescue service",
+   "ur": "فائر سروس / فائر اور ریسکیو سروس",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Fire safety in the home (English/Urdu side-by-side)",
+     "url": "https://www.hantsfire.gov.uk/wp-content/uploads/2021/03/Urdu-Fire-Safety-in-the-Home.pdf",
+     "publisher": "Hampshire & Isle of Wight Fire and Rescue Service",
+     "evidence": "EN: 'contact your local fire and rescue service for help' UR: 'مدد کے لئے اپنے مقامی فائر اور ریسکیو سروس سے مدد کے لئے رابطہ کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "One official side-by-side translation. NSW Health says 'فائر بریگیڈ' (fire brigade) and NYC EM says 'فائر ڈپارٹمنٹ آپ کے اپارٹمنٹ میں آئیں گے' (fire department)."
+  },
+  {
+   "en": "fire brigade / firefighters",
+   "ur": "فائر بریگیڈ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'پولیس یا فائر بریگیڈ کو فون کرنے کے لیے یہی نمبر استعمال کریں۔'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "smoke alarm",
+   "ur": "سموک الارم / دھوئیں کا الارم",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Fire safety in the home (English/Urdu side-by-side)",
+     "url": "https://www.hantsfire.gov.uk/wp-content/uploads/2021/03/Urdu-Fire-Safety-in-the-Home.pdf",
+     "publisher": "Hampshire & Isle of Wight Fire and Rescue Service",
+     "evidence": "EN: 'smoke alarm' UR: 'اگر آپ کے پاس سموک الارم نہ ہو جو کہ کام کرتا ہو ...'"
+    },
+    {
+     "title": "FDNY Smart fire and life safety guide (Urdu)",
+     "url": "https://www.nyc.gov/assets/fdny/downloads/pdf/education/fire-life-safety/fdny-smart-guide-urdu.pdf",
+     "publisher": "FDNY - New York City Fire Department",
+     "evidence": "Heading 'دھوئیں/CO الارمز کا چالو ہونا'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "extreme heat",
+   "ur": "شدید گرمی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'شدید گرمی کے اوقات میں سرگرمیاں محدود کر دیں'"
+    },
+    {
+     "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+     "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+     "publisher": "Office of the Governor of New York State",
+     "evidence": "'شدید گرمی نیو یارک کے شہریوں، بالخصوص کمزور افراد جیسے کہ بچوں اور بزرگ افراد کی صحت کے لیے شدید خطرہ ہے'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'شدید گرمی کی لہر کے دوران شہری حکام ٹھنڈے مراکز کھولیں گے۔'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "heat wave",
+   "ur": "گرمی کی لہر / ہیٹ ویو",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'شدید گرمی کی لہر کے دوران ...'"
+    },
+    {
+     "title": "Express News: nationwide heatwave alert, warning for citizens",
+     "url": "https://www.express.pk/story/2761557/shadeed-garmi-ki-leher-mulk-bhar-me-heat-wave-ka-alert-jari-shehriyo-ke-liye-intibah-2761557",
+     "publisher": "Express News (Pakistan)",
+     "evidence": "Headline: 'شدید گرمی کی لہر؛ ملک بھر میں ہیٹ ویو کا الرٹ جاری، شہریوں کیلیے انتباہ'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "beat the heat / protect yourself from heat",
+   "ur": "گرمی سے بچاؤ کریں / گرمی سے بچیں",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "Title 'گرمی سے بچاؤ کریں'; 'گرمی سے بچ کر اور محفوظ رہیں'; 'گرمی سے بچیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "This is Toronto's own translation of its 'Beat the Heat' campaign."
+  },
+  {
+   "en": "cooling centre",
+   "ur": "ٹھنڈک کا مرکز (plural ٹھنڈک کے مراکز)",
+   "avoid": [
+    "کولنگ سینٹر (loan not attested in sources)"
+   ],
+   "sources": [
+    {
+     "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+     "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+     "publisher": "Office of the Governor of New York State",
+     "evidence": "'نیو یارک کے رہائشیوں کو علاقائی ٹھنڈک کے مراکز پر جانے کی تاکید'; 'اپنے قریب ٹھنڈک کے کسی مرکز کی نشاندہی کریں'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'شدید گرمی کی لہر کے دوران شہری حکام ٹھنڈے مراکز کھولیں گے۔'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Both translated US sources use a native phrase, not the loan 'کولنگ سینٹر'."
+  },
+  {
+   "en": "cool space / cool place (Toronto 'Cool Spaces')",
+   "ur": "ٹھنڈی جگہ (plural ٹھنڈی جگہیں)",
+   "avoid": [
+    "کولنگ اسپیس",
+    "ٹھنڈک کی جگہ (close, but Toronto's text uses ٹھنڈی جگہ)"
+   ],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'ٹھنڈی جگہ تلاش کریں ... کسی سایہ دار یا ایئر کنڈیشنر والی جگہ پر وقفہ کریں ... toronto.ca/CoolSpaces پر قریبی مقامات تلاش کریں'; 'ٹھنڈی جگہیں تلاش کریں اور گرمی سے حفاظت کے مشورے حاصل کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Official City of Toronto translation of 'Cool Spaces'. For the directory's 'designated cooling space', this is the City's own term."
+  },
+  {
+   "en": "air-conditioned (place)",
+   "ur": "ایئر کنڈیشنر والی جگہ / ایئر کنڈیشنڈ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'کسی سایہ دار یا ایئر کنڈیشنر والی جگہ پر وقفہ کریں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "heat illness / heat-related illness",
+   "ur": "گرمی سے ہونے والی بیماری",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'گرمی سے ہونے والی بیماری کی علامات کو پہچانیں'"
+    },
+    {
+     "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+     "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+     "publisher": "Office of the Governor of New York State",
+     "evidence": "'ہیٹ اسٹروک ... جیسی گرمی سے لگنے والی بیماریوں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "warning / alert (weather)",
+   "ur": "انتباہ (plural انتباہات) / الرٹ",
+   "avoid": [
+    "وارننگ (not attested in translated sources)"
+   ],
+   "sources": [
+    {
+     "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+     "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+     "publisher": "Office of the Governor of New York State",
+     "evidence": "'موسم پر نگاہ رکھنے والی تنظیموں، انتباہات، ایڈوائزری اور تازہ ترین پیشگوئیوں کی مکمل فہرست'"
+    },
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'پیشن گوئی دیکھنے اور ایسی انتباہی اطلاعات حاصل کرنے کے لیے WeatherCAN ایپ ڈاؤن لوڈ کریں'"
+    },
+    {
+     "title": "Express News: nationwide heatwave alert, warning for citizens",
+     "url": "https://www.express.pk/story/2761557/shadeed-garmi-ki-leher-mulk-bhar-me-heat-wave-ka-alert-jari-shehriyo-ke-liye-intibah-2761557",
+     "publisher": "Express News (Pakistan)",
+     "evidence": "'ہیٹ ویو کا الرٹ جاری، شہریوں کیلیے انتباہ'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "No source has the exact phrase 'heat warning'. Official texts use انتباہ (and Pakistani media also use الرٹ). By composition, 'شدید گرمی کا انتباہ' would be expected, but no source attests it, so a native reviewer should confirm. 'وارننگ' was not found in the translated sources."
+  },
+  {
+   "en": "drinking water",
+   "ur": "پینے کا پانی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'فی فرد فی یوم کے حساب سے پینے کے پانی کا ایک گیلن'"
+    },
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'وافر مقدار میں پانی پیئیں ... باقاعدگی سے پانی پیتے رہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "This sources 'drinking water' only. No source was found for 'drinking water fountain' (see notFound)."
+  },
+  {
+   "en": "older adults / seniors",
+   "ur": "بزرگ افراد / بزرگ",
+   "avoid": [
+    "سینئرز / سینئر شہری (except inside a programme's proper name)"
+   ],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "Title 'اہل بزرگوں کے لیے دانتوں کی مفت روٹین دیکھ بھال' (Free routine dental care for eligible seniors); 'ان تمام بزرگ افراد کو دانتوں کی اعلیٰ دیکھ بھال فراہم کرتا ہے جو اہل ہیں'"
+    },
+    {
+     "title": "Beat the Heat tabloid (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+     "publisher": "City of Toronto / Toronto Public Health (2026)",
+     "evidence": "'... یا آپ اکیلے رہنے والے بزرگ شخص ہیں'"
+    },
+    {
+     "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+     "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+     "publisher": "Office of the Governor of New York State",
+     "evidence": "'بچوں اور بزرگ افراد'; 'بزرگ بالغان'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Ontario's own translation renders 'seniors' as بزرگ, not 'سینئرز' (which appears only inside the transliterated programme name)."
+  },
+  {
+   "en": "hospital",
+   "ur": "ہسپتال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'پبلک ہاسپٹل یعنی سرکاری ہسپتال'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'ہسپتال کی سروسز'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'ترجیحی ہسپتال:' ; 'فوراً ہسپتال ایمرجنسی روم میں جائیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "SickKids' Urdu page spells it اسپتال, which is an acceptable variant. ہسپتال is the majority Pakistani spelling in these sources."
+  },
+  {
+   "en": "clinic / health clinic",
+   "ur": "کلینک",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'پبلک ڈینٹل کلینک میں دانتوں کا مفت علاج'"
+    },
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'موبائل ڈینٹل کلینک'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "General use of کلینک in service descriptions"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "community health centre",
+   "ur": "کمیونٹی ہیلتھ سینٹر",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'خدمات موصول کرنے کے لیے پبلک ہیلتھ یونٹ، کمیونٹی ہیلتھ سینٹر، یا ... ابوریجنل ہیلتھ ایکسس سینٹرز کے سامنے اس کارڈ کو پیش کریں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Ontario Ministry of Health translation."
+  },
+  {
+   "en": "public health unit",
+   "ur": "پبلک ہیلتھ یونٹ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'برائے مہربانی اپنے مقامی پبلک ہیلتھ یونٹ سے بات کریں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "NYC EM says 'عوامی صحت' for 'public health' as a concept."
+  },
+  {
+   "en": "health card (OHIP)",
+   "ur": "ہیلتھ کارڈ (اونٹاریو ہیلتھ کارڈ)",
+   "avoid": [
+    "صحت کا کارڈ",
+    "صحت کارڈ"
+   ],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'OHIP کارڈ (اونٹاریو ہیلتھ کارڈ)'"
+    },
+    {
+     "title": "SickKids saliva testing program (Urdu page)",
+     "url": "https://www.sickkids.ca/en/care-services/ur-saliva-testing-program/",
+     "publisher": "The Hospital for Sick Children, Toronto",
+     "evidence": "'ہیلتھ کارڈ، لیبل اسٹیکر، اور درخواست فارم پر پہلا / آخری نام ...'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "Section heading 'ہیلتھ کارڈز'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "City of Toronto and SickKids (Toronto) both use the loanword."
+  },
+  {
+   "en": "family doctor",
+   "ur": "فیملی ڈاکٹر",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'برطانیہ میں ہر کوئی مقامی فیملی ڈاکٹر کے پاس رجسٹرڈ ہو سکتا ہے اور مفت دیکھ بھال حاصل کر سکتا ہے'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "referral",
+   "ur": "ریفرل",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "'ریفرل (ڈاکٹر وغیرہ کے حوالے) کی ضرورت نہیں ہوتی'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'صحت کے مفت جائزے اور ریفرلز'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "pharmacy / pharmacist",
+   "ur": "فارمیسی / فارماسسٹ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'ادویات اور مشورے کے لیے فارمیسی'"
+    },
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN: 'visit your pharmacist' UR: 'اپنے فارماسسٹ سے ملنے'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "appointment",
+   "ur": "اپائنٹمنٹ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN: 'You will get a video or phone appointment' UR: 'آپ کو ... ویڈیو یا فون اپائنٹمنٹ ملے گی'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'جی پی اپائنٹمنٹس'; 'آپ کو اپوائنٹمنٹ کی ضرورت نہیں ہوتی'"
+    },
+    {
+     "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+     "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+     "publisher": "Scottish Government / NHS inform (2023)",
+     "evidence": "'4 سے زیادہ علیحدہ اپوائنٹمنٹ'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Spelled both اپائنٹمنٹ and اپوائنٹمنٹ. The corrector's 'پہلے سے وقت لینا' is natural Urdu but does not match the sourced loanword; either is understandable."
+  },
+  {
+   "en": "walk-in / no appointment needed",
+   "ur": "اپائنٹمنٹ کی ضرورت نہیں (بس اندر چلے جائیں)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "Pharmacy: 'آپ کو اپوائنٹمنٹ کی ضرورت نہیں ہوتی بس اندر چلے جائیں'; urgent treatment centre: 'اندر جا کر ڈاکٹر یا نرس سے ملنے کا انتظار کر سکتے ہیں۔ آمد کا وقت اپائنٹمنٹ نہیں ہوتا'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Sources describe walk-in access with a phrase. The loan 'واک ان' does not appear in any translated source found."
+  },
+  {
+   "en": "free (of charge)",
+   "ur": "مفت",
+   "avoid": [
+    "بلا معاوضہ (correct but stiffer; sources use مفت)"
+   ],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'مفت ایمبولینس'; 'آپ کو انٹرپریٹر مفت ملتا ہے'"
+    },
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'دانتوں کی مفت روٹین دیکھ بھال'"
+    },
+    {
+     "title": "Domestic abuse: how to get help (Urdu)",
+     "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+     "publisher": "UK Home Office (GOV.UK)",
+     "evidence": "'مفت، رازدارنہ مشورے کے لئے'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "confidential",
+   "ur": "رازدارانہ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'confidential' = 'رازدارانہ'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'... صحت کی ایک مفت اور رازدارانہ سروس ہے'"
+    },
+    {
+     "title": "Domestic abuse: how to get help (Urdu)",
+     "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+     "publisher": "UK Home Office (GOV.UK)",
+     "evidence": "'مفت، رازدارنہ مشورے کے لئے، دن کے 24 گھنٹے ... ہیلپ لائن سے رابطہ کریں' (source typo رازدارنہ)"
+    },
+    {
+     "title": "How to help: mental health guide (Urdu)",
+     "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+     "publisher": "NYC Mental Health / NYC Well",
+     "evidence": "'24/7 مفت اور رازدارانہ تعاون'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "خفیہ is also attested ('مفت اور خفیہ لسانی خدمات', NYC DHS; 'مفت خفیہ', NHS Sussex), so it is not wrong. رازدارانہ is the clear majority and avoids خفیہ's 'secret/hidden' connotation."
+  },
+  {
+   "en": "mental health",
+   "ur": "ذہنی صحت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'ذہنی صحت کی خدمات'"
+    },
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "Title 'تارکین وطن، پناہ گزینوں اور بطور وزیٹر آنے والوں کی ذہنی صحت کی نگہداشت' (Mental health care for immigrants, refugees and visitors)"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'ذہنی صحت کا بحران اس وقت ہوتا ہے جب ...'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "NHS 24 uses the variant دماغی صحت. ذہنی صحت is the majority term."
+  },
+  {
+   "en": "mental health crisis",
+   "ur": "ذہنی صحت کا بحران",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'اگر آپ ذہنی صحت کے بحران کا سامنا کر رہے ہوں ...'"
+    },
+    {
+     "title": "How to help: mental health guide (Urdu)",
+     "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+     "publisher": "NYC Mental Health / NYC Well",
+     "evidence": "'بحرانی مداخلت' (crisis intervention); 'بحران سے متعلق مشاورت' (crisis counselling)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "crisis",
+   "ur": "بحران",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'ذہنی صحت کا بحران'"
+    },
+    {
+     "title": "How to help: mental health guide (Urdu)",
+     "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+     "publisher": "NYC Mental Health / NYC Well",
+     "evidence": "'بحران سے متعلق مشاورت اور خود کشی کی روک تھام'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "helpline / crisis line",
+   "ur": "ہیلپ لائن",
+   "avoid": [
+    "کرائسس لائن"
+   ],
+   "sources": [
+    {
+     "title": "Domestic abuse: how to get help (Urdu)",
+     "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+     "publisher": "UK Home Office (GOV.UK)",
+     "evidence": "'مفت، رازدارنہ مشورے کے لئے، دن کے 24 گھنٹے گھریلو زیادتی/بدسلوکی ہیلپ لائن سے رابطہ کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "One official GOV.UK translation (parallel to its English page). 'Crisis line' has no separate sourced term. Write 'بحران کی ہیلپ لائن' or keep the service's name. 'کرائسس لائن' is not attested."
+  },
+  {
+   "en": "suicide prevention",
+   "ur": "خود کشی کی روک تھام",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "How to help: mental health guide (Urdu)",
+     "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+     "publisher": "NYC Mental Health / NYC Well",
+     "evidence": "'بحران سے متعلق مشاورت اور خود کشی کی روک تھام'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "counselling",
+   "ur": "کاؤنسلنگ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "'کاؤنسلنگ (گفتگو کے ذریعے مدد) اور سائیکوتھراپی'; 'کاؤنسلنگ، فیملی تھراپی، گروپ تھراپی'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'یوتھ ہیلتھ ... سنٹر صحت کے متعلق آگہی، معلومات، مشورہ اور کاؤنسلنگ'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "The corrector spells it کونسلنگ, a minor variant; sources use کاؤنسلنگ. مشاورت in sources means 'advice/consultation' (e.g. 'قانونی مشاورت', 'بحران سے متعلق مشاورت' in NYC Well). It is acceptable but less specific for therapeutic counselling."
+  },
+  {
+   "en": "counsellor",
+   "ur": "کاؤنسلر / مشیر",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "'کاؤنسلرز لوگوں کے ساتھ ان کے مسائل اور جذبات کے متعلق بات ...'"
+    },
+    {
+     "title": "How to help: mental health guide (Urdu)",
+     "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+     "publisher": "NYC Mental Health / NYC Well",
+     "evidence": "'ذہنی صحت کے مشیر سے مفت بات کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "interpreter",
+   "ur": "مترجم / انٹرپریٹر (زبانی مترجم)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'اگر آپ انگریزی یا فرانسیسی زبانیں نہیں بولتی/بولتے ہیں اور آپ اپنا ترجمان فراہم کرنے سے قاصر ہیں تو ... مترجم کی خدمات دستیاب ہیں'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'پروفیشنل انٹرپریٹر (زبانی مترجم)'; 'آپ کو انٹرپریٹر مفت ملتا ہے'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'اگر آپ کو کسی انٹرپریٹر کی ضرورت ہو تو آپ ایک انٹرپریٹر طلب کر سکتے ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "The City of Toronto uses both ترجمان and مترجم in one sentence. Australian and UK health sources use انٹرپریٹر with the gloss زبانی مترجم."
+  },
+  {
+   "en": "interpretation services / language services",
+   "ur": "ترجمانی کی خدمات / مترجم کی خدمات",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Department of Homeless Services - Urdu information page",
+     "url": "https://www.nyc.gov/site/dhs/help/urdu.page",
+     "publisher": "NYC Department of Homeless Services",
+     "evidence": "'مفت اور خفیہ لسانی خدمات، بشمول اشاراتی زبان میں ترجمانی کی خدمات ہمیشہ دستیاب ہیں'"
+    },
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'مترجم کی خدمات دستیاب ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "The corrector's 'ترجمانی کی خدمات' matches the NYC DHS wording."
+  },
+  {
+   "en": "sign language",
+   "ur": "اشاراتی زبان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Department of Homeless Services - Urdu information page",
+     "url": "https://www.nyc.gov/site/dhs/help/urdu.page",
+     "publisher": "NYC Department of Homeless Services",
+     "evidence": "'اشاراتی زبان میں ترجمانی کی خدمات'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "pregnancy / pregnant",
+   "ur": "حمل / حاملہ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+     "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+     "publisher": "Scottish Government / NHS inform (2023)",
+     "evidence": "'وہ لوگ جو پچھلے 12 مہینوں میں حاملہ ہیں یا جنہوں نے بچے کو جنم دیا ہے'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'جب آپ حاملہ ہوتی ہیں اور اپنے بچے کی پیدائش کے فوراً بعد ...'"
+    },
+    {
+     "title": "When to call the hospital: late pregnancy (Urdu)",
+     "url": "https://www.thewomens.org.au/images/uploads/fact-sheets/multilingual/When_to_call_the_hospital_Urdu_251003.pdf",
+     "publisher": "The Royal Women's Hospital, Melbourne",
+     "evidence": "'کیا آپ وضع حمل (حالت زچگی) میں ہیں؟'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "midwife",
+   "ur": "مڈوائف (often glossed: مڈوائف یعنی دائی)",
+   "avoid": [
+    "دائی گیری کا کلینک",
+    "دائی (alone, without مڈوائف)"
+   ],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'اپنی مڈوائف، ہیلتھ وزیٹر یا جی پی سے رابطہ کریں'"
+    },
+    {
+     "title": "Your antenatal appointments (Urdu)",
+     "url": "https://www.swbh.nhs.uk/wp-content/uploads/2024/01/Your-antenatal-appointments-Urdu.pdf",
+     "publisher": "Sandwell and West Birmingham Hospitals NHS Trust",
+     "evidence": "'جب آپ اپنی مڈوائف یعنی دائی یا ڈاکٹر کو ملنے کے لیے آئیں'"
+    },
+    {
+     "title": "When to call the hospital: late pregnancy (Urdu)",
+     "url": "https://www.thewomens.org.au/images/uploads/fact-sheets/multilingual/When_to_call_the_hospital_Urdu_251003.pdf",
+     "publisher": "The Royal Women's Hospital, Melbourne",
+     "evidence": "'... ان خدشات پر مڈوائف (دائی) سے بات کرنا چاہتی ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "All three translated sources lead with the loanword مڈوائف and use دائی only as a gloss in brackets. That suggests دائی alone may read as a traditional birth attendant. 'Midwifery clinic' is not attested as a phrase; 'مڈوائف کلینک' (or 'مڈوائفری کلینک') follows the sourced head word."
+  },
+  {
+   "en": "maternity care",
+   "ur": "زچگی کی دیکھ بھال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'... اس کو زچگی کی دیکھ بھال کہا جاتا ہے'; 'اپنی زچگی کی دیکھ بھال جلد از جلد شروع کردیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "dentist",
+   "ur": "دانتوں کا ڈاکٹر / ڈینٹسٹ",
+   "avoid": [
+    "دندان ساز (alone; formal)"
+   ],
+   "sources": [
+    {
+     "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+     "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+     "publisher": "Scottish Government / NHS inform (2023)",
+     "evidence": "'آپ کا دانتوں کا ڈاکٹر ہر معائنے میں آپ کے ساتھ اس پر بات کرے گا'"
+    },
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN heading 'Dentist' = UR 'ڈینٹسٹ (دندان ساز)'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "dental care",
+   "ur": "دانتوں کی دیکھ بھال / دانتوں کا علاج",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'اہل بزرگوں کے لیے دانتوں کی مفت روٹین دیکھ بھال'"
+    },
+    {
+     "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+     "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+     "publisher": "Scottish Government / NHS inform (2023)",
+     "evidence": "'دانتوں کی دیکھ بھال اور علاج'; 'NHS دانتوں کا مفت علاج'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "dentures",
+   "ur": "ڈینچر (plural ڈینچرز)",
+   "avoid": [
+    "مصنوعی دانت (not used in official sources; understandable but differs)"
+   ],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "EN 'What about dentures?' = UR 'ڈینچرز کے بارے میں کیا ہے؟'; 'ڈینچر کے بشمول پروستھوڈونٹک خدمات کا جزوی طور پر احاطہ کیا جائے گا'"
+    },
+    {
+     "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+     "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+     "publisher": "Scottish Government / NHS inform (2023)",
+     "evidence": "Price list: 'اوپر اور نیچے مکمل ڈینچر سیٹ' (full upper and lower dentures)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Ontario's own seniors-dental translation uses the loanword."
+  },
+  {
+   "en": "allergy / food allergy",
+   "ur": "الرجی / غذائی الرجی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Food allergy poster for food service establishments (Urdu)",
+     "url": "https://www.nyc.gov/assets/doh/downloads/pdf/rii/allergy-poster-ur.pdf",
+     "publisher": "NYC Department of Health and Mental Hygiene",
+     "evidence": "'غذائی الرجیاں سنگین ہو سکتی ہیں'; 'جب کوئی کسٹمر کسی ملازم کو غذائی الرجی کے بارے میں اطلاع دے ...'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "peanut",
+   "ur": "مونگ پھلی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Food allergy poster for food service establishments (Urdu)",
+     "url": "https://www.nyc.gov/assets/doh/downloads/pdf/rii/allergy-poster-ur.pdf",
+     "publisher": "NYC Department of Health and Mental Hygiene",
+     "evidence": "List of the nine most common allergenic foods: 'مونگ پھلی، ... مچھلی، ... انڈے، تل، دودھ، گیہوں، سویا'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "'Peanut-free' is not attested. 'مونگ پھلی سے پاک' is a composition (the corrector's choice), not a sourced phrase."
+  },
+  {
+   "en": "halal",
+   "ur": "حلال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "MOIA one-pager: resources for immigrant New Yorkers (Urdu)",
+     "url": "https://www.nyc.gov/assets/immigrants/downloads/pdf/moia-one-pager-4-urdu.pdf",
+     "publisher": "NYC Mayor's Office of Immigrant Affairs",
+     "evidence": "'مفت، ویجیٹیرین، حلال اور کوشر کھانے پورے NYC میں دستیاب ہیں' (PDF text layer extracts as حالل; visual reading is حلال)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "vaccination / immunization",
+   "ur": "ویکسینیشن / حفاظتی ٹیکے",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Helping you find the right care (English/Urdu side-by-side)",
+     "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+     "publisher": "NHS 24 (Scotland, 2024)",
+     "evidence": "EN: 'immunisations and vaccinations' UR: 'امیونائزیشنز اور ویکسینیشنز (حفاظتی ٹیکے)'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "toll-free",
+   "ur": "ٹول فری",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'ٹال فری 1-833-207-4435'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Ontario's text spells it ٹال فری. ٹول فری is the more common spelling; confirm with a native reviewer."
+  },
+  {
+   "en": "shelter (homeless/emergency)",
+   "ur": "پناہ گاہ",
+   "avoid": [
+    "شیلٹر (loan; not used by the official sources found)"
+   ],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'shelter' = 'پناہ گاہ'"
+    },
+    {
+     "title": "Department of Homeless Services - Urdu information page",
+     "url": "https://www.nyc.gov/site/dhs/help/urdu.page",
+     "publisher": "NYC Department of Homeless Services",
+     "evidence": "'... انٹیک سنٹر میں پناہ گاہ کے لیے درخواست دینا لازمی ہے'; 'اکیلے رہنے والی بالغ خواتین پناہ گاہ کے حصول کے لیے ...'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "'Emergency shelter' is not attested as a phrase. 'ہنگامی پناہ گاہ' follows the sourced parts."
+  },
+  {
+   "en": "homelessness / person experiencing homelessness",
+   "ur": "بے گھری / بے گھری کا سامنا کرنے والا شخص",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'person experiencing homelessness' = 'بے گھری کا سامنا کرنے والا شخص'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "food bank",
+   "ur": "فوڈ بینک",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Find help in Birmingham - cost of living leaflet (Urdu)",
+     "url": "https://www.birmingham.gov.uk/download/downloads/id/25942/cost_of_living_leaflet_-_urdu.pdf",
+     "publisher": "Birmingham City Council",
+     "evidence": "'فوڈ بینکس: ہم جانتے ہیں کہ پہلی بار فوڈ بینک یا دیگر پروجیکٹس تک رسائی مشکل ہو سکتی ہے'; 'فوڈ بینک یا دیگر فوڈ سپورٹ تلاش کرنے کے لیے ...'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "social assistance (Ontario Works)",
+   "ur": "سماجی امداد (اونٹاریو ورکس)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "Title 'اونٹاریو ورکس کے لیے درخواست کیسے دیں'; 'صوبے کے سماجی امدادی رابطہ مرکز (Province's Social Assistance Contact Centre)'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "housing assistance",
+   "ur": "ہاؤسنگ امداد / رہائش میں مدد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'housing assistance' = 'ہاؤسنگ امداد'"
+    },
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'اگر آپ کے پاس کھانے اور رہائش کے لیے کافی رقم نہیں ہے ...' (رہائش = housing)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "child care",
+   "ur": "بچوں کی نگہداشت / چائلڈ کیئر",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2024 Childcare Guide (Urdu)",
+     "url": "https://www.nyc.gov/assets/opportunity/pdf/2024-Childcare-Guide-Urdu.pdf",
+     "publisher": "NYC Mayor's Office for Economic Opportunity",
+     "evidence": "'بچوں کی نگہداشت اور ابتدائی تعلیم کے بارے میں آپ کے لیے رہنمائی'; 'چائلڈ کیئر واؤچرز'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "The corrector's 'بچوں کی دیکھ بھال' is plain and understandable. The source uses نگہداشت or the loan چائلڈ کیئر."
+  },
+  {
+   "en": "kindergarten",
+   "ur": "کنڈرگارٹن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2023 NYC Public Schools Admissions Guide (Urdu)",
+     "url": "https://pwsblobprd.schools.nyc/prd-pws/docs/default-source/default-document-library/enrollment/2023-nyc-public-schools-admissions-guide-web-urdu.pdf?sfvrsn=ac20a709_2",
+     "publisher": "New York City Public Schools",
+     "evidence": "Cover: 'ارلی لرن، 3-K، پری کنڈرگارٹن، کنڈرگارٹن، ... مڈل اسکول، ہائی اسکول'; section 'کنڈرگارٹن میں درخواست دیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "middle school",
+   "ur": "مڈل اسکول",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2023 NYC Public Schools Admissions Guide (Urdu)",
+     "url": "https://pwsblobprd.schools.nyc/prd-pws/docs/default-source/default-document-library/enrollment/2023-nyc-public-schools-admissions-guide-web-urdu.pdf?sfvrsn=ac20a709_2",
+     "publisher": "New York City Public Schools",
+     "evidence": "Cover list: '... مڈل اسکول، ہائی اسکول ...'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "library",
+   "ur": "لائبریری",
+   "avoid": [
+    "کتب خانہ (correct but formal; official sources use لائبریری)"
+   ],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'library' = 'لائبریری'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'... جیسے لائبریری، کمیونٹی سینٹر، یا عبادت گاہ'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "community centre",
+   "ur": "کمیونٹی سینٹر",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'... جیسے لائبریری، کمیونٹی سینٹر، یا عبادت گاہ'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'لیکروفٹ سرجری اور بیوبش کمیونٹی سینٹر میں بھی ان کے سیشنز منعقد ہوتے ہیں'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'کمیونٹی سنٹر' (spelling variant)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "community member",
+   "ur": "کمیونٹی کا رکن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'community member' = 'کمیونٹی کا رکن'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "community-based / non-profit organization",
+   "ur": "کمیونٹی پر مبنی تنظیم / غیر منافع بخش تنظیم",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary rows: 'community-based organization' = 'کمیونٹی پر مبنی تنظیم'; 'non-profit organization' = 'غیر منافع بخش تنظیم'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "place of worship",
+   "ur": "عبادت گاہ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'... جیسے لائبریری، کمیونٹی سینٹر، یا عبادت گاہ'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "mosque",
+   "ur": "مسجد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "BBC Urdu: Ujjain's 650-year-old mosque",
+     "url": "https://www.bbc.com/urdu/articles/cjkg7evp1209o",
+     "publisher": "BBC News Urdu",
+     "evidence": "'اجین کی 650 سال پرانی شاہی مسجد سڑک کی توسیع کی مہم کی زد میں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Media usage only. The word is universal."
+  },
+  {
+   "en": "prayers / Friday prayer",
+   "ur": "نماز / جمعہ کی نماز",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "BBC Urdu article (Friday and Eid prayers)",
+     "url": "https://www.bbc.com/urdu/articles/c8207qedv950o",
+     "publisher": "BBC News Urdu",
+     "evidence": "'... جن میں جمعے اور عید کی نمازیں بھی شامل ہیں ... نماز ادا کرتے ہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Media usage. The corrector's 'پانچ وقت کی نمازیں اور جمعہ کی نماز' is consistent."
+  },
+  {
+   "en": "youth / young people",
+   "ur": "نوجوان (plural نوجوانوں)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'نوجوانوں کی صحت کی خدمات'; '12 سے 24 سال عمر کے بچوں اور نوجوانوں کے لیے'"
+    },
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "Use of نوجوان in service list"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "disability / people with disabilities",
+   "ur": "معذوری / معذور افراد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'معذوری کی انشورنس کی قومی سکیم (NDIS)'; 'معذوروں کے لیے'"
+    },
+    {
+     "title": "My Emergency Plan (Urdu)",
+     "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+     "publisher": "NYC Emergency Management",
+     "evidence": "'معذور افراد اور رسائی و عملی ضروریات والے دیگر لوگ'; 'معذوری سے متاثر لوگوں کے لئے میئر کا دفتر'"
+    },
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'سیکھنے کی معذوری اور آٹزم کے لیے مدد دستیاب ہے'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "adult",
+   "ur": "بالغ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'adult' = 'بالغ'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "nursing home / long-term care",
+   "ur": "نرسنگ ہوم",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'nursing home' = 'نرسنگ ہوم'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "immigrant(s)",
+   "ur": "تارکین وطن (singular تارک وطن)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "'تارکین وطن اور پناہ گزینوں کو اپنے نئے ماحول میں ایڈجسٹ کرنے میں ...'"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "Title 'تارکین وطن کرایہ دار کے حقوق'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'مہاجر و پناہ گزین خواتین' (OCASI uses مہاجر for 'immigrant')"
+    }
+   ],
+   "confidence": "high",
+   "notes": "OCASI uses مہاجر for 'immigrant' and IRCC's name is rendered 'امیگریشن، مہاجرین اور شہریت کینیڈا'. In Pakistani usage مہاجر is ambiguous (refugee/migrant/historical Muhajir). تارکین وطن is the clearest choice."
+  },
+  {
+   "en": "newcomer(s) to Canada",
+   "ur": "نئے آنے والے (unsourced); sourced near-equivalent: تارکین وطن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'کیا آپ یہاں نئے ریفیوجی (پناہ گزین) یا تارک وطن ہیں؟' (Are you a new refugee or migrant here?)"
+    }
+   ],
+   "confidence": "low",
+   "notes": "No translated source has 'newcomers' as a term. The NSW booklet expresses it with 'نئے ... تارک وطن'. The corrector's 'نئے آنے والوں' is a natural composition but has no source; a native reviewer should confirm."
+  },
+  {
+   "en": "refugee",
+   "ur": "پناہ گزین",
+   "avoid": [
+    "مہاجر (for refugee; ambiguous)",
+    "ریفیوجی (alone; acceptable only as a gloss)"
+   ],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'پناہ گزین کون ہوتا ہے؟' (Who is a refugee?)"
+    },
+    {
+     "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+     "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+     "evidence": "'تارکین وطن، پناہ گزینوں اور بطور وزیٹر آنے والوں ...'"
+    },
+    {
+     "title": "NSW health care system information booklet (Urdu)",
+     "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+     "publisher": "NSW Health - South Western Sydney Local Health District",
+     "evidence": "'نئے ریفیوجی (پناہ گزین)'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'مہاجر و پناہ گزین خواتین'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "refugee claim",
+   "ur": "پناہ گزینی کا دعویٰ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'اپنا پناہ گزینی کا دعویٰ شروع کریں'; 'پناہ گزینی کے دعوے کے عمل کی وضاحت'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "immigration",
+   "ur": "امیگریشن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'امیگریشن اینڈ ریفیوجی بورڈ آف کینیڈا (IRB)'"
+    },
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'امیگریشن کے کاغذات' (immigration papers)"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'چاہے آپ کی امیگریشن حیثیت کچھ بھی ہو'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "immigration status",
+   "ur": "امیگریشن حیثیت / امیگریشن اسٹیٹس",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'آپ کو تمام دیگر کرایہ داروں کے برابر قانونی حقوق حاصل ہیں – چاہے آپ کی امیگریشن حیثیت کچھ بھی ہو'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'اگر آپ اپنے امیگریشن سٹیٹس کی وجہ سے رپورٹ درج کرنے سے متعلق تشویش میں ہیں ...'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "citizenship",
+   "ur": "شہریت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'امیگریشن، ریفیوجی اینڈ سٹیزنشپ کینیڈا (امیگریشن، مہاجرین اور شہریت کینیڈا) (IRCC)'"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'چاہے آپ کے پاس گرین کارڈ ہو، ویزا، امریکی شہریت ہو ...'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "permanent resident",
+   "ur": "مستقل رہائشی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'آپ مستقل رہائشی (پرماننٹ ریزیڈینٹ) بننے کے لیے درخواست دے سکتے ہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "resident",
+   "ur": "رہائشی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'resident' = 'رہائشی'"
+    },
+    {
+     "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+     "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+     "publisher": "Ontario Ministry of Health (2019)",
+     "evidence": "'اونٹاریو کے رہائشی ہیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "settlement services / settlement agency",
+   "ur": "سیٹلمنٹ سروسز / سیٹلمنٹ ایجنسی",
+   "avoid": [
+    "آبادکاری (inconsistent with Canadian usage)"
+   ],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'کسی وکیل یا قابل اعتماد سیٹلمنٹ سروس فراہم کرنے والوں سے بات کریں'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'... یا اپنے علاقے کی سیٹلمینٹ ایجنسی (Settlement Agency) سے رابطہ کیجئے'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Canadian sources keep the loanword. Birmingham's leaflet has 'آبادکاری اور شہریت کے بارے میں مشورہ', but آبادکاری also means 'colonisation/population settlement' and is not used by the Canadian sources. Pick one term and use it throughout; the corrector used both."
+  },
+  {
+   "en": "lawyer",
+   "ur": "وکیل",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'وکیل تلاش کریں'"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'براہ کرم کسی وکیل سے مشورہ کریں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "legal aid",
+   "ur": "قانونی امداد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'آپ قانونی امداد یا مفت قانونی کلینک کے ذریعے کم لاگت یا مفت وکیل حاصل کرنے کے قابل ہو سکتے ہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "OCASI says 'قانونی معاونت کی تنظیم' (legal aid organization)."
+  },
+  {
+   "en": "legal clinic (community legal clinic)",
+   "ur": "قانونی کلینک",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+     "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+     "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+     "evidence": "'... قانونی امداد یا مفت قانونی کلینک کے ذریعے ...'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "legal advice",
+   "ur": "قانونی مشورہ / قانونی مشاورت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'یہ عام معلومات ہیں، قانونی مشورہ نہیں۔'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'... ذاتی یا قانونی مشاورت کے لیے'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "tenant",
+   "ur": "کرایہ دار",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Service request form for tenants (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2018/08/950d-MLS_MaintenanceForm_Urdu.pdf",
+     "publisher": "City of Toronto Municipal Licensing & Standards",
+     "evidence": "Title 'کرایہ داروں کے لیے خدمت کی درخواست کا فارم' (Service Request Form for Tenants)"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'تارکین وطن کرایہ داروں کے حقوق'"
+    },
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'میری لینڈ کرایہ داروں کا حقوق کا بل'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "tenant rights",
+   "ur": "کرایہ داروں کے حقوق",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'مالک مکان اور کرایہ دار کے حقوق اور ذمہ داریوں ...'; 'کرایہ داروں کے حقوق کا رہنما'"
+    },
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'کرایہ داروں کے اہم حقوق'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "landlord",
+   "ur": "مالک مکان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'آپ کا مالک مکان آپ کو ہراساں نہیں کر سکتا'"
+    },
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'مالک مکان' and the variant 'مکان مالک' in the same document"
+    },
+    {
+     "title": "RentSafeTO colour-coded signs rack card (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2026/07/9594-CS-26-096-RentSafeTOCampaign-RackCard-4x9-v3-URDU.pdf",
+     "publisher": "City of Toronto (2026)",
+     "evidence": "'مالکان' (building owners)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "rent",
+   "ur": "کرایہ",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'لیز یا کرایہ کا معاہدہ'"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'کرایہ غلط طریقے سے بڑھائیں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "lease / rental agreement",
+   "ur": "لیز / کرایہ کا معاہدہ",
+   "avoid": [
+    "پٹہ"
+   ],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'لیز یا کرایہ کا معاہدہ'"
+    },
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'لیز اور کرایہ داریاں'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "The US Census glossary has 'پٹہ', which is legalistic. Plain-language official texts use لیز."
+  },
+  {
+   "en": "eviction",
+   "ur": "بے دخلی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "Heading 'بے دخلیاں'; 'آپ کا مکان مالک تب تک آپ کو بے دخل نہیں کر سکتا جب تک ...'"
+    },
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "'نیو یارک اسٹیٹ گڈ کاز بے دخلی کا قانون'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "illegal lockout",
+   "ur": "(غیر قانونی طور پر) گھر سے باہر بند کر دینا / تالے بدل دینا",
+   "avoid": [
+    "غیر قانونی طور پر تالے لگانا"
+   ],
+   "sources": [
+    {
+     "title": "Immigrant tenant rights (Urdu)",
+     "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+     "publisher": "New York State Office of the Attorney General",
+     "evidence": "EN: 'lock you out of your apartment' UR: 'آپ کو اپنے اپارٹمنٹ سے باہر بند کر دیں'; EN 'threaten to lock you out of your home' UR 'تمہیں تمہارے گھر سے باہر بند کرنے کی دھمکی'"
+    },
+    {
+     "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+     "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+     "publisher": "Maryland Department of Housing and Community Development",
+     "evidence": "'آپ کو بے دخل کرنے کی کوششوں جیسے تالے کو تبدیل کرنا، یوٹیلیٹیز کو بند کرنا ... کی اجازت نہیں ہے'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "No noun for 'lockout' exists in the sources. Both describe the act: shutting the tenant out of the home, or changing the locks. 'تالے لگانا' alone (the corrector's choice) means 'to put locks on' and does not convey being locked out."
+  },
+  {
+   "en": "domestic violence / abuse",
+   "ur": "گھریلو تشدد / گھریلو زیادتی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Domestic abuse: how to get help (Urdu)",
+     "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+     "publisher": "UK Home Office (GOV.UK)",
+     "evidence": "Title 'گھریلو زیادتی/بدسلوکی: مدد کیسے حاصل کی جائے'"
+    },
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'جنسی زیادتی/گھریلو تشدد کے علاج یا برتاؤ کے سینٹر'"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "violence against women",
+   "ur": "خواتین کے خلاف تشدد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UN News Urdu: end violence against women (23 Nov 2022)",
+     "url": "https://news.un.org/ur/story/2022/11/647",
+     "publisher": "United Nations (UN News Urdu)",
+     "evidence": "'خواتین کے خلاف تشدد کو کتابِ ماضی کا حصہ بنا دیں'; 'خواتین کے خلاف تشدد کے خاتمے کے عالمی دن'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "UN official Urdu. Matches the corrector's usage."
+  },
+  {
+   "en": "sexual violence",
+   "ur": "جنسی تشدد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+     "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+     "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+     "evidence": "'جنسی تشدد اور اِس مہم کے بارے میں مزید معلومات جاننے کے لیے'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "employment",
+   "ur": "روزگار",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "2020 Census Glossary English to Urdu",
+     "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+     "publisher": "U.S. Census Bureau (2019)",
+     "evidence": "Glossary row: 'employment' = 'روزگار'"
+    },
+    {
+     "title": "Career guidance and resume help (Urdu)",
+     "url": "https://dol.ny.gov/system/files/documents/2024/01/p13-statewide-12-23_urd.pdf",
+     "publisher": "New York State Department of Labor",
+     "evidence": "'روزگار کے مواقع، واقعات، اور بھرتی کے وسائل'"
+    }
+   ],
+   "confidence": "high",
+   "notes": "ملازمت (job/employment) is also fine; روزگار is the sourced term for 'employment' as a service area."
+  },
+  {
+   "en": "job training / employment training",
+   "ur": "روزگار کی تربیت / تربیت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+     "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+     "publisher": "NHS Sussex Integrated Care Board (2023)",
+     "evidence": "'... مالیات، روزگار تربیت، سوگ ...'"
+    },
+    {
+     "title": "Career guidance and resume help (Urdu)",
+     "url": "https://dol.ny.gov/system/files/documents/2024/01/p13-statewide-12-23_urd.pdf",
+     "publisher": "New York State Department of Labor",
+     "evidence": "'ہم طویل مدتی کیریئر کے لیے قلیل مدتی تربیت فراہم کر سکتے ہیں'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "unemployed",
+   "ur": "بے روزگار",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Career guidance and resume help (Urdu)",
+     "url": "https://dol.ny.gov/system/files/documents/2024/01/p13-statewide-12-23_urd.pdf",
+     "publisher": "New York State Department of Labor",
+     "evidence": "'... بے روزگار افراد کو اعلیٰ ترقی کے شعبوں میں ...'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "bicycle / cyclist",
+   "ur": "سائیکل / سائیکل سوار",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "BBC Urdu article (cyclists)",
+     "url": "https://www.bbc.com/urdu/articles/ck9qrz4g4j21o",
+     "publisher": "BBC News Urdu",
+     "evidence": "'ہم سائیکل سواروں کے ایک بڑے ہجوم میں شامل ہوگئے'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Media usage only."
+  },
+  {
+   "en": "public toilet / public washroom",
+   "ur": "عوامی بیت الخلا",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Express News: public toilets in public places",
+     "url": "https://www.express.pk/story/239554/awamy-mqamat-byt-alkhla-ky-tamyr-awr-mkhts-fnd-ky-tfsyl-tlb-239554",
+     "publisher": "Express News (Pakistan)",
+     "evidence": "Headline: 'عوامی مقامات بیت الخلا کی تعمیر اور مختص فنڈ کی تفصیل طلب'"
+    },
+    {
+     "title": "Service request form for tenants (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2018/08/950d-MLS_MaintenanceForm_Urdu.pdf",
+     "publisher": "City of Toronto Municipal Licensing & Standards",
+     "evidence": "Room/item label 'بیت الخلاء' (toilet)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "No translated source uses 'واش روم'. It is common in Pakistani speech but unverified here; a native reviewer should choose between واش روم and بیت الخلا."
+  },
+  {
+   "en": "resilience",
+   "ur": "لچک / مشکل سے ابھرنے کی قوت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Cambridge English-Urdu Dictionary: resilience",
+     "url": "https://dictionary.cambridge.org/dictionary/english-urdu/resilience",
+     "publisher": "Cambridge University Press (dictionary)",
+     "evidence": "Sense 'the ability to be happy, successful, etc. again after something difficult or bad has happened' = 'ابھرنے کی قوت، کسی پریشانی یا بیماری پر قابو پانے کی صلاحیت'; physical sense = 'لچک'"
+    }
+   ],
+   "confidence": "low",
+   "notes": "Dictionary only. 'Climate/community resilience' has no authoritative Urdu translation in the sources found."
+  },
+  {
+   "en": "family members / household",
+   "ur": "خاندان کے افراد / فیملی ممبران",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "How to apply for Ontario Works (Urdu)",
+     "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+     "publisher": "City of Toronto Employment & Social Services (2025)",
+     "evidence": "'آپ کی درخواست میں شامل تمام فیملی ممبران'; 'خاندان کے تمام افراد کے لیے شناخت، ٹیکس اور مالیاتی دستاویزات'"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  }
+ ],
+ "sourcesConsulted": [
+  {
+   "title": "Beat the Heat tabloid (Urdu)",
+   "url": "https://www.toronto.ca/wp-content/uploads/2026/07/8f8a-Beat-the-Heat-Tabloid-urd.pdf",
+   "publisher": "City of Toronto / Toronto Public Health (2026)",
+   "language pair": "EN-UR (separate EN tabloid)",
+   "useful": true
+  },
+  {
+   "title": "RentSafeTO colour-coded signs rack card (Urdu)",
+   "url": "https://www.toronto.ca/wp-content/uploads/2026/07/9594-CS-26-096-RentSafeTOCampaign-RackCard-4x9-v3-URDU.pdf",
+   "publisher": "City of Toronto (2026)",
+   "language pair": "UR with EN panels",
+   "useful": true
+  },
+  {
+   "title": "Service request form for tenants (Urdu)",
+   "url": "https://www.toronto.ca/wp-content/uploads/2018/08/950d-MLS_MaintenanceForm_Urdu.pdf",
+   "publisher": "City of Toronto Municipal Licensing & Standards",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "How to apply for Ontario Works (Urdu)",
+   "url": "https://www.toronto.ca/wp-content/uploads/2025/01/8d15-How-to-Apply-for-Ontario-WorksURDUFINAL.pdf",
+   "publisher": "City of Toronto Employment & Social Services (2025)",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Ontario Seniors Dental Care Program brochure (Urdu)",
+   "url": "https://files.ontario.ca/health-v1/MOH-Seniors-Dental-PDF-Urdu-2019-11-01.pdf",
+   "publisher": "Ontario Ministry of Health (2019)",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "SickKids saliva testing program (Urdu page)",
+   "url": "https://www.sickkids.ca/en/care-services/ur-saliva-testing-program/",
+   "publisher": "The Hospital for Sick Children, Toronto",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "#4ImmigrantWomen violence-against-women resources booklet (Urdu)",
+   "url": "https://ocasi.org/sites/default/files/vaw-booklet-urdu_0.pdf",
+   "publisher": "OCASI - Ontario Council of Agencies Serving Immigrants",
+   "language pair": "UR with EN headers",
+   "useful": true
+  },
+  {
+   "title": "My Refugee Claim - refugee claim process explained (Urdu)",
+   "url": "https://myrefugeeclaim.ca/ur/guide/%DA%A9%DB%8C%D9%86%DB%8C%DA%88%D8%A7-%D9%85%DB%8C%DA%BA-%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AA%D8%AD%D9%81%D8%B8-%DA%A9%D9%88-%D8%B3%D9%85%D8%AC%DA%BE%DB%8C/%D9%BE%D9%86%D8%A7%DB%81-%DA%AF%D8%B2%DB%8C%D9%86%D9%88%DA%BA-%DA%A9%DB%92-%D8%AF%D8%B9%D9%88%DB%8C-%DA%A9%DB%92-%D8%B9%D9%85%D9%84-%DA%A9%DB%8C-%D9%88%D8%B6%D8%A7%D8%AD%D8%AA/",
+   "publisher": "Kinbrace (Canada); translation by Exchange Language Services and The Refugee Centre",
+   "language pair": "UR (EN site parallel)",
+   "useful": true
+  },
+  {
+   "title": "2020 Census Glossary English to Urdu",
+   "url": "https://www2.census.gov/programs-surveys/decennial/2020/resources/language-materials/glossaries/Urdu-Glossary.pdf",
+   "publisher": "U.S. Census Bureau (2019)",
+   "language pair": "EN-UR glossary",
+   "useful": true
+  },
+  {
+   "title": "Receiving NHS dental treatment in Scotland - factsheet (Urdu)",
+   "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2024/01/Factsheet-Urdu-Translation-Dentistry-Nov-2023.pdf",
+   "publisher": "Scottish Government / NHS inform (2023)",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Helping you find the right care (English/Urdu side-by-side)",
+   "url": "https://appnhs24wp-10f290a0e92c564eff58-endpoint.azureedge.net/wp-content/uploads/2024/05/Helping-you-find-the-right-care-Urdu-2024.pdf",
+   "publisher": "NHS 24 (Scotland, 2024)",
+   "language pair": "EN/UR side-by-side",
+   "useful": true
+  },
+  {
+   "title": "Your guide to getting healthcare in Crawley (Urdu booklet)",
+   "url": "https://www.sussex.ics.nhs.uk/wp-content/uploads/sites/9/2023/11/Booklet-Urdu-LR.pdf",
+   "publisher": "NHS Sussex Integrated Care Board (2023)",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Your antenatal appointments (Urdu)",
+   "url": "https://www.swbh.nhs.uk/wp-content/uploads/2024/01/Your-antenatal-appointments-Urdu.pdf",
+   "publisher": "Sandwell and West Birmingham Hospitals NHS Trust",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "When to call the hospital: late pregnancy (Urdu)",
+   "url": "https://www.thewomens.org.au/images/uploads/fact-sheets/multilingual/When_to_call_the_hospital_Urdu_251003.pdf",
+   "publisher": "The Royal Women's Hospital, Melbourne",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "NSW health care system information booklet (Urdu)",
+   "url": "https://www.swslhd.health.nsw.gov.au/refugee/assets/pdf/CommunityEduPrograms/HIP_Booklet_Urdu.pdf",
+   "publisher": "NSW Health - South Western Sydney Local Health District",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Mental health care for immigrants, refugees and visitors (Urdu)",
+   "url": "https://www.mhcs.health.nsw.gov.au/publications/mental-health-care-for-immigrants/urdu/@@download/file",
+   "publisher": "NSW Multicultural Mental Health / Way Ahead (NSW Government)",
+   "language pair": "UR with EN title",
+   "useful": true
+  },
+  {
+   "title": "My Emergency Plan (Urdu)",
+   "url": "https://www.nyc.gov/assets/em/downloads/pdf/translations_myplan/Fillable_myemergencyplan_2016_0831_urd%20-%20Revised.pdf",
+   "publisher": "NYC Emergency Management",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "FDNY Smart fire and life safety guide (Urdu)",
+   "url": "https://www.nyc.gov/assets/fdny/downloads/pdf/education/fire-life-safety/fdny-smart-guide-urdu.pdf",
+   "publisher": "FDNY - New York City Fire Department",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Governor urges New Yorkers to visit cooling centers - press release (Urdu), 25 July 2023",
+   "url": "https://www.governor.ny.gov/sites/default/files/2023-07/07.25.23.rel_.HEAT_Urdu.pdf",
+   "publisher": "Office of the Governor of New York State",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "2024 Childcare Guide (Urdu)",
+   "url": "https://www.nyc.gov/assets/opportunity/pdf/2024-Childcare-Guide-Urdu.pdf",
+   "publisher": "NYC Mayor's Office for Economic Opportunity",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "2023 NYC Public Schools Admissions Guide (Urdu)",
+   "url": "https://pwsblobprd.schools.nyc/prd-pws/docs/default-source/default-document-library/enrollment/2023-nyc-public-schools-admissions-guide-web-urdu.pdf?sfvrsn=ac20a709_2",
+   "publisher": "New York City Public Schools",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Food allergy poster for food service establishments (Urdu)",
+   "url": "https://www.nyc.gov/assets/doh/downloads/pdf/rii/allergy-poster-ur.pdf",
+   "publisher": "NYC Department of Health and Mental Hygiene",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "MOIA one-pager: resources for immigrant New Yorkers (Urdu)",
+   "url": "https://www.nyc.gov/assets/immigrants/downloads/pdf/moia-one-pager-4-urdu.pdf",
+   "publisher": "NYC Mayor's Office of Immigrant Affairs",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Department of Homeless Services - Urdu information page",
+   "url": "https://www.nyc.gov/site/dhs/help/urdu.page",
+   "publisher": "NYC Department of Homeless Services",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "How to help: mental health guide (Urdu)",
+   "url": "https://mentalhealth.cityofnewyork.us/wp-content/uploads/2021/08/HowtoHelp-Guide_UR.pdf",
+   "publisher": "NYC Mental Health / NYC Well",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Immigrant tenant rights (Urdu)",
+   "url": "https://ur.ag.ny.gov/publications/immigrant-tenant-rights",
+   "publisher": "New York State Office of the Attorney General",
+   "language pair": "UR (EN page parallel)",
+   "useful": true
+  },
+  {
+   "title": "Maryland Tenant Bill of Rights (Urdu, effective 1 Oct 2025)",
+   "url": "https://dhcd.maryland.gov/Tenant-Landlord-Affairs/Documents/Tenant-Bill-of-Rights-Urdu.pdf",
+   "publisher": "Maryland Department of Housing and Community Development",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Career guidance and resume help (Urdu)",
+   "url": "https://dol.ny.gov/system/files/documents/2024/01/p13-statewide-12-23_urd.pdf",
+   "publisher": "New York State Department of Labor",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Crime prevention guide (Urdu)",
+   "url": "https://houstontx.gov/police/pdfs/brochures/urdu/Crime%20Prevention%20Guide_Urdu.pdf",
+   "publisher": "Houston Police Department",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "Fire safety in the home (English/Urdu side-by-side)",
+   "url": "https://www.hantsfire.gov.uk/wp-content/uploads/2021/03/Urdu-Fire-Safety-in-the-Home.pdf",
+   "publisher": "Hampshire & Isle of Wight Fire and Rescue Service",
+   "language pair": "EN/UR side-by-side",
+   "useful": true
+  },
+  {
+   "title": "Domestic abuse: how to get help (Urdu)",
+   "url": "https://www.gov.uk/guidance/domestic-abuse-how-to-get-help.ur",
+   "publisher": "UK Home Office (GOV.UK)",
+   "language pair": "UR (EN page parallel)",
+   "useful": true
+  },
+  {
+   "title": "Find help in Birmingham - cost of living leaflet (Urdu)",
+   "url": "https://www.birmingham.gov.uk/download/downloads/id/25942/cost_of_living_leaflet_-_urdu.pdf",
+   "publisher": "Birmingham City Council",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "UN News Urdu: end violence against women (23 Nov 2022)",
+   "url": "https://news.un.org/ur/story/2022/11/647",
+   "publisher": "United Nations (UN News Urdu)",
+   "language pair": "UR",
+   "useful": true
+  },
+  {
+   "title": "BBC Urdu: Ujjain's 650-year-old mosque",
+   "url": "https://www.bbc.com/urdu/articles/cjkg7evp1209o",
+   "publisher": "BBC News Urdu",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "BBC Urdu article (Friday and Eid prayers)",
+   "url": "https://www.bbc.com/urdu/articles/c8207qedv950o",
+   "publisher": "BBC News Urdu",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "BBC Urdu: Gujranwala case registered at police station",
+   "url": "https://www.bbc.com/urdu/articles/c6y4z9j718zeo",
+   "publisher": "BBC News Urdu",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "BBC Urdu article (cyclists)",
+   "url": "https://www.bbc.com/urdu/articles/ck9qrz4g4j21o",
+   "publisher": "BBC News Urdu",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "Express News: public toilets in public places",
+   "url": "https://www.express.pk/story/239554/awamy-mqamat-byt-alkhla-ky-tamyr-awr-mkhts-fnd-ky-tfsyl-tlb-239554",
+   "publisher": "Express News (Pakistan)",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "Express News: nationwide heatwave alert, warning for citizens",
+   "url": "https://www.express.pk/story/2761557/shadeed-garmi-ki-leher-mulk-bhar-me-heat-wave-ka-alert-jari-shehriyo-ke-liye-intibah-2761557",
+   "publisher": "Express News (Pakistan)",
+   "language pair": "UR media",
+   "useful": true
+  },
+  {
+   "title": "Cambridge English-Urdu Dictionary: resilience",
+   "url": "https://dictionary.cambridge.org/dictionary/english-urdu/resilience",
+   "publisher": "Cambridge University Press (dictionary)",
+   "language pair": "EN-UR dictionary",
+   "useful": true
+  },
+  {
+   "title": "Rekhta Dictionary: severance pay",
+   "url": "https://www.rekhtadictionary.com/urdu-meaning-of-severance-pay?lang=ur",
+   "publisher": "Rekhta Foundation (dictionary)",
+   "language pair": "EN-UR dictionary",
+   "useful": false
+  },
+  {
+   "title": "Additional heat & health resources (lists Urdu Beat the Heat tabloid)",
+   "url": "https://www.toronto.ca/community-people/health-wellness-care/health-programs-advice/hot-weather/additional-heat-and-health-resources/",
+   "publisher": "City of Toronto",
+   "language pair": "EN index",
+   "useful": true
+  },
+  {
+   "title": "NDMA Heatwave Guidelines 2026",
+   "url": "https://www.ndma.gov.pk//storage/guidelines/April2026/3fHNPy1RTFwucFyYmM0W.pdf",
+   "publisher": "National Disaster Management Authority, Pakistan",
+   "language pair": "EN only (no Urdu text despite listing)",
+   "useful": false
+  },
+  {
+   "title": "NHS 'It's OK to ask' leaflet (Urdu)",
+   "url": "https://appnhs24wp41a8c38064.blob.core.windows.net/blobappnhs24wp41a8c38064/wp-content/uploads/2023/03/00665-01-nhs-its-ok-to-ask-a5-leaflet-option-b-aw-urdu-lr.pdf",
+   "publisher": "NHS Scotland",
+   "language pair": "UR",
+   "useful": false
+  },
+  {
+   "title": "NYC Commission on Human Rights - protections for Muslims factsheet (Urdu)",
+   "url": "https://www.nyc.gov/assets/cchr/downloads/pdf/materials/muslim_factsheet-urd.pdf",
+   "publisher": "NYC Commission on Human Rights",
+   "language pair": "UR",
+   "useful": false
+  },
+  {
+   "title": "NYC DOHMH extreme heat response guide (Urdu) - dead link",
+   "url": "https://www.nyc.gov/assets/doh/downloads/pdf/em/extremeheat-response-guide-ur.pdf",
+   "publisher": "NYC DOHMH",
+   "language pair": "n/a",
+   "useful": false
+  },
+  {
+   "title": "NY State DHCR rent laws / tenant guides (Urdu) - found in search, not opened",
+   "url": "https://hcr.ny.gov/system/files/documents/2022/11/rent-laws-overview-urdu-10-2019_0.pdf",
+   "publisher": "NYS Homes and Community Renewal",
+   "language pair": "UR",
+   "useful": false
+  },
+  {
+   "title": "Doctors of the World GP access cards (Urdu not directly downloadable)",
+   "url": "https://www.doctorsoftheworld.org.uk/gp-access-cards/",
+   "publisher": "Doctors of the World UK",
+   "language pair": "n/a",
+   "useful": false
+  },
+  {
+   "title": "ircc.com Urdu news pages (commercial site, not IRCC; rejected)",
+   "url": "https://ircc.com/ur/news/canada-immigration-2026-complete-guide-major-changes",
+   "publisher": "IRCC.com (unofficial)",
+   "language pair": "UR",
+   "useful": false
+  }
+ ],
+ "notFound": [
+  {
+   "en": "drinking water fountain",
+   "note": "No translated source. 'پینے کا پانی' (drinking water) is sourced, but no source gives a word for the fountain itself. The corrector's 'پینے کے پانی کے فوارے' / 'پینے کے پانی کی سہولت' need native review."
+  },
+  {
+   "en": "heat warning (as a fixed term)",
+   "note": "Only 'انتباہ' (warning) and 'الرٹ' are attested in heat contexts. The full phrase is unsourced."
+  },
+  {
+   "en": "severance / severance pay",
+   "note": "No official translation found. Rekhta dictionary only: 'ملازمت سے قبل از وقت سبکدوشی کا معاوضہ'. The corrector's 'برطرفی کا معاوضہ (severance)' keeps the English, which is a sensible hedge."
+  },
+  {
+   "en": "wrongful dismissal",
+   "note": "Not found in translated sources."
+  },
+  {
+   "en": "drop-in (program)",
+   "note": "No translated source uses 'ڈراپ ان'. Only the walk-in phrase 'اپائنٹمنٹ کی ضرورت نہیں' is sourced."
+  },
+  {
+   "en": "newcomers (as a fixed term)",
+   "note": "Not found. See the low-confidence entry. تارکین وطن (immigrants) is the sourced near-equivalent."
+  },
+  {
+   "en": "peanut-free",
+   "note": "Only 'مونگ پھلی' (peanut) is sourced. 'سے پاک' is a composition."
+  },
+  {
+   "en": "emergency shelter / youth shelter (fixed phrases)",
+   "note": "Only 'پناہ گاہ' (shelter) is sourced. Compositions like 'ہنگامی پناہ گاہ' are unsourced."
+  },
+  {
+   "en": "crisis line (distinct from helpline)",
+   "note": "Use 'ہیلپ لائن'. No source has 'کرائسس لائن' or 'بحران لائن'."
+  },
+  {
+   "en": "midwifery clinic (fixed phrase)",
+   "note": "Only 'مڈوائف' is sourced."
+  },
+  {
+   "en": "employment standards",
+   "note": "Not found."
+  },
+  {
+   "en": "interpreter for Canada-specific programs (IRCC Urdu materials)",
+   "note": "IRCC publishes almost nothing in Urdu. No IRCC Urdu page was found; Canadian immigration terms come from My Refugee Claim (professionally translated, IRCC-adjacent) and the City of Toronto."
+  }
+ ],
+ "correctionsToRecheck": [
+  {
+   "id": "6b17dc8d3ad4",
+   "issue": "[major] Health card is translated as 'صحت کا کارڈ'. Sourced term is 'ہیلتھ کارڈ' (City of Toronto Ontario Works sheet, SickKids, NSW Health), and the corrector already uses ہیلتھ کارڈ in 8f3b8610ff41 and b9bf5f163902. [minor] 'آبادکاری میں مدد' should match the other texts' 'سیٹلمنٹ'. [minor] 'خفیہ' for confidential: attested, but the sourced majority is 'رازدارانہ'. [minor] 'واک ان' is not attested; sources say 'اپائنٹمنٹ کی ضرورت نہیں'."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "issue": "[major] 'illegal lockouts' is rendered 'غیر قانونی طور پر تالے لگانا' (= illegally putting on locks). Sourced wording describes being shut out: 'گھر سے باہر بند کر دینا' (NY Attorney General) or 'تالے تبدیل کرنا' (Maryland DHCD). Suggest e.g. 'غیر قانونی طور پر گھر سے باہر بند کر دینا (lockout)'. [minor] 'ذاتی ملاقات کے لیے پہلے سے وقت لینا' is fine Urdu, but sources use 'اپائنٹمنٹ'."
+  },
+  {
+   "id": "170900592261",
+   "issue": "[major] Midwifery clinic is rendered 'دائی گیری کا کلینک' and midwives 'دائیوں'. All three health-system sources (NHS Sussex, SWBH NHS, Royal Women's Melbourne) use 'مڈوائف' and give 'دائی' only as a bracketed gloss. Suggest 'مڈوائف کلینک' / 'مڈوائفز (دائیاں)'."
+  },
+  {
+   "id": "0bb8b2cc1244",
+   "issue": "[major] Dentures are rendered 'مصنوعی دانت'. Ontario's own seniors-dental brochure (and NHS Scotland) uses 'ڈینچر/ڈینچرز'. This text describes OSDCP-type public dental care, so Ontario's wording should be followed."
+  },
+  {
+   "id": "0761f94fde45",
+   "issue": "[major] The designated cooling space is rendered 'ٹھنڈک کی جگہ (کولنگ اسپیس)'. City of Toronto's own Urdu Beat the Heat material calls Cool Spaces 'ٹھنڈی جگہ/ٹھنڈی جگہیں'; the loan 'کولنگ اسپیس' is unattested. [minor] 'شدید گرمی کی وارننگ یا الرٹ' uses 'وارننگ', which no translated source has; sources use 'انتباہ'."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "issue": "[major] 'کولنگ سینٹر' (cooling centre) and 'کرائسس لائن' (crisis line) are unattested loans. Sourced equivalents are 'ٹھنڈک کا مرکز' (NY Governor's office; NYC EM 'ٹھنڈے مراکز') and 'ہیلپ لائن' (GOV.UK). [minor] 'مشاورت' for VAW counselling; sources use 'کاؤنسلنگ'."
+  },
+  {
+   "id": "32dfa11d6223",
+   "issue": "[minor] Settlement is rendered 'آبادکاری' (agency and support), but the near-identical text 0b810534f69d uses 'سیٹلمنٹ'. Canadian sources (My Refugee Claim, OCASI) use 'سیٹلمنٹ'. VAW counselling is 'مشاورت' here and 'کونسلنگ' in 0b810534f69d; sourced form is 'کاؤنسلنگ'."
+  },
+  {
+   "id": "b8138c775adf",
+   "issue": "[minor] 'مفت آبادکاری کی خدمات' should be 'سیٹلمنٹ' for consistency with Canadian usage and other texts."
+  },
+  {
+   "id": "b9bf5f163902",
+   "issue": "[minor] 'آبادکاری' should be 'سیٹلمنٹ', as above. 'غذائی مشاورت' (nutrition counselling) is acceptable, but sourced 'counselling' is 'کاؤنسلنگ'."
+  },
+  {
+   "id": "57480d0bcd4e",
+   "issue": "[minor] 'فائر ہال' is unattested. The translated source (Houston PD) uses 'فائر اسٹیشن'."
+  },
+  {
+   "id": "2b036077722c",
+   "issue": "[minor/unverified] 'واش رومز' appears in no translated source; the attested public term is 'عوامی بیت الخلا'. Native reviewer to choose. 'پینے کے پانی کے فوارے' is also unsourced."
+  },
+  {
+   "id": "c04bdbce2472",
+   "issue": "[minor/unverified] 'واش رومز' and 'پینے کے پانی کے ... فوارے' are unsourced. See 2b036077722c."
+  },
+  {
+   "id": "97e9202b1cb6",
+   "issue": "[minor] 'پہلے سے وقت لے کر' (by appointment) is fine Urdu, but sources use 'اپائنٹمنٹ'. Optional alignment."
+  }
+ ]
+}

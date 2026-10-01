@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-01 Not-911 statement</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-x01 {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{is.block}}" hint-placeholder-val="{{true}}">
+    <div class="cvh-n911" role="note">
+      <span class="cvh-n911__num" aria-hidden="true">911</span>
+      <p class="cvh-n911__text">{{s.x01.text}}</p>
+      <p class="cvh-n911__sub">{{s.x01.call}}</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{is.inline}}">
+    <div class="cvh-n911 cvh-n911--inline" role="note">
+      <span class="cvh-n911__num" aria-hidden="true">911</span>
+      <p class="cvh-n911__text">{{s.x01.short}}</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{is.partner}}">
+    <div class="cvh-n911 cvh-n911--partner" role="note">
+      <span class="cvh-n911__num" aria-hidden="true">911</span>
+      <p class="cvh-n911__text">{{s.x01.partner}}</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{is.print}}">
+    <div class="cvh-n911 cvh-n911--print" role="note">
+      <span class="cvh-n911__num" aria-hidden="true">911</span>
+      <p class="cvh-n911__text">{{s.x01.print}}</p>
+    </div>
+  </sc-if>
+  <sc-if value="{{is.sms}}">
+    <p class="cvh-origin--sms">{{s.x01.sms}}</p>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"variant":{"editor":"enum","options":["block","inline","partner","print","sms"],"default":"block"},"lang":{"editor":"enum","options":["en","ur","el","prs","ps","bn","tl","gu","ta","sk","hi","pa","zh","es","fr"],"default":"en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, lang = p.lang || 'en', v = p.variant || 'block';
+    var is = { block: v === 'block', inline: v === 'inline', partner: v === 'partner', print: v === 'print', sms: v === 'sms' };
+    var root = 'font-size:var(--fs-body);' + (p.embedded ? '' : 'width:360px;height:150px;padding:16px;background:#fafafa;');
+    return { s: C.strings(lang), bcp: C.bcp(lang), dir: C.dir(lang), is: is,
+      rootStyle: root, rootClass: p.basic ? 'cvh-basic' : '' };
+  }
+}
+</script>
+</body>
+</html>

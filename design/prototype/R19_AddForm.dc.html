@@ -1,0 +1,265 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-19 Add an entry — template form</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-19" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Add an entry — template form">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <p class="cvh-steps">{{s.R19.step}}</p>
+  <div class="cvh-row cvh-wrap" style="--gap:8px"><h1 class="cvh-h1 cvh-grow">{{s.R19.title}}</h1><sc-if value="{{saved}}"><span class="cvh-caption cvh-muted cvh-hide-basic">{{s.R19.saved}}</span></sc-if></div>
+
+  <sc-if value="{{resubmit}}">
+    <div class="cvh-note" role="note"><span class="cvh-ico cvh-ico--info" aria-hidden="true"></span><span class="cvh-grow">{{resubmit}}</span></div>
+  </sc-if>
+
+  <fieldset class="cvh-field" style="border:0;padding:0;margin:0">
+    <legend class="cvh-label" style="padding:0;margin-bottom:6px">{{s.R19.type}}</legend>
+    <sc-for list="{{types}}" as="t" hint-placeholder-count="2">
+      <button type="button" class="cvh-option {{t.cls}}" role="radio" aria-checked="{{t.aria}}" onClick="{{t.pick}}">
+        <span class="cvh-option__box cvh-option__box--radio"><sc-if value="{{t.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if></span>
+        <span class="cvh-option__text"><span class="cvh-option__label">{{t.label}}</span><span class="cvh-option__line cvh-hide-basic">{{t.line}}</span></span>
+        <span class="cvh-pinmini cvh-pin--{{t.shape}} cvh-hide-basic" style="margin-inline-start:auto"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{t.icon}}" aria-hidden="true"></span></span></span>
+      </button>
+    </sc-for>
+  </fieldset>
+
+  <div class="cvh-field">
+    <label class="cvh-label" for="r19-name">{{s.R19.name}}</label>
+    <input id="r19-name" class="cvh-input" type="text" value="{{v.name}}" onInput="{{setName}}" placeholder="{{s.R19.namePh}}" maxlength="80">
+  </div>
+  <div class="cvh-field">
+    <label class="cvh-label" for="r19-what">{{s.R19.what}}</label>
+    <textarea id="r19-what" class="cvh-textarea" style="min-height:72px" value="{{v.what}}" onInput="{{setWhat}}" placeholder="{{s.R19.whatPh}}" maxlength="140"></textarea>
+    <p class="cvh-count">{{whatCount}}</p>
+  </div>
+
+  <div class="cvh-field">
+    <p class="cvh-label">{{s.R19.location}}</p>
+    <sc-if value="{{whereText}}">
+      <div class="cvh-card cvh-row" style="--gap:10px;align-items:flex-start">
+        <span class="cvh-ico cvh-ico--{{whereIcon}}" aria-hidden="true"></span>
+        <span class="cvh-grow">{{whereText}}</span>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toWhere}}">{{s.R19.whereChange}}</button>
+      </div>
+    </sc-if>
+    <sc-if value="{{noWhere}}">
+      <button type="button" class="cvh-dest" onClick="{{toWhere}}"><span class="cvh-ico cvh-ico--map" aria-hidden="true"></span><span class="cvh-grow">{{s.R19.whereBtn}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+      <p class="cvh-hint">{{s.R20.noAddress}}</p>
+    </sc-if>
+  </div>
+
+  <div class="cvh-field">
+    <label class="cvh-label" for="r19-cat">{{s.R19.category}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></label>
+    <select id="r19-cat" class="cvh-select" value="{{v.cat}}" onChange="{{setCat}}">
+      <sc-for list="{{cats}}" as="c" hint-placeholder-count="3"><option value="{{c.v}}">{{c.label}}</option></sc-for>
+    </select>
+  </div>
+
+  <fieldset class="cvh-field" style="border:0;padding:0;margin:0">
+    <legend class="cvh-label" style="padding:0;margin-bottom:6px">{{s.R19.hours}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></legend>
+    <div class="cvh-chiprow">
+      <button type="button" class="cvh-chip cvh-fchip {{sameCls}}" aria-pressed="{{sameAria}}" onClick="{{toggleSame}}"><sc-if value="{{v.hSame}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{s.R19.sameWeekdays}}</button>
+      <button type="button" class="cvh-chip cvh-fchip {{hNsCls}}" aria-pressed="{{hNsAria}}" onClick="{{toggleHoursNotSure}}"><sc-if value="{{v.hNotSure}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{s.R19.notSure}}</button>
+    </div>
+    <sc-if value="{{v.hNotSure}}"><p class="cvh-hint">{{s.R19.hoursNotSureLine}}</p></sc-if>
+    <sc-if value="{{showDays}}">
+      <div class="cvh-hours">
+        <sc-for list="{{days}}" as="d" hint-placeholder-count="3">
+          <div class="cvh-hours__day">
+            <span class="cvh-strong" id="{{d.id}}">{{d.label}}</span>
+            <div class="cvh-hours__pair">
+              <select class="cvh-select" aria-label="{{d.fromAria}}" value="{{d.from}}" onChange="{{d.setFrom}}">
+                <sc-for list="{{d.fromOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+              </select>
+              <sc-if value="{{d.open}}">
+                <select class="cvh-select" aria-label="{{d.toAria}}" value="{{d.to}}" onChange="{{d.setTo}}">
+                  <sc-for list="{{d.toOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+                </select>
+              </sc-if>
+            </div>
+          </div>
+        </sc-for>
+      </div>
+    </sc-if>
+  </fieldset>
+
+  <sc-for list="{{choiceFields}}" as="q" hint-placeholder-count="3">
+    <fieldset class="cvh-field" style="border:0;padding:0;margin:0">
+      <legend class="cvh-label" style="padding:0;margin-bottom:6px">{{q.label}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></legend>
+      <sc-if value="{{q.hint}}"><p class="cvh-hint">{{q.hint}}</p></sc-if>
+      <div class="cvh-chiprow" role="group" aria-label="{{q.label}}">
+        <sc-for list="{{q.opts}}" as="o" hint-placeholder-count="3">
+          <button type="button" class="cvh-chip cvh-fchip {{o.cls}}" aria-pressed="{{o.aria}}" onClick="{{o.pick}}" lang="{{o.bcp}}"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{o.label}}</button>
+        </sc-for>
+      </div>
+    </fieldset>
+  </sc-for>
+
+  <sc-if value="{{showMissing}}">
+    <div class="cvh-errorbox" role="alert"><span class="cvh-ico cvh-ico--info" aria-hidden="true" style="color:var(--danger)"></span>
+      <div class="cvh-stack" style="--gap:4px"><p class="cvh-strong">{{s.R19.missingTitle}}</p><sc-for list="{{missing}}" as="m" hint-placeholder-count="2"><p>{{m}}</p></sc-for></div>
+    </div>
+  </sc-if>
+  <sc-if value="{{ready}}">
+    <p class="cvh-row" role="status" style="--gap:8px"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span class="cvh-strong">{{s.R19.ready}}</span></p>
+  </sc-if>
+  <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{submit}}">{{s.R19.submit}}</button>
+  <p class="cvh-caption cvh-muted">{{s.x03.review}}</p>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Empty", "Partially complete: Devon&#39;s Thursday food bank", "Hours: same every weekday, and Not sure", "Community offer chosen, optional fields answered Not sure", "Ready to send", "Tried to send with something missing", "Sent back by the Hub: content kept", "Basic mode: partially complete"], "default": "Empty"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Empty": {"persona": "devon", "scenario": "C"}, "Partially complete: Devon's Thursday food bank": {"persona": "devon", "scenario": "C", "loc": {"type": "offer", "name": "Thursday food bank in the church basement", "what": "Free groceries every Thursday evening, for anyone who needs them.", "cat": "food", "dFrom": {"thu": "17:00"}, "dTo": {"thu": "19:00"}}}, "Hours: same every weekday, and Not sure": {"persona": "rashid", "scenario": "C", "loc": {"type": "offer", "name": "Prayer-room water cooler open to all", "hSame": true, "dFrom": {"mon": "09:00", "sat": "notSure", "sun": "notSure"}, "dTo": {"mon": "21:00"}}}, "Community offer chosen, optional fields answered Not sure": {"persona": "devon", "scenario": "C", "loc": {"type": "offer", "name": "Thursday food bank in the church basement", "cost": "free", "idq": "notSure", "step": "notSure", "langs": ["notSure"]}}, "Ready to send": {"persona": "devon", "scenario": "C", "loc": {"type": "offer", "name": "Thursday food bank in the church basement", "what": "Free groceries every Thursday evening, for anyone who needs them.", "cat": "food", "dFrom": {"thu": "17:00"}, "dTo": {"thu": "19:00"}, "cost": "free", "idq": "no", "step": "notSure", "langs": ["tl", "en"], "where": {"kind": "landmark", "landmark": "R.V. Burgess Park", "text": "Church basement, side door on the park side"}}}, "Tried to send with something missing": {"persona": "devon", "scenario": "C", "loc": {"type": "offer", "name": "Thursday food bank in the church basement", "tried": true}}, "Sent back by the Hub: content kept": {"persona": "yusuf", "scenario": "C", "loc": {"resubmit": "noLocation", "type": "official", "name": "Cooling room at the mall", "what": "The mall is cool to sit in when it is hot.", "hNotSure": true, "cost": "free", "idq": "notSure", "step": "notSure", "langs": ["en"]}}, "Basic mode: partially complete": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted", "loc": {"type": "offer", "name": "Greek seniors coffee morning"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'map', showExercise: 'R-19'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-19'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.R19, go = b.go, loc = b.loc, prm = b.params;
+    var DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    var v = { type: loc.type || '', name: loc.name || '', what: loc.what || '', cat: loc.cat || '', where: loc.where || prm.where || null,
+      hSame: !!loc.hSame, hNotSure: !!loc.hNotSure, dFrom: loc.dFrom || {}, dTo: loc.dTo || {}, cost: loc.cost || '', idq: loc.idq || '', step: loc.step || '', langs: loc.langs || [] };
+    var form = function () { var o = {}; ['type', 'name', 'what', 'cat', 'where', 'hSame', 'hNotSure', 'dFrom', 'dTo', 'cost', 'idq', 'step', 'langs', 'resubmit'].forEach(function (k) { if (loc[k] !== undefined) o[k] = loc[k]; }); if (!o.where && v.where) o.where = v.where; return o; };
+    // Moving to R-20 and back replaces this screen, so the form rides along in params and nothing is lost
+    var nav = function (id, params) { if (b.app.replace && !b.standalone) b.app.replace(id, params); else go(id, params); };
+    var types = [
+      { id: 'official', label: x.official, line: x.officialLine, shape: 'formal', icon: 'public' },
+      { id: 'offer', label: x.offer, line: x.offerLine, shape: 'offer', icon: 'communityOffer' }].map(function (t) {
+      var on = v.type === t.id; return Object.assign(t, { on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ type: t.id }); } }); });
+    var cats = [{ v: '', label: x.choose }].concat((D.categories || []).map(function (c) { return { v: c, label: s.categories[c] }; })).concat([{ v: 'notSure', label: x.catNotSure }]);
+    // Hours: one drop-down pair per day
+    var times = []; for (var h = 6; h <= 23; h++) times.push((h < 10 ? '0' : '') + h + ':00');
+    var tOpts = times.map(function (t) { return { v: t, label: C.hhmm12(t) }; });
+    var fromOpts = [{ v: 'closed', label: x.closedOpt }, { v: 'notSure', label: x.notSureOpt }].concat(tOpts);
+    var rowsDays = v.hSame ? [{ k: 'mon', label: x.weekdays }, { k: 'sat' }, { k: 'sun' }] : DAYS.map(function (k) { return { k: k }; });
+    var days = rowsDays.map(function (r) {
+      var k = r.k, label = r.label || s.time.days7[k], from = v.dFrom[k] || 'closed', open = from !== 'closed' && from !== 'notSure';
+      var to = v.dTo[k] || (open ? times[Math.min(times.length - 1, times.indexOf(from) + 2)] : '');
+      return { id: 'r19-d-' + k, label: label, from: from, to: to, open: open, fromOpts: fromOpts,
+        toOpts: open ? tOpts.filter(function (o) { return o.v > from; }) : tOpts, fromAria: label + ', ' + x.fromOpt, toAria: label + ', ' + x.toOpt,
+        setFrom: function (e) { var f = Object.assign({}, v.dFrom); f[k] = e.target.value; var tt = Object.assign({}, v.dTo); if (tt[k] && tt[k] <= f[k]) delete tt[k]; b.setLoc({ dFrom: f, dTo: tt }); },
+        setTo: function (e) { var t = Object.assign({}, v.dTo); t[k] = e.target.value; b.setLoc({ dTo: t }); } };
+    });
+    // Optional questions answered by choosing; "Not sure" is a choice, not a sentence
+    var single = function (key, opts) { return opts.map(function (o) { var on = v[key] === o.v; return { label: o.label, on: on, cls: on ? 'cvh-chip--on' : '', aria: on ? 'true' : 'false', bcp: '',
+      pick: function () { var p = {}; p[key] = on ? '' : o.v; b.setLoc(p); } }; }); };
+    var langOpts = (D.languages || []).map(function (l) { var on = v.langs.indexOf(l.code) >= 0;
+      return { label: l.native, bcp: l.bcp47 || l.code, on: on, cls: on ? 'cvh-chip--on' : '', aria: on ? 'true' : 'false',
+        pick: function () { var ls = v.langs.filter(function (c) { return c !== 'notSure' && c !== l.code; }); if (!on) ls.push(l.code); b.setLoc({ langs: ls }); } }; });
+    var nsOn = v.langs.indexOf('notSure') >= 0;
+    langOpts.push({ label: x.notSure, bcp: '', on: nsOn, cls: nsOn ? 'cvh-chip--on' : '', aria: nsOn ? 'true' : 'false', pick: function () { b.setLoc({ langs: nsOn ? [] : ['notSure'] }); } });
+    var choiceFields = [
+      { label: x.cost, opts: single('cost', [{ v: 'free', label: x.costFree }, { v: 'low', label: x.costLow }, { v: 'fee', label: x.costFee }, { v: 'notSure', label: x.notSure }]) },
+      { label: x.idQ, opts: single('idq', [{ v: 'no', label: x.no }, { v: 'yes', label: x.yes }, { v: 'notSure', label: x.notSure }]) },
+      { label: x.stepFreeQ, opts: single('step', [{ v: 'yes', label: x.yes }, { v: 'no', label: x.no }, { v: 'notSure', label: x.notSure }]) },
+      { label: x.languagesQ, hint: b.basic ? '' : x.langsHint, opts: langOpts }];
+    var missing = [];
+    if (!v.type) missing.push(x.type);
+    if (!v.name.trim()) missing.push(x.name);
+    if (!v.what.trim()) missing.push(x.what);
+    if (!v.where) missing.push(x.location);
+    var w = v.where, whereText = '', whereIcon = 'map';
+    if (w) { whereText = this.whereText(b, w); whereIcon = { pin: 'map', building: 'building', landmark: 'flag', address: 'directions' }[w.kind] || 'map'; }
+    var reason = loc.resubmit ? ((s.R23.reasons || {})[loc.resubmit] || {}) : null;
+    var any = !!(v.type || v.name || v.what || v.where);
+    return { v: v, types: types, cats: cats, days: days, showDays: !v.hNotSure, choiceFields: choiceFields,
+      sameCls: v.hSame ? 'cvh-chip--on' : '', sameAria: v.hSame ? 'true' : 'false', hNsCls: v.hNotSure ? 'cvh-chip--on' : '', hNsAria: v.hNotSure ? 'true' : 'false',
+      toggleSame: function () { b.setLoc({ hSame: !v.hSame, hNotSure: false }); }, toggleHoursNotSure: function () { b.setLoc({ hNotSure: !v.hNotSure }); },
+      setName: function (e) { b.setLoc({ name: e.target.value }); }, setWhat: function (e) { b.setLoc({ what: e.target.value.slice(0, 140) }); },
+      setCat: function (e) { b.setLoc({ cat: e.target.value }); },
+      whatCount: C.fill(x.count, { n: v.what.length }), whereText: whereText, whereIcon: whereIcon, noWhere: !w,
+      toWhere: function () { nav('R-20', { form: form(), where: v.where || undefined }); },
+      saved: any, resubmit: reason && reason.change ? C.fill(x.resubmitNote, { change: reason.change }) : '',
+      missing: missing, showMissing: !!loc.tried && missing.length > 0, ready: missing.length === 0,
+      submit: function () {
+        if (missing.length) { b.setLoc({ tried: true }); return; }
+        go('R-21', { lane: b.persona.role === 'ambassador' ? 'ambassador' : 'general', name: v.name, type: v.type });
+      },
+      goBack: function () { if (b.app.canBack) b.back(); else go('R-18', { mode: 'add' }); } };
+  }
+  whereText(b, w) {
+    var C = b.C, x = b.s.R20;
+    if (w.kind === 'pin') return C.fill(x.pinNear, { place: w.near || '' }) + (w.text ? '. ' + w.text : '');
+    if (w.kind === 'building') return (C.building(w.building) || {}).name + (w.text ? '. ' + w.text : '');
+    if (w.kind === 'landmark') return C.fill(x.nearLandmark, { place: w.landmark || '' }) + (w.text ? '. ' + w.text : '');
+    return w.text || '';
+  }
+
+}
+</script>
+</body>
+</html>

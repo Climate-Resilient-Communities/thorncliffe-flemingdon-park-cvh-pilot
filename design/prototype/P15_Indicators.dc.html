@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-15 Indicators</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-15" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-15" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-15" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-rv">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-rv-head">
+    <div class="cvh-rv-head__text">
+      <h2 class="cvh-hhead__title">{{x.title}}</h2>
+      <p class="cvh-muted">{{x.lead}}</p>
+    </div>
+    <div class="cvh-rv-head__acts">
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{onExport}}"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{x.export}}</button>
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toLookBack}}">{{x.toLookBack}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </div>
+  </div>
+  <sc-if value="{{exported}}"><p class="cvh-done" role="status"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span>{{exportedLine}}</span></p></sc-if>
+  <sc-if value="{{b_exercise}}"><p class="cvh-note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{x.exerciseNow}}</span></p></sc-if>
+
+  <section class="cvh-rv-band" aria-labelledby="p15-defs">
+    <span class="cvh-ico cvh-ico--lock" aria-hidden="true"></span>
+    <div class="cvh-rv-band__text">
+      <p class="cvh-strong" id="p15-defs">{{agreedLine}}</p>
+      <p>{{x.privacy}}</p>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--secondary" aria-expanded="{{defsAria}}" onClick="{{toggleDefs}}">{{defsLabel}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button>
+    <sc-if value="{{showDefs}}">
+      <ul class="cvh-rv-rules" style="flex:1 1 100%"><sc-for list="{{rules}}" as="r" hint-placeholder-count="5"><li>{{r}}</li></sc-for></ul>
+    </sc-if>
+  </section>
+
+  <div class="cvh-rv-legend">
+    <div class="cvh-stack" style="--gap:2px"><p class="cvh-strong">{{x.periodLabel}}</p><p>{{x.period}}</p></div>
+    <div class="cvh-rv-legend__cols">
+      <div class="cvh-rv-legend__col"><span class="cvh-rv-real"><span class="cvh-ico cvh-ico--flag cvh-ico--sm" aria-hidden="true"></span>{{x.colReal}}</span><span class="cvh-muted">{{x.colRealLine}}</span></div>
+      <div class="cvh-rv-legend__col"><span class="cvh-rv-ex"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{x.colExercise}}</span><span class="cvh-muted">{{x.colExerciseLine}}</span>
+        <sc-if value="{{runNote}}"><span class="cvh-strong">{{runNote}}</span></sc-if></div>
+      <div class="cvh-rv-legend__col"><span class="cvh-rv-day"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span>{{x.colEveryday}}</span><span class="cvh-muted">{{x.colEverydayLine}}</span></div>
+    </div>
+  </div>
+
+  <section class="cvh-hsec" aria-labelledby="p15-tiles">
+    <h3 class="cvh-hsec__title" id="p15-tiles">{{x.tilesTitle}}<span class="cvh-tag cvh-tag--illustrative">{{illus}}</span></h3>
+    <div class="cvh-rv-tiles">
+      <sc-for list="{{tiles}}" as="t" hint-placeholder-count="8">
+        <article class="cvh-rv-tile" aria-label="{{t.name}}">
+          <div class="cvh-rv-tile__name">
+            <h4 class="cvh-rv-tile__title">{{t.name}}</h4>
+            <p class="cvh-muted">{{t.def}}</p>
+            <span class="cvh-tag cvh-tag--illustrative">{{illus}}</span>
+          </div>
+          <div class="cvh-rv-split">
+            <sc-for list="{{t.cells}}" as="c" hint-placeholder-count="3">
+              <div class="cvh-rv-cell {{c.cls}}">
+                <span class="cvh-rv-cell__k"><span class="cvh-ico cvh-ico--{{c.icon}} cvh-ico--sm" aria-hidden="true"></span>{{c.label}}</span>
+                <span class="cvh-rv-cell__v"><span class="cvh-rv-sup"><sc-if value="{{c.sup}}"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span></sc-if>{{c.v}}</span></span>
+                <sc-if value="{{c.sub}}"><span class="cvh-muted">{{c.sub}}</span></sc-if>
+              </div>
+            </sc-for>
+          </div>
+          <sc-if value="{{t.hasMore}}">
+            <div class="cvh-rv-tile__more">
+              <sc-for list="{{t.more}}" as="m" hint-placeholder-count="2">
+                <div class="cvh-stack" style="--gap:4px">
+                  <p class="cvh-strong">{{m.title}}</p>
+                  <ul class="cvh-rv-break">
+                    <sc-for list="{{m.rows}}" as="r" hint-placeholder-count="4"><li class="cvh-rv-break__row"><span>{{r.k}}</span><span class="cvh-rv-break__v {{r.cls}}">{{r.v}}</span></li></sc-for>
+                  </ul>
+                </div>
+              </sc-for>
+            </div>
+          </sc-if>
+        </article>
+      </sc-for>
+      <article class="cvh-rv-tile" aria-label="{{trust.name}}">
+        <div class="cvh-rv-tile__name">
+          <h4 class="cvh-rv-tile__title">{{trust.name}}</h4>
+          <p class="cvh-muted">{{trust.def}}</p>
+          <span class="cvh-tag cvh-tag--illustrative">{{illus}}</span>
+        </div>
+        <div class="cvh-rv-trust">
+          <span class="cvh-rv-day" style="align-self:flex-start"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{x.asked}}</span>
+          <p class="cvh-rv-cell__v">{{trust.result}}</p>
+          <p>{{trust.when}}</p>
+          <p class="cvh-muted">{{x.trustWho}}</p>
+        </div>
+      </article>
+    </div>
+  </section>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Indicators: real, exercise and everyday, split and labelled", "After this session drill ended", "How these are counted (definitions panel open)", "Export confirmed", "Exercise running", "Phone width, 390"], "default": "Indicators: real, exercise and everyday, split and labelled"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Indicators: real, exercise and everyday, split and labelled": {}, "After this session drill ended": {"params": {"demoRun": "ended"}}, "How these are counted (definitions panel open)": {"loc": {"showDefs": true}}, "Export confirmed": {"loc": {"exported": true}}, "Exercise running": {"exercise": true, "params": {"demoRun": "running"}}, "Phone width, 390": {"w": 390, "h": 1400}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-15', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, x = b.s.P15, P = D.partner || {}, loc = b.loc;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var fmt = function (iso) { if (!iso) return ''; var p = String(iso).split('-'); return (p[2] ? (+p[2]) + ' ' : '') + MONTHS[(+p[1]) - 1] + ' ' + p[0]; };
+    var agoL = function (m) { var t = b.ago(m); return m < 1 ? t.charAt(0).toLowerCase() + t.slice(1) : t; };
+    var illus = b.s.shell && b.s.shell.illustrative ? b.s.shell.illustrative : 'Illustrative';
+    // The exercise in this session (P-14), or a demo stand-in on the lone artboard
+    var run = P.run || null;
+    if (!run && b.params.demoRun) run = { state: b.params.demoRun, name: x.demoRunName, startedMinsAgo: 58, endedMinsAgo: b.params.demoRun === 'ended' ? 12 : null };
+    var runNote = !run ? '' : run.state === 'ended' ? C.fill(x.runEnded, { name: run.name, t: agoL(run.endedMinsAgo || 0) }) : C.fill(x.runRunning, { name: run.name });
+    // Small numbers never shown: any count from 1 to 4 becomes "Fewer than 5"
+    var suppress = function (v) {
+      if (v == null) return null;
+      var t = String(v).trim();
+      if (/^[1-4]$/.test(t)) return x.fewer;
+      if (t === '0') return x.none;
+      return t;
+    };
+    var COLS = [{ k: 'real', label: x.colReal, icon: 'flag' }, { k: 'exercise', label: x.colExercise, icon: 'exercise' }, { k: 'everyday', label: x.colEveryday, icon: 'calendar' }];
+    var tiles = [], trustRec = null;
+    (P.indicators || []).forEach(function (ind) {
+      var d = (x.ind || {})[ind.id] || { name: ind.id, def: '' };
+      if (ind.asked) { trustRec = { name: d.name, def: d.def, result: ind.result, when: C.fill(x.trustWhen, { date: fmt(ind.lastSurvey) }) }; return; }
+      var cells = COLS.map(function (c) {
+        var v = suppress(ind[c.k]), na = v == null, sup = v === x.fewer;
+        return { label: c.label, icon: c.icon, v: na ? x.na : v, sup: sup, sub: sup ? x.supLine : '',
+          cls: 'cvh-rv-cell--' + c.k + (na ? ' cvh-rv-cell--na' : '') };
+      });
+      var more = [];
+      if (ind.id === 'reach') {
+        var rows = function (list) { return (list || []).map(function (r) { var v = suppress(r[1]); var sup = v === x.fewer || !/^[0-9]/.test(v); return { k: r[0], v: v, cls: sup ? 'is-sup' : '' }; }); };
+        more = [{ title: x.byChannel, rows: rows(x.channels) }, { title: x.byLanguage, rows: rows(x.languages) }];
+      }
+      tiles.push({ id: ind.id, name: d.name, def: d.def, cells: cells, more: more, hasMore: more.length > 0 });
+    });
+    trustRec = trustRec || { name: '', def: '', result: '', when: '' };
+    // Export: a static confirmation; the action is kept so the confirmation survives navigation
+    var exp = (P.other || []).filter(function (o) { return o.kind === 'export' && o.what === 'indicators'; });
+    var lastExp = exp.length ? exp[exp.length - 1] : null;
+    var exported = !!lastExp || !!loc.exported;
+    var rules = (x.rules || []).map(function (r) { return C.fill(r, { review: fmt(P.nextReview) }); });
+    return { x: x, illus: illus, b_exercise: b.exercise, tiles: tiles, trust: trustRec, runNote: runNote,
+      agreedLine: C.fill(x.agreed, { date: fmt(P.indicatorsAgreedOn) }), rules: rules,
+      showDefs: !!loc.showDefs, defsAria: loc.showDefs ? 'true' : 'false', defsLabel: loc.showDefs ? x.hideDefs : x.showDefs,
+      toggleDefs: function () { b.setLoc({ showDefs: !loc.showDefs }); },
+      exported: exported, exportedLine: C.fill(x.exportedLine, { t: lastExp ? agoL(lastExp.minsAgo || 0) : x.exportedNow }),
+      onExport: function () {
+        b.act({ t: 'partner', kind: 'export', item: { what: 'indicators', format: 'csv', period: x.period } });
+        b.setLoc({ exported: true });
+        b.toast(x.exportToast);
+      },
+      toLookBack: function () { b.go('P-16'); },
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('P-11'); } };
+  }
+
+}
+</script>
+</body>
+</html>

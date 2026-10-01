@@ -1,0 +1,277 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-03 Post a structured statement</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-03" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-03" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-03" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-ps">
+  <button type="button" class="cvh-back" style="align-self:flex-start" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h2 class="cvh-h2">{{x.title}}</h2>
+    <p class="cvh-ps-muted">{{inSpace}}</p>
+    <p class="cvh-row cvh-wrap" style="--gap:6px 8px"><span class="cvh-origin__mark" aria-hidden="true">{{mono}}</span><span class="cvh-strong">{{postingAs}}</span><sc-if value="{{isEx}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{s.x10.word}}</span></sc-if></p>
+  </div>
+
+  <sc-if value="{{posted}}">
+    <div class="cvh-ps-done" role="status">
+      <span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>
+      <div class="cvh-stack" style="--gap:6px"><p>{{x.postedTitle}}</p><p style="font-weight:400">{{x.postedLine}}</p></div>
+    </div>
+    <div class="cvh-ps-preview">
+      <div class="cvh-ps-item__head"><dc-import name="X06_Statement" variant="chip" statement="" type="{{pv.type}}" embedded="{{true}}" hint-size="210px,32px"></dc-import><span class="cvh-ps-when">{{pv.when}}</span></div>
+      <p>{{pv.text}}</p>
+      <sc-if value="{{pv.supply}}"><p class="cvh-ps-sub"><span class="cvh-ico cvh-ico--kit cvh-ico--sm" aria-hidden="true"></span><span>{{pv.supply}}</span></p></sc-if>
+      <sc-if value="{{pv.answers}}"><p class="cvh-ps-sub"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span><span>{{pv.answers}}</span></p></sc-if>
+      <div class="cvh-ps-who"><span class="cvh-origin__mark" aria-hidden="true">{{mono}}</span><span class="cvh-ps-who__org">{{orgName}}</span><span class="cvh-ps-cap {{capCls}}"><span class="cvh-ico cvh-ico--{{capIcon}} cvh-ico--sm" aria-hidden="true"></span>{{cap}}</span><span>{{personLine}}</span></div>
+    </div>
+    <div class="cvh-ps-acts">
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{toSpace}}">{{x.toSpace}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toCoverage}}"><span class="cvh-ico cvh-ico--dashboard cvh-ico--sm" aria-hidden="true"></span>{{x.toCoverage}}</button>
+      <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{another}}">{{x.another}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{composing}}">
+    <section class="cvh-stack" style="--gap:8px" aria-labelledby="p03-type">
+      <h3 class="cvh-ps-panel__title" id="p03-type">{{x.typeTitle}}</h3>
+      <p class="cvh-ps-muted">{{x.typeHint}}</p>
+      <div class="cvh-ps-types" role="radiogroup" aria-labelledby="p03-type">
+        <sc-for list="{{types}}" as="ty" hint-placeholder-count="4">
+          <button type="button" class="cvh-ps-type {{ty.cls}}" role="radio" aria-checked="{{ty.aria}}" onClick="{{ty.pick}}">
+            <dc-import name="X06_Statement" variant="chip" statement="" type="{{ty.id}}" embedded="{{true}}" hint-size="210px,32px"></dc-import>
+            <span>{{ty.line}}</span>
+            <sc-if value="{{ty.on}}"><span class="cvh-ps-type__pick"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.chosen}}</span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </section>
+
+    <sc-if value="{{hasType}}">
+      <div class="cvh-field">
+        <label class="cvh-label" for="p03-text">{{x.textLabel}}</label>
+        <input class="cvh-input" id="p03-text" value="{{text}}" placeholder="{{placeholder}}" onInput="{{onText}}">
+        <span class="cvh-hint">{{x.textHint}}</span>
+      </div>
+
+      <sc-if value="{{canAnswer}}">
+        <section class="cvh-stack" style="--gap:6px" aria-labelledby="p03-ans">
+          <h3 class="cvh-ps-panel__title" id="p03-ans">{{x.answersTitle}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></h3>
+          <div class="cvh-stack" style="--gap:6px" role="radiogroup" aria-labelledby="p03-ans">
+            <sc-for list="{{needs}}" as="n" hint-placeholder-count="3">
+              <button type="button" class="cvh-option {{n.cls}}" role="radio" aria-checked="{{n.aria}}" onClick="{{n.pick}}" style="min-height:48px;padding:8px 12px">
+                <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{n.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+                <span class="cvh-option__text"><span class="cvh-option__label" style="font-weight:400">{{n.label}}</span></span>
+                <sc-if value="{{n.illus}}"><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></sc-if>
+              </button>
+            </sc-for>
+          </div>
+        </section>
+      </sc-if>
+
+      <section class="cvh-stack" style="--gap:6px" aria-labelledby="p03-sup">
+        <h3 class="cvh-ps-panel__title" id="p03-sup">{{x.supplyTitle}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></h3>
+        <p class="cvh-ps-muted">{{x.supplyHint}}</p>
+        <div class="cvh-stack" style="--gap:6px" role="radiogroup" aria-labelledby="p03-sup">
+          <sc-for list="{{supplies}}" as="su" hint-placeholder-count="4">
+            <button type="button" class="cvh-option {{su.cls}}" role="radio" aria-checked="{{su.aria}}" onClick="{{su.pick}}" style="min-height:48px;padding:8px 12px">
+              <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{su.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{su.label}}</span><sc-if value="{{su.line}}"><span class="cvh-option__line">{{su.line}}</span></sc-if></span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{moreSup}}"><button type="button" class="cvh-link" style="align-self:flex-start" aria-expanded="{{allSupAria}}" onClick="{{toggleSup}}">{{moreSupLabel}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+        <button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{toP08}}">{{x.toP08}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+      </section>
+
+      <section class="cvh-stack" style="--gap:6px" aria-labelledby="p03-pv">
+        <h3 class="cvh-ps-panel__title" id="p03-pv">{{x.preview}}</h3>
+        <div class="cvh-ps-preview">
+          <div class="cvh-ps-item__head"><dc-import name="X06_Statement" variant="chip" statement="" type="{{pv.type}}" embedded="{{true}}" hint-size="210px,32px"></dc-import><sc-if value="{{isEx}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span>{{s.x10.word}}</span></sc-if><span class="cvh-ps-when">{{pv.when}}</span></div>
+          <p>{{pv.textShown}}</p>
+          <sc-if value="{{pv.supply}}"><p class="cvh-ps-sub"><span class="cvh-ico cvh-ico--kit cvh-ico--sm" aria-hidden="true"></span><span>{{pv.supply}}</span></p></sc-if>
+          <sc-if value="{{pv.answers}}"><p class="cvh-ps-sub"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span><span>{{pv.answers}}</span></p></sc-if>
+          <div class="cvh-ps-who"><span class="cvh-origin__mark" aria-hidden="true">{{mono}}</span><span class="cvh-ps-who__org">{{orgName}}</span><span class="cvh-ps-cap {{capCls}}"><span class="cvh-ico cvh-ico--{{capIcon}} cvh-ico--sm" aria-hidden="true"></span>{{cap}}</span><span>{{personLine}}</span></div>
+        </div>
+      </section>
+    </sc-if>
+
+    <div class="cvh-ps-bar">
+      <sc-if value="{{cannotPost}}"><p class="cvh-ps-bar__line cvh-ps-muted">{{x.pickFirst}}</p></sc-if>
+      <sc-if value="{{canPostWide}}"><p class="cvh-ps-bar__line">{{postingAs}}</p></sc-if>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{cannotPost}}" onClick="{{post}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{postLabel}}</button>
+    </div>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Four statement types (Daniel, nothing chosen yet)", "We need this, with a supply item attached", "We can take this on, answering a need", "We cannot cover this", "Posted, attributed to organisation and person", "Exercise: practice statement", "Phone 390: choose a type", "Phone 390: need with a supply item", "Phone 390: posted"], "default": "Four statement types (Daniel, nothing chosen yet)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Four statement types (Daniel, nothing chosen yet)": {"persona": "DANIEL", "params": {"space": "SPC-A"}}, "We need this, with a supply item attached": {"persona": "DANIEL", "params": {"space": "SPC-A"}, "loc": {"type": "need", "text": "Power banks for residents on floors 9 to 14 who cannot come down.", "supply": "SUP-03"}}, "We can take this on, answering a need": {"persona": "PRIYA", "params": {"space": "SPC-A"}, "loc": {"type": "canTake", "text": "We can carry water up with two staff from 8 pm.", "answers": "ST-12", "supply": "SUP-01"}}, "We cannot cover this": {"persona": "DANIEL", "params": {"space": "SPC-A"}, "loc": {"type": "cannotCover", "text": "We cannot keep the community room open after 9 pm."}}, "Posted, attributed to organisation and person": {"persona": "DANIEL", "params": {"space": "SPC-A"}, "loc": {"posted": {"type": "need", "text": "Power banks for residents on floors 9 to 14 who cannot come down.", "supply": "SUP-03"}}}, "Exercise: practice statement": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A"}, "loc": {"type": "doing", "text": "Community room open for charging (practice)."}}, "Phone 390: choose a type": {"persona": "DANIEL", "w": 390, "h": 1300, "params": {"space": "SPC-A"}}, "Phone 390: need with a supply item": {"persona": "DANIEL", "w": 390, "h": 1300, "params": {"space": "SPC-A"}, "loc": {"type": "need", "text": "Power banks for residents on floors 9 to 14 who cannot come down.", "supply": "SUP-03"}}, "Phone 390: posted": {"persona": "DANIEL", "w": 390, "h": 900, "params": {"space": "SPC-A"}, "loc": {"posted": {"type": "need", "text": "Power banks for residents on floors 9 to 14 who cannot come down.", "supply": "SUP-03"}}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-03', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  psSpace(b) {
+    var P = b.D.partner || {}, list = P.sharedSpaces || [], prm = b.params || {};
+    var find = function (id) { return list.filter(function (x) { return x.id === id; })[0] || null; };
+    if (prm.space) { var f = find(prm.space); if (f) return f; }
+    var scn = (b.C.session.get() || {}).scenario || 'A';
+    var sess = list.filter(function (x) { return x._session && !x.closed; });
+    if (b.exercise) { var ex = sess.filter(function (x) { return x.exercise; })[0]; if (ex) return ex; }
+    if (scn === 'G') return find('SPC-G') || sess[0] || null;
+    return sess[0] || find('SPC-A') || list[0] || null;
+  }
+  psCap(b, org) {
+    var x = b.s.P02, lv = ((b.D.partner || {}).capacity || {})[org], k = lv || 'none';
+    return { cap: x.cap[k] || x.cap.none, capCls: 'cvh-ps-cap--' + k, capIcon: ({ available: 'check', stretched: 'clock', atCapacity: 'flag', none: 'info' })[k] || 'info' };
+  }
+  screenVals(b) {
+    var self = this, C = b.C, D = b.D, s = b.s, x = s.P03, loc = b.loc, P = D.partner || {}, fill = C.fill, go = b.go;
+    var me = b.persona || {}, myOrg = me.org || 'HUB', org = C.org(myOrg) || {};
+    var sp = this.psSpace(b) || { id: null, type: 'other', location: '' };
+    var hz = (s.hazards || {})[sp.type] || s.x13[sp.type] || sp.type;
+    var byId = function (list, id) { return (list || []).filter(function (z) { return z.id === id; })[0] || null; };
+    var toSpace = function () { go('P-02', { space: sp.id }); };
+    var goBack = function () { if (b.app.canBack) b.back(); else toSpace(); };
+    var cp = this.psCap(b, myOrg);
+    var type = loc.type || null, text = loc.text || '', supply = loc.supply || null, answers = loc.answers || null;
+    var supplyText = function (id) {
+      var su = byId(P.supplies, id); if (!su) return '';
+      return fill(s.x06.supply, { item: su.qtyNum + ' ' + su.unit + ', ' + ((C.org(su.org) || {}).short || su.org) + ', ' + su.location });
+    };
+    var answerText = function (id) { var z = byId(P.statements, id); return z ? fill(s.P02.answers, { what: s.x06[z.type] + ': ' + z.text }) : ''; };
+    var base = { x: x, s: s, goBack: goBack, toSpace: toSpace, mono: org.monogram, orgName: org.name, cap: cp.cap, capCls: cp.capCls, capIcon: cp.capIcon,
+      personLine: (me.name || '') + ', ' + (me.role || ''), postingAs: fill(x.postingAs, { name: me.name, role: String(me.role || '').toLowerCase(), org: org.name }),
+      inSpace: fill(x.inSpace, { hazard: String(hz).toLowerCase(), where: sp.location || '' }), isEx: b.exercise || !!sp.exercise,
+      types: [], supplies: [], needs: [], pv: { type: 'need', text: '', textShown: '', supply: '', answers: '', when: '' } };
+
+    // Posted: shown as it now appears in the space
+    if (loc.posted) {
+      var ps = loc.posted;
+      return Object.assign(base, { posted: true, composing: false,
+        pv: { type: ps.type, text: ps.text, textShown: ps.text, supply: ps.supply ? supplyText(ps.supply) : '', answers: ps.answers ? answerText(ps.answers) : '', when: b.ago(0) },
+        toCoverage: function () { go('P-04', { space: sp.id }); }, another: function () { b.setLoc({ posted: null, type: null, text: '', supply: null, answers: null }); } });
+    }
+
+    var types = ['doing', 'canTake', 'cannotCover', 'need'].map(function (id) {
+      var on = id === type;
+      return { id: id, line: x.lines[id], on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ type: id, answers: id === 'canTake' || id === 'doing' ? answers : null }); } };
+    });
+    // Supplies: your own first for an offer, everyone's for a need
+    var REL = { power: ['powerBanks', 'flashlights', 'blankets', 'water', 'interpreters'], heat: ['water', 'boxFans', 'interpreters'], smoke: ['masks', 'boxFans'],
+      elevator: ['water', 'interpreters'], flood: ['water', 'blankets', 'cots'], fire: ['cots', 'blankets', 'water', 'interpreters'] }[sp.type] || [];
+    var rank = function (su) { var r = REL.indexOf(su.item); return (r < 0 ? 50 : r) + ((type === 'canTake' || type === 'doing') && su.org !== myOrg ? 100 : 0); };
+    var sups = (P.supplies || []).slice().sort(function (a, c) { return rank(a) - rank(c); });
+    var allSup = !!loc.allSup, total = sups.length;
+    if (!allSup) { var sel = sups.filter(function (su) { return su.id === supply; })[0]; sups = sups.slice(0, 5); if (sel && sups.indexOf(sel) < 0) sups.push(sel); }
+    var itemWords = { water: 'Water', masks: 'Masks', powerBanks: 'Power banks', cots: 'Cots', blankets: 'Blankets', interpreters: 'Interpreters', boxFans: 'Box fans', flashlights: 'Flashlights' };
+    var supplies = [{ id: null, label: x.noSupply, line: '' }].concat(sups.map(function (su) {
+      return { id: su.id, label: (itemWords[su.item] || su.item) + ', ' + ((C.org(su.org) || {}).name || su.org),
+        line: fill(x.supplyLine, { qty: su.qtyNum, unit: su.unit, org: (C.org(su.org) || {}).short, where: su.location }) + ' · ' + fill(x.updated, { t: b.ago(su.updatedMinsAgo || 0) }) };
+    })).map(function (o) {
+      var on = (o.id || null) === supply;
+      return Object.assign(o, { on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ supply: o.id }); } });
+    });
+    // Needs in this space nobody has taken on yet, to answer
+    var open = (P.statements || []).filter(function (z) { return z.sp === sp.id && z.type === 'need' && !z.claimedBy; });
+    var needs = [{ id: null, label: x.noAnswer, illus: false }].concat(open.map(function (z) {
+      return { id: z.id, label: fill(x.answersLine, { org: (C.org(z.org) || {}).short, text: z.text }), illus: !z._session };
+    })).map(function (o) {
+      var on = (o.id || null) === answers;
+      return Object.assign(o, { on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ answers: o.id }); } });
+    });
+    var ok = !!type && !!text.trim();
+    var post = function () {
+      if (!ok) return;
+      var item = { type: type, org: myOrg, person: me.id, text: text.trim() };
+      if (supply) item.supply = supply;
+      if (answers && (type === 'canTake' || type === 'doing')) item.answers = answers;
+      b.act({ t: 'partner', kind: 'statement', space: sp.id, item: item });
+      b.toast(x.done);
+      b.setLoc({ posted: item });
+    };
+    return Object.assign(base, { posted: false, composing: true, types: types, hasType: !!type, text: text, placeholder: type ? x.placeholder[type] : '',
+      onText: function (e) { b.setLoc({ text: e.target.value }); },
+      moreSup: total > 5, allSupAria: allSup ? 'true' : 'false', moreSupLabel: allSup ? x.fewerSup : C.fill(x.allSup, { n: total }), toggleSup: function () { b.setLoc({ allSup: !allSup }); },
+      canAnswer: (type === 'canTake' || type === 'doing') && open.length > 0, needs: needs, supplies: supplies, toP08: function () { go('P-08', { space: sp.id }); },
+      pv: { type: type || 'need', textShown: text.trim() || (type ? x.placeholder[type].replace(/^For example: /, '') : ''), supply: supply ? supplyText(supply) : '',
+        answers: answers && (type === 'canTake' || type === 'doing') ? answerText(answers) : '', when: b.ago(0) },
+      canPost: ok, canPostWide: ok && !b.narrow, cannotPost: !ok, post: post, postLabel: base.isEx ? x.postEx : x.post });
+  }
+
+}
+</script>
+</body>
+</html>

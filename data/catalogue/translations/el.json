@@ -1,0 +1,1008 @@
+{
+ "failed": {},
+ "language": "el",
+ "models": {
+  "command-a-translate-08-2025": 82,
+  "north-small-translate-09-2026": 2
+ },
+ "texts": {
+  "06c76a46e432": {
+   "model": "command-a-translate-08-2025",
+   "source": "Schools",
+   "text": "Σχολεία"
+  },
+  "0761f94fde45": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η σελίδα του κόμβου περιλαμβάνει έναν σύνδεσμο με την ένδειξη «Σε κρίση; Κάντε κλικ εδώ» και παραθέτει τοπικές υπηρεσίες υποστήριξης σε περίπτωση κρίσης: Τηλεφωνική γραμμή βοήθειας για παιδιά 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Κέντρα αντιμετώπισης κρίσεων του Greater Toronto 416-408-4357, Κέντρο αντιμετώπισης κρίσεων Gerstein 416-929-5200, Υπηρεσία διαχείρισης κρίσεων ψυχικής υγείας Anishnawbe Health Toronto 1-855-242-3310, Γραμμή βοήθειας ψυχικής υγείας Naseeha 1-866-627-3342, Ομάδα αντιμετώπισης κρίσεων και κινητής υποστήριξης Youthdale Treatment Centres 416-363-9990, Γραμμή αντιμετώπισης κρίσεων της κοινότητας Scarborough Health Network 416-495-2891, Γραμμή βοήθειας για κακοποιημένες γυναίκες 416-863-0511, Κέντρο αντιμετώπισης κρίσεων βιασμού του Τορόντο 416-597-8808 και Τμήμα Επειγόντων Περιστατικών του Νοσοκομείου Michael Garron (825 Coxwell Ave.). Ορισμένος χώρος ψύξης: παρέχει ανακούφιση σε εσωτερικούς χώρους με κλιματισμό κατά τη διάρκεια προειδοποιήσεων/ειδοποιήσεων για ακραίες θερμοκρασίες."
+   },
+   "model": "claude-correction",
+   "note": "crisis-lines review: All hotline/organisation names restored to English (most were translated) with Greek glosses; 'χώρος ψύξης' (refrigeration) and 'ακραίες θερμοκρασίες' (any extreme temperature) fixed to a cooling space during extreme heat.",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Η σελίδα του κόμβου περιλαμβάνει σύνδεσμο «Σε κρίση; Κάντε κλικ εδώ» και παραθέτει τοπικές υπηρεσίες υποστήριξης σε κρίση: Kids Help Phone (γραμμή βοήθειας για παιδιά και νέους) 1-800-668-6868, Talk Suicide Canada (γραμμή πρόληψης αυτοκτονίας) 1-833-456-4566, Distress Centres of Greater Toronto (κέντρα υποστήριξης σε κρίση) 416-408-4357, Gerstein Crisis Centre (κέντρο κρίσεων ψυχικής υγείας) 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service (υπηρεσία διαχείρισης κρίσεων ψυχικής υγείας) 1-855-242-3310, Naseeha Mental Health Hotline (γραμμή βοήθειας ψυχικής υγείας) 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team (ομάδα αντιμετώπισης κρίσεων και κινητής υποστήριξης) 416-363-9990, Scarborough Health Network Community Crisis Line (κοινοτική γραμμή υποστήριξης σε κρίση) 416-495-2891, Assaulted Women's Helpline (γραμμή βοήθειας για κακοποιημένες γυναίκες) 416-863-0511, Toronto Rape Crisis Centre (κέντρο υποστήριξης θυμάτων βιασμού) 416-597-8808 και Michael Garron Hospital Emergency Department (τμήμα επειγόντων του νοσοκομείου) (825 Coxwell Ave.). Ορισμένος χώρος δροσισμού: παρέχει κλιματιζόμενο εσωτερικό χώρο για ανακούφιση από τη ζέστη κατά τη διάρκεια προειδοποιήσεων/ειδοποιήσεων για ακραία ζέστη (καύσωνα)."
+  },
+  "0aa48c71179d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
+   "text": "Πεντηκοστιανή εκκλησία στη διεύθυνση 5 Grenoble Drive που προσφέρει λειτουργίες λατρείας και κυριακάτικο σχολείο, με παρεκκλήσι, σαλόνι και γραφεία για τη ζωή της κοινότητας. Πρόσφατα γιόρτασε την 50η επέτειό της (Σεπτέμβριος 2025)."
+  },
+  "0b810534f69d": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το TNO Food Collaborative (διαχειρίζεται ο οργανισμός The Neighbourhood Organization) παρέχει δωρεάν πρόσβαση σε τρόφιμα σε χιλιάδες άτομα στις κοινότητες Thorncliffe Park και Flemingdon Park, συμπεριλαμβανομένων φρέσκων προϊόντων, αυγών και γαλακτοκομικών προϊόντων που διανέμονται δύο φορές το μήνα, με διανομή όλο το χρόνο που υποστηρίζεται από κοινοτικούς εταίρους όπως το Greenwin Cares.\n\nΠρακτορείο εγκατάστασης με πολλαπλές υπηρεσίες που εξυπηρετεί τις περιοχές Thorncliffe Park, Flemingdon Park, St. James Town και Taylor Massey. Οι υπηρεσίες περιλαμβάνουν υποστήριξη εγκατάστασης (αξιολόγηση αναγκών, προσανατολισμός στη ζωή στον Καναδά/Οντάριο, μαθήματα προετοιμασίας για την υπηκοότητα, βοήθεια με τις αιτήσεις μετανάστευσης), βοήθεια στέγασης (αναζήτηση κατοικίας, αιτήσεις για επιδοτούμενη στέγαση, πρόσβαση σε τράπεζα ενοικίων, βοήθεια με λογαριασμούς ενέργειας), προγράμματα για ηλικιωμένους (Ολοκληρωμένες Υπηρεσίες για Ηλικιωμένους, υπηρεσίες προσωπικής υποστήριξης), προγράμματα για νέους (π.χ. προγράμματα για κορίτσια μετά το σχολείο), υπηρεσίες απασχόλησης, εκπαίδευση γλωσσών και συμβουλευτική για τη βία κατά των γυναικών. Δωρεάν· καλέστε ή επισκεφτείτε μας."
+   },
+   "model": "claude-correction",
+   "note": "'Πρακτορείο' sounded like a commercial agency; settlement agency reworded; Integrated Services for Seniors kept in English.",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Το TNO Food Collaborative (διαχειρίζεται ο οργανισμός The Neighbourhood Organization) παρέχει δωρεάν πρόσβαση σε τρόφιμα σε χιλιάδες άτομα στις κοινότητες Thorncliffe Park και Flemingdon Park, συμπεριλαμβανομένων φρέσκων προϊόντων, αυγών και γαλακτοκομικών προϊόντων που διανέμονται δύο φορές το μήνα, με διανομή όλο το χρόνο που υποστηρίζεται από κοινοτικούς εταίρους όπως το Greenwin Cares.\n\nΟργανισμός πολλαπλών υπηρεσιών για την υποστήριξη και ένταξη νεοφερμένων που εξυπηρετεί τις περιοχές Thorncliffe Park, Flemingdon Park, St. James Town και Taylor Massey. Οι υπηρεσίες περιλαμβάνουν υποστήριξη εγκατάστασης και ένταξης (αξιολόγηση αναγκών, προσανατολισμός στη ζωή στον Καναδά/Οντάριο, μαθήματα προετοιμασίας για την υπηκοότητα, βοήθεια με τις αιτήσεις μετανάστευσης), βοήθεια στέγασης (αναζήτηση κατοικίας, αιτήσεις για επιδοτούμενη στέγαση, πρόσβαση σε τράπεζα ενοικίων, βοήθεια με λογαριασμούς ενέργειας), προγράμματα για ηλικιωμένους (Integrated Services for Seniors - ολοκληρωμένες υπηρεσίες για ηλικιωμένους, υπηρεσίες προσωπικής υποστήριξης), προγράμματα για νέους (π.χ. προγράμματα για κορίτσια μετά το σχολείο), υπηρεσίες απασχόλησης, εκπαίδευση γλωσσών και συμβουλευτική για τη βία κατά των γυναικών. Δωρεάν· καλέστε ή επισκεφτείτε μας."
+  },
+  "0baa182fc012": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Εκτακτές περιπτώσεις ποιμαντικής φροντίδας: Μπορείτε να επικοινωνήσετε με τον π. Δρ. Paul Shepherd στο 647-700-7129 για έκτακτες περιπτώσεις ποιμαντικής φροντίδας ή για να κλείσετε ραντεβού."
+   },
+   "model": "claude-correction",
+   "note": "Fixed accent misspelling Εκτακτές -> Έκτακτες.",
+   "source": "Pastoral emergencies: Rev. Dr. Paul Shepherd can be reached at 647-700-7129 for pastoral emergencies or to book a meeting.",
+   "text": "Έκτακτες περιπτώσεις ποιμαντικής φροντίδας: Μπορείτε να επικοινωνήσετε με τον π. Δρ. Paul Shepherd στο 647-700-7129 για έκτακτες περιπτώσεις ποιμαντικής φροντίδας ή για να κλείσετε ραντεβού."
+  },
+  "0bb8b2cc1244": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Οι οδοντιατρικές κλινικές του Toronto Public Health παρέχουν δωρεάν βασικές οδοντιατρικές υπηρεσίες (εξέτασεις, ακτινογραφίες, σφραγίσματα, καθαρισμούς, ορισμένες θεραπείες ριζών, εξαγωγές, οδοντικά εμφυτεύματα) σε επιλέξιμα παιδιά και νέους ηλικίας 0-17 ετών, ηλικιωμένους με χαμηλό εισόδημα άνω των 65 ετών και πελάτες επιλεγμένων προγραμμάτων δημόσιας υγείας που ζουν στο Τορόντο και δεν μπορούν να αντέξουν οικονομικά έναν ιδιωτικό οδοντίατρο. Η επιλεξιμότητα αξιολογείται προσωπικά σε μια κλινική· μια κινητή οδοντιατρική κλινική εξυπηρετεί επίσης πελάτες που αντιμετωπίζουν δυσκολίες στην πρόσβαση σε περίθαλψη."
+   },
+   "model": "claude-correction",
+   "note": "Dentures were mistranslated as dental implants; fixed typo εξέτασεις.",
+   "source": "Toronto Public Health dental clinics provide free basic dental care (examinations, x-rays, fillings, cleanings, some root canals, extractions, dentures) for eligible children and youth aged 0-17, low-income seniors 65+, and clients of select public health programs who live in Toronto and cannot afford a private dentist. Eligibility is assessed in person at a clinic; a mobile dental clinic also serves clients with difficulty accessing care.",
+   "text": "Οι οδοντιατρικές κλινικές του Toronto Public Health παρέχουν δωρεάν βασικές οδοντιατρικές υπηρεσίες (εξετάσεις, ακτινογραφίες, σφραγίσματα, καθαρισμούς, ορισμένες θεραπείες ριζών, εξαγωγές, οδοντοστοιχίες (μασέλες)) σε επιλέξιμα παιδιά και νέους ηλικίας 0-17 ετών, ηλικιωμένους με χαμηλό εισόδημα άνω των 65 ετών και πελάτες επιλεγμένων προγραμμάτων δημόσιας υγείας που ζουν στο Τορόντο και δεν μπορούν να αντέξουν οικονομικά έναν ιδιωτικό οδοντίατρο. Η επιλεξιμότητα αξιολογείται προσωπικά σε μια κλινική· μια κινητή οδοντιατρική κλινική εξυπηρετεί επίσης πελάτες που αντιμετωπίζουν δυσκολίες στην πρόσβαση σε περίθαλψη."
+  },
+  "0bf38ee19e3c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Χώροι ψύξης"
+   },
+   "model": "claude-correction",
+   "note": "'Χώροι ψύξης' sounds like refrigeration rooms.",
+   "source": "Cooling Spaces",
+   "text": "Χώροι δροσισμού"
+  },
+  "0c3f5b3aa79a": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Απείγουσα διατροφική υποστήριξη για οικογένειες που έχουν ανάγκη (δωρεάν διανομή τροφίμων δύο φορές το μήνα). Δεν επιβεβαιώθηκε η ύπαρξη υπηρεσιών καταφυγίου, κέντρου ψύξης ή τηλεφωνικής γραμμής έκτακτης ανάγκης που να αφορούν ειδικά το Food Collaborative."
+   },
+   "model": "claude-correction",
+   "note": "Fixed misspelling Απείγουσα -> Επείγουσα (emergency); cooling centre -> κέντρο δροσισμού.",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "Επείγουσα διατροφική υποστήριξη για οικογένειες που έχουν ανάγκη (δωρεάν διανομή τροφίμων δύο φορές το μήνα). Δεν επιβεβαιώθηκε η ύπαρξη υπηρεσιών καταφυγίου, κέντρου δροσισμού ή τηλεφωνικής γραμμής έκτακτης ανάγκης που να αφορούν ειδικά το Food Collaborative."
+  },
+  "0f7fe1d38b46": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Πάροχος υπηρεσιών υγείας στο σπίτι και στην κοινότητα που προσφέρει υπηρεσίες στο σπίτι και σε κλινική: νοσηλεία (RN/RPN), προσωπική υποστήριξη, υποστήριξη στο σπίτι (προετοιμασία γευμάτων, οικιακές εργασίες, συντροφιά, υπενθυμίσεις φαρμάκων), φυσιοθεραπεία, εργοθεραπεία, λογοθεραπεία, κοινωνική εργασία και διαιτολογία. Οι νοσοκόμοι είναι διαθέσιμοι 24 ώρες το 24ωρο για ανάγκες βραχυπρόθεσμης ή μακροπρόθεσμης φροντίδας· λειτουργεί επίσης κλινικές νοσηλείας και φυσιοθεραπείας."
+   },
+   "model": "claude-correction",
+   "note": "νοσηλεία means hospitalisation; nursing -> νοσηλευτική φροντίδα.",
+   "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
+   "text": "Πάροχος υπηρεσιών υγείας στο σπίτι και στην κοινότητα που προσφέρει υπηρεσίες στο σπίτι και σε κλινική: νοσηλευτική φροντίδα (RN/RPN), προσωπική υποστήριξη, υποστήριξη στο σπίτι (προετοιμασία γευμάτων, οικιακές εργασίες, συντροφιά, υπενθυμίσεις φαρμάκων), φυσιοθεραπεία, εργοθεραπεία, λογοθεραπεία, κοινωνική εργασία και διαιτολογία. Οι νοσοκόμοι είναι διαθέσιμοι 24 ώρες το 24ωρο για ανάγκες βραχυπρόθεσμης ή μακροπρόθεσμης φροντίδας· λειτουργεί επίσης νοσηλευτικά ιατρεία και ιατρεία φυσιοθεραπείας."
+  },
+  "1330dcebcb5e": {
+   "model": "command-a-translate-08-2025",
+   "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
+   "text": "Μια ομάδα βάσης αποτελούμενη από περίπου 80 μέλη από 75 οικογένειες από το Thorncliffe και το Flemingdon Parks, που προέρχονται από πολλούς πολιτισμούς και θρησκείες. Στόχος της είναι να αναλάβει ηγετικό ρόλο στη σύνδεση των οργανώσεων της κοινότητας και των κατοίκων για να δημιουργηθεί μια ισχυρότερη γειτονιά."
+  },
+  "145d746d96ec": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η Ελληνική Ορθόδοξη Αρχιεπισκοπή του Καναδά (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Τορόντο, 416-429-5757) είναι το εθνικό διοικητικό όργανο της Ελληνικής Ορθόδοξης Εκκλησίας στον Καναδά. Η αρχική σελίδα της εστιάζει σε ειδήσεις και εορταστικές εκδηλώσεις της εκκλησίας, σε ορθόδοξα κατηχητικά και εκπαιδευτικά θρησκευτικά υλικά, σε ένα φυλλάδιο για τη Θεία Λειτουργία, σε ένα βιβλίο προσευχής και σε μια βιβλιοθήκη ορθόδοξων εικόνων — εκκλησιαστικά και πνευματικά υλικά και όχι κοινωνικές υπηρεσίες για την κοινότητα."
+   },
+   "model": "claude-correction",
+   "note": "Added English organisation name; Toronto in address in Latin script.",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "Η Ελληνική Ορθόδοξη Αρχιεπισκοπή του Καναδά (Greek Orthodox Archdiocese of Canada, 1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) είναι το εθνικό διοικητικό όργανο της Ελληνικής Ορθόδοξης Εκκλησίας στον Καναδά. Η αρχική σελίδα της εστιάζει σε ειδήσεις και εορταστικές εκδηλώσεις της εκκλησίας, σε ορθόδοξα κατηχητικά και εκπαιδευτικά θρησκευτικά υλικά, σε ένα φυλλάδιο για τη Θεία Λειτουργία, σε ένα βιβλίο προσευχής και σε μια βιβλιοθήκη ορθόδοξων εικόνων — εκκλησιαστικά και πνευματικά υλικά και όχι κοινωνικές υπηρεσίες για την κοινότητα."
+  },
+  "1517bf8b7dbd": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "Πολυλειτουργικό κοινοτικό κέντρο στη διεύθυνση 45 Overlea Blvd, 2ος όροφος (εντός του East York Town Centre), ανοιχτό από Δευτέρα έως Κυριακή από τις 8:00 π.μ. έως τις 8:00 μ.μ. Ένας ενιαίος χώρος όπου οι κάτοικοι έχουν πρόσβαση σε υπηρεσίες υγείας και κοινωνικής πρόνοιας, προγράμματα και κοινοτικούς χώρους από συνεργαζόμενους οργανισμούς."
+  },
+  "1538ea5a988e": {
+   "model": "command-a-translate-08-2025",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "Το νοσοκομείο St. Michael's διαθέτει τμήμα επειγόντων περιστατικών (30 Bond St.). Παρατίθενται οι πληροφορίες για το MyChart του Unity Health και οι τηλεφωνικές γραμμές του νοσοκομείου. Δεν βρέθηκαν υπηρεσίες έκτακτης ανάγκης που να αφορούν ειδικά κέντρα φροντίδας νεφρών — σε περίπτωση ιατρικής έκτακτης ανάγκης καλέστε το 911."
+  },
+  "1621e2da2a65": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
+   "text": "Κοινοτικά αναπτυγμένο αγρόκτημα στο Flemingdon Park που καλλιεργεί υγιεινά τρόφιμα για τους κατοίκους. Προσφέρει καλλιέργεια τροφίμων από την κοινότητα, μια εβδομαδιαία καλοκαιρινή αγορά αγροτών στη διεύθυνση 150 Grenoble Drive (Πέμπτες 3-6 μ.μ., από τέλη Ιουνίου έως αρχές Οκτωβρίου) και ένα πρόγραμμα Community Farmer που δίνει στους κατοίκους επιχειρηματικές ευκαιρίες για τη διαχείριση μικροεπιχειρήσεων αγροκτημάτων."
+  },
+  "16b01b9ea5a7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides emergency and urgent dental care for issues such as dental pain and cavities.",
+   "text": "Παρέχει επείγουσα και άμεση οδοντιατρική περίθαλψη για προβλήματα όπως οδοντικοί πόνοι και τερηδόνα."
+  },
+  "170900592261": {
+   "model": "command-a-translate-08-2025",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "Μαιευτική κλινική (East York/Don Mills) που παρέχει δωρεάν φροντίδα χρηματοδοτούμενη από το Υπουργείο Υγείας κατά τη διάρκεια της εγκυμοσύνης, του τοκετού και της γέννησης, καθώς και για τη μητέρα και το μωρό για έξι εβδομάδες μετά τον τοκετό. Οι γεννήσεις πραγματοποιούνται στο σπίτι, στο Toronto Birth Centre ή στο νοσοκομείο Michael Garron· οι μαίες είναι διαθέσιμες 24 ώρες το 24ωρο για επείγουσες περιπτώσεις και οι επιπλοκές παραπέμπονται σε μαιευτήρες, παιδίατρους και συμβούλους θηλασμού. Πολυγλωσσικό προσωπικό (αγγλικά, αραβικά, γαλλικά, ισπανικά, περσικά, ντάρι και άλλα) και προγεννητικά μαθήματα, συμπεριλαμβανομένων των Newborn 101.",
+   "warnings": [
+    "numbers missing from translation: 6, 7"
+   ]
+  },
+  "1a3c95cbc0e2": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δωρεάν νομικές συμβουλές και εκπροσώπηση για άτομα με χαμηλό εισόδημα στην περιοχή εξυπηρέτησης (από τη λίμνη Οντάριο έως το York Mills/401, από το Yonge/Don River έως το Victoria Park Ave), σε τέσσερις τομείς: δίκαιο στέγασης (πρόληψη έξωσης, παράνομες κλειδαριές, δικαιώματα ενοικιαστών), εργατικό δίκαιο (εργασιακά πρότυπα, αδικαιολόγητη απόλυση, αποζημίωση απόλυσης, EI), μεταναστευτικό δίκαιο (αιτήσεις μόνιμης διαμονής, άδειες εργασίας, υπηκοότητα) και ενισχύσεις εισοδήματος (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit). Επίσης, δημόσια νομική εκπαίδευση και περιορισμένες υπηρεσίες τεκμηρίωσης (βεβαιώσεις, πιστοποιημένα αντίγραφα). Γραμμή υποδοχής: 416-441-1764 ext. 1, Δευτ.–Πέμ. 9:00 π.μ.–12:30 μ.μ. (μηχάνημα καταγραφής μηνυμάτων με επιστροφή κλήσης εντός 1–3 εργάσιμων ημερών· δεν γίνονται δεκτοί επισκέπτες χωρίς ραντεβού· προσωπική υποδοχή κατόπιν ραντεβού Δευτ./Τετ. 1:30–4:30 μ.μ.)."
+   },
+   "model": "claude-correction",
+   "note": "'Illegal lockouts' was 'illegal locks'; affidavits -> ένορκες βεβαιώσεις; Lake Ontario in English.",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "Δωρεάν νομικές συμβουλές και εκπροσώπηση για άτομα με χαμηλό εισόδημα στην περιοχή εξυπηρέτησης (από το Lake Ontario (λίμνη Οντάριο) έως το York Mills/401, από το Yonge/Don River έως το Victoria Park Ave), σε τέσσερις τομείς: δίκαιο στέγασης (πρόληψη έξωσης, παράνομος αποκλεισμός ενοικιαστή από την κατοικία, δικαιώματα ενοικιαστών), εργατικό δίκαιο (εργασιακά πρότυπα, αδικαιολόγητη απόλυση, αποζημίωση απόλυσης, EI), μεταναστευτικό δίκαιο (αιτήσεις μόνιμης διαμονής, άδειες εργασίας, υπηκοότητα) και ενισχύσεις εισοδήματος (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit). Επίσης, δημόσια νομική εκπαίδευση και περιορισμένες υπηρεσίες τεκμηρίωσης (ένορκες βεβαιώσεις, επικυρωμένα αντίγραφα). Γραμμή υποδοχής: 416-441-1764 ext. 1, Δευτ.–Πέμ. 9:00 π.μ.–12:30 μ.μ. (μηχάνημα καταγραφής μηνυμάτων με επιστροφή κλήσης εντός 1–3 εργάσιμων ημερών· δεν γίνονται δεκτοί επισκέπτες χωρίς ραντεβού· προσωπική υποδοχή κατόπιν ραντεβού Δευτ./Τετ. 1:30–4:30 μ.μ.)."
+  },
+  "1ae4b85c3a4e": {
+   "model": "command-a-translate-08-2025",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "Το πρόγραμμα TNO (χρηματοδοτούμενο από το IRCC) βοηθά τους νεοφερμένους ηλικίας 18 ετών και άνω να ακολουθήσουν επαγγέλματα που απαιτούν δεξιότητες και τεχνικές καριέρες. Προσφέρει διαδρομές εκπαίδευσης και απασχόλησης στον τομέα των κατασκευών, του HVAC (άδεια G2/G3), της πληροφορικής, συμπεριλαμβανομένης της επιστήμης των δεδομένων και της τεχνητής νοημοσύνης, της οδήγησης φορτηγών (άδεια DZ), της λειτουργίας ανυψωτικών μηχανημάτων και του ελέγχου κυκλοφορίας σε οικοδομικά έργα. Είναι ανοιχτό σε μόνιμους κατοίκους, πρόσφυγες σύμφωνα με τη σύμβαση και Καναδούς πολίτες με επίπεδο αγγλικών CLB 5-6+."
+  },
+  "1be560c4691c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Σταθμοί της Πυροσβεστικής Υπηρεσίας του Τορόντο που παρέχουν προστασία από πυρκαγιές και υπηρεσίες διάσωσης σε έκτακτες περιπτώσεις 24 ώρες το 24ωρο στην περιοχή: Σταθμός 321 (231 McRae Dr), Σταθμός 235 (200 Bermondsey Rd), Σταθμός 322 (256 Cosburn Ave), Σταθμός 224 (1313 Woodbine Ave). Γραμμή μη επείγουσας ανάγκης: 416-338-9050."
+   },
+   "model": "claude-correction",
+   "note": "Organisation name kept in English with gloss.",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "Σταθμοί της Toronto Fire Services (Πυροσβεστική Υπηρεσία του Τορόντο) που παρέχουν προστασία από πυρκαγιές και υπηρεσίες διάσωσης σε έκτακτες περιπτώσεις 24 ώρες το 24ωρο στην περιοχή: Σταθμός 321 (231 McRae Dr), Σταθμός 235 (200 Bermondsey Rd), Σταθμός 322 (256 Cosburn Ave), Σταθμός 224 (1313 Woodbine Ave). Γραμμή μη επείγουσας ανάγκης: 416-338-9050."
+  },
+  "235e1072c4f3": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Κοινωνικό κέντρο της πόλης στη διεύθυνση 150 Grenoble Drive στο Flemingdon Park με το εσωτερικό πάρκο Playground Paradise (παιχνίδι για παιδιά έως 12 ετών χωρίς προειδοποίηση, 3 δολάρια ανά παιδί, απαιτούνται κάλτσες, απαιτείται συνοδεία γονέα ή κηδεμόνα). Διαθέτει επίσης εσωτερικές και εξωτερικές παιδικές χαρές, χώρο για πικνίκ, χώρο για πιτσιλίσματα, κοινοτικό κήπο, πολυλειτουργικά αθλητικά γήπεδα, γήπεδα μπέιζμπολ και γήπεδα χόκεϊ και μπάσκετ. Στην ίδια διεύθυνση βρίσκεται το Flemingdon Park EarlyON, το οποίο προσφέρει δωρεάν προγράμματα για παιδιά προσχολικής ηλικίας και οικογένειες χωρίς προειδοποίηση."
+   },
+   "model": "claude-correction",
+   "note": "'Drop-in' was 'without warning'; splash pad and community centre wording fixed.",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "Δημοτικό κοινοτικό κέντρο στη διεύθυνση 150 Grenoble Drive στο Flemingdon Park με την εσωτερική παιδική χαρά Playground Paradise (ελεύθερο παιχνίδι χωρίς ραντεβού για παιδιά έως 12 ετών, 3 δολάρια ανά παιδί, απαιτούνται κάλτσες, απαιτείται συνοδεία γονέα ή κηδεμόνα). Διαθέτει επίσης εσωτερικές και εξωτερικές παιδικές χαρές, χώρο για πικνίκ, χώρο παιχνιδιού με νερό (splash pad), κοινοτικό κήπο, πολυλειτουργικά αθλητικά γήπεδα, γήπεδα μπέιζμπολ και γήπεδα χόκεϊ και μπάσκετ. Στην ίδια διεύθυνση βρίσκεται το Flemingdon Park EarlyON, το οποίο προσφέρει δωρεάν προγράμματα για παιδιά προσχολικής ηλικίας και οικογένειες, χωρίς ραντεβού."
+  },
+  "27c968e6692b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Libraries",
+   "text": "Βιβλιοθήκες"
+  },
+  "2839a2e22b9b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Offers crisis counselling (their impact page reports 207 clients received it).",
+   "text": "Προσφέρει συμβουλευτική σε περιπτώσεις κρίσεων (στη σελίδα τους για την επίδρασή τους αναφέρεται ότι 207 πελάτες έλαβαν συμβουλευτική)."
+  },
+  "2b036077722c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Μεγάλο δημόσιο πάρκο με χαράδρα στη διεύθυνση 73 Thorncliffe Park Drive, κατά μήκος του ποταμού Don, μεταξύ Thorncliffe Park, Flemingdon Park και του πρώην Κέντρου Επιστημών του Οντάριο. Παροχές: γήπεδο disc golf 18 οπών (ιδρύθηκε το 2011, δωρεάν), πεδίο τοξοβολίας (ένα από τα δύο μόνο δημόσια πεδία στον Καναδά, δωρεάν αλλά χωρίς επίβλεψη), μονοπάτια τζόγκινγκ/ποδηλασίας, πίστες σκι αντοχής και ιππασίας, καταφύγια/περιοχές πικνίκ, εστίες φωτιάς, γήπεδα μπάσκετ, τουαλέτες και βρύσες πόσιμου νερού (το νερό και οι τουαλέτες είναι κλειστές τον χειμώνα)."
+   },
+   "model": "claude-correction",
+   "note": "Place name kept in English with gloss.",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "Μεγάλο δημόσιο πάρκο με χαράδρα στη διεύθυνση 73 Thorncliffe Park Drive, κατά μήκος του ποταμού Don, μεταξύ Thorncliffe Park, Flemingdon Park και του πρώην Ontario Science Centre (Κέντρο Επιστημών του Οντάριο). Παροχές: γήπεδο disc golf 18 οπών (ιδρύθηκε το 2011, δωρεάν), πεδίο τοξοβολίας (ένα από τα δύο μόνο δημόσια πεδία στον Καναδά, δωρεάν αλλά χωρίς επίβλεψη), μονοπάτια τζόγκινγκ/ποδηλασίας, πίστες σκι αντοχής και ιππασίας, καταφύγια/περιοχές πικνίκ, εστίες φωτιάς, γήπεδα μπάσκετ, τουαλέτες και βρύσες πόσιμου νερού (το νερό και οι τουαλέτες είναι κλειστές τον χειμώνα)."
+  },
+  "2d4e28c7351b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Notes routine safety drills and secure entry; no emergency-specific community services listed.",
+   "text": "Σημειώνει τις συνήθεις ασκήσεις ασφαλείας και την ασφαλή είσοδο· δεν αναφέρονται συγκεκριμένες υπηρεσίες κοινότητας για έκτακτες περιπτώσεις."
+  },
+  "2d84f26c9897": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Χώρος ψύξης που έχει οριστεί: παρέχει ανακούφιση σε εσωτερικούς χώρους με κλιματισμό κατά τη διάρκεια προειδοποιήσεων/ειδοποιήσεων για ακραίες θερμοκρασίες."
+   },
+   "model": "claude-correction",
+   "note": "Cooling space -> χώρος δροσισμού (ψύξης sounds like refrigeration), consistent with the category label.",
+   "source": "Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Ορισμένος χώρος δροσισμού: παρέχει ανακούφιση σε εσωτερικούς χώρους με κλιματισμό κατά τη διάρκεια προειδοποιήσεων/ειδοποιήσεων για ακραίες θερμοκρασίες."
+  },
+  "2d9482fd50f0": {
+   "model": "command-a-translate-08-2025",
+   "source": "Social & Cultural Organizations",
+   "text": "Κοινωνικοί & Πολιτιστικοί Οργανισμοί"
+  },
+  "2de0ec486420": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η σελίδα toronto.ca αφορά ειδικά την εγκατάσταση της Πηγής Πόσιμου Νερού στο Flemingdon Park (κοντά στην Don Mills Rd και την Eglinton Ave E). Η πηγή αναφέρεται ως επίσημη παροχή αυτού του πάρκου έκτασης 13,3 εκταρίων, το οποίο διαθέτει επίσης γήπεδα μπέιζμπολ, γήπεδο χόκεϊ με μπάλα, γήπεδο κρίκετ, πολυλειτουργικό γήπεδο, 4 υπαίθρια γήπεδα μπάσκετ, υπαίθριες πίστες, 4 παιδικές χαρές (η παιδική χαρά ανανεώθηκε το 2025), χώρο αναψυχής με νερό, κοινοτικό κήπο, 6 καταφύγια για πικνίκ, αθλητικά γήπεδα και χώρους στάθμευσης."
+   },
+   "model": "claude-correction",
+   "note": "Πηγή (natural spring) -> βρύση πόσιμου νερού (drinking fountain).",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "Η σελίδα toronto.ca αφορά ειδικά τη βρύση πόσιμου νερού (Drinking Fountain) στο Flemingdon Park (κοντά στην Don Mills Rd και την Eglinton Ave E). Η βρύση αναφέρεται ως επίσημη παροχή αυτού του πάρκου έκτασης 13,3 εκταρίων, το οποίο διαθέτει επίσης γήπεδα μπέιζμπολ, γήπεδο χόκεϊ με μπάλα, γήπεδο κρίκετ, πολυλειτουργικό γήπεδο, 4 υπαίθρια γήπεδα μπάσκετ, υπαίθριες πίστες, 4 παιδικές χαρές (η παιδική χαρά ανανεώθηκε το 2025), χώρο αναψυχής με νερό, κοινοτικό κήπο, 6 καταφύγια για πικνίκ, αθλητικά γήπεδα και χώρους στάθμευσης."
+  },
+  "2f2cb7da74f4": {
+   "model": "command-a-translate-08-2025",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "Η δημόσια εξωτερική πισίνα του Δήμου του Τορόντο στη διεύθυνση 5 Leaside Park Drive (στο Leaside Park) είναι ανοιχτή εποχιακά το καλοκαίρι για ψυχαγωγικό κολύμπι και κολύμπι σε διαδρομές. Αναφέρεται ως προσβάσιμη για αναπηρικά καροτσάκια, με προσβάσιμα αποδυτήρια, επίπεδο σημείο εισόδου στην πισίνα και δυνατότητα μεταφοράς με το Wheel-Trans στην περιοχή στάθμευσης του Leaside Park Drive."
+  },
+  "313e1f70434b": {
+   "model": "command-a-translate-08-2025",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "Κοινωφελής οργάνωση γυναικών σε τοπικό επίπεδο, η οποία ηγήθηκε της αναζωογόνησης του πάρκου R.V. Burgess, δημιουργώντας από κοινού εγκαταστάσεις όπως ένας κοινοτικός κήπος, ένα καφέ στο πάρκο, μια παιδική πισίνα, καθιστικά, φωτισμό και τον μοναδικό εξωτερικό φούρνο ταντούρ σε δημόσιο πάρκο στη Βόρεια Αμερική. Εστιάζει στην οικοδόμηση της κοινότητας και στο διαπολιτισμικό έργο στο Thorncliffe Park."
+  },
+  "32dfa11d6223": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Πρακτορείο διευθέτησης πολλαπλών υπηρεσιών που εξυπηρετεί τις περιοχές Thorncliffe Park, Flemingdon Park, St. James Town και Taylor Massey. Οι υπηρεσίες περιλαμβάνουν υποστήριξη εγκατάστασης (αξιολόγηση αναγκών, προσανατολισμός στη ζωή στον Καναδά/Οντάριο, μαθήματα προετοιμασίας για την ιθαγένεια, βοήθεια με έντυπα μετανάστευσης), βοήθεια στέγασης (αναζήτηση κατοικίας, αιτήσεις για επιδοτούμενη στέγαση, πρόσβαση σε τράπεζα ενοικίων, βοήθεια με λογαριασμούς ενέργειας), προγράμματα για ηλικιωμένους (Ολοκληρωμένες Υπηρεσίες για Ηλικιωμένους, υπηρεσίες προσωπικής υποστήριξης), προγράμματα για νέους (π.χ. προγράμματα για κορίτσια μετά το σχολείο), υπηρεσίες απασχόλησης, εκπαίδευση γλωσσών και συμβουλευτική για τη βία κατά των γυναικών. Δωρεάν· καλέστε ή επισκεφθείτε μας."
+   },
+   "model": "claude-correction",
+   "note": "'Πρακτορείο διευθέτησης' sounded commercial; settlement agency reworded; program name kept in English.",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Οργανισμός πολλαπλών υπηρεσιών για την υποστήριξη και ένταξη νεοφερμένων που εξυπηρετεί τις περιοχές Thorncliffe Park, Flemingdon Park, St. James Town και Taylor Massey. Οι υπηρεσίες περιλαμβάνουν υποστήριξη εγκατάστασης και ένταξης (αξιολόγηση αναγκών, προσανατολισμός στη ζωή στον Καναδά/Οντάριο, μαθήματα προετοιμασίας για την ιθαγένεια, βοήθεια με έντυπα μετανάστευσης), βοήθεια στέγασης (αναζήτηση κατοικίας, αιτήσεις για επιδοτούμενη στέγαση, πρόσβαση σε τράπεζα ενοικίων, βοήθεια με λογαριασμούς ενέργειας), προγράμματα για ηλικιωμένους (Integrated Services for Seniors - ολοκληρωμένες υπηρεσίες για ηλικιωμένους, υπηρεσίες προσωπικής υποστήριξης), προγράμματα για νέους (π.χ. προγράμματα για κορίτσια μετά το σχολείο), υπηρεσίες απασχόλησης, εκπαίδευση γλωσσών και συμβουλευτική για τη βία κατά των γυναικών. Δωρεάν· καλέστε ή επισκεφθείτε μας."
+  },
+  "33eb20802497": {
+   "model": "command-a-translate-08-2025",
+   "source": "Health & Wellness",
+   "text": "Υγεία & Ευεξία"
+  },
+  "37155594f70b": {
+   "model": "command-a-translate-08-2025",
+   "source": "The homepage returned a 'Page Not Found' error, so services were drawn from the Thorncliffe Hub grassroots listing and third-party community resource pages. Engaged Communities is the same resident organizing group described above: started November 2019 to address youth violence, builds resident engagement in community processes, and connects residents, agencies, schools, police, and politicians. It was a 2023 City of Toronto Youth Violence Prevention Grant recipient in partnership with Flemingdon Health Centre.",
+   "text": "Η αρχική σελίδα επέστρεψε ένα σφάλμα «Η σελίδα δεν βρέθηκε», έτσι οι υπηρεσίες αντλήθηκαν από τον κατάλογο των τοπικών οργανώσεων του Thorncliffe Hub και από σελίδες πόρων της κοινότητας τρίτων. Το Engaged Communities είναι η ίδια ομάδα οργάνωσης κατοίκων που περιγράφηκε παραπάνω: ξεκίνησε τον Νοέμβριο του 2019 για να αντιμετωπίσει τη βία των νέων, ενισχύει τη συμμετοχή των κατοίκων στις διαδικασίες της κοινότητας και συνδέει τους κατοίκους, τους φορείς, τα σχολεία, την αστυνομία και τους πολιτικούς. Ήταν ένας από τους παραλήπτες της επιχορήγησης του Δήμου του Τορόντο για την πρόληψη της βίας των νέων το 2023, σε συνεργασία με το Flemingdon Health Centre."
+  },
+  "37afb9eb8339": {
+   "model": "command-a-translate-08-2025",
+   "source": "No emergency-specific services listed. (The group has previously distributed food hampers during and after the pandemic as a charitable activity.)",
+   "text": "Δεν αναφέρονται υπηρεσίες που αφορούν συγκεκριμένα σε έκτακτες ανάγκες. (Η ομάδα έχει διανείμει στο παρελθόν πακέτα τροφίμων κατά τη διάρκεια και μετά την πανδημία, ως φιλανθρωπική δραστηριότητα.)"
+  },
+  "3904b64dcef4": {
+   "model": "command-a-translate-08-2025",
+   "source": "City community recreation centre at 48 Thorncliffe Park Drive, co-located with the Thorncliffe library branch. A small (12,000 sq ft) but heavily used neighbourhood hub offering indoor courts, a daycare centre, meeting space, workshops such as mental health and wellbeing sessions, and recreation programs.",
+   "text": "Το κοινοτικό κέντρο αναψυχής της πόλης βρίσκεται στη διεύθυνση 48 Thorncliffe Park Drive, μαζί με το παράρτημα της βιβλιοθήκης Thorncliffe. Ένας μικρός (12.000 τετραγωνικά πόδια) αλλά πολύ χρησιμοποιούμενος χώρος γειτονιάς που προσφέρει εσωτερικές αίθουσες, κέντρο φροντίδας παιδιών, χώρο συναντήσεων, εργαστήρια όπως συνεδρίες για την ψυχική υγεία και την ευεξία και προγράμματα αναψυχής."
+  },
+  "39681ff66eee": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB early learning academy at 82 Thorncliffe Park Dr for young children, with structured daily routines for arrival, lunch and dismissal. Parents report absences through the Safe Arrival number (1-833-250-2290).",
+   "text": "Η Ακαδημία Πρώιμης Μάθησης του TDSB, που βρίσκεται στη διεύθυνση 82 Thorncliffe Park Dr, απευθύνεται σε μικρά παιδιά και ακολουθεί οργανωμένο καθημερινό πρόγραμμα για την άφιξη, το μεσημεριανό γεύμα και την αποχώρηση. Οι γονείς δηλώνουν τις απουσίες των παιδιών τους καλώντας τον αριθμό Safe Arrival (1-833-250-2290)."
+  },
+  "3dc2fd8bba11": {
+   "model": "command-a-translate-08-2025",
+   "source": "Non-profit community health centre (operating since 1975) at 10 Gateway Blvd offering free primary care from doctors and nurse practitioners for residents in its catchment area — no OHIP card or medical referral required. Also offers individual and family counselling/mental health services, chronic disease prevention and management (diabetes, lung and heart health), dietitians, chiropody (foot care), nutrition counselling, a sexual health clinic (with Toronto Public Health), prenatal programs, and health promotion programs (exercise, wellness, healthy cooking) for seniors, women, youth and newcomers.",
+   "text": "Μη κερδοσκοπικό κοινοτικό κέντρο υγείας (λειτουργεί από το 1975) στη διεύθυνση 10 Gateway Blvd, το οποίο προσφέρει δωρεάν πρωτοβάθμια περίθαλψη από γιατρούς και νοσηλευτές στους κατοίκους της περιοχής που εξυπηρετεί — δεν απαιτείται κάρτα OHIP ή ιατρική παραπομπή. Επίσης, προσφέρει συμβουλευτικές υπηρεσίες για άτομα και οικογένειες/υπηρεσίες ψυχικής υγείας, πρόληψη και διαχείριση χρόνιων παθήσεων (διαβήτης, υγεία πνευμόνων και καρδιάς), διαιτολόγους, ποδοθεραπεία (περιποίηση ποδιών), συμβουλευτικές υπηρεσίες διατροφής, μια κλινική σεξουαλικής υγείας (σε συνεργασία με το Toronto Public Health), προγεννητικά προγράμματα και προγράμματα προαγωγής της υγείας (άσκηση, ευεξία, υγιεινή μαγειρική) για ηλικιωμένους, γυναίκες, νέους και νεοφερμένους."
+  },
+  "3ecbd52603f7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Health Clinics",
+   "text": "Κλινικές Υγείας"
+  },
+  "411f70e150dd": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Ενορία της Ελληνικής Ορθόδοξης Εκκλησίας στη διεύθυνση 30 Thorncliffe Park Drive (χωρητικότητα άνω των 600 καθήμενων πιστών, άφθονος χώρος στάθμευσης), υπό την ηγεσία του ιερέα π. Απόστολου Γκόλια (apostolosgkolias@yahoo.com; τηλέφωνο εκκλησίας +1 (416) 425-2485, info@togreekcom.org). Κυριακάτικες και εορταστικές λειτουργίες: Όρθρος 8:30–10:00 π.μ. και Θεία Λειτουργία 10:00 π.μ.–12:00 μ.μ.· διοργανώνει εγγραφές για το κατηχητικό σχολείο και άλλα εκκλησιαστικά προγράμματα."
+   },
+   "model": "claude-correction",
+   "note": "Latin ';' (Greek question mark) replaced; priest's name also given in Latin script to match the email.",
+   "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
+   "text": "Ενορία της Ελληνικής Ορθόδοξης Εκκλησίας στη διεύθυνση 30 Thorncliffe Park Drive (χωρητικότητα άνω των 600 καθήμενων πιστών, άφθονος χώρος στάθμευσης), υπό την ηγεσία του ιερέα π. Απόστολου Γκόλια (Fr. Apostolos Gkolias, apostolosgkolias@yahoo.com, τηλέφωνο εκκλησίας +1 (416) 425-2485, info@togreekcom.org). Κυριακάτικες και εορταστικές λειτουργίες: Όρθρος 8:30–10:00 π.μ. και Θεία Λειτουργία 10:00 π.μ.–12:00 μ.μ.· διοργανώνει εγγραφές για το κατηχητικό σχολείο και άλλα εκκλησιαστικά προγράμματα."
+  },
+  "4341d8807857": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η σελίδα toronto.ca αφορά ειδικά την εγκατάσταση της Πηγής Πόσιμου Νερού στο πάρκο R.V. Burgess (46 Thorncliffe Park Dr, κοντά στο Thorncliffe Park Dr και το Overlea Blvd). Η πηγή αναφέρεται ως επίσημη παροχή αυτού του πάρκου γειτονιάς έκτασης 1,5 εκταρίων, το οποίο διαθέτει επίσης μια περιοχή με πίδακες νερού, δύο παιδικές χαρές, έναν κοινοτικό κήπο, μια σκεπαστή περιοχή πικνίκ και τον πρώτο δημόσιο φούρνο ταντούρ στον Καναδά, καθώς και εγκαταστάσεις πόσιμου νερού που έχουν επισημανθεί από τους επισκέπτες."
+   },
+   "model": "claude-correction",
+   "note": "Πηγή (natural spring) -> βρύση πόσιμου νερού (drinking fountain).",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "Η σελίδα toronto.ca αφορά ειδικά τη βρύση πόσιμου νερού (Drinking Fountain) στο πάρκο R.V. Burgess (46 Thorncliffe Park Dr, κοντά στο Thorncliffe Park Dr και το Overlea Blvd). Η βρύση αναφέρεται ως επίσημη παροχή αυτού του πάρκου γειτονιάς έκτασης 1,5 εκταρίων, το οποίο διαθέτει επίσης μια περιοχή με πίδακες νερού, δύο παιδικές χαρές, έναν κοινοτικό κήπο, μια σκεπαστή περιοχή πικνίκ και τον πρώτο δημόσιο φούρνο ταντούρ στον Καναδά, καθώς και εγκαταστάσεις πόσιμου νερού που έχουν επισημανθεί από τους επισκέπτες."
+  },
+  "4420ad1cb6b5": {
+   "model": "command-a-translate-08-2025",
+   "source": "Housing & Tenant Supports",
+   "text": "Στήριξη για θέματα στέγασης και ενοικιαστών"
+  },
+  "44a718e6efa5": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community grassroots group founded in 2019 by Thorncliffe & Flemingdon Park residents of all ages and cultures. Runs education initiatives on reducing indirect greenhouse gas emissions (buildings, waste, transportation) aligned with Toronto's TransformTO strategy, promotes 'climate-wise' sustainable living habits, and helps include seniors who became isolated during the pandemic.",
+   "text": "Κοινωφελής ομάδα βάσης που ιδρύθηκε το 2019 από κατοίκους του Thorncliffe & Flemingdon Park όλων των ηλικιών και πολιτισμών. Υλοποιεί εκπαιδευτικές πρωτοβουλίες για τη μείωση των έμμεσων εκπομπών αερίων του θερμοκηπίου (κτίρια, απόβλητα, μεταφορές) που είναι ευθυγραμμισμένες με τη στρατηγική TransformTO του Τορόντο, προωθεί συνήθειες βιώσιμου τρόπου ζωής που είναι «φιλικές προς το κλίμα» και βοηθά στην ένταξη ηλικιωμένων που απομονώθηκαν κατά τη διάρκεια της πανδημίας."
+  },
+  "4a39ebe12219": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Πηγάδια νερού"
+   },
+   "model": "claude-correction",
+   "note": "'Πηγάδια νερού' meant water wells.",
+   "source": "Water Fountains",
+   "text": "Βρύσες πόσιμου νερού"
+  },
+  "4a8be4c87e8f": {
+   "model": "command-a-translate-08-2025",
+   "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
+   "text": "Μουσείο με περιοδικές εκθέσεις, συναυλίες και διαδραστικά εργαστήρια (π.χ. εργαστήρια τέχνης, μουσικές εκδηλώσεις). Διοργανώνει σχολικά προγράμματα που περιλαμβάνουν εκδρομές στο χώρο και εικονικές εκδρομές, εκπαιδευτικό υλικό για δασκάλους και διαδικτυακά μαθήματα, καθώς και μια δωρεάν διαδικτυακή βιβλιοθήκη με podcasts, 3D περιηγήσεις και ομιλίες καλλιτεχνών."
+  },
+  "4c0ad54aefbb": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Παρέχει υπηρεσίες παρέμβασης σε κρίσεις και συμβουλευτικής μέσω του προγράμματός της για την αντιμετώπιση της βίας κατά των γυναικών· λειτουργεί ως κέντρο πρόσβασης στην τράπεζα ενοικίων του Τορόντο και ως τηλεφωνικό κέντρο του Ταμείου Έκτακτης Ενεργειακής Βοήθειας (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "Kept program names Toronto Rent Bank and Emergency Energy Fund in English with Greek gloss.",
+   "source": "Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Παρέχει υπηρεσίες παρέμβασης σε κρίσεις και συμβουλευτικής μέσω του προγράμματός της για την αντιμετώπιση της βίας κατά των γυναικών· λειτουργεί ως κέντρο πρόσβασης (Access Centre) του Toronto Rent Bank (τράπεζα ενοικίων) και ως τηλεφωνικό κέντρο του Emergency Energy Fund (Ταμείο Έκτακτης Ενεργειακής Βοήθειας) (416-397-7368)."
+  },
+  "5141105643c3": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Πολυεπιστημονική συμβουλευτική εταιρεία που συνεργάζεται με οργανισμούς σε διάφορους κλάδους (μεταξύ των πελατών της είναι το TNO, το OCAD University και η Ισλαμική Κοινότητα του Τορόντο). Οι υπηρεσίες περιλαμβάνουν έρευνα αγοράς και χρηστών, σχεδιασμό και αστικό σχεδιασμό, διαχείριση έργων και προγραμμάτων, λειτουργική υποστήριξη, συμβουλευτικές υπηρεσίες διακυβέρνησης και ηγεσίας, επιχειρηματική συμβουλευτική, ενσωμάτωση τεχνητής νοημοσύνης και νέων τεχνολογιών, branding και μέσα ενημέρωσης, βελτιστοποίηση πωλήσεων και εκπαίδευση και σεμινάρια."
+   },
+   "model": "claude-correction",
+   "note": "Organisation name kept in English.",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "Πολυεπιστημονική συμβουλευτική εταιρεία που συνεργάζεται με οργανισμούς σε διάφορους κλάδους (μεταξύ των πελατών της είναι το TNO, το OCAD University και η Islamic Society of Toronto). Οι υπηρεσίες περιλαμβάνουν έρευνα αγοράς και χρηστών, σχεδιασμό και αστικό σχεδιασμό, διαχείριση έργων και προγραμμάτων, λειτουργική υποστήριξη, συμβουλευτικές υπηρεσίες διακυβέρνησης και ηγεσίας, επιχειρηματική συμβουλευτική, ενσωμάτωση τεχνητής νοημοσύνης και νέων τεχνολογιών, branding και μέσα ενημέρωσης, βελτιστοποίηση πωλήσεων και εκπαίδευση και σεμινάρια."
+  },
+  "56ab2826fe5e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare at 9 Grenoble Dr (Flemingdon Park) for toddler, preschool, kindergarten and school-age children, with CWELCC reduced fees and subsidy available. Care offered in English, Spanish, Gujarati and Ukrainian; catered meals with halal and vegetarian options.",
+   "text": "Αδειοδοτημένη φροντίδα παιδιών στην διεύθυνση 9 Grenoble Dr (Flemingdon Park) για νήπια, παιδιά προσχολικής ηλικίας, παιδιά νηπιαγωγείου και παιδιά σχολικής ηλικίας, με μειωμένα τέλη και επιδότηση CWELCC. Η φροντίδα παρέχεται στα αγγλικά, ισπανικά, γκουτζαράτι και ουκρανικά· προσφέρονται γεύματα με επιλογές χάλαλ και χορτοφαγικές."
+  },
+  "57480d0bcd4e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το δημοτικό γήπεδο στο 165 Grenoble Dr (το οποίο μετονομάστηκε το 2009 προς τιμήν της Καναδής αστέρας του χόκεϊ Angela James) για προγράμματα πατινάζ και χόκεϊ, καθώς και γειτονικά δημόσια γήπεδα τένις. Σημείωση: Η πόλη ανακοίνωσε σχέδια (2026) για την κατασκευή ενός νέου πυροσβεστικού σταθμού στο Φλέμινγκντον στη διεύθυνση 165 Grenoble Dr, το οποίο θα αφαιρέσει δύο από τα τέσσερα γήπεδα τένις — η κατάσταση παραμένει αβέβαιη."
+   },
+   "model": "claude-correction",
+   "note": "Arena -> παγοδρόμιο (not γήπεδο); Flemingdon kept in Latin script.",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "Το δημοτικό παγοδρόμιο (arena) στη διεύθυνση 165 Grenoble Dr (το οποίο μετονομάστηκε το 2009 προς τιμήν της Καναδής αστέρας του χόκεϊ Angela James) για προγράμματα πατινάζ και χόκεϊ, καθώς και γειτονικά δημόσια γήπεδα τένις. Σημείωση: Η πόλη ανακοίνωσε σχέδια (2026) για την κατασκευή ενός νέου πυροσβεστικού σταθμού στο Flemingdon στη διεύθυνση 165 Grenoble Dr, το οποίο θα αφαιρέσει δύο από τα τέσσερα γήπεδα τένις — η κατάσταση παραμένει αβέβαιη."
+  },
+  "5b54b1c20dbc": {
+   "model": "command-a-translate-08-2025",
+   "source": "A community-led initiative raising awareness of mental health and reducing its stigma in the South Asian community, particularly for newcomers and immigrants of first and second generations.",
+   "text": "Μια πρωτοβουλία που ηγείται η κοινότητα και έχει ως στόχο την ευαισθητοποίηση σχετικά με την ψυχική υγεία και τη μείωση του στίγματος που τη συνοδεύει στην κοινότητα των Νοτιοασιατών, ιδιαίτερα για τους νεοφερμένους και τους μετανάστες πρώτης και δεύτερης γενιάς."
+  },
+  "5d864949c117": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Υπηρεσία Αστυνομίας Τορόντο, 55η Διεύθυνση (101 Coxwell Ave, 416-808-5500) — η διεύθυνση που εξυπηρετεί την ανατολική περιοχή, συμπεριλαμβανομένης της περιοχής Thorncliffe/Flemingdon· παρέχει αστυνόμευση της κοινότητας, αναφορά μη επείγουσας φύσης και υποστήριξη θυμάτων. Σημείωση: Η συγχώνευση των Διευθύνσεων 54 και 55 σε ένα νέο ενοποιημένο σταθμό στην διεύθυνση 1627 Danforth Ave (πρώην γκαράζ Danforth του TTC) είναι προγραμματισμένη."
+   },
+   "model": "claude-correction",
+   "note": "'Division' was 'Διεύθυνση' (also means address); now Αστυνομικό Τμήμα 55 (55 Division); police name in English.",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "Toronto Police Service (Αστυνομία του Τορόντο), Αστυνομικό Τμήμα 55 (55 Division) (101 Coxwell Ave, 416-808-5500) — το τμήμα που εξυπηρετεί την ανατολική περιοχή, συμπεριλαμβανομένης της περιοχής Thorncliffe/Flemingdon· παρέχει αστυνόμευση της κοινότητας, αναφορά μη επείγουσας φύσης και υποστήριξη θυμάτων. Σημείωση: Η συγχώνευση των Αστυνομικών Τμημάτων 54 και 55 (54 and 55 Divisions) σε ένα νέο ενοποιημένο τμήμα στη διεύθυνση 1627 Danforth Ave (πρώην γκαράζ Danforth του TTC) είναι προγραμματισμένη."
+  },
+  "5d959a5ff47c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το Κέντρο Παιδιών Pride In Heritage είναι ένας μη κερδοσκοπικός, κοινοτικός πολυπολιτισμικός οργανισμός φροντίδας παιδιών, ο οποίος βρίσκεται στο Gateway Public School, 55 Gateway Blvd, Τορόντο (416-467-5981). Παρέχει ολοκληρωμένη και αμερόληπτη φροντίδα παιδιών σε ένα ασφαλές και υποστηρικτικό περιβάλλον, υπό τη διαχείριση ενός εθελοντικού Διοικητικού Συμβουλίου. Αντιμετωπίζει όλους τους ανθρώπους με αξιοπρέπεια, ανεξάρτητα από την καταγωγή τους."
+   },
+   "model": "claude-correction",
+   "note": "'Inclusive' was 'comprehensive'; centre name and address kept in English.",
+   "source": "Pride In Heritage Children's Centre is a non-profit, community-based multicultural child care centre located inside Gateway Public School at 55 Gateway Blvd, Toronto (416-467-5981). It offers inclusive, bias-free child care in a safe, nurturing environment, run by a volunteer Board of Directors; it treats all individuals with dignity regardless of background.",
+   "text": "Το Pride In Heritage Children's Centre (κέντρο παιδιών) είναι ένας μη κερδοσκοπικός, κοινοτικός πολυπολιτισμικός οργανισμός φροντίδας παιδιών, ο οποίος βρίσκεται στο Gateway Public School, 55 Gateway Blvd, Toronto (416-467-5981). Παρέχει φροντίδα παιδιών χωρίς αποκλεισμούς και χωρίς προκαταλήψεις σε ένα ασφαλές και υποστηρικτικό περιβάλλον, υπό τη διαχείριση ενός εθελοντικού Διοικητικού Συμβουλίου. Αντιμετωπίζει όλους τους ανθρώπους με αξιοπρέπεια, ανεξάρτητα από την καταγωγή τους."
+  },
+  "6112e2d3ed72": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
+   "text": "Παρέχει δωρεάν, εμπιστευτική βοήθεια 24 ώρες το 24ωρο από γιατρούς που είναι διαθέσιμοι για κλήσεις (416-429-4991). Αναφέρει ρητά ότι δεν προσφέρει υπηρεσίες έκτακτης ανάγκης ή υπηρεσίες χωρίς ραντεβού — σε περίπτωση έκτακτης ανάγκης καλέστε το 911."
+  },
+  "6166d8860ebc": {
+   "model": "command-a-translate-08-2025",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Το Valley Park Middle School είναι ένα γυμνάσιο του TDSB που καλύπτει τις τάξεις 6–8 με περίπου 1.100 μαθητές από τις κοινότητες Thorncliffe Park και Flemingdon Park, στη διεύθυνση 130 Overlea Blvd, East York. Στόχος του είναι ένα ασφαλές και υποστηρικτικό περιβάλλον μάθησης που βασίζεται στον σεβασμό, την ευθύνη και την ασφάλεια· στο κείμενο της αρχικής σελίδας δεν αναφέρονται προγράμματα γαλλικής γλώσσας, ESL ή ειδικής εκπαίδευσης."
+  },
+  "62d55110cf7b": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δωρεάν Κέντρο Παιδιού και Οικογένειας EarlyON που λειτουργεί από το TCDSB στη διεύθυνση 175 Grenoble Dr και προσφέρει προγράμματα παιχνιδιού και μάθησης για παιδιά ηλικίας 0-6 ετών μαζί με τους γονείς/κηδεμόνες τους (απαιτείται η συμμετοχή των γονέων, δεν απαιτείται εγγραφή). Σύμφωνα με το πρόγραμμα του TCDSB, το St. John XXIII λειτουργεί Δευτέρα-Πέμπτη 8:45 π.μ.-12:45 μ.μ. και Παρασκευή 8:45 π.μ.-12:45 μ.μ."
+   },
+   "model": "claude-correction",
+   "note": "Centre name kept in English with gloss.",
+   "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
+   "text": "Δωρεάν EarlyON Child and Family Centre (κέντρο παιδιού και οικογένειας) που λειτουργεί από το TCDSB στη διεύθυνση 175 Grenoble Dr και προσφέρει προγράμματα παιχνιδιού και μάθησης για παιδιά ηλικίας 0-6 ετών μαζί με τους γονείς/κηδεμόνες τους (απαιτείται η συμμετοχή των γονέων, δεν απαιτείται εγγραφή). Σύμφωνα με το πρόγραμμα του TCDSB, το St. John XXIII λειτουργεί Δευτέρα-Πέμπτη 8:45 π.μ.-12:45 μ.μ. και Παρασκευή 8:45 π.μ.-12:45 μ.μ."
+  },
+  "63c710ddedbb": {
+   "model": "command-a-translate-08-2025",
+   "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
+   "text": "Νοσηλεύτριες διαθέσιμες 24 ώρες το 24ωρο για ανάγκες φροντίδας στο σπίτι· δεν υπάρχει ειδική υπηρεσία έκτακτης ανάγκης (δεν είναι υπηρεσία 911 ή παροχής επείγουσας φροντίδας).",
+   "warnings": [
+    "numbers missing from translation: 7"
+   ]
+  },
+  "67d4ed5dfe5d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
+   "text": "Το τζαμί Masjid Darus Salaam στη διεύθυνση 20 Overlea Blvd, εξυπηρετεί τη μουσουλμανική κοινότητα του Thorncliffe Park, του Flemingdon Park και άλλων περιοχών από το 1995. Προσφέρει πέντε καθημερινές προσευχές και την προσευχή Jummah, πλήρες πρόγραμμα Hifz και προγράμματα Alim/Alima, βραδινά μαθήματα Κορανίου (Madrasah), κυριακάτικο σχολείο, μαθήματα Tafseer και βασικών στοιχείων του Ισλάμ, προγράμματα για νέους, υπηρεσίες Nikah και εκδηλώσεις της κοινότητας."
+  },
+  "68c635426ffe": {
+   "model": "command-a-translate-08-2025",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "Η μεγαλύτερη ετήσια εκδήλωση της κοινότητας Thorncliffe Park, η οποία πραγματοποιείται εδώ και 14 χρόνια στο πάρκο R.V. Burgess. Ένα καλοκαιρινό απόγευμα και βράδυ με αναψυκτικά, τέχνη και χειροτεχνία, μουσική, χορό, παιχνίδια, παζάρια και φαγητό από τοπικές επιχειρήσεις. Διοργανώνεται από μια ανεξάρτητη επιτροπή εθελοντών· περίπου 100 νέοι εθελοντές συμμετέχουν κάθε χρόνο, αναπτύσσοντας ηγετικές ικανότητες."
+  },
+  "6b036c3ba973": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community Resilience",
+   "text": "Ανθεκτικότητα της κοινότητας"
+  },
+  "6b17dc8d3ad4": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "Δωρεάν, εμπιστευτικό κέντρο με ελεύθερη πρόσβαση για νέους ηλικίας 12-25 ετών στο Thorncliffe Park και στο Flemingdon Park (που εγκαινιάστηκε από τους East Toronto Health Partners, TNO – The Neighbourhood Organization και Youth Wellness Hubs Ontario· δεν απαιτείται κάρτα υγείας, οικογενειακός γιατρός ή παραπομπή). Υπηρεσίες: συμβουλευτική ευεξίας, υποστήριξη για χρήση ουσιών, πρωτοβάθμια περίθαλψη, πλοήγηση στην περίθαλψη, υποστήριξη από συνομηλίκους, υπηρεσίες απασχόλησης, επαγγελματική κατάρτιση, τράπεζα τροφίμων, βοήθεια για στέγαση και εγκατάσταση, εκπαίδευση, προγράμματα αναψυχής/κοινωνικά προγράμματα, ανάπτυξη ηγετικών δεξιοτήτων και ευκαιρίες εθελοντισμού."
+  },
+  "6ba3dd305d6e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η ιστοσελίδα unityhealth.to είναι η αρχική σελίδα του Unity Health Toronto, του δικτύου που περιλαμβάνει το St. Joseph's Health Centre (30 The Queensway, 416-530-6000), το St. Michael's Hospital (30 Bond St., 416-360-4000) και το Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Το Κέντρο Νεφρολογικής Φροντίδας του St. Michael's, που βρίσκεται στη διεύθυνση 45 Overlea Blvd. (416-867-3700), είναι μια εγκατάσταση αιμοκάθαρσης που εστιάζει στον ασθενή και βρίσκεται στην κοινότητα, με 21 σταθμούς θεραπείας, 6 σταθμούς εκπαίδευσης για αιμοκάθαρση στο σπίτι και 5 δωμάτια εξετάσεων. Η Πολυϊατρική Νεφρολογική Κλινική του Unity προσφέρει υπηρεσίες νεφρολογίας, νοσηλευτικής, διαιτολογίας, φαρμακολογίας, κοινωνικής εργασίας και εκπαίδευσης για τις διαθέσιμες μεθόδους, με στόχο την επιβράδυνση της εξέλιξης της νεφρικής νόσου, καθώς και επιλογές περιτοναϊκής και αιμοκάθαρσης στο σπίτι."
+   },
+   "model": "claude-correction",
+   "note": "Centre/clinic names kept in English; pharmacist was 'pharmacology'.",
+   "source": "unityhealth.to is the homepage for Unity Health Toronto, the parent network of St. Joseph's Health Centre (30 The Queensway, 416-530-6000), St. Michael's Hospital (30 Bond St., 416-360-4000) and Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). The St. Michael's Kidney Care Centre at 45 Overlea Blvd. (416-867-3700) is a patient-centred community satellite hemodialysis facility with 21 treatment stations, 6 home-dialysis training stations and 5 exam rooms; Unity's Multi-Care Kidney Clinic offers nephrology, nursing, dietitian, pharmacist, social worker and modality-education support to slow kidney disease progression, plus peritoneal and home hemodialysis options.",
+   "text": "Η ιστοσελίδα unityhealth.to είναι η αρχική σελίδα του Unity Health Toronto, του δικτύου που περιλαμβάνει το St. Joseph's Health Centre (30 The Queensway, 416-530-6000), το St. Michael's Hospital (30 Bond St., 416-360-4000) και το Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Το St. Michael's Kidney Care Centre (κέντρο νεφρολογικής φροντίδας), που βρίσκεται στη διεύθυνση 45 Overlea Blvd. (416-867-3700), είναι μια εγκατάσταση αιμοκάθαρσης που εστιάζει στον ασθενή και βρίσκεται στην κοινότητα, με 21 σταθμούς θεραπείας, 6 σταθμούς εκπαίδευσης για αιμοκάθαρση στο σπίτι και 5 δωμάτια εξετάσεων. Η Multi-Care Kidney Clinic (νεφρολογική κλινική) του Unity προσφέρει υπηρεσίες νεφρολογίας, νοσηλευτικής, διαιτολογίας, φαρμακοποιού, κοινωνικής εργασίας και εκπαίδευσης για τις διαθέσιμες μεθόδους, με στόχο την επιβράδυνση της εξέλιξης της νεφρικής νόσου, καθώς και επιλογές περιτοναϊκής και αιμοκάθαρσης στο σπίτι."
+  },
+  "72b07ee72576": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δημόσια αποχωρητήρια"
+   },
+   "model": "claude-correction",
+   "note": "'αποχωρητήρια' is dated; everyday word used.",
+   "source": "Public Washrooms",
+   "text": "Δημόσιες τουαλέτες"
+  },
+  "7325c2c76d27": {
+   "model": "command-a-translate-08-2025",
+   "source": "Legal Services",
+   "text": "Νομικές Υπηρεσίες"
+  },
+  "7463c7451c52": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Υπηρεσίες πολλαπλών δραστηριοτήτων"
+   },
+   "model": "claude-correction",
+   "note": "Clearer rendering of Multi-Service Agencies.",
+   "source": "Multi-Service Agencies",
+   "text": "Φορείς πολλαπλών υπηρεσιών"
+  },
+  "7482403a5dc6": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Σήμα δημόσιας πρόσβασης σε πόσιμο νερό, χρήσιμο σε περιπτώσεις ακραίων καιρικών συνθηκών υψηλής θερμοκρασίας."
+   },
+   "model": "claude-correction",
+   "note": "Σήμα (signal) -> Σημείο (point) for 'access point'.",
+   "source": "Public drinking-water access point, relevant during extreme heat events.",
+   "text": "Σημείο δημόσιας πρόσβασης σε πόσιμο νερό, χρήσιμο σε περιπτώσεις ακραίων καιρικών συνθηκών υψηλής θερμοκρασίας."
+  },
+  "75a5d313aef1": {
+   "model": "command-a-translate-08-2025",
+   "source": "Non-Profits",
+   "text": "Μη κερδοσκοπικοί οργανισμοί"
+  },
+  "78b02f992c4d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Public Spaces",
+   "text": "Δημόσιοι Χώροι"
+  },
+  "79db95729d8c": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
+   "text": "Δημοτικό σχολείο του TDSB στη διεύθυνση 9 Grenoble Drive, το οποίο εξυπηρετεί πάνω από 960 μαθητές από το νηπιαγωγείο έως την ΣΤ' τάξη (περίπου το 93% των οικογενειών έχει μεταναστεύσει στον Καναδά· ομιλούνται πάνω από 73 γλώσσες). Στην ιστοσελίδα του σχολείου δεν αναφέρονται ειδικά προγράμματα, όπως η γαλλόφωνη εκπαίδευση (French Immersion).",
+   "warnings": [
+    "numbers missing from translation: 6"
+   ]
+  },
+  "7bd551d09cd0": {
+   "model": "command-a-translate-08-2025",
+   "source": "Parent handbook notes an Emergency Management Policy available on request from supervisors; no public emergency-specific community services listed.",
+   "text": "Το εγχειρίδιο γονέων αναφέρει ότι υπάρχει πολιτική διαχείρισης έκτακτων περιστατικών, η οποία είναι διαθέσιμη κατόπιν αιτήματος από τους επιβλέποντες· δεν αναφέρονται συγκεκριμένες υπηρεσίες κοινότητας για έκτακτες καταστάσεις που αφορούν το κοινό."
+  },
+  "7c53a90857c2": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δωρεάν Κέντρο EarlyON για Παιδιά και Οικογένειες για τους κατοίκους του Τορόντο με παιδιά ηλικίας 0-6 ετών και τους γονείς/κηδεμόνες τους: προγράμματα υποστήριξης της ανάπτυξης των παιδιών, υπηρεσίες υποστήριξης γονέων, προγράμματα προετοιμασίας για το σχολείο, υποστήριξη για καθυστέρηση ομιλίας και υπηρεσίες για παιδιά με ειδικές ανάγκες με διαχείριση ατομικών υποθέσεων. Κύριος χώρος: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Δευτ-Παρ 9πμ-5μμ). Παιχνίδια γυμναστικής την Παρασκευή στο Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+   },
+   "model": "claude-correction",
+   "note": "Centre name kept in English with gloss.",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "Δωρεάν EarlyON Child and Family Centre (κέντρο για παιδιά και οικογένειες) για τους κατοίκους του Τορόντο με παιδιά ηλικίας 0-6 ετών και τους γονείς/κηδεμόνες τους: προγράμματα υποστήριξης της ανάπτυξης των παιδιών, υπηρεσίες υποστήριξης γονέων, προγράμματα προετοιμασίας για το σχολείο, υποστήριξη για καθυστέρηση ομιλίας και υπηρεσίες για παιδιά με ειδικές ανάγκες με διαχείριση ατομικών υποθέσεων. Κύριος χώρος: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Δευτ-Παρ 9πμ-5μμ). Παιχνίδια γυμναστικής την Παρασκευή στο Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+  },
+  "7d47cf9e0e64": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το δημοτικό σχολείο του Toronto Catholic District School Board (από το JK έως την 8η τάξη) στη διεύθυνση 175 Grenoble Drive στο Flemingdon Park προσφέρει μαθήματα ESL, ειδική εκπαίδευση και υποστήριξη Empower Reading, καθώς και αθλητικές ομάδες. Στο κτίριο στεγάζεται επίσης ο παιδικός σταθμός Red Apple Daycare (φροντίδα πριν και μετά το σχολείο), ένα δωρεάν κέντρο EarlyON για παιδιά και οικογένειες (προγράμματα για παιδιά από τη γέννηση έως την ηλικία των 6 ετών και τους γονείς τους) και ένα γραφείο εργαζομένων για την υποστήριξη των νεοφερμένων."
+   },
+   "model": "claude-correction",
+   "note": "'Settlement worker office' had lost the settlement meaning.",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "Το δημοτικό σχολείο του Toronto Catholic District School Board (από το JK έως την 8η τάξη) στη διεύθυνση 175 Grenoble Drive στο Flemingdon Park προσφέρει μαθήματα ESL, ειδική εκπαίδευση και υποστήριξη Empower Reading, καθώς και αθλητικές ομάδες. Στο κτίριο στεγάζεται επίσης ο παιδικός σταθμός Red Apple Daycare (φροντίδα πριν και μετά το σχολείο), ένα δωρεάν κέντρο EarlyON για παιδιά και οικογένειες (προγράμματα για παιδιά από τη γέννηση έως την ηλικία των 6 ετών και τους γονείς τους) και ένα γραφείο λειτουργού ένταξης (settlement worker) για την υποστήριξη των νεοφερμένων."
+  },
+  "7d8fe058aabe": {
+   "model": "command-a-translate-08-2025",
+   "source": "Dixon Hall Housing Services provides shelter and housing supports for people experiencing homelessness or precariously housed: help finding adequate housing, eviction prevention, budgeting, income stabilization, health promotion, and follow-up supports to remain housed. Heyworth House (2714 Danforth Ave) is one of their housing sites. Also runs community food access sites (community meals, food banks, food skills programming).",
+   "text": "Η Dixon Hall Housing Services παρέχει καταφύγιο και στήριξη στέγασης σε ανθρώπους που αντιμετωπίζουν άστεγια ή επισφαλή στέγαση: βοήθεια για εύρεση κατάλληλης κατοικίας, πρόληψη εξώσεων, διαχείριση προϋπολογισμού, σταθεροποίηση εισοδήματος, προαγωγή της υγείας και υποστηρικτικές υπηρεσίες παρακολούθησης για να παραμείνουν στεγασμένοι. Το Heyworth House (2714 Danforth Ave) είναι ένας από τους χώρους στέγασης τους. Λειτουργεί επίσης χώρους πρόσβασης σε τρόφιμα για την κοινότητα (κοινοτικά γεύματα, τράπεζες τροφίμων, προγράμματα δεξιοτήτων τροφίμων)."
+  },
+  "7e0da2420727": {
+   "model": "command-a-translate-08-2025",
+   "source": "Food Collaboratives",
+   "text": "Συνεργασίες στον τομέα των τροφίμων"
+  },
+  "7e54c8b0e600": {
+   "model": "command-a-translate-08-2025",
+   "source": "Family & Parenting Support",
+   "text": "Υποστήριξη οικογένειας και γονέων"
+  },
+  "7fb923fbd9f8": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Κοινωφελή Κέντρα"
+   },
+   "model": "claude-correction",
+   "note": "'Κοινωφελή' meant charitable; community centres = Κοινοτικά Κέντρα.",
+   "source": "Community Centres",
+   "text": "Κοινοτικά Κέντρα"
+  },
+  "85b8d1f0296e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Διαχειρίζεται καταφύγιο για νέους που αντιμετωπίζουν άστεγη κατάσταση (καταφύγιο έκτακτης ανάγκης)."
+   },
+   "model": "claude-correction",
+   "note": "Unnatural 'άστεγη κατάσταση' reworded.",
+   "source": "Operates a youth shelter for youth experiencing homelessness (emergency shelter).",
+   "text": "Διαχειρίζεται καταφύγιο για νέους που είναι άστεγοι (καταφύγιο έκτακτης ανάγκης)."
+  },
+  "88f8e20033ec": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "Αδειοδοτημένη υπηρεσία φύλαξης παιδιών με τρεις τοποθεσίες: 206 Laird Dr (βρέφη, νήπια, προσχολική ηλικία, όλο τον χρόνο), 31 Rolph Rd στο Rolph Road School (προσχολική ηλικία, νηπιαγωγείο, σχολική ηλικία· πρωινός/απογευματινός σύλλογος παιδιών Kids Club για μαθητές από το JK έως την 6η τάξη με βοήθεια στα μαθήματα, σνακ, καθώς και κάλυψη πλήρους ημέρας κατά τις ημέρες επαγγελματικής ανάπτυξης/Χριστουγέννων/διακοπών Μαρτίου) και 182 Bessborough Dr στο St. Anselm School (νηπιαγωγείο, σχολική ηλικία). Λειτουργεί επίσης κατασκήνωση τον Ιούλιο-Αύγουστο (μουσική, χορός, αθλητισμός, κολύμπι, τέχνες και χειροτεχνίες). Συμμετέχει στη μείωση των τελών του CWELCC."
+  },
+  "899a73c04466": {
+   "model": "command-a-translate-08-2025",
+   "source": "Museums",
+   "text": "Μουσεία"
+  },
+  "8c2075b94416": {
+   "model": "command-a-translate-08-2025",
+   "source": "Dental Clinics",
+   "text": "Οδοντιατρεία"
+  },
+  "8f3b8610ff41": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
+   "text": "Γραφείο υπηρεσιών της επαρχιακής κυβέρνησης στη διεύθυνση 945 Eglinton Avenue East (εντός του Staples). Εκδίδει άδειες οδήγησης, εγγραφές και πινακίδες οχημάτων, κάρτες υγείας Οντάριο και πιστοποιητικά γέννησης. Ανοιχτά Δευτέρα έως Παρασκευή 9:00 π.μ. έως 9:00 μ.μ. και Σάββατο 9:00 π.μ. έως 5:00 μ.μ."
+  },
+  "912f65f2191e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "Το Κέντρο Φροντίδας και Προσχολικής Αγωγής Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton· επικοινωνήστε με την Latoya Wilson-Rose, 416-392-3170) είναι ένα δημόσιο, αδειοδοτημένο κέντρο φροντίδας παιδιών του Δήμου του Τορόντο, το οποίο εξυπηρετεί παιδιά ηλικίας 0 έως 4 ετών και βρίσκεται στο Dennis R. Timbrell Resource Centre. Συμμετέχει στο πανκαναδικό σύστημα προσχολικής αγωγής και φροντίδας παιδιών (CWELCC) με διαθέσιμες επιδοτήσεις για τα δίδακτρα· το προσωπικό μιλά 9 γλώσσες, συμπεριλαμβανομένων των αραβικών, των βεγγαλικών, των γαλλικών, των χίντι και των περσικών, ενώ τα γεύματα παρέχονται με επιλογές χαλάλ, χωρίς χοιρινό, χωρίς φιστίκια, βίγκαν και χορτοφαγικές."
+  },
+  "9229c66e10d7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Large public park adjoining Thorncliffe Park with an 18-hole disc golf course, a public archery range, jogging and cycling paths, nature trails, picnic shelters and fire pits. The drinking fountain provides free drinking water (seasonal; closed in winter).",
+   "text": "Μεγάλο δημόσιο πάρκο που συνορεύει με το Thorncliffe Park και διαθέτει γήπεδο disc golf 18 οπών, δημόσιο πεδίο τοξοβολίας, μονοπάτια για τρέξιμο και ποδηλασία, μονοπάτια στη φύση, χώρους για πικνίκ και εστίες φωτιάς. Η βρύση παρέχει δωρεάν πόσιμο νερό (εποχιακό· κλειστό τον χειμώνα)."
+  },
+  "929cea5641e3": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δυναμοποίηση γειτονιάς και ατόμων"
+   },
+   "model": "claude-correction",
+   "note": "'Δυναμοποίηση' -> standard term Ενδυνάμωση.",
+   "source": "Neighbourhood & Individual Empowerment",
+   "text": "Ενδυνάμωση γειτονιάς και ατόμων"
+  },
+  "941791890d5c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Το δημοτικό σχολείο Gateway Public School είναι ένα σχολείο του TDSB που εξυπηρετεί παιδιά από το προνηπιαγωγείο έως την ΣΤ' τάξη (περίπου 950 μαθητές) στο Φλέμινγκντον Παρκ, στη διεύθυνση 55 Gateway Blvd, North York. Το σχολείο δίνει έμφαση σε ένα συμπεριληπτικό, πολυπολιτισμικό περιβάλλον μάθησης με υψηλές απαιτήσεις για τις επιδόσεις και τη συμπεριφορά των μαθητών· στο κείμενο της αρχικής σελίδας που ανακτήθηκε δεν αναφέρονται προγράμματα γαλλικής γλώσσας (French immersion), προγράμματα εκμάθησης αγγλικών για μη φυσικούς ομιλητές (ESL) ή προγράμματα ειδικής αγωγής."
+   },
+   "model": "claude-correction",
+   "note": "Flemingdon Park kept in Latin script.",
+   "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Το δημοτικό σχολείο Gateway Public School είναι ένα σχολείο του TDSB που εξυπηρετεί παιδιά από το προνηπιαγωγείο έως την ΣΤ' τάξη (περίπου 950 μαθητές) στο Flemingdon Park, στη διεύθυνση 55 Gateway Blvd, North York. Το σχολείο δίνει έμφαση σε ένα συμπεριληπτικό, πολυπολιτισμικό περιβάλλον μάθησης με υψηλές απαιτήσεις για τις επιδόσεις και τη συμπεριφορά των μαθητών· στο κείμενο της αρχικής σελίδας που ανακτήθηκε δεν αναφέρονται προγράμματα γαλλικής γλώσσας (French immersion), προγράμματα εκμάθησης αγγλικών για μη φυσικούς ομιλητές (ESL) ή προγράμματα ειδικής αγωγής."
+  },
+  "95c8c42be839": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το παράρτημα της Δημόσιας Βιβλιοθήκης του Τορόντο στη διεύθυνση 48 Thorncliffe Park Drive. Προσφέρει δανεισμό βιβλίων, δωρεάν Wi-Fi, δημόσιους υπολογιστές με Microsoft Office, εκτύπωση/αντιγραφή/σάρωση, ένα κέντρο πρώιμης ανάγνωσης για παιδιά KidsStop, Youth Hub, Leading to Reading βοήθεια ανάγνωσης για παιδιά σε ατομική βάση, Υπηρεσία Πληροφοριών για Νέους Μετανάστες, Υπηρεσία Οικονομικής Ενίσχυσης, αίθουσα συνεδριάσεων που μπορεί να κρατηθεί και ήσυχο χώρο μελέτης."
+   },
+   "model": "claude-correction",
+   "note": "Financial Empowerment Service was rendered as 'financial aid'; service and library names kept in English.",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "Το παράρτημα της Toronto Public Library (Δημόσια Βιβλιοθήκη του Τορόντο) στη διεύθυνση 48 Thorncliffe Park Drive. Προσφέρει δανεισμό βιβλίων, δωρεάν Wi-Fi, δημόσιους υπολογιστές με Microsoft Office, εκτύπωση/αντιγραφή/σάρωση, ένα κέντρο πρώιμης ανάγνωσης για παιδιά KidsStop, Youth Hub, Leading to Reading βοήθεια ανάγνωσης για παιδιά σε ατομική βάση, Newcomer Information Service (υπηρεσία πληροφοριών για νεοφερμένους), Financial Empowerment Service (Υπηρεσία Οικονομικής Ενδυνάμωσης), αίθουσα συνεδριάσεων που μπορεί να κρατηθεί και ήσυχο χώρο μελέτης."
+  },
+  "97522b6e2a71": {
+   "model": "command-a-translate-08-2025",
+   "source": "Licensed childcare centres in the neighbourhood offering infant, toddler, preschool, and before/after-school programs with play-based, inquiry-driven learning, nutritious meals (accommodating allergies and cultural/religious diets), and secure entry systems. Locations: 175 Grenoble Dr (Grenoble) and 135 Overlea Blvd (Overlea).",
+   "text": "Αδειοδοτημένοι παιδικοί σταθμοί στην περιοχή που προσφέρουν προγράμματα για βρέφη, νήπια, προσχολικά παιδιά και παιδιά πριν/μετά το σχολείο με μάθηση βασισμένη στο παιχνίδι και την εξερεύνηση, θρεπτικά γεύματα (που προσαρμόζονται σε αλλεργίες και πολιτιστικές/θρησκευτικές διατροφές) και συστήματα ασφαλείας εισόδου. Τοποθεσίες: 175 Grenoble Dr (Grenoble) και 135 Overlea Blvd (Overlea)."
+  },
+  "97e9202b1cb6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community bike hub on Gateway Blvd run by TNO. Offers free bike repairs (bookable appointments), do-it-yourself repair hours with tools and space, bike mechanics workshops, learn-to-ride lessons and group rides. Bikes available via the Earn-a-Bike program, twice-yearly bike giveaways, and an apply-for-a-bike option.",
+   "text": "Κοινωφελές κέντρο ποδηλάτων στην Gateway Blvd που διευθύνεται από την TNO. Προσφέρει δωρεάν επισκευές ποδηλάτων (με ραντεβού), ώρες επισκευών από τον ίδιο τον χρήστη με εργαλεία και χώρο, εργαστήρια μηχανικής ποδηλάτων, μαθήματα εκμάθησης ποδηλασίας και ομαδικές βόλτες. Ποδήλατα είναι διαθέσιμα μέσω του προγράμματος Earn-a-Bike, δωρεάν διανομές ποδηλάτων δύο φορές το χρόνο και επιλογή αίτησης για ποδήλατο."
+  },
+  "99a408333e20": {
+   "model": "command-a-translate-08-2025",
+   "source": "Mosque in the Flemingdon Park area (established 2001, holds 250-300 worshippers) offering five daily congregational prayers and Jummah Salah. Provides Islamic education and guidance for children and adults, and welcomes both Muslim and non-Muslim visitors.",
+   "text": "Τέμενος στην περιοχή Flemingdon Park (ιδρύθηκε το 2001, χωρητικότητα 250-300 πιστών) που προσφέρει πέντε καθημερινές ομαδικές προσευχές και την προσευχή Jummah Salah. Παρέχει ισλαμική εκπαίδευση και καθοδήγηση για παιδιά και ενήλικες και καλωσορίζει επισκέπτες τόσο μουσουλμάνους όσο και μη μουσουλμάνους."
+  },
+  "9aab0433db11": {
+   "model": "command-a-translate-08-2025",
+   "source": "Neighbourhood park featuring a bottle filling station providing free drinking water refills.",
+   "text": "Το πάρκο της γειτονιάς διαθέτει σταθμό γεμίσματος μπουκαλιών που προσφέρει δωρεάν νερό για συμπλήρωση μπουκαλιών."
+  },
+  "a1893ed621a6": {
+   "model": "command-a-translate-08-2025",
+   "source": "TDSB public elementary school at 80 Thorncliffe Park Dr, recognized as a Platinum Ecoschool with an active eco club. Provides public education in partnership with students, families and the community.",
+   "text": "Το δημόσιο δημοτικό σχολείο του TDSB στη διεύθυνση 80 Thorncliffe Park Dr, αναγνωρίστηκε ως Platinum Ecoschool και διαθέτει ενεργό οικολογικό σύλλογο. Παρέχει δημόσια εκπαίδευση σε συνεργασία με τους μαθητές, τις οικογένειες και την κοινότητα."
+  },
+  "a3d76b624b59": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community urban-farming group in Thorncliffe Park maintaining two communal vegetable gardens and 20+ fruit trees, with all harvests shared freely with residents and volunteers. Runs environmental education, children's nature programs, youth leadership and volunteer hours, a resident-led composting program, pollinator habitats, and woodworking and art workshops.",
+   "text": "Ομάδα αστικής γεωργίας της κοινότητας στο Thorncliffe Park που διατηρεί δύο κοινοτικούς λαχανόκηπους και πάνω από 20 δέντρα με φρούτα, με όλες τις σοδειές να μοιράζονται ελεύθερα στους κατοίκους και τους εθελοντές. Διοργανώνει προγράμματα περιβαλλοντικής εκπαίδευσης, προγράμματα φύσης για παιδιά, προγράμματα ηγεσίας για νέους και εθελοντικές ώρες, πρόγραμμα κομποστοποίησης υπό την καθοδήγηση των κατοίκων, ενδιαιτήματα επικονιαστών και εργαστήρια ξυλουργικής και τέχνης."
+  },
+  "a44c76defc5c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το Κέντρο Φροντίδας Παιδιών Thorncliffe Park εξυπηρετεί οικογένειες από το 1969 με εκπαιδευτικά προγράμματα βασισμένα στο παιχνίδι για παιδιά από τη βρεφική ηλικία έως και 12 ετών, συμπεριλαμβανομένων προγραμμάτων για παιδιά σχολικής ηλικίας, ακολουθώντας το πλαίσιο \"Πώς Συμβαίνει η Μάθηση\". Το προσωπικό μιλάει 11 γλώσσες (συμπεριλαμβανομένων των Ουρντού, Φαρσί, Παντζάμπι, Βεγγαλικά, Αμχαρικά, Ταγκαλόγκ, Τουρκικά), τα γεύματα παρέχονται από την εταιρεία Real Food For Real Kids Catering και το κέντρο συμμετέχει στο CWELCC, με διαθέσιμες πληροφορίες για επιδοτήσεις τελών."
+   },
+   "model": "claude-correction",
+   "note": "Centre and framework names kept in English with gloss.",
+   "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
+   "text": "Το Thorncliffe Park Day Care Centre (κέντρο φροντίδας παιδιών) εξυπηρετεί οικογένειες από το 1969 με εκπαιδευτικά προγράμματα βασισμένα στο παιχνίδι για παιδιά από τη βρεφική ηλικία έως και 12 ετών, συμπεριλαμβανομένων προγραμμάτων για παιδιά σχολικής ηλικίας, ακολουθώντας το πλαίσιο 'How Does Learning Happen' («Πώς συμβαίνει η μάθηση»). Το προσωπικό μιλάει 11 γλώσσες (συμπεριλαμβανομένων των Ουρντού, Φαρσί, Παντζάμπι, Βεγγαλικά, Αμχαρικά, Ταγκαλόγκ, Τουρκικά), τα γεύματα παρέχονται από την εταιρεία Real Food For Real Kids Catering και το κέντρο συμμετέχει στο CWELCC, με διαθέσιμες πληροφορίες για επιδοτήσεις τελών."
+  },
+  "a583aca46f5e": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το παράρτημα της Δημόσιας Βιβλιοθήκης του Τορόντο στη διεύθυνση 29 St. Dennis Drive προσφέρει: δανεισμό βιβλίων, δημόσιους υπολογιστές, προγράμματα για παιδιά, το πρόγραμμα γραμματισμού Leading to Reading για παιδιά και τη δωρεάν Υπηρεσία Οικονομικής Ενίσχυσης (δήλωση φόρων, αιτήσεις για επιδόματα, βοήθεια στον προϋπολογισμό — επίσης διαθέσιμη στο παράρτημα Thorncliffe). Ώρες λειτουργίας: Δευτ-Παρ 9πμ-8:30μμ, Σάβ 9πμ-5μμ, Κυρ 12μμ-5μμ. Σημείωση: το παράρτημα έκλεισε την 1η Δεκεμβρίου 2025 για ένα έργο ανανέωσης και αναμένεται να επαναλειτουργήσει στις αρχές του τρίτου τριμήνου του 2026. Η τρέχουσα λίστα ωρών λειτουργίας υποδηλώνει ότι έχει επαναλειτουργήσει, αλλά επιβεβαιώστε πριν επισκεφθείτε."
+   },
+   "model": "claude-correction",
+   "note": "Financial Empowerment Service was rendered as 'financial aid'; names kept in English.",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "Το παράρτημα της Toronto Public Library (Δημόσια Βιβλιοθήκη του Τορόντο) στη διεύθυνση 29 St. Dennis Drive προσφέρει: δανεισμό βιβλίων, δημόσιους υπολογιστές, προγράμματα για παιδιά, το πρόγραμμα γραμματισμού Leading to Reading για παιδιά και τη δωρεάν Financial Empowerment Service (Υπηρεσία Οικονομικής Ενδυνάμωσης) (δήλωση φόρων, αιτήσεις για επιδόματα, βοήθεια στον προϋπολογισμό — επίσης διαθέσιμη στο παράρτημα Thorncliffe). Ώρες λειτουργίας: Δευτ-Παρ 9πμ-8:30μμ, Σάβ 9πμ-5μμ, Κυρ 12μμ-5μμ. Σημείωση: το παράρτημα έκλεισε την 1η Δεκεμβρίου 2025 για ένα έργο ανανέωσης και αναμένεται να επαναλειτουργήσει στις αρχές του τρίτου τριμήνου του 2026. Η τρέχουσα λίστα ωρών λειτουργίας υποδηλώνει ότι έχει επαναλειτουργήσει, αλλά επιβεβαιώστε πριν επισκεφθείτε."
+  },
+  "a5c931e58836": {
+   "model": "command-a-translate-08-2025",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.",
+   "text": "Το TNO Food Collaborative (που διοικείται από την The Neighbourhood Organization) παρέχει δωρεάν πρόσβαση σε τρόφιμα σε χιλιάδες άτομα στις κοινότητες Thorncliffe Park και Flemingdon Park, συμπεριλαμβανομένων φρέσκων προϊόντων, αυγών και γαλακτοκομικών προϊόντων που διανέμονται δύο φορές το μήνα, με διανομή όλο το χρόνο που υποστηρίζεται από κοινοτικούς εταίρους όπως το Greenwin Cares."
+  },
+  "a6a63f0ab062": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Μια τοπική ομάδα πολιτών που δραστηριοποιείται στο Κέντρο Κοινότητας Thorncliffe Park (45 Overlea Blvd)."
+   },
+   "model": "claude-correction",
+   "note": "Hub name kept in English as elsewhere.",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "Μια τοπική ομάδα πολιτών που δραστηριοποιείται στο Thorncliffe Park Community Hub (45 Overlea Blvd)."
+  },
+  "a8fbb45be7f6": {
+   "model": "command-a-translate-08-2025",
+   "source": "Shelter",
+   "text": "Καταφύγιο"
+  },
+  "aa052d1c9356": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Δημόσιο λύκειο του TDSB (τάξεις 9-12) στη διεύθυνση 135 Overlea Blvd που εξυπηρετεί τις περιοχές Flemingdon Park και Thorncliffe Park (~1800 μαθητές). Φιλοξενεί το πρόγραμμα TOPS (Ταλεντάτες Προσφορές για Προγράμματα στις Επιστήμες), ένα τετραετές εμπλουτισμένο πρόγραμμα μαθηματικών/επιστημών/αγγλικών με μαθήματα επιπέδου AP· προσφέρει επίσης προγράμματα SHSM, κηποτεχνίας, χρηματοοικονομικών τίτλων, υποστήριξη ESL, πάνω από 90 συλλόγους με επικεφαλής μαθητές και ομαδικά αθλήματα ανταγωνιστικού επιπέδου."
+   },
+   "model": "claude-correction",
+   "note": "'Ταλεντάτες' is not a Greek word; program name kept in English with a gloss.",
+   "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
+   "text": "Δημόσιο λύκειο του TDSB (τάξεις 9-12) στη διεύθυνση 135 Overlea Blvd που εξυπηρετεί τις περιοχές Flemingdon Park και Thorncliffe Park (~1800 μαθητές). Φιλοξενεί το πρόγραμμα TOPS (Talented Offerings for Programs in the Sciences - πρόγραμμα για ταλαντούχους μαθητές στις επιστήμες), ένα τετραετές εμπλουτισμένο πρόγραμμα μαθηματικών/επιστημών/αγγλικών με μαθήματα επιπέδου AP· προσφέρει επίσης προγράμματα SHSM, κηποτεχνίας, χρηματοοικονομικών τίτλων, υποστήριξη ESL, πάνω από 90 συλλόγους με επικεφαλής μαθητές και ομαδικά αθλήματα ανταγωνιστικού επιπέδου."
+  },
+  "ac4875864ec7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Police Station",
+   "text": "Αστυνομικό Τμήμα"
+  },
+  "ae69792878f8": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η εκκλησία Chapel in the Park United Church είναι μια μικρή πολυπολιτισμική κοινότητα που βρίσκεται στη διεύθυνση 16 Thorncliffe Park Drive, Τορόντο (416-421-0792) και εξυπηρετεί τις περιοχές Thorncliffe Park και Don Mills. Πραγματοποιεί λειτουργίες την Κυριακή στις 10:00 π.μ. δια ζώσης, μέσω Zoom και ζωντανής μετάδοσης και προσκαλεί τους νεοφερμένους να συμμετάσχουν ως «οικογένεια πίστης»."
+   },
+   "model": "claude-correction",
+   "note": "Toronto in address kept in Latin script.",
+   "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
+   "text": "Η εκκλησία Chapel in the Park United Church είναι μια μικρή πολυπολιτισμική κοινότητα που βρίσκεται στη διεύθυνση 16 Thorncliffe Park Drive, Toronto (416-421-0792) και εξυπηρετεί τις περιοχές Thorncliffe Park και Don Mills. Πραγματοποιεί λειτουργίες την Κυριακή στις 10:00 π.μ. δια ζώσης, μέσω Zoom και ζωντανής μετάδοσης και προσκαλεί τους νεοφερμένους να συμμετάσχουν ως «οικογένεια πίστης»."
+  },
+  "b0e486b1a83e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Support & Emergency Services",
+   "text": "Υπηρεσίες Υποστήριξης & Έκτακτης Ανάγκης"
+  },
+  "b319cef2b3a7": {
+   "model": "command-a-translate-08-2025",
+   "source": "Schools & Child Services",
+   "text": "Σχολεία & Υπηρεσίες για Παιδιά"
+  },
+  "b8138c775adf": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free settlement services for refugees and immigrants, with a special focus on women and families: women-only LINC English classes, translation and interpretation services, employment support, basic and advanced computer classes, English conversation circles, sewing club, youth drop-in, and low-impact exercise. All programs are free, offered onsite and online (call for an appointment).",
+   "text": "Δωρεάν υπηρεσίες εγκατάστασης για πρόσφυγες και μετανάστες, με έμφαση στις γυναίκες και τις οικογένειες: μαθήματα αγγλικών LINC μόνο για γυναίκες, υπηρεσίες μετάφρασης και διερμηνείας, υποστήριξη στην απασχόληση, βασικά και προχωρημένα μαθήματα υπολογιστών, κύκλοι συνομιλίας στα αγγλικά, λέσχη ραπτικής, χώρος συνάντησης νέων και ασκήσεις χαμηλής έντασης. Όλα τα προγράμματα είναι δωρεάν και προσφέρονται επιτόπου και διαδικτυακά (καλέστε για να κλείσετε ραντεβού)."
+  },
+  "b9bf5f163902": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "Δωρεάν ολοκληρωμένη πρωτοβάθμια υγειονομική περίθαλψη για τους κατοίκους του ταχυδρομικού κώδικα M4H, χωρίς να απαιτείται κάρτα υγείας ή παραπομπή, με υπηρεσίες διερμηνείας. Οι υπηρεσίες περιλαμβάνουν συνεχή πρωτοβάθμια περίθαλψη, παιδιατρική κλινική που λειτουργεί σε σχολείο, φροντίδα ποδιών για ηλικιωμένους και άτομα με χρόνιες παθήσεις, συμβουλευτική διατροφής, κοινωνική εργασία και συμβουλευτική ψυχικής υγείας, εργαστήρια εκπαίδευσης για θέματα υγείας, στήριξη οικογενειών και παραπομπές σε προγράμματα στήριξης εισοδήματος, εγκατάστασης, στέγασης, απασχόλησης και γλωσσικής εκπαίδευσης. Βρίσκεται στο Thorncliffe Park Community Hub, 45 Overlea Blvd, 2ος όροφος."
+  },
+  "ba5f23dbc690": {
+   "model": "command-a-translate-08-2025",
+   "source": "Free EarlyON Child and Family Centre programs run by Family Day for parents and caregivers with young children, supporting early learning, child development and positive parent-child interaction through indoor, outdoor and virtual programming. The Flemingdon Park centre is at 150 Grenoble Drive (Don Mills/Overlea); the same page also lists a Grenoble EarlyON site.",
+   "text": "Δωρεάν προγράμματα του EarlyON Child and Family Centre που διοργανώνονται από το Family Day για γονείς και φροντιστές με μικρά παιδιά, τα οποία υποστηρίζουν την πρώιμη μάθηση, την ανάπτυξη των παιδιών και την θετική αλληλεπίδραση γονέων-παιδιών μέσω προγραμμάτων εσωτερικού χώρου, εξωτερικού χώρου και διαδικτυακών προγραμμάτων. Το κέντρο Flemingdon Park βρίσκεται στη διεύθυνση 150 Grenoble Drive (Don Mills/Overlea). Στην ίδια σελίδα αναφέρεται επίσης ένας χώρος του Grenoble EarlyON."
+  },
+  "baf809656cc3": {
+   "model": "command-a-translate-08-2025",
+   "source": "A group of neighbours working to create accessible, engaging, and inclusive public spaces for everyone to enjoy in Thorncliffe Park.",
+   "text": "Μια ομάδα γειτόνων που εργάζονται για τη δημιουργία προσβάσιμων, ελκυστικών και ανοιχτών δημόσιων χώρων για να τους απολαμβάνουν όλοι στο Thorncliffe Park."
+  },
+  "bbec136a0a48": {
+   "model": "command-a-translate-08-2025",
+   "source": "Fire Station",
+   "text": "Πυροσβεστικός Σταθμός"
+  },
+  "bc208860cefc": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το Toronto Hifz Academy στη διεύθυνση 45 Overlea Blvd, Unit 201, Τορόντο (M4H 1C3; 647-505-8622) είναι ένα κορανικό σχολείο που προσφέρει πλήρους και μερικής απασχόλησης μαθήματα Hifz (αποστήθισης του Κορανίου), προπαρασκευαστικά μαθήματα Hifz, αναθεώρηση Hafiz, κλασικά αραβικά και μαθήματα Κορανίου για γυναίκες. Τα μαθήματα πραγματοποιούνται Δευτέρα-Πέμπτη 9π.μ.-1μ.μ. και 4μ.μ.-7μ.μ., και Παρασκευή 9π.μ.-2μ.μ. και 4μ.μ.-7μ.μ."
+   },
+   "model": "claude-correction",
+   "note": "'Full-time' was 'full-time employment'; Hafiz review -> επανάληψη; Latin ';' (Greek question mark) replaced; Toronto in address in English.",
+   "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
+   "text": "Το Toronto Hifz Academy στη διεύθυνση 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3, 647-505-8622) είναι ένα κορανικό σχολείο που προσφέρει μαθήματα Hifz πλήρους και μερικής φοίτησης (αποστήθισης του Κορανίου), προπαρασκευαστικά μαθήματα Hifz, επανάληψη για Hafiz, κλασικά αραβικά και μαθήματα Κορανίου για γυναίκες. Τα μαθήματα πραγματοποιούνται Δευτέρα-Πέμπτη 9π.μ.-1μ.μ. και 4μ.μ.-7μ.μ., και Παρασκευή 9π.μ.-2μ.μ. και 4μ.μ.-7μ.μ."
+  },
+  "c04bdbce2472": {
+   "model": "command-a-translate-08-2025",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "Το πάρκο Leaside (κοντά στην Millwood Road και την Overlea Boulevard) παρέχει πόσιμο νερό στο κοινό μέσω 1 βρύσης και 2 σταθμών γεμίσματος μπουκαλιών. Το πάρκο, έκτασης 3,4 εκταρίων, διαθέτει επίσης φωτισμένο γήπεδο μπέιζμπολ, έξι φωτισμένα γήπεδα τένις, ένα γήπεδο πολλαπλών αθλητικών χρήσεων, παιδική χαρά, κοινοτικό κήπο, τουαλέτες και την εξωτερική πισίνα Leaside."
+  },
+  "c0b5b18276a1": {
+   "model": "command-a-translate-08-2025",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "Κοινωφελής τράπεζα τροφίμων στη διεύθυνση 10 Gateway Blvd (υπόγειο), North York, που παρέχει δωρεάν τρόφιμα και πόρους σε οικογένειες που έχουν ανάγκη· τώρα είναι εγγεγραμμένη ως φιλανθρωπικό ίδρυμα. Η ιστοσελίδα αναφέρει διαφορετικές ώρες λειτουργίας (Δευτέρες και Τετάρτες 11:00 π.μ. - 3:30 μ.μ. σε ένα μέρος, Δευτ-Πέμ 1:30-3:30 μ.μ. σε άλλο) - καλέστε το 416-422-4322 για επιβεβαίωση πριν επισκεφθείτε το μέρος."
+  },
+  "c6efc2c01c02": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Ρωμαιοκαθολική ενορία στην διεύθυνση 16 Thorncliffe Park Drive που προσφέρει τακτικές λειτουργίες, μυστήρια και ενοριακές εκδηλώσεις. Συνδέει τις οικογένειες με ευκαιρίες κατασκήνωσης για παιδιά και νέους που προσφέρονται σε ενορίες της Αρχιεπισκοπής του Τορόντο."
+   },
+   "model": "claude-correction",
+   "note": "Organisation name kept in English with gloss.",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "Ρωμαιοκαθολική ενορία στη διεύθυνση 16 Thorncliffe Park Drive που προσφέρει τακτικές λειτουργίες, μυστήρια και ενοριακές εκδηλώσεις. Συνδέει τις οικογένειες με ευκαιρίες κατασκήνωσης για παιδιά και νέους που προσφέρονται σε ενορίες της Archdiocese of Toronto (Αρχιεπισκοπή του Τορόντο)."
+  },
+  "cd0b92c5999a": {
+   "model": "command-a-translate-08-2025",
+   "source": "Faith-Based Organizations",
+   "text": "Οργανώσεις με βάση τη θρησκεία"
+  },
+  "cd66ac6101f6": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Υποστήριξη νεοεισερχομένων"
+   },
+   "model": "claude-correction",
+   "note": "'νεοεισερχομένων' unusual; consistent νεοφερμένων.",
+   "source": "Newcomer Supports",
+   "text": "Υποστήριξη νεοφερμένων"
+  },
+  "d2f11cfaf201": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Κλινική Μαιευτικών"
+   },
+   "model": "claude-correction",
+   "note": "'Κλινική Μαιευτικών' ungrammatical; Midwives Clinic = Κλινική Μαιών.",
+   "source": "Midwives Clinic",
+   "text": "Κλινική Μαιών"
+  },
+  "d33e215aebeb": {
+   "model": "command-a-translate-08-2025",
+   "source": "Food Security & Climate Resilience",
+   "text": "Ασφάλεια τροφίμων και ανθεκτικότητα στην κλιματική αλλαγή"
+  },
+  "d6ee993d9829": {
+   "model": "command-a-translate-08-2025",
+   "source": "Emergency food assistance for families in need is its core service during operating hours; no separate emergency program is listed.",
+   "text": "Η παροχή επείγουσας βοήθειας τροφίμων σε οικογένειες που έχουν ανάγκη αποτελεί την κύρια υπηρεσία της κατά τις ώρες λειτουργίας της· δεν αναφέρεται ξεχωριστό πρόγραμμα έκτακτης ανάγκης."
+  },
+  "d71124b428df": {
+   "model": "command-a-translate-08-2025",
+   "source": "911 emergency response: fire suppression, rescue, and medical first response. Call 911 in an emergency.",
+   "text": "911 υπηρεσία έκτακτης ανάγκης: κατάσβεση πυρκαγιάς, διάσωση και πρώτες ιατρικές βοήθειες. Σε περίπτωση έκτακτης ανάγκης, καλέστε το 911."
+  },
+  "d839bdfdb1e8": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Απείγουσα διατροφική υποστήριξη για οικογένειες που έχουν ανάγκη (δωρεάν διανομή τροφίμων δύο φορές το μήνα). Δεν επιβεβαιώθηκαν υπηρεσίες καταφυγίου, κέντρου ψύξης ή τηλεφωνικής γραμμής έκτακτης ανάγκης που να αφορούν ειδικά το Food Collaborative. Προσφέρει υπηρεσίες παρέμβασης σε κρίσεις και συμβουλευτικής μέσω του προγράμματός της για την αντιμετώπιση της βίας κατά των γυναικών· λειτουργεί ως κέντρο πρόσβασης στην τράπεζα ενοικίων του Τορόντο και ως τηλεφωνικό κέντρο του Ταμείου Έκτακτης Ενεργειακής Βοήθειας (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "Fixed misspelling Απείγουσα -> Επείγουσα; cooling -> δροσισμού; Toronto Rent Bank and Emergency Energy Fund names kept in English.",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Επείγουσα διατροφική υποστήριξη για οικογένειες που έχουν ανάγκη (δωρεάν διανομή τροφίμων δύο φορές το μήνα). Δεν επιβεβαιώθηκαν υπηρεσίες καταφυγίου, κέντρου δροσισμού ή τηλεφωνικής γραμμής έκτακτης ανάγκης που να αφορούν ειδικά το Food Collaborative. Προσφέρει υπηρεσίες παρέμβασης σε κρίσεις και συμβουλευτικής μέσω του προγράμματός της για την αντιμετώπιση της βίας κατά των γυναικών· λειτουργεί ως κέντρο πρόσβασης (Access Centre) του Toronto Rent Bank (τράπεζα ενοικίων) και ως τηλεφωνικό κέντρο του Emergency Energy Fund (Ταμείο Έκτακτης Ενεργειακής Βοήθειας) (416-397-7368)."
+  },
+  "d9ee2590bc2e": {
+   "model": "command-a-translate-08-2025",
+   "source": "Operates a Safe Arrival Program (staff contact parents if a child is absent without notice); no emergency-specific services listed.",
+   "text": "Διαθέτει πρόγραμμα ασφαλούς άφιξης (το προσωπικό επικοινωνεί με τους γονείς αν ένα παιδί απουσιάζει χωρίς ειδοποίηση). Δεν αναφέρονται υπηρεσίες που αφορούν συγκεκριμένα έκτακτες καταστάσεις."
+  },
+  "dd60669c88d7": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το εμπορικό κέντρο της γειτονιάς στην 45 Overlea Blvd διαθέτει καταστήματα λιανικής πώλησης, εστιατόρια και υπηρεσίες καθημερινής χρήσης (παντοπωλείο, τράπεζα, φαρμακείο/εργαστήριο, γυμναστήριο, κομμωτήριο). Φιλοξενεί επίσης ενοικιαστές που παρέχουν υπηρεσίες στην κοινότητα, όπως η Οργάνωση Γυναικών του Αφγανιστάν, οι Νομικές Υπηρεσίες της Κοινότητας Don Valley και η Υπηρεσία Πρόσβασης στην Υγεία Thorncliffe Park."
+   },
+   "model": "claude-correction",
+   "note": "Organisation names kept in English with Greek glosses.",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "Το εμπορικό κέντρο της γειτονιάς στη διεύθυνση 45 Overlea Blvd διαθέτει καταστήματα λιανικής πώλησης, εστιατόρια και υπηρεσίες καθημερινής χρήσης (παντοπωλείο, τράπεζα, φαρμακείο/εργαστήριο, γυμναστήριο, κομμωτήριο). Φιλοξενεί επίσης ενοικιαστές που παρέχουν υπηρεσίες στην κοινότητα, όπως η Afghan Women's Organization (οργάνωση γυναικών από το Αφγανιστάν), η Don Valley Community Legal Services (κοινοτικές νομικές υπηρεσίες) και η Health Access Thorncliffe Park (κέντρο υγείας)."
+  },
+  "dddae32defdd": {
+   "model": "command-a-translate-08-2025",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "Κέντρο κοινότητας και χώρος προσευχής Ισμαηλιτών (Jamatkhana) στην 80 Overlea Boulevard στο Thorncliffe Park. Φιλοξενεί καθημερινές προσευχές της κοινότητας και συγκεντρώσεις για τους μουσουλμάνους Ισμαηλίτες· το κτίριο περιλαμβάνει γυμναστήριο, βιβλιοθήκη, χώρους διδασκαλίας, γραφεία και χώρο παράδοσης τροφίμων."
+  },
+  "de5580650854": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Το Κέντρο Παιδιού και Οικογένειας Fraser Mustard EarlyON (στο Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) είναι ένα δωρεάν πρόγραμμα ανοιχτής συμμετοχής για γονείς και φροντιστές με παιδιά από βρέφη έως 6 ετών, που λειτουργεί Δευτέρα-Πέμπτη 8:45 π.μ.-1:45 μ.μ. Τα παιδιά μπορούν να παίξουν, να εξερευνήσουν, να μάθουν και να απολαύσουν ένα θρεπτικό σνακ, ενώ οι γονείς επικοινωνούν με άλλες οικογένειες και λαμβάνουν πληροφορίες σχετικά με τα προγράμματα και τις υπηρεσίες της κοινότητας, με την υποστήριξη ενός εξειδικευμένου επαγγελματία προσχολικής ηλικίας· δεν απαιτείται προεγγραφή."
+   },
+   "model": "claude-correction",
+   "note": "Centre name kept in English; Latin ';' replaced.",
+   "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
+   "text": "Το Fraser Mustard EarlyON Child and Family Centre (κέντρο παιδιού και οικογένειας, στο Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York, 416-394-2104) είναι ένα δωρεάν πρόγραμμα ανοιχτής συμμετοχής για γονείς και φροντιστές με παιδιά από βρέφη έως 6 ετών, που λειτουργεί Δευτέρα-Πέμπτη 8:45 π.μ.-1:45 μ.μ. Τα παιδιά μπορούν να παίξουν, να εξερευνήσουν, να μάθουν και να απολαύσουν ένα θρεπτικό σνακ, ενώ οι γονείς επικοινωνούν με άλλες οικογένειες και λαμβάνουν πληροφορίες σχετικά με τα προγράμματα και τις υπηρεσίες της κοινότητας, με την υποστήριξη ενός εξειδικευμένου επαγγελματία προσχολικής ηλικίας· δεν απαιτείται προεγγραφή."
+  },
+  "e04d44a05f5d": {
+   "model": "command-a-translate-08-2025",
+   "source": "Multi-service youth agency (operating since 1971) providing day treatment, job training, and individualized care planning for youth facing challenges at school, at home and in life, including child welfare and youth justice supports.",
+   "text": "Πολυϋπηρεσιακός οργανισμός για νέους (λειτουργεί από το 1971) που παρέχει ημερήσια θεραπεία, επαγγελματική κατάρτιση και εξατομικευμένο σχεδιασμό φροντίδας για νέους που αντιμετωπίζουν προκλήσεις στο σχολείο, στο σπίτι και στη ζωή, συμπεριλαμβανομένων υπηρεσιών προστασίας παιδιών και υποστήριξης της δικαιοσύνης για νέους."
+  },
+  "e0aa03a9fd6a": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Ιαπωνικό πολιτιστικό κέντρο στη διεύθυνση 6 Sakura Way, ανοιχτό για όλους, που προσφέρει πολιτιστικά μαθήματα (ικεμπάνα, τελετουργία τσαγιού τσάντο, καλλιγραφία σόντο, ζωγραφική σουμί-ε, ντάικο ντραμς, κότο), πολεμικές τέχνες (τζούντο, καράτε, κέντο, αϊκίντο, κιούντο, ιαΐντο, ναγκινάτα, τζόντο), μαθήματα ιαπωνικών για ενήλικες, συλλόγους (καραόκε, χούλα, χορός, σύλλογος ηλικιωμένων, πινγκ πονγκ), εποχιακές γιορτές, το Φεστιβάλ Ιαπωνικού Κινηματογράφου του Τορόντο, εκθέσεις και το Κέντρο Πολιτιστικής Κληρονομιάς Moriyama Nikkei."
+   },
+   "model": "claude-correction",
+   "note": "Festival and centre names kept in English with gloss.",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "Ιαπωνικό πολιτιστικό κέντρο στη διεύθυνση 6 Sakura Way, ανοιχτό για όλους, που προσφέρει πολιτιστικά μαθήματα (ικεμπάνα, τελετουργία τσαγιού τσάντο, καλλιγραφία σόντο, ζωγραφική σουμί-ε, ντάικο ντραμς, κότο), πολεμικές τέχνες (τζούντο, καράτε, κέντο, αϊκίντο, κιούντο, ιαΐντο, ναγκινάτα, τζόντο), μαθήματα ιαπωνικών για ενήλικες, συλλόγους (καραόκε, χούλα, χορός, σύλλογος ηλικιωμένων, πινγκ πονγκ), εποχιακές γιορτές, το Toronto Japanese Film Festival (φεστιβάλ ιαπωνικού κινηματογράφου), εκθέσεις και το Moriyama Nikkei Heritage Centre (κέντρο πολιτιστικής κληρονομιάς)."
+  },
+  "e5edc4998f24": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Κοινοτικό/αναψυκτικό κέντρο που διοικείται από την πόλη, στην διεύθυνση 29 St Dennis Dr, με εσωτερική πισίνα (μαθήματα κολύμβησης, κολύμβηση για ψυχαγωγία), εγκαταστάσεις γυμναστικής και υποκατάστημα βιβλιοθήκης, που προσφέρει προγράμματα αναψυχής για εγγεγραμμένους."
+   },
+   "model": "claude-correction",
+   "note": "'αναψυκτικό κέντρο' means café; recreation centre -> κέντρο ψυχαγωγίας και αθλητισμού.",
+   "source": "City-run community/recreation centre at 29 St Dennis Dr with an indoor pool (swim lessons, leisure swims), fitness facilities, and a library branch, offering registered recreation programs.",
+   "text": "Κοινοτικό κέντρο ψυχαγωγίας και αθλητισμού που διοικείται από την πόλη, στη διεύθυνση 29 St Dennis Dr, με εσωτερική πισίνα (μαθήματα κολύμβησης, κολύμβηση για ψυχαγωγία), εγκαταστάσεις γυμναστικής και υποκατάστημα βιβλιοθήκης, που προσφέρει προγράμματα αναψυχής για εγγεγραμμένους."
+  },
+  "e6b5bb4495c9": {
+   "model": "command-a-translate-08-2025",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "Το δωρεάν πρόγραμμα Employment Ontario του TNO στο Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200) είναι ανοιχτό σε όλους τους κατοίκους του Οντάριο. Προσφέρει εξερεύνηση καριέρας, αξιολόγηση αναγκών κατάρτισης, δεξιότητες αναζήτησης και διατήρησης εργασίας, εκδηλώσεις πρόσληψης, ενημερωτικές συναντήσεις, εργαστήρια και εξατομικευμένη υποστήριξη καριέρας, καθώς και δωρεάν βοήθεια σε θέματα ανθρώπινου δυναμικού, ένταξης και ανάρτησης θέσεων εργασίας για εργοδότες."
+  },
+  "e76c5f811246": {
+   "model": "command-a-translate-08-2025",
+   "source": "Legal & Government Services",
+   "text": "Νομικές και Κυβερνητικές Υπηρεσίες"
+  },
+  "e84d3a5ba49c": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η σελίδα της Ένωσης Ενοικιαστών των Leaside Towers για τις διευθύνσεις 85 & 95 Thorncliffe Park Drive λειτουργεί ως κατάλογος επαφών για τους κατοίκους: διαχειριστής ακινήτων (Morguard) στο 416-421-8109 και φύλακες ασφαλείας κτιρίων (Κτίριο 85: 647-462-0404; Κτίριο 95: 416-906-7970)."
+   },
+   "model": "claude-correction",
+   "note": "Association name kept in English; Latin ';' (Greek question mark) replaced.",
+   "source": "The Leaside Towers Tenants Association page for 85 & 95 Thorncliffe Park Drive functions as a contact directory for residents: property manager (Morguard) at 416-421-8109 and building security guards (Building 85: 647-462-0404; Building 95: 416-906-7970).",
+   "text": "Η σελίδα της Leaside Towers Tenants Association (ένωση ενοικιαστών) για τις διευθύνσεις 85 & 95 Thorncliffe Park Drive λειτουργεί ως κατάλογος επαφών για τους κατοίκους: διαχειριστής ακινήτων (Morguard) στο 416-421-8109 και φύλακες ασφαλείας κτιρίων (Κτίριο 85: 647-462-0404, Κτίριο 95: 416-906-7970)."
+  },
+  "e8558cfa2f76": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Κοινωφελές δίκτυο που προωθεί την ποδηλασία ως μέσο ενδυνάμωσης των γυναικών από όλα τα κοινωνικά στρώματα, ειδικά των νεοφερμένων στον Καναδά, των οποίων ο πολιτισμός δεν τους επέτρεπε να μάθουν να κάνουν ποδήλατο. Συνενώνει νέες και έμπειρες ποδηλάτριες μέσω ομαδικών βολτών, εκπαίδευσης, προπαγάνδας και εκδηλώσεων και συνδέει τις δωρεές ποδηλάτων με γυναίκες που τα χρειάζονται μέσω του BikeMatchWCN."
+   },
+   "model": "claude-correction",
+   "note": "'Advocacy' was 'propaganda'.",
+   "source": "Community network promoting cycling as empowerment for women of all backgrounds, especially newcomers to Canada whose culture prohibited them from learning to ride. Brings together new and experienced cyclists through group rides, education, advocacy and events, and connects donated bikes with women in need through BikeMatchWCN.",
+   "text": "Κοινωφελές δίκτυο που προωθεί την ποδηλασία ως μέσο ενδυνάμωσης των γυναικών από όλα τα κοινωνικά στρώματα, ειδικά των νεοφερμένων στον Καναδά, των οποίων ο πολιτισμός δεν τους επέτρεπε να μάθουν να κάνουν ποδήλατο. Συνενώνει νέες και έμπειρες ποδηλάτριες μέσω ομαδικών βολτών, εκπαίδευσης, υπεράσπισης δικαιωμάτων (συνηγορίας) και εκδηλώσεων και συνδέει τις δωρεές ποδηλάτων με γυναίκες που τα χρειάζονται μέσω του BikeMatchWCN."
+  },
+  "e8f0c19cdab7": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Ορθόδοξος καθεδρικός ναός της Μακεδονίας που εξυπηρετεί την μακεδονική κοινότητα του Τορόντο εδώ και πάνω από 60 χρόνια. Διοργανώνει τακτικές θρησκευτικές τελετές και εορτές και φιλοξενεί εκπαιδευτικούς, πολιτιστικούς και φιλανθρωπικούς οργανισμούς που διατηρούν και προάγουν την μακεδονική κληρονομιά."
+   },
+   "model": "claude-correction",
+   "note": "'καθεδρικός ναός της Μακεδονίας' implied a cathedral in (Greek) Macedonia; now the parish's own English name (from seed data) with a neutral gloss.",
+   "source": "Macedonian Orthodox cathedral that has served Toronto's Macedonian community for over 60 years. Holds regular worship services and religious holidays, and hosts educational, cultural and charitable organizations that preserve and promote Macedonian heritage.",
+   "text": "Saint Clement of Ohrid Macedonian Orthodox Cathedral (ορθόδοξος καθεδρικός ναός στο Τορόντο), που εξυπηρετεί τη μακεδονική κοινότητα του Τορόντο εδώ και πάνω από 60 χρόνια. Διοργανώνει τακτικές θρησκευτικές τελετές και εορτές και φιλοξενεί εκπαιδευτικούς, πολιτιστικούς και φιλανθρωπικούς οργανισμούς που διατηρούν και προάγουν την πολιτιστική κληρονομιά της κοινότητας."
+  },
+  "ea49f2274ddf": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Καθολική ενορία στο Don Mills (150 Gateway Blvd) που προσφέρει καθημερινές και εβδομαδιαίες λειτουργίες, μυστήρια (βάπτιση, εξομολόγηση, ευχαριστία, επιβεβαίωση, γάμος, ευχέλαιο, κηδείες), διακονίες, διακονία νέων και ενηλίκων, ευκαιρίες εθελοντισμού και εκδηλώσεις της ενοριακής κοινότητας."
+   },
+   "model": "claude-correction",
+   "note": "Confirmation -> χρίσμα (not 'verification'); 'young adults' restored.",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "Καθολική ενορία στο Don Mills (150 Gateway Blvd) που προσφέρει καθημερινές και εβδομαδιαίες λειτουργίες, μυστήρια (βάπτιση, εξομολόγηση, Θεία Ευχαριστία, χρίσμα (Confirmation), γάμος, ευχέλαιο, κηδείες), διακονίες, διακονία νέων και νεαρών ενηλίκων, ευκαιρίες εθελοντισμού και εκδηλώσεις της ενοριακής κοινότητας."
+  },
+  "ebed9e902f38": {
+   "model": "command-a-translate-08-2025",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "Μια ομάδα με επικεφαλής κατοίκους που ενώνει οικογένειες από διαφορετικά υπόβαθρα μέσω συναντήσεων, πολιτιστικών εκδηλώσεων, εκπαίδευσης και πρωτοβουλιών εθελοντισμού. Στόχος της είναι να καταπολεμήσει την κοινωνική απομόνωση και τη μοναξιά και να υποστηρίξει την εκπαίδευση των παιδιών μέσω της ενεργούς συμμετοχής στα Συμβούλια Γονέων του Gateway Public School, του Valley Park Middle School και του Marc Garneau Collegiate Institute."
+  },
+  "ec5b5ffd97a8": {
+   "model": "command-a-translate-08-2025",
+   "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
+   "text": "Αιτήματα επείγουσας συντήρησης (νύχτες, Σαββατοκύριακα και αργίες): 416-207-8253. Πάνω αναφέρονται επίσης οι επαφές ασφαλείας του κτιρίου για επείγοντα ζητήματα που αφορούν το κτίριο."
+  },
+  "ef9e53e990a8": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Η τοπική εκκλησία του Ιησού Χριστού των Αγίων των Τελευταίων Ημερών βρίσκεται στη διεύθυνση 24 Ferrand Drive, North York. Η κυριακάτικη λατρεία περιλαμβάνει μια συνάντηση για τη θεία κοινωνία και μαθήματα ανά ηλικιακή ομάδα για όλους από 18 μηνών και άνω· όλοι είναι ευπρόσδεκτοι να παρευρεθούν."
+   },
+   "model": "claude-correction",
+   "note": "Added English church name; 'local congregation' clarified.",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "Η τοπική ενορία της Εκκλησίας του Ιησού Χριστού των Αγίων των Τελευταίων Ημερών (The Church of Jesus Christ of Latter-day Saints) βρίσκεται στη διεύθυνση 24 Ferrand Drive, North York. Η κυριακάτικη λατρεία περιλαμβάνει μια συνάντηση για τη θεία κοινωνία και μαθήματα ανά ηλικιακή ομάδα για όλους από 18 μηνών και άνω· όλοι είναι ευπρόσδεκτοι να παρευρεθούν."
+  },
+  "f0173151ade9": {
+   "model": "command-a-translate-08-2025",
+   "source": "Registered non-profit supporting newcomer families, refugees, asylum seekers and people moving from shelters into permanent housing. Distributes free household essentials (seasonal clothing, footwear, kitchenware, bedding, bath accessories and select furniture) and runs newcomer workshops on parenting, navigating local systems and community resources.",
+   "text": "Μη κερδοσκοπικός οργανισμός εγγεγραμμένος, που υποστηρίζει οικογένειες νεοφερμένων, πρόσφυγες, αιτούντες άσυλο και ανθρώπους που μετακινούνται από καταφύγια σε μόνιμη κατοικία. Διανέμει δωρεάν βασικά είδη οικιακής χρήσης (εποχιακά ρούχα, υποδήματα, σκεύη κουζίνας, κλινοσκεπάσματα, είδη μπάνιου και επιλεγμένα έπιπλα) και διοργανώνει σεμινάρια για νεοφερμένους σχετικά με την ανατροφή των παιδιών, την πλοήγηση στα τοπικά συστήματα και τους πόρους της κοινότητας."
+  },
+  "f0b67cd7ba77": {
+   "model": "command-a-translate-08-2025",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "Το πάρκο Leonard Linton Park στη διεύθυνση 135 Vanderhoof Ave· ο κατάλογος των εγκαταστάσεων της πόλης αναφέρει ότι υπάρχει σταθμός γεμίσματος φιαλών νερού ως παροχή εντός του χώρου. Δεν ήταν δυνατή η ανάκτηση του πλήρους καταλόγου των παροχών."
+  },
+  "f2e70e53d615": {
+   "model": "command-a-translate-08-2025",
+   "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
+   "text": "Παρέχει υπηρεσίες έκτακτης ανάγκης για στέγαση, συμπεριλαμβανομένων ενός κέντρου ανάπαυσης που λειτουργεί 24 ώρες το 24ωρο (351 Lake Shore Blvd East), καθώς και υποστηρικτικές υπηρεσίες μείωσης των βλαβών για άτομα που διαμένουν σε καταφύγια και προγράμματα στέγασης."
+  },
+  "f53b3121ceff": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Για επείγουσες περιπτώσεις καλέστε το 911. Η 55η Διεύθυνση είναι προσβάσιμη στο 416-808-5500."
+   },
+   "model": "claude-correction",
+   "note": "'Διεύθυνση' could be read as an address; reworded as Αστυνομικό Τμήμα 55 with a call instruction.",
+   "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
+   "text": "Για επείγουσες περιπτώσεις καλέστε το 911. Μπορείτε να καλέσετε το Αστυνομικό Τμήμα 55 (55 Division) στο 416-808-5500."
+  },
+  "f630f0f0b145": {
+   "model": "command-a-translate-08-2025",
+   "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
+   "text": "Οι μαίες είναι διαθέσιμες 24 ώρες το 24ωρο για επείγουσες περιπτώσεις εγκυμοσύνης και τοκετού· δεν υπάρχει ξεχωριστό πρόγραμμα έκτακτης ανάγκης.",
+   "warnings": [
+    "numbers missing from translation: 7"
+   ]
+  },
+  "fa4e99c2c2ea": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Εγγράφωση της Κυβέρνησης"
+   },
+   "model": "claude-correction",
+   "note": "'Εγγράφωση της Κυβέρνησης' is not normal Greek.",
+   "source": "Government Documentation",
+   "text": "Κυβερνητικά έγγραφα"
+  },
+  "fd53492ca165": {
+   "model": "command-a-translate-08-2025",
+   "source": "Employment & Skills Training",
+   "text": "Απασχόληση και κατάρτιση δεξιοτήτων"
+  },
+  "ff411a340bcb": {
+   "correctedFrom": {
+    "model": "command-a-translate-08-2025",
+    "text": "Μη κερδοσκοπικός οργανισμός με ρίζες στην κοινότητα (ιδρύθηκε το 2018 από γονείς παιδιών με αυτισμό, ενσωματώθηκε το 2020) που παρέχει δωρεάν υπηρεσίες με βάση την κοινότητα και προσανατολισμένες στην οικογένεια για παιδιά και νέους με αυτισμό και άλλες νευροαναπτυξιακές διαταραχές στο East York. Τα προγράμματα περιλαμβάνουν τα προγράμματα Roots για νέους που λειτουργούν από Δευτέρα έως Σάββατο, υπηρεσίες ανάπαυσης τα Σαββατοκύριακα, μηνιαίες συναντήσεις υποστήριξης γονέων, υποστήριξη για τα μαθήματα μετά το σχολείο, δωρεάν κατασκηνώσεις για όλους κατά τη διάρκεια του καλοκαιριού και των διακοπών του Μαρτίου, εκδηλώσεις επιστροφής στο σχολείο, εκπαιδευτικά εργαστήρια και εκστρατείες ευαισθητοποίησης για τον αυτισμό και την αναπηρία."
+   },
+   "model": "claude-correction",
+   "note": "'Incorporated' was 'integrated'; respite care wording clarified.",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "Μη κερδοσκοπικός οργανισμός με ρίζες στην κοινότητα (ιδρύθηκε το 2018 από γονείς παιδιών με αυτισμό, συστάθηκε νομικά ως οργανισμός το 2020) που παρέχει δωρεάν υπηρεσίες με βάση την κοινότητα και προσανατολισμένες στην οικογένεια για παιδιά και νέους με αυτισμό και άλλες νευροαναπτυξιακές διαταραχές στο East York. Τα προγράμματα περιλαμβάνουν τα προγράμματα Roots για νέους που λειτουργούν από Δευτέρα έως Σάββατο, ανακουφιστική φροντίδα (respite) τα Σαββατοκύριακα, μηνιαίες συναντήσεις υποστήριξης γονέων, υποστήριξη για τα μαθήματα μετά το σχολείο, δωρεάν κατασκηνώσεις για όλους κατά τη διάρκεια του καλοκαιριού και των διακοπών του Μαρτίου, εκδηλώσεις επιστροφής στο σχολείο, εκπαιδευτικά εργαστήρια και εκστρατείες ευαισθητοποίησης για τον αυτισμό και την αναπηρία."
+  },
+  "fff820dc79f3": {
+   "model": "command-a-translate-08-2025",
+   "source": "Childminding & EarlyON",
+   "text": "Φροντίδα παιδιών και EarlyON"
+  }
+ },
+ "updated": "2026-10-01T04:36:29+00:00"
+}

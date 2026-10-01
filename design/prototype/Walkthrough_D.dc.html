@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Scenario D walkthrough: a practice run and a look back</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="width:2460px;height:940px;background:#e9ecef;padding:20px 24px;display:flex;flex-direction:column;gap:12px">
+  <div class="cvh-row" style="--gap:16px;align-items:baseline">
+    <h1 class="cvh-h2" style="font-size:24px">Scenario D: a practice run of Scenario A, then a look back</h1>
+    <span class="cvh-muted" style="font-size:16px">Priya runs the power outage as an exercise with Daniel (TNO) and Rashid enrolled. Every screen they see carries the exercise marker, and nothing reaches residents.</span>
+  </div>
+  <div class="wt-cols" style="display:flex;gap:24px;align-items:flex-start">
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Hub and partner space · Priya · 1280</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="HubApp" start="P-14" w="{{1280}}" h="{{840}}" hint-size="1280px,840px"></dc-import></div></div>
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Hub and partner space · Daniel, TNO · 390</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="HubApp" persona="DANIEL" start="P-02" w="{{390}}" h="{{840}}" hint-size="390px,840px"></dc-import></div></div>
+    <div class="cvh-stack" style="--gap:6px"><span class="cvh-spec__state" style="font-size:16px">Resident app · Rashid, enrolled ambassador</span><div style="box-shadow:0 0 0 1px #c5cbd1"><dc-import name="ResidentApp" persona="rashid" scenario="D" w="{{360}}" h="{{840}}" hint-size="360px,840px"></dc-import></div></div>
+    <aside class="cvh-card cvh-stack" style="--gap:10px;width:300px;height:866px;overflow:auto;margin-top:26px">
+      <p class="cvh-strong" style="font-size:18px">Facilitator</p>
+      <p class="cvh-caption">{{line}}</p>
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{start}}">Start Scenario D</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{clear}}">Clear the session</button>
+      <p class="cvh-strong" style="font-size:16px">Suggested order</p>
+      <ol class="cvh-caption" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:4px">
+        <li>Priya starts a power outage exercise on P-14 with Daniel and Rashid enrolled. It creates an exercise disruption first.</li>
+        <li>From that disruption she opens the shared space (P-01). It arrives with the power playbook and the matching commitments.</li>
+        <li>Daniel posts a statement and takes on a gap on the coverage view (P-04). Rashid posts a practice update.</li>
+        <li>Priya ends the exercise. The markers change to "Exercise ended".</li>
+        <li>Priya reviews the indicators (P-15) and three past records (P-16) with partner leads, and turns one recurring gap into an action with an owner.</li>
+      </ol>
+      <p class="cvh-strong" style="font-size:16px">Session log</p>
+      <sc-if value="{{empty}}"><p class="cvh-caption cvh-muted">Nothing yet.</p></sc-if>
+      <ol class="cvh-caption" style="margin:0;padding-inline-start:20px;display:flex;flex-direction:column;gap:2px">
+        <sc-for list="{{log}}" as="lg" hint-placeholder-count="3"><li>{{lg}}</li></sc-for>
+      </ol>
+    </aside>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":2460,"height":940}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { srev: 0 }; }
+  componentDidMount() { var self = this; this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._off) this._off(); }
+  renderVals() {
+    var C = window.CVH, S = C.session; C.data();
+    var st = S.get();
+    var log = st.log.map(function (a) { return new Date(a.at).toTimeString().slice(0, 5) + '  ' + S.label(a); });
+    return { log: log, empty: log.length === 0,
+      line: S.run() ? 'Exercise running: ' + S.run().name + '. ' + st.log.length + ' actions so far.' : st.scenario === 'D' && st.log.length ? st.log.length + ' actions so far.' : 'Press Start to begin Scenario D with a clean session. It stays in this browser only.',
+      start: function () { S.reset({ scenario: 'D' }); }, clear: function () { S.reset({}); } };
+  }
+}
+</script>
+</body>
+</html>

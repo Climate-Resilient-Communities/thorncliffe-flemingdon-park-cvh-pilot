@@ -1,0 +1,477 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-16 Map entry preview card</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-16" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--map" aria-label="Map entry preview card">
+
+<div class="cvh-mapwrap">
+<div class="cvh-maptools">
+  <div class="cvh-segment" role="group" aria-label="{{s.R14.title}}">
+    <button type="button" class="is-on" aria-pressed="true"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{s.R14.mapView}}</button>
+    <button type="button" aria-pressed="false" onClick="{{toList}}"><span class="cvh-ico cvh-ico--list cvh-ico--sm" aria-hidden="true"></span>{{s.R14.list}}</button>
+  </div>
+  <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{toAdd}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{s.R14.addShort}}</button>
+</div>
+<div class="cvh-mapbar" role="group" aria-label="{{s.R14.filters}}">
+  <sc-for list="{{chips}}" as="c" hint-placeholder-count="4">
+    <button type="button" class="cvh-chip cvh-fchip {{c.cls}}" aria-pressed="{{c.pressed}}" onClick="{{c.toggle}}"><span class="cvh-ico cvh-ico--{{c.icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{c.label}}</span><sc-if value="{{c.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if></button>
+  </sc-for>
+  <select class="cvh-select cvh-mapbar__select" aria-label="{{s.R14.subLabel}}" value="{{subVal}}" onChange="{{pickSub}}">
+    <sc-for list="{{subOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+  </select>
+</div>
+<sc-if value="{{hazardLine}}">
+  <div class="cvh-mapband" role="status">
+    <span class="cvh-ico cvh-ico--{{hazardIcon}}" aria-hidden="true"></span>
+    <span class="cvh-grow cvh-stack" style="--gap:0"><span class="cvh-strong">{{hazardLine}}</span><button type="button" class="cvh-link" onClick="{{clearHazard}}">{{s.R14.allPlaces}}</button></span>
+  </div>
+</sc-if>
+
+<sc-if value="{{showMap}}">
+  <div class="cvh-map" role="application" aria-label="{{s.R14.mapLabel}}" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerLeave="{{up}}" onPointerCancel="{{up}}">
+    <svg class="cvh-map__base" aria-hidden="true" focusable="false">
+      <path d="{{base.parks}}" fill="#d6e7cf" stroke="#b9d3ae" stroke-width="1"></path>
+      <path d="{{base.river}}" fill="none" stroke="#bcd5e6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="{{base.minor}}" fill="none" stroke="#cfd5da" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="{{base.major}}" fill="none" stroke="#c3cad0" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="{{base.minor}}" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+      <path d="{{base.major}}" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+    </svg>
+    <sc-for list="{{labels}}" as="lb" hint-placeholder-count="3">
+      <span class="cvh-map__label {{lb.cls}}" style="{{lb.style}}" aria-hidden="true">{{lb.text}}</span>
+    </sc-for>
+    <sc-for list="{{marks}}" as="m" hint-placeholder-count="6">
+      <sc-if value="{{m.one}}">
+        <button type="button" class="cvh-pin {{m.cls}}" style="{{m.style}}" onClick="{{m.tap}}" aria-label="{{m.aria}}">
+          <span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{m.icon}}" aria-hidden="true"></span></span>
+          <sc-if value="{{m.word}}"><span class="cvh-pin__word" aria-hidden="true">{{m.word}}</span></sc-if>
+        </button>
+      </sc-if>
+      <sc-if value="{{m.many}}">
+        <button type="button" class="cvh-cluster" style="{{m.style}}" onClick="{{m.tap}}">{{m.label}}</button>
+      </sc-if>
+    </sc-for>
+    <sc-if value="{{showHint}}"><p class="cvh-map__hint cvh-hide-basic">{{s.R14.tapForHours}}</p></sc-if>
+    <div class="cvh-map__controls">
+      <button type="button" class="cvh-map__btn" onClick="{{zoomIn}}" disabled="{{atMax}}" aria-label="{{s.R14.zoomIn}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span></button>
+      <button type="button" class="cvh-map__btn" onClick="{{zoomOut}}" disabled="{{atMin}}" aria-label="{{s.R14.zoomOut}}"><span class="cvh-ico cvh-ico--minus" aria-hidden="true"></span></button>
+      <button type="button" class="cvh-map__btn" onClick="{{openLegend}}" aria-label="{{s.R14.legendTitle}}"><span class="cvh-ico cvh-ico--layers" aria-hidden="true"></span></button>
+    </div>
+    <sc-if value="{{showCorner}}">
+      <div class="cvh-map__corner"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{openRules}}"><span class="cvh-ico cvh-ico--doc cvh-ico--sm" aria-hidden="true"></span>{{s.x03.readMore}}</button></div>
+    </sc-if>
+    <sc-if value="{{emptyMsg}}">
+      <div class="cvh-map__msg" role="status">
+        <p class="cvh-strong">{{emptyMsg}}</p>
+        <sc-if value="{{noneInView}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{zoomOut}}"><span class="cvh-ico cvh-ico--minus cvh-ico--sm" aria-hidden="true"></span>{{s.R14.zoomOut}}</button></sc-if>
+        <sc-if value="{{noneMatch}}"><p>{{s.R15.emptyBody}}</p></sc-if>
+      </div>
+    </sc-if>
+
+  </div>
+    <sc-if value="{{pv}}">
+    <section class="cvh-preview" aria-label="{{pv.name}}" onPointerDown="{{stop}}">
+      <div class="cvh-preview__head">
+        <span class="cvh-pinmini cvh-pin--{{pv.shape}} {{pv.spaceCls}}"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{pv.icon}}" aria-hidden="true"></span></span></span>
+        <span class="cvh-caption cvh-strong">{{pv.kind}}</span>
+        <span class="cvh-protag" title="Prototype: this card is screen R-16">R-16</span>
+        <button type="button" class="cvh-iconbtn" onClick="{{pv.close}}" aria-label="{{s.R16.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <h2 class="cvh-h3">{{pv.name}}</h2>
+      <p class="cvh-row" style="--gap:6px;align-items:flex-start"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span>{{pv.hours}}</span></p>
+      <sc-if value="{{pv.space}}"><dc-import name="X09_SpaceStatus" space="{{pv.space}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+      <sc-if value="{{pv.expanded}}">
+        <div class="cvh-stack" style="--gap:8px">
+          <p class="cvh-caption">{{pv.where}}</p>
+          <p class="cvh-caption cvh-muted">{{pv.dist}}</p>
+          <sc-if value="{{pv.hasFacts}}">
+            <div class="cvh-result__facts"><sc-for list="{{pv.facts}}" as="f" hint-placeholder-count="2"><span class="cvh-fact"><span class="cvh-ico cvh-ico--{{f.icon}} cvh-ico--sm" aria-hidden="true"></span>{{f.label}}</span></sc-for></div>
+          </sc-if>
+          <sc-if value="{{pv.help}}"><dc-import name="X14_HowTheyHelp" hazard="{{pv.hazard}}" text="{{pv.help}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,80px"></dc-import></sc-if>
+          <sc-if value="{{pv.contributed}}"><span class="cvh-tag" style="align-self:flex-start"><span class="cvh-ico cvh-ico--communityOffer cvh-ico--sm" aria-hidden="true"></span>{{s.R16.contributed}}</span></sc-if>
+          <button type="button" class="cvh-link" onClick="{{pv.wrong}}"><span class="cvh-ico cvh-ico--pencil cvh-ico--sm" aria-hidden="true"></span>{{s.R16.wrong}}</button>
+        </div>
+      </sc-if>
+      <div class="cvh-row cvh-wrap" style="--gap:8px">
+        <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{pv.open}}">{{s.R16.open}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{pv.toggle}}" aria-expanded="{{pv.aria}}">{{pv.toggleLabel}}<span class="cvh-ico cvh-ico--{{pv.toggleIcon}} cvh-ico--sm" aria-hidden="true"></span></button>
+      </div>
+    </section>
+  </sc-if>
+  <sc-if value="{{many}}">
+    <section class="cvh-preview" aria-label="{{many.title}}" onPointerDown="{{stop}}">
+      <div class="cvh-preview__head">
+        <span class="cvh-strong">{{many.title}}</span>
+        <span class="cvh-protag" title="Prototype: this card is screen R-16">R-16</span>
+        <button type="button" class="cvh-iconbtn" onClick="{{many.close}}" aria-label="{{s.R16.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <sc-for list="{{many.items}}" as="it" hint-placeholder-count="2">
+        <button type="button" class="cvh-dest" style="min-height:var(--tap);padding:8px 12px" onClick="{{it.pick}}">
+          <span class="cvh-pinmini cvh-pin--{{it.shape}} {{it.spaceCls}}"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{it.icon}}" aria-hidden="true"></span></span></span>
+          <span class="cvh-grow">{{it.name}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span>
+        </button>
+      </sc-for>
+    </section>
+  </sc-if>
+</sc-if>
+
+<sc-if value="{{loading}}">
+  <div class="cvh-map cvh-map--plain" role="status" aria-busy="true">
+    <div class="cvh-map__msg"><p class="cvh-row"><span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span><span class="cvh-strong">{{s.R14.loading}}</span></p></div>
+  </div>
+</sc-if>
+<sc-if value="{{handover}}">
+  <div class="cvh-map cvh-map--plain">
+    <div class="cvh-map__msg" role="status">
+      <p class="cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--{{handover.icon}}" aria-hidden="true"></span><span class="cvh-strong">{{handover.text}}</span></p>
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{toList}}"><span class="cvh-ico cvh-ico--list cvh-ico--sm" aria-hidden="true"></span>{{s.R14.showList}}</button>
+    </div>
+  </div>
+</sc-if>
+
+</div>
+
+<sc-if value="{{legend}}">
+  <div class="cvh-overlay" role="dialog" aria-modal="true" aria-labelledby="r14-legend">
+    <div class="cvh-sheet">
+      <div class="cvh-sheet__head">
+        <h2 class="cvh-h3 cvh-grow" id="r14-legend">{{s.R14.legendTitle}}</h2>
+        <button type="button" class="cvh-iconbtn" onClick="{{closeSheet}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <div class="cvh-sheet__body">
+        <sc-for list="{{legendRows}}" as="lg" hint-placeholder-count="4">
+          <p class="cvh-row" style="--gap:10px"><span class="cvh-pinmini cvh-pin--{{lg.shape}} {{lg.spaceCls}}"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{lg.icon}}" aria-hidden="true"></span></span></span><span>{{lg.text}}</span></p>
+        </sc-for>
+        <p class="cvh-row" style="--gap:10px"><span class="cvh-cluster" style="position:static;transform:none;display:inline-flex;align-items:center">{{legendCluster}}</span><span>{{s.R14.legendCluster}}</span></p>
+        <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{closeSheet}}">{{s.shell.done}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+<sc-if value="{{rules}}">
+  <div class="cvh-overlay" role="dialog" aria-modal="true" aria-label="{{s.x03.title}}">
+    <div class="cvh-sheet">
+      <div class="cvh-sheet__head">
+        <span class="cvh-grow"></span>
+        <button type="button" class="cvh-iconbtn" onClick="{{closeSheet}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <div class="cvh-sheet__body">
+        <dc-import name="X03_Rules" variant="full" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,420px"></dc-import>
+        <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{toAdd}}"><span class="cvh-ico cvh-ico--plus cvh-ico--sm" aria-hidden="true"></span>{{s.R14.add}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet cvh-btn--block" onClick="{{closeSheet}}">{{s.shell.close}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Collapsed: a service with hours", "Expanded", "With space status (George, heat wave)", "With space status: not confirmed", "Community offer, added by a neighbour", "Faith community, hours not known", "Disruption view: how they can help", "Several places at one spot"], "default": "Collapsed: a service with hours"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Collapsed: a service with hours": {"persona": "devon", "scenario": "C", "loc": {"lat": 43.7045, "lng": -79.344, "z": 7.6, "sel": "M071"}}, "Expanded": {"persona": "devon", "scenario": "C", "loc": {"lat": 43.7045, "lng": -79.344, "z": 7.6, "sel": "M071", "expanded": true}}, "With space status (George, heat wave)": {"persona": "george", "scenario": "B", "basic": false, "loc": {"lat": 43.716, "lng": -79.33, "z": 3.4, "sel": "M053"}}, "With space status: not confirmed": {"persona": "george", "scenario": "B", "basic": false, "loc": {"lat": 43.701, "lng": -79.3426, "z": 5, "sel": "M052"}}, "Community offer, added by a neighbour": {"persona": "devon", "scenario": "C", "loc": {"lat": 43.704, "lng": -79.3436, "z": 11.4, "sel": "M901", "expanded": true}}, "Faith community, hours not known": {"persona": "devon", "scenario": "C", "loc": {"lat": 43.703, "lng": -79.3515, "z": 5, "sel": "M012"}}, "Disruption view: how they can help": {"persona": "yusuf", "scenario": "A", "params": {"hazard": "power"}, "loc": {"lat": 43.704, "lng": -79.3448, "z": 5, "sel": "M056", "expanded": true}}, "Several places at one spot": {"persona": "nasrin", "scenario": "C", "loc": {"lat": 43.703, "lng": -79.3426, "z": 17, "many": ["M052", "M060"]}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'map', showExercise: 'R-16'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-16'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var self = this, C = b.C, D = b.D, s = b.s, x = s.R14, loc = b.loc, go = b.go;
+    var SID = 'R-14';
+    var F = this.readF(b), P = this.places(b, F);
+    var setF = function (patch) { self.setF(b, SID, patch, V); };
+    var chipsEtc = this.filterUi(b, F, setF);
+    var listParams = this.paramsOf(F, { from: 'map' });
+    var toList = function () { if (b.app.replace && !b.standalone) b.app.replace('R-15', listParams); else go('R-15', listParams); };
+    var toAdd = function () { go('R-18', { mode: 'add', from: 'map' }); };
+    // View: centre and zoom kept in b.loc, so pan and zoom survive filter changes (carried through params.loc)
+    var ZS = [1, 1.5, 2.25, 3.4, 5, 7.6, 11.4, 17], S0 = 9764, COS = Math.cos(43.71 * Math.PI / 180);
+    var focus = b.params.focus ? C.asset((C.listingFor(b.params.focus) || {}).assetId || b.params.focus) : null;
+    var home = C.home(b.ch);
+    var V = { lat: loc.lat != null ? loc.lat : (focus ? focus.lat - 70 / (S0 * 5) : home.lat), lng: loc.lng != null ? loc.lng : (focus ? focus.lng : home.lng),
+      z: loc.z != null ? loc.z : (focus ? 5 : 2.25) };
+    var sel = loc.sel !== undefined ? loc.sel : (focus ? focus.id : null);
+    var W = b.app.w || 360, H = Math.max(200, (b.app.h || 640) - 28 - 117 - 65 - 61 - 61 - (F.hazard ? 52 : 0));
+    var k = S0 * V.z;
+    var P2 = function (lat, lng) { return { x: (lng - V.lng) * COS * k, y: (V.lat - lat) * k }; };
+    var bd = D.map.bounds;
+    var clampLat = function (v) { return Math.max(bd.latMin - 0.01, Math.min(bd.latMax + 0.01, v)); };
+    var clampLng = function (v) { return Math.max(bd.lngMin - 0.02, Math.min(bd.lngMax + 0.02, v)); };
+    var stepZ = function (dir, n) { var i = ZS.indexOf(V.z); if (i < 0) i = 2; i = Math.max(0, Math.min(ZS.length - 1, i + dir * (n || 1))); return ZS[i]; };
+    // Base map: one path per layer, drawn from the illustrative map data (never an embedded service)
+    var path = function (pts, close) { return pts.map(function (p, i) { var q = P2(p[0], p[1]); return (i ? 'L' : 'M') + q.x.toFixed(1) + ' ' + q.y.toFixed(1); }).join(' ') + (close ? ' Z' : ''); };
+    var roads = D.map.roads;
+    var base = { major: roads.filter(function (r) { return r.major; }).map(function (r) { return path(r.pts); }).join(' ') || 'M0 0',
+      minor: roads.filter(function (r) { return !r.major; }).map(function (r) { return path(r.pts); }).join(' ') || 'M0 0',
+      parks: D.map.parks.map(function (p) { return path(p.pts, true); }).join(' '), river: path(D.map.river) };
+    var inView = function (q, m) { m = m || 0; return Math.abs(q.x) <= W / 2 + m && Math.abs(q.y) <= H / 2 + m; };
+    var pos = function (q) { return 'left:calc(50% + ' + q.x.toFixed(1) + 'px);top:calc(50% + ' + q.y.toFixed(1) + 'px)'; };
+    var labels = [];
+    D.map.labels.forEach(function (l) { var q = P2(l.lat, l.lng); if (inView(q, 60)) labels.push({ text: l.text, cls: 'cvh-map__label--area', style: pos(q) }); });
+    if (V.z >= 2.25) roads.forEach(function (r) {
+      var best = null;
+      for (var i = 0; i < r.pts.length - 1; i++) {
+        var a = P2(r.pts[i][0], r.pts[i][1]), c = P2(r.pts[i + 1][0], r.pts[i + 1][1]);
+        var m = { x: (a.x + c.x) / 2, y: (a.y + c.y) / 2 }, len = Math.hypot(c.x - a.x, c.y - a.y), dd = Math.hypot(m.x, m.y);
+        if (len > 140 && inView(m, -30) && (!best || dd < best.dd)) { var ang = Math.atan2(c.y - a.y, c.x - a.x) * 180 / Math.PI; if (ang > 90) ang -= 180; if (ang < -90) ang += 180; best = { m: m, dd: dd, ang: ang }; }
+      }
+      if (best) labels.push({ text: r.name, cls: 'cvh-map__label--road', style: pos(best.m) + ';transform:translate(-50%,-50%) rotate(' + best.ang.toFixed(0) + 'deg)' });
+    });
+    if (V.z >= 3.4) D.map.parks.forEach(function (p) {
+      var la = 0, ln = 0; p.pts.forEach(function (q) { la += q[0]; ln += q[1]; }); var q = P2(la / p.pts.length, ln / p.pts.length);
+      if (inView(q, -20)) labels.push({ text: p.name, cls: 'cvh-map__label--park', style: pos(q) });
+    });
+    // Markers: shape by formality, icon by kind, open spaces filled; clustered by pixel distance at this zoom
+    // Two marks collide when their boxes overlap: a cluster pill is about 100 by 44 pixels, a marker 44 by 44
+    var RX = V.z >= ZS[ZS.length - 1] ? 40 : 96, RY = V.z >= ZS[ZS.length - 1] ? 40 : 48;
+    var pts = P.shown.map(function (r) { return { r: r, q: P2(r.a.lat, r.a.lng) }; }).filter(function (p) { return inView(p.q, 120); });
+    var used = {}, groups = [];
+    pts.forEach(function (p) {
+      if (used[p.r.a.id]) return; used[p.r.a.id] = 1; var g = [p];
+      pts.forEach(function (o) { if (!used[o.r.a.id] && Math.abs(o.q.x - p.q.x) < RX && Math.abs(o.q.y - p.q.y) < RY) { used[o.r.a.id] = 1; g.push(o); } });
+      groups.push(g);
+    });
+    var visible = 0;
+    var marks = groups.map(function (g) {
+      var cx = 0, cy = 0, la = 0, ln = 0; g.forEach(function (p) { cx += p.q.x; cy += p.q.y; la += p.r.a.lat; ln += p.r.a.lng; });
+      var q = { x: cx / g.length, y: cy / g.length }; if (inView(q, 10)) visible += g.length;
+      if (g.length === 1) {
+        var r = g[0].r, kd = self.kindOf(b, r);
+        var word = F.spaces && r.st ? s.x09[r.st] : '';
+        return { one: true, many: false, style: pos(q), icon: kd.icon, word: word,
+          cls: 'cvh-pin--' + kd.shape + (r.st === 'open' ? ' cvh-pin--space' : '') + (sel === r.a.id ? ' is-selected' : ''),
+          aria: r.a.name + ', ' + kd.word + (r.st ? ', ' + s.x09[r.st] : ''),
+          tap: function () { if (self._r14 && self._r14.moved) { self._r14.moved = false; return; } b.setLoc({ lat: V.lat, lng: V.lng, z: V.z, sel: r.a.id, many: null, expanded: false }); } };
+      }
+      var ids = g.map(function (p) { return p.r.a.id; });
+      return { one: false, many: true, style: pos(q), label: C.fill(x.places, { n: g.length }),
+        tap: function () {
+          if (self._r14 && self._r14.moved) { self._r14.moved = false; return; }
+          // Zoom straight to the level where this group splits; if it never splits, list the places here
+          var la0 = Math.min.apply(null, g.map(function (p) { return p.r.a.lat; })), la1 = Math.max.apply(null, g.map(function (p) { return p.r.a.lat; }));
+          var ln0 = Math.min.apply(null, g.map(function (p) { return p.r.a.lng; })), ln1 = Math.max.apply(null, g.map(function (p) { return p.r.a.lng; }));
+          var target = null;
+          for (var zi = 0; zi < ZS.length; zi++) {
+            var zz = ZS[zi]; if (zz <= V.z) continue;
+            var big = zz >= ZS[ZS.length - 1], kk = S0 * zz;
+            if ((ln1 - ln0) * COS * kk >= (big ? 40 : 96) || (la1 - la0) * kk >= (big ? 40 : 48)) { target = zz; break; }
+          }
+          if (!target) b.setLoc({ lat: la / g.length, lng: ln / g.length, z: ZS[ZS.length - 1], many: ids, sel: null });
+          else b.setLoc({ lat: la / g.length, lng: ln / g.length, z: target, sel: null, many: null });
+        } };
+    });
+    // Pan by pointer drag; a drag never counts as a tap
+    var down = function (e) { self._r14 = { x: e.clientX, y: e.clientY, lat: V.lat, lng: V.lng, on: true, moved: false }; };
+    var move = function (e) {
+      var d = self._r14; if (!d || !d.on) return;
+      var dx = e.clientX - d.x, dy = e.clientY - d.y;
+      if (!d.moved && Math.abs(dx) + Math.abs(dy) < 6) return;
+      d.moved = true; b.setLoc({ lat: clampLat(d.lat + dy / k), lng: clampLng(d.lng - dx / (COS * k)), z: V.z });
+    };
+    var up = function () { if (self._r14) self._r14.on = false; };
+    // Preview card (R-16)
+    var byId = {}; P.all.forEach(function (r) { byId[r.a.id] = r; });
+    var selR = sel ? byId[sel] : null, pv = null;
+    if (selR) {
+      var kd = self.kindOf(b, selR), a = selR.a, l = selR.l;
+      var facts = (a.utilities || []).map(function (u) { return { icon: self.UICON[u], label: s.utilities[u] }; });
+      if (a.kit) facts.push({ icon: 'kit', label: s.utilities.kit });
+      pv = { name: a.name, kind: kd.word, icon: kd.icon, shape: kd.shape, spaceCls: selR.st === 'open' ? 'cvh-pin--space' : '',
+        hours: self.hoursLine(b, selR), space: selR.sp ? selR.sp.id : '', expanded: !!loc.expanded, aria: loc.expanded ? 'true' : 'false',
+        toggleLabel: loc.expanded ? s.R16.less : s.shell.more, toggleIcon: loc.expanded ? 'chevronDown cvh-flip' : 'chevronDown', where: a.place || [a.address, s.neighbourhoods[a.nbhd]].filter(Boolean).join(', '),
+        dist: C.fill(s.R16.distance, { d: selR.d.toFixed(1) }), facts: facts, hasFacts: facts.length > 0,
+        help: F.hazard && a.helps ? (a.helps[F.hazard] || '') : '', hazard: F.hazard || 'power', contributed: a.source === 'contribution',
+        open: function () { go('R-12', { id: l.id, from: 'map', hazard: F.hazard || undefined }); },
+        wrong: function () { go('R-17', { from: 'entry', id: l.id }); },
+        toggle: function () { b.setLoc({ expanded: !loc.expanded }); },
+        close: function () { b.setLoc({ sel: null, expanded: false }); } };
+    }
+    var many = null;
+    if (!pv && loc.many && loc.many.length) {
+      many = { title: C.fill(x.here, { n: loc.many.length }), close: function () { b.setLoc({ many: null }); },
+        items: loc.many.map(function (id) { var r = byId[id], kd = self.kindOf(b, r);
+          return { name: r.a.name, icon: kd.icon, shape: kd.shape, spaceCls: r.st === 'open' ? 'cvh-pin--space' : '', pick: function () { b.setLoc({ sel: id, many: null, expanded: false }); } }; }) };
+    }
+    var fail = !!b.flags.mapFail, loading = !!loc.loading && !fail;
+    var handover = null;
+    if (b.basic) handover = { icon: 'list', text: x.basicList };
+    else if (fail) handover = { icon: 'info', text: x.unavailable };
+    if (handover && b.basic && !b.standalone && b.app.replace && self._r14hand !== b.app.visit) {
+      // Basic mode has no map tiles: the same destination opens as the list, in the same number of taps
+      self._r14hand = b.app.visit;
+      setTimeout(function () { b.app.replace('R-15', listParams); }, 0);
+    }
+    var showMap = !handover && !loading;
+    var noneMatch = showMap && P.shown.length === 0, noneInView = showMap && !noneMatch && visible === 0;
+    var legendRows = [
+      { shape: 'formal', icon: 'public', text: x.legendFormal, spaceCls: '' }, { shape: 'informal', icon: 'grassroots', text: x.legendInformal, spaceCls: '' },
+      { shape: 'offer', icon: 'communityOffer', text: x.legendOffer, spaceCls: '' }, { shape: 'formal', icon: 'public', text: x.legendSpace, spaceCls: 'cvh-pin--space' }];
+    return Object.assign(chipsEtc, {
+      toList: toList, toAdd: toAdd, showMap: showMap, loading: loading, handover: handover,
+      base: base, labels: labels, marks: marks, down: down, move: move, up: up, stop: function (e) { e.stopPropagation(); },
+      zoomIn: function () { b.setLoc({ lat: V.lat, lng: V.lng, z: stepZ(1) }); }, zoomOut: function () { b.setLoc({ lat: V.lat, lng: V.lng, z: stepZ(-1), many: null }); },
+      atMax: V.z >= ZS[ZS.length - 1], atMin: V.z <= ZS[0],
+      showHint: !pv && !many && !noneMatch && !noneInView, showCorner: !pv && !many,
+      emptyMsg: noneMatch ? x.noneMatch : (noneInView ? x.noneInView : ''), noneMatch: noneMatch, noneInView: noneInView,
+      pv: pv, many: many, legend: !!loc.legend, rules: !!loc.rules, legendRows: legendRows, legendCluster: C.fill(x.places, { n: 3 }),
+      openLegend: function () { b.setLoc({ legend: true }); }, openRules: function () { b.setLoc({ rules: true }); },
+      closeSheet: function () { b.setLoc({ legend: false, rules: false }); }
+    });
+  }
+
+  /* ---- Shared by R-14, R-15 and R-16 (the same filter model in both views) ---- */
+  get UICON() { return { ac: 'ac', wifi: 'wifi', charging: 'charging', washrooms: 'washrooms', water: 'drinkingWater', food: 'food' }; }
+  readF(b) {
+    var p = b.params || {};
+    var F = { spaces: p.spaces || false, utility: [].concat(p.utility || []), kit: !!p.kit, subcat: p.subcat || '', hazard: p.hazard || '', filters: (p.filters || []).slice() };
+    return Object.assign(F, b.loc.f || {});
+  }
+  paramsOf(F, extra) {
+    var o = { spaces: F.spaces || undefined, utility: F.utility.length ? F.utility.slice() : undefined, kit: F.kit || undefined, subcat: F.subcat || undefined,
+      hazard: F.hazard || undefined, filters: F.filters.length ? F.filters.slice() : undefined };
+    return Object.assign(o, extra || {});
+  }
+  setF(b, sid, patch, V) {
+    var F = Object.assign(this.readF(b), patch);
+    if (b.standalone || !b.app.replace) { b.setLoc({ f: F, sel: null, many: null }); return; }
+    var keep = V ? { lat: V.lat, lng: V.lng, z: V.z } : { shown: b.loc.shown };
+    b.app.replace(sid, this.paramsOf(F, { from: b.params.from, alert: b.params.alert, loc: keep }));
+  }
+  places(b, F) {
+    var C = b.C, self = this, home = C.home(b.ch);
+    var all = (b.D.assets || []).map(function (a) {
+      var l = C.listingFor(a.id), sp = a.space ? C.space(a.space) : null;
+      return { a: a, l: l, sp: sp, st: sp ? C.spaceState(sp) : null, d: C.km(home, { lat: a.lat, lng: a.lng }) };
+    });
+    var base = F.hazard ? all.filter(function (r) { return r.a.helps && r.a.helps[F.hazard]; }) : all;
+    var shown = base.filter(function (r) { return self.passes(b, r, F); });
+    return { all: all, base: base, shown: shown, hidden: base.length - shown.length };
+  }
+  passes(b, r, F) {
+    var C = b.C, a = r.a, l = r.l, sp = r.sp;
+    if (F.spaces) { if (!sp) return false; if (F.spaces !== true && sp.purpose !== F.spaces) return false; }
+    for (var i = 0; i < F.utility.length; i++) if ((a.utilities || []).indexOf(F.utility[i]) < 0) return false;
+    if (F.kit && !a.kit) return false;
+    if (F.subcat && (a.subcats || []).indexOf(F.subcat) < 0) return false;
+    for (var j = 0; j < F.filters.length; j++) {
+      var f = F.filters[j];
+      // A space's own record answers step-free and ID when the listing does not
+      if (f.id === 'noId') { if (!(l.idRequired === 'no' || (sp && sp.idAsked === false))) return false; }
+      else if (f.id === 'stepFree') { if (!(l.stepFree === 'yes' || (sp && sp.stepFree === true))) return false; }
+      else if (f.id === 'openNow') { if (!(C.openNow(l.hours, b.scn) === true || r.st === 'open')) return false; }
+      else if (C.FILTER[f.id] && !C.FILTER[f.id](l, f.value, { scn: b.scn })) return false;
+    }
+    return true;
+  }
+  kindOf(b, r) {
+    var k = r.a.kind;
+    return { icon: k, word: (b.s.orgKinds || {})[k] || k, shape: k === 'communityOffer' ? 'offer' : (r.a.informal ? 'informal' : 'formal') };
+  }
+  hoursLine(b, r) {
+    var C = b.C, o = C.openInfo(r.l, b.scn);
+    if (o.state === 'unknown' && r.sp && r.sp.hoursToday) return C.fill(b.s.R16.hoursToday, { hours: C.hhmm12(r.sp.hoursToday[0]) + ' to ' + C.hhmm12(r.sp.hoursToday[1]) });
+    return o.text;
+  }
+  filterUi(b, F, setF) {
+    var C = b.C, s = b.s, x = s.R14, self = this;
+    var spaceLabel = F.spaces && F.spaces !== true ? C.fill(x.spaceFor, { purpose: (s.x09.purpose || {})[F.spaces] || '' }) : s.utilities.space;
+    var chips = [{ icon: 'building', label: spaceLabel, on: !!F.spaces, toggle: function () { setF({ spaces: F.spaces ? false : true }); } }];
+    (b.D.utilities || []).forEach(function (u) {
+      var on = F.utility.indexOf(u) >= 0;
+      chips.push({ icon: self.UICON[u], label: s.utilities[u], on: on,
+        toggle: function () { setF({ utility: on ? F.utility.filter(function (v) { return v !== u; }) : F.utility.concat([u]) }); } });
+    });
+    chips.push({ icon: 'kit', label: s.utilities.kit, on: F.kit, toggle: function () { setF({ kit: !F.kit }); } });
+    chips.forEach(function (c) { c.cls = c.on ? 'cvh-chip--on' : ''; c.pressed = c.on ? 'true' : 'false'; });
+    var subOpts = [{ v: '', label: x.subAll }].concat((b.D.subcategories || []).map(function (k) { return { v: k, label: (s.subcats || {})[k] || k }; }));
+    // Named, removable filters for X-11 (the list view)
+    var applied = [];
+    if (F.spaces) applied.push({ id: 'space', label: spaceLabel });
+    F.utility.forEach(function (u) { applied.push({ id: 'u:' + u, label: s.utilities[u] }); });
+    if (F.kit) applied.push({ id: 'kit', label: s.utilities.kit });
+    if (F.subcat) applied.push({ id: 'sub', label: (s.subcats || {})[F.subcat] || F.subcat });
+    F.filters.forEach(function (f) { applied.push({ id: 'f:' + f.id, label: C.filterLabel(f, b.lang), fromChoices: !!f.fromChoices }); });
+    var remove = function (id) {
+      if (id === 'space') setF({ spaces: false }); else if (id === 'kit') setF({ kit: false }); else if (id === 'sub') setF({ subcat: '' });
+      else if (id.indexOf('u:') === 0) setF({ utility: F.utility.filter(function (v) { return v !== id.slice(2); }) });
+      else if (id.indexOf('f:') === 0) setF({ filters: F.filters.filter(function (f) { return f.id !== id.slice(2); }) });
+    };
+    return { chips: chips, subOpts: subOpts, subVal: F.subcat || '', pickSub: function (e) { setF({ subcat: e.target.value }); },
+      applied: applied, removeFilter: remove,
+      hazardLine: F.hazard ? C.fill(x.disruptionView, { hazard: (s.hazards || {})[F.hazard] || F.hazard }) : '', hazardIcon: F.hazard || 'other',
+      clearHazard: function () { setF({ hazard: '' }); } };
+  }
+
+}
+</script>
+</body>
+</html>

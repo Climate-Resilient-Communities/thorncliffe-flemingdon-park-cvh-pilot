@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-03 Audience — place</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-03" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-03" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-03" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-ha-page">
+  <sc-if value="{{exNoteLine}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{exNoteLine}}</span></p></sc-if>
+  <div class="cvh-ha-bar">
+    <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{backLabel}}</button>
+    <nav class="cvh-ha-steps" aria-label="{{T.steps.label}}">
+      <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+        <button type="button" class="cvh-ha-step {{st.cls}}" aria-current="{{st.current}}" onClick="{{st.go}}"><span class="cvh-ha-step__n">{{st.n}}</span>{{st.label}}</button>
+      </sc-for>
+    </nav>
+  </div>
+  <p>{{x.lead}}</p>
+
+  <div class="cvh-ha-cols {{colsCls}}">
+    <div class="cvh-stack" style="--gap:22px">
+      <section class="cvh-ha-sec" aria-labelledby="o03-nb">
+        <h2 class="cvh-ha-sec__title" id="o03-nb">{{x.nbTitle}}</h2>
+        <div class="cvh-ha-opts cvh-ha-opts--row">
+          <sc-for list="{{nbs}}" as="n" hint-placeholder-count="2">
+            <button type="button" class="cvh-option {{n.cls}}" role="checkbox" aria-checked="{{n.aria}}" onClick="{{n.toggle}}">
+              <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{n.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{n.label}}</span><span class="cvh-option__line">{{n.line}}</span></span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+
+      <section class="cvh-ha-sec" aria-labelledby="o03-b">
+        <h2 class="cvh-ha-sec__title" id="o03-b">{{x.bTitle}}<span class="cvh-tag cvh-tag--illustrative">{{x.addresses}}</span></h2>
+        <div class="cvh-ha-search">
+          <div class="cvh-field">
+            <label class="cvh-label" for="o03-q">{{x.search}}</label>
+            <input class="cvh-input" id="o03-q" type="search" autocomplete="off" placeholder="{{x.searchHint}}" value="{{q}}" onInput="{{onQ}}" onKeyDown="{{onKey}}">
+          </div>
+          <div class="cvh-ha-seg" role="group" aria-label="{{x.nbTitle}}">
+            <sc-for list="{{segs}}" as="sg" hint-placeholder-count="3"><button type="button" class="{{sg.cls}}" aria-pressed="{{sg.aria}}" onClick="{{sg.pick}}">{{sg.label}}</button></sc-for>
+          </div>
+        </div>
+        <p class="cvh-muted" role="status">{{showing}}</p>
+        <sc-if value="{{noMatch}}"><p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{noMatch}}</span></p></sc-if>
+        <ul class="cvh-ha-list" aria-label="{{x.bTitle}}">
+          <sc-for list="{{rows}}" as="r" hint-placeholder-count="8">
+            <li>
+              <button type="button" class="cvh-ha-bld {{r.cls}}" role="checkbox" aria-checked="{{r.aria}}" disabled="{{r.locked}}" onClick="{{r.toggle}}">
+                <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{r.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+                <span class="cvh-grow cvh-stack" style="--gap:0"><span class="cvh-ha-bld__name">{{r.name}}</span><span class="cvh-ha-bld__sub">{{r.sub}}</span></span>
+                <sc-if value="{{r.sample}}"><span class="cvh-tag">{{x.sample}}</span></sc-if>
+              </button>
+            </li>
+          </sc-for>
+        </ul>
+      </section>
+    </div>
+
+    <aside class="cvh-stack cvh-ha-aside" style="--gap:14px" aria-labelledby="o03-sel">
+      <div class="cvh-ha-say" aria-live="polite">
+        <p class="cvh-eyebrow" style="color:var(--ink)">{{x.whoTitle}}</p>
+        <p class="cvh-ha-say__text">{{say}}</p>
+        <sc-if value="{{names}}"><p>{{names}}</p></sc-if>
+        <sc-if value="{{hh}}"><p class="cvh-row cvh-wrap" style="--gap:8px"><span>{{hh}}</span><span class="cvh-tag cvh-tag--illustrative">{{T.illustrative}}</span></p></sc-if>
+        <sc-if value="{{groupsKept}}"><p class="cvh-muted">{{groupsKept}}</p></sc-if>
+      </div>
+      <div class="cvh-row"><h2 class="cvh-ha-sec__title cvh-grow" id="o03-sel">{{x.selTitle}}</h2><sc-if value="{{selCount}}"><span class="cvh-tag">{{selCount}}</span></sc-if></div>
+      <sc-if value="{{none}}"><p class="cvh-muted">{{x.selNone}}</p></sc-if>
+      <div class="cvh-ha-chips">
+        <sc-for list="{{chips}}" as="c" hint-placeholder-count="2">
+          <span class="cvh-chip cvh-chip--on">{{c.label}}<button type="button" class="cvh-chip__x" aria-label="{{c.aria}}" onClick="{{c.remove}}"><span class="cvh-ico cvh-ico--close cvh-ico--sm" aria-hidden="true"></span></button></span>
+        </sc-for>
+      </div>
+      <sc-for list="{{cards}}" as="fc" hint-placeholder-count="1">
+        <div class="cvh-ha-floorcard" role="group" aria-label="{{fc.title}}">
+          <p class="cvh-strong">{{fc.title}}</p>
+          <div class="cvh-ha-seg">
+            <sc-for list="{{fc.modes}}" as="m" hint-placeholder-count="3"><button type="button" class="{{m.cls}}" aria-pressed="{{m.aria}}" onClick="{{m.pick}}">{{m.label}}</button></sc-for>
+          </div>
+          <sc-if value="{{fc.isRange}}">
+            <div class="cvh-ha-range">
+              <div class="cvh-field"><label class="cvh-label" for="{{fc.fromId}}">{{x.from}}</label>
+                <select class="cvh-select" id="{{fc.fromId}}" value="{{fc.a}}" onChange="{{fc.setA}}"><sc-for list="{{fc.opts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.selA}}">{{o.v}}</option></sc-for></select></div>
+              <div class="cvh-field"><label class="cvh-label" for="{{fc.toId}}">{{x.to}}</label>
+                <select class="cvh-select" id="{{fc.toId}}" value="{{fc.b}}" onChange="{{fc.setB}}"><sc-for list="{{fc.opts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.selB}}">{{o.v}}</option></sc-for></select></div>
+            </div>
+          </sc-if>
+          <sc-if value="{{fc.isList}}">
+            <p class="cvh-muted">{{x.pickHint}}</p>
+            <div class="cvh-ha-floors">
+              <sc-for list="{{fc.grid}}" as="g" hint-placeholder-count="6"><button type="button" class="cvh-ha-floor {{g.cls}}" aria-pressed="{{g.aria}}" aria-label="{{g.aria2}}" onClick="{{g.toggle}}">{{g.n}}</button></sc-for>
+            </div>
+          </sc-if>
+        </div>
+      </sc-for>
+    </aside>
+  </div>
+
+  <div class="cvh-pubbar">
+    <sc-if value="{{todo}}"><p class="cvh-grow">{{todo}}</p></sc-if>
+    <sc-if value="{{noTodo}}"><span class="cvh-grow"></span></sc-if>
+    <sc-if value="{{canAddGroup}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{addGroup}}">{{x.addGroup}}</button></sc-if>
+    <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{cont}}" disabled="{{blocked}}">{{nextLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Nothing selected", "Neighbourhood chosen", "Buildings found by search", "Floors in one building (Sample Tower B, 1 to 10)", "Floors picked one by one", "Mixed selection (a neighbourhood, and floors in another)", "Place for a group (seniors in one building)", "Exercise running"], "default": "Nothing selected"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Nothing selected": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "aim": "place"}}}, "Neighbourhood chosen": {"persona": "PRIYA", "params": {"draft": {"type": "smoke", "types": ["smoke"], "hazard": "smoke", "template": "TPL-ACK-SMOKE", "headline": "Smoky air today", "action": "Keep windows closed.", "aim": "place", "place": {"nbhds": ["FP"], "blds": []}}}}, "Buildings found by search": {"persona": "PRIYA", "params": {"draft": {"type": "power", "types": ["power"], "hazard": "power", "template": "TPL-ACK-POWER", "headline": "Power is out", "action": "Keep your fridge and freezer closed.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "B01", "mode": "all"}, {"id": "B02", "mode": "all"}]}}}, "loc": {"q": "thorncliffe"}}, "Floors in one building (Sample Tower B, 1 to 10)": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}}}}, "Floors picked one by one": {"persona": "PRIYA", "params": {"draft": {"type": "elevator", "types": ["elevator"], "hazard": "elevator", "template": "TPL-ACK-ELEVATOR", "headline": "Elevator is out", "action": "Use the stairs with care.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SA", "mode": "list", "list": [3, 5, 9, 14]}]}}}}, "Mixed selection (a neighbourhood, and floors in another)": {"persona": "PRIYA", "params": {"draft": {"type": "power", "types": ["power"], "hazard": "power", "template": "TPL-ACK-POWER", "headline": "Power is out", "action": "Keep your fridge and freezer closed.", "aim": "place", "place": {"nbhds": ["FP"], "blds": [{"id": "SA", "mode": "range", "a": 1, "b": 8}, {"id": "SB", "mode": "range", "a": 1, "b": 8}, {"id": "SC", "mode": "all"}]}}}}, "Place for a group (seniors in one building)": {"persona": "PRIYA", "params": {"draft": {"id": "AL-06", "type": "heat", "types": ["heat"], "hazard": "heat", "template": "TPL-ACK-HEAT", "headline": "Very hot days until Friday", "action": "Go somewhere cool for a few hours each afternoon.", "aim": "both", "place": {"nbhds": [], "blds": [{"id": "SA", "mode": "all"}]}, "groups": {"cats": ["seniors"], "langs": []}}}}, "Exercise running": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}}}, "exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-03', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) { return Object.assign(this.screenValsX10(b), { exNoteLine: b.exercise ? b.s.O03.exNote : '' }); }
+  screenValsX10(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.O03, T = s.hub.aud, H = this.ha(b), loc = b.loc;
+    var d = H.draft();
+    if (d.aim === 'group') d.aim = 'both';
+    var pl = d.place, nbOn = function (n) { return pl.nbhds.indexOf(n) >= 0; };
+    var upd = function (place) { H.set(d, { place: place }); };
+    var num = function (n) { return Math.round(n).toLocaleString('en-CA'); };
+    var OPT = D.groupOptIns || {};
+    var nbs = ['TP', 'FP'].map(function (n) {
+      var bs = (D.buildings || []).filter(function (B) { return B.nbhd === n; }), hh = 0;
+      bs.forEach(function (B) { hh += (OPT[B.id] || {}).households || 0; });
+      var on = nbOn(n);
+      return { label: C.fill(x.nbAll, { nb: s.neighbourhoods[n] }), line: C.fill(x.nbLine, { n: bs.length, h: num(hh) }), on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        toggle: function () { var p = H.clone(pl); p.nbhds = on ? p.nbhds.filter(function (k) { return k !== n; }) : p.nbhds.concat([n]); upd(p); } };
+    });
+    var q = String(loc.q || ''), nbf = loc.nbf || 'all', qq = q.trim().toLowerCase();
+    var all = D.buildings || [];
+    var match = all.filter(function (B) {
+      if (nbf !== 'all' && B.nbhd !== nbf) return false;
+      if (!qq) return true;
+      var hay = (B.name + ' ' + (B.street || '') + ' ' + s.neighbourhoods[B.nbhd]).toLowerCase(), words = hay.split(/[\s,.]+/);
+      // A street number or a single letter must match a whole word ("1" finds 1 Thorncliffe Park Drive, not 41; "Tower B" finds only B)
+      return qq.split(/\s+/).every(function (t) { return /^\d+$/.test(t) || t.length < 2 ? words.indexOf(t) >= 0 : words.some(function (w) { return w.indexOf(t) === 0; }) || hay.indexOf(t) >= 0; });
+    });
+    var chosen = function (id) { return pl.blds.filter(function (x2) { return x2.id === id; })[0]; };
+    var toggled = function (B) {
+      var p = H.clone(pl);
+      if (chosen(B.id)) p.blds = p.blds.filter(function (x2) { return x2.id !== B.id; }); else p.blds = p.blds.concat([{ id: B.id, mode: 'all' }]);
+      return p;
+    };
+    var toggleB = function (B) { upd(toggled(B)); };
+    var rows = match.map(function (B) {
+      var inNb = nbOn(B.nbhd), on = inNb || !!chosen(B.id), sel = chosen(B.id);
+      var sub = inNb ? C.fill(x.inNb, { nb: s.neighbourhoods[B.nbhd] }) : s.neighbourhoods[B.nbhd] + ' · ' + C.fill(x.floorsN, { n: B.floors }) + (sel && sel.mode !== 'all' ? ' · ' + H.floorsText(sel, B, false) : '');
+      return { name: B.name, sub: sub, sample: !!B.sample, on: on, locked: inNb, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', toggle: function () { if (!inNb) toggleB(B); } };
+    });
+    var segs = [['all', x.all], ['TP', s.neighbourhoods.TP], ['FP', s.neighbourhoods.FP]].map(function (v) {
+      var on = nbf === v[0]; return { label: v[1], cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ nbf: v[0] }); } };
+    });
+    // Selection: chips and one floors card per building outside a chosen neighbourhood
+    var chips = [], cards = [];
+    pl.nbhds.forEach(function (n) {
+      var lab = C.fill(x.nbAll, { nb: s.neighbourhoods[n] });
+      chips.push({ label: lab, aria: C.fill(x.remove, { what: lab }), remove: function () { var p = H.clone(pl); p.nbhds = p.nbhds.filter(function (k) { return k !== n; }); upd(p); } });
+    });
+    pl.blds.forEach(function (sel, i) {
+      var B = C.building(sel.id); if (!B || nbOn(B.nbhd)) return;
+      var ft = H.floorsText(sel, B, false) || x.allFloors.toLowerCase();
+      var lab = B.name + ' · ' + ft;
+      chips.push({ label: lab, aria: C.fill(x.remove, { what: B.name }), remove: function () { toggleB(B); } });
+      var patch = function (pp) { var p = H.clone(pl); p.blds[i] = Object.assign({}, p.blds[i], pp); upd(p); };
+      var mode = sel.mode || 'all', a = +sel.a || 1, z = +sel.b || B.floors, list = sel.list || [];
+      var opts = []; for (var f = 1; f <= B.floors; f++) opts.push({ v: f, selA: f === a, selB: f === z });
+      var grid = []; for (var g = 1; g <= B.floors; g++) (function (n) {
+        var on = list.indexOf(n) >= 0;
+        grid.push({ n: n, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', aria2: 'Floor ' + n,
+          toggle: function () { patch({ list: on ? list.filter(function (k) { return k !== n; }) : list.concat([n]) }); } });
+      })(g);
+      cards.push({ title: C.fill(x.floorsTitle, { building: B.name }), isRange: mode === 'range', isList: mode === 'list', a: a, b: z, opts: opts, grid: grid,
+        fromId: 'o03-f-' + B.id, toId: 'o03-t-' + B.id,
+        modes: [['all', x.allFloors], ['range', x.aRange], ['list', x.pickFloors]].map(function (m) {
+          var on = mode === m[0];
+          return { label: m[1], cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { patch(m[0] === 'range' ? { mode: 'range', a: a, b: sel.mode === 'range' ? z : Math.min(B.floors, 10) } : { mode: m[0] }); } };
+        }),
+        setA: function (e) { patch({ a: +e.target.value }); }, setB: function (e) { patch({ b: +e.target.value }); } });
+    });
+    var nChosen = pl.nbhds.length + pl.blds.filter(function (x2) { var B = C.building(x2.id); return B && !nbOn(B.nbhd); }).length;
+    var empty = H.placeEmpty(pl);
+    var r = empty ? null : H.reach({ aim: 'place', place: pl, groups: { cats: [], langs: [] } });
+    var miss = H.missing(d).filter(function (m) { return m === T.miss.place || m.indexOf('pick floors') === 0; });
+    var st = H.steps(d, 'O-03'), nx = H.next(d, 'O-03'), prev = st[st.map(function (z2) { return z2.id; }).indexOf('O-03') - 1];
+    var cats = d.groups.cats.map(function (g) { return '"' + ((s.groups || {})[g] || {}).label + '"'; });
+    return {
+      x: x, T: T, s: s, steps: st, colsCls: b.narrow ? 'cvh-ha-cols--one' : '', nbs: nbs, q: q, segs: segs, rows: rows,
+      showing: C.fill(x.showing, { n: match.length, total: all.length }), noMatch: qq && !match.length ? C.fill(x.noMatch, { q: q.trim() }) : '',
+      chips: chips, cards: cards, none: empty, selCount: nChosen ? C.fill(x.selCount, { n: nChosen }) : '',
+      say: empty ? T.nothing : H.restate({ aim: 'place', place: pl, groups: { cats: [], langs: [] } }), names: empty ? '' : H.placeNames(pl),
+      hh: r ? C.fill(x.households, { n: num(r.households) }) : '',
+      groupsKept: cats.length ? C.fill(x.groupsKept, { groups: H.joinAnd(cats, T.or) }) : '',
+      todo: miss.length ? C.fill(T.toDo, { list: H.joinAnd(miss) }) : '', noTodo: !miss.length, blocked: miss.length > 0,
+      canAddGroup: d.aim === 'place', addGroup: function () { b.go('O-04', { draft: Object.assign(H.clone(d), { aim: 'both' }) }); },
+      nextLabel: C.fill(T.nextTo, { step: (nx ? nx.label : T.steps.review).toLowerCase() }),
+      cont: function () { if (miss.length) return; b.go(nx ? nx.id : 'O-05', { draft: d }); },
+      onQ: function (e) { b.setLoc({ q: e.target.value }); },
+      onKey: function (e) { if (e.key === 'Enter' && match.length === 1 && !nbOn(match[0].nbhd)) b.setLoc({ q: '', d: Object.assign(H.clone(d), { place: chosen(match[0].id) ? pl : toggled(match[0]) }) }); },
+      backLabel: prev ? C.fill(T.backTo, { step: prev.label.toLowerCase() }) : s.shell.back,
+      goBack: function () { if (prev) b.go(prev.id, { draft: d }); else if (b.app.canBack) b.back(); else b.go('O-02', { draft: d }); }
+    };
+  }
+  /* ---- Audience helpers shared by O-02, O-03, O-04 and O-05 (same code in each; source: o_src/aud.js).
+     The draft alert travels between the four screens in params.draft; edits live in loc.d until the next step. */
+  ha(b) {
+    var C = b.C, D = b.D, s = b.s, T = s.hub.aud, NB = s.neighbourhoods || { TP: 'Thorncliffe Park', FP: 'Flemingdon Park' };
+    var OPT = D.groupOptIns || {}, THR = D.smallGroupThreshold || 10;
+    // Illustrative: share of CVH users reading in each launch language, and the reach of each channel.
+    var SHARE = { ur: .19, en: .14, prs: .09, tl: .09, bn: .08, ps: .07, ta: .06, gu: .05, hi: .05, pa: .05, zh: .04, el: .03, sk: .02, es: .02, fr: .02 };
+    var NOT_DIGITAL = 0.065, TEXT_H = 0.45, APP_H = 0.62, TEXT_G = 0.58, APP_G = 0.71;
+    var WHOLE = { nbhds: ['TP', 'FP'], blds: [] };
+    function clone(x) { return JSON.parse(JSON.stringify(x)); }
+    function blank() {
+      return { type: null, types: [], hazard: null, template: null, headline: '', notYetKnown: '', action: '', detail: '', validMode: 'resolved', validTime: '',
+        official: '', officialAdds: '', aim: 'place', place: { nbhds: [], blds: [] }, groups: { cats: [], langs: [] }, id: null, incident: null, visited: {} };
+    }
+    function draft() {
+      var d = b.loc.d || b.params.draft || null;
+      d = d ? clone(d) : blank();
+      var bl = blank(); for (var k in bl) if (d[k] === undefined) d[k] = bl[k];
+      d.place = d.place || { nbhds: [], blds: [] }; d.place.nbhds = d.place.nbhds || []; d.place.blds = d.place.blds || [];
+      d.groups = d.groups || { cats: [], langs: [] }; d.groups.cats = d.groups.cats || []; d.groups.langs = d.groups.langs || [];
+      return d;
+    }
+    function set(d, patch) { b.setLoc({ d: Object.assign(clone(d), patch || {}) }); }
+    function hasPlace(d) { return d.aim === 'place' || d.aim === 'both'; }
+    function hasGroup(d) { return d.aim === 'group' || d.aim === 'both'; }
+    function placeEmpty(pl) { return !pl || (!(pl.nbhds || []).length && !(pl.blds || []).length); }
+    function floorList(x, B) {
+      if (!x || !x.mode || x.mode === 'all') return null;
+      var out = [], i;
+      if (x.mode === 'range') { var a = Math.max(1, Math.min(+x.a || 1, +x.b || 1)), z = Math.min(B.floors, Math.max(+x.a || 1, +x.b || 1)); for (i = a; i <= z; i++) out.push(i); return out; }
+      return (x.list || []).filter(function (n) { return n >= 1 && n <= B.floors; }).sort(function (p, q) { return p - q; });
+    }
+    function joinAnd(list, word) { word = word || T.and; if (list.length < 2) return list.join(''); return list.slice(0, -1).join(', ') + ' ' + word + ' ' + list[list.length - 1]; }
+    function floorsText(x, B, only) {
+      var f = floorList(x, B); if (!f) return '';
+      if (!f.length) return T.noFloors;
+      var contiguous = f.every(function (n, i) { return !i || n === f[i - 1] + 1; });
+      var t = f.length === 1 ? C.fill(T.floorOne, { a: f[0] }) : contiguous ? C.fill(T.floorsRange, { a: f[0], b: f[f.length - 1] }) : C.fill(T.floorsList, { list: joinAnd(f.map(String)) });
+      return only ? t + ' ' + T.only : t;
+    }
+    // The chosen buildings that are not already inside a chosen neighbourhood
+    function extraBlds(pl) { return (pl.blds || []).filter(function (x) { var B = C.building(x.id); return B && (pl.nbhds || []).indexOf(B.nbhd) < 0; }); }
+    function placeText(pl, only) {
+      pl = pl || WHOLE;
+      var parts = [], nb = (pl.nbhds || []).map(function (n) { return NB[n]; });
+      if (nb.length) parts.push(joinAnd(nb));
+      var bl = extraBlds(pl);
+      if (bl.length) {
+        var ft = bl.map(function (x) { return floorsText(x, C.building(x.id), only); });
+        var same = ft.every(function (f) { return f === ft[0]; });
+        var names = bl.map(function (x) { return C.building(x.id).name; });
+        var streets = bl.map(function (x) { return C.building(x.id).street; });
+        var sameStreet = streets.every(function (t) { return t && t === streets[0]; }) && !bl.every(function (x) { return C.building(x.id).sample; });
+        var txt;
+        if (bl.length >= 3 && same && sameStreet) txt = C.fill(T.nOn, { n: bl.length, street: streets[0] }) + (ft[0] ? ', ' + ft[0] : '');
+        else if (same && bl.length <= 3) txt = joinAnd(names) + (ft[0] ? ', ' + ft[0] : '');
+        else if (bl.length <= 3) txt = joinAnd(names.map(function (n, i) { return ft[i] ? n + ' (' + ft[i] + ')' : n; }));
+        else txt = C.fill(T.nBuildings, { n: bl.length }) + (same && ft[0] ? ', ' + ft[0] : '');
+        parts.push(txt);
+      }
+      return parts.join(T.plus);
+    }
+    // When the sentence counts buildings instead of naming them, name them underneath so the sender can check
+    function placeNames(pl) {
+      var bl = extraBlds(pl || WHOLE), txt = placeText(pl || WHOLE, true);
+      var names = bl.map(function (x) { return C.building(x.id).name; });
+      return names.length && names.some(function (n) { return txt.indexOf(n) < 0; }) ? joinAnd(names) : '';
+    }
+    function effPlace(d) { return d.aim === 'group' || placeEmpty(d.place) ? WHOLE : d.place; }
+    function units(pl) {
+      var out = {};
+      (pl.nbhds || []).forEach(function (n) { (D.buildings || []).forEach(function (B) { if (B.nbhd === n) out[B.id] = 1; }); });
+      (pl.blds || []).forEach(function (x) { var B = C.building(x.id); if (!B || out[x.id] === 1 && (pl.nbhds || []).indexOf(B.nbhd) >= 0) return; var f = floorList(x, B); out[x.id] = f ? f.length / B.floors : 1; });
+      return out;
+    }
+    function sum(u, key) { var t = 0; for (var id in u) t += ((OPT[id] || {})[key] || 0) * u[id]; return t; }
+    function langShare(langs) { if (!langs || !langs.length) return 1; var t = 0; langs.forEach(function (l) { t += SHARE[l] || 0.01; }); return Math.min(1, t); }
+    function spread(total, codes) {
+      // Largest remainder, so the language rows add up to the total
+      var w = codes.map(function (c) { return SHARE[c] || 0.01; }), tw = w.reduce(function (p, q) { return p + q; }, 0);
+      var raw = w.map(function (x) { return total * x / tw; }), fl = raw.map(Math.floor), left = total - fl.reduce(function (p, q) { return p + q; }, 0);
+      raw.map(function (r, i) { return { i: i, r: r - fl[i] }; }).sort(function (p, q) { return q.r - p.r; }).slice(0, left).forEach(function (x) { fl[x.i]++; });
+      return codes.map(function (c, i) { return { code: c, name: C.lang(c).english, native: C.lang(c).native, n: fl[i] }; }).sort(function (p, q) { return q.n - p.n; });
+    }
+    function groupsText(d) {
+      var cats = d.groups.cats.map(function (g) { return '"' + ((s.groups || {})[g] || {}).label + '"'; });
+      return joinAnd(cats, T.or);
+    }
+    function langsText(d) { var l = d.groups.langs; return l.length ? C.fill(T.readIn, { langs: joinAnd(l.map(function (c) { return C.lang(c).english; }), T.or) }) : T.anyLang; }
+    function restate(d) {
+      var pl = effPlace(d), place = placeText(pl, true), g = hasGroup(d), cats = d.groups.cats.length, langs = d.groups.langs.length;
+      if (!g) return placeEmpty(d.place) ? T.nothing : C.fill(T.everyone, { place: place });
+      if (!cats && !langs) return C.fill(T.groupPending, { place: place });
+      var who = cats ? C.fill(T.whoChose, { groups: groupsText(d), langs: langsText(d) }) : C.fill(T.whoRead, { langs: joinAnd(d.groups.langs.map(function (c) { return C.lang(c).english; }), T.or) });
+      return C.fill(d.aim === 'group' || placeEmpty(d.place) ? T.anywhere : T.of, { place: place, who: who });
+    }
+    function reach(d) {
+      var pl = effPlace(d), u = units(pl), H = sum(u, 'households'), U = Math.round(H * NOT_DIGITAL);
+      var g = hasGroup(d), cats = d.groups.cats, langs = d.groups.langs, share = langShare(langs), total, unit, text, app, perCat = [];
+      var codes = langs.length ? langs.slice() : Object.keys(SHARE);
+      if (g && cats.length) {
+        var raw = 0;
+        cats.forEach(function (c) { var n = sum(u, c) * share; raw += n; perCat.push({ label: ((s.groups || {})[c] || {}).label, n: Math.round(n) }); });
+        total = Math.round(raw); unit = 'residents'; text = Math.round(total * TEXT_G); app = Math.round(total * APP_G);
+      } else {
+        total = Math.round((H - U) * share); unit = 'households'; text = Math.round(H * share * TEXT_H); app = Math.round(total * APP_H);
+      }
+      return { total: total, unit: unit, households: Math.round(H), unreachable: U, text: text, app: app, perCat: perCat, byLang: spread(total, codes),
+        grouped: g && (cats.length > 0 || langs.length > 0), combined: d.aim === 'both' && !placeEmpty(d.place) && (cats.length > 0 || langs.length > 0),
+        small: g && cats.length > 0 && total > 0 && total < THR, zero: total === 0, threshold: THR, placeHouseholds: Math.round(H),
+        placeGroupSum: g && cats.length ? Math.round(H) + total : 0 };
+    }
+    function ambassadorsFor(pl) {
+      var u = units(pl), out = [];
+      (D.ambassadors || []).forEach(function (a) {
+        (a.buildings || []).forEach(function (bid) {
+          if (!u[bid]) return;
+          var fl = (a.floors || {})[bid] || [], sel = (pl.blds || []).filter(function (x) { return x.id === bid; })[0], B = C.building(bid);
+          var chosen = sel && (pl.nbhds || []).indexOf(B.nbhd) < 0 ? floorList(sel, B) : null;
+          var hit = chosen ? fl.filter(function (f) { return chosen.indexOf(f) >= 0; }) : fl;
+          if (hit.length) out.push({ name: a.name, role: a.role, building: B.name, floors: hit.length > 1 ? C.fill(T.floorsRange, { a: hit[0], b: hit[hit.length - 1] }) : C.fill(T.floorOne, { a: hit[0] }) });
+        });
+      });
+      return out;
+    }
+    function missing(d) {
+      var m = [];
+      if (!d.type) m.push(T.miss.type);
+      if (!String(d.headline || '').trim()) m.push(T.miss.headline);
+      if (!String(d.action || '').trim()) m.push(T.miss.action);
+      if (d.validMode === 'time' && !String(d.validTime || '').trim()) m.push(T.miss.valid);
+      if (hasPlace(d) && placeEmpty(d.place)) m.push(T.miss.place);
+      if (hasPlace(d)) (d.place.blds || []).forEach(function (x) { var B = C.building(x.id); if (B && x.mode === 'list' && !(x.list || []).length && d.place.nbhds.indexOf(B.nbhd) < 0) m.push(C.fill(T.miss.floors, { building: B.name })); });
+      if (hasGroup(d) && !d.groups.cats.length && !d.groups.langs.length) m.push(T.miss.group);
+      return m;
+    }
+    function steps(d, here) {
+      var list = [['O-02', T.steps.message]];
+      if (hasGroup(d)) list.push(['O-04', T.steps.group]);
+      if (hasPlace(d)) list.push(['O-03', T.steps.place]);
+      list.push(['O-05', T.steps.review]);
+      return list.map(function (x, i) {
+        var on = x[0] === here;
+        return { id: x[0], n: i + 1, label: x[1], cls: on ? 'is-here' : '', current: on ? 'step' : 'false', go: function () { if (!on) b.go(x[0], { draft: draft() }); } };
+      });
+    }
+    function next(d, here) { var st = steps(d, here), i = -1; st.forEach(function (x, k) { if (x.cls) i = k; }); return st[i + 1] || null; }
+    function whereText(d) { return placeText(effPlace(d), false); }
+    return { blank: blank, draft: draft, set: set, clone: clone, hasPlace: hasPlace, hasGroup: hasGroup, placeEmpty: placeEmpty, floorList: floorList,
+      floorsText: floorsText, placeText: placeText, placeNames: placeNames, effPlace: effPlace, units: units, restate: restate, reach: reach, missing: missing,
+      steps: steps, next: next, whereText: whereText, ambassadorsFor: ambassadorsFor, joinAnd: joinAnd, THR: THR, WHOLE: WHOLE, SHARE: SHARE,
+      go: function (id, d, extra) { b.go(id, Object.assign({ draft: d }, extra || {})); } };
+  }
+
+}
+</script>
+</body>
+</html>

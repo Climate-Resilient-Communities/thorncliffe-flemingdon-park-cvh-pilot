@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-13 Disruption type icons</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{isGrid}}">
+    <div style="display:flex;flex-wrap:wrap;gap:14px 18px">
+      <sc-for list="{{all}}" as="t" hint-placeholder-count="9">
+        <span class="cvh-dtype"><span class="cvh-dtype__disc"><span class="cvh-ico cvh-ico--{{t.icon}}" aria-hidden="true"></span></span><span>{{t.word}}</span></span>
+      </sc-for>
+    </div>
+  </sc-if>
+  <sc-if value="{{isScreen}}">
+    <span class="cvh-row cvh-wrap" style="--gap:14px">
+      <sc-for list="{{items}}" as="t" hint-placeholder-count="1">
+        <span class="cvh-dtype {{sizeClass}}"><span class="cvh-dtype__disc"><span class="cvh-ico cvh-ico--{{t.icon}}" aria-hidden="true"></span></span><span>{{t.word}}</span></span>
+      </sc-for>
+    </span>
+  </sc-if>
+  <sc-if value="{{isText}}">
+    <span class="cvh-dtype cvh-dtype--word">{{wordLine}}</span>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"type":{"editor":"enum","options":["fire","power","water","elevator","flood","heat","smoke","winter","other"],"default":"power"},"types":{"editor":null},"size":{"editor":"enum","options":["md","lg"],"default":"md"},"surface":{"editor":"enum","options":["screen","text","grid"],"default":"grid"},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":220}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var ids = p.types && p.types.length ? p.types : [p.type || 'power'];
+    var word = function (id) { return s.x13[id] || id; };
+    var items = ids.map(function (id) { return { id: id, icon: id, word: word(id) }; });
+    var all = ['fire','power','water','elevator','flood','heat','smoke','winter','other'].map(function (id) { return { id: id, icon: id, word: word(id) }; });
+    var surface = p.surface || (p.embedded ? 'screen' : 'grid');
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? 'display:inline-block' : 'width:360px;height:220px;padding:16px;background:#fafafa;',
+      items: items, all: all, sizeClass: p.size === 'lg' ? 'cvh-dtype--lg' : '',
+      isGrid: surface === 'grid', isScreen: surface === 'screen', isText: surface === 'text',
+      wordLine: items.map(function (i) { return i.word; }).join(', ') + ':' };
+  }
+}
+</script>
+</body>
+</html>

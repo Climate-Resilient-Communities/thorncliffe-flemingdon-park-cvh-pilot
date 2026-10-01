@@ -1,0 +1,207 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-03 Post confirmation and channel status</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="A-03" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--amb" aria-label="Post confirmation and channel status">
+
+<div class="cvh-screen" style="--gap:16px">
+  <sc-if value="{{offline}}">
+    <div class="cvh-offline" role="status"><span class="cvh-ico cvh-ico--noSignal" aria-hidden="true"></span><span class="cvh-grow">{{s.A01.offline}}</span></div>
+  </sc-if>
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <sc-if value="{{missing}}"><div class="cvh-note" role="status"><span class="cvh-ico cvh-ico--info" aria-hidden="true"></span><span class="cvh-grow">{{s.A03.notFound}}</span></div></sc-if>
+
+  <sc-if value="{{found}}">
+    <section class="cvh-poststate {{stCls}}" role="status" aria-live="polite" aria-labelledby="a03-t">
+      <h1 class="cvh-poststate__title" id="a03-t"><span class="cvh-ico cvh-ico--{{stIcon}} cvh-ico--lg" aria-hidden="true"></span><span class="cvh-grow">{{stTitle}}</span></h1>
+      <p style="font-size:var(--fs-alert)">{{stBody}}</p>
+      <sc-if value="{{stSub}}"><p class="cvh-caption">{{stSub}}</p></sc-if>
+      <sc-if value="{{reason}}"><p class="cvh-card cvh-card--tight" style="background:var(--surface)"><span class="cvh-strong">{{reason}}</span></p></sc-if>
+    </section>
+
+    <sc-if value="{{showPreview}}">
+      <section class="cvh-section" style="--gap:8px" aria-labelledby="a03-seen">
+        <h2 class="cvh-h3" id="a03-seen">{{previewLabel}}</h2>
+        <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" variant="line" lang="{{lang}}" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if>
+        <div class="cvh-arow">
+          <dc-import name="X13_DisruptionType" types="{{post.types}}" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="160px,44px"></dc-import>
+          <dc-import name="X02_Origin" origin="ambassador" state="{{previewState}}" building="{{post.building}}" corrected-mins="{{corrMins}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,90px"></dc-import>
+        </div>
+        <sc-if value="{{canSee}}"><button type="button" class="cvh-link" onClick="{{seeIt}}">{{s.A03.seeIt}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+      </section>
+    </sc-if>
+
+    <section class="cvh-section" style="--gap:8px" aria-labelledby="a03-where">
+      <h2 class="cvh-h3" id="a03-where">{{s.A03.whereWhen}}</h2>
+      <ul class="cvh-chan">
+        <sc-for list="{{chans}}" as="c" hint-placeholder-count="2">
+          <li class="cvh-chan__row"><span class="cvh-ico cvh-ico--{{c.icon}}" aria-hidden="true"></span><span class="cvh-chan__what"><span class="cvh-strong">{{c.name}}</span><span class="cvh-caption">{{c.line}}</span></span></li>
+        </sc-for>
+      </ul>
+      <sc-if value="{{waitAfter}}"><p class="cvh-caption cvh-muted">{{s.A03.waitAfter}}</p></sc-if>
+    </section>
+
+    <section class="cvh-section" style="--gap:6px" aria-labelledby="a03-mine">
+      <h2 class="cvh-h3" id="a03-mine">{{s.A03.yourUpdate}}</h2>
+      <div class="cvh-card cvh-stack" style="--gap:6px">
+        <p class="cvh-strong" style="color:var(--ink)">{{typesLine}}</p>
+        <p>{{floorsLine}}</p>
+        <sc-if value="{{lineText}}"><p lang="{{lineBcp}}" dir="{{lineDir}}">{{lineText}}</p></sc-if>
+        <sc-if value="{{post.photo}}"><p class="cvh-caption">{{s.A03.photoYes}}</p></sc-if>
+        <p class="cvh-caption cvh-muted">{{appearsAs}}</p>
+      </div>
+    </section>
+  </sc-if>
+</div>
+<div class="cvh-ambbar">
+  <div class="cvh-btnrow">
+    <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--lg" style="line-height:1.15" onClick="{{another}}">{{s.A03.another}}</button>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" style="line-height:1.15" onClick="{{toHome}}">{{s.A03.toHome}}</button>
+  </div>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Direct type: live on every channel, not yet verified", "Moderated type: waiting for the Hub", "Approved and sent", "Declined, with the reason", "Low signal: saved on the phone, goes out later", "Verified by the Hub", "Corrected by the Hub, with the reason", "Withdrawn by the Hub, with the reason", "Exercise: nothing sent to residents"], "default": "Direct type: live on every channel, not yet verified"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Direct type: live on every channel, not yet verified": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-1", "sample": {"state": "live"}}}, "Moderated type: waiting for the Hub": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-2"}}, "Approved and sent": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-2", "sample": {"state": "approved", "approvedMinsAgo": 1}}}, "Declined, with the reason": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-2", "sample": {"state": "declined", "reason": "The building manager says the alarm on floor 15 is a planned test. Nothing to send."}}}, "Low signal: saved on the phone, goes out later": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-1", "offline": true, "sample": {"state": "queued"}}}, "Verified by the Hub": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-1", "sample": {"state": "verified", "verifiedMinsAgo": 2}}}, "Corrected by the Hub, with the reason": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-1", "sample": {"state": "verified", "verifiedMinsAgo": 4, "corrected": {"text": "Water is back on floors 10 to 15. It is still off on floors 16 to 22.", "minsAgo": 1}}}}, "Withdrawn by the Hub, with the reason": {"persona": "rashid", "scenario": "A", "params": {"post": "AP-1", "sample": {"state": "withdrawn", "reason": "The elevator was stopped for a few minutes for a safety check. It is working again.", "withdrawnMinsAgo": 1}}}, "Exercise: nothing sent to residents": {"persona": "rashid", "scenario": "D", "exercise": true, "params": {"post": "AP-1", "sample": {"state": "exercise"}}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'A-03'[0] === 'A' && !!app.exercise,
+      exEnded: 'A-03'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.A03, prm = b.params, m = C.session.model() || {};
+    var now = Date.now(), minsSince = function (t) { return t ? Math.max(0, Math.round((now - t) / 60000)) : 0; };
+    var nav = { goBack: function () { if (b.app.canBack) b.back(); else b.go('A-01'); }, toHome: function () { b.go('A-01'); }, another: function () { b.go('A-02'); } };
+    var offline = !!prm.offline || m.signal === false;
+    // Find the post: session and drawn posts, then this phone's exercise posts
+    var mine = (D.ambassadorPosts || []).filter(function (p) { return (p.by || 'AMB-RASHID') === 'AMB-RASHID'; });
+    var p = null;
+    mine.forEach(function (q) { if (q.id === prm.post) p = q; });
+    (m.exercise || []).forEach(function (a) { if (a.t === 'ambPost' && a.post.id === prm.post) p = Object.assign({}, a.post, { state: 'exercise', minsAgo: minsSince(a.at) }); });
+    if (!p && !prm.post && mine.length) p = mine[0];
+    if (!p) return Object.assign({ missing: true, found: false, offline: offline, chans: [], post: {} }, nav);
+    p = Object.assign({}, p, prm.sample || {});
+    var sn = p.alert ? C.snap(p.alert, b.scn) : null, a = sn ? sn.a : null;
+    var bo = C.building(p.building) || { name: p.building };
+    var fl = p.floors === 'all' || !p.floors ? null : p.floors;
+    var floorsLine = !fl ? x.floorsAll : fl[0] === fl[1] ? C.fill(x.floorsOne, { a: fl[0] }) : C.fill(x.floorsRange, { a: fl[0], b: fl[1] });
+    var floorsLow = floorsLine.charAt(0).toLowerCase() + floorsLine.slice(1);
+    var state = p.state;
+    var corr = (prm.sample || {}).corrected || (sn && sn.corrections && sn.corrections[0] ? { text: sn.corrections[0].text, minsAgo: sn.corrections[0].minsAgo } : null);
+    if (a && a.status === 'withdrawn') state = 'withdrawn';
+    var sentMins = p.sentMinsAgo != null ? p.sentMinsAgo : (p.minsAgo || 0);
+    var reasonText = function (r) { var tbl = ((s.O07 || {}).reasons) || {}; return C.fill(x.reasonLabel, { reason: tbl[r] || r || '' }); };
+    var st = { icon: 'check', title: x.liveTitle, body: x.live, sub: '', cls: '', reason: '' };
+    if (state === 'queued') st = { icon: 'noSignal', title: x.queuedTitle, body: x.queued, sub: C.fill(x.writtenAt, { t: b.ago(p.minsAgo || 0) }), cls: 'cvh-poststate--hold' };
+    else if (state === 'waiting') st = { icon: 'clock', title: x.waitingTitle, body: x.waiting, sub: C.fill(x.when, { t: b.ago(p.minsAgo || 0) }), cls: 'cvh-poststate--hold' };
+    else if (state === 'approved') st = { icon: 'check', title: x.approvedTitle, body: C.fill(x.approved, { t: b.ago(p.approvedMinsAgo != null ? p.approvedMinsAgo : minsSince(p.approvedAt)) }), sub: x.approvedLine };
+    else if (state === 'declined') st = { icon: 'info', title: x.declinedTitle, body: x.declined.split(' Reason')[0], reason: reasonText(p.reason), cls: 'cvh-poststate--hold' };
+    else if (state === 'verified') st = { icon: 'verified', title: x.verifiedTitle, body: C.fill(x.verified, { t: b.ago(p.verifiedMinsAgo != null ? p.verifiedMinsAgo : (a && a.promotedMinsAgo) || 0) }), sub: x.verifiedLine };
+    else if (state === 'withdrawn') st = { icon: 'info', title: x.withdrawnTitle, body: x.withdrawn.split(' Reason')[0], reason: reasonText(p.reason || (a && a.withdrawnReason)),
+      sub: C.fill(x.takenDown, { t: b.ago(p.withdrawnMinsAgo != null ? p.withdrawnMinsAgo : minsSince(a && a.withdrawnAt)) }) + '.', cls: 'cvh-poststate--hold' };
+    else if (state === 'exercise') st = { icon: 'exercise', title: x.exerciseTitle, body: x.exercise, sub: '', cls: 'cvh-poststate--hold' };
+    if (corr && (state === 'live' || state === 'approved' || state === 'verified')) {
+      st = { icon: 'corrected', title: x.correctedTitle, body: x.corrected.split(' Reason')[0], reason: C.fill(x.correctedLine, { text: corr.text }), sub: C.fill(x.correctedWhen, { t: b.ago(corr.minsAgo || 0) }) };
+    }
+    var out = state === 'live' || state === 'approved' || state === 'verified';
+    var sentAgo = state === 'approved' ? (p.approvedMinsAgo != null ? p.approvedMinsAgo : minsSince(p.approvedAt)) : sentMins;
+    var sentT = b.ago(sentAgo);
+    var chLine = function (ch) {
+      if (out) return ch === 'text' ? C.fill(x.sentTo, { t: sentT, building: bo.name, floors: floorsLow }) : C.fill(x.liveOn, { t: sentT, building: bo.name, floors: floorsLow });
+      if (state === 'withdrawn') return st.sub.replace(/\.$/, '');
+      if (state === 'declined' || state === 'exercise') return x.notSent;
+      return x.notYet;
+    };
+    var chans = [{ icon: 'phone', name: x.chText, line: chLine('text') }, { icon: 'globe', name: x.chWeb, line: chLine('web') }];
+    var line = p.line && p.line.text ? p.line : null;
+    var verifiedNow = state === 'verified' || state === 'approved';
+    return Object.assign({
+      found: true, missing: false, offline: offline, post: { types: p.types || [], building: p.building || 'SA', photo: !!p.photo },
+      stIcon: st.icon, stTitle: st.title, stBody: st.body, stSub: st.sub || '', stCls: st.cls || '', reason: st.reason || '',
+      showPreview: out || state === 'waiting', previewLabel: state === 'waiting' ? x.willSeen : x.howSeen,
+      previewState: corr && out ? 'corrected' : (verifiedNow || state === 'waiting' ? 'verified' : 'unverified'),
+      corrMins: corr ? (corr.minsAgo || 0) : 0, canSee: out && !!p.alert, seeIt: function () { b.go('R-07', { alert: p.alert, unverified: state === 'live' }); },
+      chans: chans, waitAfter: state === 'waiting' || state === 'queued',
+      typesLine: (p.types || []).map(function (t) { return (s.x13 || {})[t === 'fire' ? 'fireAlarm' : t === 'water' ? 'waterPlumbing' : t] || t; }).join(', '),
+      floorsLine: floorsLine, lineText: line ? line.text : '', lineBcp: line ? C.bcp(line.lang) : 'en', lineDir: line ? C.dir(line.lang) : 'ltr',
+      appearsAs: C.fill(s.A02.appearsAs, { building: bo.name })
+    }, nav);
+  }
+
+}
+</script>
+</body>
+</html>

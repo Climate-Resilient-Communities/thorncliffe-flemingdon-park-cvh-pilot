@@ -1,0 +1,2857 @@
+{
+ "language": "prs",
+ "compiled": "2026-10-01, Claude subagent (sourced, not a native speaker)",
+ "terms": [
+  {
+   "en": "hospital",
+   "prs": "شفاخانه",
+   "avoid": [
+    "بیمارستان"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "Hospitals = «شفاخانه ها»; 'Hospitals have Emergency Departments' = «شفاخانه ها دارای بخش های عاجل هستند»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«به قسمت “امرجنسی” شفاخانه محله خود بروید» (go to the emergency department of your local hospital)"
+    },
+    {
+     "title": "Kabul residents: seasonal illnesses rise with the cold",
+     "url": "https://da.azadiradio.com/a/33615545.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«شمار مراجعه‌کنندگان به کلینیک‌ها و شفاخانه‌ها ... افزایش یافته است»"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«مدیریت زباله های شفاخانه»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Universal in Afghan official and media usage. UNICEF once glosses بیمارستانی in brackets, confirming بیمارستان is the Iranian equivalent to avoid. Keep hospital proper names in English (e.g. Michael Garron Hospital)."
+  },
+  {
+   "en": "emergency department / emergency room",
+   "prs": "بخش عاجل (شفاخانه)",
+   "avoid": [
+    "اورژانس",
+    "بخش اورژانس"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "EN 'Hospitals have Emergency Departments' = «شفاخانه ها دارای بخش های عاجل هستند»; 'emergency room visit' = «بازدید اتاق عاجل»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«قسمت “امرجنسی” شفاخانه» (IRCC transliterates 'emergency' and puts it in quotes)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Side-by-side source gives بخش عاجل. IRCC's «قسمت امرجنسی» is also understood by Afghans in Canada. اورژانس is Iranian (seen in the ASCIA Persian/Dari leaflet)."
+  },
+  {
+   "en": "emergency (situation, help)",
+   "prs": "عاجل / اضطراری",
+   "avoid": [
+    "اورژانس"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«کمک عاجل درمواقع اضطراری» (urgent help in emergencies); «احتیاجات صحی عاجل» (urgent health needs)"
+    },
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«در شرایط خطرناک و اضطراری، با نمبر ۹۱۱ تماس بگیرید»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'Urgent Care Clinics' = «کلینیک های مراقبت های عاجل»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "عاجل = urgent/emergency (medical); اضطراری = emergency (situation, shelter, phone number). Both appear in IRCC Dari."
+  },
+  {
+   "en": "health clinic / health centre",
+   "prs": "کلینیک / مرکز صحی",
+   "avoid": [
+    "درمانگاه"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«می توانید به مرکز صحی (کلینیک) محله تان مراجعه کرده»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'Primary Care Clinics' = «کلینیک های مراقبت های اولیه»"
+    },
+    {
+     "title": "Mental health services banned in Afghan health centres",
+     "url": "https://da.azadiradio.com/a/33679833.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«خدمات مربوط به صحت روانی در مرکزهای صحی افغانستان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan spelling varies کلینیک/کلنیک. صحی (not بهداشتی/درمانی) is the Afghan adjective for 'health'."
+  },
+  {
+   "en": "health (adjective, as in health services/health card)",
+   "prs": "صحی",
+   "avoid": [
+    "بهداشتی",
+    "سلامت (as adjective)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "Title «خدمات صحی در کانادا» (Health care services in Canada)"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'health worry' = «نگرانی صحی»; 'health information' = «معلومات صحی»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "IRCC still uses بهداشت in fixed names (e.g. 'وزارت بهداشت ایالت'), but services/cards are صحی."
+  },
+  {
+   "en": "health card (OHIP card)",
+   "prs": "کارت صحی",
+   "avoid": [
+    "کارت بهداشتی",
+    "کارت سلامت"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«یک کارت صحی معروف بنام “هلث کارت” به عنوان مدرک پوشش صحی خود دریافت خواهید کرد»"
+    },
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "same sentence: «کارت صحی معروف بنام “هلث کارت”»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Official IRCC Dari. Write 'کارت صحی انتاریو (Ontario health card / OHIP)'. کارت بهداشتی reads as 'hygiene card'."
+  },
+  {
+   "en": "health insurance",
+   "prs": "بیمه صحی",
+   "avoid": [
+    "بیمه درمانی (acceptable but Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«بیمه صحی دولت» (government health insurance)"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'health insurance' = «بیمه صحی»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "doctor",
+   "prs": "داکتر",
+   "avoid": [
+    "پزشک",
+    "دکتر"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«داکتر عمومی ... “فامیلی داکتر”»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'regular doctor' = «داکتر خود»"
+    },
+    {
+     "title": "Kabul residents: seasonal illnesses rise with the cold",
+     "url": "https://da.azadiradio.com/a/33615545.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«توان مراجعه به داکتر و خرید دوا را نداریم»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "IRCC uses پزشک once; Afghan everyday usage is overwhelmingly داکتر."
+  },
+  {
+   "en": "family doctor / GP",
+   "prs": "داکتر عمومی (فامیلی داکتر)",
+   "avoid": [
+    "پزشک خانواده"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«داکتر عمومی معروف به “فامیلی داکتر”»"
+    },
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'your local GP' = «داکتر عمومی محلی تان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "pharmacy",
+   "prs": "دواخانه",
+   "avoid": [
+    "داروخانه"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«می توانید به یک کلینیک و یا دواخانه محلیه تان مراجعه کنید»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'Pharmacies' = «دواخانه ها»; also «فارمسی (دواخانه)»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Medicine = دوا (not دارو)."
+  },
+  {
+   "en": "medicine / medication",
+   "prs": "دوا (plural ادویه)",
+   "avoid": [
+    "دارو"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'get medicine' = «بدست آوردن دوا»; «ادویه شما»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«دریافت دوا برای نسخه هایتان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "prescription",
+   "prs": "نسخه",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'through a prescription' = «از طریق نسخه»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«دوا برای نسخه هایتان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "dentist",
+   "prs": "داکتر دندان",
+   "avoid": [
+    "دندانپزشک",
+    "دندان‌پزشک"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«مطب یک داکتر عمومی و یک داکتر دندان را بیابید»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'dentists' = «داکتر دندان»"
+    },
+    {
+     "title": "What can I expect when I get my dentures? (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/what-to-expect-when-i-get-my-dentures/dari",
+     "publisher": "NSW Ministry of Health (2024)",
+     "evidence": "EN 'see your dental practitioner' = «به داکتر دندان مراجعه کنید»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "dentures",
+   "prs": "دندان مصنوعی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "What can I expect when I get my dentures? (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/what-to-expect-when-i-get-my-dentures/dari",
+     "publisher": "NSW Ministry of Health (2024)",
+     "evidence": "EN title 'What can I expect when I get my dentures?' = «وقتی دندان مصنوعی خود را گرفتم چه انتظاری می توانم داشته باشم؟»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Official side-by-side (NSW Health)."
+  },
+  {
+   "en": "dental clinic",
+   "prs": "کلینیک دندان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'Dental Clinic' = «کلینیک دندان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Side-by-side."
+  },
+  {
+   "en": "midwife",
+   "prs": "قابله",
+   "avoid": [
+    "ماما",
+    "مامایی",
+    "دایه"
+   ],
+   "sources": [
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«100 قابله نیز در زمینه مدیریت ... آموزش دیدند»"
+    },
+    {
+     "title": "UNICEF relief supplies press release (Dari translation)",
+     "url": "https://www.unicef.org/afghanistan/media/8896/file/UNICEF%20Relief%20Supplies%20Press%20Release%20Dari%20translation.pdf",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«کیت های جراحی و قابله گی برای زنان باردار»"
+    },
+    {
+     "title": "Human rights situation in the first half of 2025 (Dari)",
+     "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+     "publisher": "Rawadari (Afghan human rights NGO)",
+     "evidence": "«چند تن از قابله ها و نرس ها را ... از کار اخراج»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "ماما/مامایی is Iranian. In Afghan Dari دایه means wet-nurse/nanny, so do not use it for a professional midwife. Midwifery clinic = کلینیک قابلگی."
+  },
+  {
+   "en": "pregnancy / pregnant",
+   "prs": "حاملگی / حامله",
+   "avoid": [
+    "بارداری (understood, Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'symptoms can occur during pregnancy' = «در دوران حاملگی»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "«اطفال و زنان حامله» (children and pregnant women)"
+    },
+    {
+     "title": "UNICEF relief supplies press release (Dari translation)",
+     "url": "https://www.unicef.org/afghanistan/media/8896/file/UNICEF%20Relief%20Supplies%20Press%20Release%20Dari%20translation.pdf",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«زنان باردار» (UNICEF Afghanistan also uses باردار)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "حامله/حاملگی is the more Afghan form; باردار also appears in UNICEF Afghanistan Dari, so it is not wrong."
+  },
+  {
+   "en": "birth / childbirth",
+   "prs": "زایمان / ولادت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'before and after the baby is born' heading = «پیش و پس از زایمان»"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«کنترول ولادت»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "mental health",
+   "prs": "صحت روانی",
+   "avoid": [
+    "سلامت روان",
+    "بهداشت روان"
+   ],
+   "sources": [
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'perinatal mental health issues' = «تکلیف های صحت روانی پیش و پس از زایمان»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "heading «صحت روان و روحی شما مهم است»"
+    },
+    {
+     "title": "Mental health services banned in Afghan health centres",
+     "url": "https://da.azadiradio.com/a/33679833.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«خدمات مربوط به صحت روانی در مرکزهای صحی»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "counselling",
+   "prs": "مشوره (also مشاوره)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Youth and adolescent health counselling centre opened in west Kabul",
+     "url": "https://www.etilaatroz.com/40270/",
+     "publisher": "Etilaatroz (Afghan daily) reporting a Ministry of Public Health release",
+     "evidence": "«مرکز “مشوره‌دهی صحی به جوانان و نوجوانان”» (Ministry of Public Health centre)"
+    },
+    {
+     "title": "Legal aid directorate (مساعد حقوقی)",
+     "url": "https://moj.gov.af/dr/%D9%85%D8%B3%D8%A7%D8%B9%D8%AF-%D8%AD%D9%82%D9%88%D9%82%DB%8C",
+     "publisher": "Ministry of Justice of Afghanistan",
+     "evidence": "«مشوره‌های شرعی و حقوقی وزارت عدلیه»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«درباره مشاوره کوتاه مدت رایگان پرسان کنید» (IRCC uses مشاوره)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "مشوره is the Afghan form; مشاوره is used by IRCC Dari and also appears in Afghan media, so it is acceptable, not an error."
+  },
+  {
+   "en": "treatment",
+   "prs": "تداوی / معالجه",
+   "avoid": [
+    "درمان (Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'Effective treatment' = «تداوی مؤثر»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'go for treatment' = «برای معالجه ... مراجعه کنید»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "interpreter",
+   "prs": "ترجمان (spoken: ترجمان شفاهی)",
+   "avoid": [
+    "مترجم (= written translator)",
+    "تفسیر"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "«شما حق داشتن ترجمان به زبان خویش را دارید» (You have the right to an interpreter in your language)"
+    },
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "EN 'Interpreter service' = «خدمات ترجمانی»; «اگر به ترجمان شفاهی ضرورت داشتید»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«از ایشان بخواهید برایتان مترجم خبر کنند» (IRCC uses مترجم)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "ترجمان is the Afghan word for interpreter. Interpretation services = خدمات ترجمانی (شفاهی). تفسیر means exegesis/commentary."
+  },
+  {
+   "en": "allergy / food allergies",
+   "prs": "حساسیت (حساسیت غذایی)",
+   "avoid": [
+    "آلرژی (Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Anaphylaxis (Persian/Dari translation)",
+     "url": "https://www.allergy.org.au/images/pcc/ana/PER_ASCIA_PCC_Anaphylaxis_2015.pdf",
+     "publisher": "ASCIA (Australasian Society of Clinical Immunology and Allergy)",
+     "evidence": "«واکنش شدید حساسیتی» / «حساسیت غذایی» (Persian/Dari leaflet, Iranian register)"
+    },
+    {
+     "title": "Ceftriaxone: a cure-all or over-prescription in Afghanistan?",
+     "url": "https://www.etilaatroz.com/118251/",
+     "publisher": "Etilaatroz (Afghan daily)",
+     "evidence": "Afghan daily: «حتا حساسیت‌های فصلی»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Same word in both registers; ASCIA leaflet itself is Iranian-register (اورژانس, پزشک), so only the word حساسیت is taken from it."
+  },
+  {
+   "en": "ambulance",
+   "prs": "آمبولانس",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«۹۱۱ ... به پولیس محلی، آتش نشانی و آمبولانس وصل میشود»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "vaccine / vaccination",
+   "prs": "واکسین / واکسیناسیون",
+   "avoid": [
+    "واکسن (IRCC also uses it)"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'getting vaccinations' = «دریافت واکسین»"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«واکسین و مواد کافی»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«واکسیناسیون منظم»; «واکسن هایی»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Afghan spelling واکسین; IRCC mixes واکسن."
+  },
+  {
+   "en": "police",
+   "prs": "پولیس",
+   "avoid": [
+    "پلیس"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«با پولیس یا خدمات حفاظت از اطفال ... تماس بگیرید»"
+    },
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«به پولیس محلی، آتش نشانی و آمبولانس وصل میشود»"
+    },
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«پولیس، محاکم و ادارات عدلی» (UNAMA Dari uses پولیس throughout)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "پلیس is the Iranian spelling."
+  },
+  {
+   "en": "police station / police division",
+   "prs": "حوزه پولیس",
+   "avoid": [
+    "پاسگاه",
+    "پوسته پولیس (= police checkpoint/post)",
+    "ایستگاه پلیس"
+   ],
+   "sources": [
+    {
+     "title": "Police District 18 opened in west Kabul",
+     "url": "https://da.azadiradio.com/a/29227216.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«حوزه ۱۸ امنیتی پولیس در غرب شهر کابل افتتاح شد»"
+    },
+    {
+     "title": "Kabul Police District 13 to be split into two districts",
+     "url": "https://www.etilaatroz.com/59069/",
+     "publisher": "Etilaatroz (Afghan daily)",
+     "evidence": "title «حوزه سیزدهم پولیس شهر کابل به دو حوزه تقسیم می‌شود» (search result title)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Afghan media usage; Kabul police districts are حوزه. Toronto Police '55 Division' can be rendered «حوزه 55 پولیس تورنتو (55 Division)». No Canadian official Dari source found."
+  },
+  {
+   "en": "fire services / fire department",
+   "prs": "آتش نشانی (اطفائیه)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«پولیس محلی، آتش نشانی و آمبولانس»"
+    },
+    {
+     "title": "Kabul Municipality ready to cooperate on fire prevention",
+     "url": "https://km.gov.af/8946/",
+     "publisher": "Kabul Municipality (شاروالی کابل)",
+     "evidence": "«رئیس عمومی اداره آتش نشانی (اطفایه)»"
+    },
+    {
+     "title": "Kabul fire department upgraded to General Directorate",
+     "url": "https://da.azadiradio.com/a/24599244.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«ریاست اطفاییه کابل»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Both are Afghan; Kabul Municipality pairs them. آتش نشانی is used by IRCC and is clearest in a Canadian context."
+  },
+  {
+   "en": "fire station",
+   "prs": "مرکز آتش نشانی / مرکز اطفائیه",
+   "avoid": [
+    "ایستگاه آتش‌نشانی (Iranian-leaning, but understood)"
+   ],
+   "sources": [
+    {
+     "title": "Kabul fire department upgraded to General Directorate",
+     "url": "https://da.azadiradio.com/a/24599244.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«در حال حاضر 4 مرکز اطفاییه در شهر کابل موجود اند»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Only Afghan media usage found. ایستگاه آتش‌نشانی (used in corrections) is understandable; not listed as an error."
+  },
+  {
+   "en": "911 / emergency phone number",
+   "prs": "نمبر تلفون اضطراری ۹۱۱",
+   "avoid": [
+    "شماره اورژانس"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«با نمبر ۹۱۱ تماس بگیرید. این نمبر تلفون اضطراری ملی است»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Afghan uses نمبر for number (شماره also used by UNHCR). Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "telephone / phone",
+   "prs": "تلفون (also تیلفون)",
+   "avoid": [
+    "تلفن"
+   ],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Contact us (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/contact/",
+     "publisher": "UNHCR",
+     "evidence": "«با خطوط تلفون ذیل ... به صورت رایگان تماس حاصل نمایید»"
+    },
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "«تلفون ها و ویبسایت های مفید» (EN 'Useful phone lines and websites')"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«نمبر تلیفون»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "تلفن is Iranian."
+  },
+  {
+   "en": "helpline / phone support line",
+   "prs": "خط کمک تلفونی / شماره های تماس کمکی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+     "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+     "evidence": "«PANDA - 1300 726 306 خط ملی کمک تلفونی» (EN: PANDA National Helpline)"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'UNHCR's helpline numbers' = «شماره های تماس کمکی UNHCR»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "For a crisis line, «خط کمک تلفونی برای بحران» is a composition from these parts; no source found for 'crisis line' itself (see notFound)."
+  },
+  {
+   "en": "shelter (emergency shelter)",
+   "prs": "سرپناه (سرپناه اضطراری)",
+   "avoid": [
+    "پناهگاه (= refuge/bunker; Iranian-leaning for this sense)",
+    "یتیم‌خانه"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«سرپناه های اضطراری برای افرادی که دچار بحران هستند ... موجود میباشد» (emergency shelters)"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Get help (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Food, shelter and other assistance' = «غذا، سرپناه و کمک های دیگر»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Youth shelter = «سرپناه اضطراری برای جوانان (بی خانمان)» — composed from sourced parts."
+  },
+  {
+   "en": "homeless",
+   "prs": "بی خانمان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«افراد بی خانمان»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "housing",
+   "prs": "مسکن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "Title «مسکن در کانادا» (Housing in Canada)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Official IRCC title. Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "tenant",
+   "prs": "مستاجر / کرایه‌نشین",
+   "avoid": [
+    "مستأجر is the same word; اجاره‌نشین (Iranian)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«وقتی مکانی را کرایه می کنید، از شما بنام مستاجر یا “تننت” یاد می شود»"
+    },
+    {
+     "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "«حقوق کرایه و کرایه نشینان»"
+    },
+    {
+     "title": "Arbitrary rent increases in Kabul; tenants fed up",
+     "url": "https://8am.media/fa/arbitrary-increase-in-house-rents-in-kabul-and-taliban-indifference-tenants-are-fed-up/",
+     "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+     "evidence": "«کرایه‌نشینان به ستوه آمده‌اند»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "landlord",
+   "prs": "مالک خانه",
+   "avoid": [
+    "صاحبخانه (Iranian-leaning)",
+    "موجر"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«شما به مالک خانه یا “لنلورد” پیسه میدهید»"
+    },
+    {
+     "title": "Arbitrary rent increases in Kabul; tenants fed up",
+     "url": "https://8am.media/fa/arbitrary-increase-in-house-rents-in-kabul-and-taliban-indifference-tenants-are-fed-up/",
+     "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+     "evidence": "«افزایش خودسرانه کرایه‌ها توسط مالکان خانه‌ها»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "rent",
+   "prs": "کرایه",
+   "avoid": [
+    "اجاره"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«آپارتمان یا خانه کرایه ای»"
+    },
+    {
+     "title": "Arbitrary rent increases in Kabul; tenants fed up",
+     "url": "https://8am.media/fa/arbitrary-increase-in-house-rents-in-kabul-and-taliban-indifference-tenants-are-fed-up/",
+     "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+     "evidence": "«افزایش خودسرانه کرایه خانه‌ها در کابل»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "اجاره is Iranian (it is used in the UK Home Office Dari housing guide, which is Iranian-register). Rent bank = صندوق کمک کرایه."
+  },
+  {
+   "en": "lease / rental agreement",
+   "prs": "قرارداد کرایه («لیز»)",
+   "avoid": [
+    "قرارداد اجاره"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«شما و مالک خانه قراردادی معروف به “لیز” امضا می کنید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "eviction (being made to leave a rental)",
+   "prs": "تخلیه خانه (by the landlord)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Arbitrary rent increases in Kabul; tenants fed up",
+     "url": "https://8am.media/fa/arbitrary-increase-in-house-rents-in-kabul-and-taliban-indifference-tenants-are-fed-up/",
+     "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+     "evidence": "«مالک خانه تهدید کرده است که در صورت نپرداختن این مبلغ، باید خانه را تخلیه کند»"
+    }
+   ],
+   "confidence": "low",
+   "notes": "Only Afghan media usage of the verb; no official tenancy translation in Dari found. اخراج is used in Afghan media for deportation and job dismissal."
+  },
+  {
+   "en": "newcomer(s)",
+   "prs": "تازه وارد / تازه واردان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«خدمات رایگان برای تازه واردان در نزدیکی شما»"
+    },
+    {
+     "title": "How can newly arrived Afghans in Canada enter the job market? (interview with WoodGreen, Toronto)",
+     "url": "https://da.azadiradio.com/a/32974410.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«افغان های تازه وارد به کانادا»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Help for newcomers = «کمک برای تازه واردان» (not «کمک‌های تازه‌واردان», which means help given by newcomers)."
+  },
+  {
+   "en": "settlement services / settlement agency",
+   "prs": "خدمات اقامت / سازمان خدمات اقامت",
+   "avoid": [
+    "اسکان (= (re)settlement/housing placement)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«سازمانهای خدمات اقامت می توانند به شما کمک کنند»"
+    },
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«مامورهای سازمان اقامت در مکاتب» (settlement workers in schools)"
+    }
+   ],
+   "confidence": "high",
+   "notes": "IRCC's official Dari term. اسکان / اسکان مجدد is used for resettlement (UK Afghan Resettlement Programme: «برنامهٔ اسکان مجدد افغانها»), so 'resettlement' = اسکان مجدد, but IRCC's 'settlement services' = خدمات اقامت."
+  },
+  {
+   "en": "resettlement",
+   "prs": "اسکان مجدد",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Afghan Resettlement Programme (Dari and Pashto)",
+     "url": "https://assets.publishing.service.gov.uk/media/68921d9ba34b939141463f79/Afghan_Resettlement_Programme__Dari_and_Pashto_.docx",
+     "publisher": "UK Government (GOV.UK)",
+     "evidence": "«برنامهٔ اسکان مجدد افغانها (ARP)» (Afghan Resettlement Programme)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "immigration",
+   "prs": "مهاجرت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اداره مهاجرت، پناهندگی و شهروندی کانادا (IRCC)»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Official Dari name of IRCC. Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "refugee",
+   "prs": "پناهنده",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اگر شما یک پناهنده هستید، یا درخواست پناهندگی داده اید»"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - home page (EN /afghanistan/ vs Dari /afghanistan/fa-af/)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/",
+     "publisher": "UNHCR",
+     "evidence": "«کمیساریای عالی سازمان ملل متحد در امور پناهندگان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Note: UNHCR Afghanistan's Dari page renders 'refugees' also as مهاجرین (Afghan everyday usage), but for Canadian legal status use پناهنده."
+  },
+  {
+   "en": "asylum seeker / refugee claimant",
+   "prs": "پناهجو / درخواست کننده پناهندگی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Get help (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Help for refugees and asylum seekers' = «کمک برای مهاجران و پناهجویان»"
+    },
+    {
+     "title": "Deportation of a group of Afghan asylum seekers from Canada",
+     "url": "https://da.azadiradio.com/a/33204802.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«اخراج یک گروه از پناهجویان افغان از کانادا»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«درخواست پناهندگی داده اید» (made a refugee claim)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "citizenship",
+   "prs": "شهروندی (تابعیت)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اداره مهاجرت، پناهندگی و شهروندی کانادا»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "IRCC uses شهروندی in its name; تابعیت is common Afghan everyday/legal usage for nationality. Either is acceptable; keep consistent."
+  },
+  {
+   "en": "permanent resident / permanent residence",
+   "prs": "اقامت دائم (دارنده اقامت دائم)",
+   "avoid": [
+    "ساکن دائم / ساکنان دائم (= permanent inhabitants)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«برای گرفتن کارت اقامت دائم یا “پرمننت رزیدنت کارت” خود اقدام کنید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Official IRCC. A PR = «دارنده اقامت دائم (PR)». Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "Social Insurance Number",
+   "prs": "نمبر بیمه اجتماعی (SIN)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«براى دريافت نمبر بیمه اجتماعی خود (SIN) درخواست دهید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "driver's licence",
+   "prs": "لیسنس موتردوانی",
+   "avoid": [
+    "گواهینامه رانندگی"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«برای دریافت لیسنس موتردوانی کسب معلومات کنید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Car = موتر (not خودرو)."
+  },
+  {
+   "en": "legal aid / legal assistance",
+   "prs": "مساعدت حقوقی",
+   "avoid": [
+    "کمک حقوقی (acceptable)"
+   ],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - home page (EN /afghanistan/ vs Dari /afghanistan/fa-af/)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Legal assistance' = «مساعدت حقوقی»"
+    },
+    {
+     "title": "Legal aid directorate (مساعد حقوقی)",
+     "url": "https://moj.gov.af/dr/%D9%85%D8%B3%D8%A7%D8%B9%D8%AF-%D8%AD%D9%82%D9%88%D9%82%DB%8C",
+     "publisher": "Ministry of Justice of Afghanistan",
+     "evidence": "«مساعدت‌های حقوقی رایگان» (Afghan Ministry of Justice: free legal aid)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "legal clinic (community legal clinic)",
+   "prs": "کلینیک حقوقی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Legal aid directorate (مساعد حقوقی)",
+     "url": "https://moj.gov.af/dr/%D9%85%D8%B3%D8%A7%D8%B9%D8%AF-%D8%AD%D9%82%D9%88%D9%82%DB%8C",
+     "publisher": "Ministry of Justice of Afghanistan",
+     "evidence": "(free legal aid context) «مساعدت‌های حقوقی رایگان»"
+    },
+    {
+     "title": "Legal clinic (Eshraq University)",
+     "url": "https://eshraq.edu.af/%DA%A9%D9%84%DB%8C%D9%86%DB%8C%DA%A9-%D8%AD%D9%82%D9%88%D9%82%DB%8C/",
+     "publisher": "Eshraq University (Afghanistan)",
+     "evidence": "page title «کلینیک حقوقی» (search result; page not fetched)"
+    }
+   ],
+   "confidence": "low",
+   "notes": "Term exists in Afghan universities (first one at Herat University) but the Canadian 'community legal clinic' concept has no official Dari source; consider «کلینیک حقوقی (مساعدت حقوقی رایگان)»."
+  },
+  {
+   "en": "violence",
+   "prs": "خشونت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'What is violence?' = «خشونت چیست؟»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "violence against women",
+   "prs": "خشونت علیه زنان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UN: Afghan women face a wide range of violence",
+     "url": "https://www.etilaatroz.com/245777/un-women-afghanistan/",
+     "publisher": "Etilaatroz (Afghan daily)",
+     "evidence": "reporting UN Women: «خشونت علیه زنان» (search result)"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "«خشونت» + «زنان» (Help for women page)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Gender-based violence = خشونت مبتنی بر جنسیت (not verified in a side-by-side source)."
+  },
+  {
+   "en": "rights",
+   "prs": "حقوق",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'Know your rights' = «حقوق خود را بدانید»"
+    },
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«حقوق و مسئولیت های مستاجر و مالک»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "complaint",
+   "prs": "شکایت",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "«یک شکایت در مرکز صحی ثبت کنید»"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Contact us (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/contact/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'complaint boxes' = «صندوق شکایات»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "food assistance",
+   "prs": "کمک های غذایی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Contact us (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/contact/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'including food assistance' = «به شمول کمک های غذایی»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Side-by-side."
+  },
+  {
+   "en": "halal",
+   "prs": "حلال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "«گوشت حلال در بیشتر فروشگاه های کلان ... وجود دارد»"
+    },
+    {
+     "title": "Life in Canada: Winnipeg (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/winnipeg-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "same: «گوشت حلال»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "egg(s)",
+   "prs": "تخم مرغ (also تخم)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Food prices in Kabul markets today",
+     "url": "http://www.afghanpaper.com/nbody.php?id=54677",
+     "publisher": "Afghan Paper (Afghan news site)",
+     "evidence": "«یک دانه تخم مرغ وطنی 7 افغانی» (Kabul food price list)"
+    }
+   ],
+   "confidence": "low",
+   "notes": "تخم مرغ is used in Afghan media, so it is not specifically Iranian; تخم alone is also common in speech. Either is fine."
+  },
+  {
+   "en": "drinking water",
+   "prs": "آب آشامیدنی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNICEF: one third of Afghan schools lack safe drinking water",
+     "url": "https://8am.media/fa/unicef-one-third-of-afghan-schools-lack-safe-drinking-water/",
+     "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+     "evidence": "«یک‌سوم مکاتب افغانستان فاقد آب آشامیدنی سالم هستند»"
+    },
+    {
+     "title": "Nine schools built in Kandahar",
+     "url": "https://da.azadiradio.com/a/33498503.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«آب آشامیدنی سالم، تشناب ها و سایر امکانات»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Drinking fountain itself not sourced (see notFound); «جای آب آشامیدنی» / «آب‌خوری» are compositions."
+  },
+  {
+   "en": "toilet / washroom (public)",
+   "prs": "تشناب (تشناب عمومی / تشناب شهری)",
+   "avoid": [
+    "سرویس بهداشتی",
+    "دستشویی",
+    "توالت"
+   ],
+   "sources": [
+    {
+     "title": "Kabul Municipality sealed the public toilet and ablution room in Baharestan Park",
+     "url": "https://km.gov.af/6509/",
+     "publisher": "Kabul Municipality (شاروالی کابل)",
+     "evidence": "«شاروالی کابل تشناب شهری و وضوخانه که در پارک بهارستان ... ساخته بود»"
+    },
+    {
+     "title": "Nine schools built in Kandahar",
+     "url": "https://da.azadiradio.com/a/33498503.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«آب آشامیدنی سالم، تشناب ها»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "سرویس بهداشتی / دستشویی are Iranian."
+  },
+  {
+   "en": "heat / hot weather",
+   "prs": "گرمی هوا (شدت گرمی)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Rising heat in some Afghan cities up to 48 degrees; WHO advice to families",
+     "url": "https://da.azadiradio.com/a/33806494.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«با افزایش گرمی هوا، افراد باید آب بیشتری بنوشند»"
+    },
+    {
+     "title": "School holidays announced due to extreme heat",
+     "url": "https://pajhwok.com/fa/2025/06/29/school-holidays-announced-due-to-extreme-heat/",
+     "publisher": "Pajhwok Afghan News",
+     "evidence": "«اعلام رخصتی مکاتب به دلیل شدت گرمی هوا»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "گرما is also used (e.g. «موج گرما») so it is not an error."
+  },
+  {
+   "en": "heat wave / heat warning",
+   "prs": "موج گرما / هشدار موج گرما",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Heat wave heading to northern and western Afghanistan",
+     "url": "https://www.etilaatroz.com/257468/heat-wave-on-the-way-to-northern-and-western-afghanistan/",
+     "publisher": "Etilaatroz (Afghan daily)",
+     "evidence": "title «موج گرما در راه شمال و غرب افغانستان»"
+    },
+    {
+     "title": "Severe heat wave warning for north and west Afghanistan",
+     "url": "https://www.khaama.com/persian/archives/171900",
+     "publisher": "Khaama Press (Persian service)",
+     "evidence": "title «هشدار موج گرمای شدید» (search result title)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Afghan media usage; Environment Canada's 'heat warning' = «هشدار گرمی شدید / هشدار موج گرما»."
+  },
+  {
+   "en": "cool place (to rest from heat)",
+   "prs": "مکان سرد / جای خنک",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Rising heat in some Afghan cities up to 48 degrees; WHO advice to families",
+     "url": "https://da.azadiradio.com/a/33806494.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "WHO advice: «دو تا سه ساعت سپری کردن در مکان‌های سرد»"
+    }
+   ],
+   "confidence": "low",
+   "notes": "Only the general phrase is sourced; there is no sourced Dari term for a 'cooling centre' (see notFound). A safe rendering is «جای خنک برای استراحت در روزهای گرم (cooling centre)»."
+  },
+  {
+   "en": "school",
+   "prs": "مکتب (plural مکاتب)",
+   "avoid": [
+    "مدرسه (in Afghan Dari = religious school/madrasa)",
+    "دبستان",
+    "دبیرستان"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اطفالتان را در مکتب شامل (ثبت نام) کنید»"
+    },
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«انواع مکاتب»"
+    },
+    {
+     "title": "School holidays announced due to extreme heat",
+     "url": "https://pajhwok.com/fa/2025/06/29/school-holidays-announced-due-to-extreme-heat/",
+     "publisher": "Pajhwok Afghan News",
+     "evidence": "«اعلام رخصتی مکاتب»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Use مدرسه only for Islamic/Qur'an schools (مدرسه دینی). Sunday school = مکتب یکشنبه."
+  },
+  {
+   "en": "elementary / primary school",
+   "prs": "مکتب ابتدائیه (ابتدایی)",
+   "avoid": [
+    "دبستان"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«سیستم مکاتب ابتدایی و متوسطه در کانادا»"
+    },
+    {
+     "title": "Kabul city provincial education profile 1400",
+     "url": "https://moe.gov.af/sites/default/files/2022-11/Provincial_Profile_1400_Kabul_City.pdf",
+     "publisher": "Ministry of Education of Afghanistan",
+     "evidence": "Afghan MoE classifies schools as ابتدائیه / متوسطه / لیسه"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "middle school",
+   "prs": "مکتب متوسطه",
+   "avoid": [
+    "مدرسه راهنمایی"
+   ],
+   "sources": [
+    {
+     "title": "Kabul city provincial education profile 1400",
+     "url": "https://moe.gov.af/sites/default/files/2022-11/Provincial_Profile_1400_Kabul_City.pdf",
+     "publisher": "Ministry of Education of Afghanistan",
+     "evidence": "Afghan MoE school levels: ابتدائیه (grades 1-6), متوسطه (7-9), لیسه (10-12)"
+    },
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "IRCC uses «تحصیلات دبیرستان یا متوسطه» for Canadian secondary"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Caution: Afghans read متوسطه as grades 7-9 (middle school), but IRCC uses متوسطه for secondary/high school. For Canadian middle school, «مکتب متوسطه (middle school)» fits Afghan readers."
+  },
+  {
+   "en": "high school / secondary school",
+   "prs": "لیسه (مکتب ثانوی)",
+   "avoid": [
+    "دبیرستان"
+   ],
+   "sources": [
+    {
+     "title": "Kabul city provincial education profile 1400",
+     "url": "https://moe.gov.af/sites/default/files/2022-11/Provincial_Profile_1400_Kabul_City.pdf",
+     "publisher": "Ministry of Education of Afghanistan",
+     "evidence": "Afghan MoE: لیسه = grades 10-12"
+    },
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "IRCC: «تحصیلات دبیرستان یا متوسطه»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "grade / class (school year level)",
+   "prs": "صنف",
+   "avoid": [
+    "کلاس (for grade level)",
+    "پایه"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«از صنف ۹ تا ۱۲»; «صنف اول مکتب»"
+    },
+    {
+     "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«ممنوعیت ... آموزش فراتر از صنف ششم»"
+    },
+    {
+     "title": "Human rights situation in the first half of 2025 (Dari)",
+     "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+     "publisher": "Rawadari (Afghan human rights NGO)",
+     "evidence": "«دانش آموزان دختر پایین تر از صنف ششم»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "'Grade 6' = صنف ششم. کلاس can still be used for a course/lesson (e.g. language classes)."
+  },
+  {
+   "en": "kindergarten (school)",
+   "prs": "کودکستان / مهد کودک",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Life in Canada: Winnipeg (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/winnipeg-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "«دوره تحصیل معمولاً از کودکستان (سن 3 یا 4) الی صنف12»"
+    },
+    {
+     "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "same sentence with «مهدطفل»"
+    },
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«از مهدکودک در سن ۴ یا ۵ سالگی شروع می شود»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "IRCC itself is inconsistent. In Afghanistan کودکستان is the state daycare/preschool for young children (see child care). Writing 'کودکستان (Kindergarten)' is clearest."
+  },
+  {
+   "en": "child care / daycare",
+   "prs": "کودکستان",
+   "avoid": [
+    "مهد کودک (Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Review of kindergartens in the country",
+     "url": "https://tolonews.com/fa/afghanistan/%D8%A8%D8%B1%D8%B1%D8%B3%DB%8C-%D9%88%D8%B6%D8%B9-%DA%A9%D9%88%D8%AF%DA%A9%D8%B3%D8%AA%D8%A7%D9%86%E2%80%8C%D9%87%D8%A7-%D8%AF%D8%B1%DA%A9%D8%B4%D9%88%D8%B1%D8%9B-%DA%86%D9%87-%D8%B4%D9%85%D8%A7%D8%B1-%DA%A9%D9%88%D8%AF%DA%A9%D8%A7%D9%86-%D8%A8%D9%87-%DA%A9%D9%88%D8%AF%DA%A9%D8%B3%D8%AA%D8%A7%D9%86-%D9%85%DB%8C%E2%80%8C%D8%B1%D9%88%D9%86%D8%AF%D8%9F",
+     "publisher": "TOLOnews",
+     "evidence": "TOLOnews: «بررسی وضع کودکستان‌ها درکشور» (state childcare run by the Ministry of Labour and Social Affairs)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Afghan childcare for working mothers is called کودکستان. To avoid confusion with school kindergarten, «مرکز نگهداری اطفال (daycare)» is a clear description, but that phrase was not found in a source."
+  },
+  {
+   "en": "children",
+   "prs": "اطفال (singular طفل)",
+   "avoid": [
+    "کودکان (understood; Iranian-leaning)",
+    "بچه‌ها"
+   ],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Help for women, children and people with specific needs' = «کمک برای زنان، اطفال و افراد با نیازمندی های خاص»"
+    },
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اطفالتان را در مکتب شامل کنید»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "کودک also appears in Afghan usage (e.g. کودکستان), so it is not an error, but اطفال is the preferred official Afghan form."
+  },
+  {
+   "en": "school year",
+   "prs": "سال تحصیلی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«سال تحصیلی در اواخر آگوست یا اوایل سپتمبر شروع می شود»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "holiday / school break",
+   "prs": "رخصتی",
+   "avoid": [
+    "تعطیلات",
+    "تعطیلی"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«با چند رخصتی در طول سال»; «مکاتب در رخصتیهای عمومی رخصت میباشند»"
+    },
+    {
+     "title": "School holidays announced due to extreme heat",
+     "url": "https://pajhwok.com/fa/2025/06/29/school-holidays-announced-due-to-extreme-heat/",
+     "publisher": "Pajhwok Afghan News",
+     "evidence": "«اعلام رخصتی مکاتب»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "March break = «رخصتی مارچ (March break)»."
+  },
+  {
+   "en": "register / enrol",
+   "prs": "ثبت نام / شامل کردن",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اطفالتان را در مکتب شامل (ثبت نام) کنید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Single official IRCC Dari source (English version published separately, not compared line by line)."
+  },
+  {
+   "en": "library",
+   "prs": "کتابخانه",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«به کتابخانه محله تان مراجعه کنید»"
+    },
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«از کتابخانه های خود بردارند»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Toronto Public Library = «کتابخانه عامه تورنتو (Toronto Public Library)»."
+  },
+  {
+   "en": "community centre",
+   "prs": "مرکز اجتماعی",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«محل کار، مکتب، فروشگاه، عبادتگاه، مراکز اجتماعی ویا ایستگاه بس»"
+    },
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "same list: «مراکز اجتماعی»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "One official source (two IRCC sheets with identical wording)."
+  },
+  {
+   "en": "place of worship",
+   "prs": "عبادتگاه",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«عبادتگاه»; «انجمن محله ها، کتابخانه ها و عبادت گاه ها»"
+    },
+    {
+     "title": "Pope Leo visits a Muslim place of worship for the first time",
+     "url": "https://da.azadiradio.com/a/33608603.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«پاپ لئو برای نخستین‌بار به عبادتگاه مسلمانان رفت»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "mosque",
+   "prs": "مسجد (plural مساجد)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Pope Leo visits a Muslim place of worship for the first time",
+     "url": "https://da.azadiradio.com/a/33608603.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«به مسجد مشهور استانبول رفت»"
+    },
+    {
+     "title": "Human rights situation in the first half of 2025 (Dari)",
+     "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+     "publisher": "Rawadari (Afghan human rights NGO)",
+     "evidence": "«اماکن مذهبی و مساجد»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "church",
+   "prs": "کلیسا",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Rioters destroyed five churches in Faisalabad",
+     "url": "https://da.azadiradio.com/a/32551181.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«آشوبگران در فیصل آباد پاکستان پنج کلیسا را تخریب کردند»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "seniors / older adults",
+   "prs": "سالمندان (افراد سالمند)",
+   "avoid": [
+    "کهنسالان (acceptable)"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«سالمندانی که محتاج به حمایت طبّی دائم میباشند»"
+    },
+    {
+     "title": "UN Secretary-General report on Afghanistan, S/2023/453 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/230620_sg_report_on_afghanistan_s.2023.453_-_dari.pdf",
+     "publisher": "UNAMA / United Nations",
+     "evidence": "«افراد سالمند، معلولین، زنان یا اطفال»"
+    },
+    {
+     "title": "What can I expect when I get my dentures? (Dari; English version also published)",
+     "url": "https://www.mhcs.health.nsw.gov.au/publications/what-to-expect-when-i-get-my-dentures/dari",
+     "publisher": "NSW Ministry of Health (2024)",
+     "evidence": "«کارت تخفیف سالمندان» (Pensioner Concession Card)"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "youth / young people",
+   "prs": "جوانان (adolescents: نوجوانان)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«برای کمک به طفلها، جوانان، و والدینی که نو وارد کانادا شده اند»"
+    },
+    {
+     "title": "Youth and adolescent health counselling centre opened in west Kabul",
+     "url": "https://www.etilaatroz.com/40270/",
+     "publisher": "Etilaatroz (Afghan daily) reporting a Ministry of Public Health release",
+     "evidence": "«مشوره‌دهی صحی به جوانان و نوجوانان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "women",
+   "prs": "زنان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Help for women' = «کمک برای زنان»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "disability",
+   "prs": "معلولیت (persons with disabilities: افراد دارای معلولیت / معلولین)",
+   "avoid": [
+    "ناتوانی"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "EN list includes disability = «... ملیت، معلولیت، سن ...»"
+    },
+    {
+     "title": "UN Secretary-General report on Afghanistan, S/2023/453 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/230620_sg_report_on_afghanistan_s.2023.453_-_dari.pdf",
+     "publisher": "UNAMA / United Nations",
+     "evidence": "«افراد سالمند، معلولین»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "people with specific needs",
+   "prs": "افراد با نیازمندی های خاص",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'people with specific needs' = «افراد با نیازمندی های خاص»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Side-by-side."
+  },
+  {
+   "en": "employment services / job search help",
+   "prs": "کاریابی / کمک برای پیدا کردن کار",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Get help (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Help to find a job' = «کمک برای پیدا کردن کار»"
+    },
+    {
+     "title": "How can newly arrived Afghans in Canada enter the job market? (interview with WoodGreen, Toronto)",
+     "url": "https://da.azadiradio.com/a/32974410.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«رئیس برنامه ها و خدمات کاریابی موسسۀ وُدگرین در شهر تورنتو»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "language classes",
+   "prs": "آموزش لسان / صنف های لسان",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«امکانات زیادی برای آموزش لسان وجود دارد»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "IRCC uses لسان (Afghan) for language; زبان is also used by UNHCR."
+  },
+  {
+   "en": "free of charge",
+   "prs": "رایگان (به صورت رایگان)",
+   "avoid": [
+    "مجانی (colloquial)"
+   ],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - home page (EN /afghanistan/ vs Dari /afghanistan/fa-af/)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'all UNHCR services are free of charge' = «تمام کمک های بشردوستانه به صورت رایگان ارایه می گردد»"
+    },
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«خدمات رایگان برای تازه واردان»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "'at no cost' = «بدون هیچگونه هزینه»"
+    }
+   ],
+   "confidence": "high",
+   "notes": ""
+  },
+  {
+   "en": "appointment",
+   "prs": "وعده ملاقات (also قرار ملاقات)",
+   "avoid": [
+    "نوبت",
+    "وقت قبلی (Iranian-leaning)"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "EN 'request an interpreter when scheduling a health appointment' = «وقتی که وعده ملاقات صحی را تنظیم میکنید ... ترجمان درخواست نمایید»"
+    },
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "EN 'appointments are not required' = «نیازی به قرار ملاقات نیست»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "One side-by-side source (uses both forms). By appointment only = «فقط با وعده ملاقات قبلی»."
+  },
+  {
+   "en": "walk-in (no appointment needed)",
+   "prs": "بدون وعده ملاقات / نیازی به قرار ملاقات نیست",
+   "avoid": [
+    "بدون نوبت",
+    "بدون وقت قبلی"
+   ],
+   "sources": [
+    {
+     "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+     "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+     "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+     "evidence": "Urgent care clinics: EN 'Because appointments are not required' = «از آنجایی که نیازی به قرار ملاقات نیست»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Walk-in clinic = «کلینیک بدون وعده ملاقات (walk-in clinic)» — composition."
+  },
+  {
+   "en": "child protection services (Children's Aid)",
+   "prs": "خدمات حفاظت از اطفال",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Health care services (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«با پولیس یا خدمات حفاظت از اطفال ... تماس بگیرید»"
+    }
+   ],
+   "confidence": "medium",
+   "notes": ""
+  },
+  {
+   "en": "municipality / city (government)",
+   "prs": "شاروالی (شهرداری also used by IRCC)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Kabul Municipality ready to cooperate on fire prevention",
+     "url": "https://km.gov.af/8946/",
+     "publisher": "Kabul Municipality (شاروالی کابل)",
+     "evidence": "«شاروالی کابل»"
+    },
+    {
+     "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "«شاروالی تاندر بی»"
+    },
+    {
+     "title": "Welcome to Canada: Housing (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«شهرداری محله دلخواهتان» (IRCC also uses شهرداری)"
+    }
+   ],
+   "confidence": "medium",
+   "notes": "Not flagged as an error; شاروالی is the distinctly Afghan term."
+  },
+  {
+   "en": "hours: morning / afternoon (AM/PM)",
+   "prs": "صبح / بعد از ظهر (عصر)",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "«از ساعت 8 صبح تا 4 بعد از ظهر، یک شنبه تا پنجشنبه»"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Contact us (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/contact/",
+     "publisher": "UNHCR",
+     "evidence": "«از 8 صبح الی 4 عصر»"
+    },
+    {
+     "title": "Legal aid directorate (مساعد حقوقی)",
+     "url": "https://moj.gov.af/dr/%D9%85%D8%B3%D8%A7%D8%B9%D8%AF-%D8%AD%D9%82%D9%88%D9%82%DB%8C",
+     "publisher": "Ministry of Justice of Afghanistan",
+     "evidence": "«۸:۳۰ صبح الی ۳:۳۰ بعد از ظهر»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Add صبح / بعد از ظهر to 12-hour times."
+  },
+  {
+   "en": "January (month)",
+   "prs": "جنوری",
+   "avoid": [
+    "ژانویه"
+   ],
+   "sources": [
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«۷ جنوری»"
+    },
+    {
+     "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+     "publisher": "UNAMA",
+     "evidence": "title «جنوری- مارچ 2026»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "February (month)",
+   "prs": "فبروری",
+   "avoid": [
+    "فوریه"
+   ],
+   "sources": [
+    {
+     "title": "Afghan Resettlement Programme (Dari and Pashto)",
+     "url": "https://assets.publishing.service.gov.uk/media/68921d9ba34b939141463f79/Afghan_Resettlement_Programme__Dari_and_Pashto_.docx",
+     "publisher": "UK Government (GOV.UK)",
+     "evidence": "«در ماه فبروری سال ۲۰۲۲»"
+    },
+    {
+     "title": "Impact of US elections on Afghanistan",
+     "url": "https://da.azadiradio.com/a/33185922.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«در فبروری ۲۰۲۰»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "March (month)",
+   "prs": "مارچ",
+   "avoid": [
+    "مارس"
+   ],
+   "sources": [
+    {
+     "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«جنوری- مارچ 2026»"
+    },
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«۲۷ مارچ»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "April (month)",
+   "prs": "اپریل",
+   "avoid": [
+    "آوریل"
+   ],
+   "sources": [
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«۲۵ اپریل ۲۰۲۲»"
+    },
+    {
+     "title": "Afghan Resettlement Programme (Dari and Pashto)",
+     "url": "https://assets.publishing.service.gov.uk/media/68921d9ba34b939141463f79/Afghan_Resettlement_Programme__Dari_and_Pashto_.docx",
+     "publisher": "UK Government (GOV.UK)",
+     "evidence": "«در ماه اپریل سال ۲۰۲۴»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "May (month)",
+   "prs": "می",
+   "avoid": [
+    "مه"
+   ],
+   "sources": [
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«در ماه می سال2023»"
+    },
+    {
+     "title": "UN Secretary-General report on Afghanistan, S/2023/453 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/230620_sg_report_on_afghanistan_s.2023.453_-_dari.pdf",
+     "publisher": "UNAMA / United Nations",
+     "evidence": "«۱۵ می۲۰۲۳»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "June (month)",
+   "prs": "جون",
+   "avoid": [
+    "ژوئن"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«در ماه جون به اتمام میرسد»"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«در جریان ماه های مارچ و جون»"
+    },
+    {
+     "title": "Human rights situation in the first half of 2025 (Dari)",
+     "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+     "publisher": "Rawadari (Afghan human rights NGO)",
+     "evidence": "«۳۰ جون ۲۰۲۵»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "July (month)",
+   "prs": "جولای",
+   "avoid": [
+    "ژوئیه",
+    "جولای is also spelled جولائی"
+   ],
+   "sources": [
+    {
+     "title": "Afghan Resettlement Programme (Dari and Pashto)",
+     "url": "https://assets.publishing.service.gov.uk/media/68921d9ba34b939141463f79/Afghan_Resettlement_Programme__Dari_and_Pashto_.docx",
+     "publisher": "UK Government (GOV.UK)",
+     "evidence": "«سر از تاریخ ۱ جولای سال ۲۰۲۵»"
+    },
+    {
+     "title": "Impact of US elections on Afghanistan",
+     "url": "https://da.azadiradio.com/a/33185922.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«در جولای ۲۰۲۲»"
+    },
+    {
+     "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+     "publisher": "IRCC, Government of Canada",
+     "evidence": "«در جولای به 24°C میرسد»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "August (month)",
+   "prs": "اگست (also آگست)",
+   "avoid": [
+    "اوت",
+    "آگوست (used by IRCC; less Afghan)"
+   ],
+   "sources": [
+    {
+     "title": "Impact of US elections on Afghanistan",
+     "url": "https://da.azadiradio.com/a/33185922.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«در ماه اگست ۲۰۲۱»"
+    },
+    {
+     "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«در اگست2021»"
+    },
+    {
+     "title": "Human rights situation in the first half of 2025 (Dari)",
+     "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+     "publisher": "Rawadari (Afghan human rights NGO)",
+     "evidence": "«آگست۱۵» / «اگست ۲۰۲۵»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "September (month)",
+   "prs": "سپتمبر",
+   "avoid": [
+    "سپتامبر"
+   ],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اوایل سپتمبر»"
+    },
+    {
+     "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«7 سپتمبر2025»"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«ماه سپتمبر سال2023»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "October (month)",
+   "prs": "اکتوبر",
+   "avoid": [
+    "اکتبر"
+   ],
+   "sources": [
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "title «اکتوبر - دسمبر ۲۰۲۳»"
+    },
+    {
+     "title": "Deportation of a group of Afghan asylum seekers from Canada",
+     "url": "https://da.azadiradio.com/a/33204802.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«روز شنبه(۱۶ اکتوبر)»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "November (month)",
+   "prs": "نومبر",
+   "avoid": [
+    "نوامبر"
+   ],
+   "sources": [
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«۲۲ نومبر»"
+    },
+    {
+     "title": "Impact of US elections on Afghanistan",
+     "url": "https://da.azadiradio.com/a/33185922.html",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "«در ۵ نومبر برگزار می‌شود»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name."
+  },
+  {
+   "en": "December (month)",
+   "prs": "دسمبر",
+   "avoid": [
+    "دسامبر",
+    "دیسامبر"
+   ],
+   "sources": [
+    {
+     "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+     "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+     "publisher": "UNAMA",
+     "evidence": "«اکتوبر - دسمبر ۲۰۲۳» (35 occurrences)"
+    },
+    {
+     "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+     "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+     "publisher": "UNICEF Afghanistan",
+     "evidence": "«تا ختم ماه دسمبر 2023»; «از تاریخ 15 دسمبر»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Afghan Dari Gregorian month name. Note: one UNAMA SG report has a stray «دیسامبر» and the Rawadari NGO report uses دسامبر, so Afghan writers are not 100% consistent, but UN/UNICEF Afghanistan Dari overwhelmingly use دسمبر."
+  },
+  {
+   "en": "weekdays",
+   "prs": "شنبه، یکشنبه، دوشنبه، سه‌شنبه، چهارشنبه، پنجشنبه، جمعه",
+   "avoid": [],
+   "sources": [
+    {
+     "title": "Welcome to Canada: Overview of education (Dari)",
+     "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+     "publisher": "IRCC, Government of Canada (2024)",
+     "evidence": "«اطفال از دوشنبه تا جمعه به مکتب می روند»"
+    },
+    {
+     "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+     "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+     "publisher": "UNHCR",
+     "evidence": "EN 'Sunday to Thursday' = «یک شنبه تا پنجشنبه»"
+    },
+    {
+     "title": "Radio Azadi radio schedule (weekday-dated pages)",
+     "url": "https://da.azadiradio.com/radio/schedule/61",
+     "publisher": "Radio Azadi (RFE/RL Dari)",
+     "evidence": "page headers e.g. «چهارشنبه ۴ سنبله ۱۴۰۵»; Radio Azadi article «امروز شنبه ۸ قوس»"
+    }
+   ],
+   "confidence": "high",
+   "notes": "Same weekday names as Iranian Persian; سه‌شنبه appears in Azadi schedule pages (Pashto service header «سه شنبه»). Monday to Friday = دوشنبه تا جمعه."
+  }
+ ],
+ "sourcesConsulted": [
+  {
+   "title": "Welcome to Canada: Health care services (Dari)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_health_care_dari.pdf",
+   "publisher": "IRCC, Government of Canada (2024)",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Welcome to Canada: Important things to do after you arrive (Dari)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_important_things_to_do_after_you_arrive_dari.pdf",
+   "publisher": "IRCC, Government of Canada (2024)",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Welcome to Canada: Housing (Dari)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_housing_dari.pdf",
+   "publisher": "IRCC, Government of Canada (2024)",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Welcome to Canada: Overview of education (Dari)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/english/corporate/publications-manuals/welcome_to_canada_education_dari.pdf",
+   "publisher": "IRCC, Government of Canada (2024)",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Life in Canada: Thunder Bay, Ontario (Dari fact sheet)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/thunder-bay-da.pdf",
+   "publisher": "IRCC, Government of Canada",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Life in Canada: Winnipeg (Dari fact sheet)",
+   "url": "https://www.canada.ca/content/dam/ircc/documents/pdf/afghanistan/dari/winnipeg-da.pdf",
+   "publisher": "IRCC, Government of Canada",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Healthcare Navigation Support - translated into Dari (English/Dari side-by-side workbook)",
+   "url": "https://mhi.taskforce.org/wp-content/uploads/2025/03/Healthcare-Navigation-Support-English-Dari.pdf",
+   "publisher": "Task Force for Global Health / IRC / NRC-RIM (CDC-funded)",
+   "language pair": "English/Dari side-by-side",
+   "useful": true
+  },
+  {
+   "title": "UNHCR Help Afghanistan - home page (EN /afghanistan/ vs Dari /afghanistan/fa-af/)",
+   "url": "https://help.unhcr.org/afghanistan/fa-af/",
+   "publisher": "UNHCR",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "UNHCR Help Afghanistan - Contact us (Dari)",
+   "url": "https://help.unhcr.org/afghanistan/fa-af/contact/",
+   "publisher": "UNHCR",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "UNHCR Help Afghanistan - Help for women, children and people with specific needs (Dari)",
+   "url": "https://help.unhcr.org/afghanistan/fa-af/support/help-for-women-children-and-people-with-specific-needs/",
+   "publisher": "UNHCR",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "UNHCR Help Afghanistan - Get help (Dari)",
+   "url": "https://help.unhcr.org/afghanistan/fa-af/support/",
+   "publisher": "UNHCR",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "Perinatal Depression and Anxiety (Dari; English version also published)",
+   "url": "https://www.mhcs.health.nsw.gov.au/publications/pnda/dari",
+   "publisher": "NSW Multicultural Health Communication Service / WayAhead",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "What can I expect when I get my dentures? (Dari; English version also published)",
+   "url": "https://www.mhcs.health.nsw.gov.au/publications/what-to-expect-when-i-get-my-dentures/dari",
+   "publisher": "NSW Ministry of Health (2024)",
+   "language pair": "English + Dari parallel versions",
+   "useful": true
+  },
+  {
+   "title": "Update on the human rights situation in Afghanistan, Oct-Dec 2023 (Dari)",
+   "url": "https://unama.unmissions.org/sites/default/files/dari_hr_update_22jan_2024.pdf",
+   "publisher": "UNAMA",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Update on human rights in Afghanistan, Jan-Mar 2026 (Dari)",
+   "url": "https://unama.unmissions.org/sites/default/files/2026-05/Dari%20-%20UNAMA%20HRS%20Update%20on%20human%20rights%20in%20Afghanistan%20Jan-Mar%202026.pdf",
+   "publisher": "UNAMA",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "UN Secretary-General report on Afghanistan, S/2023/453 (Dari)",
+   "url": "https://unama.unmissions.org/sites/default/files/230620_sg_report_on_afghanistan_s.2023.453_-_dari.pdf",
+   "publisher": "UNAMA / United Nations",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "UNICEF Afghanistan Humanitarian Situation Report (Dari)",
+   "url": "https://www.unicef.org/afghanistan/media/9671/file/Dari_UNICEF%20Afghanistan%20Humanitarian%20Situation%20Report",
+   "publisher": "UNICEF Afghanistan",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "UNICEF relief supplies press release (Dari translation)",
+   "url": "https://www.unicef.org/afghanistan/media/8896/file/UNICEF%20Relief%20Supplies%20Press%20Release%20Dari%20translation.pdf",
+   "publisher": "UNICEF Afghanistan",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Human rights situation in the first half of 2025 (Dari)",
+   "url": "https://rawadari.org/wp-content/uploads/2025/08/RW_MidYear2025_Human_Rights_Report_Dari.pdf",
+   "publisher": "Rawadari (Afghan human rights NGO)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Afghan Resettlement Programme (Dari and Pashto)",
+   "url": "https://assets.publishing.service.gov.uk/media/68921d9ba34b939141463f79/Afghan_Resettlement_Programme__Dari_and_Pashto_.docx",
+   "publisher": "UK Government (GOV.UK)",
+   "language pair": "Dari (English original published separately)",
+   "useful": true
+  },
+  {
+   "title": "Rising heat in some Afghan cities up to 48 degrees; WHO advice to families",
+   "url": "https://da.azadiradio.com/a/33806494.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Nine schools built in Kandahar",
+   "url": "https://da.azadiradio.com/a/33498503.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Mental health services banned in Afghan health centres",
+   "url": "https://da.azadiradio.com/a/33679833.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Kabul residents: seasonal illnesses rise with the cold",
+   "url": "https://da.azadiradio.com/a/33615545.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Police District 18 opened in west Kabul",
+   "url": "https://da.azadiradio.com/a/29227216.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Kabul fire department upgraded to General Directorate",
+   "url": "https://da.azadiradio.com/a/24599244.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Deportation of a group of Afghan asylum seekers from Canada",
+   "url": "https://da.azadiradio.com/a/33204802.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "How can newly arrived Afghans in Canada enter the job market? (interview with WoodGreen, Toronto)",
+   "url": "https://da.azadiradio.com/a/32974410.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Impact of US elections on Afghanistan",
+   "url": "https://da.azadiradio.com/a/33185922.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Rioters destroyed five churches in Faisalabad",
+   "url": "https://da.azadiradio.com/a/32551181.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Pope Leo visits a Muslim place of worship for the first time",
+   "url": "https://da.azadiradio.com/a/33608603.html",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Radio Azadi radio schedule (weekday-dated pages)",
+   "url": "https://da.azadiradio.com/radio/schedule/61",
+   "publisher": "Radio Azadi (RFE/RL Dari)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Kabul Municipality ready to cooperate on fire prevention",
+   "url": "https://km.gov.af/8946/",
+   "publisher": "Kabul Municipality (شاروالی کابل)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Kabul Municipality sealed the public toilet and ablution room in Baharestan Park",
+   "url": "https://km.gov.af/6509/",
+   "publisher": "Kabul Municipality (شاروالی کابل)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Legal aid directorate (مساعد حقوقی)",
+   "url": "https://moj.gov.af/dr/%D9%85%D8%B3%D8%A7%D8%B9%D8%AF-%D8%AD%D9%82%D9%88%D9%82%DB%8C",
+   "publisher": "Ministry of Justice of Afghanistan",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "School holidays announced due to extreme heat",
+   "url": "https://pajhwok.com/fa/2025/06/29/school-holidays-announced-due-to-extreme-heat/",
+   "publisher": "Pajhwok Afghan News",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Youth and adolescent health counselling centre opened in west Kabul",
+   "url": "https://www.etilaatroz.com/40270/",
+   "publisher": "Etilaatroz (Afghan daily) reporting a Ministry of Public Health release",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Ceftriaxone: a cure-all or over-prescription in Afghanistan?",
+   "url": "https://www.etilaatroz.com/118251/",
+   "publisher": "Etilaatroz (Afghan daily)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Arbitrary rent increases in Kabul; tenants fed up",
+   "url": "https://8am.media/fa/arbitrary-increase-in-house-rents-in-kabul-and-taliban-indifference-tenants-are-fed-up/",
+   "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "UNICEF: one third of Afghan schools lack safe drinking water",
+   "url": "https://8am.media/fa/unicef-one-third-of-afghan-schools-lack-safe-drinking-water/",
+   "publisher": "Hasht-e Subh (8am.media, Afghan daily)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Review of kindergartens in the country",
+   "url": "https://tolonews.com/fa/afghanistan/%D8%A8%D8%B1%D8%B1%D8%B3%DB%8C-%D9%88%D8%B6%D8%B9-%DA%A9%D9%88%D8%AF%DA%A9%D8%B3%D8%AA%D8%A7%D9%86%E2%80%8C%D9%87%D8%A7-%D8%AF%D8%B1%DA%A9%D8%B4%D9%88%D8%B1%D8%9B-%DA%86%D9%87-%D8%B4%D9%85%D8%A7%D8%B1-%DA%A9%D9%88%D8%AF%DA%A9%D8%A7%D9%86-%D8%A8%D9%87-%DA%A9%D9%88%D8%AF%DA%A9%D8%B3%D8%AA%D8%A7%D9%86-%D9%85%DB%8C%E2%80%8C%D8%B1%D9%88%D9%86%D8%AF%D8%9F",
+   "publisher": "TOLOnews",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Kabul city provincial education profile 1400",
+   "url": "https://moe.gov.af/sites/default/files/2022-11/Provincial_Profile_1400_Kabul_City.pdf",
+   "publisher": "Ministry of Education of Afghanistan",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Food prices in Kabul markets today",
+   "url": "http://www.afghanpaper.com/nbody.php?id=54677",
+   "publisher": "Afghan Paper (Afghan news site)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Heat wave heading to northern and western Afghanistan",
+   "url": "https://www.etilaatroz.com/257468/heat-wave-on-the-way-to-northern-and-western-afghanistan/",
+   "publisher": "Etilaatroz (Afghan daily)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Severe heat wave warning for north and west Afghanistan",
+   "url": "https://www.khaama.com/persian/archives/171900",
+   "publisher": "Khaama Press (Persian service)",
+   "language pair": "Dari (monolingual Afghan source)",
+   "useful": true
+  },
+  {
+   "title": "Anaphylaxis (Persian/Dari translation)",
+   "url": "https://www.allergy.org.au/images/pcc/ana/PER_ASCIA_PCC_Anaphylaxis_2015.pdf",
+   "publisher": "ASCIA (Australasian Society of Clinical Immunology and Allergy)",
+   "language pair": "Persian/Dari (Iranian register)",
+   "useful": false
+  },
+  {
+   "title": "Find Your Own Accommodation Pathway (Dari)",
+   "url": "https://assets.publishing.service.gov.uk/media/68010e2cea3dd40f93681fde/FYO_Guide__A5__DARI.pdf",
+   "publisher": "UK Government (Home Office)",
+   "language pair": "English/Dari parallel versions",
+   "useful": false
+  },
+  {
+   "title": "Welcome to Toronto - Services in Dari and Pashto for Afghan Nationals (Toronto South LIP, Oct 2021)",
+   "url": "https://thelipsecretariat.ca/wp-content/uploads/documents/2023/06/Toronto-South-LIP-Welcome-to-Toronto-Resources-in-Dari-and-Pashto.pdf",
+   "publisher": "Toronto South Local Immigration Partnership",
+   "language pair": "English only (list of Dari-speaking workers)",
+   "useful": false
+  },
+  {
+   "title": "Healthtranslations Victoria - search by language",
+   "url": "https://www.healthtranslations.vic.gov.au/search-by-language",
+   "publisher": "Victorian Government",
+   "language pair": "English/Dari (JS-rendered; could not be crawled)",
+   "useful": false
+  },
+  {
+   "title": "Welcome to Canada multilingual publications index",
+   "url": "https://www.canada.ca/en/immigration-refugees-citizenship/corporate/publications-manuals/publication-welcome-canada-what-you-should-know.html",
+   "publisher": "IRCC",
+   "language pair": "English/French/Dari index",
+   "useful": true
+  },
+  {
+   "title": "CLEAR Global / TWB glossaries",
+   "url": "https://clearglobal.org/resources/clear-global-glossaries/",
+   "publisher": "CLEAR Global",
+   "language pair": "multilingual (app; Dari glossary not retrievable as text)",
+   "useful": false
+  },
+  {
+   "title": "Ontario LTB brochures / OHRC / Legal Aid Ontario (searched for Dari versions)",
+   "url": "https://tribunalsontario.ca/documents/ltb/Brochures/Information%20for%20New%20Tenants.pdf",
+   "publisher": "Tribunals Ontario",
+   "language pair": "English/French only - no Dari found",
+   "useful": false
+  },
+  {
+   "title": "Radio Azadi article with Iranian month spellings in captions (mixed usage)",
+   "url": "https://da.azadiradio.com/a/33191345.html",
+   "publisher": "Radio Azadi",
+   "language pair": "Dari",
+   "useful": false
+  }
+ ],
+ "notFound": [
+  "food bank (only Iranian-diaspora sources found: «بانک غذا / بانک غذایی»; no Afghan or Canadian official Dari source)",
+  "cooling centre (no sourced term; only WHO advice «مکان‌های سرد» via Radio Azadi)",
+  "drinking water fountain / bottle-filling station (only «آب آشامیدنی» is sourced; «آب‌خوری» unsourced)",
+  "crisis line (only 'helpline' «خط کمک تلفونی» is sourced)",
+  "illegal lockout (no Dari tenancy-law source)",
+  "drop-in (program with no registration)",
+  "peanut / peanut-free («بادام زمینی» unsourced)",
+  "job training / skills training (no side-by-side source)",
+  "youth shelter as a fixed term (compose from sourced «سرپناه اضطراری» + «جوانان»)",
+  "EarlyON / splash pad / ball hockey (keep in English)",
+  "gender-based violence as a verified side-by-side term (UNHCR Dari page leaves the title in English)"
+ ],
+ "correctionsToRecheck": [
+  {
+   "id": "37155594f70b",
+   "issue": "Uses Iranian «پلیس» (glossary: پولیس), «نوامبر» (glossary: نومبر) and «مدارس» for schools (glossary: مکاتب)."
+  },
+  {
+   "id": "5d864949c117",
+   "issue": "Uses Iranian «پلیس» for Toronto Police (glossary: پولیس); '55 Division' rendered «بخش 55» - Afghan usage for a police division is «حوزه»."
+  },
+  {
+   "id": "7d47cf9e0e64",
+   "issue": "«مدرسه ابتدایی» and «مدرسه» for a public school (glossary: مکتب ابتدائیه/مکتب; in Afghan Dari مدرسه = religious school); «مهد کودک» for daycare (Afghan: کودکستان)."
+  },
+  {
+   "id": "88f8e20033ec",
+   "issue": "«مدرسه», «پیش‌دبستانی», «مهدکودک» and «کلاس ششم» are Iranian school terms (glossary: مکتب, صنف ششم; kindergarten کودکستان)."
+  },
+  {
+   "id": "97522b6e2a71",
+   "issue": "«مدرسه» and «پیش‌دبستانی» (glossary: مکتب; Iranian school vocabulary)."
+  },
+  {
+   "id": "a44c76defc5c",
+   "issue": "«سنین مدرسه» (school age) uses مدرسه (glossary: مکتب)."
+  },
+  {
+   "id": "170900592261",
+   "issue": "Midwife rendered «ماما / کلینیک مامایی» (Iranian; glossary: قابله / کلینیک قابلگی); «بارداری» acceptable but حاملگی preferred."
+  },
+  {
+   "id": "f630f0f0b145",
+   "issue": "«دایه‌ها (قابله‌ها)» - in Afghan Dari دایه means wet-nurse/nanny; glossary uses قابله only."
+  },
+  {
+   "id": "2b036077722c",
+   "issue": "«سرویس بهداشتی» for washrooms is Iranian (glossary: تشناب)."
+  },
+  {
+   "id": "0b810534f69d",
+   "issue": "«صندوق کمک اجاره» uses Iranian اجاره (glossary: کرایه); «اسکان» for settlement services where IRCC Dari uses «خدمات اقامت». (Also: the change تخم‌مرغ -> تخم was unnecessary; Afghan media use تخم مرغ too.)"
+  },
+  {
+   "id": "32dfa11d6223",
+   "issue": "Same as 0b810534f69d: «اجاره» (glossary: کرایه) and «اسکان» for settlement (IRCC: خدمات اقامت)."
+  },
+  {
+   "id": "b8138c775adf",
+   "issue": "«خدمات رایگان اسکان» for settlement services (IRCC Dari: خدمات اقامت). Interpretation wording «ترجمانی شفاهی» agrees with the glossary."
+  },
+  {
+   "id": "85b8d1f0296e",
+   "issue": "«پناهگاه اضطراری» for emergency shelter; IRCC and UNHCR Dari use «سرپناه (اضطراری)»."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "issue": "«پناهگاه» for shelter (glossary: سرپناه); 'cooling centre' has no sourced term."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "issue": "«پناهگاه» for shelter (glossary: سرپناه)."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "issue": "«بدون نوبت» / «تعیین وقت قبلی» for appointments (glossary: وعده ملاقات); lockout/eviction wording has no sourced Dari term - needs native review."
+  },
+  {
+   "id": "de5580650854",
+   "issue": "«تلفن» (glossary: تلفون/تیلفون) and «بدون وقت قبلی» (glossary: بدون وعده ملاقات)."
+  },
+  {
+   "id": "1538ea5a988e",
+   "issue": "«تلفن» (glossary: تلفون)."
+  },
+  {
+   "id": "dd60669c88d7",
+   "issue": "«داروخانه» for pharmacy (glossary: دواخانه)."
+  },
+  {
+   "id": "8f3b8610ff41",
+   "issue": "«گواهینامه رانندگی، ثبت نام خودرو» - IRCC Dari uses «لیسنس موتردوانی» and موتر."
+  },
+  {
+   "id": "5b54b1c20dbc",
+   "issue": "«سلامت روان» for mental health (glossary: صحت روانی)."
+  },
+  {
+   "id": "6ba3dd305d6e",
+   "issue": "«داروسازی» (pharmacy services) uses Iranian دارو (glossary: دوا/دواخانه)."
+  }
+ ]
+}

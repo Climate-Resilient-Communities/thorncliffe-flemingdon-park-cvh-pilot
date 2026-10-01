@@ -1,0 +1,158 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-01 Language selection (first run)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-01" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Language selection (first run)">
+
+<div class="cvh-screen" style="padding-bottom:12px">
+  <sc-if value="{{forwarded}}">
+    <div class="cvh-note" role="note"><span class="cvh-ico cvh-ico--share" aria-hidden="true"></span><span class="cvh-grow">{{s.R01.forwardedNote}}</span></div>
+  </sc-if>
+  <h1 class="cvh-h1 cvh-row" style="--gap:10px"><span class="cvh-ico cvh-ico--globe cvh-ico--lg" aria-hidden="true"></span><span>{{s.R01.title}}</span></h1>
+  <ul class="cvh-langlist" role="radiogroup" aria-label="{{s.R01.title}}">
+    <sc-for list="{{langs}}" as="l" hint-placeholder-count="15">
+      <li>
+        <button type="button" class="cvh-langopt {{l.cls}}" role="radio" aria-checked="{{l.pressed}}" onClick="{{l.pick}}">
+          <span class="cvh-langopt__text">
+            <span class="cvh-langopt__native" lang="{{l.bcp}}" dir="{{l.dir}}">{{l.native}}</span>
+            <sc-if value="{{l.showEn}}"><span class="cvh-langopt__en" lang="en" dir="ltr">{{l.english}}</span></sc-if>
+            <sc-if value="{{l.why}}"><span class="cvh-langopt__why">{{l.why}}</span></sc-if>
+          </span>
+          <sc-if value="{{l.on}}"><span class="cvh-langopt__check"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span></span></sc-if>
+        </button>
+      </li>
+    </sc-for>
+  </ul>
+  <div class="cvh-stack" style="--gap:6px">
+    <button type="button" class="cvh-switch {{helperCls}}" role="switch" aria-checked="{{helperAria}}" onClick="{{toggleHelper}}">
+      <span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>
+      <span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>
+      <span class="cvh-grow">{{s.R01.helperBasic}}<span class="cvh-sr">: </span> <span class="cvh-switch__state">{{helperWord}}</span></span>
+    </button>
+    <sc-if value="{{helperIsOn}}"><p class="cvh-caption cvh-muted">{{s.R01.helperOn}}</p></sc-if>
+  </div>
+</div>
+<div class="cvh-stickyfoot">
+  <sc-if value="{{hasSel}}">
+    <p class="cvh-stickyfoot__sel"><span>{{s.R01.youChose}}</span><span class="cvh-strong" lang="{{selBcp}}" dir="{{selDir}}">{{selNative}}</span></p>
+  </sc-if>
+  <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{cont}}" disabled="{{noSel}}">{{s.R01.continue}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+  <sc-if value="{{noSel}}"><p class="cvh-disabled-reason" style="margin-top:0">{{s.R01.chooseFirst}}</p></sc-if>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["First visit, nothing chosen yet", "Pre-selected from a printed notice (Greek)", "Selected by tapping (Urdu)", "Helper turned on bigger text, fewer things", "Forwarded link, first-time visitor (phone in Pashto)", "Forwarded link, phone language not known"], "default": "First visit, nothing chosen yet"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"First visit, nothing chosen yet": {"persona": "new", "scenario": "C"}, "Pre-selected from a printed notice (Greek)": {"persona": "george", "scenario": "C", "basic": false, "choices": {"building": "B25", "nbhd": "FP"}, "params": {"notice": {"lang": "el", "building": "B25"}}}, "Selected by tapping (Urdu)": {"persona": "new", "scenario": "C", "loc": {"sel": "ur"}}, "Helper turned on bigger text, fewer things": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "choices": {"building": "B25", "nbhd": "FP"}, "params": {"notice": {"lang": "el", "building": "B25"}}}, "Forwarded link, first-time visitor (phone in Pashto)": {"persona": "new", "scenario": "A", "params": {"forwarded": "AL-05", "deviceLang": "ps"}}, "Forwarded link, phone language not known": {"persona": "new", "scenario": "A", "params": {"forwarded": "AL-05"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'firstRun';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'none', showExercise: 'R-01'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-01'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.R01, prm = b.params, app = b.app;
+    var forwarded = prm.forwarded || null;
+    // Where the first choice comes from: the opener's own phone (never the sender's), or the printed notice.
+    var pre = null, preWhy = '';
+    if (forwarded) { pre = prm.deviceLang || 'en'; preWhy = x.fromPhone; }
+    else if (prm.notice && prm.notice.lang) { pre = prm.notice.lang; preWhy = x.preselected; }
+    var sel = b.loc.sel || pre;
+    var why = b.loc.sel && b.loc.sel !== pre ? x.selected : preWhy;
+    var langs = (D.languages || []).map(function (l) {
+      var on = l.code === sel;
+      return { native: l.native, english: l.english, showEn: l.native !== l.english, bcp: l.bcp47, dir: l.dir, on: on,
+        cls: on ? 'is-selected' : '', pressed: on ? 'true' : 'false', why: on ? why : '',
+        pick: function () { b.setLoc({ sel: l.code }); } };
+    });
+    var sl = sel ? C.lang(sel) : null;
+    var helperOn = app.basicState === 'helper';
+    return {
+      forwarded: !!forwarded, langs: langs, hasSel: !!sel, noSel: !sel,
+      selNative: sl ? sl.native : '', selBcp: sl ? sl.bcp47 : 'en', selDir: sl ? sl.dir : 'ltr',
+      helperCls: helperOn ? 'is-on' : '', helperAria: helperOn ? 'true' : 'false', helperIsOn: helperOn,
+      helperWord: helperOn ? s.x07.on : s.x07.off,
+      toggleHelper: function () { app.setBasicByHelper(!helperOn); },
+      cont: function () {
+        if (!sel) return;
+        app.chooseFirstLang(sel);
+        if (forwarded) (app.replace || b.go)('R-07', { alert: forwarded, from: 'forwarded' });
+        else b.go('R-26', { firstRun: true, notice: prm.notice || null });
+      }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

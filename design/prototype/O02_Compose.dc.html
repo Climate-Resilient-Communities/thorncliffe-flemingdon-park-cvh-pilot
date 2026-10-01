@@ -1,0 +1,476 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-02 Compose an alert</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-02" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-02" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-02" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-ha-page">
+  <sc-if value="{{exNoteLine}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{exNoteLine}}</span></p></sc-if>
+  <div class="cvh-ha-bar">
+    <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+    <nav class="cvh-ha-steps" aria-label="{{T.steps.label}}">
+      <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+        <button type="button" class="cvh-ha-step {{st.cls}}" aria-current="{{st.current}}" onClick="{{st.go}}"><span class="cvh-ha-step__n">{{st.n}}</span>{{st.label}}</button>
+      </sc-for>
+    </nav>
+  </div>
+
+  <div class="cvh-ha-cols {{colsCls}}">
+    <div class="cvh-stack" style="--gap:24px">
+      <section class="cvh-ha-sec" aria-labelledby="o02-type">
+        <h2 class="cvh-ha-sec__title" id="o02-type">{{x.typeTitle}}</h2>
+        <p class="cvh-muted">{{x.typeHint}}</p>
+        <div class="cvh-ha-types" role="radiogroup" aria-labelledby="o02-type">
+          <sc-for list="{{types}}" as="ty" hint-placeholder-count="9">
+            <button type="button" class="cvh-ha-type {{ty.cls}}" role="radio" aria-checked="{{ty.aria}}" onClick="{{ty.pick}}">
+              <span class="cvh-ico cvh-ico--{{ty.id}}" aria-hidden="true"></span><span class="cvh-grow">{{ty.label}}</span>
+              <sc-if value="{{ty.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{hasType}}">
+          <div class="cvh-ha-tpl" role="note">
+            <span class="cvh-ico cvh-ico--doc" aria-hidden="true"></span>
+            <div class="cvh-stack" style="--gap:2px">
+              <p class="cvh-strong">{{tplTitle}}</p>
+              <p>{{tplLine}}</p>
+              <sc-if value="{{edited}}"><p class="cvh-muted">{{x.edited}}</p></sc-if>
+            </div>
+          </div>
+        </sc-if>
+      </section>
+
+      <section class="cvh-ha-sec" aria-labelledby="o02-msg">
+        <h2 class="cvh-ha-sec__title" id="o02-msg">{{x.messageTitle}}</h2>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o02-h">{{x.headline}}<span class="cvh-tag cvh-tag--required">{{s.hub.aud.required}}</span></label>
+          <span class="cvh-hint">{{x.headlineHint}}</span>
+          <input class="cvh-input" id="o02-h" value="{{d.headline}}" onInput="{{inHeadline}}">
+        </div>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o02-n">{{x.nyk}}</label>
+          <span class="cvh-hint">{{x.nykHint}}</span>
+          <input class="cvh-input" id="o02-n" value="{{d.notYetKnown}}" onInput="{{inNyk}}">
+        </div>
+        <div class="cvh-field">
+          <span class="cvh-label">{{x.where}}</span>
+          <p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{whereLine}}</span></p>
+        </div>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o02-a">{{x.action}}<span class="cvh-tag cvh-tag--required">{{s.hub.aud.required}}</span></label>
+          <span class="cvh-hint">{{x.actionHint}}</span>
+          <input class="cvh-input" id="o02-a" value="{{d.action}}" onInput="{{inAction}}">
+        </div>
+        <div class="cvh-field">
+          <label class="cvh-label" for="o02-d">{{x.detail}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></label>
+          <span class="cvh-hint">{{x.detailHint}}</span>
+          <textarea class="cvh-textarea" id="o02-d" style="min-height:72px" value="{{d.detail}}" onInput="{{inDetail}}"></textarea>
+        </div>
+      </section>
+
+      <section class="cvh-ha-sec" aria-labelledby="o02-valid">
+        <h2 class="cvh-ha-sec__title" id="o02-valid">{{x.validTitle}}</h2>
+        <div class="cvh-ha-opts" role="radiogroup" aria-labelledby="o02-valid">
+          <sc-for list="{{valids}}" as="v" hint-placeholder-count="2">
+            <button type="button" class="cvh-option {{v.cls}}" role="radio" aria-checked="{{v.aria}}" onClick="{{v.pick}}">
+              <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{v.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{v.label}}</span><span class="cvh-option__line">{{v.line}}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{byTime}}">
+          <div class="cvh-field" style="max-width:360px">
+            <label class="cvh-label" for="o02-t">{{x.timeLabel}}</label>
+            <input class="cvh-input" id="o02-t" placeholder="{{x.timeHint}}" value="{{d.validTime}}" onInput="{{inTime}}">
+          </div>
+        </sc-if>
+      </section>
+
+      <section class="cvh-ha-sec" aria-labelledby="o02-off">
+        <h2 class="cvh-ha-sec__title" id="o02-off">{{x.officialTitle}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></h2>
+        <p class="cvh-muted">{{x.officialHint}}</p>
+        <div class="cvh-ha-opts" role="radiogroup" aria-labelledby="o02-off">
+          <sc-for list="{{officials}}" as="o" hint-placeholder-count="3">
+            <button type="button" class="cvh-option {{o.cls}}" role="radio" aria-checked="{{o.aria}}" onClick="{{o.pick}}">
+              <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{o.label}}</span><span class="cvh-option__line">{{o.line}}</span></span>
+            </button>
+          </sc-for>
+        </div>
+        <sc-if value="{{prefilled}}"><p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{x.prefilled}}</span></p></sc-if>
+        <sc-if value="{{hasOfficial}}">
+          <div class="cvh-field">
+            <label class="cvh-label" for="o02-add">{{x.adds}}</label>
+            <span class="cvh-hint">{{x.addsHint}}</span>
+            <input class="cvh-input" id="o02-add" value="{{d.officialAdds}}" onInput="{{inAdds}}">
+          </div>
+        </sc-if>
+      </section>
+
+      <section class="cvh-ha-sec" aria-labelledby="o02-aim">
+        <h2 class="cvh-ha-sec__title" id="o02-aim">{{x.aimTitle}}</h2>
+        <div class="cvh-ha-opts" role="radiogroup" aria-labelledby="o02-aim">
+          <sc-for list="{{aims}}" as="am" hint-placeholder-count="3">
+            <button type="button" class="cvh-option {{am.cls}}" role="radio" aria-checked="{{am.aria}}" onClick="{{am.pick}}">
+              <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{am.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{am.label}}</span><span class="cvh-option__line">{{am.line}}</span></span>
+            </button>
+          </sc-for>
+        </div>
+      </section>
+    </div>
+
+    <aside class="cvh-stack cvh-ha-aside" style="--gap:10px" aria-labelledby="o02-pv">
+      <h2 class="cvh-ha-sec__title" id="o02-pv">{{x.previewTitle}}</h2>
+      <p class="cvh-muted">{{x.previewLine}}</p>
+      <div class="cvh-hpreview">
+        <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" variant="line" lang="en" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if>
+        <sc-if value="{{hasType}}"><dc-import name="X13_DisruptionType" types="{{d.types}}" size="md" surface="screen" lang="en" embedded="{{true}}" hint-size="200px,44px"></dc-import></sc-if>
+        <sc-if value="{{noType}}"><p class="cvh-muted">{{x.noSelection}}</p></sc-if>
+        <p class="cvh-hpreview__headline">{{pvHeadline}}</p>
+        <sc-if value="{{d.notYetKnown}}"><p><span class="cvh-strong">{{x.notKnown}}:</span> {{d.notYetKnown}}</p></sc-if>
+        <dc-import name="X02_Origin" dc-props="{{origin}}" lang="en" embedded="{{true}}" hint-size="100%,96px"></dc-import>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{x.where}}</span><span>{{pvWhere}}</span></div>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{x.whatToDo}}</span><p class="cvh-strong">{{pvAction}}</p></div>
+        <sc-if value="{{validPv}}"><p class="cvh-muted">{{validPv}}</p></sc-if>
+      </div>
+      <p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--eye cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{x.neverShown}}</span></p>
+    </aside>
+  </div>
+
+  <div class="cvh-pubbar">
+    <sc-if value="{{todo}}"><p class="cvh-grow">{{todo}}</p></sc-if>
+    <sc-if value="{{noTodo}}"><span class="cvh-grow"></span></sc-if>
+    <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{cont}}" disabled="{{blocked}}">{{nextLabel}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Empty", "Message entered from a template (water, Sample Tower B)", "Official alert on the same event linked (heat, AL-01)", "Valid until a time", "Aim by group (heat, seniors)", "Aim by place and group together", "Wording changed, no template (Other)", "Partner author (Daniel, TNO)", "Exercise running"], "default": "Empty"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Empty": {"persona": "PRIYA"}, "Message entered from a template (water, Sample Tower B)": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "detail": "The building has shut off the water to repair a pipe.", "validMode": "resolved", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}, "groups": {"cats": [], "langs": []}}}}, "Official alert on the same event linked (heat, AL-01)": {"persona": "PRIYA", "loc": {"pickType": "heat"}}, "Valid until a time": {"persona": "PRIYA", "params": {"draft": {"type": "power", "types": ["power"], "hazard": "power", "template": "TPL-ACK-POWER", "headline": "Power is out", "notYetKnown": "Cause not known yet", "action": "Keep your fridge and freezer closed. Use a flashlight, not candles.", "detail": "Power is out. We are finding out why.", "validMode": "time", "validTime": "tonight at 11 pm", "aim": "place", "place": {"nbhds": [], "blds": []}, "groups": {"cats": [], "langs": []}}}}, "Aim by group (heat, seniors)": {"persona": "PRIYA", "loc": {"pickType": "heat", "aim": "group"}}, "Aim by place and group together": {"persona": "PRIYA", "loc": {"pickType": "heat", "aim": "both"}}, "Wording changed, no template (Other)": {"persona": "PRIYA", "params": {"draft": {"type": "other", "types": ["other"], "hazard": "other", "template": null, "headline": "Gas smell reported near the parking garage", "notYetKnown": "Where the smell is coming from", "action": "Stay away from the garage until the gas company says it is safe.", "detail": "", "validMode": "resolved", "aim": "place", "place": {"nbhds": [], "blds": []}, "groups": {"cats": [], "langs": []}}}}, "Partner author (Daniel, TNO)": {"persona": "DANIEL", "loc": {"pickType": "elevator"}}, "Exercise running": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "detail": "The building has shut off the water to repair a pipe.", "validMode": "resolved", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}, "groups": {"cats": [], "langs": []}}}, "exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-02', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) { return Object.assign(this.screenValsX10(b), { exNoteLine: b.exercise ? b.s.O02.exNote : '' }); }
+  screenValsX10(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.O02, H = this.ha(b), T = s.hub.aud, prm = b.params, loc = b.loc;
+    var TPL_OF = { power: 'TPL-ACK-POWER', water: 'TPL-ACK-FLOOD', flood: 'TPL-ACK-FLOOD', elevator: 'TPL-ACK-ELEVATOR', heat: 'TPL-ACK-HEAT', smoke: 'TPL-ACK-SMOKE', fire: 'TPL-ACK-FIRE', winter: null, other: null };
+    var OFF_OF = { heat: 'AL-01', flood: 'AL-02', water: null, winter: 'AL-03' };
+    var model = b.session || {}, offState = model.official || {};
+    var relayedNow = function (id) { return !!(offState[id] && offState[id].relayed) || C.scenarioAlerts(C.session.get().scenario).active.some(function (sn) { return sn.id === id; }); };
+    // Template wording for a type; heat reuses the drawn heat alert (AL-06) so residents' tailored advice keeps working
+    var tplFor = function (type) {
+      if (type === 'heat') {
+        var h = C.alert('AL-06') || {}, first = (h.entries || []).filter(function (e) { return e.kind === 'alert'; }).pop() || {};
+        return { id: 'AL-06', headline: h.headline, notYetKnown: h.notYetKnown, action: h.action, detail: first.text || '', validMode: 'time', validTime: h.validUntil,
+          official: 'AL-01', officialAdds: (h.officialLink || {}).adds || '', place: { nbhds: ['TP', 'FP'], blds: [] } };
+      }
+      var t = (x.tpl || {})[type] || {}, off = OFF_OF[type] && relayedNow(OFF_OF[type]) ? OFF_OF[type] : '';
+      var nbLevel = type === 'smoke' || type === 'winter';
+      return { id: null, headline: t.headline || '', notYetKnown: t.notYetKnown || '', action: t.action || '', detail: t.detail || '', validMode: 'resolved', validTime: '',
+        official: off, officialAdds: '', place: nbLevel ? { nbhds: ['TP', 'FP'], blds: [] } : null };
+    };
+    var applyType = function (d, type) {
+      var t = tplFor(type), patch = { type: type, types: [type], hazard: type, template: TPL_OF[type] || null, headline: t.headline, notYetKnown: t.notYetKnown,
+        action: t.action, detail: t.detail, validMode: t.validMode, validTime: t.validTime, official: t.official, officialAdds: t.officialAdds, id: t.id };
+      if (t.place && H.placeEmpty(d.place)) patch.place = t.place;
+      return Object.assign(H.clone(d), patch);
+    };
+    var d = H.draft();
+    // Demo presets and entry from O-01 or O-18: fill from a type, an incident or an official alert
+    if (!loc.d && !prm.draft) {
+      var inc = prm.incident ? (D.incidents || []).filter(function (i) { return i.id === prm.incident; })[0] : null;
+      var pick = loc.pickType || (inc ? inc.type : null) || (prm.official ? (C.alert(prm.official) || {}).hazard : null);
+      if (pick) d = applyType(d, pick);
+      if (inc) { d.incident = inc.id; if (inc.buildings && inc.buildings.length) d.place = { nbhds: [], blds: inc.buildings.map(function (id) { return inc.floors && inc.floors !== 'all' ? { id: id, mode: 'range', a: inc.floors[0], b: inc.floors[1] } : { id: id, mode: 'all' }; }) }; }
+      if (prm.official) d.official = prm.official;
+      if (loc.aim) d.aim = loc.aim;
+    }
+    var set = function (patch) { H.set(d, patch); };
+    var tplT = tplFor(d.type || 'other');
+    var tplRec = (D.templates || []).filter(function (t) { return t.id === d.template; })[0];
+    var edited = !!d.type && (d.headline !== tplT.headline || d.action !== tplT.action || d.notYetKnown !== tplT.notYetKnown);
+    var TYPES = ['fire', 'power', 'water', 'elevator', 'flood', 'heat', 'smoke', 'winter', 'other'];
+    var types = TYPES.map(function (id) {
+      var on = d.type === id;
+      return { id: id, label: id === 'water' ? s.x13.waterPlumbing : id === 'fire' ? s.x13.fireAlarm : s.x13[id], on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        pick: function () { b.setLoc({ d: applyType(d, id) }); } };
+    });
+    var valids = [['resolved', x.untilResolved, x.untilResolvedLine], ['time', x.untilTime, x.untilTimeLine]].map(function (v) {
+      var on = d.validMode === v[0];
+      return { label: v[1], line: v[2], on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { set({ validMode: v[0] }); } };
+    });
+    var offList = (D.alerts || []).filter(function (a) { return a.level === 'official' && !a.fictional && a.hazard; });
+    var officials = [{ id: '', label: x.none, line: x.noneLine }].concat(offList.map(function (a) {
+      var st = offState[a.id] ? (offState[a.id].relayed ? x.relayed : offState[a.id].state === 'incoming' ? x.incoming : x.notRelayed) : (relayedNow(a.id) ? x.relayed : (D.incomingOfficial || []).indexOf(a.id) >= 0 ? x.incoming : x.notRelayed);
+      return { id: a.id, label: a.headline, line: s.x02.sources[a.origin.source] + ' · ' + st };
+    })).map(function (o) {
+      var on = (d.official || '') === o.id;
+      return Object.assign(o, { on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { set({ official: o.id }); } });
+    });
+    var aims = [['place', x.byPlace, x.byPlaceLine], ['group', x.byGroup, x.byGroupLine], ['both', x.both, x.bothLine]].map(function (v) {
+      var on = d.aim === v[0];
+      return { label: v[1], line: v[2], on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { set({ aim: v[0] }); } };
+    });
+    var persona = b.persona || {}, partner = persona.org && persona.org !== 'HUB';
+    var origin = { origin: partner ? 'partner' : 'hub', state: 'verified', org: persona.org || 'HUB', surface: 'screen' };
+    var placeKnown = d.aim === 'group' || !H.placeEmpty(d.place);
+    var where = placeKnown ? H.whereText(d) : '';
+    var st = H.steps(d, 'O-02'), nx = H.next(d, 'O-02');
+    var miss = [];
+    if (!d.type) miss.push(T.miss.type);
+    if (!String(d.headline || '').trim()) miss.push(T.miss.headline);
+    if (!String(d.action || '').trim()) miss.push(T.miss.action);
+    if (d.validMode === 'time' && !String(d.validTime || '').trim()) miss.push(T.miss.valid);
+    var todo = miss.length ? C.fill(T.toDo, { list: H.joinAnd(miss) }) : '';
+    return {
+      x: x, T: T, s: s, d: d, steps: st, colsCls: b.narrow ? 'cvh-ha-cols--one' : '', types: types, hasType: !!d.type, noType: !d.type,
+      tplTitle: d.template ? C.fill(x.template, { id: d.template }) : x.noTemplate,
+      tplLine: d.template ? C.fill(x.templateLine, { t: b.C.seconds((tplRec || {}).audioSecs || 40, 'en') }) : x.noTemplateLine, edited: edited && !!d.template,
+      whereLine: placeKnown ? C.fill(x.whereFrom, { where: where }) : x.whereLater,
+      valids: valids, byTime: d.validMode === 'time', officials: officials, hasOfficial: !!d.official,
+      prefilled: !!d.official && !!(offState[d.official] && offState[d.official].relayed),
+      aims: aims, origin: origin,
+      pvHeadline: d.headline || '…', pvWhere: where || '…', pvAction: d.action || '…',
+      validPv: d.type ? (d.validMode === 'time' ? (d.validTime ? 'Valid until ' + d.validTime : '') : 'Valid until resolved') : '',
+      todo: todo, noTodo: !todo, blocked: miss.length > 0,
+      nextLabel: nx ? C.fill(T.nextTo, { step: nx.label.toLowerCase() }) : T.steps.review,
+      inHeadline: function (e) { set({ headline: e.target.value }); }, inNyk: function (e) { set({ notYetKnown: e.target.value }); },
+      inAction: function (e) { set({ action: e.target.value }); }, inDetail: function (e) { set({ detail: e.target.value }); },
+      inTime: function (e) { set({ validTime: e.target.value }); }, inAdds: function (e) { set({ officialAdds: e.target.value }); },
+      cont: function () { if (miss.length || !nx) return; b.go(nx.id, { draft: d }); },
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); }
+    };
+  }
+  /* ---- Audience helpers shared by O-02, O-03, O-04 and O-05 (same code in each; source: o_src/aud.js).
+     The draft alert travels between the four screens in params.draft; edits live in loc.d until the next step. */
+  ha(b) {
+    var C = b.C, D = b.D, s = b.s, T = s.hub.aud, NB = s.neighbourhoods || { TP: 'Thorncliffe Park', FP: 'Flemingdon Park' };
+    var OPT = D.groupOptIns || {}, THR = D.smallGroupThreshold || 10;
+    // Illustrative: share of CVH users reading in each launch language, and the reach of each channel.
+    var SHARE = { ur: .19, en: .14, prs: .09, tl: .09, bn: .08, ps: .07, ta: .06, gu: .05, hi: .05, pa: .05, zh: .04, el: .03, sk: .02, es: .02, fr: .02 };
+    var NOT_DIGITAL = 0.065, TEXT_H = 0.45, APP_H = 0.62, TEXT_G = 0.58, APP_G = 0.71;
+    var WHOLE = { nbhds: ['TP', 'FP'], blds: [] };
+    function clone(x) { return JSON.parse(JSON.stringify(x)); }
+    function blank() {
+      return { type: null, types: [], hazard: null, template: null, headline: '', notYetKnown: '', action: '', detail: '', validMode: 'resolved', validTime: '',
+        official: '', officialAdds: '', aim: 'place', place: { nbhds: [], blds: [] }, groups: { cats: [], langs: [] }, id: null, incident: null, visited: {} };
+    }
+    function draft() {
+      var d = b.loc.d || b.params.draft || null;
+      d = d ? clone(d) : blank();
+      var bl = blank(); for (var k in bl) if (d[k] === undefined) d[k] = bl[k];
+      d.place = d.place || { nbhds: [], blds: [] }; d.place.nbhds = d.place.nbhds || []; d.place.blds = d.place.blds || [];
+      d.groups = d.groups || { cats: [], langs: [] }; d.groups.cats = d.groups.cats || []; d.groups.langs = d.groups.langs || [];
+      return d;
+    }
+    function set(d, patch) { b.setLoc({ d: Object.assign(clone(d), patch || {}) }); }
+    function hasPlace(d) { return d.aim === 'place' || d.aim === 'both'; }
+    function hasGroup(d) { return d.aim === 'group' || d.aim === 'both'; }
+    function placeEmpty(pl) { return !pl || (!(pl.nbhds || []).length && !(pl.blds || []).length); }
+    function floorList(x, B) {
+      if (!x || !x.mode || x.mode === 'all') return null;
+      var out = [], i;
+      if (x.mode === 'range') { var a = Math.max(1, Math.min(+x.a || 1, +x.b || 1)), z = Math.min(B.floors, Math.max(+x.a || 1, +x.b || 1)); for (i = a; i <= z; i++) out.push(i); return out; }
+      return (x.list || []).filter(function (n) { return n >= 1 && n <= B.floors; }).sort(function (p, q) { return p - q; });
+    }
+    function joinAnd(list, word) { word = word || T.and; if (list.length < 2) return list.join(''); return list.slice(0, -1).join(', ') + ' ' + word + ' ' + list[list.length - 1]; }
+    function floorsText(x, B, only) {
+      var f = floorList(x, B); if (!f) return '';
+      if (!f.length) return T.noFloors;
+      var contiguous = f.every(function (n, i) { return !i || n === f[i - 1] + 1; });
+      var t = f.length === 1 ? C.fill(T.floorOne, { a: f[0] }) : contiguous ? C.fill(T.floorsRange, { a: f[0], b: f[f.length - 1] }) : C.fill(T.floorsList, { list: joinAnd(f.map(String)) });
+      return only ? t + ' ' + T.only : t;
+    }
+    // The chosen buildings that are not already inside a chosen neighbourhood
+    function extraBlds(pl) { return (pl.blds || []).filter(function (x) { var B = C.building(x.id); return B && (pl.nbhds || []).indexOf(B.nbhd) < 0; }); }
+    function placeText(pl, only) {
+      pl = pl || WHOLE;
+      var parts = [], nb = (pl.nbhds || []).map(function (n) { return NB[n]; });
+      if (nb.length) parts.push(joinAnd(nb));
+      var bl = extraBlds(pl);
+      if (bl.length) {
+        var ft = bl.map(function (x) { return floorsText(x, C.building(x.id), only); });
+        var same = ft.every(function (f) { return f === ft[0]; });
+        var names = bl.map(function (x) { return C.building(x.id).name; });
+        var streets = bl.map(function (x) { return C.building(x.id).street; });
+        var sameStreet = streets.every(function (t) { return t && t === streets[0]; }) && !bl.every(function (x) { return C.building(x.id).sample; });
+        var txt;
+        if (bl.length >= 3 && same && sameStreet) txt = C.fill(T.nOn, { n: bl.length, street: streets[0] }) + (ft[0] ? ', ' + ft[0] : '');
+        else if (same && bl.length <= 3) txt = joinAnd(names) + (ft[0] ? ', ' + ft[0] : '');
+        else if (bl.length <= 3) txt = joinAnd(names.map(function (n, i) { return ft[i] ? n + ' (' + ft[i] + ')' : n; }));
+        else txt = C.fill(T.nBuildings, { n: bl.length }) + (same && ft[0] ? ', ' + ft[0] : '');
+        parts.push(txt);
+      }
+      return parts.join(T.plus);
+    }
+    // When the sentence counts buildings instead of naming them, name them underneath so the sender can check
+    function placeNames(pl) {
+      var bl = extraBlds(pl || WHOLE), txt = placeText(pl || WHOLE, true);
+      var names = bl.map(function (x) { return C.building(x.id).name; });
+      return names.length && names.some(function (n) { return txt.indexOf(n) < 0; }) ? joinAnd(names) : '';
+    }
+    function effPlace(d) { return d.aim === 'group' || placeEmpty(d.place) ? WHOLE : d.place; }
+    function units(pl) {
+      var out = {};
+      (pl.nbhds || []).forEach(function (n) { (D.buildings || []).forEach(function (B) { if (B.nbhd === n) out[B.id] = 1; }); });
+      (pl.blds || []).forEach(function (x) { var B = C.building(x.id); if (!B || out[x.id] === 1 && (pl.nbhds || []).indexOf(B.nbhd) >= 0) return; var f = floorList(x, B); out[x.id] = f ? f.length / B.floors : 1; });
+      return out;
+    }
+    function sum(u, key) { var t = 0; for (var id in u) t += ((OPT[id] || {})[key] || 0) * u[id]; return t; }
+    function langShare(langs) { if (!langs || !langs.length) return 1; var t = 0; langs.forEach(function (l) { t += SHARE[l] || 0.01; }); return Math.min(1, t); }
+    function spread(total, codes) {
+      // Largest remainder, so the language rows add up to the total
+      var w = codes.map(function (c) { return SHARE[c] || 0.01; }), tw = w.reduce(function (p, q) { return p + q; }, 0);
+      var raw = w.map(function (x) { return total * x / tw; }), fl = raw.map(Math.floor), left = total - fl.reduce(function (p, q) { return p + q; }, 0);
+      raw.map(function (r, i) { return { i: i, r: r - fl[i] }; }).sort(function (p, q) { return q.r - p.r; }).slice(0, left).forEach(function (x) { fl[x.i]++; });
+      return codes.map(function (c, i) { return { code: c, name: C.lang(c).english, native: C.lang(c).native, n: fl[i] }; }).sort(function (p, q) { return q.n - p.n; });
+    }
+    function groupsText(d) {
+      var cats = d.groups.cats.map(function (g) { return '"' + ((s.groups || {})[g] || {}).label + '"'; });
+      return joinAnd(cats, T.or);
+    }
+    function langsText(d) { var l = d.groups.langs; return l.length ? C.fill(T.readIn, { langs: joinAnd(l.map(function (c) { return C.lang(c).english; }), T.or) }) : T.anyLang; }
+    function restate(d) {
+      var pl = effPlace(d), place = placeText(pl, true), g = hasGroup(d), cats = d.groups.cats.length, langs = d.groups.langs.length;
+      if (!g) return placeEmpty(d.place) ? T.nothing : C.fill(T.everyone, { place: place });
+      if (!cats && !langs) return C.fill(T.groupPending, { place: place });
+      var who = cats ? C.fill(T.whoChose, { groups: groupsText(d), langs: langsText(d) }) : C.fill(T.whoRead, { langs: joinAnd(d.groups.langs.map(function (c) { return C.lang(c).english; }), T.or) });
+      return C.fill(d.aim === 'group' || placeEmpty(d.place) ? T.anywhere : T.of, { place: place, who: who });
+    }
+    function reach(d) {
+      var pl = effPlace(d), u = units(pl), H = sum(u, 'households'), U = Math.round(H * NOT_DIGITAL);
+      var g = hasGroup(d), cats = d.groups.cats, langs = d.groups.langs, share = langShare(langs), total, unit, text, app, perCat = [];
+      var codes = langs.length ? langs.slice() : Object.keys(SHARE);
+      if (g && cats.length) {
+        var raw = 0;
+        cats.forEach(function (c) { var n = sum(u, c) * share; raw += n; perCat.push({ label: ((s.groups || {})[c] || {}).label, n: Math.round(n) }); });
+        total = Math.round(raw); unit = 'residents'; text = Math.round(total * TEXT_G); app = Math.round(total * APP_G);
+      } else {
+        total = Math.round((H - U) * share); unit = 'households'; text = Math.round(H * share * TEXT_H); app = Math.round(total * APP_H);
+      }
+      return { total: total, unit: unit, households: Math.round(H), unreachable: U, text: text, app: app, perCat: perCat, byLang: spread(total, codes),
+        grouped: g && (cats.length > 0 || langs.length > 0), combined: d.aim === 'both' && !placeEmpty(d.place) && (cats.length > 0 || langs.length > 0),
+        small: g && cats.length > 0 && total > 0 && total < THR, zero: total === 0, threshold: THR, placeHouseholds: Math.round(H),
+        placeGroupSum: g && cats.length ? Math.round(H) + total : 0 };
+    }
+    function ambassadorsFor(pl) {
+      var u = units(pl), out = [];
+      (D.ambassadors || []).forEach(function (a) {
+        (a.buildings || []).forEach(function (bid) {
+          if (!u[bid]) return;
+          var fl = (a.floors || {})[bid] || [], sel = (pl.blds || []).filter(function (x) { return x.id === bid; })[0], B = C.building(bid);
+          var chosen = sel && (pl.nbhds || []).indexOf(B.nbhd) < 0 ? floorList(sel, B) : null;
+          var hit = chosen ? fl.filter(function (f) { return chosen.indexOf(f) >= 0; }) : fl;
+          if (hit.length) out.push({ name: a.name, role: a.role, building: B.name, floors: hit.length > 1 ? C.fill(T.floorsRange, { a: hit[0], b: hit[hit.length - 1] }) : C.fill(T.floorOne, { a: hit[0] }) });
+        });
+      });
+      return out;
+    }
+    function missing(d) {
+      var m = [];
+      if (!d.type) m.push(T.miss.type);
+      if (!String(d.headline || '').trim()) m.push(T.miss.headline);
+      if (!String(d.action || '').trim()) m.push(T.miss.action);
+      if (d.validMode === 'time' && !String(d.validTime || '').trim()) m.push(T.miss.valid);
+      if (hasPlace(d) && placeEmpty(d.place)) m.push(T.miss.place);
+      if (hasPlace(d)) (d.place.blds || []).forEach(function (x) { var B = C.building(x.id); if (B && x.mode === 'list' && !(x.list || []).length && d.place.nbhds.indexOf(B.nbhd) < 0) m.push(C.fill(T.miss.floors, { building: B.name })); });
+      if (hasGroup(d) && !d.groups.cats.length && !d.groups.langs.length) m.push(T.miss.group);
+      return m;
+    }
+    function steps(d, here) {
+      var list = [['O-02', T.steps.message]];
+      if (hasGroup(d)) list.push(['O-04', T.steps.group]);
+      if (hasPlace(d)) list.push(['O-03', T.steps.place]);
+      list.push(['O-05', T.steps.review]);
+      return list.map(function (x, i) {
+        var on = x[0] === here;
+        return { id: x[0], n: i + 1, label: x[1], cls: on ? 'is-here' : '', current: on ? 'step' : 'false', go: function () { if (!on) b.go(x[0], { draft: draft() }); } };
+      });
+    }
+    function next(d, here) { var st = steps(d, here), i = -1; st.forEach(function (x, k) { if (x.cls) i = k; }); return st[i + 1] || null; }
+    function whereText(d) { return placeText(effPlace(d), false); }
+    return { blank: blank, draft: draft, set: set, clone: clone, hasPlace: hasPlace, hasGroup: hasGroup, placeEmpty: placeEmpty, floorList: floorList,
+      floorsText: floorsText, placeText: placeText, placeNames: placeNames, effPlace: effPlace, units: units, restate: restate, reach: reach, missing: missing,
+      steps: steps, next: next, whereText: whereText, ambassadorsFor: ambassadorsFor, joinAnd: joinAnd, THR: THR, WHOLE: WHOLE, SHARE: SHARE,
+      go: function (id, d, extra) { b.go(id, Object.assign({ draft: d }, extra || {})); } };
+  }
+
+}
+</script>
+</body>
+</html>

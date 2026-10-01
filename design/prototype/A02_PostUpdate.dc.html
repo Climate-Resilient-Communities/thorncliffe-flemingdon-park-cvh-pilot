@@ -1,0 +1,279 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>A-02 Post a building update</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="A-02" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main cvh-main--amb" aria-label="Post a building update">
+
+<div class="cvh-screen" style="--gap:16px">
+  <sc-if value="{{exNoteLine}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{exNoteLine}}</span></p></sc-if>
+  <sc-if value="{{offline}}">
+    <div class="cvh-offline" role="status"><span class="cvh-ico cvh-ico--noSignal" aria-hidden="true"></span><span class="cvh-grow">{{s.A01.offline}}</span></div>
+  </sc-if>
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h1 class="cvh-h2">{{s.A02.title}}</h1>
+    <p class="cvh-caption">{{canPost}}</p>
+  </div>
+
+  <section class="cvh-section" style="--gap:10px" aria-labelledby="a02-types">
+    <h2 class="cvh-label" id="a02-types">{{s.A02.types}} <span class="cvh-tag cvh-tag--required">{{s.A02.required}}</span></h2>
+    <div class="cvh-types" role="group" aria-labelledby="a02-types">
+      <sc-for list="{{types}}" as="t" hint-placeholder-count="6">
+        <button type="button" class="cvh-typebtn {{t.cls}}" aria-pressed="{{t.aria}}" onClick="{{t.toggle}}">
+          <span class="cvh-typebtn__tick" aria-hidden="true"><sc-if value="{{t.on}}"><span class="cvh-ico cvh-ico--check"></span></sc-if></span>
+          <dc-import name="X13_DisruptionType" type="{{t.id}}" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="96px,64px"></dc-import>
+          <sc-if value="{{t.more}}"><span class="cvh-typebtn__more">{{t.more}}</span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+    <p class="cvh-caption cvh-muted">{{s.A02.notOffered}}</p>
+  </section>
+
+  <sc-if value="{{isOther}}">
+    <dc-import name="X01_Not911" variant="block" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,84px"></dc-import>
+    <section class="cvh-section" style="--gap:10px" aria-labelledby="a02-oline">
+      <h2 class="cvh-label" id="a02-oline">{{s.A02.lineRequired}} <span class="cvh-tag cvh-tag--required">{{s.A02.required}}</span></h2>
+      <p class="cvh-hint">{{s.A02.otherFirst}}</p>
+      <sc-if value="{{hasLine}}">
+        <div class="cvh-card cvh-stack" style="--gap:6px;border:2px solid var(--interactive)">
+          <p class="cvh-eyebrow" style="color:var(--ink)">{{s.A02.lineAdded}}</p>
+          <p lang="{{lineBcp}}" dir="{{lineDir}}" style="font-size:var(--fs-alert)">{{lineText}}</p>
+          <sc-if value="{{lineMt}}"><p class="cvh-caption cvh-muted">{{lineMt}}</p></sc-if>
+          <button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{clearLine}}">{{s.A02.remove}}</button>
+        </div>
+      </sc-if>
+      <div class="cvh-phrases">
+        <sc-for list="{{phrases}}" as="ph" hint-placeholder-count="3"><button type="button" class="cvh-chip {{ph.cls}}" aria-pressed="{{ph.aria}}" onClick="{{ph.pick}}">{{ph.text}}</button></sc-for>
+      </div>
+      <div class="cvh-field">
+        <label class="cvh-label" for="a02-own1" style="font-weight:400">{{s.A02.ownLine}}</label>
+        <input id="a02-own1" class="cvh-input {{lineErrCls}}" value="{{loc.lineText}}" onInput="{{onLine}}" autocomplete="off">
+      </div>
+    </section>
+  </sc-if>
+
+  <section class="cvh-section" style="--gap:10px" aria-labelledby="a02-floors">
+    <h2 class="cvh-label" id="a02-floors">{{s.A02.floors}} <span class="cvh-tag cvh-tag--required">{{s.A02.required}}</span></h2>
+    <div class="cvh-stack" style="--gap:8px" role="radiogroup" aria-labelledby="a02-floors">
+      <sc-for list="{{fopts}}" as="f" hint-placeholder-count="3">
+        <button type="button" class="cvh-option {{f.cls}}" style="min-height:52px;padding:10px 14px" role="radio" aria-checked="{{f.aria}}" onClick="{{f.pick}}">
+          <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{f.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+          <span class="cvh-option__text"><span class="cvh-option__label">{{f.label}}</span><span class="cvh-option__line">{{f.line}}</span></span>
+        </button>
+      </sc-for>
+    </div>
+    <sc-if value="{{isPick}}">
+      <p class="cvh-strong" style="color:var(--ink)" role="status">{{pickLine}}</p>
+      <div class="cvh-floorpick" role="group" aria-label="{{s.A02.pickLabel}}">
+        <sc-for list="{{grid}}" as="g" hint-placeholder-count="24"><button type="button" class="cvh-floorbtn {{g.cls}}" aria-pressed="{{g.aria}}" aria-label="{{g.label}}" onClick="{{g.tap}}">{{g.n}}</button></sc-for>
+      </div>
+    </sc-if>
+  </section>
+
+  <section class="cvh-section" style="--gap:10px" aria-labelledby="a02-more">
+    <h2 class="cvh-label" id="a02-more">{{s.A02.more}} <span class="cvh-tag cvh-tag--optional">{{s.A02.optional}}</span></h2>
+    <sc-if value="{{loc.photo}}">
+      <div class="cvh-photo"><span class="cvh-photo__thumb" aria-hidden="true"></span><span class="cvh-grow">{{s.A02.photoAdded}}</span><button type="button" class="cvh-link" onClick="{{togglePhoto}}">{{s.A02.remove}}</button></div>
+    </sc-if>
+    <sc-if value="{{noPhoto}}">
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block cvh-btn--start" onClick="{{togglePhoto}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span>{{s.A02.photo}}</button>
+    </sc-if>
+    <sc-if value="{{showLineBtn}}">
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block cvh-btn--start" onClick="{{openLine}}"><span class="cvh-ico cvh-ico--pencil" aria-hidden="true"></span>{{s.A02.line}}</button>
+    </sc-if>
+    <sc-if value="{{showOptLine}}">
+      <sc-if value="{{hasLine}}">
+        <div class="cvh-card cvh-stack" style="--gap:6px;border:2px solid var(--interactive)">
+          <p class="cvh-eyebrow" style="color:var(--ink)">{{s.A02.lineAdded}}</p>
+          <p lang="{{lineBcp}}" dir="{{lineDir}}" style="font-size:var(--fs-alert)">{{lineText}}</p>
+          <sc-if value="{{lineMt}}"><p class="cvh-caption cvh-muted">{{lineMt}}</p></sc-if>
+          <button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{clearLine}}">{{s.A02.remove}}</button>
+        </div>
+      </sc-if>
+      <div class="cvh-phrases">
+        <sc-for list="{{phrases}}" as="ph" hint-placeholder-count="3"><button type="button" class="cvh-chip {{ph.cls}}" aria-pressed="{{ph.aria}}" onClick="{{ph.pick}}">{{ph.text}}</button></sc-for>
+        <button type="button" class="cvh-chip {{bnCls}}" aria-pressed="{{bnAria}}" onClick="{{pickBn}}"><span class="cvh-tag cvh-tag--illustrative" style="min-height:24px;padding:0 6px">{{s.A02.sampleTag}}</span>{{s.A02.sampleBn}}</button>
+      </div>
+      <div class="cvh-field">
+        <label class="cvh-label" for="a02-own2" style="font-weight:400">{{s.A02.ownLine}}</label>
+        <input id="a02-own2" class="cvh-input" value="{{loc.lineText}}" onInput="{{onLine}}" autocomplete="off">
+      </div>
+      <p class="cvh-caption cvh-muted">{{s.A02.mtNote}}</p>
+    </sc-if>
+  </section>
+</div>
+<section class="cvh-ambbar" aria-label="{{s.A02.post}}">
+  <p class="cvh-ambbar__sub">{{appearsAs}}</p>
+  <sc-if value="{{hasTypes}}">
+    <p class="cvh-ambbar__line" role="status"><span class="cvh-ico cvh-ico--{{outIcon}}" aria-hidden="true"></span><span class="cvh-grow">{{outcome}}</span></p>
+  </sc-if>
+  <sc-if value="{{someWait}}"><p class="cvh-ambbar__sub">{{s.A02.someWait}}</p></sc-if>
+  <sc-if value="{{offline}}"><p class="cvh-ambbar__sub cvh-row" style="--gap:6px;align-items:flex-start"><span class="cvh-ico cvh-ico--noSignal cvh-ico--sm" aria-hidden="true"></span><span>{{s.A02.offlineBar}}</span></p></sc-if>
+  <sc-if value="{{err}}"><p class="cvh-error" role="alert"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{err}}</span></p></sc-if>
+  <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg cvh-btn--block" onClick="{{post}}">{{postLabel}}</button>
+</section>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Empty", "Elevator and water, floors 10 to 22: goes out now", "Ready to post, with a photo and a line in Bengali", "Fire alarm or evacuation: the Hub checks first", "Several types, one waits for the Hub", "Other chosen: 911 first, one line required", "Other without the line: asked for it", "Floors: your round", "No signal: it will be saved on the phone", "Exercise: practice, marked on the screen"], "default": "Empty"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Empty": {"persona": "rashid", "scenario": "A"}, "Elevator and water, floors 10 to 22: goes out now": {"persona": "rashid", "scenario": "A", "loc": {"types": ["elevator", "water"], "fmode": "pick", "fa": 10, "fb": 22}}, "Ready to post, with a photo and a line in Bengali": {"persona": "rashid", "scenario": "A", "loc": {"types": ["elevator", "water"], "fmode": "pick", "fa": 10, "fb": 22, "photo": true, "lineOpen": true, "line": {"lang": "bn", "text": "লিফট বন্ধ, সিঁড়ি ব্যবহার করুন। বয়স্ক প্রতিবেশীদের খোঁজ নিন।", "mt": {"en": "The elevator is stopped, use the stairs. Check on older neighbours."}}}}, "Fire alarm or evacuation: the Hub checks first": {"persona": "rashid", "scenario": "A", "loc": {"types": ["fire"], "fmode": "pick", "fa": 15, "fb": 15}}, "Several types, one waits for the Hub": {"persona": "rashid", "scenario": "A", "loc": {"types": ["power", "fire"], "fmode": "all"}}, "Other chosen: 911 first, one line required": {"persona": "rashid", "scenario": "A", "loc": {"types": ["other"]}}, "Other without the line: asked for it": {"persona": "rashid", "scenario": "A", "loc": {"types": ["other"], "err": "line"}}, "Floors: your round": {"persona": "rashid", "scenario": "A", "loc": {"types": ["power"], "fmode": "mine"}}, "No signal: it will be saved on the phone": {"persona": "rashid", "scenario": "A", "params": {"offline": true}, "loc": {"types": ["elevator"], "fmode": "all"}}, "Exercise: practice, marked on the screen": {"persona": "rashid", "scenario": "D", "loc": {"types": ["elevator", "water"], "fmode": "pick", "fa": 10, "fb": 22}, "exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'A-02'[0] === 'A' && !!app.exercise,
+      exEnded: 'A-02'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) { return Object.assign(this.screenValsX10(b), { exNoteLine: !!b.app.exercise ? b.s.A02.exNote : '' }); }
+  screenValsX10(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.A02, loc = b.loc, prm = b.params, m = C.session.model() || {};
+    var amb = (D.ambassadors || []).filter(function (a) { return a.id === 'AMB-RASHID'; })[0] || (D.ambassadors || [])[0];
+    var bid = amb.buildings[0], bo = C.building(bid) || { name: bid, floors: 24 }, fl = amb.floors[bid] || [];
+    var offline = !!prm.offline || m.signal === false;
+    var ORDER = ['power', 'water', 'elevator', 'fire', 'flood', 'other'];
+    var picked = ('types' in loc ? loc.types : (prm.types || [])) || [];
+    var set = function (p) { b.setLoc(Object.assign({ err: '' }, p)); };
+    var types = ORDER.map(function (t) {
+      var on = picked.indexOf(t) >= 0;
+      return { id: t, on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', more: (x.typeMore || {})[t] || '',
+        toggle: function () { set({ types: on ? picked.filter(function (y) { return y !== t; }) : picked.concat([t]) }); } };
+    });
+    var sel = picked.filter(function (t, i) { return ORDER.indexOf(t) >= 0 && picked.indexOf(t) === i; });
+    var isOther = sel.indexOf('other') >= 0;
+    // Floors: whole building (one tap), the round, or a range tapped on a grid
+    var fmode = loc.fmode || 'all', fa = loc.fa || null, fb = loc.fb || null;
+    var lo = fa && fb ? Math.min(fa, fb) : fa, hi = fa && fb ? Math.max(fa, fb) : fa;
+    var fopt = function (id, label, line) {
+      var on = fmode === id;
+      return { label: label, line: line, on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { set({ fmode: id }); } };
+    };
+    var fopts = [fopt('all', x.wholeBuilding, C.fill(x.wholeLine, { n: bo.floors })),
+      fopt('mine', C.fill(x.mineLabel, { a: fl[0], b: fl[fl.length - 1] }), x.mineLine),
+      fopt('pick', x.pickLabel, x.pickLine)];
+    var grid = [];
+    for (var i = 1; i <= (bo.floors || 24); i++) (function (n) {
+      var end = n === fa || n === fb, inside = lo && hi && n > lo && n < hi;
+      grid.push({ n: n, cls: end ? 'is-end' : (inside ? 'is-in' : ''), aria: end || inside ? 'true' : 'false', label: C.fill(x.floorAria, { n: n }),
+        tap: function () { if (!fa || fb) set({ fa: n, fb: null }); else set({ fb: n }); } });
+    })(i);
+    var floors = fmode === 'all' ? 'all' : fmode === 'mine' ? [fl[0], fl[fl.length - 1]] : (lo ? [lo, hi] : null);
+    var floorsWord = floors === 'all' ? x.wholeWord : !floors ? '' : floors[0] === floors[1] ? C.fill(x.pickOne, { a: floors[0] }).toLowerCase() : C.fill(x.pickRange, { a: floors[0], b: floors[1] }).toLowerCase();
+    var pickLine = !lo ? x.pickNone : lo === hi ? C.fill(x.pickOne, { a: lo }) : C.fill(x.pickRange, { a: lo, b: hi });
+    // One line: quick phrases, a prototype sample in Bengali, or a free field. Typing is never required except for Other.
+    var SAMPLE = { lang: 'bn', text: 'লিফট বন্ধ, সিঁড়ি ব্যবহার করুন। বয়স্ক প্রতিবেশীদের খোঁজ নিন।', mt: { en: 'The elevator is stopped, use the stairs. Check on older neighbours.' } };
+    var typed = String(loc.lineText || '').trim();
+    var line = typed ? { lang: b.lang, text: typed } : (loc.line || null);
+    var list = isOther ? x.otherPhrases : x.phrases;
+    var phrases = list.map(function (p) {
+      var on = !!line && line.text === p;
+      return { text: p, cls: on ? 'cvh-chip--on' : '', aria: on ? 'true' : 'false', pick: function () { set({ line: { lang: 'en', text: p }, lineText: '' }); } };
+    });
+    var bnOn = !!line && line.text === SAMPLE.text;
+    var showOptLine = !isOther && (!!loc.lineOpen || !!line);
+    var direct = sel.length ? C.session.isDirect(sel) : null;
+    var someWait = sel.length > 1 && !direct && sel.some(function (t) { return C.session.DIRECT[t]; });
+    var errKey = loc.err || '';
+    var err = errKey === 'types' ? x.errTypes : errKey === 'floors' ? x.errFloors : errKey === 'line' ? x.errLine : '';
+    var post = function () {
+      if (!sel.length) { b.setLoc({ err: 'types' }); return; }
+      if (isOther && !line) { b.setLoc({ err: 'line' }); return; }
+      if (!floors) { b.setLoc({ err: 'floors' }); return; }
+      var ln;
+      if (line) { ln = { lang: line.lang, text: line.text, mt: line.mt || {} }; ln.en = line.lang === 'en' ? line.text : (ln.mt.en || line.text); }
+      var id = 'AP-S' + Date.now();
+      b.act({ t: 'ambPost', post: { id: id, by: 'AMB-RASHID', building: bid, types: sel, floors: floors, line: ln, photo: !!loc.photo } });
+      b.go('A-03', { post: id });
+    };
+    return {
+      loc: loc, offline: offline, canPost: C.fill(s.A01.canPost, { building: bo.name }),
+      types: types, isOther: isOther, hasTypes: sel.length > 0,
+      fopts: fopts, isPick: fmode === 'pick', grid: grid, pickLine: pickLine,
+      noPhoto: !loc.photo, togglePhoto: function () { set({ photo: !loc.photo }); },
+      showLineBtn: !isOther && !showOptLine, showOptLine: showOptLine, openLine: function () { set({ lineOpen: true }); },
+      phrases: phrases, bnCls: bnOn ? 'cvh-chip--on' : '', bnAria: bnOn ? 'true' : 'false',
+      pickBn: function () { set({ line: SAMPLE, lineText: '' }); },
+      hasLine: !!line, lineText: line ? line.text : '', lineBcp: line ? C.bcp(line.lang) : 'en', lineDir: line ? C.dir(line.lang) : 'ltr',
+      lineMt: line && line.lang !== b.lang && line.mt && line.mt[b.lang] ? line.mt[b.lang] : '',
+      lineErrCls: errKey === 'line' ? 'is-error' : '',
+      onLine: function (e) { b.setLoc({ lineText: e.target.value, line: null, err: '' }); },
+      clearLine: function () { set({ line: null, lineText: '' }); },
+      appearsAs: C.fill(x.appearsAs, { building: bo.name }),
+      outcome: b.app.exercise ? x.exOutcome : direct ? x.goesNow : x.waits, outIcon: b.app.exercise ? 'exercise' : direct ? 'now' : 'clock', someWait: someWait,
+      err: err, post: post, postLabel: C.fill(x.postTo, { floors: floorsWord || x.pickLabel.toLowerCase() }),
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('A-01'); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

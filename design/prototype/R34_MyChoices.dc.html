@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-34 What I have told the CVH</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-34" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="What I have told the CVH">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <div class="cvh-stack" style="--gap:8px">
+    <h1 class="cvh-h1">{{s.R34.title}}</h1>
+    <p>{{s.R34.lead}}</p>
+  </div>
+  <sc-if value="{{fromTailored}}">
+    <div class="cvh-note" role="note"><span class="cvh-ico cvh-ico--info" aria-hidden="true"></span><span class="cvh-grow">{{s.R34.fromTailored}}</span></div>
+  </sc-if>
+  <sc-if value="{{removedLine}}">
+    <div class="cvh-note" role="status" style="border-style:solid;border-color:var(--ink)"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>
+      <span class="cvh-stack cvh-grow" style="--gap:2px"><span class="cvh-strong" style="color:var(--ink)">{{removedLine}}</span><span>{{s.R34.removed}}</span></span></div>
+  </sc-if>
+
+  <section class="cvh-told" aria-labelledby="r34-lang">
+    <p class="cvh-kv__k" id="r34-lang">{{s.R34.language}}</p>
+    <p class="cvh-told__val"><span lang="{{langBcp}}" dir="{{langDir}}">{{langName}}</span> <span class="cvh-muted" style="font-weight:400">{{langEn}}</span></p>
+    <div class="cvh-told__acts"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{changeLang}}">{{s.R34.change}}</button></div>
+  </section>
+
+  <sc-if value="{{place}}">
+    <section class="cvh-told" aria-labelledby="r34-b">
+      <p class="cvh-kv__k" id="r34-b">{{s.R34.building}}</p>
+      <p class="cvh-told__val">{{place}}</p>
+      <div class="cvh-told__acts">
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{changePlace}}">{{s.R34.change}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{removePlace}}">{{s.R34.remove}}</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{basicOn}}">
+    <section class="cvh-told" aria-labelledby="r34-basic">
+      <p class="cvh-kv__k" id="r34-basic">{{s.R34.basic}}</p>
+      <p class="cvh-told__val">{{s.R34.on}}</p>
+      <sc-if value="{{basicHelper}}"><p class="cvh-caption cvh-muted">{{s.R34.setByHelper}}</p></sc-if>
+      <div class="cvh-told__acts"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{turnOffBasic}}">{{s.R34.turnOff}}</button></div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{showGroups}}">
+    <section class="cvh-told {{groupsCls}}" aria-labelledby="r34-g">
+      <p class="cvh-kv__k" id="r34-g">{{s.R34.groups}}</p>
+      <sc-if value="{{noGroups}}"><p class="cvh-told__val">{{s.R34.groupsNone}}</p></sc-if>
+      <sc-for list="{{groups}}" as="g" hint-placeholder-count="2">
+        <div class="cvh-told__sub">
+          <span class="cvh-told__val">{{g.label}}</span>
+          <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{g.remove}}" aria-label="{{g.aria}}">{{s.R34.remove}}</button>
+        </div>
+      </sc-for>
+      <div class="cvh-told__acts"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{changeGroups}}">{{groupsBtn}}</button></div>
+      <div class="cvh-told__sub" style="flex-direction:column;align-items:stretch;padding-top:10px">
+        <span class="cvh-kv__k">{{s.R34.checkin}}</span>
+        <span class="cvh-told__val">{{checkinVal}}</span>
+        <sc-if value="{{checkinSub}}"><span class="cvh-caption cvh-muted">{{checkinSub}}</span></sc-if>
+        <div class="cvh-told__acts">
+          <sc-if value="{{hasCheckin}}">
+            <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{changeCheckin}}">{{s.R34.change}}</button>
+            <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{removeCheckin}}">{{s.R34.remove}}</button>
+          </sc-if>
+          <sc-if value="{{noCheckin}}">
+            <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{askCheckin}}"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{s.R34.checkinAsk}}</button>
+          </sc-if>
+        </div>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{headsUp}}">
+    <section class="cvh-told" aria-labelledby="r34-hu">
+      <p class="cvh-kv__k" id="r34-hu">{{s.R34.headsUp}}</p>
+      <p class="cvh-told__val">{{s.R34.on}}</p>
+      <p class="cvh-caption cvh-muted">{{s.R32.never}}</p>
+      <div class="cvh-told__acts">
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{changeHeadsUp}}">{{s.R34.change}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{removeHeadsUp}}">{{s.R34.remove}}</button>
+      </div>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{textLine}}">
+    <section class="cvh-told" aria-labelledby="r34-t">
+      <p class="cvh-kv__k" id="r34-t">{{s.R34.textAlerts}}</p>
+      <p class="cvh-told__val">{{textLine}}</p>
+      <p class="cvh-caption cvh-muted">{{s.R34.howStop}}</p>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{nothing}}">
+    <div class="cvh-card cvh-stack" style="--gap:8px">
+      <p class="cvh-h3">{{s.R34.nothing}}</p>
+      <p>{{s.R34.tellUs}}</p>
+      <button type="button" class="cvh-link" onClick="{{changePlace}}"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span>{{s.R34.whereLive}}</button>
+      <button type="button" class="cvh-link" onClick="{{changeGroups}}"><span class="cvh-ico cvh-ico--person cvh-ico--sm" aria-hidden="true"></span>{{s.R34.whichGroups}}</button>
+      <button type="button" class="cvh-link" onClick="{{askCheckin}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{s.R34.checkinAsk}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{invite}}">
+    <section class="cvh-card cvh-stack" style="--gap:12px" aria-labelledby="r34-inv">
+      <p class="cvh-row cvh-h3" id="r34-inv" style="--gap:10px"><span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span><span>{{s.R03.getTextAlerts}}</span></p>
+      <p>{{s.R34.invite}}</p>
+      <div class="cvh-pair">
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{accept}}">{{s.R34.inviteYes}}</button>
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{decline}}">{{s.R34.inviteNo}}</button>
+      </div>
+    </section>
+  </sc-if>
+  <p class="cvh-row cvh-caption cvh-muted" style="--gap:8px"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span>{{s.R34.onDevice}}</span></p>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Reached from Tailored to your choices (Amina)", "Everything chosen (George)", "Groups, with the check-in option in view (from Be ready)", "Check-in requested", "Removed and confirmed", "Nothing chosen", "Text-alert invitation while not subscribed", "Signed up, waiting for YES", "Basic mode (Amina)"], "default": "Reached from Tailored to your choices (Amina)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Reached from Tailored to your choices (Amina)": {"persona": "amina", "scenario": "B", "basic": false, "params": {"from": "tailored"}}, "Everything chosen (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "params": {"from": "header"}}, "Groups, with the check-in option in view (from Be ready)": {"persona": "nasrin", "scenario": "C", "params": {"from": "header", "focus": "checkin"}}, "Check-in requested": {"persona": "amina", "scenario": "C", "basic": false, "params": {"from": "header"}}, "Removed and confirmed": {"persona": "george", "scenario": "C", "basic": false, "choices": {"groups": []}, "params": {"from": "header"}, "loc": {"removed": "Seniors"}}, "Nothing chosen": {"persona": "new", "scenario": "C", "params": {"from": "header"}}, "Text-alert invitation while not subscribed": {"persona": "devon", "scenario": "C", "params": {"from": "header"}}, "Signed up, waiting for YES": {"persona": "nasrin", "scenario": "C", "choices": {"pendingPhone": "(416) 555-0148"}, "params": {"from": "header"}}, "Basic mode (Amina)": {"persona": "amina", "scenario": "C", "basic": true, "basicState": "persisted", "params": {"from": "header"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'none', showExercise: 'R-34'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-34'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R34, ch = b.ch, prm = b.params, app = b.app, loc = b.loc;
+    var nbName = function (id) { return (s.neighbourhoods || {})[id] || id; };
+    var removed = function (label) { b.setLoc({ removed: label }); };
+    // Language: the one the resident chose, always shown, changeable through the language control (R-02)
+    var lg = C.lang(app.chosenLang || (b.persona || {}).lang || b.lang);
+    // Building and floor
+    var bo = ch.building ? C.building(ch.building) : null;
+    var place = bo ? (ch.floor ? C.fill(x.floorOf, { building: bo.name, floor: ch.floor }) : bo.name) : (ch.nbhd ? C.fill(x.neighbourhoodOnly, { nbhd: nbName(ch.nbhd) }) : '');
+    // Groups, one line each, each removable
+    var gs = (ch.groups || []).filter(function (g) { return g !== 'checkin'; });
+    var groups = gs.map(function (g) {
+      var label = s.groups[g].label;
+      return { label: label, aria: s.R34.remove + ': ' + label,
+        remove: function () { app.setChoices({ groups: (ch.groups || []).filter(function (y) { return y !== g; }) }); removed(label); } };
+    });
+    var ci = ch.checkin;
+    var wantsCi = !!ci || (ch.groups || []).indexOf('checkin') >= 0;
+    var methodWord = function (m) { var w = s.R33[m] || ''; return w.charAt(0).toLowerCase() + w.slice(1); };
+    var checkinVal = ci ? C.fill(x.checkinBy, { method: methodWord(ci.method) }) : x.checkinNone;
+    var checkinSub = '';
+    if (ci && ci.method === 'knock' && ci.unit) checkinSub = C.fill(x.unitLine, { unit: ci.unit });
+    if (wantsCi && !ci && ch.building && ch.floor && !C.checkinCovered(ch.building, ch.floor)) checkinSub = x.checkinNoAmb;
+    var nb = function (p) { return String(p).replace(/ /g, '\u00a0').replace(/-/g, '\u2011'); };
+    var textLine = ch.subscribed ? C.fill(x.textOn, { phone: nb(ch.phone || '(416) 555-0148') }) : (ch.pendingPhone ? C.fill(x.textPending, { phone: nb(ch.pendingPhone) }) : '');
+    var basicOn = !!b.basic;
+    var anything = !!place || gs.length > 0 || wantsCi || !!ch.headsUp || basicOn || !!textLine;
+    return {
+      fromTailored: prm.from === 'tailored', removedLine: loc.removed ? C.fill(x.removedItem, { item: loc.removed }) : '',
+      goBack: function () { if (app.canBack) b.back(); else b.go('R-03'); },
+      langName: lg.native, langEn: lg.native !== lg.english ? '(' + lg.english + ')' : '', langBcp: lg.bcp47, langDir: lg.dir,
+      changeLang: function () { app.openLang(); },
+      place: place, changePlace: function () { b.go('R-35', { from: 'choices' }); },
+      removePlace: function () { app.setChoices({ building: null, floor: null, nbhd: null }); removed(place); },
+      basicOn: basicOn, basicHelper: app.basicState === 'helper',
+      turnOffBasic: function () { if (app.basic) app.toggleBasic(); removed(s.R34.basic); },
+      showGroups: anything, groupsCls: prm.focus === 'checkin' || prm.focus === 'groups' ? 'cvh-told--focus' : '',
+      noGroups: gs.length === 0, groups: groups, groupsBtn: gs.length ? x.changeGroups : x.chooseGroups,
+      changeGroups: function () { b.go('R-26', { from: 'choices' }); },
+      checkinVal: checkinVal, checkinSub: checkinSub, hasCheckin: !!ci, noCheckin: !ci,
+      changeCheckin: function () { b.go('R-33', { from: 'choices' }); },
+      askCheckin: function () { b.go('R-33', { from: 'choices' }); },
+      removeCheckin: function () { app.setChoices({ checkin: null, groups: (ch.groups || []).filter(function (y) { return y !== 'checkin'; }) }); removed(s.R34.checkin); },
+      headsUp: !!ch.headsUp, changeHeadsUp: function () { b.go('R-32'); },
+      removeHeadsUp: function () { app.setChoices({ headsUp: false }); removed(s.R34.headsUp); },
+      textLine: textLine, nothing: !anything,
+      invite: !ch.subscribed && !ch.pendingPhone && !loc.inviteNo,
+      accept: function () { b.go('R-05', { from: 'choices' }); }, decline: function () { b.setLoc({ inviteNo: true }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,1032 @@
+{
+ "failed": {},
+ "language": "sk",
+ "models": {
+  "north-small-translate-09-2026": 79
+ },
+ "texts": {
+  "06c76a46e432": {
+   "model": "north-small-translate-09-2026",
+   "source": "Schools",
+   "text": "Školy"
+  },
+  "0761f94fde45": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Na stránke centra sa nachádza odkaz „Ste v kríze? Kliknite sem\" a zoznam miestnej krízovej pomoci: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto – služba pre krízové situácie v oblasti duševného zdravia 1-855-242-3310, Naseeha – linka pomoci pre duševné zdravie 1-866-627-3342, Youthdale Treatment Centres – krízový a mobilný tím 416-363-9990, Scarborough Health Network – komunitná krízová linka 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808 a pohotovostné oddelenie nemocnice Michael Garron (825 Coxwell Ave.). Vyhradený priestor na ochladenie: ponúka vnútorný priestor s klimatizáciou ako útechu počas výstrah alebo upozornení na extrémne horúčavy."
+   },
+   "model": "claude-correction",
+   "note": "crisis-lines review: hotline and hospital names back in English with Slovak glosses; 'útecha' (consolation) -> 'úľava' (relief).",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Na stránke centra je odkaz „Ste v kríze? Kliknite sem“ a zoznam miestnych liniek krízovej pomoci: Kids Help Phone (linka pre deti a mladých) 1-800-668-6868, Talk Suicide Canada (linka prevencie samovrážd) 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service (krízová služba pre duševné zdravie) 1-855-242-3310, Naseeha Mental Health Hotline (linka pomoci pre duševné zdravie) 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team (krízový a mobilný tím pre mladých) 416-363-9990, Scarborough Health Network Community Crisis Line (komunitná krízová linka) 416-495-2891, Assaulted Women's Helpline (linka pomoci pre ženy, ktoré zažili násilie) 416-863-0511, Toronto Rape Crisis Centre (krízové centrum pre obete znásilnenia) 416-597-8808 a Michael Garron Hospital Emergency Department (pohotovosť nemocnice, 825 Coxwell Ave.). Určené miesto na ochladenie: počas výstrah pred extrémnymi horúčavami ponúka úľavu v klimatizovanom vnútornom priestore."
+  },
+  "0aa48c71179d": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pentekostálny zbor na adrese Grenoble Drive 5, kde sa konajú bohoslužby a nedeľná škola. K dispozícii je kaplnka, spoločenská miestnosť a kancelárie pre život zboru. Nedávno oslávil svoje 50. výročie (september 2025)."
+   },
+   "model": "claude-correction",
+   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
+   "text": "Pentekostálny zbor na adrese 5 Grenoble Drive, kde sa konajú bohoslužby a nedeľná škola. K dispozícii je kaplnka, spoločenská miestnosť a kancelárie pre život zboru. Nedávno oslávil svoje 50. výročie (september 2025)."
+  },
+  "0b810534f69d": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "TNO Food Collaborative (prevádzkované organizáciou The Neighbourhood Organization) poskytuje bezplatný prístup k potravinám tisíckam ľudí v komunitách Thorncliffe Park a Flemingdon Park, vrátane čerstvej zeleniny a ovocia, vajec a mliečnych výrobkov, ktoré sa distribuujú dvakrát mesačne. Celoročnú distribúciu podporujú partneri z komunity, ako je Greenwin Cares.\n\nViacslužbová agentúra pre pristahovalcov, ktorá pôsobí v oblastiach Thorncliffe Park, Flemingdon Park, St. James Town a Taylor Massey. Služby zahŕňajú podporu pri usadzovaní sa (posúdenie potrieb, úvod do života v Kanade a Ontáriu, prípravné kurzy na získanie občianstva, pomoc s imigračnými formulármi), pomoc pri hľadaní bývania (vyhľadávanie bývania, žiadosti o dotované bývanie, prístup k fondu na úhradu nájomného, pomoc pri platení účtov za energie), programy pre seniorov (Integrované služby pre seniorov, osobná asistenčná služba), programy pre mládež (napr. mimoškolské programy pre dievčatá), služby v oblasti zamestnanosti, jazykové kurzy a poradenstvo pre obete násilia páchaného na ženách. Služby sú bezplatné; zavolajte alebo prídite osobne."
+   },
+   "model": "claude-correction",
+   "note": "Fixed typo prisťahovalcov and unnatural word; restored program names Integrated Services for Seniors and Rent Bank with Slovak gloss",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "TNO Food Collaborative (prevádzkované organizáciou The Neighbourhood Organization) poskytuje bezplatný prístup k potravinám tisíckam ľudí v komunitách Thorncliffe Park a Flemingdon Park, vrátane čerstvej zeleniny a ovocia, vajec a mliečnych výrobkov, ktoré sa distribuujú dvakrát mesačne. Celoročnú distribúciu podporujú partneri z komunity, ako je Greenwin Cares.\n\nAgentúra s viacerými službami pre prisťahovalcov, ktorá pôsobí v oblastiach Thorncliffe Park, Flemingdon Park, St. James Town a Taylor Massey. Služby zahŕňajú podporu pri usadzovaní sa (posúdenie potrieb, úvod do života v Kanade a Ontáriu, prípravné kurzy na získanie občianstva, pomoc s imigračnými formulármi), pomoc pri hľadaní bývania (vyhľadávanie bývania, žiadosti o dotované bývanie, prístup k Rent Bank (fond na pomoc s nájomným), pomoc pri platení účtov za energie), programy pre seniorov (Integrated Services for Seniors – integrované služby pre seniorov, osobná asistenčná služba), programy pre mládež (napr. mimoškolské programy pre dievčatá), služby v oblasti zamestnanosti, jazykové kurzy a poradenstvo pre obete násilia páchaného na ženách. Služby sú bezplatné; zavolajte alebo prídite osobne."
+  },
+  "0baa182fc012": {
+   "model": "north-small-translate-09-2026",
+   "source": "Pastoral emergencies: Rev. Dr. Paul Shepherd can be reached at 647-700-7129 for pastoral emergencies or to book a meeting.",
+   "text": "Pastoračná pomoc v núdzových situáciách: V prípade pastoračnej núdze alebo na dohodnutie stretnutia môžete kontaktovať reverenda doktora Paula Shepherda na čísle 647-700-7129."
+  },
+  "0bb8b2cc1244": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Public Health dental clinics provide free basic dental care (examinations, x-rays, fillings, cleanings, some root canals, extractions, dentures) for eligible children and youth aged 0-17, low-income seniors 65+, and clients of select public health programs who live in Toronto and cannot afford a private dentist. Eligibility is assessed in person at a clinic; a mobile dental clinic also serves clients with difficulty accessing care.",
+   "text": "Zubné kliniky organizácie Toronto Public Health poskytujú bezplatnú základnú zubnú starostlivosť (prehliadky, röntgenové snímky, plomby, čistenie zubov, niektoré endodontické ošetrenia, extrakcie, zubné protézy) pre oprávnené deti a mládež vo veku 0 – 17 rokov, seniorov s nízkymi príjmami vo veku 65 rokov a viac, ako aj pre účastníkov vybraných programov verejného zdravotníctva, ktorí žijú v Toronte a nemôžu si dovoliť súkromného zubára. Oprávnenosť sa posudzuje osobne priamo na klinike; mobilná zubná klinika zároveň poskytuje služby klientom, ktorí majú ťažkosti s prístupom k zdravotnej starostlivosti."
+  },
+  "0bf38ee19e3c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Chladené miestnosti"
+   },
+   "model": "claude-correction",
+   "note": "Cooling spaces = places to cool down in hot weather, not refrigerated rooms",
+   "source": "Cooling Spaces",
+   "text": "Miesta na ochladenie (počas horúčav)"
+  },
+  "0c3f5b3aa79a": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia jedla dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, chladiacich centier ani krízových liniek, ktoré by boli špecifické pre Food Collaborative."
+   },
+   "model": "claude-correction",
+   "note": "Cooling centre = place to cool down in heat, not refrigeration",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia jedla dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, miest na ochladenie počas horúčav ani krízových liniek, ktoré by boli špecifické pre Food Collaborative."
+  },
+  "0f7fe1d38b46": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Poskytovateľ zdravotnej starostlivosti v domácnosti a komunite, ktorý ponúka služby priamo u klienta aj v ambulanciách: ošetrovateľskú starostlivosť (registrované zdravotné sestry), osobnú pomoc, domácu pomoc (príprava jedla, upratovanie, spoločnosť, pripomienky na užívanie liekov), fyzioterapiu, ergoterapiu, logopédiu, sociálnu prácu a výživové poradenstvo. Sestry sú k dispozícii nepretržite (24 hodín denne, 7 dní v týždni) pre krátkodobú aj dlhodobú starostlivosť; prevádzkujú aj ošetrovateľské a fyzioterapeutické ambulancie."
+   },
+   "model": "claude-correction",
+   "note": "Companionship clarified (spoločnosť alone can mean a company)",
+   "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
+   "text": "Poskytovateľ zdravotnej starostlivosti v domácnosti a komunite, ktorý ponúka služby priamo u klienta aj v ambulanciách: ošetrovateľskú starostlivosť (registrované zdravotné sestry), osobnú pomoc, domácu pomoc (príprava jedla, upratovanie, robenie spoločnosti, pripomienky na užívanie liekov), fyzioterapiu, ergoterapiu, logopédiu, sociálnu prácu a výživové poradenstvo. Sestry sú k dispozícii nepretržite (24 hodín denne, 7 dní v týždni) pre krátkodobú aj dlhodobú starostlivosť; prevádzkujú aj ošetrovateľské a fyzioterapeutické ambulancie."
+  },
+  "1330dcebcb5e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Miestna iniciatíva, ktorá združuje približne 80 členov z 75 rodín z oblastí Thorncliffe a Flemingdon Parks, pochádzajúcich z rôznych kultúr a náboženstiev. Jej cieľom je prevziať vedúcu úlohu pri prepojovaní miestnych organizácií a obyvateľov, aby sa vytvorila silnejšia komunita."
+   },
+   "model": "claude-correction",
+   "note": "Grammar/word form",
+   "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
+   "text": "Miestna iniciatíva, ktorá združuje približne 80 členov z 75 rodín z oblastí Thorncliffe a Flemingdon Parks, pochádzajúcich z rôznych kultúr a náboženstiev. Jej cieľom je prevziať vedúcu úlohu pri prepájaní miestnych organizácií a obyvateľov, aby sa vytvorila silnejšia komunita."
+  },
+  "145d746d96ec": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Grécka pravoslávna arcidiecéza v Kanade (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) je celonárodným správnym orgánom Gréckej pravoslávnej cirkvi v Kanade. Jej webová stránka sa zameriava na cirkevné správy a slávnosti, pravoslávny katechizmus a materiály na náboženskú výchovu, sprievodca bohoslužbou Božskej liturgie, modlitebná kniha a zbierka pravoslávnych ikon – ide teda skôr o cirkevné a duchovné zdroje než o komunitné sociálne služby."
+   },
+   "model": "claude-correction",
+   "note": "Accusative case fixed; English organisation name restored with Slovak gloss",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "Greek Orthodox Archdiocese of Canada – Grécka pravoslávna arcidiecéza v Kanade (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) je celonárodným správnym orgánom Gréckej pravoslávnej cirkvi v Kanade. Jej webová stránka sa zameriava na cirkevné správy a slávnosti, pravoslávny katechizmus a materiály na náboženskú výchovu, sprievodcu bohoslužbou Božskej liturgie, modlitebnú knihu a zbierku pravoslávnych ikon – ide teda skôr o cirkevné a duchovné zdroje než o komunitné sociálne služby."
+  },
+  "1517bf8b7dbd": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Viacúčelové komunitné centrum na adrese Overlea Blvd 45, 2. poschodie (vnútri East York Town Centre), otvorené od pondelka do nedele od 8:00 do 20:00. Je to miesto, kde obyvatelia nájdu všetko potrebné – zdravotné a sociálne služby, programy aj komunitné priestory od partnerských organizácií."
+   },
+   "model": "claude-correction",
+   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "Viacúčelové komunitné centrum na adrese 45 Overlea Blvd, 2. poschodie (vnútri East York Town Centre), otvorené od pondelka do nedele od 8:00 do 20:00. Je to miesto, kde obyvatelia nájdu všetko potrebné – zdravotné a sociálne služby, programy aj komunitné priestory od partnerských organizácií."
+  },
+  "1538ea5a988e": {
+   "model": "north-small-translate-09-2026",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "Nemocnica St. Michael's má oddelenie urgentnej starostlivosti (30 Bond St.). Uvádzajú sa kontaktné údaje na portál MyChart organizácie Unity Health a telefónne linky nemocnice. Žiadne špeciálne služby urgentnej starostlivosti pre centrum liečby obličiek neboli nájdené – v prípade zdravotnej núdze volajte číslo 911."
+  },
+  "1621e2da2a65": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
+   "text": "Farma vytvorená miestnou komunitou vo štvrti Flemingdon Park, kde sa pestujú zdravé potraviny pre obyvateľov. Ponúka spoločné pestovanie potravín, týždenný letný farmársky trh na adrese 150 Grenoble Drive (štvrtky od 15:00 do 18:00, od konca júna do začiatku októbra) a program Community Farmer, ktorý poskytuje obyvateľom podnikateľské príležitosti na prevádzkovanie malých poľnohospodárskych podnikov.",
+   "warnings": [
+    "numbers missing from translation: 3, 6"
+   ]
+  },
+  "16b01b9ea5a7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provides emergency and urgent dental care for issues such as dental pain and cavities.",
+   "text": "Poskytuje núdzovú a akútnu zubnú starostlivosť pri problémoch, ako sú bolesti zubov a zubný kaz."
+  },
+  "170900592261": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pôrodnícka poradňa (East York/Don Mills) poskytuje bezplatnú starostlivosť financovanú Ministerstvom zdravotníctva počas tehotenstva, pôrodu a po narodení dieťaťa, ako aj starostlivosť o rodičov a dieťa až do šiestich týždňov po pôrode. Pôrody sa realizujú doma, v Torontskom pôrodníckom centre alebo v nemocnici Michael Garron; pôrodné asistentky sú k dispozícii nepretržite 24 hodín denne, 7 dní v týždni pri naliehavých problémoch a v prípade komplikácií zabezpečia odoslanie k gynekológom, pediatrom a laktačným poradcom. Personál hovorí viacerými jazykmi (angličtina, arabčina, francúzština, španielčina, perzština, darí a ďalšie) a ponúka predpôrodné kurzy vrátane kurzu starostlivosti o novorodenca."
+   },
+   "model": "claude-correction",
+   "note": "Restored names Toronto Birth Centre and Newborn 101; obstetricians = pôrodníci",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "Pôrodnícka poradňa (East York/Don Mills) poskytuje bezplatnú starostlivosť financovanú Ministerstvom zdravotníctva počas tehotenstva, pôrodu a po narodení dieťaťa, ako aj starostlivosť o rodičov a dieťa až do šiestich týždňov po pôrode. Pôrody sa realizujú doma, v Toronto Birth Centre (pôrodné centrum) alebo v nemocnici Michael Garron; pôrodné asistentky sú k dispozícii nepretržite 24 hodín denne, 7 dní v týždni pri naliehavých problémoch a v prípade komplikácií zabezpečia odoslanie k pôrodníkom, pediatrom a laktačným poradcom. Personál hovorí viacerými jazykmi (angličtina, arabčina, francúzština, španielčina, perzština, darí a ďalšie) a ponúka predpôrodné kurzy vrátane kurzu Newborn 101 (starostlivosť o novorodenca)."
+  },
+  "1a3c95cbc0e2": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Bezplatné právne poradenstvo a zastupovanie pre ľudí s nízkymi príjmami v danej oblasti (od jazera Ontário po York Mills/diaľnica 401, od ulice Yonge a rieky Don po Victoria Park Ave) v štyroch oblastiach: bytové právo (predchádzanie vystahovaniu, nezákonné uzamknutie priestorov, práva nájomcov), pracovné právo (pracovné normy, neoprávnené prepustenie, odstupné, dávka v nezamestnanosti EI), imigračné právo (žiadosti o trvalý pobyt, pracovné povolenia, občianstvo) a sociálne dávky (ODSP, OW, CPP, OAS, GIS, kanadská dávka pre ľudí so zdravotným postihnutím); ďalej verejné právne vzdelávanie a obmedzené služby týkajúce sa dokumentov (písomné vyhlásenia pod prísahou, notársky overené kópie). Linka pre prvý kontakt: 416-441-1764, linka 1, pondelok – štvrtok 9:00 – 12:30 (hlasová schránka s návratným volaním do 1 – 3 pracovných dní; osobné návštevy bez objednania nie sú možné; osobné vybavenie žiadostí je možné len po predchádzajúcom objednání v pondelok a stredu od 13:30 do 16:30)."
+   },
+   "model": "claude-correction",
+   "note": "Illegal lockouts clarified (landlord locks tenant out); typo; ext. = klapka",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "Bezplatné právne poradenstvo a zastupovanie pre ľudí s nízkymi príjmami v danej oblasti (od jazera Ontário po York Mills/diaľnica 401, od ulice Yonge a rieky Don po Victoria Park Ave) v štyroch oblastiach: bytové právo (predchádzanie vysťahovaniu, nezákonné zamknutie nájomcu mimo bytu prenajímateľom, práva nájomcov), pracovné právo (pracovné normy, neoprávnené prepustenie, odstupné, dávka v nezamestnanosti EI), imigračné právo (žiadosti o trvalý pobyt, pracovné povolenia, občianstvo) a sociálne dávky (ODSP, OW, CPP, OAS, GIS, kanadská dávka pre ľudí so zdravotným postihnutím); ďalej verejné právne vzdelávanie a obmedzené služby týkajúce sa dokumentov (písomné vyhlásenia pod prísahou, notársky overené kópie). Linka pre prvý kontakt: 416-441-1764, klapka 1, pondelok – štvrtok 9:00 – 12:30 (hlasová schránka s návratným volaním do 1 – 3 pracovných dní; osobné návštevy bez objednania nie sú možné; osobné vybavenie žiadostí je možné len po predchádzajúcom objednání v pondelok a stredu od 13:30 do 16:30)."
+  },
+  "1ae4b85c3a4e": {
+   "model": "north-small-translate-09-2026",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "Program TNO (financovaný organizáciou IRCC) pomáha novým prisťahovalcom vo veku 18 rokov a viac získať kvalifikáciu v remeselných a technických profesiách. Ponúka vzdelávacie kurzy a možnosti zamestnania v oblasti stavebníctva, vykurovania, vetrania a klimatizácie (licencia G2/G3), IT vrátane dátovej vedy a umelej inteligencie, vodičskej práce s nákladnými vozidlami (licencia DZ), obsluhy vysokozdvižných vozíkov a riadenia dopravy na stavbách. Program je určený pre trvalých rezidentov, utečencov podľa Ženevského dohovoru a kanadských občanov s úrovňou znalosti angličtiny CLB 5 – 6 a vyššou."
+  },
+  "1be560c4691c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Požiarne stanice Torontských hasičských zborov, ktoré zabezpečujú nepretržitú požiarnu ochranu a záchranné zásahy v tejto oblasti: Stanica 321 (231 McRae Dr), Stanica 235 (200 Bermondsey Rd), Stanica 322 (256 Cosburn Ave), Stanica 224 (1313 Woodbine Ave). Linka pre nehroziace núdzové situácie: 416-338-9050."
+   },
+   "model": "claude-correction",
+   "note": "Restored service name; clearer wording for non-emergency line",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "Požiarne stanice Toronto Fire Services (hasiči mesta Toronto), ktoré zabezpečujú nepretržitú požiarnu ochranu a záchranné zásahy v tejto oblasti: Stanica 321 (231 McRae Dr), Stanica 235 (200 Bermondsey Rd), Stanica 322 (256 Cosburn Ave), Stanica 224 (1313 Woodbine Ave). Linka pre situácie, ktoré nie sú núdzové: 416-338-9050."
+  },
+  "235e1072c4f3": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Miestne komunitné centrum na adrese 150 Grenoble Drive vo štvrti Flemingdon Park, kde sa nachádza vnútorný detský kútik Playground Paradise (voľný prístup na hranie pre deti do 12 rokov, 3 USD za dieťa, potrebné sú ponožky, dieťa musí sprevádzať rodič alebo zákonný zástupca). Sú tu aj vnútorné a vonkajšie ihriská, miesto na piknik, vodný hračkový park, komunitná záhrada, viacúčelové športoviská, baseballové ihriská a ihriská na pozemný hokej a basketbal. Na tej istej adrese pôsobí aj Flemingdon Park EarlyON, ktorý ponúka bezplatné programy pre malé deti a rodiny s voľným prístupom."
+   },
+   "model": "claude-correction",
+   "note": "Currency fixed to Canadian dollars; ball hockey = hokejbal; City = mestské",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "Mestské komunitné centrum na adrese 150 Grenoble Drive vo štvrti Flemingdon Park, kde sa nachádza vnútorný detský kútik Playground Paradise (voľný prístup na hranie pre deti do 12 rokov, 3 $ (kanadské doláre) za dieťa, potrebné sú ponožky, dieťa musí sprevádzať rodič alebo zákonný zástupca). Sú tu aj vnútorné a vonkajšie ihriská, miesto na piknik, vodný hračkový park, komunitná záhrada, viacúčelové športoviská, baseballové ihriská a ihriská na hokejbal a basketbal. Na tej istej adrese pôsobí aj Flemingdon Park EarlyON, ktorý ponúka bezplatné programy pre malé deti a rodiny s voľným prístupom."
+  },
+  "27c968e6692b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Libraries",
+   "text": "Knižnice"
+  },
+  "2839a2e22b9b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Offers crisis counselling (their impact page reports 207 clients received it).",
+   "text": "Ponúkajú krízové poradenstvo (na ich stránke o dosahu sa uvádza, že ho využilo 207 klientov)."
+  },
+  "2b036077722c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Veľký verejný park s roklou na adrese Thorncliffe Park Drive 73, pozdĺž rieky Don medzi štvrťami Thorncliffe Park a Flemingdon Park a bývalým Ontárskym vedeckým centrom. Zariadenia: 18-jamkové ihrisko na discgolf (zriadené v roku 2011, bezplatné), lukostrelecký areál (jeden z dvoch verejných areálov v Kanade, bezplatný, ale bez dozoru), bežecké a cyklistické chodníky, trasy pre bežecké lyžovanie a jazdu na koni, prístrešky a miesta na piknik, ohniská, basketbalové ihriská, toalety a pitné fontány (voda a toalety sú v zime uzavreté)."
+   },
+   "model": "claude-correction",
+   "note": "Address kept in English order; name restored",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "Veľký verejný park s roklou na adrese 73 Thorncliffe Park Drive, pozdĺž rieky Don medzi štvrťami Thorncliffe Park a Flemingdon Park a bývalým Ontario Science Centre (vedecké centrum). Zariadenia: 18-jamkové ihrisko na discgolf (zriadené v roku 2011, bezplatné), lukostrelecký areál (jeden z dvoch verejných areálov v Kanade, bezplatný, ale bez dozoru), bežecké a cyklistické chodníky, trasy pre bežecké lyžovanie a jazdu na koni, prístrešky a miesta na piknik, ohniská, basketbalové ihriská, toalety a pitné fontány (voda a toalety sú v zime uzavreté)."
+  },
+  "2d4e28c7351b": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Poznámky: pravidelne sa konajú bezpečnostné cvičenia a je zabezpečený vstup; žiadne špecifické komunitné služby pre núdzové situácie nie sú uvedené."
+   },
+   "model": "claude-correction",
+   "note": "\"Notes\" is a verb here",
+   "source": "Notes routine safety drills and secure entry; no emergency-specific community services listed.",
+   "text": "Uvádza, že sa pravidelne konajú bezpečnostné cvičenia a vstup do budovy je zabezpečený; žiadne špecifické komunitné služby pre núdzové situácie nie sú uvedené."
+  },
+  "2d84f26c9897": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Vyhradený chladený priestor: ponúka vnútorné priestory s klimatizáciou ako útechu počas výstrah alebo upozornení na extrémne horúčavy."
+   },
+   "model": "claude-correction",
+   "note": "Cooling space = place to cool down in heat (not refrigerated); \"útecha\" (consolation) replaced",
+   "source": "Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Vyhradené miesto na ochladenie počas horúčav: ponúka klimatizovaný vnútorný priestor, kde si môžete oddýchnuť od horúčavy počas výstrah alebo upozornení na extrémne horúčavy."
+  },
+  "2d9482fd50f0": {
+   "model": "north-small-translate-09-2026",
+   "source": "Social & Cultural Organizations",
+   "text": "Spoločenské a kultúrne organizácie"
+  },
+  "2de0ec486420": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Stránka toronto.ca sa týka konkrétne pitnej fontány vo Flemingdon Parku (neďaleko križovatky Don Mills Rd a Eglinton Ave E). Fontána je uvedená ako oficiálne vybavenie tohto 13,3-hektárového parku, v ktorom sa nachádzajú aj bejzbalové ihriská, ihrisko na pozemný hokej, kriketové ihrisko, viacúčelové ihrisko, 4 vonkajšie basketbalové ihriská, vonkajšie bežecké dráhy, 4 detské ihriská (jedno z detských ihrísk bolo zrekonštruované v roku 2025), vodný hrací prvok pre deti, komunitná záhrada, 6 prístreškov na pikniky, športové ihriská a parkoviská."
+   },
+   "model": "claude-correction",
+   "note": "Ball hockey = hokejbal",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "Stránka toronto.ca sa týka konkrétne pitnej fontány vo Flemingdon Parku (neďaleko križovatky Don Mills Rd a Eglinton Ave E). Fontána je uvedená ako oficiálne vybavenie tohto 13,3-hektárového parku, v ktorom sa nachádzajú aj bejzbalové ihriská, ihrisko na hokejbal, kriketové ihrisko, viacúčelové ihrisko, 4 vonkajšie basketbalové ihriská, vonkajšie bežecké dráhy, 4 detské ihriská (jedno z detských ihrísk bolo zrekonštruované v roku 2025), vodný hrací prvok pre deti, komunitná záhrada, 6 prístreškov na pikniky, športové ihriská a parkoviská."
+  },
+  "2f2cb7da74f4": {
+   "model": "north-small-translate-09-2026",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "Vonkajší verejný bazén mesta Toronto na adrese 5 Leaside Park Drive (v parku Leaside) je otvorený len v letnom období a slúži na rekreačné plávanie aj plávanie v dráhach. Je prístupný pre osoby na vozíku – k dispozícii sú bezbariérové šatne, bezbariérový vstup na plošinu pri bazéne a možnosť vyloženia cestujúcich služby Wheel-Trans na parkovisku pri ulici Leaside Park Drive."
+  },
+  "313e1f70434b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "Miestna ženská komunita, ktorá viedla obnovu parku R.V. Burgess. Spoločne vytvorili rôzne vybavenie, ako sú komunitná záhrada, kaviareň v parku, detský vodný prvok, sedacie miesta, osvetlenie a jedinú vonkajšiu pec tandoor v severoamerickom verejnom parku. Organizácia sa zameriava na budovanie komunity a medzikultúrnu prácu v štvrti Thorncliffe Park."
+  },
+  "32dfa11d6223": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Agentúra poskytujúca rôzne služby pre prisťahovalcov, ktorá pôsobí v štvrti Thorncliffe Park, Flemingdon Park, St. James Town a Taylor Massey. Medzi služby patrí podpora pri adaptácii (posúdenie potrieb, zoznámenie so životom v Kanade a Ontáriu, prípravné kurzy na získanie občianstva, pomoc s imigračnými formulármi), pomoc pri hľadaní bývania (vyhľadávanie ubytovania, žiadosti o dotované bývanie, prístup k fondu na úhradu nájomného, pomoc s účtami za energie), programy pre seniorov (integrované služby pre seniorov, osobná asistenčná pomoc), programy pre mládež (napr. mimoškolské aktivity pre dievčatá), služby v oblasti zamestnanosti, jazyková výučba a poradenstvo pre ženy postihnuté násilím. Služby sú bezplatné; zavolajte alebo sa zastavte osobne."
+   },
+   "model": "claude-correction",
+   "note": "Plural agreement; program names restored with gloss",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "Agentúra poskytujúca rôzne služby pre prisťahovalcov, ktorá pôsobí v štvrtiach Thorncliffe Park, Flemingdon Park, St. James Town a Taylor Massey. Medzi služby patrí podpora pri adaptácii (posúdenie potrieb, zoznámenie so životom v Kanade a Ontáriu, prípravné kurzy na získanie občianstva, pomoc s imigračnými formulármi), pomoc pri hľadaní bývania (vyhľadávanie ubytovania, žiadosti o dotované bývanie, prístup k Rent Bank (fond na pomoc s nájomným), pomoc s účtami za energie), programy pre seniorov (Integrated Services for Seniors – integrované služby pre seniorov, osobná asistenčná pomoc), programy pre mládež (napr. mimoškolské aktivity pre dievčatá), služby v oblasti zamestnanosti, jazyková výučba a poradenstvo pre ženy postihnuté násilím. Služby sú bezplatné; zavolajte alebo sa zastavte osobne."
+  },
+  "33eb20802497": {
+   "model": "north-small-translate-09-2026",
+   "source": "Health & Wellness",
+   "text": "Zdravie a pohoda"
+  },
+  "37155594f70b": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Na hlavnej stránke sa zobrazila chyba „Stránka sa nenašla\", preto boli údaje o službách prevzaté zo zoznamu komunitných iniciatív Thorncliffe Hub a z externých stránok s komunitnými zdrojmi. Organizácia Engaged Communities je tá istá skupina obyvateľov, o ktorej sme už hovorili: vznikla v novembri 2019 s cieľom riešiť násilie medzi mládežou, podporuje zapájanie obyvateľov do komunitných aktivít a spája obyvateľov, inštitúcie, školy, políciu a politikov. V roku 2023 získala grant mesta Toronto na prevenciu násilia medzi mládežou v partnerstve s Flemingdon Health Centre."
+   },
+   "model": "claude-correction",
+   "note": "Program name restored with gloss",
+   "source": "The homepage returned a 'Page Not Found' error, so services were drawn from the Thorncliffe Hub grassroots listing and third-party community resource pages. Engaged Communities is the same resident organizing group described above: started November 2019 to address youth violence, builds resident engagement in community processes, and connects residents, agencies, schools, police, and politicians. It was a 2023 City of Toronto Youth Violence Prevention Grant recipient in partnership with Flemingdon Health Centre.",
+   "text": "Na hlavnej stránke sa zobrazila chyba „Stránka sa nenašla\", preto boli údaje o službách prevzaté zo zoznamu komunitných iniciatív Thorncliffe Hub a z externých stránok s komunitnými zdrojmi. Organizácia Engaged Communities je tá istá skupina obyvateľov, o ktorej sme už hovorili: vznikla v novembri 2019 s cieľom riešiť násilie medzi mládežou, podporuje zapájanie obyvateľov do komunitných aktivít a spája obyvateľov, inštitúcie, školy, políciu a politikov. V roku 2023 získala City of Toronto Youth Violence Prevention Grant (grant mesta Toronto na prevenciu násilia medzi mládežou) v partnerstve s Flemingdon Health Centre."
+  },
+  "37afb9eb8339": {
+   "model": "north-small-translate-09-2026",
+   "source": "No emergency-specific services listed. (The group has previously distributed food hampers during and after the pandemic as a charitable activity.)",
+   "text": "Žiadne špecifické služby pre núdzové situácie nie sú uvedené. (Táto skupina už v minulosti v rámci charitatívnej činnosti rozdeľovala potravinové balíky počas pandémie aj po nej.)"
+  },
+  "3904b64dcef4": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Mestské komunitné rekreačné centrum na adrese Thorncliffe Park Drive 48, ktoré sídli v tej istej budove ako pobočka knižnice Thorncliffe. Je to malý (12 000 štvorcových stôp), no veľmi využívaný miestny komunitný bod s vnútornými športoviskami, detským centrom, priestorom na stretnutia, kurzami – napríklad na tému duševného zdravia a pohody – a rekreačnými programami."
+   },
+   "model": "claude-correction",
+   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "source": "City community recreation centre at 48 Thorncliffe Park Drive, co-located with the Thorncliffe library branch. A small (12,000 sq ft) but heavily used neighbourhood hub offering indoor courts, a daycare centre, meeting space, workshops such as mental health and wellbeing sessions, and recreation programs.",
+   "text": "Mestské komunitné rekreačné centrum na adrese 48 Thorncliffe Park Drive, ktoré sídli v tej istej budove ako pobočka knižnice Thorncliffe. Je to malý (12 000 štvorcových stôp), no veľmi využívaný miestny komunitný bod s vnútornými športoviskami, detským centrom, priestorom na stretnutia, kurzami – napríklad na tému duševného zdravia a pohody – a rekreačnými programami."
+  },
+  "39681ff66eee": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Akadémia predškolskej výchovy TDSB na adrese Thorncliffe Park Dr 82 je určená pre malé deti a má stanovený denný režim pri príchode, obedňajšom jedle aj odchode. Rodičia hlásia absenciu prostredníctvom linky Safe Arrival (1-833-250-2290)."
+   },
+   "model": "claude-correction",
+   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "source": "TDSB early learning academy at 82 Thorncliffe Park Dr for young children, with structured daily routines for arrival, lunch and dismissal. Parents report absences through the Safe Arrival number (1-833-250-2290).",
+   "text": "Akadémia predškolskej výchovy TDSB na adrese 82 Thorncliffe Park Dr je určená pre malé deti a má stanovený denný režim pri príchode, obedňajšom jedle aj odchode. Rodičia hlásia absenciu prostredníctvom linky Safe Arrival (1-833-250-2290)."
+  },
+  "3dc2fd8bba11": {
+   "model": "north-small-translate-09-2026",
+   "source": "Non-profit community health centre (operating since 1975) at 10 Gateway Blvd offering free primary care from doctors and nurse practitioners for residents in its catchment area — no OHIP card or medical referral required. Also offers individual and family counselling/mental health services, chronic disease prevention and management (diabetes, lung and heart health), dietitians, chiropody (foot care), nutrition counselling, a sexual health clinic (with Toronto Public Health), prenatal programs, and health promotion programs (exercise, wellness, healthy cooking) for seniors, women, youth and newcomers.",
+   "text": "Neziskové komunitné zdravotnícke stredisko (funguje od roku 1975) na adrese 10 Gateway Blvd ponúka bezplatnú primárnu zdravotnú starostlivosť od lekárov a zdravotných sestier s rozšírenou praxou pre obyvateľov svojej spádovej oblasti – nie je potrebná karta OHIP ani odporúčanie od lekára. Stredisko tiež poskytuje individuálne a rodinné poradenstvo a služby v oblasti duševného zdravia, prevenciu a liečbu chronických ochorení (cukrovka, ochorenia pľúc a srdca), služby dietológov, pedikúru (starostlivosť o nohy), výživové poradenstvo, kliniku sexuálneho zdravia (spoločne s Toronto Public Health), predpôrodné programy a programy na podporu zdravia (cvičenie, celková pohoda, zdravé varenie) pre seniorov, ženy, mládež a prisťahovalcov."
+  },
+  "3ecbd52603f7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Health Clinics",
+   "text": "Zdravotné ambulancie"
+  },
+  "411f70e150dd": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Grécka pravoslávna farnosť na adrese Thorncliffe Park Drive 30 (kapacita viac ako 600 miest na sedenie, dostatok parkovacích miest), ktorej predstaveným je farnosťny kňaz otec Apostolos Gkolias (apostolosgkolias@yahoo.com; telefón do kostola: +1 (416) 425-2485, info@togreekcom.org). Bohoslužby v nedeľu a počas sviatkov: Orthros (ranná bohoslužba) od 8:30 do 10:00 a Božská liturgia od 10:00 do 12:00; farnosť zabezpečuje zápis do nedeľnej školy a ďalšie cirkevné programy."
+   },
+   "model": "claude-correction",
+   "note": "Address order; non-word fixed",
+   "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
+   "text": "Grécka pravoslávna farnosť na adrese 30 Thorncliffe Park Drive (kapacita viac ako 600 miest na sedenie, dostatok parkovacích miest), ktorej predstaveným je farár otec Apostolos Gkolias (apostolosgkolias@yahoo.com; telefón do kostola: +1 (416) 425-2485, info@togreekcom.org). Bohoslužby v nedeľu a počas sviatkov: Orthros (ranná bohoslužba) od 8:30 do 10:00 a Božská liturgia od 10:00 do 12:00; farnosť zabezpečuje zápis do nedeľnej školy a ďalšie cirkevné programy."
+  },
+  "4341d8807857": {
+   "model": "north-small-translate-09-2026",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "Stránka toronto.ca sa týka konkrétne pitnej fontány v parku R.V. Burgess (46 Thorncliffe Park Dr, neďaleko križovatky Thorncliffe Park Dr a Overlea Blvd). Fontána je uvedená ako oficiálne vybavenie tohto susedského parku s rozlohou 1,5 hektára, v ktorom sa nachádza aj vodný detský kútik, dve detské ihriská, komunitná záhrada, prístrešok na pikniky a prvá verejná tandoor pec v Kanade; návštevníci si pochvaľujú aj možnosti doplnenia pitnej vody."
+  },
+  "4420ad1cb6b5": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Bydlisko a podpora pre nájomníkov"
+   },
+   "model": "claude-correction",
+   "note": "Housing = bývanie",
+   "source": "Housing & Tenant Supports",
+   "text": "Bývanie a podpora pre nájomníkov"
+  },
+  "44a718e6efa5": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community grassroots group founded in 2019 by Thorncliffe & Flemingdon Park residents of all ages and cultures. Runs education initiatives on reducing indirect greenhouse gas emissions (buildings, waste, transportation) aligned with Toronto's TransformTO strategy, promotes 'climate-wise' sustainable living habits, and helps include seniors who became isolated during the pandemic.",
+   "text": "Miestna komunitná skupina, ktorú v roku 2019 založili obyvatelia štvrte Thorncliffe a Flemingdon Park všetkých vekových kategórií a kultúr. Realizuje vzdelávacie projekty zamerané na znižovanie nepriamych emisií skleníkových plynov (v oblasti budov, odpadu a dopravy) v súlade so stratégiou TransformTO mesta Toronto, podporuje udržateľný spôsob života šetrný ku klíme a pomáha zapájať seniorov, ktorí sa počas pandémie ocitli v izolácii."
+  },
+  "4a39ebe12219": {
+   "model": "north-small-translate-09-2026",
+   "source": "Water Fountains",
+   "text": "Pítka"
+  },
+  "4a8be4c87e8f": {
+   "model": "north-small-translate-09-2026",
+   "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
+   "text": "Múzeum s rotujúcimi výstavami, koncertmi a praktickými dielňami (napr. výtvarné dielne, hudobné podujatia). Ponúka školské programy vrátane exkurzií priamo v múzeu aj virtuálnych výletov, materiálov pre učiteľov a online kurzov, ako aj bezplatnú online knižnicu obsahu s podcastmi, 3D prehliadkami a rozhovormi s umelcami."
+  },
+  "4c0ad54aefbb": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Ponúka krízovú pomoc a poradenstvo v rámci svojho programu proti násiliu páchanému na ženách; funguje ako kontaktné miesto pre Torontskú banku na pomoc s nájmom a ako call centrum Núdzového fondu na úhradu energií (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "Program names restored with gloss",
+   "source": "Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Ponúka krízovú pomoc a poradenstvo v rámci svojho programu proti násiliu páchanému na ženách; funguje ako kontaktné miesto Toronto Rent Bank Access Centre (pomoc s nájomným) a ako call centrum Emergency Energy Fund (núdzový fond na úhradu energií) (416-397-7368)."
+  },
+  "5141105643c3": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Viacdruhová poradenská firma, ktorá spolupracuje s organizáciami z rôznych odvetví (medzi klientov patrili TNO, OCAD University a Islamic Society of Toronto). Služby zahŕňajú prieskum trhu a používateľov, dizajn a urbanistické plánovanie, riadenie projektov a programov, prevádzkovú podporu, poradenstvo v oblasti riadenia a vedenia, podnikateľské poradenstvo, implementáciu umelej inteligencie a nových technológií, tvorbu značky a mediálnu komunikáciu, optimalizáciu predaja, ako aj školenia a workshopy."
+   },
+   "model": "claude-correction",
+   "note": "Unnatural word",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "Multidisciplinárna poradenská firma, ktorá spolupracuje s organizáciami z rôznych odvetví (medzi klientov patrili TNO, OCAD University a Islamic Society of Toronto). Služby zahŕňajú prieskum trhu a používateľov, dizajn a urbanistické plánovanie, riadenie projektov a programov, prevádzkovú podporu, poradenstvo v oblasti riadenia a vedenia, podnikateľské poradenstvo, implementáciu umelej inteligencie a nových technológií, tvorbu značky a mediálnu komunikáciu, optimalizáciu predaja, ako aj školenia a workshopy."
+  },
+  "56ab2826fe5e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Licensed childcare at 9 Grenoble Dr (Flemingdon Park) for toddler, preschool, kindergarten and school-age children, with CWELCC reduced fees and subsidy available. Care offered in English, Spanish, Gujarati and Ukrainian; catered meals with halal and vegetarian options.",
+   "text": "Oficiálne zariadenie starostlivosti o deti na adrese 9 Grenoble Dr (Flemingdon Park) pre batoľatá, predškolákov, deti v materskej škole aj školopovinné deti. Platia znížené poplatky v rámci programu CWELCC a je možné získať príspevok. Starostlivosť je poskytovaná v angličtine, španielčine, gudžarátčine a ukrajinčine; stravovanie je zabezpečené s možnosťou halal a vegetariánskych jedál."
+  },
+  "57480d0bcd4e": {
+   "model": "north-small-translate-09-2026",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "Mestská aréna na adrese 165 Grenoble Dr (v roku 2009 premenovaná po kanadskej hokejovej hviezde Angele Jamesovej) slúži na korčuľovanie a hokejové programy, pričom sú súčasťou areálu aj verejné tenisové kurty. Poznámka: Mesto oznámilo plány (rok 2026) na výstavbu novej hasičskej zbrojnice Flemingdon na adrese 165 Grenoble Dr, v dôsledku čoho by sa zrušili dva zo štyroch tenisových kurtov – situácia je zatiaľ neistá."
+  },
+  "5b54b1c20dbc": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Iniciatíva, ktorú vedie komunita a ktorá má za cieľ zvýšiť povedomie o duševnom zdraví a znížiť jeho stigmatizáciu v juhovýchodnoázijskej komunite, najmä medzi novoprichádzajúcimi a prisťahovalcami prvej a druhej generácie."
+   },
+   "model": "claude-correction",
+   "note": "South Asian, not Southeast Asian",
+   "source": "A community-led initiative raising awareness of mental health and reducing its stigma in the South Asian community, particularly for newcomers and immigrants of first and second generations.",
+   "text": "Iniciatíva, ktorú vedie komunita a ktorá má za cieľ zvýšiť povedomie o duševnom zdraví a znížiť jeho stigmatizáciu v juhoázijskej komunite, najmä medzi novoprichádzajúcimi a prisťahovalcami prvej a druhej generácie."
+  },
+  "5d864949c117": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Polícia Toronta, oddelenie 55 (101 Coxwell Ave, 416-808-5500) – toto oddelenie pôsobi v východnej časti mesta vrátane štvrte Thorncliffe/Flemingdon; zabezpečuje komunitnú políciu, nahlasovanie nehôd, ktoré nie sú naliehavé, a pomoc obetiam. Poznámka: Oddelenia 54 a 55 sa majú zlúčiť a vytvoriť novú spoločnú stanovišťu na adrese 1627 Danforth Ave (bývalá garáž TTC Danforth)."
+   },
+   "model": "claude-correction",
+   "note": "Names restored; typos and wrong words fixed",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "Toronto Police Service (polícia Toronta), 55 Division (oddelenie 55) (101 Coxwell Ave, 416-808-5500) – toto oddelenie pôsobí vo východnej časti mesta vrátane štvrte Thorncliffe/Flemingdon; zabezpečuje komunitnú políciu, nahlasovanie udalostí, ktoré nie sú naliehavé, a pomoc obetiam. Poznámka: Oddelenia 54 a 55 sa majú zlúčiť a vytvoriť novú spoločnú stanicu na adrese 1627 Danforth Ave (bývalá garáž TTC Danforth)."
+  },
+  "5d959a5ff47c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Detské centrum Pride In Heritage je neziskové, komunitné multikultúrne zariadenie starostlivosti o deti, ktoré sídli v štátnej škole Gateway na adrese 55 Gateway Blvd, Toronto (416-467-5981). Ponúka inkluzívnu a nestrannú starostlivosť o deti v bezpečnom a podporujúcom prostredí; centrum riadi dobrovoľnícka rada a ku každému človeku pristupuje s dôstojnosťou bez ohľadu na jeho pôvod."
+   },
+   "model": "claude-correction",
+   "note": "School name restored",
+   "source": "Pride In Heritage Children's Centre is a non-profit, community-based multicultural child care centre located inside Gateway Public School at 55 Gateway Blvd, Toronto (416-467-5981). It offers inclusive, bias-free child care in a safe, nurturing environment, run by a volunteer Board of Directors; it treats all individuals with dignity regardless of background.",
+   "text": "Detské centrum Pride In Heritage je neziskové, komunitné multikultúrne zariadenie starostlivosti o deti, ktoré sídli v škole Gateway Public School na adrese 55 Gateway Blvd, Toronto (416-467-5981). Ponúka inkluzívnu a nestrannú starostlivosť o deti v bezpečnom a podporujúcom prostredí; centrum riadi dobrovoľnícka rada a ku každému človeku pristupuje s dôstojnosťou bez ohľadu na jeho pôvod."
+  },
+  "6112e2d3ed72": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
+   "text": "Poskytuje bezplatnú a dôvernú nepretržitú telefonickú pomoc od lekárov (416-429-4991). Jasne uvádza, že neposkytuje urgentnú ani ambulantnú starostlivosť bez objednania – v prípade núdze volajte číslo 911.",
+   "warnings": [
+    "numbers missing from translation: 24"
+   ]
+  },
+  "6166d8860ebc": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Stredná škola Valley Park je stredná škola v rámci TDSB pre ročníky 6 – 8, ktorú navštevuje približne 1 100 žiakov zo štvrti Thorncliffe Park a Flemingdon Park. Nachádza sa na adrese 130 Overlea Blvd, East York. Jej cieľom je vytvoriť bezpečné a podporujúce prostredie pre vzdelávanie, založené na rešpekte, zodpovednosti a bezpečnosti. Na webovej stránke neboli uvedené žiadne programy francúzskeho vyučovania, výučby angličtiny pre cudzincov (ESL) ani špeciálnej pedagogiky."
+   },
+   "model": "claude-correction",
+   "note": "Middle school is not stredná škola; name restored",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Valley Park Middle School je škola TDSB pre 6. – 8. ročník (zodpovedá vyšším ročníkom základnej školy, nie je to stredná škola), ktorú navštevuje približne 1 100 žiakov zo štvrti Thorncliffe Park a Flemingdon Park. Nachádza sa na adrese 130 Overlea Blvd, East York. Jej cieľom je vytvoriť bezpečné a podporujúce prostredie pre vzdelávanie, založené na rešpekte, zodpovednosti a bezpečnosti. Na webovej stránke neboli uvedené žiadne programy francúzskeho vyučovania, výučby angličtiny pre cudzincov (ESL) ani špeciálnej pedagogiky."
+  },
+  "62d55110cf7b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
+   "text": "Bezplatné centrum EarlyON pre deti a rodiny, ktoré prevádzkuje TCDSB na adrese 175 Grenoble Dr, ponúka voľný prístup k hrám a vzdelávacím programom pre deti vo veku 0 – 6 rokov spolu s ich rodičmi alebo opatrovateľmi (účasť rodičov je potrebná, registrácia nie je nutná). Podľa harmonogramu TCDSB je centrum St. John XXIII otvorené od pondelka do štvrtka od 8:45 do 12:45 a v piatok od 8:45 do 12:45."
+  },
+  "63c710ddedbb": {
+   "model": "north-small-translate-09-2026",
+   "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
+   "text": "Sestry sú k dispozícii nepretržite, 24 hodín denne, 7 dní v týždni, pre potreby domácej starostlivosti; žiadna špecializovaná záchranná služba nie je uvedená (nie je to tiesňová linka 911 ani zariadenie urgentnej starostlivosti)."
+  },
+  "67d4ed5dfe5d": {
+   "model": "north-small-translate-09-2026",
+   "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
+   "text": "Mešita Darus Salaam na adrese 20 Overlea Blvd slúži moslimskej komunite v štvrti Thorncliffe Park, Flemingdon Park a okolitých oblastiach už od roku 1995. Ponúka päť denných modlitieb a spoločnú modlitbu Jummah, celodenné programy Hifz a štúdium na Alima/Alimu, večerné hodiny Koránu (Madrasah), nedeľnú školu, výučbu výkladu Koránu (Tafseer) a základov islámu, programy pre mládež, služby spojené so sobášom (Nikah) a komunitné podujatia."
+  },
+  "68c635426ffe": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Najväčšia každoročná komunálna akcia v štvrti Thorncliffe Park, ktorá sa už 14 rokov koná v parku R.V. Burgess. Letné popoludnie a večer s občerstvením, remeselnými výrobkami, hudbou, tancom, hrami, stánkami s tovarom a jedlom od miestnych podnikateľov. Organizuje ju nezávislý dobrovoľnícky výbor; každý rok sa zapojí približne 100 mladých dobrovoľníkov, ktorí si tak rozvíjajú vodcovské zručnosti."
+   },
+   "model": "claude-correction",
+   "note": "Community, not municipal",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "Najväčšia každoročná komunitná akcia v štvrti Thorncliffe Park, ktorá sa už 14 rokov koná v parku R.V. Burgess. Letné popoludnie a večer s občerstvením, remeselnými výrobkami, hudbou, tancom, hrami, stánkami s tovarom a jedlom od miestnych podnikateľov. Organizuje ju nezávislý dobrovoľnícky výbor; každý rok sa zapojí približne 100 mladých dobrovoľníkov, ktorí si tak rozvíjajú vodcovské zručnosti."
+  },
+  "6b036c3ba973": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community Resilience",
+   "text": "Odolnosť komunity"
+  },
+  "6b17dc8d3ad4": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "Bezplatné a dôverné centrum s otvorenou prevádzkou pre mládež vo veku 12 – 25 rokov v štvrti Thorncliffe Park a Flemingdon Park (zriadené organizáciami East Toronto Health Partners, TNO – The Neighbourhood Organization a Youth Wellness Hubs Ontario; nie je potrebný zdravotný preukaz, praktický lekár ani odporúčanie). Služby: poradenstvo v oblasti duševného zdravia, podpora pri závislosti od návykových látok, základná zdravotná starostlivosť, pomoc pri orientácii v systéme zdravotnej starostlivosti, vzájomná podpora, služby v oblasti zamestnanosti, odborná príprava v remeselných odboroch, potravinová banka, pomoc s bývaním a integráciou prisťahovalcov, vzdelávanie, rekreačné a spoločenské programy, rozvoj líderských zručností a možnosti dobrovoľníckej práce."
+  },
+  "6ba3dd305d6e": {
+   "model": "north-small-translate-09-2026",
+   "source": "unityhealth.to is the homepage for Unity Health Toronto, the parent network of St. Joseph's Health Centre (30 The Queensway, 416-530-6000), St. Michael's Hospital (30 Bond St., 416-360-4000) and Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). The St. Michael's Kidney Care Centre at 45 Overlea Blvd. (416-867-3700) is a patient-centred community satellite hemodialysis facility with 21 treatment stations, 6 home-dialysis training stations and 5 exam rooms; Unity's Multi-Care Kidney Clinic offers nephrology, nursing, dietitian, pharmacist, social worker and modality-education support to slow kidney disease progression, plus peritoneal and home hemodialysis options.",
+   "text": "unityhealth.to je webová stránka organizácie Unity Health Toronto, ktorá je materskou sieťou pre St. Joseph's Health Centre (30 The Queensway, 416-530-6000), nemocnicu St. Michael's Hospital (30 Bond St., 416-360-4000) a zariadenie Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Centrum nefrologickej starostlivosti St. Michael's Kidney Care Centre na adrese 45 Overlea Blvd. (416-867-3700) je komunitné satelitné pracovisko pre hemodialýzu zamerané na potreby pacientov, ktoré disponuje 21 liečebnými miestami, 6 miestami na zaškolenie do domácej dialýzy a 5 vyšetrovacími miestnosťami. Nefrologická klinika Unity Multi-Care Kidney Clinic ponúka služby nefrológov, zdravotných sestier, výživových poradcov, lekárnikov a sociálnych pracovníkov, ako aj poradenstvo týkajúce sa rôznych spôsobov liečby s cieľom spomaliť postup ochorenia obličiek; zároveň poskytuje možnosti peritoneálnej dialýzy a domácej hemodialýzy."
+  },
+  "72b07ee72576": {
+   "model": "north-small-translate-09-2026",
+   "source": "Public Washrooms",
+   "text": "Verejné toalety"
+  },
+  "7325c2c76d27": {
+   "model": "north-small-translate-09-2026",
+   "source": "Legal Services",
+   "text": "Právne služby"
+  },
+  "7463c7451c52": {
+   "model": "north-small-translate-09-2026",
+   "source": "Multi-Service Agencies",
+   "text": "Agentúry poskytujúce viacero služieb"
+  },
+  "7482403a5dc6": {
+   "model": "north-small-translate-09-2026",
+   "source": "Public drinking-water access point, relevant during extreme heat events.",
+   "text": "Verejný prístup k pitnej vode, ktorý je dôležitý počas extrémnych horúčav."
+  },
+  "75a5d313aef1": {
+   "model": "north-small-translate-09-2026",
+   "source": "Non-Profits",
+   "text": "Neziskové organizácie"
+  },
+  "78b02f992c4d": {
+   "model": "north-small-translate-09-2026",
+   "source": "Public Spaces",
+   "text": "Verejné priestory"
+  },
+  "79db95729d8c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Základná škola TDSB na adrese 9 Grenoble Drive, ktorá vyučuje viac ako 960 žiakov od materskej školy až po 6. ročník (približne 93 % rodín prisťahovalcov; hovorí sa tu viac ako 73 jazykmi). Na webovej stránke školy nie sú uvedené žiadne špeciálne programy, ako je napríklad francúzsky imerzný program."
+   },
+   "model": "claude-correction",
+   "note": "Meaning restored",
+   "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
+   "text": "Základná škola TDSB na adrese 9 Grenoble Drive, ktorá vyučuje viac ako 960 žiakov od materskej školy až po 6. ročník (približne 93 % rodín sa prisťahovalo do Kanady; hovorí sa tu viac ako 73 jazykmi). Na webovej stránke školy nie sú uvedené žiadne špeciálne programy, ako je napríklad francúzsky imerzný program."
+  },
+  "7bd551d09cd0": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "V sprievodcovi pre rodičov sa uvádza, že politika krízového riadenia je na vyžiadanie dostupná u vychovávateľov; nie sú uvedené žiadne verejné komunitné služby určené špeciálne pre núdzové situácie."
+   },
+   "model": "claude-correction",
+   "note": "Supervisors = vedúci",
+   "source": "Parent handbook notes an Emergency Management Policy available on request from supervisors; no public emergency-specific community services listed.",
+   "text": "V sprievodcovi pre rodičov sa uvádza, že politika krízového riadenia je na vyžiadanie dostupná u vedúcich zamestnancov; nie sú uvedené žiadne verejné komunitné služby určené špeciálne pre núdzové situácie."
+  },
+  "7c53a90857c2": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Bezplatné centrum EarlyON pre deti a rodiny pre obyvateľov mesta Toronto s deťmi vo veku 0 – 6 rokov a ich rodičmi či opatrovateľmi: programy na podporu vývoja dieťaťa, služby podpory pre rodičov, programy prípravy na školu, pomoc pri oneskorenom vývine reči a služby pre deti so špeciálnymi potrebami vrátane individuálneho prístupu ku každému prípadu. Hlavné sídlo: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, jednotka 200 (pondelok – piatok 9:00 – 17:00); vo piatok sú k dispozícii hry v telocvični v centre Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+   },
+   "model": "claude-correction",
+   "note": "Preposition form",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "Bezplatné centrum EarlyON pre deti a rodiny pre obyvateľov mesta Toronto s deťmi vo veku 0 – 6 rokov a ich rodičmi či opatrovateľmi: programy na podporu vývoja dieťaťa, služby podpory pre rodičov, programy prípravy na školu, pomoc pri oneskorenom vývine reči a služby pre deti so špeciálnymi potrebami vrátane individuálneho prístupu ku každému prípadu. Hlavné sídlo: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd, jednotka 200 (pondelok – piatok 9:00 – 17:00); v piatok sú k dispozícii hry v telocvični v centre Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+  },
+  "7d47cf9e0e64": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "Základná škola Toronto Catholic District School Board (od predškolskej výchovy po 8. ročník) na adrese 175 Grenoble Drive vo štvrti Flemingdon Park ponúka výučbu angličtiny ako cudzieho jazyka (ESL), špeciálnu pedagogickú starostlivosť, podporu v rámci programu Empower Reading a športové tímy. V budove sa nachádza aj jasle a škôlka Red Apple Daycare (starostlivosť pred a po škole), bezplatné centrum EarlyON pre deti a rodiny (programy pre deti od narodenia do 6 rokov a pre rodičov) a kancelária pracovníka pre integráciu prisťahovalcov, ktorý pomáha novým prichádzajúcim."
+  },
+  "7d8fe058aabe": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Dixon Hall Housing Services poskytuje prístrešie a podporu pri bývaní ľuďom bez domova alebo tým, ktorí majú nestabilné bývanie: pomoc pri hľadaní vhodného bývania, predchádzanie vystahovaniu, riadenie financií, stabilizáciu príjmov, podporu zdravia a následnú pomoc na udržanie si bývania. Heyworth House (2714 Danforth Ave) je jedným z ich ubytovacích zariadení. Organizácia tiež prevádzkuje miesta s prístupom k potravinám pre komunitu (spoločné jedlá, potravinové banky, programy na zlepšenie zručností v oblasti stravovania)."
+   },
+   "model": "claude-correction",
+   "note": "Typo",
+   "source": "Dixon Hall Housing Services provides shelter and housing supports for people experiencing homelessness or precariously housed: help finding adequate housing, eviction prevention, budgeting, income stabilization, health promotion, and follow-up supports to remain housed. Heyworth House (2714 Danforth Ave) is one of their housing sites. Also runs community food access sites (community meals, food banks, food skills programming).",
+   "text": "Dixon Hall Housing Services poskytuje prístrešie a podporu pri bývaní ľuďom bez domova alebo tým, ktorí majú nestabilné bývanie: pomoc pri hľadaní vhodného bývania, predchádzanie vysťahovaniu, riadenie financií, stabilizáciu príjmov, podporu zdravia a následnú pomoc na udržanie si bývania. Heyworth House (2714 Danforth Ave) je jedným z ich ubytovacích zariadení. Organizácia tiež prevádzkuje miesta s prístupom k potravinám pre komunitu (spoločné jedlá, potravinové banky, programy na zlepšenie zručností v oblasti stravovania)."
+  },
+  "7e0da2420727": {
+   "model": "north-small-translate-09-2026",
+   "source": "Food Collaboratives",
+   "text": "Spoločenstvá zdieľania potravín"
+  },
+  "7e54c8b0e600": {
+   "model": "north-small-translate-09-2026",
+   "source": "Family & Parenting Support",
+   "text": "Podpora pre rodiny a rodičovstvo"
+  },
+  "7fb923fbd9f8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community Centres",
+   "text": "Komunitné centrá"
+  },
+  "85b8d1f0296e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Operates a youth shelter for youth experiencing homelessness (emergency shelter).",
+   "text": "Prevádzkuje útulok pre mladých ľudí bez domova (núdzové prístrešie)."
+  },
+  "88f8e20033ec": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Licencované zariadenie starostlivosti o deti s tromi pobočkami: 206 Laird Dr (kojenci, batoľatá, predškolský vek, celoročný prevádzkový režim), 31 Rolph Rd pri škole Rolph Road School (predškolský vek, školský vek; ranný a popoludňajší klub pre deti od predškolského ročníka po 6. ročník so pomocou pri domácej úlohe a občerstvením, ako aj celodenné zabezpečenie počas školiacich dní, vianočných a marcových prázdnin) a 182 Bessborough Dr pri škole St. Anselm School (predškolský vek, školský vek). Počas júla a augusta organizuje letný tábor (hudba, tanec, šport, plávanie, výtvarné a remeselné činnosti). Účasť na programe CWELCC na zníženie poplatkov."
+   },
+   "model": "claude-correction",
+   "note": "Preposition form",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "Licencované zariadenie starostlivosti o deti s tromi pobočkami: 206 Laird Dr (kojenci, batoľatá, predškolský vek, celoročný prevádzkový režim), 31 Rolph Rd pri škole Rolph Road School (predškolský vek, školský vek; ranný a popoludňajší klub pre deti od predškolského ročníka po 6. ročník s pomocou pri domácej úlohe a občerstvením, ako aj celodenné zabezpečenie počas školiacich dní, vianočných a marcových prázdnin) a 182 Bessborough Dr pri škole St. Anselm School (predškolský vek, školský vek). Počas júla a augusta organizuje letný tábor (hudba, tanec, šport, plávanie, výtvarné a remeselné činnosti). Účasť na programe CWELCC na zníženie poplatkov."
+  },
+  "899a73c04466": {
+   "model": "north-small-translate-09-2026",
+   "source": "Museums",
+   "text": "Múzeá"
+  },
+  "8c2075b94416": {
+   "model": "north-small-translate-09-2026",
+   "source": "Dental Clinics",
+   "text": "Zubné ordinácie"
+  },
+  "8f3b8610ff41": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Krajský úrad štátnych služieb na adrese 945 Eglinton Avenue East (v predajni Staples). Vydáva vodičské preukazy, eviduje vozidlá a vydáva evidenčné značky, vydáva zdravotné karty provincie Ontario a rodné listy. Otvorené od pondelka do piatka od 9:00 do 21:00 a v sobotu od 9:00 do 17:00."
+   },
+   "model": "claude-correction",
+   "note": "Provincial, not regional",
+   "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
+   "text": "Úrad provinčnej vlády Ontária pre služby občanom na adrese 945 Eglinton Avenue East (v predajni Staples). Vydáva vodičské preukazy, eviduje vozidlá a vydáva evidenčné značky, vydáva zdravotné karty provincie Ontario a rodné listy. Otvorené od pondelka do piatka od 9:00 do 21:00 a v sobotu od 9:00 do 17:00."
+  },
+  "912f65f2191e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Centrum predškolskej výchovy a starostlivosti o deti Flemingdon (29 St Dennis Dr, Don Mills/Eglinton; kontakt: Latoya Wilson-Rose, 416-392-3170) je verejné, licencované zariadenie mesta Toronto, ktoré poskytuje starostlivosť o deti vo veku od 0 do 4 rokov a sídli v centre zdrojov Dennis R. Timbrell. Je súčasťou celokanadského systému predškolskej výchovy a starostlivosti o deti (CWELCC), v rámci ktorého sú dostupné príspevky na úhradu poplatkov; personál hovorí 9 jazykmi, vrátane arabčiny, bengálčiny, francúzštiny, hindčiny a perzštiny, a stravu zabezpečuje externý dodávateľ s možnosťou halal jedál, jedál bez bravčového mäsa, bez arašidov, vegánskych a vegetariánskych jedál."
+   },
+   "model": "claude-correction",
+   "note": "Names restored",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "Flemingdon Early Learning & Child Care Centre (centrum predškolskej výchovy a starostlivosti o deti; 29 St Dennis Dr, Don Mills/Eglinton; kontakt: Latoya Wilson-Rose, 416-392-3170) je verejné, licencované zariadenie mesta Toronto, ktoré poskytuje starostlivosť o deti vo veku od 0 do 4 rokov a sídli v Dennis R. Timbrell Resource Centre. Je súčasťou celokanadského systému predškolskej výchovy a starostlivosti o deti (CWELCC), v rámci ktorého sú dostupné príspevky na úhradu poplatkov; personál hovorí 9 jazykmi, vrátane arabčiny, bengálčiny, francúzštiny, hindčiny a perzštiny, a stravu zabezpečuje externý dodávateľ s možnosťou halal jedál, jedál bez bravčového mäsa, bez arašidov, vegánskych a vegetariánskych jedál."
+  },
+  "9229c66e10d7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Large public park adjoining Thorncliffe Park with an 18-hole disc golf course, a public archery range, jogging and cycling paths, nature trails, picnic shelters and fire pits. The drinking fountain provides free drinking water (seasonal; closed in winter).",
+   "text": "Veľký verejný park susediaci s Thorncliffe Park, kde nájdete 18-jamkové discgolfové ihrisko, verejné strelnisko pre lukostreľbu, bežecké a cyklistické trasy, prírodné chodníky, prístrešky na pikniky a ohniská. Pítko poskytuje bezplatnú pitnú vodu (len v sezóne; v zime je zatvorené)."
+  },
+  "929cea5641e3": {
+   "model": "north-small-translate-09-2026",
+   "source": "Neighbourhood & Individual Empowerment",
+   "text": "Posilnenie susedstva a jednotlivcov"
+  },
+  "941791890d5c": {
+   "model": "north-small-translate-09-2026",
+   "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Základná škola Gateway Public School je súčasťou TDSB a poskytuje vzdelanie pre deti od predškolskej prípravy až po 6. ročník (približne 950 žiakov) vo štvrti Flemingdon Park na adrese 55 Gateway Blvd, North York. Škola kladie dôraz na inkluzívne a multikultúrne prostredie s vysokými požiadavkami na výsledky a správanie. Na webovej stránke nebola uvedená žiadna informácia o programe francúzskeho vyučovania, výučbe angličtiny pre cudzincov (ESL) ani o špeciálnom vzdelávaní."
+  },
+  "95c8c42be839": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pobočka Torontskej verejnej knižnice na adrese 48 Thorncliffe Park Drive. Ponúka požičiavanie kníh, bezplatné Wi-Fi, verejné počítače s programom Microsoft Office, tlač, kopírovanie a skenovanie, centrum predčitateľskej gramotnosti KidsStop, priestor pre mládež Youth Hub, individuálnu pomoc pri čítaní pre deti v rámci programu Leading to Reading, informačnú službu pre prisťahovalcov, službu finančného poradenstva, miestnosť na rezerváciu stretnutí a tichý priestor na štúdium."
+   },
+   "model": "claude-correction",
+   "note": "Names restored with gloss; clearer wording",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "Pobočka Toronto Public Library (verejná knižnica) na adrese 48 Thorncliffe Park Drive. Ponúka požičiavanie kníh, bezplatné Wi-Fi, verejné počítače s programom Microsoft Office, tlač, kopírovanie a skenovanie, centrum predčitateľskej gramotnosti KidsStop, priestor pre mládež Youth Hub, individuálnu pomoc pri čítaní pre deti v rámci programu Leading to Reading, Newcomer Information Service (informácie pre prisťahovalcov), Financial Empowerment Service (finančné poradenstvo), miestnosť na stretnutia, ktorú si možno rezervovať a tichý priestor na štúdium."
+  },
+  "97522b6e2a71": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Povolené detské jasle a škôlky v susedstve ponúkajú programy pre bábätká, batoliatka, predškolákov a rannú či popoludňajšiu starostlivosť s učením založeným na hre a objavovaní, výživným stravovaním (s ohľadom na alergie a kultúrne či náboženské stravovacie potreby) a bezpečným vstupným systémom. Adresy: 175 Grenoble Dr (Grenoble) a 135 Overlea Blvd (Overlea)."
+   },
+   "model": "claude-correction",
+   "note": "Word forms",
+   "source": "Licensed childcare centres in the neighbourhood offering infant, toddler, preschool, and before/after-school programs with play-based, inquiry-driven learning, nutritious meals (accommodating allergies and cultural/religious diets), and secure entry systems. Locations: 175 Grenoble Dr (Grenoble) and 135 Overlea Blvd (Overlea).",
+   "text": "Licencované detské jasle a škôlky v susedstve ponúkajú programy pre bábätká, batoľatá, predškolákov a rannú či popoludňajšiu starostlivosť s učením založeným na hre a objavovaní, výživným stravovaním (s ohľadom na alergie a kultúrne či náboženské stravovacie potreby) a bezpečným vstupným systémom. Adresy: 175 Grenoble Dr (Grenoble) a 135 Overlea Blvd (Overlea)."
+  },
+  "97e9202b1cb6": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Komunitné cyklistické centrum na ulici Gateway Blvd, ktoré prevádzkuje organizácia TNO. Ponúka bezplatné opravy bicyklov (po predchádzajúcej rezervácii), hodiny s možnosťou vlastnej opravy, kde sú k dispozícii náradie a priestor, workshopy o údržbe bicyklov, kurzy jazdy na bicykli pre začiatočníkov a spoločné jazdy. Bicykle sú dostupné v rámci programu Earn-a-Bike, dvakrát ročne sa konajú tomboly o bicykle a je možné požiadať o bicykel."
+   },
+   "model": "claude-correction",
+   "note": "Giveaway, not raffle",
+   "source": "Community bike hub on Gateway Blvd run by TNO. Offers free bike repairs (bookable appointments), do-it-yourself repair hours with tools and space, bike mechanics workshops, learn-to-ride lessons and group rides. Bikes available via the Earn-a-Bike program, twice-yearly bike giveaways, and an apply-for-a-bike option.",
+   "text": "Komunitné cyklistické centrum na ulici Gateway Blvd, ktoré prevádzkuje organizácia TNO. Ponúka bezplatné opravy bicyklov (po predchádzajúcej rezervácii), hodiny s možnosťou vlastnej opravy, kde sú k dispozícii náradie a priestor, workshopy o údržbe bicyklov, kurzy jazdy na bicykli pre začiatočníkov a spoločné jazdy. Bicykle sú dostupné v rámci programu Earn-a-Bike, dvakrát ročne sa bicykle rozdávajú zadarmo a je možné požiadať o bicykel."
+  },
+  "99a408333e20": {
+   "model": "north-small-translate-09-2026",
+   "source": "Mosque in the Flemingdon Park area (established 2001, holds 250-300 worshippers) offering five daily congregational prayers and Jummah Salah. Provides Islamic education and guidance for children and adults, and welcomes both Muslim and non-Muslim visitors.",
+   "text": "Mešita v oblasti Flemingdon Park (založená v roku 2001, kapacita 250 – 300 veriacich), kde sa konajú päťkrát denne spoločné modlitby a piatková modlitba Džumaa. Ponúka islamské vzdelávanie a poradenstvo pre deti aj dospelých a vítajú sa tu moslimskí aj nemoslimskí návštevníci."
+  },
+  "9aab0433db11": {
+   "model": "north-small-translate-09-2026",
+   "source": "Neighbourhood park featuring a bottle filling station providing free drinking water refills.",
+   "text": "Miestny park s výdavníkom vody, kde si môžete zadarmo doplniť pitnú vodu."
+  },
+  "a1893ed621a6": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB public elementary school at 80 Thorncliffe Park Dr, recognized as a Platinum Ecoschool with an active eco club. Provides public education in partnership with students, families and the community.",
+   "text": "Verejná základná škola TDSB na adrese 80 Thorncliffe Park Dr, ktorá je ocenená ako platinová Ekoškola a má aktívny ekologický krúžok. Poskytuje verejné vzdelávanie v spolupráci so žiakmi, rodinami a miestnou komunitou."
+  },
+  "a3d76b624b59": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Skupina pre komunitné mestské poľnohospodárstvo v Thorncliffe Park sa stará o dve spoločné zeleninové záhony a viac ako 20 ovocných stromov. Všetka úroda sa bezplatne rozdeľuje medzi obyvateľov a dobrovoľníkov. Skupina organizuje environmentálnu výchovu, prírodné programy pre deti, aktivity na rozvoj líderských zručností pre mládež a dobrovoľnícke práce, program kompostovania pod vedením obyvateľov, vytvára útočiská pre opeľovače a ponúka dielne zamerané na prácu so drevom a umenie."
+   },
+   "model": "claude-correction",
+   "note": "Agreement and preposition",
+   "source": "Community urban-farming group in Thorncliffe Park maintaining two communal vegetable gardens and 20+ fruit trees, with all harvests shared freely with residents and volunteers. Runs environmental education, children's nature programs, youth leadership and volunteer hours, a resident-led composting program, pollinator habitats, and woodworking and art workshops.",
+   "text": "Skupina pre komunitné mestské poľnohospodárstvo v Thorncliffe Park sa stará o dve spoločné zeleninové záhrady a viac ako 20 ovocných stromov. Všetka úroda sa bezplatne rozdeľuje medzi obyvateľov a dobrovoľníkov. Skupina organizuje environmentálnu výchovu, prírodné programy pre deti, aktivity na rozvoj líderských zručností pre mládež a dobrovoľnícke práce, program kompostovania pod vedením obyvateľov, vytvára útočiská pre opeľovače a ponúka dielne zamerané na prácu s drevom a umenie."
+  },
+  "a44c76defc5c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Detské centrum Thorncliffe Park poskytuje svoje služby rodinám už od roku 1969. Ponúka vzdelávacie programy založené na hre pre deti od narodenia až do 12 rokov, vrátane programov pre školské deti, ktoré vychádzajú z rámca „How Does Learning Happen\". Zamestnanci hovoria 11 jazykmi (vrátane urdu, perzštiny, pandžábčiny, bengálčiny, amharčiny, tagalčiny a turečtiny). Stravu zabezpečuje cateringová spoločnosť Real Food For Real Kids a centrum sa zapája do programu CWELCC, pričom sú k dispozícii informácie o dotáciách na školné."
+   },
+   "model": "claude-correction",
+   "note": "Name restored",
+   "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
+   "text": "Thorncliffe Park Day Care Centre (detské centrum) poskytuje svoje služby rodinám už od roku 1969. Ponúka vzdelávacie programy založené na hre pre deti od narodenia až do 12 rokov, vrátane programov pre školské deti, ktoré vychádzajú z rámca „How Does Learning Happen\". Zamestnanci hovoria 11 jazykmi (vrátane urdu, perzštiny, pandžábčiny, bengálčiny, amharčiny, tagalčiny a turečtiny). Stravu zabezpečuje cateringová spoločnosť Real Food For Real Kids a centrum sa zapája do programu CWELCC, pričom sú k dispozícii informácie o dotáciách na školné."
+  },
+  "a583aca46f5e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pobočka Torontskej verejnej knižnice na adrese 29 St. Dennis Drive ponúka požičiavanie kníh, verejné počítače, programy pre deti, vzdelávací program Leading to Reading na podporu gramotnosti pre deti a bezplatnú službu finančného poradenstva Financial Empowerment Service (pomoc s daňovým priznaním, žiadosťami o dávky a plánovaním rozpočtu – táto služba je dostupná aj na pobočke Thorncliffe). Otváracie hodiny: Po–Pia 9:00–20:30, So 9:00–17:00, Ne 12:00–17:00. Poznámka: pobočka bude od 1. decembra 2025 zatvorená kvôli rekonštrukcii a jej opätovné otvorenie sa očakáva začiatkom tretieho štvrťroka 2026; uvedené otváracie hodiny naznačujú, že už bola znovu otvorená, ale pred návštevou si to overte."
+   },
+   "model": "claude-correction",
+   "note": "Name restored; tense",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "Pobočka Toronto Public Library (verejná knižnica) na adrese 29 St. Dennis Drive ponúka požičiavanie kníh, verejné počítače, programy pre deti, vzdelávací program Leading to Reading na podporu gramotnosti pre deti a bezplatnú službu finančného poradenstva Financial Empowerment Service (pomoc s daňovým priznaním, žiadosťami o dávky a plánovaním rozpočtu – táto služba je dostupná aj na pobočke Thorncliffe). Otváracie hodiny: Po–Pia 9:00–20:30, So 9:00–17:00, Ne 12:00–17:00. Poznámka: pobočka bola od 1. decembra 2025 zatvorená kvôli rekonštrukcii a jej opätovné otvorenie sa očakáva začiatkom tretieho štvrťroka 2026; uvedené otváracie hodiny naznačujú, že už bola znovu otvorená, ale pred návštevou si to overte."
+  },
+  "a5c931e58836": {
+   "model": "north-small-translate-09-2026",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.",
+   "text": "TNO Food Collaborative (ktorú prevádzkuje The Neighbourhood Organization) poskytuje bezplatný prístup k potravinám tisíckam ľudí v komunitách Thorncliffe Park a Flemingdon Park. Dvakrát mesačne sa tu rozdeľujú čerstvé potraviny, vajcia a mliečne výrobky, pričom celoročné dodávky zabezpečujú partneri z radov miestnej komunity, ako je napríklad Greenwin Cares."
+  },
+  "a6a63f0ab062": {
+   "model": "north-small-translate-09-2026",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "Miestna komunitná skupina pôsobiaca v Thorncliffe Park Community Hub (45 Overlea Blvd)."
+  },
+  "a8fbb45be7f6": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Útulok"
+   },
+   "model": "claude-correction",
+   "note": "Clarified meaning of shelter",
+   "source": "Shelter",
+   "text": "Núdzové ubytovanie (útulok)"
+  },
+  "aa052d1c9356": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
+   "text": "Verejná stredná škola TDSB (9. – 12. ročník) na adrese 135 Overlea Blvd, ktorá slúži štvrti Flemingdon Park a Thorncliffe Park (približne 1800 žiakov). Je hostiteľskou školou programu TOPS (Talented Offerings for Programs in the Sciences) – štvorročného rozšíreného programu z matematiky, prírodných vied a angličtiny s kurzami na úrovni AP; ponúka tiež program SHSM, kurzy záhradníctva, finančných nástrojov, podporu pre žiakov s angličtinou ako cudzím jazykom (ESL), viac ako 90 krúžkov vedených samotnými žiakmi a tímové športy na súťažnej úrovni."
+  },
+  "ac4875864ec7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Police Station",
+   "text": "Policajná stanica"
+  },
+  "ae69792878f8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
+   "text": "Zbor Chapel in the Park United Church je malé multikultúrne spoločenstvo so sídlom na adrese 16 Thorncliffe Park Drive, Toronto (416-421-0792), ktoré slúži obyvateľom štvrte Thorncliffe Park a Don Mills. Nedeľné bohoslužby sa konajú o 10:00 osobne, cez Zoom aj ako priamy prenos na internete. Zbor pozýva nových ľudí, aby sa pripojili a stali sa súčasťou jeho „veriacej rodiny\"."
+  },
+  "b0e486b1a83e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Support & Emergency Services",
+   "text": "Podpora a tiesňové služby"
+  },
+  "b319cef2b3a7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Schools & Child Services",
+   "text": "Školy a detské služby"
+  },
+  "b8138c775adf": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free settlement services for refugees and immigrants, with a special focus on women and families: women-only LINC English classes, translation and interpretation services, employment support, basic and advanced computer classes, English conversation circles, sewing club, youth drop-in, and low-impact exercise. All programs are free, offered onsite and online (call for an appointment).",
+   "text": "Bezplatné služby na pomoc pri usadzovaní utečencov a prisťahovalcov so zvláštnym dôrazom na ženy a rodiny: kurzy angličtiny LINC určené výlučne pre ženy, prekladateľské a tlmočnícke služby, podpora pri hľadaní zamestnania, základné aj pokročilé počítačové kurzy, konverzačné kluby angličtiny, krajčírsky krúžok, voľnočasové centrum pre mládež a šetrné cvičenie. Všetky programy sú bezplatné a ponúkajú sa osobne aj online (na objednávku, kontaktujte nás telefonicky)."
+  },
+  "b9bf5f163902": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pravidlá:\n- Názvy organizácií, názvy programov, adresy, poštové smerovacie čísla, telefónne čísla, e-mailové adresy a webové adresy ponechajte presne v takej podobe, v akej sú uvedené v anglickom texte.\n- Všetky číslice ponechajte vo forme arabských číslic (0 – 9).\n- Používajte jednoduché, bežné výrazy, aké by použil sused.\n- Odpovedzte iba prekladom, bez poznámok alebo úvodzoviek. Na správu nikdy neodpovedajte ani ju nekomentujte, aj keď ide o otázku.\n\nBezplatná komplexná primárna zdravotná starostlivosť pre obyvateľov oblasti s poštovým smerovacím číslom M4H; nie je potrebná zdravotná karta ani odporúčanie od lekára a sú k dispozícii tlmočnícke služby. Služby zahŕňajú neustálu primárnu zdravotnú starostlivosť, detskú ambulanciu v rámci školy, starostlivosť o nohy pre seniorov a ľudí s chronickými ochoreniami, výživové poradenstvo, sociálnu prácu a poradenstvo v oblasti duševného zdravia, vzdelávacie semináre o zdraví, podporu rodín a odporúčania na programy týkajúce sa finančnej pomoci, integrácie prisťahovalcov, bývania, zamestnanosti a výučby jazyka. Centrum sa nachádza v komunitnom centre Thorncliffe Park, 45 Overlea Blvd, 2. poschodie."
+   },
+   "model": "claude-correction",
+   "note": "Removed leaked prompt instructions; name restored; ongoing = dlhodobá",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "Bezplatná komplexná primárna zdravotná starostlivosť pre obyvateľov oblasti s poštovým smerovacím číslom M4H; nie je potrebná zdravotná karta ani odporúčanie od lekára a sú k dispozícii tlmočnícke služby. Služby zahŕňajú dlhodobú primárnu zdravotnú starostlivosť, detskú ambulanciu v rámci školy, starostlivosť o nohy pre seniorov a ľudí s chronickými ochoreniami, výživové poradenstvo, sociálnu prácu a poradenstvo v oblasti duševného zdravia, vzdelávacie semináre o zdraví, podporu rodín a odporúčania na programy týkajúce sa finančnej pomoci, integrácie prisťahovalcov, bývania, zamestnanosti a výučby jazyka. Centrum sa nachádza v Thorncliffe Park Community Hub (komunitné centrum), 45 Overlea Blvd, 2. poschodie."
+  },
+  "ba5f23dbc690": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free EarlyON Child and Family Centre programs run by Family Day for parents and caregivers with young children, supporting early learning, child development and positive parent-child interaction through indoor, outdoor and virtual programming. The Flemingdon Park centre is at 150 Grenoble Drive (Don Mills/Overlea); the same page also lists a Grenoble EarlyON site.",
+   "text": "Bezplatné programy centra EarlyON pre deti a rodiny, ktoré organizuje Family Day pre rodičov a opatrovateľov s malými deťmi, podporujú rané vzdelávanie, vývoj dieťaťa a pozitívnu interakciu medzi rodičmi a deťmi prostredníctvom aktivít vo vnútri, vonku aj online. Centrum vo štvrti Flemingdon Park sa nachádza na adrese 150 Grenoble Drive (Don Mills/Overlea); na tej istej stránke je uvedený aj program EarlyON v lokalite Grenoble."
+  },
+  "baf809656cc3": {
+   "model": "north-small-translate-09-2026",
+   "source": "A group of neighbours working to create accessible, engaging, and inclusive public spaces for everyone to enjoy in Thorncliffe Park.",
+   "text": "Skupina susedov, ktorí sa snažia vytvoriť prístupné, zaujímavé a otvorené verejné priestory, kde si každý v štvrti Thorncliffe Park môže užívať spoločný čas."
+  },
+  "bbec136a0a48": {
+   "model": "north-small-translate-09-2026",
+   "source": "Fire Station",
+   "text": "Požiarna stanica"
+  },
+  "bc208860cefc": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
+   "text": "Toronto Hifz Academy na adrese 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) je koránska škola, ktorá ponúka denné aj externé štúdium Hifz (memorovanie Koránu), prípravný kurz pred Hifz, opakovanie pre Hafizov, klasickú arabčinu a kurzy Koránu pre ženy. Vyučovanie prebieha od pondelka do štvrtka od 9.00 do 13.00 a od 16.00 do 19.00, v piatok od 9.00 do 14.00 a od 16.00 do 19.00.",
+   "warnings": [
+    "numbers missing from translation: 2, 7"
+   ]
+  },
+  "c04bdbce2472": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Park Leaside (neďaleko cesty Millwood Road a bulvára Overlea Boulevard) ponúka verejný prístup k pitnej vode prostredníctvom jednej pitnej fontány a dvoch staníc na plnenie fliaš. Tento 3,4-hektárový park má aj osvetlené ihrisko na bejzbal, šesť osvetlených tenisových kurtov, viacúčelové športovisko, detské ihrisko, komunitnú záhradu, toalety a vonkajší bazén Leaside."
+   },
+   "model": "claude-correction",
+   "note": "Name restored",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "Park Leaside (neďaleko cesty Millwood Road a bulvára Overlea Boulevard) ponúka verejný prístup k pitnej vode prostredníctvom jednej pitnej fontány a dvoch staníc na plnenie fliaš. Tento 3,4-hektárový park má aj osvetlené ihrisko na bejzbal, šesť osvetlených tenisových kurtov, viacúčelové športovisko, detské ihrisko, komunitnú záhradu, toalety a vonkajší bazén Leaside Outdoor Pool."
+  },
+  "c0b5b18276a1": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Obecná potravinová banka na adrese 10 Gateway Blvd (suterén), North York, poskytuje bezplatné potraviny a pomoc rodinám v núdzi; teraz je registrovanou charitatívnou organizáciou. Na stránke sú uvedené rozdielne otváracie hodiny (v jednej časti pondelky a stredy od 11:00 do 15:30, v inej pondelok až štvrtok od 13:30 do 15:30) – pred návštevou si to overte telefonicky na čísle 416-422-4322."
+   },
+   "model": "claude-correction",
+   "note": "Community, not municipal",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "Komunitná potravinová banka na adrese 10 Gateway Blvd (suterén), North York, poskytuje bezplatné potraviny a pomoc rodinám v núdzi; teraz je registrovanou charitatívnou organizáciou. Na stránke sú uvedené rozdielne otváracie hodiny (v jednej časti pondelky a stredy od 11:00 do 15:30, v inej pondelok až štvrtok od 13:30 do 15:30) – pred návštevou si to overte telefonicky na čísle 416-422-4322."
+  },
+  "c6efc2c01c02": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Rímskokatolícka farnosť na adrese Thorncliffe Park Drive 16, kde sa slúžia pravidelné omše, udieľajú sviatosti a konajú sa farské podujatia. Spája rodiny s letnými tábormi pre deti a mládež, ktoré ponúkajú farnosti Arcidiecézy Toronto."
+   },
+   "model": "claude-correction",
+   "note": "Address reordered Slovak-style (number after street); house rule keeps the English form",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "Rímskokatolícka farnosť na adrese 16 Thorncliffe Park Drive, kde sa slúžia pravidelné omše, udieľajú sviatosti a konajú sa farské podujatia. Spája rodiny s letnými tábormi pre deti a mládež, ktoré ponúkajú farnosti Arcidiecézy Toronto."
+  },
+  "cd0b92c5999a": {
+   "model": "north-small-translate-09-2026",
+   "source": "Faith-Based Organizations",
+   "text": "Náboženské organizácie"
+  },
+  "cd66ac6101f6": {
+   "model": "north-small-translate-09-2026",
+   "source": "Newcomer Supports",
+   "text": "Podpora pre novoprichádzajúcich"
+  },
+  "d2f11cfaf201": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Pôrodná poradňa"
+   },
+   "model": "claude-correction",
+   "note": "Midwives clinic",
+   "source": "Midwives Clinic",
+   "text": "Ambulancia pôrodných asistentiek"
+  },
+  "d33e215aebeb": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Bezpečnosť potravín a odolnosť voči zmene klímy"
+   },
+   "model": "claude-correction",
+   "note": "Food security = access to food",
+   "source": "Food Security & Climate Resilience",
+   "text": "Dostupnosť potravín a odolnosť voči zmene klímy"
+  },
+  "d6ee993d9829": {
+   "model": "north-small-translate-09-2026",
+   "source": "Emergency food assistance for families in need is its core service during operating hours; no separate emergency program is listed.",
+   "text": "Základnou službou počas otváracích hodín je núdzová potravinová pomoc pre rodiny v núdzi; žiadny samostatný núdzový program nie je uvedený."
+  },
+  "d71124b428df": {
+   "model": "north-small-translate-09-2026",
+   "source": "911 emergency response: fire suppression, rescue, and medical first response. Call 911 in an emergency.",
+   "text": "Núdzová linka 911: hasenie požiarov, záchranné práce a prvá zdravotná pomoc. V prípade núdze volajte číslo 911."
+  },
+  "d839bdfdb1e8": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia potravín dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, chladiacich centier alebo krízovej linky špecifické pre Food Collaborative. Poskytuje krízovú intervenciu a poradenstvo v rámci svojho programu proti násiliu na ženách; funguje ako kontaktné miesto pre Toronto Rent Bank a call centrum fondu núdzovej pomoci na úhradu energií (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "Cooling centre meaning; program name restored",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "Núdzová potravinová pomoc pre rodiny v núdzi (bezplatná distribúcia potravín dvakrát mesačne). Neboli potvrdené žiadne služby týkajúce sa ubytovania, miest na ochladenie počas horúčav alebo krízovej linky špecifické pre Food Collaborative. Poskytuje krízovú intervenciu a poradenstvo v rámci svojho programu proti násiliu na ženách; funguje ako kontaktné miesto pre Toronto Rent Bank a call centrum Emergency Energy Fund (núdzový fond na úhradu energií) (416-397-7368)."
+  },
+  "d9ee2590bc2e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Prevádzkuje program Bezpečný príchod (personál kontaktuje rodičov, ak dieťa nepríde do školy bez predchádzajúceho upozornenia); žiadne špecifické núdzové služby nie sú uvedené."
+   },
+   "model": "claude-correction",
+   "note": "Program name restored",
+   "source": "Operates a Safe Arrival Program (staff contact parents if a child is absent without notice); no emergency-specific services listed.",
+   "text": "Prevádzkuje program Safe Arrival (bezpečný príchod) (personál kontaktuje rodičov, ak dieťa nepríde do školy bez predchádzajúceho upozornenia); žiadne špecifické núdzové služby nie sú uvedené."
+  },
+  "dd60669c88d7": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Miestne nákupné centrum na adrese Overlea Blvd 45 s obchodmi, reštauráciami a bežnými službami (potraviny, banka, lekáreň/laboratórium, fitnes, kaderníctvo). Sú v ňom aj zariadenia poskytujúce komunitné služby, ako sú Organizácia afgánskych žien, Právne služby pre komunitu Don Valley a Health Access Thorncliffe Park."
+   },
+   "model": "claude-correction",
+   "note": "Address and names restored",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "Miestne nákupné centrum na adrese 45 Overlea Blvd s obchodmi, reštauráciami a bežnými službami (potraviny, banka, lekáreň/laboratórium, fitnes, kaderníctvo). Sú v ňom aj zariadenia poskytujúce komunitné služby, ako sú Afghan Women's Organization, Don Valley Community Legal Services a Health Access Thorncliffe Park."
+  },
+  "dddae32defdd": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Islamské centrum a modlitebňa (Džamátchána) pre šíitskych izmaílitov na adrese Overlea Boulevard 80 v štvrti Thorncliffe Park. Konajú sa tu každodenné spoločné modlitby a stretnutia komunity izmaílitských muslimov; budova zahŕňa telocvičňu, knižnicu, učebne, kancelárie a miesto na odovzdávanie potravín."
+   },
+   "model": "claude-correction",
+   "note": "Address order; no added info; Slovak spelling moslimov",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "Komunitné centrum a modlitebňa izmaílitov (Jamatkhana) na adrese 80 Overlea Boulevard v štvrti Thorncliffe Park. Konajú sa tu každodenné spoločné modlitby a stretnutia komunity izmaílitských moslimov; budova zahŕňa telocvičňu, knižnicu, učebne, kancelárie a miesto na odovzdávanie potravín."
+  },
+  "de5580650854": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Centrum pre deti a rodiny Fraser Mustard EarlyON (pri Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) je bezplatný program, kam môžete prísť kedykoľvek, určený pre rodičov a opatrovateľov s deťmi od narodenia do 6 rokov. Funguje od pondelka do štvrtka od 8:45 do 13:45. Deti si môžu hrať, objavovať svet, učiť sa a vychutnať si zdravú desiatu, zatiaľ čo rodičia sa môžu spoznať s ďalšími rodinami a získať informácie o komunitných programoch a službách. Všetko prebieha pod vedením kvalifikovaného odborníka na rané detstvo a nie je potrebná žiadna predbežná registrácia."
+   },
+   "model": "claude-correction",
+   "note": "Grammar",
+   "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
+   "text": "Centrum pre deti a rodiny Fraser Mustard EarlyON (pri Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) je bezplatný program, kam môžete prísť kedykoľvek, určený pre rodičov a opatrovateľov s deťmi od narodenia do 6 rokov. Funguje od pondelka do štvrtka od 8:45 do 13:45. Deti sa môžu hrať, objavovať svet, učiť sa a vychutnať si zdravú desiatu, zatiaľ čo rodičia sa môžu spoznať s ďalšími rodinami a získať informácie o komunitných programoch a službách. Všetko prebieha pod vedením kvalifikovaného odborníka na rané detstvo a nie je potrebná žiadna predbežná registrácia."
+  },
+  "e04d44a05f5d": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Viacúčelové centrum pre mládež (funguje od roku 1971), ktoré ponúka dennú starostlivosť, prípravu na zamestnanie a individuálne plány pomoci pre mladých ľudí, ktorí majú problémy v škole, doma aj v živote, vrátane podpory v oblasti ochrany detí a justície pre mládež."
+   },
+   "model": "claude-correction",
+   "note": "Day treatment, not day care",
+   "source": "Multi-service youth agency (operating since 1971) providing day treatment, job training, and individualized care planning for youth facing challenges at school, at home and in life, including child welfare and youth justice supports.",
+   "text": "Viacúčelové centrum pre mládež (funguje od roku 1971), ktoré ponúka dennú liečebnú starostlivosť (terapiu), prípravu na zamestnanie a individuálne plány pomoci pre mladých ľudí, ktorí majú problémy v škole, doma aj v živote, vrátane podpory v oblasti ochrany detí a justície pre mládež."
+  },
+  "e0aa03a9fd6a": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Japonské kultúrne centrum na adrese Sakura Way 6 je otvorené pre všetkých. Ponúka kultúrne kurzy (ikebana – aranžovanie kvetov, čadó – čajový obrad, šodó – kaligrafia, sumi-e – maľba tušom, hra na bubny taiko, hra na koto), bojové umenia (džudo, karate, kendó, aikidó, kjúdó, iaidó, naginata, džódó), kurzy japončiny pre dospelých, kluby (karaoke, hula, tanec, klub pre seniorov, stolný tenis), sezónne slávnosti, Torontský festival japonského filmu, výstavy a Centrum dedičstva Moriyama Nikkei."
+   },
+   "model": "claude-correction",
+   "note": "Address and names restored",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "Japonské kultúrne centrum na adrese 6 Sakura Way je otvorené pre všetkých. Ponúka kultúrne kurzy (ikebana – aranžovanie kvetov, čadó – čajový obrad, šodó – kaligrafia, sumi-e – maľba tušom, hra na bubny taiko, hra na koto), bojové umenia (džudo, karate, kendó, aikidó, kjúdó, iaidó, naginata, džódó), kurzy japončiny pre dospelých, kluby (karaoke, hula, tanec, klub pre seniorov, stolný tenis), sezónne slávnosti, Toronto Japanese Film Festival, výstavy a Moriyama Nikkei Heritage Centre."
+  },
+  "e5edc4998f24": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Mestské komunitné a rekreačné centrum na adrese St Dennis Dr 29 s krytým bazénom (plavecké kurzy a voľné plavanie), fitness zariadeniami a pobočkou knižnice, ktoré ponúka organizované rekreačné programy."
+   },
+   "model": "claude-correction",
+   "note": "Address order; typo",
+   "source": "City-run community/recreation centre at 29 St Dennis Dr with an indoor pool (swim lessons, leisure swims), fitness facilities, and a library branch, offering registered recreation programs.",
+   "text": "Mestské komunitné a rekreačné centrum na adrese 29 St Dennis Dr s krytým bazénom (plavecké kurzy a voľné plávanie), fitness zariadeniami a pobočkou knižnice, ktoré ponúka organizované rekreačné programy."
+  },
+  "e6b5bb4495c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "Bezplatný program Employment Ontario od organizácie TNO v Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200) je otvorený pre všetkých obyvateľov Ontária. Ponúka poradenstvo pri výbere povolania, posúdenie potrieb vzdelávania, pomoc pri hľadaní práce a zručnosti na udržanie si zamestnania, náborové podujatia, informačné stretnutia, workshopy a individuálne kariérne poradenstvo. Pre zamestnávateľov sú k dispozícii aj bezplatné služby v oblasti ľudských zdrojov, zapracovania nových zamestnancov a zverejňovania pracovných ponúk."
+  },
+  "e76c5f811246": {
+   "model": "north-small-translate-09-2026",
+   "source": "Legal & Government Services",
+   "text": "Právne a štátne služby"
+  },
+  "e84d3a5ba49c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Stránka Združenia nájomníkov Leaside Towers pre objekty na adresách 85 a 95 Thorncliffe Park Drive slúži ako zoznam kontaktov pre obyvateľov: správca nehnuteľnosti (Morguard) na čísle 416-421-8109 a strážni v budovách (budova 85: 647-462-0404; budova 95: 416-906-7970)."
+   },
+   "model": "claude-correction",
+   "note": "Name restored",
+   "source": "The Leaside Towers Tenants Association page for 85 & 95 Thorncliffe Park Drive functions as a contact directory for residents: property manager (Morguard) at 416-421-8109 and building security guards (Building 85: 647-462-0404; Building 95: 416-906-7970).",
+   "text": "Stránka Leaside Towers Tenants Association (združenie nájomníkov) pre objekty na adresách 85 a 95 Thorncliffe Park Drive slúži ako zoznam kontaktov pre obyvateľov: správca nehnuteľnosti (Morguard) na čísle 416-421-8109 a strážni v budovách (budova 85: 647-462-0404; budova 95: 416-906-7970)."
+  },
+  "e8558cfa2f76": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community network promoting cycling as empowerment for women of all backgrounds, especially newcomers to Canada whose culture prohibited them from learning to ride. Brings together new and experienced cyclists through group rides, education, advocacy and events, and connects donated bikes with women in need through BikeMatchWCN.",
+   "text": "Komunitná sieť, ktorá podporuje cyklistiku ako spôsob posilnenia postavenia žien bez ohľadu na ich pôvod, najmä nových prisťahovalkýň do Kanady, ktorým ich kultúra bránila naučiť sa jazdiť na bicykli. Spája začiatočníčky aj skúsené cyklistky prostredníctvom spoločných jazd, vzdelávania, obhajoby záujmov a podujatí a zároveň cez program BikeMatchWCN sprostredkováva darované bicykle ženám, ktoré ich potrebujú."
+  },
+  "e8f0c19cdab7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Macedonian Orthodox cathedral that has served Toronto's Macedonian community for over 60 years. Holds regular worship services and religious holidays, and hosts educational, cultural and charitable organizations that preserve and promote Macedonian heritage.",
+   "text": "Macedónska pravoslávna katedrála, ktorá slúži macedónskej komunite v Toronte už viac ako 60 rokov. Pravidelne sa tu konajú bohoslužby a oslavy náboženských sviatkov. Zároveň poskytuje priestory vzdelávacím, kultúrnym a charitatívnym organizáciám, ktoré zachovávajú a propagujú macedónske dedičstvo."
+  },
+  "ea49f2274ddf": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Katolícka farnosť v Don Mills (150 Gateway Blvd) ponúka každodenné a týždenné omše, sviatosti (krst, zmierenie, eucharistiu, biřmovanie, sviatosť manželstva, pomazanie chorých, pohreby), rôzne služby, prácu s mládežou a mladými dospelými, možnosti dobrovoľníckej činnosti a podujatia pre farnosť."
+   },
+   "model": "claude-correction",
+   "note": "Czech letter ř removed",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "Katolícka farnosť v Don Mills (150 Gateway Blvd) ponúka každodenné a týždenné omše, sviatosti (krst, zmierenie, eucharistiu, birmovanie, sviatosť manželstva, pomazanie chorých, pohreby), rôzne služby, prácu s mládežou a mladými dospelými, možnosti dobrovoľníckej činnosti a podujatia pre farnosť."
+  },
+  "ebed9e902f38": {
+   "model": "north-small-translate-09-2026",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "Skupina založená miestnymi obyvateľmi, ktorá spája rodiny z rôznych prostredí prostredníctvom stretnutí, kultúrnych podujatí, vzdelávania a dobrovoľníckych aktivít. Jej cieľom je bojovať proti sociálnej izolácii a osamelosti a podporuje vzdelávanie detí aktívnou účasťou v rodičovských združeniach na školách Gateway Public School, Valley Park Middle School a Marc Garneau Collegiate Institute."
+  },
+  "ec5b5ffd97a8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
+   "text": "Naliehavé požiadavky na údržbu (v noci, cez víkendy a sviatky): 416-207-8253. Kontaktné údaje na bezpečnosť budovy sú tiež uvedené vyššie pre naliehavé problémy týkajúce sa budovy."
+  },
+  "ef9e53e990a8": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Miestne združenie Cirkvi Ježiša Krista Svätých neskorších dní na adrese 24 Ferrand Drive, North York. Nedeľné bohoslužby zahŕňajú stretnutie pri svätosti a tiež skupinové stretnutia podľa vekových kategórií pre všetkých od 18 mesiacov nahor; všetci sú srdečne vítaní."
+   },
+   "model": "claude-correction",
+   "note": "Sacrament meeting; name restored with gloss",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "Miestny zbor cirkvi The Church of Jesus Christ of Latter-day Saints (Cirkev Ježiša Krista Svätých neskorších dní) na adrese 24 Ferrand Drive, North York. Nedeľné bohoslužby zahŕňajú sviatostné zhromaždenie a tiež skupinové stretnutia podľa vekových kategórií pre všetkých od 18 mesiacov nahor; všetci sú srdečne vítaní."
+  },
+  "f0173151ade9": {
+   "model": "north-small-translate-09-2026",
+   "source": "Registered non-profit supporting newcomer families, refugees, asylum seekers and people moving from shelters into permanent housing. Distributes free household essentials (seasonal clothing, footwear, kitchenware, bedding, bath accessories and select furniture) and runs newcomer workshops on parenting, navigating local systems and community resources.",
+   "text": "Registrovaná nezisková organizácia, ktorá pomáha rodinám prisťahovalcov, utečencom, žiadateľom o azyl a ľuďom, ktorí sa sťahujú z útulkov do trvalého bývania. Poskytuje bezplatné základné potreby do domácnosti (sezónne oblečenie, obuv, kuchynské potreby, posteľnú bielizeň, kúpeľňové doplnky a vybraný nábytok) a organizuje pre prisťahovalcov workshopy o rodičovstve, orientácii v miestnych systémoch a využívaní komunitných zdrojov."
+  },
+  "f0b67cd7ba77": {
+   "model": "north-small-translate-09-2026",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "Park Leonard Linton na adrese 135 Vanderhoof Ave; zoznam zariadení mesta uvádza, že súčasťou areálu je stanica na doplnenie vody do fliaš. Úplný zoznam vybavenia sa nepodarilo získať."
+  },
+  "f2e70e53d615": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
+   "text": "Poskytuje núdzové ubytovanie, vrátane nepretržite otvoreného centra pre dočasný pobyt (351 Lake Shore Blvd East), ako aj služby zamerané na znižovanie rizík pre ľudí v útulkoch a v rámci bytových programov.",
+   "warnings": [
+    "numbers missing from translation: 24"
+   ]
+  },
+  "f53b3121ceff": {
+   "model": "north-small-translate-09-2026",
+   "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
+   "text": "V prípade núdze zavolajte na číslo 911. Na oddelenie 55 sa môžete obrátiť na čísle 416-808-5500."
+  },
+  "f630f0f0b145": {
+   "model": "north-small-translate-09-2026",
+   "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
+   "text": "Pôrodné asistentky sú k dispozícii nepretržite 24 hodín denne, 7 dní v týždni pri naliehavých problémoch v tehotenstve a pri pôrode; žiadny osobitný pohotovostný program nie je uvedený."
+  },
+  "fa4e99c2c2ea": {
+   "model": "north-small-translate-09-2026",
+   "source": "Government Documentation",
+   "text": "Úradné dokumenty"
+  },
+  "fd53492ca165": {
+   "model": "north-small-translate-09-2026",
+   "source": "Employment & Skills Training",
+   "text": "Zamestnanosť a odborná príprava"
+  },
+  "ff411a340bcb": {
+   "model": "north-small-translate-09-2026",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "Nezisková organizácia vzniknutá zdola (založená v roku 2018 rodičmi detí s autizmom, ako právnická osoba registrovaná v roku 2020), ktorá poskytuje bezplatné služby zamerané na komunitu a rodiny pre deti a mládež s autizmom a inými neurovývojovými poruchami vo štvrti East York. Programy zahŕňajú mládežnícke aktivity Roots, ktoré prebiehajú od pondelka do soboty, víkendové odľahčovacie služby pre rodiny, mesačné stretnutia na podporu rodičov, doučovanie po škole, bezplatné inkluzívne letné tábory a tábory počas jarných prázdnin (March break), podujatia spojené so začiatkom školského roka, vzdelávacie workshopy a kampane na zvýšenie povedomia o autizme a zdravotnom postihnutí."
+  },
+  "fff820dc79f3": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "Opatera detí a EarlyON"
+   },
+   "model": "claude-correction",
+   "note": "Slovak word",
+   "source": "Childminding & EarlyON",
+   "text": "Opatrovanie detí a EarlyON"
+  }
+ },
+ "updated": "2026-10-01T04:39:33+00:00"
+}

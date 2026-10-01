@@ -1,0 +1,127 @@
+{
+ "language": "fr",
+ "reviewer": "Claude subagent, line-by-line, 2026-10-01 (not a native speaker)",
+ "textsRead": 140,
+ "findings": [
+  {
+   "id": "b8138c775adf",
+   "severity": "redo",
+   "problem": "\"Services de colonisation gratuits\" means \"free colonization services\" — wrong and jarring for refugees; settlement services are \"services d'établissement\" (as used elsewhere in this file).",
+   "reviewedText": "Services de colonisation gratuits pour les réfugiés et les immigrants, avec une attention particulière pour les femmes et les familles : cours d'anglais LINC réservés aux femmes, services de traduction et d'interprétation, soutien à l'emploi, cours d'informatique de base et avancés, cercles de conversation en anglais, club de couture, centre d'accueil pour les jeunes et exercices à faible impact. Tous les programmes sont gratuits, offerts sur place et en ligne (appelez pour prendre rendez-vous)."
+  },
+  {
+   "id": "1a3c95cbc0e2",
+   "severity": "redo",
+   "problem": "Benefit acronyms are wrong/invented: \"PDOS\" (ODSP is POSPH), \"AO\" (OW is Ontario au travail, OT), \"SVG\" (GIS is SRG, Supplément de revenu garanti); \"Allocation canadienne pour personnes en situation de handicap\" should be the official \"Prestation canadienne pour les personnes handicapées\". Also \"verrouillages illégaux\" is a literal calque of \"illegal lockouts\"; say \"changements de serrures illégaux / expulsions illégales par le propriétaire\".",
+   "reviewedText": "Conseils juridiques et représentation gratuits pour les personnes à faible revenu dans la zone de desserte (du lac Ontario à York Mills/401, de Yonge/Don River à Victoria Park Ave), dans quatre domaines : le droit du logement (prévention des expulsions, verrouillages illégaux, droits des locataires), le droit du travail (normes d'emploi, congédiement abusif, indemnités de départ, AE), le droit de l'immigration (demandes de résidence permanente, permis de travail, citoyenneté) et les soutiens au revenu (PDOS, AO, RPC, SV, SVG, Allocation canadienne pour personnes en situation de handicap) ; également éducation juridique publique et services de documentation limités (déclarations sous serment, copies conformes notariées). Ligne d’accueil : 416-441-1764 poste 1, du lundi au jeudi de 9 h à 12 h 30 (messagerie vocale avec rappel dans un délai de 1 à 3 jours ouvrables ; pas de visites sans rendez-vous ; accueil en personne sur rendez-vous les lundi et mercredi de 13 h 30 à 16 h 30)."
+  },
+  {
+   "id": "4c0ad54aefbb",
+   "severity": "review",
+   "problem": "\"banque de location de Toronto\" means \"Toronto rental/leasing bank\"; Toronto Rent Bank should be \"Banque d'aide au loyer de Toronto\" (keep \"Toronto Rent Bank\" in brackets).",
+   "reviewedText": "Offre des services d'intervention en cas de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d'accès à la banque de location de Toronto et comme centre d'appels pour le fonds d'urgence pour l'énergie (416-397-7368)."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "severity": "review",
+   "problem": "\"banque de location de Toronto\" means \"rental bank\" — use \"Banque d'aide au loyer de Toronto (Toronto Rent Bank)\". Also \"ligne d'urgence\" (emergency line) for \"crisis-line\" should be \"ligne d'écoute de crise\".",
+   "reviewedText": "Soutien alimentaire d’urgence pour les familles dans le besoin (distribution gratuite de nourriture deux fois par mois). Aucun refuge, centre de rafraîchissement ou service de ligne d’urgence spécifique au Food Collaborative n’a été confirmé. Offre des services d’intervention en situation de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d’accès à la banque de location de Toronto et comme centre d’appels du fonds d’urgence pour l’énergie (416-397-7368)."
+  },
+  {
+   "id": "0b810534f69d",
+   "severity": "review",
+   "problem": "\"accès à une banque de loyers\" (a \"bank of rents\") is a calque of rent bank; use \"accès à la banque d'aide au loyer (Rent Bank)\".",
+   "reviewedText": "Le TNO Food Collaborative (géré par The Neighbourhood Organization) fournit un accès gratuit à la nourriture à des milliers de personnes dans les communautés de Thorncliffe Park et de Flemingdon Park, y compris des produits frais, des œufs et des produits laitiers distribués deux fois par mois, avec une distribution toute l'année soutenue par des partenaires communautaires comme Greenwin Cares.\n\nAgence d'établissement multiservices desservant Thorncliffe Park, Flemingdon Park, St. James Town et Taylor Massey. Les services comprennent le soutien à l'établissement (évaluation des besoins, orientation pour la vie au Canada/en Ontario, cours de préparation à la citoyenneté, aide pour remplir les formulaires d'immigration), l'aide au logement (recherche de logement, demandes de logements subventionnés, accès à une banque de loyers, aide pour les factures d'énergie), les programmes pour les aînés (Services intégrés pour les aînés, services de soutien personnel), les programmes pour les jeunes (par exemple, les programmes pour les filles après l'école), les services d'emploi, la formation linguistique et le soutien psychologique pour les femmes victimes de violence. Gratuit ; appelez ou présentez-vous sur place."
+  },
+  {
+   "id": "0bf38ee19e3c",
+   "severity": "review",
+   "problem": "\"Espaces de refroidissement\" sounds like spaces for cooling objects/equipment; for people during heat, Canadian usage is \"Lieux de rafraîchissement\" / \"Centres de rafraîchissement\" (the file itself uses \"centre de rafraîchissement\" elsewhere).",
+   "reviewedText": "Espaces de refroidissement"
+  },
+  {
+   "id": "2d84f26c9897",
+   "severity": "review",
+   "problem": "\"Espace de refroidissement désigné\" — use \"Lieu de rafraîchissement désigné\" for consistency with Canadian/City of Toronto usage and the other texts.",
+   "reviewedText": "Espace de refroidissement désigné : offre un soulagement intérieur climatisé pendant les avertissements ou alertes de chaleur extrême."
+  },
+  {
+   "id": "fe8809651fbc",
+   "severity": "review",
+   "problem": "\"Espace de refroidissement désigné\" — should be \"Lieu de rafraîchissement désigné\" (consistent with other texts).",
+   "reviewedText": "La page du centre comprend un lien « En crise? Cliquez ici » et énumère les services locaux d’aide en cas de crise : Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, et le service d’urgence de l’hôpital Michael Garron (825, avenue Coxwell). Espace de refroidissement désigné : offre un répit climatisé à l’intérieur pendant les avertissements ou alertes de chaleur extrême. La page du centre comprend un lien « En crise? Cliquez ici » et énumère les services locaux d’aide en cas de crise : Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, et le service d’urgence de l’hôpital Michael Garron (825, avenue Coxwell)."
+  },
+  {
+   "id": "6166d8860ebc",
+   "severity": "review",
+   "problem": "\"une école secondaire du TDSB\" — in Ontario \"école secondaire\" means high school (grades 9-12); a grade 6-8 middle school is an \"école intermédiaire\".",
+   "reviewedText": "Valley Park Middle School est une école secondaire du TDSB qui accueille les élèves de la 6e à la 8e année et compte environ 1 100 élèves provenant des communautés de Thorncliffe Park et de Flemingdon Park, au 130 Overlea Blvd, East York. Son objectif est de créer un environnement d'apprentissage sûr et favorable, fondé sur le respect, la responsabilité et la sécurité ; aucun programme d'immersion en français, d'anglais langue seconde ou d'éducation spécialisée n'était mentionné dans le texte de la page d'accueil consulté."
+  },
+  {
+   "id": "ebed9e902f38",
+   "severity": "review",
+   "problem": "\"l'école secondaire Valley Park\" implies a high school; Valley Park is a middle school — \"l'école intermédiaire Valley Park (Valley Park Middle School)\".",
+   "reviewedText": "Un groupe dirigé par des résidents qui rassemble des familles de divers horizons grâce à des rencontres, des célébrations culturelles, des activités éducatives et des initiatives de bénévolat. Il vise à lutter contre l'isolement social et la solitude et soutient l'éducation des enfants en participant activement aux conseils de parents de l'école publique Gateway, de l'école secondaire Valley Park et du Marc Garneau Collegiate Institute."
+  },
+  {
+   "id": "1ae4b85c3a4e",
+   "severity": "review",
+   "problem": "\"licence G2/G3\" and \"licence DZ\" — Canadian French uses \"permis\" (\"permis de conduire DZ\", \"certificat/permis G2/G3\"); \"niveau d'anglais CLB 5-6+\" — the French benchmark name is NCLC (\"NCLC 5-6+\"); \"HVAC\" could be glossed \"chauffage, ventilation et climatisation (CVC)\".",
+   "reviewedText": "Programme TNO (financé par IRCC) qui aide les nouveaux arrivants de 18 ans et plus à poursuivre une carrière dans les métiers spécialisés et les domaines techniques. Offre des parcours de formation et d’emploi en construction, en HVAC (licence G2/G3), en TI, y compris en science des données et en IA, en conduite de camion (licence DZ), en conduite de chariot élévateur et en contrôle de la circulation sur les chantiers de construction. Ouvert aux résidents permanents, aux réfugiés au sens de la Convention et aux citoyens canadiens ayant un niveau d’anglais CLB 5-6+."
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "severity": "review",
+   "problem": "\"accès de plain-pied au pont de la piscine\" — \"pont\" means ship's deck/bridge; pool deck is \"la plage (le bord) de la piscine\".",
+   "reviewedText": "Piscine publique extérieure de la ville de Toronto située au 5 Leaside Park Drive (dans le parc Leaside), ouverte saisonnièrement en été pour la baignade récréative et la baignade en couloirs. Classée comme accessible en fauteuil roulant, avec des vestiaires accessibles, un accès de plain-pied au pont de la piscine et un arrêt Wheel-Trans dans le stationnement de Leaside Park Drive."
+  },
+  {
+   "id": "4341d8807857",
+   "severity": "review",
+   "problem": "\"un parc aquatique\" means a water park (slides, admission); a splash pad is \"une aire de jeux d'eau\" (as used in other texts).",
+   "reviewedText": "La page toronto.ca est spécifiquement dédiée à la fontaine à boire située dans le parc R.V. Burgess (46 Thorncliffe Park Dr, près de Thorncliffe Park Dr et Overlea Blvd). La fontaine est considérée comme un équipement officiel de ce parc de quartier de 1,5 hectare, qui comprend également un parc aquatique, deux terrains de jeux, un jardin communautaire, une aire de pique-nique couverte et le premier four tandoor public du Canada, ainsi que des installations d'eau potable remarquées par les visiteurs."
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "severity": "review",
+   "problem": "\"ouvert à tous\" (open to everyone) loses \"walk-in\" — say \"sans rendez-vous\"; \"conseils en matière de bien-être\" means wellness advice, counselling is \"counseling / consultation psychosociale\".",
+   "reviewedText": "Centre gratuit et confidentiel, ouvert à tous, pour les jeunes de 12 à 25 ans de Thorncliffe Park et Flemingdon Park (lancé par East Toronto Health Partners, TNO – The Neighbourhood Organization et Youth Wellness Hubs Ontario; aucune carte de santé, médecin de famille ou référence n’est requise). Services : conseils en matière de bien-être, soutien en matière de consommation de substances, soins primaires, orientation dans les soins, soutien par les pairs, services d’emploi, formation professionnelle, banque alimentaire, aide au logement et à l’établissement, éducation, programmes récréatifs et sociaux, développement du leadership et possibilités de bénévolat."
+  },
+  {
+   "id": "6ba3dd305d6e",
+   "severity": "review",
+   "problem": "\"services ... d'infirmerie\" means sick-bay/infirmary services; nursing should be \"soins infirmiers\". \"réseau parent\" is a calque; prefer \"réseau qui regroupe\".",
+   "reviewedText": "unityhealth.to est la page d’accueil de Unity Health Toronto, le réseau parent du St. Joseph's Health Centre (30 The Queensway, 416-530-6000), du St. Michael's Hospital (30 Bond St., 416-360-4000) et de Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). Le Centre de soins rénaux St. Michael's, situé au 45 Overlea Blvd. (416-867-3700), est un centre communautaire d’hémodialyse axé sur les patients, qui comprend 21 postes de traitement, 6 postes de formation à la dialyse à domicile et 5 salles d’examen; la clinique rénale multisoins de Unity offre des services de néphrologie, d’infirmerie, de diététique, de pharmacie, de travail social et de soutien à l’éducation sur les modalités pour ralentir la progression de la maladie rénale, ainsi que des options de dialyse péritonéale et d’hémodialyse à domicile."
+  },
+  {
+   "id": "7e0da2420727",
+   "severity": "review",
+   "problem": "\"Collaboratives alimentaires\" — \"collaborative\" is not a French noun; suggest \"Collectifs alimentaires\" or \"Initiatives alimentaires collaboratives\".",
+   "reviewedText": "Collaboratives alimentaires"
+  },
+  {
+   "id": "a44c76defc5c",
+   "severity": "review",
+   "problem": "\"« Comment l'apprentissage se produit-il? »\" is an ad-hoc translation of the Ontario framework; its official French title is \"« Comment apprend-on? »\".",
+   "reviewedText": "Le centre de garde d’enfants Thorncliffe Park sert les familles depuis 1969 en offrant des programmes éducatifs basés sur le jeu pour les enfants de la petite enfance jusqu’à 12 ans, y compris des programmes pour les enfants d’âge scolaire, en suivant le cadre « Comment l’apprentissage se produit-il? ». Le personnel parle 11 langues (dont l’ourdou, le farsi, le pendjabi, le bengali, l’amharique, le tagalog et le turc), les repas sont fournis par le traiteur Real Food For Real Kids et le centre participe au CWELCC, avec des informations sur les subventions disponibles pour les frais."
+  },
+  {
+   "id": "e5edc4998f24",
+   "severity": "review",
+   "problem": "\"programmes récréatifs inscrits\" means programs that are themselves registered; should be \"programmes récréatifs avec inscription\" (registration required).",
+   "reviewedText": "Centre communautaire et récréatif géré par la ville, situé au 29 St Dennis Dr, qui comprend une piscine intérieure (cours de natation, baignade récréative), des installations de conditionnement physique et une succursale de bibliothèque, offrant des programmes récréatifs inscrits."
+  },
+  {
+   "id": "c04bdbce2472",
+   "severity": "review",
+   "problem": "\"la route Millwood\" — \"route\" suggests a highway and translating the street name hinders finding it; keep \"Millwood Road\" (or \"chemin Millwood\").",
+   "reviewedText": "Le Leaside Park (près de la route Millwood et du boulevard Overlea) fournit de l’eau potable au public grâce à une fontaine à boire et à deux stations de remplissage de bouteilles. Le parc de 3,4 hectares comprend également un terrain de balle éclairé, six courts de tennis éclairés, un terrain de sport polyvalent, un terrain de jeu pour enfants, un jardin communautaire, des toilettes et la piscine extérieure de Leaside."
+  },
+  {
+   "id": "de5580650854",
+   "severity": "review",
+   "problem": "\"les parents se connectent avec d'autres familles\" is an anglicism (se connecter = log in); use \"les parents tissent des liens avec d'autres familles\".",
+   "reviewedText": "Le Centre Fraser Mustard EarlyON pour les enfants et les familles (situé à la Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) est un programme gratuit sans inscription préalable pour les parents et les aidants ayant des enfants de la naissance à 6 ans, qui a lieu du lundi au jeudi de 8 h 45 à 13 h 45. Les enfants peuvent jouer, explorer, apprendre et profiter d’une collation nutritive pendant que les parents se connectent avec d’autres familles et obtiennent des informations sur les programmes et les services communautaires, avec le soutien d’un professionnel qualifié de la petite enfance; aucune préinscription n’est requise."
+  }
+ ]
+}

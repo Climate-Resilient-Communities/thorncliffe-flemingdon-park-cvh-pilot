@@ -1,0 +1,249 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-22 Correct an existing entry</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-22" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Correct an existing entry">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <sc-if value="{{sent}}">
+    <div class="cvh-stack" style="--gap:10px">
+      <span class="cvh-ico cvh-ico--check cvh-ico--xl" aria-hidden="true" style="color:var(--hub-green-dark)"></span>
+      <h1 class="cvh-h1">{{s.R22.sentTitle}}</h1>
+      <p class="cvh-lead">{{s.R22.sent}}</p>
+    </div>
+    <section class="cvh-card cvh-stack" style="--gap:8px" aria-label="{{s.R22.whatChanged}}">
+      <p class="cvh-caption cvh-muted">{{place.name}}</p>
+      <sc-for list="{{changedRows}}" as="r" hint-placeholder-count="1">
+        <div class="cvh-kv"><span class="cvh-kv__k">{{r.label}}</span><span class="cvh-strong">{{r.value}}</span><span class="cvh-caption cvh-muted"><span class="cvh-strike">{{r.was}}</span></span></div>
+      </sc-for>
+    </section>
+    <section class="cvh-card cvh-stack" style="--gap:6px;border:2px solid var(--ink)">
+      <p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--{{laneIcon}}" aria-hidden="true"></span><span class="cvh-h3">{{laneLine}}</span></p>
+      <p class="cvh-strong">{{howLong}}</p>
+    </section>
+    <div class="cvh-actions">
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{toPlace}}">{{s.R22.toPlace}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{toMap}}"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{s.R22.toMap}}</button>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{editing}}">
+    <h1 class="cvh-h1">{{s.R22.title}}</h1>
+    <p class="cvh-kindline"><span class="cvh-pinmini cvh-pin--{{place.shape}}"><span class="cvh-pin__mark"><span class="cvh-ico cvh-ico--{{place.icon}}" aria-hidden="true"></span></span></span><span class="cvh-h3">{{place.name}}</span></p>
+    <p>{{s.R22.changeOne}}</p>
+    <div>
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <div class="cvh-fieldrow">
+          <div class="cvh-fieldrow__v">
+            <span class="cvh-kv__k">{{r.label}}</span>
+            <sc-if value="{{r.changed}}">
+              <span class="cvh-strong">{{r.value}}</span>
+              <span class="cvh-caption cvh-muted"><span class="cvh-strike">{{r.wasLine}}</span></span>
+              <span class="cvh-tag" style="align-self:flex-start"><span class="cvh-ico cvh-ico--pencil cvh-ico--sm" aria-hidden="true"></span>{{s.R22.changedTag}}</span>
+            </sc-if>
+            <sc-if value="{{r.same}}"><span>{{r.value}}</span></sc-if>
+            <sc-if value="{{r.open}}">
+              <div class="cvh-stack" style="--gap:8px;padding-top:6px">
+                <sc-if value="{{r.isText}}"><input class="cvh-input" type="text" value="{{r.draft}}" onInput="{{r.setText}}" aria-label="{{r.label}}"></sc-if>
+                <sc-if value="{{r.isChoice}}">
+                  <div class="cvh-chiprow" role="group" aria-label="{{r.label}}"><sc-for list="{{r.opts}}" as="o" hint-placeholder-count="3">
+                    <button type="button" class="cvh-chip cvh-fchip {{o.cls}}" aria-pressed="{{o.aria}}" onClick="{{o.pick}}"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{o.label}}</button>
+                  </sc-for></div>
+                </sc-if>
+                <sc-if value="{{r.isHours}}">
+                  <div class="cvh-hours"><sc-for list="{{r.days}}" as="d" hint-placeholder-count="3">
+                    <div class="cvh-hours__day"><span class="cvh-strong">{{d.label}}</span>
+                      <div class="cvh-hours__pair">
+                        <select class="cvh-select" aria-label="{{d.fromAria}}" value="{{d.from}}" onChange="{{d.setFrom}}"><sc-for list="{{d.fromOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for></select>
+                        <sc-if value="{{d.open}}"><select class="cvh-select" aria-label="{{d.toAria}}" value="{{d.to}}" onChange="{{d.setTo}}"><sc-for list="{{d.toOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for></select></sc-if>
+                      </div>
+                    </div>
+                  </sc-for></div>
+                </sc-if>
+                <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{r.done}}">{{s.R22.doneEditing}}</button>
+              </div>
+            </sc-if>
+          </div>
+          <sc-if value="{{r.canChange}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{r.edit}}" aria-label="{{r.changeAria}}">{{s.R22.change}}</button></sc-if>
+          <sc-if value="{{r.changed}}"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{r.undo}}">{{s.R22.undo}}</button></sc-if>
+        </div>
+      </sc-for>
+    </div>
+    <p class="cvh-rules__market">{{s.x03.market}}</p>
+    <dc-import name="X03_Rules" variant="link" on-open="{{toRules}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,48px"></dc-import>
+    <sc-if value="{{needOne}}"><p class="cvh-hint" role="status">{{s.R22.nothingYet}}</p></sc-if>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{submit}}">{{s.R22.submit}}</button>
+    <p class="cvh-caption cvh-muted cvh-hide-basic">{{s.R22.onlyThis}}</p>
+  </sc-if>
+</div>
+<sc-if value="{{rules}}">
+  <div class="cvh-overlay" role="dialog" aria-modal="true" aria-label="{{s.x03.title}}">
+    <div class="cvh-sheet">
+      <div class="cvh-sheet__head">
+        <span class="cvh-grow"></span>
+        <button type="button" class="cvh-iconbtn" onClick="{{closeSheet}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <div class="cvh-sheet__body">
+        <dc-import name="X03_Rules" variant="full" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,420px"></dc-import>
+        <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{closeSheet}}">{{s.shell.close}}</button>
+      </div>
+    </div>
+  </div>
+</sc-if>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Opened with values in place", "Changing one field: the hours", "One field changed", "Submitted: general lane", "Submitted: ambassador lane (Rashid, a community offer)", "A place with details not known", "Basic mode: opened with values in place"], "default": "Opened with values in place"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Opened with values in place": {"persona": "yusuf", "scenario": "C", "params": {"id": "L02"}}, "Changing one field: the hours": {"persona": "yusuf", "scenario": "C", "params": {"id": "L02"}, "loc": {"edit": "hours"}}, "One field changed": {"persona": "yusuf", "scenario": "C", "params": {"id": "L02"}, "loc": {"ch": {"hours": {"wed": ["13:00", "17:00"], "fri": ["10:00", "14:00"], "sat": ["10:00", "13:00"]}}}}, "Submitted: general lane": {"persona": "yusuf", "scenario": "C", "params": {"id": "L02"}, "loc": {"sent": true, "ch": {"hours": {"wed": ["13:00", "17:00"], "fri": ["10:00", "14:00"], "sat": ["10:00", "13:00"]}}}}, "Submitted: ambassador lane (Rashid, a community offer)": {"persona": "rashid", "scenario": "C", "params": {"id": "L24"}, "loc": {"sent": true, "ch": {"hours": {"sun": ["10:00", "18:00"]}}}}, "A place with details not known": {"persona": "devon", "scenario": "C", "params": {"id": "M012"}}, "Basic mode: opened with values in place": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted", "params": {"id": "L21"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'map', showExercise: 'R-22'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-22'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var self = this, C = b.C, D = b.D, s = b.s, x = s.R22, r19 = s.R19, loc = b.loc, prm = b.params, go = b.go;
+    var l = C.listingFor(prm.id || 'L02') || C.listing('L02');
+    var a = C.asset(l.assetId) || {};
+    var ch = loc.ch || {}, drafts = loc.drafts || {};
+    var unknown = s.R12.unknown;
+    var costT = function (v) { return { free: r19.costFree, lowCost: r19.costLow, fee: r19.costFee }[v] || unknown; };
+    var ynT = function (v) { return v === 'yes' ? r19.yes : v === 'no' ? r19.no : unknown; };
+    var langsT = function (v) { return Array.isArray(v) ? v.map(function (c) { return C.lang(c).native; }).join(', ') : unknown; };
+    var fields = [
+      { k: 'name', label: x.namePlace, kind: 'text', orig: l.name, text: function (v) { return v; } },
+      { k: 'hours', label: r19.hours, kind: 'hours', orig: l.hours, text: function (v) { return self.hoursText(b, v); } },
+      { k: 'where', label: x.whereLabel, kind: 'text', orig: l.place || l.address || '', text: function (v) { return v || unknown; } },
+      { k: 'cost', label: r19.cost, kind: 'choice', orig: l.cost, text: costT, opts: [['free', r19.costFree], ['lowCost', r19.costLow], ['fee', r19.costFee], ['unknown', r19.notSure]] },
+      { k: 'idRequired', label: r19.idQ, kind: 'choice', orig: l.idRequired, text: ynT, opts: [['no', r19.no], ['yes', r19.yes], ['unknown', r19.notSure]] },
+      { k: 'stepFree', label: r19.stepFreeQ, kind: 'choice', orig: l.stepFree, text: ynT, opts: [['yes', r19.yes], ['no', r19.no], ['unknown', r19.notSure]] },
+      { k: 'languages', label: r19.languagesQ, kind: 'text', orig: langsT(l.languages), text: function (v) { return v; } }];
+    var setCh = function (k, v) { var c = Object.assign({}, ch); if (v === undefined) delete c[k]; else c[k] = v; b.setLoc({ ch: c }); };
+    var DAYS = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    var times = []; for (var h = 6; h <= 23; h++) times.push((h < 10 ? '0' : '') + h + ':00');
+    var tOpts = times.map(function (t) { return { v: t, label: C.hhmm12(t) }; });
+    var rows = fields.map(function (f) {
+      var isCh = Object.prototype.hasOwnProperty.call(ch, f.k), cur = isCh ? ch[f.k] : f.orig, open = loc.edit === f.k;
+      var row = { label: f.label, value: f.text(cur), wasLine: C.fill(x.was, { v: f.text(f.orig) }), changed: isCh && !open, same: !isCh && !open, open: open,
+        canChange: !open && !isCh && !loc.edit, changeAria: x.change + ': ' + f.label,
+        isText: f.kind === 'text', isChoice: f.kind === 'choice', isHours: f.kind === 'hours',
+        edit: function () { b.setLoc({ edit: f.k }); }, undo: function () { setCh(f.k, undefined); },
+        done: function () { b.setLoc({ edit: null }); } };
+      if (f.kind === 'text') {
+        row.draft = drafts[f.k] !== undefined ? drafts[f.k] : cur;
+        row.setText = function (e) { var d = Object.assign({}, drafts); d[f.k] = e.target.value; b.setLoc({ drafts: d }); };
+        row.done = function () { var v = drafts[f.k]; var c = Object.assign({}, ch); if (v !== undefined && v.trim() && v !== f.orig) c[f.k] = v.trim(); b.setLoc({ edit: null, ch: c }); };
+      }
+      if (f.kind === 'choice') row.opts = f.opts.map(function (o) { var on = cur === o[0];
+        return { label: o[1], on: on, cls: on ? 'cvh-chip--on' : '', aria: on ? 'true' : 'false', pick: function () { var c = Object.assign({}, ch); if (o[0] === f.orig) delete c[f.k]; else c[f.k] = o[0]; b.setLoc({ ch: c, edit: null }); } }; });
+      if (f.kind === 'hours') {
+        var hv = cur && cur !== 'unknown' ? cur : {};
+        row.days = DAYS.map(function (d) {
+          var t = hv[d], from = t ? t[0] : 'closed', open2 = !!t, lab = s.time.days7[d];
+          var put = function (val) { var nh = {}; DAYS.forEach(function (dd) { if (hv[dd]) nh[dd] = hv[dd]; }); if (val) nh[d] = val; else delete nh[d]; setCh('hours', nh); };
+          return { label: lab, from: from, open: open2, to: t ? t[1] : '', fromAria: lab + ', ' + r19.fromOpt, toAria: lab + ', ' + r19.toOpt,
+            fromOpts: [{ v: 'closed', label: r19.closedOpt }].concat(tOpts), toOpts: t ? tOpts.filter(function (o) { return o.v > t[0]; }) : tOpts,
+            setFrom: function (e) { var v = e.target.value; if (v === 'closed') put(null); else put([v, t && t[1] > v ? t[1] : times[Math.min(times.length - 1, times.indexOf(v) + 2)]]); },
+            setTo: function (e) { put([t[0], e.target.value]); } };
+        });
+      }
+      return row;
+    });
+    if (b.basic && !loc.edit) rows = rows.filter(function (r, i) { return i < 5 || r.changed; });
+    var nCh = Object.keys(ch).length;
+    var lane = b.persona.role === 'ambassador' ? 'ambassador' : 'general';
+    var changedRows = fields.filter(function (f) { return Object.prototype.hasOwnProperty.call(ch, f.k); }).map(function (f) { return { label: f.label, value: f.text(ch[f.k]), was: C.fill(x.was, { v: f.text(f.orig) }) }; });
+    var shape = a.kind === 'communityOffer' ? 'offer' : (a.informal ? 'informal' : 'formal');
+    return { place: { name: l.name, icon: l.kind, shape: shape }, rows: rows, sent: !!loc.sent, editing: !loc.sent, changedRows: changedRows,
+      needOne: !!loc.tried && nCh === 0,
+      laneLine: C.fill(s.R21.lane, { lane: lane === 'ambassador' ? s.R21.laneAmbassador : s.R21.laneGeneral }), laneIcon: lane === 'ambassador' ? 'person' : 'clock',
+      howLong: lane === 'ambassador' ? s.R21.dayLine : s.R21.weekLine,
+      submit: function () { if (!nCh) { b.setLoc({ tried: true }); return; } b.setLoc({ sent: true, edit: null }); },
+      toRules: function () { b.setLoc({ rules: true }); }, rules: !!loc.rules, closeSheet: function () { b.setLoc({ rules: false }); },
+      toPlace: function () { go('R-12', { id: l.id }); }, toMap: function () { go('R-14', { focus: l.assetId }); },
+      goBack: function () { if (b.app.canBack) b.back(); else go('R-12', { id: l.id }); } };
+  }
+  hoursText(b, h) {
+    var C = b.C, s = b.s;
+    if (!h || h === 'unknown') return s.R12.unknown;
+    var out = [];
+    ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'].forEach(function (d) { if (h[d]) out.push(s.time.days7[d] + ' ' + C.hhmm12(h[d][0]) + ' to ' + C.hhmm12(h[d][1])); });
+    return out.length ? out.join(', ') : s.time.closed;
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-02 Origin and verification marker</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{isScreen}}" hint-placeholder-val="{{true}}">
+    <div class="cvh-origin">
+      <div class="cvh-origin__who">
+        <span class="cvh-origin__mark {{markClass}}" aria-hidden="true">
+          <sc-if value="{{markIcon}}"><span class="cvh-ico cvh-ico--{{markIcon}} cvh-ico--sm"></span></sc-if>
+          <sc-if value="{{markText}}"><span>{{markText}}</span></sc-if>
+        </span>
+        <span class="cvh-origin__level cvh-bdi">{{levelLine}}</span>
+      </div>
+      <button type="button" class="cvh-verify cvh-verify--{{vstate}}" onClick="{{open}}" aria-label="{{verifyAria}}">
+        <span class="cvh-ico cvh-ico--{{verifyIcon}}" aria-hidden="true"></span>
+        <span class="cvh-bdi">{{verifyText}}</span>
+        <span class="cvh-verify__more">{{s.x02.whatMeans}}</span>
+      </button>
+    </div>
+  </sc-if>
+  <sc-if value="{{isText}}">
+    <p class="cvh-origin--sms cvh-bdi">{{textLine}}</p>
+  </sc-if>
+  <sc-if value="{{isPrint}}">
+    <div class="cvh-origin cvh-origin--print">
+      <div class="cvh-origin__who">
+        <span class="cvh-origin__mark" style="border-color:#000;color:#000" aria-hidden="true">
+          <sc-if value="{{markIcon}}"><span class="cvh-ico cvh-ico--{{markIcon}} cvh-ico--sm"></span></sc-if>
+          <sc-if value="{{markText}}"><span>{{markText}}</span></sc-if>
+        </span>
+        <span class="cvh-origin__level" style="color:#000">{{levelLine}}</span>
+      </div>
+      <span class="cvh-verify cvh-verify--{{vstate}}" style="cursor:default">
+        <span class="cvh-ico cvh-ico--{{verifyIcon}}" aria-hidden="true"></span><span>{{verifyText}}</span>
+      </span>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"origin":{"editor":"enum","options":["official","hub","partner","ambassador"],"default":"hub"},"state":{"editor":"enum","options":["verified","unverified","corrected","official"],"default":"verified"},"surface":{"editor":"enum","options":["screen","text","forwarded","print"],"default":"screen"},"source":{"editor":"enum","options":["ECCC","CITY","ALERTREADY"],"default":"ECCC"},"org":{"editor":"enum","options":["HUB","TNO","CRC","CITY"],"default":"TNO"},"building":{"editor":"text","default":"SA"},"correctedMins":{"editor":"int","default":75},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"onOpen":{"editor":null},"embedded":{"editor":null},"$preview":{"width":360,"height":150}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var origin = p.origin || 'hub', surface = p.surface || 'screen';
+    var state = origin === 'official' ? 'official' : (p.state || 'verified');
+    var srcName = (s.x02.sources || {})[p.source || 'ECCC'] || p.source;
+    var org = C.org(p.org || 'TNO') || { name: p.org, monogram: p.org };
+    var b = C.building(p.building || 'SA') || { name: p.building };
+    var author, markIcon = null, markText = null, markClass = '';
+    if (origin === 'official') { markIcon = 'officialMark'; markClass = 'cvh-origin__mark--official'; }
+    else if (origin === 'hub') { author = s.x02.hub; markText = 'Hub'; }
+    else if (origin === 'partner') { author = org.name; markText = org.monogram; }
+    else { author = C.fill(s.x02.ambassador, { building: b.name }); markIcon = 'building'; markClass = 'cvh-origin__mark--amb'; }
+    var levelLine = origin === 'official' ? C.fill(s.x02.official, { source: srcName }) : C.fill(s.x02.community, { author: author });
+    var verifier = origin === 'partner' ? org.name : s.x02.hub;
+    var verifyText, verifyIcon;
+    if (state === 'official') { verifyText = s.x02.levelOfficial; verifyIcon = 'shield'; }
+    else if (state === 'verified') { verifyText = C.fill(s.x02.verifiedBy, { org: verifier }); verifyIcon = 'verified'; }
+    else if (state === 'corrected') { verifyText = C.fill(s.x02.verifiedBy, { org: verifier }) + ' · ' + C.fill(s.x02.corrected, { t: C.ago(p.correctedMins != null ? p.correctedMins : 75, lang) }); verifyIcon = 'corrected'; }
+    else { verifyText = s.x02.notYetVerified; verifyIcon = 'unverified'; }
+    var textLine = origin === 'official' ? levelLine + '.' : levelLine + ' · ' + (state === 'unverified' ? s.x02.notYetVerified : C.fill(s.x02.verifiedBy, { org: verifier })) + '.';
+    var self = this;
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:150px;padding:16px;background:#fafafa;',
+      isScreen: surface === 'screen', isText: surface === 'text' || surface === 'forwarded', isPrint: surface === 'print',
+      markIcon: markIcon, markText: markText, markClass: markClass, levelLine: levelLine,
+      vstate: state, verifyText: verifyText, verifyIcon: verifyIcon, textLine: textLine,
+      verifyAria: verifyText + '. ' + s.x02.whatMeans,
+      open: function () { if (self.props.onOpen) self.props.onOpen(); } };
+  }
+}
+</script>
+</body>
+</html>

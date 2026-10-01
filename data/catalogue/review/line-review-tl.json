@@ -1,0 +1,139 @@
+{
+ "language": "tl",
+ "reviewer": "Claude subagent, line-by-line, 2026-10-01 (not a native speaker)",
+ "textsRead": 140,
+ "findings": [
+  {
+   "id": "1a3c95cbc0e2",
+   "severity": "redo",
+   "problem": "\"ilegal na pagkulong sa loob ng bahay\" means 'illegally locking someone inside the house' — the opposite situation. An illegal lockout is a landlord locking the tenant OUT; should be \"ilegal na pagla-lock out ng landlord (pagpapalabas at pagkandado sa nangungupahan)\".",
+   "reviewedText": "Libreng payong legal at representasyon para sa mga taong may mababang kita sa saklaw ng serbisyo (mula Lake Ontario hanggang York Mills/401, mula Yonge/Don River hanggang Victoria Park Ave), sa apat na larangan: batas sa pabahay (pag-iwas sa pagpapaalis, ilegal na pagkulong sa loob ng bahay, mga karapatan ng nangungupahan), batas sa trabaho (mga pamantayan sa trabaho, hindi makatwirang pagkasisante, separation pay, EI), batas sa imigrasyon (mga aplikasyon para sa PR, work permit, pagkamamamayan) at mga tulong pinansyal (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); mayroon ding pampublikong edukasyon sa batas at limitadong serbisyo sa dokumento (affidavit, notarial true copy). Intake Line: 416-441-1764 ext. 1, Lunes–Huwebes 9:00 AM–12:30 PM (iiwan ng mensahe sa voicemail at tatawagan pabalik sa loob ng 1–3 araw ng trabaho; walang walk-in; personal na intake ay sa pamamagitan ng nakatakdang appointment tuwing Lunes/Miyerkules 1:30–4:30 PM)."
+  },
+  {
+   "id": "235e1072c4f3",
+   "severity": "redo",
+   "problem": "\"libreng paglalaro\" ('free play') for 'drop-in play' contradicts the \"$3 bawat bata\" in the same sentence; drop-in means no appointment/registration: \"drop-in na paglalaro (walang appointment)\".",
+   "reviewedText": "Sentro ng komunidad sa lungsod sa 150 Grenoble Drive sa Flemingdon Park, kung saan matatagpuan ang Playground Paradise na isang indoor playground (libreng paglalaro para sa mga batang hanggang 12 taong gulang, $3 bawat bata, kailangang may medyas, dapat may kasamang magulang o tagapangalaga). Mayroon din itong mga indoor at outdoor playground, lugar para sa piknik, splash pad, community garden, mga multipurpose sports field, baseball diamond, at mga court para sa ball hockey at basketball. Sa parehong address matatagpuan ang Flemingdon Park EarlyON, na nag-aalok ng mga libreng drop-in na programa para sa maagang pagkabata at sa mga pamilya."
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "severity": "redo",
+   "problem": "\"Pampublikong swimming pool sa labas ng City of Toronto\" means 'public pool OUTSIDE the City of Toronto' (wrong location). Should be \"Outdoor na pampublikong swimming pool ng City of Toronto\".",
+   "reviewedText": "Pampublikong swimming pool sa labas ng City of Toronto sa 5 Leaside Park Drive (sa Leaside Park), bukas lamang tuwing tag-araw para sa paglangoy bilang libangan at lane swimming. Nakalista na accessible ito para sa mga gumagamit ng wheelchair, may mga accessible na palitan ng damit, pantay na pasukan patungo sa pool deck, at Wheel-Trans drop-off sa parking lot ng Leaside Park Drive."
+  },
+  {
+   "id": "e5edc4998f24",
+   "severity": "redo",
+   "problem": "\"libreng paglangoy para sa libangan\" invents 'free' — 'leisure swims' does not say free. Also \"Komunidad at recreation center\" ('community and recreation center') is garbled for 'community/recreation centre'. Should be \"paglangoy para sa libangan (leisure swim)\" and \"Community/recreation centre\".",
+   "reviewedText": "Komunidad at recreation center na pinapatakbo ng lungsod sa 29 St Dennis Dr na may indoor pool (mga klase sa paglangoy, libreng paglangoy para sa libangan), mga pasilidad para sa fitness, at isang sangay ng aklatan, na nag-aalok ng mga rehistradong programa para sa libangan."
+  },
+  {
+   "id": "d6ee993d9829",
+   "severity": "redo",
+   "problem": "\"tulong na pagkain ... sa oras ng sakuna\" / \"programa para sa sakuna\" means food help 'in times of disaster' — implies food is only given during disasters. Source: emergency food assistance is its regular core service. Should be \"Pang-emergency na tulong na pagkain\" and \"hiwalay na emergency program\".",
+   "reviewedText": "Ang tulong na pagkain para sa mga pamilyang nangangailangan sa oras ng sakuna ang pangunahing serbisyo nito sa oras ng operasyon; walang nakalistang hiwalay na programa para sa sakuna."
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "severity": "redo",
+   "problem": "\"tulong sa pabahay at pag-aayos ng dokumento\" renders 'settlement help' as 'fixing documents' — wrong service; settlement = newcomer settlement help (\"tulong para sa mga bagong dating (settlement)\"). Also \"suporta para sa paggamit ng ipinagbabawal na gamot\" reads as 'support for using illegal drugs'; should be support for people with alcohol/drug use problems.",
+   "reviewedText": "Libre at kumpidensyal na walk-in hub para sa mga kabataang may edad 12–25 sa Thorncliffe Park at Flemingdon Park (itinatag ng East Toronto Health Partners, TNO – The Neighbourhood Organization, at Youth Wellness Hubs Ontario; hindi kailangan ng health card, pamilyang doktor o referral). Mga Serbisyo: pagpapayo para sa wellness, suporta para sa paggamit ng ipinagbabawal na gamot, primaryang pangangalaga sa kalusugan, gabay sa paghahanap ng serbisyo, suporta mula sa kapwa kabataan, mga serbisyo sa trabaho, pagsasanay sa mga teknikal na hanapbuhay, food bank, tulong sa pabahay at pag-aayos ng dokumento, edukasyon, mga programang panlibangan at panlipunan, pagpapaunlad ng pamumuno at mga pagkakataon para mag-volunteer."
+  },
+  {
+   "id": "b9bf5f163902",
+   "severity": "redo",
+   "problem": "\"mga taong may malalang karamdaman\" means 'people with SEVERE illness'; source is chronic conditions (\"pangmatagalang sakit\"). Also \"pag-aayos ng dokumento (settlement)\" = 'fixing documents'; should be newcomer settlement help.",
+   "reviewedText": "Libreng komprehensibong pangangalagang pangkalusugan para sa mga residente ng M4H postal code, walang kailangang health card o referral, at may mga serbisyo sa pagsasalin ng wika. Kasama sa mga serbisyo ang regular na pangangalagang pangkalusugan, klinika para sa mga bata sa paaralan, pangangalaga sa paa para sa mga nakatatanda at mga taong may malalang karamdaman, payo sa nutrisyon, serbisyo ng social worker at payo sa kalusugang mental, mga workshop sa edukasyon sa kalusugan, suporta sa pamilya, at referral sa mga programa para sa tulong pinansyal, pag-aayos ng dokumento (settlement), pabahay, trabaho, at pag-aaral ng wika. Matatagpuan sa Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor."
+  },
+  {
+   "id": "0bf38ee19e3c",
+   "severity": "review",
+   "problem": "Category heading \"Mga Lugar na Presko\" ('fresh/breezy places') does not clearly say a place to cool down during extreme heat; better \"Mga Cooling Space (Lugar na Pampalamig sa Matinding Init)\".",
+   "reviewedText": "Mga Lugar na Presko"
+  },
+  {
+   "id": "1538ea5a988e",
+   "severity": "review",
+   "problem": "\"natagurang\" is not a word (garbled \"natagpuang\", 'found').",
+   "reviewedText": "Ang St. Michael's Hospital ay may emergency department (30 Bond St.); nakalista ang MyChart ng Unity Health at ang mga telepono ng ospital. Walang natagurang emergency services na partikular para sa kidney care centre — sa oras ng medical emergency, tumawag sa 911."
+  },
+  {
+   "id": "1ae4b85c3a4e",
+   "severity": "review",
+   "problem": "\"HVAC (may lisensyang G2/G3)\" / \"pagmamaneho ng trak (may lisensyang DZ)\" reads as 'people who already have the licence'; the program trains toward these licences: \"(para sa lisensyang G2/G3)\".",
+   "reviewedText": "Programa ng TNO (pinopondohan ng IRCC) na tumutulong sa mga bagong dating na may edad 18 pataas na kumuha ng mga skilled trade at teknikal na karera. Nag-aalok ng pagsasanay at mga oportunidad sa trabaho sa konstruksyon, HVAC (may lisensyang G2/G3), IT kabilang ang data science at AI, pagmamaneho ng trak (may lisensyang DZ), pagpapatakbo ng forklift, at traffic control sa konstruksyon. Bukas ito para sa mga permanenteng residente, mga refugee sa ilalim ng konbensyon, at mga mamamayang Canadian na may antas ng Ingles na CLB 5-6+."
+  },
+  {
+   "id": "2b036077722c",
+   "severity": "review",
+   "problem": "Name changed: \"Ilog Don\" — keep \"Don River\" per house rules.",
+   "reviewedText": "Malaking pampublikong parke sa gilid ng bangin sa 73 Thorncliffe Park Drive, sa tabi ng Ilog Don sa pagitan ng Thorncliffe Park, Flemingdon Park at ng dating Ontario Science Centre. Mga pasilidad: 18-hole disc golf course (itinayo noong 2011, libre), archery range (isa sa dalawang pampublikong range lamang sa Canada, libre ngunit walang bantay), mga daan para sa jogging at pagbibisikleta, mga trail para sa Nordic skiing at pang-kabayo, mga kubol/lugar para sa piknik, fire pit, mga court para sa basketball, mga palikuran at drinking fountain (sarado ang tubig at mga palikuran tuwing taglamig)."
+  },
+  {
+   "id": "2de0ec486420",
+   "severity": "review",
+   "problem": "\"6 na payong para sa piknik\" = '6 picnic umbrellas'; picnic shelters are roofed structures: \"6 na picnic shelter (kubol na may bubong)\".",
+   "reviewedText": "Ang pahinang toronto.ca ay para partikular sa pasilidad ng Drinking Fountain sa loob ng Flemingdon Park (malapit sa Don Mills Rd at Eglinton Ave E). Ang fountain ay nakalista bilang isang opisyal na pasilidad ng 13.3-hektaryang parkeng ito, na mayroon ding mga baseball diamond, ball hockey pad, cricket pitch, multipurpose field, 4 na outdoor basketball court, outdoor track, 4 na palaruan (na-na-update ang palaruan noong 2025), splash pad, community garden, 6 na payong para sa piknik, mga sports field at mga parking lot."
+  },
+  {
+   "id": "4a8be4c87e8f",
+   "severity": "review",
+   "problem": "\"mga panayam sa mga artista\" — \"artista\" in Filipino usually means actors/celebrities; artist talks should be \"mga talk ng mga artist/alagad ng sining\".",
+   "reviewedText": "Museo na may mga nagbabagong eksibisyon, mga konsiyerto, at mga hands-on na workshop (halimbawa, mga workshop sa sining, mga kaganapan sa musika). Nagpapatakbo ng mga programa para sa paaralan kabilang ang mga field trip sa mismong lugar at online, mga materyales para sa mga guro at mga online na kurso, pati na rin ang isang libreng online content library na may mga podcast, 3D tour at mga panayam sa mga artista."
+  },
+  {
+   "id": "a583aca46f5e",
+   "severity": "review",
+   "problem": "\"pansamantalang magsasara ang sangay sa Disyembre 1, 2025\" uses future tense ('will close'); source says it closed (past): \"nagsara\".",
+   "reviewedText": "Sangay ng Toronto Public Library sa 29 St. Dennis Drive: paghiram ng libro, mga pampublikong computer, mga programa para sa mga bata, Leading to Reading literacy program para sa mga bata, at ang libreng Financial Empowerment Service (pag-aayos ng tax, pag-aaplay para sa mga benepisyo, tulong sa pagbabadyet — inaalok din sa sangay ng Thorncliffe). Nakasaad na oras ng operasyon: Lunes-Biyernes 9am-8:30pm, Sabado 9am-5pm, Linggo 12-5pm. Paalala: pansamantalang magsasara ang sangay sa Disyembre 1, 2025 para sa isang proyekto ng pag-aayos at inaasahang magbubukas muli sa unang bahagi ng Q3 2026; ayon sa nakasaad na oras, tila nakabukas na ito muli, ngunit pakisuri muna bago pumunta."
+  },
+  {
+   "id": "dd60669c88d7",
+   "severity": "review",
+   "problem": "\"sari-sari store\" for 'grocery' suggests a tiny corner shop; use \"grocery\".",
+   "reviewedText": "Shopping mall sa kapitbahayan sa 45 Overlea Blvd na may mga tindahan, mga restaurant at mga pang-araw-araw na serbisyo (sari-sari store, bangko, botika/laboratoryo, fitness center, salon). Mayroon din itong mga nangungupahan na nagbibigay ng serbisyo sa komunidad gaya ng Afghan Women's Organization, Don Valley Community Legal Services at Health Access Thorncliffe Park."
+  },
+  {
+   "id": "7c53a90857c2",
+   "severity": "review",
+   "problem": "Name changed: \"Lungsod ng Toronto\" — keep \"City of Toronto\" per house rules.",
+   "reviewedText": "Libreng EarlyON Child and Family Centre para sa mga residente ng Lungsod ng Toronto na may mga anak na may edad 0-6 at sa kanilang mga magulang o tagapag-alaga: mga programa para sa suporta sa pag-unlad ng bata, mga serbisyo para sa suporta sa mga magulang, mga programa para sa paghahanda sa pagpasok sa paaralan, suporta para sa pagkaantala sa pagsasalita, at mga serbisyo para sa mga may espesyal na pangangailangan na may indibidwal na case management. Pangunahing lokasyon: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Lunes-Biyernes, 9am-5pm); oras ng paglalaro sa gym tuwing Biyernes sa Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr."
+  },
+  {
+   "id": "912f65f2191e",
+   "severity": "review",
+   "problem": "Name changed: \"Lungsod ng Toronto\" — keep \"City of Toronto\" per house rules.",
+   "reviewedText": "Ang Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; makipag-ugnayan kay Latoya Wilson-Rose, 416-392-3170) ay isang pampubliko at lisensyadong pasilidad para sa pag-aalaga ng bata ng Lungsod ng Toronto para sa mga batang may edad 0 hanggang 4 na taon, na matatagpuan sa Dennis R. Timbrell Resource Centre. Kasali ito sa Canada-Wide Early Learning and Child Care (CWELCC) system at may mga subsidiya sa bayarin; ang mga kawani ay nagsasalita ng 9 na wika kabilang ang Arabic, Bengali, Pranses, Hindi, at Persian, at ang mga pagkain ay mula sa catering na may mga opsyon na halal, walang baboy, walang mani, vegan, at vegetarian."
+  },
+  {
+   "id": "e04d44a05f5d",
+   "severity": "review",
+   "problem": "Unsure: \"pang-araw-araw na paggamot\" ('daily treatment') for 'day treatment' (a structured daytime school/therapy program); a native reader may prefer \"day treatment program\".",
+   "reviewedText": "Isang ahensya para sa kabataan na nag-aalok ng iba't ibang serbisyo (nag-ooperate na simula noong 1971) na nagbibigay ng pang-araw-araw na paggamot, pagsasanay sa trabaho, at indibidwal na plano sa pangangalaga para sa mga kabataang nahaharap sa mga problema sa paaralan, sa tahanan, at sa buhay, kabilang ang suporta para sa kapakanan ng bata at sa sistema ng hustisya para sa kabataan."
+  },
+  {
+   "id": "5b54b1c20dbc",
+   "severity": "review",
+   "problem": "Unsure: \"diskriminasyon\" ('discrimination') for 'stigma'; \"stigma\" or \"hiya at panghuhusga\" may be closer.",
+   "reviewedText": "Isang inisyatibong pinamumunuan ng komunidad para itaas ang kamalayan sa kalusugang mental at bawasan ang diskriminasyon laban dito sa komunidad ng Timog Asya, lalo na para sa mga bagong dating at mga imigrante ng una at ikalawang henerasyon."
+  },
+  {
+   "id": "32dfa11d6223",
+   "severity": "review",
+   "problem": "\"pag-aadjust sa bagong bayan\" ('adjusting to the new town'); \"bagong bansa\" (new country) is more natural for settlement. Wording only.",
+   "reviewedText": "Ahensya para sa iba't ibang serbisyo para sa mga bagong dating, na nagsisilbi sa Thorncliffe Park, Flemingdon Park, St. James Town at Taylor Massey. Kabilang sa mga serbisyo ang tulong sa pag-aadjust sa bagong bayan (pagtatasa ng mga pangangailangan, oryentasyon sa buhay sa Canada/Ontario, mga klase para sa paghahanda sa pagkamamamayan, tulong sa mga papeles para sa imigrasyon), tulong sa pabahay (paghahanap ng matitirhan, pag-aaplay para sa subsidized na pabahay, tulong sa upa, at tulong sa bayad sa kuryente), mga programa para sa mga nakatatanda (Integrated Services for Seniors, mga serbisyo ng personal na suporta), mga programa para sa kabataan (halimbawa, mga programa para sa mga batang babae pagkatapos ng klase), mga serbisyo sa trabaho, pagsasanay sa wika, at pagpapayo para sa mga biktima ng karahasan laban sa kababaihan. Libre ito; tumawag o pumunta lang sa opisina."
+  },
+  {
+   "id": "f0173151ade9",
+   "severity": "review",
+   "problem": "\"panahon-naaangkop na damit\" is an awkward calque of 'seasonal clothing'; \"damit na angkop sa panahon\" is more natural. Wording only.",
+   "reviewedText": "Isang rehistradong non-profit na tumutulong sa mga bagong dating na pamilya, mga refugee, mga asylum seeker, at mga taong lumilipat mula sa mga shelter patungo sa permanenteng tirahan. Nagbibigay ng mga libreng pangunahing kagamitan sa bahay (panahon-naaangkop na damit, sapatos, kagamitan sa kusina, sapin sa kama, mga kagamitan sa paliligo, at ilang kasangkapan) at nagsasagawa ng mga workshop para sa mga bagong dating tungkol sa pagpapalaki ng anak, pag-unawa sa mga lokal na sistema, at mga mapagkukunan sa komunidad."
+  },
+  {
+   "id": "1621e2da2a65",
+   "severity": "review",
+   "problem": "\"nagpapalaki ng masustansyang pagkain\" ('raising/enlarging food') is literal; \"nagtatanim\" is natural. Wording only.",
+   "reviewedText": "Sakahan na binuo ng komunidad sa Flemingdon Park na nagpapalaki ng masustansyang pagkain para sa mga residente. Nag-aalok ito ng pagtatanim ng pagkain para sa komunidad, isang lingguhang farmers' market tuwing tag-araw sa 150 Grenoble Drive (Huwebes, 3-6 ng hapon, mula huling bahagi ng Hunyo hanggang unang bahagi ng Oktubre), at isang Community Farmer program na nagbibigay sa mga residente ng pagkakataong magnegosyo sa pamamagitan ng pagpapatakbo ng maliliit na sakahan."
+  }
+ ]
+}

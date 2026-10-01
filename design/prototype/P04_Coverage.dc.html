@@ -1,0 +1,521 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-04 Coverage view</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-04" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-04" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-04" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-pc">
+  <sc-if value="{{noSpace}}">
+    <div class="cvh-pc-panel">
+      <p class="cvh-h3">{{x.noSpaceTitle}}</p>
+      <p>{{x.noSpaceLine}}</p>
+      <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{toIncidents}}">{{x.toIncidents}}</button>
+    </div>
+  </sc-if>
+  <sc-if value="{{hasSpace}}">
+    <header class="cvh-pc-head" aria-label="{{head.title}}">
+      <div class="cvh-pc-head__line">
+        <dc-import name="X13_DisruptionType" types="{{head.types}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import>
+        <span class="cvh-pill">{{head.level}}</span>
+        <h2 class="cvh-pc-head__title">{{head.location}}</h2>
+      </div>
+      <div class="cvh-pc-head__line">
+        <span><span class="cvh-strong">{{x.purposeLabel}}:</span> {{head.purpose}}</span>
+        <span class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{head.started}}</span>
+      </div>
+      <p class="cvh-muted">{{head.meta}}</p>
+      <sc-if value="{{orgsInHead}}">
+        <ul class="cvh-pc-orgs" aria-label="{{x.orgsTitle}}">
+          <sc-for list="{{orgs}}" as="o" hint-placeholder-count="4">
+            <li class="cvh-pc-org"><span class="cvh-origin__mark" aria-hidden="true">{{o.mono}}</span><span class="cvh-pc-org__name">{{o.short}}</span>
+              <span class="cvh-cap {{o.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{o.capWord}}</span></li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{exercise}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{x.exercise}}</span></p></sc-if>
+    </header>
+
+    <nav class="cvh-pc-bar {{barCls}}" aria-label="{{x.countsLabel}}">
+      <sc-for list="{{bar}}" as="c" hint-placeholder-count="4">
+        <button type="button" class="cvh-pc-bar__btn {{c.cls}}" onClick="{{c.go}}" aria-label="{{c.aria}}">
+          <sc-if value="{{c.isGap}}"><span class="cvh-ico cvh-ico--flag cvh-ico--sm" aria-hidden="true"></span></sc-if>
+          <span class="cvh-pc-bar__n">{{c.n}}</span><span>{{c.label}}</span>
+        </button>
+      </sc-for>
+    </nav>
+
+    <div class="cvh-pc-cols {{colsCls}}">
+      <div class="cvh-stack" style="--gap:22px">
+        <p class="cvh-muted">{{assembled}}</p>
+        <sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+          <section class="cvh-pc-grp {{g.cls}}" data-grp="{{g.key}}" aria-labelledby="{{g.hid}}">
+            <h3 class="cvh-pc-grp__title" id="{{g.hid}}"><span class="cvh-ico cvh-ico--{{g.icon}}" aria-hidden="true"></span>{{g.title}}<span class="cvh-hsec__count">{{g.count}}</span></h3>
+            <p class="cvh-pc-grp__line">{{g.line}}</p>
+            <sc-if value="{{g.empty}}"><p class="cvh-pc-empty">{{g.emptyLine}}</p></sc-if>
+            <sc-for list="{{g.items}}" as="it" hint-placeholder-count="2">
+              <article class="cvh-pc-item {{it.cls}}">
+                <div class="cvh-pc-item__head">
+                  <sc-if value="{{it.isStmt}}"><dc-import name="X06_Statement" variant="chip" type="{{it.stmtType}}" embedded="{{true}}" hint-size="200px,32px"></dc-import></sc-if>
+                  <sc-if value="{{it.isKind}}"><span class="cvh-pc-kind"><span class="cvh-ico cvh-ico--{{it.kindIcon}} cvh-ico--sm" aria-hidden="true"></span>{{it.kindWord}}</span></sc-if>
+                  <sc-if value="{{it.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if>
+                  <sc-if value="{{it.fresh}}"><span class="cvh-flag cvh-flag--due"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{x.fresh}}</span></sc-if>
+                </div>
+                <p class="cvh-pc-item__text">{{it.text}}</p>
+                <sc-if value="{{it.hasOrg}}">
+                  <div class="cvh-pc-who">
+                    <span class="cvh-origin__mark" aria-hidden="true">{{it.mono}}</span>
+                    <span class="cvh-strong" style="color:var(--ink)">{{it.orgName}}</span>
+                    <span class="cvh-cap {{it.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{it.capWord}}</span>
+                    <sc-if value="{{it.whoLine}}"><span>{{it.whoLine}}</span></sc-if>
+                  </div>
+                </sc-if>
+                <sc-if value="{{it.state}}"><p class="cvh-pc-item__state"><span class="cvh-ico cvh-ico--{{it.stateIcon}} cvh-ico--sm" aria-hidden="true"></span><span>{{it.state}}</span></p></sc-if>
+                <sc-if value="{{it.hasMatch}}">
+                  <div class="cvh-pc-match">
+                    <p class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--kit cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong" style="color:var(--ink)">{{x.matchTitle}}</span></p>
+                    <sc-for list="{{it.match}}" as="mm" hint-placeholder-count="1"><p>{{mm}}</p></sc-for>
+                  </div>
+                </sc-if>
+                <ul class="cvh-pc-trace" aria-label="{{x.traceTitle}}">
+                  <sc-for list="{{it.trace}}" as="tr" hint-placeholder-count="2">
+                    <li><span class="cvh-ico cvh-ico--{{tr.icon}} cvh-ico--sm" aria-hidden="true"></span><span><span class="cvh-pc-id">{{tr.id}}</span> {{tr.text}}</span></li>
+                  </sc-for>
+                </ul>
+                <sc-if value="{{it.hasActions}}">
+                  <div class="cvh-pc-item__actions">
+                    <sc-if value="{{it.canClaim}}"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{it.claim}}"><span class="cvh-ico cvh-ico--handshake cvh-ico--sm" aria-hidden="true"></span>{{x.claim}}</button></sc-if>
+                    <sc-if value="{{it.canConfirm}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{it.confirm}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{x.confirm}}</button></sc-if>
+                    <sc-if value="{{it.own}}"><p class="cvh-muted">{{x.ownGap}}</p></sc-if>
+                  </div>
+                </sc-if>
+              </article>
+            </sc-for>
+          </section>
+        </sc-for>
+      </div>
+
+      <aside class="cvh-stack" style="--gap:16px">
+        <sc-if value="{{orgsBelow}}">
+          <section class="cvh-pc-panel" aria-labelledby="p04-orgs">
+            <h3 class="cvh-pc-panel__title" id="p04-orgs">{{x.orgsTitle}}</h3>
+            <ul class="cvh-pc-orgs cvh-pc-orgs--rows">
+              <sc-for list="{{orgs}}" as="o" hint-placeholder-count="4">
+                <li class="cvh-pc-org"><span class="cvh-origin__mark" aria-hidden="true">{{o.mono}}</span><span class="cvh-pc-org__name">{{o.name}}</span>
+                  <span class="cvh-cap {{o.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{o.capWord}}</span></li>
+              </sc-for>
+            </ul>
+          </section>
+        </sc-if>
+        <section class="cvh-pc-panel" aria-labelledby="p04-sp">
+          <h3 class="cvh-pc-panel__title" id="p04-sp"><span class="cvh-ico cvh-ico--building" aria-hidden="true"></span>{{x.spacesTitle}}<span class="cvh-tag cvh-tag--illustrative">Illustrative</span></h3>
+          <p class="cvh-muted">{{x.spacesLine}}</p>
+          <sc-if value="{{spacesNote}}"><p class="cvh-pc-empty">{{spacesNote}}</p></sc-if>
+          <sc-for list="{{spaces}}" as="sp" hint-placeholder-count="3">
+            <div class="cvh-pc-srow">
+              <p class="cvh-strong" style="color:var(--ink)">{{sp.name}}</p>
+              <dc-import name="X09_SpaceStatus" space="{{sp.id}}" lang="en" embedded="{{true}}" hint-size="100%,64px"></dc-import>
+              <p>{{sp.cap}}</p>
+              <p class="cvh-muted">{{sp.runBy}}</p>
+            </div>
+          </sc-for>
+        </section>
+        <section class="cvh-pc-panel" aria-labelledby="p04-amb">
+          <h3 class="cvh-pc-panel__title" id="p04-amb"><span class="cvh-ico cvh-ico--person" aria-hidden="true"></span>{{x.ambTitle}}</h3>
+          <div class="cvh-row cvh-wrap" style="--gap:8px"><span class="cvh-readonly cvh-pc-readonly"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span>{{x.readOnly}}</span><span class="cvh-tag cvh-tag--illustrative">Illustrative counts</span></div>
+          <p class="cvh-muted">{{x.ambLine}}</p>
+          <p class="cvh-strong" style="color:var(--ink)">{{amb.round}}</p>
+          <sc-for list="{{amb.blds}}" as="bd" hint-placeholder-count="3">
+            <div class="cvh-stack" style="--gap:6px">
+              <p class="cvh-strong" style="color:var(--ink)">{{bd.name}}</p>
+              <sc-for list="{{bd.bands}}" as="bn" hint-placeholder-count="2">
+                <div class="cvh-pc-band {{bn.cls}}">
+                  <p><span class="cvh-strong">{{bn.floors}}</span> <span class="cvh-muted">{{bn.amb}}</span></p>
+                  <sc-if value="{{bn.none}}"><p class="cvh-muted">{{x.noAmb}}</p></sc-if>
+                  <sc-if value="{{bn.hasCounts}}"><p class="cvh-pc-counts"><span>{{bn.done}}</span><span>{{bn.nr}}</span><span>{{bn.conn}}</span><span>{{bn.todo}}</span></p></sc-if>
+                </div>
+              </sc-for>
+            </div>
+          </sc-for>
+        </section>
+        <div class="cvh-pc-links">
+          <button type="button" class="cvh-link" onClick="{{toSpace}}">{{x.toSpace}}</button>
+          <button type="button" class="cvh-link" onClick="{{toDecisions}}">{{x.toDecisions}}</button>
+          <button type="button" class="cvh-link" onClick="{{toCapacity}}">{{x.toCapacity}}</button>
+          <button type="button" class="cvh-link" onClick="{{toSpaces}}">{{x.toSpaces}}</button>
+          <button type="button" class="cvh-link" onClick="{{toSupplies}}">{{x.toSupplies}}</button>
+        </div>
+      </aside>
+    </div>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Scenario A, six hours in: four groups, gaps first (Daniel, TNO)", "Gap claimed live: the water carry is being worked on", "Commitment confirmed, and a playbook ask taken on", "Priya, the Hub: her own need cannot be claimed by her", "Scenario G, three weeks in: elevators out (Priya)", "Exercise running", "Phone width, 390: not covered first, sticky counts", "Phone width, 390: Scenario G"], "default": "Scenario A, six hours in: four groups, gaps first (Daniel, TNO)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Scenario A, six hours in: four groups, gaps first (Daniel, TNO)": {"persona": "DANIEL", "params": {"space": "SPC-A"}}, "Gap claimed live: the water carry is being worked on": {"persona": "DANIEL", "params": {"space": "SPC-A", "sample": {"claims": {"ST-12": {"org": "TNO", "by": "DANIEL", "mins": 0}}}}}, "Commitment confirmed, and a playbook ask taken on": {"persona": "DANIEL", "params": {"space": "SPC-A", "sample": {"confirm": {"COM-02": 1}, "claims": {"ST-12": {"org": "TNO", "by": "DANIEL", "mins": 3}}}}}, "Priya, the Hub: her own need cannot be claimed by her": {"persona": "PRIYA", "params": {"space": "SPC-A"}}, "Scenario G, three weeks in: elevators out (Priya)": {"persona": "PRIYA", "params": {"space": "SPC-G"}}, "Exercise running": {"persona": "DANIEL", "exercise": true, "params": {"space": "SPC-A"}}, "Phone width, 390: not covered first, sticky counts": {"persona": "DANIEL", "w": 390, "h": 1600, "params": {"space": "SPC-A"}}, "Phone width, 390: Scenario G": {"persona": "PRIYA", "w": 390, "h": 1600, "params": {"space": "SPC-G"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-04', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.P04, P = D.partner || {}, prm = b.params || {}, ago = b.ago, dur = b.dur, fill = C.fill;
+    var sample = prm.sample || {};
+    var sess = C.session.get() || {}, scn = sess.scenario || 'A', model = b.session || {};
+    var me = b.persona || {}, myOrg = me.org || 'HUB';
+    var sp = this.pcSpace(b);
+    var capWords = (s.P05 || {}).words || { notSet: 'Not set', available: 'Available', stretched: 'Stretched', atCapacity: 'At capacity' };
+    var capOf = function (org) { var v = (P.capacity || {})[org]; v = v || 'notSet'; return { capCls: 'cvh-cap--' + v, capWord: capWords[v] || v }; };
+    var orgName = function (id) { return (C.org(id) || { name: id }).name; };
+    var orgShort = function (id) { var o = C.org(id) || { short: id }; return o.short.charAt(0).toUpperCase() + o.short.slice(1); };
+    var pname = function (id) { return (C.person(id) || { name: id || '' }).name; };
+    var go = b.go;
+    var nav = { toIncidents: function () { go('O-01'); } };
+    if (!sp) return Object.assign({ x: x, noSpace: true, hasSpace: false, head: {}, orgs: [], bar: [], groups: [], spaces: [], amb: { blds: [] } }, nav);
+    var spId = sp.id, hazard = sp.type || 'power';
+    var hazName = (s.hazards || {})[hazard] || hazard;
+    var pb = (P.playbooks || {})[sp.playbook || hazard] || {};
+    // Statements of this space, with any standalone-artboard sample claims laid over them
+    var stmts = (P.statements || []).filter(function (t) { return t.sp === spId; }).map(function (t) {
+      var c = Object.assign({}, t), sc = (sample.claims || {})[t.id];
+      if (sc && !c.claimedBy) { c.claimedBy = sc.org; c.claimedMinsAgo = sc.mins || 0; c._claimBy = sc.by; }
+      return c;
+    });
+    var byIdS = {}; stmts.forEach(function (t) { byIdS[t.id] = t; });
+    // Who took a gap on, from the session log
+    (model.partner || []).forEach(function (it) { if (it.kind === 'claim' && byIdS[it.statement] && !byIdS[it.statement]._claimBy) byIdS[it.statement]._claimBy = it.by; });
+    var orgsIn = (sp.orgs && sp.orgs.length ? sp.orgs.slice() : []);
+    var addOrg = function (o) { if (o && orgsIn.indexOf(o) < 0) orgsIn.push(o); };
+    stmts.forEach(function (t) { addOrg(t.org); });
+    Object.keys(pb.asks || {}).forEach(addOrg);
+    var comms = (P.commitments || []).filter(function (c) { return c.type === hazard; });
+    comms.forEach(function (c) { addOrg(c.org); });
+    addOrg(myOrg);
+    var decisions = (P.decisions || []).filter(function (d) { return d.sp === spId; });
+    var handovers = (P.handovers || []).filter(function (h) { return h.sp === spId; });
+    var alert = sp.alert ? C.alert(sp.alert) : null;
+    var line = function (id, icon, text) { return { id: id, icon: icon, text: text }; };
+    var stTrace = function (t) { return line(t.id, 'doc', fill(x.tStatement, { person: pname(t.person), org: orgShort(t.org), t: ago(t.minsAgo || 0) })); };
+    var supplyOf = function (id) { return (P.supplies || []).filter(function (u) { return u.id === id; })[0] || null; };
+    // Playbook matching: which statements, alert or handovers already answer each checklist item and ask
+    var KEYS = [[/acknowledg|alert/i, /acknowledg|alert|update posted/i, 'alert'], [/check-in|checked on|high floors/i, /check-in|check on|wellness call/i],
+      [/charging space|community room/i, /community room|charging/i], [/senior/i, /senior/i], [/power bank/i, /power bank/i], [/blanket/i, /blanket/i],
+      [/hydro/i, /hydro/i], [/backup/i, /backup|open until|open late/i], [/uncovered floors/i, /no ambassador|cannot cover|uncovered/i], [/grocer/i, /grocer/i],
+      [/wellness/i, /wellness/i], [/stair/i, /stair/i], [/ride/i, /ride/i], [/weekly (alert )?update/i, /weekly update/i], [/handover/i, null, 'handover'], [/coverage view/i, null, 'self']];
+    var matchItem = function (text) {
+      var hits = [], how = null;
+      KEYS.forEach(function (k) {
+        if (!k[0].test(text)) return;
+        if (k[1]) stmts.forEach(function (t) { if (k[1].test(t.text) && hits.indexOf(t) < 0) hits.push(t); });
+        if (!hits.length && k[2] === 'alert' && alert) how = 'alert';
+        if (k[2] === 'handover' && handovers.length) how = 'handover';
+        if (k[2] === 'self') how = 'self';
+      });
+      if (!/uncovered floors/i.test(text)) {
+        var rank = function (t) { return t.type === 'doing' ? 0 : t.type === 'canTake' ? 1 : t.claimedBy ? 1 : t.type === 'need' ? 2 : 3; };
+        var best = Math.min.apply(null, hits.map(rank).concat([9]));
+        hits = hits.filter(function (t) { return rank(t) === best; });
+      }
+      return { hits: hits, how: how };
+    };
+    var claimedPb = {}; stmts.forEach(function (t) { if (t.playbook) claimedPb[t.playbook] = t; });
+    var pbNotes = {};   // statement id -> playbook lines it answers
+    var items = [];
+    var pbV = pb.version || '';
+    var pbLabel = function (txt) { return fill(x.tPlaybook, { hazard: hazName.toLowerCase(), item: txt }); };
+    // Checklist (adjusted items from P-02 are read from D.partner.other, kind 'playbook')
+    var adj = {}; (P.other || []).forEach(function (o) { if (o.kind === 'playbook' && o.sp === spId && o.index != null && o.text) adj[o.index] = o.text; });
+    (pb.checklist || []).forEach(function (txt0, i) {
+      var txt = adj[i] || txt0, key = hazard + ':c' + i, mt = matchItem(txt);
+      if (claimedPb[key]) return;
+      if (mt.hits.length) { mt.hits.forEach(function (t) { (pbNotes[t.id] = pbNotes[t.id] || []).push(pbLabel(txt)); }); return; }
+      if (mt.how === 'self') return;
+      if (mt.how === 'alert' || mt.how === 'handover') {
+        items.push({ g: 'covered', kind: 'checklist', text: txt, org: mt.how === 'alert' ? ((alert.origin || {}).org || 'HUB') : ((C.person(handovers[handovers.length - 1].from) || {}).org || 'HUB'), illus: true, mins: null,
+          trace: [line('Playbook', 'ready', pbLabel(txt)), mt.how === 'alert' ? line(alert.id, 'now', fill(x.tChecklistAlert, { headline: alert.headline })) : line(handovers[handovers.length - 1].id, 'doc', fill(x.tChecklistHandover, { n: handovers.length }))] });
+        return;
+      }
+      items.push({ g: 'gap', kind: 'checklist', text: txt, org: null, illus: true, mins: null, pbKey: key, claimable: true, state: x.stateChecklist, stateIcon: 'info',
+        trace: [line('Playbook', 'ready', pb.proposed ? fill(x.tPlaybookProposed, { hazard: hazName.toLowerCase() }) : fill(x.tPlaybookOnly, { hazard: hazName.toLowerCase(), v: pbV }))] });
+    });
+    // Asks of each partner: split into parts; a part nobody has taken waits on the organisation it was asked of
+    Object.keys(pb.asks || {}).forEach(function (org) {
+      String(pb.asks[org]).split(/;|,| and /).map(function (z) { return z.trim(); }).filter(Boolean).forEach(function (part, j) {
+        var txt = part.charAt(0).toUpperCase() + part.slice(1), key = hazard + ':a:' + org + ':' + j, mt = matchItem(part);
+        if (claimedPb[key]) return;
+        if (mt.hits.length) { mt.hits.forEach(function (t) { (pbNotes[t.id] = pbNotes[t.id] || []).push(fill(x.kindAsk, { org: orgShort(org) }) + ': ' + txt); }); return; }
+        if (mt.how) return;
+        items.push({ g: 'waiting', kind: 'ask', askOrg: org, text: txt, org: org, illus: true, mins: null, pbKey: key, claimable: true,
+          state: fill(x.stateAsk, { org: orgShort(org) }), stateIcon: 'clock',
+          trace: [line('Playbook', 'ready', pb.proposed ? fill(x.tPlaybookProposed, { hazard: hazName.toLowerCase() }) : fill(x.tPlaybookOnly, { hazard: hazName.toLowerCase(), v: pbV }))] });
+      });
+    });
+    // Statements
+    var used = {};
+    var answers = {}; stmts.forEach(function (t) { if (t.type === 'canTake' && t.answers && byIdS[t.answers]) (answers[t.answers] = answers[t.answers] || []).push(t); });
+    var needBySupply = {}; stmts.forEach(function (t) { if (t.type === 'need' && t.supply) needBySupply[t.supply] = t; });
+    var released = {}, reassigned = {}, openIn = {};
+    handovers.forEach(function (h) {
+      (h.released || []).forEach(function (r) { released[typeof r === 'object' ? r.id : r] = h; });
+      (h.reassigned || []).forEach(function (r) { reassigned[typeof r === 'object' ? r.id : r] = h; });
+      (h.open || []).forEach(function (r) { openIn[r] = h; });
+    });
+    var decTrace = function (id) { return decisions.filter(function (d) { return d.from === id; }).map(function (d) { return line(d.id, 'doc', fill(x.tDecision, { text: d.decision })); }); };
+    var hoTrace = function (id) {
+      var out = [];
+      if (openIn[id]) out.push(line(openIn[id].id, 'person', fill(x.tHandoverOpen, { name: pname(openIn[id].from), t: ago(openIn[id].minsAgo || 0) })));
+      if (released[id]) out.push(line(released[id].id || 'Handover', 'person', fill(x.tReleased, { name: pname(released[id].from), t: ago(released[id].minsAgo || 0) })));
+      if (reassigned[id]) out.push(line(reassigned[id].id || 'Handover', 'person', fill(x.tReassigned, { name: pname(reassigned[id].from) })));
+      return out;
+    };
+    var claimLine = function (t) {
+      var who = t._claimBy ? pname(t._claimBy) : '';
+      return { state: fill(x.stateTaken, { org: orgName(t.claimedBy), person: who ? ' (' + who + ')' : '', t: ago(t.claimedMinsAgo || 0) }),
+        tr: line(t.id, 'handshake', who ? fill(x.tClaim, { t: ago(t.claimedMinsAgo || 0), person: who, org: orgShort(t.claimedBy) }) : fill(x.tClaimNoPerson, { t: ago(t.claimedMinsAgo || 0), org: orgShort(t.claimedBy) })) };
+    };
+    // Doing statements about the same space are one item
+    var bySpace = {};
+    stmts.forEach(function (t) { if (t.type === 'doing' && t.space) (bySpace[t.space] = bySpace[t.space] || []).push(t); });
+    stmts.forEach(function (t) {
+      if (used[t.id]) return;
+      var it = { stmt: t, text: t.text, org: t.org, person: t.person, mins: t.minsAgo || 0, illus: !t._session, trace: [stTrace(t)] };
+      if (t.type === 'doing') {
+        if (t.supply && needBySupply[t.supply]) return;   // folded into the need it answers
+        var grp = t.space ? bySpace[t.space].slice().sort(function (p, q) { return (p.minsAgo || 0) - (q.minsAgo || 0); }) : [t];
+        grp.forEach(function (z) { used[z.id] = 1; });
+        var top = grp[0];
+        it = { stmt: top, text: top.text, org: top.org, person: top.person, mins: top.minsAgo || 0, illus: grp.some(function (z) { return !z._session; }),
+          trace: grp.map(stTrace), g: 'covered' };
+      } else if (t.type === 'need' || t.type === 'cannotCover') {
+        used[t.id] = 1;
+        var ans = answers[t.id] || [];
+        if (t.claimedBy) { var cl = claimLine(t); it.g = 'working'; it.state = cl.state; it.stateIcon = 'handshake'; it.trace.push(cl.tr); it.claimMins = t.claimedMinsAgo || 0; it.mine = t.claimedBy === myOrg; }
+        else if (ans.length) { it.g = 'working'; it.state = fill(x.stateAnswered, { org: orgName(ans[0].org) }); it.stateIcon = 'handshake'; }
+        else if (released[t.id]) { it.g = 'waiting'; it.state = x.stateReleased; it.stateIcon = 'person'; it.claimable = true; }
+        else { it.g = 'gap'; it.claimable = true; }
+        ans.forEach(function (a) { used[a.id] = 1; it.trace.push(line(a.id, 'stmtCanTake', fill(x.tAnswer, { text: a.text, person: pname(a.person), org: orgShort(a.org), t: ago(a.minsAgo || 0) }))); });
+        if (t.supply) {
+          var su = supplyOf(t.supply);
+          stmts.forEach(function (d) { if (d.type === 'doing' && d.supply === t.supply) { used[d.id] = 1; it.trace.push(line(d.id, 'stmtDoing', fill(x.tDoing, { text: d.text, person: pname(d.person), org: orgShort(d.org), t: ago(d.minsAgo || 0) }))); } });
+          if (su) {
+            var qw = (s.P08 && s.P08.qty && s.P08.qty[su.qty]) || su.qty;
+            it.match = [(su.qtyNum != null ? fill(x.matchLine, { qtyWord: qw, num: su.qtyNum, unit: su.unit, location: su.location, t: ago(su.updatedMinsAgo || 0) }) : fill(x.matchLineNoNum, { qtyWord: qw, location: su.location, t: ago(su.updatedMinsAgo || 0) })) + ' (' + orgName(su.org) + ')'];
+            (P.supplies || []).forEach(function (o) { if (o.id !== su.id && o.item === su.item) it.match.push(fill(x.matchOther, { qtyWord: (s.P08 && s.P08.qty && s.P08.qty[o.qty]) || o.qty, num: o.qtyNum != null ? o.qtyNum : '', unit: o.unit || '', org: orgShort(o.org), location: o.location })); });
+            it.trace.push(line(su.id, 'kit', fill(x.tSupply, { item: su.unit || su.item })));
+          }
+        }
+      } else if (t.type === 'canTake') {
+        if (t.answers && byIdS[t.answers]) return;
+        used[t.id] = 1;
+        if (t.playbook) { it.g = 'working'; it.state = fill(x.stateTaken, { org: orgName(t.org), person: ' (' + pname(t.person) + ')', t: ago(t.minsAgo || 0) }); it.stateIcon = 'handshake'; it.mine = t.org === myOrg; it.claimMins = t.minsAgo || 0; }
+        else { it.g = 'waiting'; it.state = fill(x.stateOffer, { org: orgShort(t.org) }); it.stateIcon = 'clock'; }
+      } else return;
+      (pbNotes[it.stmt.id] || []).forEach(function (n) { it.trace.push(line('Playbook', 'ready', n)); });
+      if (t.playbook) it.trace.push(line('Playbook', 'ready', fill(x.tPlaybookOnly, { hazard: hazName.toLowerCase(), v: pbV }).replace(/ Nobody has said they are taking this\./, '')));
+      it.trace = it.trace.concat(decTrace(it.stmt.id), hoTrace(it.stmt.id));
+      items.push(it);
+    });
+    // Standing commitments that match this kind of disruption
+    comms.forEach(function (c) {
+      var conf = (sample.confirm || {})[c.id] != null ? { state: 'confirmed', mins: sample.confirm[c.id] } : (c.state && c.space === spId ? { state: c.state, mins: c.confirmedMinsAgo || 0 } : null);
+      var it = { kind: 'commitment', text: c.text, org: c.org, role: c.role, illus: !c._session, mins: conf ? conf.mins : null, comm: c,
+        trace: [line(c.id, 'handshake', fill(x.tCommitment, { agreement: c.agreement || c.role }))] };
+      if (released[c.id]) { it.g = 'waiting'; it.state = x.stateReleased; it.stateIcon = 'person'; it.claimable = false; }
+      else if (conf && conf.state === 'confirmed') { it.g = 'covered'; it.state = fill(x.stateConfirmed, { org: orgShort(c.org), t: ago(conf.mins) }); it.stateIcon = 'check'; it.claimMins = conf.mins; }
+      else if (conf && conf.state === 'declined') { it.g = 'gap'; it.state = fill(x.stateDeclined, { org: orgShort(c.org) }); it.stateIcon = 'info'; }
+      else { it.g = 'waiting'; it.state = fill(x.stateUnconfirmed, { org: orgName(c.org) }); it.stateIcon = 'clock'; it.canConfirm = c.org === myOrg; }
+      it.trace = it.trace.concat(hoTrace(c.id));
+      items.push(it);
+    });
+    var hazArt = (/^[aeiou]/i.test(hazName) ? 'an ' : 'a ') + hazName.toLowerCase();
+    if (!comms.length) items.push({ g: 'gap', kind: 'noCommitment', text: fill(x.tCommitmentNone, { hazard: hazArt }).replace('From standing commitments: n', 'N'), org: null, illus: true, mins: null,
+      state: x.stateNoCommitment, stateIcon: 'info', trace: [line('P-11', 'handshake', fill(x.tCommitmentNone, { hazard: hazArt }))] });
+    // Render each item
+    var self = this;
+    var render = function (it) {
+      var t = it.stmt, o = it.org ? C.org(it.org) : null, pr = t ? C.person(t.person) : null, cap = it.org ? capOf(it.org) : { capCls: '', capWord: '' };
+      var kindWord = it.kind === 'commitment' ? x.kindCommitment : it.kind === 'checklist' ? x.kindChecklist : it.kind === 'ask' ? fill(x.kindAsk, { org: orgShort(it.askOrg) }) : it.kind === 'noCommitment' ? x.kindNoCommitment : '';
+      var whoLine = t ? (pr ? pr.name + ', ' + pr.role : '') + ' · ' + ago(t.minsAgo || 0) : it.role ? it.role : (it.kind === 'checklist' ? fill(x.tPlaybookOnly, { hazard: hazName.toLowerCase(), v: pbV }).split('.')[0] : '');
+      var fresh = (it.claimMins != null && it.claimMins <= 1) || (t && t._session && (t.minsAgo || 0) <= 1);
+      var canClaim = !!it.claimable && (t ? t.org !== myOrg : true);
+      var own = !!it.claimable && !!t && t.org === myOrg;
+      return { cls: (it.g === 'gap' ? 'cvh-pc-item--gap' : '') + (fresh ? ' cvh-pc-item--fresh' : ''), hasOrg: !!o, isStmt: !!t, stmtType: t ? t.type : '', isKind: !t, kindWord: kindWord,
+        kindIcon: it.kind === 'commitment' || it.kind === 'noCommitment' ? 'handshake' : 'ready', illus: !!it.illus, fresh: fresh,
+        text: it.text, mono: o ? o.monogram : 'PB', orgName: o ? o.name : fill(x.tPlaybookOnly, { hazard: hazName.toLowerCase(), v: pbV }).split(',')[0].replace(/^From the /, 'The '),
+        capCls: cap.capCls, capWord: cap.capWord, whoLine: o ? whoLine : '',
+        state: it.state || '', stateIcon: it.stateIcon || 'info', hasMatch: !!(it.match && it.match.length), match: it.match || [], trace: it.trace || [],
+        canClaim: canClaim, own: own, canConfirm: !!it.canConfirm, hasActions: canClaim || own || !!it.canConfirm,
+        claim: function () { self.pcClaim(b, sp, it); }, confirm: function () { b.act({ t: 'partner', kind: 'commitment', space: spId, item: { commitmentId: it.comm.id, changes: { state: 'confirmed', space: spId } } }); b.toast(x.confirmToast); } };
+    };
+    var order = ['gap', 'working', 'waiting', 'covered'];
+    var icons = { gap: 'flag', working: 'handshake', waiting: 'clock', covered: 'check' };
+    var sortIt = function (p, q) {
+      var pm = p.claimMins != null ? p.claimMins : p.mins, qm = q.claimMins != null ? q.claimMins : q.mins;
+      if (pm == null && qm == null) return 0; if (pm == null) return 1; if (qm == null) return -1; return pm - qm;
+    };
+    var groups = order.map(function (k) {
+      var list = items.filter(function (it) { return it.g === k; }).sort(sortIt).map(render);
+      return { key: k, hid: 'p04-g-' + k, title: x.groups[k], line: x.groupLines[k], icon: icons[k], count: list.length, items: list, empty: list.length === 0, emptyLine: x.emptyGroup[k],
+        cls: k === 'gap' ? 'cvh-pc-grp--gap' : k === 'covered' ? 'cvh-pc-grp--covered' : '' };
+    });
+    var jumpTo = function (k) { return function (e) { var r = e && e.currentTarget && e.currentTarget.closest ? e.currentTarget.closest('.cvh-hubbody') : null; var el = r ? r.querySelector('[data-grp="' + k + '"]') : null; if (el) r.scrollTop += el.getBoundingClientRect().top - r.getBoundingClientRect().top - (b.narrow ? 120 : 12); }; };
+    var bar = groups.map(function (g) { return { n: g.count, label: g.title, isGap: g.key === 'gap', cls: g.key === 'gap' ? 'cvh-pc-bar__btn--gap' : '', aria: fill(x.jump, { group: g.title }) + ': ' + g.count, go: jumpTo(g.key) }; });
+    // Head
+    var dis = (P.disruptions || []).filter(function (d) { return d.id === sp.disruption; })[0];
+    var inc = (D.incidents || []).filter(function (i) { return i.id === sp.disruption; })[0];
+    var startedMins = dis ? dis.startedMinsAgo : inc ? inc.firstLoggedMinsAgo : sp.openedMinsAgo;
+    var opener = C.person(sp.openedBy) || null;
+    var metaBits = [];
+    if (opener) metaBits.push(fill(x.openedBy, { name: opener.name, org: orgShort(opener.org), t: ago(sp.openedMinsAgo || 0) }));
+    if (alert) metaBits.push(fill(x.alertLine, { headline: alert.headline }));
+    var head = { types: [hazard], level: fill(x.level, { n: sp.level || 1 }), location: sp.location || '', title: hazName + ', ' + (sp.location || ''),
+      purpose: (x.purposes || {})[sp.purpose] || sp.purpose || '', started: fill(x.started, { t: dur(startedMins || 0) }), meta: metaBits.join(' · ') };
+    var orgs = orgsIn.map(function (id) { var o = C.org(id) || { monogram: id, name: id, short: id }; var cp = capOf(id); return { id: id, mono: o.monogram, name: o.name, short: orgShort(id), capCls: cp.capCls, capWord: cp.capWord }; });
+    // Spaces run by these organisations
+    var spaces = (D.spaces || []).filter(function (z) { return orgsIn.indexOf(z.org) >= 0; }).map(function (z) {
+      var a = C.asset(z.assetId) || {}, nm = (z.room ? z.room + ', ' : '') + (a.name || z.id);
+      var cp = z.capacity || {};
+      return { id: z.id, name: nm, cap: cp.now != null ? fill(x.spaceCap, { now: cp.now, max: cp.max }) : fill(x.spaceCapMax, { max: cp.max }), runBy: fill(x.spaceRunBy, { org: orgName(z.org) }) };
+    });
+    var spacesNote = pb.spaces && pb.spaces.length === 1 && /No space opens/.test(pb.spaces[0]) ? fill(x.noSpaceNote, { note: pb.spaces[0] }) : '';
+    return Object.assign({ x: x, noSpace: false, hasSpace: true, head: head, orgs: orgs, orgsInHead: !b.narrow, orgsBelow: b.narrow, exercise: b.exercise,
+      bar: bar, barCls: b.narrow ? 'cvh-pc-bar--sticky' : '', groups: groups, colsCls: b.narrow ? 'cvh-pc-cols--one' : '',
+      assembled: fill(x.assembled, { st: stmts.length, cm: comms.length, hazard: hazName.toLowerCase() }),
+      spaces: spacesNote ? [] : spaces, spacesNote: spacesNote, amb: this.pcAmb(b, sp, alert),
+      toSpace: function () { go('P-02', { space: spId }); }, toDecisions: function () { go('P-09', { space: spId }); }, toCapacity: function () { go('P-05', { space: spId }); },
+      toSpaces: function () { go('P-07', { space: spId }); }, toSupplies: function () { go('P-08', { space: spId }); } }, nav);
+  }
+  pcSpace(b) {
+    var P = b.D.partner || {}, list = P.sharedSpaces || [], id = (b.params || {}).space, C = b.C;
+    var scn = (C.session.get() || {}).scenario || 'A';
+    var find = function (k) { return list.filter(function (z) { return z.id === k; })[0] || null; };
+    var sp = id ? find(id) : null;
+    if (!sp && b.exercise) sp = list.filter(function (z) { return z._session && z.exercise && !z.closed; })[0] || null;
+    if (!sp && scn === 'G') sp = find('SPC-G');
+    if (!sp) sp = list.filter(function (z) { return z._session && !z.closed && !z.exercise; })[0] || null;
+    if (!sp) sp = find('SPC-A');
+    return sp;
+  }
+  pcClaim(b, sp, it) {
+    var C = b.C, x = b.s.P04, me = b.persona || {}, org = me.org || 'HUB', on = (C.org(org) || { name: org }).name;
+    if (it.stmt) b.act({ t: 'partner', kind: 'claim', space: sp.id, item: { statement: it.stmt.id, org: org } });
+    else b.act({ t: 'partner', kind: 'statement', space: sp.id, item: { type: 'canTake', org: org, person: me.id, text: 'We will take this on: ' + it.text.charAt(0).toLowerCase() + it.text.slice(1) + ' (from the playbook).', playbook: it.pbKey } });
+    b.toast(C.fill(b.exercise ? x.claimExercise : x.claimToast, { org: on }));
+  }
+  pcAmb(b, sp, alert) {
+    var C = b.C, D = b.D, x = b.s.P04, fill = C.fill;
+    var loc = sp.location || '', blds = [];
+    var aud = alert && alert.audience && alert.audience.place ? alert.audience.place.buildings : null;
+    if (aud && aud.length) blds = aud.slice();
+    else {
+      (D.buildings || []).forEach(function (bd) { if (loc.indexOf(bd.name) >= 0) blds.push(bd.id); });
+      var mm = !blds.length && loc.match(/Sample Towers? ([A-Z](?:(?:, | and )[A-Z])*)/);
+      if (mm) mm[1].split(/, | and /).forEach(function (l) { blds.push('S' + l); });
+    }
+    var round = (sp.type === 'power' || sp.type === 'heat');
+    var log = (C.session.get() || {}).log || [], was = {};
+    log.forEach(function (a) { if (a.t === 'checkin' && !a.exercise) was[a.id] = a.status === 'passed' ? (a.was || was[a.id]) : a.status; });
+    var recs = (D.checkins || []).concat(D.unreachable || []);
+    var rc = D.roundCounts || {};
+    var out = blds.map(function (bid) {
+      var bd = C.building(bid) || { name: bid, floors: 0 }, n = bd.floors || 0, bands = [], cur = null;
+      for (var f = 1; f <= n; f++) {
+        var who = null; (D.ambassadors || []).forEach(function (a) { if (((a.floors || {})[bid] || []).indexOf(f) >= 0) who = a; });
+        var key = who ? who.id : '';
+        if (cur && cur.key === key) cur.z = f; else { cur = { key: key, a: f, z: f, who: who }; bands.push(cur); }
+      }
+      return { name: bd.name, bands: bands.map(function (r) {
+        var fl = r.a === r.z ? fill(x.floor, { a: r.a }) : fill(x.floors, { a: r.a, b: r.z });
+        if (!r.who) return { floors: fl, amb: '', none: true, hasCounts: false, cls: 'cvh-pc-band--none' };
+        var c = null;
+        if (round) {
+          var inBand = recs.filter(function (k) { return k.building === bid && +k.floor >= r.a && +k.floor <= r.z; });
+          if (inBand.length) {
+            c = { done: 0, nr: 0, conn: 0, todo: 0 };
+            inBand.forEach(function (k) { var st = k.status === 'passed' ? (was[k.id] || 'notReached') : k.status; if (st === 'done') c.done++; else if (st === 'notReached') c.nr++; else if (st === 'connected') c.conn++; else c.todo++; });
+          } else if (rc[bid] && rc[bid][r.a + '-' + r.z] && !rc[bid][r.a + '-' + r.z].uncovered) {
+            var v = rc[bid][r.a + '-' + r.z]; c = { done: v.done, nr: v.notReached, conn: v.connected, todo: v.waiting };
+          }
+        }
+        return { floors: fl, amb: r.who.name + ', ' + (r.who.role || '').toLowerCase(), none: false, hasCounts: !!c, cls: '',
+          done: c ? fill(x.cDone, { n: c.done }) : '', nr: c ? fill(x.cNr, { n: c.nr }) : '', conn: c ? fill(x.cConn, { n: c.conn }) : '', todo: c ? fill(x.cTodo, { n: c.todo }) : '' };
+      }) };
+    });
+    return { blds: out, round: round && alert ? fill(x.roundFor, { alert: alert.headline + ' (' + alert.where + ')' }) : x.noRound };
+  }
+
+}
+</script>
+</body>
+</html>

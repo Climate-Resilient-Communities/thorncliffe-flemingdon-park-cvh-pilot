@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-12 Service / asset listing detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-12" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Service / asset listing detail">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <header class="cvh-stack" style="--gap:10px">
+    <div class="cvh-find-tags">
+      <span class="cvh-tag"><span class="cvh-ico cvh-ico--{{kindIcon}} cvh-ico--sm" aria-hidden="true"></span>{{kindLabel}}</span>
+      <sc-if value="{{offerTag}}"><span class="cvh-tag"><span class="cvh-ico cvh-ico--communityOffer cvh-ico--sm" aria-hidden="true"></span>{{s.R12.communityOffer}}</span></sc-if>
+    </div>
+    <h1 class="cvh-h1">{{l.name}}</h1>
+    <p class="cvh-lead">{{l.firstLine}}</p>
+    <sc-if value="{{isOffer}}"><p class="cvh-caption">{{s.R12.communityOfferLine}}</p></sc-if>
+    <sc-if value="{{mtFrom}}">
+      <dc-import name="X04_MachineTranslation" state="labelled" from="{{mtFrom}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,48px"></dc-import>
+    </sc-if>
+    <sc-if value="{{mtUnavailable}}">
+      <dc-import name="X04_MachineTranslation" state="unavailable" from="{{srcLang}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,120px"></dc-import>
+    </sc-if>
+  </header>
+
+  <sc-if value="{{help}}">
+    <dc-import name="X14_HowTheyHelp" hazard="{{hazard}}" text="{{help}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,70px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{spaceId}}">
+    <section class="cvh-card" aria-label="{{s.utilities.space}}">
+      <dc-import name="X09_SpaceStatus" space="{{spaceId}}" variant="block" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,380px"></dc-import>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{unknownLine}}"><p class="cvh-note"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{unknownLine}}</span></p></sc-if>
+  <section class="cvh-stack" style="--gap:0" aria-label="{{l.name}}">
+    <div class="cvh-find-attr">
+      <span class="cvh-find-attr__k"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{s.R12.status}}</span>
+      <p class="cvh-h3">{{statusText}}</p>
+    </div>
+    <div class="cvh-find-attr">
+      <span class="cvh-find-attr__k"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{addrLabel}}</span>
+      <sc-if value="{{noAddress}}"><p class="cvh-caption cvh-muted">{{s.R12.noAddress}}</p></sc-if>
+      <p>{{where}}</p>
+      <div class="cvh-row cvh-wrap" style="--gap:8px">
+        <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{directions}}"><span class="cvh-ico cvh-ico--directions cvh-ico--sm" aria-hidden="true"></span>{{s.R12.directions}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toMap}}"><span class="cvh-ico cvh-ico--map cvh-ico--sm" aria-hidden="true"></span>{{s.R12.onMap}}</button>
+      </div>
+    </div>
+    <sc-for list="{{attrs}}" as="at" hint-placeholder-count="7">
+      <div class="cvh-find-attr">
+        <span class="cvh-find-attr__k"><span class="cvh-ico cvh-ico--{{at.icon}} cvh-ico--sm" aria-hidden="true"></span>{{at.label}}</span>
+        <sc-if value="{{at.hours}}">
+          <dl class="cvh-find-hours">
+            <sc-for list="{{at.hours}}" as="h" hint-placeholder-count="7">
+              <dt class="{{h.cls}}">{{h.day}}</dt><dd class="{{h.cls}}">{{h.text}}</dd>
+            </sc-for>
+          </dl>
+        </sc-if>
+        <sc-if value="{{at.text}}"><p class="{{at.cls}}">{{at.text}}</p></sc-if>
+        <sc-if value="{{at.note}}"><p class="cvh-caption">{{at.note}}</p></sc-if>
+      </div>
+    </sc-for>
+    <div class="cvh-find-attr">
+      <span class="cvh-find-attr__k"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{s.R12.contact}}</span>
+      <sc-if value="{{l.phone}}"><button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{call}}"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{callLabel}}</button></sc-if>
+      <div class="cvh-row cvh-wrap" style="--gap:4px 16px">
+        <sc-if value="{{l.email}}"><button type="button" class="cvh-link" onClick="{{email}}">{{s.R12.email}}</button></sc-if>
+        <sc-if value="{{l.web}}"><button type="button" class="cvh-link" onClick="{{web}}">{{s.R12.website}}<span class="cvh-ico cvh-ico--external cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+      </div>
+      <sc-if value="{{noContact}}"><p class="cvh-find-unknown">{{noContact}}</p></sc-if>
+    </div>
+  </section>
+  <sc-if value="{{moreLabel}}"><button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{showAll}}">{{moreLabel}}<span class="cvh-ico cvh-ico--chevronDown cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+
+  <sc-if value="{{showAbout}}">
+    <section class="cvh-stack" style="--gap:10px" aria-label="{{s.R12.kind}}">
+      <div class="cvh-kv"><span class="cvh-kv__k">{{s.R12.services}}</span><span class="cvh-kv__v">{{l.serviceTypes}}</span></div>
+      <div class="cvh-kv"><span class="cvh-kv__k">{{s.R12.kind}}</span><span class="cvh-kv__v">{{kindLabel}}</span></div>
+      <sc-if value="{{runBy}}"><div class="cvh-kv"><span class="cvh-kv__k">{{s.R12.org}}</span><span class="cvh-kv__v">{{runBy}}</span></div></sc-if>
+      <sc-if value="{{orgLink}}"><button type="button" class="cvh-link" onClick="{{toOrg}}">{{orgLink}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+    </section>
+  </sc-if>
+
+  <section class="cvh-find-source" aria-label="{{s.R12.source}}">
+    <span class="cvh-ico cvh-ico--{{sourceIcon}}" aria-hidden="true"></span>
+    <div class="cvh-stack cvh-grow" style="--gap:6px">
+      <p class="cvh-strong">{{sourceLine}}</p>
+      <sc-if value="{{derivedNote}}"><p class="cvh-caption">{{derivedNote}}</p></sc-if>
+      <span class="cvh-tag cvh-tag--illustrative" style="align-self:flex-start">{{s.R12.illustrative}}</span>
+    </div>
+  </section>
+
+  <button type="button" class="cvh-dest" onClick="{{toCorrect}}"><span class="cvh-ico cvh-ico--pencil" aria-hidden="true"></span><span class="cvh-grow">{{s.R12.correct}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+
+  <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Open now, all nine attributes, confirmed by the organisation", "Closed, opens tomorrow (money for rent)", "Public sources, attributes and languages not known", "Community offer, machine-translated from Urdu", "Community offer, from Bengali, no street address", "Space open for cooling, how they can help (heat)", "Space full (asset without a full listing)", "Space closed", "Space not confirmed", "How they can help, from the power alert", "Faith organisation, most details not known", "Basic mode: closed, opens tomorrow (George)", "Basic mode: space open, heat (Amina)"], "default": "Open now, all nine attributes, confirmed by the organisation"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Open now, all nine attributes, confirmed by the organisation": {"persona": "nasrin", "scenario": "C", "params": {"id": "L09", "from": "search"}}, "Closed, opens tomorrow (money for rent)": {"persona": "nasrin", "scenario": "C", "params": {"id": "L15", "from": "search"}}, "Public sources, attributes and languages not known": {"persona": "nasrin", "scenario": "C", "params": {"id": "L02", "from": "search"}}, "Community offer, machine-translated from Urdu": {"persona": "nasrin", "scenario": "C", "params": {"id": "L23", "from": "search"}}, "Community offer, from Bengali, no street address": {"persona": "george", "scenario": "G", "basic": false, "params": {"id": "L24", "from": "map"}}, "Space open for cooling, how they can help (heat)": {"persona": "amina", "scenario": "B", "basic": false, "params": {"id": "L25", "from": "alert", "hazard": "heat"}}, "Space full (asset without a full listing)": {"persona": "george", "scenario": "B", "basic": false, "params": {"id": "M054", "from": "map", "hazard": "heat"}}, "Space closed": {"persona": "nasrin", "scenario": "B", "params": {"id": "L20", "from": "map"}}, "Space not confirmed": {"persona": "george", "scenario": "B", "basic": false, "params": {"id": "M052", "from": "list"}}, "How they can help, from the power alert": {"persona": "yusuf", "scenario": "A", "params": {"id": "L20", "from": "alert", "hazard": "power"}}, "Faith organisation, most details not known": {"persona": "yusuf", "scenario": "A", "params": {"id": "M021", "from": "alert", "hazard": "power"}}, "Basic mode: closed, opens tomorrow (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "params": {"id": "L15", "from": "search"}}, "Basic mode: space open, heat (Amina)": {"persona": "amina", "scenario": "B", "basic": true, "basicState": "persisted", "params": {"id": "L25", "from": "alert", "hazard": "heat"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'help', showExercise: 'R-12'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-12'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R12, prm = b.params, lang = b.lang, D = b.D, go = b.go;
+    var id = prm.id || 'L15';
+    var l = C.listingFor(id);
+    var goBack = function () {
+      if (b.app.canBack) return b.back();
+      var map = { search: 'R-10', map: 'R-14', list: 'R-15', guide: 'R-25' };
+      go(map[prm.from] || 'R-09', prm.from === 'guide' ? { hazard: prm.hazard, stage: 'during' } : {});
+    };
+    if (!l) return { l: { name: s.R12.notFound, firstLine: '' }, attrs: [], goBack: goBack, kindIcon: 'info', kindLabel: '', sourceIcon: 'info' };
+    var as = C.asset(l.assetId) || {};
+    var unknown = x.unknown, yn = s.x09;
+    var MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    var fmtDate = function (d) { if (!d) return x.addedRecently; var p = String(d).split('-'); return (+p[2]) + ' ' + MONTHS[(+p[1]) - 1] + ' ' + p[0]; };
+    var ask = l.phone ? x.unknownCall : x.unknownAsk;
+    var isOffer = !!l.communityOffer || l.kind === 'communityOffer';
+    // Machine translation: the listing is written in one language and shown in another
+    var srcLang = l.sourceLang || 'en';
+    var mtUnavailable = (l.untranslated || []).indexOf(lang) >= 0;
+    var mtFrom = !mtUnavailable && srcLang !== lang ? srcLang : '';
+    // Status
+    var oi = C.openInfo(l, b.scn);
+    // Hours by day, Monday first, today marked
+    var today = C.clock(b.scn).day;
+    var order = ['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+    var hours = null;
+    if (l.hours && l.hours !== 'unknown') hours = order.map(function (d) {
+      var t = l.hours[d], isT = d === today;
+      return { day: s.time.days7[d] + (isT ? ' (' + x.todayTag + ')' : ''), text: t ? C.hhmm12(t[0]) + ' to ' + C.hhmm12(t[1]) : s.time.closed, cls: isT ? 'is-today' : '' };
+    });
+    var nUnknown = 0;
+    var unk = function (label, icon) { nUnknown++; return { label: label, icon: icon, text: unknown, cls: 'cvh-find-unknown', note: '' }; };
+    var attr = {};
+    attr.hours = hours ? { label: x.hours, icon: 'calendar', hours: hours } : unk(x.hours, 'calendar');
+    attr.languages = Array.isArray(l.languages) ? { label: x.languages, icon: 'language', text: l.languages.map(function (c) { var L = C.lang(c); return L.native === L.english ? L.native : L.native + ' (' + L.english + ')'; }).join(', ') }
+      : { label: x.languages, icon: 'language', text: x.languagesUnknown, cls: 'cvh-find-unknown' };
+    attr.cost = l.cost && l.cost !== 'unknown' ? { label: x.cost, icon: 'cost', text: l.costNote || ((s.filters.short || {})[l.cost] || l.cost) } : unk(x.cost, 'cost');
+    attr.bring = l.bring && l.bring !== 'unknown' ? { label: x.bring, icon: 'bag', text: l.bring } : unk(x.bring, 'bag');
+    attr.id = l.idRequired === 'no' ? { label: x.id, icon: 'idCard', text: x.idNo, cls: 'cvh-strong', note: l.idNote || '' }
+      : l.idRequired === 'yes' ? { label: x.id, icon: 'idCard', text: x.idYes, cls: 'cvh-strong', note: l.idNote || '' }
+      : { label: x.id, icon: 'idCard', text: unknown, cls: 'cvh-find-unknown', note: (l.idNote && l.idNote.indexOf('Not known') < 0 ? l.idNote + ' ' : '') + ask };
+    attr.access = l.stepFree === 'yes' ? { label: x.access, icon: 'stepFree', text: x.stepFreeYes, note: l.accessNote || '' }
+      : l.stepFree === 'no' ? { label: x.access, icon: 'stepFree', text: x.stepFreeNo, note: l.accessNote || '' } : unk(x.access, 'stepFree');
+    attr.appt = { yes: x.apptYes, no: x.apptNo, sometimes: x.apptSometimes }[l.appointment] ? { label: x.appointment, icon: 'appointment', text: { yes: x.apptYes, no: x.apptNo, sometimes: x.apptSometimes }[l.appointment] } : unk(x.appointment, 'appointment');
+    var all = !b.basic || !!b.loc.all;
+    var attrs = all ? [attr.hours, attr.languages, attr.cost, attr.bring, attr.id, attr.access, attr.appt] : [attr.cost, attr.id];
+    // Space: a property of this one listing
+    var sp = (D.spaces || []).filter(function (x2) { return (x2.listing && x2.listing === l.id) || x2.assetId === l.assetId; })[0] || null;
+    var statusText = oi.state !== 'unknown' ? oi.text : (sp && sp.hoursToday ? C.fill(x.spaceHours, { from: C.hhmm12(sp.hoursToday[0]), to: C.hhmm12(sp.hoursToday[1]) }) : x.hoursUnknown + '. ' + ask);
+    // Where the information came from
+    var cf = l.confirmed || {};
+    var contributed = cf.source === 'contribution' || as.source === 'contribution';
+    var sourceLine = cf.by ? C.fill(x.confirmedBy, { org: cf.by, date: fmtDate(cf.date) })
+      : contributed ? C.fill(x.contributedBy, { date: cf.date ? fmtDate(cf.date) : b.ago((as.acceptedDaysAgo || 1) * 1440) }) : x.publicSource;
+    // Organisation behind it
+    var page = l.org ? (D.orgPages || []).filter(function (o) { return o.id === l.org; })[0] : null;
+    var org = l.org ? C.org(l.org) : null;
+    var kind = l.kind || 'nonprofit';
+    var hazard = prm.hazard || null;
+    var help = hazard && l.helps ? (l.helps[hazard] || '') : '';
+    var place = l.address || l.place || '';
+    return {
+      l: l, isOffer: isOffer, offerTag: isOffer && kind !== 'communityOffer', unknownLine: nUnknown || l.idRequired === 'unknown' || !Array.isArray(l.languages) ? C.fill(x.someUnknown, { ask: ask }) : '', kindIcon: kind, kindLabel: (s.orgKinds || {})[kind] || kind,
+      mtFrom: mtFrom, mtUnavailable: mtUnavailable, srcLang: srcLang,
+      hazard: hazard || 'power', help: help, spaceId: sp ? sp.id : '',
+      statusText: statusText, addrLabel: l.address ? x.address : x.whereToFind, noAddress: !l.address, where: l.address ? l.address + (l.place ? '. ' + l.place : '') : (l.place || unknown),
+      attrs: attrs, moreLabel: all ? '' : x.seeAll, showAll: function () { b.setLoc({ all: true }); }, showAbout: all,
+      callLabel: l.phone ? x.call + ' ' + l.phone : '', noContact: !l.phone && !l.email && !l.web ? x.noContact + ' ' + x.unknownAsk : '',
+      runBy: org ? org.name : (cf.by && cf.by !== l.name ? cf.by : ''), orgLink: page ? C.fill(x.otherServices, { org: page.name }) : '',
+      sourceLine: sourceLine, sourceIcon: cf.by ? 'verified' : contributed ? 'person' : 'info', derivedNote: l.derived ? x.derivedNote : '',
+      goBack: goBack,
+      call: function () { b.toast(C.fill(x.callConfirm, { phone: l.phone })); },
+      email: function () { b.toast(C.fill(x.emailConfirm, { email: l.email })); },
+      web: function () { b.toast(C.fill(x.webConfirm, { web: String(l.web).replace(/^https?:\/\//, '').split('/')[0] })); },
+      directions: function () { b.toast(C.fill(x.directionsConfirm, { place: place })); },
+      toMap: function () { go('R-14', { focus: l.id }); },
+      toOrg: function () { go('R-13', { org: l.org }); },
+      toCorrect: function () { go('R-22', { id: l.id }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

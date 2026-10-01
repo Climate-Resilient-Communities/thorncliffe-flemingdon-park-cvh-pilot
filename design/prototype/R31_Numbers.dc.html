@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-31 Numbers I might need</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-31" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Numbers I might need">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <div class="cvh-stack" style="--gap:4px">
+    <h1 class="cvh-h1">{{s.R31.title}}</h1>
+    <p class="cvh-hide-basic">{{s.R31.lead}}</p>
+  </div>
+
+  <sc-if value="{{called}}">
+    <div class="cvh-note" role="status"><span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span><span class="cvh-grow">{{called}}</span></div>
+  </sc-if>
+
+  <section class="cvh-e911" aria-labelledby="r31-911">
+    <p class="cvh-eyebrow" style="color:var(--ink)" id="r31-911">{{s.R31.emergency}}</p>
+    <p class="cvh-e911__num">911</p>
+    <p class="cvh-strong">{{s.R31.emergencyWhen}}</p>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{call911}}"><span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span>{{s.R31.call911}}</button>
+  </section>
+
+  <section class="cvh-section" aria-labelledby="r31-rest">
+    <h2 class="cvh-section__title" id="r31-rest">{{s.R31.others}}</h2>
+    <ul class="cvh-numlist">
+      <sc-for list="{{rows}}" as="r" hint-placeholder-count="5">
+        <li class="cvh-num">
+          <p class="cvh-num__purpose">{{r.purpose}}</p>
+          <sc-if value="{{r.line}}"><p class="cvh-caption">{{r.line}}</p></sc-if>
+          <sc-if value="{{r.lineTag}}"><span class="cvh-tag cvh-tag--illustrative" style="align-self:flex-start">{{s.shell.illustrative}}</span></sc-if>
+          <sc-if value="{{r.number}}">
+            <div class="cvh-num__row">
+              <span class="cvh-num__digits">{{r.number}}</span>
+              <sc-if value="{{r.illustrative}}"><span class="cvh-tag cvh-tag--illustrative">{{s.shell.illustrative}}</span></sc-if>
+              <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{r.call}}" aria-label="{{r.callAria}}"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{s.R31.call}}</button>
+            </div>
+          </sc-if>
+          <sc-if value="{{r.choose}}"><button type="button" class="cvh-link" onClick="{{r.choose}}">{{s.R31.chooseBuilding}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+        </li>
+      </sc-for>
+    </ul>
+  </section>
+
+  <dc-import name="X01_Not911" variant="inline" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Building contact known (Yusuf, Sample Tower A)", "No building contact: ambassador route (George)", "No building contact, no ambassador on the floor (Nasrin)", "No building chosen (first visit)", "Call confirmation (211)", "Basic mode: building contact known (Amina)", "Basic mode: no building contact (George)"], "default": "Building contact known (Yusuf, Sample Tower A)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Building contact known (Yusuf, Sample Tower A)": {"persona": "yusuf", "scenario": "C"}, "No building contact: ambassador route (George)": {"persona": "george", "scenario": "C", "basic": false}, "No building contact, no ambassador on the floor (Nasrin)": {"persona": "nasrin", "scenario": "C"}, "No building chosen (first visit)": {"persona": "new", "scenario": "C"}, "Call confirmation (211)": {"persona": "yusuf", "scenario": "C", "loc": {"called": "211"}}, "Basic mode: building contact known (Amina)": {"persona": "amina", "scenario": "C", "basic": true, "basicState": "persisted"}, "Basic mode: no building contact (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper"}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'ready', showExercise: 'R-31'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-31'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R31, D = b.D, ch = b.ch, go = b.go;
+    var nums = {}; (D.numbers || []).forEach(function (n) { nums[n.id] = n; });
+    var call = function (number) {
+      return function () { var m = C.fill(x.callConfirm, { number: number }); b.setLoc({ called: number }); b.toast(m); };
+    };
+    var row = function (purpose, number, extra) {
+      return Object.assign({ purpose: purpose, number: number, line: '', lineTag: false, illustrative: false, choose: null,
+        call: call(number), callAria: C.fill(x.calling, { what: purpose }) + ', ' + number }, extra || {});
+    };
+    // The resident's building contact, when the Hub knows one; otherwise say so, and give the route that exists.
+    var bId = ch.building, bld = bId ? C.building(bId) : null, bc = bId ? (D.buildingContacts || {})[bId] : null;
+    var buildingRow;
+    if (bc) {
+      buildingRow = row(C.fill(x.building, { role: (x.roles || {})[bc.role] || bc.role }), bc.phone, { line: bld ? bld.name : '', illustrative: !!bc.illustrative });
+    } else if (!bld) {
+      buildingRow = { purpose: x.buildingTitle, number: null, line: x.noBuildingChosen, choose: function () { go('R-35', { from: 'home' }); } };
+    } else {
+      var covered = ch.floor ? C.checkinCovered(bId, ch.floor) : false;
+      buildingRow = { purpose: x.buildingTitle + ': ' + bld.name, number: null, choose: null,
+        line: covered ? x.noBuilding + ' ' + x.ambRoute : x.noBuildingNoAmb };
+    }
+    var hub = nums.hub || { number: (D.hubContact || {}).phone };
+    var rows = [
+      buildingRow,
+      row(x.hub, hub.number, { line: b.basic ? '' : x.hubHours, lineTag: !b.basic && !!(D.hubContact || {}).hoursIllustrative }),
+      row(x.p211, (nums['211'] || {}).number || '211'),
+      row(x.p311, (nums['311'] || {}).number || '311'),
+      row(x.hydro, (nums.hydro || {}).number)
+    ];
+    var called = b.loc.called ? C.fill(x.callConfirm, { number: b.loc.called }) : '';
+    return { rows: rows, called: called, call911: call('911'),
+      goBack: function () { if (b.app.canBack) b.back(); else go('R-24'); } };
+  }
+
+}
+</script>
+</body>
+</html>

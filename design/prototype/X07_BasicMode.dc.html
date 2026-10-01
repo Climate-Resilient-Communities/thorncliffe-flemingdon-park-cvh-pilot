@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-07 Basic mode</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <div class="cvh-stack" style="--gap:6px">
+    <button type="button" class="cvh-switch {{onClass}}" role="switch" aria-checked="{{ariaOn}}" onClick="{{toggle}}" style="{{btnStyle}}">
+      <span class="cvh-switch__track" aria-hidden="true"><span class="cvh-switch__knob"></span></span>
+      <sc-if value="{{showIcon}}"><span class="cvh-ico cvh-ico--textsize cvh-ico--sm" aria-hidden="true"></span></sc-if>
+      <span class="cvh-grow">{{s.x07.label}}<span class="cvh-sr">: </span> <span class="cvh-switch__state">{{stateWord}}</span></span>
+    </button>
+    <sc-if value="{{sub}}"><p class="cvh-caption cvh-muted">{{sub}}</p></sc-if>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["off","on","helper","persisted"],"default":"off"},"on":{"editor":null},"onToggle":{"editor":null},"compact":{"editor":"boolean","default":false},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":110}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { local: null }; }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var st = p.state || 'off';
+    var on = p.on !== undefined && p.on !== null ? !!p.on : (this.state.local !== null ? this.state.local : st !== 'off');
+    var sub = p.compact ? '' : (st === 'helper' && on ? s.x07.setByHelper : st === 'persisted' && on ? s.x07.remembered : '');
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic || on && !p.embedded ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:110px;padding:16px;background:#fafafa;',
+      btnStyle: p.compact ? 'width:100%' : '', showIcon: !p.compact,
+      onClass: on ? 'is-on' : '', ariaOn: on ? 'true' : 'false', stateWord: on ? s.x07.on : s.x07.off, sub: sub,
+      toggle: function () { if (self.props.onToggle) self.props.onToggle(); else self.setState({ local: !on }); } };
+  }
+}
+</script>
+</body>
+</html>

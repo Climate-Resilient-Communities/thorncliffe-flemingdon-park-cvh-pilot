@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alert components: X-01, X-02, X-13, X-08, X-12</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-sheetpage" lang="en" dir="ltr" style="width:1440px;height:5950px;overflow:hidden">
+  <div class="cvh-stack" style="--gap:8px">
+    <p class="cvh-eyebrow">Component library · phase 1</p>
+    <h1 style="font-size:40px;line-height:1.1;margin:0;color:var(--ink)">Alert components: X-01, X-02, X-13, X-08, X-12</h1>
+    <p class="cvh-spec__note" style="font-size:17px">Everything that sits on an alert, in every state the brief lists, with right-to-left (Urdu) and bigger-text variants. Fixed alert order: type and headline, what is not yet known, verification, where, one action.</p>
+  </div>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-01</span><h2 class="cvh-spec__title">Not-911 statement</h2></div>
+    <p class="cvh-spec__note">A designed component, not footer text. Placed on R-07, R-04, the head of R-25, R-31, R-33 and P-02.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells0}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X01_Not911" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-02</span><h2 class="cvh-spec__title">Origin and verification marker</h2></div>
+    <p class="cvh-spec__note">Level and author in words, verification as shape plus word, always directly under the headline. Opens R-28. Never colour alone.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells1}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X02_Origin" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-13</span><h2 class="cvh-spec__title">Disruption type icons</h2></div>
+    <p class="cvh-spec__note">Always with the word; never in the incident status colours.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells2}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X13_DisruptionType" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-08</span><h2 class="cvh-spec__title">Audio control</h2></div>
+    <p class="cvh-spec__note">Length stated before play; text always stays alongside; the control never mirrors. Press play on the idle state to run it.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells3}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X08_Audio" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-12</span><h2 class="cvh-spec__title">Tailored block: What this means for you</h2></div>
+    <p class="cvh-spec__note">Beneath the core of an alert, never above it. Advice, never a group name. Absent when nothing was chosen.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells4}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X12_Tailored" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":5950}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {"cells0": [{"label": "Block (R-07, R-25, R-31, R-33)", "w": 360, "props": {"variant": "block", "embedded": true}}, {"label": "Inline (compact surfaces)", "w": 360, "props": {"variant": "inline", "embedded": true}}, {"label": "Partner space (P-02)", "w": 420, "props": {"variant": "partner", "embedded": true}}, {"label": "Printed notice (X-05)", "w": 360, "props": {"variant": "print", "embedded": true}}, {"label": "Text message line (R-04)", "w": 360, "props": {"variant": "sms", "embedded": true}}, {"label": "Urdu, right-to-left", "w": 360, "props": {"variant": "block", "lang": "ur", "embedded": true}}, {"label": "Greek", "w": 360, "props": {"variant": "block", "lang": "el", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"variant": "block", "basic": true, "embedded": true}}], "cells1": [{"label": "Hub, verified", "w": 360, "props": {"origin": "hub", "state": "verified", "embedded": true}}, {"label": "Partner (TNO), verified", "w": 360, "props": {"origin": "partner", "org": "TNO", "state": "verified", "embedded": true}}, {"label": "Building ambassador, not yet verified", "w": 360, "props": {"origin": "ambassador", "building": "SA", "state": "unverified", "embedded": true}}, {"label": "Ambassador post after promotion", "w": 360, "props": {"origin": "ambassador", "building": "SA", "state": "verified", "embedded": true}}, {"label": "Corrected", "w": 360, "props": {"origin": "hub", "state": "corrected", "correctedMins": 75, "embedded": true}}, {"label": "Official alert relayed (ECCC)", "w": 360, "props": {"origin": "official", "source": "ECCC", "embedded": true}}, {"label": "Official, Alert Ready", "w": 360, "props": {"origin": "official", "source": "ALERTREADY", "embedded": true}}, {"label": "In a text message (words only)", "w": 360, "props": {"origin": "hub", "state": "verified", "surface": "text", "embedded": true}}, {"label": "Forwarded, not yet verified", "w": 360, "props": {"origin": "ambassador", "state": "unverified", "surface": "forwarded", "embedded": true}}, {"label": "Printed sheet (one colour)", "w": 360, "props": {"origin": "hub", "state": "verified", "surface": "print", "embedded": true}}, {"label": "Urdu, right-to-left", "w": 360, "props": {"origin": "hub", "state": "verified", "lang": "ur", "embedded": true}}, {"label": "Dari, not yet verified", "w": 360, "props": {"origin": "ambassador", "state": "unverified", "lang": "prs", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"origin": "official", "source": "ECCC", "basic": true, "embedded": true}}], "cells2": [{"label": "The set of nine", "w": 380, "props": {"surface": "grid", "embedded": true}}, {"label": "Multi-select (A-02: elevator and water)", "w": 360, "props": {"types": ["elevator", "water"], "surface": "screen", "embedded": true}}, {"label": "Large, on an alert headline", "w": 360, "props": {"type": "power", "size": "lg", "surface": "screen", "embedded": true}}, {"label": "In a text message (word only)", "w": 360, "props": {"types": ["power"], "surface": "text", "embedded": true}}, {"label": "Urdu set", "w": 380, "props": {"surface": "grid", "lang": "ur", "embedded": true}}, {"label": "Tamil set", "w": 380, "props": {"surface": "grid", "lang": "ta", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"type": "heat", "size": "lg", "surface": "screen", "basic": true, "embedded": true}}], "cells3": [{"label": "Idle, length stated", "w": 360, "props": {"state": "idle", "secs": 40, "embedded": true}}, {"label": "Loading", "w": 360, "props": {"state": "loading", "embedded": true}}, {"label": "Playing", "w": 360, "props": {"state": "playing", "at": 14, "embedded": true}}, {"label": "Paused", "w": 360, "props": {"state": "paused", "at": 22, "embedded": true}}, {"label": "Failed, one-line explanation", "w": 360, "props": {"state": "failed", "embedded": true}}, {"label": "Per guide section (R-25)", "w": 360, "props": {"state": "idle", "secs": 45, "variant": "section", "embedded": true}}, {"label": "Try it: fails on a slow connection", "w": 360, "props": {"state": "idle", "failOnPlay": true, "embedded": true}}, {"label": "Urdu (controls stay left to right)", "w": 360, "props": {"state": "idle", "lang": "ur", "embedded": true}}, {"label": "Mandarin", "w": 360, "props": {"state": "idle", "lang": "zh", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"state": "idle", "basic": true, "embedded": true}}], "cells4": [{"label": "Senior with a check-in (Amina, heat)", "w": 360, "props": {"hazard": "heat", "groups": ["seniors", "checkin"], "checkin": "covered", "embedded": true}}, {"label": "Newcomer (Nasrin, heat)", "w": 360, "props": {"hazard": "heat", "groups": ["newcomers"], "checkin": "none", "embedded": true}}, {"label": "Several groups (power outage)", "w": 360, "props": {"hazard": "power", "groups": ["seniors", "families"], "checkin": "none", "embedded": true}}, {"label": "Floor has no ambassador", "w": 360, "props": {"hazard": "power", "groups": ["checkin"], "checkin": "uncovered", "embedded": true}}, {"label": "On a relayed official alert", "w": 360, "props": {"hazard": "heat", "groups": ["seniors"], "checkin": "none", "official": true, "embedded": true}}, {"label": "Version everyone gets shown", "w": 360, "props": {"hazard": "heat", "groups": ["seniors"], "checkin": "covered", "mode": "standard", "embedded": true}}, {"label": "Urdu, advice not yet translated", "w": 360, "props": {"hazard": "heat", "groups": ["seniors", "checkin"], "checkin": "covered", "lang": "ur", "embedded": true}}, {"label": "Bigger text, fewer things (actions first)", "w": 360, "props": {"hazard": "heat", "groups": ["seniors", "checkin"], "checkin": "covered", "basic": true, "embedded": true}}]};
+  }
+}
+</script>
+</body>
+</html>

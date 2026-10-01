@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-06 Structured statement chip</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op" lang="en" dir="ltr" style="{{rootStyle}}">
+  <sc-if value="{{isChip}}" hint-placeholder-val="{{true}}">
+    <span class="cvh-stmt cvh-stmt--{{type}}"><span class="cvh-ico cvh-ico--{{icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{word}}</span></span>
+  </sc-if>
+  <sc-if value="{{isCard}}">
+    <article class="cvh-stmt-card" aria-label="{{word}}">
+      <div class="cvh-row cvh-wrap" style="--gap:8px">
+        <span class="cvh-stmt cvh-stmt--{{type}}"><span class="cvh-ico cvh-ico--{{icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{word}}</span></span>
+        <span class="cvh-tag cvh-tag--illustrative">Illustrative</span>
+      </div>
+      <p class="cvh-stmt-card__text">{{text}}</p>
+      <sc-if value="{{supply}}"><p class="cvh-row" style="--gap:6px;font-size:15px"><span class="cvh-ico cvh-ico--kit cvh-ico--sm" aria-hidden="true"></span>{{supply}}</p></sc-if>
+      <sc-if value="{{claimed}}"><p class="cvh-row" style="--gap:6px;font-size:15px;font-weight:700;color:var(--ink)"><span class="cvh-ico cvh-ico--handshake cvh-ico--sm" aria-hidden="true"></span>{{claimed}}</p></sc-if>
+      <div class="cvh-stmt-card__who">
+        <span class="cvh-origin__mark" aria-hidden="true">{{monogram}}</span>
+        <span class="cvh-stmt-card__org">{{orgName}}</span><span>{{personLine}}</span><span>· {{when}}</span>
+      </div>
+    </article>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"type":{"editor":"enum","options":["doing","canTake","cannotCover","need"],"default":"need"},"statement":{"editor":"enum","options":["","ST-01","ST-02","ST-03","ST-04","ST-06","ST-07","ST-10","ST-12","ST-13"],"default":"ST-03"},"variant":{"editor":"enum","options":["chip","card"],"default":"card"},"claimedBy":{"editor":"enum","options":["","HUB","TNO","CRC","CITY"],"default":""},"embedded":{"editor":null},"$preview":{"width":420,"height":230}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var p = this.props, C = window.CVH, D = C.data(), s = C.strings('en');
+    var st = null; (D.partner.statements || []).forEach(function (x) { if (x.id === p.statement) st = x; });
+    var type = st ? st.type : (p.type || 'need');
+    var icons = { doing: 'stmtDoing', canTake: 'stmtCanTake', cannotCover: 'stmtCannot', need: 'stmtNeed' };
+    var org = C.org(st ? st.org : 'HUB') || {}, person = C.person(st ? st.person : 'PRIYA') || {};
+    var sup = st && st.supply ? (D.partner.supplies || []).filter(function (x) { return x.id === st.supply; })[0] : null;
+    var claimedOrg = p.claimedBy ? C.org(p.claimedBy) : null;
+    var variant = p.variant || (p.embedded ? 'chip' : 'card');
+    return { rootStyle: p.embedded ? '' : 'width:420px;height:230px;padding:16px;background:#e8edf4;',
+      isChip: variant === 'chip', isCard: variant === 'card', type: type, icon: icons[type], word: s.x06[type],
+      text: st ? st.text : '', monogram: org.monogram, orgName: org.name, personLine: person.name ? person.name + ', ' + person.role : '',
+      when: C.ago(st ? st.minsAgo : 10, 'en'),
+      supply: sup ? C.fill(s.x06.supply, { item: sup.qtyNum + ' ' + sup.unit + ' (' + (C.org(sup.org) || {}).short + ')' }) : '',
+      claimed: claimedOrg ? C.fill(s.x06.claimed, { org: claimedOrg.name }) : '' };
+  }
+}
+</script>
+</body>
+</html>

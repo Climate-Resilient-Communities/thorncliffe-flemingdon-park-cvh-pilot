@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-12 Tailored block</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{showMine}}" hint-placeholder-val="{{true}}">
+    <section class="cvh-tailored" aria-label="{{s.x12.title}}">
+      <div class="cvh-tailored__head">
+        <sc-if value="{{official}}"><span class="cvh-tailored__from"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span>{{s.x12.fromHub}}</span></sc-if>
+        <h3 class="cvh-h3">{{s.x12.title}}</h3>
+      </div>
+      <sc-if value="{{hasCheckin}}"><p class="cvh-tailored__checkin">{{checkinLine}}</p></sc-if>
+      <sc-if value="{{hasAdvice}}">
+        <ul class="cvh-tailored__list">
+          <sc-for list="{{advice}}" as="a" hint-placeholder-count="2">
+            <li class="cvh-tailored__item"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span><span lang="{{a.lang}}" dir="{{a.dir}}">{{a.text}}</span></li>
+          </sc-for>
+        </ul>
+      </sc-if>
+      <sc-if value="{{unavailable}}"><p class="cvh-caption cvh-muted">{{unavailableLine}}</p></sc-if>
+      <dc-import name="X08_Audio" secs="{{audioSecs}}" variant="section" lang="{{lang}}" embedded="{{true}}" hint-size="100%,72px"></dc-import>
+      <div class="cvh-tailored__links">
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{openChoices}}">{{s.x12.tailoredLink}}</button>
+        <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toStandard}}">{{s.x12.standard}}</button>
+      </div>
+    </section>
+  </sc-if>
+  <sc-if value="{{showStandard}}">
+    <div class="cvh-standard-note">
+      <span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span>
+      <span class="cvh-grow">{{s.x12.standardShown}}</span>
+      <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toMine}}">{{s.x12.showMine}}</button>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"hazard":{"editor":"enum","options":["heat","power","flood","elevator","smoke","fire","winter"],"default":"heat"},"groups":{"editor":null},"group":{"editor":"enum","options":["none","seniors","newcomers","families"],"default":"seniors"},"checkin":{"editor":"enum","options":["none","covered","uncovered"],"default":"covered"},"official":{"editor":"boolean","default":false},"mode":{"editor":"enum","options":["mine","standard"],"default":"mine"},"onChoices":{"editor":null},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":520}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { mode: null }; }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data(), lang = p.lang || 'en', s = C.strings(lang);
+    var hazard = p.hazard || 'heat';
+    var groups = p.groups || (p.group && p.group !== 'none' ? [p.group] : []);
+    var checkin = p.checkin || 'none';
+    var tr = ((window.CVH_STRINGS[lang] || {}).tailored || {})[hazard] || {};
+    var advice = [], unavailable = false;
+    groups.forEach(function (g) {
+      if (g === 'checkin') return;
+      var own = lang !== 'en' && tr[g];
+      var lines = own ? tr[g] : (((D.tailored || {})[hazard] || {})[g] || []);
+      if (lang !== 'en' && !tr[g] && lines.length) unavailable = true;
+      lines.forEach(function (t) { advice.push({ text: t, lang: own || lang === 'en' ? C.bcp(lang) : 'en', dir: own || lang === 'en' ? C.dir(lang) : 'ltr' }); });
+    });
+    if (p.basic) advice = advice.slice(0, 3);
+    var hub = D.hubContact || {};
+    var checkinLine = checkin === 'covered' ? s.x12.checkin : C.fill(s.x12.noCheckin, { phone: hub.phone, hours: s.x12.hubHours });
+    var any = groups.filter(function (g) { return g !== 'checkin'; }).length > 0 || checkin !== 'none';
+    var mode = this.state.mode || p.mode || 'mine';
+    return { s: s, lang: lang, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:520px;padding:16px;background:#fafafa;overflow:hidden;',
+      showMine: any && mode === 'mine', showStandard: any && mode === 'standard',
+      official: !!p.official, hasCheckin: checkin !== 'none', checkinLine: checkinLine,
+      advice: advice, hasAdvice: advice.length > 0, unavailable: unavailable,
+      unavailableLine: s.x04.unavailable + '. ' + C.fill(s.x04.showSource, { lang: 'English' }),
+      audioSecs: 30 + advice.length * 6,
+      openChoices: function () { if (self.props.onChoices) self.props.onChoices(); },
+      toStandard: function () { self.setState({ mode: 'standard' }); },
+      toMine: function () { self.setState({ mode: 'mine' }); } };
+  }
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>P-05 Our capacity</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="P-05" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="P-05" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="P-05" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-pc" style="max-width:920px">
+  <div class="cvh-stack" style="--gap:6px">
+    <h2 class="cvh-h2">{{x.title}}</h2>
+    <p>{{lead}}</p>
+  </div>
+  <div class="cvh-pc-now" role="status">
+    <span class="cvh-origin__mark" aria-hidden="true">{{mine.mono}}</span>
+    <span class="cvh-strong" style="color:var(--ink)">{{mine.nowLabel}}</span>
+    <span class="cvh-cap {{mine.capCls}}"><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{mine.capWord}}</span>
+    <span class="cvh-grow"></span>
+    <sc-if value="{{mine.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if>
+    <span class="cvh-muted" style="flex-basis:100%">{{mine.setLine}}</span>
+  </div>
+  <sc-if value="{{exercise}}"><p class="cvh-row" style="--gap:8px"><span class="cvh-ico cvh-ico--exercise cvh-ico--sm" aria-hidden="true"></span><span class="cvh-strong">{{exLine}}</span></p></sc-if>
+  <fieldset class="cvh-stack" style="--gap:10px;border:0;padding:0;margin:0">
+    <legend class="cvh-strong" style="color:var(--ink);margin-bottom:8px">{{x.choose}}</legend>
+    <div class="cvh-pc-opts {{optsCls}}">
+      <sc-for list="{{opts}}" as="o" hint-placeholder-count="4">
+        <button type="button" class="cvh-pc-opt {{o.cls}}" aria-pressed="{{o.pressed}}" onClick="{{o.pick}}">
+          <span class="cvh-cap {{o.capCls}}" aria-hidden="true"><span class="cvh-cap__m"><i></i><i></i><i></i></span></span>
+          <span class="cvh-pc-opt__text"><span class="cvh-pc-opt__word">{{o.word}}</span><span class="cvh-muted">{{o.line}}</span></span>
+          <sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-pc-opt__check" aria-hidden="true"></span></sc-if>
+        </button>
+      </sc-for>
+    </div>
+  </fieldset>
+  <p class="cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span>{{x.selfDeclared}}</span></p>
+
+  <div class="cvh-pc-cols cvh-pc-cols--even {{colsCls}}">
+    <section class="cvh-pc-panel" aria-labelledby="p05-pv">
+      <h3 class="cvh-pc-panel__title" id="p05-pv">{{x.preview}}</h3>
+      <div class="cvh-stmt-card">
+        <div class="cvh-row cvh-wrap" style="--gap:8px"><dc-import name="X06_Statement" variant="chip" type="doing" embedded="{{true}}" hint-size="200px,32px"></dc-import><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></div>
+        <p class="cvh-stmt-card__text">{{previewText}}</p>
+        <div class="cvh-pc-who">
+          <span class="cvh-origin__mark" aria-hidden="true">{{mine.mono}}</span>
+          <span class="cvh-strong" style="color:var(--ink)">{{mine.name}}</span>
+          <span class="cvh-cap {{mine.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{mine.capWord}}</span>
+          <span>{{previewWho}}</span>
+        </div>
+      </div>
+    </section>
+    <section class="cvh-pc-panel" aria-labelledby="p05-all">
+      <h3 class="cvh-pc-panel__title" id="p05-all">{{x.others}}</h3>
+      <p class="cvh-muted">{{x.othersLine}}</p>
+      <ul class="cvh-pc-orgs cvh-pc-orgs--rows">
+        <sc-for list="{{others}}" as="o" hint-placeholder-count="4">
+          <li class="cvh-pc-org"><span class="cvh-origin__mark" aria-hidden="true">{{o.mono}}</span><span class="cvh-pc-org__name">{{o.name}}</span>
+            <span class="cvh-cap {{o.capCls}}"><span class="cvh-sr">Capacity: </span><span class="cvh-cap__m" aria-hidden="true"><i></i><i></i><i></i></span>{{o.capWord}}</span>
+            <sc-if value="{{o.illus}}"><span class="cvh-tag cvh-tag--illustrative">Illustrative</span></sc-if></li>
+        </sc-for>
+      </ul>
+    </section>
+  </div>
+  <div class="cvh-pc-links">
+    <button type="button" class="cvh-link" onClick="{{toCoverage}}">{{x.toCoverage}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    <button type="button" class="cvh-link" onClick="{{toSpace}}">{{x.toSpace}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Available (Daniel, TNO)", "Stretched (Priya, the Hub)", "At capacity", "Not set (Kwame, the City)", "Exercise running", "Phone width, 390"], "default": "Available (Daniel, TNO)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Available (Daniel, TNO)": {"persona": "DANIEL"}, "Stretched (Priya, the Hub)": {"persona": "PRIYA"}, "At capacity": {"persona": "DANIEL", "params": {"sample": "atCapacity"}}, "Not set (Kwame, the City)": {"persona": "KWAME"}, "Exercise running": {"persona": "DANIEL", "exercise": true}, "Phone width, 390": {"persona": "DANIEL", "w": 390, "h": 1300}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'P-05', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, x = b.s.P05, P = D.partner || {}, fill = C.fill, prm = b.params || {};
+    var me = b.persona || {}, myOrg = me.org || 'HUB', org = C.org(myOrg) || { name: myOrg, monogram: myOrg, short: myOrg };
+    var cap = Object.assign({}, P.capacity || {});
+    if (prm.sample !== undefined) cap[myOrg] = prm.sample;
+    // Who set each organisation's capacity in this session
+    var setAct = {}; (C.session.get().log || []).forEach(function (a) { if (a.t === 'partner' && a.kind === 'capacity' && a.item) setAct[a.item.org] = a; });
+    var lvl = function (o) { return cap[o] || 'notSet'; };
+    var capView = function (o) { var v = lvl(o); return { capCls: 'cvh-cap--' + v, capWord: x.words[v] }; };
+    var mineAct = prm.sample !== undefined ? null : setAct[myOrg];
+    var cur = lvl(myOrg), mv = capView(myOrg);
+    var setLine = cur === 'notSet' ? fill(x.notSetLine, { org: org.name }) : mineAct ? fill(x.setBy, { name: (C.person(mineAct.by) || { name: me.name }).name, t: b.ago(Math.round((Date.now() - mineAct.at) / 60000)) }) : x.setDrawn;
+    var mine = { mono: org.monogram, name: org.name, nowLabel: fill(x.now, { org: org.name }), capCls: mv.capCls, capWord: mv.capWord, setLine: setLine, illus: cur !== 'notSet' && !mineAct };
+    var opts = ['available', 'stretched', 'atCapacity', 'notSet'].map(function (k) {
+      var on = cur === k;
+      return { word: x.words[k], line: x.lines[k], on: on, cls: on ? 'is-on' : '', pressed: on ? 'true' : 'false', capCls: 'cvh-cap--' + k,
+        pick: function () {
+          b.act({ t: 'partner', kind: 'capacity', item: { org: myOrg, level: k === 'notSet' ? null : k } });
+          b.toast(k === 'notSet' ? x.cleared : fill(b.exercise ? x.exerciseSet : x.setTo, { word: x.words[k].toLowerCase() }));
+        } };
+    });
+    var orgsIn = ['HUB', 'TNO', 'CRC', 'CITY'];
+    Object.keys(cap).forEach(function (o) { if (orgsIn.indexOf(o) < 0) orgsIn.push(o); });
+    var others = orgsIn.filter(function (o) { return o !== myOrg; }).map(function (o) {
+      var r = C.org(o) || { name: o, monogram: o }, v = capView(o);
+      return { mono: r.monogram, name: r.name, capCls: v.capCls, capWord: v.capWord, illus: lvl(o) !== 'notSet' && !setAct[o] };
+    });
+    var mySpace = (D.spaces || []).filter(function (z) { return z.org === myOrg; })[0];
+    var previewText = myOrg === 'TNO' ? 'Community room still open; 9 people charging now.' : mySpace ? 'Our space is open and staffed.' : 'We are on the reception desk until 11 pm.';
+    var sp = (b.params || {}).space;
+    return { x: x, lead: fill(x.lead, { org: org.name }), mine: mine, opts: opts, others: others, exercise: b.exercise,
+      exLine: b.s.x10.running + ' ' + b.s.x10.runningSub, optsCls: b.narrow ? 'cvh-pc-opts--one' : '', colsCls: b.narrow ? 'cvh-pc-cols--one' : '',
+      previewText: previewText, previewWho: fill(x.previewLine, { name: me.name, role: me.role }),
+      toCoverage: function () { b.go('P-04', sp ? { space: sp } : {}); }, toSpace: function () { b.go('P-02', sp ? { space: sp } : {}); } };
+  }
+
+}
+</script>
+</body>
+</html>

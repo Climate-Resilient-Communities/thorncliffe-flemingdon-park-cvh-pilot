@@ -1,0 +1,427 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-05 Pre-send review</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-05" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-05" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-05" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage cvh-ha-page">
+  <div class="cvh-ha-bar">
+    <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{backLabel}}</button>
+    <nav class="cvh-ha-steps" aria-label="{{T.steps.label}}">
+      <sc-for list="{{steps}}" as="st" hint-placeholder-count="3">
+        <button type="button" class="cvh-ha-step {{st.cls}}" aria-current="{{st.current}}" onClick="{{st.go}}"><span class="cvh-ha-step__n">{{st.n}}</span>{{st.label}}</button>
+      </sc-for>
+    </nav>
+  </div>
+
+  <sc-if value="{{exercise}}">
+    <div class="cvh-ha-done" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><div class="cvh-stack" style="--gap:2px"><p>{{x.exTitle}}</p><p style="font-weight:400">{{x.exLine}}</p></div></div>
+  </sc-if>
+
+  <div class="cvh-ha-cols {{colsCls}}">
+    <div class="cvh-stack" style="--gap:20px">
+      <section class="cvh-ha-say" aria-labelledby="o05-say">
+        <p class="cvh-eyebrow" style="color:var(--ink)" id="o05-say">{{x.sayTitle}}</p>
+        <p class="cvh-ha-say__text">{{say}}</p>
+        <sc-if value="{{names}}"><p>{{names}}</p></sc-if>
+        <p class="cvh-muted">{{x.generated}}</p>
+        <div class="cvh-row cvh-wrap" style="--gap:4px 20px">
+          <sc-if value="{{hasPlace}}"><button type="button" class="cvh-link" onClick="{{toPlace}}">{{x.changePlace}}</button></sc-if>
+          <sc-if value="{{hasGroup}}"><button type="button" class="cvh-link" onClick="{{toGroup}}">{{x.changeGroup}}</button></sc-if>
+        </div>
+      </section>
+
+      <sc-if value="{{small}}">
+        <div class="cvh-ha-warn" role="alert">
+          <span class="cvh-ico cvh-ico--flag" aria-hidden="true"></span>
+          <div class="cvh-stack" style="--gap:8px">
+            <p class="cvh-strong">{{smallTitle}}</p>
+            <p>{{s.O04.small}}</p>
+            <button type="button" class="cvh-option {{ackCls}}" role="checkbox" aria-checked="{{ackAria}}" onClick="{{toggleAck}}" style="background:#fff">
+              <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{ackOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+              <span class="cvh-option__text"><span class="cvh-option__label">{{x.smallAck}}</span></span>
+            </button>
+          </div>
+        </div>
+      </sc-if>
+
+      <section class="cvh-ha-sec" aria-labelledby="o05-reach">
+        <div class="cvh-row cvh-wrap" style="--gap:8px"><h2 class="cvh-ha-sec__title" id="o05-reach">{{x.reachTitle}}</h2><span class="cvh-tag cvh-tag--illustrative">{{T.illustrative}}</span></div>
+        <sc-if value="{{combined}}"><p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--layers cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{intersection}}</span></p></sc-if>
+        <div class="cvh-ha-reach">
+          <div class="cvh-ha-count">
+            <p class="cvh-strong">{{x.total}}</p>
+            <p class="cvh-ha-count__n">{{totalN}}</p>
+            <p>{{unit}}</p>
+            <p class="cvh-strong" style="margin-top:8px">{{x.byChannel}}</p>
+            <table class="cvh-ha-table">
+              <tbody>
+                <tr><th scope="row"><span class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{x.text}}</span></th><td class="cvh-ha-num">{{textN}}</td></tr>
+                <tr><th scope="row"><span class="cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--globe cvh-ico--sm" aria-hidden="true"></span>{{x.app}}</span></th><td class="cvh-ha-num">{{appN}}</td></tr>
+              </tbody>
+            </table>
+            <p class="cvh-muted">{{x.both}}</p>
+          </div>
+          <div class="cvh-ha-unreach" role="group" aria-labelledby="o05-un">
+            <p class="cvh-strong" id="o05-un">{{x.unTitle}}</p>
+            <p class="cvh-ha-count__n">{{unN}}</p>
+            <p>{{x.unUnit}}</p>
+            <sc-if value="{{groupOnly}}"><p>{{x.unGroupOnly}}</p></sc-if>
+            <sc-if value="{{handoff}}">
+              <sc-if value="{{hasAmbs}}"><p>{{x.unLine}}</p></sc-if>
+              <sc-if value="{{hasGroup}}"><p class="cvh-muted">{{x.unGroup}}</p></sc-if>
+              <sc-if value="{{noAmbs}}"><p class="cvh-strong">{{x.noAmb}}</p></sc-if>
+              <ul class="cvh-stack" style="--gap:4px;margin:0;padding-inline-start:20px">
+                <sc-for list="{{ambs}}" as="am" hint-placeholder-count="2"><li>{{am}}</li></sc-for>
+              </ul>
+              <p class="cvh-muted">{{x.noCover}}</p>
+            </sc-if>
+          </div>
+        </div>
+        <div class="cvh-ha-count">
+          <p class="cvh-strong">{{x.byLang}}</p>
+          <sc-if value="{{small}}"><p>{{x.langSmall}}</p></sc-if>
+          <table class="cvh-ha-table">
+            <tbody>
+              <sc-for list="{{byLang}}" as="bl" hint-placeholder-count="6">
+                <tr><th scope="row">{{bl.name}} <span class="cvh-muted" lang="{{bl.bcp}}" dir="{{bl.dir}}">{{bl.native}}</span></th><td class="cvh-ha-num">{{bl.n}}</td></tr>
+              </sc-for>
+            </tbody>
+          </table>
+          <sc-if value="{{langToggle}}"><button type="button" class="cvh-link" style="align-self:flex-start" onClick="{{toggleLangs}}">{{langToggle}}</button></sc-if>
+        </div>
+      </section>
+    </div>
+
+    <aside class="cvh-stack cvh-ha-aside" style="--gap:12px" aria-labelledby="o05-msg">
+      <div class="cvh-row"><h2 class="cvh-ha-sec__title cvh-grow" id="o05-msg">{{x.msgTitle}}</h2><button type="button" class="cvh-link" onClick="{{toMessage}}">{{x.changeMessage}}</button></div>
+      <div class="cvh-hpreview">
+        <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" variant="line" lang="en" embedded="{{true}}" hint-size="100%,28px"></dc-import></sc-if>
+        <sc-if value="{{hasType}}"><dc-import name="X13_DisruptionType" types="{{d.types}}" size="md" surface="screen" lang="en" embedded="{{true}}" hint-size="200px,44px"></dc-import></sc-if>
+        <p class="cvh-hpreview__headline">{{pvHeadline}}</p>
+        <sc-if value="{{d.notYetKnown}}"><p><span class="cvh-strong">{{s.O02.notKnown}}:</span> {{d.notYetKnown}}</p></sc-if>
+        <dc-import name="X02_Origin" dc-props="{{origin}}" lang="en" embedded="{{true}}" hint-size="100%,96px"></dc-import>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{s.O02.where}}</span><span>{{where}}</span></div>
+        <div class="cvh-kv"><span class="cvh-kv__k">{{s.O02.whatToDo}}</span><p class="cvh-strong">{{pvAction}}</p></div>
+        <p class="cvh-muted">{{validLine}}</p>
+      </div>
+      <sc-if value="{{officialLine}}"><p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--officialMark cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{officialLine}}</span></p></sc-if>
+      <div class="cvh-stack" style="--gap:4px">
+        <p class="cvh-strong">{{x.channelsTitle}}</p>
+        <p>{{x.channels}}</p>
+        <p>{{langsLine}}</p>
+      </div>
+      <p class="cvh-ha-readonly"><span class="cvh-ico cvh-ico--eye cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{s.O02.neverShown}}</span></p>
+    </aside>
+  </div>
+
+  <div class="cvh-pubbar">
+    <p class="cvh-grow">{{status}}</p>
+    <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{send}}" disabled="{{blocked}}">{{sendLabel}}</button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Place: floors in one building (water, Sample Tower B)", "Place: three buildings on one street", "Group: seniors in both neighbourhoods (heat)", "Combined: seniors in Sample Tower A (intersection)", "Combined, below the small-group threshold", "Partner author, language group (Daniel, TNO)", "Exercise: nothing will be sent to residents", "Something still missing"], "default": "Place: floors in one building (water, Sample Tower B)"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Place: floors in one building (water, Sample Tower B)": {"persona": "PRIYA", "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "detail": "The building has shut off the water to repair a pipe.", "validMode": "time", "validTime": "today at 6 pm", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}}}}, "Place: three buildings on one street": {"persona": "PRIYA", "params": {"draft": {"type": "power", "types": ["power"], "hazard": "power", "template": "TPL-ACK-POWER", "headline": "Power is out", "notYetKnown": "Cause not known yet", "action": "Keep your fridge and freezer closed. Use a flashlight, not candles.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "B01", "mode": "range", "a": 1, "b": 6}, {"id": "B02", "mode": "range", "a": 1, "b": 6}, {"id": "B03", "mode": "range", "a": 1, "b": 6}]}}}}, "Group: seniors in both neighbourhoods (heat)": {"persona": "PRIYA", "params": {"draft": {"id": "AL-06", "type": "heat", "types": ["heat"], "hazard": "heat", "template": "TPL-ACK-HEAT", "headline": "Very hot days until Friday", "notYetKnown": "Whether the heat will last into the weekend", "action": "Go somewhere cool for a few hours each afternoon.", "detail": "It will be very hot until Friday. Apartments without air conditioning can get dangerously hot.", "validMode": "time", "validTime": "Friday at 9 pm", "official": "AL-01", "officialAdds": "This message adds the cooling spaces open near you.", "aim": "group", "place": {"nbhds": ["TP", "FP"], "blds": []}, "groups": {"cats": ["seniors"], "langs": []}}}}, "Combined: seniors in Sample Tower A (intersection)": {"persona": "PRIYA", "params": {"draft": {"id": "AL-06", "type": "heat", "types": ["heat"], "hazard": "heat", "template": "TPL-ACK-HEAT", "headline": "Very hot days until Friday", "notYetKnown": "Whether the heat will last into the weekend", "action": "Go somewhere cool for a few hours each afternoon.", "validMode": "time", "validTime": "Friday at 9 pm", "official": "AL-01", "officialAdds": "This message adds the cooling spaces open near you.", "aim": "both", "place": {"nbhds": [], "blds": [{"id": "SA", "mode": "all"}]}, "groups": {"cats": ["seniors"], "langs": []}}}}, "Combined, below the small-group threshold": {"persona": "PRIYA", "params": {"draft": {"id": "AL-06", "type": "heat", "types": ["heat"], "hazard": "heat", "template": "TPL-ACK-HEAT", "headline": "Very hot days until Friday", "notYetKnown": "Whether the heat will last into the weekend", "action": "Go somewhere cool for a few hours each afternoon.", "validMode": "time", "validTime": "Friday at 9 pm", "aim": "both", "place": {"nbhds": [], "blds": [{"id": "B01", "mode": "all"}]}, "groups": {"cats": ["seniors"], "langs": []}}}}, "Partner author, language group (Daniel, TNO)": {"persona": "DANIEL", "params": {"draft": {"type": "other", "types": ["other"], "hazard": "other", "headline": "Settlement clinic moved to Thursday", "notYetKnown": "", "action": "Come to 1 Leaside Park Drive on Thursday instead.", "aim": "group", "groups": {"cats": ["newcomers"], "langs": ["prs", "ps"]}}}}, "Exercise: nothing will be sent to residents": {"persona": "PRIYA", "exercise": true, "params": {"draft": {"type": "water", "types": ["water"], "hazard": "water", "template": "TPL-ACK-FLOOD", "headline": "Water is off for a pipe repair", "notYetKnown": "When the water will be back on", "action": "Fill a jug of water now if you still can.", "aim": "place", "place": {"nbhds": [], "blds": [{"id": "SB", "mode": "range", "a": 1, "b": 10}]}}}}, "Something still missing": {"persona": "PRIYA", "params": {"draft": {"type": "power", "types": ["power"], "hazard": "power", "template": "TPL-ACK-POWER", "headline": "Power is out", "action": "", "aim": "place"}}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-05', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.O05, T = s.hub.aud, H = this.ha(b), loc = b.loc;
+    var d = H.draft();
+    var num = function (n) { return Math.round(n).toLocaleString('en-CA'); };
+    var r = H.reach(d);
+    var hasPlace = H.hasPlace(d), hasGroup = H.hasGroup(d);
+    var persona = b.persona || {}, partner = !!persona.org && persona.org !== 'HUB';
+    var origin = { origin: partner ? 'partner' : 'hub', state: 'verified', org: persona.org || 'HUB', surface: 'screen' };
+    var miss = H.missing(d);
+    var ackOn = !!loc.ackSmall;
+    if (r.small && !ackOn) miss = miss.concat([x.smallNeeded]);
+    var LIMIT = 6, langsAll = r.byLang.map(function (l) { return { name: l.name, native: l.native !== l.name ? l.native : '', bcp: C.bcp(l.code), dir: C.dir(l.code), n: num(l.n) }; });
+    langsAll = r.small ? [] : langsAll.filter(function (l) { return l.n !== '0'; });
+    var byLang = loc.allLangs ? langsAll : langsAll.slice(0, LIMIT);
+    var pl = H.effPlace(d);
+    var ambs = H.ambassadorsFor(pl).map(function (a) { return C.fill(x.covers, a); });
+    var off = d.official ? C.alert(d.official) : null;
+    var tplRec = (D.templates || []).filter(function (t) { return t.id === d.template; })[0];
+    var st = H.steps(d, 'O-05'), prev = st[st.length - 2];
+    var groupLabel = d.groups.cats.map(function (g) { return '"' + ((s.groups || {})[g] || {}).label + '"'; });
+    var send = function () {
+      if (miss.length) return;
+      var ex = pl.blds.filter(function (z) { var B = C.building(z.id); return B && pl.nbhds.indexOf(B.nbhd) < 0; });
+      var ranges = ex.map(function (z) { var f = H.floorList(z, C.building(z.id)); return f && f.length ? [f[0], f[f.length - 1]] : null; });
+      var common = ranges.length && ranges.every(function (q) { return q && ranges[0] && q[0] === ranges[0][0] && q[1] === ranges[0][1]; }) ? ranges[0] : null;
+      var floorsBy = {}; ex.forEach(function (z) { var f = H.floorList(z, C.building(z.id)); if (f) floorsBy[z.id] = f; });
+      var place = d.aim === 'group' ? null : { nbhds: pl.nbhds.slice(), buildings: ex.map(function (z) { return z.id; }), floors: common, floorsBy: floorsBy };
+      var id = d.id || ('AL-S' + Date.now());
+      var alert = { id: id, level: 'community', origin: partner ? { type: 'partner', org: persona.org } : { type: 'hub' }, verified: 'verified',
+        types: d.types, hazard: d.hazard || d.type, template: d.template || null, headline: d.headline, notYetKnown: d.notYetKnown || null, where: H.whereText(d),
+        action: d.action, audience: { place: place, groups: d.groups.cats.slice(), langs: d.groups.langs.slice() },
+        validUntil: d.validMode === 'time' ? d.validTime : 'until resolved', audioSecs: tplRec ? tplRec.audioSecs : 0,
+        officialLink: d.official ? { alert: d.official, adds: d.officialAdds || '' } : null };
+      if (partner) alert.verifiedBy = persona.org;
+      var act = { t: 'publish', alert: alert, entry: { kind: 'alert', text: String(d.detail || '').trim() || d.headline + '.' } };
+      if (d.incident) act.incident = d.incident;
+      b.act(act);
+      // O-06 reads a summary in its own shape (it cannot read an exercise alert, which never reaches the data)
+      var u = H.units(pl), all = Object.keys(u);
+      b.go('O-06', { alert: id, draft: { id: id, types: alert.types, headline: alert.headline, where: alert.where, buildings: d.aim === 'group' ? [] : all,
+        floors: pl.nbhds.length ? null : common, validUntil: alert.validUntil, audioSecs: alert.audioSecs, template: alert.template, kind: 'alert', postedMins: 0, origin: alert.origin,
+        groups: alert.audience.groups, langs: alert.audience.langs, reach: { total: r.total, unit: r.unit, text: r.text, app: r.app, unreachable: r.unreachable } } });
+    };
+    return {
+      x: x, T: T, s: s, d: d, steps: st, colsCls: b.narrow ? 'cvh-ha-cols--one' : '', exercise: b.exercise,
+      say: H.restate(d), names: H.placeNames(pl), hasPlace: hasPlace, hasGroup: hasGroup,
+      toPlace: function () { b.go('O-03', { draft: d }); }, toGroup: function () { b.go('O-04', { draft: d }); }, toMessage: function () { b.go('O-02', { draft: d }); },
+      small: r.small, smallTitle: C.fill(s.O04.smallTitle, { n: r.total }), ackOn: ackOn, ackCls: ackOn ? 'is-on' : '', ackAria: ackOn ? 'true' : 'false',
+      toggleAck: function () { b.setLoc({ ackSmall: !ackOn }); },
+      combined: r.combined && r.unit === 'residents',
+      intersection: C.fill(x.intersection, { n: num(r.total), group: H.joinAnd(groupLabel, T.or), place: H.placeText(pl, false), households: num(r.households) }),
+      totalN: num(r.total), unit: r.unit === 'residents' ? C.fill(x.unitResOf, { groups: H.joinAnd(groupLabel, T.or) }) : x.unitHh, noAmbs: !ambs.length, hasAmbs: ambs.length > 0,
+      textN: num(r.text), appN: num(r.app), unN: num(r.unreachable), ambs: ambs, byLang: byLang,
+      langToggle: langsAll.length > LIMIT ? (loc.allLangs ? x.showFewer : C.fill(x.showAll, { n: langsAll.length })) : '',
+      toggleLangs: function () { b.setLoc({ allLangs: !loc.allLangs }); },
+      hasType: !!d.type, origin: origin, pvHeadline: d.headline || '…', pvAction: d.action || '…', where: H.whereText(d),
+      validLine: d.validMode === 'time' && d.validTime ? C.fill(x.valid, { t: d.validTime }) : x.validResolved,
+      officialLine: off ? C.fill(x.officialLinked, { alert: off.headline, source: s.x02.sources[off.origin.source] }) : '',
+      langsLine: d.groups.langs.length && hasGroup ? C.fill(d.template ? x.langsOnly : x.langsOnlyMt, { langs: H.joinAnd(d.groups.langs.map(function (c) { return C.lang(c).english; })) }) : (d.template ? x.langsLine : x.langsMt),
+      groupOnly: d.aim === 'group', handoff: d.aim !== 'group',
+      status: miss.length ? C.fill(T.toDo, { list: H.joinAnd(miss) }) : (b.exercise ? x.exTitle : x.ready), blocked: miss.length > 0,
+      sendLabel: b.exercise ? x.sendPractice : x.send, send: send,
+      backLabel: prev ? C.fill(T.backTo, { step: prev.label.toLowerCase() }) : s.shell.back,
+      goBack: function () { if (prev) b.go(prev.id, { draft: d }); else if (b.app.canBack) b.back(); else b.go('O-02', { draft: d }); }
+    };
+  }
+  /* ---- Audience helpers shared by O-02, O-03, O-04 and O-05 (same code in each; source: o_src/aud.js).
+     The draft alert travels between the four screens in params.draft; edits live in loc.d until the next step. */
+  ha(b) {
+    var C = b.C, D = b.D, s = b.s, T = s.hub.aud, NB = s.neighbourhoods || { TP: 'Thorncliffe Park', FP: 'Flemingdon Park' };
+    var OPT = D.groupOptIns || {}, THR = D.smallGroupThreshold || 10;
+    // Illustrative: share of CVH users reading in each launch language, and the reach of each channel.
+    var SHARE = { ur: .19, en: .14, prs: .09, tl: .09, bn: .08, ps: .07, ta: .06, gu: .05, hi: .05, pa: .05, zh: .04, el: .03, sk: .02, es: .02, fr: .02 };
+    var NOT_DIGITAL = 0.065, TEXT_H = 0.45, APP_H = 0.62, TEXT_G = 0.58, APP_G = 0.71;
+    var WHOLE = { nbhds: ['TP', 'FP'], blds: [] };
+    function clone(x) { return JSON.parse(JSON.stringify(x)); }
+    function blank() {
+      return { type: null, types: [], hazard: null, template: null, headline: '', notYetKnown: '', action: '', detail: '', validMode: 'resolved', validTime: '',
+        official: '', officialAdds: '', aim: 'place', place: { nbhds: [], blds: [] }, groups: { cats: [], langs: [] }, id: null, incident: null, visited: {} };
+    }
+    function draft() {
+      var d = b.loc.d || b.params.draft || null;
+      d = d ? clone(d) : blank();
+      var bl = blank(); for (var k in bl) if (d[k] === undefined) d[k] = bl[k];
+      d.place = d.place || { nbhds: [], blds: [] }; d.place.nbhds = d.place.nbhds || []; d.place.blds = d.place.blds || [];
+      d.groups = d.groups || { cats: [], langs: [] }; d.groups.cats = d.groups.cats || []; d.groups.langs = d.groups.langs || [];
+      return d;
+    }
+    function set(d, patch) { b.setLoc({ d: Object.assign(clone(d), patch || {}) }); }
+    function hasPlace(d) { return d.aim === 'place' || d.aim === 'both'; }
+    function hasGroup(d) { return d.aim === 'group' || d.aim === 'both'; }
+    function placeEmpty(pl) { return !pl || (!(pl.nbhds || []).length && !(pl.blds || []).length); }
+    function floorList(x, B) {
+      if (!x || !x.mode || x.mode === 'all') return null;
+      var out = [], i;
+      if (x.mode === 'range') { var a = Math.max(1, Math.min(+x.a || 1, +x.b || 1)), z = Math.min(B.floors, Math.max(+x.a || 1, +x.b || 1)); for (i = a; i <= z; i++) out.push(i); return out; }
+      return (x.list || []).filter(function (n) { return n >= 1 && n <= B.floors; }).sort(function (p, q) { return p - q; });
+    }
+    function joinAnd(list, word) { word = word || T.and; if (list.length < 2) return list.join(''); return list.slice(0, -1).join(', ') + ' ' + word + ' ' + list[list.length - 1]; }
+    function floorsText(x, B, only) {
+      var f = floorList(x, B); if (!f) return '';
+      if (!f.length) return T.noFloors;
+      var contiguous = f.every(function (n, i) { return !i || n === f[i - 1] + 1; });
+      var t = f.length === 1 ? C.fill(T.floorOne, { a: f[0] }) : contiguous ? C.fill(T.floorsRange, { a: f[0], b: f[f.length - 1] }) : C.fill(T.floorsList, { list: joinAnd(f.map(String)) });
+      return only ? t + ' ' + T.only : t;
+    }
+    // The chosen buildings that are not already inside a chosen neighbourhood
+    function extraBlds(pl) { return (pl.blds || []).filter(function (x) { var B = C.building(x.id); return B && (pl.nbhds || []).indexOf(B.nbhd) < 0; }); }
+    function placeText(pl, only) {
+      pl = pl || WHOLE;
+      var parts = [], nb = (pl.nbhds || []).map(function (n) { return NB[n]; });
+      if (nb.length) parts.push(joinAnd(nb));
+      var bl = extraBlds(pl);
+      if (bl.length) {
+        var ft = bl.map(function (x) { return floorsText(x, C.building(x.id), only); });
+        var same = ft.every(function (f) { return f === ft[0]; });
+        var names = bl.map(function (x) { return C.building(x.id).name; });
+        var streets = bl.map(function (x) { return C.building(x.id).street; });
+        var sameStreet = streets.every(function (t) { return t && t === streets[0]; }) && !bl.every(function (x) { return C.building(x.id).sample; });
+        var txt;
+        if (bl.length >= 3 && same && sameStreet) txt = C.fill(T.nOn, { n: bl.length, street: streets[0] }) + (ft[0] ? ', ' + ft[0] : '');
+        else if (same && bl.length <= 3) txt = joinAnd(names) + (ft[0] ? ', ' + ft[0] : '');
+        else if (bl.length <= 3) txt = joinAnd(names.map(function (n, i) { return ft[i] ? n + ' (' + ft[i] + ')' : n; }));
+        else txt = C.fill(T.nBuildings, { n: bl.length }) + (same && ft[0] ? ', ' + ft[0] : '');
+        parts.push(txt);
+      }
+      return parts.join(T.plus);
+    }
+    // When the sentence counts buildings instead of naming them, name them underneath so the sender can check
+    function placeNames(pl) {
+      var bl = extraBlds(pl || WHOLE), txt = placeText(pl || WHOLE, true);
+      var names = bl.map(function (x) { return C.building(x.id).name; });
+      return names.length && names.some(function (n) { return txt.indexOf(n) < 0; }) ? joinAnd(names) : '';
+    }
+    function effPlace(d) { return d.aim === 'group' || placeEmpty(d.place) ? WHOLE : d.place; }
+    function units(pl) {
+      var out = {};
+      (pl.nbhds || []).forEach(function (n) { (D.buildings || []).forEach(function (B) { if (B.nbhd === n) out[B.id] = 1; }); });
+      (pl.blds || []).forEach(function (x) { var B = C.building(x.id); if (!B || out[x.id] === 1 && (pl.nbhds || []).indexOf(B.nbhd) >= 0) return; var f = floorList(x, B); out[x.id] = f ? f.length / B.floors : 1; });
+      return out;
+    }
+    function sum(u, key) { var t = 0; for (var id in u) t += ((OPT[id] || {})[key] || 0) * u[id]; return t; }
+    function langShare(langs) { if (!langs || !langs.length) return 1; var t = 0; langs.forEach(function (l) { t += SHARE[l] || 0.01; }); return Math.min(1, t); }
+    function spread(total, codes) {
+      // Largest remainder, so the language rows add up to the total
+      var w = codes.map(function (c) { return SHARE[c] || 0.01; }), tw = w.reduce(function (p, q) { return p + q; }, 0);
+      var raw = w.map(function (x) { return total * x / tw; }), fl = raw.map(Math.floor), left = total - fl.reduce(function (p, q) { return p + q; }, 0);
+      raw.map(function (r, i) { return { i: i, r: r - fl[i] }; }).sort(function (p, q) { return q.r - p.r; }).slice(0, left).forEach(function (x) { fl[x.i]++; });
+      return codes.map(function (c, i) { return { code: c, name: C.lang(c).english, native: C.lang(c).native, n: fl[i] }; }).sort(function (p, q) { return q.n - p.n; });
+    }
+    function groupsText(d) {
+      var cats = d.groups.cats.map(function (g) { return '"' + ((s.groups || {})[g] || {}).label + '"'; });
+      return joinAnd(cats, T.or);
+    }
+    function langsText(d) { var l = d.groups.langs; return l.length ? C.fill(T.readIn, { langs: joinAnd(l.map(function (c) { return C.lang(c).english; }), T.or) }) : T.anyLang; }
+    function restate(d) {
+      var pl = effPlace(d), place = placeText(pl, true), g = hasGroup(d), cats = d.groups.cats.length, langs = d.groups.langs.length;
+      if (!g) return placeEmpty(d.place) ? T.nothing : C.fill(T.everyone, { place: place });
+      if (!cats && !langs) return C.fill(T.groupPending, { place: place });
+      var who = cats ? C.fill(T.whoChose, { groups: groupsText(d), langs: langsText(d) }) : C.fill(T.whoRead, { langs: joinAnd(d.groups.langs.map(function (c) { return C.lang(c).english; }), T.or) });
+      return C.fill(d.aim === 'group' || placeEmpty(d.place) ? T.anywhere : T.of, { place: place, who: who });
+    }
+    function reach(d) {
+      var pl = effPlace(d), u = units(pl), H = sum(u, 'households'), U = Math.round(H * NOT_DIGITAL);
+      var g = hasGroup(d), cats = d.groups.cats, langs = d.groups.langs, share = langShare(langs), total, unit, text, app, perCat = [];
+      var codes = langs.length ? langs.slice() : Object.keys(SHARE);
+      if (g && cats.length) {
+        var raw = 0;
+        cats.forEach(function (c) { var n = sum(u, c) * share; raw += n; perCat.push({ label: ((s.groups || {})[c] || {}).label, n: Math.round(n) }); });
+        total = Math.round(raw); unit = 'residents'; text = Math.round(total * TEXT_G); app = Math.round(total * APP_G);
+      } else {
+        total = Math.round((H - U) * share); unit = 'households'; text = Math.round(H * share * TEXT_H); app = Math.round(total * APP_H);
+      }
+      return { total: total, unit: unit, households: Math.round(H), unreachable: U, text: text, app: app, perCat: perCat, byLang: spread(total, codes),
+        grouped: g && (cats.length > 0 || langs.length > 0), combined: d.aim === 'both' && !placeEmpty(d.place) && (cats.length > 0 || langs.length > 0),
+        small: g && cats.length > 0 && total > 0 && total < THR, zero: total === 0, threshold: THR, placeHouseholds: Math.round(H),
+        placeGroupSum: g && cats.length ? Math.round(H) + total : 0 };
+    }
+    function ambassadorsFor(pl) {
+      var u = units(pl), out = [];
+      (D.ambassadors || []).forEach(function (a) {
+        (a.buildings || []).forEach(function (bid) {
+          if (!u[bid]) return;
+          var fl = (a.floors || {})[bid] || [], sel = (pl.blds || []).filter(function (x) { return x.id === bid; })[0], B = C.building(bid);
+          var chosen = sel && (pl.nbhds || []).indexOf(B.nbhd) < 0 ? floorList(sel, B) : null;
+          var hit = chosen ? fl.filter(function (f) { return chosen.indexOf(f) >= 0; }) : fl;
+          if (hit.length) out.push({ name: a.name, role: a.role, building: B.name, floors: hit.length > 1 ? C.fill(T.floorsRange, { a: hit[0], b: hit[hit.length - 1] }) : C.fill(T.floorOne, { a: hit[0] }) });
+        });
+      });
+      return out;
+    }
+    function missing(d) {
+      var m = [];
+      if (!d.type) m.push(T.miss.type);
+      if (!String(d.headline || '').trim()) m.push(T.miss.headline);
+      if (!String(d.action || '').trim()) m.push(T.miss.action);
+      if (d.validMode === 'time' && !String(d.validTime || '').trim()) m.push(T.miss.valid);
+      if (hasPlace(d) && placeEmpty(d.place)) m.push(T.miss.place);
+      if (hasPlace(d)) (d.place.blds || []).forEach(function (x) { var B = C.building(x.id); if (B && x.mode === 'list' && !(x.list || []).length && d.place.nbhds.indexOf(B.nbhd) < 0) m.push(C.fill(T.miss.floors, { building: B.name })); });
+      if (hasGroup(d) && !d.groups.cats.length && !d.groups.langs.length) m.push(T.miss.group);
+      return m;
+    }
+    function steps(d, here) {
+      var list = [['O-02', T.steps.message]];
+      if (hasGroup(d)) list.push(['O-04', T.steps.group]);
+      if (hasPlace(d)) list.push(['O-03', T.steps.place]);
+      list.push(['O-05', T.steps.review]);
+      return list.map(function (x, i) {
+        var on = x[0] === here;
+        return { id: x[0], n: i + 1, label: x[1], cls: on ? 'is-here' : '', current: on ? 'step' : 'false', go: function () { if (!on) b.go(x[0], { draft: draft() }); } };
+      });
+    }
+    function next(d, here) { var st = steps(d, here), i = -1; st.forEach(function (x, k) { if (x.cls) i = k; }); return st[i + 1] || null; }
+    function whereText(d) { return placeText(effPlace(d), false); }
+    return { blank: blank, draft: draft, set: set, clone: clone, hasPlace: hasPlace, hasGroup: hasGroup, placeEmpty: placeEmpty, floorList: floorList,
+      floorsText: floorsText, placeText: placeText, placeNames: placeNames, effPlace: effPlace, units: units, restate: restate, reach: reach, missing: missing,
+      steps: steps, next: next, whereText: whereText, ambassadorsFor: ambassadorsFor, joinAnd: joinAnd, THR: THR, WHOLE: WHOLE, SHARE: SHARE,
+      go: function (id, d, extra) { b.go(id, Object.assign({ draft: d }, extra || {})); } };
+  }
+
+}
+</script>
+</body>
+</html>

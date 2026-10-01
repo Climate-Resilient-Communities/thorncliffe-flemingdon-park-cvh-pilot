@@ -1,0 +1,233 @@
+{
+ "_about": "Findings from reading the translations, merged into translation-errors.md by scripts/review_translations.py. Reviewer: Claude (AI), 2026-10-01: emergency-role texts in 8 languages, plus Pashto items flagged by the back-translation check. Not a native-speaker review.",
+ "ps": [
+  {
+   "id": "8d4903274832",
+   "severity": "redo",
+   "problem": "'fire suppression' became 'اور لګول' (lighting a fire); should be 'اور وژل'. Fire station listing."
+  },
+  {
+   "id": "2d84f26c9897",
+   "severity": "redo",
+   "problem": "'cooling space' became 'خنډ ځای' (obstacle place); should be a cooling place, e.g. 'د یخولو ځای'.",
+   "reviewedText": "مشخص شوی خنډ ځای: د سخت تودوخې خبرتیاوو/هشدارونو په وخت کې د هوایي کولر سره د کور دننه آرامۍ چمتو کوي."
+  },
+  {
+   "id": "7482403a5dc6",
+   "severity": "redo",
+   "problem": "Garbled: 'تودوخې پېرېدو' and 'کارده' are not real phrasing for 'during extreme heat' / 'useful'.",
+   "reviewedText": "د اوبو د اړتیا لپاره عامه ځای، په تودوخې پېرېدو په وخت کې کارده."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "severity": "redo",
+   "problem": "'twice monthly' became 'هره دوو ورځو وروسته' (every two days); 'cooling centre' became 'سایټ (سرد ځای)'.",
+   "reviewedText": "د اړتیا لرونکو کورنیو لپاره اضطراري خوراکي مرسته (هره دوو ورځو وروسته وړیا خوراکي توکي ویشل کیږي). د خوراکي همکارۍ (Food Collaborative) لپاره هیڅ ډول پناهګاه، سایټ (سرد ځای) یا بحران-کرښې خدمتونه تایید شوي ندي."
+  },
+  {
+   "id": "4c0ad54aefbb",
+   "severity": "redo",
+   "problem": "'crisis intervention' became 'د ژوندی حالتونو مدیریت' (managing living situations); adds 'نړۍوال' (global) to the program name.",
+   "reviewedText": "د ژوندی حالتونو مدیریت او مشوره چمتو کوي چې د ښځو په وړاندې تاوتریخوالی نړۍوال پروګرام له لارې ترسره کیږي؛ د تورونټو د کرایه بانک ته د لاسرسی مرکز او د انرژۍ د اضطراري فنډ د تلیفون مرکز په توګه کار کوي (416-397-7368)."
+  },
+  {
+   "id": "6112e2d3ed72",
+   "severity": "redo",
+   "problem": "'on-call assistance' became 'تلیفوني ژباړه کوي' (does telephone translation).",
+   "reviewedText": "د ډاکټرانو پرسونل لخوا د 24 ساعتې وړیا او محرم مشورې او مرستې تلیفوني ژباړه کوي (416-429-4991). په ډاګه ده چې دا د بیړنیو حالتونو یا پرته د پخوا نوم لیکنې د لیدنې (walk-in) خدمتونه نه وړاندې کوي — په بیړنی حالت کې 911 ته تلیفون وکړئ."
+  },
+  {
+   "id": "f630f0f0b145",
+   "severity": "redo",
+   "problem": "Garbled first clause: 'د 24 ساعتې د نښې په حالت کې' does not say midwives are on call 24/7.",
+   "reviewedText": "دا زاینې د ماماګانې کارکونکي د 24 ساعتې د نښې په حالت کې د حامله گی او زاینې د فوری ستونزو لپاره چمتو دي؛ هیڅ جلا اضطراري پروګرام لیست نه شوی."
+  },
+  {
+   "id": "1538ea5a988e",
+   "severity": "redo",
+   "problem": "Says Unity Health's name is MyChart ('نوم یې MyChart دی'); MyChart is Unity Health's patient portal.",
+   "reviewedText": "سینټ مایکل روغتون یو اضطراري څانګه لري (30 بانډ سټریټ)؛ یونټي هیلټ (Unity Health) نوم یې MyChart دی او روغتون د تلیفون شمیرې هم لیکلې دي. د کلیه د درملنې مرکزونو لپاره ځانګړي اضطراري خدمتونه موندل نشول — د طبی حالت په اضطرار کې 911 ته تلیفون وکړئ."
+  },
+  {
+   "id": "d9ee2590bc2e",
+   "severity": "review",
+   "problem": "'absent without notice' rendered as absent 'له ډګره' (from the field); awkward.",
+   "reviewedText": "د \"سیف ارایول\" (Safe Arrival) پروګرام په چلند کې لري (کارکوونکي د والدینو سره اړیکه نیسي که چیرې کومه زده کونکی پرته له خبرتیا له ډګره غایب وي)؛ هیڅ ډول اضطراري خدمتونه ذکر شوي ندي."
+  },
+  {
+   "id": "37afb9eb8339",
+   "severity": "review",
+   "problem": "'has previously distributed' rendered in present tense ('ویشي').",
+   "reviewedText": "هیڅ ډول اضطراري خدمتونه لیست نشوي. (دا ډله پخوا د انسانیت په چوکاټ کې د عالمي وبا په جریان او وروسته خوراکي توکي ویشي.)"
+  },
+  {
+   "id": "1621e2da2a65",
+   "severity": "redo",
+   "problem": "'Community-developed' became 'د کلیسا لخوا' (by the church), three times; market hours 'Thursdays 3-6pm' became 'د سهار 3' (3 in the morning).",
+   "reviewedText": "د کلیسا لخوا رامینځته شوی فارم په فلیمینډون پارک کې د اوسیدونکو لپاره روغ خواړه تولیدوي. د کلیسا په کچه د خوراکي توکو کښت، د تودوخې په موسمي کې د کسانو بازار (د اونۍ یوه ورځ) په 150 گرینوبل ډرايف کې (پنجشنبې د سهار 3 څخه د ماښام 6 بجې پورې، د جون په پای څخه د اکتوبر په پیل پورې) او د کلیسا فارمر پروګرام چمتو کوي چې اوسیدونکو ته سوداګریزې فرصتونه ورکوي ترڅو د کوچني فارمونو سوداګرۍ پیل او اداره کړي."
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "severity": "redo",
+   "problem": "'at 5 Leaside Park Drive' became 'په پوړه 5 کې' (on floor 5).",
+   "reviewedText": "د تورونټو ښار د خلکو لپاره د شنا کولو بیرونی پول د لیساید پارک ډرایو (په لیساید پارک کې) په پوړه 5 کې موقعیت لري؛ دا په اوړي په موسمي توګه د تفریح او منظم شنا کولو لپاره خلکو ته خلاص دی. د ویلچر لپاره مناسب دی، د لباس بدلون لپاره مناسب کوټې لري، د پول پلیټ ته د داخلیدو لاره مساویه ده او د ویل-ټرانس (Wheel-Trans) مسافران د لیساید پارک ډرایو په پارکینګ ځای کې له موټر څخه ګرځېدای شي."
+  }
+ ],
+ "prs": [
+  {
+   "id": "85b8d1f0296e",
+   "severity": "redo",
+   "problem": "'youth shelter' became 'یتیم‌خانه' (orphanage).",
+   "reviewedText": "برای جوانان بی‌خانمان یتیم‌خانه (پناهگاه اضطراری) اداره می‌کند."
+  },
+  {
+   "id": "2d4e28c7351b",
+   "severity": "redo",
+   "problem": "'Notes routine safety drills' became an order to the reader ('رو یادداشت کن', write down), in colloquial Iranian Persian.",
+   "reviewedText": "تمرینات معمولی ایمنی و ورود امن رو یادداشت کن؛ هیچ خدمات اجتماعی خاص برای مواقع اضطراری ذکر نشده."
+  },
+  {
+   "id": "1538ea5a988e",
+   "severity": "review",
+   "problem": "Colloquial Iranian register ('یه بخش اورژانس داره') and 'بیمارستان' instead of Dari 'شفاخانه'.",
+   "reviewedText": "بیمارستان سنت مایکل یه بخش اورژانس داره (30 Bond St)؛ اطلاعات MyChart یونیتی هلث (Unity Health) و شماره تلفن‌های بیمارستان هم نوشته شده. هیچ خدمات اورژانسی مخصوص مرکز دیالیز پیدا نشد؛ در صورت بروز وضعیت اضطراری پزشکی با شماره 911 تماس بگیرید."
+  },
+  {
+   "id": "8d4903274832",
+   "severity": "review",
+   "problem": "'Core 911' left in English."
+  },
+  {
+   "id": "d9ee2590bc2e",
+   "severity": "review",
+   "problem": "'without notice' became 'ناگهانی' (sudden).",
+   "reviewedText": "برنامه «ورود ایمن» را اجرا می‌کند (کارکنان در صورت غیبت ناگهانی کودک با والدین تماس می‌گیرند)؛ هیچ خدمت ویژه‌ای برای موارد اضطراری ذکر نشده است."
+  },
+  {
+   "id": "899a73c04466",
+   "severity": "redo",
+   "problem": "'موزیمونه' uses the Pashto plural ending -ونه; Dari is 'موزیم‌ها'.",
+   "reviewedText": "موزیمونه"
+  }
+ ],
+ "el": [
+  {
+   "id": "7482403a5dc6",
+   "severity": "redo",
+   "problem": "'access point' became 'Σήμα' (signal); should be 'Σημείο'.",
+   "reviewedText": "Σήμα δημόσιας πρόσβασης σε πόσιμο νερό, χρήσιμο σε περιπτώσεις ακραίων καιρικών συνθηκών υψηλής θερμοκρασίας."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "severity": "redo",
+   "problem": "Spelling error in the first word: 'Απείγουσα' for 'Επείγουσα' (emergency).",
+   "reviewedText": "Απείγουσα διατροφική υποστήριξη για οικογένειες που έχουν ανάγκη (δωρεάν διανομή τροφίμων δύο φορές το μήνα). Δεν επιβεβαιώθηκε η ύπαρξη υπηρεσιών καταφυγίου, κέντρου ψύξης ή τηλεφωνικής γραμμής έκτακτης ανάγκης που να αφορούν ειδικά το Food Collaborative."
+  }
+ ],
+ "ur": [
+  {
+   "id": "8d4903274832",
+   "severity": "review",
+   "problem": "'Core 911' transliterated as 'کور 911', which reads as nonsense."
+  },
+  {
+   "id": "d6ee993d9829",
+   "severity": "review",
+   "problem": "'مساعدت غذائیہ' is stiff Arabic-style phrasing; everyday Urdu would be 'کھانے کی امداد'.",
+   "reviewedText": "مساعدت غذائیہ ضرورت مند خاندانوں کے لئے اس کے کام کے اوقات کے دوران اس کی بنیادی خدمت ہے؛ کوئی الگ سے ہنگامی پروگرام درج نہیں ہے۔"
+  }
+ ],
+ "hi": [
+  {
+   "id": "8d4903274832",
+   "severity": "review",
+   "problem": "'Core 911' transliterated as 'कोर 911'."
+  },
+  {
+   "id": "f630f0f0b145",
+   "severity": "review",
+   "problem": "Says midwives 'have been asked to be' available 24/7 rather than are available.",
+   "reviewedText": "गर्भावस्था और प्रसव से जुड़ी आपात स्थितियों के लिए दाइयों को 24/7 कॉल पर उपलब्ध रहने के लिए कहा गया है; कोई अलग आपातकालीन कार्यक्रम सूचीबद्ध नहीं है।"
+  },
+  {
+   "id": "2d4e28c7351b",
+   "severity": "review",
+   "problem": "Read 'Notes' as a noun ('नोट्स ... हैं'); the English means the daycare mentions drills.",
+   "reviewedText": "नोट्स नियमित सुरक्षा अभ्यास और सुरक्षित प्रवेश के बारे में हैं; किसी भी आपातकालीन विशिष्ट सामुदायिक सेवाओं की सूची नहीं दी गई है।"
+  },
+  {
+   "id": "f2e70e53d615",
+   "severity": "review",
+   "problem": "Street address transliterated into Devanagari ('लेक शोर ब्लूवार्ड ईस्ट'); addresses should stay in English. Command A Translate does this in Hindi generally.",
+   "reviewedText": "आपातकालीन आश्रय सेवाएँ प्रदान करता है, जिसमें 24 घंटे का विश्राम केंद्र (351 लेक शोर ब्लूवार्ड ईस्ट) शामिल है, साथ ही आश्रयों और आवास कार्यक्रमों में रहने वाले लोगों के लिए हानि कम करने के समर्थन भी शामिल हैं।"
+  }
+ ],
+ "fr": [
+  {
+   "id": "4c0ad54aefbb",
+   "severity": "review",
+   "problem": "'Rent Bank' became 'banque de location' (rental bank); the program helps with rent, e.g. 'banque d'aide au loyer'.",
+   "reviewedText": "Offre des services d'intervention en cas de crise et de consultation dans le cadre de son programme de lutte contre la violence faite aux femmes; agit comme centre d'accès à la banque de location de Toronto et comme centre d'appels pour le fonds d'urgence pour l'énergie (416-397-7368)."
+  }
+ ],
+ "es": [
+  {
+   "id": "4c0ad54aefbb",
+   "severity": "review",
+   "problem": "'Rent Bank' became 'Banco de Alquileres' (literal); clearer as 'Banco de ayuda para el alquiler'.",
+   "reviewedText": "Ofrece intervención en situaciones de crisis y asesoramiento a través de su programa contra la violencia hacia las mujeres; actúa como centro de acceso al Banco de Alquileres de Toronto y como centro de llamadas del Fondo de Emergencia para la Energía (416-397-7368)."
+  }
+ ],
+ "ta": [
+  {
+   "id": "fe8809651fbc",
+   "severity": "redo",
+   "problem": "A Telugu letter inside a Tamil word ('யూத்டேல்' for Youthdale). Crisis line names are translated into Tamil (e.g. Kids Help Phone), so residents cannot search for them; keep the English names.",
+   "reviewedText": "மையப் பக்கத்தின் முகப்பில் 'சிக்கலில் இருக்கிறீர்களா? இங்கே கிளிக் செய்யவும்' என்ற இணைப்பு உள்ளது மற்றும் உள்ளூர் நெருக்கடி ஆதரவு சேவைகளின் பட்டியல் உள்ளது:\n\n- குழந்தைகள் உதவி தொலைபேசி: 1-800-668-6868\n- தற்கொலை பற்றி பேசுங்கள் கனடா: 1-833-456-4566\n- பெரிய டொராண்டோவின் துயர மையங்கள்: 416-408-4357\n- ஜெர்ஸ்டீன் நெருக்கடி மையம்: 416-929-5200\n- அனிஷ்னாவ்பே ஆரோக்கியம் டொராண்டோ மனநல நெருக்கடி மேலாண்மை சேவை: 1-855-242-3310\n- நஸீஹா மனநல ஹாட்லைன்: 1-866-627-3342\n- யూత்டேல் சிகிச்சை மையங்கள் நெருக்கடி மற்றும் மொபைல் ஆதரவு குழு: 416-363-9990\n- ஸ்கார்போரோ ஆரோக்கிய நெட்வொர்க் சமூக நெருக்கடி வரி: 416-495-2891\n- தாக்கப்பட்ட பெண்கள் ஹெல்ப்லைன்: 416-863-0511\n- டொராண்டோ பாலியல் வன்முறை நெருக்கடி மையம்: 416-597-8808\n- மைக்கேல் கேரன் மருத்துவமனை அவசர பிரிவு (825 கோக்ஸ்வெல் அவென்யூ).\n\nகுளிர்ந்த இடம்: கடுமையான வெப்ப எச்சரிக்கைகள்/அறிவிப்புகள் போது குளிர்ந்த இடத்தை வழங்குகிறது."
+  },
+  {
+   "id": "0c3f5b3aa79a",
+   "severity": "review",
+   "problem": "'No ... services were confirmed' became 'it was confirmed that there are no ... services' (stronger claim than the English).",
+   "reviewedText": "தேவையுள்ள குடும்பங்களுக்கான அவசர உணவு உதவி (மாதம் இருமுறை இலவச உணவு விநியோகம்). Food Collaborative அமைப்பின் சார்பாக தங்குமிடம், குளிர்சாதன வசதி கொண்ட பாதுகாப்பு மையங்கள் அல்லது அவசர உதவி தொலைபேசி சேவைகள் எதுவும் இல்லை என்பது உறுதி செய்யப்பட்டது."
+  },
+  {
+   "id": "d839bdfdb1e8",
+   "severity": "review",
+   "problem": "'were confirmed' dropped: says the Food Collaborative has no shelter or crisis services, rather than none confirmed.",
+   "reviewedText": "தேவையுள்ள குடும்பங்களுக்கான அவசர உணவு உதவி (மாதம் இருமுறை இலவச உணவு விநியோகம்). Food Collaborative அமைப்பின் கீழ் தங்குமிடம், குளிர்சாதன வசதி கொண்ட பாதுகாப்பு மையம் அல்லது அவசர உதவி தொலைபேசி சேவைகள் எதுவும் இல்லை. பெண்களுக்கு எதிரான வன்முறை தடுப்புத் திட்டத்தின் மூலம் அவசர கால தலையீடு மற்றும் ஆலோசனை சேவைகளை வழங்குகிறது; டொராண்டோ ரென்ட் பேங்க் (Toronto Rent Bank) உதவி மையமாகவும், அவசர மின் ஆற்றல் நிதி உதவி அழைப்பு மையமாகவும் (416-397-7368) செயல்படுகிறது."
+  },
+  {
+   "id": "1538ea5a988e",
+   "severity": "review",
+   "problem": "Street address transliterated into Tamil script ('30 பாண்ட் ஸ்ட்ரீட்'); addresses should stay in English.",
+   "reviewedText": "செயின்ட் மைக்கேல்ஸ் மருத்துவமனையில் அவசர சிகிச்சைப் பிரிவு செயல்படுகிறது (30 பாண்ட் ஸ்ட்ரீட்); யூனிட்டி ஹெல்த்-இன் மைசார்ட் (MyChart) மற்றும் மருத்துவமனை தொலைபேசி எண்கள் கொடுக்கப்பட்டுள்ளன. சிறுநீரக சிகிச்சை மையத்திற்கென பிரத்யேக அவசர சிகிச்சை சேவைகள் எதுவும் இல்லை — மருத்துவ அவசரநிலை ஏற்பட்டால் 911-க்கு அழையுங்கள்."
+  }
+ ],
+ "pa": [
+  {
+   "id": "d839bdfdb1e8",
+   "severity": "redo",
+   "problem": "'cooling centre' became 'ਠੰਡੇ ਮੌਸਮ ਲਈ ਰਾਹਤ ਕੇਂਦਰ' (relief centre for cold weather), the opposite hazard. Also 'violence-against-women program' reads as 'women against violence'.",
+   "reviewedText": "ਲੋੜਵੰਦ ਪਰਿਵਾਰਾਂ ਲਈ ਐਮਰਜੈਂਸੀ ਭੋਜਨ ਸਹਾਇਤਾ (ਹਰ ਮਹੀਨੇ ਦੋ ਵਾਰ ਮੁਫ਼ਤ ਭੋਜਨ ਵੰਡਿਆ ਜਾਂਦਾ ਹੈ)। Food Collaborative ਵੱਲੋਂ ਕੋਈ ਖਾਸ ਸ਼ਰਨ ਘਰ, ਠੰਡੇ ਮੌਸਮ ਲਈ ਰਾਹਤ ਕੇਂਦਰ ਜਾਂ ਸੰਕਟਕਾਲੀਨ ਹੈਲਪਲਾਈਨ ਸੇਵਾਵਾਂ ਪੁਸ਼ਟੀ ਨਹੀਂ ਕੀਤੀਆਂ ਗਈਆਂ। ਇਹ ਸੰਸਥਾ ਆਪਣੇ 'ਹਿੰਸਾ ਵਿਰੁੱਧ ਔਰਤਾਂ' ਪ੍ਰੋਗਰਾਮ ਰਾਹੀਂ ਸੰਕਟਕਾਲੀਨ ਮਦਦ ਅਤੇ ਸਲਾਹ-ਮਸ਼ਵਰਾ ਪ੍ਰਦਾਨ ਕਰਦੀ ਹੈ; ਇਹ Toronto Rent Bank Access Centre ਅਤੇ Emergency Energy Fund ਕਾਲ ਸੈਂਟਰ ਵਜੋਂ ਵੀ ਕੰਮ ਕਰਦੀ ਹੈ (416-397-7368)।"
+  },
+  {
+   "id": "2d4e28c7351b",
+   "severity": "review",
+   "problem": "'Notes routine safety drills' became an instruction to the reader ('ਨੋਟ ਕਰੋ ਕਿ', note that).",
+   "reviewedText": "ਨੋਟ ਕਰੋ ਕਿ ਨਿਯਮਿਤ ਤੌਰ 'ਤੇ ਸੁਰੱਖਿਆ ਅਭਿਆਸ ਕੀਤੇ ਜਾਂਦੇ ਹਨ ਅਤੇ ਦਾਖਲਾ ਸੁਰੱਖਿਅਤ ਹੈ; ਕੋਈ ਖਾਸ ਐਮਰਜੈਂਸੀ ਸੇਵਾਵਾਂ ਸੂਚੀਬੱਧ ਨਹੀਂ ਹਨ।"
+  },
+  {
+   "id": "1538ea5a988e",
+   "severity": "review",
+   "problem": "Street address transliterated into Gurmukhi ('30 ਬੌਂਡ ਸਟ੍ਰੀਟ'); addresses should stay in English.",
+   "reviewedText": "ਸੇਂਟ ਮਾਈਕਲ ਹਸਪਤਾਲ ਵਿੱਚ ਐਮਰਜੈਂਸੀ ਵਿਭਾਗ ਚੱਲਦਾ ਹੈ (30 ਬੌਂਡ ਸਟ੍ਰੀਟ); ਯੂਨਿਟੀ ਹੈਲਥ ਦੀ MyChart ਅਤੇ ਹਸਪਤਾਲ ਦੇ ਫ਼ੋਨ ਨੰਬਰ ਦਿੱਤੇ ਗਏ ਹਨ। ਗੁਰਦੇ ਦੀ ਦੇਖਭਾਲ ਲਈ ਕਿਸੇ ਖਾਸ ਕੇਂਦਰ ਵਿੱਚ ਐਮਰਜੈਂਸੀ ਸੇਵਾਵਾਂ ਨਹੀਂ ਮਿਲੀਆਂ — ਜੇਕਰ ਕੋਈ ਮੈਡੀਕਲ ਐਮਰਜੈਂਸੀ ਹੋਵੇ ਤਾਂ 911 'ਤੇ ਫ਼ੋਨ ਕਰੋ।"
+  },
+  {
+   "id": "37afb9eb8339",
+   "severity": "review",
+   "problem": "'ਤਾਤਕਾਲ-ਸੰਬੰਧੀ' is an unusual word for 'emergency'; the other texts use 'ਐਮਰਜੈਂਸੀ'.",
+   "reviewedText": "ਤਾਤਕਾਲ-ਸੰਬੰਧੀ ਸੇਵਾਵਾਂ ਸੂਚੀਬੱਧ ਨਹੀਂ ਹਨ। (ਗਰੁੱਪ ਨੇ ਪਹਿਲਾਂ ਮਹਾਮਾਰੀ ਦੌਰਾਨ ਅਤੇ ਬਾਅਦ ਵਿੱਚ ਦਾਨ ਵਜੋਂ ਭੋਜਨ ਹੰਪਰ ਵੰਡੇ ਹਨ।)"
+  }
+ ]
+}

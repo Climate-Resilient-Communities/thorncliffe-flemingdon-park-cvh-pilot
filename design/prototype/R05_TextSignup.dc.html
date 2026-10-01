@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-05 Text alert sign-up</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-05" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Text alert sign-up">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <sc-if value="{{isForm}}">
+    <div class="cvh-stack" style="--gap:8px">
+      <span class="cvh-steps">{{s.R05.step1}}</span>
+      <h1 class="cvh-h1">{{s.R05.title}}</h1>
+      <p>{{s.R05.lead}}</p>
+    </div>
+    <sc-if value="{{formError}}">
+      <div class="cvh-errorbox" role="alert"><span class="cvh-ico cvh-ico--info" aria-hidden="true" style="color:var(--danger)"></span><span class="cvh-grow cvh-strong">{{formError}}</span></div>
+    </sc-if>
+
+    <div class="cvh-field">
+      <label class="cvh-label" for="r05-phone">{{s.R05.phone}} <span class="cvh-tag cvh-tag--required">{{s.R05.required}}</span></label>
+      <p class="cvh-hint" id="r05-phone-hint">{{s.R05.phoneHelp}}</p>
+      <input id="r05-phone" class="cvh-input {{phoneCls}}" type="tel" inputmode="tel" autocomplete="tel" aria-describedby="r05-phone-hint" aria-invalid="{{phoneInvalid}}" value="{{phone}}" onInput="{{onPhone}}">
+      <sc-if value="{{phoneOk}}"><p class="cvh-row cvh-caption cvh-strong" style="--gap:6px;color:var(--ink)"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span><span class="cvh-bdi">{{phoneShown}}</span></p></sc-if>
+      <sc-if value="{{phoneErr}}"><p class="cvh-error"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{s.R05.phoneError}}</span></p></sc-if>
+    </div>
+
+    <div class="cvh-field" role="radiogroup" aria-labelledby="r05-nb">
+      <p class="cvh-label" id="r05-nb">{{s.R05.nbhd}} <span class="cvh-tag cvh-tag--required">{{s.R05.required}}</span></p>
+      <sc-for list="{{nbs}}" as="n" hint-placeholder-count="2">
+        <button type="button" class="cvh-option {{n.cls}}" role="radio" aria-checked="{{n.aria}}" onClick="{{n.pick}}" style="min-height:var(--tap);padding-block:8px;{{nbStyle}}">
+          <span class="cvh-option__box cvh-option__box--radio" aria-hidden="true"><sc-if value="{{n.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+          <span class="cvh-option__label">{{n.label}}</span>
+        </button>
+      </sc-for>
+      <sc-if value="{{nbErr}}"><p class="cvh-error"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span>{{s.R05.nbhdError}}</span></p></sc-if>
+    </div>
+
+    <div class="cvh-field">
+      <label class="cvh-label" for="r05-lang">{{s.R05.language}}</label>
+      <select id="r05-lang" class="cvh-select" onChange="{{onLang}}" value="{{langVal}}">
+        <sc-for list="{{langOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}" lang="{{o.bcp}}">{{o.label}}</option></sc-for>
+      </select>
+      <sc-if value="{{langFromFirst}}"><p class="cvh-hint">{{s.R05.languageFrom}}</p></sc-if>
+    </div>
+
+    <div class="cvh-field">
+      <p class="cvh-label">{{s.R05.building}} <span class="cvh-tag cvh-tag--optional">{{s.R05.optional}}</span></p>
+      <sc-if value="{{chosen}}">
+        <div class="cvh-chosen">
+          <span class="cvh-ico cvh-ico--building" aria-hidden="true"></span>
+          <p class="cvh-grow cvh-strong" style="color:var(--ink)">{{chosen}}</p>
+          <button type="button" class="cvh-link" onClick="{{editBuilding}}">{{s.R05.change}}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{searching}}">
+        <input class="cvh-input" type="search" placeholder="{{s.R05.buildingSearch}}" aria-label="{{s.R05.buildingSearch}}" value="{{q}}" onInput="{{onQ}}">
+        <sc-if value="{{hasMatches}}">
+          <ul class="cvh-picklist">
+            <sc-for list="{{matches}}" as="m" hint-placeholder-count="3">
+              <li><button type="button" class="cvh-pick" onClick="{{m.pick}}"><span class="cvh-ico cvh-ico--building cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{m.name}} <span class="cvh-pick__sub">{{m.sub}}</span></span></button></li>
+            </sc-for>
+          </ul>
+        </sc-if>
+        <sc-if value="{{moreLine}}"><p class="cvh-hint">{{moreLine}}</p></sc-if>
+        <button type="button" class="cvh-link" onClick="{{notListed}}">{{s.R05.notListed}}</button>
+        <sc-if value="{{notListedLine}}"><div class="cvh-note" role="status"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span class="cvh-grow">{{notListedLine}}</span></div></sc-if>
+      </sc-if>
+    </div>
+    <sc-if value="{{showFloor}}">
+      <div class="cvh-field">
+        <label class="cvh-label" for="r05-floor">{{s.R05.floor}} <span class="cvh-tag cvh-tag--optional">{{s.R05.optional}}</span></label>
+        <select id="r05-floor" class="cvh-select" onChange="{{onFloor}}" value="{{floorVal}}">
+          <sc-for list="{{floors}}" as="f" hint-placeholder-count="3"><option value="{{f.v}}" selected="{{f.sel}}">{{f.label}}</option></sc-for>
+        </select>
+      </div>
+    </sc-if>
+    <p class="cvh-caption cvh-muted">{{s.R05.whatYouGet}}</p>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg cvh-btn--block" onClick="{{toGroups}}">{{s.R05.continue}}</button>
+    <p class="cvh-row cvh-caption cvh-muted" style="--gap:8px"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span>{{s.R05.noAccount}}</span></p>
+  </sc-if>
+
+  <sc-if value="{{isGroups}}">
+    <div class="cvh-stack" style="--gap:8px">
+      <span class="cvh-steps">{{s.R05.step2}}</span>
+      <h1 class="cvh-h1">{{s.R05.groupsTitle}}</h1>
+      <p>{{s.R05.groupsLead}}</p>
+    </div>
+    <div class="cvh-stack" style="--gap:10px">
+      <sc-for list="{{gopts}}" as="o" hint-placeholder-count="4">
+        <button type="button" class="cvh-option {{o.cls}}" role="checkbox" aria-checked="{{o.aria}}" onClick="{{o.toggle}}">
+          <span class="cvh-option__box" aria-hidden="true"><sc-if value="{{o.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span>
+          <span class="cvh-option__text"><span class="cvh-option__label">{{o.label}}</span><span class="cvh-option__line">{{o.line}}</span></span>
+        </button>
+      </sc-for>
+    </div>
+    <p class="cvh-caption">{{s.R05.consent}}</p>
+    <div class="cvh-stack" style="--gap:10px">
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg cvh-btn--block" onClick="{{send}}">{{s.R05.send}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{skipGroups}}">{{s.R05.groupsSkip}}</button>
+      <p class="cvh-caption cvh-muted">{{s.R26.skipLine}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isSent}}">
+    <section class="cvh-card cvh-stack" style="--gap:10px;border:2px solid var(--interactive)" role="status" aria-labelledby="r05-sent">
+      <p class="cvh-row cvh-h1" id="r05-sent" style="--gap:10px"><span class="cvh-ico cvh-ico--phone cvh-ico--lg" aria-hidden="true"></span><span>{{s.R05.sentTitle}}</span></p>
+      <p style="font-size:var(--fs-lead)">{{sentBody}}</p>
+    </section>
+    <div class="cvh-pair">
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{resend}}">{{s.R05.resend}}</button>
+      <button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{fix}}">{{s.R05.fix}}</button>
+    </div>
+    <p class="cvh-caption">{{s.R05.consent}}</p>
+    <button type="button" class="cvh-btn cvh-btn--quiet cvh-btn--start" lang="en" dir="ltr" onClick="{{seePhone}}" style="text-decoration:none;gap:8px"><span class="cvh-tag cvh-tag--illustrative">{{s.R05.protoTag}}</span><span style="text-decoration:underline">{{s.R05.protoSee}}</span></button>
+    <p class="cvh-row cvh-caption cvh-muted" style="--gap:8px"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span>{{s.R05.noAccount}}</span></p>
+  </sc-if>
+
+  <sc-if value="{{isDone}}">
+    <section class="cvh-card cvh-stack" style="--gap:10px;border:2px solid var(--interactive)" role="status" aria-labelledby="r05-done">
+      <p class="cvh-row cvh-h1" id="r05-done" style="--gap:10px"><span class="cvh-ico cvh-ico--check cvh-ico--lg" aria-hidden="true"></span><span>{{s.R05.signedUpTitle}}</span></p>
+      <p style="font-size:var(--fs-lead)">{{doneBody}}</p>
+      <p>{{s.R05.howStop}}</p>
+      <p>{{s.R05.howChange}}</p>
+    </section>
+    <p class="cvh-row cvh-caption cvh-muted" style="--gap:8px"><span class="cvh-ico cvh-ico--lock cvh-ico--sm" aria-hidden="true"></span><span>{{s.R05.noAccount}}</span></p>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg cvh-btn--block" onClick="{{toHome}}">{{s.R05.toHome}}</button>
+    <button type="button" class="cvh-link" onClick="{{toChoices}}">{{s.shell.choices}}</button>
+  </sc-if>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Empty, required fields marked, language from R-01", "Building and floor pre-filled from R-35 (George)", "Neighbourhood only, building left blank", "My building is not listed", "Phone typed with spaces and brackets, shown back", "Mistyped number, one-line error", "Form error: neighbourhood missing", "Groups step, pre-filled from R-26", "Sent: check your phone", "Signed up", "Basic mode, helper signing up George"], "default": "Empty, required fields marked, language from R-01"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Empty, required fields marked, language from R-01": {"persona": "nasrin", "scenario": "C", "choices": {"building": null, "floor": null, "nbhd": null}, "params": {"from": "home"}}, "Building and floor pre-filled from R-35 (George)": {"persona": "george", "scenario": "C", "basic": false, "params": {"from": "firstRun"}}, "Neighbourhood only, building left blank": {"persona": "amina", "scenario": "C", "basic": false, "choices": {"subscribed": false, "building": null, "floor": null, "nbhd": "TP"}, "loc": {"phone": "416 555 0123"}}, "My building is not listed": {"persona": "new", "scenario": "C", "loc": {"nbhd": "FP", "editing": true, "q": "Don Mills", "notListed": true}}, "Phone typed with spaces and brackets, shown back": {"persona": "george", "scenario": "C", "basic": false, "loc": {"phone": "( 416 )555 0123"}}, "Mistyped number, one-line error": {"persona": "george", "scenario": "C", "basic": false, "loc": {"phone": "416 555 01234"}}, "Form error: neighbourhood missing": {"persona": "new", "scenario": "C", "loc": {"phone": "4165550123", "submitted": true}}, "Groups step, pre-filled from R-26": {"persona": "george", "scenario": "C", "basic": false, "loc": {"phone": "416 555 0123", "step": "groups"}}, "Sent: check your phone": {"persona": "amina", "scenario": "C", "basic": false, "choices": {"subscribed": false, "pendingPhone": "(416) 555-0123"}}, "Signed up": {"persona": "amina", "scenario": "C", "basic": false, "choices": {"subscribed": true, "phone": "(416) 555-0123"}}, "Basic mode, helper signing up George": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "loc": {"phone": "416 555 0123"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'R-05'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-05'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, x = s.R05, ch = b.ch, prm = b.params, app = b.app, loc = b.loc;
+    var nbName = function (id) { return (s.neighbourhoods || {})[id] || id; };
+    var nbsp = function (p) { return String(p || '').replace(/ /g, ' ').replace(/-/g, '‑'); };
+    var goBack = function () { if (loc.step === 'groups') { b.setLoc({ step: 'form' }); return; } if (app.canBack) b.back(); else b.go('R-03'); };
+    var firstLang = app.chosenLang || (b.persona || {}).lang || b.lang;
+    var langCode = loc.lang || firstLang;
+    var langWord = function (code) { var l = C.lang(code); return b.lang === 'en' ? l.english : l.native; };
+    // Signed up: the reply YES has arrived (R-06). Sent: waiting for it, and the screen stays on that instruction.
+    if (ch.subscribed && !loc.fixing) {
+      return { isForm: false, isGroups: false, isSent: false, isDone: true, goBack: goBack,
+        doneBody: C.fill(x.signedUpBody, { phone: nbsp(ch.phone || ch.pendingPhone || '(416) 555-0123'), lang: langWord(firstLang) }),
+        toHome: function () { b.go('R-03'); }, toChoices: function () { b.go('R-34', { from: 'signup' }); } };
+    }
+    if (ch.pendingPhone && !loc.fixing) {
+      return { isForm: false, isGroups: false, isSent: true, isDone: false, goBack: goBack,
+        sentBody: C.fill(x.sentBody, { phone: nbsp(ch.pendingPhone) }),
+        resend: function () { b.toast(C.fill(x.resent, { phone: ch.pendingPhone })); },
+        fix: function () { b.setLoc({ fixing: true, step: 'form', phone: ch.pendingPhone }); },
+        seePhone: function () { b.go('R-06', { stage: 'confirm' }); } };
+    }
+    // Form
+    var raw = 'phone' in loc ? loc.phone : '';
+    var ph = C.phone(raw), digits = ph.digits || '';
+    var letters = /[a-z]/i.test(raw);
+    var tooLong = digits.length > 11 || (digits.length === 11 && digits[0] !== '1');
+    var phoneErr = !!raw && (letters || tooLong || (loc.submitted && !ph.ok));
+    if (!raw && loc.submitted) phoneErr = false;
+    var bld = 'bld' in loc ? loc.bld : (ch.building || null);
+    var bo = bld ? C.building(bld) : null;
+    var nbhd = loc.nbhd || (bo ? bo.nbhd : ch.nbhd) || null;
+    var floor = 'floor' in loc ? loc.floor : (ch.floor ? String(ch.floor) : '');
+    var editing = !!loc.editing || !bo;
+    var q = loc.q || '', qq = q.toLowerCase().trim();
+    var all = (D.buildings || []).filter(function (y) { return (!nbhd || y.nbhd === nbhd) && (!qq || (y.name + ' ' + y.street).toLowerCase().indexOf(qq) >= 0); });
+    var cap = qq ? 5 : 3;
+    var matches = (qq || nbhd ? all : []).slice(0, cap).map(function (y) {
+      return { name: y.name, sub: [nbhd ? '' : nbName(y.nbhd), y.sample ? x.sample : ''].filter(Boolean).join(' · '),
+        pick: function () { b.setLoc({ bld: y.id, nbhd: y.nbhd, editing: false, q: '', notListed: false, floor: '' }); } };
+    });
+    var missing = [];
+    if (!ph.ok) missing.push(x.missingPhone);
+    if (!nbhd) missing.push(x.missingNbhd);
+    var floors = [{ v: '', label: x.noFloor, sel: !floor }];
+    if (bo) for (var i = 1; i <= bo.floors; i++) floors.push({ v: String(i), label: C.fill(x.floorN, { n: i }), sel: String(i) === String(floor) });
+    var picked = loc.picked || (ch.groups || []).slice();
+    if (!loc.picked && ch.checkin && picked.indexOf('checkin') < 0) picked.push('checkin');
+    var gopts = (D.groups || []).map(function (g) {
+      var on = picked.indexOf(g) >= 0;
+      return { label: s.groups[g].label, line: s.groups[g].line, on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        toggle: function () { var p = picked.filter(function (y) { return y !== g; }); if (!on) p.push(g); b.setLoc({ picked: p }); } };
+    });
+    var sendWith = function (groups) {
+      var patch = { pendingPhone: ph.formatted, phone: ph.formatted, subscribed: false, nbhd: nbhd, building: bo ? bo.id : null, floor: bo && floor ? +floor : null };
+      if (groups) patch.groups = groups;
+      app.setChoices(patch);
+      b.setLoc({ fixing: false, step: 'form' });
+    };
+    var sub = nbhd && !bo ? nbName(nbhd) : '';
+    var langOpts = (D.languages || []).map(function (l) { return { v: l.code, label: l.native + (l.native !== l.english ? ' (' + l.english + ')' : ''), bcp: l.bcp47, sel: l.code === langCode }; });
+    return {
+      isForm: loc.step !== 'groups', isGroups: loc.step === 'groups', isSent: false, isDone: false, goBack: goBack,
+      formError: loc.submitted && missing.length ? C.fill(x.formError, { missing: missing.join(x.and) }) : '',
+      phone: raw, onPhone: function (e) { b.setLoc({ phone: e.target.value }); },
+      phoneOk: ph.ok, phoneShown: ph.ok ? C.fill(x.phoneShown, { phone: nbsp(ph.formatted) }) : '', phoneErr: phoneErr || (loc.submitted && !ph.ok),
+      phoneCls: (phoneErr || (loc.submitted && !ph.ok)) ? 'is-error' : '', phoneInvalid: (phoneErr || (loc.submitted && !ph.ok)) ? 'true' : 'false',
+      nbs: ['TP', 'FP'].map(function (id) { var on = nbhd === id; return { label: nbName(id), on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false',
+        pick: function () { var p = { nbhd: id }; if (bo && bo.nbhd !== id) { p.bld = null; p.floor = ''; } b.setLoc(p); } }; }),
+      nbErr: loc.submitted && !nbhd, nbStyle: loc.submitted && !nbhd ? 'border-color:var(--danger)' : '',
+      langOpts: langOpts, langVal: langCode, langFromFirst: langCode === firstLang, onLang: function (e) { b.setLoc({ lang: e.target.value }); },
+      chosen: !editing && bo ? bo.name + (bo.sample ? ' (' + x.sample + ')' : '') : '', searching: editing,
+      editBuilding: function () { b.setLoc({ editing: true }); },
+      q: q, onQ: function (e) { b.setLoc({ q: e.target.value, notListed: false }); }, matches: matches, hasMatches: matches.length > 0,
+      moreLine: (qq || nbhd) && all.length > cap ? C.fill(x.moreBuildings, { n: all.length - cap }) : '',
+      notListed: function () { b.setLoc({ notListed: true, bld: null }); },
+      notListedLine: loc.notListed ? C.fill(x.notListedResult, { nbhd: nbhd ? nbName(nbhd) : s.R35.both }) : '',
+      showFloor: !!bo && !editing, floors: floors, floorVal: floor, onFloor: function (e) { b.setLoc({ floor: e.target.value }); },
+      toGroups: function () { if (missing.length) { b.setLoc({ submitted: true }); return; } b.setLoc({ step: 'groups', submitted: false }); },
+      gopts: gopts, send: function () { sendWith(picked.slice()); }, skipGroups: function () { sendWith(null); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

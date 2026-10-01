@@ -1,0 +1,256 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-11 Log a disruption</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-11" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-11" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-11" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-hpage" style="max-width:920px">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{x.back}}</button>
+  <div class="cvh-elapsed" role="timer" aria-live="off">
+    <span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span>
+    <span class="cvh-elapsed__time">{{elapsed}}</span>
+    <span>{{x.benchmark}}</span>
+  </div>
+  <div class="cvh-stack" style="--gap:4px">
+    <p>{{x.lead}}</p>
+  </div>
+  <sc-if value="{{b_exercise}}"><p class="cvh-note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{x.exercise}}</span></p></sc-if>
+
+  <section class="cvh-hsec" aria-labelledby="o11-type">
+    <h3 class="cvh-hsec__title" id="o11-type">{{x.step1}}<span class="cvh-tag cvh-tag--required">{{x.required}}</span></h3>
+    <p class="cvh-strong">{{x.inBuilding}}</p>
+    <div class="cvh-typepick {{pickCls}}" role="radiogroup" aria-label="{{x.inBuilding}}">
+      <sc-for list="{{bTypes}}" as="t" hint-placeholder-count="6">
+        <button type="button" class="cvh-typeopt {{t.cls}}" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}"><dc-import name="X13_DisruptionType" type="{{t.id}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import><sc-if value="{{t.isOn}}"><span class="cvh-ico cvh-ico--check cvh-typeopt__check" aria-hidden="true"></span></sc-if></button>
+      </sc-for>
+    </div>
+    <p class="cvh-strong">{{x.inNbhd}}</p>
+    <div class="cvh-typepick {{pickCls}}" role="radiogroup" aria-label="{{x.inNbhd}}">
+      <sc-for list="{{nTypes}}" as="t" hint-placeholder-count="3">
+        <button type="button" class="cvh-typeopt {{t.cls}}" role="radio" aria-checked="{{t.on}}" onClick="{{t.pick}}"><dc-import name="X13_DisruptionType" type="{{t.id}}" surface="screen" lang="en" embedded="{{true}}" hint-size="140px,44px"></dc-import><sc-if value="{{t.isOn}}"><span class="cvh-ico cvh-ico--check cvh-typeopt__check" aria-hidden="true"></span></sc-if></button>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-hsec" aria-labelledby="o11-area">
+    <h3 class="cvh-hsec__title" id="o11-area">{{x.step2}}<span class="cvh-tag cvh-tag--required">{{x.required}}</span></h3>
+    <sc-if value="{{noType}}"><p class="cvh-muted">{{x.pickTypeFirst}}</p></sc-if>
+    <sc-if value="{{hasType}}">
+      <div class="cvh-stack" style="--gap:14px">
+        <sc-if value="{{nbhdOnly}}"><p class="cvh-muted">{{x.nbhdOnlyHint}}</p></sc-if>
+        <div class="cvh-stack" style="--gap:6px">
+          <p class="cvh-strong">{{x.nbhdLabel}}</p>
+          <div class="cvh-chiprow">
+            <sc-for list="{{nbhdChips}}" as="c" hint-placeholder-count="2">
+              <button type="button" class="cvh-chip cvh-chip--pick {{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}"><sc-if value="{{c.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{c.label}}</button>
+            </sc-for>
+          </div>
+        </div>
+        <sc-if value="{{buildingsOk}}">
+          <div class="cvh-stack" style="--gap:6px">
+            <p class="cvh-strong">{{x.buildingsLabel}}</p>
+            <div class="cvh-chiprow">
+              <sc-for list="{{sampleChips}}" as="c" hint-placeholder-count="4">
+                <button type="button" class="cvh-chip cvh-chip--pick {{c.cls}}" aria-pressed="{{c.on}}" onClick="{{c.pick}}"><sc-if value="{{c.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if>{{c.label}}</button>
+              </sc-for>
+            </div>
+            <div class="cvh-field">
+              <label class="cvh-label" for="o11-q">{{x.searchLabel}}</label>
+              <input id="o11-q" class="cvh-input" type="search" autocomplete="off" value="{{q}}" onInput="{{onQ}}" placeholder="{{x.searchPh}}">
+            </div>
+            <sc-if value="{{hasResults}}">
+              <ul class="cvh-hresults">
+                <sc-for list="{{results}}" as="r" hint-placeholder-count="3">
+                  <li><button type="button" class="cvh-option {{r.cls}}" aria-pressed="{{r.on}}" onClick="{{r.pick}}" style="min-height:48px;padding:8px 12px"><span class="cvh-option__box" aria-hidden="true"><sc-if value="{{r.isOn}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm"></span></sc-if></span><span class="cvh-option__text"><span class="cvh-option__label">{{r.name}}</span><span class="cvh-option__line">{{r.line}}</span></span></button></li>
+                </sc-for>
+              </ul>
+            </sc-if>
+            <sc-if value="{{noMatch}}"><p class="cvh-muted">{{x.noMatch}}</p></sc-if>
+            <sc-if value="{{hasChosen}}">
+              <div class="cvh-row cvh-wrap" style="--gap:8px">
+                <span class="cvh-strong">{{x.chosen}}:</span>
+                <sc-for list="{{chosen}}" as="c" hint-placeholder-count="3">
+                  <span class="cvh-chip cvh-chip--on">{{c.name}}<button type="button" class="cvh-chip__x" onClick="{{c.remove}}" aria-label="{{c.aria}}"><span class="cvh-ico cvh-ico--close cvh-ico--sm" aria-hidden="true"></span></button></span>
+                </sc-for>
+              </div>
+            </sc-if>
+          </div>
+        </sc-if>
+        <sc-if value="{{hasChosen}}">
+          <div class="cvh-stack" style="--gap:6px">
+            <p class="cvh-label">{{x.floorsLabel}}<span class="cvh-tag cvh-tag--optional">{{x.optional}}</span></p>
+            <p class="cvh-hint">{{x.floorsHint}}</p>
+            <div class="cvh-range">
+              <div class="cvh-field">
+                <label class="cvh-label" for="o11-from">{{x.fromFloor}}</label>
+                <select id="o11-from" class="cvh-select" value="{{fromVal}}" onChange="{{onFrom}}"><sc-for list="{{fromOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.v}}</option></sc-for></select>
+              </div>
+              <div class="cvh-field">
+                <label class="cvh-label" for="o11-to">{{x.toFloor}}</label>
+                <select id="o11-to" class="cvh-select" value="{{toVal}}" onChange="{{onTo}}"><sc-for list="{{toOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}" selected="{{o.sel}}">{{o.v}}</option></sc-for></select>
+              </div>
+            </div>
+          </div>
+        </sc-if>
+      </div>
+    </sc-if>
+  </section>
+
+  <div class="cvh-pubbar">
+    <div class="cvh-stack cvh-grow" style="--gap:2px">
+      <sc-if value="{{ready}}"><span class="cvh-muted">{{x.summary}}</span><span class="cvh-strong">{{summary}}</span></sc-if>
+      <sc-if value="{{notReady}}"><span class="cvh-disabled-reason" style="margin:0">{{x.notReady}}</span></sc-if>
+    </div>
+    <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--lg" disabled="{{notReady}}" onClick="{{onContinue}}">{{x.cont}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+  </div>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Empty", "Type chosen", "Area chosen: the three Sample Towers", "Ready to publish: floors 1 to 6", "Building search at pilot scale", "Neighbourhood type: heat", "Exercise running"], "default": "Empty"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Empty": {}, "Type chosen": {"params": {"type": "power"}}, "Area chosen: the three Sample Towers": {"loc": {"type": "power", "buildings": ["SA", "SB", "SC"]}}, "Ready to publish: floors 1 to 6": {"loc": {"type": "power", "buildings": ["SA", "SB", "SC"], "to": 6}}, "Building search at pilot scale": {"loc": {"type": "water", "q": "Thorncliffe Park Drive", "buildings": ["B05"]}}, "Neighbourhood type: heat": {"loc": {"type": "heat", "nbhds": ["TP", "FP"]}}, "Exercise running": {"exercise": true, "loc": {"type": "power", "buildings": ["SA", "SB", "SC"], "to": 6}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-11', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, D = b.D, s = b.s, h = s.O11, loc = b.loc, prm = b.params;
+    var NBHD_TYPES = ['heat', 'smoke', 'winter'];
+    var type = loc.type || prm.type || null;
+    var nbhdOnly = NBHD_TYPES.indexOf(type) >= 0;
+    var bs = nbhdOnly ? [] : (loc.buildings || []);
+    var nbhds = loc.nbhds || [];
+    var set = function (patch) { b.setLoc(patch); };
+    var mkType = function (id) {
+      var on = id === type;
+      return { id: id, isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { set({ type: id, buildings: NBHD_TYPES.indexOf(id) >= 0 ? [] : bs }); } };
+    };
+    var bTypes = ['power', 'water', 'elevator', 'fire', 'flood', 'other'].map(mkType);
+    var nTypes = NBHD_TYPES.map(mkType);
+    // Area: a whole neighbourhood, or buildings (with floors)
+    var nbhdChips = (D.neighbourhoods || []).map(function (n) {
+      var on = nbhds.indexOf(n.id) >= 0;
+      return { label: n.name, isOn: on, on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '',
+        pick: function () { set({ nbhds: on ? nbhds.filter(function (x) { return x !== n.id; }) : nbhds.concat([n.id]), buildings: [], from: null, to: null }); } };
+    });
+    var SAMPLE = ['SA', 'SB', 'SC'];
+    var allSample = SAMPLE.every(function (id) { return bs.indexOf(id) >= 0; });
+    var toggle = function (id) { var on = bs.indexOf(id) >= 0; set({ buildings: on ? bs.filter(function (x) { return x !== id; }) : bs.concat([id]), nbhds: [], from: null, to: null }); };
+    var sampleChips = [{ label: h.sampleAll, isOn: allSample, on: allSample ? 'true' : 'false', cls: allSample ? 'cvh-chip--on' : '',
+      pick: function () { set({ buildings: allSample ? bs.filter(function (x) { return SAMPLE.indexOf(x) < 0; }) : bs.filter(function (x) { return SAMPLE.indexOf(x) < 0; }).concat(SAMPLE), nbhds: [], from: null, to: null }); } }]
+      .concat(SAMPLE.map(function (id) { var on = bs.indexOf(id) >= 0; return { label: C.building(id).name, isOn: on, on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '', pick: function () { toggle(id); } }; }));
+    var q = loc.q || '', qn = q.trim().toLowerCase();
+    var results = !qn ? [] : (D.buildings || []).filter(function (x) { return !x.sample && (x.name + ' ' + x.street).toLowerCase().indexOf(qn) >= 0; }).slice(0, 8).map(function (x) {
+      var on = bs.indexOf(x.id) >= 0;
+      return { name: x.name, line: (s.neighbourhoods[x.nbhd] || '') + ', ' + x.floors + ' floors', isOn: on, on: on ? 'true' : 'false', cls: on ? 'is-on' : '', pick: function () { toggle(x.id); } };
+    });
+    var chosen = bs.map(function (id) { var x = C.building(id) || { name: id }; return { name: x.name, aria: C.fill(h.remove, { name: x.name }), remove: function () { toggle(id); } }; });
+    var maxF = bs.reduce(function (m, id) { return Math.max(m, (C.building(id) || {}).floors || 0); }, 0) || 1;
+    var from = Math.min(loc.from || 1, maxF), to = Math.max(from, Math.min(loc.to || maxF, maxF));
+    var floors = bs.length && (from > 1 || to < maxF) ? [from, to] : null;
+    var opts = function (lo, hi, sel) { var o = []; for (var i = lo; i <= hi; i++) o.push({ v: String(i), sel: i === sel }); return o; };
+    // Where, in the resident house style ("Sample Tower A, B and C, floors 1 to 6")
+    var joinAnd = function (xs) { return xs.length < 2 ? xs.join('') : xs.slice(0, -1).join(', ') + ' and ' + xs[xs.length - 1]; };
+    var where = '';
+    if (bs.length) {
+      var allS = bs.every(function (id) { return SAMPLE.indexOf(id) >= 0; });
+      where = allS && bs.length > 1 ? 'Sample Tower ' + joinAnd(SAMPLE.filter(function (id) { return bs.indexOf(id) >= 0; }).map(function (id) { return id.slice(1); }))
+        : joinAnd(bs.map(function (id) { return (C.building(id) || { name: id }).name; }));
+      if (floors) where += floors[0] === floors[1] ? ', floor ' + floors[0] : ', floors ' + floors[0] + ' to ' + floors[1];
+    } else if (nbhds.length) where = joinAnd(nbhds.map(function (n) { return s.neighbourhoods[n]; }));
+    var ready = !!type && !!where;
+    var tword = (s.hazards || {})[type] || s.x13[type] || '';
+    var started = prm.startedAt ? Math.floor((Date.now() - prm.startedAt) / 60000) : 0;
+    var nb = bs.length ? ((C.building(bs[0]) || {}).nbhd || 'TP') : (nbhds.length === 1 ? nbhds[0] : 'both');
+    return { x: h, b_exercise: b.exercise, elapsed: started >= 1 ? C.fill(h.started, { t: b.ago(started) }) : h.startedNow,
+      bTypes: bTypes, nTypes: nTypes, pickCls: b.narrow ? 'cvh-typepick--one' : '', noType: !type, hasType: !!type, nbhdOnly: nbhdOnly, buildingsOk: !nbhdOnly,
+      nbhdChips: nbhdChips, sampleChips: sampleChips, q: q, onQ: function (e) { set({ q: e.target.value }); },
+      results: results, hasResults: results.length > 0, noMatch: !!qn && results.length === 0, chosen: chosen, hasChosen: chosen.length > 0,
+      fromOpts: opts(1, maxF, from), toOpts: opts(from, maxF, to), fromVal: String(from), toVal: String(to),
+      onFrom: function (e) { var v = +e.target.value; set({ from: v, to: Math.max(v, to) }); }, onTo: function (e) { set({ to: +e.target.value, from: from }); },
+      ready: ready, notReady: !ready, summary: tword + ', ' + where,
+      goBack: function () { if (b.app.canBack) b.back(); else b.go('O-01'); },
+      onContinue: function () {
+        if (!ready) return;
+        var id = 'INC-S' + Date.now();
+        b.act({ t: 'incident', incident: { id: id, type: type, types: [type], buildings: bs.slice(), floors: floors, where: where, nbhd: nb, nbhds: nbhds.slice(), startedAt: prm.startedAt || null } });
+        b.go('O-12', { incident: id });
+      } };
+  }
+
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,339 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>O-08 Moderation queue</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-op cvh-hub {{layoutClass}} {{surfaceClass}}" lang="en" dir="ltr" style="width:{{w}}px;height:{{h}}px">
+  <sc-if value="{{wide}}"><dc-import name="C_HubSide" active="O-08" in-disruption="{{inDisruption}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="240px,100%"></dc-import></sc-if>
+  <div class="cvh-hubmain">
+    <dc-import name="C_ProtoBar" screen-id="O-08" wide="{{wide}}" lang="en" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+    <sc-if value="{{app.exercise}}"><dc-import name="X10_Exercise" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="en" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+    <dc-import name="C_HubTop" screen-id="O-08" persona="{{app.persona}}" narrow="{{narrow}}" on-menu="{{app.openMenu}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+    <div class="cvh-hubbody ">
+
+<div class="cvh-stack" style="--gap:20px">
+  <sc-if value="{{exNoteLine}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--exercise" aria-hidden="true"></span><span>{{exNoteLine}}</span></p></sc-if>
+  <sc-if value="{{banner}}">
+    <div class="cvh-mq-banner" role="status">
+      <span class="cvh-ico cvh-ico--{{banner.icon}}" aria-hidden="true"></span>
+      <div class="cvh-grow cvh-stack" style="--gap:4px">
+        <p class="cvh-strong">{{banner.text}}</p>
+        <sc-for list="{{banner.names}}" as="bn" hint-placeholder-count="2"><p class="cvh-caption">{{bn}}</p></sc-for>
+        <div class="cvh-mq-banner__acts">
+          <sc-if value="{{next}}"><button type="button" class="cvh-btn cvh-btn--primary" onClick="{{next.go}}">{{next.label}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></sc-if>
+          <sc-if value="{{noNext}}"><p class="cvh-caption">{{x.allClear}}</p></sc-if>
+        </div>
+      </div>
+    </div>
+  </sc-if>
+
+  <section class="cvh-mq-summary" aria-label="{{x.timeK}}">
+    <div class="cvh-mq-stat">
+      <span class="cvh-mq-stat__n">{{count}}</span>
+      <span class="cvh-strong">{{x.waitingN}}</span>
+      <span class="cvh-caption cvh-muted">{{laneSplit}}</span>
+    </div>
+    <div class="cvh-mq-stat {{oldestCls}}">
+      <span class="cvh-caption cvh-strong cvh-muted">{{x.oldestK}}</span>
+      <span class="cvh-mq-stat__n" style="font-size:var(--fs-h2)">{{oldest.age}}</span>
+      <sc-if value="{{oldest.due}}"><span class="cvh-mq-cell__main"><span class="cvh-ico cvh-ico--{{oldest.icon}} cvh-ico--sm" aria-hidden="true"></span>{{oldest.due}}</span></sc-if>
+      <sc-if value="{{oldest.overdue}}"><span class="cvh-mq-flag" style="align-self:flex-start"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span>{{oldest.overdue}}</span></sc-if>
+    </div>
+    <div class="cvh-mq-stat cvh-mq-stat--time {{timeCls}}">
+      <span class="cvh-caption cvh-strong cvh-muted">{{x.timeK}}</span>
+      <span class="cvh-strong" style="font-size:var(--fs-h3);color:var(--ink)">{{time.estimate}}</span>
+      <div class="cvh-mq-meter" role="img" aria-label="{{time.aria}}">
+        <span class="cvh-mq-meter__fill" style="width:{{time.fillPct}}%"></span>
+        <sc-if value="{{time.over}}"><span class="cvh-mq-meter__over" style="inset-inline-start:{{time.markPct}}%;width:{{time.overPct}}%"></span></sc-if>
+        <span class="cvh-mq-meter__mark" style="inset-inline-start:{{time.markPct}}%"></span>
+        <span class="cvh-mq-meter__marklabel" style="inset-inline-start:{{time.markPct}}%">{{time.markLabel}}</span>
+      </div>
+      <p class="cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--{{time.icon}} cvh-ico--sm" aria-hidden="true" style="margin-top:2px"></span><span class="cvh-strong">{{time.line}}</span></p>
+      <sc-if value="{{time.over}}"><p>{{time.overLine}}</p><p class="cvh-caption cvh-muted">{{x.lighter}}</p></sc-if>
+      <p class="cvh-caption cvh-muted">{{time.budget}}. {{x.estimateHow}}</p>
+    </div>
+  </section>
+
+  <sc-if value="{{isEmpty}}">
+    <div class="cvh-mr-card cvh-mr-card--key" role="status">
+      <p class="cvh-row" style="--gap:10px"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span><span class="cvh-h3">{{x.emptyTitle}}</span></p>
+      <p>{{x.emptyLine}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{hasWaiting}}">
+    <div class="cvh-mq-tools">
+      <sc-if value="{{easyCount}}"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{selectEasy}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{selectEasyLabel}}</button></sc-if>
+      <sc-if value="{{selCount}}"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{clearSel}}">{{x.clear}}</button></sc-if>
+      <sc-if value="{{easyCount}}"><p class="cvh-caption cvh-muted" style="flex:1 1 320px">{{x.selectEasyHint}}</p></sc-if>
+    </div>
+  </sc-if>
+
+  <sc-for list="{{lanes}}" as="ln" hint-placeholder-count="2">
+    <section class="cvh-mq-lane {{ln.cls}}" aria-labelledby="{{ln.hid}}">
+      <div class="cvh-mq-lanehead">
+        <span class="cvh-ico cvh-ico--{{ln.icon}}" aria-hidden="true"></span>
+        <h2 class="cvh-h3" id="{{ln.hid}}">{{ln.title}}</h2>
+        <span class="cvh-tag">{{ln.count}}</span>
+        <span class="cvh-caption" style="flex:1 1 260px">{{ln.line}}</span>
+      </div>
+      <sc-if value="{{ln.empty}}"><p class="cvh-caption" style="padding:14px 16px">{{x.laneNone}}</p></sc-if>
+      <sc-if value="{{ln.hasRows}}">
+        <div class="cvh-mq-row cvh-mq-row--head" aria-hidden="true">
+          <span class="cvh-mq-sel"></span><span class="cvh-mq-main">{{x.cols.what}}</span><span class="cvh-mq-type">{{x.cols.type}}</span><span class="cvh-mq-lang">{{x.cols.lang}}</span><span class="cvh-mq-age">{{x.cols.age}}</span><span class="cvh-mq-act"></span>
+        </div>
+      </sc-if>
+      <sc-for list="{{ln.rows}}" as="r" hint-placeholder-count="3">
+        <div class="cvh-mq-row {{r.cls}}">
+          <span class="cvh-mq-sel">
+            <button type="button" class="cvh-mq-check" role="checkbox" aria-checked="{{r.checked}}" aria-label="{{r.selAria}}" title="{{r.selTitle}}" disabled="{{r.cantSel}}" onClick="{{r.toggle}}">
+              <span class="cvh-option__box"><sc-if value="{{r.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if></span>
+            </button>
+          </span>
+          <div class="cvh-mq-main">
+            <button type="button" class="cvh-mq-name" onClick="{{r.open}}">{{r.name}}</button>
+            <p class="cvh-mq-gloss">{{r.gloss}}</p>
+            <sc-if value="{{r.corrOf}}"><p class="cvh-caption cvh-muted">{{r.corrOf}}</p></sc-if>
+            <sc-if value="{{r.hasFlags}}">
+              <div class="cvh-mq-flags">
+                <sc-for list="{{r.flags}}" as="fl" hint-placeholder-count="1"><span class="cvh-mq-flag {{fl.cls}}"><span class="cvh-ico cvh-ico--{{fl.icon}} cvh-ico--sm" aria-hidden="true"></span>{{fl.label}}</span></sc-for>
+              </div>
+            </sc-if>
+            <sc-if value="{{r.after}}"><span class="cvh-mq-flag cvh-mq-flag--soft"><span class="cvh-ico cvh-ico--calendar cvh-ico--sm" aria-hidden="true"></span>{{x.afterBudget}}</span></sc-if>
+          </div>
+          <div class="cvh-mq-cell cvh-mq-type"><span class="cvh-mq-cell__main"><span class="cvh-ico cvh-ico--{{r.typeIcon}} cvh-ico--sm" aria-hidden="true"></span>{{r.typeLabel}}</span></div>
+          <div class="cvh-mq-cell cvh-mq-lang"><span class="cvh-mq-cell__main"><span class="cvh-ico cvh-ico--language cvh-ico--sm" aria-hidden="true"></span>{{r.langName}}</span><span class="cvh-muted">{{r.glossNote}}</span></div>
+          <div class="cvh-mq-cell cvh-mq-age"><span class="cvh-mq-cell__main"><span class="cvh-ico cvh-ico--clock cvh-ico--sm" aria-hidden="true"></span>{{r.ageText}}</span><span class="{{r.dueCls}}">{{r.due}}</span></div>
+          <div class="cvh-mq-act"><button type="button" class="cvh-btn cvh-btn--secondary" onClick="{{r.open}}" aria-label="{{r.reviewAria}}">{{x.review}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button></div>
+        </div>
+      </sc-for>
+    </section>
+  </sc-for>
+
+  <sc-if value="{{hasDone}}">
+    <section class="cvh-mq-lane" aria-labelledby="o08-done">
+      <div class="cvh-mq-lanehead">
+        <span class="cvh-ico cvh-ico--check" aria-hidden="true"></span>
+        <h2 class="cvh-h3" id="o08-done">{{x.doneTitle}}</h2>
+        <span class="cvh-tag">{{doneCount}}</span>
+      </div>
+      <sc-for list="{{doneRows}}" as="d" hint-placeholder-count="2">
+        <div class="cvh-mq-row cvh-mq-row--done">
+          <div class="cvh-mq-main"><button type="button" class="cvh-mq-name" onClick="{{d.open}}">{{d.name}}</button><p class="cvh-caption cvh-muted">{{d.meta}}</p></div>
+          <div class="cvh-mq-cell cvh-mq-dec"><span class="cvh-mq-cell__main"><span class="cvh-ico cvh-ico--{{d.icon}} cvh-ico--sm" aria-hidden="true"></span>{{d.decision}}</span></div>
+          <div class="cvh-mq-cell cvh-mq-age"><span class="cvh-muted">{{d.when}}</span></div>
+          <div class="cvh-mq-act"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{d.open}}" aria-label="{{d.openAria}}">{{x.open}}</button></div>
+        </div>
+      </sc-for>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{selCount}}">
+    <div class="cvh-mq-batch" role="region" aria-label="{{selLabel}}">
+      <span class="cvh-strong" style="color:var(--ink);font-size:var(--fs-h3)">{{selLabel}}</span>
+      <span class="cvh-caption cvh-grow" style="flex:1 1 280px">{{x.batchLine}}</span>
+      <button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{clearSel}}">{{x.clear}}</button>
+      <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{acceptSel}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{acceptLabel}}</button>
+    </div>
+  </sc-if>
+</div>
+
+    </div>
+  </div>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["A realistic week: 13 waiting, two lanes", "Batch selection: the nine with nothing missing", "A handful waiting", "Oldest overdue: the same week, two days later", "Will not fit in the time set aside (10 minutes this week)", "Back from a decision, with done this session", "Empty: nothing waiting", "Exercise running"], "default": "A realistic week: 13 waiting, two lanes"},"embedded":{"editor":null},"fullh":{"editor":null},"w":{"editor":null},"$preview":{"width":1280,"height":800}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"A realistic week: 13 waiting, two lanes": {"persona": "PRIYA"}, "Batch selection: the nine with nothing missing": {"persona": "PRIYA", "loc": {"sel": ["SUB-12", "SUB-13", "SUB-01", "SUB-02", "SUB-03", "SUB-04", "SUB-05", "SUB-06", "SUB-07"]}}, "A handful waiting": {"persona": "PRIYA", "params": {"only": ["SUB-03", "SUB-06", "SUB-11", "SUB-12"]}}, "Oldest overdue: the same week, two days later": {"persona": "PRIYA", "params": {"shift": 2}}, "Will not fit in the time set aside (10 minutes this week)": {"persona": "PRIYA", "params": {"budget": 10}}, "Back from a decision, with done this session": {"persona": "PRIYA", "params": {"done": {"sub": "SUB-10", "decision": "declined"}, "pre": {"SUB-01": {"decision": "accepted", "mins": 6}, "SUB-10": {"decision": "declined", "reason": "advert", "mins": 1}}}}, "Empty: nothing waiting": {"persona": "PRIYA", "params": {"only": []}}, "Exercise running": {"persona": "PRIYA", "exercise": true}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Hub and partner space" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoHubApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    if (!p.app && p.w) { app.w = p.w; app.narrow = p.w < 700; }
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: C.strings('en'), h: C.strings('en').hub, params: app.params || {}, loc: loc, setLoc: setLoc,
+      go: app.go, back: app.back, act: app.act, narrow: !!app.narrow, exercise: !!app.exercise, persona: C.person(app.persona || 'PRIYA') || {},
+      session: C.session.model(), standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, 'en'); }, dur: function (mins) { return C.duration(mins, 'en'); }, fill: C.fill };
+    var sid = 'O-08', n = parseInt(sid.slice(2), 10);
+    var partner = sid[0] === 'P' && n <= 10;
+    var narrow = !!app.narrow;
+    var base = { app: app, w: app.w || 1280, h: app.h || 800, narrow: narrow, wide: !narrow, toast: this.state.toast,
+      exEnded: !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30),
+      layoutClass: narrow ? 'cvh-hub--narrow' : '', surfaceClass: partner ? 'cvh-partner' : '', inDisruption: !!app.inDisruption || partner };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) { return Object.assign(this.screenValsX10(b), { exNoteLine: b.exercise ? b.s.O08.exNote : '' }); }
+  screenValsX10(b) {
+    var C = b.C, s = b.s, x = s.O08, prm = b.params || {}, go = b.go, loc = b.loc;
+    var q = this.mq(b), labels = (s.O10 || {}).labels || {};
+    var sel = (loc.sel || []).filter(function (id) { return q.waiting.some(function (t) { return t.id === id; }); });
+    // Which items fit in this week's time, in queue order
+    var total = 0, cut = 0;
+    q.waiting.forEach(function (t) { total += t.mins; if (total <= q.budget + 1e-9) cut++; });
+    var est = Math.ceil(total), over = total > q.budget + 1e-9, scale = Math.max(total, q.budget) || 1;
+    var time = { estimate: q.waiting.length ? C.fill(x.estimate, { n: est }) : x.nothingToClear, budget: C.fill(x.budget, { n: q.budget }), markLabel: C.fill(x.budgetMark, { n: q.budget }),
+      fillPct: Math.round(Math.min(total, q.budget) / scale * 100), markPct: Math.round(q.budget / scale * 100), overPct: Math.round(Math.max(0, total - q.budget) / scale * 100),
+      over: over, icon: over ? 'info' : 'check',
+      line: over ? C.fill(x.over, { n: Math.ceil(total - q.budget) }) : (q.budget - total >= 2 ? C.fill(x.fits, { n: Math.floor(q.budget - total) }) : q.budget - total >= 1 ? x.fitsOne : x.fitsExact),
+      overLine: C.fill(x.overLine, { n: q.waiting.length - cut }) };
+    time.aria = time.estimate + '. ' + time.budget + '. ' + time.line;
+    var rowOf = function (t, i) {
+      var on = sel.indexOf(t.id) >= 0, f = t.fields || {}, flags = [];
+      if (t.noWhere) flags.push({ label: x.flags.noWhere, icon: 'map', cls: '' });
+      if (t.noCat) flags.push({ label: x.flags.noCat, icon: 'list', cls: '' });
+      if (!t.isCorr && f.cost === 'fee') flags.push({ label: x.flags.fee, icon: 'cost', cls: '' });
+      else if (!t.isCorr && f.cost === 'lowCost') flags.push({ label: x.flags.lowCost, icon: 'cost', cls: '' });
+      else if (t.money) flags.push({ label: x.flags.words, icon: 'cost', cls: '' });
+      var gloss = f.whatEn || f.what || '';
+      return { id: t.id, name: f.name, gloss: gloss, corrOf: t.isCorr ? C.fill(x.correctionOf, { what: x.changed[f.changed] || x.changed.other }) : '',
+        flags: flags, hasFlags: flags.length > 0, typeLabel: t.typeLabel, typeIcon: t.typeIcon, langName: t.langName,
+        glossNote: t.sourceLang && t.sourceLang !== 'en' ? x.glossMachine : x.glossOwn,
+        ageText: t.ageText, due: t.due, dueCls: t.overdue ? 'cvh-strong' : 'cvh-muted',
+        after: over && q.waiting.indexOf(t) >= cut, on: on, checked: on ? 'true' : 'false', cls: on ? 'is-sel' : '',
+        cantSel: t.noWhere, selTitle: t.noWhere ? x.cantSelect : '', selAria: t.noWhere ? x.cantSelect + ': ' + f.name : C.fill(x.selectAria, { name: f.name }),
+        reviewAria: x.review + ': ' + f.name,
+        toggle: function () { if (t.noWhere) return; b.setLoc({ sel: on ? sel.filter(function (k) { return k !== t.id; }) : sel.concat([t.id]), batchDone: null }); },
+        open: function () { go('O-09', { sub: t.id }); } };
+    };
+    var amb = q.waiting.filter(function (t) { return t.lane === 'ambassador'; }), gen = q.waiting.filter(function (t) { return t.lane !== 'ambassador'; });
+    var showLanes = q.waiting.length > 0;
+    var lanes = !showLanes ? [] : [
+      { hid: 'o08-amb', cls: 'cvh-mq-lane--amb', icon: 'person', title: x.ambLane, line: x.ambLaneLine, count: C.fill(x.laneCount, { n: amb.length }), rows: amb.map(rowOf) },
+      { hid: 'o08-gen', cls: '', icon: 'inbox', title: x.genLane, line: x.genLaneLine, count: C.fill(x.laneCount, { n: gen.length }), rows: gen.map(rowOf) }];
+    lanes.forEach(function (l) { l.hasRows = l.rows.length > 0; l.empty = !l.hasRows; });
+    var oldestT = q.waiting.slice().sort(function (a, z) { return z.age - a.age; })[0];
+    var anyOverdue = q.waiting.some(function (t) { return t.overdue; });
+    var nOver = q.waiting.filter(function (t) { return t.overdue; }).length;
+    var oldest = oldestT ? { age: oldestT.ageText, due: oldestT.due + (oldestT.lane === 'ambassador' ? ', ' + x.onAmb : ''), icon: oldestT.overdue ? 'info' : 'clock',
+      overdue: nOver ? (nOver === 1 ? x.overdueOneAll : C.fill(x.overdueN, { n: nOver })) : '' } : { age: x.oldestNone, due: '', icon: 'clock', overdue: '' };
+    // Done this session: decided in this browser's session (or drawn for a demo)
+    var doneRows = q.done.slice().sort(function (a, z) { return (a.decidedMinsAgo || 0) - (z.decidedMinsAgo || 0); }).map(function (t) {
+      var f = t.fields || {}, acc = t.decision === 'accepted';
+      return { name: f.name, meta: t.typeLabel + ' · ' + t.langName + ' · ' + (t.lane === 'ambassador' ? x.ambLane : x.genLane),
+        decision: acc ? x.accepted : C.fill(x.declined, { reason: labels[t.decisionReason] || t.decisionReason || '' }), icon: acc ? 'check' : 'close',
+        when: t.decidedMinsAgo != null ? b.ago(t.decidedMinsAgo) : '', openAria: x.open + ': ' + f.name, open: function () { go('O-09', { sub: t.id }); } };
+    });
+    // Banner after a decision (from O-09 or O-10) or after a batch
+    var banner = null, justId = null;
+    if (loc.batchDone && loc.batchDone.length) {
+      banner = { icon: 'check', text: C.fill(x.batchDone, { n: loc.batchDone.length }), names: loc.batchDone.map(function (id) { var t = C.byId(q.subs, id); return t ? (t.fields || {}).name : id; }) };
+    } else if (prm.done && prm.done.sub) {
+      var jt = C.byId(q.subs, prm.done.sub); justId = prm.done.sub;
+      if (jt) {
+        var nm = (jt.fields || {}).name, dec = jt.decision || prm.done.decision;
+        banner = { icon: dec === 'accepted' ? 'check' : 'close', names: [],
+          text: dec === 'accepted' ? C.fill(jt.isCorr ? x.justAcceptedCorr : x.justAccepted, { name: jt.isCorr ? jt.corrOf : nm }) : C.fill(x.justDeclined, { name: nm, lang: jt.langName }) };
+      }
+    }
+    var nx = banner ? (justId ? q.nextAfter(justId) : q.waiting[0]) : null;
+    var next = nx ? { label: C.fill(x.nextOne, { name: (nx.fields || {}).name }), go: function () { go('O-09', { sub: nx.id }); } } : null;
+    var easy = q.waiting.filter(function (t) { return t.easy; });
+    var self = this;
+    return { x: x, banner: banner, next: next, noNext: !!banner && !nx,
+      count: q.waiting.length, laneSplit: q.waiting.length ? C.fill(x.split, { a: amb.length, g: gen.length }) : '',
+      oldest: oldest, oldestCls: anyOverdue ? 'cvh-mq-stat--alarm' : '', time: time, timeCls: over ? 'cvh-mq-stat--alarm' : '',
+      isEmpty: q.waiting.length === 0, hasWaiting: q.waiting.length > 0, lanes: lanes,
+      hasDone: doneRows.length > 0, doneRows: doneRows, doneCount: String(doneRows.length),
+      easyCount: easy.length, selectEasyLabel: C.fill(x.selectEasy, { n: easy.length }),
+      selectEasy: function () { b.setLoc({ sel: easy.map(function (t) { return t.id; }), batchDone: null }); },
+      clearSel: function () { b.setLoc({ sel: [] }); },
+      selCount: sel.length, selLabel: C.fill(x.selectedN, { n: sel.length }), acceptLabel: C.fill(x.acceptN, { n: sel.length }),
+      acceptSel: function () {
+        // One moderate action per item: the session log shows each decision on its own
+        sel.forEach(function (id) { b.act({ t: 'moderate', sub: id, decision: 'accepted' }); });
+        b.setLoc({ sel: [], batchDone: sel.slice() });
+      } };
+  }
+  mq(b) {
+    // The queue as the Hub sees it. Decisions come from the session (D.moderation carries decision, decisionReason, decidedMinsAgo).
+    // Demo-only overlays for the artboard: params.only (which items), params.shift (days later), params.pre (drawn decisions), params.budget.
+    var C = b.C, D = b.D, x = b.s.O08, prm = b.params || {};
+    var shift = +prm.shift || 0, pre = prm.pre || {};
+    var PAYOPT = /pay what you can|give what you can|by donation/i;
+    var subs = (D.moderation || []).filter(function (r) { return !prm.only || prm.only.indexOf(r.id) >= 0; }).map(function (r) {
+      var t = Object.assign({}, r), f = r.fields || {}, lc = f.location || {};
+      if (!t.decision && pre[r.id]) { t.decision = pre[r.id].decision; t.decisionReason = pre[r.id].reason || null; t.decidedMinsAgo = pre[r.id].mins != null ? pre[r.id].mins : 2; }
+      t.age = (r.daysAgo || 0) + shift;
+      t.isCorr = r.type === 'correction';
+      t.noWhere = !t.isCorr && (!lc.kind || lc.kind === 'none' || !(lc.text || lc.textEn));
+      t.noCat = !t.isCorr && !f.category;
+      var txt = (f.name || '') + ' ' + (f.whatEn || ''), words = txt.match(/\d+\s?% off|\bstores?\b|\bshops?\b|\bdiscounts?\b|\bsale\b|\bbest prices?\b|\bcheap\b|\bbuy\b/gi) || [];
+      t.bizWords = words.filter(function (w, i) { return words.map(function (k) { return k.toLowerCase(); }).indexOf(w.toLowerCase()) === i; });
+      t.payOptional = PAYOPT.test(txt);
+      t.money = !t.isCorr && (f.cost === 'fee' || f.cost === 'lowCost' || t.payOptional || t.bizWords.length > 0);
+      t.easy = t.isCorr || (!t.noWhere && !t.noCat && f.cost === 'free' && !t.money);
+      t.mins = (t.isCorr ? 0.5 : 1) + (r.sourceLang && r.sourceLang !== 'en' ? 0.5 : 0) + (t.noWhere ? 1 : 0) + (t.noCat ? 0.5 : 0);
+      var target = r.lane === 'ambassador' ? 1 : 7, left = target - t.age;
+      t.overdue = left < 0;
+      t.due = left < 0 ? (left === -1 ? x.overdueOne : C.fill(x.overdue, { n: -left })) : left === 0 ? x.dueToday : left === 1 ? x.dueTomorrow : C.fill(x.dueIn, { n: left });
+      t.ageText = t.age <= 0 ? x.today : t.age === 1 ? x.day : C.fill(x.days, { n: t.age });
+      t.typeLabel = x.types[r.type] || r.type;
+      t.typeIcon = { service: 'public', communityOffer: 'communityOffer', correction: 'pencil' }[r.type] || 'doc';
+      var L = C.lang(r.sourceLang || 'en');
+      t.langName = L.english || L.native; t.langNative = L.native; t.bcp = L.bcp47 || r.sourceLang || 'en'; t.dir = L.dir || 'ltr';
+      t.corrOf = t.isCorr && f.correctionOf ? ((C.listing(f.correctionOf) || {}).name || f.correctionOf) : '';
+      return t;
+    });
+    subs.sort(function (a, z) { return (a.lane === z.lane ? 0 : a.lane === 'ambassador' ? -1 : 1) || (z.age - a.age) || (a.id < z.id ? -1 : 1); });
+    var waiting = subs.filter(function (t) { return !t.decision; }), done = subs.filter(function (t) { return !!t.decision; });
+    var nextAfter = function (id) {
+      var i = -1; subs.forEach(function (t, k) { if (t.id === id) i = k; });
+      for (var k = 1; k <= subs.length; k++) { var t = subs[(i + k + subs.length) % subs.length]; if (!t.decision && t.id !== id) return t; }
+      return null;
+    };
+    return { subs: subs, waiting: waiting, done: done, nextAfter: nextAfter, budget: +prm.budget || D.moderationBudgetMins || 20 };
+  }
+
+}
+</script>
+</body>
+</html>

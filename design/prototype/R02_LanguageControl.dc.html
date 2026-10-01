@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-02 Language control</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <div class="cvh-overlay" role="dialog" aria-modal="true" aria-labelledby="r02-title">
+    <div class="cvh-sheet">
+      <div class="cvh-sheet__head">
+        <span class="cvh-ico cvh-ico--globe" aria-hidden="true"></span>
+        <h2 class="cvh-h2 cvh-grow" id="r02-title">{{s.R02.title}}</h2>
+        <button type="button" class="cvh-iconbtn" onClick="{{close}}" aria-label="{{s.shell.close}}"><span class="cvh-ico cvh-ico--close" aria-hidden="true"></span></button>
+      </div>
+      <div class="cvh-sheet__body">
+        <sc-if value="{{pend}}">
+          <div class="cvh-stack" style="--gap:12px" role="alert">
+            <p class="cvh-h3">{{s.R02.unavailable}}</p>
+            <p>{{pend.body}}</p>
+            <div lang="{{pend.bcp}}" dir="{{pend.dir}}"><dc-import name="X04_MachineTranslation" state="unavailable" from="en" lang="{{pend.code}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,140px"></dc-import></div>
+            <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{pend.go}}">{{pend.goLabel}}</button>
+            <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block" onClick="{{pend.cancel}}">{{pend.cancelLabel}}</button>
+          </div>
+        </sc-if>
+        <sc-if value="{{showList}}"><p class="cvh-caption cvh-muted">{{s.shell.languageReturn}}</p></sc-if>
+        <sc-for list="{{langs}}" as="l" hint-placeholder-count="15">
+          <button type="button" class="cvh-langopt {{l.cls}}" lang="{{l.bcp}}" dir="{{l.dir}}" onClick="{{l.pick}}" aria-pressed="{{l.pressed}}">
+            <span class="cvh-langopt__native">{{l.native}}</span>
+            <sc-if value="{{l.on}}"><span class="cvh-langopt__check"><span class="cvh-ico cvh-ico--check" aria-hidden="true"></span></span></sc-if>
+          </button>
+        </sc-for>
+      </div>
+    </div>
+  </div>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"state":{"editor":"enum","options":["open","unavailable"],"default":"open"},"target":{"editor":"enum","options":["el","ur","prs","ps","tl","bn"],"default":"el"},"screen":{"editor":"text","default":"R-03"},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { local: null, pending: null, dismissed: false }; }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data(), app = p.app, W = window;
+    var lang = (app && app.lang) || this.state.local || p.lang || 'en', s = C.strings(lang);
+    // "Not yet available in this language" (brief 3.2.2, F1 step 7): when the chosen language has no
+    // strings for the screen underneath, say so plainly before switching. Never a silent fall back.
+    var screenKey = String((app && app.screen) || p.screen || 'R-03').replace('-', '');
+    var hasScreen = function (code) {
+      if (code === 'en') return true;
+      var en = (W.CVH_STRINGS.en || {})[screenKey]; if (!en) return true;
+      var tr = (W.CVH_STRINGS[code] || {})[screenKey]; if (!tr) return false;
+      return Object.keys(en).every(function (k) { return tr[k] !== undefined && tr[k] !== ''; });
+    };
+    var apply = function (code) { self.setState({ pending: null }); if (self.props.app) self.props.app.setLang(code); else self.setState({ local: code }); };
+    var pendingCode = this.state.pending || ((p.state === 'unavailable' && !this.state.dismissed && !this.state.local) ? (p.target || 'el') : null);
+    var langs = (D.languages || []).map(function (l) {
+      var on = l.code === lang;
+      return { native: l.native, bcp: l.bcp47, dir: l.dir, on: on, cls: on ? 'is-selected' : '', pressed: on ? 'true' : 'false',
+        pick: function () { if (l.code !== lang && !hasScreen(l.code)) self.setState({ pending: l.code }); else apply(l.code); } };
+    });
+    var pend = null;
+    if (pendingCode) {
+      var pl = C.lang(pendingCode);
+      pend = { code: pendingCode, bcp: pl.bcp47, dir: pl.dir, body: C.fill(s.R02.unavailableBody, { lang: pl.native }),
+        goLabel: C.fill(s.R02.continueIn || 'Continue in {lang}', { lang: pl.native }), cancelLabel: s.R02.chooseOther || 'Choose another language',
+        go: function () { apply(pendingCode); }, cancel: function () { self.setState({ pending: null, dismissed: true }); } };
+      langs = [];
+    }
+    var basic = app ? app.basic : p.basic;
+    return { s: s, langs: langs, pend: pend, showList: !pend, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'position:relative;width:360px;height:640px;background:#fafafa;overflow:hidden;',
+      close: function () { if (self.props.app) self.props.app.closeOverlay(); } };
+  }
+}
+</script>
+</body>
+</html>

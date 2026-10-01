@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Place and contribution components: X-09, X-11, X-14, X-04, X-03, X-07</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-sheetpage" lang="en" dir="ltr" style="width:1440px;height:4830px;overflow:hidden">
+  <div class="cvh-stack" style="--gap:8px">
+    <p class="cvh-eyebrow">Component library · phase 1</p>
+    <h1 style="font-size:40px;line-height:1.1;margin:0;color:var(--ink)">Place and contribution components: X-09, X-11, X-14, X-04, X-03, X-07</h1>
+    <p class="cvh-spec__note" style="font-size:17px">Space status is its own signal set: word, icon and shape, never the incident status colours. Unconfirmed never reads as open.</p>
+  </div>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-09</span><h2 class="cvh-spec__title">Space status badge</h2></div>
+    <p class="cvh-spec__note">Set only on P-07 by the organisation that runs the space, read everywhere else.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells0}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X09_SpaceStatus" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-11</span><h2 class="cvh-spec__title">Applied-filter bar</h2></div>
+    <p class="cvh-spec__note">Every filter named in words and removable in one tap, with the count it hides. Try removing a filter.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells1}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X11_FilterBar" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-14</span><h2 class="cvh-spec__title">How they can help</h2></div>
+    <p class="cvh-spec__note">A service shown for a disruption must say how it helps; otherwise it is not in the help list.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells2}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X14_HowTheyHelp" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-04</span><h2 class="cvh-spec__title">Machine-translation label and report control</h2></div>
+    <p class="cvh-spec__note">Invites correction rather than warning about accuracy. Try reporting.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells3}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X04_MachineTranslation" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-03</span><h2 class="cvh-spec__title">The rules of the space</h2></div>
+    <p class="cvh-spec__note">On R-18 before the form, never behind a link; reachable from R-12, R-14 and R-15. Marketplace line on its own.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells4}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X03_Rules" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">X-07</span><h2 class="cvh-spec__title">Basic mode: bigger text, fewer things</h2></div>
+    <p class="cvh-spec__note">A display mode on the same screens, named for what it does. One tap from home, settable by a helper on R-01.</p>
+    <div style="display:flex;flex-wrap:wrap;gap:20px;align-items:flex-start">
+      <sc-for list="{{cells5}}" as="c" hint-placeholder-count="4">
+        <div class="cvh-spec__cell" style="width:{{c.w}}px">
+          <span class="cvh-spec__state">{{c.label}}</span>
+          <div class="cvh-frame" style="padding:12px;position:relative">
+            <dc-import name="X07_BasicMode" dc-props="{{c.props}}" hint-size="100%,80px"></dc-import>
+          </div>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":4830}}'>
+class Component extends DCLogic {
+  renderVals() {
+    return {"cells0": [{"label": "Open, for cooling", "w": 360, "props": {"status": "open", "purpose": "cooling", "confirmedMins": 20, "embedded": true}}, {"label": "Full, for cooling", "w": 360, "props": {"status": "full", "purpose": "cooling", "confirmedMins": 15, "embedded": true}}, {"label": "Closed, for clean air", "w": 360, "props": {"status": "closed", "purpose": "cleanAir", "confirmedMins": 90, "embedded": true}}, {"label": "Not confirmed (was open)", "w": 360, "props": {"space": "S5", "embedded": true}}, {"label": "Open, for device charging", "w": 360, "props": {"status": "open", "purpose": "charging", "confirmedMins": 35, "embedded": true}}, {"label": "Open, for warming", "w": 360, "props": {"status": "open", "purpose": "warming", "confirmedMins": 5, "embedded": true}}, {"label": "Space block on R-12 (S1)", "w": 380, "props": {"space": "S1", "variant": "block", "embedded": true}}, {"label": "Urdu", "w": 360, "props": {"status": "open", "purpose": "cooling", "lang": "ur", "embedded": true}}, {"label": "Greek space block", "w": 380, "props": {"space": "S3", "variant": "block", "lang": "el", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"status": "full", "purpose": "cooling", "basic": true, "embedded": true}}], "cells1": [{"label": "Filters from search and from choices", "w": 360, "props": {"embedded": true}}, {"label": "One filter", "w": 360, "props": {"filters": [{"id": "stepFree", "label": "Step-free", "fromChoices": true}], "hiding": 9, "embedded": true}}, {"label": "No filters", "w": 360, "props": {"filters": [], "hiding": 0, "embedded": true}}, {"label": "Dari, right-to-left", "w": 360, "props": {"lang": "prs", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"basic": true, "embedded": true}}], "cells2": [{"label": "Power outage (the Hub)", "w": 360, "props": {"listing": "L25", "hazard": "power", "embedded": true}}, {"label": "Heat (library)", "w": 360, "props": {"listing": "L20", "hazard": "heat", "embedded": true}}, {"label": "Elevator (community offer)", "w": 360, "props": {"listing": "L24", "hazard": "elevator", "embedded": true}}, {"label": "Fire (Home Essentials)", "w": 360, "props": {"listing": "L05", "hazard": "fire", "embedded": true}}, {"label": "Bigger text, fewer things", "w": 360, "props": {"listing": "L25", "hazard": "heat", "basic": true, "embedded": true}}], "cells3": [{"label": "Labelled (listing written in English)", "w": 360, "props": {"state": "labelled", "from": "en", "embedded": true}}, {"label": "Report opened", "w": 360, "props": {"state": "reportOpen", "from": "tl", "embedded": true}}, {"label": "Reported, acknowledged", "w": 360, "props": {"state": "reported", "from": "bn", "embedded": true}}, {"label": "Not yet available in this language", "w": 360, "props": {"state": "unavailable", "from": "en", "lang": "gu", "embedded": true}}, {"label": "Urdu, right-to-left", "w": 360, "props": {"state": "labelled", "from": "en", "lang": "ur", "embedded": true}}, {"label": "Bengali", "w": 360, "props": {"state": "labelled", "from": "en", "lang": "bn", "embedded": true}}], "cells4": [{"label": "English", "w": 360, "props": {"variant": "full", "embedded": true}}, {"label": "Tagalog (Devon)", "w": 360, "props": {"variant": "full", "lang": "tl", "embedded": true}}, {"label": "Urdu, right-to-left", "w": 360, "props": {"variant": "full", "lang": "ur", "embedded": true}}, {"label": "Link from map and listing", "w": 360, "props": {"variant": "link", "embedded": true}}], "cells5": [{"label": "Off", "w": 360, "props": {"state": "off", "embedded": true}}, {"label": "On (this cell switches to bigger text)", "w": 360, "props": {"state": "on", "embedded": true}}, {"label": "Set by a helper", "w": 360, "props": {"state": "helper", "embedded": true}}, {"label": "Remembered on return", "w": 360, "props": {"state": "persisted", "embedded": true}}, {"label": "Greek", "w": 360, "props": {"state": "off", "lang": "el", "embedded": true}}, {"label": "Urdu", "w": 360, "props": {"state": "on", "lang": "ur", "embedded": true}}]};
+  }
+}
+</script>
+</body>
+</html>

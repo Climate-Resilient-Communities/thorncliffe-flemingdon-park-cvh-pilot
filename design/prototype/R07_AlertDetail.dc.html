@@ -1,0 +1,316 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-07 Alert detail</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-07" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Alert detail">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <sc-if value="{{ended}}">
+    <div class="cvh-note" role="note">
+      <sc-if value="{{isResolved}}"><dc-import name="C_IncidentStatus" status="resolved" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="120px,32px"></dc-import></sc-if>
+      <sc-if value="{{isExpired}}"><span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span></sc-if>
+      <span class="cvh-grow">{{endedLine}}</span>
+    </div>
+  </sc-if>
+  <sc-if value="{{fictional}}"><span class="cvh-tag cvh-tag--illustrative">{{s.R07.amberNote}}</span></sc-if>
+
+  <article class="cvh-alert" aria-labelledby="r07-h">
+    <dc-import name="X13_DisruptionType" types="{{a.types}}" size="lg" surface="screen" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="200px,52px"></dc-import>
+    <h1 class="cvh-alert__headline" id="r07-h">{{a.headline}}</h1>
+    <sc-if value="{{ongoing}}"><span class="cvh-tag" style="align-self:flex-start">{{ongoing}}</span></sc-if>
+
+    <sc-if value="{{isAck}}">
+      <div class="cvh-alert--ack cvh-stack" style="--gap:6px">
+        <span class="cvh-more-coming"><span class="cvh-ico cvh-ico--clock" aria-hidden="true"></span>{{s.R07.moreComing}}</span>
+        <p class="cvh-caption">{{s.R07.moreComingLine}}</p>
+      </div>
+    </sc-if>
+    <sc-if value="{{nyk}}">
+      <p class="cvh-alert__unknown"><span class="cvh-strong">{{s.R07.notYetKnownLabel}}:</span> {{nyk}}</p>
+    </sc-if>
+
+    <dc-import name="X02_Origin" dc-props="{{origin}}" lang="{{lang}}" basic="{{basic}}" on-open="{{toVerified}}" embedded="{{true}}" hint-size="100%,96px"></dc-import>
+    <sc-if value="{{hasAudio}}">
+      <dc-import name="X08_Audio" secs="{{a.audioSecs}}" variant="alert" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,72px"></dc-import>
+    </sc-if>
+
+    <div class="cvh-kv">
+      <span class="cvh-kv__k">{{s.R07.whereLabel}}</span>
+      <span class="cvh-alert__body">{{where}}</span>
+    </div>
+    <div class="cvh-kv">
+      <span class="cvh-kv__k">{{s.R07.actionLabel}}</span>
+      <p class="cvh-alert__action">{{a.action}}</p>
+    </div>
+    <p class="cvh-caption cvh-muted">{{timeLine}}</p>
+  </article>
+
+  <sc-if value="{{officialText}}">
+    <section class="cvh-card cvh-stack" style="--gap:8px;border-radius:6px" aria-label="{{s.R07.officialText}}">
+      <p class="cvh-eyebrow" style="color:var(--ink)">{{s.R07.officialText}}</p>
+      <p lang="en" dir="ltr">{{officialText}}</p>
+      <sc-if value="{{showTemplateNote}}"><p class="cvh-caption cvh-muted">{{s.R07.officialTemplate}}</p></sc-if>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{amb}}">
+    <section class="cvh-card cvh-stack" style="--gap:8px" aria-label="{{s.R07.ambLine}}">
+      <p class="cvh-eyebrow" style="color:var(--ink)">{{s.R07.ambLine}}</p>
+      <p class="cvh-alert__body">{{amb.text}}</p>
+      <dc-import name="X04_MachineTranslation" state="labelled" from="{{amb.from}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,48px"></dc-import>
+      <sc-if value="{{amb.showOriginal}}"><p class="cvh-caption cvh-muted"><span>{{amb.originalLabel}}: </span><span lang="{{amb.fromBcp}}" dir="{{amb.fromDir}}">{{amb.original}}</span></p></sc-if>
+    </section>
+  </sc-if>
+
+  <dc-import name="X01_Not911" variant="block" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,84px"></dc-import>
+
+  <sc-if value="{{tailored}}">
+    <dc-import name="X12_Tailored" dc-props="{{tailored}}" lang="{{lang}}" basic="{{basic}}" on-choices="{{toChoices}}" embedded="{{true}}" hint-size="100%,300px"></dc-import>
+  </sc-if>
+
+  <sc-if value="{{official}}">
+    <section class="cvh-card cvh-stack" style="--gap:8px;border-radius:6px;border:2px solid var(--ink)" aria-label="{{s.R07.officialCard}}">
+      <p class="cvh-eyebrow" style="color:var(--ink)">{{s.R07.officialCard}}</p>
+      <dc-import name="X02_Origin" origin="official" source="{{official.source}}" lang="{{lang}}" basic="{{basic}}" on-open="{{official.verified}}" embedded="{{true}}" hint-size="100%,96px"></dc-import>
+      <p>{{official.adds}}</p>
+      <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start" onClick="{{official.open}}">{{s.R07.openOfficial}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{hasSpaces}}">
+    <section class="cvh-section" aria-labelledby="r07-near">
+      <h2 class="cvh-h2" id="r07-near">{{s.R07.openNear}}</h2>
+      <sc-if value="{{spacesFiltered}}"><p class="cvh-caption">{{s.R07.spacesFiltered}}</p></sc-if>
+      <ul class="cvh-list">
+        <sc-for list="{{spaces}}" as="sp" hint-placeholder-count="2">
+          <li class="cvh-result">
+            <button type="button" class="cvh-result__name" onClick="{{sp.open}}"><span class="cvh-grow">{{sp.name}}</span><span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+            <dc-import name="X09_SpaceStatus" space="{{sp.id}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,60px"></dc-import>
+            <p class="cvh-caption">{{sp.line}}</p>
+          </li>
+        </sc-for>
+      </ul>
+      <button type="button" class="cvh-link" onClick="{{toAllSpaces}}">{{s.R07.openNearAll}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </section>
+  </sc-if>
+
+  <sc-if value="{{hasActions}}">
+    <section class="cvh-actions" aria-label="{{s.R07.whatToDo}}">
+      <sc-for list="{{guides}}" as="gd" hint-placeholder-count="1"><button type="button" class="cvh-dest" onClick="{{gd.go}}"><span class="cvh-ico cvh-ico--doc" aria-hidden="true"></span><span class="cvh-grow">{{gd.label}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button></sc-for>
+      <sc-if value="{{hasGuide}}"><button type="button" class="cvh-dest" onClick="{{toServices}}"><span class="cvh-ico cvh-ico--search" aria-hidden="true"></span><span class="cvh-grow">{{s.R07.services}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button></sc-if>
+      <button type="button" class="cvh-dest" onClick="{{toShare}}"><span class="cvh-ico cvh-ico--share" aria-hidden="true"></span><span class="cvh-grow">{{s.R07.share}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+    </section>
+  </sc-if>
+
+  <section class="cvh-section" aria-labelledby="r07-thread">
+    <h2 class="cvh-h2" id="r07-thread">{{s.R07.thread}}</h2>
+    <ol class="cvh-thread">
+      <sc-for list="{{entries}}" as="e" hint-placeholder-count="3">
+        <li class="cvh-entry {{e.cls}}">
+          <span class="cvh-entry__kind"><span class="cvh-ico cvh-ico--{{e.icon}} cvh-ico--sm" aria-hidden="true"></span><span>{{e.kind}}</span><sc-if value="{{e.latest}}"><span class="cvh-tag">{{s.R07.latestTag}}</span></sc-if><span class="cvh-entry__time">{{e.time}}</span></span>
+          <p class="cvh-entry__text">{{e.text}}</p>
+          <sc-if value="{{e.changed}}">
+            <p class="cvh-caption"><span class="cvh-strong">{{e.changedLabel}}</span> <span class="cvh-strike">{{e.from}}</span> <span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span> <span class="cvh-strong">{{e.to}}</span></p>
+          </sc-if>
+          <sc-if value="{{e.offer}}">
+            <div class="cvh-stack" style="--gap:6px">
+              <span class="cvh-eyebrow" style="color:var(--ink)">{{s.R07.supportOffer}}</span>
+              <sc-if value="{{e.offer.space}}"><dc-import name="X09_SpaceStatus" space="{{e.offer.space}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,44px"></dc-import></sc-if>
+              <button type="button" class="cvh-link" onClick="{{e.offer.open}}">{{e.offer.name}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+            </div>
+          </sc-if>
+        </li>
+      </sc-for>
+    </ol>
+    <sc-if value="{{hiddenCount}}"><button type="button" class="cvh-link" onClick="{{showAll}}">{{hiddenCount}}</button></sc-if>
+  </section>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Hub-issued, updated and corrected (Scenario A)", "Acknowledgement only (first two minutes)", "Update with a support offer", "Resolved with final entry, from the archive", "Heat, ongoing day 2, tailored for Amina", "Heat, tailored for George", "Heat, tailored for Nasrin", "Official alert relayed (ECCC)", "Ambassador post, not yet verified", "Ambassador post, promoted to verified", "Partner-issued, long disruption (Scenario G)", "Expired official alert", "Flood in the building (Scenario E)", "Blizzard: power and elevators (Scenario F)", "Amber Alert layout (fictional placeholder)", "Basic mode: heat, Amina", "Basic mode: power outage, corrected"], "default": "Hub-issued, updated and corrected (Scenario A)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Hub-issued, updated and corrected (Scenario A)": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05"}}, "Acknowledgement only (first two minutes)": {"persona": "amina", "scenario": "A", "basic": false, "params": {"alert": "AL-05", "upto": "e1"}}, "Update with a support offer": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-05", "upto": "e3"}}, "Resolved with final entry, from the archive": {"persona": "yusuf", "scenario": "C", "params": {"alert": "AL-05", "from": "archive"}}, "Heat, ongoing day 2, tailored for Amina": {"persona": "amina", "scenario": "B", "basic": false, "params": {"alert": "AL-06"}}, "Heat, tailored for George": {"persona": "george", "scenario": "B", "basic": false, "params": {"alert": "AL-06"}}, "Heat, tailored for Nasrin": {"persona": "nasrin", "scenario": "B", "params": {"alert": "AL-06"}}, "Official alert relayed (ECCC)": {"persona": "george", "scenario": "B", "basic": false, "params": {"alert": "AL-01"}}, "Ambassador post, not yet verified": {"persona": "rashid", "scenario": "A", "params": {"alert": "AL-07", "unverified": true}}, "Ambassador post, promoted to verified": {"persona": "yusuf", "scenario": "A", "params": {"alert": "AL-07"}}, "Partner-issued, long disruption (Scenario G)": {"persona": "george", "scenario": "G", "basic": false, "choices": {"building": "SB", "floor": 6}, "params": {"alert": "AL-08"}}, "Expired official alert": {"persona": "nasrin", "scenario": "C", "params": {"alert": "AL-02", "from": "archive"}}, "Flood in the building (Scenario E)": {"persona": "new", "scenario": "E", "choices": {"building": "SC", "floor": 2}, "params": {"alert": "AL-09"}}, "Blizzard: power and elevators (Scenario F)": {"persona": "george", "scenario": "F", "basic": false, "choices": {"building": "SB", "floor": 7}, "params": {"alert": "AL-10"}}, "Amber Alert layout (fictional placeholder)": {"persona": "nasrin", "scenario": "C", "params": {"alert": "AL-04"}}, "Basic mode: heat, Amina": {"persona": "amina", "scenario": "B", "basic": true, "basicState": "persisted", "params": {"alert": "AL-06"}}, "Basic mode: power outage, corrected": {"persona": "amina", "scenario": "A", "basic": true, "basicState": "helper", "params": {"alert": "AL-05"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'now', showExercise: 'R-07'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-07'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R07, ch = b.ch, go = b.go, prm = b.params, lang = b.lang;
+    var id = prm.alert || 'AL-05';
+    var ref = Object.assign({}, C.refFor(id, b.scn));
+    if (prm.upto) ref.upto = prm.upto;
+    if (prm.status) ref.status = prm.status;
+    var sn = C.snap(ref, b.scn);
+    if (!sn) return { a: { headline: 'Alert not found', types: ['other'] }, entries: [], goBack: b.back };
+    var a = sn.a, o = C.originProps(sn, { unverified: !!prm.unverified });
+    var fictional = !!a.fictional;
+    var withdrawn = sn.status === 'withdrawn';
+    var ended = sn.status === 'resolved' || sn.status === 'expired' || withdrawn;
+    var endedLine = withdrawn ? C.fill(x.endedWithdrawn, { reason: a.withdrawnReason || '' }) : sn.status === 'resolved' ? C.fill(x.endedResolved, { t: b.ago(sn.resolvedMins) }) : C.fill(x.endedExpired, { t: b.ago(sn.expiredMins) });
+    var ongoing = !ended && a.ongoingDays && sn.day ? C.fill(x.ongoingDays, { n: sn.day, total: a.ongoingDays }) : '';
+    var timeLine = sn.entries.length > 1 ? C.fill(x.timeLine, { posted: b.ago(sn.postedMins), updated: b.ago(sn.updatedMins) }) : C.fill(x.timeLineOne, { posted: b.ago(sn.postedMins) });
+    if (!ended && a.validUntil) timeLine += ' · ' + C.fill(x.validLine, { until: a.validUntil });
+    // Ambassador's own line, machine-translated when it was written in another language
+    var amb = null;
+    if (a.ambassadorLine) {
+      var al = a.ambassadorLine, own = al.lang === lang;
+      amb = { from: al.lang, text: own ? al.text : ((al.mt || {})[lang] || (al.mt || {}).en || al.text), original: al.text, showOriginal: !own && !b.basic,
+        originalLabel: C.fill(x.ambassadorOriginal, { lang: C.lang(al.lang).native }), fromBcp: C.bcp(al.lang), fromDir: C.dir(al.lang) };
+    }
+    // Thread, newest first
+    var kinds = x.kinds || {};
+    var icons = { ack: 'clock', alert: 'info', issued: 'officialMark', update: 'info', correction: 'corrected', final: 'check', ambassador: 'building' };
+    var all = sn.entries.map(function (e, i) {
+      var offer = null;
+      if (e.supportOffer && e.supportOffer.space) {
+        var sp = C.space(e.supportOffer.space), l = C.spaceListing(sp);
+        offer = { space: e.supportOffer.space, name: l ? l.name : '', open: function () { go('R-12', { id: C.spaceKey(sp), from: 'alert', hazard: a.hazard }); } };
+      } else if (e.supportOffer && e.supportOffer.listing) {
+        var ol = C.listingFor(e.supportOffer.listing);
+        if (ol) offer = { space: null, name: ol.name, open: function () { go('R-12', { id: e.supportOffer.listing, from: 'alert', hazard: a.hazard }); } };
+      }
+      var text = e.text || (amb ? amb.text : '');
+      return { kind: kinds[e.kind] || e.kind, icon: icons[e.kind] || 'info', time: b.ago(e.minsAgo), text: text, latest: i === 0 && sn.entries.length > 1,
+        cls: (i === 0 ? 'cvh-entry--latest ' : '') + (e.kind === 'correction' ? 'cvh-entry--correction' : ''),
+        changed: e.kind === 'correction' && e.changed ? true : false, changedLabel: x.whatChanged ? C.fill(x.whatChanged, { changed: '' }).replace(/:?\s*$/, ':') : '',
+        from: e.changed ? e.changed.from : '', to: e.changed ? e.changed.to : '', offer: offer };
+    });
+    var showAllThread = !!b.loc.allThread || !b.basic;
+    var entries = showAllThread ? all : all.slice(0, 1);
+    var hiddenCount = all.length - entries.length > 0 ? C.fill(x.basicMore, { n: all.length - entries.length }) : '';
+    // Tailored block: from what the resident chose, never shown to anyone else
+    var groups = (ch.groups || []).filter(function (g) { return g !== 'checkin'; });
+    var wantsCheckin = (ch.groups || []).indexOf('checkin') >= 0 || !!ch.checkin;
+    var checkin = 'none';
+    if (wantsCheckin && (a.hazard === 'heat' || a.hazard === 'power') && !ended) checkin = C.checkinCovered(ch.building, ch.floor) ? 'covered' : 'uncovered';
+    var hasTailoring = !ended && !fictional && a.hazard && (groups.length > 0 || checkin !== 'none');
+    var tailored = hasTailoring ? { hazard: a.hazard, groups: groups, checkin: checkin, official: o.origin === 'official' } : null;
+    // Official alert on the same event
+    var official = null;
+    if (a.officialLink) {
+      var oa = C.alert(a.officialLink.alert);
+      official = { source: oa.origin.source, adds: a.officialLink.adds, open: function () { go('R-07', { alert: oa.id }); }, verified: function () { go('R-28', { alert: oa.id }); } };
+    }
+    // Open near you: the spaces are on the alert itself, with the resident's own filters applied and named
+    var tf = C.tailorFilters(ch), noId = tf.some(function (f) { return f.id === 'noId'; });
+    var spaces = [];
+    if (!ended && a.openNearYou) {
+      a.openNearYou.forEach(function (sid) {
+        var sp = C.space(sid); if (!sp) return;
+        if (noId && sp.idAsked) return;
+        var l = C.spaceListing(sp), as = C.asset(sp.assetId);
+        var d = as ? C.km(C.home(ch), { lat: as.lat, lng: as.lng }) : null;
+        spaces.push({ id: sid, name: l ? l.name : sid, d: d, line: (l && l.address ? l.address : '') + (d != null ? ' · ' + C.fill(s.R10.distance, { d: d.toFixed(1) }) : ''),
+          open: function () { go('R-12', { id: C.spaceKey(sp), from: 'alert', hazard: a.hazard }); } });
+      });
+      spaces.sort(function (p, q) { return (p.d || 99) - (q.d || 99); });
+    }
+    if (b.basic) spaces = spaces.slice(0, 1);
+    var purpose = spaces.length ? (C.space(spaces[0].id) || {}).purpose : null;
+    var hazardName = (s.hazards || {})[a.hazard] || '';
+    // One guide per disruption type on the alert (brief, Scenario F: a blizzard alert links the power outage and elevator guides)
+    var GUIDE_FOR = { power: 'power', elevator: 'elevator', heat: 'heat', smoke: 'smoke', fire: 'fire', flood: 'flood', water: 'flood', winter: 'power' };
+    var guideHazard = GUIDE_FOR[a.hazard] || a.hazard;
+    var guideList = [];
+    (a.types || []).concat([a.hazard]).forEach(function (t) { var g = GUIDE_FOR[t]; if (g && guideList.indexOf(g) < 0 && (b.D.guides || {})[g]) guideList.push(g); });
+    if (guideList.indexOf(guideHazard) > 0) { guideList.splice(guideList.indexOf(guideHazard), 1); guideList.unshift(guideHazard); }
+    var guides = (b.basic ? guideList.slice(0, 1) : guideList).map(function (g) {
+      return { label: C.fill(x.guide, { hazard: ((s.hazards || {})[g] || g).toLowerCase() }), go: function () { go('R-25', { hazard: g, stage: 'during', from: 'alert', alert: a.id }); } };
+    });
+    return {
+      a: a, origin: o, fictional: fictional, ended: ended, isResolved: sn.status === 'resolved', isExpired: sn.status === 'expired' || withdrawn, endedLine: endedLine,
+      ongoing: ongoing, isAck: sn.isAck, nyk: sn.notYetKnown, where: sn.where, timeLine: timeLine,
+      hasAudio: !!a.audioSecs && !fictional, officialText: a.officialText || '', showTemplateNote: lang !== 'en' && !!a.officialText,
+      amb: amb, tailored: tailored, official: official,
+      hasSpaces: spaces.length > 0, spaces: spaces, spacesFiltered: noId,
+      hasActions: !fictional, hasGuide: guides.length > 0, guides: guides,
+      guideLabel: C.fill(x.guide, { hazard: ((s.hazards || {})[guideHazard] || hazardName).toLowerCase() }),
+      entries: entries, hiddenCount: hiddenCount, showAll: function () { b.setLoc({ allThread: true }); },
+      goBack: function () { if (b.app.canBack) b.back(); else go(prm.from === 'archive' ? 'R-08' : 'R-03'); },
+      toVerified: function () { go('R-28', { alert: a.id, unverified: !!prm.unverified }); },
+      toChoices: function () { go('R-34', { from: 'tailored' }); },
+      toAllSpaces: function () { go('R-15', { spaces: purpose || true, hazard: a.hazard, filters: tf, from: 'alert' }); },
+      toGuide: function () { go('R-25', { hazard: guideHazard, stage: 'during', from: 'alert', alert: a.id }); },
+      toServices: function () { go('R-10', { hazard: guideHazard, filters: tf, from: 'alert', alert: a.id }); },
+      toShare: function () { go('R-29', { alert: a.id, upto: prm.upto, unverified: !!prm.unverified }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

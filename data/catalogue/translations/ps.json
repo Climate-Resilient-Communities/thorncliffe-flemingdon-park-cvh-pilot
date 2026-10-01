@@ -1,0 +1,961 @@
+{
+ "failed": {},
+ "language": "ps",
+ "models": {
+  "north-small-translate-09-2026": 140
+ },
+ "texts": {
+  "06c76a46e432": {
+   "model": "north-small-translate-09-2026",
+   "source": "Schools",
+   "text": "ښوونځي"
+  },
+  "0761f94fde45": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د هاب پاڼه د \"آیا تاسو په بحران کې یاست؟ دلته کلیک وکړئ\" لینک لري او د سیمه ایز بحران مرستو لیست یې شامل دی: Kids Help Phone 1-800-668-6868، Talk Suicide Canada 1-833-456-4566، Distress Centres of Greater Toronto 416-408-4357، Gerstein Crisis Centre 416-929-5200، Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310، Naseeha Mental Health Hotline 1-866-627-3342، Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990، Scarborough Health Network Community Crisis Line 416-495-2891، Assaulted Women's Helpline 416-863-0511، Toronto Rape Crisis Centre 416-597-8808، او د Michael Garron Hospital اضطراري څانګه (825 Coxwell Ave.). مشخص شوی سایټ (آرامګاه): د سخت تودوخې اخطارونو په وخت کې کولر لرونکي بند فضا چمتو کوي."
+   },
+   "model": "claude-correction",
+   "note": "hospital department name kept in English with Pashto gloss; cooling space was 'site (tomb/mausoleum)' -> air-conditioned place; terms: emergency department, extreme heat, air-conditioned, crisis; unsourced phrasing: cooling space/centre = 'ایرکانډیشن لرونکی ځای' (air-conditioned place) + English; unsourced phrasing: heat warnings kept in English after 'د سختې ګرمۍ د خبرتیاوو'",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "د هاب پاڼه د \"آیا تاسو په بحران کې یاست؟ دلته کلیک وکړئ\" لینک لري او د سیمه ایز بحران مرستو لیست یې شامل دی: Kids Help Phone 1-800-668-6868، Talk Suicide Canada 1-833-456-4566، Distress Centres of Greater Toronto 416-408-4357، Gerstein Crisis Centre 416-929-5200، Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310، Naseeha Mental Health Hotline 1-866-627-3342، Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990، Scarborough Health Network Community Crisis Line 416-495-2891، Assaulted Women's Helpline 416-863-0511، Toronto Rape Crisis Centre 416-597-8808، او Michael Garron Hospital Emergency Department (د روغتون بیړنۍ خونه) (825 Coxwell Ave.). ټاکل شوی ایرکانډیشن لرونکی ځای (cooling space): د سختې ګرمۍ د خبرتیاوو (extreme heat warnings/alerts) پر مهال د ودانۍ دننه ایرکانډیشن لرونکی ځای چمتو کوي."
+  },
+  "0aa48c71179d": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "پینټیکوستل چرچ په 5 گرینوبل ډرایو کې موقعیت لري، چې عبادتونو او د اتوار پوهنتون (Sunday school) خدمات وړاندې کوي؛ د لمړنیو عبادتونو لپاره جامع مسجد (chapel)، استراحتځای او دفترونه هم لري. د دې چرچ 50مین کلیزۍ زیږون په دې وروستیو کې (سپتمبر 2025) یادیږي."
+   },
+   "model": "claude-correction",
+   "note": "chapel was 'grand mosque' -> کوچنۍ کلیسا; 'Sunday university' -> Sunday school; garbled 50th anniversary fixed; address kept in English; terms: church, Sunday, school; unsourced phrasing: Sunday school = 'د یکشنبې ښوونځی' + English",
+   "source": "Pentecostal church at 5 Grenoble Drive offering worship services and Sunday school, with chapel, lounge and offices for congregational life. Recently celebrated its 50th anniversary (September 2025).",
+   "text": "پینټیکوستل کلیسا په 5 Grenoble Drive کې موقعیت لري، چې عبادتونو او د یکشنبې ښوونځي (Sunday school) خدمات وړاندې کوي؛ د جماعت د ژوند لپاره کوچنۍ کلیسا (chapel)، استراحتځای او دفترونه هم لري. دې کلیسا په دې وروستیو کې (سپتمبر 2025) خپله 50مه کلیزه ولمانځله."
+  },
+  "0b810534f69d": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "TNO د خوراک همکارۍ (چې د The Neighbourhood Organization لخوا اداره کیږي) په زرګونو کسانو ته په تورن کلیف پارک او فلیمینډون پارک کلیو کې د خوراکو لاسرسی وړیا چمتو کوي، په شمول د تازه محصولاتو، هګۍ او د شیردار ګاډو محصولاتو چې د میاشتو دوه ځله ویشل کیږي؛ او د کلیوالو ملګرو لکه Greenwin Cares په ملاتړ سره د کال په اوږدو کې ویشل کیږي.\n\nد ډیری خدمتونو استوګنځای چې د تورن کلیف پارک، فلیمینډون پارک، سینټ جیمز ټاون او تیلر میسي کلیو ته خدمتونه وړاندې کوي. خدمتونه د استوګنې مرستې (اړتیاو ارزونه، د کاناډا/اونټاریو ژوند په اړه معلومات، د تابعیت د ترلاسه کولو زده کړې، د مهاجرت فورمه کې مرستې)، د کورونو مرستې (د کور پلټنه، د ارزانه کورونو غوښتنلیکونه، د کرایه بانک لاسرسی، د انرژۍ بیل مرستې)، د پیرانو پروګرامونه (د پیرانو لپاره یوځای شوي خدمتونه، شخصي ملاتړ خدمتونه)، د ځوانانو پروګرامونه (د بیلګې په توګه، د ښوونځي وروسته د نجلۍ پروګرامونه)، د کار موندنې خدمتونه، د ژبې روزنه، او د ښځو په وړاندې تاوتریخوالی په اړه مشوره شامل دي. وړیا؛ تلیفون وکړئ یا په دفتر ته راشئ."
+   },
+   "model": "claude-correction",
+   "note": "'milk-vehicle products' -> لبنیات; 'multi-service residence' -> settlement agency; settlement support no longer 'residence help'; 'villages' -> communities/areas; twice a month fixed; place and program names kept in English; terms: newcomers, settlement services, government-funded organization/agency, immigration, rent, seniors, twice a month (low), walk-in/drop-in",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.\n\nMulti-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "TNO Food Collaborative (د خوړو همکاري) (چې د The Neighbourhood Organization لخوا اداره کیږي) په زرګونو کسانو ته په Thorncliffe Park او Flemingdon Park ټولنو کې د خوراکو لاسرسی وړیا چمتو کوي، په شمول د تازه محصولاتو، هګیو او لبنیاتو (شیدې) چې په میاشت کې دوه ځله ویشل کیږي؛ او د ټولنې د ملګرو لکه Greenwin Cares په ملاتړ سره د کال په اوږدو کې ویشل کیږي.\n\nد نویو راغلو کسانو د میشته کېدو څو خدمتي اداره چې Thorncliffe Park، Flemingdon Park، St. James Town او Taylor Massey سیمو ته خدمتونه وړاندې کوي. خدمتونه د میشته کېدو مرسته (اړتیاو ارزونه، د کاناډا/اونټاریو ژوند په اړه معلومات، د تابعیت د ترلاسه کولو زده کړې، د کډوالۍ فورمو کې مرستې)، د کورونو مرستې (د کور پلټنه، د ارزانه کورونو غوښتنلیکونه، د کرایې بانک (rent bank) ته لاسرسی، د انرژۍ بیل مرستې)، د سپین ږیرو پروګرامونه (Integrated Services for Seniors، شخصي ملاتړ خدمتونه)، د ځوانانو پروګرامونه (د بیلګې په توګه، د ښوونځي وروسته د نجونو پروګرامونه)، د کار موندنې خدمتونه، د ژبې روزنه، او د ښځو په وړاندې تاوتریخوالی په اړه مشوره شامل دي. وړیا؛ تلیفون وکړئ یا حضوري راشئ (بې له مخکې وخت اخیستلو)."
+  },
+  "0baa182fc012": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "روحاني مرستې او اضطراري حالتونه: د روحاني مرستو یا ناستې د اخیستلو لپاره، تاسو کولی شئ د څښتن ډاکتر پاول شیپډ (Rev. Dr. Paul Shepherd) سره د 647-700-7129 په شمیره کې اړیکه ونیسئ."
+   },
+   "model": "claude-correction",
+   "note": "'Rev.' was 'Lord/owner' -> پادري; name kept in English; 'pastoral help and emergencies' -> pastoral emergencies; terms: emergency (situation), doctor, church (note: Rev. = پادري)",
+   "source": "Pastoral emergencies: Rev. Dr. Paul Shepherd can be reached at 647-700-7129 for pastoral emergencies or to book a meeting.",
+   "text": "روحاني بیړني حالتونه: د روحاني بیړنیو حالتونو یا د ناستې د وخت اخیستلو لپاره، تاسو کولی شئ پادري ډاکټر Paul Shepherd (Rev. Dr. Paul Shepherd) سره د 647-700-7129 په شمیره کې اړیکه ونیسئ."
+  },
+  "0bb8b2cc1244": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د تورونټو عامه روغتیا د دندونو کلینیکونه د 0-17 کلنې وړ وړ کودکان او نوجوانانو، 65 کلنې یا له هغه څخه ډیر عمر لرونکو د کم عاید لرونکو پیرودونکو، او هغه کسانو چې په تورونټو کې ژوند کوي او د خصوصي دندانګر په لیدلو توان نه لري، د ټاکل شوي عامه روغتیا پروګرامونو مراجعینو لپاره لومړني د دندونو درملنې خدمات (معاینه، ایکس-ری، د دندونو سوراخونه پُرول، پاکول، ځینې ریشه چینل درملنې، د دندونو راوړل، مصنوعي دندونه) وړیا چمتو کوي. وړتیا د کلینیک کې په حضوري توګه ارزونه کیږي؛ یو ګرځنده د دندونو کلینیک هم هغه مراجعینو ته خدمت کوي چې د درملنې ته لاسرسی په ستونزې سره مخ دي."
+   },
+   "model": "claude-correction",
+   "note": "'bringing teeth' -> extractions; seniors were 'customers'; Persian دندان/دندانګر/کودکان replaced; terms: dentist, dental care, clinic, children, youth, seniors, free; unsourced phrasing: extractions = 'د غاښونو ایستل', dentures = 'مصنوعي غاښونه', fillings/root canals, each with English",
+   "source": "Toronto Public Health dental clinics provide free basic dental care (examinations, x-rays, fillings, cleanings, some root canals, extractions, dentures) for eligible children and youth aged 0-17, low-income seniors 65+, and clients of select public health programs who live in Toronto and cannot afford a private dentist. Eligibility is assessed in person at a clinic; a mobile dental clinic also serves clients with difficulty accessing care.",
+   "text": "د تورونټو عامه روغتیا د غاښونو کلینیکونه د 0-17 کلنو وړ ماشومانو او ځوانانو، 65 کلنو یا له هغه څخه ډېر عمر لرونکو کم عایده سپین ږیرو، او هغه کسانو چې په تورونټو کې ژوند کوي او د خصوصي غاښونو ډاکټر په لیدلو توان نه لري، د ټاکل شوي عامه روغتیا پروګرامونو مراجعینو لپاره د غاښونو لومړنۍ پاملرنه (معاینه، ایکس-ری، د غاښونو ډکول (fillings)، پاکول، د ځینو غاښونو د ریښې درملنه (root canals)، د غاښونو ایستل (extractions)، مصنوعي غاښونه (dentures)) وړیا چمتو کوي. وړتیا د کلینیک کې په حضوري توګه ارزونه کیږي؛ د غاښونو یو ګرځنده کلینیک هم هغه مراجعینو ته خدمت کوي چې د درملنې ته لاسرسی په ستونزې سره مخ دي."
+  },
+  "0bf38ee19e3c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "سایه دار ځایونه"
+   },
+   "model": "claude-correction",
+   "note": "'shaded places' -> air-conditioned places; terms: air-conditioned; unsourced phrasing: cooling space/centre = 'ایرکانډیشن لرونکی ځای' (air-conditioned place) + English",
+   "source": "Cooling Spaces",
+   "text": "ایرکانډیشن لرونکي ځایونه (Cooling Spaces)"
+  },
+  "0c3f5b3aa79a": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د اړتیا لرونکو کورنیو لپاره اضطراري خوراکي مرسته (هره دوو ورځو وروسته وړیا خوراکي توکي ویشل کیږي). د خوراکي همکارۍ (Food Collaborative) لپاره هیڅ ډول پناهګاه، سایټ (سرد ځای) یا بحران-کرښې خدمتونه تایید شوي ندي."
+   },
+   "model": "claude-correction",
+   "note": "'every two days' -> twice a month; garbled 'site (cold place)' -> cooling centre; shelter and crisis line in Pashto; terms: emergency, food assistance, free food, twice a month (low), shelter, helpline/crisis line; unsourced phrasing: cooling space/centre = 'ایرکانډیشن لرونکی ځای' (air-conditioned place) + English",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed.",
+   "text": "د اړتیا لرونکو کورنیو لپاره بیړنۍ خوراکي مرسته (په میاشت کې دوه ځله وړیا خوراکي توکي ویشل کیږي). د خوراکي همکارۍ (Food Collaborative) لپاره هیڅ ډول سرپناه، ایرکانډیشن لرونکی ځای (cooling centre) یا د بحران ټیلیفوني کرښې خدمتونه تایید شوي ندي."
+  },
+  "0f7fe1d38b46": {
+   "model": "north-small-translate-09-2026",
+   "source": "Home and community health care provider offering in-home and clinic-based services: nursing (RN/RPN), personal support, home support (meal prep, housekeeping, companionship, medication reminders), physiotherapy, occupational therapy, speech-language pathology, social work and dietetics. Nurses are available 24/7 for short- or long-term care needs; also operates nursing and physiotherapy clinics.",
+   "text": "کورني او ټولنیز روغتیا خدمتونه چمتو کونکي چې په کور او کلنیک کې خدمتونه وړاندې کوي: نرسۍ (RN/RPN)، شخصي مرستې، کورني ملاتړ (خواړه چمتو کول، کورنۍ کارونه، همدګی، د درملو یادونه)، فزیکوتراپی، اوکيوپيشنل تراپی، د ژبې او خبرو اترو درملنې، ټولنیز کار او تغذیه. نرسان 24 ساعته او د اونۍ ټولو ورځو د لنډ مهاله یا اوږد مهاله روغتیا مرستو لپاره شتون لري؛ همدارنګه د نرسۍ او فزیکوتراپی کلنیکونه هم په کار کوي.",
+   "warnings": [
+    "numbers missing from translation: 7"
+   ]
+  },
+  "1330dcebcb5e": {
+   "model": "north-small-translate-09-2026",
+   "source": "A grassroots group of about 80 members from 75 families across Thorncliffe and Flemingdon Parks, from many cultures and religions. Aims to take a leadership role in connecting community organizations and residents to build a stronger neighbourhood.",
+   "text": "د ټورنکلیف او فلیمینګدون پارکس په شاوخوا کې د 75 کورنۍ څخه د 80 غړو یو ځایي ډله چې د بیلابیلو کلتورو او مذاهبو څخه دي. د دې ډلې موخه د سیمې د سازمانونو او اوسیدونکو ترمنځ اړیکې پیاوړي کولو او د یو پیاوړي ګاونډي جوړولو لپاره مشرۍ رول غوره کول دي."
+  },
+  "145d746d96ec": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Greek Orthodox Archdiocese of Canada (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) is the national administrative body of the Greek Orthodox Church in Canada. Its homepage focuses on church news and celebrations, Orthodox catechism and religious education resources, a Divine Liturgy booklet, prayer book, and an Orthodox icons library — ecclesiastical and spiritual resources rather than community social services.",
+   "text": "یوناني ارتودوکس آرک دیوسیز د کاناډا (1 Patriarch Bartholomew Way / 86 Overlea Boulevard, Toronto, 416-429-5757) د کاناډا په یوناني ارتودوکس چرچ کې ملي اداري ارګان دی. د دې ویب پاڼه په کلیسا خبرونو او جشنونو، ارتودوکس دینی تعلیماتو او مذهبي زده کړې سرچینو، د الهی عبادت (لیتورژي) کتابچې، د لمونځونو کتاب او د ارتودوکس عکسونو (آیکونونو) کتابتون باندې تمرکز کوي — دا په عوض د ټولنیزو خدمتونو، د کلیسا او روحاني سرچینو ته توجه لري."
+  },
+  "1517bf8b7dbd": {
+   "model": "north-small-translate-09-2026",
+   "source": "Multi-service community hub at 45 Overlea Blvd, 2nd Floor (inside East York Town Centre), open Monday to Sunday 8:00 AM to 8:00 PM. One-stop space where residents access health and social services, programs and community spaces from partner organizations.",
+   "text": "ګډو خدمتونو مرکز په 45 اوورلیا بولوار، دویمه طبقه (د ایست یورک تاون سنټر دننه) موقعیت لري؛ د دوشنبې تر یکشنبې پورې له سهار 8 بجې نه تر شپه 8 بجې پورې خلاص دی. دا یو ځای دی چیرته چې اوسیدونکي د روغتیا او ټولنیزو خدمتونو، پروګرامونو او د ملګري سازمانونو د ټولنیزو مرکزونو څخه بهره مند کیږي.",
+   "warnings": [
+    "numbers missing from translation: 00, 2"
+   ]
+  },
+  "1538ea5a988e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "سینټ مایکل روغتون یو اضطراري څانګه لري (30 بانډ سټریټ)؛ یونټي هیلټ (Unity Health) نوم یې MyChart دی او روغتون د تلیفون شمیرې هم لیکلې دي. د کلیه د درملنې مرکزونو لپاره ځانګړي اضطراري خدمتونه موندل نشول — د طبی حالت په اضطرار کې 911 ته تلیفون وکړئ."
+   },
+   "model": "claude-correction",
+   "note": "no longer says Unity Health is named MyChart; hospital name and address kept in English; terms: emergency department, emergency (situation), hospital",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "St. Michael's Hospital (سینټ مایکل روغتون) یوه بیړنۍ خونه (emergency department) لري (30 Bond St.)؛ د Unity Health MyChart او د روغتون د تلیفون شمېرې هم لیست شوې دي. د کلیه د درملنې مرکزونو لپاره ځانګړي بیړني خدمتونه ونه موندل شول — په طبي بیړني حالت کې 911 ته زنګ ووهئ."
+  },
+  "1621e2da2a65": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د کلیسا لخوا رامینځته شوی فارم په فلیمینډون پارک کې د اوسیدونکو لپاره روغ خواړه تولیدوي. د کلیسا په کچه د خوراکي توکو کښت، د تودوخې په موسمي کې د کسانو بازار (د اونۍ یوه ورځ) په 150 گرینوبل ډرايف کې (پنجشنبې د سهار 3 څخه د ماښام 6 بجې پورې، د جون په پای څخه د اکتوبر په پیل پورې) او د کلیسا فارمر پروګرام چمتو کوي چې اوسیدونکو ته سوداګریزې فرصتونه ورکوي ترڅو د کوچني فارمونو سوداګرۍ پیل او اداره کړي."
+   },
+   "model": "claude-correction",
+   "note": "'church' -> community (3x); 3pm was '3 in the morning' -> د ماسپښین 3; 'persons' market' -> farmers' market; address kept in English; terms: Thursday, early afternoon, evening, community centre (د ټولنې); unsourced phrasing: farmers' market = 'د بزګرانو بازار' + English",
+   "source": "Community-developed farm in Flemingdon Park growing healthy food for residents. Offers community food growing, a weekly summer farmers' market at 150 Grenoble Drive (Thursdays 3-6pm, late June to early October), and a Community Farmer program giving residents entrepreneurial opportunities to run micro-farm businesses.",
+   "text": "د ټولنې لخوا رامینځته شوی فارم په فلیمینډون پارک کې د اوسیدونکو لپاره روغ خواړه تولیدوي. د ټولنې په کچه د خوراکي توکو کښت، د اوړي په موسم کې د بزګرانو اونیز بازار (farmers' market) په 150 Grenoble Drive کې (پنجشنبې د ماسپښین له 3 بجو څخه د ماښام تر 6 بجو پورې، د جون په پای څخه د اکتوبر په پیل پورې) او د Community Farmer پروګرام چمتو کوي چې اوسیدونکو ته سوداګریزې فرصتونه ورکوي ترڅو د کوچني فارمونو سوداګرۍ پیل او اداره کړي."
+  },
+  "16b01b9ea5a7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provides emergency and urgent dental care for issues such as dental pain and cavities.",
+   "text": "د دندونو د درد او سوراخونو په شان ستونزې لپاره عاجل او فوري دندونې درملنې چمتو کوي."
+  },
+  "170900592261": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د زچگی کلنیک (ایسټ یارک/ډون میلز) چې د صحت وزارت لخوا تمویل شوی، د حامله گی، زچگی او د ماشوم زیږیدلو په وخت کې وړیا طبی مرستې چمتو کوي او د مادر او نوزاد لپاره د زیږیدلو وروسته تر شپږ اونۍ پورې مرستې کوي. زیږیدل په کور کې، د تورونټو زیږیدلو مرکز یا مایکل ګارون روغتون کې ترسره کیږي؛ د زچگی متخصصات (midwives) د فوری حالتونو لپاره د 24 ساعتې د ورځې او شپې د مرستې لپاره چمتو دي، او د پیچلو حالتونو په صورت کې ناروغان د زچگی متخصصینو، اطفال متخصصینو او د شیردهی مشاورینو ته راجع کیږي. د ډیرو ژبو پرسونل (انګلیسي، عربي، فرانسوي، هسپانوي، فارسي، دری او نور) او د زیږیدلو دمخه زده کړې کورسونه شامل دي، په ځانګړې توګه د نوي زیږیدلي ماشوم 101 (Newborn 101) کورس."
+   },
+   "model": "claude-correction",
+   "note": "Dari زچگی/حامله گی/مادر/نوزاد/شیردهی replaced; midwives and obstetricians no longer the same word; on call 24/7 made explicit; birth centre and hospital names kept in English; terms: midwife, pregnancy, maternity care, clinic, specialist, doctor, 24/7, emergency; unsourced phrasing: lactation consultants = 'د تي ورکولو مشاورین' + English",
+   "source": "Midwifery clinic (East York/Don Mills) providing free, Ministry of Health-funded care through pregnancy, labour and birth, and for parent and baby through 6 weeks postpartum. Births are attended at home, the Toronto Birth Centre or Michael Garron Hospital; midwives are on call 24/7 for urgent concerns, and complications are referred to obstetricians, pediatricians and lactation consultants. Multilingual staff (English, Arabic, French, Spanish, Farsi, Dari and others) and prenatal classes including Newborn 101.",
+   "text": "د قابلو کلینیک (East York/Don Mills) چې د صحت وزارت لخوا تمویل شوی، د امیندوارۍ، زېږون (labour and birth) په وخت کې وړیا پاملرنه چمتو کوي او د مور او نوي زېږېدلي ماشوم لپاره د زیږیدلو وروسته تر شپږ اونۍ پورې مرستې کوي. زیږیدل په کور کې، Toronto Birth Centre یا Michael Garron Hospital کې ترسره کیږي؛ قابلې (midwives) د بیړنیو اندېښنو لپاره د ورځې 24 ساعته، په اونۍ کې اووه ورځې د تلیفون له لارې چمتو دي، او د پیچلو حالتونو په صورت کې ناروغان د زېږون متخصصو ډاکټرانو (obstetricians)، د ماشومانو متخصصو ډاکټرانو (pediatricians) او د تي ورکولو مشاورینو (lactation consultants) ته راجع کیږي. د ډیرو ژبو پرسونل (انګلیسي، عربي، فرانسوي، هسپانوي، فارسي، دری او نور) او د زیږیدلو دمخه زده کړې کورسونه شامل دي، په ځانګړې توګه د نوي زیږیدلي ماشوم 101 (Newborn 101) کورس."
+  },
+  "1a3c95cbc0e2": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د کم عایده خلکو لپاره د قانوني مشورې او استازیتوبو وړیا خدمتونه د خدمتونه ترلاسه کولو سیمې (د اونټاریو ډنډه څخه تر یورک ملز/401 پورې، د یونګ/دون سیند څخه تر وکټوریا پارک ایونیو پورې) په څلورو برخو کې: د کورونو قانون (د کور څخه بیرون کولو مخنیوی، غیرقانوني تالابونه، د کرایه اړونده حقوق)، د کار قانون (د کار معیارونه، ناسم او غیرقانوني برخاست، د خدمت پای ته رسیدو بډایه، د بیکاري بیمه)، د مهاجرت قانون (د دايمي استوګنځای غوښتنلیکونه، د کار اجازه لیکونه، تابعیت) او د عوایدو مرستې (ODSP, OW, CPP, OAS, GIS, د کاناډا معلولیت مرستې)؛ همدارنګه د عامه خلکو لپاره قانوني زده کړې او محدود اسناد خدمات (تأیید شوي بیانات، رسمي نقلونه). د تماس شمیره: 416-441-1764 داخلي 1، له دوشنبه تر پنجشنبې پورې سهار 9:00 څخه دمازګرپړې 12:30 (پیغام پریږدوئ، 1 څخه 3 کاري ورځو په اوږدو کې تلیفون به تاسو ته کړیږي؛ مستقیم راتګ نه منل کیږي؛ د حضوری مراجعې لپاره یوازې د تړون شوي نېغه ناستې په واسطه د دوشنبه او چهارشنبې په وخت کې له 1:30 څخه تر 4:30 دمازګرپړې)."
+   },
+   "model": "claude-correction",
+   "note": "'illegal ponds' -> illegal lockouts; severance was 'rich'; non-word 'دمازګرپړې' -> noon/afternoon times; place names kept in English; terms: tenants' rights, immigration, permanent resident, appointment, Monday, Wednesday, Thursday, morning, noon, early afternoon, late afternoon; unsourced phrasing: eviction prevention, illegal lockouts, severance kept with English",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "د کم عایده خلکو لپاره د قانوني مشورې او استازیتوبو وړیا خدمتونه د خدمتونه ترلاسه کولو سیمې (له Lake Ontario څخه تر York Mills/401 پورې، له Yonge/Don River څخه تر Victoria Park Ave پورې) په څلورو برخو کې: د کورونو قانون (د کور څخه د ایستلو مخنیوی (eviction prevention)، په غیرقانوني ډول له کوره بهر بندول (illegal lockouts)، د کرایه دارانو حقونه)، د کار قانون (د کار معیارونه، ناسم او غیرقانوني برخاست، د دندې د پای پیسې (severance)، د بیکارۍ بیمه (EI))، د کډوالۍ قانون (د دایمي اوسېدونکي (PR) غوښتنلیکونه، د کار اجازه لیکونه، تابعیت) او د عوایدو مرستې (ODSP, OW, CPP, OAS, GIS, د کاناډا معلولیت مرستې)؛ همدارنګه د عامه خلکو لپاره قانوني زده کړې او محدود اسناد خدمات (تأیید شوي بیانات، رسمي نقلونه). Intake Line (د نوم لیکنې شمېره): 416-441-1764 داخلي 1، له دوشنبې تر پنجشنبې پورې د سهار له 9:00 څخه د غرمې تر 12:30 پورې (پیغام پریږدوئ، 1 څخه 3 کاري ورځو په اوږدو کې تلیفون به تاسو ته کړیږي؛ مستقیم راتګ نه منل کیږي؛ حضوري نوم لیکنه یوازې د مخکې اخیستل شوي د لیدنې وخت سره، د دوشنبې او چهارشنبې په ورځو د ماسپښین له 1:30 څخه د مازدیګر تر 4:30 پورې)."
+  },
+  "1ae4b85c3a4e": {
+   "model": "north-small-translate-09-2026",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "د TNO پروګرام (چې د IRCC لخوا تمویل کیږي) د 18 کلن او له هغه څخه ډیر عمر لرونکي نوي راغلې کسانو سره مرسته کوي ترڅو په مسلکي صنعتونو او تخنیکي کارونو کې ګام ونیسي. دا پروګرام روزنه او د کار فرصتونه په ساختماني برخه، د HVAC (G2/G3 جواز)، د معلوماتي ټکنالوژۍ (IT) په شمول د ډاټا ساینس او مصنوعي ذکاوت (AI)، د لاری چلوونې (DZ جواز)، فورک لفټ چلولو او د ساختماني کارونو د ترافیک کنټرول په برخو کې وړاندې کوي. دا پروګرام د دايمي اوسیدونکو، د کنوانسیون پناهګرانو او د کاناډا اتباعو لپاره خلاصه ده چې د انګلیسي ژبې کولیبي کچې (CLB) 5-6 او له هغه څخه ډیر ولري."
+  },
+  "1be560c4691c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د تورونټو د اورګاډي خدماتو ځایونه چې د دې سیمې لپاره د اور د ګوښې څخه ساتنه او اضطراري ژغورل څخه د ورځني 24 ساعت په اوږدو کې مرسته کوي: ځای 321 (231 McRae Dr)، ځای 235 (200 Bermondsey Rd)، ځای 322 (256 Cosburn Ave)، ځای 224 (1313 Woodbine Ave). د غیر اضطراري اړیکو لیکه: 416-338-9050."
+   },
+   "model": "claude-correction",
+   "note": "'train services' -> Toronto Fire Services (اطفایه); garbled fire protection fixed; 24/7 made explicit; station labels kept in English; terms: fire services, fire station (medium), emergency, 24/7, non-emergency number",
+   "source": "Toronto Fire Services stations providing 24/7 fire protection and emergency rescue for the area: Station 321 (231 McRae Dr), Station 235 (200 Bermondsey Rd), Station 322 (256 Cosburn Ave), Station 224 (1313 Woodbine Ave). Non-emergency line: 416-338-9050.",
+   "text": "د Toronto Fire Services (د تورونټو د اطفایې خدمتونه) مرکزونه چې د دې سیمې لپاره د ورځې 24 ساعته، په اونۍ کې اووه ورځې د اور څخه ساتنه او بیړنۍ ژغورنه وړاندې کوي: Station 321 (231 McRae Dr)، Station 235 (200 Bermondsey Rd)، Station 322 (256 Cosburn Ave)، Station 224 (1313 Woodbine Ave). غیر عاجل تلیفون شمېره: 416-338-9050."
+  },
+  "235e1072c4f3": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ښار ټولنیز مرکز د فلیمینګډون پارک کې د 150 گرینوبل ډرایو په پته کې موقعیت لري، چې د \"پلے گراؤنډ پیرایډیس\" انډور لوبګاه هم په دې مرکز کې شامل دی (د 12 کلنې عمر تر پورې د ماشومانو لپاره آزاد لوبې، د هر ماشوم لپاره 3 ډالر، جورابونه اړین دي، د ماشوم سرپرست یا پلار/مور باید همداراز وي). په دې مرکز کې انډور او بهرنی لوبګاهونه، د تفریح ځای، د اوبو سرچینې (splash pad)، ټولنیز باغ، ګڼډولی ورزشي میدانونه، بیس بال میدانونه، او د بال هاکی او باسکتبال لوبګاهونه هم شتون لري. په ورته پته کې \"فلیمینګډون پارک ارلی اون\" (Flemingdon Park EarlyON) هم موقعیت لري، چې د کوچنيانو او کورنۍ لپاره وړیا آزاد تعلیمي او تفریحی پروګرامونه وړاندې کوي."
+   },
+   "model": "claude-correction",
+   "note": "parent/guardian must accompany restored; Urdu-letter name and transliterated address replaced by English; non-word for multipurpose fixed; terms: walk-in/drop-in, children, free; unsourced phrasing: multipurpose = 'د بېلابېلو لوبو'",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "د ښار ټولنیز مرکز په Flemingdon Park کې د 150 Grenoble Drive په پته موقعیت لري، چې د \"Playground Paradise\" انډور لوبګاه هم په دې مرکز کې شامل دی (د 12 کلنې عمر تر پورې د ماشومانو لپاره حضوري لوبې (drop-in)، د هر ماشوم لپاره 3 ډالر، جورابونه اړین دي، مور/پلار یا سرپرست باید له ماشوم سره وي). په دې مرکز کې انډور او بهرنی لوبګاهونه، د تفریح ځای، د اوبو سرچینې (splash pad)، ټولنیز باغ، د بېلابېلو لوبو ورزشي میدانونه، بیس بال میدانونه، او د بال هاکی او باسکتبال لوبګاهونه هم شتون لري. په ورته پته کې Flemingdon Park EarlyON هم موقعیت لري، چې د کوچنيانو او کورنۍ لپاره وړیا حضوري (drop-in) تعلیمي او تفریحی پروګرامونه وړاندې کوي."
+  },
+  "27c968e6692b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Libraries",
+   "text": "کتابتونونه"
+  },
+  "2839a2e22b9b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Offers crisis counselling (their impact page reports 207 clients received it).",
+   "text": "د بحرانونو مشوره وړاندې کوي (د دوی اغیزاتو پاڼه راپور ورکوي چې 207 مراجعین یې ترلاسه کړي دي)."
+  },
+  "2b036077722c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د خلکو لپاره یو لوی غورځنګ پارک په 73 Thorncliffe Park Drive کې، د Don River په اړه او د Thorncliffe Park، Flemingdon Park او پخوانۍ Ontario Science Centre تر منځ. اسانتیاوې: 18 سوراخه ډیسک ګلف میدان (د 2011 کال په اوږدو کې جوړ شوی، وړیا)، تیراندازی میدان (یو له دوه عامه میدانونو څخه په کاناډا کې، وړیا مګر بې څارې)، ځلېدو او دوچرخې سایکل چلونې لارې، نورډیک سکيینګ او اسب سوارۍ لارې، پکنیک پوړۍ/ساحې، د اور د دودوړې ځایونه، باسکتبال میدانونه، تشنابونه او آب نوشیږي چشمې (آب او تشنابونه په ژمي کې بند دي)."
+   },
+   "model": "claude-correction",
+   "note": "'movement park' -> ravine park; 'about' -> along the Don River; 'only' restored; 'shining' -> jogging; Persian آب/چشمه/اسب/دوچرخه replaced; garbled picnic shelters/fire pits fixed; terms: public park, shelter, public washroom; unsourced phrasing: ravine = 'دره' + English; unsourced phrasing: drinking water = 'د څښلو اوبه' (reviewer suggestion) + English",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "په 73 Thorncliffe Park Drive کې په دره کې پروت یو لوی عامه پارک (ravine park)، د Don River په اوږدو او د Thorncliffe Park، Flemingdon Park او پخوانۍ Ontario Science Centre تر منځ. اسانتیاوې: 18 سوراخه ډیسک ګلف میدان (په 2011 کال کې جوړ شوی، وړیا)، تیراندازی میدان (په کاناډا کې یوازې له دوو عامه میدانونو څخه یو، وړیا مګر بې څارې)، د منډو او سایکل چلولو لارې، نورډیک سکيینګ او آس سپرلۍ لارې، د پکنیک سرپناوې/ځایونه، د اور بلولو ځایونه (fire pits)، باسکتبال میدانونه، تشنابونه او د څښلو اوبو نلونه (drinking water fountains) (اوبه او تشنابونه په ژمي کې بند دي)."
+  },
+  "2d4e28c7351b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Notes routine safety drills and secure entry; no emergency-specific community services listed.",
+   "text": "د عادي خوندیتوب تمرینونو او د ننوتلو خونديتوب یادداشتونه؛ هیڅ ډول د بیړنیو حالتونو لپاره ځانګړي د ټولنیزو خدمتونو لیست شتون نلري."
+  },
+  "2d84f26c9897": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "مشخص شوی خنډ ځای: د سخت تودوخې خبرتیاوو/هشدارونو په وخت کې د هوایي کولر سره د کور دننه آرامۍ چمتو کوي."
+   },
+   "model": "claude-correction",
+   "note": "'designated obstacle place' -> designated cooling space; terms: extreme heat, air-conditioned; unsourced phrasing: cooling space/centre = 'ایرکانډیشن لرونکی ځای' (air-conditioned place) + English; unsourced phrasing: heat warnings kept in English after 'د سختې ګرمۍ د خبرتیاوو'",
+   "source": "Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "ټاکل شوی ایرکانډیشن لرونکی ځای (cooling space): د سختې ګرمۍ د خبرتیاوو (extreme heat warnings/alerts) پر مهال د ودانۍ دننه ایرکانډیشن لرونکی ځای چمتو کوي."
+  },
+  "2d9482fd50f0": {
+   "model": "north-small-translate-09-2026",
+   "source": "Social & Cultural Organizations",
+   "text": "ټولنیز او فرهنګي سازمانونه"
+  },
+  "2de0ec486420": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د toronto.ca پاڼه په ځانګړي توګه د فلیمینګډون پارک (د ډان ميلز سړک او ایګلينټن اونیو ختیځ نژدې) دننه د آب نوشیدلو چشمې (Drinking Fountain) لپاره ده. دا چشمې د دې 13.3 هیکټار پارک رسمي اسانتیاو کې شامل دي؛ په دې پارک کې د بالډیمونډو میدانونه، د هاکي میدان، د کرکټ پچ، ګڼډوله کارونې لپاره میدان، 4 بهرني باسکټبال میدانونه، بهرني دوړو لاره، 4 د لوبو ځایونه (د لوبو ځایونه په 2025 کې نوي کړل شوي دي)، د اوبو د تګاتو ځای، د کلی باغ، 6 د پکنیک خونه، د ورزش میدانونه او پارکنګ ځایونه هم شتون لري."
+   },
+   "model": "claude-correction",
+   "note": "Persian 'آب نوشیدلو چشمې' and several non-words (ball diamonds, multipurpose, tracks, splash pad, 'village garden', 'picnic room') fixed, each with English; street names kept in English; terms: public park, shelter; unsourced phrasing: drinking water = 'د څښلو اوبه' (reviewer suggestion) + English; unsourced phrasing: splash pad, outdoor tracks, multipurpose field with English",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "د toronto.ca پاڼه په ځانګړي توګه د Flemingdon Park (Don Mills Rd او Eglinton Ave E ته نژدې) دننه د څښلو اوبو نل (Drinking Fountain) لپاره ده. دا نل د دې 13.3 هیکټاره پارک په رسمي اسانتیاوو کې شامل دی؛ په دې پارک کې د بیس بال میدانونه (ball diamonds)، د بال هاکي میدان، د کرکټ پچ، د بېلابېلو لوبو میدان (multipurpose field)، 4 بهرني باسکټبال میدانونه، د منډو بهرنۍ لارې (outdoor tracks)، 4 د لوبو ځایونه (د لوبو ځایونه په 2025 کې نوي کړل شوي دي)، د اوبو د لوبو ځای (splash pad)، ټولنیز باغ (community garden)، 6 د پکنیک سرپناوې (picnic shelters)، د ورزش میدانونه او پارکنګ ځایونه هم شتون لري."
+  },
+  "2f2cb7da74f4": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د تورونټو ښار د خلکو لپاره د شنا کولو بیرونی پول د لیساید پارک ډرایو (په لیساید پارک کې) په پوړه 5 کې موقعیت لري؛ دا په اوړي په موسمي توګه د تفریح او منظم شنا کولو لپاره خلکو ته خلاص دی. د ویلچر لپاره مناسب دی، د لباس بدلون لپاره مناسب کوټې لري، د پول پلیټ ته د داخلیدو لاره مساویه ده او د ویل-ټرانس (Wheel-Trans) مسافران د لیساید پارک ډرایو په پارکینګ ځای کې له موټر څخه ګرځېدای شي."
+   },
+   "model": "claude-correction",
+   "note": "'on floor 5' -> 5 Leaside Park Drive; 'walk around from the car' -> drop-off; address kept in English; terms: swimming; unsourced phrasing: swimming pool = 'د لامبو وهلو حوض' + English, lane swimming/level entry with English",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "د تورونټو ښار د خلکو لپاره د لامبو وهلو بهرنی حوض (swimming pool) په 5 Leaside Park Drive (په Leaside Park کې) موقعیت لري؛ دا په اوړي په موسمي توګه د تفریحي او په لیکو کې (lane swimming) لامبو وهلو لپاره خلکو ته خلاص دی. د ویلچر لپاره مناسب دی، د لباس بدلون لپاره مناسب کوټې لري، د حوض غاړې ته ننوتل هوار دي (level entry) او د ویل-ټرانس (Wheel-Trans) مسافران د Leaside Park Drive په پارکینګ ځای کې له موټر څخه ښکته کېدای شي."
+  },
+  "313e1f70434b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Grassroots women's community organization that led the revitalization of R.V. Burgess Park, co-creating amenities such as a community garden, park cafe, splash pad, seating, lighting and the only outdoor tandoor oven in a North American public park. Focuses on community building and intercultural work in Thorncliffe Park.",
+   "text": "د ښځوګانو د محلي ټولنیزې سازمان چې د آر وی برجس پارک بیاژوندونې لړۍ په غاړه نیولې ده؛ دغه سازمان د ټولنه باغ، پارک کافه، اوبو سره لوبې کولو ساحه (splash pad)، ناستګاهونه، رڼا او په شمالي امریکا کې د عامه پارکونو کې یوازینی د تندور تنور (tandoor oven) لکه څنګه چې د خلکو کارونې لپاره وي، په ګډ سره جوړ کړي دي. دغه سازمان په تورن کلیف پارک کې د ټولنې ودانۍ او د مختلفو کلتورونو ترمنځ همکارۍ ته تمرکز کوي."
+  },
+  "32dfa11d6223": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ډیری خدمتونو د حل او مساعدت اداره چې د Thorncliffe Park، Flemingdon Park، St. James Town او Taylor Massey سیمې ته خدمتونه وړاندې کوي. خدمتونه د حل او مساعدت ملاتړ (اړتیاوې ارزونه، د کاناډا/اونټاریو ژوند په اړه معلومات، د تابعیت د ترلاسه کولو زده کړې، د مهاجرت فورمه کې مرستې)، د کورونو په برخه کې مرستې (د کور پلټنه، د ارزانه کورونو غوښتنلیکونه، د کرایه بانک سره اړیکه، د انرژۍ بلونو کې مرستې)، د پیرانو پروګرامونه (د پیرانو لپاره یوځای شوي خدمتونه، شخصي ملاتړ خدمتونه)، د ځوانانو پروګرامونه (د بیلګې په توګه، د ښوونځي وروسته د نجونو پروګرامونه)، د کار موندنې خدمتونه، د ژبې زده کړې او د ښځو په وړاندې تاوتریخوالی په اړه مشاورت شامل دي. وړیا ده؛ تلیفون وکړئ یا په شخصي ډول راشئ."
+   },
+   "model": "claude-correction",
+   "note": "settlement was 'solution/dispute resolution' (2x) -> میشته کېدو; seniors program name kept in English; terms: newcomers, settlement services, organization/agency, immigration, rent, seniors, walk-in/drop-in",
+   "source": "Multi-service settlement agency serving Thorncliffe Park, Flemingdon Park, St. James Town and Taylor Massey. Services include settlement support (needs assessment, orientation to life in Canada/Ontario, citizenship preparation classes, immigration forms help), housing assistance (housing search, subsidized housing applications, rent bank access, energy bill assistance), seniors programs (Integrated Services for Seniors, personal support services), youth programs (e.g., after-school girls' programs), employment services, language training, and violence-against-women counselling. Free; call or drop in.",
+   "text": "د نویو راغلو کسانو د میشته کېدو څو خدمتي اداره چې د Thorncliffe Park، Flemingdon Park، St. James Town او Taylor Massey سیمې ته خدمتونه وړاندې کوي. خدمتونه د میشته کېدو ملاتړ (اړتیاوې ارزونه، د کاناډا/اونټاریو ژوند په اړه معلومات، د تابعیت د ترلاسه کولو زده کړې، د کډوالۍ فورمو کې مرسته)، د کورونو په برخه کې مرستې (د کور پلټنه، د ارزانه کورونو غوښتنلیکونه، د کرایې بانک (rent bank) ته لاسرسی، د انرژۍ بلونو کې مرستې)، د سپین ږیرو پروګرامونه (Integrated Services for Seniors، شخصي ملاتړ خدمتونه)، د ځوانانو پروګرامونه (د بیلګې په توګه، د ښوونځي وروسته د نجونو پروګرامونه)، د کار موندنې خدمتونه، د ژبې زده کړې او د ښځو په وړاندې تاوتریخوالی په اړه مشاورت شامل دي. وړیا ده؛ تلیفون وکړئ یا حضوري راشئ (بې له مخکې وخت اخیستلو)."
+  },
+  "33eb20802497": {
+   "model": "north-small-translate-09-2026",
+   "source": "Health & Wellness",
+   "text": "روغتیا او سلامتي"
+  },
+  "37155594f70b": {
+   "model": "north-small-translate-09-2026",
+   "source": "The homepage returned a 'Page Not Found' error, so services were drawn from the Thorncliffe Hub grassroots listing and third-party community resource pages. Engaged Communities is the same resident organizing group described above: started November 2019 to address youth violence, builds resident engagement in community processes, and connects residents, agencies, schools, police, and politicians. It was a 2023 City of Toronto Youth Violence Prevention Grant recipient in partnership with Flemingdon Health Centre.",
+   "text": "کور پاڼه «پاڼه نه موندل شوې» تېروتنه ورکړه، له همدې کبله خدمتونه د Thorncliffe Hub د محلي لیست او د دریمې ډلې د ټولنیزو سرچینو پاڼو څخه اخیستل شوي. Engaged Communities هغه د اوسیدونکو تنظیم کونکي ډله ده چې پورته یادونه وشوه: د نومبر 2019 راهیسې د ځوانانو تاوتریخوالی په مسئله کې کار کوي، د اوسیدونکو د ګډون په ټولنه کې هڅه کوي او اوسیدونکي، ادارې، ښوونځي، پولیس او سیاستوالان سره یوځای کوي. دا د 2023 کال د تورونټو ښار د ځوانانو تاوتریخوالی د مخنیوي پروګرام له مرستو څخه بهره یې په همکارۍ سره د Flemingdon روغتیا مرکز ترلاسه کړی."
+  },
+  "37afb9eb8339": {
+   "model": "north-small-translate-09-2026",
+   "source": "No emergency-specific services listed. (The group has previously distributed food hampers during and after the pandemic as a charitable activity.)",
+   "text": "هیڅ ډول اضطراري خدمتونه لیست نشوي. (دا ډله پخوا د انسانیت په چوکاټ کې د عالمي وبا په جریان او وروسته خوراکي توکي ویشي.)"
+  },
+  "3904b64dcef4": {
+   "model": "north-small-translate-09-2026",
+   "source": "City community recreation centre at 48 Thorncliffe Park Drive, co-located with the Thorncliffe library branch. A small (12,000 sq ft) but heavily used neighbourhood hub offering indoor courts, a daycare centre, meeting space, workshops such as mental health and wellbeing sessions, and recreation programs.",
+   "text": "د ښار ټولنیز تفریحی مرکز د Thorncliffe Park Drive په 48 نمبر کې موقعیت لري او د Thorncliffe کتابتون د څانګې سره یوځای دی. دا د کورنۍ په کچه یو کوچنی (12,000 مربع فټ) خو خورا ډیر کارونې لاندې مرکز دی چې د انډول لوبګو میدانونه، د ماشومانو د نگاړنې مرکز، د غونډو ځای، ورکشاپونه لکه د رواني روغتیا او عمومي سلامتي غونډې، او تفریحی پروګرامونه وړاندې کوي."
+  },
+  "39681ff66eee": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ټی ڈی ایس بی (TDSB) لږ عمر زده کونکو زده کړې اکاډیمي په 82 ټورن کلیف پارک ډر (Thorncliffe Park Dr) کې د کوچنيانو لپاره ده، چې د رارسیدو، خواړو او کور ته راستنیدو لپاره یو منظم ورځني ترتیب لري. مور او پالر د زاړه کیدو یا غیر حاضري په اړه د \"سیف ارایول\" (Safe Arrival) شمیره (1-833-250-2290) له لارې خبر ورکوي."
+   },
+   "model": "claude-correction",
+   "note": "removed added 'getting old'; Urdu-letter TDSB and transliterated address replaced by English; terms: children, school",
+   "source": "TDSB early learning academy at 82 Thorncliffe Park Dr for young children, with structured daily routines for arrival, lunch and dismissal. Parents report absences through the Safe Arrival number (1-833-250-2290).",
+   "text": "د TDSB د وړو ماشومانو د زده کړې اکاډیمي (early learning academy) په 82 Thorncliffe Park Dr کې د کوچنيانو لپاره ده، چې د رارسیدو، خواړو او کور ته راستنیدو لپاره یو منظم ورځني ترتیب لري. مور او پلار د غیرحاضرۍ په اړه د \"سیف ارایول\" (Safe Arrival) شمیره (1-833-250-2290) له لارې خبر ورکوي."
+  },
+  "3dc2fd8bba11": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "غیرانتفاعي ټولنیز روغتیا مرکز (چې له 1975 کال راهیسې فعال دی) په 10 Gateway Blvd کې موقعیت لري او د دې سیمې اوسېدونکو لپاره د ډاکټرانو او نرسونو لخوا وړیا لومړنی روغتیا خدمات چمتو کوي — د OHIP کارت یا د روغتیا څخه د راجع کولو سند اړتیا نلري. دغه مرکز د انفرادي او کورنۍ مشورې/رواني روغتیا خدمات، د اوږدمهاله ناروغیو (دیابت، پښو او زړه ناروغۍ) مخنیوی او اداره کول، د خوراکې متخصصین، پښو درملنې (chiropody)، د تغذیې مشورې، د جنسي روغتیا کلنیک (د تورونټو عامه روغتیا ادارې سره په همکارۍ)، د زچگی دمخه پروګرامونه او د روغتیا پراختیا پروګرامونه (ورزش، عمومي تندرستي، روغ خواړه) د پیرانو، ښځو، ځوانانو او نوي راغلوالو لپاره هم وړاندې کوي."
+   },
+   "model": "claude-correction",
+   "note": "'lung' was 'feet' -> سږي; Dari زچگی -> د زېږون دمخه; terms: community health centre, clinic, maternity care (prenatal), newcomers; lung = سږي not in glossary (reviewer suggestion)",
+   "source": "Non-profit community health centre (operating since 1975) at 10 Gateway Blvd offering free primary care from doctors and nurse practitioners for residents in its catchment area — no OHIP card or medical referral required. Also offers individual and family counselling/mental health services, chronic disease prevention and management (diabetes, lung and heart health), dietitians, chiropody (foot care), nutrition counselling, a sexual health clinic (with Toronto Public Health), prenatal programs, and health promotion programs (exercise, wellness, healthy cooking) for seniors, women, youth and newcomers.",
+   "text": "غیرانتفاعي د ټولنې روغتیايي مرکز (چې له 1975 کال راهیسې فعال دی) په 10 Gateway Blvd کې موقعیت لري او د دې سیمې اوسېدونکو لپاره د ډاکټرانو او نرسونو لخوا وړیا لومړنی روغتیا خدمات چمتو کوي — د OHIP کارت یا د روغتیا څخه د راجع کولو سند اړتیا نلري. دغه مرکز د انفرادي او کورنۍ مشورې/رواني روغتیا خدمات، د اوږدمهاله ناروغیو (دیابت، د سږو او زړه ناروغۍ) مخنیوی او اداره کول، د خوراکې متخصصین، پښو درملنې (chiropody)، د تغذیې مشورې، د جنسي روغتیا کلینیک (د تورونټو عامه روغتیا ادارې سره په همکارۍ)، د زېږون دمخه پروګرامونه او د روغتیا پراختیا پروګرامونه (ورزش، عمومي تندرستي، روغ خواړه) د پیرانو، ښځو، ځوانانو او نوي راغلي کسانو لپاره هم وړاندې کوي."
+  },
+  "3ecbd52603f7": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "روغتونونه"
+   },
+   "model": "claude-correction",
+   "note": "'hospitals' -> health clinics; terms: clinic / health clinic, hospital (note)",
+   "source": "Health Clinics",
+   "text": "روغتیايي کلینیکونه"
+  },
+  "411f70e150dd": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "یوناني ارتدوکس کلیسا په 30 Thorncliffe Park Drive کې موقعیت لري (ظرفیت: 600+ نمازګزار کولای شي ناسته عبادت وکړي، پارکینګ ساحه هم شتون لري)؛ د کلیسا پیرسون د پیرسون پیرست (Father) Apostolos Gkolias له لوري اداره کیږي (apostolosgkolias@yahoo.com؛ د کلیسا شمیره: +1 (416) 425-2485، info@togreekcom.org). د اتوار او د مذهبي رخصتیو ورځو عبادات: Orthros (سحری عبادت) له 8:30 څخه تر 10:00 بجې پورې او د خدای عبادت (Divine Liturgy) له 10:00 بجې څخه تر 12:00 بجې پورې؛ د اتوار مکتب (Sunday School) نوم لیکنې او نور د کلیسا پروګرامونه هم په لاره اچوي."
+   },
+   "model": "claude-correction",
+   "note": "garbled priest title -> پادري Fr. Apostolos Gkolias; Sunday -> یکشنبه; morning/noon times made explicit; terms: church, Sunday, morning, noon, school; unsourced phrasing: Sunday School = 'د یکشنبې ښوونځی' + English",
+   "source": "Greek Orthodox parish at 30 Thorncliffe Park Drive (capacity 600+ seated worshipers, ample parking), led by Parish Priest Fr. Apostolos Gkolias (apostolosgkolias@yahoo.com; church phone +1 (416) 425-2485, info@togreekcom.org). Sunday and Feast Day services: Orthros-Matins 8:30–10:00 AM and Divine Liturgy 10:00 AM–12:00 noon; runs Sunday School registration and other church programs.",
+   "text": "یوناني ارتدوکس کلیسا په 30 Thorncliffe Park Drive کې موقعیت لري (ظرفیت: 600+ عبادت کوونکي کولای شي ناست عبادت وکړي، پارکینګ ساحه هم شتون لري)؛ د کلیسا پادري (Parish Priest) Fr. Apostolos Gkolias یې مشري کوي (apostolosgkolias@yahoo.com؛ د کلیسا شمیره: +1 (416) 425-2485، info@togreekcom.org). د یکشنبې او د مذهبي رخصتیو ورځو عبادات: Orthros-Matins (د سهار عبادت) د سهار له 8:30 څخه تر 10:00 بجو پورې او د خدای عبادت (Divine Liturgy) د سهار له 10:00 بجو څخه د غرمې تر 12:00 بجو پورې؛ د یکشنبې ښوونځي (Sunday School) نوم لیکنې او نور د کلیسا پروګرامونه هم په لاره اچوي."
+  },
+  "4341d8807857": {
+   "model": "north-small-translate-09-2026",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within R.V. Burgess Park (46 Thorncliffe Park Dr, near Thorncliffe Park Dr and Overlea Blvd). The fountain is listed as an official amenity of this 1.5-hectare neighbourhood park, which also has a splash pad, two playgrounds, a community garden, sheltered picnic area and Canada's first public tandoor oven, plus drinking water facilities noted by visitors.",
+   "text": "د toronto.ca پاڼه په ځانګړي توګه د R.V. Burgess پارک دننه د آب نوشولو فوارې (Drinking Fountain) لپاره ده (46 Thorncliffe Park Dr، د Thorncliffe Park Dr او Overlea Blvd نژدې). دا فواره د دې 1.5 هیکتاره محله پارک یو رسمي اسانتیا بلل کیږي؛ په دې پارک کې د اوبو سره لوبې کولو لپاره یو \"splash pad\"، دوه د لوبو ځایونه، یو ټولنیز باغ، یو سایټ شوی پکنیک ځای او د کاناډا لومړی عامه تنور (tandoor) هم شتون لري، سربېره پر دې د لیدونکو لخوا د آب نوشولو اسانتیاوو ته هم اشاره شوې ده."
+  },
+  "4420ad1cb6b5": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د کورونو او کور غړیو ملاتړ"
+   },
+   "model": "claude-correction",
+   "note": "'household members' -> tenants; terms: housing, tenant",
+   "source": "Housing & Tenant Supports",
+   "text": "د کور او کرایه دارانو ملاتړ"
+  },
+  "44a718e6efa5": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community grassroots group founded in 2019 by Thorncliffe & Flemingdon Park residents of all ages and cultures. Runs education initiatives on reducing indirect greenhouse gas emissions (buildings, waste, transportation) aligned with Toronto's TransformTO strategy, promotes 'climate-wise' sustainable living habits, and helps include seniors who became isolated during the pandemic.",
+   "text": "د ټولنې د خلکو د په سیمه کې د کار کولو ګروپ چې په 2019 کال کې د ټورنکلیف او فلیمینډون پارک د اوسیدونکو لخوا، له هر عمر او هر کلتور څخه، تاسیس شوی. دا ګروپ د غیرمستقیم شینو گازونو (ودانۍ، فضله مواد، ترانسپورت) د کمولو په برخه کې د زده کړې پروژې په بنسټ د ټورونټو \"TransformTO\" ستراتیژۍ سره په سمون کې پلي کوي، د اقلیم په پام کې نیولو سره د پایدار ژوند عاداتو ته وده ورکوي، او د هغو پیرمردانو او پیرزنانو سره مرسته کوي چې د عالمی وبا په دوران کې تنګ او تنها شوې دي."
+  },
+  "4a39ebe12219": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "آبګیزونه"
+   },
+   "model": "claude-correction",
+   "note": "non-Pashto 'آبګیزونه' replaced; unsourced phrasing: drinking water = 'د څښلو اوبه' (reviewer suggestion) + English",
+   "source": "Water Fountains",
+   "text": "د څښلو اوبو نلونه (Water Fountains)"
+  },
+  "4a8be4c87e8f": {
+   "model": "north-small-translate-09-2026",
+   "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
+   "text": "موزیم چې د بدلیدونکي نندارتونونو، کنسرټونو او عملي ورکشاپونو (د بیلګې په توګه، هنري ورکشاپونه، موسیقي برنامه) لري. د ښوونځیو پروګرامونه په پلي کولو بوخت دی، په شمول د ښوونځي په ځای او آنلاین ساحوي لیدنې، د ښوونکو سرچینې او آنلاین کورسونه، او همدارنګه د پادکاسټونو، 3D لیدنو او د هنرمندانو خبرو سره یو وړیا آنلاین محتوا کتابتون."
+  },
+  "4c0ad54aefbb": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ژوندی حالتونو مدیریت او مشوره چمتو کوي چې د ښځو په وړاندې تاوتریخوالی نړۍوال پروګرام له لارې ترسره کیږي؛ د تورونټو د کرایه بانک ته د لاسرسی مرکز او د انرژۍ د اضطراري فنډ د تلیفون مرکز په توګه کار کوي (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "'managing living situations' -> crisis intervention; removed added 'global'; program names kept in English; terms: violence against women, crisis, counselling, rent, emergency; unsourced phrasing: crisis intervention = 'د بحران پر مهال مرسته' + English",
+   "source": "Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "د ښځو پر وړاندې تاوتریخوالي د پروګرام له لارې د بحران پر مهال مرسته (crisis intervention) او مشوره چمتو کوي؛ د Toronto Rent Bank (د کرایې بانک) د لاسرسي مرکز او د Emergency Energy Fund (د انرژۍ بیړني فنډ) د تلیفون مرکز په توګه کار کوي (416-397-7368)."
+  },
+  "5141105643c3": {
+   "model": "north-small-translate-09-2026",
+   "source": "Multi-disciplinary consulting firm working with organizations across industries (clients have included TNO, OCAD University and the Islamic Society of Toronto). Services include market and user research, design and urban planning, project and program management, operational support, governance and leadership advisory, business consulting, AI and emerging-tech integration, branding and media, sales optimization, and training and workshops.",
+   "text": "د ډیری تخصصونو مشاورتي شرکت چې د مختلفو صنعتونو سازمانونو سره کار کوي (پیرودونکي په کې د TNO، OCAD پوهنتون او د تورونټو اسلامي ټولنه شامل دي). خدمات په کې د بازار او کارونکي څیړنه، ډیزاین او ښاروالۍ پلان جوړونه، د پروژې او پروګرام مدیریت، عملیاتي ملاتړ، حکومتداري او مشرتابه مشورتي خدمات، سوداګرۍ مشورې، د مصنوعي ذکاوت (AI) او نوي ټیکنالوژۍ سره یوځای کول، برانډینګ او رسنۍ، د پلور ښه والي، او روزنه او ورکشاپونه شامل دي."
+  },
+  "56ab2826fe5e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "جواز لرونکي ماشومانو پالنګونه په 9 گرینوبل ډرایو (فلیمنګدون پارک) کې د کوچنيانو، په لیسه دمخه زده کونکو، کودکستان او د ښوونځي عمر ماشومانو لپاره شتون لري؛ د CWELCC له لارې د فیس کمښت او مالي مرستې موجود دي. د پاملرنې خدمتونه په انګلیسي، هسپانوي، ګجراتي او اوکرایني ژبو کې وړاندې کیږي؛ خواړه هم د حلال او سبزیجاتو پر بنسټ چمتو کیږي."
+   },
+   "model": "claude-correction",
+   "note": "'children's beds' -> licensed child care centre; 'before high school' -> preschool; Dari کودکستان -> وړکتون; address kept in English; terms: child care (licensed child care centre), kindergarten, secondary school note (preschool), halal",
+   "source": "Licensed childcare at 9 Grenoble Dr (Flemingdon Park) for toddler, preschool, kindergarten and school-age children, with CWELCC reduced fees and subsidy available. Care offered in English, Spanish, Gujarati and Ukrainian; catered meals with halal and vegetarian options.",
+   "text": "جواز لرونکی د ماشومانو د پاملرنې مرکز په 9 Grenoble Dr (Flemingdon Park) کې د کوچنيانو، د ښوونځي دمخه ماشومانو، وړکتون او د ښوونځي عمر ماشومانو لپاره شتون لري؛ د CWELCC له لارې د فیس کمښت او مالي مرستې موجود دي. د پاملرنې خدمتونه په انګلیسي، هسپانوي، ګجراتي او اوکرایني ژبو کې وړاندې کیږي؛ خواړه هم د حلال او سبزیجاتو پر بنسټ چمتو کیږي."
+  },
+  "57480d0bcd4e": {
+   "model": "north-small-translate-09-2026",
+   "source": "City arena at 165 Grenoble Dr (renamed in 2009 for Canadian hockey star Angela James) for ice skating and hockey programs, plus adjacent public tennis courts. Note: the City announced plans (2026) to build a new Flemingdon fire hall at 165 Grenoble Dr, which would remove two of the four tennis courts — status uncertain.",
+   "text": "سیتی ارینا په 165 گرینوبل ډر (چې په 2009 کال کې د کاناډایی هاکی ستوری انګلا جیمز له نومه بدله شوې) د یخ په تودوخې لغزیدلو او هاکی پروګرامونو لپاره کارول کیږي، او تر څنګ یې عامه ټینس لوبې میدانونه هم شتون لري. یادونه: ښار اداره د 165 گرینوبل ډر په ځای کې د فلیمینډون نوې اتشنې مرکز جوړولو پلانونه (2026) اعالن کړي دي، چې د دې له امله د 4 ټینس میدانونو څخه 2 له منځه به ولاړ شي — وضعیت نامعلوم دی."
+  },
+  "5b54b1c20dbc": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ټولنې لخوا پیل شوی یو هڅه غبرګون چې د رواني روغتیا په اړه د پوهاوي زیاتولو او د دې بڼې (ننګ) له مینځه وړلو په برخه کې کار کوي، په ځانګړې توګه د سویلي آسیا ټولنې کې د نوي راغلې او لومړي او دویم نسل مهاجرین لپاره."
+   },
+   "model": "claude-correction",
+   "note": "stigma was 'shape (honour)' -> ټولنیز پیغور; garbled 'effort reaction' fixed; terms: mental health, stigma (medium), newcomers",
+   "source": "A community-led initiative raising awareness of mental health and reducing its stigma in the South Asian community, particularly for newcomers and immigrants of first and second generations.",
+   "text": "د ټولنې لخوا پیل شوې یوه هڅه چې د رواني روغتیا په اړه د پوهاوي زیاتولو او د هغې د ټولنیز پیغور (stigma) کمولو په برخه کې کار کوي، په ځانګړې توګه د سویلي آسیا ټولنې کې د نوي راغلي کسانو او د لومړي او دویم نسل مهاجرینو لپاره."
+  },
+  "5d864949c117": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Police Service, 55 Division (101 Coxwell Ave, 416-808-5500) — the division serving the east end including the Thorncliffe/Flemingdon area; provides community policing, non-emergency reporting, and victim support. Note: 54 and 55 Divisions are planned to amalgamate into a new consolidated station at 1627 Danforth Ave (former TTC Danforth garage).",
+   "text": "د تورونټو پولیس خدمتونه، 55 ډویزن (101 Coxwell Ave, 416-808-5500) — دا ډویزن په ختیځې برخې کې د خدمتونو چمتووالی لري، په شمول د تورنکلیف/فلیمینګدون سیمې؛ د ټولنیز پولیس خدمتونه، د غیر-اضطراري راپور ورکول، او د قربانیانو ملاتړ چمتو کوي. یادونه: د 54 او 55 ډویزونو د یوځای کیدو پلان شتون لري ترڅو د 1627 Danforth Ave (پخوانی د TTC د Danforth گیراژ) په ځای یو نوی متحد پولیس څانګه جوړه شي."
+  },
+  "5d959a5ff47c": {
+   "model": "north-small-translate-09-2026",
+   "source": "Pride In Heritage Children's Centre is a non-profit, community-based multicultural child care centre located inside Gateway Public School at 55 Gateway Blvd, Toronto (416-467-5981). It offers inclusive, bias-free child care in a safe, nurturing environment, run by a volunteer Board of Directors; it treats all individuals with dignity regardless of background.",
+   "text": "د میراث په اړه افتخار کول د ماشومانو مرکز یو غیرانتفاعي او د خلکو په بنسټ جوړ شوی ګډ فرهنګي د ماشومانو ساتنې مرکز دی چې د \"گیټوی پبلک سکول\" دننه، په پته 55 گیټوی بولوار، تورونټو کې موقعیت لري (416-467-5981). دا مرکز په خوندي او مناسب چاپیریال کې د ماشومانو ساتنه کوي چې پرته له هر ډول تعصب څخه او د ټولو لپاره د لاسرسي وړ وي؛ دغه مرکز چې د رضاکارانو مدیریت لخوا اداره کیږي، د هر کس سره په درناوی سره چلند کوي، پرته له دې چې دوی له کوم ځای څخه وي."
+  },
+  "6112e2d3ed72": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ډاکټرانو پرسونل لخوا د 24 ساعتې وړیا او محرم مشورې او مرستې تلیفوني ژباړه کوي (416-429-4991). په ډاګه ده چې دا د بیړنیو حالتونو یا پرته د پخوا نوم لیکنې د لیدنې (walk-in) خدمتونه نه وړاندې کوي — په بیړنی حالت کې 911 ته تلیفون وکړئ."
+   },
+   "model": "claude-correction",
+   "note": "'does telephone translation' -> on-call help by phone from staff doctors; terms: free and confidential, doctor, 24 hours, emergency, walk-in/drop-in",
+   "source": "Provides free, confidential 24-hour on-call assistance from staff physicians (416-429-4991). Explicitly states it does not offer emergency or walk-in services — call 911 in an emergency.",
+   "text": "د ورځې 24 ساعته د مرکز د ډاکټرانو لخوا د تلیفون له لارې وړیا او محرمه مرسته چمتو کوي (416-429-4991). په ډاګه ده چې دا بیړني یا حضوري (walk-in، بې له مخکې وخت اخیستلو) خدمتونه نه وړاندې کوي — په بیړني حالت کې 911 ته زنګ ووهئ."
+  },
+  "6166d8860ebc": {
+   "model": "north-small-translate-09-2026",
+   "source": "Valley Park Middle School is a TDSB middle school serving grades 6–8 with about 1,100 students from the Thorncliffe Park and Flemingdon Park communities, at 130 Overlea Blvd, East York. Its focus is a safe, supportive learning environment built on respect, responsibility, and safety; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "ولی پارک منځنۍ ښوونځی د TDSB یو منځنۍ ښوونځی دی چې د ښوونځي درجې 6 څخه تر 8 پورې ته خدمت کوي او شاوخوا 1,100 زده کونکي د تورنکلیف پارک او فلیمینډون پارک کلیو کې لري؛ دا په ختیځ یورک کې د 130 اوورلیا بولوار په پته موقعیت لري. د دې تمرکز یو خوندي او ملاتړ کونکي زده کړې چاپیریال دی چې په احترام، مسؤلیت او خوندیتوب باندې جوړ شوی دی؛ په مخ پاڼې کې د فرانسوي ژبور، د انګلیسي زده کړې لپاره (ESL) یا ځانګړي زده کړې پروګرامونو هیڅ یادونه نه ده شوې."
+  },
+  "62d55110cf7b": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free TCDSB-run EarlyON Child and Family Centre at 175 Grenoble Dr offering drop-in play and learning programs for children ages 0-6 with their parents/caregivers (parent participation required, no registration needed). Per TCDSB schedules, St. John XXIII runs Monday-Thursday 8:45am-12:45pm and Friday 8:45am-12:45pm.",
+   "text": "د TCDSB لخوا اداره شوی د ماشومانو او کورنۍ لپاره وړیا \"EarlyON\" مرکز په 175 گرینوبل ډرایور کې موقعیت لري، چې د 0-6 کلن ماشومانو لپاره د لوبې او زده کړې پروګرامونه وړاندې کوي ترڅو د خپلو مور او پالرانو یا ساتونکي سره یې ګډون وکړي (د مور او پالرانو/ساتونکو ګډون اړین دی، هیڅ ثبتولو ته اړتیا نشته). د TCDSB د کاري مهال ویش په اساس، د \"St. John XXIII\" مرکز د دوشنبه تر پنجشنبې پورې د سهار 8:45 څخه د ماسپښین 12:45 پورې او د جمعې ورځ د سهار 8:45 څخه د ماسپښین 12:45 پورې خلاص دی."
+  },
+  "63c710ddedbb": {
+   "model": "north-small-translate-09-2026",
+   "source": "Nurses available 24/7 for home care needs; no dedicated emergency service listed (not a 911 or urgent-care provider).",
+   "text": "نرسونه د کورني پاملرنې اړتیاوو لپاره د ورځې او شپې 24 ساعته شتون لري؛ هیڅ ډول ځانګړی اضطراري خدمت لیست شوی ندي (د 911 یا فوری مرستې چمتو کونکي نه دي).",
+   "warnings": [
+    "numbers missing from translation: 7"
+   ]
+  },
+  "67d4ed5dfe5d": {
+   "model": "north-small-translate-09-2026",
+   "source": "Masjid Darus Salaam at 20 Overlea Blvd, serving the Muslim community of Thorncliffe Park, Flemingdon Park and beyond since 1995. Offers five daily prayers and Jummah, full-time Hifz and Alim/Alima programs, evening Quran classes (Madrasah), Sunday school, Tafseer and Islamic essentials studies, youth programs, Nikah services and community events.",
+   "text": "مسجد دارالسلام په اوورلیا بولوار 20 کې موقعیت لري، چې له 1995 ز. ک. راهیسې د تورنکلیف پارک، فلمینګدون پارک او هغه سیمې مسلمانانو ته خدمت کوي. دلته پنځه ورځني نمازونه او جمعې نماز، د حفظ قرآن او د عالم/عالمه تعلیمي پروګرامونه په بشپړه توګه، د ماښام قرآن ټولګۍ (مدرسې)، د یکشنبې ښوونځی، تفسیر او د اسلامي اساساتو زده کړه، د ځوانانو پروګرامونه، د نکاح خدمات او د ټولنیزې پیښو برنامې ترسره کیږي."
+  },
+  "68c635426ffe": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ټورن کلیف پارک ترټولو لوی کلنۍ غونډه چې د 14 کلونو راهیسې د آر وی برجس پارک کې ترسره کیږي. د اوړي پلازمینه په مینځپانګې او ماښام کې د تازه خواړو، هنر او دست کاري توکو، موسیقي، رقص، لوبو، بازار پلونو او سیمه ایز سوداګرۍ خواړو سره یوځای. د یو خپلواکې رضاکارانو کمیټې لخوا تنظیم شوی؛ هر کال نږدې 100 تنه ځوانان رضاکارانه کار کوي او د مشرتابه وړتوب ځانګړتیاوې پرمخ وړوي."
+   },
+   "model": "claude-correction",
+   "note": "'summer capital in content' -> summer afternoon and evening; 'bazaar bridges' -> bazaar tables; park name kept in English; terms: early afternoon, evening, volunteer, youth",
+   "source": "Thorncliffe Park's biggest annual community event, held for the last 14 years in R.V. Burgess Park. A summer afternoon and evening with refreshments, arts and crafts, music, dance, games, bazaar tables, and food from local businesses. Organized by an independent volunteer committee; about 100 youth volunteer each year, building leadership skills.",
+   "text": "د Thorncliffe Park ترټولو لوی کلنۍ غونډه چې د تېرو 14 کلونو راهیسې په R.V. Burgess Park کې ترسره کیږي. د اوړي یو ماسپښین او ماښام د سپکو خوړو، هنر او دست کاري توکو، موسیقي، رقص، لوبو، د بازار مېزونو او سیمه ایز سوداګرۍ خواړو سره یوځای. د یو خپلواکې رضاکارانو کمیټې لخوا تنظیم شوی؛ هر کال نږدې 100 تنه ځوانان رضاکارانه کار کوي او د مشرتابه وړتوب ځانګړتیاوې پرمخ وړوي."
+  },
+  "6b036c3ba973": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community Resilience",
+   "text": "د ټولنې مقاومت"
+  },
+  "6b17dc8d3ad4": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د 12 څخه تر 25 کلنې ځوانانو لپاره د تورنکلیف پارک او فلیمینډون پارک کې وړیا او محرم ډول د رضاکارانه مراجعینو لپاره د خدماتو مرکز (د ایسټ تورونټو صحتمندي شریکانو، TNO – د همسایګانو سازمان او د انتاریو ځوانانو صحتمندي مرکزونو لخوا پیل شوی؛ د صحتمندي کارت، د کورنۍ ډاکټر یا راجع کول ته اړتیا نشته). خدمات: مشورتي مرستې د رواني او جسماني روغتیا لپاره، د موادو د استعمال څخه لرې کیدو کې مرستې، لومړني روغتیا خدمات، د خدماتو ته لارښود مرستې، د همکارانو ملاتړ، د کار موندنې خدمات، مسلکي روزنه، د خوراکي توکو بانک، د کور او اوسیدلو او د جاړه کیدو مرستې، زده کړه، تفریحی او ټولنیزې پروګرامونه، د مشرتابه وړتیا او رضاکارانه فرصتونه."
+   },
+   "model": "claude-correction",
+   "note": "'help with crying' -> settlement help; partner names restored in English; 'voluntary clients' -> walk-in-style; terms: settlement services, free and confidential, walk-in/drop-in, food bank, family doctor, job/vocational training",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "د 12 څخه تر 25 کلنې ځوانانو لپاره په Thorncliffe Park او Flemingdon Park کې وړیا او محرم حضوري (walk-in) مرکز (د East Toronto Health Partners، TNO – The Neighbourhood Organization او Youth Wellness Hubs Ontario لخوا پیل شوی؛ د روغتیا کارت، د کورنۍ ډاکټر یا راجع کول ته اړتیا نشته). خدمات: مشورتي مرستې د رواني او جسماني روغتیا لپاره، د موادو د استعمال څخه لرې کیدو کې مرستې، لومړني روغتیا خدمات، د خدماتو ته لارښود مرستې، د همکارانو ملاتړ، د کار موندنې خدمات، مسلکي روزنه، د خوړو بانک، د کور او د میشته کېدو مرسته، زده کړه، تفریحی او ټولنیزې پروګرامونه، د مشرتابه وړتیا او رضاکارانه فرصتونه."
+  },
+  "6ba3dd305d6e": {
+   "model": "north-small-translate-09-2026",
+   "source": "unityhealth.to is the homepage for Unity Health Toronto, the parent network of St. Joseph's Health Centre (30 The Queensway, 416-530-6000), St. Michael's Hospital (30 Bond St., 416-360-4000) and Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666). The St. Michael's Kidney Care Centre at 45 Overlea Blvd. (416-867-3700) is a patient-centred community satellite hemodialysis facility with 21 treatment stations, 6 home-dialysis training stations and 5 exam rooms; Unity's Multi-Care Kidney Clinic offers nephrology, nursing, dietitian, pharmacist, social worker and modality-education support to slow kidney disease progression, plus peritoneal and home hemodialysis options.",
+   "text": "unityhealth.to د Unity Health Toronto لومړی پاڼه ده، کوم چې د St. Joseph's Health Centre (30 The Queensway, 416-530-6000)، د St. Michael's Hospital (30 Bond St., 416-360-4000) او د Providence Healthcare (3276 St. Clair Ave. E., 416-285-3666) مادر شبکه ده. د St. Michael's کلیه روغتیا مرکز په 45 Overlea Blvd. (416-867-3700) کې د ناروغانو په مرکزیت پر بنسټ جوړ شوی یو سیمه ایز همغږی همالایفیسیس (hemodialysis) مرکز دی چې د 21 درملنې ځایونو، 6 کورني همالایفیسیس روزنې ځایونو او 5 معاینې کوټو سره سمجه راغلی دی؛ د Unity کثیر خدمتونه کلیه کلنیک د کلیوې ناروغۍ د پرمختګ د کمولو لپاره د کلیه ناروغۍ متخصص (nephrology)، نرسۍ خدمتونه، خوراکي توکي متخصص، درملوګر، ټولنیز کارکوونکي او درملنې طریقه په اړه معلوماتي ملاتړ چمتو کوي، او همدارنګه د پیریټونیل (peritoneal) او کورني همالایفیسیس امکانات وړاندې کوي."
+  },
+  "72b07ee72576": {
+   "model": "north-small-translate-09-2026",
+   "source": "Public Washrooms",
+   "text": "عامه تشنابونه"
+  },
+  "7325c2c76d27": {
+   "model": "north-small-translate-09-2026",
+   "source": "Legal Services",
+   "text": "حقوقي خدمتونه"
+  },
+  "7463c7451c52": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "ډیری خدمتونه وړانډې"
+   },
+   "model": "claude-correction",
+   "note": "garbled 'many services forward' -> multi-service agencies; terms: government-funded organization/agency (اداره); unsourced phrasing: 'څو خدمتي' (reviewer) — multi-service agency is in notFound",
+   "source": "Multi-Service Agencies",
+   "text": "څو خدمتي ادارې"
+  },
+  "7482403a5dc6": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د اوبو د اړتیا لپاره عامه ځای، په تودوخې پېرېدو په وخت کې کارده."
+   },
+   "model": "claude-correction",
+   "note": "non-words replaced; terms: extreme heat; unsourced phrasing: drinking water = 'د څښلو اوبه' (reviewer suggestion) + English",
+   "source": "Public drinking-water access point, relevant during extreme heat events.",
+   "text": "د څښلو اوبو عامه ځای (drinking-water access point)، د سختې ګرمۍ پر مهال ګټور دی."
+  },
+  "75a5d313aef1": {
+   "model": "north-small-translate-09-2026",
+   "source": "Non-Profits",
+   "text": "غیر انتفاعي موسسې"
+  },
+  "78b02f992c4d": {
+   "model": "north-small-translate-09-2026",
+   "source": "Public Spaces",
+   "text": "عامه ځایونه"
+  },
+  "79db95729d8c": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB elementary school at 9 Grenoble Drive serving over 960 students from Kindergarten to Grade 6 (about 93% of families have immigrated to Canada; 73+ languages spoken). No special programs such as French Immersion are mentioned on the school's homepage.",
+   "text": "TDSB لومړني ښوونځی په 9 Grenoble Drive کې موقعیت لري چې د کیډنګارټ څخه تر درجې 6 پورې د 960 زده کونکو څخه زیات ته زده کړه ورکوي (نږدې 93٪ کورنۍ له بل هیواد څخه په کاناډا مهاجرت کړي دي؛ په 73 او نور ژبو خبرې کیږي). په دې ښوونځي ویب پاڼه کې هیڅ ډول ځانګړي پروګرامونه لکه \"فرانسوي زبان زده کړه\" (French Immersion) ذکر شوي ندي."
+  },
+  "7bd551d09cd0": {
+   "model": "north-small-translate-09-2026",
+   "source": "Parent handbook notes an Emergency Management Policy available on request from supervisors; no public emergency-specific community services listed.",
+   "text": "د والدین لارښود کې یادونه ده چې د بیړنیو حالتونو مدیریت پالیسي د مشرانو څخه غوښتنه کولو پر بنسټ شتون لري؛ هیڅ ډول عامه د بیړنیو حالتونو لپاره ځانګړي د ټولنیز خدمتونه لیست شوي ندي."
+  },
+  "7c53a90857c2": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "د تورونټو ښار د اوسیدونکو لپاره چې د 0-6 کلن عمر لرونکي ماشومان ولري او د هغوی مور او پالر/پالونکي دي، د \"EarlyON\" ماشومان او کورنۍ مرکز وړیا دی: د ماشومانو پراختیا ملاتړ پروګرامونه، د والدینو ملاتړ خدمات، د ښوونځي لپاره چمتووالی پروګرامونه، د ژبې ناڅاپي (تاخیر) ملاتړ، او د ځانګړو اړتیاوو خدمات د انفرادي قضیې مدیریت سره. اصلي ځای: TNO-Thorncliffe Park Community Hub، 45 Overlea Blvd Unit 200 (د دوشنبه تر جمعې پورې سهار 9 بجې څخه غرمې 5 بجې پورې)؛ د جمعې ورځ د تفریح او ورزش لپاره د \"Jenner Jean Marie\" کلیوالو مرکز کې، 48 Thorncliffe Park Dr."
+  },
+  "7d47cf9e0e64": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Catholic District School Board elementary school (JK to Grade 8) at 175 Grenoble Drive in Flemingdon Park, offering ESL, special education and Empower Reading supports plus sports teams. The building also houses Red Apple Daycare (before and after school care), a free EarlyON Child and Family Centre (programs for children birth to age 6 and parents), and a settlement worker office supporting newcomers.",
+   "text": "د تورونټو کیتولیک ډسټرکټ سکول بورډ ابتدایي ښوونځی (د لومړي ګام څخه تر ښوونځي درجه 8 پورې) چې په فلیمینډون پارک کې د 175 گرینوبل ډرایو په پته موقعیت لري؛ د انګلیسي زبون زده کړې (ESL)، ځانګړي زده کړې او د لوستلو وړتیا (Empower Reading) ملاتړ، او د لوبې ټیمونه وړاندې کوي. په دې ودانۍ کې د \"ریډ ایپل\" (Red Apple) ورځني بچیو ساتنه مرکز (د ښوونځي دمخه او وروسته د بچیو ساتنه)، د \"ارلی-آن\" (EarlyON) وړیا د ماشومانو او کورنۍ مرکز (د زیږیدلو څخه تر 6 کلنې پورې د ماشومانو او والدینو لپاره پروګرامونه)، او د مهاجرینو مرستندویه ادارې دفتر هم شامل دي چې نوي راغلې کسان سره مرسته کوي."
+  },
+  "7d8fe058aabe": {
+   "model": "north-small-translate-09-2026",
+   "source": "Dixon Hall Housing Services provides shelter and housing supports for people experiencing homelessness or precariously housed: help finding adequate housing, eviction prevention, budgeting, income stabilization, health promotion, and follow-up supports to remain housed. Heyworth House (2714 Danforth Ave) is one of their housing sites. Also runs community food access sites (community meals, food banks, food skills programming).",
+   "text": "د دیکسون هال د کورونو خدمتونه د هغو خلکو لپاره پناه او کورونو ملاتړ چمتو کوي چې بې کوره دي یا ناامنه کورونه لري: د مناسب کور موندلو کې مرسته، د کور له لاسه ورکیدو مخه نیول، بودیجه جوړونه، د عواید ثبات، د روغتیا پرمختګ، او د کور ته راتګ او د کور په اړه پاتې کیدو لپاره د تعقیب او ملاتړ خدمتونه. هیورث هاؤس (2714 دانفورټ ایونیو) د دوی د کورونو مرکزونو څخه یو دی. همدارنګه د ټولنیز خوراکي توکو ته لاسرسی ورکولو مرکزونه (ټولنیز خواړه، خوراکي توکي بانکونه، د خوراکي مهارتونو پروګرامونه) هم اداره کوي."
+  },
+  "7e0da2420727": {
+   "model": "north-small-translate-09-2026",
+   "source": "Food Collaboratives",
+   "text": "غذايي همکارۍ"
+  },
+  "7e54c8b0e600": {
+   "model": "north-small-translate-09-2026",
+   "source": "Family & Parenting Support",
+   "text": "کورنۍ او د والدینو ملاتړ"
+  },
+  "7fb923fbd9f8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community Centres",
+   "text": "د ټولنیزو مرکزونه"
+  },
+  "85b8d1f0296e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Operates a youth shelter for youth experiencing homelessness (emergency shelter).",
+   "text": "د بې کورنيو نوجوانانو لپاره پناهګاه چلوي (اضطراري پناهګاه)."
+  },
+  "88f8e20033ec": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "جواز لرونکي کودکستان چې په درې ځایونو فعالیت کوي: 206 Laird Dr (نوزادان، کوچني ماشومان، لومړنی تعلیم، د کال په اوږدو کې)، 31 Rolph Rd د Rolph Road په ښوونځي کې (لومړنی تعلیم، کودکستان، د ښوونځي عمر ماشومان؛ د ښوونځي دمخه او وروسته د کودکانو کلب د JK څخه تر ډیګري 6 پورې، د کورکاږې (homework) سره مرسته، خواړې او د بشپړ ورځې PD day، کرسمس او مارچ تعطیلاتو په جریان کې مرستې)، او 182 Bessborough Dr د St. Anselm په ښوونځي کې (کودکستان، د ښوونځي عمر ماشومان). سربېره پر دې، د جولای او اګست په میاشتونو کې د اوړي پلوه څپرکی (summer camp) هم ترسره کوي (موسيقي، ناچ، ورزشونه، تیرېدو، هنر او دستکارۍ). د CWELCC فیس کمولو پروګرام کې هم ګډون لري."
+   },
+   "model": "claude-correction",
+   "note": "'summer side chapter' -> summer camp; 'passing' -> swimming; 'degree 6' -> Grade 6; 'primary education' -> preschool; Dari/Urdu کودکستان/کودکان/نوزادان/ناچ replaced; terms: child care, kindergarten, homework, swimming, after-school programs; unsourced phrasing: summer camp = 'اوړنی کمپ' + English",
+   "source": "Licensed childcare with three sites: 206 Laird Dr (infants, toddlers, preschool, year-round), 31 Rolph Rd at Rolph Road School (preschool, kindergarten, school-age; before/after-school Kids Club for JK-Grade 6 with homework help, snacks, plus full-day PD day/Christmas/March break coverage), and 182 Bessborough Dr at St. Anselm School (kindergarten, school-age). Also runs a July-August summer camp (music, dance, sports, swimming, arts & crafts). Participates in CWELCC fee reduction.",
+   "text": "جواز لرونکی د ماشومانو د پاملرنې مرکز چې په درې ځایونو فعالیت کوي: 206 Laird Dr (نوي زېږېدلي ماشومان، کوچني ماشومان، د ښوونځي دمخه، د کال په اوږدو کې)، 31 Rolph Rd د Rolph Road په ښوونځي کې (د ښوونځي دمخه، وړکتون، د ښوونځي عمر ماشومان؛ د ښوونځي دمخه او وروسته Kids Club د JK څخه تر 6م ټولګي پورې، د کورنۍ دندې (homework) سره مرسته، سپک خواړه او د بشپړ ورځې PD day، کرسمس او مارچ تعطیلاتو په جریان کې مرستې)، او 182 Bessborough Dr د St. Anselm په ښوونځي کې (وړکتون، د ښوونځي عمر ماشومان). سربېره پر دې، د جولای او اګست په میاشتونو کې اوړنی کمپ (summer camp) هم ترسره کوي (موسيقي، نڅا، ورزشونه، لامبو وهل، هنر او دستکارۍ). د CWELCC فیس کمولو پروګرام کې هم ګډون لري."
+  },
+  "899a73c04466": {
+   "model": "north-small-translate-09-2026",
+   "source": "Museums",
+   "text": "موزیمونه"
+  },
+  "8c2075b94416": {
+   "model": "north-small-translate-09-2026",
+   "source": "Dental Clinics",
+   "text": "د دندونو درملنیز کلینیکونه"
+  },
+  "8f3b8610ff41": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provincial government services office at 945 Eglinton Avenue East (inside Staples). Issues driver's licences, vehicle registration and plates, Ontario health cards and birth certificates. Open Monday to Friday 9:00 AM to 9:00 PM and Saturday 9:00 AM to 5:00 PM.",
+   "text": "ولایتي حکومت د خدماتو دفتر په 945 ایګلینټن ایونیو ایست (د سټیپلز دننه) کې موقعیت لري. د موټر چلوونکي جواز، د موټر راجستر او نمبر پلیټونه، د انتاریو روغتیا کارتونه او د زیږون سندونه چمتو کوي. له دوشنبه تر جمعې پورې د سهار 9 بجې نه تر شپه 9 بجې پورې خلاص دی او د شنبې ورځ د سهار 9 بجې نه تر 5 بجې پورې خلاص دی.",
+   "warnings": [
+    "numbers missing from translation: 00"
+   ]
+  },
+  "912f65f2191e": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "فلیمینګدون لومړنی زده کړی او د ماشومانو ساتنې مرکز (Flemingdon Early Learning & Child Care Centre، 29 St Dennis Dr, Don Mills/Eglinton؛ د اړیکو لپاره لاتویا ویلسن-روز ته د 416-392-3170 په شمیره سره اړیکه ونیسئ) د تورونټو ښار یو عامه او جواز لرونکی د ماشومانو ساتنې مرکز دی چې د 0 څخه تر 4 کلنو ماشومانو ته خدمت کوي او د ډینس آر. ټیمبریل سرچینو مرکز کې موقعیت لري. دا مرکز د کاناډا په کچه د لومړنی زده کړې او د ماشومانو ساتنې (CWELCC) سیسټم کې شامل دی او د فیس سبسډی (مالی مرستې) چمتو کوي؛ کارکوونکي 9 ژبه په شمول عربی، بنګالی، فرانسوي، هندی او فارسي خبرې کوي، او خواړه د حلال، پرې په ګوډي پرته، د چنګاښ پرته، ویګن (حیوانی محصولات پرته) او سبزی خور (Vegetarian) توکو سره چمتو کیږي."
+   },
+   "model": "claude-correction",
+   "note": "SAFETY: peanut-free was 'without crab' and pork-free was garbled; names kept in English; terms: halal, child care, allergy note; unsourced phrasing: peanut-free = 'له مومپلیو پرته', pork-free = 'د خنزیر له غوښې پرته', both with English",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "فلیمینګدون لومړنی زده کړی او د ماشومانو ساتنې مرکز (Flemingdon Early Learning & Child Care Centre، 29 St Dennis Dr, Don Mills/Eglinton؛ د اړیکو لپاره Latoya Wilson-Rose ته د 416-392-3170 په شمیره سره اړیکه ونیسئ) د تورونټو ښار یو عامه او جواز لرونکی د ماشومانو ساتنې مرکز دی چې د 0 څخه تر 4 کلنو ماشومانو ته خدمت کوي او Dennis R. Timbrell Resource Centre کې موقعیت لري. دا مرکز د کاناډا په کچه د لومړنی زده کړې او د ماشومانو ساتنې (CWELCC) سیسټم کې شامل دی او د فیس سبسډی (مالی مرستې) چمتو کوي؛ کارکوونکي 9 ژبې په شمول عربی، بنګالی، فرانسوي، هندی او فارسي خبرې کوي، او خواړه د حلال، د خنزیر له غوښې پرته (pork-free)، له مومپلیو پرته (peanut-free)، ویګن (حیوانی محصولات پرته) او سبزی خور (Vegetarian) توکو سره چمتو کیږي."
+  },
+  "9229c66e10d7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Large public park adjoining Thorncliffe Park with an 18-hole disc golf course, a public archery range, jogging and cycling paths, nature trails, picnic shelters and fire pits. The drinking fountain provides free drinking water (seasonal; closed in winter).",
+   "text": "یو لوی عامه پارک چې د تورن کلیف پارک سره نږدې دی؛ په دې کې 18 سوراخونه لري چې د ډیسک ګلف لپاره کارول کیږي، عامه تیراندۍ میدان، ګام زدن او دوچرخه سوارۍ لاره، طبیعي لارښوونې، پکنیک پناهګاهونه او د اور پاڼې شتون لري. په دې پارک کې د اوبو چشمې شتون لري چې وړیا آب وړاندې کوي (صرف په ځینو موسمونو کې خلاصه ده؛ په ژمي کې بند کیږي)."
+  },
+  "929cea5641e3": {
+   "model": "north-small-translate-09-2026",
+   "source": "Neighbourhood & Individual Empowerment",
+   "text": "ګاونډیو او انفرادي وړتیاورکول"
+  },
+  "941791890d5c": {
+   "model": "north-small-translate-09-2026",
+   "source": "Gateway Public School is a TDSB elementary school serving Junior Kindergarten to Grade 6 (approx. 950 students) in Flemingdon Park, at 55 Gateway Blvd, North York. The school emphasizes an inclusive, multicultural learning environment with high expectations for achievement and conduct; no French immersion, ESL, or special education programs were listed on the homepage text fetched.",
+   "text": "Gateway Public School یو ابتدایي ښوونځی دی چې د TDSB په ګډون د جونیور کنډرګارټ څخه تر ښوونځي درجه 6 پورې (نږدې 950 زده کونکی) په فلیمینګډون پارک کې، د 55 Gateway Blvd، نورث یورک کې خدمات وړاندې کوي. دا ښوونځی د پرمختګ او چلند لپاره لوړ توقعاتو سره، د ګډون او ګډ فرهنګونو زده کړې چاپیریال ته ځانګړي اهمیت ورکوي؛ په مخ پاڼه کې د فرانسوي ژبو زده کړې (French immersion)، د انګلیسي ژبه زده کړې (ESL) یا ځانګړي زده کړې پروګرامونه ذکر شوي نه دي."
+  },
+  "95c8c42be839": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Public Library branch at 48 Thorncliffe Park Drive. Offers book borrowing, free Wi-Fi, public computers with Microsoft Office, print/copy/scan, a KidsStop early literacy centre, Youth Hub, Leading to Reading one-to-one children's reading help, a Newcomer Information Service, a Financial Empowerment Service, a bookable meeting room and quiet study space.",
+   "text": "ټورونټو د عامه کتابتونو څانګه په 48 ټورن کلیف پارک ډرایو کې موقعیت لري. د کتابونو پور اخیستلو، وړیا وای-فای، د مایکروسافټ آفیس سره عامه کمپیوټرونه، چاپ/کاپی/اسکین، د کوچنيانو د ابتدایی سواد مرکز (KidsStop)، د ځوانانو مرکز (Youth Hub)، د کودکانو د لوستلو لپاره انفرادي مرستې پروګرام (Leading to Reading)، د نوي راغلیو معلوماتي خدمت، د مالي توانمندې خدمت، د اجاره اخیستلو وړ غونډه خونه او ساکت مطالعې ځای وړاندې کوي."
+  },
+  "97522b6e2a71": {
+   "model": "north-small-translate-09-2026",
+   "source": "Licensed childcare centres in the neighbourhood offering infant, toddler, preschool, and before/after-school programs with play-based, inquiry-driven learning, nutritious meals (accommodating allergies and cultural/religious diets), and secure entry systems. Locations: 175 Grenoble Dr (Grenoble) and 135 Overlea Blvd (Overlea).",
+   "text": "په محل کې جواز لرونکي د ماشومانو ساتنې مرکزونه چې د شیرغړو، کوچنيانو، د ښوونځي دمخه زده کړې او د ښوونځي وړاندې/وروسته پروګرامونه وړاندې کوي؛ په لوبې پر بنسټ زده کړه، د پوښتنو له لارې زده کړه، صحتمند خواړه (د حساسیتونو او د فرهنګي/مذهبي خواړو ته درناوی سره) او خوندي د ننوتلو سیسټمونه لري. پته: 175 Grenoble Dr (Grenoble) او 135 Overlea Blvd (Overlea)."
+  },
+  "97e9202b1cb6": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community bike hub on Gateway Blvd run by TNO. Offers free bike repairs (bookable appointments), do-it-yourself repair hours with tools and space, bike mechanics workshops, learn-to-ride lessons and group rides. Bikes available via the Earn-a-Bike program, twice-yearly bike giveaways, and an apply-for-a-bike option.",
+   "text": "د ټولنیز سایکل مرکز د Gateway Blvd په کوڅه کې چې د TNO لخوا اداره کیږي. د سایکلونو وړیا ترمیم (لپاره د نوبت اخیستل امکان لري)، د وسایلو او ځای سره د خپل ځان لخوا ترمیم کولو وختونه، د سایکل مکینکس ورکشاپونه، د سایکل سوارۍ زده کړې او ډلې یوځای سایکل سوارۍ وړاندې کوي. سایکلونه د \"Earn-a-Bike\" پروګرام له لارې، د کال دوځلې وار د سایکلونو وړیا ورکولو او د سایکل غوښتنې د امکان په واسطه ترلاسه کیدی شي."
+  },
+  "99a408333e20": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "په فلیمینګډون پارک سیمه کې مسجد (د 2001 کال په اوږدو کې تأسیس شوی، چې 250-300 عبادت کوونکي یې په خپل ځان کې ځای ورکوي) چې هره ورځ پنځه نمازونه او جمعې نماز هم ترسره کوي. د ماشومانو او ځوانانو لپاره د اسلامي زده کړې او لارښوونې چمتو کوي او د مسلمانانو او غیر مسلمانانو د لیدونکو څخه په خوشحاله توګه استقبال کوي."
+   },
+   "model": "claude-correction",
+   "note": "'children and youth' -> children and adults; مسجد -> جومات; park name in English; terms: mosque, children (adults = لویان)",
+   "source": "Mosque in the Flemingdon Park area (established 2001, holds 250-300 worshippers) offering five daily congregational prayers and Jummah Salah. Provides Islamic education and guidance for children and adults, and welcomes both Muslim and non-Muslim visitors.",
+   "text": "د Flemingdon Park په سیمه کې جومات (په 2001 کال کې تأسیس شوی، چې 250-300 عبادت کوونکي یې په خپل ځان کې ځای ورکوي) چې هره ورځ پنځه نمازونه او جمعې نماز هم ترسره کوي. د ماشومانو او لویانو لپاره د اسلامي زده کړې او لارښوونې چمتو کوي او د مسلمانانو او غیر مسلمانانو د لیدونکو څخه په خوشحاله توګه استقبال کوي."
+  },
+  "9aab0433db11": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "ګاونډي پارک چې د بوتل ډکولو مرکز لري او د اوبو د څښتنۍ لپاره وړیا پانی وړاندې کوي."
+   },
+   "model": "claude-correction",
+   "note": "'water ownership' -> drinking water; Urdu پانی removed; terms: free, public park; unsourced phrasing: drinking water = 'د څښلو اوبه' (reviewer suggestion) + English; bottle filling station kept in English",
+   "source": "Neighbourhood park featuring a bottle filling station providing free drinking water refills.",
+   "text": "ګاونډي پارک چې د بوتل ډکولو ځای (bottle filling station) لري او وړیا د څښلو اوبه وړاندې کوي."
+  },
+  "a1893ed621a6": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB public elementary school at 80 Thorncliffe Park Dr, recognized as a Platinum Ecoschool with an active eco club. Provides public education in partnership with students, families and the community.",
+   "text": "TDSB عامه لومړنی ښوونځی په 80 Thorncliffe Park Dr کې موقعیت لري، چې د فعال اکو کلب سره د Platinum Ecoschool په توګه پیژندل کیږي. د ښوونځي زده کړو په برخه کې د زده کونکو، کورنیو او کلیوالو سره په همکارۍ سره عامه زده کړه چمتو کوي."
+  },
+  "a3d76b624b59": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community urban-farming group in Thorncliffe Park maintaining two communal vegetable gardens and 20+ fruit trees, with all harvests shared freely with residents and volunteers. Runs environmental education, children's nature programs, youth leadership and volunteer hours, a resident-led composting program, pollinator habitats, and woodworking and art workshops.",
+   "text": "د ټاون کلیف پارک کې د ښار کچې کرنې د کلیوالو ډلې دوه د سبزیجات مشترکه باغونه او 20+ میووې ونې ساتل کیږي، چې د حاصلاتو ټولې محصولات په وړیا توګه د اوسیدونکو او رضاکارانو سره شریکې کیږي. دا ډله د چاپیریال پوهاوی، د ماشومانو د طبیعت پروګرامونه، د ځوانانو لیډرشپ او رضاکارانه فعالیتونه، د اوسیدونکو په ریاست د کمپوست کولو پروګرام، د مچراګانو (پولیناتور) د ژوندځایونو ساتل، او د لرګیو جوړولو او هنري ورکشاپونه په لاره اچوي."
+  },
+  "a44c76defc5c": {
+   "model": "north-small-translate-09-2026",
+   "source": "Thorncliffe Park Day Care Centre has served families since 1969 with play-based educational programs for children from infancy through 12 years old, including school-age programs, following the 'How Does Learning Happen' framework. Staff speak 11 languages (including Urdu, Farsi, Punjabi, Bengali, Amharic, Tagalog, Turkish), meals are provided through the Real Food For Real Kids catering, and the centre participates in CWELCC with fee subsidy information available.",
+   "text": "د ټورن کلیف پارک د ورځني ساتنې مرکز له 1969 کال راهیسې د کورنۍ غړو ته د ماشومانو لپاره د لوبې په واسطه د زده کړې پروګرامونه وړاندې کوي، چې د ماشومانو له پیل څخه تر 12 کلنې پورې شامل دي او د ښوونځي عمر پروګرامونه هم په کې شامل دي؛ دا پروګرامونه د \"زده کړه څنګه واقعه کیږي\" چوچېداره تعقیبوي. کارکوونکي په 11 ژبو خبرې کوي (په شمول د اردو، فارسي، پنجابي، بنګالي، امهاري، تاګالوګ او ترکي ژبو)، خواړه د \"ریل فود فور ریل کیدز\" (Real Food For Real Kids) له خوا چمتو کیږي، او دا مرکز د CWELCC پروګرام کې ګډون لري، چیرې چې د فیس سبسډي (مالیې مرستې) په اړه معلومات شتون لري."
+  },
+  "a583aca46f5e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "ټورونټو د عامه کتابتونو څانګه په سینټ ډینس ډرایو (St. Dennis Drive) 29: کتابونه پورته کول، عامه کمپیوټرونه، د ماشومانو پروګرامونه، د ماشومانو لپاره د لوستلو مهارتونو پروګرام (Leading to Reading) او وړیا مالي توانمند سازی خدمت (مالیه ورکول، د مرستو غوښتنلیکونه، بودیجه جوړولو مرسته — دا خدمت د تورنکلیف (Thorncliffe) څانګې په واسطه هم چمتو کیږي). د کاري وختونه: د دو شنبې له ورځې تر جمعې پورې سهار له 9 بجې تر شپې پورې 8:30 بجې، د شنبې ورځ سهار له 9 بجې تر 5 بجې پورې، د یکشنبې ورځ له 12 بجې تر 5 بجې پورې. یادونه: دا څانګه د نوي کولو پروژې له امله د دسمبر په لومړۍ نیټه 2025 بنده کیږي او د بیا پرانیستلو په اړه د 2026 کال د دریمې ربعې په پیل کې هیله مند یم؛ اوسني کاري وختونه په لیست کې د بیا پرانستلو په توګه ذکر شوي دي، خو د څخه کتنې دمخه یقینا معلومه کړئ.",
+   "warnings": [
+    "numbers missing from translation: 1, 3"
+   ]
+  },
+  "a5c931e58836": {
+   "model": "north-small-translate-09-2026",
+   "source": "The TNO Food Collaborative (run by The Neighbourhood Organization) provides free food access to thousands of individuals in the Thorncliffe Park and Flemingdon Park communities, including fresh produce, eggs, and dairy products distributed twice a month, with year-round distribution supported by community partners like Greenwin Cares.",
+   "text": "TNO د خوراک همکارۍ (چې د \"The Neighbourhood Organization\" لخوا اداره کیږي) په زرګونو کسانو ته په ټورنکلیف پارک او فلیمینډون پارک کلیو کې د خوراکي توکو لاسرسی وړیا چمتو کوي، په شمول تازه محصولات، هګۍ او شیدې محصولات چې د میاشتې دوو ځل ویشل کیړای شي، او د کلیوالو ملګرو لکه \"Greenwin Cares\" د مرستې په واسطه د کال په اوږدو کې ویشل کیړای شي."
+  },
+  "a6a63f0ab062": {
+   "model": "north-small-translate-09-2026",
+   "source": "Grassroots community group based at Thorncliffe Park Community Hub (45 Overlea Blvd).",
+   "text": "د خلکو په کچه فعاله ټولنه چې د تورنکلیف پارک ټولنیز مرکز (45 Overlea Blvd) کې موقعیت لري."
+  },
+  "a8fbb45be7f6": {
+   "model": "north-small-translate-09-2026",
+   "source": "Shelter",
+   "text": "پناهګاه"
+  },
+  "aa052d1c9356": {
+   "model": "north-small-translate-09-2026",
+   "source": "TDSB public high school (grades 9-12) at 135 Overlea Blvd serving Flemingdon Park and Thorncliffe Park (~1800 students). Host school of the TOPS program (Talented Offerings for Programs in the Sciences), a four-year enriched math/science/English program with AP-level courses; also offers SHSM, horticulture, financial securities programs, ESL supports, 90+ student-led clubs and competitive team sports.",
+   "text": "TDSB عامه لیسه (ګریډونه 9-12) په 135 اوورلیا بولوار کې موقعیت لري چې د فلمینګدون پارک او تورنکلیف پارک سیمې ته خدمت کوي (نږدې 1800 زده کونکی). دا ښوونځی د TOPS پروګرام (د ساینسونو پروګرامونو لپاره استعدادونه) مرکز دی؛ دا یو څلور کلن غنی شوي ریاضی/ساینس/انګلیسي پروګرام دی چې کورسونه د AP (پیشښتې کورسونه) په کچه لري؛ همدارنګه د SHSM، باغداري، مالي تضمیناتو پروګرامونه، د ESL مرستې، 90+ زده کونکو اداره شوي کلبونه او سیالی ورکړې ورزشونه وړاندې کوي."
+  },
+  "ac4875864ec7": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "پولیسي څارنوالۍ"
+   },
+   "model": "claude-correction",
+   "note": "'police prosecutor's office' -> police station; terms: police station (medium)",
+   "source": "Police Station",
+   "text": "پولیس سټیشن (د پولیسو مرکز)"
+  },
+  "ae69792878f8": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "چیپل ان د پارک یونایتد چرچ د تورونټو ښار په 16 ټورنکلیف پارک ډرایو کې موقعیت لري (416-421-0792) او د ټورنکلیف پارک او ډون میلز سیمې لپاره خدمات وړاندې کوي. دا د اړونیو خلکو لپاره د اونۍ د لمړۍ ورځ د 10:00 بجې په ځای، زوم او لږښت (live stream) له لارې عبادتونه ترسره کوي او نوي راغلې کسان د \"ایماني کورنۍ\" په توګه د ګډون لپاره بلنه ورکوي."
+   },
+   "model": "claude-correction",
+   "note": "'first day of the week' (=Saturday) -> یکشنبه; 'multicultural' and 'small' restored; 'in place' -> in person; non-word for live stream fixed; church name and address in English; terms: Sunday, morning, church, newcomers; unsourced phrasing: multicultural = 'څو کلتوري' (from کلتوري مرکزونه)",
+   "source": "Chapel in the Park United Church is a small multicultural congregation at 16 Thorncliffe Park Drive, Toronto (416-421-0792), serving Thorncliffe Park and Don Mills. It holds Sunday services at 10:00 a.m. in person, via Zoom, and live stream, and invites newcomers to join as a 'faith family.'",
+   "text": "Chapel in the Park United Church یوه کوچنۍ څو کلتوري کلیسا ده چې په 16 Thorncliffe Park Drive, Toronto کې موقعیت لري (416-421-0792) او د Thorncliffe Park او Don Mills سیمو لپاره خدمات وړاندې کوي. دا د یکشنبې په ورځ د سهار په 10:00 بجو حضوري، د Zoom او ژوندۍ خپرونې (live stream) له لارې عبادتونه ترسره کوي او نوي راغلي کسان د \"ایماني کورنۍ\" په توګه د ګډون لپاره بلنه ورکوي."
+  },
+  "b0e486b1a83e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Support & Emergency Services",
+   "text": "ملاتړ او اضطراري خدمتونه"
+  },
+  "b319cef2b3a7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Schools & Child Services",
+   "text": "ښوونځي او د ماشومانو خدمات"
+  },
+  "b8138c775adf": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free settlement services for refugees and immigrants, with a special focus on women and families: women-only LINC English classes, translation and interpretation services, employment support, basic and advanced computer classes, English conversation circles, sewing club, youth drop-in, and low-impact exercise. All programs are free, offered onsite and online (call for an appointment).",
+   "text": "د پناهګیرانو او مهاجرینو لپاره وړیا د استوګنې مرستې، په ځانګړې توګه د ښځو او کورنیو خانواده وو په پام کې نیولو سره: یوازې د ښځو لپاره د انګلیسي ژبه زده کړې (LINC) ټولګۍ، د ترجمې او شفاهي ترجمانې خدمتونه، د کار موندنې ملاتړ، لومړني او پرمختللي کمپیوټر ټولګۍ، د انګلیسي ژبې خبرې اترې ګروپونه، د خیاطت ګروپ، د ځوانانو آزاد مرکز او سبک ورزشونه. ټول پروګرامونه وړیا دي، په مرکز کې او آنلاین وړاندې کیږي (د ناستې لپاره تلیفون وکړئ)."
+  },
+  "b9bf5f163902": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "د M4H پوستل کوډ سیمې اوسیدونکو لپاره وړیا او جامع لومړني روغتیا خدمات، هیڅ روغتیا کارت یا راجع کونکی سند ته اړتیا نلري، د ژباړې خدمات هم شامل دي. خدمات کې د دوامداره لومڐني درملنې، د ښوونځیو په اړه د ماشومانو کلنیک، د پیرانو او داوومره ناروغیو (مزمن بیماریو) سره مخامخ د پښو درملنې، د تغذیې مشوره، ټولنیز کار او د رواني روغتیا مشوره، د روغتیا پوهنې ورکشاپونه، د کورنۍ ملاتړ، او راجع کول د عاید ملاتړ، د استوګنې، کور، کار او ژبې پروګرامونو ته شامل دي. دا مرکز په Thorncliffe Park Community Hub، 45 Overlea Blvd، دویمه طبقه کې موقعیت لري.",
+   "warnings": [
+    "numbers missing from translation: 2"
+   ]
+  },
+  "ba5f23dbc690": {
+   "model": "north-small-translate-09-2026",
+   "source": "Free EarlyON Child and Family Centre programs run by Family Day for parents and caregivers with young children, supporting early learning, child development and positive parent-child interaction through indoor, outdoor and virtual programming. The Flemingdon Park centre is at 150 Grenoble Drive (Don Mills/Overlea); the same page also lists a Grenoble EarlyON site.",
+   "text": "د کوچنيانو او کورنیو مرکزونو (EarlyON) د وړیا پروګرامونه چې د \"فیملي ڈی\" لخوا د کوچنيانو سره د والدین او پالونکي لپاره چلېږي، د لومړني زده کړې، د ماشوم پراختیا او د والدین او ماشومانو ترمنځ مثبت اړیکو ته مرسته کوي او د کورنۍ غونډې، بهرنی فعالیتونه او آنلاین پروګرامونه په کښې شامل دي. د \"فلیمنګدون پارک\" مرکز په 150 ګرینوبل ډرایو (دون ملز/اوورلیا) کې موقعيت لري؛ په ورته پاڼه کې د \"ګرینوبل\" ایلیون (EarlyON) مرکز هم لست شوی دی."
+  },
+  "baf809656cc3": {
+   "model": "north-small-translate-09-2026",
+   "source": "A group of neighbours working to create accessible, engaging, and inclusive public spaces for everyone to enjoy in Thorncliffe Park.",
+   "text": "د ګاونډیو یو ګروپ چې په تورن کلیف پارک کې د ټولو لپاره د لاسرسی وړ، خوند اخیستونکی او همغږۍ پر بنسټ جوړ شوي عامه ځایونه رامنځته کولو لپاره کار کوي."
+  },
+  "bbec136a0a48": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "اورګاډي څانګه"
+   },
+   "model": "claude-correction",
+   "note": "'train department' -> اطفایه; terms: fire station (medium), fire services",
+   "source": "Fire Station",
+   "text": "اطفایه (Fire Station)"
+  },
+  "bc208860cefc": {
+   "model": "north-small-translate-09-2026",
+   "source": "Toronto Hifz Academy at 45 Overlea Blvd, Unit 201, Toronto (M4H 1C3; 647-505-8622) is a Quranic school offering Full-Time and Part-Time Hifz (Quran memorization), Pre-Hifz, Hafiz review, Classical Arabic, and Sisters Quran classes. Classes run Mon–Thu 9am–1pm and 4pm–7pm, and Fri 9am–2pm and 4pm–7pm.",
+   "text": "تورونټو حفظ اکیډمي، په 45 اوورلیا بولوار، واحد 201، تورونټو کې (M4H 1C3; 647-505-8622) د قرآن یو ښوونځی دی چې د بشپړ وخت او نیمه وخت حفظ (قرآن زبانی)، د حفظ په مخه زده کړه، د حفظ تکرار، د کلاسیکي عربی او د خورانو لپاره د قرآن ټولګي وړاندې کوي. ټولګۍ د دوشنبې تر پنجشنبې پورې د سهار 9 بجې څخه د 1 بجې پورې او د 4 بجې څخه د 7 بجې پورې، او د جمعې د سهار 9 بجې څخه د 2 بجې پورې او د 4 بجې څخه د 7 بجې پورې ترسره کیږي."
+  },
+  "c04bdbce2472": {
+   "model": "north-small-translate-09-2026",
+   "source": "Leaside Park (near Millwood Road and Overlea Boulevard) provides public drinking water through 1 drinking fountain and 2 bottle filling stations. The 3.4-hectare park also has a lit ball diamond, six lit tennis courts, a multipurpose sports field, a children's playground, a community garden, washrooms and the Leaside Outdoor Pool.",
+   "text": "لیساید پارک (د مل ووډ سړک او اوورلیا بولوار ته نږدې) د څښتنۍ اوبو د یو اوبو چشمې (فانټین) او د 2 بوتل ډکولو مرکزونو له لارې عامه اوبې چمتو کوي. د 3.4 هیکټار مساحت لرونکی دا پارک د رڼا لرونکي بیسبال میدان، شپږ رڼا لرونکي ټینس کورټونه، یو ګڼډول ورزشي ساحه، د ماشومانو د لوبې ځای، د کلی باغ، تشنابونه او د لیساید بهرني سویمه (پول) هم لري.",
+   "warnings": [
+    "numbers missing from translation: 1"
+   ]
+  },
+  "c0b5b18276a1": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community food bank at 10 Gateway Blvd (basement), North York, providing free food and resources to families in need; now a registered charity. The site lists inconsistent hours (Mondays and Wednesdays 11:00am-3:30pm in one place, Mon-Thu 1:30-3:30pm in another) - call 416-422-4322 to confirm before visiting.",
+   "text": "د ټولنیز خوراکي توکو بانک په 10 Gateway Blvd (زیرزمین) کې، نورث یورک، چې د اړتیا لرونکو کورنیو لپاره وړیا خوراکي توکي او مرستې چمتو کوي؛ اوس یو رسمي خيراتي موسسه دی. په دې ویب پاڼه کې د کار وختونه یوځای نه دي لیکلي (د دوشنبې او چهارشنبې ورځې د 11:00 بجې نه 3:30 بجې پورې په یوه برخه کې، او د دوشنبې نه تر پنجشنبې پورې د 1:30 بجې نه 3:30 بجې په بله برخه کې) - د لیدلو دمخه د تایید لپاره د 416-422-4322 شمېرې ته تلیفون وکړئ."
+  },
+  "c6efc2c01c02": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "رومین کیتولیک پیریش د تورنکلیف پارک ډرایو په شمیره 16 کې موقعیت لري چې منظمه ماسونه، د مذہبي رسمونه او پیریش دندیې ترسره کوي. دا د کورنیو د ماشومانو او ځوانانو لپاره د داورغونو (Summer Camps) فرصتونه چې د تورونټو آرکډایوسیز په مختلفو پیریشونو کې شتون لري، سره یې تړي."
+   },
+   "model": "claude-correction",
+   "note": "garbled Mass/parish events/summer camps fixed; Urdu ہ removed; address and archdiocese in English; terms: church, children, youth; unsourced phrasing: summer camps = 'د اوړي کمپونه' + English",
+   "source": "Roman Catholic parish at 16 Thorncliffe Park Drive offering regular Mass, sacraments and parish events. Connects families to summer camp opportunities for children and youth offered across parishes of the Archdiocese of Toronto.",
+   "text": "د رومن کاتولیک کلیسا (Roman Catholic parish) په 16 Thorncliffe Park Drive کې موقعیت لري چې منظم عبادتونه (Mass)، مذهبي مراسم (sacraments) او د کلیسا پروګرامونه ترسره کوي. دا د کورنیو د ماشومانو او ځوانانو لپاره د اوړي کمپونو (summer camps) فرصتونه چې د Archdiocese of Toronto په بېلابېلو کلیساګانو کې شتون لري، سره یې تړي."
+  },
+  "cd0b92c5999a": {
+   "model": "north-small-translate-09-2026",
+   "source": "Faith-Based Organizations",
+   "text": "مذهبي سازمانونه"
+  },
+  "cd66ac6101f6": {
+   "model": "north-small-translate-09-2026",
+   "source": "Newcomer Supports",
+   "text": "د نوي راغلوالو ملاتړ"
+  },
+  "d2f11cfaf201": {
+   "model": "north-small-translate-09-2026",
+   "source": "Midwives Clinic",
+   "text": "د زچې د مرستې کلنیک"
+  },
+  "d33e215aebeb": {
+   "model": "north-small-translate-09-2026",
+   "source": "Food Security & Climate Resilience",
+   "text": "غذايي مصؤنیت او اقليمي مقاومت"
+  },
+  "d6ee993d9829": {
+   "model": "north-small-translate-09-2026",
+   "source": "Emergency food assistance for families in need is its core service during operating hours; no separate emergency program is listed.",
+   "text": "په اړتیا کې د کورنیو خاندانونو لپاره د بیړنیو خوراکي توکو مرسته د دې د فعالیت وختونو په جریان کې اصلي خدمت دی؛ هیڅ جلا بیړنی برنامه لیست شوی نه دی."
+  },
+  "d71124b428df": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "911 اضطراري ځواب: اور لګولو مخه ونیسي، نجات او طبی ابتدايي مرسته. په اضطراري حالت کې 911 ته ټیلیفون وکړئ."
+   },
+   "model": "claude-correction",
+   "note": "'prevent setting fires' -> fire suppression (اور وژل); اضطراري -> بیړنی; terms: emergency (situation), emergency services, firefighters (اور وژل root)",
+   "source": "911 emergency response: fire suppression, rescue, and medical first response. Call 911 in an emergency.",
+   "text": "911 بیړنی ځواب: د اور وژل، ژغورنه او لومړنۍ طبي مرسته. په بیړني حالت کې 911 ته زنګ ووهئ."
+  },
+  "d839bdfdb1e8": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د اړتیا مند کورنیو لپاره اضطراري خوراکي مرسته (هره دوو ورځو وروسته وړیا خوراکي توکي ویشل کیږي). د خوراکي همکارۍ (Food Collaborative) لپاره هیڅ ډول پناهګاه، سایټ (سرد ځای) یا بحران-کرښې خدمتونه تایید شوي ندي. د ښځو په وړاندې تاوتریخوالی نړۍ د خپل پروګرام له لارې بحرانونو په وړاندې مداخله او مشوره چمتو کوي؛ د تورونټو کور مالیه بانک ته لاسرسی ورکونکي مرکز او د اضطراري انرژۍ فنډ د تلیفون مرکز په توګه کار کوي (416-397-7368)."
+   },
+   "model": "claude-correction",
+   "note": "'every two days' -> twice a month; 'house tax bank' -> Rent Bank; removed inserted 'world'; garbled cooling centre fixed; terms: emergency, food assistance, twice a month (low), shelter, helpline/crisis line, violence against women, rent; unsourced phrasing: cooling space/centre = 'ایرکانډیشن لرونکی ځای' (air-conditioned place) + English; unsourced phrasing: crisis intervention = 'د بحران پر مهال مرسته' + English",
+   "source": "Emergency food support for families in need (free food distribution twice monthly). No shelter, cooling centre, or crisis-line services specific to the Food Collaborative were confirmed. Offers crisis intervention and counselling through its violence-against-women program; acts as a Toronto Rent Bank Access Centre and Emergency Energy Fund call centre (416-397-7368).",
+   "text": "د اړتیا لرونکو کورنیو لپاره بیړنۍ خوراکي مرسته (په میاشت کې دوه ځله وړیا خوراکي توکي ویشل کیږي). د خوراکي همکارۍ (Food Collaborative) لپاره هیڅ ډول سرپناه، ایرکانډیشن لرونکی ځای (cooling centre) یا د بحران ټیلیفوني کرښې خدمتونه تایید شوي ندي. د ښځو پر وړاندې تاوتریخوالي د خپل پروګرام له لارې د بحران پر مهال مرسته (crisis intervention) او مشوره چمتو کوي؛ د Toronto Rent Bank (د کرایې بانک) د لاسرسي مرکز او د Emergency Energy Fund (د انرژۍ بیړني فنډ) د تلیفون مرکز په توګه کار کوي (416-397-7368)."
+  },
+  "d9ee2590bc2e": {
+   "model": "north-small-translate-09-2026",
+   "source": "Operates a Safe Arrival Program (staff contact parents if a child is absent without notice); no emergency-specific services listed.",
+   "text": "د \"سیف ارایول\" (Safe Arrival) پروګرام په چلند کې لري (کارکوونکي د والدینو سره اړیکه نیسي که چیرې کومه زده کونکی پرته له خبرتیا له ډګره غایب وي)؛ هیڅ ډول اضطراري خدمتونه ذکر شوي ندي."
+  },
+  "dd60669c88d7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "ګاونډي بازار په 45 اوورلیا بولوار کې د پرچون دوکانونو، رستورانونو او روزانه خدماتو (خوراکي توکي، بانک، درملتون/لابراتوار، فټنس مرکز، حنا او لمبې تراشي مرکز) سره شتون لري. په دې ځای کې د ټولنیزو خدماتو د استوګنځیو په توګه د افغانې ښځو سازمان، دون ویلی ټولنیز قانوني خدمتونه او هیلث ایکسیس تورنکلیف پارک هم موقعیت لري."
+  },
+  "dddae32defdd": {
+   "model": "north-small-translate-09-2026",
+   "source": "Ismaili community centre and prayer hall (Jamatkhana) at 80 Overlea Boulevard in Thorncliffe Park. Hosts daily congregational prayers and community gatherings for Ismaili Muslims; the building includes a gymnasium, library, teaching spaces, offices and a food drop-off area.",
+   "text": "اسماعیلي ټولنیز مرکز او نمازخونه (جماعتخانه) په تورنکلیف پارک کې د 80 اوورلیا بولوار په پته کې موقعیت لري. د اسماعیلي مسلمانانو لپاره ورځني ګروهي نمازونه او ټولنیز غونډې په دې ځای کې ترسره کیږي؛ دې ودانۍ کې یو ورزشګاه، کتابتون، زده کړې لپاره ځایونه، دفترونه او د خوراکي توکو د تسلیمولو سیمه شامل دي."
+  },
+  "de5580650854": {
+   "model": "north-small-translate-09-2026",
+   "source": "The Fraser Mustard EarlyON Child and Family Centre (at Fraser Mustard Early Learning Academy, 82 Thorncliffe Park Dr, East York; 416-394-2104) is a free drop-in program for parents and caregivers with children from infants to 6 years, running Mon–Thu 8:45am–1:45pm. Children can play, explore, learn, and enjoy a nutritious snack while parents connect with other families and get information about community programs and services, supported by a qualified early-years professional; no pre-registration required.",
+   "text": "فریزر مسترد \"ارلی آن\" د ماشومانو او کورنیو مرکز (په فریزر مسترد د لومړني زده کړې اکاډیمي کې، 82 تورنکلیف پارک ډرایو، ایسټ یورک؛ 416-394-2104) د ماشومانو له زیږیدلو څخه تر 6 کلنې پورې د والدینو او ساتونکي لپاره یو وړیا پروګرام دی چې کولای شي په هر وخت راشي؛ دا پروګرام له دوشنبه تر پنجشنبې پورې د سهار 8:45 څخه د ماسپښین 1:45 پورې فعال دی. ماشومان کولای شي لوبه وکړي، ځلوړي، زده کړې وکړي او د ګټور خواړو څخه خوند واخلوي، پداسې حال کې چې والدین د نورو کورنیو سره اړیکې جوړوي او د ټولنیزو پروګرامونو او خدمتونو په اړه معلومات ترلاسه کوي؛ د دې کار د لومړني زده کړې مسلکي کارپوه یوې چاڼګرې په توګه مرسته کوي او د مخکې د نوم لیکنې اړتیا نشته."
+  },
+  "e04d44a05f5d": {
+   "model": "north-small-translate-09-2026",
+   "source": "Multi-service youth agency (operating since 1971) providing day treatment, job training, and individualized care planning for youth facing challenges at school, at home and in life, including child welfare and youth justice supports.",
+   "text": "د ځوانانو د ګڼډوله خدمتونو اداره (له 1971 کال راهیسې فعاله) چې د ورځنی درملنې، د کاري روزنې او د هر ځوان لپاره د ځانګړي پاملرنې پلانونو خدمات وړاندې کوي؛ دا خدمات د هغو ځوانانو لپاره دي چې په ښوونځي، کور او ژوند کې ستونزې سره مخ دي، په شمول د ماشومانو د پاملرنې او د ځوانانو د عدلي حقوقو ملاتړ."
+  },
+  "e0aa03a9fd6a": {
+   "model": "north-small-translate-09-2026",
+   "source": "Japanese cultural centre at 6 Sakura Way, open to everyone, offering cultural classes (ikebana flower arranging, chado tea ceremony, shodo calligraphy, sumi-e painting, taiko drumming, koto), martial arts (judo, karate, kendo, aikido, kyudo, iaido, naginata, jodo), Japanese language classes for adults, clubs (karaoke, hula, dance, seniors' club, ping pong), seasonal festivals, the Toronto Japanese Film Festival, exhibitions, and the Moriyama Nikkei Heritage Centre.",
+   "text": "جاپاني فرهنګي مرکز په 6 Sakura Way کې موقعیت لري، د ټولو لپاره خلاص دی او د فرهنګي روزنې کورسونه (ایکبانا د ګلونو ترتیب، چادو چای مراسم، شودو خوشنویسي، سومی-ای رسامي، تایکو طبل نوازي، کوتو)، د جنډي هنرونه (جودو، کاراته، کندو، آیکیدو، کیودو، ایایدو، ناګیناتا، جودو)، د ګډونوالو لپاره د جاپاني ژبه روزنې، کلبونه (کاراوکه، هولا، رقص، د پیرانو کلب، پینګ پونګ)، موسمي جشنونه، د تورونټو جاپاني فلم فیسټیوال، نندارتونونه او د موریاما نیککای میراث مرکز وړاندې کوي."
+  },
+  "e5edc4998f24": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د ښار لخوا اداره شوی ټولنیز/تفریحی مرکز د 29 سینټ ډینس ډرایو کې موقعیت لري چې د اندرونی سوځنګر (تیریدو زده کړې او تفریحی تیریدل)، د فټنس اسانتیاوو او د کتابتونو یو شاخه لري او د نوم لیکنې تفریحی پروګرامونه وړاندې کوي."
+   },
+   "model": "claude-correction",
+   "note": "'indoor burner' -> indoor pool; 'passing' -> swimming lessons/leisure swims; address in English; terms: swimming, library; unsourced phrasing: pool = 'لامبو حوض' + English",
+   "source": "City-run community/recreation centre at 29 St Dennis Dr with an indoor pool (swim lessons, leisure swims), fitness facilities, and a library branch, offering registered recreation programs.",
+   "text": "د ښار لخوا اداره شوی ټولنیز/تفریحی مرکز په 29 St Dennis Dr کې موقعیت لري چې د دننه لامبو حوض (indoor pool) (د لامبو زده کړه او تفریحي لامبو وهل)، د فټنس اسانتیاوو او د کتابتونو یو شاخه لري او د نوم لیکنې تفریحی پروګرامونه وړاندې کوي."
+  },
+  "e6b5bb4495c9": {
+   "model": "north-small-translate-09-2026",
+   "source": "TNO's free Employment Ontario program at the Thorncliffe Park Community Hub (45 Overlea Blvd, Unit 200), open to all Ontario residents. Offers career exploration, training-needs assessment, job search and retention skills, hiring events, information sessions, workshops and one-on-one career support, plus free HR, onboarding and job-posting help for employers.",
+   "text": "د TNO وړیا د کار او کاري فرصتونو پروګرام (Employment Ontario) په Thorncliffe Park Community Hub کې (45 Overlea Blvd, Unit 200) د ټولو د انتاریو اوسیدونکو لپاره خلاص دی. د مسلکونو کتنه، روزنې اړتیاوې ارزونه، د کار پلټنه او د کار ساتلو مهارتونه، د بڼدلو ورځې، معلوماتي غونډې، ورکشاپونه او انفرادي مسلکي مرستې وړاندې کوي؛ سربېره پر دې، د کارګمارونکو لپاره د منابعو مدیریت (HR)، د کارمندانو د پیل او د خالی ګوړۍ اعلانونو د خپرولو کې وړیا مرسته هم شامله ده."
+  },
+  "e76c5f811246": {
+   "model": "north-small-translate-09-2026",
+   "source": "Legal & Government Services",
+   "text": "حقوقي او دولتي خدمتونه"
+  },
+  "e84d3a5ba49c": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د لیساید تاورز (Leaside Towers) کوربه وګړو ټولنه پاڼه د 85 او 95 تورن کلف پارک ډرایو (Thorncliffe Park Drive) لپاره د اوسیدونکو د اړیکو لارښود په توګه کار کوي: د ملکیت مدیر (Morguard) په شمیره 416-421-8109 او د ودانۍ محافظین (ودانۍ 85: 647-462-0404؛ ودانۍ 95: 416-906-7970)."
+   },
+   "model": "claude-correction",
+   "note": "'host people's association' -> tenants association; terms: tenant",
+   "source": "The Leaside Towers Tenants Association page for 85 & 95 Thorncliffe Park Drive functions as a contact directory for residents: property manager (Morguard) at 416-421-8109 and building security guards (Building 85: 647-462-0404; Building 95: 416-906-7970).",
+   "text": "د لیساید تاورز (Leaside Towers) د کرایه دارانو ټولنې (Tenants Association) پاڼه د 85 او 95 Thorncliffe Park Drive لپاره د اوسیدونکو د اړیکو لارښود په توګه کار کوي: د ملکیت مدیر (Morguard) په شمیره 416-421-8109 او د ودانۍ محافظین (ودانۍ 85: 647-462-0404؛ ودانۍ 95: 416-906-7970)."
+  },
+  "e8558cfa2f76": {
+   "model": "north-small-translate-09-2026",
+   "source": "Community network promoting cycling as empowerment for women of all backgrounds, especially newcomers to Canada whose culture prohibited them from learning to ride. Brings together new and experienced cyclists through group rides, education, advocacy and events, and connects donated bikes with women in need through BikeMatchWCN.",
+   "text": "د ټولنیز شبکې له خوا د دوچرخه سوارۍ ته وده ورکول د ټولو ډول پس منظر لرونکو ښځو، په ځانګړې توګه د کاناډا ته تازه رسیدونکو د پیاوړتیا لپاره یو وسیله په توګه وړاندې کېږي؛ هغه ښځې چې د دوی فرهنګ دوی ته د دوچرخه سوارۍ زده کړې او کارولو څخه منع کوي. دا شبکه د ډلو سوارۍ، روزنې، د حقونو دفاع او مختلفې پروګرامونو له لارې نوي او تجربه لرونکي دوچرخه سواران یوځای کوي او د BikeMatchWCN له لارې د مرستې په توګه ورکړل شوي دوچرخې دې اړتیا لرونکو ښځو ته ورسوي."
+  },
+  "e8f0c19cdab7": {
+   "model": "north-small-translate-09-2026",
+   "source": "Macedonian Orthodox cathedral that has served Toronto's Macedonian community for over 60 years. Holds regular worship services and religious holidays, and hosts educational, cultural and charitable organizations that preserve and promote Macedonian heritage.",
+   "text": "د مقدونیا ارتدوکس کیتیدراګلزه چې د 60 کلونو څخه زیات عرصه په تورونټو کې د مقدونیا د ټولنې لپاره د عبادت او مذهبي مراسمو برپا کول او د تعلیمي، فرهنګي او خيراتي سازمانونو لپاره ځای برابر کوي؛ دا سازمانونه د مقدونیا میراث ساتي او خپلوايي کوي."
+  },
+  "ea49f2274ddf": {
+   "model": "north-small-translate-09-2026",
+   "source": "Catholic parish in Don Mills (150 Gateway Blvd) offering daily and weekly Mass, sacraments (baptism, reconciliation, Eucharist, confirmation, marriage, anointing of the sick, funerals), ministries, youth and young adult ministry, volunteer opportunities, and parish community events.",
+   "text": "د کیتولیک کلیسا په ډون میلز کې (150 Gateway Blvd) چې د هره ورځې او اونۍ ماسونه، د مذہبي رسمونه (تعمید، توبه، ایوکارست، تایید، واده، ناروغانو ته د تیل د مالیدل، جنازې)، د کلیسا خدمات، د ځوانانو او نویو بالغینو خدمتونه، رضاکارۍ فرصتونه او د کلیسا ټولنیزې پروګرامونه وړاندې کوي."
+  },
+  "ebed9e902f38": {
+   "model": "north-small-translate-09-2026",
+   "source": "A resident-led group bringing families together across diverse backgrounds through gatherings, cultural celebrations, education, and volunteer initiatives. Aims to combat social isolation and loneliness and supports children's education through active involvement in the Parent Councils of Gateway Public School, Valley Park Middle School, and Marc Garneau Collegiate Institute.",
+   "text": "یو د اوسیدونکو په قیادت یوګروپ چې د مختلفو پس منظرونو کورنیو ترمنځ د غونډو، فرهنګي جشنونو، زده کړې او رضاکارانه پروژو له لارې یوځای راټولوي. د دې موخه د ټولنیز تنهایی او جلاوړۍ مخه ونیسي او د کوچنيانو زده کړې سره مرسته کوي؛ د دې کار په ترسره کولو کې د Gateway Public School، Valley Park Middle School او Marc Garneau Collegiate Institute په والدینو شوراګانو کې فعاله برخه اخیستنه شامله ده."
+  },
+  "ec5b5ffd97a8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Emergency maintenance requests (nights, weekends & holidays): 416-207-8253. Building security contacts are also listed above for urgent building issues.",
+   "text": "د بیړنیو ترمیماتو غوښتنې (شپې، د اونۍ پایې او رخصتۍ ورځې): 416-207-8253. د ودانۍ امنیت مسؤلینو اړیکې هم پورته لست شوي دي ترڅو د ودانۍ د فوری ستونزو په اړه سره یې اړیکه ونیسئ."
+  },
+  "ef9e53e990a8": {
+   "model": "north-small-translate-09-2026",
+   "source": "Local congregation of The Church of Jesus Christ of Latter-day Saints at 24 Ferrand Drive, North York. Sunday worship includes a sacrament meeting plus age-group classes for everyone from 18 months old and up; all are welcome to attend.",
+   "text": "د عیسی مسیح د وروستی ورځونو مقدسینو کلیسا (The Church of Jesus Christ of Latter-day Saints) محلي اجتماع په 24 فراند ډرایو، نورث یورک کې موقعیت لري. د اتوار د عبادت پروګرام د قرباني مراسمو غونډې او د عمر پوړو کتګوریو ته وړاندې شوي درسونه په شمول دي چې د 18 میاشتو څخه پورې او له هغه وروسته د ټولو لپاره دي؛ ټول د ګډون لپاره مدعو دي."
+  },
+  "f0173151ade9": {
+   "model": "north-small-translate-09-2026",
+   "source": "Registered non-profit supporting newcomer families, refugees, asylum seekers and people moving from shelters into permanent housing. Distributes free household essentials (seasonal clothing, footwear, kitchenware, bedding, bath accessories and select furniture) and runs newcomer workshops on parenting, navigating local systems and community resources.",
+   "text": "د نوم لیکنې شوي غیرانتفاعي سازمان چې د نوي راغلې کورنیو، پاېښتونکو، پناه غوښتونکو او هغه کسانو سره مرسته کوي چې د پناهځایونو څخه د دايمي کورونو په لور حرکت کوي. دا سازمان وړیا اړینې کورني توکي (موسمي جامې، بوټې، پخلنځیي وسايل، بسترۍ، حمام وسايل او ځینې فرنيچر) ویشي او د نوي راغلې کسانو لپاره ورکشاپونه په دغو موضوعاتو کې چې د ماشومانو ساتنه، د محلي سیسټمونو او د ټولنیز سرچینو په کارولو کې د لارښوونې په برخه کې ترسره کوي."
+  },
+  "f0b67cd7ba77": {
+   "model": "north-small-translate-09-2026",
+   "source": "Leonard Linton Park at 135 Vanderhoof Ave; the City's facility listing identifies a water bottle filling station as an on-site amenity. Full amenity list could not be retrieved.",
+   "text": "لئونارډ لینټن پارک په 135 وینډرهوف ایونیو کې؛ د ښار د تاسیساتو لیست کې د اوبو بوتل ډکولو مرکز د ساحې د اسانتیاوو په توګه ذکر شوی. د اسانتیاوو بشپړ لیست ترلاسه نشو کړی."
+  },
+  "f2e70e53d615": {
+   "model": "north-small-translate-09-2026",
+   "source": "Provides emergency shelter services, including a 24-hour respite centre (351 Lake Shore Blvd East), plus harm reduction supports for people in shelters and housing programs.",
+   "text": "د بیړنیو پناهګاهونو خدمات چمتو کوي، په شمول د 24 ساعته استراحت مرکز (351 Lake Shore Blvd East)، او همدارنګه د زیانونو کمولو ملاتړ د هغو کسانو لپاره چې په پناهګاهونو او کورونو پروګرامونو کې دي."
+  },
+  "f53b3121ceff": {
+   "model": "north-small-translate-09-2026",
+   "source": "Call 911 for emergencies. 55 Division can be reached at 416-808-5500.",
+   "text": "د بیړنیو حالتونو لپاره د 911 سره اړیکه ونیسئ. د 55 ډویژن سره د 416-808-5500 په نمبر کې اړیکه ونیسئ."
+  },
+  "f630f0f0b145": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "دا زاینې د ماماګانې کارکونکي د 24 ساعتې د نښې په حالت کې د حامله گی او زاینې د فوری ستونزو لپاره چمتو دي؛ هیڅ جلا اضطراري پروګرام لیست نه شوی."
+   },
+   "model": "claude-correction",
+   "note": "garbled first clause rewritten so midwives are on call 24/7; Dari حامله گی removed; terms: midwife, pregnancy, maternity care, 24/7, emergency",
+   "source": "Midwives are on call 24/7 for urgent pregnancy and labour concerns; no separate emergency program is listed.",
+   "text": "قابلې د امیندوارۍ او زېږون د بیړنیو اندېښنو لپاره د ورځې 24 ساعته، په اونۍ کې اووه ورځې د تلیفون له لارې چمتو دي؛ هیڅ جلا بیړنی پروګرام نه دی لیست شوی."
+  },
+  "fa4e99c2c2ea": {
+   "model": "north-small-translate-09-2026",
+   "source": "Government Documentation",
+   "text": "حکومتي اسناد"
+  },
+  "fd53492ca165": {
+   "model": "north-small-translate-09-2026",
+   "source": "Employment & Skills Training",
+   "text": "د کار او روزگار او مهارتونو روزنه"
+  },
+  "ff411a340bcb": {
+   "correctedFrom": {
+    "model": "north-small-translate-09-2026",
+    "text": "د خلکو په کچه یو غیرانتفاعي سازمان (چې په 2018 کال کې د اتیزم سره مخ شوي ماشومانو د والدینو لخوا تاسیس شو او په 2020 کال کې رسمي ثبت شول) چې په خاورۍورک (East York) کې د اتیزم او نور عصبي-دماغي اختلالات سره مخ شوي ماشومان او ځوانانو ته وړیا، د ټولنې پر بنسټ او د کورنۍ په پام کې نیولو سره خدمات چمتو کوي. دغه پروګرامونه د ځوانانو د \"Roots\" پروګرامونه شامل دي چې له دوشنبه تر شنبې پورې ترسره کیږي، د اونۍ پای د آرامۍ او استراحت لپاره خدمات، د والدینو میاشتنی ملګري ملاتړ غونډې، د ښوونځي وروسته د کورکاژ (دموخه) سره مرسته، وړیا او شامله د اوړي او مارچ رخصتي په ورځو ترسره شوې کمپونه، د ښوونځي بیا پیل په برخه کې پروګرامونه، زده کړې ورکشاپونه او د اتیزم/ناڅاپي حالتونو په اړه د پوهاوی کمپاینونه دي."
+   },
+   "model": "claude-correction",
+   "note": "'sudden conditions' -> disability; garbled East York and homework fixed; terms: disability, homework, after-school programs",
+   "source": "Grassroots non-profit (founded 2018 by parents of children with autism, incorporated 2020) providing free, community-based, family-oriented services for children and youth with autism and other neurodevelopmental disorders in East York. Programs include Roots youth programs running Monday to Saturday, weekend respite, monthly parent support meetings, after-school homework support, free inclusive summer and March break camps, back-to-school events, educational workshops and autism/disability awareness campaigns.",
+   "text": "د خلکو په کچه یو غیرانتفاعي سازمان (چې په 2018 کال کې د اتیزم سره مخ شوي ماشومانو د والدینو لخوا تاسیس شو او په 2020 کال کې رسمي ثبت شول) چې په East York کې د اتیزم او نور عصبي-دماغي اختلالات سره مخ شوي ماشومان او ځوانانو ته وړیا، د ټولنې پر بنسټ او د کورنۍ په پام کې نیولو سره خدمات چمتو کوي. دغه پروګرامونه د ځوانانو د \"Roots\" پروګرامونه شامل دي چې له دوشنبه تر شنبې پورې ترسره کیږي، د اونۍ پای د آرامۍ او استراحت لپاره خدمات، د والدینو میاشتنی ملګري ملاتړ غونډې، د ښوونځي وروسته د کورنۍ دندې (homework) سره مرسته، وړیا او شامله د اوړي او مارچ رخصتي په ورځو ترسره شوې کمپونه، د ښوونځي بیا پیل په برخه کې پروګرامونه، زده کړې ورکشاپونه او د اتیزم/معلولیت په اړه د پوهاوی کمپاینونه دي."
+  },
+  "fff820dc79f3": {
+   "model": "north-small-translate-09-2026",
+   "source": "Childminding & EarlyON",
+   "text": "د ماشومانو ساتنه او EarlyON"
+  }
+ },
+ "updated": "2026-10-01T04:36:18+00:00"
+}

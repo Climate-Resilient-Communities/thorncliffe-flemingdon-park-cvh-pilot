@@ -1,0 +1,159 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Design tokens and foundations</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-sheetpage" lang="en" dir="ltr" style="width:1440px;height:3960px;overflow:hidden">
+  <div class="cvh-stack" style="--gap:8px">
+    <p class="cvh-eyebrow">Component library · phase 1</p>
+    <h1 style="font-size:40px;line-height:1.1;margin:0;color:var(--ink)">Design tokens and foundations</h1>
+    <p class="cvh-spec__note" style="font-size:17px">One token set in cvh/cvh.css. Brand tokens come from the Community Virtual Resilience Hub design system; the dark text variants, the reserved status set and type minimums come from the brief, Section 9. Brand colour and status colour never mix.</p>
+  </div>
+
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Brand</span><h2 class="cvh-spec__title">Brand palette and permitted use</h2></div>
+    <p class="cvh-spec__note">Hub blue dark is the primary interactive colour (buttons, links, "Get text alerts"). Orange, green and yellow never carry body text and never sit on or next to a status indicator.</p>
+    <div style="display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:16px">
+      <sc-for list="{{brand}}" as="c" hint-placeholder-count="12">
+        <div class="cvh-swatch"><div class="cvh-swatch__chip" style="background: {{c.hex}}"></div><strong>{{c.name}}</strong><span style="font-family:ui-monospace,Menlo,monospace">{{c.hex}}</span><span class="cvh-muted">{{c.use}}</span></div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Signals</span><h2 class="cvh-spec__title">Three signal sets, kept apart</h2></div>
+    <p class="cvh-spec__note">1. Incident status (reserved, 6.5:1 to 7.9:1). 2. Statement types, X-06. 3. Space status, X-09. Plus two markers that are neither: the exercise banner (X-10) and the Prototype marker. The right column is the same row in greyscale.</p>
+    <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px">
+      <div class="cvh-stack" style="--gap:18px">
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">1 · Incident status</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{statuses}}" as="st"><dc-import name="C_IncidentStatus" status="{{st}}" embedded="{{true}}" hint-size="160px,32px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">2 · Statement types</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{stmts}}" as="st"><dc-import name="X06_Statement" type="{{st}}" variant="chip" embedded="{{true}}" hint-size="180px,32px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">3 · Space status</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{spaces}}" as="st"><dc-import name="X09_SpaceStatus" status="{{st}}" purpose="cooling" embedded="{{true}}" hint-size="200px,60px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">Markers · exercise and prototype</span><dc-import name="X10_Exercise" embedded="{{true}}" hint-size="100%,56px"></dc-import><dc-import name="C_ProtoBar" screen-id="R-03" wide="{{true}}" embedded="{{true}}" hint-size="100%,28px"></dc-import></div>
+      </div>
+      <div class="cvh-stack" style="--gap:18px;filter:grayscale(1)" aria-hidden="true">
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">Greyscale check</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{statuses}}" as="st"><dc-import name="C_IncidentStatus" status="{{st}}" embedded="{{true}}" hint-size="160px,32px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">Greyscale check</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{stmts}}" as="st"><dc-import name="X06_Statement" type="{{st}}" variant="chip" embedded="{{true}}" hint-size="180px,32px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">Greyscale check</span><div class="cvh-row cvh-wrap" style="--gap:10px"><sc-for list="{{spaces}}" as="st"><dc-import name="X09_SpaceStatus" status="{{st}}" purpose="cooling" embedded="{{true}}" hint-size="200px,60px"></dc-import></sc-for></div></div>
+        <div class="cvh-stack" style="--gap:8px"><span class="cvh-spec__state">Greyscale check</span><dc-import name="X10_Exercise" embedded="{{true}}" hint-size="100%,56px"></dc-import><dc-import name="C_ProtoBar" screen-id="R-03" wide="{{true}}" embedded="{{true}}" hint-size="100%,28px"></dc-import></div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px">
+      <sc-for list="{{signalHex}}" as="c" hint-placeholder-count="12">
+        <div class="cvh-swatch"><div class="cvh-swatch__chip" style="height:32px;background: {{c.hex}}"></div><span><strong>{{c.name}}</strong> <span style="font-family:ui-monospace,Menlo,monospace">{{c.hex}}</span></span></div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Type</span><h2 class="cvh-spec__title">Type scale: Public Sans, with Noto for the other eight scripts</h2></div>
+    <p class="cvh-spec__note">Minimums from the brief: resident body 18, alert body 20, bigger-text mode 22, operator 16. Arabic script and the Indic scripts get more line height. Urdu is set in Naskh for now; Nastaliq still has to be tested with Urdu readers.</p>
+    <div style="display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px">
+      <sc-for list="{{scales}}" as="sc" hint-placeholder-count="4">
+        <div class="cvh-frame {{sc.cls}}" style="display:flex;flex-direction:column;gap:10px">
+          <span class="cvh-spec__state">{{sc.name}}</span>
+          <span class="cvh-h1">Power is out</span>
+          <span class="cvh-alert__unknown">Cause not known yet</span>
+          <span class="cvh-body">Keep your fridge and freezer closed.</span>
+          <span class="cvh-caption cvh-muted">Posted 3 hours 20 minutes ago</span>
+        </div>
+      </sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:12px">
+      <sc-for list="{{scripts}}" as="l" hint-placeholder-count="15">
+        <div class="cvh-frame" lang="{{l.bcp}}" dir="{{l.dir}}" style="display:flex;flex-direction:column;gap:4px;padding:12px">
+          <span style="font-size:22px;font-weight:700">{{l.native}}</span>
+          <span class="cvh-body">{{l.sample}}</span>
+          <span class="cvh-caption cvh-muted" lang="en" dir="ltr">{{l.english}} · {{l.script}}</span>
+        </div>
+      </sc-for>
+    </div>
+  </section>
+
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Controls</span><h2 class="cvh-spec__title">Buttons, fields and chips in every state</h2></div>
+    <p class="cvh-spec__note">44 by 44 minimum (56 in bigger-text mode), 8px between targets, a 2px focus ring on everything, and a disabled state that says what is missing.</p>
+    <div style="display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:20px">
+      <div class="cvh-stack"><span class="cvh-spec__state">Primary</span><button type="button" class="cvh-btn cvh-btn--primary">Get text alerts</button><button type="button" class="cvh-btn cvh-btn--primary is-focus">Focus</button><button type="button" class="cvh-btn cvh-btn--primary is-pressed" style="transform:translateY(1px)">Pressed</button><div><button type="button" class="cvh-btn cvh-btn--primary" disabled="{{true}}">Publish</button><p class="cvh-disabled-reason">Choose a disruption type to publish.</p></div></div>
+      <div class="cvh-stack"><span class="cvh-spec__state">Secondary and quiet</span><button type="button" class="cvh-btn cvh-btn--secondary">Skip</button><button type="button" class="cvh-btn cvh-btn--secondary is-focus">Focus</button><button type="button" class="cvh-btn cvh-btn--quiet">Show the version everyone gets</button><button type="button" class="cvh-dest"><span class="cvh-ico cvh-ico--search" aria-hidden="true"></span>Find help</button></div>
+      <div class="cvh-stack">
+        <span class="cvh-spec__state">Field (design system Field)</span>
+        <div class="vrh-field" style="max-width:none"><label class="vrh-field__label cvh-strong" for="f1">Phone number <span class="cvh-muted" style="font-weight:400">Required</span></label><input id="f1" class="vrh-field__input" value="(416) 555-0123" style="font-size:18px"><p class="vrh-field__help">Any way you write it is fine.</p></div>
+        <div class="vrh-field vrh-field--error" style="max-width:none"><label class="vrh-field__label cvh-strong" for="f2">Phone number</label><input id="f2" class="vrh-field__input" value="416 555 01" style="font-size:18px"><p class="vrh-field__error">Error: this number needs 10 digits, like 416 555 0123.</p></div>
+      </div>
+      <div class="cvh-stack"><span class="cvh-spec__state">Chips and tags</span><div class="cvh-row cvh-wrap"><span class="cvh-chip">Open now</span><span class="cvh-chip cvh-chip--on">Free</span></div><div class="cvh-row cvh-wrap"><span class="cvh-tag">Grassroots group</span><span class="cvh-tag cvh-tag--illustrative">Illustrative</span><span class="cvh-tag cvh-tag--ai">AI-generated</span></div></div>
+    </div>
+  </section>
+
+  <section class="cvh-spec">
+    <div class="cvh-spec__head"><span class="cvh-spec__id">Space</span><h2 class="cvh-spec__title">Spacing, radii and icons</h2></div>
+    <p class="cvh-spec__note">Spacing from the design system (4, 10, 17, 24, 29, 48, 67). Radius 16 on everything you touch. Icons are drawn for this prototype as CSS masks, so each takes the text colour; direction icons mirror in right-to-left, media controls do not. The faith icon is neutral: no single faith's symbol.</p>
+    <div class="cvh-row cvh-wrap" style="--gap:24px;align-items:flex-end">
+      <sc-for list="{{spacing}}" as="sp"><div class="cvh-stack" style="--gap:6px;align-items:center"><div style="width: {{sp.v}}px;height: {{sp.v}}px;background:var(--hub-blue-dark);border-radius:2px"></div><span class="cvh-spec__state">{{sp.n}} · {{sp.v}}</span></div></sc-for>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(12,minmax(0,1fr));gap:12px">
+      <sc-for list="{{icons}}" as="i" hint-placeholder-count="48">
+        <div class="cvh-stack" style="--gap:4px;align-items:center;padding:8px 2px;border:1px solid var(--border);border-radius:10px;color:var(--ink)"><span class="cvh-ico cvh-ico--{{i}}" aria-hidden="true"></span><span style="font-size:11px;font-family:ui-monospace,Menlo,monospace;color:var(--text-muted)">{{i}}</span></div>
+      </sc-for>
+    </div>
+  </section>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1440,"height":3960}}'>
+class Component extends DCLogic {
+  renderVals() {
+    var C = window.CVH, D = C.data();
+    var samples = { ur: 'بجلی بند ہے', ps: 'برېښنا نشته', tl: 'Walang kuryente', prs: 'برق قطع است', gu: 'વીજળી ગઈ છે', ta: 'மின்சாரம் இல்லை', el: 'Δεν υπάρχει ρεύμα',
+      sk: 'Nie je elektrina', bn: 'বিদ্যুৎ নেই', hi: 'बिजली नहीं है', pa: 'ਬਿਜਲੀ ਨਹੀਂ ਹੈ', zh: '停电了', es: 'No hay luz', fr: 'Il n\'y a plus de courant', en: 'Power is out' };
+    return {
+      brand: [
+        { name: 'Hub orange', hex: '#f15a28', use: 'Heat topic, large numerals. Never text below 36px.' }, { name: 'Hub blue', hex: '#1a75bb', use: 'Flood topic; links on light ground.' },
+        { name: 'Hub yellow', hex: '#fcb041', use: 'Accent bar and decorative fills only.' }, { name: 'Hub green', hex: '#01a25e', use: 'Food topic; the Hub mark. Never text.' },
+        { name: 'Ink (navy)', hex: '#002a45', use: 'Headings, icons, verified marker.' }, { name: 'Text', hex: '#1a1a1a', use: 'Body copy.' },
+        { name: 'Hub blue dark', hex: '#155c94', use: 'Primary interactive colour, 7:1.' }, { name: 'Hub green dark', hex: '#01663b', use: 'When green must carry text.' },
+        { name: 'Hub orange dark', hex: '#a3300b', use: 'When orange must carry text.' }, { name: 'Hub amber dark', hex: '#814d02', use: 'When amber must carry text.' },
+        { name: 'Surface', hex: '#fafafa', use: 'Page ground.' }, { name: 'Sprout green', hex: '#00865f', use: 'Built-by credit only.' }],
+      statuses: ['active', 'progress', 'resolved', 'unknown'], stmts: ['doing', 'canTake', 'cannotCover', 'need'], spaces: ['open', 'full', 'closed', 'unconfirmed'],
+      signalHex: [
+        { name: 'Active problem', hex: '#b3261e' }, { name: 'Work in progress', hex: '#7a4b00' }, { name: 'Resolved', hex: '#1b5e20' }, { name: 'Not known', hex: '#4a5563' },
+        { name: 'Doing / can take', hex: '#1f3a5f' }, { name: 'Cannot cover', hex: '#3f4a56' }, { name: 'Need', hex: '#5b3c88' }, { name: 'Space open', hex: '#0b5563' },
+        { name: 'Space full', hex: '#463a6e' }, { name: 'Space closed', hex: '#3f4a56' }, { name: 'Exercise', hex: '#3b2766' }, { name: 'Help box tint', hex: '#e7f0f8' }],
+      scales: [{ name: 'Resident: body 18, alert 20', cls: '' }, { name: 'Bigger text, fewer things: 22', cls: 'cvh-basic' }, { name: 'Operator and partner: 16', cls: 'cvh-op' }],
+      scripts: (D.languages || []).map(function (l) { return { native: l.native, english: l.english, script: l.script, bcp: l.bcp47, dir: l.dir, sample: samples[l.code] }; }),
+      spacing: [{ n: 'space-1', v: 4 }, { n: 'space-2', v: 10 }, { n: 'space-3', v: 17 }, { n: 'space-4', v: 24 }, { n: 'space-5', v: 29 }, { n: 'space-6', v: 48 }, { n: 'space-7', v: 67 }],
+      icons: window.CVH_ICONS || [] };
+  }
+}
+</script>
+</body>
+</html>

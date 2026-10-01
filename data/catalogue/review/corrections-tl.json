@@ -1,0 +1,114 @@
+{
+ "language": "tl",
+ "corrector": "Claude subagent, 2026-10-01 (not native; needs native review)",
+ "corrections": [
+  {
+   "id": "1a3c95cbc0e2",
+   "source": "Free legal advice and representation for low-income people in the catchment area (Lake Ontario to York Mills/401, Yonge/Don River to Victoria Park Ave), in four areas: housing law (eviction prevention, illegal lockouts, tenant rights), employment law (employment standards, wrongful dismissal, severance, EI), immigration law (PR applications, work permits, citizenship) and income supports (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); also public legal education and limited document services (affidavits, notarial true copies). Intake Line: 416-441-1764 ext. 1, Mon–Thu 9:00 AM–12:30 PM (voicemail with 1–3 business day callback; no walk-ins; in-person intake by booked appointment Mon/Wed 1:30–4:30 PM).",
+   "text": "Libreng payong legal at representasyon para sa mga taong may mababang kita sa saklaw ng serbisyo (mula Lake Ontario hanggang York Mills/401, mula Yonge/Don River hanggang Victoria Park Ave), sa apat na larangan: batas sa pabahay (pag-iwas sa pagpapaalis, ilegal na lockout (ilegal na pagla-lock out ng landlord sa nangungupahan), mga karapatan ng nangungupahan), batas sa trabaho (mga pamantayan sa trabaho, hindi makatwirang pagkasisante, separation pay, EI), batas sa imigrasyon (mga aplikasyon para sa PR, work permit, pagkamamamayan) at mga tulong pinansyal (ODSP, OW, CPP, OAS, GIS, Canada Disability Benefit); mayroon ding pampublikong edukasyon sa batas at limitadong serbisyo sa dokumento (affidavit, notarial true copy). Intake Line: 416-441-1764 ext. 1, Lunes–Huwebes 9:00 AM–12:30 PM (iiwan ng mensahe sa voicemail at tatawagan pabalik sa loob ng 1–3 araw ng trabaho; walang walk-in; personal na intake ay sa pamamagitan ng nakatakdang appointment tuwing Lunes/Miyerkules 1:30–4:30 PM).",
+   "note": "lockouts: 'locking inside the house' -> landlord illegally locking tenant out."
+  },
+  {
+   "id": "235e1072c4f3",
+   "source": "City community centre at 150 Grenoble Drive in Flemingdon Park with the Playground Paradise indoor playground (drop-in play for children up to age 12, $3 per child, socks required, parent or guardian must accompany). Also has indoor and outdoor playgrounds, a picnic area, splash pad, community garden, multipurpose sports fields, baseball diamonds, and ball hockey and basketball courts. The same address hosts Flemingdon Park EarlyON, offering free drop-in early-childhood and family programs.",
+   "text": "Sentro ng komunidad sa lungsod sa 150 Grenoble Drive sa Flemingdon Park, kung saan matatagpuan ang Playground Paradise na isang indoor playground (drop-in na paglalaro, walang appointment, para sa mga batang hanggang 12 taong gulang, $3 bawat bata, kailangang may medyas, dapat may kasamang magulang o tagapangalaga). Mayroon din itong mga indoor at outdoor playground, lugar para sa piknik, splash pad, community garden, mga multipurpose sports field, baseball diamond, at mga court para sa ball hockey at basketball. Sa parehong address matatagpuan ang Flemingdon Park EarlyON, na nag-aalok ng mga libreng drop-in na programa para sa maagang pagkabata at sa mga pamilya.",
+   "note": "'libreng' (free) contradicted the $3 fee; drop-in = no appointment."
+  },
+  {
+   "id": "2f2cb7da74f4",
+   "source": "City of Toronto outdoor public swimming pool at 5 Leaside Park Drive (in Leaside Park), open seasonally in summer for recreational and lane swimming. Listed as wheelchair accessible with accessible change rooms, level entry to the pool deck and Wheel-Trans drop-off at the Leaside Park Drive lot.",
+   "text": "Outdoor na pampublikong swimming pool ng City of Toronto sa 5 Leaside Park Drive (sa Leaside Park), bukas lamang tuwing tag-araw para sa paglangoy bilang libangan at lane swimming. Nakalista na accessible ito para sa mga gumagamit ng wheelchair, may mga accessible na palitan ng damit, pantay na pasukan patungo sa pool deck, at Wheel-Trans drop-off sa parking lot ng Leaside Park Drive.",
+   "note": "'outside the City of Toronto' -> City of Toronto outdoor pool."
+  },
+  {
+   "id": "e5edc4998f24",
+   "source": "City-run community/recreation centre at 29 St Dennis Dr with an indoor pool (swim lessons, leisure swims), fitness facilities, and a library branch, offering registered recreation programs.",
+   "text": "Community/recreation centre na pinapatakbo ng City sa 29 St Dennis Dr na may indoor pool (mga klase sa paglangoy, paglangoy para sa libangan (leisure swim)), mga pasilidad para sa fitness, at isang sangay ng aklatan, na nag-aalok ng mga rehistradong programa para sa libangan.",
+   "note": "Removed invented 'free' for leisure swims; fixed garbled 'community/recreation centre'."
+  },
+  {
+   "id": "d6ee993d9829",
+   "source": "Emergency food assistance for families in need is its core service during operating hours; no separate emergency program is listed.",
+   "text": "Ang pang-emergency na tulong na pagkain para sa mga pamilyang nangangailangan ang pangunahing serbisyo nito sa oras ng operasyon; walang nakalistang hiwalay na emergency program.",
+   "note": "'in time of disaster' implied food only during disasters; now emergency food help as core service."
+  },
+  {
+   "id": "6b17dc8d3ad4",
+   "source": "Free, confidential walk-in-style hub for youth aged 12–25 in Thorncliffe Park and Flemingdon Park (launched by East Toronto Health Partners, TNO – The Neighbourhood Organization, and Youth Wellness Hubs Ontario; no health card, family doctor or referral needed). Services: wellness counselling, substance use support, primary care, care navigation, peer support, employment services, trades training, food bank, housing and settlement help, education, recreation/social programs, leadership development and volunteer opportunities.",
+   "text": "Libre at kumpidensyal na walk-in hub para sa mga kabataang may edad 12–25 sa Thorncliffe Park at Flemingdon Park (itinatag ng East Toronto Health Partners, TNO – The Neighbourhood Organization, at Youth Wellness Hubs Ontario; hindi kailangan ng health card, pamilyang doktor o referral). Mga Serbisyo: pagpapayo para sa wellness, suporta para sa mga may problema sa paggamit ng alak o droga (substance use), primaryang pangangalaga sa kalusugan, gabay sa paghahanap ng serbisyo, suporta mula sa kapwa kabataan, mga serbisyo sa trabaho, pagsasanay sa mga teknikal na hanapbuhay, food bank, tulong sa pabahay at settlement (tulong para sa mga bagong dating), edukasyon, mga programang panlibangan at panlipunan, pagpapaunlad ng pamumuno at mga pagkakataon para mag-volunteer.",
+   "note": "settlement != 'fixing documents'; substance use support no longer reads as support for using drugs."
+  },
+  {
+   "id": "b9bf5f163902",
+   "source": "Free comprehensive primary health care for residents of the M4H postal code, no health card or referral needed, with interpretation services. Services include ongoing primary care, a school-based pediatric clinic, foot care for seniors and people with chronic conditions, nutrition counselling, social work and mental health counselling, health education workshops, family support, and referrals to income support, settlement, housing, employment and language programs. Located in the Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "text": "Libreng komprehensibong pangangalagang pangkalusugan para sa mga residente ng M4H postal code, walang kailangang health card o referral, at may mga serbisyo sa pagsasalin ng wika. Kasama sa mga serbisyo ang regular na pangangalagang pangkalusugan, klinika para sa mga bata sa paaralan, pangangalaga sa paa para sa mga nakatatanda at mga taong may pangmatagalang sakit (chronic condition), payo sa nutrisyon, serbisyo ng social worker at payo sa kalusugang mental, mga workshop sa edukasyon sa kalusugan, suporta sa pamilya, at referral sa mga programa para sa tulong pinansyal, settlement (tulong para sa mga bagong dating), pabahay, trabaho, at pag-aaral ng wika. Matatagpuan sa Thorncliffe Park Community Hub, 45 Overlea Blvd, 2nd Floor.",
+   "note": "chronic != severe; settlement != 'fixing documents'."
+  },
+  {
+   "id": "0bf38ee19e3c",
+   "source": "Cooling Spaces",
+   "text": "Mga Cooling Space (Lugar na Pampalamig sa Matinding Init)",
+   "note": "Heading now clearly means a place to cool down in extreme heat."
+  },
+  {
+   "id": "1538ea5a988e",
+   "source": "St. Michael's Hospital operates an emergency department (30 Bond St.); Unity Health's MyChart and hospital phone lines are listed. No kidney-care-centre-specific emergency services found — in a medical emergency call 911.",
+   "text": "Ang St. Michael's Hospital ay may emergency department (30 Bond St.); nakalista ang MyChart ng Unity Health at ang mga telepono ng ospital. Walang natagpuang emergency services na partikular para sa kidney care centre — sa oras ng medical emergency, tumawag sa 911.",
+   "note": "Fixed garbled word 'natagurang' -> 'natagpuang'."
+  },
+  {
+   "id": "1ae4b85c3a4e",
+   "source": "TNO program (funded by IRCC) helping newcomers aged 18+ pursue skilled trades and technical careers. Offers training and employment pathways in construction, HVAC (G2/G3 licence), IT including data science and AI, truck driving (DZ licence), forklift operation and construction traffic control. Open to permanent residents, convention refugees and Canadian citizens with CLB 5-6+ English.",
+   "text": "Programa ng TNO (pinopondohan ng IRCC) na tumutulong sa mga bagong dating na may edad 18 pataas na kumuha ng mga skilled trade at teknikal na karera. Nag-aalok ng pagsasanay at mga oportunidad sa trabaho sa konstruksyon, HVAC (para sa lisensyang G2/G3), IT kabilang ang data science at AI, pagmamaneho ng trak (para sa lisensyang DZ), pagpapatakbo ng forklift, at traffic control sa konstruksyon. Bukas ito para sa mga permanenteng residente, mga refugee sa ilalim ng konbensyon, at mga mamamayang Canadian na may antas ng Ingles na CLB 5-6+.",
+   "note": "Training is toward the licences, not for people who already hold them."
+  },
+  {
+   "id": "2b036077722c",
+   "source": "Large public ravine park at 73 Thorncliffe Park Drive, along the Don River between Thorncliffe Park, Flemingdon Park and the former Ontario Science Centre. Amenities: 18-hole disc golf course (est. 2011, free), archery range (one of only two public ranges in Canada, free but unsupervised), jogging/cycling paths, Nordic skiing and equestrian trails, picnic shelters/areas, fire pits, basketball courts, washrooms and drinking water fountains (water and washrooms closed in winter).",
+   "text": "Malaking pampublikong parke sa gilid ng bangin sa 73 Thorncliffe Park Drive, sa tabi ng Don River sa pagitan ng Thorncliffe Park, Flemingdon Park at ng dating Ontario Science Centre. Mga pasilidad: 18-hole disc golf course (itinayo noong 2011, libre), archery range (isa sa dalawang pampublikong range lamang sa Canada, libre ngunit walang bantay), mga daan para sa jogging at pagbibisikleta, mga trail para sa Nordic skiing at pang-kabayo, mga kubol/lugar para sa piknik, fire pit, mga court para sa basketball, mga palikuran at drinking fountain (sarado ang tubig at mga palikuran tuwing taglamig).",
+   "note": "Restored name 'Don River'."
+  },
+  {
+   "id": "2de0ec486420",
+   "source": "The toronto.ca page is specifically for the Drinking Fountain facility within Flemingdon Park (near Don Mills Rd and Eglinton Ave E). The fountain is listed as an official amenity of this 13.3-hectare park, which also has ball diamonds, a ball hockey pad, cricket pitch, multipurpose field, 4 outdoor basketball courts, outdoor tracks, 4 playgrounds (playground updated in 2025), splash pad, community garden, 6 picnic shelters, sport fields and parking lots.",
+   "text": "Ang pahinang toronto.ca ay para partikular sa pasilidad ng Drinking Fountain sa loob ng Flemingdon Park (malapit sa Don Mills Rd at Eglinton Ave E). Ang fountain ay nakalista bilang isang opisyal na pasilidad ng 13.3-hektaryang parkeng ito, na mayroon ding mga baseball diamond, ball hockey pad, cricket pitch, multipurpose field, 4 na outdoor basketball court, outdoor track, 4 na palaruan (na-na-update ang palaruan noong 2025), splash pad, community garden, 6 na picnic shelter (kubol na may bubong), mga sports field at mga parking lot.",
+   "note": "'picnic umbrellas' -> picnic shelters."
+  },
+  {
+   "id": "4a8be4c87e8f",
+   "source": "Museum with rotating exhibitions, concerts and hands-on workshops (e.g., art workshops, music events). Runs school programs including onsite and virtual field trips, teacher resources and online courses, plus a free online content library with podcasts, 3D tours and artist talks.",
+   "text": "Museo na may mga nagbabagong eksibisyon, mga konsiyerto, at mga hands-on na workshop (halimbawa, mga workshop sa sining, mga kaganapan sa musika). Nagpapatakbo ng mga programa para sa paaralan kabilang ang mga field trip sa mismong lugar at online, mga materyales para sa mga guro at mga online na kurso, pati na rin ang isang libreng online content library na may mga podcast, 3D tour at mga talk ng mga artist (alagad ng sining).",
+   "note": "'artista' reads as actors/celebrities."
+  },
+  {
+   "id": "a583aca46f5e",
+   "source": "Toronto Public Library branch at 29 St. Dennis Drive: book borrowing, public computers, children's programs, Leading to Reading literacy program for kids, and the free Financial Empowerment Service (tax filing, benefits applications, budgeting help — also offered at Thorncliffe branch). Listed hours: Mon-Fri 9am-8:30pm, Sat 9am-5pm, Sun 12-5pm. Note: the branch closed Dec 1, 2025 for a refresh project with reopening expected early Q3 2026; current hours listing suggests it has reopened, but verify before visiting.",
+   "text": "Sangay ng Toronto Public Library sa 29 St. Dennis Drive: paghiram ng libro, mga pampublikong computer, mga programa para sa mga bata, Leading to Reading literacy program para sa mga bata, at ang libreng Financial Empowerment Service (pag-aayos ng tax, pag-aaplay para sa mga benepisyo, tulong sa pagbabadyet — inaalok din sa sangay ng Thorncliffe). Nakasaad na oras ng operasyon: Lunes-Biyernes 9am-8:30pm, Sabado 9am-5pm, Linggo 12-5pm. Paalala: pansamantalang nagsara ang sangay sa Disyembre 1, 2025 para sa isang proyekto ng pag-aayos at inaasahang magbubukas muli sa unang bahagi ng Q3 2026; ayon sa nakasaad na oras, tila nakabukas na ito muli, ngunit pakisuri muna bago pumunta.",
+   "note": "Future 'will close' -> past 'closed' as in source."
+  },
+  {
+   "id": "dd60669c88d7",
+   "source": "Neighbourhood shopping mall at 45 Overlea Blvd with retail stores, restaurants and everyday services (grocery, bank, pharmacy/lab, fitness, hair salon). Also houses community service tenants such as the Afghan Women's Organization, Don Valley Community Legal Services and Health Access Thorncliffe Park.",
+   "text": "Shopping mall sa kapitbahayan sa 45 Overlea Blvd na may mga tindahan, mga restaurant at mga pang-araw-araw na serbisyo (grocery, bangko, botika/laboratoryo, fitness center, salon). Mayroon din itong mga nangungupahan na nagbibigay ng serbisyo sa komunidad gaya ng Afghan Women's Organization, Don Valley Community Legal Services at Health Access Thorncliffe Park.",
+   "note": "'sari-sari store' -> 'grocery'."
+  },
+  {
+   "id": "7c53a90857c2",
+   "source": "Free EarlyON Child and Family Centre for City of Toronto residents with children ages 0-6 and their parents/caregivers: child development support programs, parent support services, school readiness programs, language-delay support, and special needs services with individual case management. Main location: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Mon-Fri 9am-5pm); Friday gym playtime at Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "text": "Libreng EarlyON Child and Family Centre para sa mga residente ng City of Toronto na may mga anak na may edad 0-6 at sa kanilang mga magulang o tagapag-alaga: mga programa para sa suporta sa pag-unlad ng bata, mga serbisyo para sa suporta sa mga magulang, mga programa para sa paghahanda sa pagpasok sa paaralan, suporta para sa pagkaantala sa pagsasalita, at mga serbisyo para sa mga may espesyal na pangangailangan na may indibidwal na case management. Pangunahing lokasyon: TNO-Thorncliffe Park Community Hub, 45 Overlea Blvd Unit 200 (Lunes-Biyernes, 9am-5pm); oras ng paglalaro sa gym tuwing Biyernes sa Jenner Jean Marie Community Centre, 48 Thorncliffe Park Dr.",
+   "note": "Restored name 'City of Toronto'."
+  },
+  {
+   "id": "912f65f2191e",
+   "source": "Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; contact Latoya Wilson-Rose, 416-392-3170) is a public, licensed City of Toronto child care centre serving children 0 to 4 years, located in the Dennis R. Timbrell Resource Centre. It participates in the Canada-Wide Early Learning and Child Care (CWELCC) system with fee subsidies available; staff speak 9 languages including Arabic, Bengali, French, Hindi, and Persian, and meals are catered with halal, pork-free, peanut-free, vegan, and vegetarian options available.",
+   "text": "Ang Flemingdon Early Learning & Child Care Centre (29 St Dennis Dr, Don Mills/Eglinton; makipag-ugnayan kay Latoya Wilson-Rose, 416-392-3170) ay isang pampubliko at lisensyadong pasilidad para sa pag-aalaga ng bata ng City of Toronto para sa mga batang may edad 0 hanggang 4 na taon, na matatagpuan sa Dennis R. Timbrell Resource Centre. Kasali ito sa Canada-Wide Early Learning and Child Care (CWELCC) system at may mga subsidiya sa bayarin; ang mga kawani ay nagsasalita ng 9 na wika kabilang ang Arabic, Bengali, Pranses, Hindi, at Persian, at ang mga pagkain ay mula sa catering na may mga opsyon na halal, walang baboy, walang mani, vegan, at vegetarian.",
+   "note": "Restored name 'City of Toronto'."
+  },
+  {
+   "id": "0761f94fde45",
+   "source": "The hub's page features an 'In crisis? Click here' link and lists local crisis supports: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, and Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Designated cooling space: provides air-conditioned indoor relief during extreme heat warnings/alerts.",
+   "text": "Sa pahina ng hub ay may link na 'May krisis? I-click dito' at nakalista rito ang mga lokal na serbisyo para sa tulong sa krisis: Kids Help Phone 1-800-668-6868, Talk Suicide Canada 1-833-456-4566, Distress Centres of Greater Toronto 416-408-4357, Gerstein Crisis Centre 416-929-5200, Anishnawbe Health Toronto Mental Health Crisis Management Service 1-855-242-3310, Naseeha Mental Health Hotline 1-866-627-3342, Youthdale Treatment Centres Crisis & Mobile Support Team 416-363-9990, Scarborough Health Network Community Crisis Line 416-495-2891, Assaulted Women's Helpline 416-863-0511, Toronto Rape Crisis Centre 416-597-8808, at Michael Garron Hospital Emergency Department (825 Coxwell Ave.). Itinalagang lugar na pampalamig (cooling space): nagbibigay ng malamig na lugar sa loob na may aircon para maibsan ang init kapag may babala o alerto ng matinding init.",
+   "note": "crisis-lines review: Cooling-space label said 'designated place for rest' (lugar para sa pahinga); now 'designated cooling place' with relief from heat; rest unchanged."
+  }
+ ]
+}

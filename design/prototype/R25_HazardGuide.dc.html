@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-25 Hazard guide (before / during / after)</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-25" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Hazard guide (before / during / after)">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-eyebrow cvh-row" style="--gap:6px"><span class="cvh-ico cvh-ico--{{hazard}} cvh-ico--sm" aria-hidden="true"></span>{{s.R25.guideWord}}<span class="cvh-hide-basic" style="font-weight:400"> · {{readTime}}</span></p>
+    <h1 class="cvh-h1">{{title}}</h1>
+    <sc-if value="{{openedDuring}}"><p class="cvh-caption cvh-strong">{{s.R25.openedDuring}}</p></sc-if>
+    <span class="cvh-tag cvh-tag--ai" style="align-self:flex-start">{{s.R25.aiLabel}}</span>
+    <sc-if value="{{unavailable}}"><p class="cvh-note" role="note"><span class="cvh-ico cvh-ico--language" aria-hidden="true"></span><span class="cvh-grow">{{unavailable}}</span></p></sc-if>
+  </div>
+
+  <dc-import name="X01_Not911" variant="block" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,84px"></dc-import>
+  <p class="cvh-guide__when911"><span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span><span class="cvh-grow" lang="{{cBcp}}" dir="{{cDir}}">{{when911}}</span></p>
+  <button type="button" class="cvh-link" onClick="{{toNumbers}}"><span class="cvh-ico cvh-ico--phone cvh-ico--sm" aria-hidden="true"></span>{{s.R25.numbers}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+
+  <sc-if value="{{forYou}}">
+    <section class="cvh-tailored" aria-labelledby="r25-you">
+      <h2 class="cvh-h3" id="r25-you">{{s.R25.forYou}}</h2>
+      <ul class="cvh-tailored__list">
+        <sc-for list="{{forYou.lines}}" as="t" hint-placeholder-count="2">
+          <li class="cvh-tailored__item"><span class="cvh-ico cvh-ico--arrow cvh-ico--sm" aria-hidden="true"></span><span lang="{{t.bcp}}" dir="{{t.dir}}">{{t.text}}</span></li>
+        </sc-for>
+      </ul>
+      <div class="cvh-tailored__links"><button type="button" class="cvh-btn cvh-btn--quiet" onClick="{{toChoices}}">{{s.R25.tailoredLink}}</button></div>
+    </section>
+    <h2 class="cvh-section__title">{{s.R25.fullGuide}}</h2>
+  </sc-if>
+
+  <div class="cvh-stack" style="--gap:6px">
+    <p class="cvh-caption cvh-strong" id="r25-jump">{{s.R25.stagesNav}}</p>
+    <div class="cvh-segment cvh-segment--3" role="group" aria-labelledby="r25-jump">
+      <sc-for list="{{stages}}" as="st" hint-placeholder-count="3">
+        <button type="button" class="{{st.cls}}" aria-pressed="{{st.pressed}}" onClick="{{st.pick}}">{{st.label}}</button>
+      </sc-for>
+    </div>
+  </div>
+
+  <section class="cvh-section" aria-labelledby="r25-stage">
+    <p class="cvh-eyebrow">{{stageNow}}</p>
+    <h2 class="cvh-h2" id="r25-stage">{{stageLabel}}</h2>
+    <dc-import name="X08_Audio" secs="{{audioSecs}}" variant="section" fail-on-play="{{audioFail}}" lang="{{lang}}" basic="{{basic}}" embedded="{{true}}" hint-size="100%,72px"></dc-import>
+    <ol class="cvh-guide__steps" lang="{{cBcp}}" dir="{{cDir}}">
+      <sc-for list="{{steps}}" as="step" hint-placeholder-count="3">
+        <li><span>{{step}}</span></li>
+      </sc-for>
+    </ol>
+    <sc-if value="{{moreSteps}}"><button type="button" class="cvh-link" onClick="{{showAllSteps}}">{{moreSteps}}</button></sc-if>
+    <sc-if value="{{next}}">
+      <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block" onClick="{{next.go}}">{{next.label}}<span class="cvh-ico cvh-ico--chevron cvh-ico--sm" aria-hidden="true"></span></button>
+    </sc-if>
+    <sc-if value="{{isLast}}"><p>{{s.R25.endLine}}</p></sc-if>
+  </section>
+
+  <section class="cvh-section" aria-labelledby="r25-help">
+    <h2 class="cvh-section__title" id="r25-help">{{s.R25.helpTitle}}</h2>
+    <button type="button" class="cvh-dest" onClick="{{toServices}}"><span class="cvh-ico cvh-ico--search" aria-hidden="true"></span><span class="cvh-grow">{{s.R25.services}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+    <sc-if value="{{spaces}}">
+      <button type="button" class="cvh-dest" onClick="{{spaces.go}}"><span class="cvh-ico cvh-ico--{{spaces.icon}}" aria-hidden="true"></span><span class="cvh-grow">{{spaces.label}}</span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+    </sc-if>
+    <button type="button" class="cvh-dest" onClick="{{toNumbers}}"><span class="cvh-ico cvh-ico--phone" aria-hidden="true"></span><span class="cvh-grow cvh-stack" style="--gap:2px"><span>{{s.R25.numbers}}</span><span class="cvh-caption cvh-hide-basic" style="font-weight:400">{{s.R25.numbersLine}}</span></span><span class="cvh-ico cvh-ico--chevron" aria-hidden="true"></span></button>
+  </section>
+
+  <p class="cvh-note cvh-hide-basic" role="note"><span class="cvh-ico cvh-ico--kit" aria-hidden="true"></span><span class="cvh-grow">{{s.R25.kit}}</span></p>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["Power outage, opened at before (from Be ready)", "Power outage, opened at during from the alert", "Heat, during, for you first (Nasrin)", "Heat, before, for you first (George)", "Wildfire smoke, after", "Flood or plumbing failure, during", "Elevator failure, during (Scenario G)", "Fire and evacuation, before", "Audio fails on a slow connection", "Not yet available in Urdu (stated, not hidden)", "Basic mode: heat, during (Amina)", "Basic mode: power, before (George)"], "default": "Power outage, opened at before (from Be ready)"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"Power outage, opened at before (from Be ready)": {"persona": "yusuf", "scenario": "C", "params": {"hazard": "power", "from": "ready"}}, "Power outage, opened at during from the alert": {"persona": "yusuf", "scenario": "A", "params": {"hazard": "power", "stage": "during", "from": "alert", "alert": "AL-05"}}, "Heat, during, for you first (Nasrin)": {"persona": "nasrin", "scenario": "B", "params": {"hazard": "heat", "stage": "during", "from": "alert", "alert": "AL-06"}}, "Heat, before, for you first (George)": {"persona": "george", "scenario": "C", "basic": false, "params": {"hazard": "heat", "from": "ready"}}, "Wildfire smoke, after": {"persona": "devon", "scenario": "C", "params": {"hazard": "smoke", "stage": "after"}}, "Flood or plumbing failure, during": {"persona": "new", "scenario": "E", "choices": {"building": "SC", "floor": 2}, "params": {"hazard": "flood", "stage": "during"}}, "Elevator failure, during (Scenario G)": {"persona": "george", "scenario": "G", "basic": false, "choices": {"building": "SB", "floor": 6}, "params": {"hazard": "elevator", "stage": "during"}}, "Fire and evacuation, before": {"persona": "new", "scenario": "C", "params": {"hazard": "fire"}}, "Audio fails on a slow connection": {"persona": "yusuf", "scenario": "A", "params": {"hazard": "power", "stage": "during", "audioFail": true}}, "Not yet available in Urdu (stated, not hidden)": {"persona": "amina", "scenario": "B", "basic": false, "lang": "ur", "params": {"hazard": "heat", "stage": "during"}}, "Basic mode: heat, during (Amina)": {"persona": "amina", "scenario": "B", "basic": true, "basicState": "persisted", "params": {"hazard": "heat", "stage": "during", "from": "alert", "alert": "AL-06"}}, "Basic mode: power, before (George)": {"persona": "george", "scenario": "C", "basic": true, "basicState": "helper", "params": {"hazard": "power"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'ready', showExercise: 'R-25'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-25'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var C = b.C, s = b.s, x = s.R25, D = b.D, go = b.go, prm = b.params, ch = b.ch, lang = b.lang;
+    var hazard = prm.hazard === 'winter' ? 'power' : (prm.hazard || 'power');
+    var g = (D.guides || {})[hazard] || (D.guides || {}).power;
+    var order = ['before', 'during', 'after'];
+    var stage = b.loc.stage || prm.stage || 'before';
+    if (order.indexOf(stage) < 0) stage = 'before';
+    var si = order.indexOf(stage);
+    // Guide text exists in English only for now: say so plainly, never fall back silently (brief Section 8).
+    var own = lang === 'en';
+    var cBcp = own ? C.bcp(lang) : 'en', cDir = own ? C.dir(lang) : 'ltr';
+    var unavailable = own ? '' : C.fill(x.unavailable, { lang: C.lang(lang).native });
+    var all = g[stage] || [];
+    var cap = b.basic && !b.loc.allSteps ? 3 : 99;
+    var steps = all.slice(0, cap);
+    var moreSteps = all.length > steps.length ? C.fill(x.allSteps, { n: all.length }) : '';
+    var stages = order.map(function (k) {
+      var on = k === stage;
+      return { label: s.stages[k], cls: on ? 'is-on' : '', pressed: on ? 'true' : 'false', pick: function () { b.setLoc({ stage: k, allSteps: false }); } };
+    });
+    var next = si < 2 ? { label: C.fill(x.next, { stage: s.stages[order[si + 1]] }), go: function () { b.setLoc({ stage: order[si + 1], allSteps: false }); } } : null;
+    // For you first: advice from the resident's own choices, written as what to do (never who they are)
+    var tr = ((window.CVH_STRINGS[lang] || {}).tailored || {})[hazard] || {};
+    var lines = [];
+    (ch.groups || []).forEach(function (gr) {
+      if (gr === 'checkin') return;
+      var mine = !own && tr[gr];
+      (mine ? tr[gr] : (((D.tailored || {})[hazard] || {})[gr] || [])).forEach(function (t) {
+        lines.push({ text: t, bcp: mine || own ? C.bcp(lang) : 'en', dir: mine || own ? C.dir(lang) : 'ltr' });
+      });
+    });
+    var forYou = lines.length && !b.basic ? { lines: lines } : null;
+    // Spaces open for this purpose: heat, smoke and outages only (brief F11)
+    var purpose = { heat: 'cooling', smoke: 'cleanAir', power: 'charging' }[hazard];
+    var tf = C.tailorFilters(ch);
+    var spaces = purpose ? { icon: purpose, label: C.fill(x.spaces, { purpose: x.purposeWords[purpose] }),
+      go: function () { go('R-15', { spaces: purpose, hazard: hazard, filters: tf, from: 'guide' }); } } : null;
+    return {
+      hazard: hazard, title: (s.hazards || {})[hazard], readTime: C.fill(x.readTime, { n: g.readMins || 3 }), unavailable: unavailable,
+      cBcp: cBcp, cDir: cDir, when911: g.when911, forYou: forYou, stages: stages, stage: stage,
+      stageNow: C.fill(x.stageNow, { stage: s.stages[stage] }), stageLabel: s.stages[stage],
+      audioSecs: (g.audio || {})[stage] || 40, audioFail: !!prm.audioFail,
+      steps: steps, moreSteps: moreSteps, showAllSteps: function () { b.setLoc({ allSteps: true }); },
+      next: next, isLast: si === 2, spaces: spaces, openedDuring: prm.from === 'alert' && prm.stage === 'during' && !b.loc.stage,
+      goBack: function () { if (b.app.canBack) b.back(); else go(prm.from === 'alert' && prm.alert ? 'R-07' : 'R-24', prm.alert ? { alert: prm.alert } : {}); },
+      toNumbers: function () { go('R-31', { from: 'guide', hazard: hazard }); },
+      toChoices: function () { go('R-34', { from: 'tailored' }); },
+      toServices: function () { go('R-10', { hazard: hazard, filters: tf, from: 'guide' }); }
+    };
+  }
+
+}
+</script>
+</body>
+</html>

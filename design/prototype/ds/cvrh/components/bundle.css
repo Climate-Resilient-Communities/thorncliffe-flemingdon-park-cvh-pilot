@@ -1,0 +1,158 @@
+@import url('https://fonts.googleapis.com/css2?family=Public+Sans:ital,wght@0,400;0,700;1,400;1,700&display=swap');
+
+/* Community Virtual Resilience Hub. Load after tokens.css.
+   Shape rule: slide containers square (radius-none); anything you can touch, and document/screen containers, radius-card; one radius-header swoop per page; discs round. */
+.vrh { font-family: var(--font-sans); color: var(--text); }
+.vrh *, .vrh *::before, .vrh *::after { box-sizing: border-box; }
+.vrh a { color: var(--accent-text); text-underline-offset: 3px; }
+.vrh :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+
+/* Topic: set one modifier; components read --vrh-topic */
+.vrh-topic-heat { --vrh-topic: var(--topic-heat); }
+.vrh-topic-flood { --vrh-topic: var(--topic-flood); }
+.vrh-topic-food { --vrh-topic: var(--topic-food); }
+.vrh-topic-wellbeing { --vrh-topic: var(--topic-wellbeing); }
+
+/* SectionHeader */
+.vrh-header { max-width: 760px; }
+.vrh-header .vrh-header__title { max-width: 26ch; }
+.vrh-header__eyebrow { margin: 0 0 var(--space-2); color: var(--eyebrow); }
+.vrh-header__title { margin: 0; color: var(--ink); }
+.vrh-header__lede { margin: var(--space-2) 0 0; color: var(--text-muted); max-width: 48ch; }
+
+/* FeatureCard (slides): square, topic bar on top */
+.vrh-features { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--space-3); }
+.vrh-card { background: var(--surface-raised); border-top: var(--space-2) solid var(--vrh-topic, var(--accent-bar)); border-radius: var(--radius-none); padding: var(--space-5); }
+.vrh-card--wide { grid-column: span 2; }
+.vrh-card__title { margin: 0 0 var(--space-2); color: var(--ink); }
+.vrh-card__body { margin: 0; color: var(--text); max-width: 42ch; }
+@media (max-width: 767px) { .vrh-features { grid-template-columns: 1fr; } .vrh-card--wide { grid-column: auto; } }
+
+/* Panel (slides): navy, yellow left bar */
+.vrh-panels { display: grid; grid-template-columns: 3fr 2fr; gap: var(--space-4); }
+.vrh-panel { position: relative; background: var(--surface-deep); color: var(--on-deep); padding: var(--space-5) var(--space-5) var(--space-5) calc(var(--space-5) + var(--space-2)); }
+.vrh-panel::before { content: ""; position: absolute; inset: 0 auto 0 0; width: var(--space-2); background: var(--accent-bar); }
+.vrh-panel__title { margin: 0; color: var(--on-deep); }
+.vrh-panel__rule { width: var(--space-6); height: var(--space-1); background: var(--accent-bar); border: 0; margin: var(--space-3) 0; }
+.vrh-panel__body { margin: 0; color: var(--on-deep); max-width: 48ch; }
+@media (max-width: 767px) { .vrh-panels { grid-template-columns: 1fr; } }
+
+/* Steps: numbered, sequences only */
+.vrh-steps { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: var(--space-6); margin: 0; padding: 0; list-style: none; counter-reset: vrh-step; }
+.vrh-step { counter-increment: vrh-step; }
+.vrh-step::before { content: counter(vrh-step, decimal-leading-zero); display: block; color: var(--numeral); font-size: 48px; line-height: 1; font-weight: 700; margin-bottom: var(--space-3); }
+.vrh-step__title { margin: 0 0 var(--space-2); color: var(--ink); }
+.vrh-step__body { margin: 0; color: var(--text); }
+
+/* Callout */
+.vrh-callout { margin: 0; border-left: var(--space-2) solid var(--accent-bar); padding: var(--space-1) 0 var(--space-1) var(--space-4); max-width: 52ch; }
+.vrh-callout__text { margin: 0; color: var(--ink); font-weight: 700; }
+.vrh-callout__cite { display: block; margin-top: var(--space-2); color: var(--text-muted); font-style: normal; }
+
+/* Tags */
+.vrh-band { background: var(--surface-deep); padding: var(--space-4) var(--space-7); }
+.vrh-band__label { margin: 0 0 var(--space-3); color: var(--tpch-yellow); font-weight: 700; }
+.vrh-tags { display: flex; flex-wrap: wrap; gap: var(--space-2); margin: 0; padding: 0; list-style: none; }
+.vrh-tag { display: inline-flex; align-items: center; gap: var(--space-2); min-height: 38px; padding: 0 var(--space-4); border: 1px solid var(--on-deep); border-radius: var(--radius-card); color: var(--on-deep); }
+.vrh-tag[class*="vrh-topic-"]::before { content: ""; width: 10px; height: 10px; border-radius: var(--radius-disc); background: var(--vrh-topic); flex: none; }
+.vrh-tag--light { border: 0; background: var(--yellow-tint); color: var(--on-yellow); font-weight: 700; }
+
+/* Button */
+.vrh-button { display: inline-flex; align-items: center; min-height: 44px; padding: var(--space-2) var(--space-4); border: 0; border-radius: var(--radius-card); background: var(--tpch-yellow); color: var(--on-yellow); font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; white-space: nowrap; cursor: pointer; }
+.vrh a.vrh-button, .vrh a.vrh-button:visited { color: var(--on-yellow); }
+.vrh-button:hover { background: var(--yellow-tint); }
+.vrh-button--quiet { background: transparent; color: var(--ink); box-shadow: inset 0 0 0 1px var(--control-border); }
+.vrh a.vrh-button--quiet { color: var(--ink); }
+.vrh-button--quiet:hover { background: var(--surface-raised); }
+
+/* ServiceCard (documents) */
+.vrh-services { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-3); }
+.vrh-service { background: var(--surface-warm); border-radius: var(--radius-card); padding: var(--space-4); color: var(--text-on-warm); }
+.vrh-service__head { display: flex; align-items: center; gap: var(--space-3); margin-bottom: var(--space-3); }
+.vrh-service__art { width: 56px; height: 56px; object-fit: contain; flex: none; }
+.vrh-service__title { margin: 0; color: var(--on-yellow); }
+.vrh-service__body { margin: 0; color: var(--text-on-warm); }
+@media (max-width: 767px) { .vrh-services { grid-template-columns: 1fr; } }
+
+/* Notice (screens) */
+.vrh-notice { background: var(--surface-raised); border: 1px solid var(--border); border-radius: var(--radius-card); overflow: hidden; max-width: 560px; }
+.vrh-notice__strip { height: var(--space-2); background: var(--vrh-topic, var(--accent-bar)); }
+.vrh-notice__inner { padding: var(--space-4); }
+.vrh-notice__kind { margin: 0 0 var(--space-1); color: var(--text-muted); }
+.vrh-notice__title { margin: 0 0 var(--space-2); color: var(--ink); }
+.vrh-notice__body { margin: 0 0 var(--space-4); color: var(--text); }
+
+/* Field */
+.vrh-field { display: grid; gap: var(--space-1); max-width: 420px; }
+.vrh-field__label { color: var(--ink); }
+.vrh-field__input { font: inherit; color: var(--text); background: var(--surface-raised); border: 1px solid var(--control-border); border-radius: var(--radius-card); min-height: 44px; padding: 0 var(--space-3); }
+.vrh-field__input:focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.vrh-field__help { color: var(--text-muted); margin: 0; }
+.vrh-field__error { color: var(--danger); margin: 0; font-weight: 700; }
+.vrh-field--error .vrh-field__input { border: 2px solid var(--danger); }
+
+/* IconDisc */
+.vrh-disc { display: inline-grid; place-items: center; width: 96px; height: 96px; border-radius: var(--radius-disc); background: var(--yellow-tint); flex: none; }
+.vrh-disc img { width: 50%; height: 50%; object-fit: contain; }
+.vrh-disc--sm { width: 64px; height: 64px; }
+
+/* Lockup */
+.vrh-lockup { display: inline-flex; align-items: center; gap: var(--space-4); }
+.vrh-lockup__hub { height: 72px; width: auto; }
+.vrh-lockup__with { color: var(--text-muted); }
+.vrh-lockup__sprout { height: 36px; width: auto; }
+.vrh-lockup__divider { width: 1px; align-self: stretch; background: var(--border); }
+.vrh-only-dark { display: none; }
+[data-theme="dark"] .vrh-only-dark { display: inline-block; }
+[data-theme="dark"] .vrh-only-light { display: none; }
+
+/* PageHeader */
+.vrh-pagehead { background: var(--surface-deep); color: var(--on-deep); border-bottom-right-radius: var(--radius-header); padding: var(--space-6) var(--space-7) var(--space-6) var(--space-6); max-width: 720px; }
+.vrh-pagehead__title { margin: 0; color: var(--on-deep); }
+.vrh-pagehead__sub { margin: var(--space-2) 0 0; color: var(--on-deep); }
+
+/* Footers */
+.vrh-footer { display: flex; align-items: center; justify-content: space-between; padding: var(--space-3) 0; border-top: 1px solid var(--border); }
+.vrh-footer__counter { color: var(--text-muted); }
+.vrh-docfooter { display: flex; align-items: center; gap: var(--space-2); color: var(--text); }
+.vrh-docfooter img { height: 20px; }
+
+/* MediaSplit: photo bleeds off one edge, text on the plain side. Also the screen hero. */
+.vrh-split { display: grid; grid-template-columns: 5fr 7fr; min-height: 420px; background: var(--surface); }
+.vrh-split--photo-right { grid-template-columns: 7fr 5fr; }
+.vrh-split--photo-right .vrh-split__media { order: 2; }
+.vrh-split__media { margin: 0; min-height: 280px; }
+.vrh-split__media img { display: block; width: 100%; height: 100%; object-fit: cover; }
+.vrh-split__body { align-self: center; padding: var(--space-6) var(--space-7); max-width: 640px; }
+.vrh-split__title { margin: 0; color: var(--ink); max-width: 20ch; }
+.vrh-split__lede { margin: var(--space-3) 0 var(--space-5); color: var(--text-muted); max-width: 44ch; }
+.vrh-split__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); }
+@media (max-width: 767px) {
+  .vrh-split, .vrh-split--photo-right { grid-template-columns: 1fr; min-height: 0; }
+  .vrh-split--photo-right .vrh-split__media { order: 0; }
+  .vrh-split__media { aspect-ratio: 4 / 3; min-height: 0; }
+  .vrh-split__body { padding: var(--space-5) 16px var(--space-6); }
+  .vrh-band { padding: var(--space-4) 16px; }
+}
+
+/* EmptyState: nothing to show yet, and what to do about it */
+.vrh-empty { display: grid; grid-template-columns: auto 1fr; gap: var(--space-4); align-items: start; padding: var(--space-5); border: 1px dashed var(--control-border); border-radius: var(--radius-card); max-width: 560px; }
+.vrh-empty__title { margin: 0 0 var(--space-1); color: var(--ink); }
+.vrh-empty__body { margin: 0 0 var(--space-4); color: var(--text-muted); max-width: 44ch; }
+@media (max-width: 479px) { .vrh-empty { grid-template-columns: 1fr; } }
+
+/* Skeleton: loading placeholders shaped like the content they stand in for */
+.vrh-skel { display: block; background: var(--border); border-radius: var(--radius-card); }
+.vrh-skel--line { height: 14px; margin-bottom: var(--space-2); }
+.vrh-skel--title { height: 22px; width: 60%; margin-bottom: var(--space-3); }
+.vrh-skel--button { height: 44px; width: 168px; margin-top: var(--space-2); }
+.vrh-skel--short { width: 40%; }
+
+/* Motion: feedback and loading only. */
+@media (prefers-reduced-motion: no-preference) {
+  .vrh-button { transition: background-color 160ms ease-out, transform 120ms ease-out; }
+  .vrh-button:active { transform: translateY(1px); }
+  .vrh-field__input { transition: border-color 160ms ease-out; }
+  .vrh-skel { animation: vrh-pulse 1.4s ease-in-out infinite; }
+}
+@keyframes vrh-pulse { 50% { opacity: .55; } }

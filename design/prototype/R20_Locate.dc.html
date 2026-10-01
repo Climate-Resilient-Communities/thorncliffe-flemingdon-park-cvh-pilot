@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>R-20 Locate without an address</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh cvh-app {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="width:{{w}}px;height:{{h}}px">
+  <dc-import name="C_ProtoBar" screen-id="R-20" lang="{{lang}}" on-controls="{{app.openControls}}" embedded="{{true}}" hint-size="100%,28px"></dc-import>
+  <sc-if value="{{showExercise}}"><dc-import name="X10_Exercise" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{exEnded}}"><dc-import name="X10_Exercise" state="ended" lang="{{lang}}" embedded="{{true}}" hint-size="100%,60px"></dc-import></sc-if>
+  <sc-if value="{{showHeader}}"><dc-import name="C_ResidentHeader" variant="{{headerVariant}}" lang="{{lang}}" basic="{{basic}}" basic-state="{{app.basicState}}" on-lang="{{app.openLang}}" on-choices="{{app.openChoices}}" on-basic="{{app.toggleBasic}}" embedded="{{true}}" hint-size="100%,116px"></dc-import></sc-if>
+  <main class="cvh-main " aria-label="Locate without an address">
+
+<div class="cvh-screen">
+  <button type="button" class="cvh-back" onClick="{{goBack}}"><span class="cvh-ico cvh-ico--back cvh-ico--sm" aria-hidden="true"></span>{{s.shell.back}}</button>
+  <h1 class="cvh-h1">{{s.R20.title}}</h1>
+  <p class="cvh-row" style="--gap:8px;align-items:flex-start"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true" style="margin-top:3px"></span><span class="cvh-strong">{{s.R20.noAddress}}</span></p>
+
+  <fieldset class="cvh-field" style="border:0;padding:0;margin:0">
+    <legend class="cvh-label" style="padding:0;margin-bottom:6px">{{s.R20.howTitle}}</legend>
+    <div class="cvh-stack" style="--gap:8px">
+      <sc-for list="{{modes}}" as="m" hint-placeholder-count="3">
+        <button type="button" class="cvh-option {{m.cls}}" role="radio" aria-checked="{{m.aria}}" onClick="{{m.pick}}">
+          <span class="cvh-option__box cvh-option__box--radio"><sc-if value="{{m.on}}"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span></sc-if></span>
+          <span class="cvh-ico cvh-ico--{{m.icon}}" aria-hidden="true"></span>
+          <span class="cvh-option__text"><span class="cvh-option__label">{{m.label}}</span></span>
+        </button>
+      </sc-for>
+    </div>
+  </fieldset>
+
+  <sc-if value="{{isPin}}">
+    <div class="cvh-stack" style="--gap:8px">
+      <p class="cvh-hint">{{s.R20.pinHint}}</p>
+      <div class="cvh-map cvh-pinmap" role="application" aria-label="{{s.R20.mapLabel}}" onPointerDown="{{down}}" onPointerMove="{{move}}" onPointerUp="{{up}}" onPointerLeave="{{up}}" onPointerCancel="{{up}}">
+        <svg class="cvh-map__base" aria-hidden="true" focusable="false">
+          <path d="{{base.parks}}" fill="#d6e7cf" stroke="#b9d3ae" stroke-width="1"></path>
+          <path d="{{base.river}}" fill="none" stroke="#bcd5e6" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="{{base.minor}}" fill="none" stroke="#cfd5da" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="{{base.major}}" fill="none" stroke="#c3cad0" stroke-width="11" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="{{base.minor}}" fill="none" stroke="#ffffff" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"></path>
+          <path d="{{base.major}}" fill="none" stroke="#ffffff" stroke-width="8" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+        <sc-for list="{{blds}}" as="bd" hint-placeholder-count="3"><span class="cvh-map__building" style="{{bd.style}}" aria-hidden="true"></span></sc-for>
+        <sc-for list="{{labels}}" as="lb" hint-placeholder-count="2"><span class="cvh-map__label {{lb.cls}}" style="{{lb.style}}" aria-hidden="true">{{lb.text}}</span></sc-for>
+        <div class="cvh-pinmap__pin" aria-hidden="true"><span class="cvh-pinmap__head"></span><span class="cvh-pinmap__dot"></span></div>
+        <div class="cvh-map__controls">
+          <button type="button" class="cvh-map__btn" onClick="{{zoomIn}}" aria-label="{{s.R14.zoomIn}}"><span class="cvh-ico cvh-ico--plus" aria-hidden="true"></span></button>
+          <button type="button" class="cvh-map__btn" onClick="{{zoomOut}}" aria-label="{{s.R14.zoomOut}}"><span class="cvh-ico cvh-ico--minus" aria-hidden="true"></span></button>
+        </div>
+      </div>
+      <p class="cvh-caption" role="status">{{pinWhere}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isBuilding}}">
+    <div class="cvh-field">
+      <label class="cvh-label" for="r20-b">{{s.R20.building}}</label>
+      <select id="r20-b" class="cvh-select" value="{{bVal}}" onChange="{{setBuilding}}">
+        <sc-for list="{{bOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+      </select>
+    </div>
+    <div class="cvh-field">
+      <label class="cvh-label" for="r20-bt">{{s.R20.described}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></label>
+      <input id="r20-bt" class="cvh-input" type="text" value="{{bText}}" onInput="{{setBText}}" placeholder="{{s.R20.describedHint}}" maxlength="100">
+      <p class="cvh-hint cvh-hide-basic">{{s.R20.describedHint}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isLandmark}}">
+    <div class="cvh-field">
+      <label class="cvh-label" for="r20-l">{{s.R20.landmark}}</label>
+      <select id="r20-l" class="cvh-select" value="{{lVal}}" onChange="{{setLandmark}}">
+        <sc-for list="{{lOpts}}" as="o" hint-placeholder-count="3"><option value="{{o.v}}">{{o.label}}</option></sc-for>
+      </select>
+    </div>
+    <div class="cvh-field">
+      <label class="cvh-label" for="r20-lt">{{s.R20.landmarkMore}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></label>
+      <input id="r20-lt" class="cvh-input" type="text" value="{{lText}}" onInput="{{setLText}}" placeholder="{{s.R20.landmarkHint}}" maxlength="100">
+      <p class="cvh-hint cvh-hide-basic">{{s.R20.landmarkHint}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{isAddress}}">
+    <div class="cvh-field">
+      <label class="cvh-label" for="r20-a">{{s.R20.address}}<span class="cvh-tag cvh-tag--optional">{{s.R19.optional}}</span></label>
+      <input id="r20-a" class="cvh-input" type="text" value="{{aText}}" onInput="{{setAText}}" maxlength="100" autocomplete="street-address">
+      <p class="cvh-hint">{{s.R20.addressHint}}</p>
+    </div>
+  </sc-if>
+
+  <sc-if value="{{need}}"><p class="cvh-hint" role="status">{{need}}</p></sc-if>
+  <button type="button" class="cvh-btn cvh-btn--primary cvh-btn--block cvh-btn--lg" onClick="{{use}}" disabled="{{cannot}}">{{s.R20.use}}</button>
+</div>
+
+  </main>
+  <sc-if value="{{showNav}}"><dc-import name="C_ResidentNav" active="{{navActive}}" lang="{{lang}}" basic="{{basic}}" on-nav="{{app.go}}" embedded="{{true}}" hint-size="100%,64px"></dc-import></sc-if>
+  <sc-if value="{{toast}}"><div class="cvh-toast" role="status" lang="en" dir="ltr"><span class="cvh-ico cvh-ico--info cvh-ico--sm" aria-hidden="true"></span><span class="cvh-grow">{{toast}}</span></div></sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"app":{"editor":null},"demo":{"editor": "enum", "options": ["No address given: choose a way", "Drop a pin", "Building and described place", "Nearby landmark: Devon&#39;s church basement", "Street address, only if known", "Basic mode: building"], "default": "No address given: choose a way"},"embedded":{"editor":null},"fullh":{"editor":null},"$preview":{"width":360,"height":640}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { toast: null, loc: {}, locKey: null, srev: 0 }; }
+  componentDidMount() { var self = this; if (!this.props.app && window.CVH.session) this._off = window.CVH.session.on(function (st) { self.setState({ srev: st.rev }); }); }
+  componentWillUnmount() { if (this._tt) clearTimeout(this._tt); if (this._off) this._off(); }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, D = C.data();
+    var DEMOS = {"No address given: choose a way": {"persona": "devon", "scenario": "C"}, "Drop a pin": {"persona": "devon", "scenario": "C", "loc": {"mode": "pin", "lat": 43.7033, "lng": -79.3436, "z": 11.4}}, "Building and described place": {"persona": "rashid", "scenario": "C", "loc": {"mode": "building", "building": "SA", "btext": "The prayer room on the ground floor, next to the laundry"}}, "Nearby landmark: Devon's church basement": {"persona": "devon", "scenario": "C", "loc": {"mode": "landmark", "landmark": "park:R.V. Burgess Park", "ltext": "Church basement, side door on the park side"}}, "Street address, only if known": {"persona": "yusuf", "scenario": "C", "loc": {"mode": "address"}}, "Basic mode: building": {"persona": "george", "scenario": "C", "basic": true, "basicState": "persisted", "loc": {"mode": "building"}}}, keys = Object.keys(DEMOS);
+    var demoKey = p.app ? null : (p.demo && DEMOS[p.demo] ? p.demo : keys[0]);
+    var localToast = function (m) {
+      if (self._tt) clearTimeout(self._tt);
+      self.setState({ toast: typeof m === 'string' ? m : 'This artboard shows one screen. Open "Resident app" to click through.' });
+      self._tt = setTimeout(function () { self.setState({ toast: null }); }, 2600);
+    };
+    var app = p.app || C.demoApp(DEMOS[demoKey] || {}, localToast);
+    if (!p.app && p.fullh) app.h = p.fullh;
+    var lang = app.lang || 'en', basic = !!app.basic, s = C.strings(lang);
+    var locKey = p.app ? 'v' + (app.visit || 0) : 'd:' + demoKey;
+    var locInit = (p.app ? (app.params || {}).loc : (DEMOS[demoKey] || {}).loc) || {};
+    var patch = this.state.locKey === locKey ? this.state.loc : {};
+    var loc = Object.assign({}, locInit, patch);
+    var setLoc = function (x) { var cur = self.state.locKey === locKey ? self.state.loc : {}; self.setState({ locKey: locKey, loc: Object.assign({}, cur, x) }); };
+    var b = { self: this, app: app, C: C, D: D, s: s, en: C.strings('en'), lang: lang, basic: basic, scn: app.scenario || D.defaultScenario,
+      ch: app.choices || {}, params: app.params || {}, loc: loc, setLoc: setLoc, go: app.go, back: app.back, flags: app.flags || {},
+      act: app.act || function (a) { return C.session.act(Object.assign({ exercise: !!app.exercise }, a)); }, session: C.session.model(),
+      persona: app.persona || {}, standalone: !p.app,
+      toast: function (m) { if (p.app) app.flash(m); else localToast(m); },
+      ago: function (mins) { return C.ago(mins, lang); }, dur: function (mins) { return C.duration(mins, lang); },
+      fill: C.fill };
+    var chrome = 'full';
+    var base = { app: app, lang: lang, basic: basic, s: s, bcp: C.bcp(lang), dir: C.dir(lang),
+      rootClass: basic ? 'cvh-basic' : '', w: app.w || 360, h: app.h || 640, toast: this.state.toast,
+      showHeader: chrome === 'full' || chrome === 'firstRun', headerVariant: chrome === 'firstRun' ? 'firstRun' : 'full',
+      showNav: chrome === 'full', navActive: 'map', showExercise: 'R-20'[0] === 'A' && !!app.exercise,
+      exEnded: 'R-20'[0] === 'A' && !app.exercise && !!(D.partner && D.partner.run && D.partner.run.state === 'ended' && D.partner.run.endedMinsAgo != null && D.partner.run.endedMinsAgo < 30 && (D.partner.run.enrolled || []).indexOf('AMB-' + String((app.persona || {}).name || '').toUpperCase()) >= 0) };
+    return Object.assign(base, this.screenVals(b));
+  }
+
+  screenVals(b) {
+    var self = this, C = b.C, D = b.D, s = b.s, x = s.R20, loc = b.loc, prm = b.params, go = b.go;
+    var form = prm.form || {};
+    var w0 = prm.where || form.where || {};
+    var L = Object.assign({ mode: w0.kind || '', building: w0.kind === 'building' ? w0.building : '', btext: w0.kind === 'building' ? w0.text : '',
+      landmark: w0.kind === 'landmark' ? w0.landmarkId : '', ltext: w0.kind === 'landmark' ? w0.text : '', atext: w0.kind === 'address' ? w0.text : '' }, loc);
+    var nav = function (id, params) { if (b.app.replace && !b.standalone) b.app.replace(id, params); else go(id, params); };
+    var back = function (where) { nav('R-19', { loc: Object.assign({}, form, where ? { where: where } : {}) }); };
+    var modes = [{ id: 'pin', icon: 'map', label: x.pin }, { id: 'building', icon: 'building', label: x.building }, { id: 'landmark', icon: 'flag', label: x.landmark }, { id: 'address', icon: 'directions', label: x.address + ' (' + s.R19.optional.toLowerCase() + ')' }]
+      .map(function (m) { var on = L.mode === m.id; return Object.assign(m, { on: on, cls: on ? 'is-on' : '', aria: on ? 'true' : 'false', pick: function () { b.setLoc({ mode: m.id }); } }); });
+    // Landmarks people give directions by: the parks on the map and the places everyone knows
+    var marks = D.map.parks.map(function (p) { var la = 0, ln = 0; p.pts.forEach(function (q) { la += q[0]; ln += q[1]; }); return { v: 'park:' + p.name, label: p.name, lat: la / p.pts.length, lng: ln / p.pts.length }; })
+      .concat(['M056', 'M057', 'M060', 'M061', 'M053', 'M072', 'M012'].map(function (id) { var a = C.asset(id); return a ? { v: 'asset:' + id, label: a.name, lat: a.lat, lng: a.lng } : null; }).filter(Boolean));
+    var lOpts = [{ v: '', label: x.landmarkChoose }].concat(marks);
+    var bOpts = [{ v: '', label: x.buildingChoose }].concat((D.buildings || []).map(function (bd) { return { v: bd.id, label: bd.name }; }));
+    // Pin: the pin stays in the middle of a small drawn map; drag the map under it
+    var S0 = 9764, COS = Math.cos(43.71 * Math.PI / 180), ZS = [3.4, 5, 7.6, 11.4, 17];
+    var home = C.home(b.ch);
+    var V = { lat: L.lat != null ? L.lat : (w0.lat || home.lat), lng: L.lng != null ? L.lng : (w0.lng || home.lng), z: L.z || 7.6 };
+    var k = S0 * V.z, P2 = function (la, ln) { return { x: (ln - V.lng) * COS * k, y: (V.lat - la) * k }; };
+    var path = function (pts, close) { return pts.map(function (p, i) { var q = P2(p[0], p[1]); return (i ? 'L' : 'M') + q.x.toFixed(1) + ' ' + q.y.toFixed(1); }).join(' ') + (close ? ' Z' : ''); };
+    var roads = D.map.roads;
+    var base = { major: roads.filter(function (r) { return r.major; }).map(function (r) { return path(r.pts); }).join(' '), minor: roads.filter(function (r) { return !r.major; }).map(function (r) { return path(r.pts); }).join(' '),
+      parks: D.map.parks.map(function (p) { return path(p.pts, true); }).join(' '), river: path(D.map.river) };
+    var pos = function (q) { return 'left:calc(50% + ' + q.x.toFixed(1) + 'px);top:calc(50% + ' + q.y.toFixed(1) + 'px)'; };
+    var inV = function (q) { return Math.abs(q.x) < 200 && Math.abs(q.y) < 140; };
+    var blds = (D.buildings || []).map(function (bd) { return P2(bd.lat, bd.lng); }).filter(inV).map(function (q) { return { style: pos(q) }; });
+    var labels = [];
+    D.map.labels.concat(D.map.parks.map(function (p) { var m = marks.filter(function (x2) { return x2.label === p.name; })[0]; return { text: p.name, lat: m.lat, lng: m.lng, park: true }; }))
+      .forEach(function (l) { var q = P2(l.lat, l.lng); if (inV(q)) labels.push({ text: l.text, cls: l.park ? 'cvh-map__label--park' : 'cvh-map__label--area', style: pos(q) }); });
+    var nearest = function (la, ln) {
+      var best = null;
+      (D.buildings || []).forEach(function (bd) { var d = C.km({ lat: la, lng: ln }, bd); if (!best || d < best.d) best = { d: d, name: bd.name }; });
+      marks.forEach(function (m) { var d = C.km({ lat: la, lng: ln }, m) - 0.05; if (!best || d < best.d) best = { d: d, name: m.label }; });
+      return best ? best.name : '';
+    };
+    var near = L.mode === 'pin' ? nearest(V.lat, V.lng) : '';
+    var down = function (e) { self._r20 = { x: e.clientX, y: e.clientY, lat: V.lat, lng: V.lng, on: true }; };
+    var move = function (e) { var d = self._r20; if (!d || !d.on) return; b.setLoc({ lat: d.lat + (e.clientY - d.y) / k, lng: d.lng - (e.clientX - d.x) / (COS * k), z: V.z }); };
+    var up = function () { if (self._r20) self._r20.on = false; };
+    var zi = ZS.indexOf(V.z); if (zi < 0) zi = 2;
+    // What goes back to the form
+    var where = null, need = '';
+    if (L.mode === 'pin') where = { kind: 'pin', lat: V.lat, lng: V.lng, near: near };
+    else if (L.mode === 'building') { if (L.building) where = { kind: 'building', building: L.building, text: (L.btext || '').trim() }; else need = x.needBuilding; }
+    else if (L.mode === 'landmark') { var lm = marks.filter(function (m) { return m.v === L.landmark; })[0]; if (lm) where = { kind: 'landmark', landmarkId: lm.v, landmark: lm.label, lat: lm.lat, lng: lm.lng, text: (L.ltext || '').trim() }; else need = x.needLandmark; }
+    else if (L.mode === 'address') { if ((L.atext || '').trim()) where = { kind: 'address', text: L.atext.trim() }; else need = x.needAddress; }
+    else need = x.needOne;
+    return { modes: modes, isPin: L.mode === 'pin', isBuilding: L.mode === 'building', isLandmark: L.mode === 'landmark', isAddress: L.mode === 'address',
+      base: base, blds: blds, labels: labels, down: down, move: move, up: up, pinWhere: near ? C.fill(x.pinWhere, { place: near }) : '',
+      zoomIn: function () { b.setLoc({ lat: V.lat, lng: V.lng, z: ZS[Math.min(ZS.length - 1, zi + 1)] }); }, zoomOut: function () { b.setLoc({ lat: V.lat, lng: V.lng, z: ZS[Math.max(0, zi - 1)] }); },
+      bOpts: bOpts, bVal: L.building || '', bText: L.btext || '', setBuilding: function (e) { b.setLoc({ building: e.target.value }); }, setBText: function (e) { b.setLoc({ btext: e.target.value }); },
+      lOpts: lOpts, lVal: L.landmark || '', lText: L.ltext || '', setLandmark: function (e) { b.setLoc({ landmark: e.target.value }); }, setLText: function (e) { b.setLoc({ ltext: e.target.value }); },
+      aText: L.atext || '', setAText: function (e) { b.setLoc({ atext: e.target.value }); },
+      need: need, cannot: !where, use: function () { if (where) back(where); },
+      goBack: function () { back(null); } };
+  }
+
+}
+</script>
+</body>
+</html>

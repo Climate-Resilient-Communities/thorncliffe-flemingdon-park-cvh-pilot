@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>X-04 Machine-translation label and report control</title>
+<script src="./support.js"></script>
+<link rel="stylesheet" href="ds/cvrh/components/bundle.css">
+<link rel="stylesheet" href="cvh/cvh.css">
+<script src="cvh/lib.js"></script>
+<script src="cvh/data.js"></script>
+<script src="cvh/inventory.js"></script>
+<script src="cvh/icons.js"></script>
+<script src="cvh/strings.en.js"></script>
+<script src="cvh/strings.ur.js"></script>
+<script src="cvh/strings.ps.js"></script>
+<script src="cvh/strings.tl.js"></script>
+<script src="cvh/strings.prs.js"></script>
+<script src="cvh/strings.gu.js"></script>
+<script src="cvh/strings.ta.js"></script>
+<script src="cvh/strings.el.js"></script>
+<script src="cvh/strings.sk.js"></script>
+<script src="cvh/strings.bn.js"></script>
+<script src="cvh/strings.hi.js"></script>
+<script src="cvh/strings.pa.js"></script>
+<script src="cvh/strings.zh.js"></script>
+<script src="cvh/strings.es.js"></script>
+<script src="cvh/strings.fr.js"></script>
+<script src="cvh/strings.en.screens.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Public+Sans:wght@400;700&amp;family=Noto+Sans:wght@400;700&amp;family=Noto+Naskh+Arabic:wght@400;700&amp;family=Noto+Sans+Devanagari:wght@400;700&amp;family=Noto+Sans+Gujarati:wght@400;700&amp;family=Noto+Sans+Bengali:wght@400;700&amp;family=Noto+Sans+Tamil:wght@400;700&amp;family=Noto+Sans+Gurmukhi:wght@400;700&amp;family=Noto+Sans+SC:wght@400;700&amp;display=swap">
+<style>body{margin:0;background:#fafafa}</style>
+</helmet>
+<div class="cvh {{rootClass}}" lang="{{bcp}}" dir="{{dir}}" style="{{rootStyle}}">
+  <sc-if value="{{isLabelled}}" hint-placeholder-val="{{true}}">
+    <div class="cvh-mt">
+      <span class="cvh-mt__label"><span class="cvh-ico cvh-ico--language cvh-ico--sm" aria-hidden="true"></span>{{s.x04.label}}</span>
+      <span class="cvh-muted">{{fromLine}}</span>
+      <sc-if value="{{canReport}}"><button type="button" class="cvh-mt__report" onClick="{{openReport}}">{{s.x04.report}}</button></sc-if>
+      <sc-if value="{{isOpen}}">
+        <div class="cvh-mt__panel" role="group" aria-label="{{s.x04.reportTitle}}">
+          <p class="cvh-strong">{{s.x04.reportTitle}}</p>
+          <sc-for list="{{reasons}}" as="r" hint-placeholder-count="3">
+            <button type="button" class="cvh-btn cvh-btn--secondary cvh-btn--block cvh-btn--start {{r.cls}}" onClick="{{r.pick}}" aria-pressed="{{r.on}}">{{r.label}}</button>
+          </sc-for>
+          <button type="button" class="cvh-btn cvh-btn--primary" onClick="{{send}}" disabled="{{noReason}}">{{s.x04.send}}</button>
+        </div>
+      </sc-if>
+      <sc-if value="{{isReported}}">
+        <p class="cvh-mt__done" role="status"><span class="cvh-ico cvh-ico--check cvh-ico--sm" aria-hidden="true"></span>{{s.x04.reported}}</p>
+      </sc-if>
+    </div>
+  </sc-if>
+  <sc-if value="{{isUnavailable}}">
+    <div class="cvh-unavailable" role="note">
+      <span class="cvh-ico cvh-ico--language" aria-hidden="true"></span>
+      <div class="cvh-stack" style="--gap:6px">
+        <p class="cvh-strong">{{s.x04.unavailable}}</p>
+        <p class="cvh-caption">{{unavailableBody}}</p>
+        <button type="button" class="cvh-btn cvh-btn--secondary" style="align-self:flex-start">{{showSource}}</button>
+      </div>
+    </div>
+  </sc-if>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"state":{"editor":"enum","options":["labelled","reportOpen","reported","unavailable"],"default":"labelled"},"from":{"editor":"enum","options":["en","ur","bn","tl","prs","el","ta","gu"],"default":"en"},"lang":{"editor": "enum", "options": ["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"], "default": "en"},"basic":{"editor":"boolean","default":false},"embedded":{"editor":null},"$preview":{"width":360,"height":320}}'>
+class Component extends DCLogic {
+  constructor(props) { super(props); this.state = { st: null, reason: null }; }
+  renderVals() {
+    var self = this, p = this.props, C = window.CVH, lang = p.lang || 'en', s = C.strings(lang);
+    var st = this.state.st || p.state || 'labelled';
+    var fromL = C.lang(p.from || 'en');
+    var fromName = fromL.native;
+    var reasons = ['meaning', 'words', 'unclear'].map(function (k) {
+      var on = self.state.reason === k;
+      return { label: s.x04.reasons[k], on: on ? 'true' : 'false', cls: on ? 'cvh-chip--on' : '', pick: function () { self.setState({ reason: k }); } };
+    });
+    return { s: s, bcp: C.bcp(lang), dir: C.dir(lang), rootClass: p.basic ? 'cvh-basic' : '',
+      rootStyle: p.embedded ? '' : 'width:360px;height:320px;padding:16px;background:#fafafa;',
+      isLabelled: st !== 'unavailable', isUnavailable: st === 'unavailable',
+      canReport: st === 'labelled', isOpen: st === 'reportOpen', isReported: st === 'reported',
+      fromLine: C.fill(s.x04.from, { lang: fromName }), reasons: reasons, noReason: !this.state.reason && st === 'reportOpen' && !p.state,
+      unavailableBody: C.fill(s.x04.unavailableBody, { lang: C.lang(lang).native }),
+      showSource: C.fill(s.x04.showSource, { lang: fromName }),
+      openReport: function () { self.setState({ st: 'reportOpen' }); },
+      send: function () { self.setState({ st: 'reported' }); } };
+  }
+}
+</script>
+</body>
+</html>
