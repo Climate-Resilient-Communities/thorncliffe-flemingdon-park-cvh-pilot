@@ -2685,3 +2685,335 @@ So that I know who has been reached and no test path can send by accident.
 **Given** a failed, undelivered or unknown text
 **When** shown
 **Then** it shows the meaning in plain words (for example "Number not in service", "Outcome unclear; not re-sent"), without the phone number on screen
+
+## E07 — Residents sign up and get alerts by text
+
+Residents read plain-language terms, sign up for texts on the web or with a staff member's help, and confirm by replying YES themselves. They change their choices or leave by text or a short-lived web link, approved alerts reach exactly the matching subscribers in their language, corrections and finals reach everyone who got the original, and Admins see spend against the budget with a cap that warns but never blocks.
+
+**Epic estimate:** 54 h across 10 stories (5 S, 5 M) · **Epic actual:** —
+
+**Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.13 (buildings and floors), S02.03 (device choices), S03.04 (`rate_limit`), S04.04 (`matches`), S04.06 (renderer), S04.07 (approval, reviewed-count check, `captureRecipients` hook), S05.02 and S05.03 (correction and final recipient rules), S06.01 to S06.07 (outbox, sendability by kind, sender, callbacks, pause, on-call), S06.08 (cost data). Each story creates only the tables it needs and names the stories it depends on.
+
+**Handoffs.** Reply 3 (withdraw a check-in request) is routed to `checkins`' `withdrawRequest(subscriberId)` port; until E08 implements it, it replies "You have no check-in request". The sign-up form's optional check-in request is added in E08. Re-consent campaigns at the end of the pilot are E09.
+
+**Definitions used in this epic**
+
+| Term | Meaning |
+| --- | --- |
+| Canadian number | An E.164 `+1` number whose area code is on the Canadian area-code list in config. Anything else is refused. |
+| Pending sign-up | A `pending_signup` holding the number, language, neighbourhood, optional places, groups and topics, `consent_version` and how it started (`web` or `staff`). It expires 48 hours after its confirmation text was created. At most one per number per 48 hours. |
+| Subscriber | A confirmed number with language, neighbourhood (required), places (`subscriber_place`: buildings, each with optional floors; any number of buildings), groups, topic opt-outs, `consent_version` and `retention_state`. No name, unit, email or password is ever stored. |
+| Confirmation | Only the resident replying YES from that number confirms. YES is accepted as `YES` or `Y` in any case, or the catalog's word for yes in the pending sign-up's language. YES resolves to the open prompt with the latest `sent_at` for that number. |
+| Reply normalisation | Inbound text is trimmed and case-folded; Arabic-Indic, Extended Arabic-Indic, Bengali, Devanagari, Gujarati, Gurmukhi, Tamil and full-width digits are mapped to 0–9 before matching. Inbound bodies are never stored, only daily keyword counts. |
+| Decision table | One router, `subscriptions/application/handleInbound`, chooses the action from (keyword, the number's state `none`, `pending` or `active`, open prompt). Every row has a test. |
+| Menu | Reply 1 (street → building on that street → floor) or 2 (language by list number), state in `sms_prompt`. Every step offers 0 to go back and 9 for the Hub's number; options that do not fit page with 9 → "more" replaced by 8 (so 9 always means the Hub); a menu idle for 10 minutes resets with a message saying so; at most 5 menus per number per day. Every menu message is a catalog string that fits one segment in its language's encoding. |
+| Edit link | A single-use web link valid for 30 minutes, sent by text on request, to change choices or delete the subscription. |
+| Matching subscribers | Active subscribers for whom `src/contracts/audience.ts#matches` is true; the SQL query in `subscriptions` must return exactly the same set (property test). |
+| Monthly cap | An Admin-set SMS spend limit per calendar month in `America/Toronto`. Exceeding it shows the shortfall and notifies Admins; it never blocks a send. |
+| Overnight notice | The welcome text says, in the resident's language, that messages are checked by Hub staff and may not be sent overnight (accepted risk R-11). |
+
+### Story S07.01 — Residents can read plain terms before signing up
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** NFR-N5 (terms), AR-17, FR-A2 · **Depends on:** S02.09 · **Branch:** `e07-s01-terms`
+
+As a resident,
+I want to read in my language what the CVH keeps about me and who handles it,
+So that I can decide whether to sign up.
+
+**Acceptance Criteria:**
+
+**Given** the terms and privacy page at `/{lang}/terms`
+**When** opened
+**Then** it states in plain words: only the phone number, language, neighbourhood and optional choices are kept; no name, unit, email or password; who processes data (Twilio, Cohere, Vercel, Supabase) and where; the community owns the data; how to stop (reply STOP or 0) and that stopping deletes the subscription; that backups keep deleted data for the backup window; the minimum age of 16, or younger with a parent's or guardian's help; the privacy contact; and that messages are checked by Hub staff and may not be sent overnight
+
+**Given** the terms text
+**When** it is published
+**Then** it carries a version (`consent_version`), is translated and reviewed offline like the guides (S02.09 rules, owner and last-updated date shown), and every sign-up records the version shown
+**And** a new version applies to new sign-ups only; existing subscribers keep theirs until the end-of-pilot re-consent (E09)
+
+**Given** the counsel review in launch readiness
+**When** the terms are changed after it
+**Then** the new version is not published until the review is recorded
+
+### Story S07.02 — Resident signs up for texts on the web
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A2, FR-A9 (SMS), FR-A12, AR-13, AR-20, UX-DR9 (R-05, R-06) · **Depends on:** S07.01, S06.07 · **Branch:** `e07-s02-web-signup`
+
+As a resident,
+I want to sign up for text alerts with just my number, language and neighbourhood,
+So that I get alerts even when I am not using the app.
+
+**Acceptance Criteria:**
+
+**Given** "Get text alerts" (R-05)
+**When** opened
+**Then** the form is filled from the device choices (language, neighbourhood from chosen buildings, buildings, floors, groups) and asks only for the phone number; the resident can change any choice, must agree to the terms (linked, version shown) and confirm the minimum-age statement
+
+**Given** the form is submitted
+**When** the number is not a Canadian number, the neighbourhood is missing, or the terms are not agreed
+**Then** it is refused with the reason in the page language and nothing is stored
+
+**Given** a valid submission
+**When** it is accepted
+**Then** a pending sign-up is created and one `transactional` confirmation text (purpose `confirmation`, `send_by` 48 hours) is queued in the chosen language: "Reply YES to get CVH alerts. Reply STOP to stop."; R-06 shows what to expect, how to stop and how to change choices
+**And** this POST is the only resident request that carries places or groups (AD-3 exception), and it sets no cookie
+
+**Given** a number with a pending sign-up in the last 48 hours, or already subscribed
+**When** submitted again
+**Then** the response is a success body with `status: already_pending` or `already_subscribed` and the same neutral wording ("If this number can get texts, a message is on its way"), so the form never reveals whether a number is subscribed; no second confirmation is sent
+
+**Given** one client (salted IP hash) submits more than 5 sign-ups in an hour
+**When** the next arrives
+**Then** it returns 429 and nothing is stored
+
+**Given** the confirmation is refused by the provider because the number earlier texted STOP (permanent error)
+**When** the callback arrives
+**Then** the pending sign-up is deleted, and R-06 has told the resident in advance: "No text within 5 minutes? Text START to {number}, then sign up again"
+
+### Story S07.03 — Staff help a resident sign up at an event or the Hub desk
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-A2 (helped sign-up), AR-20, NFR-N5 (staff-assisted) · **Depends on:** S07.02 · **Branch:** `e07-s03-staff-assisted-signup`
+
+As a Hub Coordinator at a launch event,
+I want to start a sign-up for a resident on my phone,
+So that residents without the app can join, while still confirming for themselves.
+
+**Acceptance Criteria:**
+
+**Given** the staff sign-up screen (Coordinators, Ambassadors and Admins)
+**When** the staff member enters the resident's number, language, neighbourhood and optional choices, and confirms the resident has heard the terms summary (shown on screen in the resident's language)
+**Then** a pending sign-up with `started_by = staff` is created and the same confirmation text is queued; the resident must reply YES themselves
+
+**Given** the per-staff limit
+**When** a staff account starts more than 40 sign-ups in a day
+**Then** further ones are refused with a message (limits per staff account, not per IP)
+
+**Given** the audit trail
+**When** a staff-assisted sign-up is started
+**Then** `signup.assisted` is audited with the staff id and outcome, never the phone number
+
+**Given** a staff member
+**When** they later look for that resident
+**Then** no staff screen lists subscribers or their numbers (access requests are E09)
+
+### Story S07.04 — Residents confirm, get a welcome, and STOP deletes them
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-inbound-router`
+
+As a resident,
+I want my YES to start my alerts and STOP to remove me completely,
+So that I control whether I get texts.
+
+**Acceptance Criteria:**
+
+**Given** `POST /api/twilio/inbound`
+**When** a message arrives
+**Then** the signature is validated against `PUBLIC_BASE_URL` before any work; the body is normalised and passed to the decision table, then discarded; only the daily keyword count is stored
+
+**Given** a pending sign-up and the reply YES from that number before it expires
+**When** it is handled
+**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice
+**And** a repeated YES is answered "You are already signed up" and changes nothing
+
+**Given** YES with no pending sign-up, or after it expired
+**When** handled
+**Then** the reply gives the sign-up link and no subscriber is created
+
+**Given** Twilio Advanced Opt-Out handles STOP, START and HELP
+**When** the inbound webhook reports an opt-out (`OptOutType = STOP`)
+**Then** the subscriber, its places, opt-outs, prompts, edit links and any pending sign-up for that number are hard-deleted in one transaction; the app sends no reply of its own; queued texts to that subscriber are skipped at hand-off
+**And** START with no subscription is answered with the sign-up link; HELP replies are Twilio's and are tested on the verified number before launch
+
+**Given** reply 0 from an active subscriber
+**When** handled
+**Then** the subscription is deleted as for STOP, and one final text confirms it in the subscriber's language
+
+**Given** any other text from a number with no state
+**When** handled
+**Then** it is answered at most once a day with the sign-up link and "Reply STOP to stop"; otherwise ignored
+
+**Given** every row of the decision table
+**When** the tests run
+**Then** each (keyword, state, open prompt) combination has a test, including normalised digits in Urdu, Bengali and Gujarati script
+
+### Story S07.05 — Residents change building, floor or language by numbered text menus
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-D-6, AR-13, AR-19 (one-segment menus), AR-20 · **Depends on:** S07.04 · **Branch:** `e07-s05-sms-menus`
+
+As a resident with a basic phone,
+I want to change my building, floor or language by replying with numbers,
+So that I can keep my alerts right without a smartphone.
+
+**Acceptance Criteria:**
+
+**Given** reply 1
+**When** the menu runs
+**Then** it lists streets with the 43 pilot buildings by number, then buildings on the chosen street, then floors (or "whole building"); each step offers 0 to go back and 9 for the Hub's number; long lists page with 8 for more
+**And** the chosen building and floor replace the subscriber's places only when the last step is completed, with a confirmation text
+
+**Given** reply 2
+**When** the menu runs
+**Then** it lists the 15 languages each in its own name, by number, and the choice changes the subscriber's language with a confirmation in the new language
+
+**Given** every menu and prompt message in every language
+**When** CI runs the fixture
+**Then** each renders to exactly one segment with the real encoder (GSM-7 or UCS-2, `SmartEncoded=false`), or CI fails naming the message and language
+
+**Given** a menu idle for 10 minutes
+**When** the resident replies after that
+**Then** the menu has reset, the reply says so, and the number is treated as a new keyword
+
+**Given** a number that has started 5 menus today
+**When** it sends 1 or 2 again
+**Then** the reply says the daily limit is reached and offers the edit link and the Hub's number
+
+**Given** reply 3
+**When** handled
+**Then** it calls `checkins`' `withdrawRequest` port (E08); until then the reply is "You have no check-in request"
+
+### Story S07.06 — Residents change or delete their subscription with a one-time web link
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-A2, AR-13, AR-17 · **Depends on:** S07.05 · **Branch:** `e07-s06-edit-link`
+
+As a resident with a smartphone,
+I want a link to change my choices on a web page,
+So that I don't have to step through text menus.
+
+**Acceptance Criteria:**
+
+**Given** a menu step offering the edit link, or reply 1 or 2 when the daily menu limit is reached
+**When** the resident asks for it
+**Then** a single-use token valid for 30 minutes is created (stored hashed) and texted as `/{lang}/subscription/{token}`
+
+**Given** the link opened in time
+**When** the resident changes language, places, groups or topic opt-outs, or chooses "Delete my subscription"
+**Then** the change is saved (or the subscription hard-deleted), the token is used up, and a confirmation text is queued
+**And** the page sets no cookie and shows no phone number beyond its last two digits
+
+**Given** an expired or used token
+**When** opened
+**Then** the page says "This link has expired" (a success body with `status: expired`) and explains how to get a new one by text
+
+### Story S07.07 — Approved alerts reach exactly the matching subscribers
+
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Traces:** FR-A1 (SMS), FR-A2, FR-A16 (SMS), AR-11, FR-A3 (recipients per language) · **Depends on:** S07.04, S06.03 · **Branch:** `e07-s07-subscriber-fanout`
+
+As a resident subscriber,
+I want texts only for my buildings, floors and groups, in my language,
+So that every text I get matters to me.
+
+**Acceptance Criteria:**
+
+**Given** the SQL recipient query in `subscriptions` and `matches` in `src/contracts`
+**When** the property test runs on thousands of generated audiences and subscriber profiles in a local database
+**Then** the query returns exactly the profiles `matches` accepts, including topic opt-outs and the fire and evacuation override
+
+**Given** the recipient-count port used by the approval view
+**When** an entry is reviewed
+**Then** it returns the count of matching active subscribers per language
+
+**Given** an entry is approved
+**When** `captureRecipients(entry, tx)` runs inside the approval transaction
+**Then** it locks the matching subscriber rows `FOR SHARE` in lock order, creates one `alert` delivery per subscriber with the frozen body for the subscriber's current language (or the English fallback body with `translation.unavailable` for a fallback language), and returns the count to S04.07's reviewed-count check
+**And** a subscriber who signs up, changes places or unsubscribes during approval is either fully included or fully excluded (concurrency test)
+
+**Given** a correction or withdrawal
+**When** approved
+**Then** recipients are the target's recipients (from its deliveries, opt-outs never removing them) plus the entry's own audience, deduplicated; a recipient deleted since gets nothing
+
+**Given** a final
+**When** approved
+**Then** recipients are the union of every entry's recipients in the thread plus the final's own audience, deduplicated by subscriber
+
+**Given** an SMS alert to 120 subscribers that is corrected
+**When** the correction is approved (integration test with a fake provider)
+**Then** the same 120 receive the correction by text, each in their current language, marked as a correction (FR-A16 acceptance), and the web shows the correction above the original
+
+**Given** an entry in a language whose translation fell back
+**When** subscribers in that language receive it
+**Then** they get the English body with `translation.unavailable` in their language, and the approver saw how many
+
+### Story S07.08 — Admins see spend against the budget and set a monthly cap
+
+- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Traces:** FR-G6, NFR-N9, FR-M5, AR-12 (spend cap) · **Depends on:** S07.07, S06.08 · **Branch:** `e07-s08-spend-cap`
+
+As a Hub Admin,
+I want spend to date and a monthly SMS cap that warns me,
+So that we stay within the pilot budget without ever blocking an urgent alert.
+
+**Acceptance Criteria:**
+
+**Given** the spend view
+**When** an Admin or Director opens it
+**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000), using actual prices where Twilio reported them and labelled estimates otherwise; Directors see it read-only
+
+**Given** an Admin at `aal2`
+**When** they set or change the monthly cap
+**Then** it is saved in `spend_cap` and audited
+
+**Given** an approval
+**When** it runs
+**Then** after the recipient snapshot it takes the `spend_cap` lock (last in lock order), writes a `spend_reservation` for the estimate, and if month-to-date plus the estimate exceeds the cap, the approver has already been shown the shortfall on the approval view, the approval still succeeds, `cap_overrun` is audited, and Admins are notified by a `transactional` text
+**And** two approvals at the same time each see the other's reservation (concurrency test)
+
+**Given** the month boundary in `America/Toronto`
+**When** spend is totalled
+**Then** a send at 23:59 and one at 00:01 Toronto time fall in different months (test)
+
+### Story S07.09 — Abuse of sign-up and texting is limited
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** AR-20, NFR-N9 · **Depends on:** S07.04 · **Branch:** `e07-s09-abuse-limits`
+
+As a Hub Admin,
+I want the sign-up form and replies protected from scripts,
+So that nobody can use the CVH to send texts to strangers or run up costs.
+
+**Acceptance Criteria:**
+
+**Given** the Twilio Messaging Service
+**When** the daily configuration check runs (S06.02)
+**Then** it also confirms geo permissions allow Canada only and SMS pumping protection is on, and raises an on-call alert otherwise
+
+**Given** the daily ceiling on `transactional` texts (config)
+**When** it is crossed
+**Then** an `ops_event` is recorded and on-call is alerted once that day; texts keep sending
+
+**Given** inbound messages from one number
+**When** more than 20 arrive in an hour
+**Then** further ones that day get no reply (counted only), and the count is recorded
+
+**Given** the rate-limit hashes
+**When** 24 hours pass
+**Then** they are deleted (job test)
+
+### Story S07.10 — The Hub counts subscribers and correction reach
+
+- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Traces:** FR-M1 (subscribers), FR-M4 (correction reach), FR-M5 · **Depends on:** S07.07 · **Branch:** `e07-s10-subscriber-measures`
+
+As a Hub Director,
+I want daily subscriber numbers and how far corrections reached,
+So that the pilot can report reach without identifying anyone.
+
+**Acceptance Criteria:**
+
+**Given** the daily measures job
+**When** it runs
+**Then** it stores active subscribers, pending sign-ups, confirmations and deletions by language and neighbourhood, as counts only, with no identifiers; groups of fewer than 5 are shown as "fewer than 5"
+
+**Given** each correction, withdrawal and final sent to subscribers
+**When** measured
+**Then** attempted reach and confirmed reach are reported against the original's recipients (S06.08 definitions), drills apart
+
+**Given** cost per alert
+**When** reported
+**Then** it shows SMS cost by language (actual where reported, otherwise labelled estimate) and the alert's share of Cohere usage, drills apart
