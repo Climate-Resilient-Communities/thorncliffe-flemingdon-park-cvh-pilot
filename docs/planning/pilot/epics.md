@@ -2376,6 +2376,7 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | `claimed`, `submitted`, `unknown` | `delivered`, `undelivered`, `failed` | signed callback with a terminal status |
 | `claimed`, `unknown` | `submitted` | signed callback with a non-terminal status (`queued`, `sending`, `sent`) |
 | `submitted` | `unknown` | no terminal status after 24 hours |
+| `queued`, `claimed` | `unknown` | only the restore recovery operation (E09 S09.03), while recovery mode is on |
 
 ### Story S06.01 — Every outbound text is one queued record, never a phone number
 
@@ -3423,7 +3424,10 @@ The Hub learns about problems before residents do, can deliberately resend texts
 | Re-consent prompt | At campaign start each targeted subscriber gets an `sms_prompt` of kind `reconsent`, open until the deadline. YES from that number resolves to it (latest `sent_at`, AD-9) and moves the subscriber to `retained`. |
 | Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. Stored as `access_request` with the Admin, a salted hash of the number, timestamps and outcome, never the number. |
 | Access code | 6 digits, stored only as an HMAC (server secret, request id, code), valid 15 minutes, at most 3 attempts, used once. Verification is one atomic update that succeeds only if the request is unverified, unexpired, under its attempt limit and the code matches; a failed attempt increments the count in the same statement. |
-| Deletion ledger | Every subscription deletion also appends `(salted number hash, deleted_at)` to a daily file in a private Storage bucket outside the database, kept for the database backup window plus one day. A database restore replays it (S09.03). |
+| Deletion ledger | Every subscription deletion inserts `(seq, salted number hash, deleted_at)` into `deletion_ledger_outbox` in the same transaction as the deletion, so no deletion can commit without its entry. A ledger exporter, every minute, copies new entries in `seq` order to files in a private Storage bucket outside the database, then writes an external checkpoint object `{last_seq, exported_at}`, then removes the exported rows. Ledger files are kept for the database backup window plus one day; the salt lives in the environment, not the database. |
+| Ledger complete | The ledger files hold every `seq` from the first to the checkpoint's `last_seq` with no gap, and the checkpoint's `exported_at` is no more than 2 minutes before the outside monitor's last successful heartbeat (an external record of when the system was last alive). Otherwise the ledger is incomplete. |
+| Recovery mode | A flag on `messaging_control` that an Admin at `aal2` can set only while texts are paused and the sender lease is disabled; every use is audited. It is the only state in which the restore recovery operation may run. |
+| Verified control | Proof that the person asking controls the number: they read back an access code texted to it (S09.06), or answer a call-back to it (launch-day process), or send a given one-time phrase from it by text. Nothing else counts. |
 | Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
 | Small-number rule | In every displayed or exported measure, a count of 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5"; a percentage whose numerator or denominator is 1 to 4 is not shown; and where a total and the other visible cells would reveal a hidden cell, one more cell is hidden. Zero is shown as 0. |
 | Measures | Section 9 of the pilot PRD: subscribers and installs; acknowledgement, approval and delivery times; check-in counts; directory, map and search use; translation understood per language (survey) and fallback rates; drills, corrections and their reach; cost per alert and total spend; coverage. All aggregate, drills apart. |
@@ -3505,20 +3509,39 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** the deletion ledger
 **When** any subscription is deleted (STOP, double 0, edit page, access request, purge)
-**Then** the ledger entry is written after the deletion commits, retried until stored, and a failure to store it raises a health condition; the ledger never holds a number, only its salted hash (salt in the environment, not the database)
+**Then** its `deletion_ledger_outbox` entry commits in the same transaction, and the exporter later copies it and advances the external checkpoint; the ledger never holds a number, only its salted hash
+**And** an exporter lag over 3 minutes, or a failure to write the files or the checkpoint, is a health condition
+
+**Given** a crash immediately after a deletion commits, before the exporter runs
+**When** the exporter next runs
+**Then** the entry is exported and the checkpoint advanced (test)
+
+**Given** Storage is unavailable when the exporter runs
+**When** it fails
+**Then** the entries stay in the outbox, the exporter retries every minute, the health condition is raised after 3 minutes, and the ledger is reported incomplete until the export succeeds (test)
 
 **Given** the restore procedure
 **When** a backup is restored
-**Then** before the app serves traffic: texts are paused and the sender lease is disabled; every subscriber, pending sign-up, check-in row and edit link whose number hash appears in the ledger after the backup's time is deleted again; every delivery not in a terminal state is set to `unknown` (so nothing handed off after the backup can be sent again automatically) and listed for Admin review; only then are the lease and sending re-enabled
-**And** a staging rehearsal restores a backup taken before a test deletion and a test send, and confirms the deleted subscription stays deleted and the sent text is not sent again
+**Then** before the app serves traffic: texts are paused, the sender lease is disabled and recovery mode is set; the ledger must be complete, and if it is incomplete or unavailable the restore stays blocked (the app stays in maintenance) until it is complete
+**And** every subscriber, pending sign-up, check-in row, edit link and `inbound_reply` whose number hash appears in the ledger after the backup's time is deleted again; numbers that Twilio reports as opted out are deleted too
+**And** the restore recovery operation sets every `queued` or `claimed` delivery to `unknown` (so nothing handed off after the backup can be sent again automatically), lists them for Admin review and audits the counts; outside recovery mode the trigger refuses that change (direct SQL test)
+**And** only then are recovery mode turned off and the lease and sending re-enabled, each audited
+
+**Given** spend after a restore
+**When** reconciled
+**Then** reservations of deliveries moved to `unknown` by the recovery operation are released, not counted as spent; Twilio's usage records for the period from the backup's time to the restore are fetched and recorded as one actual `spend_event` for that period; nothing is assumed charged without that record
+
+**Given** the staging restore rehearsal
+**When** it runs
+**Then** it restores a backup taken before a test deletion and a test send, and confirms: the deleted subscription stays deleted; the sent text is not sent again; a restore with a deliberately removed ledger file is blocked; and spend shows the period's usage once
 
 **Given** the launch-day access-request process, used until S09.06 ships
 **When** a resident asks what is held
-**Then** an Admin verifies the resident by calling the number back, then IT runs `scripts/access-request` (service key, read-only, output shown on screen and not saved), and the request is recorded in the audit trail without the number
+**Then** an Admin establishes verified control by calling the number back, then IT runs `scripts/access-request` (service key, read-only, output shown on screen and not saved); a deletion on the resident's behalf is done the same way only after verified control; the request is recorded in the audit trail without the number
 
-**Given** someone whose number can no longer receive texts or calls
+**Given** someone who cannot show verified control of the number (it can no longer receive texts or calls)
 **When** they ask for access or deletion
-**Then** the procedure does not show any data; it allows deletion only, after the person states the number in person at the Hub, and the deletion is audited as "unverified request"
+**Then** the request is recorded (without the number), nothing is revealed and nothing is deleted; the Hub offers the alternative of sending a given one-time phrase by text from that number, explains that texting STOP from it deletes the subscription, and that all pilot data is deleted at the end of the pilot (S09.08)
 
 **Given** launch readiness
 **When** the procedures are rehearsed
