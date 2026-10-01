@@ -2355,7 +2355,7 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | Permanent error | A provider 4xx error other than 429 (for example invalid number, or recipient opted out): the row becomes `failed` with the code; never retried. |
 | Ambiguous outcome | Anything else after the request may have been sent: a 5xx response, a timeout, a dropped connection, or an acceptance followed by an error. The row becomes `unknown` and is never re-sent automatically. |
 | Lease expiry of a row | A row `claimed` for more than 5 minutes without a hand-off returns to `queued`; one claimed with a hand-off but no recorded outcome for 5 minutes becomes `unknown`; a `submitted` row with no terminal status after 24 hours becomes `unknown`. |
-| Pause | A `messaging_pause` row set by an Admin. While paused, nothing is claimed or handed off; queued and claimed-but-not-handed-off rows wait. |
+| Pause | Set by an Admin on the single `messaging_control` row. While paused, nothing it applies to is claimed or handed off; queued and claimed-but-not-handed-off rows wait. On-call texts are exempt. |
 | Drill roster | Staff-owned phone numbers entered by Admins, each with a label and language. Drill texts can go only to them. |
 | On-call roster | Admin phone numbers entered by Admins, for operational alerts (`ops.oncall_roster`). |
 
