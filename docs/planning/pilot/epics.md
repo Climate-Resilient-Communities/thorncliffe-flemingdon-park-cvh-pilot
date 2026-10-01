@@ -158,6 +158,8 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Rehearse a full drill in production; rehearse one database restore with `scripts/restore-reconcile` (S09.03) | Hub + IT | Before launch |
 | Manual Lighthouse run (mobile preset, Slow 4G, cold cache, median of 3) on `/en/`, `/ur/` and the directory page; record Largest Contentful Paint, Total Blocking Time and JavaScript transferred against the proposed budgets (LCP ≤ 4 s, TBT ≤ 600 ms, JS ≤ 200 KB compressed); note any miss with an action | IT | Before launch |
 | Rehearse the re-consent campaign on the drill roster in production (S09.07) | Hub + IT | By day 55 |
+| Storage decision for the deletion ledger: confirm Supabase Storage exposes and enforces a retention policy of at least the database backup window plus one day with no early deletion or overwrite (configuration readable at run time), or record an alternative store with the same guarantees (S09.03) | IT | **Before S09.03 implementation starts** |
+| Verified ledger enforcement in production: with the app's credentials, deleting or overwriting a ledger object before its retention expires is refused, and the configured retention matches the procedures (S09.03) | IT + Hub | **Before launch (launch gate)** |
 | Plan launch events with staff-assisted sign-up | Hub | Before launch |
 
 ### FR Coverage Map
@@ -2636,9 +2638,23 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 **Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` once, with kind `sms`, language, entry id and `is_drill`, in the same transaction as the outcome
 **And** a not-accepted outcome that requeues the row writes nothing, so a retried text is counted once, when it is finally accepted
 
-**Given** a calendar month ends (Toronto time)
-**When** an Admin runs the monthly reconciliation procedure
-**Then** Twilio's SMS usage records for the month are entered once as an actual `spend_event` for that month (converted to CAD at the configured rate, labelled), and reports show the actual total and its difference from the estimates; entering the same month twice is refused
+**Given** a reconciliation, identified by a stable reconciliation id
+**When** it runs
+**Then** its interval is exact and stated in UTC: for a month, `[first instant of the month, first instant of the next month)` in `America/Toronto`, converted to UTC, with id `month:{YYYY-MM}`; for a restore, `[backup's timestamp, moment sending was re-enabled)`, with id `restore:{backup timestamp}:{re-enable timestamp}` (S09.03)
+**And** it lists every outbound message in the interval from the Twilio Messages API, following `next_page_uri` until it is empty, and records each message's actual price once, keyed by its `MessageSid` (unique across all reconciliations), converted to CAD at the configured rate and labelled
+
+**Given** the same reconciliation run again, or a message already imported by another reconciliation
+**When** it imports
+**Then** nothing changes: the reconciliation id and each `MessageSid` are unique, so a repeated import adds no actual and replaces no further estimate (test)
+
+**Given** a reconciliation whose listing completed and every message has a price
+**When** it is applied
+**Then** it replaces only the estimates attributable to its interval: for a month, the estimates of deliveries whose outcome was recorded in that interval and that are not attributed to a restore reconciliation; for a restore, the estimates of the deliveries its recovery operation set to `unknown`; each replaced estimate is marked with the reconciliation id and is no longer counted, so no text is counted twice
+**And** the reconciliation is marked complete and reports the actual total and its difference from the replaced estimates
+
+**Given** a reconciliation whose listing failed, was cut short, or includes a message with no price yet
+**When** it is checked
+**Then** nothing is replaced, the interval is shown as "pending reconciliation" with its estimates still counted (never zero), and the reconciliation is retried later (tests for each)
 
 **Given** an alert entry's deliveries
 **When** the pilot measures are computed
@@ -2978,7 +2994,7 @@ So that we stay within the pilot budget without ever blocking an urgent alert.
 
 **Given** the spend view
 **When** an Admin or Director opens it
-**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000): actual where reconciled (S06.08), otherwise labelled estimates; Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured, never as zero; Directors see it read-only
+**Then** it shows SMS and Cohere spend this month and for the pilot to date against the pilot budget (CAD 1,000): actual where a reconciliation is complete (S06.08), otherwise labelled estimates, with intervals awaiting reconciliation labelled "pending reconciliation"; Cohere usage whose price is unknown is shown as "price unknown" with its units, or as a labelled estimate when an estimate rate is configured, never as zero; Directors see it read-only
 
 **Given** an Admin at `aal2`
 **When** they set or change the monthly cap
@@ -3480,6 +3496,16 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Acceptance Criteria:**
 
+**Given** the deletion ledger's store
+**When** S09.03's implementation is about to start
+**Then** the Storage decision in Launch Readiness has been recorded: either Supabase Storage is confirmed to expose and enforce a retention policy of at least the database backup window plus one day, with no early deletion or overwrite and with that configuration readable at run time; or an alternative store is chosen that preserves the deletion evidence with the same guarantees
+**And** until that decision is recorded, S09.03 is not started
+**And** any alternative keeps the same contract: deletions are not committed without confirmed evidence, completeness check 2 reads the alternative's controls, and recovery stays blocked when completeness is unknown
+
+**Given** launch readiness
+**When** ledger enforcement is verified in production
+**Then** an attempt with the app's credentials to delete or overwrite a ledger object before its retention expires is refused, the configured retention is read back and matches the procedures, and the result is recorded in Launch Readiness; without that record the pilot does not launch
+
 **Given** `docs/procedures/`
 **When** this story is done
 **Then** it holds one page each, in plain steps with screen names, for: writing and approving an alert; correcting and withdrawing; closing; running a drill; pausing and resuming texts; resending failed texts; a cap overrun; a health alert and who owns the incident; changing Messaging Service settings (texts paused first); rotating secrets (at pilot start, on departures, at pilot end); restoring the database; and a resident access request
@@ -3539,8 +3565,10 @@ So that sending, correcting and recovering are done the same way every time.
 **Then** these cases are tested: a Twilio log of three pages (all read, complete); a page that errors (incomplete); a redacted body (incomplete); a ledger listing error (incomplete); a retention policy shorter than the backup window plus one day, or one that allows early deletion or overwrite (incomplete); a re-subscription 1 minute after a STOP resolved with order evidence (complete); and the same case with no order evidence (stays incomplete)
 
 **Given** spend after a restore
-**When** reconciled
-**Then** deliveries moved to `unknown` by the recovery operation are not counted as spent; Twilio's usage records for the period from the backup's time to the restore are fetched and recorded as one actual `spend_event` for that period; nothing is assumed charged without that record
+**When** recovery ends
+**Then** deliveries set to `unknown` by the recovery operation keep their estimates, counted as spent and labelled "pending reconciliation" (never zero)
+**And** a restore reconciliation (S06.08) runs for the interval `[backup's timestamp, moment sending was re-enabled)` with id `restore:{backup timestamp}:{re-enable timestamp}`; when it is complete it replaces exactly those estimates with the actual prices of the messages Twilio sent in that interval, each `MessageSid` counted once; until then the interval stays pending reconciliation
+**And** tests cover: importing the same restore reconciliation twice (no change); a message also falling in the month's reconciliation (counted once); and a message with no price yet (interval stays pending, estimates still counted)
 
 **Given** the staging restore rehearsal
 **When** it runs
