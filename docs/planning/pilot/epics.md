@@ -3078,7 +3078,7 @@ So that the pilot can report reach without identifying anyone.
 
 ## E08 — Ambassadors post building updates and check on neighbours
 
-Ambassadors see their buildings' alerts and post updates and incidents for their floors; lower-risk posts appear on the web at once as "Not yet verified" while every text waits for a second person. Subscribed residents can ask to be checked on during heat and outages, with honest consent and coverage; during those alerts the covering ambassadors run a round that works without signal and keeps nothing on the phone, the Hub hears at once about anyone not reached or needing help, and only counts remain when the alert closes. Posting stories come first so posting can ship even if check-ins slip.
+Ambassadors see their buildings' alerts and post updates and incidents for their floors; lower-risk posts appear on the web at once as "Not yet verified" while every text waits for a second person. Subscribed residents can ask to be checked on during heat and outages, with honest consent and coverage; during those alerts the covering ambassadors run a round that works without signal and keeps nothing on the phone, the Hub hears at once about anyone not reached or needing help, and only counts remain when the alert closes. Posting stories come first so posting can ship even if check-ins slip; the full-pilot launch gate still requires every story in this epic.
 
 **Epic estimate:** 52 h across 9 stories (3 S, 6 M) · **Epic actual:** —
 
@@ -3091,13 +3091,19 @@ Ambassadors see their buildings' alerts and post updates and incidents for their
 | Ambassador types | Types an Ambassador may post: power, water or plumbing, elevator, fire alarm or evacuation, flood or leak, and "Other" (which requires a line of text and puts 911 first). Heat, smoke and winter storm are neighbourhood alerts for Coordinators and Admins only. |
 | D-1 post | An entry for which `alerting/domain/d1.ts#isD1Eligible` is true: author role Ambassador, not a drill, kind `ack`, `update` or `correction`, and every type has `disruption_type.direct = true` (power, water, elevator, flood). It is web-published at submit as "Not yet verified"; its texts wait for approval. Fire alarm or evacuation and "Other" posts appear nowhere until approved. |
 | Unsent post | A post the ambassador pressed Submit on without signal. It is held only in the open page's memory with its submit idempotency key and submitted when signal returns while the page is open; it is never written to the phone's storage. Closing the page loses it, and the page says so. (This replaces the prototype's "Saved on your phone" wording.) |
-| Check-in request | `subscriber.checkin_method` (`call` or `text`) on one saved place marked "where I live", which must have a floor. Turning it on shows, in the resident's language, that an ambassador on her floor will see her phone number and floor, that it is not an emergency service and when to call 911, and records `consent_version`. |
+| Check-in request | `subscriber.checkin_method` (`call` or `text`) on one saved place marked "where I live", which must have a floor. Turning it on shows, in the resident's language, that an ambassador on her floor will see her phone number and floor, that it is not an emergency service and when to call 911, and records `consent_version`. Changing the "where I live" building or floor requires that consent again; changing only the method does not. |
+| Request during sign-up | A check-in request made in the sign-up form is stored on the pending sign-up and becomes active only when the resident replies YES. At YES, coverage is checked again: if the floor is still covered the request is activated in the same transaction (and joins matching open rounds); if not, it is not activated and the welcome text says "No ambassador covers your floor now. Call the Hub at {number}". |
+| Personalised check-in responses | Request state, submission responses and coverage results are returned only by `POST` responses with `Cache-Control: no-store`, are never cached by the service worker and never sent as usage events. Only R-33's general explanation is a public, cacheable page. |
 | Covered request | A request whose floor passes `identity.coversFloor(rsn, floor)` at the time it is made. A request is never saved for an uncovered floor. |
 | Round types | Disruption types with `disruption_type.checkin = true` (pilot: heat and power), editable by an Admin at `aal2` (audited). |
-| Round | One per non-drill thread of a round type: `checkin` rows `(alert_id, subscriber_id, rsn, floor, status)`, unique per thread and subscriber, created by `checkins.ensureRound` when a non-drill `ack`, `update` or `correction` in that open thread is approved. Requesters who ask after the latest approval join at the next approval. D-1 publication never creates a round. `checkin` never stores a phone number. |
-| Marks | `done`, `not_reached`, `needs_help`, each with a client-generated mark id so a resent mark is applied once. |
-| On-duty Hub number | An `ops.oncall_roster` entry with role `on_duty`. Escalations go to it; if none is set, they go to the on-call Admins and the approval view of a round-type alert warns about it. |
-| Escalation | A Hub list item for a `not_reached` or `needs_help` mark, plus a `transactional` text to the on-duty number with a staff link; never the resident's number in the text. |
+| Round | One per non-drill thread of a round type: `checkin` rows `(alert_id, subscriber_id, rsn, floor, method, status)`, unique per thread and subscriber, never storing a phone number. Rows are created by `checkins.ensureRound` when a non-drill `ack`, `update` or `correction` in that open thread is approved, and also at once when a covered request is activated or changed while a matching round is open (`checkins.joinActiveRounds`). A round matches a request when the "where I live" place matches the audience of the thread's latest approved, non-superseded substantive entry. D-1 publication never creates a round. |
+| Reconciling a changed request | When "where I live", floor or method changes, each of the subscriber's open round rows is updated in the same transaction: a new location that still matches and is covered moves the row (old location tallied `moved`, row reset to `pending` at the new location); a location that no longer matches removes the row (tallied `moved`); a method change updates the row. A building change by SMS menu 1 that replaces "where I live" withdraws the request instead (fresh consent cannot be given by text), and the confirmation text says so and offers the edit link. |
+| Request lock order | A use case that changes a request (activate, change, withdraw, delete) first reads the candidate open round threads, then locks those `alert` rows in id order, then the subscriber row, then its `checkin` rows, then `checkin_tally`, matching AD-18. `ensureRound` in an approval holds its thread first, then the subscriber rows, in the same order. |
+| Marks | `done`, `not_reached`, `needs_help`, each with a client-generated mark id so a resent mark is applied once. A later mark on the same row replaces the earlier one. |
+| Mark ticket | Each row on the round page carries a ticket: an HMAC, with a server secret, over `(row id, alert id, rsn, floor, staff id, issued at)`. It holds no resident data. Every mark sends the row id and ticket; the server checks the signature, that the ticket's staff id is the signed-in account and that account is active, and that the ticket is for a thread still open or closed less than 24 hours ago. A late mark (row already deleted) is trusted only through its ticket. |
+| On-duty Admin | An `ops.oncall_roster` entry with role `on_duty`, linked to an active Admin account. Escalations go to them; with none set they go to the on-call Admins, and the approval view of a round-type alert warns about it. |
+| Escalation | Created on the Hub list at once, in the same transaction as the mark, unique per (row id, status). It also queues a `transactional` text (purpose `escalation`, recipient kind `oncall`) to the on-duty Admin, never containing the resident's number. Like other on-call texts it is exempt from the pause, and it is sent through the paced queue after fire and evacuation alerts, so arrival can take seconds to minutes during a large send. |
+| Round tally | `checkin_tally` keyed `(alert_id, rsn, floor, status)`. `requested` is cumulative: +1 when a row is created at that location, never decreased. Outcomes are mutually exclusive, one per row per location, recorded when the row leaves that location (close, withdrawal, deletion or move): the row's latest mark (`done`, `not_reached`, `needs_help`), else `withdrawn`, `moved` or `unmarked`. Rows kept after close for follow-up are tallied at close and flagged so their later deletion adds nothing. After close, for each location, `requested` equals the sum of the outcomes. |
 
 ### Story S08.01 — Ambassadors see their buildings' alerts and their own posts
 
@@ -3230,7 +3236,20 @@ So that someone notices if I need help.
 
 **Given** the request is submitted
 **When** the server checks `coversFloor` for that floor
-**Then** a covered floor saves the request; an uncovered floor is told at once "No ambassador covers your floor yet. Call the Hub at {number}" and the request is not saved (the rest of the sign-up or change still saves)
+**Then** a covered floor saves the request (on the pending sign-up until YES, or on the subscriber); an uncovered floor is told at once "No ambassador covers your floor yet. Call the Hub at {number}" and the request is not saved (the rest of the sign-up or change still saves)
+**And** every response follows the personalised check-in response rule (no-store, never cached by the service worker, no usage event), tested
+
+**Given** a request activated (at YES or on the edit page) while a matching round is open
+**When** it is saved
+**Then** `joinActiveRounds` adds the requester to that round in the same transaction, and the ambassador's round page shows them on its next refresh; the Hub never has to post another update for them to be included
+
+**Given** a subscriber with an active request changes "where I live", floor or method on the edit page, or changes building by SMS menu 1
+**When** saved
+**Then** the change follows the reconciling rule; a building or floor change on the edit page asks for the consent again before saving
+
+**Given** two open round threads covering the subscriber and an approval in each
+**When** a change, a withdrawal or a deletion races those approvals
+**Then** the request lock order serialises them: no row is left at an old location, for a withdrawn request, or for a deleted subscriber (concurrency tests for each)
 
 **Given** reply 3, or "Withdraw my check-in request" on the edit page
 **When** handled
@@ -3261,7 +3280,7 @@ So that ambassadors can start checking on people without anyone forgetting a ste
 
 **Given** a later approval in the same thread
 **When** `ensureRound` runs again
-**Then** requesters who asked since are added, existing rows and marks are untouched, and requesters whose place no longer matches keep their existing row until close
+**Then** any matching requester without a row is added, existing rows and marks are untouched, and rows whose place no longer matches the newest approved audience are removed and tallied `moved`
 
 **Given** a drill thread
 **When** anything tries to insert a `checkin` row for it
@@ -3288,7 +3307,7 @@ So that I can check on each person quickly and nothing about them stays on my ph
 
 **Given** "My round" (A-04)
 **When** an Ambassador opens it during an open round
-**Then** it lists only requests on floors they cover in that thread's buildings, each with phone number, floor and method (call or text) as `tel:` or `sms:` links, never a name or reason; the contacts are composed in the app layer from `subscriptions` and sent `no-store`
+**Then** it lists only requests on floors they cover in that thread's buildings, each with phone number, floor and method (call or text) as `tel:` or `sms:` links and a mark ticket, never a name or reason; the contacts are composed in the app layer from `subscriptions` and sent `no-store`
 **And** Ambassadors not covering a floor, Coordinators and Directors get counts only; Admins can see every request (direct-request tests)
 
 **Given** the page has loaded
@@ -3303,13 +3322,20 @@ So that I can check on each person quickly and nothing about them stays on my ph
 **When** signal returns while the page is open
 **Then** the queued marks are sent in order with their mark ids; the page shows how many are waiting, and warns "Keep this page open until marks are sent"
 
-**Given** the page is closed, or in the background for 10 minutes
-**When** that happens
-**Then** the page clears its data (and any unsent marks, with a warning shown before closing when marks are waiting)
+**Given** the page goes to the background
+**When** it becomes visible again, or is restored by back navigation or the browser's page cache (`pageshow`)
+**Then** before anything renders, it compares the recorded time it was hidden with the current time (never relying on timers, which browsers suspend); after 10 minutes or more it clears all data and unsent marks and shows "Reload your round with signal"
+**And** `pagehide` clears the data, the page is `no-store` so browsers do not keep it in their back-forward cache, and a warning is shown before leaving when marks are waiting
+**And** tests cover a background period with suspended timers (clock jump), a return at 9 and at 10 minutes, and back navigation after leaving the page
 
-**Given** a mark for a row deleted because the thread closed or the resident withdrew
+**Given** any mark
+**When** it arrives without a valid ticket, with a ticket for another account, from a suspended account, or for a thread closed more than 24 hours ago
+**Then** it is refused (401 or 403), changes nothing and the refusal is recorded; fabricated tickets are counted in `ops_event`
+
+**Given** a mark with a valid ticket for a row deleted because the thread closed or the resident withdrew
 **When** it arrives
-**Then** `done` is answered "This request has ended"; `not_reached` and `needs_help` still create an escalation with the building and floor only (S08.08), and the ambassador is told "The Hub has been told; call the Hub if you can"
+**Then** `done` is answered "This request has ended"; `not_reached` and `needs_help` create one escalation with the ticket's building, floor and ambassador only (S08.08), and the ambassador is told "The Hub has been told; call the Hub if you can"
+**And** repeating the same late mark, or sending it again with a new mark id, creates no second escalation (unique per row id and status)
 
 ### Story S08.08 — The Hub hears at once about anyone not reached or needing help
 
@@ -3324,7 +3350,12 @@ So that the Hub follows up before it is too late.
 
 **Given** a `not_reached` or `needs_help` mark
 **When** it is recorded
-**Then** in the same transaction an escalation appears on the Hub list (O-17) and a `transactional` text (purpose `escalation`) is queued to the on-duty number: "{status}: {building}, floor {n}. Open: {staff link}", never the resident's number; with no on-duty number, it goes to the on-call Admins
+**Then** in the same transaction an escalation appears on the Hub list (O-17) at once, and a `transactional` text (purpose `escalation`, recipient kind `oncall`) is queued to the on-duty Admin: "{status}: {building}, floor {n}. Open: {staff link}", never the resident's number; with no on-duty Admin, it goes to the on-call Admins
+**And** the text is sent during a pause, through the paced queue (S06 claim order), and the Hub list does not wait for it
+
+**Given** the on-duty roster
+**When** an Admin sets an on-duty entry
+**Then** it must be linked to an active Admin account with an authenticator, so whoever receives the text can open the resident details after signing in at `aal2`
 
 **Given** an Admin opens the escalation
 **When** they view it
@@ -3332,7 +3363,8 @@ So that the Hub follows up before it is too late.
 
 **Given** a thread closes
 **When** `closeAlert` runs
-**Then** `pending` and `done` rows are tallied and deleted in the same transaction, while `not_reached` and `needs_help` rows stay until an Admin marks them handled or 24 hours after close, when the purge job tallies and deletes them
+**Then** every row is tallied in the same transaction; `pending` and `done` rows are deleted, while `not_reached` and `needs_help` rows are flagged as tallied and stay until an Admin marks them handled or 24 hours after close, when the purge job deletes them without tallying again
+**And** the terms (S07.01) state this exception before check-ins launch: "If an ambassador could not reach you or found you needed help, the Hub keeps your number and floor for up to 24 hours after the alert ends, to follow up"
 
 **Given** an escalation from a mark that arrived after its row was deleted
 **When** shown
@@ -3349,9 +3381,14 @@ So that we can see how the round is going and report on it afterwards without ke
 
 **Acceptance Criteria:**
 
-**Given** `checkin_tally` keyed `(alert_id, rsn, floor, status)` with statuses `requested`, `done`, `not_reached`, `needs_help`, `withdrawn`, `unmarked`
-**When** marks, withdrawals and closing happen
-**Then** the tally is updated in the same transactions, and after close the counts still add up to the requests that were in the round (test)
+**Given** the round tally rule, with statuses `requested`, `done`, `not_reached`, `needs_help`, `withdrawn`, `moved`, `unmarked`
+**When** rows are created, marked, re-marked, moved, withdrawn, deleted, closed and purged
+**Then** the tally is updated in the same transactions, and after close, for each location, `requested` equals the sum of the outcomes
+**And** tests cover a resent mark, a changed mark (done then needs help), a withdrawal after a mark, a move between floors, deletion during the round, and the purge of a kept row, each counted once
+
+**Given** the live round view during the round
+**When** shown
+**Then** live counts are computed from the current rows, not from the tally
 
 **Given** the round progress view (O-17)
 **When** a Coordinator, Director (read-only) or Admin opens it
