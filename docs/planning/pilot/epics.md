@@ -2341,11 +2341,15 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | Unresolved states | `queued`, `claimed`, `submitted`, `unknown`. `unknown` means the outcome is unclear; it can still be resolved by a late callback. |
 | Terminal states | `delivered`, `undelivered`, `failed`, `cancelled`, `skipped`, `skipped_env`. A terminal state never changes. A resend (E09) creates a new row. |
 | Closing entry | The entry whose approval closed the thread: its `final`, or the withdrawal that left no substantive entry (E05). Its deliveries stay sendable after the thread closes; every other entry's do not. |
-| Sendable | A row may be handed to the provider only if: no pause is active; its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; its recipient still exists; and, for `ack`, `update` and `correction`, the entry's valid-until has not passed. Finals and withdrawals have no valid-until check. |
+| Sendable (every kind) | The row is still `claimed` by this worker under a valid sender lease, its recipient still exists, its `send_by` time (if any) has not passed, and the pause does not apply to it. The pause applies to `alert`, `campaign` and resident `transactional` texts; on-call texts to `oncall` recipients are still sent during a pause so Admins hear about problems. |
+| Sendable (`alert`) | Also: its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; for `ack`, `update` and `correction`, the entry's valid-until has not passed (finals and withdrawals have no valid-until check); drill entries only to `roster` recipients. |
+| Sendable (`transactional`) | Also: its `purpose` is on the allow-list for the module that created it (`alerting`: approver notices; `subscriptions`: confirmation, welcome, menu and prompt replies, edit links; `checkins`: escalations; `ops`: on-call alerts), checked by a trigger at insert; and the recipient is still eligible for that purpose at hand-off (a confirmation only to a still-pending sign-up, other subscriber texts only to an active subscriber, on-call texts only to a number still on the on-call roster, staff texts only to an active staff account). Each purpose sets a `send_by` (for example 30 minutes for a menu reply, 48 hours for a confirmation). |
+| Sendable (`campaign`) | Also: the campaign was started by an Admin at `aal2` and is not cancelled, and the recipient is a subscriber still in the campaign's target state (D-7: `reconsent_pending`). Campaign texts are created in E09. |
 | Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued` and due, and committing `claimed` with its worker id and `claimed_at` in its own short transaction. |
-| Hand-off point | Immediately before the provider call, in a short transaction under the row lock, the dispatcher re-checks that the row is still `claimed` by this worker and sendable, and commits `handed_off_at`. A pause, cancellation, correction, close or deletion committed before this point stops the send; after it, the call goes ahead and cannot be recalled. |
+| Hand-off point | Immediately before the provider call, one short transaction takes these locks in this order, re-checks that the row is sendable, and commits `handed_off_at`: (1) the sender lease row `FOR SHARE`, checking this worker's token; (2) the `messaging_control` row (which holds the pause) `FOR SHARE`; (3) for `alert` rows, the thread `FOR SHARE`, then the entry `FOR SHARE`; (4) the recipient's row `FOR SHARE` (subscriber, roster entry, on-call entry or staff account); (5) the delivery row `FOR UPDATE`. Competing changes take conflicting locks on the same rows: pause and resume lock `messaging_control` `FOR UPDATE`; supersession, discard, merge and close lock the thread `FOR UPDATE`; deleting a recipient locks its row. So a change committed before the hand-off transaction takes its locks stops the send, and a change that waits behind the hand-off sees the text as already handed off and cannot recall it. |
+| Lock order | Extends AD-18: sender lease → `messaging_control` → `alert` → `alert_entry` → recipient row → `delivery` → `checkin` → `checkin_tally` → `spend_cap`. Every use case that touches more than one of these takes them in this order. |
 | Claim order | Fire and evacuation alert entries first, then on-call and other transactional texts, then building-level before neighbourhood-level alerts, then oldest first. |
-| Sender lease | Only one dispatcher sends at a time, across every function instance and pg_cron run: it must hold the `dispatcher_lease` row (taken by a conditional update when the previous lease has expired, valid 60 s, renewed every batch). A run that cannot take the lease exits without claiming. |
+| Sender lease | Only one dispatcher sends at a time, across every function instance and pg_cron run. It holds the single `dispatcher_lease` row, taken by a conditional update when the previous lease has expired, which writes a new random ownership token and an expiry 60 s ahead. Every renewal, claim and hand-off includes `token = mine AND expires_at > now()`; a renewal that updates no row, or a claim or hand-off that finds the token changed or expired, makes that worker stop at once without calling the provider. Each claimed row records the token that claimed it. |
 | Send pace | The lease holder submits at most the configured segments per second (default 3, Twilio's default toll-free rate) and claims only as many rows as it can send at that pace before its time limit, leaving 10 s of margin. |
 | Not accepted | The provider answered with HTTP 429 and an error body, or the connection failed before any of the request was sent. Only these are retried: the row returns to `queued` with backoff (30 s, 2 min, 10 min), at most 3 attempts, then `failed`. |
 | Permanent error | A provider 4xx error other than 429 (for example invalid number, or recipient opted out): the row becomes `failed` with the code; never retried. |
@@ -2361,9 +2365,9 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | --- | --- | --- |
 | `queued` | `claimed` | claim |
 | `queued` | `cancelled` | `cancelQueued` (supersession, discard, merge, close) |
-| `claimed` | `queued` | not accepted (retry with backoff), pause before hand-off, or claim expired before hand-off |
+| `claimed` | `queued` | not accepted (retry with backoff), pause before hand-off, claim expired before hand-off, or claimed under a lease token that is no longer current (requeued by the new lease holder) |
 | `claimed` | `cancelled` | not sendable at the hand-off point because the entry was superseded, discarded or its thread closed |
-| `claimed` | `skipped` | not sendable at the hand-off point because the recipient was deleted or the valid-until passed |
+| `claimed` | `skipped` | not sendable at the hand-off point because the recipient was deleted or is no longer eligible, the valid-until or `send_by` passed, or the campaign was cancelled |
 | `claimed` | `skipped_env` | `SMS_MODE=log` |
 | `claimed` | `submitted` | provider accepted |
 | `claimed` | `failed` | permanent error, or retries exhausted |
@@ -2399,6 +2403,10 @@ So that we can always see what went out and nothing is submitted twice automatic
 **When** created
 **Then** they are created only inside an approval transaction (a trigger refuses an `alert` delivery unless the approval use case set its transaction-local marker for that entry)
 
+**Given** a `transactional` or `campaign` delivery
+**When** it is inserted
+**Then** a trigger refuses a `transactional` row whose purpose is not on the creating module's allow-list or has no `send_by`, and a `campaign` row with no campaign started by an Admin at `aal2` (direct SQL tests)
+
 **Given** the `ContactResolver` port, wired in the composition root to `subscriptions`, `identity` and `ops`
 **When** the dispatcher needs a number
 **Then** it resolves it at the hand-off point and never stores it; logs mask numbers to the last two digits (test)
@@ -2418,6 +2426,11 @@ So that residents get the most urgent text first and nobody gets duplicates from
 **When** a run starts
 **Then** it sends only if it takes the sender lease; otherwise it exits without claiming
 **And** three runs started at once result in one sender, and over a 60-second window with a fake clock and fake provider the total submitted never exceeds 3 segments per second (concurrency test)
+
+**Given** a lease holder that stalls for more than 60 seconds (fake clock)
+**When** a replacement takes the lease and the old worker then resumes
+**Then** the replacement requeues the old worker's claimed rows that were not handed off; the old worker's next renewal, claim or hand-off finds its token changed and stops without calling the provider; no row is handed off twice (test)
+**And** a row the old worker had already handed off before stalling keeps its hand-off and is left for its callback or the lease-expiry sweep
 
 **Given** the lease holder
 **When** it sends
@@ -2475,6 +2488,10 @@ So that nobody receives something we already took back, while the final word sti
 **Given** E05's merge race with the real dispatcher
 **When** a merge and a claim of the same row run at the same time
 **Then** either the claim wins and the merge is refused, or the merge wins and the claim skips the cancelled row; never both (concurrency test repeated 50 times)
+
+**Given** the hand-off transaction and each competing change (a pause, a resident or roster entry being deleted, a correction approval, a close, a merge)
+**When** they race with controlled interleaving on two database connections, in both orders
+**Then** if the change commits first the row is not handed off (returned to `queued`, `skipped` or `cancelled`), and if the hand-off commits first the change waits, then sees the row as in flight; no deadlock occurs with a 5-second lock timeout, and each case follows the lock order (integration tests)
 
 **Given** a correction approved while the original's texts are part-sent
 **When** it commits
@@ -2572,7 +2589,8 @@ So that we can stop a mistake or a provider problem immediately.
 
 **Given** an Admin at `aal2`
 **When** they choose "Pause all texts" with a reason
-**Then** a `messaging_pause` is recorded and audited, every Hub screen shows "Texts are paused" with who paused, when and why, nothing more is claimed, and claimed rows not yet handed off return to `queued` at the hand-off point
+**Then** the pause is recorded on `messaging_control` and audited, every Hub screen shows "Texts are paused" with who paused, when and why, nothing it applies to is claimed, and claimed rows not yet handed off return to `queued` at the hand-off point
+**And** on-call texts to Admins continue during the pause, and the screen says so
 
 **Given** texts already handed off when the pause commits
 **When** the pause screen shows

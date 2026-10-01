@@ -230,7 +230,7 @@ stateDiagram-v2
 
 - **Binds:** A7, A15, A16, C7, G6
 - **Prevents:** approval, dispatch, correction, expiry and close interleaving into deliveries on closed threads, recreated check-in rows or deadlocks.
-- **Rule:** every use case that changes a thread (submit, approve, discard, return, correct, withdraw, close, expire, round create, tally) runs in one transaction that starts with `SELECT … FROM alert WHERE id = $1 FOR UPDATE`, then locks rows in the order `alert → alert_entry → delivery → checkin → checkin_tally → spend_cap`, re-reads the thread state and refuses with `ALERT_CLOSED` when closed. Closing moves every `draft` and `pending_approval` entry to `discarded` and cancels every `queued` delivery in the same transaction.
+- **Rule:** every use case that changes a thread (submit, approve, discard, return, correct, withdraw, close, expire, round create, tally) runs in one transaction that starts with `SELECT … FROM alert WHERE id = $1 FOR UPDATE`, then locks rows in the order `alert → alert_entry → recipient row → delivery → checkin → checkin_tally → spend_cap` (the dispatcher's hand-off takes the sender lease and `messaging_control` first, then the same order with shared locks), re-reads the thread state and refuses with `ALERT_CLOSED` when closed. Closing moves every `draft` and `pending_approval` entry to `discarded` and cancels every `queued` delivery in the same transaction.
 
 ### AD-19 — Building and neighbourhood status are derived, never stored
 
