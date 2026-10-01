@@ -2109,7 +2109,7 @@ So that a mistake is fixed openly and nobody keeps acting on wrong information.
 
 **Given** a withdrawal leaves no published, non-superseded substantive entry in the thread
 **When** it is approved
-**Then** `closeAlert(alertId, 'withdrawn')` runs in the same transaction, even though the new withdrawal notice is itself published
+**Then** `closeAlert(alertId, 'withdrawn', keepEntryId = the withdrawal)` runs in the same transaction, even though the new withdrawal notice is itself published, so the withdrawal's own texts are kept and sent
 
 **Given** a thread with one approved acknowledgement, and a thread with an acknowledgement and one update
 **When** the only substantive entry is withdrawn in the first, and only the update in the second
@@ -2323,30 +2323,54 @@ So that neighbours without the app still get trustworthy information.
 
 ## E06 — Texts go out safely
 
-Every outbound text goes through one queue and one sender: in a fixed priority order, at a controlled pace, never twice, never after it was cancelled, with delivery status tracked from signed webhooks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.
+Every outbound text goes through one queue and one sender: in a fixed priority order, at a shared, controlled pace, with no automatic duplicate submissions, never after it was cancelled before hand-off, and with delivery status tracked from signed callbacks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.
 
 **Epic estimate:** 48 h across 9 stories (4 S, 5 M) · **Epic actual:** —
 
-**Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.05 (`cancelQueued`, final recipients, merge guard), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
+**Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.05 (`cancelQueued`, closing entry, final recipients, merge guard), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
 
 **Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim rule that E05's merge relies on, and repeats E05's merge and final-delivery tests with real deliveries. `captureRecipients` is implemented here for drills only (drill roster); E07 adds subscribers.
+
+**What the sender guarantees.** It prevents automatic duplicate submissions: a text is handed to the provider at most once unless an Admin deliberately resends it (E09). It does not guarantee exactly-once delivery: a text whose outcome is unclear is marked `unknown`, never re-sent automatically, and may or may not have arrived.
 
 **Definitions used in this epic**
 
 | Term | Meaning |
 | --- | --- |
-| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), state and timestamps. It never stores a phone number. |
-| States | `queued → claimed → submitted → delivered | failed | undelivered | unknown`, plus `cancelled`, `skipped` (recipient deleted or entry no longer sendable) and `skipped_env` (non-production). Allowed transitions are enforced by a trigger; final states never change. |
-| Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued`, and committing `claimed` with `claimed_at` in its own short transaction before any provider call. |
-| Claim order | Fire and evacuation entries first, then on-call and other transactional texts, then building-level before neighbourhood-level alerts, then oldest first. |
-| Send pace | The dispatcher submits at most the configured segments per second (default 3, Twilio's toll-free rate), so priority order holds instead of being lost in the provider's own queue. |
-| Ambiguous outcome | The provider call timed out or the connection dropped after the request was sent. The row becomes `unknown` and is never re-sent automatically. |
-| Retryable error | The provider answered with 429 or 5xx, so the text was not accepted. The row returns to `queued` with a backoff (30 s, 2 min, 10 min), at most 3 times, then `failed`. |
-| Permanent error | Any other provider error (for example invalid number or opted-out recipient). The row becomes `failed` with the error code; never retried. |
-| Lease expiry | A row `claimed` for more than 5 minutes becomes `unknown`; a row `submitted` with no final status after 24 hours becomes `unknown`. Neither is re-sent automatically; resend is a deliberate Admin action (E09). |
-| Pause | A `messaging_pause` row set by an Admin. While paused, nothing is claimed; queued rows stay queued. |
+| Delivery | One `delivery` row per text to one recipient: `kind` (`alert`, `transactional`, `campaign`), `recipient_kind` (`subscriber`, `roster`, `staff`, `oncall`), recipient id, language, frozen body, segments, cost estimate, `idempotency_key` (unique), an opaque random `callback_ref`, the provider id once known, attempts, state and timestamps. It never stores a phone number. |
+| Unresolved states | `queued`, `claimed`, `submitted`, `unknown`. `unknown` means the outcome is unclear; it can still be resolved by a late callback. |
+| Terminal states | `delivered`, `undelivered`, `failed`, `cancelled`, `skipped`, `skipped_env`. A terminal state never changes. A resend (E09) creates a new row. |
+| Closing entry | The entry whose approval closed the thread: its `final`, or the withdrawal that left no substantive entry (E05). Its deliveries stay sendable after the thread closes; every other entry's do not. |
+| Sendable | A row may be handed to the provider only if: no pause is active; its entry is approved and not superseded or discarded; its thread is open, or the entry is the closing entry; its recipient still exists; and, for `ack`, `update` and `correction`, the entry's valid-until has not passed. Finals and withdrawals have no valid-until check. |
+| Claim | The dispatcher takes a row only by locking it (`FOR UPDATE SKIP LOCKED`), re-checking it is still `queued` and due, and committing `claimed` with its worker id and `claimed_at` in its own short transaction. |
+| Hand-off point | Immediately before the provider call, in a short transaction under the row lock, the dispatcher re-checks that the row is still `claimed` by this worker and sendable, and commits `handed_off_at`. A pause, cancellation, correction, close or deletion committed before this point stops the send; after it, the call goes ahead and cannot be recalled. |
+| Claim order | Fire and evacuation alert entries first, then on-call and other transactional texts, then building-level before neighbourhood-level alerts, then oldest first. |
+| Sender lease | Only one dispatcher sends at a time, across every function instance and pg_cron run: it must hold the `dispatcher_lease` row (taken by a conditional update when the previous lease has expired, valid 60 s, renewed every batch). A run that cannot take the lease exits without claiming. |
+| Send pace | The lease holder submits at most the configured segments per second (default 3, Twilio's default toll-free rate) and claims only as many rows as it can send at that pace before its time limit, leaving 10 s of margin. |
+| Not accepted | The provider answered with HTTP 429 and an error body, or the connection failed before any of the request was sent. Only these are retried: the row returns to `queued` with backoff (30 s, 2 min, 10 min), at most 3 attempts, then `failed`. |
+| Permanent error | A provider 4xx error other than 429 (for example invalid number, or recipient opted out): the row becomes `failed` with the code; never retried. |
+| Ambiguous outcome | Anything else after the request may have been sent: a 5xx response, a timeout, a dropped connection, or an acceptance followed by an error. The row becomes `unknown` and is never re-sent automatically. |
+| Lease expiry of a row | A row `claimed` for more than 5 minutes without a hand-off returns to `queued`; one claimed with a hand-off but no recorded outcome for 5 minutes becomes `unknown`; a `submitted` row with no terminal status after 24 hours becomes `unknown`. |
+| Pause | A `messaging_pause` row set by an Admin. While paused, nothing is claimed or handed off; queued and claimed-but-not-handed-off rows wait. |
 | Drill roster | Staff-owned phone numbers entered by Admins, each with a label and language. Drill texts can go only to them. |
 | On-call roster | Admin phone numbers entered by Admins, for operational alerts (`ops.oncall_roster`). |
+
+**State transitions** (every other change is refused by a trigger)
+
+| From | To | Cause |
+| --- | --- | --- |
+| `queued` | `claimed` | claim |
+| `queued` | `cancelled` | `cancelQueued` (supersession, discard, merge, close) |
+| `claimed` | `queued` | not accepted (retry with backoff), pause before hand-off, or claim expired before hand-off |
+| `claimed` | `cancelled` | not sendable at the hand-off point because the entry was superseded, discarded or its thread closed |
+| `claimed` | `skipped` | not sendable at the hand-off point because the recipient was deleted or the valid-until passed |
+| `claimed` | `skipped_env` | `SMS_MODE=log` |
+| `claimed` | `submitted` | provider accepted |
+| `claimed` | `failed` | permanent error, or retries exhausted |
+| `claimed` | `unknown` | ambiguous outcome, or no outcome 5 minutes after hand-off |
+| `claimed`, `submitted`, `unknown` | `delivered`, `undelivered`, `failed` | signed callback with a terminal status |
+| `claimed`, `unknown` | `submitted` | signed callback with a non-terminal status (`queued`, `sending`, `sent`) |
+| `submitted` | `unknown` | no terminal status after 24 hours |
 
 ### Story S06.01 — Every outbound text is one queued record, never a phone number
 
@@ -2355,17 +2379,17 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 As a Hub Admin,
 I want every text recorded once before it is sent,
-So that we can always see what went out and nothing is sent twice.
+So that we can always see what went out and nothing is submitted twice automatically.
 
 **Acceptance Criteria:**
 
 **Given** the `delivery` table owned by `messaging`
 **When** the migration runs
-**Then** it has the fields in the definitions, a unique `idempotency_key` (`entry_id:recipient:channel` for alerts, `kind:subject:purpose:nonce` otherwise), no phone number column, RLS locked down, and `recipient_id` set to null if the recipient is deleted
+**Then** it has the fields in the definitions, a unique `idempotency_key` (`entry_id:recipient:channel` for alerts, `kind:subject:purpose:nonce` otherwise), a unique `callback_ref`, no phone number column, RLS locked down, and `recipient_id` set to null if the recipient is deleted
 
-**Given** a state change
-**When** it is not an allowed transition, or changes a final state
-**Then** the trigger refuses it (direct SQL tests for each forbidden transition with the app's credentials)
+**Given** the state transition table
+**When** a change not in the table is attempted, or a terminal state is changed
+**Then** the trigger refuses it (direct SQL tests with the app's credentials for every row of the table and for each forbidden change, including `delivered → failed` and `cancelled → queued`)
 
 **Given** two inserts with the same idempotency key
 **When** they run at the same time
@@ -2373,51 +2397,57 @@ So that we can always see what went out and nothing is sent twice.
 
 **Given** `alert` deliveries
 **When** created
-**Then** they are created only inside an approval transaction (a trigger refuses an `alert` delivery whose entry is not being approved in the same transaction, using a transaction-local marker set by the approval use case)
+**Then** they are created only inside an approval transaction (a trigger refuses an `alert` delivery unless the approval use case set its transaction-local marker for that entry)
 
 **Given** the `ContactResolver` port, wired in the composition root to `subscriptions`, `identity` and `ops`
 **When** the dispatcher needs a number
-**Then** it resolves it at claim time and never stores it; logs mask numbers to the last two digits (test)
+**Then** it resolves it at the hand-off point and never stores it; logs mask numbers to the last two digits (test)
 
-### Story S06.02 — The dispatcher sends each text once, in priority order
+### Story S06.02 — One sender submits each text at most once, in priority order and at a shared pace
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** AR-12, AR-19 (byte-for-byte), FR-M2 (delivery data) · **Depends on:** S06.01 · **Branch:** `e06-s02-dispatcher`
 
 As a Hub Coordinator,
-I want approved texts sent quickly, fire alerts first, and never twice,
-So that residents get the most urgent text first and nobody gets duplicates.
+I want approved texts sent quickly, fire alerts first, and never submitted twice automatically,
+So that residents get the most urgent text first and nobody gets duplicates from a retry.
 
 **Acceptance Criteria:**
 
-**Given** the dispatcher runs right after an approval commits and every minute by pg_cron (`/api/jobs/dispatch`, with the environment's job secret)
-**When** it runs
-**Then** it checks the pause, claims rows by the claim rule in claim order, resolves each number, calls the Twilio Messaging Service with the frozen body byte for byte and the status callback URL from `PUBLIC_BASE_URL`, and commits `submitted` with the provider id right after each call
-**And** two dispatcher runs at the same time never claim the same row (concurrency test)
+**Given** the dispatcher is started right after an approval commits and every minute by pg_cron (`/api/jobs/dispatch`, with the environment's job secret)
+**When** a run starts
+**Then** it sends only if it takes the sender lease; otherwise it exits without claiming
+**And** three runs started at once result in one sender, and over a 60-second window with a fake clock and fake provider the total submitted never exceeds 3 segments per second (concurrency test)
 
-**Given** a burst of 300 queued texts
-**When** the dispatcher sends
-**Then** it keeps to the send pace, stops claiming before the function time limit (leaving a safety margin of 10 s), and the next run continues; a fire alert queued during the burst is claimed before the remaining lower-priority rows
+**Given** the lease holder
+**When** it sends
+**Then** it claims only as many rows, in claim order, as it can send at the send pace before its time limit, and for each row: passes the hand-off point, calls the Twilio Messaging Service with the frozen body, `SmartEncoded=false` on every request, and a status callback URL of `PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`, then records the outcome
+
+**Given** a burst of 300 queued texts and a fire alert approved during it
+**When** the dispatcher continues
+**Then** the fire alert's rows are claimed before the remaining lower-priority rows, and the next run picks up where the last stopped
 
 **Given** each provider outcome
 **When** the call returns
-**Then** acceptance gives `submitted`; a retryable error re-queues with backoff up to 3 times; a permanent error gives `failed` with the code; an ambiguous outcome gives `unknown` (fake provider tests for each, including a timeout after the request is sent)
+**Then** acceptance gives `submitted` with the provider id; not accepted re-queues with backoff; a permanent error gives `failed`; an ambiguous outcome gives `unknown`
+**And** fake-provider tests cover: 429; connection refused before sending; 400 invalid number; 500; timeout after the request is sent; acceptance followed by a dropped connection; and acceptance followed by an error
 
-**Given** the lease rules
+**Given** the outcome is written after a callback already moved the row on
+**When** the dispatcher records it
+**Then** the write applies only if the row is still `claimed` (or only fills a missing provider id that matches), so a late response never overwrites a callback's state (test)
+
+**Given** the row lease rules
 **When** the sweep runs (every minute)
-**Then** rows past their lease become `unknown`, are recorded in `ops_event`, and are never re-sent automatically
-
-**Given** a row whose recipient was deleted, whose entry was superseded or discarded, whose thread closed, or whose entry's valid-until has passed
-**When** it reaches the claim
-**Then** it is `skipped` or `cancelled` with the reason and no provider call is made
-
-**Given** Twilio Smart Encoding
-**When** the dispatcher starts a run in production
-**Then** it reads the Messaging Service setting (cached for 1 hour); if Smart Encoding is on, it claims nothing, records an `ops_event` and alerts on-call (S06.07)
+**Then** expired claims return to `queued` or become `unknown` as defined, each `unknown` is recorded in `ops_event`, and nothing is re-sent automatically
 
 **Given** `SMS_MODE=log` (every environment except production)
 **When** the dispatcher runs
 **Then** each row becomes `skipped_env` with its body length and segments logged, no provider call is made, and no Twilio credentials are read
+
+**Given** the Messaging Service configuration
+**When** the health job runs daily, and on every change to the service recorded in the procedures
+**Then** it reads the service's Smart Encoding setting and raises an on-call alert if it is on; this is defence in depth, because every request already sets `SmartEncoded=false`
+**And** the procedures state the configuration-control assumption: only named Admins change the Messaging Service, and texts are paused while they do
 
 ### Story S06.03 — Cancelled, merged and closed alerts never send stale texts
 
@@ -2425,18 +2455,22 @@ So that residents get the most urgent text first and nobody gets duplicates.
 - **Traces:** AR-12, AR-9, FR-A16 (cancellation side) · **Depends on:** S06.02, S05.05 · **Branch:** `e06-s03-cancel-queued`
 
 As a Hub Coordinator,
-I want texts for withdrawn, corrected or closed alerts stopped before they go,
-So that nobody receives something we already took back.
+I want texts for withdrawn, corrected or closed alerts stopped before they are handed off,
+So that nobody receives something we already took back, while the final word still goes out.
 
 **Acceptance Criteria:**
 
 **Given** `cancelQueued(entryIds, tx)`
 **When** called by supersession, discard, merge or close
-**Then** it locks the entries' `queued` rows in lock order (after `alert_entry`, before `checkin`) and sets them `cancelled` in the caller's transaction; rows already claimed or later are left as they are and reported to the caller
+**Then** it locks the entries' `queued` rows in lock order (after `alert_entry`, before `checkin`) and sets them `cancelled` in the caller's transaction; `claimed` rows not yet handed off are stopped at the hand-off point by the sendable check; rows already handed off are left and reported to the caller
 
 **Given** E05's final-delivery test with real deliveries
-**When** a thread with an update whose texts are still queued gets its final approved
-**Then** the update's queued rows are `cancelled` and the final's rows are created and stay `queued`, then are sent
+**When** a thread with an update whose texts are still queued gets its final approved, including while texts are paused and after resuming
+**Then** the update's queued rows are `cancelled`, the final's rows are created, stay `queued` during the pause, and are sent after resume even though the thread is closed
+
+**Given** a withdrawal that closes its thread
+**When** it is approved
+**Then** it is the closing entry, its rows are created and sent after the close, and the withdrawn entry's queued rows are cancelled
 
 **Given** E05's merge race with the real dispatcher
 **When** a merge and a claim of the same row run at the same time
@@ -2444,7 +2478,7 @@ So that nobody receives something we already took back.
 
 **Given** a correction approved while the original's texts are part-sent
 **When** it commits
-**Then** the original's queued rows are cancelled, its submitted rows are untouched, and the correction goes to every recipient of the original (drill roster in this epic; subscribers in E07)
+**Then** the original's queued rows are cancelled, claimed rows not yet handed off become `cancelled` at the hand-off point, handed-off and submitted rows are untouched, and the correction goes to every recipient of the original (drill roster in this epic; subscribers in E07)
 
 ### Story S06.04 — Delivery status comes only from signed provider callbacks
 
@@ -2457,25 +2491,30 @@ So that we know who received an alert and can follow up on failures.
 
 **Acceptance Criteria:**
 
-**Given** `POST /api/twilio/status`
+**Given** `POST /api/twilio/status?ref={callback_ref}`
 **When** a callback arrives
-**Then** its `X-Twilio-Signature` is validated against `PUBLIC_BASE_URL` and the exact request before any work; an invalid signature returns 403, does nothing, and is counted in `ops_event` (more than 5 in 10 minutes raises an on-call alert, S06.07)
+**Then** its `X-Twilio-Signature` is validated against the full URL (including `ref`) built from `PUBLIC_BASE_URL` and the request body before any work; an invalid signature returns 403, does nothing, and is counted in `ops_event` (more than 5 in 10 minutes raises an on-call alert, S06.07)
 
-**Given** a valid callback
-**When** it names a provider id
-**Then** the status is mapped (`queued`, `sending`, `sent` keep `submitted` and record the provider status; `delivered`, `undelivered`, `failed` set the final state with the error code) and the time is stored
+**Given** a valid callback whose `ref` matches a delivery
+**When** the delivery has no provider id yet
+**Then** the callback's `MessageSid` is stored as its provider id and the status is applied by the transition table
+**And** when the delivery already has a different provider id, nothing changes and the mismatch is recorded in `ops_event`
 
-**Given** callbacks arriving out of order, repeated, or after a final state
+**Given** the race where the callback arrives before the dispatcher has recorded Twilio's response
+**When** both complete in either order
+**Then** the row ends with the callback's status and the provider id, and the dispatcher's late write changes nothing (test)
+
+**Given** an ambiguous send that never recorded a response
+**When** a callback with its `ref` arrives later
+**Then** the row moves from `unknown` to the callback's status, and the `unknown` is marked resolved in `ops_event` (test)
+
+**Given** callbacks repeated, out of order, or after a terminal state
 **When** processed
-**Then** a final state is never changed and a repeat changes nothing (idempotent); an earlier status arriving after a later one is ignored
+**Then** a terminal state never changes, a repeat changes nothing, and a non-terminal status arriving after a terminal one is ignored
 
-**Given** a callback for an unknown provider id
+**Given** a valid callback with no `ref`, or a `ref` matching no delivery
 **When** processed
 **Then** it returns 200, changes nothing and is counted in `ops_event`
-
-**Given** a callback for a row marked `unknown` by the lease sweep
-**When** it reports `delivered` or `failed`
-**Then** the row takes that final state and the `unknown` is resolved in `ops_event`
 
 **Given** the callback route
 **When** the no-cookie and logging tests run
@@ -2514,11 +2553,11 @@ So that we practise sending without any chance of reaching residents.
 
 **Given** a drill completes
 **When** the Hub reviews it
-**Then** the drill view shows sent, delivered, failed and unknown per roster member and language, and the drill counts are stored apart from real alert counts (FR-M4)
+**Then** the drill view shows per roster member and language how many texts were handed off, delivered, undelivered, failed and unknown, and drill counts are stored apart from real alert counts (FR-M4)
 
 **Given** a production drill
 **When** run as part of launch readiness
-**Then** it covers an alert, an update, a correction and a final, and each roster phone receives each text once, in its language, with the exercise marker
+**Then** it covers an alert, an update, a correction and a final, and each roster phone receives each text in its language with the exercise marker, with no automatic duplicate submission; any `unknown` is investigated before launch
 
 ### Story S06.06 — An Admin can pause all sending at once
 
@@ -2526,14 +2565,18 @@ So that we practise sending without any chance of reaching residents.
 - **Traces:** AR-12 (pause), NFR-N6 · **Depends on:** S06.02 · **Branch:** `e06-s06-pause`
 
 As a Hub Admin,
-I want one switch that stops every text from going out,
+I want one switch that stops every text not yet handed to the provider,
 So that we can stop a mistake or a provider problem immediately.
 
 **Acceptance Criteria:**
 
 **Given** an Admin at `aal2`
 **When** they choose "Pause all texts" with a reason
-**Then** a `messaging_pause` is recorded and audited, every Hub screen shows "Texts are paused" with who paused, when and why, and the dispatcher claims nothing from its next check
+**Then** a `messaging_pause` is recorded and audited, every Hub screen shows "Texts are paused" with who paused, when and why, nothing more is claimed, and claimed rows not yet handed off return to `queued` at the hand-off point
+
+**Given** texts already handed off when the pause commits
+**When** the pause screen shows
+**Then** it says "{n} texts were already handed to the provider and cannot be recalled", with the same wording on the sending progress view
 
 **Given** a pause
 **When** texts are approved or created during it
@@ -2541,11 +2584,7 @@ So that we can stop a mistake or a provider problem immediately.
 
 **Given** "Resume texts"
 **When** an Admin at `aal2` resumes
-**Then** the pause ends, is audited, and the dispatcher continues in claim order; rows whose entry was superseded, closed or past its valid-until during the pause are skipped or cancelled, not sent
-
-**Given** a pause is in place
-**When** texts are already claimed
-**Then** those in-flight calls complete (a pause cannot recall a text already handed to the provider), and the screen says how many were in flight
+**Then** the pause ends, is audited, and the dispatcher continues in claim order; each row is checked for sendability at the hand-off point, so rows whose entry was superseded, discarded, past its valid-until or in a closed thread are cancelled or skipped, while a closing entry's rows are sent
 
 **Given** anyone other than an Admin, or an Admin without `aal2`
 **When** they call pause or resume directly
@@ -2567,12 +2606,12 @@ So that a problem is fixed before residents miss an alert.
 **Then** it is saved in `ops.oncall_roster` and audited without the number; at least one on-call number is required before any non-drill alert can be approved in production
 
 **Given** `/api/jobs/health`, called every minute by pg_cron
-**When** a delivery is `queued` for more than 5 minutes outside a pause, a row becomes `unknown`, Smart Encoding is found on, or signature failures exceed 5 in 10 minutes
+**When** a delivery is `queued` and due for more than 5 minutes outside a pause, a row becomes `unknown`, the sender lease has not been renewed for 3 minutes while rows are due, Smart Encoding is found on, or signature failures exceed 5 in 10 minutes
 **Then** it writes an `ops_event` (no personal data) and creates one `transactional` text per on-call number, at most once per condition per 30 minutes
 
 **Given** an on-call text
 **When** it is queued
-**Then** it is claimed ahead of alerts (claim order) and sent by the same dispatcher; if the dispatcher itself is failing, the `ops_event` and the Hub banner still record it (an independent outside check is added in E09)
+**Then** it follows the claim order: after fire and evacuation alerts, before every other alert; if the sender itself is failing, the `ops_event` and the Hub banner still record it (an independent outside check is added in E09)
 
 **Given** the condition clears
 **When** the health job next runs
@@ -2589,17 +2628,22 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 **Acceptance Criteria:**
 
-**Given** a delivery submitted
+**Given** a delivery handed off
 **When** it is recorded
-**Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` with kind `sms`, language, entry id and `is_drill`; the provider's reported price, when a callback carries it, is stored beside the estimate
+**Then** its segments and estimated cost (segments × configured price per segment, integer cents CAD) are written to `spend_event` with kind `sms`, language, entry id and `is_drill`
+
+**Given** a delivery with a provider id reaches a terminal state
+**When** the price job runs (hourly)
+**Then** it fetches the Message resource from Twilio and stores `price`, `price_unit` and `num_segments` beside the estimate; while `price` is still empty it retries hourly for up to 72 hours, then records "price not reported"
+**And** reports use the actual price when present (converted to CAD at the configured rate, labelled), otherwise the estimate, labelled as an estimate
 
 **Given** an alert entry's deliveries
 **When** the pilot measures are computed
-**Then** time from approval to first `submitted`, to 90% `delivered`, and to the last final state are available per entry and language, drills apart
+**Then** per entry and language, the denominator is the rows handed off (excluding `cancelled`, `skipped` and `skipped_env`); time from approval to first hand-off, and to the moment delivered rows reach 90% of that denominator, are reported; if 90% is never reached, the measure shows "not reached" with the final delivered share; drills are reported apart
 
 **Given** a correction
 **When** its reach is computed
-**Then** the number of recipients of the original and of the correction are available per entry (FR-M4), drills apart
+**Then** it reports attempted reach (recipients of the original, and correction rows handed off to them) separately from confirmed reach (correction rows `delivered`), drills apart (FR-M4)
 
 ### Story S06.09 — The first-text spike is replaced, and the Hub sees what went where
 
@@ -2614,12 +2658,12 @@ So that I know who has been reached and no test path can send by accident.
 
 **Given** the E01 spike (S01.15)
 **When** this story is done
-**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher (dependency rule); a test fails if any other module calls it
+**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher and the price job (dependency rule); a test fails if any other module calls it
 
 **Given** the published confirmation (O-06) and the alert's staff view
 **When** an entry is sending
-**Then** they show per language: queued, sent, delivered, failed, undelivered, unknown and cancelled counts, refreshed every 15 seconds, with drills in their own view
+**Then** they show per language: waiting, in flight (handed to the provider), delivered, undelivered, failed, unknown and cancelled counts, refreshed every 15 seconds, with drills in their own view
 
-**Given** a failed or unknown text
+**Given** a failed, undelivered or unknown text
 **When** shown
-**Then** it shows the error meaning in plain words (for example "Number not in service"), without the phone number on screen
+**Then** it shows the meaning in plain words (for example "Number not in service", "Outcome unclear; not re-sent"), without the phone number on screen
