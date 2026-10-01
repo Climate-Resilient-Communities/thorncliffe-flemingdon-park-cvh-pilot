@@ -162,7 +162,7 @@ Hub staff, coordinators and ambassadors (for their assigned buildings) can write
 - Acceptance: an alert for Building X, floors 4–6 reaches by SMS exactly the subscribers registered to Building X floors 4–6 and those registered to Building X with no floor.
 
 **A2. Channels and SMS sign-up.**
-Every alert is delivered on the web app and by SMS to matching subscribers, and by web push to residents who installed the web app and allowed notifications (web push may be dropped if it exceeds the pilot budget).
+Every alert is delivered on the web app and by SMS to matching subscribers, Web push is deferred to the MVP (architecture spine, Deferred): browsers require a visible notification for every push, so it cannot respect choices kept on the device.
 SMS sign-up needs only a phone number, a language and a neighbourhood; building, floor, groups and a check-in request are optional. No name, unit number, email, password or account. The resident confirms the sign-up herself by replying, even when someone else helped her start it. Every message says how to stop ("reply STOP"). She can change her choices or unsubscribe at any time, including by text keyword; unsubscribing deletes her subscription data.
 
 **A3. Languages.**
