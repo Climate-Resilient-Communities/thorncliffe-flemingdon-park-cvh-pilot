@@ -3,7 +3,7 @@ import type { AssuranceLevel, SetupGate } from "../../../contracts/staffAuth";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { SYSTEM_ACTOR, type REFUSAL_REASONS } from "../../audit";
-import { mayManageAccounts } from "../domain/accountAuthority";
+import { actorCan } from "../domain/accountAuthority";
 import type { PrivilegedAction } from "../domain/assurance";
 import { normaliseAuthenticatorCode } from "../domain/authenticatorCode";
 import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
@@ -589,7 +589,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         await audit.recordRefusal(db, { action: "password.reissued", actorStaffId: actor ? actor.id : null, subjectType: "staff_account", subjectId, meta: { reason } });
         return err(code);
       };
-      if (!actor || !mayManageAccounts(actor)) return refuse("forbidden", "forbidden", null);
+      if (!actor || !actorCan(actor, "accounts.manage")) return refuse("forbidden", "forbidden", null);
       const username = normaliseUsername(usernameInput);
       const target = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
       if (!target) return refuse("not_found", "not_found", null);
@@ -605,7 +605,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
       const result = await reissue(target, pepper(starting.value), actor.id, async () => {}, async (tx) => {
         const current = await store.findById(tx, actor.id);
-        return current !== null && mayManageAccounts(current);
+        return current !== null && actorCan(current, "accounts.manage");
       });
       if (result !== "reissued") return refuse(result === "provider_error" ? "provider_error" : "not_reissuable", result, target.id);
       return ok({ username: target.username, startingPassword: starting.value });
@@ -792,6 +792,21 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         subjectType: "staff_account",
         subjectId: staffId,
         meta: { status: 403, route, permission, reason: "aal_required" },
+      });
+    },
+
+    /**
+     * Audits a staff request the role policy refused (S01.12: 403): `forbidden` when the role may
+     * never do `permission`, `out_of_scope` when it may but not on this building, floor or entry.
+     * `route` is the route pattern, never a value from the request.
+     */
+    async refuseByPolicy(staffId: string, route: string, permission: string, reason: "forbidden" | "out_of_scope"): Promise<void> {
+      await audit.recordRefusal(db, {
+        action: "permission.denied",
+        actorStaffId: staffId,
+        subjectType: "staff_account",
+        subjectId: staffId,
+        meta: { status: 403, route, permission, reason },
       });
     },
 

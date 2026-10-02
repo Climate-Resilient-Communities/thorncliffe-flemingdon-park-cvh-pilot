@@ -62,12 +62,15 @@ export type FactorEnrolment = z.infer<typeof FactorEnrolment>;
 /**
  * Error codes of the staff API (`{ error: code, message? }`). `setup_incomplete` is the 403 of
  * every `/api/staff` call outside the current setup gate, and `aal2_required` the 403 of a
- * privileged call from a session below `aal2` (S01.10); neither has a message: the code is the contract.
+ * privileged call from a session below `aal2` (S01.10), `forbidden` the 403 of a call the role
+ * policy refuses, for the role or out of the person's scope (S01.12); none has a message: the code
+ * is the contract.
  */
 export const STAFF_API_ERRORS = [
   "unauthenticated",
   "setup_incomplete",
   "aal2_required",
+  "forbidden",
   "bad_request",
   "unsupported_media_type",
   "forbidden_origin",
