@@ -76,15 +76,15 @@ const NEGATIVE_UTILITY = /(?<![\w-])-(?:m|mx|my|ms|me|mt|mr|mb|ml|mbs|mbe|space-
 // A spacing property of a style object: padding: 13, "margin-top": "-4px", rowGap: size. The key may be quoted
 // and camelCase or kebab-case; the value a number, a string or an identifier (member access included).
 const STYLE_OBJECT =
-  /(?<![\w[$-])(["']?)((?:padding|margin|gap|row-gap|column-gap|rowGap|columnGap)(?:[A-Z]\w*|-[a-z-]+)?)\1\s*:\s*(-?\d*\.?\d+(?![\w.])|(["'`])[^"'`]*\4|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[[^\]\n]*\])*)/g;
+  /(?<![\w[$-])(["']?)((?:padding|margin|gap|row-gap|column-gap|rowGap|columnGap)(?:[A-Z]\w*|-[a-z-]+)?)\1\s*:\s*(-?(?:\d+(?:\.\d+)?|\.\d+)(?![\w.])|(["'`])[^"'`]*\4|[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*|\[[^\]\n]*\])*)/g;
 // Not values: a type annotation (gap: number) and the words that stand for no value.
 const NOT_A_VALUE = /^(?:number|string|boolean|never|unknown|any|undefined|null|void|true|false|[A-Z]\w*)$/;
 
-const isNegative = (value) => {
+export const isNegative = (value) => {
   for (const match of value.matchAll(/(?:^|[\s(,])-(?=[\d.]|var\(|calc\()([\d.]*)/g)) {
     if (match[1] === "" || parseFloat(match[1]) !== 0) return true;
   }
-  for (const match of value.matchAll(/\*\s*-\s*(\d*\.?\d+)|(\d*\.?\d+)\s*\*\s*-\s*(?!\d)|-\s*(\d*\.?\d+)\s*\*/g)) {
+  for (const match of value.matchAll(/\*\s*-\s*(\d+(?:\.\d+)?|\.\d+)|(?<![\d.])(\d+(?:\.\d+)?|\.\d+)\s*\*\s*-\s*(?!\d)|-\s*(\d+(?:\.\d+)?|\.\d+)\s*\*/g)) {
     if (parseFloat(match[1] ?? match[2] ?? match[3] ?? "1") !== 0) return true;
   }
   // calc(0px - var(--x)) is the negative of --x.
