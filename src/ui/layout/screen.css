@@ -90,7 +90,7 @@
     inset-block-end: 0;
     z-index: 2;
     background-color: var(--surface);
-    border-block-start: var(--offset-align-hairline) solid var(--border);
+    border-block-start: 1px solid var(--border);
   }
 
   .layout-screen__actions-inner {
