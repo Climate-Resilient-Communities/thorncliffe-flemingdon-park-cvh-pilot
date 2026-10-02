@@ -1,0 +1,174 @@
+{
+ "meta": {
+  "source": "design/prototype/cvh/data.js (guides) and design/prototype/cvh/strings.en.js (hazards, for the titles)",
+  "note": "English source of the six guides. Each guide needs a named owner (the Hub Coordinator responsible), a last-updated date and an English review by that owner (reviewer and date) before scripts/seed/guides.mjs will load it. Values starting with PLACEHOLDER are refused by the seed. Translations: data/catalogue/translations/content/<lang>.json."
+ },
+ "guides": [
+  {
+   "id": "power",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 3,
+   "title": "Power outage",
+   "when911": "Call 911 if someone is in danger, there is a fire, or a person who uses powered medical equipment cannot breathe or is unwell.",
+   "before": [
+    "Keep a flashlight and spare batteries where you can find them in the dark.",
+    "Charge a battery pack for your phone and keep it charged.",
+    "Write down important phone numbers on paper.",
+    "If you use medical equipment that needs power, ask your doctor or pharmacist about a backup plan."
+   ],
+   "during": [
+    "Use a flashlight, not candles.",
+    "Keep your fridge and freezer closed. Food stays cold for about 4 hours in the fridge and 24 hours in a full freezer.",
+    "Unplug electronics so they are not damaged when the power comes back.",
+    "Check on neighbours who live alone, if it is safe to do so."
+   ],
+   "after": [
+    "Throw away food that has been above 4 degrees for more than 2 hours.",
+    "Plug your electronics back in one at a time.",
+    "If your power is still out when your neighbours' is back, call Toronto Hydro."
+   ]
+  },
+  {
+   "id": "flood",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 3,
+   "title": "Flood or plumbing failure",
+   "when911": "Call 911 if water is near electrical outlets or panels, if someone is trapped, or if water is rising fast.",
+   "before": [
+    "Keep valuables and papers off the floor, in a plastic bag or box.",
+    "Know where the water shut-off valve is in your unit, if there is one.",
+    "Keep a few large bottles of drinking water."
+   ],
+   "during": [
+    "Stay out of flooded parking levels, stairwells and basements.",
+    "Do not touch electrical outlets or equipment if you are standing in water.",
+    "Tell your superintendent or building management about leaks straight away.",
+    "If the water in your building is turned off, use bottled water for drinking and cooking."
+   ],
+   "after": [
+    "Take photos of any damage for your landlord and insurance.",
+    "Throw away food that touched flood water.",
+    "Open windows to dry things out. Ask for help if you see mould."
+   ]
+  },
+  {
+   "id": "elevator",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 2,
+   "title": "Elevator failure",
+   "when911": "Call 911 if someone is trapped in an elevator and unwell, or if someone cannot get out of the building in an emergency.",
+   "before": [
+    "Keep a week of medicines and some food at home.",
+    "Tell your floor ambassador if you cannot use the stairs.",
+    "Keep the number for the building office or superintendent on paper."
+   ],
+   "during": [
+    "Use the stairs slowly and hold the handrail. Rest on the landings.",
+    "Ask a neighbour or your floor ambassador to help carry groceries.",
+    "If you need to get to an appointment, ask for help with transport."
+   ],
+   "after": [
+    "Report any problems with the elevator to building management.",
+    "If repairs take a long time, you have the right to ask your landlord about it. Free legal help can explain your rights."
+   ]
+  },
+  {
+   "id": "heat",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 3,
+   "title": "Extreme heat",
+   "when911": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke.",
+   "before": [
+    "Find out which cool places are near you and when they are open.",
+    "Get a fan, and curtains or blinds to block the sun.",
+    "Ask your pharmacist if any of your medicines make heat harder on your body."
+   ],
+   "during": [
+    "Drink water often, even if you are not thirsty.",
+    "Spend a few hours in a cool place each day.",
+    "Keep blinds closed during the day and open windows at night if it is cooler outside.",
+    "Take a cool shower or bath, or put your feet in cool water.",
+    "Check on neighbours who live alone."
+   ],
+   "after": [
+    "Keep drinking water; your body needs time to recover.",
+    "Tell a doctor or nurse if you still feel dizzy or unwell."
+   ]
+  },
+  {
+   "id": "smoke",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 3,
+   "title": "Wildfire smoke",
+   "when911": "Call 911 if someone has chest pain, cannot breathe, or is very confused.",
+   "before": [
+    "Make a box-fan air filter, or find out where to get one.",
+    "Keep a few well-fitting masks at home.",
+    "If you have asthma or a heart condition, make sure your medicines are not expired."
+   ],
+   "during": [
+    "Stay indoors with windows and doors closed.",
+    "Run a box-fan filter or an air purifier in one room and stay in that room.",
+    "Wear a well-fitting mask if you have to go outside.",
+    "Go to a space with filtered air if your home gets smoky."
+   ],
+   "after": [
+    "Air out your home when the air outside is clean again.",
+    "Change or clean your fan filter.",
+    "See a doctor if you still cough or feel short of breath."
+   ]
+  },
+  {
+   "id": "fire",
+   "owner": "PLACEHOLDER: Hub Coordinator responsible for this content, to be named by the Hub",
+   "lastUpdated": "2026-10-02",
+   "englishReview": {
+    "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+    "date": null
+   },
+   "readMins": 2,
+   "title": "Fire and evacuation",
+   "when911": "Call 911 as soon as you see fire or smoke, or hear a fire alarm with signs of fire. Do not wait for anyone else to call.",
+   "before": [
+    "Know where the two nearest stairwells are on your floor.",
+    "Keep your keys, phone and medicines in one place by the door.",
+    "Tell your floor ambassador if you will need help to leave the building."
+   ],
+   "during": [
+    "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door.",
+    "If it is safe to leave, use the stairs, not the elevator, and close doors behind you.",
+    "Once you are out, stay out until the fire service says it is safe."
+   ],
+   "after": [
+    "Do not go back in until the fire service says it is safe.",
+    "If you cannot go home, ask where the reception point is.",
+    "Free help can replace household basics and explain your rights as a tenant."
+   ]
+  }
+ ]
+}
