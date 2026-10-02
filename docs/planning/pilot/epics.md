@@ -16,7 +16,7 @@ excluded:
   - prototype partner space P-01..P-16, moderation O-08..O-10, resident submissions R-17..R-23, seasonal heads-up R-32, connect-to-service A-05, printed notice X-05, audio X-08, space status X-09, statement chip X-06, code of conduct X-03 (MVP scope)
 conventions:
   requirement_ids: 'FR-<PRD id> (e.g. FR-A15), NFR-<PRD id> (e.g. NFR-N5), AR-<n> (architecture), UX-DR<n> (prototype and brief)'
-  time_tracking: 'every story carries Estimate (set at planning) and Actual (filled when the story is done)'
+  time_tracking: 'every story carries Estimate (set at planning) and Actual (filled when the story is done). Actual is the wall-clock time from the start of work on the story to the merge of its PR, with both times in UTC; it includes build, review, fixes, CI and waiting for owner input'
 ---
 
 # CVH Pilot - Epic Breakdown
@@ -304,7 +304,7 @@ Admins create staff accounts; staff sign in safely; the 43 buildings and floors 
 
 ### Story S01.01 — Developer can run, test and deploy the CVH app skeleton
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h
+- **Size:** M · **Estimate:** 6 h · **Actual:** 2 h 29 min (started 2026-10-01 23:27 UTC, merged 2026-10-02 01:56 UTC)
 - **Traces:** AR-1, AR-2, AR-22 · **Depends on:** none · **Branch:** `e01-s01-app-skeleton`
 
 As a developer,
@@ -334,7 +334,7 @@ So that every later story starts from the same structure and rules.
 
 ### Story S01.02 — Environments are separated and refuse unsafe settings
 
-- **Size:** S · **Estimate:** 3.5 h · **Actual:** —
+- **Size:** S · **Estimate:** 3.5 h · **Actual:** 16 min (started 2026-10-02 03:03 UTC, merged 2026-10-02 03:19 UTC)
 - **Traces:** AR-4, NFR-N6 · **Depends on:** S01.01 · **Branch:** `e01-s02-environment-safeguards`
 
 As a developer,
@@ -557,7 +557,7 @@ So that a lost phone or a departed volunteer cannot keep access.
 
 ### Story S01.16 — Developer generates the shared design tokens and layout primitives
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 37 min (started 2026-10-02 01:59 UTC, merged 2026-10-02 03:36 UTC)
 - **Traces:** UX-DR1, UX-DR19 (spacing, targets), AR-27 (tokens), NFR-N2 · **Depends on:** S01.01 · **Branch:** `e01-s16-tokens-layout`
 - **Note:** placed before S01.09 in this document because S01.09 depends on it; story IDs are not renumbered, and execution order follows declared dependencies.
 
@@ -845,7 +845,7 @@ Residents open the CVH in any phone browser, choose their language and what matt
 
 ### Story S02.01 — Developer generates every interface string from the prototype
 
-- **Size:** S · **Estimate:** 3.5 h · **Actual:** —
+- **Size:** S · **Estimate:** 3.5 h · **Actual:** 1 h 1 min (started 2026-10-02 02:01 UTC, merged 2026-10-02 03:02 UTC)
 - **Traces:** UX-DR2, AR-27 (strings), NFR-N1 · **Depends on:** S01.01 · **Branch:** `e02-s01-strings`
 
 As a developer,
@@ -1460,7 +1460,7 @@ So that search can never point to a listing the resident's phone doesn't have.
 
 ### Story S03.03 — Server tells which language a question was written in
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 1 min (started 2026-10-02 02:01 UTC, merged 2026-10-02 03:02 UTC)
 - **Traces:** FR-D2-Q, AR-15 · **Depends on:** S01.01 · **Branch:** `e03-s03-question-language`
 
 As a resident,
