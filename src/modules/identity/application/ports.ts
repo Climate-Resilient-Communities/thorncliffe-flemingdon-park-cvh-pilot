@@ -307,6 +307,11 @@ export interface StaffSessionStore {
   revoke(db: DbExecutor, id: string, at: Date): Promise<boolean>;
   /** Records that an open session of this account reached `aal2` at `at` (S01.10). False when there is no such open session. */
   markAal2(tx: DbTransaction, id: string, staffId: string, at: Date): Promise<boolean>;
+  /**
+   * Which of these accounts have an open session that reached aal2 and was opened after `since`
+   * (the absolute limit not yet passed): those Admins can reset another Admin from the Hub.
+   */
+  withLiveAal2(db: DbExecutor, staffIds: readonly string[], since: Date): Promise<string[]>;
   /** Revokes every open session of the account, except `keep` when given. Returns how many it revoked. */
   revokeAll(db: DbExecutor, staffId: string, at: Date, options?: { keep?: string }): Promise<number>;
 }

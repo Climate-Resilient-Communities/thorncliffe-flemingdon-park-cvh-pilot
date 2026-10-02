@@ -27,7 +27,7 @@ export type FactorResetCause = (typeof FACTOR_RESET_REASONS)[number];
  * or null to go ahead. Nothing has been written when it runs.
  */
 export type FactorResetCheck = (tx: DbTransaction, account: StaffAccount) => Promise<FactorResetRefusal | null>;
-export type FactorResetRefusal = "forbidden" | "not_resettable" | "no_authenticator" | "other_usable_admin";
+export type FactorResetRefusal = "forbidden" | "not_resettable" | "no_authenticator" | "other_usable_admin" | "other_admin_signed_in";
 
 /**
  * The authenticator reset (S01.10's hook for S01.11), internal to the identity module like session
@@ -46,7 +46,7 @@ export function createFactorReset(deps: FactorResetDeps) {
   const { db, store, audit } = deps;
   return {
     async resetFactor(
-      target: { staffId: string; actorStaffId: string | null; cause: FactorResetCause },
+      target: { staffId: string; actorStaffId: string | null; cause: FactorResetCause; attested?: true },
       check?: FactorResetCheck,
     ): Promise<Result<{ adminShortfall: boolean; providerCleared: boolean }, "not_found" | FactorResetRefusal>> {
       const done = await db.transaction(async (tx) => {
@@ -62,7 +62,7 @@ export function createFactorReset(deps: FactorResetDeps) {
           actorStaffId: target.actorStaffId,
           subjectType: "staff_account",
           subjectId: account.id,
-          meta: { recovery: target.cause, ...adminShortfallMeta(recovery) },
+          meta: { recovery: target.cause, ...adminShortfallMeta(recovery), ...(target.attested ? { attested: true as const } : {}) },
         });
         return { account, recovery };
       });

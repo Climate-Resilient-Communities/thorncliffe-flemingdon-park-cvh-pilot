@@ -12,7 +12,7 @@ import { AUDIT_REASONS, type AuditWriter } from "./accounts";
 import { DEFAULT_LOCK_TIMEOUT_MS } from "./adminRecovery";
 import type { IdentityProvider, StaffStore } from "./ports";
 import type { SessionRevocation } from "./sessionRevocation";
-import { adminStandings } from "./usability";
+import { adminStandings, type SignInLockReader } from "./usability";
 
 export interface StaffChangeDeps {
   db: Db;
@@ -21,7 +21,7 @@ export interface StaffChangeDeps {
   audit: AuditWriter;
   now: () => Date;
   /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin. */
-  signInLockedUntil: (username: string) => Promise<Date | null>;
+  signInLockedUntil: SignInLockReader;
   /** How long a change waits for a row lock before failing (default 5 s): Supabase is called while Admin rows are locked. */
   lockTimeoutMs?: number;
   /** S01.08: every change here ends all the account's sessions, in the change's transaction. */
@@ -107,7 +107,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
         const decided = decideStaffChange(actor.id, target, change);
         if (!decided.ok) throw new ChangeRefusal(decided.error, target.role);
         if (takesAwayAnAdmin(target, change)) {
-          const standings = await adminStandings(deps, locked.filter((account) => account.role === "admin"), deps.now());
+          const standings = await adminStandings(deps, tx, locked.filter((account) => account.role === "admin"), deps.now());
           const floor = decideAdminChange(standings, target.id);
           if (!floor.ok) throw new ChangeRefusal(floor.error, target.role);
         }
@@ -176,7 +176,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
       const viewer = await store.findById(db, viewerId);
       if (!viewer || !mayManageAccounts(viewer)) return false;
       if (bootstrapPhase(await store.readBootstrap(db)) !== "completed") return false;
-      return hasAdminShortfall(await adminStandings(deps, await store.listAdmins(db), deps.now()));
+      return hasAdminShortfall(await adminStandings(deps, db, await store.listAdmins(db), deps.now()));
     },
   };
 }

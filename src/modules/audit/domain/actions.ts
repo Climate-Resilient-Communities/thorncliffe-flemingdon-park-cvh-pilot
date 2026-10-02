@@ -107,6 +107,8 @@ export const AUDIT_META = {
   "factor.reset": meta({
     admin_shortfall: adminShortfall.optional(),
     recovery: z.enum(FACTOR_RESET_REASONS).optional(),
+    /** IT's scripts/recover-admin run with --confirm-no-admin-can-sign-in: the operator attested that no Admin can sign in. */
+    attested: z.literal(true).optional(),
   }),
 
   // Sign-in and sessions (S01.07, S01.08, S01.10)

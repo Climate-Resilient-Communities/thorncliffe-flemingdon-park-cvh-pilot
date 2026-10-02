@@ -3,7 +3,7 @@
 // it with esbuild:
 //
 //   node --env-file=.env.production.local scripts/recover-admin \
-//     --username jdoe --reason all_admins_lost_access
+//     --username jdoe --reason all_admins_lost_access [--confirm-no-admin-can-sign-in]
 //
 // It needs production's environment (VERCEL_ENV=production and the rest of what
 // src/platform/config/env.ts requires there, for example from
@@ -40,7 +40,7 @@ export interface CliDeps {
 
 const USAGE =
   "Usage: node --env-file=<production env file> scripts/recover-admin --username <admin's username> " +
-  `--reason <${FACTOR_RESET_REASONS.join("|")}>\n\n` +
+  `--reason <${FACTOR_RESET_REASONS.join("|")}> [--confirm-no-admin-can-sign-in]\n\n` +
   "For when no usable Admin can sign in to reset an Admin's authenticator from the Hub (People, \"Reset an\n" +
   "authenticator\"). It resets the named Admin's authenticator under the same rules as the Hub: the\n" +
   "authenticator is removed, every session of that Admin ends, and at their next sign-in (with their own\n" +
@@ -55,6 +55,12 @@ const USAGE =
   "exists, ask them to reset it from the Hub instead (safer: this script then cannot be used to bypass an\n" +
   "Admin who can sign in). A usable Admin is active, not locked, has chosen their own password and has an\n" +
   "enrolled authenticator.\n\n" +
+  "When two or more Admins count as usable but none of them can in fact sign in (for example all lost their\n" +
+  "phones), add --confirm-no-admin-can-sign-in, valid only with --reason all_admins_lost_access. It attests\n" +
+  "that no Admin can sign in and skips the usable-Admin refusal (the reset is audited with attested: true).\n" +
+  "It still refuses while another Admin has a live aal2 session (signed in with their authenticator within\n" +
+  "the last 12 hours): that Admin can reset this one from the Hub. After the reset, the reset Admin signs in\n" +
+  "and re-enrols an authenticator, then resets the other Admin's authenticator from the Hub (People).\n\n" +
   "It works in any phase, including while the first two Admins are still being set up, and it never\n" +
   "restarts that setup. When the reset leaves fewer than two usable Admins, the Hub shows the shortfall\n" +
   "banner to the Admin once they are back: they restore a second usable Admin.";
@@ -66,7 +72,11 @@ const REFUSALS: Record<RecoverAdminError, string> = {
   not_resettable: "that account is suspended or removed",
   other_usable_admin:
     "another usable Admin exists. Ask an Admin to reset this authenticator from the Hub (People, \"Reset an authenticator\"). " +
-    "This script is only for when no usable Admin can sign in",
+    "This script is only for when no usable Admin can sign in. If every usable Admin has in fact lost their phone, " +
+    "run it again with --reason all_admins_lost_access --confirm-no-admin-can-sign-in",
+  other_admin_signed_in:
+    "another Admin has a signed-in session that passed the authenticator check (aal2) in the last 12 hours, so they can reset this " +
+    "authenticator from the Hub (People, \"Reset an authenticator\")",
 };
 
 function connectToProduction(env: Env): Connection {
@@ -85,7 +95,7 @@ export async function runRecoverAdmin(argv: string[], deps: CliDeps): Promise<nu
   try {
     ({ values } = parseArgs({
       args: argv,
-      options: { username: { type: "string" }, reason: { type: "string" } },
+      options: { username: { type: "string" }, reason: { type: "string" }, "confirm-no-admin-can-sign-in": { type: "boolean" } },
       strict: true,
       allowPositionals: false,
     }));
@@ -104,6 +114,12 @@ export async function runRecoverAdmin(argv: string[], deps: CliDeps): Promise<nu
     return 2;
   }
 
+  const attested = values["confirm-no-admin-can-sign-in"] === true;
+  if (attested && reason !== "all_admins_lost_access") {
+    deps.error(`--confirm-no-admin-can-sign-in is valid only with --reason all_admins_lost_access\n${USAGE}`);
+    return 2;
+  }
+
   const environment = productionEnvironment(deps.env, "recover-admin");
   if (!environment.ok) {
     deps.error(`Refusing to run: unsafe or incomplete environment settings:\n${environment.problems.map((p) => `  - ${p}`).join("\n")}`);
@@ -112,7 +128,7 @@ export async function runRecoverAdmin(argv: string[], deps: CliDeps): Promise<nu
 
   const connection = (deps.connect ?? connectToProduction)(environment.env);
   try {
-    const result = await connection.identity.recoverAdmin(String(values.username), reason);
+    const result = await connection.identity.recoverAdmin(String(values.username), reason, { attested });
     if (!result.ok) {
       deps.error(`Refused: ${REFUSALS[result.error]} (${result.error}). Nothing was changed; the refusal is in the audit trail.`);
       return 1;
@@ -120,9 +136,12 @@ export async function runRecoverAdmin(argv: string[], deps: CliDeps): Promise<nu
     const { username, adminShortfall, providerCleared } = result.value;
     const lines = [
       `Authenticator reset for ${username}. Their old authenticator is removed and every session of theirs has ended.`,
-      `Audited as factor.reset, actor system, reason ${reason}.`,
+      `Audited as factor.reset, actor system, reason ${reason}${attested ? ", attested (no Admin can sign in)" : ""}.`,
       `Next step: ${username} signs in with their own password and is taken to set up a new authenticator before anything else. This did not change their password.`,
     ];
+    if (attested) {
+      lines.push(`Then ${username} re-enrols an authenticator and resets the other Admin's authenticator from the Hub (People, "Reset an authenticator").`);
+    }
     if (adminShortfall) {
       lines.push(
         "There are now fewer than two usable Admins. Once back in, they should restore a second usable Admin (the Hub shows the banner until two are usable).",

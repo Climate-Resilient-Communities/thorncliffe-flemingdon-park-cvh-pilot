@@ -1,4 +1,4 @@
-import type { Db, DbExecutor } from "../../../platform/db";
+import type { Db } from "../../../platform/db";
 import { SYSTEM_ACTOR, type FACTOR_RESET_REASONS } from "../../audit";
 import { mayManageAccounts } from "../domain/accountAuthority";
 import { decideUnderBootstrap } from "../domain/bootstrap";
@@ -8,8 +8,9 @@ import { needsAuthenticator } from "../domain/setupGate";
 import type { StaffAccount } from "../domain/staffAccount";
 import type { AuditReason, AuditWriter } from "./accounts";
 import type { FactorReset, FactorResetCheck } from "./factorReset";
-import type { IdentityProvider, StaffStore } from "./ports";
-import { adminStandings } from "./usability";
+import type { IdentityProvider, StaffSessionStore, StaffStore } from "./ports";
+import { SESSION_ABSOLUTE_MS } from "../domain/sessionLimits";
+import { adminStandings, type SignInLockReader } from "./usability";
 
 export type ResetAuthenticatorError =
   | "forbidden"
@@ -28,7 +29,9 @@ export type RecoverAdminError =
   | "not_admin"
   | "not_resettable"
   /** Another usable Admin exists, so one of them resets it from the Hub. */
-  | "other_usable_admin";
+  | "other_usable_admin"
+  /** With the attestation: another Admin has a live aal2 session, so they can reset it from the Hub. */
+  | "other_admin_signed_in";
 
 export interface AuthenticatorResetDone {
   username: string;
@@ -50,7 +53,9 @@ export interface FactorRecoveryDeps {
    * The failed-sign-in lock of a username (S01.07), read through the given executor: inside the
    * reset's transaction it is the transaction, never a second pool connection.
    */
-  signInLockedUntilIn: (executor: DbExecutor, username: string) => Promise<Date | null>;
+  signInLockedUntil: SignInLockReader;
+  /** Open aal2 sessions (S01.10), read through the reset's transaction. */
+  sessions: Pick<StaffSessionStore, "withLiveAal2">;
   store: StaffStore;
   audit: AuditWriter;
   now: () => Date;
@@ -117,7 +122,11 @@ export function createFactorRecovery(deps: FactorRecoveryDeps) {
       }
     },
 
-    async recoverAdmin(usernameInput: string, reason: FactorResetReason): Promise<Result<AuthenticatorResetDone, RecoverAdminError>> {
+    async recoverAdmin(
+      usernameInput: string,
+      reason: FactorResetReason,
+      options: { attested?: boolean } = {},
+    ): Promise<Result<AuthenticatorResetDone, RecoverAdminError>> {
       const refused = async (code: RecoverAdminError, auditReason: AuditReason, subjectId: string | null) => {
         await refuse(SYSTEM_ACTOR, subjectId, auditReason);
         return err(code);
@@ -133,15 +142,26 @@ export function createFactorRecovery(deps: FactorRecoveryDeps) {
         if (!RESETTABLE.has(locked.status)) return "not_resettable";
         // The Admin rows are locked (the recovery exception took them): this count cannot change under us.
         const others = (await store.listAdmins(tx)).filter((admin) => admin.id !== locked.id);
+        if (options.attested) {
+          // The operator attests that no Admin can sign in; an Admin with a live aal2 session can, so that still refuses.
+          const since = new Date(deps.now().getTime() - SESSION_ABSOLUTE_MS);
+          const signedIn = await deps.sessions.withLiveAal2(tx, others.map((admin) => admin.id), since);
+          return signedIn.length > 0 ? "other_admin_signed_in" : null;
+        }
         // Every read inside the transaction goes through the transaction's own connection.
-        const standings = await adminStandings({ idp: deps.idp, signInLockedUntil: (name) => deps.signInLockedUntilIn(tx, name) }, others, deps.now());
+        const standings = await adminStandings(deps, tx, others, deps.now());
         return standings.some((admin) => admin.usable) ? "other_usable_admin" : null;
       };
-      const result = await deps.factorReset.resetFactor({ staffId: target.id, actorStaffId: SYSTEM_ACTOR, cause: reason }, check);
+      const result = await deps.factorReset.resetFactor(
+        { staffId: target.id, actorStaffId: SYSTEM_ACTOR, cause: reason, ...(options.attested ? { attested: true as const } : {}) },
+        check,
+      );
       if (result.ok) return ok({ username: target.username, ...result.value });
       switch (result.error) {
         case "other_usable_admin":
           return refused("other_usable_admin", "conflict", target.id);
+        case "other_admin_signed_in":
+          return refused("other_admin_signed_in", "conflict", target.id);
         case "forbidden":
           return refused("not_admin", "forbidden", target.id);
         case "not_found":

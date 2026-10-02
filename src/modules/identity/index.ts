@@ -58,14 +58,11 @@ export function throttleKeyFromSecret(secret: string): string {
   return createHmac("sha256", secret).update("cvh:sign-in-throttle:v1").digest("hex");
 }
 
-/** The failed-sign-in lock of a username, read with the wiring's throttle key. */
+/**
+ * The failed-sign-in lock of a username, read with the wiring's throttle key through the executor
+ * its caller gives: the caller's transaction inside one, never a second pool connection.
+ */
 function lockReader(wiring: IdentityWiring) {
-  const read = lockReaderIn(wiring);
-  return (username: string) => read(wiring.db, username);
-}
-
-/** The same, through the executor it is given (a transaction's, inside one). */
-function lockReaderIn(wiring: IdentityWiring) {
   return signInLockReader({ throttle: drizzleThrottleStore, throttleKey: wiring.throttleKey ?? PROCESS_THROTTLE_KEY, now: wiring.now ?? (() => new Date()) });
 }
 
@@ -98,7 +95,7 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
     ...createAccountService(deps),
     ...createStaffChangeService({ ...deps, revocation }),
     ...createPasswordResetService({ ...deps, revocation, beginAdminRecovery }),
-    ...createFactorRecovery({ ...deps, factorReset, signInLockedUntilIn: lockReaderIn(wiring) }),
+    ...createFactorRecovery({ ...deps, factorReset, sessions: drizzleStaffSessionStore }),
   };
 }
 
