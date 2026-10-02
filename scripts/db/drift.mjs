@@ -54,7 +54,9 @@ export async function introspect(sql) {
        from pg_constraint where conrelid = any($1::oid[]) and contype <> 'n'`,
       [oids],
     );
-    for (const c of constraints) byOid.get(c.oid).constraints.push(c.definition);
+    // A constraint added NOT VALID (expand-only: existing rows are not scanned) has the same shape as
+    // a validated one, and Drizzle cannot say NOT VALID, so the validation state is not compared.
+    for (const c of constraints) byOid.get(c.oid).constraints.push(c.definition.replace(/ NOT VALID$/, ""));
     const indexes = await sql.unsafe(
       `select i.indrelid as oid, pg_get_indexdef(i.indexrelid) as definition
        from pg_index i
