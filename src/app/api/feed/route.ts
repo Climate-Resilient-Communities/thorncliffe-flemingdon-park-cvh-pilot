@@ -26,7 +26,11 @@ const failure = (status: number, code: "LANG_INVALID" | "FEED_UNAVAILABLE") =>
   });
 
 export async function GET(request: Request) {
-  const lang = LangCodeSchema.safeParse(new URL(request.url).searchParams.get("lang"));
+  const { searchParams } = new URL(request.url);
+  // Nothing but `lang` is accepted: another parameter would be a way to fragment the shared cache or to carry something
+  // about the resident, so it is refused.
+  if ([...searchParams.keys()].some((key) => key !== "lang")) return failure(400, "LANG_INVALID");
+  const lang = LangCodeSchema.safeParse(searchParams.get("lang"));
   if (!lang.success) return failure(400, "LANG_INVALID");
   try {
     return Response.json(FeedV1.parse(await readCached(lang.data)), { headers: { "Cache-Control": PUBLIC_CACHE } });

@@ -50,6 +50,18 @@ describe("GET /api/feed", () => {
     expect([...body.places.buildings, ...body.places.neighbourhoods].every((place) => place.status === "none")).toBe(true);
   });
 
+  it.each(["/api/feed?lang=en&building=4154146", "/api/feed?lang=en&lang=ur&x=1", "/api/feed?lang=en&floor=2", "/api/feed?Lang=en"])(
+    "refuses any query parameter other than lang (%s) with 400 and no-store, without reading the feed",
+    async (path) => {
+      const response = await get(path);
+
+      expect(response.status).toBe(400);
+      expect(response.headers.get("Cache-Control")).toBe("no-store");
+      expect(FeedErrorV1.parse(await response.json()).error.code).toBe("LANG_INVALID");
+      expect(reads).toEqual([]);
+    },
+  );
+
   it("sets no cookie, and is shareable for 15 seconds at the edge", async () => {
     const response = await get("/api/feed?lang=ur");
 

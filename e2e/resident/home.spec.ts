@@ -222,6 +222,62 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
   });
+
+  test("says so, and never shows 'Nothing active' as current, when the feed stops answering", async ({ page }) => {
+    await stubFeed(page, [feedOf(4)]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Nothing active");
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+
+    // From now on the feed route never answers.
+    await page.unroute("**/api/feed**");
+    let asked = 0;
+    await page.route("**/api/feed**", () => {
+      asked += 1;
+    });
+
+    // The ask at 60 seconds hangs; it is given up after 20 seconds and the screen says the answer is old.
+    await page.clock.fastForward(60_000);
+    await expect.poll(() => asked).toBe(1);
+    await page.clock.fastForward(20_000);
+    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+
+    // The next tick asks again and the note stays; a newer ask replacing one still in flight is a failure too.
+    await page.clock.fastForward(40_000);
+    await expect.poll(() => asked).toBe(2);
+    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+  });
+
+  test("polls nothing while the page is hidden, and asks once, straight away, when it is visible again", async ({ page }) => {
+    const seen = await stubFeed(page, [feedOf(1)]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    expect(seen).toHaveLength(1);
+
+    const setVisibility = (state: "hidden" | "visible") =>
+      page.evaluate((value) => {
+        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
+        document.dispatchEvent(new Event("visibilitychange"));
+      }, state);
+
+    await setVisibility("hidden");
+    await page.clock.fastForward(180_000);
+    await page.waitForTimeout(250);
+    expect(seen).toHaveLength(1);
+
+    await setVisibility("visible");
+    await expect.poll(() => seen.length).toBe(2);
+    await page.waitForTimeout(250);
+    expect(seen).toHaveLength(2);
+  });
 });
 
 // AD-3: nothing the resident chose leaves the phone. Every request home makes is the same one every resident makes.

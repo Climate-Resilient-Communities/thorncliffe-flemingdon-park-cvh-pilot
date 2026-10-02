@@ -197,13 +197,16 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
         <Stack gap="section-resident">
           {heading}
 
-          {feed.failed && (
-            <div className="home-note" role="status" data-testid="feed-failed">
-              <ResidentText as="p">
-                {feed.feed && feed.staleMs !== null ? t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) }) : t("feedFailed")}
-              </ResidentText>
-            </div>
-          )}
+          {/* One live region, always mounted, so a screen reader hears the note when it is put into it. */}
+          <div role="status" data-testid="feed-status">
+            {feed.failed && (
+              <div className="home-note" data-testid="feed-failed">
+                <ResidentText as="p">
+                  {feed.feed && feed.staleMs !== null ? t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) }) : t("feedFailed")}
+                </ResidentText>
+              </div>
+            )}
+          </div>
 
           {rows.buildings.length > 0 ? (
             <section data-testid="home-buildings">
@@ -219,9 +222,11 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
               </Stack>
             </section>
           ) : (
-            <section aria-label={t("noBuildingChosen")} data-testid="home-invite">
+            <section aria-labelledby="home-invite-line" data-testid="home-invite">
               <Stack gap="related">
-                <ResidentText as="p">{t("noBuildingLine")}</ResidentText>
+                <p id="home-invite-line">
+                  <ResidentText>{t("noBuildingLine")}</ResidentText>
+                </p>
                 <Link className="choice-btn choice-btn--secondary tap home-invite" href={`/${lang}/choices/place`} data-testid="home-choose-building">
                   <ResidentText>{t("noBuildingChosen")}</ResidentText>
                 </Link>

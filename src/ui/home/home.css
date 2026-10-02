@@ -104,7 +104,7 @@
     color: #4a5563;
   }
 
-  /* Not known and still checking are not "none": a dashed look and italics, so neither reads as "all clear". */
+  /* Not known and still checking are not "none": italic words, so neither reads as "all clear". */
   .home-status--unknown .home-status__words,
   .home-status--checking .home-status__words {
     font-style: italic;

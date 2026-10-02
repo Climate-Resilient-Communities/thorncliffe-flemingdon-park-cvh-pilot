@@ -3,6 +3,17 @@ import { FeedV1, feedPath } from "@/contracts/feed";
 /** Home asks for the feed again this often while it is visible (AD-17). */
 export const FEED_POLL_MS = 60_000;
 
+/** One ask is given up after this long (below the poll interval, so a hanging network is a failure, not a wait). */
+export const FEED_TIMEOUT_MS = 20_000;
+
+/** An answer older than this is shown with the "last loaded" note even when no ask has failed. */
+export const FEED_OUTDATED_MS = 2 * FEED_POLL_MS;
+
+/** Whether the answer fetched at `at` (ms since 1970) is too old to be shown as current at `now`. */
+export function isOutdated(at: number | null, now: number): boolean {
+  return at !== null && now - at > FEED_OUTDATED_MS;
+}
+
 /**
  * Whether an answer is newer than what the phone has seen. The phone keeps the highest `feed_version` it has seen and
  * discards a lower one (a late answer from a slower edge copy must not roll the screen back to before an alert). An
@@ -14,11 +25,18 @@ export function isStale(highestSeen: number, incoming: number): boolean {
 
 /**
  * Asks for the feed: `GET /api/feed?lang=` and nothing else, with no credentials, no body and no header of ours, so every
- * resident makes the same request (AD-3). Resolves to the feed, or null when the answer is a failure or not a FeedV1.
+ * resident makes the same request (AD-3). Resolves to the feed, or null when the answer is a failure, not a FeedV1, or
+ * has not finished within `timeoutMs` (the request is then cancelled). When `signal` aborts, the request is cancelled too
+ * and the result is null; the caller tells that from a failure by checking its own signal.
  */
-export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, signal?: AbortSignal): Promise<FeedV1 | null> {
+export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, signal?: AbortSignal, timeoutMs = FEED_TIMEOUT_MS): Promise<FeedV1 | null> {
+  const own = new AbortController();
+  const cancel = () => own.abort();
+  if (signal?.aborted) return null;
+  signal?.addEventListener("abort", cancel, { once: true });
+  const timer = setTimeout(cancel, timeoutMs);
   try {
-    const response = await fetcher(feedPath(lang), { credentials: "omit", headers: { Accept: "application/json" }, signal });
+    const response = await fetcher(feedPath(lang), { credentials: "omit", headers: { Accept: "application/json" }, signal: own.signal });
     // The body is always read, so a refusal does not leave the request open.
     const text = await response.text();
     if (!response.ok) return null;
@@ -26,6 +44,9 @@ export async function fetchFeed(lang: string, fetcher: typeof fetch = fetch, sig
     return parsed.success ? parsed.data : null;
   } catch {
     return null;
+  } finally {
+    clearTimeout(timer);
+    signal?.removeEventListener("abort", cancel);
   }
 }
 
