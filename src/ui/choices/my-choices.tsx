@@ -7,10 +7,11 @@ import { GROUPS, type DeviceChoices, type Group } from "@/contracts/deviceChoice
 import type { LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { Isolated, isolatedInString, withIsolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
 import { baseChoices, choicesStore } from "./choices-store";
 import type { StepLanguage } from "./language-step";
-import { ChoiceButton } from "./parts";
+import { ChoiceButton, ToldRow } from "./parts";
 import { useBuildingList, useChoices, useReconcileChoices } from "./use-choices";
 
 function Told({ id, title, children }: { id: string; title: string; children: ReactNode }) {
@@ -21,29 +22,6 @@ function Told({ id, title, children }: { id: string; title: string; children: Re
       </p>
       {children}
     </section>
-  );
-}
-
-/** One saved item with its own Remove. */
-function ToldRow({ label, caption, remove, removeText, removeLabel, testId }: { label: string; caption?: string; remove: () => void; removeText: string; removeLabel: string; testId: string }) {
-  return (
-    <div className="choice-told__row" data-testid={testId}>
-      <div>
-        <p className="choice-told__value">
-          <ResidentText>{label}</ResidentText>
-        </p>
-        {caption !== undefined && (
-          <p className="choice-hint">
-            <ResidentText>{caption}</ResidentText>
-          </p>
-        )}
-      </div>
-      <div className="choice-told__acts">
-        <ChoiceButton variant="quiet" onClick={remove} ariaLabel={removeLabel}>
-          {removeText}
-        </ChoiceButton>
-      </div>
-    </div>
   );
 }
 
@@ -61,7 +39,7 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
   const choices = useChoices();
   const { state } = useBuildingList();
   useReconcileChoices(state);
-  const [removedItem, setRemovedItem] = useState<string | null>(null);
+  const [removedItem, setRemovedItem] = useState<ReactNode | null>(null);
   const [confirming, setConfirming] = useState(false);
 
   if (choices === undefined) {
@@ -81,14 +59,16 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
   const removed = saved.removed && (saved.removed.buildings > 0 || saved.removed.floors > 0) ? saved.removed : null;
   const nothing = buildings.length === 0 && groups.length === 0;
 
-  const change = (update: (current: DeviceChoices) => DeviceChoices, item: string) => {
+  // The new value is built from `current`, what the store holds when the change runs, not from what this render saw:
+  // a change made in another tab, or by the building list check, since the last render is not undone.
+  const change = (update: (current: DeviceChoices) => DeviceChoices, item: ReactNode) => {
     choicesStore.update((current) => update(baseChoices(current)));
     setRemovedItem(item);
   };
 
-  const removeBuilding = (rsn: string, label: string) => {
+  const removeBuilding = (rsn: string, name: ReactNode) => {
     const own = new Set(list?.buildings.find((b) => b.rsn === rsn)?.floors.map((f) => f.id));
-    change((c) => ({ ...c, buildings: buildings.filter((r) => r !== rsn), floors: floors.filter((id) => !own.has(id)) }), label);
+    change((c) => ({ ...c, buildings: (c.buildings ?? []).filter((r) => r !== rsn), floors: (c.floors ?? []).filter((id) => !own.has(id)) }), name);
   };
 
   const clearEverything = () => {
@@ -108,14 +88,14 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
           <div role="status" className="choice-note" data-testid="removed-note">
             <Stack gap="label">
               {removed.buildings > 0 && (
-                <p className="choice-told__value">
-                  <ResidentText>{removed.buildings === 1 ? t("removedBuildingOne") : t("removedBuildingMany", { n: removed.buildings })}</ResidentText>
-                </p>
+                <ResidentText as="p" className="choice-told__value">
+                  {removed.buildings === 1 ? t("removedBuildingOne") : t("removedBuildingMany", { n: removed.buildings })}
+                </ResidentText>
               )}
               {removed.floors > 0 && (
-                <p className="choice-told__value">
-                  <ResidentText>{removed.floors === 1 ? t("removedFloorOne") : t("removedFloorMany", { n: removed.floors })}</ResidentText>
-                </p>
+                <ResidentText as="p" className="choice-told__value">
+                  {removed.floors === 1 ? t("removedFloorOne") : t("removedFloorMany", { n: removed.floors })}
+                </ResidentText>
               )}
               <ResidentText as="p">{t("removedRest")}</ResidentText>
               <div className="choice-told__acts">
@@ -129,7 +109,7 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
 
         {removedItem !== null && (
           <p role="status" className="choice-note" data-testid="removed-item">
-            <ResidentText>{t("removedItem", { item: removedItem })}</ResidentText> <ResidentText>{t("removed")}</ResidentText>
+            {withIsolated((item) => t("removedItem", { item }), removedItem, "auto")} <ResidentText>{t("removed")}</ResidentText>
           </p>
         )}
 
@@ -152,32 +132,35 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
 
         <Told id="told-place" title={t("building")}>
           {buildings.length === 0 && (
-            <p className="choice-told__value">
-              <ResidentText>{t("buildingsNone")}</ResidentText>
-            </p>
+            <ResidentText as="p" className="choice-told__value">
+              {t("buildingsNone")}
+            </ResidentText>
           )}
           {state.status === "loading" && buildings.length > 0 && (
-            <p className="choice-hint">
-              <ResidentText>{t("loading")}</ResidentText>
-            </p>
+            <ResidentText as="p" className="choice-hint">
+              {t("loading")}
+            </ResidentText>
           )}
           {state.status === "failed" && buildings.length > 0 && (
-            <p className="choice-hint" data-testid="list-failed">
-              <ResidentText>{t("listFailed")}</ResidentText>
-            </p>
+            <ResidentText as="p" className="choice-hint" testId="list-failed">
+              {t("listFailed")}
+            </ResidentText>
           )}
           {buildings.map((rsn) => {
             const listed = list?.buildings.find((b) => b.rsn === rsn);
             const label = listed?.address ?? t("buildingByRsn", { rsn });
+            // An address is place text and is isolated; "Building 123" is the catalog's own words.
+            const name: ReactNode = listed ? <Isolated>{label}</Isolated> : label;
             const chosenFloors = listed ? listed.floors.filter((floor) => floors.includes(floor.id)) : [];
             return (
               <div key={rsn} className="choice-told" data-testid={`told-building-${rsn}`}>
                 <ToldRow
                   label={label}
                   caption={listed?.neighbourhood}
+                  isolate={listed !== undefined}
                   removeText={t("remove")}
-                  removeLabel={t("removeItem", { item: label })}
-                  remove={() => removeBuilding(rsn, label)}
+                  removeLabel={t("removeItem", { item: isolatedInString(label) })}
+                  remove={() => removeBuilding(rsn, name)}
                   testId={`told-building-row-${rsn}`}
                 />
                 {chosenFloors.map((floor) => {
@@ -185,10 +168,17 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
                   return (
                     <ToldRow
                       key={floor.id}
-                      label={floorLabel}
+                      label={withIsolated((n) => place("floorN", { n }), floor.label)}
                       removeText={t("remove")}
-                  removeLabel={t("removeItem", { item: `${label}, ${floorLabel}` })}
-                      remove={() => change((c) => ({ ...c, floors: floors.filter((id) => id !== floor.id) }), `${label}, ${floorLabel}`)}
+                      removeLabel={t("removeItem", { item: `${isolatedInString(label)}, ${isolatedInString(floorLabel)}` })}
+                      remove={() =>
+                        change(
+                          (c) => ({ ...c, floors: (c.floors ?? []).filter((id) => id !== floor.id) }),
+                          <>
+                            {name}, {withIsolated((n) => place("floorN", { n }), floor.label)}
+                          </>,
+                        )
+                      }
                       testId={`told-floor-${floor.id}`}
                     />
                   );
@@ -196,10 +186,10 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
               </div>
             );
           })}
-          {!list && floors.length > 0 && (
-            <p className="choice-hint">
-              <ResidentText>{floors.length === 1 ? t("floorsOne") : t("floorsMany", { n: floors.length })}</ResidentText>
-            </p>
+          {!list && buildings.length > 0 && floors.length > 0 && (
+            <ResidentText as="p" className="choice-hint">
+              {floors.length === 1 ? t("floorsOne") : t("floorsMany", { n: floors.length })}
+            </ResidentText>
           )}
           <div className="choice-told__acts">
             <ChoiceButton variant="secondary" onClick={() => router.push(`/${lang}/choices/place`)} testId="change-place">
@@ -210,9 +200,9 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
 
         <Told id="told-groups" title={t("groups")}>
           {groups.length === 0 && (
-            <p className="choice-told__value">
-              <ResidentText>{t("groupsNone")}</ResidentText>
-            </p>
+            <ResidentText as="p" className="choice-told__value">
+              {t("groupsNone")}
+            </ResidentText>
           )}
           {groups.map((group) => {
             const label = groupText(`${group}.label`);
@@ -221,8 +211,8 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
                 key={group}
                 label={label}
                 removeText={t("remove")}
-                  removeLabel={t("removeItem", { item: label })}
-                remove={() => change((c) => ({ ...c, groups: groups.filter((g) => g !== group) }), label)}
+                removeLabel={t("removeItem", { item: isolatedInString(label) })}
+                remove={() => change((c) => ({ ...c, groups: (c.groups ?? []).filter((g) => g !== group) }), label)}
                 testId={`told-group-${group}`}
               />
             );
@@ -234,9 +224,9 @@ export function MyChoices({ lang, languages }: { lang: LaunchCode; languages: re
           </div>
         </Told>
 
-        <p className="choice-hint" data-testid="on-device">
-          <ResidentText>{t("onDevice")}</ResidentText>
-        </p>
+        <ResidentText as="p" className="choice-hint" testId="on-device">
+          {t("onDevice")}
+        </ResidentText>
 
         {confirming ? (
           <section className="choice-note" aria-labelledby="clear-title" data-testid="clear-confirm">

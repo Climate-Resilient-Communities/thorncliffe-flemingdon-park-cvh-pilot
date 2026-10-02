@@ -28,7 +28,7 @@ test("no request carries the saved selection, and the only data requests are the
   await stubBuildingList(page);
   await seedChoices(page, JSON.stringify(SAVED));
   const pending: Promise<Seen>[] = [];
-  page.on("request", (request: Request) => {
+  page.context().on("request", (request: Request) => {
     pending.push(request.allHeaders().then((headers) => ({ method: request.method(), url: request.url(), headers: JSON.stringify(headers), body: request.postData() ?? "" })));
   });
 
@@ -43,6 +43,7 @@ test("no request carries the saved selection, and the only data requests are the
   await page.getByTestId("step-save").click();
   await page.waitForURL("**/en/choices");
   await page.getByTestId(`told-building-row-${BUILDING_A}`).getByRole("button", { name: /^Remove: / }).click();
+  await expect(page.getByTestId(`told-building-row-${BUILDING_A}`)).toHaveCount(0);
   await page.waitForLoadState("networkidle");
 
   const seen = await Promise.all(pending);
@@ -73,7 +74,7 @@ test("a visitor with nothing saved makes the same building list request", async 
   await stubBuildingList(page);
   await seedChoices(page, JSON.stringify({ v: 1, welcomed: true }));
   const lists: string[] = [];
-  page.on("request", (request) => {
+  page.context().on("request", (request) => {
     if (new URL(request.url()).pathname === "/api/buildings") lists.push(`${request.method()} ${request.url()}`);
   });
 

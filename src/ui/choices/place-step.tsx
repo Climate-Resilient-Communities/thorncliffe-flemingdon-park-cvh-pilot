@@ -7,7 +7,9 @@ import type { BuildingList } from "@/contracts/buildingList";
 import type { LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { richResident, withIsolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
+import { sortBuildings } from "./building-list";
 import { baseChoices, choicesStore } from "./choices-store";
 import { ChoiceButton, ChoiceOption, StepActions, type StepMode } from "./parts";
 import { useBuildingList, useChoices } from "./use-choices";
@@ -33,7 +35,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
 
   const list = state.status === "ready" ? state.list : null;
   const shown = useMemo(
-    () => (list ? list.buildings.filter((b) => query.trim() === "" || matches(b.address, query) || matches(b.neighbourhood, query)) : []),
+    () => (list ? sortBuildings(list.buildings).filter((b) => query.trim() === "" || matches(b.address, query) || matches(b.neighbourhood, query)) : []),
     [list, query],
   );
 
@@ -105,6 +107,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
             <input
               className="choice-input"
               type="search"
+              dir="auto"
               value={query}
               onChange={(event) => setQuery(event.target.value)}
               placeholder={t("buildingSearch")}
@@ -116,7 +119,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
             </p>
             {shown.length === 0 && query.trim() !== "" && (
               <p className="choice-hint" data-testid="no-match">
-                <ResidentText>{t("noMatch", { q: query.trim() })}</ResidentText>
+                {withIsolated((q) => t("noMatch", { q }), query.trim(), "auto")}
               </p>
             )}
             <Stack gap="target" as="ul" testId="building-options">
@@ -133,12 +136,13 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
                         onChange={() => toggleBuilding(building)}
                         label={building.address}
                         line={building.neighbourhood}
+                        isolate
                         testId={`building-${building.rsn}`}
                       />
                       {chosen && (
                         <fieldset className="choice-fieldset choice-floors" data-testid={`floors-${building.rsn}`}>
                           <legend className="choice-legend">
-                            <ResidentText>{t("floorsIn", { building: building.address })}</ResidentText>
+                            {richResident(t.rich("floorsIn", { address: building.address, building: (chunks) => <bdi lang="en" dir="ltr">{chunks}</bdi> }))}
                           </legend>
                           {building.floors.length === 0 ? (
                             <p className="choice-hint">
@@ -154,7 +158,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
                                     value={floor.id}
                                     checked={floors.includes(floor.id)}
                                     onChange={() => toggleFloor(floor.id)}
-                                    label={t("floorN", { n: floor.label })}
+                                    label={withIsolated((n) => t("floorN", { n }), floor.label)}
                                     testId={`floor-${floor.id}`}
                                   />
                                 </li>

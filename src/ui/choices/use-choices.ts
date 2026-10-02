@@ -13,6 +13,11 @@ export function useChoices(): ChoicesSnapshot | undefined {
   return useSyncExternalStore(choicesStore.subscribe, choicesStore.getSnapshot, unknown);
 }
 
+/** Whether the phone keeps what is written to it: undefined until it has been probed (the server and the first render). */
+export function useStorageUsable(): boolean | undefined {
+  return useSyncExternalStore(choicesStore.subscribe, choicesStore.storageUsable, unknown);
+}
+
 export type BuildingListState = { status: "loading" } | { status: "failed" } | { status: "ready"; list: BuildingList };
 
 /** The building list, loaded when `enabled`. `retry` asks again after a failure. */

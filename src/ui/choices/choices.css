@@ -191,9 +191,10 @@
     overflow-wrap: anywhere;
   }
 
+  /* A saved item and its Remove on one line: the words take what the button leaves and wrap, the button never wraps below. */
   .choice-told__row {
     display: flex;
-    flex-wrap: wrap;
+    flex-wrap: nowrap;
     align-items: center;
     justify-content: space-between;
     gap: var(--gap-label);
@@ -202,8 +203,19 @@
   }
 
   .choice-told__row > :first-child {
+    flex: 1 1 auto;
     min-inline-size: 0;
     overflow-wrap: anywhere;
+  }
+
+  .choice-told__row > .choice-told__acts {
+    flex: none;
+  }
+
+  /* In a building's own box (its row, then its floors) the first row has nothing above it to be told apart from. */
+  .choice-told > .choice-told__row:first-child {
+    padding-block-start: 0;
+    border-block-start: 0;
   }
 
   .choice-told__acts {

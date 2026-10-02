@@ -11,9 +11,13 @@ const unique = <T>(items: readonly T[]): T[] => [...new Set(items)];
  *
  * An empty list is never trusted to mean "everything is gone": the pilot has 43 buildings, so a list with none is a
  * server that has not been loaded, and the choices are left as they are.
+ *
+ * A list that was generated before the choices were last written is never used: it may not know a building the resident
+ * has just chosen (from a newer list, or in another tab). Choices without `savedAt` (written before it existed) are checked.
  */
 export function reconcileChoices(choices: DeviceChoices, list: BuildingList): DeviceChoices {
   if (list.buildings.length === 0) return choices;
+  if (choices.savedAt !== undefined && Date.parse(list.generated_at) < choices.savedAt) return choices;
   const listed = new Map(list.buildings.map((building) => [building.rsn, building]));
   const floorOwner = new Map(list.buildings.flatMap((building) => building.floors.map((floor) => [floor.id, building.rsn] as const)));
 
@@ -23,7 +27,9 @@ export function reconcileChoices(choices: DeviceChoices, list: BuildingList): De
   const floors = savedFloors.filter((id) => floorOwner.has(id) && buildings.includes(floorOwner.get(id)!));
 
   const removedBuildings = savedBuildings.length - buildings.length;
-  const removedFloors = savedFloors.filter((id) => !floorOwner.has(id)).length;
+  // A floor that is gone is counted only while a chosen building is still listed. A floor carries no building, so when
+  // none is left the floor went with its building, which is already counted: it is not a second removal.
+  const removedFloors = buildings.length === 0 ? 0 : savedFloors.filter((id) => !floorOwner.has(id)).length;
   const duplicates = (choices.buildings?.length ?? 0) !== savedBuildings.length || (choices.floors?.length ?? 0) !== savedFloors.length;
   if (removedBuildings === 0 && removedFloors === 0 && floors.length === savedFloors.length && !duplicates) return choices;
 

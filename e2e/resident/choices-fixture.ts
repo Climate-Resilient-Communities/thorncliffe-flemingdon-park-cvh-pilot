@@ -46,13 +46,14 @@ export const BUILDINGS = [
   },
 ];
 
-export const BUILDING_LIST = { v: 1, buildings: BUILDINGS };
+/** The list as the server answers: read just now, unless a test says when. */
+export const buildingList = (generatedAt: Date = new Date()) => ({ v: 1, generated_at: generatedAt.toISOString(), buildings: BUILDINGS });
 
-/** Answers /api/buildings with the list above, or with a failure. */
-export async function stubBuildingList(page: Page, answer: "list" | "unavailable" = "list") {
+/** Answers /api/buildings with the list above (generated when asked, or at `generatedAt`), or with a failure. */
+export async function stubBuildingList(page: Page, answer: "list" | "unavailable" = "list", generatedAt?: Date) {
   await page.route("**/api/buildings", (route: Route) =>
     answer === "list"
-      ? route.fulfill({ json: BUILDING_LIST, headers: { "Cache-Control": "no-store" } })
+      ? route.fulfill({ json: buildingList(generatedAt), headers: { "Cache-Control": "no-store" } })
       : route.fulfill({ status: 503, json: { error: "unavailable" } }),
   );
 }
@@ -69,4 +70,13 @@ export async function seedChoices(page: Page, raw: string) {
   );
 }
 
-export const savedChoices = (page: Page) => page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices") ?? "null"));
+/** What the phone holds under `cvh.choices` without `savedAt`, the time of the last write (read with `savedAtOf`). */
+export const savedChoices = (page: Page) =>
+  page.evaluate(() => {
+    const value = JSON.parse(localStorage.getItem("cvh.choices") ?? "null");
+    if (value) delete value.savedAt;
+    return value;
+  });
+
+/** When the phone last wrote `cvh.choices` (ms since 1970), or undefined. */
+export const savedAtOf = (page: Page): Promise<number | undefined> => page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices") ?? "null")?.savedAt);

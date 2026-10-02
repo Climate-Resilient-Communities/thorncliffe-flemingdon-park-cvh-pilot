@@ -22,7 +22,10 @@ export interface ResidentBuilding {
 export function createResidentBuildings(deps: { db: Db }) {
   const { db } = deps;
   return {
-    /** Every building by neighbourhood and address, each with its floors. */
+    /**
+     * Every building by neighbourhood and address, each with its floors. A building flagged `not_in_register_since` is
+     * still listed: S02.08 still opens its page, so a resident's saved choice for it stays valid.
+     */
     async list(): Promise<ResidentBuilding[]> {
       const rows = await db
         .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name })

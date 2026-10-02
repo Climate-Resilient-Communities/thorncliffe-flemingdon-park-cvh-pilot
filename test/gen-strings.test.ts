@@ -40,7 +40,7 @@ function translator(dir: string, locale: string) {
       throw error;
     },
   });
-  return t as unknown as (key: string, values?: Record<string, string>) => string;
+  return t as unknown as (key: string, values?: Record<string, string | ((chunks: string) => string)>) => string;
 }
 
 function generate(...args: string[]) {
@@ -191,7 +191,11 @@ describe("string catalogs", () => {
     const t = translator(COMMITTED, code);
     for (const [key, value] of Object.entries(leaves(read(COMMITTED, code)))) {
       if (typeof value !== "string") continue;
-      const values = Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(([, name]) => [name, "x"]));
+      // {name} is filled with a word; a <tag> (t.rich) with a function that returns what is inside it.
+      const values = {
+        ...Object.fromEntries([...value.matchAll(/<(\w+)>/g)].map(([, name]) => [name, (chunks: string) => chunks])),
+        ...Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(([, name]) => [name, "x"])),
+      };
       expect(() => t(key, values), `${code} ${key}`).not.toThrow();
     }
   });
