@@ -15,7 +15,7 @@ import { deriveStartingPassword } from "../domain/startingPassword";
 import { startingPasswordStanding } from "../domain/startingPasswordWindow";
 import type { AuditWriter } from "./accounts";
 import type { AuthSessions, IdentityProvider, OperationalLog, StaffStore, ThrottleStore } from "./ports";
-import { adminShortfallMeta, type AdminRecovery } from "./staffChanges";
+import { adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
 

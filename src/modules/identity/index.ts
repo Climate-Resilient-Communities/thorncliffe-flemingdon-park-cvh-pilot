@@ -9,6 +9,7 @@ import { drizzleStaffStore } from "./adapters/staffStore";
 import { drizzleThrottleStore } from "./adapters/throttleStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
 import type { IdentityProvider } from "./application/ports";
+import { createAdminRecovery } from "./application/adminRecovery";
 import { createStaffAuthService, signInLockReader, type StaffAuthService } from "./application/staffAuth";
 import { createStaffChangeService, type StaffChangeService } from "./application/staffChanges";
 
@@ -29,6 +30,8 @@ export interface IdentityWiring {
   now?: () => Date;
   newId?: () => string;
   audit?: AuditWriter;
+  /** How long a change waits for a row lock before failing; default 5 s. */
+  lockTimeoutMs?: number;
 }
 
 /** The failed-sign-in lock of a username, read with the wiring's throttle key. */
@@ -51,6 +54,7 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
     now: wiring.now ?? (() => new Date()),
     newId: wiring.newId ?? (() => uuidv7()),
     signInLockedUntil: lockReader(wiring),
+    lockTimeoutMs: wiring.lockTimeoutMs,
   };
   return { ...createAccountService(deps), ...createStaffChangeService(deps) };
 }
@@ -58,8 +62,8 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
 /**
  * Sign-in, the session lookup, the setup gates' password change and the re-issue of starting
  * passwords (S01.07), wired like createIdentity. `accounts` is the IdentityService whose bootstrap
- * completion runs after a password change and whose recovery exception covers the automatic locks
- * (created from the same wiring when not given).
+ * completion runs after a password change (created from the same wiring when not given); the
+ * automatic locks go through the module's internal recovery exception (S01.06).
  */
 export function createStaffAuth(wiring: IdentityWiring & { throttleKey: string; accounts?: IdentityService }): StaffAuthService {
   const accounts = wiring.accounts ?? createIdentity(wiring);
@@ -73,7 +77,13 @@ export function createStaffAuth(wiring: IdentityWiring & { throttleKey: string; 
     now: wiring.now ?? (() => new Date()),
     throttleKey: wiring.throttleKey,
     completeBootstrapIfReady: (actorId) => accounts.completeBootstrapIfReady(actorId),
-    beginAdminRecovery: (tx, targetId) => accounts.beginAdminRecovery(tx, targetId),
+    beginAdminRecovery: createAdminRecovery({
+      store: drizzleStaffStore,
+      idp: wiring.idp,
+      now: wiring.now ?? (() => new Date()),
+      lockTimeoutMs: wiring.lockTimeoutMs,
+      signInLockedUntil: lockReader(wiring),
+    }).beginAdminRecovery,
   });
 }
 
@@ -83,7 +93,7 @@ export { supabaseIdentityProvider, type SupabaseAdminConfig } from "./adapters/s
 export type { AccountService, AddPersonView, CreatedAccount } from "./application/accounts";
 export type { AuthSessions, AuthSessionsFactory, CookieJar, CreateLoginError, IdentityProvider, SessionCookieOptions } from "./application/ports";
 export type { ChangePasswordError, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
-export { adminShortfallMeta, type AdminRecovery, type StaffChangeService } from "./application/staffChanges";
+export { type StaffChangeService } from "./application/staffChanges";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
 export { setupGate } from "./domain/setupGate";
 export { CLIENT_LIMIT, USERNAME_LIMIT } from "./domain/signInThrottle";

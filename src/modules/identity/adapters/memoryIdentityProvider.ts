@@ -53,6 +53,13 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
   let nextFailure: CreateLoginError | null = null;
   let nextPasswordFailure: SetPasswordError | null = null;
   let failDeletes = false;
+  let latency: { ms: number; fails: boolean } | null = null;
+  /** Every call takes `latency.ms` first, then fails like the real adapter's timeout does (or answers, if `fails` is false). */
+  const slow = async () => {
+    if (!latency) return;
+    await new Promise((resolve) => setTimeout(resolve, latency!.ms));
+    if (latency.fails) throw new Error("identity provider timed out");
+  };
   let unavailable = false;
 
   const load = (): State => {
@@ -134,6 +141,8 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     failNextPassword(error: SetPasswordError): void;
     failDeletes(fail: boolean): void;
     setUnavailable(down: boolean): void;
+    /** Simulates a slow or hanging provider: each call waits `ms`, then times out (`fails`, the default) or answers. `null` ends it. */
+    delay(ms: number | null, options?: { fails?: boolean }): void;
     enrol(authUserId: string): void;
     findByLogin(login: string): [string, MemoryLogin] | undefined;
     /** Adds a login as if left behind earlier (or made by someone else, with `staffMarker: false`). */
@@ -158,6 +167,9 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     setUnavailable(down) {
       unavailable = down;
     },
+    delay(ms, options = {}) {
+      latency = ms === null ? null : { ms, fails: options.fails ?? true };
+    },
     enrol(authUserId) {
       change((state) => {
         const user = state.users.get(authUserId);
@@ -179,6 +191,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     sessions,
 
     async findLogin(login) {
+      await slow();
       const state = load();
       const found = [...state.users.entries()].find(([, user]) => user.login === login);
       if (!found) return null;
@@ -187,6 +200,11 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     },
 
     async createLogin({ login, password }) {
+      try {
+        await slow();
+      } catch {
+        return { ok: false, error: "unavailable" };
+      }
       if (nextFailure) {
         const error = nextFailure;
         nextFailure = null;
@@ -202,6 +220,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     },
 
     async deleteLogin(authUserId) {
+      await slow();
       if (failDeletes) throw new Error("delete failed");
       change((state) => {
         state.users.delete(authUserId);
@@ -211,10 +230,16 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     },
 
     async hasVerifiedAuthenticator(authUserId) {
+      await slow();
       return load().users.get(authUserId)?.authenticatorEnrolled ?? false;
     },
 
     async setPassword(authUserId, password) {
+      try {
+        await slow();
+      } catch {
+        return { ok: false, error: "unavailable" };
+      }
       if (nextPasswordFailure) {
         const error = nextPasswordFailure;
         nextPasswordFailure = null;

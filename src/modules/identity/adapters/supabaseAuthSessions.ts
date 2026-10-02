@@ -1,6 +1,7 @@
 import { combineChunks, createServerClient, stringFromBase64URL } from "@supabase/ssr";
 import { createClient, isAuthApiError, isAuthSessionMissingError, type SupabaseClient } from "@supabase/supabase-js";
 import type { AuthSessions, CookieJar, SessionCookieOptions } from "../application/ports";
+import { DEFAULT_PROVIDER_TIMEOUT_MS, withTimeout } from "./supabaseIdentityProvider";
 
 export interface SupabaseSessionConfig {
   /** The project URL (NEXT_PUBLIC_SUPABASE_URL). */
@@ -11,6 +12,8 @@ export interface SupabaseSessionConfig {
   secureCookies: boolean;
   /** Test seam: the fetch the client uses. Tests pass a fake; nothing in a test reaches a real project. */
   fetch?: typeof fetch;
+  /** How long any call to Supabase Auth may take before it is abandoned (default 5 s, like the Admin API's). */
+  timeoutMs?: number;
 }
 
 /** The session cookie's name (chunked by @supabase/ssr as `<name>.0`, `<name>.1`… when long). */
@@ -37,12 +40,13 @@ const NO_SESSION_STATUSES = new Set([400, 401, 403, 404]);
  */
 export function supabaseAuthSessions(config: SupabaseSessionConfig, jar: CookieJar): AuthSessions {
   const cookieOptions = sessionCookieOptions(config.secureCookies);
+  const boundedFetch = withTimeout(config.fetch ?? fetch, config.timeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS);
 
   // A client that never stores or refreshes a session: it only sends the token it is given.
   const plain = (): SupabaseClient =>
     createClient(config.url, config.publishableKey, {
       auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-      global: config.fetch ? { fetch: config.fetch } : undefined,
+      global: { fetch: boundedFetch },
     });
 
   /** The access token of the request's session cookie, or null when there is none or it cannot be read. */
@@ -71,7 +75,7 @@ export function supabaseAuthSessions(config: SupabaseSessionConfig, jar: CookieJ
       const holding = createServerClient(config.url, config.publishableKey, {
         cookies: { getAll: () => jar.getAll(), setAll: (cookies) => void held.push(...(cookies as typeof held)) },
         cookieOptions: { ...cookieOptions, name: SESSION_COOKIE },
-        global: config.fetch ? { fetch: config.fetch } : undefined,
+        global: { fetch: boundedFetch },
       });
       let result;
       try {

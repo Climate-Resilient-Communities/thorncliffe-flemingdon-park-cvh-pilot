@@ -1,12 +1,13 @@
 import { isStaffRole, type StaffRole } from "../../../contracts/staffRoles";
-import type { Db, DbTransaction } from "../../../platform/db";
+import type { Db } from "../../../platform/db";
 import { mayManageAccounts } from "../domain/accountAuthority";
-import { decideAdminChange, hasAdminShortfall, leavesAdminShortfall } from "../domain/adminFloor";
+import { decideAdminChange, hasAdminShortfall } from "../domain/adminFloor";
 import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
 import { decideStaffChange, takesAwayAnAdmin, type StaffChange } from "../domain/staffChange";
 import { AUDIT_REASONS, type AuditWriter } from "./accounts";
+import { DEFAULT_LOCK_TIMEOUT_MS } from "./adminRecovery";
 import type { IdentityProvider, StaffStore } from "./ports";
 import { adminStandings } from "./usability";
 
@@ -18,17 +19,8 @@ export interface StaffChangeDeps {
   now: () => Date;
   /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin. */
   signInLockedUntil: (username: string) => Promise<Date | null>;
-}
-
-/** What a recovery action or an automatic lock learns before it changes an account (S01.06). */
-export interface AdminRecovery {
-  /** The change leaves fewer than two usable Admins: its audit record carries `admin_shortfall: true`. */
-  adminShortfall: boolean;
-}
-
-/** The `meta` fields a recovery action or automatic lock adds to its audit record. */
-export function adminShortfallMeta(recovery: AdminRecovery): { admin_shortfall?: true } {
-  return recovery.adminShortfall ? { admin_shortfall: true } : {};
+  /** How long a change waits for a row lock before failing (default 5 s): Supabase is called while Admin rows are locked. */
+  lockTimeoutMs?: number;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -57,7 +49,7 @@ class ChangeRefusal {
  * Suspending, removing and changing the role of staff accounts, under the two-Admin rule (S01.06):
  * any change that would leave fewer than two usable Admins is refused with "There must always be at
  * least two usable Admins" and audited as `refused`. The recovery exception and the automatic locks
- * go through beginAdminRecovery instead.
+ * go through the identity module's internal beginAdminRecovery (adminRecovery.ts) instead.
  */
 export function createStaffChangeService(deps: StaffChangeDeps) {
   const { db, store, audit } = deps;
@@ -96,6 +88,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
 
     try {
       await db.transaction(async (tx) => {
+        await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
         // Every Admin row and the target's are locked first; what is read after the lock is what
         // a concurrent change committed, so two changes never both count the same Admins.
         const locked = await store.lockAdminsAndAccount(tx, targetId);
@@ -157,23 +150,6 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
     /** An Admin gives another account a new role. Demoting an Admin is refused under the two-Admin rule. */
     changeRole(actorId: string, targetId: string, role: string) {
       return applyChange(actorId, targetId, { kind: "change_role", role: role as StaffRole });
-    },
-
-    /**
-     * The recovery exception (S01.06). The Admin-issued password reset (S01.08), the authenticator
-     * reset (S01.11) and the automatic locks (failed sign-in and expired starting password, S01.07)
-     * call this inside their own transaction, before they change the account:
-     *  - it locks the Admin rows and the account's, like every change to Admins;
-     *  - it lets the transaction leave fewer than two usable Admins (the database trigger allows it);
-     *  - it says whether the change does, so the caller's audit record carries
-     *    `adminShortfallMeta(result)` (`admin_shortfall: true`).
-     * It never refuses: blocking a recovery would stop the Admins recovering. Bootstrap never returns.
-     */
-    async beginAdminRecovery(tx: DbTransaction, targetId: string): Promise<AdminRecovery> {
-      const locked = await store.lockAdminsAndAccount(tx, targetId);
-      await store.permitAdminShortfall(tx);
-      const standings = await adminStandings(deps, locked, deps.now());
-      return { adminShortfall: leavesAdminShortfall(standings, targetId) };
     },
 
     /**

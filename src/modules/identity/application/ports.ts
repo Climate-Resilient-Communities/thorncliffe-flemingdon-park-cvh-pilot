@@ -113,8 +113,6 @@ export interface StaffStore {
   findById(db: DbExecutor, id: string): Promise<StaffAccount | null>;
   findByUsername(db: DbExecutor, username: string): Promise<StaffAccount | null>;
   findByAuthUserId(db: DbExecutor, authUserId: string): Promise<StaffAccount | null>;
-  /** Locks the account's row until the transaction ends and reads it. */
-  lockAccount(tx: DbTransaction, id: string): Promise<StaffAccount | null>;
   /** Records the starting password's one successful sign-in. */
   markStartingPasswordUsed(tx: DbTransaction, id: string, at: Date): Promise<void>;
   /** `active` → `locked_pending_reissue`, only while a starting password is in use. True when it changed. */
@@ -146,6 +144,10 @@ export interface StaffStore {
    * other committed.
    */
   lockAdminsAndAccount(tx: DbTransaction, staffId: string): Promise<StaffAccount[]>;
+  /** Locks one account's row (`for update`) until the transaction ends, and returns it as locked (null if there is none). */
+  lockAccount(tx: DbTransaction, staffId: string): Promise<StaffAccount | null>;
+  /** Makes this transaction fail, rather than wait, when a row lock held by another is not free within `ms` (set local lock_timeout). */
+  setLockTimeout(tx: DbTransaction, ms: number): Promise<void>;
   /**
    * Lets this transaction leave fewer than two usable Admins: the recovery exception and the
    * automatic locks only. The database trigger staff_account_keep_two_usable_admins refuses such an

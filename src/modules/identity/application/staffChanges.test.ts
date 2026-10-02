@@ -5,7 +5,8 @@ import { memoryIdentityProvider } from "../adapters/memoryIdentityProvider";
 import type { BootstrapState } from "../domain/bootstrap";
 import type { StaffAccount } from "../domain/staffAccount";
 import type { StaffStore } from "./ports";
-import { adminShortfallMeta, createStaffChangeService } from "./staffChanges";
+import { adminShortfallMeta, createAdminRecovery } from "./adminRecovery";
+import { createStaffChangeService } from "./staffChanges";
 
 const id = (n: number) => `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 const [A, B, C, D] = [1, 2, 3, 4].map(id);
@@ -32,11 +33,22 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     idp.users.set(authUserId, { login: "x", password: "x", authenticatorEnrolled: true });
   }
   const permitted = vi.fn(async () => {});
+  const lockedAdmins = vi.fn();
+  const lockedAccount = vi.fn();
+  const lockTimeouts: number[] = [];
   const store = {
     findById: async (_db, staffId) => (rows.has(staffId) ? { ...rows.get(staffId)! } : null),
     readBootstrap: async () => bootstrap,
     listAdmins: async () => [...rows.values()].filter((row) => row.role === "admin"),
-    lockAdminsAndAccount: async (_tx, staffId) => [...rows.values()].filter((row) => row.role === "admin" || row.id === staffId).map((row) => ({ ...row })),
+    lockAccount: async (_tx, staffId) => {
+      lockedAccount(staffId);
+      return rows.has(staffId) ? { ...rows.get(staffId)! } : null;
+    },
+    setLockTimeout: async (_tx, ms) => void lockTimeouts.push(ms),
+    lockAdminsAndAccount: async (_tx, staffId) => {
+      lockedAdmins(staffId);
+      return [...rows.values()].filter((row) => row.role === "admin" || row.id === staffId).map((row) => ({ ...row }));
+    },
     permitAdminShortfall: permitted,
     setStatus: async (_tx, staffId, status) => void (rows.get(staffId)!.status = status),
     setRole: async (_tx, staffId, role) => void (rows.get(staffId)!.role = role),
@@ -48,8 +60,10 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     recordRefusal: async (_db: Db, event: AuditEvent) => void refused.push(event),
   };
   const db = { transaction: async (fn: (tx: DbTransaction) => Promise<unknown>) => fn(TX) } as unknown as Db;
-  const service = createStaffChangeService({ db, store, idp, audit, now: () => new Date(), signInLockedUntil: async () => null });
-  return { service, rows, idp, recorded, refused, permitted };
+  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: async () => null };
+  const service = createStaffChangeService(deps);
+  const { beginAdminRecovery } = createAdminRecovery(deps);
+  return { service, beginAdminRecovery, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts };
 }
 
 const RULE = { ok: false, error: "two_admin_rule" };
@@ -135,22 +149,78 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
   });
 });
 
-describe("the recovery exception", () => {
-  it("never refuses, permits the shortfall in the database, and says when it leaves fewer than two usable Admins", async () => {
-    const { service, permitted } = setup([{ id: A }, { id: B }]);
+describe("the recovery exception (internal to the identity module)", () => {
+  it("is not part of the service the module hands out", () => {
+    const { service } = setup([{ id: A }, { id: B }]);
 
-    const recovery = await service.beginAdminRecovery(TX, B);
+    expect(service).not.toHaveProperty("beginAdminRecovery");
+  });
+
+  it("never refuses, permits the shortfall in the database, and says when it leaves fewer than two usable Admins", async () => {
+    const { beginAdminRecovery, permitted, lockedAdmins, lockTimeouts } = setup([{ id: A }, { id: B }]);
+
+    const recovery = await beginAdminRecovery(TX, B);
 
     expect(recovery).toEqual({ adminShortfall: true });
     expect(permitted).toHaveBeenCalledWith(TX);
+    expect(lockedAdmins).toHaveBeenCalledWith(B);
+    expect(lockTimeouts).toEqual([4321]);
     expect(adminShortfallMeta(recovery)).toEqual({ admin_shortfall: true });
   });
 
-  it("carries no flag when two usable Admins remain, or when the account is not an Admin", async () => {
-    const { service } = setup([{ id: A }, { id: B }, { id: C }, { id: D, role: "coordinator" }]);
+  it("carries no flag when two usable Admins remain", async () => {
+    const { beginAdminRecovery } = setup([{ id: A }, { id: B }, { id: C }]);
 
-    expect(adminShortfallMeta(await service.beginAdminRecovery(TX, C))).toEqual({});
-    expect(adminShortfallMeta(await service.beginAdminRecovery(TX, D))).toEqual({});
+    expect(adminShortfallMeta(await beginAdminRecovery(TX, C))).toEqual({});
+  });
+
+  it("locks only a non-Admin target: no Admin row is locked, the provider is not called, nothing is permitted", async () => {
+    const { beginAdminRecovery, idp, permitted, lockedAdmins, lockedAccount } = setup([{ id: A }, { id: B }, { id: D, role: "coordinator" }]);
+    idp.delay(60_000); // would hang the test if the provider were asked
+
+    const recovery = await beginAdminRecovery(TX, D);
+
+    expect(recovery).toEqual({ adminShortfall: false });
+    expect(adminShortfallMeta(recovery)).toEqual({});
+    expect(lockedAccount).toHaveBeenCalledWith(D);
+    expect(lockedAdmins).not.toHaveBeenCalled();
+    expect(permitted).not.toHaveBeenCalled();
+  });
+
+  it("also returns early for an account that does not exist", async () => {
+    const { beginAdminRecovery, lockedAdmins } = setup([{ id: A }, { id: B }]);
+
+    expect(await beginAdminRecovery(TX, D)).toEqual({ adminShortfall: false });
+    expect(lockedAdmins).not.toHaveBeenCalled();
+  });
+});
+
+describe("a slow identity provider while Admin rows are locked (S01.06)", () => {
+  it("fails the change within the provider's timeout, writes nothing and audits nothing", async () => {
+    const { service, idp, rows, recorded } = setup([{ id: A }, { id: B }, { id: C }]);
+    idp.delay(30); // a Supabase call that times out after 30 ms
+    const started = Date.now();
+
+    await expect(service.suspendAccount(A, C)).rejects.toThrow("identity provider timed out");
+
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(rows.get(C)!.status).toBe("active");
+    expect(recorded).toEqual([]);
+  });
+
+  it("fails the banner check the same way, for the layout to give up on it", async () => {
+    const { service, idp } = setup([{ id: A }, { id: B }]);
+    idp.delay(30);
+
+    await expect(service.adminShortfallBanner(A)).rejects.toThrow("identity provider timed out");
+  });
+
+  it("asks the database to give up on a row lock after the configured time", async () => {
+    const { service, lockTimeouts } = setup([{ id: A }, { id: B }, { id: C }]);
+
+    await service.suspendAccount(A, C);
+
+    expect(lockTimeouts).toEqual([4321]);
   });
 });
 

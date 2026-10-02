@@ -21,7 +21,8 @@
 --
 -- Two concurrent changes cannot both pass on a stale count: the trigger takes
 -- a transaction-level advisory lock before counting, and in READ COMMITTED its
--- count then sees whatever the other transaction committed.
+-- count then sees whatever the other transaction committed. In REPEATABLE READ and SERIALIZABLE
+-- it would not, so a change that could break the rule is refused there outright.
 
 create function staff_account_keep_two_usable_admins() returns trigger
 language plpgsql
@@ -39,6 +40,14 @@ begin
   end if;
   if coalesce(current_setting('cvh.admin_recovery', true), '') = 'on' then
     return null;
+  end if;
+
+  -- The count below is only right if it sees what other transactions committed, which a snapshot
+  -- taken earlier (REPEATABLE READ, SERIALIZABLE) does not: two such transactions could each
+  -- demote a different Admin and both pass. The guard refuses to run there at all.
+  if current_setting('transaction_isolation') <> 'read committed' then
+    raise exception 'two-Admin guard requires READ COMMITTED'
+      using errcode = 'check_violation', constraint = 'staff_account_two_usable_admins_isolation';
   end if;
 
   -- Serialises the counts of concurrent changes (key: identity's admin floor).

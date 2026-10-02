@@ -39,11 +39,6 @@ export const drizzleStaffStore: StaffStore = {
     return row ? toAccount(row) : null;
   },
 
-  async lockAccount(tx, id) {
-    const [row] = await tx.select().from(staffAccount).where(eq(staffAccount.id, id)).limit(1).for("update");
-    return row ? toAccount(row) : null;
-  },
-
   async markStartingPasswordUsed(tx, id, at) {
     await tx
       .update(staffAccount)
@@ -152,6 +147,15 @@ export const drizzleStaffStore: StaffStore = {
       .orderBy(asc(staffAccount.id))
       .for("update");
     return rows.map(toAccount);
+  },
+
+  async lockAccount(tx, staffId) {
+    const [row] = await tx.select().from(staffAccount).where(eq(staffAccount.id, staffId)).for("update");
+    return row ? toAccount(row) : null;
+  },
+
+  async setLockTimeout(tx, ms) {
+    await tx.execute(sql`select set_config('lock_timeout', ${`${Math.round(ms)}ms`}, true)`);
   },
 
   async permitAdminShortfall(tx) {
