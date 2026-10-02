@@ -16,6 +16,17 @@ Severity:
   python3 scripts/review_translations.py              # all languages with a file
   python3 scripts/review_translations.py --langs ur,ps
   python3 scripts/review_translations.py --fix-digits # convert non-Western digits in place
+
+Guides and essential numbers (S02.09):
+
+  python3 scripts/review_translations.py --content    # status per language, stale and critical (911) problems
+  python3 scripts/review_translations.py --content --mark-reviewed ur --reviewer "Name" --reviewed-on 2026-11-02
+                                                      # record a native reader's review of a language's current
+                                                      # machine translations (--keys to limit it to some texts)
+
+--content writes review/content-translation-status.json. --mark-reviewed changes status
+"machine" to "reviewed" (with reviewer and date) only on translations that are current
+(their source hash matches the English); zh-Hant follows zh and is never marked by hand.
 """
 import argparse
 import json
@@ -172,11 +183,84 @@ def write_reports(issues, langs, totals):
     (REVIEW_DIR / 'translation-errors.md').write_text('\n'.join(lines) + '\n', encoding='utf-8')
 
 
+def content_status(texts):
+    """Per language: counts and the problems the seed would report (S02.09)."""
+    import content_catalogue as cc
+
+    status = {}
+    for lang in cc.CONTENT_LANGS:
+        path = cc.CONTENT_DIR / f'{lang}.json'
+        raw = cc.read_json(path)['texts'] if path.exists() else {}
+        counts = {'reviewed': 0, 'machine': 0, 'stale': 0, 'null': 0}
+        problems = []
+        for key, english in texts.items():
+            rec = raw.get(key)
+            if not rec:
+                counts['null'] += 1
+                continue
+            if rec.get('sourceHash') != cc.source_hash(english):
+                counts['stale'] += 1
+                problems.append({'id': key, 'problem': 'stale: the English changed since this was translated'})
+                continue
+            counts[rec['status']] += 1
+            lost = missing_critical(english, rec['text'])
+            if lost:
+                problems.append({'id': key, 'problem': 'lost or changed: ' + ', '.join(lost)})
+            if rec['status'] == 'reviewed' and (cc.is_placeholder(rec.get('reviewer')) or not cc.valid_date(rec.get('reviewedOn'))):
+                problems.append({'id': key, 'problem': 'reviewed without a named reviewer and date'})
+        status[lang] = {'texts': len(texts), **counts, 'problems': problems}
+    return status
+
+
+def mark_reviewed(lang, reviewer, reviewed_on, keys):
+    import content_catalogue as cc
+
+    if lang not in cc.MODEL_LANGS:
+        raise SystemExit(f'{lang}: only translated languages are reviewed by hand; zh-Hant follows zh')
+    if cc.is_placeholder(reviewer):
+        raise SystemExit('--reviewer must name the person who read the translation')
+    if not cc.valid_date(reviewed_on):
+        raise SystemExit('--reviewed-on must be a date, YYYY-MM-DD')
+    texts = cc.content_texts()
+    data = cc.load_content(lang, texts)
+    marked = 0
+    for key, rec in data['texts'].items():
+        if rec and rec['status'] == 'machine' and (not keys or key in keys):
+            rec.update(status='reviewed', reviewer=reviewer, reviewedOn=reviewed_on)
+            marked += 1
+    cc.save_content(lang, data)
+    print(f'{lang}: {marked} translations marked reviewed by {reviewer} on {reviewed_on}')
+    if lang == 'zh':
+        changed, kept, missing = cc.convert_zh_hant(texts)
+        print(f'zh-Hant: {changed} converted from zh, {kept} unchanged, {missing} null')
+
+
+def content_main(args):
+    import content_catalogue as cc
+
+    if args.mark_reviewed:
+        return mark_reviewed(args.mark_reviewed, args.reviewer, args.reviewed_on,
+                             set(args.keys.split(',')) if args.keys else None)
+    status = content_status(cc.content_texts())
+    cc.write_json(cc.REVIEW_DIR / 'content-translation-status.json', status, sort_keys=False)
+    for lang, st in status.items():
+        print(f'{lang}: {st["reviewed"]} reviewed, {st["machine"]} machine, {st["stale"]} stale, '
+              f'{st["null"]} not translated (English with translation.unavailable), {len(st["problems"])} problem(s)')
+    print(f'Wrote {cc.REVIEW_DIR / "content-translation-status.json"}')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--langs', help='comma-separated language codes (default: every language with a file)')
     ap.add_argument('--fix-digits', action='store_true', help='convert non-Western digits to 0-9 in place')
+    ap.add_argument('--content', action='store_true', help='report on the guides and essential numbers')
+    ap.add_argument('--mark-reviewed', metavar='LANG', help='with --content: record a native reader\'s review')
+    ap.add_argument('--reviewer', help='with --mark-reviewed: the reader\'s name')
+    ap.add_argument('--reviewed-on', help='with --mark-reviewed: the review date, YYYY-MM-DD')
+    ap.add_argument('--keys', help='with --mark-reviewed: comma-separated text keys (default: all current machine texts)')
     args = ap.parse_args()
+    if args.content:
+        return content_main(args)
 
     langs = args.langs.split(',') if args.langs else \
         [l for l in NAMES if (TRANSLATIONS_DIR / f'{l}.json').exists()]
