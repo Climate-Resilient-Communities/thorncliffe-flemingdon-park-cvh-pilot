@@ -41,6 +41,8 @@ export const REFUSAL_REASONS = [
   "self_action",
   "duplicate",
   "validation",
+  /** A staff request whose facts the guard could not read (a malformed body): a 400. */
+  "bad_request",
   "not_found",
   "conflict",
   "floor_has_assignments",
@@ -116,7 +118,7 @@ export const AUDIT_META = {
     sessions: count.optional(),
   }),
   "permission.denied": meta({
-    status: z.union([z.literal(401), z.literal(403)]),
+    status: z.union([z.literal(400), z.literal(401), z.literal(403)]),
     permission: permission.optional(),
     route: route.optional(),
   }),

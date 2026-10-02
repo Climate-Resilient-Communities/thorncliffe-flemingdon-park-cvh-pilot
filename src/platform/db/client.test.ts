@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetEnvCache } from "../config/env";
-import { createDb, getDb, resetDb } from "./client";
+import { DB_POOL_MAX, createDb, getDb, resetDb } from "./client";
 
 const POOLER = "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres";
 
@@ -15,6 +15,12 @@ describe("database client", () => {
     const db = createDb(POOLER);
 
     expect(db.$client.options.prepare).toBe(false);
+  });
+
+  it("opens at most DB_POOL_MAX connections, postgres.js's default, unless told otherwise", () => {
+    expect(DB_POOL_MAX).toBe(10);
+    expect(createDb(POOLER).$client.options.max).toBe(DB_POOL_MAX);
+    expect(createDb(POOLER, { max: 3 }).$client.options.max).toBe(3);
   });
 
   it("connects to DATABASE_URL from the validated environment", () => {

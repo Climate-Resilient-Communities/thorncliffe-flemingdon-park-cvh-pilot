@@ -15,8 +15,9 @@
 // `can(role, action, context)`; a refused call is a 403 `forbidden` with one `permission.denied`
 // record, before the route's own code (a page shows its refusal view instead, unaudited). The
 // context is the person's id and, only when the role's rule depends on it, their assignments
-// (./scope.ts) and the facts the route gives about the call (`context`: the building, floor or
-// entry it is on).
+// (./scope.ts); a route or action that declares `context` has its facts about the call (the
+// building, floor or entry it is on) computed once, always, judged, and handed to its own code as
+// the argument it acts on. A `context` that throws is a 400 `bad_request`, audited, and nothing runs.
 //
 // requireAal2 (S01.10): then, when the action is one of identity's PRIVILEGED_ACTIONS, the guard
 // refuses it with 403 `aal2_required` unless the session is `aal2` (the level the server read from
@@ -71,8 +72,14 @@ export interface StaffSpec {
   action: PolicyAction;
 }
 
-/** The facts about a call that the role policy may need: the building, floor or entry it is on (PolicyContext). */
-export type PolicyFacts = Pick<PolicyContext, "target" | "entry" | "alertOpen">;
+/**
+ * The facts about a call that the role policy may need: the building(s), floor or entry it is on
+ * (PolicyContext). `entry` and `alertOpen` must be loaded from the database by the route's `context`,
+ * never taken from the request: a request can claim anything. `target` and `targets` may name what
+ * the request addresses, as long as that is what the handler then acts on: the guard passes the
+ * judged facts to `handle` / `act`, which act on them and do not parse the request again.
+ */
+export type PolicyFacts = Pick<PolicyContext, "target" | "targets" | "entry" | "alertOpen">;
 
 const GUARD = Symbol.for("cvh.staff.guard");
 
@@ -96,7 +103,8 @@ export type GuardDecision =
   | { kind: "unauthenticated" }
   | { kind: "outside_gate"; session: StaffSession }
   | { kind: "denied"; session: StaffSession; permission: PolicyAction; reason: "forbidden" | "out_of_scope" }
-  | { kind: "aal_required"; session: StaffSession; permission: PrivilegedAction };
+  | { kind: "aal_required"; session: StaffSession; permission: PrivilegedAction }
+  | { kind: "bad_request"; session: StaffSession; permission: PolicyAction };
 
 type Refusal = Exclude<GuardDecision, { kind: "allow" }>;
 
@@ -111,7 +119,7 @@ function admits(access: Exclude<RouteAccess, "public">, gate: SetupGate): boolea
  * session's server-side level. Null when the session may go ahead.
  */
 export function requireAal2(session: StaffSession, privileged: PrivilegedAction | undefined): GuardDecision | null {
-  if (privileged === undefined || meetsAssurance(session.aal, privileged)) return null;
+  if (privileged === undefined || meetsAssurance(session.role, session.aal, privileged)) return null;
   return { kind: "aal_required", session, permission: privileged };
 }
 
@@ -131,15 +139,35 @@ export function decide(spec: Pick<GuardSpec, "access" | "action">, session: Staf
   return requireAal2(session, isPrivilegedAction(action) ? action : undefined) ?? { kind: "allow", session };
 }
 
+/** What judge() settled: the decision and, for a call that declared `context`, the facts it was judged on. */
+interface Judged {
+  decision: GuardDecision;
+  facts: PolicyFacts;
+}
+
 /**
- * decide() with the context loaded only when the role's rule depends on it: the person's current
- * assignments (./scope.ts) and the facts the route gives about the call.
+ * decide() with the context loaded where it matters. A call that declares `context` has its facts
+ * computed here, always (once the session is past the setup gate and the role is not refused
+ * outright), judged, and returned for the route's own code to act on: the single parse of the
+ * request. A `context` that throws (a malformed body) is a `bad_request`. Without `context`, the
+ * person's assignments are loaded only when the role's rule depends on them.
  */
-async function judge(spec: StaffSpec, session: StaffSession | null, facts?: () => Promise<PolicyFacts>): Promise<GuardDecision> {
+async function judge(spec: StaffSpec, session: StaffSession | null, facts?: () => Promise<PolicyFacts>): Promise<Judged> {
   const first = decide(spec, session);
-  if (first.kind !== "denied" || first.reason !== "out_of_scope" || !needsPolicyContext(first.session.role, spec.action)) return first;
-  const context: PolicyContext = { ...(facts ? await facts() : {}), assignments: await assignmentsOf(first.session) };
-  return decide(spec, first.session, context);
+  const refusedOutright = first.kind === "unauthenticated" || first.kind === "outside_gate" || (first.kind === "denied" && first.reason === "forbidden");
+  if (refusedOutright || !session) return { decision: first, facts: {} };
+  if (!facts) {
+    if (first.kind !== "denied" || !needsPolicyContext(session.role, spec.action)) return { decision: first, facts: {} };
+    return { decision: decide(spec, session, { assignments: await assignmentsOf(session) }), facts: {} };
+  }
+  let judged: PolicyFacts;
+  try {
+    judged = await facts();
+  } catch {
+    return { decision: { kind: "bad_request", session, permission: spec.action }, facts: {} };
+  }
+  const assignments = needsPolicyContext(session.role, spec.action) ? await assignmentsOf(session) : [];
+  return { decision: decide(spec, session, { ...judged, assignments }), facts: judged };
 }
 
 /** Audits a refused staff request, once; a failure to audit never turns the refusal into a pass. */
@@ -147,6 +175,7 @@ async function auditRefusal(spec: StaffSpec, decision: Refusal): Promise<void> {
   try {
     if (decision.kind === "unauthenticated") await identity().refuseUnauthenticated(spec.action, spec.route);
     else if (decision.kind === "denied") await staffAuth().refuseByPolicy(decision.session.staffId, spec.route, decision.permission, decision.reason);
+    else if (decision.kind === "bad_request") await staffAuth().refuseByPolicy(decision.session.staffId, spec.route, decision.permission, "bad_request", 400);
     else if (decision.kind === "aal_required") await staffAuth().refuseBelowAal2(decision.session.staffId, spec.route, decision.permission);
     else await staffAuth().refuseOutsideGate(decision.session.staffId, spec.route);
   } catch {
@@ -155,16 +184,18 @@ async function auditRefusal(spec: StaffSpec, decision: Refusal): Promise<void> {
 }
 
 /** Why a signed-in call was refused, for a server action's own answer: `forbidden` covers out-of-scope calls too. */
-export type ActionRefusal = "setup_incomplete" | "forbidden" | "aal2_required";
+export type ActionRefusal = "setup_incomplete" | "forbidden" | "aal2_required" | "bad_request";
 
 function refusalOf(decision: Exclude<Refusal, { kind: "unauthenticated" }>): ActionRefusal {
   if (decision.kind === "aal_required") return "aal2_required";
+  if (decision.kind === "bad_request") return "bad_request";
   return decision.kind === "denied" ? "forbidden" : "setup_incomplete";
 }
 
 /** The API answer of a refusal: 401 `unauthenticated`, or 403 `setup_incomplete`, `forbidden` or `aal2_required`. */
 function refusalResponse(decision: Refusal): Response {
   if (decision.kind === "unauthenticated") return staffError(401, "unauthenticated");
+  if (decision.kind === "bad_request") return staffError(400, "bad_request");
   return staffError(403, refusalOf(decision));
 }
 
@@ -201,10 +232,10 @@ export function staffPage<P>(
 ) {
   const { refused } = spec;
   const page = async (props: P) => {
-    const decision = await judge(spec, await currentStaffSession());
+    const { decision } = await judge(spec, await currentStaffSession());
     if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
     if (decision.kind === "outside_gate") redirect(GATE_PAGES[decision.session.gate]);
-    if (decision.kind === "denied") {
+    if (decision.kind === "denied" || decision.kind === "bad_request") {
       if (!refused) redirect(GATE_PAGES.hub);
       return createElement(PolicyRefusal, null, await refused(decision.session, props));
     }
@@ -250,24 +281,26 @@ type Handler = (request: Request) => Promise<Response>;
 
 /**
  * An `/api/staff` route handler at `access` (never `public`; see publicStaffRoute). `context`
- * gives the policy the facts of the call (read from a copy of the request), asked only when the
- * role's rule depends on them.
+ * gives the policy the facts of the call (read from a copy of the request; see PolicyFacts); when
+ * declared it is always asked, and the judged facts are handed to `handle` as its third argument,
+ * so the handler acts on what was judged and does not parse the request again. A `context` that
+ * throws answers 400 `bad_request` (audited) before `handle` runs.
  */
 export function staffRoute(
   spec: StaffSpec & { context?: (request: Request, session: StaffSession) => Promise<PolicyFacts> },
-  handle: (request: Request, session: StaffSession) => Promise<Response>,
+  handle: (request: Request, session: StaffSession, facts: PolicyFacts) => Promise<Response>,
 ): Handler {
   const { context } = spec;
   const handler = async (request: Request) => {
     const crossSite = refuseCrossSite(request);
     if (crossSite) return crossSite;
     const session = await currentStaffSession();
-    const decision = await judge(spec, session, context && session ? () => context(request.clone(), session) : undefined);
+    const { decision, facts } = await judge(spec, session, context && session ? () => context(request.clone(), session) : undefined);
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
       return refusalResponse(decision);
     }
-    return handle(request, decision.session as StaffSession);
+    return handle(request, decision.session as StaffSession, facts);
   };
   return mark(handler, spec, "call");
 }
@@ -300,23 +333,37 @@ export async function readJson<T>(request: Request, schema: { safeParse(value: u
  * `aal2` for a privileged action, into the action's own answer (for example a form state with the
  * message), given the action's arguments: a server action has no status of its own, so each is
  * the 403 of an action, answered before its own code. `context` gives the policy the facts of the
- * call, from the action's arguments, asked only when the role's rule depends on them.
+ * call, from the action's arguments (see PolicyFacts); when declared it is always asked, a
+ * `context` that throws is refused as `bad_request` (audited), and the judged facts are handed to
+ * `act` as its second argument, before the action's own arguments, so `act` acts on what was judged.
  */
 export function staffAction<A extends unknown[], R>(
-  spec: StaffSpec & { context?: (session: StaffSession, ...args: A) => Promise<PolicyFacts> },
+  spec: StaffSpec & { context: (session: StaffSession, ...args: A) => Promise<PolicyFacts> },
+  act: (session: StaffSession, facts: PolicyFacts, ...args: A) => Promise<R>,
+  refused: (error: ActionRefusal, ...args: A) => R,
+): (...args: A) => Promise<R>;
+export function staffAction<A extends unknown[], R>(
+  spec: StaffSpec & { context?: undefined },
   act: (session: StaffSession, ...args: A) => Promise<R>,
+  refused: (error: ActionRefusal, ...args: A) => R,
+): (...args: A) => Promise<R>;
+export function staffAction<A extends unknown[], R>(
+  spec: StaffSpec & { context?: (session: StaffSession, ...args: A) => Promise<PolicyFacts> },
+  act: unknown,
   refused: (error: ActionRefusal, ...args: A) => R,
 ): (...args: A) => Promise<R> {
   const { context } = spec;
+  const run = act as (session: StaffSession, ...rest: unknown[]) => Promise<R>;
   const action = async (...args: A) => {
     const session = await currentStaffSession();
-    const decision = await judge(spec, session, context && session ? () => context(session, ...args) : undefined);
+    const { decision, facts } = await judge(spec, session, context && session ? () => context(session, ...args) : undefined);
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
       if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
       return refused(refusalOf(decision), ...args);
     }
-    return act(decision.session as StaffSession, ...args);
+    const signedIn = decision.session as StaffSession;
+    return context ? run(signedIn, facts, ...args) : run(signedIn, ...args);
   };
   return mark(action, spec, "call");
 }

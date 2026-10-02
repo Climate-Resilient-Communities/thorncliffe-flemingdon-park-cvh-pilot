@@ -25,9 +25,17 @@ export type DbTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
 /** Where a write can run: the client itself, or inside a caller's transaction. */
 export type DbExecutor = Db | DbTransaction;
 
+/**
+ * The most connections one client opens (postgres.js's default, stated so tests can match it). A
+ * transaction holds one of them until it ends, so code inside a transaction must query through the
+ * transaction, never the client: a second connection taken while others wait for a lock the
+ * transaction holds can exhaust the pool and deadlock it.
+ */
+export const DB_POOL_MAX = 10;
+
 /** Creates a client for a pooler URL. No connection is opened until the first query. */
-export function createDb(url: string): Db {
-  const client = postgres(url, { prepare: false });
+export function createDb(url: string, options: { max?: number } = {}): Db {
+  const client = postgres(url, { prepare: false, max: options.max ?? DB_POOL_MAX });
   return drizzle({ client });
 }
 

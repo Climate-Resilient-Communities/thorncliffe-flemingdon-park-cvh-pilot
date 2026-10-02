@@ -18,14 +18,16 @@ import {
 const SPINE = path.join(__dirname, "..", "..", "..", "..", "docs", "architecture", "ARCHITECTURE-SPINE.md");
 
 /** The AD-4 authority table as the spine writes it: each row's first cell and its four role cells. */
-function spineMatrix(): { row: string; cells: Record<StaffRole, string> }[] {
-  const lines = readFileSync(SPINE, "utf8").split("\n");
+function spineMatrix(text: string = readFileSync(SPINE, "utf8")): { row: string; cells: Record<StaffRole, string> }[] {
+  const lines = text.split("\n");
   const header = lines.findIndex((line) => /^\| Action \| Ambassador \| Coordinator \| Director \| Admin \|$/.test(line.trim()));
   expect(header, "the AD-4 table's header in the spine").toBeGreaterThan(-1);
   const rows = [];
   for (const line of lines.slice(header + 2)) {
     if (!line.trim().startsWith("|")) break;
-    const [row, ambassador, coordinator, director, admin] = line.trim().slice(1, -1).split("|").map((cell) => cell.trim());
+    const cells = line.trim().slice(1, -1).split("|").map((cell) => cell.trim());
+    expect(cells, `a data row has the action and four role cells: ${line.trim()}`).toHaveLength(5);
+    const [row, ambassador, coordinator, director, admin] = cells;
     rows.push({ row, cells: { ambassador, coordinator, director, admin } });
   }
   return rows;
@@ -48,6 +50,18 @@ function rulesForCell(row: string, cell: string): PolicyRule[] {
       throw new Error(`a cell the encoding does not know: "${cell}" in "${row}"`);
   }
 }
+
+describe("the spine parser", () => {
+  it("fails on a data row with an extra cell, or a missing one", () => {
+    const text = readFileSync(SPINE, "utf8");
+    const header = text.split("\n").findIndex((line) => /^\| Action \| Ambassador/.test(line.trim()));
+    const lines = text.split("\n");
+    const firstRow = header + 2;
+    expect(() => spineMatrix(text)).not.toThrow();
+    expect(() => spineMatrix(lines.map((line, index) => (index === firstRow ? `${line} extra |` : line)).join("\n"))).toThrow(/four role cells/);
+    expect(() => spineMatrix(lines.map((line, index) => (index === firstRow ? line.replace(/ [^|]+\|$/, "") : line)).join("\n"))).toThrow(/four role cells/);
+  });
+});
 
 describe("the encoded matrix", () => {
   it("has the rows of the AD-4 table in the spine, in order, with each cell encoded as the table says", () => {
@@ -94,6 +108,11 @@ const CASES: { actions: readonly string[]; situation: string; context: PolicyCon
   { actions: ["alert.author"], situation: "a building outside the assignments", context: { assignments: [ASSIGNED], target: { rsn: "7002", floorId: "floor-3" } }, expected: roles(false, true, false, true) },
   { actions: ["alert.author"], situation: "no assignments (before S01.14)", context: { target: { rsn: "7001" } }, expected: roles(false, true, false, true) },
   { actions: ["alert.author"], situation: "no target given", context: { assignments: [ASSIGNED] }, expected: roles(false, true, false, true) },
+  { actions: ["alert.author"], situation: "several buildings, all assigned", context: { assignments: [ASSIGNED, { rsn: "7002", floorIds: null }], targets: ["7001", "7002"] }, expected: roles(true, true, false, true) },
+  { actions: ["alert.author"], situation: "several buildings, one not assigned", context: { assignments: [ASSIGNED], targets: ["7001", "7002"] }, expected: roles(false, true, false, true) },
+  { actions: ["alert.author"], situation: "an empty list of buildings", context: { assignments: [ASSIGNED], targets: [] }, expected: roles(false, true, false, true) },
+  { actions: ["alert.author"], situation: "an empty list of buildings beside an assigned target", context: { assignments: [ASSIGNED], targets: [], target: { rsn: "7001" } }, expected: roles(false, true, false, true) },
+  { actions: ["alert.author"], situation: "an assigned target with an unassigned one in the list", context: { assignments: [ASSIGNED], targets: ["7002"], target: { rsn: "7001" } }, expected: roles(false, true, false, true) },
   // Author neighbourhood scope, or heat, smoke, winter: no | yes | no | yes.
   { actions: ["alert.author_wide"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001" } }, expected: roles(false, true, false, true) },
   // Author correction or withdrawal: own pending entries only | yes | no | yes.
