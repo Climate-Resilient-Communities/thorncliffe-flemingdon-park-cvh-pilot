@@ -5,10 +5,12 @@ import { decideAdminChange, hasAdminShortfall } from "../domain/adminFloor";
 import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
+import { revocationCauseOf } from "../domain/sessionLimits";
 import { decideStaffChange, takesAwayAnAdmin, type StaffChange } from "../domain/staffChange";
 import { AUDIT_REASONS, type AuditWriter } from "./accounts";
 import { DEFAULT_LOCK_TIMEOUT_MS } from "./adminRecovery";
 import type { IdentityProvider, StaffStore } from "./ports";
+import type { SessionRevocation } from "./sessionRevocation";
 import { adminStandings } from "./usability";
 
 export interface StaffChangeDeps {
@@ -21,6 +23,8 @@ export interface StaffChangeDeps {
   signInLockedUntil: (username: string) => Promise<Date | null>;
   /** How long a change waits for a row lock before failing (default 5 s): Supabase is called while Admin rows are locked. */
   lockTimeoutMs?: number;
+  /** S01.08: every change here ends all the account's sessions, in the change's transaction. */
+  revocation: Pick<SessionRevocation, "revokeAll">;
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -50,6 +54,9 @@ class ChangeRefusal {
  * any change that would leave fewer than two usable Admins is refused with "There must always be at
  * least two usable Admins" and audited as `refused`. The recovery exception and the automatic locks
  * go through the identity module's internal beginAdminRecovery (adminRecovery.ts) instead.
+ *
+ * Each change also ends every session of the account (S01.08): revoked in the same transaction,
+ * `session.revoked` audited; the next request of any of them is refused.
  */
 export function createStaffChangeService(deps: StaffChangeDeps) {
   const { db, store, audit } = deps;
@@ -123,6 +130,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
             meta: { role: target.role },
           });
         }
+        await deps.revocation.revokeAll(tx, { staffId: target.id, actorStaffId: actor.id, cause: revocationCauseOf(change) });
       });
     } catch (error) {
       if (error instanceof ChangeRefusal) {

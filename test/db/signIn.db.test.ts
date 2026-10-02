@@ -1072,7 +1072,7 @@ describe("choosing a password and a re-issue of the same account are serialised"
     expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: false });
   });
 
-  it("a password chosen while an Admin re-issues waits for it and then stands: the starting password is not left valid", async () => {
+  it("a password chosen while an Admin re-issues waits for it and is then refused (the re-issue counts a revocation): the re-issued starting password stays valid once", async () => {
     const admin = await hubAdmin();
     const id = await account(ann);
     const changes: unknown[] = [];
@@ -1083,10 +1083,11 @@ describe("choosing a password and a re-issue of the same account are serialised"
     expect(await reissuer.reissueStartingPassword(admin, "aokafor")).toMatchObject({ ok: true });
     await finished();
 
-    expect(changes).toEqual([{ ok: true, value: { gate: "hub" } }]);
-    expect(await expectConsistent(id, ANN_START)).toBe(false);
-    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: false });
-    expect(await signIn(browser(), "aokafor", OWN)).toMatchObject({ ok: true });
+    // Even at the same millisecond the re-issue is a new starting password: the person tries again.
+    expect(changes).toEqual([{ ok: false, error: "not_required" }]);
+    expect(await expectConsistent(id, ANN_START)).toBe(true);
+    expect(await signIn(browser(), "aokafor", OWN)).toMatchObject({ ok: false });
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
   });
 
   it("a password chosen from a session the re-issue revoked is refused, and the re-issued starting password stays valid once", async () => {

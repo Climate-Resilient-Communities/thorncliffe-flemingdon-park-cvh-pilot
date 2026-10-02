@@ -960,7 +960,7 @@
       passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.' } } } });
   /* Staff sign-in and the setup sequence's first gate (S01.07). Not a prototype screen. */
   m(en, { staff: { signIn: { title: 'Staff sign-in', lead: 'Sign in with the username and password you were given.', username: 'Username', password: 'Password', submit: 'Sign in',
-    failed: 'Username or password is incorrect', expired: 'Your starting password has expired. Ask an Admin to re-issue it.',
+    failed: 'Username or password is incorrect', expired: 'Your starting password has expired or was already used. Ask an Admin for a new starting password.',
     unavailable: 'Sign-in is not working right now. Try again in a few minutes.' },
   signOut: 'Sign out', signedInAs: 'Signed in as {name}, {role}',
   setup: { incomplete: 'Finish setting up your account first.',
@@ -984,4 +984,12 @@
     shortfallLine: 'Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role.' },
   people: { errors: { selfAction: 'You cannot change your own account. Ask another Admin.', accountRemoved: 'This account was removed and cannot be changed.',
     noChange: 'Nothing to change: the account is already like that.', notFound: 'That account does not exist.' } } } });
+  /* An Admin's "Reset password" (S01.08). Not a prototype screen. */
+  m(en, { staff: { resetPassword: { title: 'Reset a password', lead: 'For someone who forgot their password. They get a new starting password and are signed out on every device.',
+    username: 'Their username', submit: 'Reset password', done: 'New starting password for {username}: {password}',
+    doneLine: 'Give it to them in person. It works once, within 24 hours. They were signed out on every device.',
+    errors: { notFound: 'No account has that username.', notResettable: 'This account is suspended or removed, so its password cannot be reset.',
+      forbidden: 'Only an Admin can reset a password.', selfAction: 'You cannot reset your own password. Ask another Admin.',
+      providerError: 'The new password could not be set. The account is locked and signed out; reset it again.',
+      passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was reset. Ask IT to set it.' } } } });
 })();
