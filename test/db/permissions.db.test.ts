@@ -29,6 +29,7 @@ import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit"
 import { NO_ASSIGNMENTS, createBuildingService } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
+import { memoryDirectoryStorage } from "../../src/modules/directory";
 import { createDb, type Db } from "../../src/platform/db";
 import { PROVIDER_ID, ROLE_CALLERS, STAFF_ENDPOINTS, TARGET_USERNAME, type RoleCaller, type StaffEndpoint } from "../permissions/endpoints";
 import { connect, serverUrl } from "./helpers";
@@ -41,6 +42,7 @@ const wired = vi.hoisted(() => ({
   assignments: [] as unknown[],
   places: null as unknown,
   db: null as unknown,
+  publish: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -55,7 +57,8 @@ vi.mock("../../src/app/staff/identity", () => ({
 // A provider change asks Next to refresh the list, which only a request inside Next can do.
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 // The providers screen (S02.04) reads and writes through the app's database connection.
-vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db }));
+// "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
+vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
 // The buildings page and its actions (S01.13) read and write through the places module on the app's own connection.
 vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }));
 // The S01.14 stub: the assignments the guard reads for the caller.
@@ -91,6 +94,12 @@ beforeAll(async () => {
   url.password = password;
   app = createDb(url.href);
   wired.db = app;
+  wired.publish = {
+    storage: memoryDirectoryStorage(),
+    catalogue: async () => ({ hash: "a".repeat(64), gitCommit: null }),
+    zhHant: async () => ({ convert: (text: string) => text, openccVersion: "1.4.2", config: "test" }),
+    onFailure: async () => {},
+  };
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
   const tables = await owner<{ name: string; table_name: string }[]>`
     select format('%I.%I', table_schema, table_name) as name, table_name
@@ -107,8 +116,14 @@ async function reset() {
   await owner.begin(async (tx) => {
     await tx.unsafe(`
       alter table audit_event disable trigger audit_event_no_update_or_delete;
-      alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
+      alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;
+      alter table directory_release disable trigger directory_release_guard;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
+    await tx`delete from directory_release`;
+    await tx`delete from ops_event`;
+    await tx`delete from catalogue_load`;
+    // The seed ran with the catalogue the publish dependencies below report.
+    await tx`insert into catalogue_load (hash) values (${"a".repeat(64)})`;
     await tx`delete from provider_category`;
     await tx`delete from provider_location`;
     await tx`delete from provider`;
@@ -121,7 +136,8 @@ async function reset() {
     await tx`delete from sign_in_lock`;
     await tx.unsafe(`
       alter table audit_event enable trigger audit_event_no_update_or_delete;
-      alter table staff_bootstrap enable trigger staff_bootstrap_forward_only;`);
+      alter table staff_bootstrap enable trigger staff_bootstrap_forward_only;
+      alter table directory_release enable trigger directory_release_guard;`);
   });
 }
 

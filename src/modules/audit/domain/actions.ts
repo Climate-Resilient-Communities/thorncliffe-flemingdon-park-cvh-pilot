@@ -56,6 +56,10 @@ export const REFUSAL_REASONS = [
   "floor_has_assignments",
   "not_allowlisted",
   "provider_error",
+  /** A directory publish gave up after its attempts (S02.05); the previous release stays current. */
+  "publish_failed",
+  /** A directory publish is already running (S02.05). */
+  "publish_running",
   /** S01.15: the test text cannot be sent here (not production with SMS_MODE live, or Twilio not set up). */
   "not_available",
 ] as const;
@@ -152,6 +156,27 @@ export const AUDIT_META = {
   "provider.unpublished": meta({}),
   "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
 
+  // The directory release (S02.05): an Admin publishes the directory as one numbered release. The subject is the
+  // release (type `directory_release`, its number); `meta` holds counts only. The release number and the counts are
+  // required on an ok record (REQUIRED_WHEN_OK), absent on a refusal, which carries its reason.
+  "directory.published": meta({
+    release: count.optional(),
+    providers: count.optional(),
+    categories: count.optional(),
+    files: count.optional(),
+    /** Texts published in a language other than English. */
+    translations: count.optional(),
+    /** Texts published as English with translation.unavailable. */
+    fallbacks: count.optional(),
+    /** Translations withheld because the English changed since they were made. */
+    stale: count.optional(),
+    attempts: count.optional(),
+    /** Files already stored when a stopped publish resumed. */
+    resumed_files: count.optional(),
+    /** On a refusal with reason `publish_failed`: why the publish failed (a PublishFailureCode). */
+    failure: code.optional(),
+  }),
+
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.
   "seed.run": meta({ seed: code, counts: z.record(code, count).optional(), warnings: count.optional(), failures: count.optional() }),
 
@@ -180,6 +205,7 @@ export type AuditOutcome = "ok" | "refused";
 const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "provider.confirmed": ["confirmed_on"],
   "provider.published": ["last_confirmed"],
+  "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
