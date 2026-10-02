@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { checkDestructiveMigrations, lookUpProductionRelease } from "../scripts/db/contracts.mjs";
+import { checkDestructiveMigrations, lookUpProductionRelease, unacceptedChanges } from "../scripts/db/contracts.mjs";
 import { findDestructiveChanges, findTransactionProblems, lexSql, readContractNotes } from "../scripts/db/sql.mjs";
 
 describe("destructive change detection", () => {
@@ -434,5 +434,21 @@ describe("CLI on a push to main", () => {
     expect(result.status).toBe(1);
     expect(result.stdout).toMatch(/Checking 1 migration\(s\)/);
     expect(result.stderr).toMatch(/20260101000002_drop.sql drops table t/);
+  });
+});
+
+describe("changes accepted in migrations merged before their rule", () => {
+  const STAFF = "20261002110000_staff_account.sql";
+
+  it("accepts the foreign key on audit_event.actor_staff_id, worded by either check, and nothing else", () => {
+    const text = "adds a foreign key constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)";
+    const database = "adds constraint audit_event_actor_staff_id_fkey on public.audit_event: FOREIGN KEY (actor_staff_id) REFERENCES staff_account(id) (rows the previous release writes may violate it)";
+
+    expect(unacceptedChanges(STAFF, [text, database])).toEqual([]);
+    expect(unacceptedChanges(STAFF, ["drops table staff_account", "adds a unique constraint to audit_event (x)"])).toHaveLength(2);
+  });
+
+  it("accepts nothing for any other migration", () => {
+    expect(unacceptedChanges("20270101000000_new.sql", ["adds a foreign key constraint to audit_event (x)"])).toHaveLength(1);
   });
 });
