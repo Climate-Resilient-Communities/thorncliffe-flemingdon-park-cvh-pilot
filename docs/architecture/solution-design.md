@@ -25,7 +25,7 @@ Figures marked "estimate" are estimates. Nothing here goes beyond the sources li
 
 **How it runs.** The application runs on Vercel (a hosting service) in its Montreal region. Data is kept in Supabase (a hosted Postgres database with sign-in and file storage) in its Canadian region. Text messages go through Twilio from one verified toll-free number. Translation and search matching use Cohere language models only. Residents who do not sign up have nothing stored about them: their choices stay on their own phone.
 
-**Cost.** About CAD 560 for two months (estimate), against a budget of about CAD 1,000. Most of it is SMS. A monthly SMS cap of CAD 250 is suggested. The cap warns and records an overrun; it never stops an alert.
+**Cost.** About CAD 545 for two months (estimate), against a budget of about CAD 1,000. Most of it is SMS. A monthly SMS cap of CAD 250 is suggested. The cap warns and records an overrun; it never stops an alert.
 
 **Top risks.**
 - Twilio's toll-free number verification takes days to weeks. It must be submitted in week 1.
@@ -103,8 +103,8 @@ The CVH is one application with one code base, split into modules (alerting, sub
 
 | Provider | Used for | Region |
 |---|---|---|
-| Vercel Pro | Runs the web app and its server functions | Montreal (`yul1`); may fail over to the US during a regional outage |
-| Supabase Pro | Postgres database, staff sign-in with TOTP, private file storage, scheduled jobs (pg_cron) | Canada (`ca-central-1`) |
+| Vercel Hobby | Runs the web app and its server functions | Montreal (`yul1`); may fail over to the US during a regional outage |
+| Supabase Free (one project) | Postgres database, staff sign-in with TOTP, private file storage, scheduled jobs (pg_cron) | Canada (`ca-central-1`) |
 | Twilio | SMS out and in, one verified toll-free number, Canada only, STOP/START/HELP handling | Non-Canadian processor, disclosed in the terms (P9) |
 | Cohere | Translation and search matching (embeddings) | Non-Canadian processing not excluded; disclosed |
 | Map tiles | Neutral base map | Free-tier provider to be chosen at build |
@@ -116,11 +116,11 @@ flowchart LR
     P["Basic phone: SMS only"]
     S["Staff and ambassador browser: signed in, nothing cached"]
   end
-  subgraph Vercel["Vercel Pro, Montreal"]
+  subgraph Vercel["Vercel Hobby, Montreal"]
     W["CVH web app: resident pages, staff pages, share pages"]
     API["Server functions: feed, directory, search, metrics, Twilio webhooks, jobs"]
   end
-  subgraph Supabase["Supabase Pro, Canada"]
+  subgraph Supabase["Supabase Free, Canada"]
     PG[("Postgres: alerts, subscribers, outbox, audit")]
     AU["Staff sign-in with TOTP"]
     ST["Private storage: directory releases"]
@@ -157,7 +157,7 @@ flowchart LR
 
 **Corrections** (A16). Entries are never edited after residents saw them. A change is a new correction entry. It goes to everyone who received the original plus the new audience, and opt-outs cannot remove them (AD-5, AD-7). Every change to an alert runs one step at a time per alert, so approval, sending, correction and closing cannot overlap (AD-18).
 
-**Drills** (A17). Drill status is set once and cannot change. The database refuses a drill text to anyone not on the drill roster and refuses check-in rows for a drill. Resident pages read only from a view that excludes drills, and a code check blocks resident pages from reading anything else (AD-6). In addition, the staging environment can only text the drill roster, and preview builds cannot send texts at all (AD-15).
+**Drills** (A17). Drill status is set once and cannot change. The database refuses a drill text to anyone not on the drill roster and refuses check-in rows for a drill. Resident pages read only from a view that excludes drills, and a code check blocks resident pages from reading anything else (AD-6). In addition, preview builds cannot send texts at all (AD-15).
 
 **No names** (P4). Resident names are never asked for and have nowhere to be stored. Posts carry only the role and building. Check-in rows hold a subscriber reference, building, floor and status, never a phone number; the ambassador's screen looks up the number at the moment it is shown (AD-12, AD-13).
 
@@ -228,7 +228,6 @@ All central data is in the Supabase database in Canada, except directory release
 | Usage counts | Daily counts per event and language | Kept | Staff |
 | Rate-limit records | Salted, one-way hash of the visitor's IP address | 24 hours | System only |
 | Buildings, providers, guides | Public facts | Kept | Everyone |
-| Backups | Daily copies of the database | Supabase Pro backup window; deleted data stays in backups until they expire, and the terms say so | Supabase project owners |
 
 ### 6.2 What is never stored
 
@@ -246,11 +245,10 @@ All central data is in the Supabase database in Canada, except directory release
 
 | Environment | Database | Texts | Scheduled jobs |
 |---|---|---|---|
-| Production | Supabase Pro, Canada | Live, to subscribers | Yes |
-| Staging | Separate Supabase project, synthetic subscribers only | Never; every send is recorded as skipped | Yes, own secret |
-| Preview (one per code change) | Staging data | Logged only, never sent | No |
+| Production | Supabase Free, Canada (one project) | Live, to subscribers | Yes |
+| Preview (one per code change) | The production project, live data | Logged only, never sent | No |
 
-Only production has a Twilio account and a verified toll-free number, so only one verification is needed; drills are rehearsed in production against the drill roster. Each environment has its own Cohere key with a spend limit and its own job secret. The application refuses to start if the text mode and environment do not match. Production data is never copied out.
+Only production has a Twilio account and a verified toll-free number, so only one verification is needed; drills are rehearsed in production against the drill roster. Each environment has its own Cohere key with a spend limit; the job secret is production's. The application refuses to start if the text mode and environment do not match. Previews share production's database (accepted pilot risk; a staging project is MVP work).
 
 ### 7.2 Deployment
 
@@ -289,7 +287,6 @@ Written procedures (N6) cover:
 - **Resend.** A text whose outcome is unknown is never resent automatically, to avoid duplicates. An Admin can resend failed texts as a deliberate action.
 - **Cap overrun.** Approval continues; Admins are notified and decide whether to raise the cap.
 - **Ownership.** Who owns an incident, and who is on call out of hours.
-- **Restore.** Supabase Pro takes daily backups. One restore is rehearsed before launch.
 
 ## 8. Cost for two months
 
@@ -302,12 +299,12 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Drills, approver notifications | About 800 segments | 20 |
 | Incoming texts (YES, keywords) | About 700 | 30 |
 | Toll-free number | 2 months | 6 |
-| Vercel Pro | 1 seat, 2 months | 55 |
-| Supabase Pro | Production, plus staging compute in the same organisation | 100 |
+| Vercel Hobby | 1 seat, 2 months | 0 |
+| Supabase Free | One project | 0 |
 | Cohere | Catalogue translation re-runs (offline scripts), alerts, about 4,000 questions, test-set runs | 55 |
 | Domain | — | 20 |
-| **Total** | | **about 700** |
-| Headroom within CAD 1,000 | | about 300 |
+| **Total** | | **about 545** |
+| Headroom within CAD 1,000 | | about 455 |
 
 **Assumptions.** 400 confirmed subscribers, 60% reading a non-Latin script. 25 alert entries sent by SMS: 22 at building level to about 80 people each, 3 neighbourhood-wide. Average 3 segments per text in Latin scripts and 6 in non-Latin scripts, because every alert carries the full footer (verification and machine-translation labels, 911 line, link, "Reply STOP") in the pilot. A segment is the unit Twilio charges: 160 characters in Latin scripts but only 70 in scripts like Urdu or Tamil, so the same alert costs more in those languages. Cohere has not published prices for its translation models; the Cohere line assumes rates similar to its Command models.
 
@@ -328,7 +325,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Two-person approval delays urgent alerts | Approvers are texted; lower-risk posts show on the web at once; time to approval measured. No single-person override. |
 | SMS spending exceeds budget | Cost shown per language before approval; cap warns; weekly review. |
 | Ambassador sees phone numbers without formal vetting | Own floors only, open alerts only, never cached on the phone, no names, deleted on close, access removable at once. |
-| A drill reaches residents | Database refuses non-roster recipients; staging and previews cannot text. |
+| A drill reaches residents | Database refuses non-roster recipients; previews cannot text. |
 | Sending stops part-way through | Outbox with unique keys; job reruns every minute; unknown outcomes are flagged, not resent. |
 | Abuse of the sign-up form to send texts | Canada-only numbers; Twilio pumping protection; one pending sign-up per number per 48 hours; rate limits; daily ceiling alert. |
 | Data processed outside Canada (Twilio, Cohere, Vercel failover) | Named in plain-language terms; minimum data; residency is MVP work. |
@@ -348,7 +345,6 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 | Confirm each building's real floor labels (no 13th floor, lobby, mezzanine) | Hub | Before launch |
 | Name the privacy contact; have counsel glance at the consent and terms wording | Hub | Before launch |
 | Plan launch events with staff-assisted sign-up; tell residents the confirmation text may take a few minutes | Hub | Before launch |
-| Rehearse a database restore from backup | IT | Before launch |
 | Build the search test set with ambassadors (about 10 questions per language, 150 total); pick the embedding model; set the "no clear match" threshold | Hub, ambassadors, IT | Before launch |
 | Native-speaker review of translations in every language on its routed model | Hub and community reviewers | Before launch, and after any model change |
 | Clean the provider list; hold back unconfirmed providers | Hub | Before first publish |
@@ -365,7 +361,7 @@ All figures are estimates in CAD, from the architect's recommendation, at USD 1 
 - **Live-updating staff screens.** Staff screens refresh every 15 seconds instead.
 - **Vector database, reranking, generated answers.**
 - **Canadian processing** for SMS and translation; data governance; 3 to 7 year retention; privacy review.
-- **Point-in-time recovery, multiple regions, reliability targets.**
+- **Point-in-time recovery, multiple regions, reliability targets; backups and restore; a staging project; Supabase Pro and Vercel Pro.**
 - From the PRD: native apps, email, official alert feeds (the manual "Official alert from [source]" relay is also deferred to the MVP), partner alerts and coordination space, confirm receipt, "I need help", resident reports and moderation, trusted helpers, audio and human-checked templates, advanced directory filters, buildings outside the 43, Hub hours and approval timeouts.
 
 ## 11. Open questions

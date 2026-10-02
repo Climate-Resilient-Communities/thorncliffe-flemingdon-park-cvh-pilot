@@ -27,7 +27,7 @@ This document breaks the CVH pilot into epics and stories, built from the pilot 
 
 **Pilot lean cut (approved 2026-10-01).** This is the lean pilot plan from the approved Sprint Change Proposal. Some stories were simplified to pilot scale and some deferred to the MVP (see "Deferred to MVP" at the end). The approved full plan is kept unchanged as the MVP reference in `docs/planning/mvp/reference/pilot-epics-full.md`.
 
-**Totals.** Build 495.5 h across 91 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated.
+**Totals.** Build 491.5 h across 91 stories (E01–E09). Manual operations during the pilot: 15 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated. With the single-Supabase change (2026-10-02) it became 491.5 h: backups, restore and the deletion ledger moved to the MVP.
 
 ## Requirements Inventory
 
@@ -85,14 +85,14 @@ NFR-N4: No numeric targets; outages, failed sends and slow deliveries logged and
 NFR-N5: No resident names; minimum data; personal staff sign-in, second factor for Admin and Coordinator; check-in records deleted at close; plain-language terms naming processors and community ownership; PIPEDA; privacy contact and Hub-handled access/correction; minimum age 16 or younger with a guardian's help; staff sessions 30 minutes idle (ambassadors) and 12 hours (others); phone-first staff screens; staff-assisted sign-up.
 NFR-N6: Small codebase; written procedures for sending, approving, correcting, withdrawing and drills; drills rehearsed on the live system against the roster; test system never sends texts.
 NFR-N7: Buildings, providers and guides have a named owner and a last-updated or last-confirmed date shown to residents.
-NFR-N9: Total build and running cost within about CAD 1,000 for two months (current estimate about CAD 700).
+NFR-N9: Total build and running cost within about CAD 1,000 for two months (current estimate about CAD 545).
 
 ### Additional Requirements
 
 - AR-1 (starter): new Next.js 16.3.8 App Router project (create-next-app, TypeScript per its default) with React 19.3, Tailwind 4.3.3, next-intl 4.14.8, Serwist 9.5.12, Drizzle 0.45.3 + postgres 3.4.9 (`prepare: false`), zod 4.6.5, Vitest 5.0.3, Playwright 1.63.0, dependency-cruiser 18.5.0 — this is Epic 1 Story 1.
 - AR-2: modular monolith: `src/app`, `src/contracts`, `src/modules/<11 modules>/{domain,application,adapters,index.ts}`, `src/platform`, `src/ui`, `src/i18n`; dependency graph from the spine enforced by dependency-cruiser; table ownership checked against migrations (AD-2).
 - AR-3: one app, two surfaces: `/[lang]` resident (service worker cached) and `/staff` (no-store, network-only except the in-memory round page) (AD-1).
-- AR-4: environments: Vercel Pro yul1 + Supabase Pro ca-central-1 production; separate staging Supabase; previews use staging, no cron, no migrations; `SMS_MODE` live only in production, log elsewhere; env schema validated at boot; secrets in Vercel env and Supabase Vault; CI applies SQL migrations before production deploy (AD-15).
+- AR-4: environments: Vercel Hobby yul1 + one Supabase Free project in ca-central-1, shared by production and previews (staging deferred to the MVP); previews run no cron and apply no migrations; `SMS_MODE` live only in production, log elsewhere; env schema validated at boot; secrets in Vercel env and Supabase Vault; CI applies SQL migrations before production deploy (AD-15).
 - AR-5: database: SQL migrations canonical (Supabase CLI), Drizzle schema with drift check, RLS enabled with no policies, pg_cron and pg_net enabled in the first migration (Conventions, AD-4).
 - AR-6: staff auth with Supabase Auth: Admin-created usernames, one-time starting password with forced change and 24-hour lock, TOTP aal2 for Admin and Coordinator, status check every request, global sign-out on suspension, table-driven `policy.ts#can`, session limits (AD-4).
 - AR-7: wire contracts as versioned zod schemas in `src/contracts` (LangCode, Audience + matcher, Translated, FeedV1, Thread, Entry, DirectoryManifestV1, SearchV1 with query_lang), contract-tested both sides (AD-20).
@@ -146,7 +146,6 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Submit Twilio toll-free verification (Hub business number, address, website) | Hub | Week 1 of build |
 | Get Cohere pricing for the translate models; set an organisation spend limit | Hub / IT | Before launch |
 | Confirm Cohere production access and exact model identifiers for Command A Translate and North Small Translate (both require production access); until then all routes are provisional | Hub / IT | Before launch |
-| Production STOP-evidence rehearsal: a real STOP to the production number is read back through the paginated Messages API (body, sender, timestamp) and replayed to delete a test subscription (S09.03) | IT + Hub | Before launch |
 | Search meets every Hub-approved minimum (hit rate per language, no-match accuracy, emergency accuracy) on the evaluation subset of the full test set (S03.08) | Hub + IT | Before launch |
 | Confirm Tiny Aya's licence covers the Hub's use (if routed) | Hub | Before launch |
 | Confirm each building's real floor labels (43 buildings) | Hub | Before seeding production |
@@ -155,12 +154,10 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Name the privacy contact; counsel review of consent and terms wording | Hub | Before launch |
 | Written procedures (N6): sending, approving, correcting, withdrawing, drills, pause, resend, cap overrun | Hub | Before launch |
 | Name the Admin on-call roster and on-duty Hub number; enter drill roster | Hub | Before launch |
-| Rehearse a full drill in production; rehearse one database restore with `scripts/restore-reconcile` (S09.03) | Hub + IT | Before launch |
+| Rehearse a full drill in production (S09.03) | Hub + IT | Before launch |
 | Manual Lighthouse run (mobile preset, Slow 4G, cold cache, median of 3) on `/en/`, `/ur/` and the directory page; record Largest Contentful Paint, Total Blocking Time and JavaScript transferred against the proposed budgets (LCP ≤ 4 s, TBT ≤ 600 ms, JS ≤ 200 KB compressed); note any miss with an action | IT | Before launch |
 | Rehearse the re-consent campaign on the drill roster in production (S09.07) | Hub + IT | By day 55 |
 | Reconcile `tokens.json` with the approved prototype: one spacing scale from the prototype's values; each rare value kept as a named step where an approved screen needs it, or changed by a recorded design decision; resident gutter, touch targets, target spacing, Hub breakpoint and container widths added (gaps G1–G10 in `docs/design-framework/spacing-container/token-architecture.md`). **Done 2026-10-02:** `tokens.json` version 3; decisions in §11; rare values in `rare-spacing-inventory.md` | Design owner | Before S01.16 |
-| Storage decision for the deletion ledger: confirm Supabase Storage exposes and enforces a retention policy of at least the database backup window plus one day with no early deletion or overwrite (configuration readable at run time), or record an alternative store with the same guarantees (S09.03) | IT | **Before S09.03 implementation starts** |
-| Verified ledger enforcement in production: with the app's credentials, deleting or overwriting a ledger object before its retention expires is refused, and the configured retention matches the procedures (S09.03) | IT + Hub | **Before launch (launch gate)** |
 | Plan launch events with staff-assisted sign-up | Hub | Before launch |
 
 ### FR Coverage Map
@@ -210,7 +207,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 
 **Conventions.** Epics `E01`–`E09` (E10 deferred to the MVP); stories `S<epic>.<nn>` (e.g. `S04.03`); branches `e04-s03-<short-slug>`. Story size S (up to 4 hours) or M (1 day) by default; L (2 days) only with a written reason in the story. Every story records **Estimate** and **Actual** time.
 
-**Launch gate.** The pilot launches only when E01–E08 are done, plus E09's S09.01 (health alerts and outside check), S09.02 (resend) and S09.03 (procedures, deletion ledger, restore reconciliation and rehearsals, including the production STOP-evidence rehearsal). E09's SQL views and the end-of-pilot process may land during the pilot (D-7 must be ready by day 60). Residents never get E04 without E05.
+**Launch gate.** The pilot launches only when E01–E08 are done, plus E09's S09.01 (health alerts and outside check), S09.02 (resend) and S09.03 (procedures and rehearsals). E09's SQL views and the end-of-pilot process may land during the pilot (D-7 must be ready by day 60). Residents never get E04 without E05.
 
 **Optional soft launch.** Once E02 and E03 are done, they may be opened to ambassadors during the build to collect translation and search feedback for the catalogue and the search test set.
 
@@ -247,7 +244,7 @@ Posting stories come first (ambassador home, web-first "Not yet verified" posts)
 **Covers:** FR-E1, E2, E3, C1, C3, C4, C6, C7, A15 (D-1 path) · NFR-N5 (check-in consent) · AR-16 · UX-DR14, 17
 
 ### E09 — The Hub monitors the pilot and closes it cleanly
-The full health job and on-call alerts, resend of failed texts, written procedures with restore reconciliation, the weekly review and the pilot measures as SQL views and exports, access requests by call-back, and end-of-pilot re-consent and deletion.
+The full health job and on-call alerts, resend of failed texts, written procedures, the weekly review and the pilot measures as SQL views and exports, access requests by call-back, and end-of-pilot re-consent and deletion.
 **Covers:** FR-D-7, M1–M5 (views and export) · NFR-N4, N5 (access requests), N6, N9 · AR-17, 21
 
 ### E10 — Deferred to MVP
@@ -283,7 +280,9 @@ The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the t
 
 Admins create staff accounts; staff sign in safely; the 43 buildings and floors are seeded and ambassadors assigned; coverage and the audit trail work; a first text arrives from production.
 
-**Epic estimate:** 89 h across 16 stories (4 S, 12 M) · **Epic actual:** —
+**Epic estimate:** 88.5 h across 16 stories (4 S, 12 M) · **Epic actual:** —
+
+**Epic exit:** before E01 is closed, every E01 component and screen is captured as screenshots and approved by the product owner: the S01.16 layout components (Screen, Stack, Inline, Grid in every variant, the tap rule) and every E01 screen and state (Hub shell at 390, 699, 700 and 1280 px; sign-in, MFA setup and recovery screens; account and building management screens), in `en` and `ur`, light theme, normal and basic mode where they apply.
 
 **Shared foundations reused by later stories and epics:** environment configuration (S01.02), design tokens and layout primitives (S01.16), migrations and RLS (S01.03), the audit trail (S01.04), accounts and sessions (S01.05–S01.11), the role policy (S01.12), buildings and floors (S01.13), coverage (S01.14). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -335,18 +334,14 @@ So that every later story starts from the same structure and rules.
 
 ### Story S01.02 — Environments are separated and refuse unsafe settings
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 3.5 h · **Actual:** —
 - **Traces:** AR-4, NFR-N6 · **Depends on:** S01.01 · **Branch:** `e01-s02-environment-safeguards`
 
 As a developer,
-I want production, staging and previews kept apart with settings checked at start-up,
-So that no environment can text residents or touch production data by mistake.
+I want production and previews checked at start-up,
+So that no environment other than production can text residents.
 
 **Acceptance Criteria:**
-
-**Given** two Supabase Pro projects, production in `ca-central-1` and staging
-**When** the app runs in production, staging and a preview
-**Then** production connects only to the production project, and staging and previews connect only to staging (each environment's credentials exist only in that environment's Vercel variables)
 
 **Given** `src/platform/config/env.ts` validates variables with zod at start-up
 **When** `SMS_MODE` is anything but `live` in production or anything but `log` elsewhere
@@ -813,7 +808,7 @@ So that we learn in week one whether the Twilio account and toll-free number wor
 **When** the test runs
 **Then** the screen shows the provider's error code and message, nothing is retried automatically, and the outcome is audited as `refused`
 
-**Given** staging or a preview
+**Given** a preview
 **When** the page is opened
 **Then** the button is replaced by "Texts are only sent from production"; no Twilio credentials exist there (S01.02)
 **And** delivery-status callbacks are not part of the spike; they arrive with the outbound queue in E06
@@ -1645,7 +1640,7 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 **Acceptance Criteria:**
 
 **Given** the pilot uses one embedding model, `embed-v4.0`
-**When** the runner is run on staging with the translated-question leg on and off, within the usage allowance
+**When** the runner is run against a preview deployment (the shared Supabase project) with the translated-question leg on and off, within the usage allowance
 **Then** a report for the tuning subset is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage; the choice is recorded in the spine and set as config
 
 **Given** the scores of correct and no-match questions
@@ -1701,7 +1696,7 @@ So that a model or route change never quietly makes search worse for one languag
 
 **Given** a change to the embedding model, `search_question_route`, the threshold, `emergency_categories` or the catalogue
 **When** CI runs on that change
-**Then** the runner runs the evaluation subset against staging, and CI fails if any language's hit rate, the no-match accuracy or the emergency accuracy falls below its minimum in `bar.json`, naming the measure and the drop
+**Then** the runner runs the evaluation subset against the change's preview deployment, and CI fails if any language's hit rate, the no-match accuracy or the emergency accuracy falls below its minimum in `bar.json`, naming the measure and the drop
 
 **Given** the week before launch and the middle of the pilot (week 4)
 **When** the team runs the test set manually
@@ -1710,13 +1705,13 @@ So that a model or route change never quietly makes search worse for one languag
 **Given** a live run is about to start
 **When** the runner checks the usage allowance
 **Then** it refuses to start unless every model used has a known per-unit price or the config holds a usage allowance (calls and tokens per month); it estimates the run's usage from the question count and refuses if that would exceed what remains this month, counted from `spend_event` units (not money) while prices are unknown
-**And** each run's usage is recorded in `spend_event` against staging
+**And** each run's usage is recorded in `spend_event` in the shared project, labelled as a test-set run
 
 ## E04 — Hub staff write, translate and approve alerts residents can trust
 
 Hub staff log a disruption, post a short acknowledgement, and write an alert for a place and optional groups; the CVH translates it into every launch language with checks, renders the exact texts, and a second person approves exactly what they saw. Approved alerts appear on the web in every language, with origin and verification shown the same way everywhere, ordered and tailored on each resident's phone. Texts are rendered and frozen here but sent in E06; updates, corrections, closing, status and sharing are E05; ambassador posting and the D-1 web-first path are E08.
 
-**Launch gate kept.** E04 alone cannot be launched to residents: production runs with `RESIDENT_ALERTS_ENABLED=false`, so the feed returns no threads there, until E05's corrections and closing are released (S04.08). Staging and previews run with it on.
+**Launch gate kept.** E04 alone cannot be launched to residents: production runs with `RESIDENT_ALERTS_ENABLED=false`, so the feed returns no threads there, until E05's corrections and closing are released (S04.08). Previews run with it on.
 
 **Handoff to E07.** E04 freezes text and audience at submit. The recipient snapshot (who receives the text, in which language) is taken at approval through `subscriptions`' `captureRecipients(entry, tx)` port, inside the approval transaction. Until E07 implements it, the port returns no recipients; E07 must implement it inside that same transaction and keep the count check in S04.07.
 
@@ -1763,7 +1758,7 @@ So that timeouts are set from evidence before alerts depend on them.
 **Acceptance Criteria:**
 
 **Given** 20 representative English alert texts (10 short acknowledgements, 10 full alerts of 300 to 600 characters, drawn from the prototype's examples) and the provisional routes
-**When** `scripts/translation-latency` runs on staging within the usage allowance
+**When** `scripts/translation-latency` runs against the shared Supabase project within the usage allowance
 **Then** each text is translated into each launch language with every model in that language's route, 3 times, and the report records p50, p95 and p99 latency, failure count and usage per language and model
 **And** the report is committed under `data/translation-latency/{date}.json`
 
@@ -2403,7 +2398,7 @@ So that neighbours without the app still get trustworthy information.
 
 Every outbound text goes through one queue and one sender: in a fixed priority order, at a shared, controlled pace, with no automatic duplicate submissions, never after it was cancelled before hand-off, and with delivery status tracked from signed callbacks. Drills reach only the drill roster, an Admin can pause all sending, and a stuck queue alerts the on-call Admin. This epic proves the whole path end to end with drills to staff phones before any resident signs up (E07), and removes the E01 spike.
 
-**Epic estimate:** 45 h across 9 stories (4 S, 5 M) · **Epic actual:** —
+**Epic estimate:** 44.5 h across 9 stories (4 S, 5 M) · **Epic actual:** —
 
 **Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.04 (`cancelQueued`, closing entry, final recipients), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -2455,7 +2450,6 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 | `claimed`, `submitted`, `unknown` | `delivered`, `undelivered`, `failed` | signed callback with a terminal status |
 | `claimed`, `unknown` | `submitted` | signed callback with a non-terminal status (`queued`, `sending`, `sent`) |
 | `submitted` | `unknown` | no terminal status after 24 hours |
-| `queued`, `claimed` | `unknown` | only the restore recovery operation (E09 S09.03), while recovery mode is on |
 
 ### Story S06.01 — Every outbound text is one queued record, never a phone number
 
@@ -2722,7 +2716,7 @@ So that a problem is fixed before residents miss an alert.
 
 ### Story S06.08 — Each text records its cost and timing
 
-- **Size:** S · **Estimate:** 3 h · **Actual:** —
+- **Size:** S · **Estimate:** 2.5 h · **Actual:** —
 - **Traces:** FR-M2, FR-M5 (cost data), FR-M4 · **Depends on:** S06.04 · **Branch:** `e06-s08-cost-timing`
 
 As a Hub Director,
@@ -2738,7 +2732,7 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 **Given** a reconciliation, identified by a stable reconciliation id
 **When** it runs
-**Then** its interval is exact and stated in UTC: for a month, `[first instant of the month, first instant of the next month)` in `America/Toronto`, converted to UTC, with id `month:{YYYY-MM}`; for a restore, `[backup's timestamp, moment sending was re-enabled)`, with id `restore:{backup timestamp}:{re-enable timestamp}` (S09.03)
+**Then** its interval is exact and stated in UTC: for a month, `[first instant of the month, first instant of the next month)` in `America/Toronto`, converted to UTC, with id `month:{YYYY-MM}`
 **And** it lists every outbound message in the interval from the Twilio Messages API, following `next_page_uri` until it is empty, and records each message's actual price once, keyed by its `MessageSid` (unique across all reconciliations), converted to CAD at the configured rate and labelled
 
 **Given** the matching rule
@@ -2752,7 +2746,7 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 **Given** a reconciliation whose listing completed and every message has a price
 **When** it is applied
-**Then** it is marked complete and reports, for its interval: the actual total; the estimates its actuals retired; unmatched actuals (messages with no delivery carrying that `MessageSid`, for example texts sent after a backup whose rows were lost), counted at their actual price and labelled; and the difference from the retired estimates
+**Then** it is marked complete and reports, for its interval: the actual total; the estimates its actuals retired; unmatched actuals (messages with no delivery carrying that `MessageSid`), counted at their actual price and labelled; and the difference from the retired estimates
 
 **Given** an estimate whose delivery has no provider id, or whose `MessageSid` has not been imported by any complete reconciliation
 **When** spend is reported
@@ -2764,7 +2758,7 @@ So that the pilot can report cost per alert and how quickly texts arrived.
 
 **Given** the boundary and overlap cases
 **When** the tests run
-**Then** they cover: Twilio records a message at 23:59:59 Toronto time on the last day of a month while the app records its acceptance at 00:00:01 on the first day of the next, with the earlier month reconciled first (its actual retires the estimate recorded in the next month) and with the later month reconciled first (the estimate stays unresolved until the earlier month's import retires it); and a message inside both a month and a restore interval, with the month imported first and with the restore imported first, counted once and retiring its estimate once in both orders
+**Then** they cover: Twilio records a message at 23:59:59 Toronto time on the last day of a month while the app records its acceptance at 00:00:01 on the first day of the next, with the earlier month reconciled first (its actual retires the estimate recorded in the next month) and with the later month reconciled first (the estimate stays unresolved until the earlier month's import retires it)
 
 **Given** an alert entry's deliveries
 **When** the pilot measures are computed
@@ -2787,7 +2781,7 @@ So that I know who has been reached and no test path can send by accident.
 
 **Given** the E01 spike (S01.15)
 **When** this story is done
-**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher and the reconciliation and restore scripts (dependency rule); a test fails if any other module calls it
+**Then** its screen, route, allowlist variable and `sms.test_sent` action are removed; the Twilio adapter is imported only by the dispatcher and the reconciliation script (dependency rule); a test fails if any other module calls it
 
 **Given** the published confirmation (O-06) and the alert's staff view
 **When** an entry is sending
@@ -2841,7 +2835,7 @@ So that I can decide whether to sign up.
 
 **Given** the terms and privacy page at `/{lang}/terms`
 **When** opened
-**Then** it states in plain words: only the phone number, language, neighbourhood and optional choices are kept; no name, unit, email or password; who processes data (Twilio, Cohere, Vercel, Supabase) and where; the community owns the data; how to stop (reply STOP or 0) and that stopping deletes the subscription; that backups keep deleted data for the backup window; the minimum age of 16, or younger with a parent's or guardian's help; the privacy contact; and that messages are checked by Hub staff and may not be sent overnight
+**Then** it states in plain words: only the phone number, language, neighbourhood and optional choices are kept; no name, unit, email or password; who processes data (Twilio, Cohere, Vercel, Supabase) and where; the community owns the data; how to stop (reply STOP or 0) and that stopping deletes the subscription; the minimum age of 16, or younger with a parent's or guardian's help; the privacy contact; and that messages are checked by Hub staff and may not be sent overnight
 
 **Given** the terms text
 **When** it is published
@@ -3135,7 +3129,7 @@ So that nobody can use the CVH to send texts to strangers or run up costs.
 
 **Given** the Twilio Messaging Service
 **When** the daily configuration check runs (S06.02)
-**Then** it also confirms geo permissions allow Canada only, SMS pumping protection is on, message body redaction is off and message log retention covers the database backup window (STOP evidence, E09), and raises an on-call alert otherwise
+**Then** it also confirms geo permissions allow Canada only, SMS pumping protection is on, and raises an on-call alert otherwise
 
 **Given** the daily ceiling on `transactional` texts (config)
 **When** it is crossed
@@ -3507,9 +3501,9 @@ So that we can see how the round is going and report on it afterwards without ke
 
 The Hub learns about problems before residents do, can deliberately resend texts that failed, reviews reliability every week from SQL views, and gives Directors the pilot measures as an export for the week-8 go / no-go review. Residents can ask what the CVH holds about them through a call-back process, and at the end of the pilot subscribers are asked whether to stay, with everyone else deleted on schedule.
 
-**Epic estimate:** 33 h across 7 stories (3 S, 4 M) · **Epic actual:** — · S09.06 (access-request screen) deferred to the MVP
+**Epic estimate:** 30 h across 7 stories (4 S, 3 M) · **Epic actual:** — · S09.06 (access-request screen) deferred to the MVP
 
-**Launch gate.** Before launch: S09.01 (health and outside check), S09.02 (resend, which the procedures rehearse) and S09.03 (procedures, deletion ledger, restore reconciliation, the access-request process and the rehearsals, including the production STOP-evidence rehearsal). S09.04 and S09.05 may land during the pilot. S09.07 and S09.08 must be ready by day 60.
+**Launch gate.** Before launch: S09.01 (health and outside check), S09.02 (resend, which the procedures rehearse) and S09.03 (procedures, the access-request process and the rehearsals). S09.04 and S09.05 may land during the pilot. S09.07 and S09.08 must be ready by day 60.
 
 **Depends on earlier epics:** S01.04 (audit), S01.12 (policy), S01.14 (coverage), S02.15 (usage counts), S03.04 (search log), S04.02 (translation statuses), S04.07 (timings, reviewed-count check), S06.01 to S06.08 (outbox, sendability, sender, callbacks, pause, on-call, cost and timing), S07.04 to S07.08 (inbound router, menus, edit link, matching, spend), S07.10 (subscriber measures), S08.08 and S08.09 (escalations, round tally). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -3527,11 +3521,6 @@ The Hub learns about problems before residents do, can deliberately resend texts
 | Campaign | The end-of-pilot re-consent: a record with the frozen catalog text per language (reviewed before the pilot), the terms version and the deadline (Toronto time), started by one Admin at `aal2` after a rehearsal on the drill roster. States `started → ended`. |
 | Re-consent prompt | At campaign start each targeted subscriber gets an `sms_prompt` of kind `reconsent`, open until the deadline. YES from that number resolves to it (latest `sent_at`, AD-9) and moves the subscriber to `retained`. |
 | Access request | A resident's request to see or correct what the CVH holds about their number (PIPEDA), answered within 30 days. In the pilot it is handled by the call-back process in S09.03 and recorded in the audit trail with dates, outcome and the Admin, never the number. |
-| Deletion ledger | A write-ahead record outside the database. Before any deletion commits, the use case writes one object `{intent id, salted number hash, requested_at, reason}` to a private Storage bucket and waits for Storage to confirm it; only then does the deletion transaction run. An intent whose deletion never committed is harmless: re-applying it deletes a number whose owner asked to be deleted. Ledger objects are kept for the database backup window plus one day; the salt lives in the environment, not the database. |
-| Unconfirmed deletion | When Storage does not confirm the intent, no deletion commits. Double 0, the edit page and the access-request process fail visibly and the resident or Admin is asked to try again (or, for double 0, to reply STOP); they are never held. The purge simply runs again, because who it deletes follows from the subscriber states. Only STOP, which Twilio has already acted on, is held for retry in the database, so only STOP can be committed to nowhere outside the database. |
-| STOP evidence | Twilio's opt-out list cannot be read through its Console or API, but every inbound message, including each STOP, is kept in Twilio's message log and can be listed through the Messages API. That log is the durable outside evidence for STOP. The daily configuration check (S07.09) confirms message body redaction is off and log retention covers the backup window; the terms name Twilio as keeping these logs. |
-| Restore complete | `scripts/restore-reconcile` reports complete only when all seven completeness checks in S09.03 pass and every boundary case has been resolved from evidence. Otherwise deletion completeness is unknown and the restore stays in maintenance; there is no override that contacts anyone. |
-| Replay rule | A restore (through `scripts/restore-reconcile`) deletes a subscriber, pending sign-up, edit link or `inbound_reply` whose number matches either a ledger intent (by salted hash, whatever the intent's date) or a STOP-keyword inbound message in the Twilio log since the backup (STOP, STOPALL, UNSUBSCRIBE, CANCEL, END, QUIT and any opt-out keyword configured on the service), and which was created at or before that intent or message. A record created afterwards (a later, valid re-subscription) is never deleted by it; a record created within 2 minutes either side is a boundary case for review (check 7). The purge then runs again. |
 | Week | Monday 00:00 to Sunday 23:59 in `America/Toronto`. |
 | Small-number rule | In every displayed or exported measure, a count of 1 to 4 for a language, neighbourhood, building or floor is shown as "fewer than 5"; a percentage whose numerator or denominator is 1 to 4 is not shown; and where a total and the other visible cells would reveal a hidden cell, one more cell is hidden. Zero is shown as 0. |
 | Measures | Section 9 of the pilot PRD: subscribers and installs; acknowledgement, approval and delivery times; check-in counts; directory, map and search use; translation understood per language (survey) and fallback rates; drills, corrections and their reach; cost per alert and total spend; coverage. All aggregate, drills apart. |
@@ -3557,7 +3546,7 @@ So that a silent failure cannot leave residents without alerts.
 
 **Given** the outside check
 **When** the heartbeat fails twice in a row (for example pg_cron stopped, the database is down, or the app is down)
-**Then** the on-call Admins get an email from the monitor within 5 minutes; the launch rehearsal includes stopping the health job on staging and confirming the email arrives
+**Then** the on-call Admins get an email from the monitor within 5 minutes; the launch rehearsal includes stopping the production health job before launch and confirming the email arrives
 
 **Given** the Hub screens
 **When** an open health condition exists
@@ -3595,95 +3584,22 @@ So that residents who missed an alert still get it, without risking duplicates b
 **When** it reaches hand-off
 **Then** it follows E06's sendability rules for its original kind and purpose, and it is counted in spend once (E07 rules)
 
-### Story S09.03 — Procedures are written and rehearsed, and a restore cannot undo a deletion
+### Story S09.03 — Procedures are written and rehearsed
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
-- **Traces:** NFR-N6, NFR-N5, AR-21, AR-17, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures-ledger`
+- **Size:** S · **Estimate:** 2 h · **Actual:** —
+- **Traces:** NFR-N6, NFR-N5, AR-21, AR-17, Launch readiness · **Depends on:** S09.01, S09.02 · **Branch:** `e09-s03-procedures`
+- **Note:** the deletion ledger, restore procedure, `scripts/restore-reconcile`, restore spend reconciliation and the restore and STOP-evidence rehearsals are deferred to the MVP (single Supabase project, 2026-10-02).
 
 As a Hub Coordinator,
-I want short procedures I can follow under pressure, and a restore that respects residents' choices,
+I want short procedures I can follow under pressure,
 So that sending, correcting and recovering are done the same way every time.
 
 **Acceptance Criteria:**
 
-**Given** the deletion ledger's store
-**When** S09.03's implementation is about to start
-**Then** the Storage decision in Launch Readiness has been recorded: either Supabase Storage is confirmed to expose and enforce a retention policy of at least the database backup window plus one day, with no early deletion or overwrite and with that configuration readable at run time; or an alternative store is chosen that preserves the deletion evidence with the same guarantees
-**And** until that decision is recorded, S09.03 is not started
-**And** any alternative keeps the same contract: deletions are not committed without confirmed evidence, completeness check 2 reads the alternative's controls, and recovery stays blocked when completeness is unknown
-
-**Given** launch readiness
-**When** ledger enforcement is verified in production
-**Then** an attempt with the app's credentials to delete or overwrite a ledger object before its retention expires is refused, the configured retention is read back and matches the procedures, and the result is recorded in Launch Readiness; without that record the pilot does not launch
-
 **Given** `docs/procedures/`
 **When** this story is done
-**Then** it holds one page each, in plain steps with screen names, for: writing and approving an alert; correcting and withdrawing; closing; running a drill; pausing and resuming texts; resending failed texts; a cap overrun; a health alert and who owns the incident; changing Messaging Service settings (texts paused first); rotating secrets (at pilot start, on departures, at pilot end); restoring the database; and a resident access request
+**Then** it holds one page each, in plain steps with screen names, for: writing and approving an alert; correcting and withdrawing; closing; running a drill; pausing and resuming texts; resending failed texts; a cap overrun; a health alert and who owns the incident; changing Messaging Service settings (texts paused first); rotating secrets (at pilot start, on departures, at pilot end); and a resident access request
 **And** each names its owner and last-reviewed date, and each Hub screen that starts one of these tasks links to it
-
-**Given** any deletion (STOP, double 0, edit page, access request, purge)
-**When** it runs
-**Then** the ledger intent is written to Storage and confirmed before the deletion transaction starts; the ledger never holds a number, only its salted hash
-
-**Given** Storage does not confirm the intent
-**When** each path handles it
-**Then** no deletion commits; a double 0 is answered "We could not finish deleting right now. Reply STOP to stop at once" while the subscriber still exists; the edit page and the access-request process report "Deletion failed, try again"; the purge retries on its next run; a STOP is held for retry in the database and retried every minute, and a health condition is raised (tests for each)
-
-**Given** the restore procedure, for every restore
-**When** a backup is restored
-**Then** before the app serves traffic: texts are paused, the sender lease is disabled, recovery mode is on, and the app stays in maintenance until an Admin and IT complete `scripts/restore-reconcile` and it reports complete
-
-**Given** `scripts/restore-reconcile`
-**When** it runs
-**Then** it first runs the seven completeness checks below, changing nothing; only if every check passes does it apply the replay rule (with the check-in rows of a deleted subscriber going with it), re-run the purge, set every `queued` or `claimed` delivery to `unknown` through the recovery operation (outside recovery mode the trigger refuses that change; direct SQL test), and print its report
-**And** if any check fails, it reports "incomplete" with the failing check, makes no changes, the app stays in maintenance, and nobody is contacted
-
-**Completeness checks (all must pass):**
-
-1. **Ledger listing complete:** the bucket is listed page by page until Storage returns no continuation token; the number of objects read equals the number listed; every object parses against the intent schema. Any listing error, timeout or unparsable object fails the check.
-2. **Ledger retention controls verified:** the bucket's configured retention policy keeps every object for at least the database backup window plus one day; the bucket and its credentials forbid deleting or overwriting objects before that age (the app's key can only create new objects; object keys are unique intent ids, so a write never replaces another); and these controls are read from Storage's configuration at run time and match the values recorded in the procedures. The age of any object (a launch marker or an old intent) is not accepted as evidence. A missing, unreadable or weaker control fails the check.
-3. **Twilio log listing complete:** inbound messages to the CVH number are listed from 1 hour before the backup's time to now, following `next_page_uri` until it is empty; every page returns successfully; the run records the page count and message count.
-4. **Twilio log not redacted:** every inbound SMS listed has a non-empty body that is not the redaction placeholder, and the daily configuration check (S07.09) for redaction off and retention covering the backup window passed on its most recent run before the incident. Any redacted body, or a failed or missing configuration check, fails the check.
-5. **Twilio log retention covers the range:** the start of the range (backup time minus 1 hour) is within the account's message retention period recorded by the configuration check.
-6. **Keyword list current:** the STOP keywords used by the replay match the opt-out keywords recorded for the Messaging Service in the procedures, as last confirmed by the configuration check.
-7. **Boundary cases resolved from evidence:** a record created within 2 minutes either side of a matching intent or STOP is listed as "needs review" and is neither deleted nor kept automatically. An Admin resolves each only from evidence of the order of deletion and re-subscription (for example the Twilio message log showing the STOP and the later YES, with message ids and timestamps, or the ledger intent and the audit record of the re-subscription), and records that evidence with the decision (audited). If the order cannot be established from evidence, the item stays unresolved, the report stays incomplete, and recovery stays blocked.
-
-**And** the report lists: intents read, Twilio pages and messages read, deletions applied, records kept as later re-subscriptions, boundary cases and their evidence, and deliveries set to `unknown`
-
-**Given** the script reports complete
-**When** recovery ends
-**Then** an Admin at `aal2` turns recovery mode off and re-enables the lease and sending, each audited
-
-**Given** a deletion commits and the original database is then permanently lost (the test drops the database immediately after the commit)
-**When** a fresh database is restored from a backup taken before the deletion and the procedure runs
-**Then** the ledger intent re-applies the deletion and the subscription is gone (test)
-
-**Given** the sequence: intent written and confirmed, backup taken, deletion commits, database permanently lost
-**When** the backup is restored and the procedure runs
-**Then** the intent, although dated before the backup, is applied by the replay rule and the subscription is gone (test)
-
-**Given** the sequence: a number is deleted, the same number signs up again and confirms, a backup is taken, the database is lost
-**When** the backup is restored and the procedure runs
-**Then** the old intent does not delete the new subscription, because it was created after the intent (test)
-
-**Given** the sequence: a successful health run and heartbeat, then a STOP arrives, its ledger write is not confirmed, and the database is permanently lost immediately afterwards
-**When** a backup is restored and the script runs with a fake Twilio message log containing that STOP
-**Then** the STOP in the log re-applies the deletion and the subscription is gone (test)
-
-**Given** fakes for each completeness check
-**When** the script runs
-**Then** these cases are tested: a Twilio log of three pages (all read, complete); a page that errors (incomplete); a redacted body (incomplete); a ledger listing error (incomplete); a retention policy shorter than the backup window plus one day, or one that allows early deletion or overwrite (incomplete); a re-subscription 1 minute after a STOP resolved with order evidence (complete); and the same case with no order evidence (stays incomplete)
-
-**Given** spend after a restore
-**When** recovery ends
-**Then** deliveries set to `unknown` by the recovery operation keep their estimates, counted as spent and labelled "pending reconciliation" (never zero)
-**And** a restore reconciliation (S06.08) runs for the interval `[backup's timestamp, moment sending was re-enabled)` with id `restore:{backup timestamp}:{re-enable timestamp}`; it imports each message Twilio sent in that interval once by `MessageSid`, and its actuals retire estimates only by matching `MessageSid` (S06.08 matching rule)
-**And** messages with no matching delivery (texts sent after the backup whose rows were lost) are counted as unmatched actuals, and recovery-`unknown` estimates with no provider id stay counted as unresolved estimates, both shown side by side; until the reconciliation is complete the interval stays pending reconciliation
-**And** tests cover: importing the same restore reconciliation twice (no change); a message also falling in the month's reconciliation, in both import orders (counted once); and a message with no price yet (interval stays pending, estimates still counted)
-
-**Given** the staging restore rehearsal
-**When** it runs
-**Then** it restores a backup taken before a test deletion, a test STOP and a test send, and confirms: the deleted subscriptions stay deleted; the sent text is not sent again; a restore with the ledger bucket made unreadable stays in maintenance; a boundary case is resolved from evidence; and spend shows the period's usage once
 
 **Given** the access-request process (the pilot has no access-request screen)
 **When** a resident asks what is held
@@ -3691,15 +3607,11 @@ So that sending, correcting and recovering are done the same way every time.
 
 **Given** someone who cannot show verified control of the number (it can no longer receive texts or calls)
 **When** they ask for access or deletion
-**Then** the request is recorded (without the number), nothing is revealed and nothing is deleted; the Hub offers the alternative of sending a given one-time phrase by text from that number, explains that texting STOP from it deletes the subscription, and that subscribers who do not re-consent at the end of the pilot are deleted after the stated deadline (S09.08), with backups covered by the retention notice in the terms
+**Then** the request is recorded (without the number), nothing is revealed and nothing is deleted; the Hub offers the alternative of sending a given one-time phrase by text from that number, explains that texting STOP from it deletes the subscription, and that subscribers who do not re-consent at the end of the pilot are deleted after the stated deadline (S09.08)
 
 **Given** launch readiness
 **When** the procedures are rehearsed
-**Then** a production drill (S06.05), a pause and resume, a resend on staging, the restore rehearsal with `scripts/restore-reconcile` and the access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
-
-**Given** the production STOP-evidence rehearsal (launch gate)
-**When** a staff test phone texts STOP to the configured production number
-**Then** the message is retrieved through the paginated Twilio Messages API with its body, sender and timestamp; the replay rule, run in a restore of a staging copy using that retrieved evidence, deletes the test subscription; and the result is recorded in the launch-readiness checklist before launch
+**Then** a production drill (S06.05), a pause and resume, a resend in production to the drill roster and the access-request process are performed following the written steps, and any step that did not work is fixed in the procedure before launch
 
 ### Story S09.04 — The Hub reviews reliability every week
 
@@ -3789,7 +3701,7 @@ So that the Hub keeps its promise to residents.
 
 **Given** the deadline has passed (Toronto time; 30 days after the campaign started)
 **When** the purge job runs
-**Then** for each subscriber it locks the row, re-checks that it is still `reconsent_pending` and that the deadline has passed by the database clock, and runs the full E07 deletion with a ledger entry; the counts deleted and retained are recorded as an aggregate `ops_event`
+**Then** for each subscriber it locks the row, re-checks that it is still `reconsent_pending` and that the deadline has passed by the database clock, and runs the full E07 deletion; the counts deleted and retained are recorded as an aggregate `ops_event`
 
 **Given** a YES arriving at the moment of the deadline
 **When** it races the purge
@@ -3813,6 +3725,12 @@ These stories are not built in the pilot. Their approved criteria are kept uncha
 | S05.05 Merge duplicate alerts | Merging threads before texts go out | Withdraw the duplicate with reason "duplicate" (S05.02) |
 | S09.06 Access-request screen | Screen with texted access codes | Call-back and `scripts/access-request` process (S09.03) |
 | S10.01 Official alert relay (E10) | Relaying official alerts with source and link | None in the pilot |
+| S09.03 (part) Deletion ledger and restore | Write-ahead deletion ledger in Storage and its launch gates, restore procedure, `scripts/restore-reconcile` with completeness checks, recovery mode, restore spend reconciliation, restore and STOP-evidence rehearsals | None: the pilot's Supabase Free project has no backups, so a deletion is final |
+| S06.08 (part) Restore reconciliation | Reconciliation interval for a restore gap | Monthly reconciliation only |
+| S01.02 (part) Staging project | Separate staging Supabase project; previews on synthetic data | Previews share the production project (accepted pilot risk) |
+| S07.09 (part) STOP-evidence retention check | Daily check that Twilio log retention covers the backup window | None |
+
+These parts were deferred by the single-Supabase change (2026-10-02).
 
 The full versions of these simplified stories are also in the reference copy: S03.04, S03.05, S03.07, S03.09, S06.02, S06.03, S06.08, S07.08, S08.05–S08.09, S09.03–S09.05 and S09.07.
 
@@ -3821,13 +3739,11 @@ The full versions of these simplified stories are also in the reference copy: S0
 | Task | When | Effort |
 | --- | --- | --- |
 | Manual Lighthouse run on `/en/`, `/ur/` and the directory page, recorded in Launch Readiness | Before launch | 1 h |
-| Running the staging restore rehearsal and the production STOP-evidence rehearsal (launch gates) | Before launch | 3 h |
 | Twilio usage reconciliation (S06.08) | Monthly, twice | 1 h |
 | Access requests by call-back and script | About 4 expected | 3 h |
 | Weekly reliability review from SQL views, notes in `docs/procedures/weekly-notes/` | Weekly, 8 times | 6 h |
 | Week-8 measures export for the go / no-go review | Once | 1 h |
 | Re-consent campaign rehearsal on the drill roster, then the real run | Once | 2 h |
 | Handling duplicate alerts by withdrawal | Occasional | 1 h |
-| **Total** | | **18 h** |
-| Restore reconciliation, only if a restore is ever needed | Contingency | about 4 h (not in the total) |
+| **Total** | | **15 h** |
 | Three-model embedding comparison, only if `embed-v4.0` misses the launch bar (S03.07) | Contingency | about 3 h (not in the total) |
