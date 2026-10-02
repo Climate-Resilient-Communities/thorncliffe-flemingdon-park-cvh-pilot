@@ -77,6 +77,10 @@ export interface StaffStore {
    * other committed.
    */
   lockAdminsAndAccount(tx: DbTransaction, staffId: string): Promise<StaffAccount[]>;
+  /** Locks one account's row (`for update`) until the transaction ends, and returns it as locked (null if there is none). */
+  lockAccount(tx: DbTransaction, staffId: string): Promise<StaffAccount | null>;
+  /** Makes this transaction fail, rather than wait, when a row lock held by another is not free within `ms` (set local lock_timeout). */
+  setLockTimeout(tx: DbTransaction, ms: number): Promise<void>;
   /**
    * Lets this transaction leave fewer than two usable Admins: the recovery exception and the
    * automatic locks only. The database trigger staff_account_keep_two_usable_admins refuses such an

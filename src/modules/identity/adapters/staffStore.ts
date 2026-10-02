@@ -98,6 +98,15 @@ export const drizzleStaffStore: StaffStore = {
     return rows.map(toAccount);
   },
 
+  async lockAccount(tx, staffId) {
+    const [row] = await tx.select().from(staffAccount).where(eq(staffAccount.id, staffId)).for("update");
+    return row ? toAccount(row) : null;
+  },
+
+  async setLockTimeout(tx, ms) {
+    await tx.execute(sql`select set_config('lock_timeout', ${`${Math.round(ms)}ms`}, true)`);
+  },
+
   async permitAdminShortfall(tx) {
     await tx.execute(sql`select set_config('cvh.admin_recovery', 'on', true)`);
   },

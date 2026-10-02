@@ -17,6 +17,8 @@ export interface IdentityWiring {
   now?: () => Date;
   newId?: () => string;
   audit?: AuditWriter;
+  /** How long a change waits for a row lock before failing; default 5 s. */
+  lockTimeoutMs?: number;
 }
 
 /** The identity module's use cases: accounts and bootstrap (S01.05), and changes under the two-Admin rule (S01.06). */
@@ -32,6 +34,7 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
     log: stdoutOperationalLog,
     now: wiring.now ?? (() => new Date()),
     newId: wiring.newId ?? (() => uuidv7()),
+    lockTimeoutMs: wiring.lockTimeoutMs,
   };
   return { ...createAccountService(deps), ...createStaffChangeService(deps) };
 }
@@ -39,7 +42,7 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
 export { supabaseIdentityProvider, type SupabaseAdminConfig } from "./adapters/supabaseIdentityProvider";
 export type { AccountService, AddPersonView, CreatedAccount } from "./application/accounts";
 export type { CreateLoginError, IdentityProvider } from "./application/ports";
-export { adminShortfallMeta, type AdminRecovery, type StaffChangeService } from "./application/staffChanges";
+export { type StaffChangeService } from "./application/staffChanges";
 export { mayManageAccounts, type Actor } from "./domain/accountAuthority";
 export { MIN_USABLE_ADMINS } from "./domain/adminFloor";
 export { bootstrapPhase, type BootstrapPhase, type BootstrapState, type StaffIntent } from "./domain/bootstrap";

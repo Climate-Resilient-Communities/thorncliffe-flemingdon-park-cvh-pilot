@@ -7,8 +7,10 @@ import { sql as drizzleSql } from "drizzle-orm";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import * as audit from "../../src/modules/audit";
-import { adminShortfallMeta, createIdentity, type IdentityService } from "../../src/modules/identity";
+import { createIdentity, type IdentityService } from "../../src/modules/identity";
+import { drizzleStaffStore } from "../../src/modules/identity/adapters/staffStore";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { adminShortfallMeta, createAdminRecovery } from "../../src/modules/identity/application/adminRecovery";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -21,6 +23,8 @@ let auditBaseline = 0;
 
 let idp: MemoryIdentityProvider;
 let identity: IdentityService;
+/** The identity module's internal recovery step, as S01.07/S01.08/S01.11 use cases call it from inside the module. */
+let beginAdminRecovery: ReturnType<typeof createAdminRecovery>["beginAdminRecovery"];
 
 beforeAll(async () => {
   owner = connect(serverUrl());
@@ -55,6 +59,7 @@ beforeEach(async () => {
   await resetIdentity();
   idp = memoryIdentityProvider();
   identity = createIdentity({ db: app, idp });
+  ({ beginAdminRecovery } = createAdminRecovery({ store: drizzleStaffStore, idp, now: () => new Date() }));
 });
 
 afterAll(async () => {
@@ -206,11 +211,55 @@ describe("three usable Admins", () => {
   });
 });
 
+describe("a slow or hanging identity provider, and a lock that is never freed", () => {
+  it("fails the change within the provider's timeout and releases the Admin locks, nothing written", async () => {
+    const [a, b, c] = [await account(), await account(), await account()];
+    await bootstrapCompleted(a, b);
+    idp.delay(100); // each Supabase call times out after 100 ms
+
+    const started = Date.now();
+    await expect(identity.suspendAccount(a, c)).rejects.toThrow("identity provider timed out");
+    expect(Date.now() - started).toBeLessThan(3000);
+
+    // The Admin rows are free again: a transaction takes them without waiting.
+    await asApp((tx) => tx`select id from staff_account where role = 'admin' for update nowait`);
+    expect(await admins()).toBe(3);
+    expect(await auditRecords()).toEqual([]);
+    // And the next change goes through once the provider answers.
+    idp.delay(null);
+    expect(await identity.suspendAccount(a, c)).toEqual({ ok: true, value: undefined });
+  });
+
+  it("gives up on a row lock held by someone else after the lock timeout, and leaves the account alone", async () => {
+    const [a, b, c] = [await account(), await account(), await account()];
+    await bootstrapCompleted(a, b);
+    const patient = createIdentity({ db: app, idp, lockTimeoutMs: 300 });
+    let release!: () => void;
+    const holding = new Promise<void>((resolve) => (release = resolve));
+    const held = asApp(async (tx) => {
+      await tx`select id from staff_account where id = ${b} for update`;
+      await holding;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+
+    try {
+      const started = Date.now();
+      await expect(patient.suspendAccount(a, c)).rejects.toMatchObject({ cause: { code: "55P03" } });
+      expect(Date.now() - started).toBeLessThan(3000);
+    } finally {
+      release();
+      await held;
+    }
+    const [row] = await owner`select status from staff_account where id = ${c}`;
+    expect(row.status).toBe("active");
+  });
+});
+
 describe("the recovery exception", () => {
   /** Stands in for S01.08's Admin-issued password reset, in one transaction as the app. */
   async function resetPassword(actor: string, target: string) {
     return app.transaction(async (tx) => {
-      const recovery = await identity.beginAdminRecovery(tx, target);
+      const recovery = await beginAdminRecovery(tx, target);
       await tx.execute(drizzleSql`update staff_account set must_change_password = true, starting_password_issued_at = now() where id = ${target}`);
       await audit.record(tx, { action: "password.reset", actorStaffId: actor, subjectType: "staff_account", subjectId: target, meta: adminShortfallMeta(recovery) });
       return recovery;
@@ -247,12 +296,43 @@ describe("the recovery exception", () => {
     const second = await account();
     await bootstrapCompleted(first, second);
 
-    const recovery = await app.transaction((tx) => identity.beginAdminRecovery(tx, second));
+    const recovery = await app.transaction((tx) => beginAdminRecovery(tx, second));
     const [{ auth_user_id }] = await owner`select auth_user_id from staff_account where id = ${second}`;
     idp.users.get(auth_user_id)!.authenticatorEnrolled = false;
 
     expect(recovery).toEqual({ adminShortfall: true });
     expect(await identity.adminShortfallBanner(first)).toBe(true);
+  });
+
+  it("is not on the module's public interface", () => {
+    expect(identity).not.toHaveProperty("beginAdminRecovery");
+  });
+
+  it("locks only a non-Admin target: it does not wait on a lock held on an Admin row, and permits nothing", async () => {
+    const first = await account();
+    const second = await account();
+    const coordinator = await account({ role: "coordinator" });
+    await bootstrapCompleted(first, second);
+    idp.delay(60_000); // the provider must not be asked
+    let release!: () => void;
+    const holding = new Promise<void>((resolve) => (release = resolve));
+    const held = asApp(async (tx) => {
+      await tx`select id from staff_account where role = 'admin' for update`;
+      await holding;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 150));
+    try {
+      const recovery = await app.transaction(async (tx) => {
+        const result = await beginAdminRecovery(tx, coordinator);
+        const [{ flag }] = (await tx.execute(drizzleSql`select coalesce(current_setting('cvh.admin_recovery', true), '') as flag`)) as unknown as { flag: string }[];
+        expect(flag).toBe("");
+        return result;
+      });
+      expect(recovery).toEqual({ adminShortfall: false });
+    } finally {
+      release();
+      await held;
+    }
   });
 
   it("never re-enters bootstrap; changes to Admins stay refused, and everything else continues", async () => {
