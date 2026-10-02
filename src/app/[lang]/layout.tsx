@@ -1,11 +1,13 @@
 import type { Metadata } from "next";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
+import { preload } from "react-dom";
 import type { CSSProperties } from "react";
 import { ResidentShell, type NavItem } from "@/ui/shell";
 import { isLaunchCode, LAUNCH_CODES, LAUNCH_LANGUAGES, languageOf } from "@/i18n/languages";
 import "../globals.css";
-import { fontStack } from "./fonts";
+import "./fonts.generated.css";
+import { fontStack, PUBLIC_SANS_LATIN } from "./fonts";
 
 // AD-1: the resident surface is /[lang]/…, prerendered for each launch language. A first segment that is not
 // one is a 404 below; an unknown language code never gets this far, because proxy.ts sends it to /en/.
@@ -28,6 +30,9 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const { lang } = await params;
   if (!isLaunchCode(lang)) notFound();
   setRequestLocale(lang);
+  // The one font file every resident page needs (Latin text in any language), preloaded from here and from no other
+  // layout, so the staff and site pages preload nothing. The language's own Noto slices follow their text.
+  preload(PUBLIC_SANS_LATIN, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   const language = languageOf(lang);
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
