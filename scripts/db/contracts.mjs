@@ -14,6 +14,32 @@ import { findDestructiveChanges, readContractNotes } from "./sql.mjs";
 const SHA = /^[0-9a-f]{40}$/i;
 
 /**
+ * Changes of migrations that were merged before the rule that flags them
+ * existed, and that are safe: each entry names the migration, the change as
+ * the text check words it and as the database check words it, and why. Add to
+ * this list only for a migration already on main; a new migration gets a
+ * contract note or an expand-only shape instead.
+ */
+const ACCEPTED_CHANGES = {
+  // actor_staff_id was never written before staff accounts existed (the audit module wrote null), so
+  // no row of the previous release can violate the foreign key that migration 20261002010000 announced.
+  "20261002110000_staff_account.sql": [
+    /^adds a foreign key constraint to audit_event \(/,
+    /^adds constraint audit_event_actor_staff_id_fkey on public\.audit_event:/,
+  ],
+};
+
+/**
+ * @param {string} file migration file name
+ * @param {string[]} changes
+ * @returns {string[]} the changes that are not accepted above
+ */
+export function unacceptedChanges(file, changes) {
+  const accepted = ACCEPTED_CHANGES[file] ?? [];
+  return changes.filter((change) => !accepted.some((pattern) => pattern.test(change)));
+}
+
+/**
  * The commit production is serving. PRODUCTION_RELEASE overrides the lookup
  * (tests, or an operator who knows better); otherwise PRODUCTION_URL is asked.
  *
@@ -69,7 +95,10 @@ export async function checkDestructiveMigrations(migrations, { productionRelease
   let production;
 
   for (const { file, sql } of migrations) {
-    const changes = databaseChanges && file in databaseChanges ? databaseChanges[file] : findDestructiveChanges(sql);
+    const changes = unacceptedChanges(
+      file,
+      databaseChanges && file in databaseChanges ? databaseChanges[file] : findDestructiveChanges(sql),
+    );
     const notes = readContractNotes(sql);
     problems.push(...notes.problems.map((p) => `${file}: ${p}`));
     if (changes.length === 0 && notes.releases.length === 0) continue;

@@ -1,8 +1,17 @@
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { checkNetAccess, checkOwnership, checkRls, checkSequences } from "../../scripts/db/check-schema.mjs";
+import {
+  checkColumnPrivileges,
+  checkFunctionExecute,
+  checkNetAccess,
+  checkOwnership,
+  checkRls,
+  checkSecurityDefiner,
+  checkSequences,
+} from "../../scripts/db/check-schema.mjs";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { FIXTURES, ROOT, connect, createFreshDatabase, serverUrl, type FreshDatabase } from "./helpers";
 
@@ -243,6 +252,190 @@ describe("sequence check", () => {
     const problems = await checked(`${TABLE} ${SUPABASE_DEFAULTS} revoke all on sequence audit_event_id_seq from public, anon, authenticated, service_role;`);
 
     expect(problems).toEqual([]);
+  });
+});
+
+describe("function execute check", () => {
+  const FUNCTION = "create function public.leak_audit() returns bigint language sql as $$ select 1::bigint $$;";
+
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(sqlText);
+    return checkFunctionExecute(db.sql);
+  }
+
+  it("rejects a function PUBLIC can execute, which PostgreSQL grants by default", async () => {
+    const problems = await checked(FUNCTION);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.leak_audit\(\) is a function that anon and authenticated can execute: add "revoke all on function/)]);
+  });
+
+  it("rejects a procedure too", async () => {
+    const problems = await checked("create procedure public.tidy() language sql as $$ select 1 $$;");
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.tidy\(\) is a procedure that anon and authenticated can execute/)]);
+  });
+
+  it("rejects a function granted to anon only", async () => {
+    const problems = await checked(`${FUNCTION} revoke all on function public.leak_audit() from public; grant execute on function public.leak_audit() to anon;`);
+
+    expect(problems).toEqual([expect.stringMatching(/can execute/)]);
+    expect(problems[0]).toContain("that anon can execute");
+  });
+
+  it("rejects a function granted to authenticated through a role it belongs to", async () => {
+    const role = `helper_${Date.now()}`;
+    try {
+      const problems = await checked(
+        `${FUNCTION} revoke all on function public.leak_audit() from public; create role ${role} nologin; grant ${role} to authenticated; grant execute on function public.leak_audit() to ${role};`,
+      );
+
+      expect(problems).toEqual([expect.stringContaining("that authenticated can execute")]);
+    } finally {
+      // Roles belong to the server, not the database: leave none behind.
+      await db?.sql.unsafe(`revoke all on function public.leak_audit() from ${role}; drop role if exists ${role}`);
+    }
+  });
+
+  it("passes once PUBLIC, anon and authenticated are revoked", async () => {
+    const problems = await checked(`${FUNCTION} revoke all on function public.leak_audit() from public, anon, authenticated;`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("passes a function only service_role and the app role can execute", async () => {
+    const problems = await checked(
+      `${FUNCTION} revoke all on function public.leak_audit() from public, anon, authenticated; grant execute on function public.leak_audit() to service_role;`,
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("does not count functions of an extension", async () => {
+    db = await createFreshDatabase();
+    await db.sql.unsafe("create extension if not exists pgcrypto with schema public");
+
+    expect(await checkFunctionExecute(db.sql)).toEqual([]);
+  });
+
+  it("the migration revoking default privileges leaves a new table and sequence closed to clients", async () => {
+    db = await createFreshDatabase();
+    // What Supabase's default privileges give postgres in public, then the migration's statements.
+    await db.sql.unsafe(`
+      alter default privileges for role postgres in schema public grant all on tables to anon, authenticated;
+      alter default privileges for role postgres in schema public grant all on sequences to anon, authenticated;
+      alter default privileges for role postgres in schema public grant execute on functions to anon, authenticated;`);
+    await db.sql.unsafe(readFileSync(path.join(ROOT, "db/migrations/20261002140000_revoke_default_client_privileges.sql"), "utf8"));
+    await db.sql.unsafe(`create table t (id bigint generated always as identity primary key); ${FUNCTION}`);
+
+    const [row] = await db.sql`
+      select has_table_privilege('anon', 't', 'select') as table_anon,
+             has_table_privilege('authenticated', 't', 'select') as table_authenticated,
+             has_sequence_privilege('anon', 't_id_seq', 'usage') as sequence_anon,
+             has_sequence_privilege('authenticated', 't_id_seq', 'usage') as sequence_authenticated`;
+    expect(row).toEqual({ table_anon: false, table_authenticated: false, sequence_anon: false, sequence_authenticated: false });
+  });
+});
+
+describe("security definer check", () => {
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(`${sqlText}`);
+    return checkSecurityDefiner(db.sql);
+  }
+
+  const definer = (config: string) =>
+    `create function public.leak_audit() returns bigint language sql security definer ${config} as $$ select 1::bigint $$;`;
+
+  it("rejects a security definer function without a pinned search_path", async () => {
+    const problems = await checked(definer(""));
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.leak_audit\(\) is a SECURITY DEFINER function without a pinned search_path/)]);
+  });
+
+  it("rejects one that sets another option but not search_path", async () => {
+    const problems = await checked(definer("set work_mem = '8MB'"));
+
+    expect(problems).toHaveLength(1);
+  });
+
+  it("passes security definer functions that pin the search_path, empty or not", async () => {
+    expect(await checked(definer("set search_path = ''"))).toEqual([]);
+    expect(await checked(definer("set search_path = pg_catalog, public"))).toEqual([]);
+  });
+
+  it("ignores security invoker functions", async () => {
+    expect(await checked("create function public.f() returns int language sql as $$ select 1 $$;")).toEqual([]);
+  });
+
+  it("rejects a security definer procedure without a pinned search_path", async () => {
+    const problems = await checked("create procedure public.tidy() language sql security definer as $$ select 1 $$;");
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.tidy\(\) is a SECURITY DEFINER procedure/)]);
+  });
+});
+
+describe("column privilege check", () => {
+  const TABLE =
+    "create table audit_event (id int primary key, secret text); alter table audit_event enable row level security; revoke all on audit_event from public, anon, authenticated;";
+
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(sqlText);
+    return checkColumnPrivileges(db.sql);
+  }
+
+  it("rejects a column granted to anon on a table", async () => {
+    const problems = await checked(`${TABLE} grant select (secret) on audit_event to anon;`);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_event\.secret has a column privilege \(anon SELECT\) for a client role/)]);
+  });
+
+  it("rejects a column granted to authenticated or PUBLIC, and any privilege type", async () => {
+    const problems = await checked(`${TABLE} grant update (id) on audit_event to authenticated; grant insert (secret) on audit_event to public;`);
+
+    expect(problems).toEqual([
+      expect.stringContaining("public.audit_event.id has a column privilege (authenticated UPDATE)"),
+      expect.stringContaining("public.audit_event.secret has a column privilege (public INSERT)"),
+    ]);
+  });
+
+  it("rejects a column of a view that clients can read column by column (the bug-hunt repro)", async () => {
+    const problems = await checked(
+      `${TABLE} create view audit_feed as select id, secret from audit_event; revoke all on audit_feed from public, anon, authenticated; grant select (secret) on audit_feed to anon;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_feed\.secret has a column privilege \(anon SELECT\)/)]);
+  });
+
+  it("passes after the column grant is revoked, and for the app role's column grants", async () => {
+    expect(await checked(`${TABLE} grant select (secret) on audit_event to anon; revoke all (secret) on audit_event from anon;`)).toEqual([]);
+    expect(await checked(`${TABLE} grant select (secret) on audit_event to postgres, service_role;`)).toEqual([]);
+  });
+});
+
+describe("db:check on the bug-hunt repro", () => {
+  it("fails with annotations for a security definer leak_audit() and a view with a column grant", async () => {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(`
+      create table audit_event (id int primary key, secret text);
+      alter table audit_event enable row level security;
+      revoke all on audit_event from public, anon, authenticated;
+      create function public.leak_audit() returns bigint language sql security definer as $$ select count(*) from public.audit_event $$;
+      grant execute on function public.leak_audit() to anon;
+      create view audit_feed with (security_invoker = true) as select id, secret from audit_event;
+      revoke all on audit_feed from public, anon, authenticated;
+      grant select (secret) on audit_feed to anon;`);
+
+    const result = spawnSync("node", [path.join(ROOT, "scripts/db/check-schema.mjs")], {
+      encoding: "utf8",
+      env: { ...process.env, MIGRATE_DATABASE_URL: db.url, GITHUB_ACTIONS: "true" },
+    });
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toMatch(/::error title=Function execute::public\.leak_audit\(\) is a function that anon and authenticated can execute/);
+    expect(result.stdout).toMatch(/::error title=Security definer::public\.leak_audit\(\) is a SECURITY DEFINER function without a pinned search_path/);
+    expect(result.stdout).toMatch(/::error title=Column privileges::public\.audit_feed\.secret has a column privilege \(anon SELECT\)/);
   });
 });
 

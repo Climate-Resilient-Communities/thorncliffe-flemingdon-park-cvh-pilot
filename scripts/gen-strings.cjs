@@ -70,6 +70,10 @@ function markList(list) {
 // A language's own value counts when it exists; "" is a deliberate translation, an empty list is not.
 const present = (value) => value !== undefined && value !== null && !(Array.isArray(value) && value.length === 0);
 
+// A required key (the 911 block, the machine-translation label, "Not known") must have text in every
+// language: a blank or non-string value there is a missing translation, not a deliberate empty one.
+const blankRequired = (keyPath, value) => REQUIRED_KEYS.includes(keyPath) && !(typeof value === "string" && value.trim() !== "");
+
 /** True when an English value has no letters outside {placeholders}: numbers, "", "{nbhd}". */
 function deliberate(value) {
   if (Array.isArray(value)) return value.every(deliberate);
@@ -95,7 +99,7 @@ function mergeLanguage(english, table, code) {
       const own = isObject(tr) ? tr[key] : undefined;
       if (isObject(value)) {
         out[key] = walk(value, own, `${keyPath}.`);
-      } else if (present(own)) {
+      } else if (present(own) && !blankRequired(keyPath, own)) {
         out[key] = own;
       } else if (code === SOURCE_LANGUAGE || deliberate(value)) {
         out[key] = value;
