@@ -94,9 +94,23 @@ jobs:
         env:
           APP_VERSION: ${{ github.sha }}
       # The resident shell in every language at 320, 390 and 768 px (baseline screenshots, right-to-left
-      # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made.
+      # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made. It runs
+      # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
+      # and compared in; the runner's own Ubuntu rasterises text differently. node_modules and .next are the
+      # host's (the same linux x64).
       - name: Test the resident surface in the production build
-        run: npm run test:resident
+        run: npm run test:resident:docker
+        env:
+          CI: "true"
+      # The diffs and actual screenshots of a failed comparison.
+      - name: Upload the resident test results
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: resident-test-results
+          path: test-results/
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Smoke check the production build
         run: npm run test:smoke
         env:

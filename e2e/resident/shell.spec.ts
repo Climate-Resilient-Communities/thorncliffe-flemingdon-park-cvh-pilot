@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { HEIGHTS, LANGUAGES, WIDTHS, openResident, shellBoxes } from "./helpers";
+import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident, shellBoxes } from "./helpers";
 
 // S02.02: the resident shell in every launch language at 320, 390 and 768 px.
 
@@ -60,7 +60,7 @@ for (const language of LANGUAGES) {
         });
         expect(overflow).toEqual({ page: 0, body: 0, main: 0 });
 
-        await expect(page).toHaveScreenshot(`shell-${language.code}-${width}.png`);
+        await expectBaseline(page, `shell-${language.code}-${width}.png`);
       });
     }
   });

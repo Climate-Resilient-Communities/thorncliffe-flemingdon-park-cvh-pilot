@@ -30,7 +30,9 @@
     "check:layers": "node scripts/check-css.mjs layers",
     "check:logical": "node scripts/check-css.mjs logical",
     "test:layout": "playwright test -c playwright.layout.config.ts",
-    "test:resident": "playwright test -c playwright.resident.config.ts"
+    "test:resident": "playwright test -c playwright.resident.config.ts",
+    "test:resident:docker": "scripts/resident-docker.sh",
+    "test:resident:update": "scripts/resident-docker.sh --update-snapshots=all"
   },
   "dependencies": {
     "@fontsource-variable/noto-naskh-arabic": "5.3.0",
