@@ -9,8 +9,11 @@ import "../globals.css";
 import "./fonts.generated.css";
 import { fontStack, PUBLIC_SANS_LATIN } from "./fonts";
 
-// AD-1: the resident surface is /[lang]/…, prerendered for each launch language. A first segment that is not
-// one is a 404 below; an unknown language code never gets this far, because proxy.ts sends it to /en/.
+// AD-1: the resident surface is /[lang]/…, prerendered for each launch language. dynamicParams = false makes any
+// other first segment a plain 404 that is rendered for the request, not a page cached for a year (a language-shaped
+// unknown code never gets this far, because proxy.ts sends it to /en/).
+export const dynamicParams = false;
+
 export function generateStaticParams() {
   return LAUNCH_CODES.map((lang) => ({ lang }));
 }
