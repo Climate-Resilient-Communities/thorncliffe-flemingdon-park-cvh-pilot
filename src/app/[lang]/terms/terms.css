@@ -1,0 +1,58 @@
+/*
+ * Terms and privacy page (S07.01). Spacing from the semantic tokens, direction from logical properties only.
+ * The facts row (version, owner, last updated) wraps, so a long translated label never forces a scroll.
+ */
+@layer components {
+  .terms-facts {
+    display: flex;
+    flex-direction: column;
+    row-gap: var(--gap-subline);
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .terms-facts__item {
+    display: flex;
+    flex-wrap: wrap;
+    column-gap: var(--gap-label);
+    min-inline-size: 0;
+  }
+
+  .terms-facts dt {
+    font-weight: 700;
+  }
+
+  .terms-facts dd {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  /* The draft banner: unmistakable, and never hidden by the theme. */
+  .terms-draft {
+    padding: var(--inset-card);
+    border: 2px solid var(--danger);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .terms-draft__title {
+    font-weight: 700;
+  }
+
+  .terms-draft__reasons {
+    margin-block: 0;
+    padding-inline-start: var(--gap-related);
+    font-size: var(--type-caption-size);
+  }
+
+  .terms-line,
+  .terms-contact {
+    overflow-wrap: anywhere;
+  }
+
+  /* The contact (an email address or a number) is its own left-to-right line under its label, never mixed into the label's line. */
+  .terms-contact__value {
+    display: block;
+  }
+}

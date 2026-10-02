@@ -18,6 +18,7 @@ import {
   type GuideSource,
   type NumberSource,
 } from "@/modules/directory/domain/guideContent";
+import { termsReviewHash, termsTexts, type TermsSource } from "@/modules/subscriptions/domain/terms";
 
 const ROOT = path.join(__dirname, "..");
 const STUB = path.join(ROOT, "test", "helpers", "stub_translate.py");
@@ -87,17 +88,20 @@ describe("content text keys and hashes", () => {
       "texts = c.content_texts()",
       "guides = c.read_json(c.GUIDES_PATH)['guides']; numbers = c.read_json(c.NUMBERS_PATH)['numbers']",
       "reviews = {g['id']: c.english_review_hash({'guide.%s.%s' % (g['id'], k): v for k, v in c.guide_texts(g).items()}) for g in guides}",
+      "terms = c.read_json(c.TERMS_PATH); reviews['terms'] = c.english_review_hash(c.terms_review_texts(terms))",
       "reviews['numbers'] = c.english_review_hash({'number.%s.%s' % (n['id'], k): v for n in numbers for k, v in c.number_texts(n).items()})",
       "print(json.dumps({'texts': {k: [v, c.source_hash(v)] for k, v in texts.items()}, 'reviews': reviews}))",
     ].join("\n");
     const { texts: python, reviews } = JSON.parse(execFileSync("python3", ["-c", script], { cwd: ROOT, env: { ...process.env, CVH_CATALOGUE_DIR: path.join(ROOT, "data", "catalogue") }, encoding: "utf8" }));
     const guides = JSON.parse(readFileSync(path.join(ROOT, "data", "catalogue", "guides.json"), "utf8")).guides;
     const numbers = JSON.parse(readFileSync(path.join(ROOT, "data", "catalogue", "numbers.json"), "utf8"));
-    const seed = contentTexts({ guides, numbers });
+    const terms = JSON.parse(readFileSync(path.join(ROOT, "data", "catalogue", "terms.json"), "utf8")) as TermsSource;
+    const seed = { ...contentTexts({ guides, numbers }), ...termsTexts(terms) };
 
     expect(Object.keys(python)).toEqual(Object.keys(seed));
     for (const [key, english] of Object.entries(seed)) expect(python[key]).toEqual([english, sourceHash(english)]);
     const ts: Record<string, string> = {
+      terms: termsReviewHash(terms, sourceHash),
       numbers: englishReviewHash(
         Object.fromEntries(numbers.numbers.flatMap((n: NumberSource) => Object.entries(numberTexts(n)).map(([k, v]) => [numberKey(n.id, k), v]))),
         sourceHash,

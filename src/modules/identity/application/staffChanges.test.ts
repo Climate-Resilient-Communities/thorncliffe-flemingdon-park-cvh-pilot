@@ -60,7 +60,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     recordRefusal: async (_db: Db, event: AuditEvent) => void refused.push(event),
   };
   const db = { transaction: async (fn: (tx: DbTransaction) => Promise<unknown>) => fn(TX) } as unknown as Db;
-  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321 };
+  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: async () => null };
   const service = createStaffChangeService(deps);
   const { beginAdminRecovery } = createAdminRecovery(deps);
   return { service, beginAdminRecovery, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts };

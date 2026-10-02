@@ -18,6 +18,7 @@ done
 case "$url" in
   */v4/aliases/*) response=$STUB_ALIAS ;;
   */v7/deployments*) response=$STUB_LIST ;;
+  */pulls\\?*) echo "$url" > "$STUB_URL_LOG"; response=$STUB_PULLS ;;
   *) echo "unexpected request $url" >&2; exit 2 ;;
 esac
 status=\${response%%|*}
@@ -60,6 +61,10 @@ function run(script: string, env: Record<string, string>) {
       PRODUCTION_URL: "https://cvh.example.ca",
       GITHUB_OUTPUT: output,
       GITHUB_SHA: "newsha",
+      GITHUB_TOKEN: "ghs_token",
+      GITHUB_REPOSITORY: "Climate-Resilient-Communities/cvh",
+      GITHUB_REF_NAME: "feat/x",
+      STUB_URL_LOG: path.join(stubs, "url-log"),
       ...env,
     },
   });
@@ -117,6 +122,37 @@ describe("preview-gate.sh", () => {
     expect(result.code).toBe(0);
     expect(result.output).toBe("deploy=false\n");
     expect(result.stdout).toContain("::warning title=Vercel preview not built::");
+  });
+});
+
+describe("open-pr-gate.sh", () => {
+  it("deploys a preview when the branch has an open pull request in this repository", () => {
+    const result = run("open-pr-gate.sh", { STUB_PULLS: `200|${JSON.stringify([{ number: 22 }])}` });
+    expect(result.code).toBe(0);
+    expect(result.output).toBe("open=true\n");
+    expect(readFileSync(path.join(stubs, "url-log"), "utf8").trim()).toBe(
+      "https://api.github.com/repos/Climate-Resilient-Communities/cvh/pulls?state=open&per_page=1&head=Climate-Resilient-Communities%3Afeat%2Fx",
+    );
+  });
+
+  it("skips the preview with a notice when no pull request is open", () => {
+    const result = run("open-pr-gate.sh", { STUB_PULLS: "200|[]" });
+    expect(result.code).toBe(0);
+    expect(result.output).toBe("open=false\n");
+    expect(result.stdout).toContain("::notice title=Vercel preview skipped::");
+    expect(result.stdout).not.toContain("::warning");
+  });
+
+  it.each([
+    ["the API returns a server error", "502|{}"],
+    ["the token is refused", '403|{"message":"Resource not accessible"}'],
+    ["the lookup gets no response (DNS failure)", "000|"],
+    ["the response is not a list", "200|<html>"],
+  ])("skips the preview with a warning, not a failure, when %s", (_case, pulls) => {
+    const result = run("open-pr-gate.sh", { STUB_PULLS: pulls });
+    expect(result.code).toBe(0);
+    expect(result.output).toBe("open=false\n");
+    expect(result.stdout).toContain("::warning title=Vercel preview skipped::");
   });
 });
 

@@ -1,8 +1,10 @@
 import { expect, test, type Page } from "@playwright/test";
 import { LANGUAGES, openResident } from "./helpers";
 
-// S02.02: a string that fell back to English ("[EN] ...") is an isolated left-to-right English run, so a
-// right-to-left page does not reorder it ("Nothing is happening [EN] / .right now") and a screen reader switches voice.
+// S02.02: a string that fell back to English ("[EN] ...") is English with lang="en" dir="ltr". When it is the whole
+// text of a heading or paragraph, those attributes sit on that element itself, so a right-to-left page does not reorder
+// it ("Nothing is happening [EN] / .right now"), its lines start at the left and wrap normally, and a screen reader
+// switches voice. (Inside otherwise-translated text the run is an inline <bdi>: see ResidentText.)
 
 type Glyph = { char: string; left: number; right: number; top: number };
 
@@ -36,19 +38,19 @@ function readsLeftToRight(list: Glyph[]) {
 
 for (const code of ["ur", "ps", "prs"]) {
   test.describe(`${code}: English fallback text`, () => {
-    test("is an English left-to-right run, and its full stop is at the visual end", async ({ page }) => {
+    test("is a left-to-right English block, and its full stop is at the visual end", async ({ page }) => {
       await openResident(page, `/${code}`, 390);
 
       for (const selector of ["main h1", "main p"]) {
-        const run = page.locator(`${selector} > bdi`);
+        const run = page.locator(`${selector}[lang=en][dir=ltr]`);
         await expect(run, selector).toHaveCount(1);
-        await expect(run, selector).toHaveAttribute("lang", "en");
-        await expect(run, selector).toHaveAttribute("dir", "ltr");
+        // The block itself carries the language and direction; there is no inline run inside it.
+        await expect(run.locator("bdi"), selector).toHaveCount(0);
 
         const text = await run.textContent();
         expect(text, selector).toMatch(/^\[EN\] .*\.$/);
 
-        const list = await glyphs(page, `${selector} > bdi`);
+        const list = await glyphs(page, `${selector}[lang=en][dir=ltr]`);
         expect(list.map(({ char }) => char).join(""), selector).toBe(text);
         expect(readsLeftToRight(list), `${selector} reads left to right`).toBe(true);
 
@@ -67,19 +69,17 @@ for (const code of ["ur", "ps", "prs"]) {
   });
 }
 
-test("the English heading of a right-to-left page sits at the start (right) edge, the text inside it reading left to right", async ({ page }) => {
+test("the English heading of a right-to-left page is a left-to-right block: its text starts at the left gutter", async ({ page }) => {
   await openResident(page, "/ur", 390);
   const { heading, main } = await page.evaluate(() => {
-    const read = (element: Element) => element.getBoundingClientRect();
     const range = document.createRange();
-    range.selectNodeContents(document.querySelector("main h1 > bdi")!);
-    return { heading: range.getBoundingClientRect().toJSON(), main: read(document.querySelector("main")!).toJSON() };
+    range.selectNodeContents(document.querySelector("main h1[lang=en][dir=ltr]")!);
+    return { heading: range.getBoundingClientRect().toJSON(), main: document.querySelector("main")!.getBoundingClientRect().toJSON() };
   });
 
-  // text-align: start in a right-to-left paragraph: the run's right edge is the content edge, one gutter in from the main's.
-  expect(main.right - heading.right).toBeGreaterThan(0);
-  expect(main.right - heading.right).toBeLessThan(30);
+  // text-align: start in a left-to-right block: the text's left edge is the content edge, one gutter in from the main's.
   expect(heading.left - main.left).toBeGreaterThan(10);
+  expect(heading.left - main.left).toBeLessThan(30);
 });
 
 for (const language of LANGUAGES) {

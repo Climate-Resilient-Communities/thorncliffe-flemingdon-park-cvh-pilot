@@ -187,4 +187,26 @@ describe("CI workflow (S01.03)", () => {
     expect(destructive).toMatch(/--removals "\$RUNNER_TEMP\/migration-removals\.json"/);
     expect(stepIndex(all, /npm run db:migrate/)).toBeLessThan(stepIndex(all, /npm run db:check-destructive/));
   });
+
+  it("uploads each deployment as one tarball, because the Hobby plan caps daily file uploads", () => {
+    const deploys = workflow.match(/vercel deploy .*/g) ?? [];
+
+    expect(deploys).toHaveLength(2);
+    for (const command of deploys) expect(command).toMatch(/^vercel deploy --prebuilt --archive=tgz /);
+    expect(job("production")).toMatch(/vercel deploy --prebuilt --archive=tgz --prod --skip-domain --json/);
+  });
+
+  it("deploys previews only for branches with an open pull request, with read-only token scopes", () => {
+    const preview = job("preview");
+    const all = steps(preview);
+
+    expect(preview).toMatch(/permissions:\n {6}contents: read\n {6}pull-requests: read\n/);
+    expect(job("production")).not.toMatch(/pull-requests/);
+    expect(all[stepIndex(all, /open-pr-gate\.sh/)]).toMatch(/GITHUB_TOKEN: \$\{\{ github\.token \}\}/);
+    expect(all[stepIndex(all, /open-pr-gate\.sh/)]).toMatch(/run: trusted\/scripts\/ci\/open-pr-gate\.sh/);
+    expect(stepIndex(all, /ref: main\b/)).toBeLessThan(stepIndex(all, /open-pr-gate\.sh/));
+    expect(stepIndex(all, /open-pr-gate\.sh/)).toBeLessThan(stepIndex(all, /preview-gate\.sh/));
+    expect(all[stepIndex(all, /preview-gate\.sh/)]).toMatch(/if: steps\.pr\.outputs\.open == 'true'/);
+    expect(preview).not.toMatch(/continue-on-error/);
+  });
 });

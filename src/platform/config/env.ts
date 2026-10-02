@@ -20,9 +20,27 @@ import { PRODUCTION_HOST } from "./hosts";
  * SUPABASE_SECRET_KEY  server   production, preview      secret; Supabase Auth's Admin API (identity's adapter, built only in
  *                                                        server code and scripts/create-first-admin), never in a NEXT_PUBLIC_ variable
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
- *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
+ *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key.
+ *                                                        The Supabase project's JWT expiry (Auth > Settings > "JWT expiry
+ *                                                        limit", jwt_exp) must be 43200 seconds: staff sessions are never
+ *                                                        refreshed, so the access token is the whole 12-hour session (sign-in
+ *                                                        logs identity.jwt_expiry_short once per process when it is shorter)
+ * STAFF_PASSWORD_PEPPER
+ *                      server   optional at start-up     secret; at least 32 random bytes as hex (64+ characters, `openssl rand
+ *                                                        -hex 32`) or base64 (44+ characters). Supabase Auth stores
+ *                                                        hex(HMAC-SHA-256(pepper, password)), never the typed password. Not
+ *                                                        required to start, so the site runs before it is set; until it is,
+ *                                                        every staff sign-in, account creation, password change and re-issue
+ *                                                        refuses (logged as identity.staff_passwords_not_configured). Never a
+ *                                                        NEXT_PUBLIC_ variable, never printed. The same value wherever the same
+ *                                                        Supabase project is used; changing it makes every password unusable
+ *                                                        until each is re-issued
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret
+ * CVH_FAKE_IDENTITY_FILE
+ *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
+ *                                                        in against the in-memory identity fake kept in this file instead of
+ *                                                        Supabase Auth (the end-to-end tests); never a real account
  */
 
 export type AppEnvironment = "production" | "preview" | "development";
@@ -52,6 +70,8 @@ const rawSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalText,
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
+  CVH_FAKE_IDENTITY_FILE: optionalText,
+  STAFF_PASSWORD_PEPPER: optionalText,
 });
 
 type Raw = z.infer<typeof rawSchema>;
@@ -66,6 +86,12 @@ export interface Env {
   supabaseUrl?: string;
   supabasePublishableKey?: string;
   twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
+  /** Local development only: the identity fake's state file (end-to-end tests). */
+  fakeIdentityFile?: string;
+  /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
+  staffPasswordPepper?: string;
+  /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
+  staffPasswordPepperProblem?: string;
 }
 
 export class EnvError extends Error {
@@ -84,19 +110,45 @@ function shown(value: string): string {
   return /^\s*[A-Za-z]{1,16}\s*$/.test(value) ? JSON.stringify(value) : "a value that is not shown";
 }
 
-function resolveEnvironment(raw: Raw, problems: string[]): AppEnvironment {
+/**
+ * Where this runs, from VERCEL and VERCEL_ENV. `fallback` is the environment to assume, with a problem to report,
+ * when Vercel's variables are missing or unknown: parseEnv assumes the strictest non-production one ("preview") and
+ * fails the boot; a caller that must fail closed (failClosedEnvironment) assumes "production".
+ */
+function detectEnvironment(
+  raw: Pick<Raw, "VERCEL" | "VERCEL_ENV">,
+  fallback: AppEnvironment,
+): { environment: AppEnvironment; problem?: string } {
   const vercelEnv = raw.VERCEL_ENV;
   if (vercelEnv === undefined) {
-    if (raw.VERCEL === undefined) return "development";
-    problems.push("VERCEL_ENV: missing on Vercel (VERCEL is set); expose Vercel's system environment variables");
-    return "preview";
+    if (raw.VERCEL === undefined) return { environment: "development" };
+    return {
+      environment: fallback,
+      problem: "VERCEL_ENV: missing on Vercel (VERCEL is set); expose Vercel's system environment variables",
+    };
   }
   if (vercelEnv === "production" || vercelEnv === "preview" || vercelEnv === "development") {
-    return vercelEnv;
+    return { environment: vercelEnv };
   }
-  problems.push(`VERCEL_ENV: must be production, preview or development (got ${shown(vercelEnv)})`);
-  // Treat an unknown environment as the strictest non-production one.
-  return "preview";
+  return {
+    environment: fallback,
+    problem: `VERCEL_ENV: must be production, preview or development (got ${shown(vercelEnv)})`,
+  };
+}
+
+function resolveEnvironment(raw: Raw, problems: string[]): AppEnvironment {
+  const { environment, problem } = detectEnvironment(raw, "preview");
+  if (problem) problems.push(problem);
+  return environment;
+}
+
+/**
+ * The environment for a caller that must fail closed (the terms page: only a known preview or local development may
+ * show unpublished text). Same detection as parseEnv, but a missing or unknown VERCEL_ENV on Vercel counts as
+ * production, and nothing else is validated or thrown: it reads only VERCEL and VERCEL_ENV.
+ */
+export function failClosedEnvironment(source: Record<string, string | undefined> = process.env): AppEnvironment {
+  return detectEnvironment(rawSchema.pick({ VERCEL: true, VERCEL_ENV: true }).parse(source), "production").environment;
 }
 
 function checkSmsMode(environment: AppEnvironment, smsMode: string | undefined, problems: string[]) {
@@ -219,6 +271,26 @@ function isSupabaseSecretKey(value: string): boolean {
   }
 }
 
+export const STAFF_PASSWORD_PEPPER_MIN_BYTES = 32;
+
+/**
+ * The password pepper's rule: at least 32 bytes of key material written as hex or base64, and not
+ * an obviously repeated pattern. Returns the problem, or undefined when the value is usable. Never
+ * fails start-up (see the table above): the identity operations refuse instead.
+ */
+export function staffPasswordPepperProblem(value: string | undefined): string | undefined {
+  if (value === undefined) return "STAFF_PASSWORD_PEPPER: not set";
+  const trimmed = value.trim();
+  let bytes = 0;
+  if (/^[0-9a-fA-F]+$/.test(trimmed)) bytes = Math.floor(trimmed.length / 2);
+  else if (/^[A-Za-z0-9+/_-]+={0,2}$/.test(trimmed)) bytes = Math.floor((trimmed.replace(/=+$/, "").length * 3) / 4);
+  else return "STAFF_PASSWORD_PEPPER: must be hex or base64 (for example `openssl rand -hex 32`)";
+  if (bytes < STAFF_PASSWORD_PEPPER_MIN_BYTES || new Set(trimmed).size < 10) {
+    return `STAFF_PASSWORD_PEPPER: must be at least ${STAFF_PASSWORD_PEPPER_MIN_BYTES} random bytes (for example \`openssl rand -hex 32\`)`;
+  }
+  return undefined;
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
@@ -237,10 +309,21 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     }
   }
 
+  const onVercel = raw.VERCEL !== undefined || raw.VERCEL_ENV !== undefined;
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_IDENTITY_FILE !== undefined) {
+    problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
+  }
+
+  const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
       problems.push(`${name}: holds a Supabase secret key; NEXT_PUBLIC_ variables are sent to browsers`);
+    }
+    if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && value.trim() !== "") {
+      if (name.includes("PEPPER") || (pepper !== undefined && value.trim() === pepper)) {
+        problems.push(`${name}: holds the staff password pepper; NEXT_PUBLIC_ variables are sent to browsers`);
+      }
     }
   }
 
@@ -274,7 +357,14 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
             messagingServiceSid: raw.TWILIO_MESSAGING_SERVICE_SID,
           }
         : undefined,
+    fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
+    ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };
+}
+
+function pepperSettings(value: string | undefined): Pick<Env, "staffPasswordPepper" | "staffPasswordPepperProblem"> {
+  const problem = staffPasswordPepperProblem(value);
+  return problem === undefined ? { staffPasswordPepper: (value as string).trim() } : { staffPasswordPepperProblem: problem };
 }
 
 let cached: Env | undefined;

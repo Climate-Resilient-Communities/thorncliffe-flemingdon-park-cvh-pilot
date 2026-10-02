@@ -14,12 +14,8 @@ export default async function ResidentNotFound() {
   return (
     <Screen surface="resident">
       <Stack gap="related">
-        <h1>
-          <ResidentText>{shell("pageNotFound")}</ResidentText>
-        </h1>
-        <p>
-          <ResidentText>{shell("pageNotFoundBody")}</ResidentText>
-        </p>
+        <ResidentText as="h1">{shell("pageNotFound")}</ResidentText>
+        <ResidentText as="p">{shell("pageNotFoundBody")}</ResidentText>
       </Stack>
     </Screen>
   );

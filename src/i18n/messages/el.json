@@ -30,6 +30,16 @@
       "sun": "Κυριακή"
     }
   },
+  "terms": {
+    "version": "[EN] Version",
+    "owner": "[EN] Owner",
+    "updated": "[EN] Last updated",
+    "privacyContact": "[EN] Privacy contact",
+    "draftTitle": "[EN] Draft: not yet published",
+    "draftBody": "[EN] This text has not been approved yet. It is not the final terms. Do not sign up on the strength of it.",
+    "draftWhy": "[EN] Not published because:",
+    "translationNote": "[EN] Some of this page has not been translated into {lang} yet. Those parts show in English."
+  },
   "shell": {
     "cvhName": "Κοινοτικός Εικονικός Κόμβος",
     "hubName": "[EN] Thorncliffe Park Community Hub",
@@ -3822,10 +3832,69 @@
         "unauthenticated": "[EN] Sign in to continue.",
         "providerError": "[EN] The account could not be created, and nothing was saved. Try again.",
         "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy.",
+        "passwordsNotConfigured": "[EN] Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.",
         "selfAction": "[EN] You cannot change your own account. Ask another Admin.",
         "accountRemoved": "[EN] This account was removed and cannot be changed.",
         "noChange": "[EN] Nothing to change: the account is already like that.",
         "notFound": "[EN] That account does not exist."
+      }
+    },
+    "signIn": {
+      "title": "[EN] Staff sign-in",
+      "lead": "[EN] Sign in with the username and password you were given.",
+      "username": "[EN] Username",
+      "password": "[EN] Password",
+      "submit": "[EN] Sign in",
+      "failed": "[EN] Username or password is incorrect",
+      "expired": "[EN] Your starting password has expired. Ask an Admin to re-issue it.",
+      "unavailable": "[EN] Sign-in is not working right now. Try again in a few minutes."
+    },
+    "signOut": "[EN] Sign out",
+    "signedInAs": "[EN] Signed in as {name}, {role}",
+    "setup": {
+      "incomplete": "[EN] Finish setting up your account first.",
+      "password": {
+        "title": "[EN] Choose your password",
+        "lead": "[EN] Your starting password works only this once. Choose a password that only you know.",
+        "password": "[EN] New password",
+        "passwordHint": "[EN] At least 10 characters. It cannot contain your username or be your starting password.",
+        "confirm": "[EN] Type the new password again",
+        "submit": "[EN] Save my password",
+        "errors": {
+          "tooShort": "[EN] Use at least 10 characters.",
+          "tooLong": "[EN] This password is too long. Use at most 72 letters, or fewer if you use symbols or other alphabets.",
+          "containsUsername": "[EN] Your password cannot contain your username.",
+          "isStartingPassword": "[EN] Choose a password that is not your starting password.",
+          "mismatch": "[EN] The two passwords are not the same. Type the same password twice.",
+          "rejected": "[EN] That password was not accepted. Choose a different one.",
+          "unavailable": "[EN] Your password could not be saved. Nothing changed. Try again.",
+          "notRequired": "[EN] There is no starting password to replace. Sign in again."
+        }
+      },
+      "authenticator": {
+        "title": "[EN] Set up your authenticator",
+        "lead": "[EN] Admins and Coordinators confirm each sign-in with a code from an authenticator app on their phone.",
+        "notYet": "[EN] Setting up an authenticator is not available yet. Your password is saved. Sign out for now."
+      }
+    },
+    "hub": {
+      "title": "[EN] Hub",
+      "lead": "[EN] You are signed in.",
+      "addPerson": "[EN] Add a person"
+    },
+    "reissue": {
+      "title": "[EN] Re-issue a starting password",
+      "lead": "[EN] For someone whose starting password expired before they used it, or who signed in once without choosing their own password.",
+      "username": "[EN] Their username",
+      "submit": "[EN] Re-issue",
+      "done": "[EN] New starting password for {username}: {password}",
+      "doneLine": "[EN] Give it to them in person. It works once, within 24 hours.",
+      "errors": {
+        "notFound": "[EN] No account has that username.",
+        "notReissuable": "[EN] This person already chose their own password, or their account is suspended or removed.",
+        "forbidden": "[EN] Only an Admin can re-issue a starting password.",
+        "providerError": "[EN] The starting password could not be re-issued, and nothing changed. Try again.",
+        "passwordsNotConfigured": "[EN] Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was re-issued. Ask IT to set it."
       }
     },
     "admins": {

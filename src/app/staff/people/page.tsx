@@ -1,17 +1,18 @@
 import type { Metadata } from "next";
-import { redirect } from "next/navigation";
 import { englishText } from "@/i18n/text";
 import { Screen, Stack } from "@/ui";
+import { staffPage } from "../guard";
 import { identity } from "../identity";
-import { currentStaffSession } from "../session";
 import { AddPersonBody } from "./AddPersonBody";
+import { ReissueForm } from "./ReissueForm";
 
 export const metadata: Metadata = { title: englishText("staff.people.title") };
 
-/** "Add a person" (S01.05). Staff only: without a session it sends to sign-in; responses are no-store (next.config.ts). */
-export default async function AddPersonPage() {
-  const session = await currentStaffSession();
-  if (!session) redirect("/staff/sign-in");
+/**
+ * "Add a person" (S01.05), with "Re-issue a starting password" (S01.07) for Admins. Staff at the
+ * Hub only (the guard sends everyone else to sign-in or their setup gate); responses are no-store.
+ */
+export default staffPage({ route: "/staff/people", access: "hub" }, async (session) => {
   const view = await identity().addPersonView(session.staffId);
   return (
     <main>
@@ -22,8 +23,18 @@ export default async function AddPersonPage() {
             <p>{englishText("staff.people.lead")}</p>
           </Stack>
           <AddPersonBody view={view} />
+          {session.role === "admin" && (
+            <ReissueForm
+              labels={{
+                title: englishText("staff.reissue.title"),
+                lead: englishText("staff.reissue.lead"),
+                username: englishText("staff.reissue.username"),
+                submit: englishText("staff.reissue.submit"),
+              }}
+            />
+          )}
         </Stack>
       </Screen>
     </main>
   );
-}
+});

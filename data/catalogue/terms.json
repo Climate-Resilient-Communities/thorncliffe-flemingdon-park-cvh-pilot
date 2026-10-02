@@ -1,0 +1,87 @@
+{
+ "meta": {
+  "source": "S07.01, the acceptance criteria in docs/planning/pilot/epics.md, and the spine (AD-9, AD-12, AD-15, P9, N5).",
+  "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version and a counsel review of exactly this English and version. Values starting with PLACEHOLDER are refused. Any change to the text, the contact or the version needs a new counsel review: python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE. Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
+ },
+ "consentVersion": "2026-10-02.1",
+ "owner": "PLACEHOLDER: Hub Coordinator responsible for the terms, to be named by the Hub",
+ "lastUpdated": "2026-10-02",
+ "englishReview": {
+  "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+  "date": null
+ },
+ "counselReview": {
+  "reviewer": "PLACEHOLDER: counsel to be named when the launch-readiness review is done",
+  "date": null,
+  "version": null,
+  "sourceHash": null
+ },
+ "privacyContact": "PLACEHOLDER: the privacy contact (an email address or a phone number) to be named by the Hub",
+ "title": "Terms and privacy",
+ "sections": [
+  {
+   "id": "keep",
+   "heading": "What we keep",
+   "lines": [
+    "If you sign up for text alerts, we keep four things.",
+    "Your phone number.",
+    "Your language.",
+    "Your neighbourhood: Thorncliffe Park or Flemingdon Park.",
+    "Choices you make if you want to, such as your building, your floor and the groups you belong to.",
+    "We do not ask for your name. We do not ask for your unit number, your email or a password. We do not keep them.",
+    "If you do not sign up, we keep nothing about you. This app sets no cookies. It does not keep the questions you type."
+   ]
+  },
+  {
+   "id": "who",
+   "heading": "Who handles your information",
+   "lines": [
+    "Four companies help us run the service. They handle information for us.",
+    "Twilio sends the text messages. It handles your phone number and our messages to you. It may do this outside Canada.",
+    "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. It may work outside Canada.",
+    "Vercel runs the website. Its servers are in Montreal. If there is an outage, it may use servers in the United States.",
+    "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada."
+   ]
+  },
+  {
+   "id": "owns",
+   "heading": "Who owns the data",
+   "lines": [
+    "The community owns the data. The Hub looks after it for you and your neighbours."
+   ]
+  },
+  {
+   "id": "stop",
+   "heading": "How to stop",
+   "lines": [
+    "Reply STOP to any text from the Hub. Or reply 0, then reply 0 again to confirm.",
+    "When you stop, we delete your subscription. That means we delete your phone number and your choices. We cannot get them back.",
+    "After that, we send you nothing."
+   ]
+  },
+  {
+   "id": "age",
+   "heading": "Who can sign up",
+   "lines": [
+    "You must be 16 or older to sign up.",
+    "If you are younger than 16, a parent or guardian must help you sign up."
+   ]
+  },
+  {
+   "id": "messages",
+   "heading": "About the messages",
+   "lines": [
+    "Hub staff check every alert before it is sent.",
+    "Because of this, a message may not be sent overnight."
+   ]
+  },
+  {
+   "id": "contact",
+   "heading": "Questions and your information",
+   "lines": [
+    "To see what we hold about you, or to fix it, contact our privacy contact.",
+    "Hub staff will call your number back to check that it is yours. Then they will tell you what we hold. If something is wrong, they will fix it."
+   ]
+  }
+ ]
+}

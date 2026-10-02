@@ -17,6 +17,8 @@ export interface StaffChangeDeps {
   idp: IdentityProvider;
   audit: AuditWriter;
   now: () => Date;
+  /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin. */
+  signInLockedUntil: (username: string) => Promise<Date | null>;
   /** How long a change waits for a row lock before failing (default 5 s): Supabase is called while Admin rows are locked. */
   lockTimeoutMs?: number;
 }
@@ -50,7 +52,7 @@ class ChangeRefusal {
  * go through the identity module's internal beginAdminRecovery (adminRecovery.ts) instead.
  */
 export function createStaffChangeService(deps: StaffChangeDeps) {
-  const { db, store, idp, audit } = deps;
+  const { db, store, audit } = deps;
 
   async function refuse(actorStaffId: string | null, targetId: string | null, change: StaffChange, code: IdentityRefusal, targetRole?: StaffRole) {
     const reason = AUDIT_REASONS[code];
@@ -97,7 +99,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
         const decided = decideStaffChange(actor.id, target, change);
         if (!decided.ok) throw new ChangeRefusal(decided.error, target.role);
         if (takesAwayAnAdmin(target, change)) {
-          const standings = await adminStandings(idp, locked.filter((account) => account.role === "admin"), deps.now());
+          const standings = await adminStandings(deps, locked.filter((account) => account.role === "admin"), deps.now());
           const floor = decideAdminChange(standings, target.id);
           if (!floor.ok) throw new ChangeRefusal(floor.error, target.role);
         }
@@ -159,7 +161,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
       const viewer = await store.findById(db, viewerId);
       if (!viewer || !mayManageAccounts(viewer)) return false;
       if (bootstrapPhase(await store.readBootstrap(db)) !== "completed") return false;
-      return hasAdminShortfall(await adminStandings(idp, await store.listAdmins(db), deps.now()));
+      return hasAdminShortfall(await adminStandings(deps, await store.listAdmins(db), deps.now()));
     },
   };
 }

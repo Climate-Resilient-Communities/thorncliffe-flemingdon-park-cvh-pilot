@@ -26,11 +26,13 @@ export function bootstrapPhase(state: BootstrapState | null): BootstrapPhase {
  *  - complete_own_setup: replace their own starting password, enrol their own authenticator,
  *    read their own details, sign out (the setup sequence's gates, S01.07 and S01.10);
  *  - create_account: "Add a person" with this role;
+ *  - reissue_starting_password: an Admin re-issues this account's expired starting password (S01.07);
  *  - other: anything else.
  */
 export type StaffIntent =
   | { kind: "complete_own_setup" }
   | { kind: "create_account"; role: StaffRole }
+  | { kind: "reissue_starting_password"; targetId: string }
   | { kind: "other" };
 
 /** `creates_second_admin`: allowed, and the new account becomes bootstrap's second Admin. */
@@ -61,6 +63,12 @@ export function decideUnderBootstrap(
     state.secondAdminId === null
   ) {
     return ok("creates_second_admin");
+  }
+  // A pending Admin's starting password can expire before they sign in; the other pending Admin
+  // may re-issue it, or bootstrap could never finish.
+  if (state !== null && intent.kind === "reissue_starting_password") {
+    const pending = [state.firstAdminId, state.secondAdminId];
+    if (pending.includes(actorId) && pending.includes(intent.targetId) && actorId !== intent.targetId) return ok("allowed");
   }
   return err("bootstrap_incomplete");
 }

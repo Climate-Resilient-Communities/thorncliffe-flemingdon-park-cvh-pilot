@@ -102,6 +102,23 @@ describe("Supabase Auth identity provider", () => {
     expect(verified.calls[0]).toMatchObject({ url: `${URL_BASE}/auth/v1/admin/users/${USER_ID}/factors`, method: "GET" });
     expect(await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch: unverified.fetch }).hasVerifiedAuthenticator(USER_ID)).toBe(false);
   });
+
+  it("replaces a user's password with the Admin API (S01.07)", async () => {
+    const { fetch, calls } = fakeFetch(() => ({ status: 200, body: { id: USER_ID } }));
+
+    expect(await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch }).setPassword(USER_ID, "correct horse battery")).toEqual({ ok: true });
+    expect(calls[0]).toMatchObject({ url: `${URL_BASE}/auth/v1/admin/users/${USER_ID}`, method: "PUT", body: { password: "correct horse battery" } });
+  });
+
+  it.each([
+    [422, { error_code: "weak_password", msg: "Password is known to be weak" }, "rejected"],
+    [400, { error_code: "validation_failed", msg: "Password cannot be longer than 72 characters" }, "rejected"],
+    [500, { msg: "boom" }, "unavailable"],
+  ])("reads a %i answer to a password change as %s", async (status, body, error) => {
+    const { fetch } = fakeFetch(() => ({ status, body }));
+
+    expect(await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch }).setPassword(USER_ID, "correct horse battery")).toEqual({ ok: false, error });
+  });
 });
 
 describe("Supabase Auth calls never hang (S01.06: Admin rows can be locked while they run)", () => {

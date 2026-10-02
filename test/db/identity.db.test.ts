@@ -6,7 +6,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { runCreateFirstAdmin } from "../../scripts/identity/create-first-admin";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { createIdentity, type AccountService } from "../../src/modules/identity";
+import { createIdentity, pepperPassword, type AccountService } from "../../src/modules/identity";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
@@ -19,6 +19,9 @@ let auditBaseline = 0;
 
 let idp: MemoryIdentityProvider;
 let identity: AccountService;
+
+/** STAFF_PASSWORD_PEPPER of these tests: random per run. */
+const PEPPER = randomBytes(32).toString("hex");
 
 const jane = { username: "JDoe", firstName: "Jane", lastName: "Doe", email: "jane.doe@example.org" };
 const omar = { username: "ofarouk", firstName: "Omar", lastName: "Farouk", email: "omar@example.org", role: "admin" };
@@ -44,6 +47,7 @@ async function resetIdentity() {
       alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
     await tx`delete from staff_bootstrap`;
+    await tx`delete from staff_session`;
     await tx`update staff_account set created_by = null`;
     await tx`delete from staff_account`;
     await tx.unsafe(`
@@ -55,7 +59,7 @@ async function resetIdentity() {
 beforeEach(async () => {
   await resetIdentity();
   idp = memoryIdentityProvider();
-  identity = createIdentity({ db: app, idp });
+  identity = createIdentity({ db: app, idp, passwordPepper: PEPPER });
 });
 
 afterAll(async () => {
@@ -122,7 +126,8 @@ describe("the first Admin", () => {
       { username: "jdoe", first_name: "Jane", last_name: "Doe", email: "jane.doe@example.org", role: "admin", status: "active", must_change_password: true, issued: true, created_by: null },
     ]);
     expect(await bootstrap()).toEqual({ first_admin_id: staffId, second_admin_id: null, completed_at: null });
-    expect([...idp.users.values()]).toEqual([{ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe", authenticatorEnrolled: false }]);
+    // Supabase Auth is given the peppered starting password, never the one handed over.
+    expect([...idp.users.values()]).toEqual([{ login: "jdoe@staff.cvh.invalid", password: pepperPassword(PEPPER, "rvh-jane-doe"), authenticatorEnrolled: false }]);
     const [{ auth_user_id }] = await owner`select auth_user_id from staff_account where id = ${staffId}`;
     expect(idp.users.has(auth_user_id)).toBe(true);
     expect(await auditRecords()).toEqual([
@@ -143,7 +148,7 @@ describe("the first Admin", () => {
 
   it("is created once when two runs race, and the losing run's login is removed", async () => {
     const gated = gatedProvider(idp, 2);
-    const racing = createIdentity({ db: app, idp: gated });
+    const racing = createIdentity({ db: app, idp: gated, passwordPepper: PEPPER });
 
     const results = await Promise.all([racing.createFirstAdmin(jane), racing.createFirstAdmin({ ...jane, username: "jdoe2" })]);
 
@@ -168,6 +173,7 @@ describe("the first Admin", () => {
     const failing = createIdentity({
       db: app,
       idp,
+      passwordPepper: PEPPER,
       audit: {
         record: async () => {
           throw new Error("audit store down");
@@ -246,6 +252,29 @@ describe("a starting password the identity provider rejects", () => {
   });
 });
 
+describe("without STAFF_PASSWORD_PEPPER", () => {
+  it("refuses to create any account, with an explicit refusal and an operational log line, and gives the provider nothing", async () => {
+    const lines: string[] = [];
+    const spy = vi.spyOn(console, "log").mockImplementation((line: string) => void lines.push(line));
+    try {
+      const unpeppered = createIdentity({ db: app, idp });
+      expect(await unpeppered.createFirstAdmin(jane)).toEqual({ ok: false, error: "passwords_not_configured" });
+      const firstId = await firstAdmin();
+      expect(await unpeppered.addPerson(firstId, omar)).toEqual({ ok: false, error: "passwords_not_configured" });
+      // A pepper too short to be one is no pepper.
+      expect(await createIdentity({ db: app, idp, passwordPepper: "short" }).addPerson(firstId, omar)).toEqual({ ok: false, error: "passwords_not_configured" });
+    } finally {
+      spy.mockRestore();
+    }
+    expect(idp.users.size).toBe(1);
+    expect(await accounts()).toHaveLength(1);
+    expect(lines.map((line) => JSON.parse(line))).toEqual(
+      expect.arrayContaining([{ level: "error", evt: "identity.staff_passwords_not_configured", module: "identity", operation: "create_account" }]),
+    );
+    expect((await auditRecords()).at(-1)).toMatchObject({ action: "account.created", outcome: "refused", meta: { reason: "provider_error", role: "admin" } });
+  });
+});
+
 describe("scripts/create-first-admin", () => {
   const production = () => ({
     VERCEL_ENV: "production",
@@ -256,13 +285,14 @@ describe("scripts/create-first-admin", () => {
     SUPABASE_SECRET_KEY: "sb_secret_test_only",
     NEXT_PUBLIC_SUPABASE_URL: "https://example-project.supabase.co",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test_only",
+    STAFF_PASSWORD_PEPPER: PEPPER,
   });
   const args = ["--username", "jdoe", "--first-name", "Jane", "--last-name", "Doe", "--email", "jane.doe@example.org"];
 
   async function run(env: Record<string, string>) {
     const out: string[] = [];
     const error: string[] = [];
-    const connect = vi.fn(() => ({ identity, close: async () => {} }));
+    const connect = vi.fn(() => ({ identity, staffAuth: { reissueFirstAdminStartingPassword: async () => ({ ok: false as const, error: "not_first_admin" as const }) }, close: async () => {} }));
     const code = await runCreateFirstAdmin(args, { env, out: (l) => out.push(l), error: (l) => error.push(l), connect });
     return { code, out: out.join("\n"), error: error.join("\n"), connect };
   }
@@ -333,7 +363,7 @@ describe("Add a person", () => {
 
   it("creates one second Admin when two requests race", async () => {
     const firstId = await firstAdmin();
-    const racing = createIdentity({ db: app, idp: gatedProvider(idp, 2) });
+    const racing = createIdentity({ db: app, idp: gatedProvider(idp, 2), passwordPepper: PEPPER });
 
     const results = await Promise.all([racing.addPerson(firstId, omar), racing.addPerson(firstId, { ...omar, username: "other" })]);
 

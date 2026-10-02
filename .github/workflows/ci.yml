@@ -102,6 +102,12 @@ jobs:
       - run: npm run build
         env:
           APP_VERSION: ${{ github.sha }}
+      # Staff sign-in and the first setup gate in a browser (S01.07), against the build just made, with
+      # the identity fake instead of Supabase Auth and the disposable database above (as cvh_app_login).
+      - name: Staff sign-in end to end
+        run: npm run test:staff
+        env:
+          STAFF_TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       # The resident shell in every language at 320, 390 and 768 px (baseline screenshots, right-to-left
       # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made. It runs
       # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
@@ -127,6 +133,11 @@ jobs:
 
   # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
   # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
+  #
+  # Vercel's Hobby plan caps file uploads per day, so previews are limited to branches with an open
+  # pull request and deploys upload one tarball (--archive=tgz) instead of every built file. This
+  # workflow runs on push only, so a branch pushed before its pull request is opened gets no
+  # preview; the first push after opening the pull request gets one.
   preview:
     name: Vercel preview
     needs: checks
@@ -139,6 +150,9 @@ jobs:
     # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
     # only if the owner creates it with minimal scope.
     environment: preview
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
@@ -164,8 +178,8 @@ jobs:
           fi
       - if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
-      # The gate is the one script that gets the token before any branch code has
-      # run, so it comes from main, not from the branch being previewed.
+      # The gates are the scripts that get a token before any branch code has
+      # run, so they come from main, not from the branch being previewed.
       - name: Check out main's CI scripts
         if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
@@ -174,9 +188,15 @@ jobs:
           path: trusted
           sparse-checkout: scripts/ci
           persist-credentials: false
+      - name: Confirm the branch has an open pull request
+        id: pr
+        if: steps.settings.outputs.ok == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: trusted/scripts/ci/open-pr-gate.sh
       - name: Confirm production already has a deployment
         id: vercel
-        if: steps.settings.outputs.ok == 'true'
+        if: steps.pr.outputs.open == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: trusted/scripts/ci/preview-gate.sh
@@ -204,7 +224,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --json | jq -er .url)
           url="https://${url#https://}"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
@@ -301,7 +321,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --prod --skip-domain --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --prod --skip-domain --json | jq -er .url)
           echo "url=$url" >> "$GITHUB_OUTPUT"
       # Checked again just before promoting: main may have moved during the build.
       - name: Check this commit is still the head of main before promoting
