@@ -7,6 +7,7 @@ import { stdoutOperationalLog } from "./adapters/operationalLog";
 import { drizzleStaffStore } from "./adapters/staffStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
 import type { IdentityProvider } from "./application/ports";
+import { createStaffChangeService, type StaffChangeService } from "./application/staffChanges";
 
 export interface IdentityWiring {
   db: Db;
@@ -18,9 +19,12 @@ export interface IdentityWiring {
   audit?: AuditWriter;
 }
 
-/** The account use cases, wired to the identity tables, the audit trail and the given identity provider. */
-export function createIdentity(wiring: IdentityWiring): AccountService {
-  return createAccountService({
+/** The identity module's use cases: accounts and bootstrap (S01.05), and changes under the two-Admin rule (S01.06). */
+export type IdentityService = AccountService & StaffChangeService;
+
+/** The identity use cases, wired to the identity tables, the audit trail and the given identity provider. */
+export function createIdentity(wiring: IdentityWiring): IdentityService {
+  const deps = {
     db: wiring.db,
     idp: wiring.idp,
     store: drizzleStaffStore,
@@ -28,13 +32,16 @@ export function createIdentity(wiring: IdentityWiring): AccountService {
     log: stdoutOperationalLog,
     now: wiring.now ?? (() => new Date()),
     newId: wiring.newId ?? (() => uuidv7()),
-  });
+  };
+  return { ...createAccountService(deps), ...createStaffChangeService(deps) };
 }
 
 export { supabaseIdentityProvider, type SupabaseAdminConfig } from "./adapters/supabaseIdentityProvider";
 export type { AccountService, AddPersonView, CreatedAccount } from "./application/accounts";
 export type { CreateLoginError, IdentityProvider } from "./application/ports";
+export { adminShortfallMeta, type AdminRecovery, type StaffChangeService } from "./application/staffChanges";
 export { mayManageAccounts, type Actor } from "./domain/accountAuthority";
+export { MIN_USABLE_ADMINS } from "./domain/adminFloor";
 export { bootstrapPhase, type BootstrapPhase, type BootstrapState, type StaffIntent } from "./domain/bootstrap";
 export { STAFF_LOGIN_DOMAIN, loginForUsername, type NewAccountInput } from "./domain/newAccount";
 export { REFUSAL_FIELDS, REFUSAL_MESSAGE_KEYS, type IdentityRefusal } from "./domain/refusals";
