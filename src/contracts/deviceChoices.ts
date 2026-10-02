@@ -1,14 +1,12 @@
 import { z } from "zod";
-import { FloorIdSchema, RsnSchema } from "./buildingList";
+import { GroupSchema } from "./groups";
 import { LangCodeSchema } from "./lang";
+import { FloorIdSchema, RsnSchema } from "./places";
+
+// The groups and the floor/rsn schemas are defined once, in `groups.ts` and `places.ts` (S04.04); this module imports them.
 
 /** The one localStorage key that holds a resident's choices on their phone (AD-3). Never sent to the server. */
 export const DEVICE_CHOICES_KEY = "cvh.choices";
-
-/** The groups R-26 offers, in the order it shows them (`groups.<id>` in the string catalog). Residents choose; nothing is inferred. */
-export const GROUPS = ["seniors", "newcomers", "families", "checkin"] as const;
-export const GroupSchema = z.enum(GROUPS);
-export type Group = z.infer<typeof GroupSchema>;
 
 // `{v: 1, …}`. The schema is loose so that a field a later story adds (muted topics, basic mode) survives a write by an
 // earlier one. Each named field is checked on its own when the value is read (parseDeviceChoices): a field with the

@@ -10,6 +10,8 @@ import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import type { ComponentProps, ReactNode } from "react";
 import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
+import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/staff/alerts/audience/AudienceBody";
+import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
 import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
 import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
@@ -517,6 +519,33 @@ export function CoverageFixture({
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/coverage">
       <Screen surface="staff" testId="screen">
         <CoverageBody screen={screen} actions={actions} initial={initial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The audience pages (S04.04, O-03 the place and O-04 the groups) as a Coordinator sees them in the Hub shell: the app's own
+ * AudienceBody on a view built by the app's own view functions (e2e/hub/audience.spec.ts and e2e/layout/audience.spec.ts), in
+ * the same `review` Screen the pages use, with the actions replaced by ones that do nothing and, where a picture needs it, a
+ * form already in its refused state (`initial`).
+ */
+export function AudienceFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: AudienceScreen;
+  initial?: AudienceInitial;
+}) {
+  const actions: AudienceActions = { place: noAction, groups: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/alerts/audience">
+      <Screen surface="staff" width="review" testId="screen">
+        <AudienceBody screen={screen} actions={actions} initial={initial} />
       </Screen>
     </AroundTheScreen>
   );

@@ -3,7 +3,7 @@
 export { readBuildingsFixtureFile } from "./adapters/buildingsFixture";
 export { readMergeFile, readRegisterFile } from "./adapters/registerFiles";
 export { createBuildingService } from "./application/floors";
-export { floorsOfBuilding, type FloorRecord } from "./application/floorReader";
+export { floorsOfBuilding, neighbourhoodIds, type FloorRecord } from "./application/floorReader";
 export type { BuildingContact, BuildingDetail, BuildingFacts, BuildingFloorPlan, BuildingService, BuildingServiceDeps, BuildingSummary, FloorPlace, FloorPlanFloor, FloorRefusal, FloorResult, FloorView } from "./application/floors";
 export { readPublicBuilding, type PublicBuilding } from "./application/publicBuilding";
 export { createResidentBuildings, type ResidentBuilding, type ResidentBuildings, type ResidentFloor } from "./application/residentBuildings";

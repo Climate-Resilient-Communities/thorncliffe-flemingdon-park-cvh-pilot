@@ -31,4 +31,11 @@ export const AUDIT_REASON: Record<AlertRefusal, AuditReason> = {
   DRAFT_CHANGED: "conflict",
   REPORTED_AT_INVALID: "validation",
   PREPARATION_FAILED: "provider_error",
+  AUDIENCE_EMPTY: "validation",
+  NEIGHBOURHOOD_NOT_FOUND: "not_found",
+  BUILDING_NOT_FOUND: "not_found",
+  FLOOR_NOT_IN_BUILDING: "validation",
+  FLOOR_RANGE_REVERSED: "validation",
+  FLOOR_RANGE_INCOMPLETE: "validation",
+  GROUP_UNKNOWN: "validation",
 };

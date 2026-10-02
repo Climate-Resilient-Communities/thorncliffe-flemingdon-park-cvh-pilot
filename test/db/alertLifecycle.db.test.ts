@@ -21,20 +21,32 @@ import {
   type EntryStatus,
   type FrozenContent,
 } from "../../src/modules/alerting";
+import type { Audience } from "../../src/contracts/audience";
 import { createAssignments } from "../../src/modules/identity";
 import { floorsOfBuilding } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
+
+/** The buildings the tests name (S04.04: an audience may name only buildings that exist), with the floors of the first. */
+const RSN = "4154146";
+const OTHER_RSN = "4154147";
+const floorId = (index: number) => `01900000-0000-7000-8000-0000000a${String(index).padStart(4, "0")}`;
+const FLOORS = ["G", "1", "2", "3", "4", "5"];
+const madeNeighbourhoods: string[] = [];
 
 const NOW = new Date("2026-10-01T15:00:00Z");
 let clock = NOW;
 
 const sha = (tag: string) => createHash("sha256").update(tag).digest("hex");
 
+const NB_AUDIENCE: Audience = { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] };
+/** The audience of a building (the whole building by default), carrying the entry's types. */
+const buildingAudience = (types: string[] = ["power"], rsn = RSN, floors: string[] | null = null): Audience => ({ scope: "buildings", buildings: [{ rsn, floors }], groups: [], types: [...types].sort() });
+
 const content = (over: Partial<EntryContent> = {}): EntryContent => ({
   text: "Power is out on floors 3 to 5.",
   types: ["power"],
-  audience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }] },
+  audience: buildingAudience([...(over.types ?? ["power"])]),
   phase: "problem",
   validUntil: new Date("2026-10-02T15:00:00Z"),
   ...over,
@@ -107,6 +119,19 @@ beforeAll(async () => {
   appUrl = url.href;
   appSql = postgres(appUrl, { max: 4, onnotice: () => {} });
   app = createDb(appUrl);
+  for (const [id, name, fsa] of [["TP", "Thorncliffe Park", "M4H"], ["FP", "Flemingdon Park", "M3C"]]) {
+    if ((await owner`select 1 from neighbourhood where id = ${id}`).length === 0) {
+      await owner`insert into neighbourhood (id, name, fsa) values (${id}, ${name}, ${fsa})`;
+      madeNeighbourhoods.push(id);
+    }
+  }
+  for (const rsn of [RSN, OTHER_RSN]) {
+    await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at)
+                values (${rsn}, 'TP', ${`${rsn} Test Dr`}, 43.7, -79.34, '2026-10-01T12:00:00Z') on conflict do nothing`;
+  }
+  for (const [index, label] of FLOORS.entries()) {
+    await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${floorId(index)}, ${RSN}, ${label}, ${index}, true) on conflict do nothing`;
+  }
   authorA = await account("coordinator");
   coordB = await account("coordinator");
   adminC = await account("admin");
@@ -123,6 +148,9 @@ afterAll(async () => {
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
     for (const { id } of accounts) await tx`delete from staff_account where id = ${id}`;
   });
+  await owner`delete from building_floor where rsn = ${RSN}`;
+  await owner`delete from building where rsn in (${RSN}, ${OTHER_RSN})`;
+  for (const id of madeNeighbourhoods) await owner`delete from neighbourhood where id = ${id}`;
   await app?.$client.end({ timeout: 5 });
   await appSql?.end({ timeout: 5 });
   await owner.unsafe("alter role cvh_app_login password null");
@@ -263,7 +291,7 @@ async function seedRaw(status: EntryStatus): Promise<{ alertId: string; entryId:
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
     await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                       version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)
-             values (${entryId}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")},
+             values (${entryId}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")},
                      ${frozenCols ? 1 : 0}, ${frozenCols ? hash : null}, ${frozenCols ? tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } }) : null}, ${frozenCols ? NOW : null},
                      ${status === "approved" || status === "superseded" ? coordB.id : null}, ${status === "approved" || status === "superseded" ? NOW : null},
                      ${status === "approved" || status === "superseded" ? 1 : null}, ${status === "approved" || status === "superseded" ? hash : null}, ${status === "approved" ? NOW : null})`;
@@ -316,7 +344,7 @@ describe("the entry trigger and lifecycle.ts", () => {
       await insertRawAlert(alertId);
       await expect(
         asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until)
-              values (${randomUUID()}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
+              values (${randomUUID()}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
         status,
       ).rejects.toThrow(/starts as a draft/);
     }
@@ -399,8 +427,8 @@ describe("create, save, submit and discard", () => {
     expect(await refuse(director, { ...base, content: content() })).toBe("NOT_ALLOWED");
     // An Ambassador covers nothing until S01.14 gives them assignments.
     expect(await refuse(ambassador, { ...base, content: content() })).toBe("OUT_OF_SCOPE");
-    expect(await refuse(ambassador, { ...base, content: content({ audience: { scope: "neighbourhood", neighbourhood_ids: ["TP"] } }) })).toBe("NOT_ALLOWED");
-    expect(await refuse(authorA, { ...base, content: content({ types: ["heat"], audience: { scope: "neighbourhood", neighbourhood_ids: ["TP"] } }) })).toBe("ok");
+    expect(await refuse(ambassador, { ...base, content: content({ audience: NB_AUDIENCE }) })).toBe("NOT_ALLOWED");
+    expect(await refuse(authorA, { ...base, content: content({ types: ["heat"], audience: { ...NB_AUDIENCE, types: ["heat"] } }) })).toBe("ok");
 
     expect((await owner`select count(*)::int as n from alert`)[0].n).toBe(1);
     const refusals = (await auditRows()).filter((row) => row.outcome === "refused");
@@ -596,27 +624,13 @@ describe("approval", () => {
 // --- a pending entry is frozen ------------------------------------------------------------------------
 
 describe("an Ambassador author and their assignments (S01.14)", () => {
-  const RSN = "4154146";
-  const OTHER_RSN = "4154147";
-  let madeNeighbourhood = false;
 
+  /** Runs the test, then forgets the Ambassador's assignments (the buildings are the file's fixture). */
   async function withBuildings<T>(run: () => Promise<T>): Promise<T> {
-    const existing = await owner`select 1 from neighbourhood where id = 'TP'`;
-    if (existing.length === 0) {
-      await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
-      madeNeighbourhood = true;
-    }
-    for (const rsn of [RSN, OTHER_RSN]) {
-      await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at)
-                  values (${rsn}, 'TP', ${`${rsn} Test Dr`}, 43.7, -79.34, '2026-10-01T12:00:00Z') on conflict do nothing`;
-    }
     try {
       return await run();
     } finally {
       await owner`delete from ambassador_assignment where staff_id = ${ambassador.id}`;
-      await owner`delete from building where rsn in (${RSN}, ${OTHER_RSN})`;
-      if (madeNeighbourhood) await owner`delete from neighbourhood where id = 'TP'`;
-      madeNeighbourhood = false;
     }
   }
 
@@ -660,7 +674,7 @@ describe("a pending_approval entry", () => {
     const ref = await newPending();
     const changes: [string, (tx: postgres.TransactionSql) => PromiseLike<unknown>][] = [
       ["text", (tx) => tx`update alert_entry set original_text = 'changed' where id = ${ref.entryId}`],
-      ["audience", (tx) => tx`update alert_entry set audience = ${tx.json({ scope: "neighbourhood" })} where id = ${ref.entryId}`],
+      ["audience", (tx) => tx`update alert_entry set audience = ${tx.json({ ...NB_AUDIENCE, neighbourhood_ids: ["FP"] })} where id = ${ref.entryId}`],
       ["types", (tx) => tx`update alert_entry set types = ${["water"]} where id = ${ref.entryId}`],
       ["valid_until", (tx) => tx`update alert_entry set valid_until = valid_until + interval '1 hour' where id = ${ref.entryId}`],
       ["phase", (tx) => tx`update alert_entry set phase = 'in_progress' where id = ${ref.entryId}`],
@@ -718,7 +732,7 @@ describe("a draft entry", () => {
     await expect(asApp(coordB.id, (tx) => tx`update alert_entry set approved_by = ${coordB.id}, approved_at = now(), approved_version = 1, approved_hash = ${sha("x")} where id = ${ref.entryId}`)).rejects.toThrow();
     const insert = (actor: string | null, author: string) =>
       asApp(actor, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
-              values (${randomUUID()}, ${ref.alertId}, 'update', ${author}, ${[author]}, 't', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
+              values (${randomUUID()}, ${ref.alertId}, 'update', ${author}, ${[author]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
     await expect(insert(null, authorA.id)).rejects.toThrow(/acting account/);
     await expect(insert(coordB.id, authorA.id)).rejects.toThrow(/author must be the acting account/);
     await expect(insert(authorA.id, authorA.id)).resolves.toBeDefined();
@@ -730,7 +744,7 @@ describe("a draft entry", () => {
     await expect(asApp(authorA.id, (tx) => tx`update alert_entry set original_text = 'late' where id = ${ref.entryId}`)).rejects.toThrow(/ALERT_CLOSED/);
     await expect(
       asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
-              values (${randomUUID()}, ${ref.alertId}, 'update', ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
+              values (${randomUUID()}, ${ref.alertId}, 'update', ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
     ).rejects.toThrow(/ALERT_CLOSED/);
     expect(await alerting.saveDraft(actorOf(authorA), ref, content())).toEqual({ ok: false, error: "ALERT_CLOSED" });
     expect(await alerting.submitEntry(actorOf(authorA), ref, frozen("v1"))).toEqual({ ok: false, error: "ALERT_CLOSED" });
@@ -917,7 +931,7 @@ describe("what the trigger allows, against direct SQL", () => {
     const ref = await newDraft(authorA);
     const insert = (kind: string) =>
       asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
-              values (${randomUUID()}, ${ref.alertId}, ${kind}, ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
+              values (${randomUUID()}, ${ref.alertId}, ${kind}, ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
     for (const kind of ["correction", "withdrawal", "final"]) await expect(insert(kind), kind).rejects.toThrow(/only an ack or an update/);
     await expect(insert("update")).resolves.toBeDefined();
   });
