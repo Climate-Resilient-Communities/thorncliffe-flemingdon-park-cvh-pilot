@@ -1472,7 +1472,7 @@ describe("the directory release (S02.05)", () => {
       });
 
       it("counts the publish's own usage only: questions and test-set runs do not use up the publish allowance", async () => {
-        await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'query', ${MODEL}, 500, 9000000), (${new Date("2026-10-01T15:00:00Z")}, 'embed', 'test_set', ${MODEL}, 500, 9000000)`;
+        await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'search', ${MODEL}, 500, 9000000), (${new Date("2026-10-01T15:00:00Z")}, 'embed', 'test_set', ${MODEL}, 500, 9000000)`;
         const model = fakeEmbedder();
         const first = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 3, tokensPerMonth: 100_000 } }) });
 

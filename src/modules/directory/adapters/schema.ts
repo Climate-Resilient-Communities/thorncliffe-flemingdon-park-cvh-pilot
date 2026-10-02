@@ -216,3 +216,33 @@ export const catalogueLoad = pgTable(
     pgPolicy("catalogue_load_app_select", { for: "select", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();
+
+// ---------------------------------------------------------------- search_log (S03.04)
+/** One row per answered or failed search: counts and codes only, never the question (AD-3, AD-13). Matches 20261002340000_search_log_rate_limit.sql. */
+export const searchLog = pgTable(
+  "search_log",
+  {
+    id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    at: timestamp({ withTimezone: true }).notNull().defaultNow(),
+    lang: text().notNull(),
+    queryLang: text("query_lang").notNull(),
+    releaseV: integer("release_v"),
+    ms: integer().notNull(),
+    resultCount: integer("result_count").notNull(),
+    status: text().$type<"ok" | "no_clear_match" | "unavailable" | "error">().notNull(),
+    topScore: doublePrecision("top_score"),
+    translatedLeg: text("translated_leg").$type<"not_needed" | "used" | "failed" | "timed_out">().notNull().default("not_needed"),
+  },
+  (t) => [
+    index("search_log_at_idx").on(t.at),
+    check("search_log_lang_format", sql`${t.lang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{4})?$'`),
+    check("search_log_query_lang_format", sql`${t.queryLang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{4})?$'`),
+    check("search_log_release_v_positive", sql`${t.releaseV} is null or ${t.releaseV} > 0`),
+    check("search_log_ms_not_negative", sql`${t.ms} >= 0`),
+    check("search_log_result_count_range", sql`${t.resultCount} between 0 and 5`),
+    check("search_log_status", sql`${t.status} in ('ok', 'no_clear_match', 'unavailable', 'error')`),
+    check("search_log_translated_leg", sql`${t.translatedLeg} in ('not_needed', 'used', 'failed', 'timed_out')`),
+    pgPolicy("search_log_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("search_log_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+  ],
+).enableRLS();
