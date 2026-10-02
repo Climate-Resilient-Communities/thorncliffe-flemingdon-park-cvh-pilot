@@ -9,8 +9,10 @@ import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFrom
 // Every change here is the policy action `buildings.manage` (AD-4: Admin-only reference data), which is
 // also privileged (S01.10): the guard refuses any other role, then a session below aal2, before the
 // action's own code, whatever the screen showed. Without a session the guard sends the person to sign-in.
+// (These actions declare no `context`, so a `bad_request` cannot arise; it reads as forbidden.)
 const REFUSAL_KEYS: Record<ActionRefusal, string> = {
   forbidden: "staff.buildings.errors.forbidden",
+  bad_request: "staff.buildings.errors.forbidden",
   setup_incomplete: "staff.setup.incomplete",
   aal2_required: "staff.authenticator.required",
 };
