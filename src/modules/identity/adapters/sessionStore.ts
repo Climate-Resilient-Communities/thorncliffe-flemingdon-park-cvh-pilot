@@ -13,7 +13,9 @@ export const drizzleStaffSessionStore: StaffSessionStore = {
 
   async find(db, id) {
     const [row] = await db.select().from(staffSession).where(eq(staffSession.id, id)).limit(1);
-    return row ? { id: row.id, staffId: row.staffAccountId, createdAt: row.createdAt, lastSeenAt: row.lastSeenAt, revokedAt: row.revokedAt } : null;
+    return row
+      ? { id: row.id, staffId: row.staffAccountId, createdAt: row.createdAt, lastSeenAt: row.lastSeenAt, revokedAt: row.revokedAt, aal2At: row.aal2At }
+      : null;
   },
 
   async touch(db, id, at) {
@@ -38,6 +40,15 @@ export const drizzleStaffSessionStore: StaffSessionStore = {
       .update(staffSession)
       .set({ revokedAt: at })
       .where(and(eq(staffSession.id, id), isNull(staffSession.revokedAt)))
+      .returning({ id: staffSession.id });
+    return rows.length > 0;
+  },
+
+  async markAal2(tx, id, staffId, at) {
+    const rows = await tx
+      .update(staffSession)
+      .set({ aal2At: at })
+      .where(and(eq(staffSession.id, id), eq(staffSession.staffAccountId, staffId), isNull(staffSession.revokedAt)))
       .returning({ id: staffSession.id });
     return rows.length > 0;
   },

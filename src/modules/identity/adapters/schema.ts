@@ -1,7 +1,7 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
 // db/migrations/20261002110000_staff_account.sql, 20261002130000_sign_in.sql,
-// 20261002131000_staff_session.sql and 20261002150000_session_revocation.sql; the drift test
-// compares them.
+// 20261002131000_staff_session.sql, 20261002150000_session_revocation.sql and
+// 20261002160000_authenticator.sql; the drift test compares them.
 // The bootstrap row's forward-only trigger and the grants live only in the migration.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, index, integer, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
@@ -32,6 +32,8 @@ export const staffAccount = pgTable(
     createdBy: uuid("created_by").references((): AnyPgColumn => staffAccount.id),
     /** S01.08: how many times the account's sessions were revoked (sign-in compares it). */
     sessionGeneration: integer("session_generation").notNull().default(0),
+    /** S01.10: when the person enrolled an authenticator through the app; null when none is. */
+    factorEnrolledAt: timestamp("factor_enrolled_at", { withTimezone: true }),
   },
   (t) => [
     check(
@@ -127,6 +129,8 @@ export const staffSession = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
     lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
     revokedAt: timestamp("revoked_at", { withTimezone: true }),
+    /** S01.10: when this session reached aal2 through the app's authenticator code check. */
+    aal2At: timestamp("aal2_at", { withTimezone: true }),
   },
   (t) => [
     index("staff_session_account_idx").on(t.staffAccountId).where(sql`${t.revokedAt} is null`),

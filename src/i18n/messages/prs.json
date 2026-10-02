@@ -3877,7 +3877,14 @@
       "authenticator": {
         "title": "[EN] Set up your authenticator",
         "lead": "[EN] Admins and Coordinators confirm each sign-in with a code from an authenticator app on their phone.",
-        "notYet": "[EN] Setting up an authenticator is not available yet. Your password is saved. Sign out for now."
+        "install": "[EN] First install an authenticator app on your phone, if you do not have one yet.",
+        "start": "[EN] Show my setup code",
+        "scan": "[EN] Scan this QR code with the authenticator app, or type the key into it.",
+        "qrAlt": "[EN] QR code for the authenticator app",
+        "key": "[EN] Key: {key}",
+        "keyHint": "[EN] This key is shown only now. If you leave this page, start again to get a new one.",
+        "code": "[EN] The 6-digit code the app shows",
+        "submit": "[EN] Confirm"
       }
     },
     "hub": {
@@ -3919,6 +3926,22 @@
         "selfAction": "[EN] You cannot reset your own password. Ask another Admin.",
         "providerError": "[EN] The new password could not be set. The account is locked and signed out; reset it again.",
         "passwordsNotConfigured": "[EN] Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was reset. Ask IT to set it."
+      }
+    },
+    "authenticator": {
+      "required": "[EN] This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.",
+      "code": {
+        "title": "[EN] Enter your authenticator code",
+        "lead": "[EN] Open your authenticator app and type the 6-digit code it shows for CVH Hub.",
+        "code": "[EN] 6-digit code",
+        "submit": "[EN] Continue",
+        "lost": "[EN] Lost your phone? Ask an Admin to reset your authenticator."
+      },
+      "errors": {
+        "codeInvalid": "[EN] That code is not right. Type the newest code the app shows, and check that the time on your phone is set automatically.",
+        "locked": "[EN] Too many wrong codes or passwords. Wait 15 minutes, then try again.",
+        "notRequired": "[EN] Your authenticator setup has changed. Reload the page.",
+        "unavailable": "[EN] The authenticator is not working right now. Try again in a few minutes."
       }
     }
   }

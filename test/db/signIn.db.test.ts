@@ -157,9 +157,9 @@ async function account(person: Person): Promise<string> {
   if (person.enrolled) idp.enrol(authUserId);
   const id = `01900000-0000-7000-8000-${String(nextId++).padStart(12, "0")}`;
   await owner`
-    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, status, must_change_password, starting_password_issued_at)
+    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, status, must_change_password, starting_password_issued_at, factor_enrolled_at)
     values (${id}, ${authUserId}, ${person.username}, ${person.firstName}, ${person.lastName}, 'someone@example.org', ${person.role ?? "ambassador"},
-            ${person.status ?? "active"}, ${person.own === undefined}, ${person.own === undefined ? clock : null})`;
+            ${person.status ?? "active"}, ${person.own === undefined}, ${person.own === undefined ? clock : null}, ${person.enrolled ? clock : null})`;
   return id;
 }
 
@@ -505,7 +505,7 @@ describe("bootstrap completion", () => {
     await owner`insert into staff_bootstrap (first_admin_id, second_admin_id) values (${first}, ${second})`;
     for (let i = 0; i < 5; i++) await signIn(browser(), "admin1", "wrong");
 
-    expect(await auth.changePassword(second, { password: "admin password two", confirm: "admin password two" })).toEqual({ ok: true, value: { gate: "hub" } });
+    expect(await auth.changePassword(second, { password: "admin password two", confirm: "admin password two" })).toEqual({ ok: true, value: { gate: "authenticator_code" } });
     expect((await owner`select completed_at from staff_bootstrap`)[0].completed_at).toBeNull();
 
     advance(minutes(16));

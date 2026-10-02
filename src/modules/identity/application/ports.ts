@@ -1,3 +1,4 @@
+import type { AssuranceLevel } from "../../../contracts/staffAuth";
 import type { DbExecutor, DbTransaction } from "../../../platform/db";
 import type { BootstrapState } from "../domain/bootstrap";
 import type { StaffAccount } from "../domain/staffAccount";
@@ -21,7 +22,9 @@ export interface FoundLogin {
  * Port: the identity provider that holds sign-in credentials (Supabase Auth, AD-4). The app keeps
  * people's details on staff_account; the provider holds only the login, the password and, from
  * S01.10, the authenticator. Later stories add what they need here (S01.07 sign-in and password
- * change, S01.08 session revocation, S01.10 factor enrolment, S01.11 factor reset).
+ * change, S01.08 session revocation, S01.10 factor enrolment, S01.11 factor reset). Enrolling and
+ * checking a code are the user's own session calls (AuthSessions); this Admin API side only reads
+ * and removes factors.
  */
 export interface IdentityProvider {
   /** Creates a confirmed auth user with this login and password. Sends nothing to anyone. */
@@ -36,6 +39,11 @@ export interface IdentityProvider {
   deleteLogin(authUserId: string): Promise<void>;
   /** True when the auth user has a verified TOTP factor (S01.10 enrols them). Throws on failure. */
   hasVerifiedAuthenticator(authUserId: string): Promise<boolean>;
+  /**
+   * Deletes every MFA factor of the auth user, verified or not (S01.10: before an enrolment, so
+   * the new factor is the only one; S01.11: an authenticator reset). Throws on failure.
+   */
+  removeFactors(authUserId: string): Promise<void>;
   /**
    * Replaces the auth user's password (S01.07: the person's own password, or an Admin's re-issue of
    * the starting password). The old password stops working at once, and every session the user has
@@ -91,9 +99,39 @@ export type PasswordCheck =
  */
 export interface SessionUser {
   authUserId: string;
+  /** The user has a verified TOTP factor at the provider. */
   authenticatorEnrolled: boolean;
   sessionKey: string;
+  /**
+   * The verified token's `aal` claim (S01.10): read only after the provider verified the token,
+   * never from anything the browser says. Anything but `aal2` is `aal1`.
+   */
+  aal: AssuranceLevel;
 }
+
+/** A new authenticator's secret (S01.10), to show once: never stored or logged by the app. */
+export interface FactorEnrolment {
+  secret: string;
+  /** The `otpauth://` link the QR code holds. */
+  uri: string;
+  /** The provider's QR code of `uri` (an SVG data URL), or null when it gives none. */
+  qrCode: string | null;
+}
+
+export type EnrolFactorError =
+  /** The provider refused the enrolment (for example TOTP is not enabled in the project). */
+  | "rejected"
+  /** The provider could not be reached or failed. */
+  | "unavailable";
+
+/**
+ * An accepted authenticator code (S01.10): the provider raised the session to `aal2` and issued
+ * its new tokens, which are held back until the app records the session's level. `sessionKey`
+ * names the raised session (normally the same session as before: Supabase keeps `session_id`).
+ */
+export type FactorVerification =
+  | { ok: true; sessionKey: string; aal: AssuranceLevel; accept(): Promise<void> }
+  | { ok: false; error: "invalid_code" | "no_factor" | "unavailable" };
 
 /**
  * Port: the signed-in session of one request, kept in its cookies (Supabase Auth through
@@ -110,6 +148,18 @@ export interface AuthSessions {
   currentUser(): Promise<SessionUser | null>;
   /** Ends this session at the provider and clears its cookies. Never throws. */
   signOut(): Promise<void>;
+  /**
+   * Starts enrolling a TOTP authenticator for the session's user (S01.10): the provider makes an
+   * unverified factor and its secret. Never throws.
+   */
+  enrolFactor(input: { issuer: string; accountName: string }): Promise<{ ok: true; enrolment: FactorEnrolment } | { ok: false; error: EnrolFactorError }>;
+  /**
+   * Checks an authenticator code against the user's TOTP factor: the newest unverified one
+   * (`unverified`, the enrolment's confirming code) or the verified one (`verified`, a sign-in's
+   * code). A right code verifies the factor where it was unverified and raises the session to
+   * `aal2`. Never throws.
+   */
+  verifyFactor(input: { code: string; factor: "unverified" | "verified" }): Promise<FactorVerification>;
 }
 
 export type AuthSessionsFactory = (cookies: CookieJar) => AuthSessions;
@@ -189,6 +239,10 @@ export interface StaffStore {
   sessionGeneration(db: DbExecutor, staffId: string): Promise<number | null>;
   /** Adds one to the account's revocation count. */
   bumpSessionGeneration(tx: DbTransaction, staffId: string): Promise<void>;
+  /** Records the account's authenticator as enrolled at `at` (S01.10), unless it already is. True when it changed. */
+  setFactorEnrolled(tx: DbTransaction, staffId: string, at: Date): Promise<boolean>;
+  /** Forgets the account's authenticator (S01.10 promotion, S01.11 reset): the next sign-in enrols one. */
+  clearFactorEnrolment(tx: DbTransaction, staffId: string): Promise<void>;
 }
 
 /** A lock started by failed sign-ins: one username, or one client. */
@@ -205,7 +259,15 @@ export interface ThrottleStore {
     tx: DbTransaction,
     failure: { at: Date; usernameHash: string; clientHash: string },
     windowsStart: { username: Date; client: Date },
+  ): Promise<{ username: number; client: number; id: number }>;
+  /** The failures in each window (pending authenticator-code attempts included), without storing one. */
+  countFailures(
+    tx: DbTransaction,
+    keys: { usernameHash: string; clientHash: string },
+    windowsStart: { username: Date; client: Date },
   ): Promise<{ username: number; client: number }>;
+  /** Deletes one stored failure (a pending code attempt that turned out right). */
+  removeFailure(tx: DbTransaction, id: number): Promise<void>;
   /** Starts or extends a lock (never shortens one). */
   setLock(tx: DbTransaction, kind: ThrottleKind, keyHash: string, until: Date): Promise<void>;
   /** Deletes failures and ended locks older than `before`. */
@@ -220,6 +282,8 @@ export interface StaffSessionRecord {
   createdAt: Date;
   lastSeenAt: Date;
   revokedAt: Date | null;
+  /** When the session reached `aal2` through the app's code check (S01.10); null while it is `aal1`. */
+  aal2At: Date | null;
 }
 
 /**
@@ -241,6 +305,8 @@ export interface StaffSessionStore {
   replace(tx: DbTransaction, from: string, to: { id: string; staffId: string; at: Date }): Promise<void>;
   /** Revokes one session. True when it was open. */
   revoke(db: DbExecutor, id: string, at: Date): Promise<boolean>;
+  /** Records that an open session of this account reached `aal2` at `at` (S01.10). False when there is no such open session. */
+  markAal2(tx: DbTransaction, id: string, staffId: string, at: Date): Promise<boolean>;
   /** Revokes every open session of the account, except `keep` when given. Returns how many it revoked. */
   revokeAll(db: DbExecutor, staffId: string, at: Date, options?: { keep?: string }): Promise<number>;
 }

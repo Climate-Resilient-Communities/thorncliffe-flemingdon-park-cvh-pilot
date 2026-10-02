@@ -94,8 +94,9 @@ async function replacePassword(staffId: string) {
   await owner`update staff_account set must_change_password = false, starting_password_issued_at = null where id = ${staffId}`;
 }
 
+/** As the owner, stands in for S01.10: the person enrolled an authenticator through the app. */
 async function enrol(staffId: string) {
-  const [{ auth_user_id }] = await owner`select auth_user_id from staff_account where id = ${staffId}`;
+  const [{ auth_user_id }] = await owner`update staff_account set factor_enrolled_at = now() where id = ${staffId} returning auth_user_id`;
   idp.enrol(auth_user_id);
 }
 

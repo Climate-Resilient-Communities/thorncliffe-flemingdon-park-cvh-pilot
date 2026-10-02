@@ -2,16 +2,17 @@
 // new page, route handler or server action under src/app/staff or src/app/api/staff is covered
 // the moment it exists: it fails here unless it is built with a guard wrapper (src/app/staff/guard.ts)
 // and refuses a request without a session, and one at an earlier setup gate, before its own code.
+// A privileged route or action (S01.10) also refuses a session below aal2 before its own code.
 import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { GATE_PAGES, type SetupGate } from "../src/contracts/staffAuth";
-import type { StaffSession } from "../src/modules/identity";
+import { GATE_PAGES, SETUP_GATES, type AssuranceLevel, type SetupGate } from "../src/contracts/staffAuth";
+import { PRIVILEGED_ACTIONS, type StaffSession } from "../src/modules/identity";
 import { findStaffSurface, routePathOf, staffSurfaceProblems } from "./helpers/staffSurface";
 
 const session = vi.hoisted(() => ({ current: null as StaffSession | null }));
-const audits = vi.hoisted(() => ({ unauthenticated: [] as unknown[][], outsideGate: [] as unknown[][] }));
+const audits = vi.hoisted(() => ({ unauthenticated: [] as unknown[][], outsideGate: [] as unknown[][], belowAal2: [] as unknown[][] }));
 const unreachable = vi.hoisted(() => () => {
   throw new Error("the route's own code ran although the guard should have refused");
 });
@@ -25,7 +26,10 @@ vi.mock("../src/app/staff/identity", () => ({
   }),
   staffAuth: () => ({
     refuseOutsideGate: async (...args: unknown[]) => void audits.outsideGate.push(args),
+    refuseBelowAal2: async (...args: unknown[]) => void audits.belowAal2.push(args),
     changePassword: unreachable,
+    startEnrolment: unreachable,
+    verifyAuthenticatorCode: unreachable,
     reissueStartingPassword: unreachable,
     signIn: unreachable,
     signOut: unreachable,
@@ -47,7 +51,8 @@ const relative = (file: string) => path.relative(ROOT, file);
 /** The URL path of a route file: its directory under src/app, without route groups. */
 const routePath = (file: string) => routePathOf(APP, file);
 
-const atGate = (gate: SetupGate): StaffSession => ({
+/** An Admin's session at a gate; at the Hub it is aal2 unless `aal` says otherwise. */
+const atGate = (gate: SetupGate, aal: AssuranceLevel = gate === "hub" ? "aal2" : "aal1"): StaffSession => ({
   staffId: "01900000-0000-7000-8000-000000000001",
   username: "jdoe",
   firstName: "Jane",
@@ -55,7 +60,11 @@ const atGate = (gate: SetupGate): StaffSession => ({
   role: "admin",
   gate,
   sessionId: "a".repeat(64),
+  aal,
 });
+
+/** True when a route with this access admits a session at `gate` (the guard's rule). */
+const admits = (access: unknown, gate: SetupGate) => access === "any_gate" || access === gate || (Array.isArray(access) && access.includes(gate));
 
 /** Runs a page and returns where it redirected to (it must redirect). */
 async function redirectOf(page: (props: unknown) => unknown): Promise<string> {
@@ -76,14 +85,24 @@ beforeEach(() => {
   session.current = null;
   audits.unauthenticated.length = 0;
   audits.outsideGate.length = 0;
+  audits.belowAal2.length = 0;
 });
 
 describe("the staff routes on disk", () => {
   it("are found: every page, route handler and server action file", () => {
     expect(pages.map(relative).sort()).toEqual(
-      expect.arrayContaining(["src/app/staff/page.tsx", "src/app/staff/people/page.tsx", "src/app/staff/setup/password/page.tsx", "src/app/staff/sign-in/page.tsx"]),
+      expect.arrayContaining([
+        "src/app/staff/page.tsx",
+        "src/app/staff/people/page.tsx",
+        "src/app/staff/setup/authenticator/page.tsx",
+        "src/app/staff/setup/password/page.tsx",
+        "src/app/staff/sign-in/code/page.tsx",
+        "src/app/staff/sign-in/page.tsx",
+      ]),
     );
-    expect(handlers.map(routePath).sort()).toEqual(expect.arrayContaining(["/api/staff/me", "/api/staff/password", "/api/staff/sign-in", "/api/staff/sign-out"]));
+    expect(handlers.map(routePath).sort()).toEqual(
+      expect.arrayContaining(["/api/staff/factor/enrol", "/api/staff/factor/verify", "/api/staff/me", "/api/staff/password", "/api/staff/sign-in", "/api/staff/sign-out"]),
+    );
     expect(actionFiles.map(relative)).toContain("src/app/staff/people/actions.ts");
   });
 
@@ -230,11 +249,12 @@ describe.each(pages.map((file) => [relative(file), file]))("page %s", (_name, fi
     const spec = guardSpecOf(page);
     if (!spec || spec.access === "public") return;
     expect(await redirectOf(page)).toBe("/staff/sign-in");
-    for (const gate of ["choose_password", "enrol_authenticator", "hub"] as const) {
-      if (spec.access === gate || spec.access === "any_gate") continue;
+    for (const gate of SETUP_GATES) {
+      if (admits(spec.access, gate)) continue;
       session.current = atGate(gate);
       expect(await redirectOf(page), `${gate}`).toBe(GATE_PAGES[gate]);
     }
+    expect(spec.privileged, "a page is never privileged: its actions are").toBeUndefined();
   });
 });
 
@@ -265,13 +285,31 @@ describe.each(handlers.map((file) => [routePath(file), file]))("route handler %s
       expect(await unauthenticated.json()).toEqual({ error: "unauthenticated" });
       expect(unauthenticated.headers.get("cache-control")).toBe("no-store");
       expect(audits.unauthenticated.at(-1)).toEqual(["staff.request", route]);
-      for (const gate of ["choose_password", "enrol_authenticator", "hub"] as const) {
-        if (spec.access === gate || spec.access === "any_gate") continue;
+      for (const gate of SETUP_GATES) {
+        if (admits(spec.access, gate)) continue;
         session.current = atGate(gate);
         const refused = await handler(jsonRequest(route, method));
         expect(refused.status, gate).toBe(403);
         expect(await refused.json()).toEqual({ error: "setup_incomplete" });
         expect(audits.outsideGate.at(-1)).toEqual([atGate(gate).staffId, route]);
+      }
+    }
+  });
+
+  it("answers 403 aal2_required to a session below aal2 when privileged, before its own code, and audits it", async () => {
+    const { guardSpecOf } = await import("../src/app/staff/guard");
+    const exportsOf: Record<string, unknown> = await import(file);
+    for (const method of HTTP_METHODS.filter((name) => name in exportsOf)) {
+      const handler = exportsOf[method] as (request: Request) => Promise<Response>;
+      const spec = guardSpecOf(handler);
+      if (!spec?.privileged) continue;
+      expect(PRIVILEGED_ACTIONS).toContain(spec.privileged);
+      for (const gate of SETUP_GATES.filter((candidate) => admits(spec.access, candidate))) {
+        session.current = atGate(gate, "aal1");
+        const refused = await handler(jsonRequest(route, method));
+        expect(refused.status, gate).toBe(403);
+        expect(await refused.json()).toEqual({ error: "aal2_required" });
+        expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, route, spec.privileged]);
       }
     }
   });
@@ -299,8 +337,8 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       session.current = null;
       expect(await redirectOf(() => action({ status: "idle" }, new FormData())), name).toBe("/staff/sign-in");
       expect(audits.unauthenticated.at(-1), name).toEqual(["staff.request", spec.route]);
-      for (const gate of ["choose_password", "enrol_authenticator", "hub"] as const) {
-        if (spec.access === gate || spec.access === "any_gate") continue;
+      for (const gate of SETUP_GATES) {
+        if (admits(spec.access, gate)) continue;
         session.current = atGate(gate);
         expect(await action({ status: "idle" }, new FormData()), `${name} at ${gate}`).toMatchObject({
           status: "refused",
@@ -309,24 +347,93 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       }
     }
   });
-});
 
-describe("the setup sequence's gate 1", () => {
-  it("leaves only Choose your password, POST /api/staff/password, GET /api/staff/me and sign-out reachable", async () => {
+  it("refuse a session below aal2 when privileged (403 aal2_required), before their own code, whatever the role", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
-    const reachable: string[] = [];
-    for (const file of pages) {
-      const spec = guardSpecOf((await import(file)).default);
-      if (spec && spec.access !== "public" && (spec.access === "choose_password" || spec.access === "any_gate")) reachable.push(`page ${spec.route}`);
-    }
-    for (const file of handlers) {
-      const exportsOf: Record<string, unknown> = await import(file);
-      for (const method of HTTP_METHODS.filter((name) => name in exportsOf)) {
-        const spec = guardSpecOf(exportsOf[method]);
-        if (spec && (spec.access === "choose_password" || spec.access === "any_gate" || spec.access === "public")) reachable.push(`${method} ${spec.route}`);
+    const exportsOf: Record<string, (...args: unknown[]) => Promise<{ status: string; message?: string }>> = await import(file);
+    for (const [name, action] of Object.entries(exportsOf)) {
+      const spec = guardSpecOf(action);
+      if (!spec?.privileged) continue;
+      expect(PRIVILEGED_ACTIONS).toContain(spec.privileged);
+      for (const role of ["admin", "coordinator", "director", "ambassador"] as const) {
+        for (const gate of SETUP_GATES.filter((candidate) => admits(spec.access, candidate))) {
+          session.current = { ...atGate(gate, "aal1"), role };
+          expect(await action({ status: "idle" }, new FormData()), `${name} as ${role} at ${gate}`).toMatchObject({
+            status: "refused",
+            message: "This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.",
+          });
+          expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
+        }
       }
     }
-    expect(reachable.sort()).toEqual(["GET /api/staff/me", "POST /api/staff/password", "POST /api/staff/sign-in", "POST /api/staff/sign-out", "page /staff/setup/password"]);
+  });
+});
+
+describe("privileged actions (S01.10: account changes run only at aal2)", () => {
+  it("are Add a person, Re-issue and Reset password, each marked accounts.manage", async () => {
+    const { guardSpecOf } = await import("../src/app/staff/guard");
+    const exportsOf: Record<string, unknown> = await import("../src/app/staff/people/actions");
+    const marked = Object.entries(exportsOf).map(([name, value]) => [name, guardSpecOf(value)?.privileged]);
+    expect(Object.fromEntries(marked)).toEqual({ addPersonAction: "accounts.manage", reissueAction: "accounts.manage", resetPasswordAction: "accounts.manage" });
+  });
+
+  it("let an aal2 session through to the action's own code", async () => {
+    const { addPersonAction } = await import("../src/app/staff/people/actions");
+    session.current = atGate("hub", "aal2");
+    // The mocked module throws when the action's own code runs: the guard let it through.
+    await expect(addPersonAction({ status: "idle" }, new FormData())).rejects.toThrow(/the route's own code ran/);
+    expect(audits.belowAal2).toEqual([]);
+  });
+});
+
+/** Every page and call a session at `gate` can reach (public calls included). */
+async function reachableAt(gate: SetupGate): Promise<string[]> {
+  const { guardSpecOf } = await import("../src/app/staff/guard");
+  const reachable: string[] = [];
+  for (const file of pages) {
+    const spec = guardSpecOf((await import(file)).default);
+    if (spec && spec.access !== "public" && admits(spec.access, gate)) reachable.push(`page ${spec.route}`);
+  }
+  for (const file of handlers) {
+    const exportsOf: Record<string, unknown> = await import(file);
+    for (const method of HTTP_METHODS.filter((name) => name in exportsOf)) {
+      const spec = guardSpecOf(exportsOf[method]);
+      if (spec && (spec.access === "public" || admits(spec.access, gate))) reachable.push(`${method} ${spec.route}`);
+    }
+  }
+  return reachable.sort();
+}
+
+describe("the setup sequence's gates", () => {
+  it("gate 1 leaves only Choose your password, POST /api/staff/password, GET /api/staff/me and sign-out reachable", async () => {
+    expect(await reachableAt("choose_password")).toEqual([
+      "GET /api/staff/me",
+      "POST /api/staff/password",
+      "POST /api/staff/sign-in",
+      "POST /api/staff/sign-out",
+      "page /staff/setup/password",
+    ]);
+  });
+
+  it("gate 2 leaves only the enrolment page, POST /api/staff/factor/enrol and /verify, GET /api/staff/me and sign-out reachable", async () => {
+    expect(await reachableAt("enrol_authenticator")).toEqual([
+      "GET /api/staff/me",
+      "POST /api/staff/factor/enrol",
+      "POST /api/staff/factor/verify",
+      "POST /api/staff/sign-in",
+      "POST /api/staff/sign-out",
+      "page /staff/setup/authenticator",
+    ]);
+  });
+
+  it("the code gate after the password leaves only the code page, POST /api/staff/factor/verify, GET /api/staff/me and sign-out reachable", async () => {
+    expect(await reachableAt("authenticator_code")).toEqual([
+      "GET /api/staff/me",
+      "POST /api/staff/factor/verify",
+      "POST /api/staff/sign-in",
+      "POST /api/staff/sign-out",
+      "page /staff/sign-in/code",
+    ]);
   });
 });
 

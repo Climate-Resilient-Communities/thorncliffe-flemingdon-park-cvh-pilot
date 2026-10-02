@@ -6,6 +6,8 @@ import { supabaseIdentityProvider } from "./supabaseIdentityProvider";
 const URL_BASE = "https://example-project.supabase.co";
 const SECRET = "sb_secret_test_only_not_a_real_key";
 const USER_ID = "4f8a3a3e-5b7c-4d2e-9f10-1a2b3c4d5e6f";
+const F1 = "0b9c1d2e-3f40-4a5b-8c6d-7e8f9a0b1c2d";
+const F2 = "1c0d2e3f-4051-4b6c-9d7e-8f9a0b1c2d3e";
 
 interface Call {
   url: string;
@@ -103,6 +105,27 @@ describe("Supabase Auth identity provider", () => {
     expect(await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch: unverified.fetch }).hasVerifiedAuthenticator(USER_ID)).toBe(false);
   });
 
+  it("removes every factor of a user, verified or not (S01.10 enrolment, S01.11 reset)", async () => {
+    const { fetch, calls } = fakeFetch((call) =>
+      call.method === "GET"
+        ? { status: 200, body: [{ id: F1, factor_type: "totp", status: "verified" }, { id: F2, factor_type: "totp", status: "unverified" }] }
+        : { status: 200, body: { id: "deleted" } },
+    );
+
+    await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch }).removeFactors(USER_ID);
+    expect(calls.map((call) => `${call.method} ${call.url.replace(URL_BASE, "")}`)).toEqual([
+      `GET /auth/v1/admin/users/${USER_ID}/factors`,
+      `DELETE /auth/v1/admin/users/${USER_ID}/factors/${F1}`,
+      `DELETE /auth/v1/admin/users/${USER_ID}/factors/${F2}`,
+    ]);
+  });
+
+  it("throws when a factor cannot be removed", async () => {
+    const { fetch } = fakeFetch((call) => (call.method === "GET" ? { status: 200, body: [{ id: F1, factor_type: "totp", status: "verified" }] } : { status: 500, body: { msg: "boom" } }));
+
+    await expect(supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch }).removeFactors(USER_ID)).rejects.toThrow(/refused to delete a factor/);
+  });
+
   it("replaces a user's password with the Admin API (S01.07)", async () => {
     const { fetch, calls } = fakeFetch(() => ({ status: 200, body: { id: USER_ID } }));
 
@@ -150,6 +173,7 @@ describe("Supabase Auth calls never hang (S01.06: Admin rows can be locked while
     ["findLogin", (provider: ReturnType<typeof idp>) => provider.findLogin("jdoe@staff.cvh.invalid")],
     ["deleteLogin", (provider: ReturnType<typeof idp>) => provider.deleteLogin(USER_ID)],
     ["hasVerifiedAuthenticator (listFactors)", (provider: ReturnType<typeof idp>) => provider.hasVerifiedAuthenticator(USER_ID)],
+    ["removeFactors (listFactors)", (provider: ReturnType<typeof idp>) => provider.removeFactors(USER_ID)],
   ])("throws a provider error when %s hangs, within the timeout", async (_, call) => {
     const { fetch } = hangingFetch();
     const started = Date.now();

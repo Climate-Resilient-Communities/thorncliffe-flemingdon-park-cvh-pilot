@@ -21,6 +21,15 @@ export interface UsabilitySources {
 }
 
 /**
+ * Whether the account has an authenticator the app enrolled (S01.10): the app's own record on
+ * staff_account and a verified factor at the provider, both. The provider is asked only when the
+ * record is there; an authenticator added at the provider directly, outside the app, never counts.
+ */
+export async function hasEnrolledAuthenticator(idp: IdentityProvider, account: Pick<StaffAccount, "authUserId" | "factorEnrolledAt">): Promise<boolean> {
+  return account.factorEnrolledAt !== null && (await idp.hasVerifiedAuthenticator(account.authUserId));
+}
+
+/**
  * Whether the account is a usable Admin at `now`, gathering each fact from where it lives
  * (isUsableAdmin lists them). The identity provider is asked about the authenticator only when
  * the account's own row could make it usable. Database facts are read through `executor`: the
@@ -29,13 +38,13 @@ export interface UsabilitySources {
  * This is the one place the facts are gathered.
  */
 export async function isAccountUsableAdmin(sources: UsabilitySources, executor: DbExecutor, account: StaffAccount, now: Date): Promise<boolean> {
-  if (account.role !== "admin" || account.status !== "active" || account.mustChangePassword) return false;
+  if (account.role !== "admin" || account.status !== "active" || account.mustChangePassword || account.factorEnrolledAt === null) return false;
   return isUsableAdmin(
     {
       role: account.role,
       status: account.status,
       mustChangePassword: account.mustChangePassword,
-      authenticatorEnrolled: await sources.idp.hasVerifiedAuthenticator(account.authUserId),
+      authenticatorEnrolled: await hasEnrolledAuthenticator(sources.idp, account),
       signInLockedUntil: await sources.signInLockedUntil(executor, account.username),
     },
     now,

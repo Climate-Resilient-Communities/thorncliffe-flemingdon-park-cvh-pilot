@@ -22,4 +22,11 @@ export interface StaffAccount {
   startingPasswordIssuedAt: Date | null;
   /** When the starting password was used for its one successful sign-in (S01.07); null until then. */
   startingPasswordUsedAt: Date | null;
+  /**
+   * When the person enrolled an authenticator through the app (S01.10); null when none is enrolled,
+   * after an authenticator reset (S01.11) and after a promotion to Admin or Coordinator from a role
+   * without one. The app's own record of the factor Supabase Auth holds: the gate and the usable-Admin
+   * rule need both, and the two-Admin trigger can see only this one.
+   */
+  factorEnrolledAt: Date | null;
 }

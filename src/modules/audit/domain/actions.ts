@@ -25,6 +25,8 @@ export const SYSTEM_ACTOR = null;
 /** Why an action was refused or failed: a code, never a message or an input. */
 export const REFUSAL_REASONS = [
   "wrong_password",
+  /** A wrong authenticator code (S01.10). */
+  "wrong_code",
   "unknown_username",
   "throttled",
   "locked",
