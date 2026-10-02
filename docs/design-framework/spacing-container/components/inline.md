@@ -49,10 +49,10 @@ Not included: `justify="around" | "evenly"` (source has them; unused), `directio
 | `grid` | `--gap-grid` | `--app-space-5` | 10px |
 | `stack` | `--gap-stack` | `--app-space-6` | 12px |
 | `panel` | `--gap-panel` | `--app-space-10` | 24px |
-| `meta-inline` | `--gap-meta-inline` | `--app-space-18px` (rare) | 18px column gap; only list-row metadata (O-01) |
-| `type-grid-inline` | `--gap-type-grid-inline` | `--app-space-18px` (rare) | 18px column gap; only the disruption type grid (X-13) |
+| `meta-inline` | `--gap-meta-inline`, row `--gap-meta-block` | `--app-space-18px` (rare), `--app-space-2` | 18px column gap, 4px row gap; only list-row metadata (O-01) |
+| `type-grid-inline` | `--gap-type-grid-inline`, row `--gap-type-grid-block` | `--app-space-18px` (rare), `--app-space-7` | 18px column gap, 14px row gap; only the disruption type grid (X-13) |
 
-When `wrap` is on, the same token is used for the row gap and the column gap (one value, `gap`). A wrapping row of touch targets uses `gap="target"`. `meta-inline` and `type-grid-inline` set the column gap only: they are named for the inline axis.
+When `wrap` is on, the same token is used for the row gap and the column gap (one value, `gap`). A wrapping row of touch targets uses `gap="target"`. `meta-inline` and `type-grid-inline` set the column gap; when they wrap, their row gaps are `--gap-meta-block` (4px) and `--gap-type-grid-block` (14px), as in the prototype. Their items are text, not targets; a wrapping row of targets uses `gap="target"`, so no two targets are closer than 8px.
 
 ## Responsive behaviour
 

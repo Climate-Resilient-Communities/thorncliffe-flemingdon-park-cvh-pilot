@@ -26,7 +26,7 @@ Columns are always `minmax(0, 1fr)` (or a fixed aside size next to one) so long 
 | Prop | Type (allowed values only) | Default | Notes |
 | --- | --- | --- | --- |
 | `cols` | `1 \| 2 \| 3 \| 4` | `1` | Equal columns at every width. Not combined with `twoColumn` |
-| `twoColumn` | `'aside' \| 'aside-compact' \| 'even'` | none | Staff only. Two-column Hub page: one column below 800px of content width, two columns at or above (see Responsive behaviour). `'aside'`: main plus `--size-aside-staff` (380px), gap `--gap-columns-hub` (28px), on the review pages O-02, O-03, O-04, O-05, O-07, O-13. `'aside-compact'`: main plus `--size-aside-staff-compact` (300px), gap `--gap-panel` (24px), on O-01, O-06, O-12, O-14. `'even'`: two equal columns, gap `--gap-panel` (24px), where those pages use the prototype's `.cvh-hcols--even` |
+| `twoColumn` | `'aside' \| 'aside-compact' \| 'even' \| 'even-inner'` | none | Staff only. Two-column Hub page or block: one column below 800px of content width, two columns at or above (see Responsive behaviour). `'aside'`: main plus `--size-aside-staff` (380px), gap `--gap-columns-hub` (28px), on O-02, O-03, O-04, O-05, O-07, O-13. `'aside-compact'`: main plus `--size-aside-staff-compact` (300px), gap `--gap-panel` (24px), on O-01 and O-12. `'even'`: two equal columns, gap `--gap-panel` (24px), on O-14. `'even-inner'`: two equal columns, gap `--gap-columns-inner` (10px), for the equal-column blocks inside O-06 and O-12. |
 | `gap` | `'target' \| 'grid' \| 'stack' \| 'panel'` | `'grid'` | Equal-column grids only. A `twoColumn` grid takes its gaps from its variant |
 | `collapseInBasic` | `boolean` | `true` | One column when basic mode is on. Set `false` only with a reason in the screen spec (for example, the 3 mark buttons on the round page, which is a staff screen where basic mode does not apply) |
 | `as` | `'div' \| 'ul' \| 'ol'` | `'div'` | |
@@ -46,6 +46,7 @@ Not included: `cols` 5, 6 and 12 (source has them; the largest pilot grid is the
 | `twoColumn="aside"`: aside | `--size-aside-staff` | `--app-aside-staff` | 380px |
 | `twoColumn="aside-compact"`: aside | `--size-aside-staff-compact` | `--app-aside-staff-compact` | 300px |
 | `twoColumn="aside-compact"` and `"even"`: column gap | `--gap-panel` | `--app-space-10` | 24px |
+| `twoColumn="even-inner"`: column gap | `--gap-columns-inner` | `--app-space-5` | 10px |
 | `twoColumn` (any), one column: row gap | `--gap-section-hub` | `--app-space-9` | 20px |
 | `twoColumn` switch | `--container-hub-two-column` (Tailwind variant `@hub-two-column:`) | `app-container-hub-two-column-min` (build-time literal) | 800px of content width |
 
@@ -135,3 +136,7 @@ With `collapseInBasic` (the default), `:root[data-basic="true"]` sets `grid-temp
 **Given** `src/ui/layout/grid.css`
 **When** the CI checks run
 **Then** it contains no literal length other than `0`, no `@media` rule, no 700 or 800 literal and no physical property, and every gap and size is a `var()` of a semantic token
+
+**Given** `<Grid twoColumn="even-inner">` in fixture containers 799px and 800px wide
+**When** it is rendered
+**Then** at 799px it is one column with a row gap of 20px, and at 800px it is two equal columns with a 10px column gap (`--gap-columns-inner`), not the page's 24px

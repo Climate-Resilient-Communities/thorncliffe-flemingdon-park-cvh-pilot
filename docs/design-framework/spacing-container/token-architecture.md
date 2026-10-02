@@ -75,12 +75,13 @@ Radius is listed because containers and content components share it. Layout prim
 | `--app-min-header-resident` | 56px | Resident header minimum block size (the prototype's earlier 60 px is overridden by 56 px) |
 | `--app-min-topbar-hub` | 60px | Hub top bar minimum block size |
 | `--app-min-nav-item-resident`, `--app-min-nav-item-resident-basic` | 64px, 80px | Resident navigation item minimum block size |
-| `--app-page-staff` | 1040px | Default Hub page maximum inline size |
+| `--app-page-staff` | 1040px | Default Hub page maximum inline size, where no screen-specific maximum exists |
 | `--app-page-staff-review` | 1080px | Only the pages that already use it: O-02, O-03, O-04, O-05, O-07, O-13 |
 | `--app-page-staff-partner` | 1140px | Only partner-space pages (P-01 to P-16, MVP) |
+| `--app-page-staff-published`, `--app-page-staff-log`, `--app-page-staff-update`, `--app-page-staff-resolve` | 960px, 920px, 980px, 900px | Only the pages that already use them: O-06; O-11; O-14 and O-15; O-16 |
 | `--app-side-nav` | 240px | Hub side navigation |
 | `--app-aside-staff` | 380px | Aside on two-column Hub pages |
-| `--app-aside-staff-compact` | 300px | Side column on the pages that already use it: O-01, O-06, O-12, O-14 |
+| `--app-aside-staff-compact` | 300px | Side column on the pages that already use it: O-01, O-12 |
 
 The shell sizes are minimums. Translated text may make the header, top bar and navigation items taller.
 
@@ -128,13 +129,16 @@ Each semantic token is one `var()` of a primitive and is named by its job (`nami
 | `--gap-stack` | `var(--app-space-6)` | 12px | Default stack gap |
 | `--gap-section-resident` | `var(--app-space-8)` | 16px | Between sections of a resident screen (G1) |
 | `--gap-section-hub` | `var(--app-space-9)` | 20px | Between sections of a Hub page; gap of a stacked two-column page (G1) |
-| `--gap-panel` | `var(--app-space-10)` | 24px | Between panels; column gap on O-01, O-06, O-12, O-14 |
+| `--gap-panel` | `var(--app-space-10)` | 24px | Between panels; column gap on O-01, O-12 and O-14 |
 | `--gap-paragraph` | `var(--app-space-10)` | 24px | Guide paragraphs |
 | `--gap-columns-hub` | `var(--app-space-28px)` | 28px | Main column to aside on O-02, O-03, O-04, O-05, O-07, O-13 |
 | `--gap-section-hub-main` | `var(--app-space-22px)` | 22px | Main-column sections on O-01, O-03, O-04, O-14, O-15 |
 | `--gap-section-hub-review` | `var(--app-space-18px)` | 18px | Main-column sections on O-07, O-12 |
 | `--gap-meta-inline` | `var(--app-space-18px)` | 18px | Column gap of list-row metadata (O-01) |
 | `--gap-type-grid-inline` | `var(--app-space-18px)` | 18px | Column gap of the disruption type grid (X-13) |
+| `--gap-meta-block` | `var(--app-space-2)` | 4px | Row gap of list-row metadata (O-01); the items are text, not targets |
+| `--gap-type-grid-block` | `var(--app-space-7)` | 14px | Row gap of the disruption type grid (X-13); the items are text, not targets |
+| `--gap-columns-inner` | `var(--app-space-5)` | 10px | Gap of an equal-column block inside a Hub page (O-06, O-12), not the page's 24px |
 | `--gutter-resident` | `var(--app-space-8)` | 16px | Resident inline inset and block-start inset (G2) |
 | `--inset-screen-end` | `var(--app-space-10)` | 24px | Resident block-end inset (G2) |
 | `--inset-page-staff` | `var(--app-space-10)` | 24px | Hub page inset at and above the Hub breakpoint |
@@ -161,6 +165,7 @@ Gutter and insets are the same in basic mode (G2). Asymmetric card padding shown
 | `--size-page-staff` | `var(--app-page-staff)` | 1040px |
 | `--size-page-staff-review` | `var(--app-page-staff-review)` | 1080px |
 | `--size-page-staff-partner` | `var(--app-page-staff-partner)` | 1140px |
+| `--size-page-staff-published`, `--size-page-staff-log`, `--size-page-staff-update`, `--size-page-staff-resolve` | `var(--app-page-staff-published)` and so on | 960px, 920px, 980px, 900px |
 | `--size-side-nav` | `var(--app-side-nav)` | 240px |
 | `--size-aside-staff` | `var(--app-aside-staff)` | 380px |
 | `--size-aside-staff-compact` | `var(--app-aside-staff-compact)` | 300px |
@@ -244,7 +249,7 @@ In Tailwind v4, `px-*` and `mx-*` compile to `padding-inline` and `margin-inline
 Two-column Hub pages (O-01, O-02, O-03, O-04, O-05, O-06, O-07, O-12, O-13, O-14):
 
 - **Below 800 px of content width:** one column, main content first, then the aside, which fills the available width and is not sticky. The gap is `--gap-section-hub` (20px), as in the prototype's one-column variants.
-- **At 800 px and above:** a flexible main column (`minmax(0, 1fr)`) and the aside at `--size-aside-staff` (380px), with the page's approved gap: `--gap-columns-hub` (28px) on O-02, O-03, O-04, O-05, O-07, O-13. The pages that already use a 300px side column (O-01, O-06, O-12, O-14) keep it (`--size-aside-staff-compact`) with `--gap-panel` (24px), and their equal-column variants use two `minmax(0, 1fr)` columns; both follow the same 800px rule.
+- **At 800 px and above:** a flexible main column (`minmax(0, 1fr)`) and the aside at `--size-aside-staff` (380px), with the page's approved gap: `--gap-columns-hub` (28px) on O-02, O-03, O-04, O-05, O-07, O-13. O-01 and O-12 keep their 300px side column (`--size-aside-staff-compact`) and O-14 its two equal columns, with `--gap-panel` (24px); both follow the same 800px rule. The equal-column blocks inside O-06 and O-12 keep the prototype's 10px gap (`--gap-columns-inner`).
 - **Actions:** approval and publish actions stay in `Screen`'s sticky `actions` slot (the prototype's `.cvh-pubbar`) in both layouts.
 - **Why a container, not the viewport:** at 700px the side navigation (240px) and page inset (2 × 24px) leave 412px, too narrow for a 380px aside. The content width reaches 800px only at a viewport of 1088px; below the shell breakpoint it is at most 668px, so pages are always stacked there.
 
@@ -386,4 +391,8 @@ Decided by the design owner on 2026-10-02; recorded in `tokens.json` version 3. 
 | G9 | Navy theme | Both themes are generated; pilot screens launch in light mode; no theme selector in the pilot. |
 | G10 | Line height by script | Default body 1.5, tight 1.25; staff body 1.45; Arabic script body 1.9, tight 1.6; Indic body 1.75, tight 1.45; Chinese body 1.7, for both Simplified and Traditional Chinese. |
 
-Two points extend the decisions by analogy and are flagged for the design owner: the pages that already use a 300px side column (O-01, O-06, O-12, O-14) keep it and follow the same 800px rule, and their equal-column variants do too.
+**Confirmed by the design owner on 2026-10-02 (second round):**
+
+- The 800px container rule also applies to O-01, O-06, O-12 and O-14, which keep their existing column proportions.
+- `--gap-subline` (2px), `--gap-tight` (6px) and `--gap-related` (8px) name the 2, 6 and 8px steps; the home-tile grid gap is 10px; the slide-only decorations (`--rule-length`, `--rule-thickness`, `--bar-thickness`) are not generated for the app; check-in mark buttons are 8px apart.
+- The prototype is preserved for the remaining differences: list-row metadata keeps a 4px row gap and the disruption type grid a 14px row gap (`--gap-meta-block`, `--gap-type-grid-block`; their items are text, not targets, so the 8px target spacing does not apply); the equal-column blocks inside O-06 and O-12 keep 10px; each Hub screen with its own maximum keeps it as a named variant (O-06 960px, O-11 920px, O-14 and O-15 980px, O-16 900px), and 1040px is the default only where no screen-specific maximum exists. O-18 stays out of the pilot.

@@ -26,7 +26,7 @@ Screen  (div, data-surface)
 | Prop | Type (allowed values only) | Default | Notes |
 | --- | --- | --- | --- |
 | `surface` | `'resident' \| 'staff'` | required | Picks the inset and width tokens. Ambassador screens use `'resident'` (they are phone screens in the prototype). |
-| `width` | `'default' \| 'review' \| 'partner'` | `'default'` | Staff only: the maximum inline size. `'review'` only on O-02, O-03, O-04, O-05, O-07 and O-13; `'partner'` only on partner-space screens (MVP). Not accepted with `surface="resident"` (resident content is not capped). |
+| `width` | `'default' \| 'review' \| 'published' \| 'log' \| 'update' \| 'resolve' \| 'partner'` | `'default'` | Staff only: the maximum inline size. Each named width only on the screens that already use it in the prototype: `'review'` O-02, O-03, O-04, O-05, O-07, O-13; `'published'` O-06; `'log'` O-11; `'update'` O-14, O-15; `'resolve'` O-16; `'partner'` partner-space screens (MVP). `'default'` everywhere else. Not accepted with `surface="resident"` (resident content is not capped). |
 | `inset` | `'default' \| 'none'` | `'default'` | `'none'` removes the inline gutter and the section gap (the prototype's `.cvh-screen--flush`, used by the map). Block-end padding stays. |
 | `bleed` | `ReactNode` | none | Rendered before the body, full width. |
 | `actions` | `ReactNode` | none | Rendered after the body; sticky to the block end of the scroll container; full width. |
@@ -49,6 +49,7 @@ No `className`, `style`, `gap` or `padding` prop. Children are laid out as a col
 | `--screen-max-inline-size` (staff, `width="default"`) | `--size-page-staff` | `--app-page-staff` | 1040px (G5) |
 | `--screen-max-inline-size` (staff, `width="review"`) | `--size-page-staff-review` | `--app-page-staff-review` | 1080px (G5) |
 | `--screen-max-inline-size` (staff, `width="partner"`) | `--size-page-staff-partner` | `--app-page-staff-partner` | 1140px (G5; MVP) |
+| `--screen-max-inline-size` (staff, `width="published"`, `"log"`, `"update"`, `"resolve"`) | `--size-page-staff-published`, `-log`, `-update`, `-resolve` | `--app-page-staff-published` and so on | 960px, 920px, 980px, 900px (G5) |
 | `--screen-max-inline-size` (resident) | none | none | Not set: resident content fills the shell's main area at every width (G5) |
 
 The resident values are the same in basic mode (G2). `Screen` never falls back to a literal; the check "spacing from tokens only" stays on.
@@ -107,6 +108,7 @@ No change. Gaps and insets stay the same in basic mode (G2, as in the prototype)
 **Given** `Screen surface="staff"` with `width="default"` and with `width="review"`
 **When** rendered at a viewport of 1600 px
 **Then** the body's inline size is 1040px (`--size-page-staff`) and 1080px (`--size-page-staff-review`) respectively, and the body is centred in the main column
+**And** `width="published"`, `"log"`, `"update"` and `"resolve"` give 960px, 920px, 980px and 900px
 
 **Given** `Screen surface="staff"` and `Screen surface="resident"`
 **When** the computed styles of the body are read
