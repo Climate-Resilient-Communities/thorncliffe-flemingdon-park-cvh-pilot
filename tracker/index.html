@@ -1,0 +1,153 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>CVH • Pilot tracker</title><style>
+/* Layout: dark header band, then a single column of stat tiles, filters, epic cards with expandable stories */
+:root{--bg:#f3f6f3;--fg:#203b40;--surface:#fff;--subtle:#fbfcfa;--line:#dce4de;--control:#b9cbc4;--muted:#5d726e;--accent:#13645d;--progress:#24816c;--track:#e8eee9;--note:#e6eee8;--well:#f5f7f4;--band:#133d3c;--band-fg:#fff;--band-soft:#d4e3de;--band-label:#b9d8cb;
+--done-bg:#d5f0df;--done-fg:#185735;--prog-bg:#dbe9ff;--prog-fg:#254980;--rev-bg:#fff0ca;--rev-fg:#6b4e00;--merge-bg:#d9efec;--merge-fg:#145a54;--def-bg:#eee8f4;--def-fg:#4f3d66;--plan-bg:#edf0ed;--plan-fg:#47605b;--over-bg:#fff0d9;--over-fg:#805520;--under-bg:#eef3f0;--under-fg:#47665b;--warn-bg:#fdecdc;--warn-fg:#8a3d0c;--warn-line:#f0c29c;
+font-family:system-ui,-apple-system,"Segoe UI",sans-serif}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#0f1716;--fg:#dbe7e3;--surface:#16211f;--subtle:#1a2725;--line:#2a3a37;--control:#3a4d49;--muted:#93a8a3;--accent:#6fd0b4;--progress:#3fae91;--track:#24332f;--note:#1c2b28;--well:#121c1a;--band:#0b2524;--band-fg:#fff;--band-soft:#b8cec8;--band-label:#8fc4b1;
+--done-bg:#1d3d2b;--done-fg:#9be0b6;--prog-bg:#1c2c47;--prog-fg:#a9c6f5;--rev-bg:#3d3215;--rev-fg:#f0d58a;--merge-bg:#173a37;--merge-fg:#8fd9cd;--def-bg:#2e2639;--def-fg:#cdb9e6;--plan-bg:#24302d;--plan-fg:#b3c6c1;--over-bg:#3d2e17;--over-fg:#f0c588;--under-bg:#1f2d2a;--under-fg:#a9c4bb;--warn-bg:#3a2415;--warn-fg:#f4b98a;--warn-line:#6b3d1f;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#0f1716;--fg:#dbe7e3;--surface:#16211f;--subtle:#1a2725;--line:#2a3a37;--control:#3a4d49;--muted:#93a8a3;--accent:#6fd0b4;--progress:#3fae91;--track:#24332f;--note:#1c2b28;--well:#121c1a;--band:#0b2524;--band-fg:#fff;--band-soft:#b8cec8;--band-label:#8fc4b1;
+--done-bg:#1d3d2b;--done-fg:#9be0b6;--prog-bg:#1c2c47;--prog-fg:#a9c6f5;--rev-bg:#3d3215;--rev-fg:#f0d58a;--merge-bg:#173a37;--merge-fg:#8fd9cd;--def-bg:#2e2639;--def-fg:#cdb9e6;--plan-bg:#24302d;--plan-fg:#b3c6c1;--over-bg:#3d2e17;--over-fg:#f0c588;--under-bg:#1f2d2a;--under-fg:#a9c4bb;--warn-bg:#3a2415;--warn-fg:#f4b98a;--warn-line:#6b3d1f;color-scheme:dark}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font-size:15px}
+header{background:var(--band);color:var(--band-fg);padding:38px max(16px,5vw)}header small{color:var(--band-label);letter-spacing:.13em;font-size:12px}h1{font-size:38px;margin:12px 0;text-wrap:balance}header p{color:var(--band-soft);margin:0 0 8px}#stamp{color:var(--band-soft);font-size:13px;font-variant-numeric:tabular-nums}
+main{max-width:1350px;margin:auto;padding:28px max(16px,2vw)}a{color:var(--accent)}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}.stat,.epic,.artifact{background:var(--surface);border:1px solid var(--line);border-radius:12px}.stat,.artifact{padding:20px}.stat strong{display:block;font-size:30px;margin-bottom:5px;font-variant-numeric:tabular-nums}
+.muted{color:var(--muted);font-size:13px}
+.toolbar{display:flex;gap:12px;margin:28px 0 18px;flex-wrap:wrap;align-items:center}
+input,select,button{font:inherit;padding:11px 12px;border:1px solid var(--control);border-radius:8px;background:var(--surface);color:var(--fg)}input{flex:1;min-width:min(210px,100%)}button{cursor:pointer}button:hover{border-color:var(--accent)}button:disabled{opacity:.6;cursor:wait}
+.epic{margin:14px 0;overflow:hidden}.epichead{padding:20px;background:var(--subtle)}.epichead h2{font-size:19px;margin:0 0 9px}
+.bar{height:6px;background:var(--track);border-radius:9px;margin-top:12px}.bar i{display:block;height:100%;background:var(--progress);border-radius:9px}
+.story{border-top:1px solid var(--line)}
+summary{cursor:pointer;display:flex;gap:14px;align-items:center;padding:16px 20px;list-style:none}summary::-webkit-details-marker{display:none}summary:hover{background:var(--subtle)}
+summary::before{content:"";width:7px;height:7px;flex:none;border-right:2px solid var(--muted);border-bottom:2px solid var(--muted);transform:rotate(-45deg);transition:transform .15s}details[open]>summary::before{transform:rotate(45deg)}
+.sid{font-size:12px;color:var(--muted);min-width:56px;font-variant-numeric:tabular-nums}.title{flex:1;font-size:14px;min-width:0}
+.badge{padding:5px 9px;border-radius:30px;font-size:12px;white-space:nowrap;background:var(--plan-bg);color:var(--plan-fg)}
+.Done{background:var(--done-bg);color:var(--done-fg)}.Inprogress{background:var(--prog-bg);color:var(--prog-fg)}.Inreview{background:var(--rev-bg);color:var(--rev-fg)}.Merged{background:var(--merge-bg);color:var(--merge-fg)}.Deferred{background:var(--def-bg);color:var(--def-fg)}
+.detail{padding:0 20px 20px 97px;font-size:14px;line-height:1.6}.detail p{max-width:75ch}
+.criteria{white-space:pre-wrap;max-height:350px;overflow:auto;background:var(--well);padding:16px;border-radius:8px;font:12px/1.7 system-ui,sans-serif}
+.artifacts{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:12px}.artifact a{font-weight:600}
+footer{margin:30px 0;color:var(--muted);font-size:12px}
+.note{padding:14px;background:var(--note);border-radius:8px;font-size:13px;margin:0 0 12px}
+.alert{padding:14px 16px;background:var(--warn-bg);color:var(--warn-fg);border:1px solid var(--warn-line);border-radius:8px;font-size:14px;margin:0 0 12px}.alert b{font-variant-numeric:tabular-nums}
+h2{margin-top:30px}
+.table-wrap{overflow-x:auto;margin:18px 0}table{width:100%;border-collapse:collapse;font-variant-numeric:tabular-nums;font-size:14px}th,td{text-align:left;padding:10px 12px;border-bottom:1px solid var(--line);white-space:nowrap}th{font-size:12px;color:var(--muted);font-weight:600}
+.time-pair{display:flex;align-items:center;gap:16px;flex-wrap:wrap;justify-content:flex-end;min-width:290px}.time-metric{display:flex;flex-direction:column;gap:3px;min-width:56px}.time-metric small{font-size:10px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}.time-metric strong{font-size:15px;font-weight:600;font-variant-numeric:tabular-nums}
+.time-variance{font-size:11px;padding:6px 9px;border-radius:6px;background:var(--under-bg);color:var(--under-fg);white-space:nowrap}.time-variance.over{background:var(--over-bg);color:var(--over-fg)}.time-variance.missing{background:var(--warn-bg);color:var(--warn-fg)}
+@media(max-width:700px){.stats{grid-template-columns:1fr 1fr}summary{flex-wrap:wrap}.title{flex-basis:calc(100% - 100px)}.detail{padding:0 16px 16px}h1{font-size:30px}.time-pair{order:4;width:100%;min-width:0;justify-content:flex-start;gap:20px}.time-variance{margin-left:auto}}
+@media(prefers-reduced-motion:reduce){summary::before{transition:none}}
+</style><header><small>CLIMATE RESILIENT COMMUNITIES / DELIVERY</small><h1>The pilot, at a glance.</h1><p>Every epic. Every story. Evidence of what has been built.</p><div id="stamp">Loading the plan from GitHub…</div></header><main><div class="stats" id="stats"></div><div id="missing" class="alert" hidden></div><p class="note" id="reported"></p><div class="toolbar"><input id="search" aria-label="Search stories" placeholder="Search stories, IDs or acceptance criteria…"><select id="status" aria-label="Status"><option value="">All statuses</option><option>Done</option><option>Merged</option><option>In review</option><option>In progress</option><option>Planned</option><option>Deferred</option><option value="missing">Finished, hours missing</option></select><select id="epic" aria-label="Epic"><option value="">All epics</option></select><button id="refresh">↻ Refresh from GitHub</button><button id="collapse">Collapse all</button><span id="refresh-state" role="status" class="muted"></span></div><p class="muted" id="count"></p><div id="stories"></div><h2>Time: estimate vs actual</h2><p class="muted">Actuals are reported work hours, not calendar time between starting and finishing. Comparisons include only stories with recorded actuals. Missing hours never count as zero.</p><div id="time-summary" class="note"></div><div class="table-wrap"><table id="time-table"></table></div><h2>Created &amp; approved artifacts</h2><p class="muted">Repository references, separate from story completion.</p><div class="artifacts" id="artifacts"></div><footer id="foot"></footer></main><script>
+// Raw inputs: the plan text, deferred stories and PR list. Null means fetch everything live.
+let D=null;
+const REPO='Climate-Resilient-Communities/thorncliffe-flemingdon-park-cvh-pilot',BASE='https://github.com/'+REPO,API='https://api.github.com/repos/'+REPO,RAW='https://raw.githubusercontent.com/'+REPO+'/';
+const PLAN='docs/planning/pilot/epics.md',FULL='docs/planning/mvp/reference/pilot-epics-full.md';
+const DEFERRED=['S02.13','S05.05','S09.06','S10.01'];
+// Statuses the team reported that GitHub cannot show. GitHub wins when it shows a later stage.
+const REPORTED={'S01.01':{status:'Done',evidence:'Team reported production smoke passed for merge f5b1073; CI run #4.'},'S01.16':{status:'In progress',branch:'e01-s16-tokens-layout',evidence:'Team reported implementation started; no completion claimed.'}};
+const STAGE=['Planned','In progress','In review','Merged','Done'];
+const FINISHED=['Done','Merged'];
+const ARTIFACTS=[['Approved pilot plan','docs/planning/pilot/epics.md','Active stories · approved scope'],['Architecture spine','docs/architecture/ARCHITECTURE-SPINE.md','Binding technical decisions'],['Resolved design tokens','design/prototype/ds/cvrh/tokens.json','G1–G10 decisions'],['Spacing framework','docs/design-framework/spacing-container/README.md','Layout and component specifications'],['Reviewed catalogue','data/catalogue','Source data and translations; publication checks still required'],['Prototype screens','design/prototype','Design reference'],['Full MVP reference','docs/planning/mvp/reference','Preserved original plan']];
+const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const idPattern=id=>new RegExp('(?<![A-Za-z0-9_])'+id.replace('.','\\.')+'(?!\\d)');
+const storyBlocks=text=>[...text.matchAll(/^### Story (S\d+\.\d+) — (.+)\n([\s\S]*?)(?=^### Story |^## |(?![\s\S]))/gm)];
+const field=(body,re)=>(body.match(re)||[])[1];
+const actualOf=body=>{const t=(field(body,/\*\*Actual:\*\* ([^\n]+)/)||'').trim();return /^\d/.test(t)?parseFloat(t):null};
+const anchor=(sha,id,title)=>BASE+'/blob/'+sha+'/'+PLAN+'#story-'+id.toLowerCase().replace('.','')+'--'+title.toLowerCase().replace(/[^\p{L}\p{N}_ -]/gu,'').replaceAll(' ','-');
+const fmtH=n=>Math.round(n*10)/10+' h';
+
+function build(raw){
+ const epics=[],stories=[];
+ for(const block of raw.plan.split(/(?=^## E\d\d\b)/m)){
+  const h=block.match(/^## (E\d\d).*? — (.+)/);if(!h)continue;
+  epics.push({id:h[1],title:h[2].trim()});
+  for(const [,id,title,body] of storyBlocks(block)){
+   const prs=raw.prs.filter(p=>idPattern(id).test(p.title));
+   const dep=field(body,/\*\*Depends on:\*\* (.*?)(?: ·|\n)/);
+   stories.push({id,epic:h[1],title:title.trim(),size:field(body,/\*\*Size:\*\* (\w+)/)||'',estimate:parseFloat(field(body,/\*\*Estimate:\*\* ([\d.]+) h/))||0,
+    actual:raw.branchActuals[id]??actualOf(body),actualSource:raw.branchActuals[id]!=null?'PR branch':'plan on main',
+    status:prs.some(p=>p.merged)?'Merged':prs.some(p=>p.state==='open')?'In review':'Planned',
+    evidence:prs.some(p=>p.merged)?'Implementation PR merged. Delivery verification has not been recorded here.':prs.some(p=>p.state==='open')?'Open implementation PR on GitHub.':'',
+    branch:field(body,/\*\*Branch:\*\* `([^`]+)`/)||'',dependencies:dep?dep.match(/S\d+\.\d+/g)||[]:[],traces:field(body,/\*\*Traces:\*\* (.*?)(?: ·|\n)/)||'',
+    criteria:body.split('**Acceptance Criteria:**').pop().trim(),prs:prs.map(p=>p.number),url:anchor(raw.sha,id,title.trim())});
+  }
+ }
+ const deferred=new Map(storyBlocks(raw.full).map(([,id,title,body])=>[id,{title,body}]));
+ for(const id of DEFERRED){const d=deferred.get(id);if(!d)continue;
+  stories.push({id,epic:'E'+id.slice(1,3),title:d.title.trim(),size:field(d.body,/\*\*Size:\*\* (\w+)/)||'',estimate:parseFloat(field(d.body,/\*\*Estimate:\*\* ([\d.]+) h/))||0,actual:null,status:'Deferred',evidence:'',branch:'',dependencies:[],traces:'MVP reference',criteria:'Deferred from the pilot. Full acceptance criteria are preserved in the MVP reference.',prs:[],url:BASE+'/blob/'+raw.sha+'/'+FULL});}
+ if(!epics.some(e=>e.id==='E10'))epics.push({id:'E10',title:'Official alert relay · deferred'});
+ for(const s of stories){const r=REPORTED[s.id];if(r&&STAGE.indexOf(r.status)>STAGE.indexOf(s.status))Object.assign(s,r,{reported:true});}
+ const byId=new Map(stories.map(s=>[s.id,s]));
+ for(const s of stories)s.waitingFor=s.dependencies.filter(d=>byId.has(d)&&!FINISHED.includes(byId.get(d).status));
+ return {epics,stories};
+}
+
+async function fetchLive(){
+ const json=async url=>{const r=await fetch(url,{cache:'no-store',headers:{Accept:'application/vnd.github+json'}});if(!r.ok)throw new Error(r.status===403?'GitHub rate limit reached, try again in a few minutes':'GitHub returned '+r.status);return r.json()};
+ const text=async path=>{const r=await fetch(RAW+path,{cache:'no-store'});if(!r.ok)throw new Error('Could not load '+path.split('/').pop());return r.text()};
+ const commit=await json(API+'/commits/main');
+ const pulls=[];for(let page=1;;page++){const b=await json(API+'/pulls?state=all&per_page=100&page='+page);pulls.push(...b);if(b.length<100)break;}
+ const prs=pulls.map(p=>({number:p.number,title:p.title,state:p.state,merged:!!p.merged_at,head_sha:p.head.sha}));
+ const [plan,full]=await Promise.all([text(commit.sha+'/'+PLAN),text(commit.sha+'/'+FULL)]);
+ // Hours are often recorded on the story's branch before it merges.
+ const branchActuals={};
+ await Promise.all(prs.filter(p=>/S\d+\.\d+/.test(p.title)).map(async p=>{
+  let branchPlan;try{branchPlan=await text(p.head_sha+'/'+PLAN)}catch{return}
+  for(const [,id,,body] of storyBlocks(branchPlan))if(idPattern(id).test(p.title)){const a=actualOf(body);if(a!=null)branchActuals[id]=a;}
+ }));
+ return {sha:commit.sha,updated:new Date().toISOString(),live:true,plan,full,prs,branchActuals};
+}
+
+let M;
+function show(){
+ M=build(D);
+ const keep=$('epic').value;$('epic').innerHTML='<option value="">All epics</option>'+M.epics.map(e=>`<option value="${esc(e.id)}">${esc(e.id+' · '+e.title)}</option>`).join('');$('epic').value=keep;
+ const when=new Date(D.updated).toLocaleString('en-CA',{timeZone:'America/Toronto'});
+ $('stamp').textContent=(D.live?'Live from GitHub, fetched ':'Snapshot built ')+when+' Toronto time · main '+D.sha.slice(0,7);
+ const rep=M.stories.filter(s=>s.reported).map(s=>s.id);
+ $('reported').textContent='“Done” requires delivery evidence; approved design documents do not count as built features.'+(rep.length?' '+rep.join(' and ')+(rep.length>1?' statuses come':' status comes')+' from team reports rather than GitHub.':'');
+ render();updateStats();updateTime();
+ $('artifacts').innerHTML=ARTIFACTS.map(([t,p,n])=>`<div class="artifact"><a href="${esc(BASE+'/tree/'+D.sha+'/'+p)}" target="_blank" rel="noopener">${esc(t)} ↗</a><p class="muted">${esc(n)}</p></div>`).join('');
+}
+const active=()=>M.stories.filter(s=>s.status!=='Deferred');
+const missingHours=()=>active().filter(s=>FINISHED.includes(s.status)&&s.actual===null);
+function updateStats(){
+ const a=active(),n=st=>a.filter(s=>st.includes(s.status)).length;
+ $('stats').innerHTML=[[n(['Done'])+' / '+a.length,'Delivered with evidence'],[n(['Merged']),'Merged, awaiting verification'],[n(['In progress','In review']),'In progress or review'],[fmtH(a.reduce((t,s)=>t+s.estimate,0)),'Planned build effort · '+M.stories.filter(s=>s.status==='Deferred').length+' deferred']].map(([v,l])=>`<div class="stat"><strong>${v}</strong><span class="muted">${l}</span></div>`).join('');
+ const miss=missingHours();$('missing').hidden=!miss.length;
+ $('missing').innerHTML=miss.length?`<b>${miss.length}</b> finished ${miss.length>1?'stories have':'story has'} no actual hours recorded: ${miss.map(s=>`<b>${esc(s.id)}</b>`).join(', ')}. Add <code>**Actual:** N h</code> to ${miss.length>1?'each story':'the story'} in <a href="${BASE}/blob/main/${PLAN}" target="_blank" rel="noopener">epics.md</a>.`:'';
+}
+function variance(s){
+ if(s.actual===null)return FINISHED.includes(s.status)?'<span class="time-variance missing">Hours not recorded</span>':'';
+ if(s.actual===s.estimate)return '<span class="time-variance">On estimate</span>';
+ return `<span class="time-variance ${s.actual>s.estimate?'over':''}">${fmtH(Math.abs(s.actual-s.estimate))} ${s.actual>s.estimate?'over':'under'} estimate</span>`;
+}
+function render(){
+ const q=$('search').value.toLowerCase(),status=$('status').value,epic=$('epic').value,miss=new Set(missingHours());
+ const rows=M.stories.filter(s=>(!status||(status==='missing'?miss.has(s):s.status===status))&&(!epic||s.epic===epic)&&[s.id,s.title,s.traces,s.criteria].join(' ').toLowerCase().includes(q));
+ $('count').textContent=rows.length+(rows.length===1?' story shown':' stories shown');
+ $('stories').innerHTML=M.epics.map(e=>{const ss=rows.filter(s=>s.epic===e.id);if(!ss.length)return '';const all=active().filter(s=>s.epic===e.id),done=all.filter(s=>FINISHED.includes(s.status)).length;
+  return `<section class="epic"><div class="epichead"><h2>${esc(e.id)} · ${esc(e.title)}</h2><div class="muted">${done}/${all.length} done or merged · ${fmtH(all.reduce((t,s)=>t+s.estimate,0))} estimated</div><div class="bar"><i style="width:${all.length?done/all.length*100:0}%"></i></div></div>${ss.map(s=>`<details class="story"><summary><span class="sid">${s.id}</span><span class="title">${esc(s.title)}</span><span class="time-pair"><span class="time-metric"><small>Estimate</small><strong>${fmtH(s.estimate)}</strong></span><span class="time-metric"><small>Actual</small><strong>${s.actual===null?'—':fmtH(s.actual)}</strong></span>${variance(s)}</span><span class="badge ${s.status.replaceAll(' ','')}">${s.status}</span></summary><div class="detail"><p>${esc(s.evidence||'No implementation completion evidence recorded.')}</p><p><b>Size:</b> ${esc(s.size)} · <b>Reported actual:</b> ${s.actual===null?'Not recorded':fmtH(s.actual)+' (from the '+s.actualSource+')'}<br><b>Dependencies:</b> ${esc(s.dependencies.join(', ')||'None')}<br><b>Waiting for:</b> ${esc(s.waitingFor.join(', ')||'No listed unfinished dependencies')}<br><b>Branch:</b> ${esc(s.branch||'Not recorded')}</p><p><a href="${esc(s.url)}" target="_blank" rel="noopener">Open source story ↗</a>${s.prs.map(n=>` · <a href="${BASE}/pull/${n}" target="_blank" rel="noopener">PR #${n} ↗</a>`).join('')}</p><div class="criteria">${esc(s.criteria)}</div></div></details>`).join('')}</section>`}).join('')||'<p>No matching stories.</p>';
+}
+function updateTime(){
+ const a=active(),recorded=a.filter(s=>s.actual!==null),actual=recorded.reduce((t,s)=>t+s.actual,0),est=recorded.reduce((t,s)=>t+s.estimate,0),miss=missingHours();
+ const delta=n=>n===0?'On estimate':fmtH(Math.abs(n))+' '+(n>0?'over':'under');
+ $('time-summary').textContent=recorded.length+' of '+a.length+' stories have reported actuals: '+fmtH(actual)+' actual versus '+fmtH(est)+' estimated for those same stories ('+delta(actual-est)+').'+(miss.length?' '+miss.length+' finished '+(miss.length>1?'stories are':'story is')+' missing hours and '+(miss.length>1?'are':'is')+' left out.':'')+' Hours are reported, not measured automatically.';
+ $('time-table').innerHTML='<thead><tr><th>Epic</th><th>Full estimate</th><th>Recorded actual</th><th>Estimate for recorded stories</th><th>Difference</th><th>Recording coverage</th><th>Finished, hours missing</th></tr></thead><tbody>'+M.epics.map(e=>{const ss=a.filter(s=>s.epic===e.id);if(!ss.length)return '';const rr=ss.filter(s=>s.actual!==null),x=rr.reduce((t,s)=>t+s.actual,0),y=rr.reduce((t,s)=>t+s.estimate,0),mm=miss.filter(s=>s.epic===e.id).length;return `<tr><td>${esc(e.id)}</td><td>${fmtH(ss.reduce((t,s)=>t+s.estimate,0))}</td><td>${rr.length?fmtH(x):'Not recorded'}</td><td>${rr.length?fmtH(y):'—'}</td><td>${rr.length?delta(x-y):'—'}</td><td>${rr.length}/${ss.length} stories</td><td>${mm||'—'}</td></tr>`}).join('')+'</tbody>';
+}
+
+let everLive=false;
+async function refresh(auto){
+ const button=$('refresh');button.disabled=true;button.textContent='Refreshing…';$('refresh-state').textContent='Fetching the plan and pull requests…';
+ try{D=await fetchLive();everLive=true;show();$('refresh-state').textContent='Up to date with GitHub';
+  $('foot').textContent='Live from GitHub main '+D.sha.slice(0,7)+'. The page fetches the latest plan and pull requests each time it opens and when you press Refresh. Reported statuses are labelled.';}
+ catch(error){
+  if(auto&&!everLive&&D){button.hidden=true;$('refresh-state').textContent='';$('foot').textContent='Snapshot of main '+D.sha.slice(0,7)+'. This copy cannot reach GitHub, so it is rebuilt and republished on a schedule. Reported statuses are labelled.';}
+  else $('refresh-state').textContent='Refresh failed: '+error.message+'. The previous data is still shown.';
+ }
+ finally{button.disabled=false;button.textContent='↻ Refresh from GitHub';}
+}
+['search','status','epic'].forEach(id=>$(id).addEventListener('input',()=>M&&render()));
+$('collapse').onclick=()=>document.querySelectorAll('details').forEach(d=>d.open=false);
+$('refresh').onclick=()=>refresh(false);
+if(D)show();
+refresh(true);
+</script></html>
