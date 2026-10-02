@@ -83,9 +83,13 @@ describe("the building page view", () => {
   });
 
   it("takes the role's label from the language's catalog, and leaves an untranslated one for the page to mark as English", () => {
-    const view = buildingPageView(building({ contact: { role: "property_office", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), translator(ur, "ur"), "ur");
+    const contact = { role: "property_office", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } as const;
+    const view = buildingPageView(building({ contact }), translator(ur, "ur"), "ur");
+    expect(view.contact.role).toBe(ur.building.roles.propertyOffice);
+    expect(view.contact.role).not.toBe(en.building.roles.propertyOffice);
 
-    expect(view.contact.role).toBe("[EN] Property office");
+    const untranslated = translator({ ...en, building: { ...en.building, roles: { ...en.building.roles, propertyOffice: `[EN] ${en.building.roles.propertyOffice}` } } }, "ur");
+    expect(buildingPageView(building({ contact }), untranslated, "ur").contact.role).toBe("[EN] Property office");
   });
 
   it("marks a Call that fell back to English, so the button can read as English", () => {
@@ -119,7 +123,9 @@ describe("the building page view", () => {
   });
 
   it("falls back to English for text a language lacks, with the date written the English way", () => {
-    const view = buildingPageView(building(), translator(ur, "ur"), "ur");
+    // A stub of the Urdu catalog with the register's title and "Last updated" left untranslated.
+    const stub = translator({ ...ur, building: { ...ur.building, registerTitle: `[EN] ${en.building.registerTitle}`, updated: `[EN] ${en.building.updated}` } }, "ur");
+    const view = buildingPageView(building(), stub, "ur");
 
     expect(view.registerTitle).toBe("[EN] From the City register");
     expect(view.updated).toBe("[EN] Last updated September 28, 2026");
