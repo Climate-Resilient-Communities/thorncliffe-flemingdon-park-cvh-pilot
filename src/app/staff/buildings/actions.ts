@@ -1,10 +1,13 @@
 "use server";
 
+import { revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { RESIDENT_BUILDINGS_TAG } from "@/contracts/buildingList";
 import { englishText } from "@/i18n/text";
+import { buildingTag } from "../../buildingCache";
 import { staffAction, type ActionRefusal } from "../guard";
 import { buildings } from "../places";
-import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, type EditState } from "./editFloors";
+import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, setContactFromForm, type EditState } from "./editFloors";
 
 // Every change here is the policy action `buildings.manage` (AD-4: Admin-only reference data), which is
 // also privileged (S01.10): the guard refuses any other role, then a session below aal2, before the
@@ -21,9 +24,16 @@ const refused = (error: ActionRefusal): EditState => ({ status: "refused", messa
 
 const SPEC = { route: "/staff/buildings", access: "hub", action: "buildings.manage" } as const;
 
-/** A saved change goes back to the building's page, which shows what was done; a refusal stays in the form. */
+/**
+ * A saved change goes back to the building's page, which shows what was done; a refusal stays in the form. A saved
+ * change also expires the resident building list (S02.03), so the next request reads the new floors and buildings
+ * from the database instead of the cached copy.
+ */
 const finish = (state: EditState): EditState => {
-  if (state.status === "saved") redirect(state.location);
+  if (state.status === "saved") {
+    revalidateTag(RESIDENT_BUILDINGS_TAG, { expire: 0 });
+    redirect(state.location);
+  }
   return state;
 };
 
@@ -45,6 +55,21 @@ export const renameFloorAction = staffAction(
 export const removeFloorAction = staffAction(
   SPEC,
   async (session, _previous: EditState, form: FormData) => finish(await removeFloorFromForm({ buildings }, session, form)),
+  (error) => refused(error),
+);
+
+/**
+ * "Save contact" (S02.08). A saved contact is on the residents' building page at once: the cached facts of the
+ * building are dropped here, not left to expire.
+ */
+export const setContactAction = staffAction(
+  SPEC,
+  async (session, _previous: EditState, form: FormData) => {
+    const state = await setContactFromForm({ buildings }, session, form);
+    const rsn = form.get("rsn");
+    if (state.status === "saved" && typeof rsn === "string" && /^[0-9]{1,9}$/.test(rsn)) updateTag(buildingTag(rsn));
+    return finish(state);
+  },
   (error) => refused(error),
 );
 

@@ -150,6 +150,11 @@ export interface PlannedProvider {
   /** text key (`services`, `emergency_role`) -> language -> text. */
   texts: Record<string, Record<string, string>>;
   translations: Record<string, Record<string, Record<string, unknown>>>;
+  /**
+   * text key -> language -> why that translation was not loaded although the file has one (stale, machine, ...). A language
+   * with no translation at all is not here. The directory release reports the stale ones from it (S02.05).
+   */
+  withheld: Record<string, Record<string, UnavailableReason>>;
   sourceNotes: string[];
 }
 
@@ -214,6 +219,8 @@ function adapt(file: ProviderTranslationFile | undefined, hash: Hasher): Transla
 interface LoadedTexts {
   labels: Record<string, string>;
   provenance: Record<string, Record<string, unknown>>;
+  /** language -> why a translation that exists was not loaded (never `not_translated`: that is the absence of one). */
+  withheld: Record<string, UnavailableReason>;
 }
 
 /** Loads the reviewed, current translations of one English text; counts the ones it cannot load. */
@@ -224,7 +231,7 @@ function translate(
   report: ProviderSeedReport,
   unavailable: Map<string, UnavailableCount>,
 ): LoadedTexts {
-  const out: LoadedTexts = { labels: { en: english }, provenance: {} };
+  const out: LoadedTexts = { labels: { en: english }, provenance: {}, withheld: {} };
   const key = options.textId(english);
   for (const lang of PROVIDER_LANGS) {
     const result = evaluateTranslation(lang, key, english, translations, options.hash, ["911"]);
@@ -235,6 +242,7 @@ function translate(
       continue;
     }
     const reason: UnavailableReason = "blank" in result ? "incomplete_record" : result.unavailable;
+    if (reason !== "not_translated") out.withheld[lang] = reason;
     const slot = `${lang}:${reason}`;
     const count = unavailable.get(slot) ?? { lang, reason, count: 0 };
     count.count += 1;
@@ -336,13 +344,16 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
   const providers: PlannedProvider[] = valid.map((entry) => {
     const texts: PlannedProvider["texts"] = {};
     const provenance: PlannedProvider["translations"] = {};
+    const withheld: PlannedProvider["withheld"] = {};
     const services = translated(entry.services.en);
     texts.services = services.labels;
     if (Object.keys(services.provenance).length > 0) provenance.services = services.provenance;
+    if (Object.keys(services.withheld).length > 0) withheld.services = services.withheld;
     if (entry.emergencyRole) {
       const role = translated(entry.emergencyRole.en);
       texts.emergency_role = role.labels;
       if (Object.keys(role.provenance).length > 0) provenance.emergency_role = role.provenance;
+      if (Object.keys(role.withheld).length > 0) withheld.emergency_role = role.withheld;
     }
     return {
       id: entry.id,
@@ -359,6 +370,7 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
       contact: { phone: entry.contact.phone, email: entry.contact.email, social: entry.contact.social, web: entry.contact.web },
       texts,
       translations: provenance,
+      withheld,
       sourceNotes: entry.sourceNotes,
     };
   });

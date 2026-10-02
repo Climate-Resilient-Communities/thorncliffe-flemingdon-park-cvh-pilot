@@ -5,7 +5,7 @@ import { useId, useRef, type MouseEvent } from "react";
 import { pathInLanguage } from "@/i18n/paths";
 import type { LaunchCode } from "@/i18n/languages";
 import { ResidentText } from "../text/resident-text";
-import { deviceStorage, saveLanguageChoice } from "./language-choice";
+import { saveLanguageChoice } from "./language-choice";
 
 export type LanguageOption = { code: LaunchCode; bcp47: string; dir: "ltr" | "rtl"; native: string };
 
@@ -29,7 +29,7 @@ export function LanguageControl({ current, languages, labels }: LanguageControlP
 
   const choose = (event: MouseEvent<HTMLAnchorElement>, code: LaunchCode) => {
     event.preventDefault();
-    saveLanguageChoice(deviceStorage(), code);
+    saveLanguageChoice(code);
     if (code === current) {
       dialog.current?.close();
       return;

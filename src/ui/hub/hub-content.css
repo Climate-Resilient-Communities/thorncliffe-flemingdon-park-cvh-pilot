@@ -10,6 +10,16 @@
     text-decoration: underline;
   }
 
+  /*
+   * A link that is also a touch target (the `tap` utility), in a column: as wide as its text and no wider, centred
+   * in its own height, so the target's minimum size does not open a gap between it and the line that follows.
+   */
+  .hub-link.tap {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+  }
+
   /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
   .hub-list-item {
     padding-block-end: var(--gap-related);
@@ -27,6 +37,34 @@
   }
 
   .hub-flag__label {
+    font-weight: 700;
+  }
+
+  /*
+   * Coverage of a floor or a group of floors (S01.14): always written out ("Covered: G, 1" / "Not covered: 2, 3"),
+   * with a bar and a surface that only add to the words. Covered is the green bar on the plain surface; not covered
+   * is the danger bar on the warm surface. Never colour alone.
+   */
+  .hub-cover {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border-inline-start: var(--offset-align-icon) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .hub-cover--covered {
+    border-inline-start-color: var(--sprout-green);
+  }
+
+  .hub-cover--uncovered {
+    border-inline-start-color: var(--danger);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-cover__label {
     font-weight: 700;
   }
 }

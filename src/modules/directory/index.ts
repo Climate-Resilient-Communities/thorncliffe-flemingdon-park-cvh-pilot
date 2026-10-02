@@ -29,3 +29,19 @@ export { formatSeedReport, type ContentInput, type LaunchGap, type SeedReport } 
 export { PROVIDER_ID, type ProviderCatalogueInput, type ProviderSeedPlan, type ProviderSeedReport } from "./domain/providerCatalogue";
 export { PROVIDER_ERRORS, torontoDate, type ProviderError } from "./domain/providerState";
 export { TORONTO_BOUNDS, inToronto } from "@/contracts/torontoBounds";
+export { catalogueHash, catalogueVersion, gitCommitOf } from "./adapters/catalogueVersion";
+export { openccZhHant } from "./adapters/openccConverter";
+export { DIRECTORY_BUCKET, fileDirectoryStorage, memoryDirectoryStorage, supabaseDirectoryStorage } from "./adapters/releaseStorage";
+export { PUBLISH_FAILURE_CODES, type CatalogueMismatch, type CatalogueVersion, type DirectoryStorage, type PublishDeps, type PublishFailure, type PublishFailureCode } from "./application/ports";
+export {
+  DEFAULT_LEASE_MS,
+  MAX_ATTEMPTS,
+  PUBLISH_BUDGET_MS,
+  currentReleaseSummary,
+  latestReleaseSummary,
+  publishDirectory,
+  type PublishResult,
+  type ReleaseSummary,
+} from "./application/publishDirectory";
+export { currentManifest, langOfFile, readListing, type ListingRead } from "./application/serveRelease";
+export { RELEASE_LANGS, type ReleaseCounts, type ReleaseReport, type ReleaseSearch, type StaleText, type ZhHantConverter } from "./domain/directoryRelease";

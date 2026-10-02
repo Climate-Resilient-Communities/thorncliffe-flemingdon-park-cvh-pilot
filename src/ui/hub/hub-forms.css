@@ -8,7 +8,9 @@
  *   .hub-button--primary   the one main action of a form (--ink on --on-deep)
  *   .hub-button--secondary a quieter action: --surface-raised with a --control-border hairline, like the shell's sign-out
  *   .hub-input             a text, date or number input
+ *   .hub-check             a checkbox with its sentence beside it
  *   .hub-error             a refusal, shown as text (red and bold, never colour alone)
+ *   .hub-choice            a checkbox or radio with its text: the label is the tap target
  */
 @layer components {
   .hub-button {
@@ -63,6 +65,52 @@
   .hub-input:disabled {
     border-color: var(--border);
     background-color: var(--surface);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  .hub-check {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-related);
+    min-block-size: var(--tap-current);
+  }
+
+  .hub-check input {
+    flex: none;
+    inline-size: var(--tap-current);
+    block-size: var(--tap-current);
+    margin: 0;
+  }
+
+  .hub-check span {
+    align-self: center;
+  }
+
+  /*
+   * A checkbox or radio and its text, as one target (S01.14, the app's first): the label is at least the tap size on
+   * both sides, so the whole of it is tapped, and the control inside is the icon size (24px, about 1.5rem) in the ink colour.
+   */
+  .hub-choice {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    min-inline-size: var(--tap-current);
+    padding-inline: var(--gap-label);
+    cursor: pointer;
+  }
+
+  .hub-choice > input {
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    margin: 0;
+    accent-color: var(--ink);
+    cursor: inherit;
+  }
+
+  .hub-choice:has(> input:disabled) {
     color: var(--text-muted);
     cursor: not-allowed;
   }

@@ -37,12 +37,17 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       ],
     },
   ];
+  // Coverage (S01.14) is `coverage.view`: an Admin and a Coordinator, and a Director read-only. It sits with the
+  // disruption screens because it says where a check-in round can be promised.
+  if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "coverage", label: englishText("hub.nav.coverage"), href: "/staff/coverage", icon: "ready" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
-  // `accounts.manage`, the providers page `provider.manage` (S02.04), the buildings page `buildings.manage` (S01.13) and the
-  // first-text spike's page (S01.15, E06 removes it) `sms.test_send`, all Admin only.
+  // `accounts.manage`, the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05),
+  // the buildings page `buildings.manage` (S01.13) and the first-text spike's page (S01.15, E06 removes it) `sms.test_send`,
+  // all Admin only.
   const admin: HubNavSection["items"][number][] = [];
   if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
   if (can(role, "provider.manage")) admin.push({ id: "providers", label: englishText("hub.nav.providers"), href: "/staff/providers", icon: "inbox" });
+  if (can(role, "guide.publish")) admin.push({ id: "directory", label: englishText("hub.nav.directory"), href: "/staff/directory", icon: "layers" });
   if (can(role, "buildings.manage")) admin.push({ id: "buildings", label: englishText("hub.nav.buildings"), href: "/staff/buildings", icon: "building" });
   if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });

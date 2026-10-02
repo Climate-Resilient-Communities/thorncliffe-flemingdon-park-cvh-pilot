@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Db } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
+import { CONTACT_OWNER, checkContact, isContactRole, type ContactError, type ContactRole } from "../domain/buildingContact";
 import { checkFloorLabel, type FloorLabelError } from "../domain/floorLabel";
 import type { AssignedAmbassador, FloorAssignments, PlacesAudit, PlacesAuditEvent } from "./ports";
 
@@ -41,13 +42,41 @@ export interface BuildingFacts {
   updatedAt: Date;
 }
 
+/** The building contact an Admin entered (S02.08); the Hub owns it. */
+export interface BuildingContact {
+  /** Which office the number reaches, as stored: a code, shown to residents as a translated label. */
+  role: ContactRole;
+  /** E.164: +14165550123 */
+  phone: string;
+  owner: typeof CONTACT_OWNER;
+  updatedAt: Date;
+}
+
 export interface BuildingDetail extends BuildingSummary {
   facts: BuildingFacts;
+  /** Null when no contact was entered. */
+  contact: BuildingContact | null;
   /** Lowest first. */
   floors: FloorView[];
 }
 
-export type FloorRefusal = FloorLabelError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
+export interface FloorPlanFloor {
+  id: string;
+  label: string;
+  /** Orders the floors of a building, lowest first. */
+  sortOrder: number;
+}
+
+/** A building with its floors, as the coverage view needs it. */
+export interface BuildingFloorPlan {
+  rsn: string;
+  address: string;
+  neighbourhoodId: string;
+  neighbourhoodName: string;
+  floors: FloorPlanFloor[];
+}
+
+export type FloorRefusal = FloorLabelError | ContactError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
 
 /** An expected outcome as a value (spine: Errors). A refusal to remove a floor lists the Ambassadors who block it. */
 export type FloorResult<T> = { ok: true; value: T } | { ok: false; error: FloorRefusal; ambassadors?: readonly AssignedAmbassador[] };
@@ -87,6 +116,11 @@ const REASONS: Record<FloorRefusal, "validation" | "duplicate" | "not_found" | "
   label_too_long: "validation",
   label_characters: "validation",
   label_duplicate: "duplicate",
+  role_invalid: "validation",
+  phone_invalid: "validation",
+  role_without_phone: "validation",
+  phone_without_role: "validation",
+  not_work_number: "validation",
   building_not_found: "not_found",
   floor_not_found: "not_found",
   floor_has_assignments: "floor_has_assignments",
@@ -103,6 +137,12 @@ function isLabelUniqueViolation(error: unknown): boolean {
     current = (current as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/** The contact of a building row; null unless all of it is there (the database checks it is all or nothing). */
+export function contactOf(row: Pick<typeof building.$inferSelect, "contactRole" | "contactPhone" | "contactUpdatedAt">): BuildingContact | null {
+  if (row.contactRole === null || row.contactPhone === null || row.contactUpdatedAt === null || !isContactRole(row.contactRole)) return null;
+  return { role: row.contactRole, phone: row.contactPhone, owner: CONTACT_OWNER, updatedAt: row.contactUpdatedAt };
 }
 
 const floorOf = (row: typeof buildingFloor.$inferSelect): FloorView => ({ id: row.id, label: row.label, confirmed: row.confirmed });
@@ -176,6 +216,22 @@ export function createBuildingService(deps: BuildingServiceDeps) {
       }));
     },
 
+    /**
+     * Every building with its floors, lowest first, by neighbourhood and address: what the coverage view
+     * (S01.14) lays the assignments over. A building with no floors yet has an empty list.
+     */
+    async listFloorPlans(): Promise<BuildingFloorPlan[]> {
+      const rows = await db
+        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhoodName: neighbourhood.name })
+        .from(building)
+        .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
+        .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));
+      const floors = await db.select().from(buildingFloor).orderBy(asc(buildingFloor.sortOrder), asc(buildingFloor.label));
+      const byBuilding = new Map<string, FloorPlanFloor[]>();
+      for (const floor of floors) byBuilding.set(floor.rsn, [...(byBuilding.get(floor.rsn) ?? []), { id: floor.id, label: floor.label, sortOrder: floor.sortOrder }]);
+      return rows.map((row) => ({ ...row, floors: byBuilding.get(row.rsn) ?? [] }));
+    },
+
     /** One building with its facts and floors; null when there is none with that rsn. */
     async getBuilding(rsn: string): Promise<BuildingDetail | null> {
       if (!RSN.test(rsn)) return null;
@@ -204,6 +260,7 @@ export function createBuildingService(deps: BuildingServiceDeps) {
           barrierFreeEntrance: row.barrierFreeEntrance,
           updatedAt: row.factsUpdatedAt,
         },
+        contact: contactOf(row),
         floors: floors.map(floorOf),
       };
     },
@@ -272,6 +329,42 @@ export function createBuildingService(deps: BuildingServiceDeps) {
           meta: { floor_id: floor.id, label: floor.label, assignments: 0 },
         });
         return floorOf(floor);
+      });
+    },
+
+    /**
+     * Enters, changes or removes the building contact (S02.08). The Hub is its owner and now its last-updated
+     * date. Both fields empty removes it; one without the other, a role that is not on the list, a number that is
+     * not a North American one, or a number the Admin did not confirm as a work or office number the building
+     * agreed to publish is refused with the reason, and nothing is saved. Saving what is already there is
+     * refused as no change, so the date means "last changed".
+     */
+    setContact(actorStaffId: string, input: { rsn: string; role: string; phone: string; workNumber: boolean }): Promise<FloorResult<{ contact: BuildingContact | null }>> {
+      return change(actorStaffId, "building.contact_changed", input.rsn, async (tx) => {
+        const row = await lockBuilding(tx, input.rsn);
+        const checked = checkContact(input.role, input.phone, input.workNumber);
+        if (!checked.ok) throw new Refused(checked.error);
+        const before = contactOf(row);
+        if ((checked.contact === null && before === null) || (checked.contact && before && checked.contact.role === before.role && checked.contact.phone === before.phone)) {
+          throw new Refused("no_change");
+        }
+        const at = now();
+        await tx
+          .update(building)
+          .set(
+            checked.contact
+              ? { contactRole: checked.contact.role, contactPhone: checked.contact.phone, contactOwner: CONTACT_OWNER, contactUpdatedAt: at }
+              : { contactRole: null, contactPhone: null, contactOwner: null, contactUpdatedAt: null },
+          )
+          .where(eq(building.rsn, input.rsn));
+        await audit.record(tx, {
+          action: "building.contact_changed",
+          actorStaffId,
+          subjectType: "building",
+          subjectId: input.rsn,
+          meta: checked.contact ? {} : { cleared: true },
+        });
+        return { contact: checked.contact ? { ...checked.contact, owner: CONTACT_OWNER, updatedAt: at } : null };
       });
     },
 

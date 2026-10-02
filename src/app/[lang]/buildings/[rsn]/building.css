@@ -1,0 +1,108 @@
+/*
+ * Resident building page (S02.08). Spacing from the semantic tokens, direction from logical properties only.
+ * "Yes", "No" and "Not known" are three different looks, none of them by colour alone: a filled disc, an empty
+ * ring and a dashed ring, each with its word, and "Not known" in italics.
+ */
+@layer components {
+  .building-neighbourhood,
+  .building-updated {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  /* The Hub is checking this building: a note, not an error. */
+  .building-note {
+    padding: var(--inset-card);
+    border: 2px solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .building-facts {
+    margin: 0;
+  }
+
+  .building-fact {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    column-gap: var(--gap-related);
+    row-gap: var(--gap-subline);
+    padding-block: var(--gap-tight);
+    border-block-end: 1px solid var(--border);
+  }
+
+  .building-fact dt {
+    min-inline-size: 0;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .building-fact dd {
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .building-value {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--gap-label);
+  }
+
+  .building-value--number {
+    font-weight: 700;
+  }
+
+  .building-value__mark {
+    flex: none;
+    box-sizing: border-box;
+    inline-size: 0.75em;
+    block-size: 0.75em;
+    border-radius: var(--radius-disc);
+  }
+
+  /* Yes: a filled disc. */
+  .building-value--yes .building-value__mark {
+    background-color: var(--ink);
+    border: 2px solid var(--ink);
+  }
+
+  /* No: an empty ring. */
+  .building-value--no .building-value__mark {
+    background-color: transparent;
+    border: 2px solid var(--ink);
+  }
+
+  /* Not known: a dashed ring, and the words in italics, so it never looks like a "No". */
+  .building-value--unknown {
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  .building-value--unknown .building-value__mark {
+    background-color: transparent;
+    border: 2px dashed var(--text-muted);
+  }
+
+  .building-contact__role {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .building-contact__call {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    padding-inline: var(--gap-related);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: none;
+  }
+}

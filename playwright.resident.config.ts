@@ -1,3 +1,4 @@
+import path from "node:path";
 import { defineConfig } from "@playwright/test";
 
 // Page tests of the resident surface (/[lang]/…) against the production build: run `npm run build` first.
@@ -29,6 +30,10 @@ export default defineConfig({
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     baseURL: localUrl,
+    // Every test starts as a returning resident who has been through the first-run steps (S02.03), so a page that
+    // sends a first visit to R-01 does not redirect them. A test of the first visit starts empty:
+    // test.use({ storageState: { cookies: [], origins: [] } }).
+    storageState: { cookies: [], origins: [{ origin: localUrl, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
     browserName: "chromium",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
@@ -36,7 +41,8 @@ export default defineConfig({
     command: `npm run start -- --port ${port}`,
     url: localUrl,
     // The server refuses to start without a safe environment (S01.02); a local run is development.
-    env: { SMS_MODE: "log", PUBLIC_BASE_URL: localUrl },
+    // CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) reads these sample buildings instead of the database.
+    env: { SMS_MODE: "log", PUBLIC_BASE_URL: localUrl, CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json") },
     reuseExistingServer: !process.env.CI,
   },
 });
