@@ -1404,7 +1404,7 @@ Residents type a question in any launch language, romanized or mixed included, a
 ### Story S03.01 — Team can measure search with a test set from day one
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** FR-D2-Q (acceptance), AR-24 · **Depends on:** S02.04 · **Branch:** `e03-s01-test-set-runner`
+- **Traces:** FR-D2-Q (acceptance), AR-22 (AD-24) · **Depends on:** S02.04 · **Branch:** `e03-s01-test-set-runner`
 
 As a developer,
 I want a test-set format, a runner and a starter set of about 30 questions,
