@@ -1,48 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
-import { DEVICE_CHOICES_KEY, parseDeviceChoices } from "@/contracts/deviceChoices";
 import { ResidentText } from "@/ui";
+import { useChoices } from "@/ui/choices";
 import type { BuildingContactCard } from "../view";
 
 // The contacts of the buildings a resident chose (S02.10, S02.08). The choices live only on the phone (AD-3,
 // `cvh.choices`), so the server sends every pilot building's contact and the phone picks its own: the server never
 // learns which buildings were chosen, and this page is the same for everyone (cacheable).
-
-const RSN = /^[0-9]{1,9}$/;
-
-/** The buildings in the saved choices, in the order they were chosen. Anything that is not a register number is ignored. */
-export function chosenRsns(raw: string | null): readonly string[] {
-  const buildings = parseDeviceChoices(raw)?.buildings;
-  if (!Array.isArray(buildings)) return [];
-  return [...new Set(buildings.filter((rsn): rsn is string => typeof rsn === "string" && RSN.test(rsn)))];
-}
-
-let cached: { raw: string | null; value: readonly string[] } = { raw: null, value: [] };
-
-/** The chosen buildings as of now. The same array until the saved text changes (for useSyncExternalStore). */
-function getSnapshot(): readonly string[] {
-  let raw: string | null = null;
-  try {
-    raw = window.localStorage.getItem(DEVICE_CHOICES_KEY);
-  } catch {
-    // Storage blocked or missing: the same as no choices.
-  }
-  if (raw !== cached.raw) cached = { raw, value: chosenRsns(raw) };
-  return cached.value;
-}
-
-function subscribe(listener: () => void): () => void {
-  const onStorage = (event: StorageEvent) => {
-    if (event.key === null || event.key === DEVICE_CHOICES_KEY) listener();
-  };
-  window.addEventListener("storage", onStorage);
-  return () => window.removeEventListener("storage", onStorage);
-}
-
-/** undefined until the phone has been read (the server and the first render), then the chosen buildings. */
-const useChosenRsns = (): readonly string[] | undefined => useSyncExternalStore(subscribe, getSnapshot, () => undefined);
 
 export type ChosenContactsProps = {
   /** "Your building" */
@@ -117,8 +82,9 @@ function Card({ card, props }: { card: BuildingContactCard; props: ChosenContact
  * phone has been read nothing is drawn (the server cannot know), so the page never shows a wrong building for a moment.
  */
 export function ChosenContacts(props: ChosenContactsProps) {
-  const chosen = useChosenRsns();
-  if (chosen === undefined) return null;
+  const choices = useChoices();
+  if (choices === undefined) return null;
+  const chosen = [...new Set(choices?.buildings ?? [])];
   const byRsn = new Map(props.buildings.map((card) => [card.rsn, card]));
   // A building the list no longer has (removed since it was chosen) is skipped.
   const cards = chosen.flatMap((rsn) => byRsn.get(rsn) ?? []);
