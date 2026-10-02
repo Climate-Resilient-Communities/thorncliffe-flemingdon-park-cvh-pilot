@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { checkOwnership, checkRls } from "../../scripts/db/check-schema.mjs";
+import { checkNetAccess, checkOwnership, checkRls } from "../../scripts/db/check-schema.mjs";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { FIXTURES, ROOT, connect, createFreshDatabase, serverUrl, type FreshDatabase } from "./helpers";
 
@@ -133,6 +133,83 @@ describe("RLS check cannot be sidestepped", () => {
     expect(await checkOwnership(db!.sql, owners)).toEqual([
       expect.stringMatching(/^extensions\.widget is not in the table ownership table/),
     ]);
+  });
+});
+
+describe("network access check (pg_net)", () => {
+  const CALLER = `create function public.notify_partner() returns bigint language plpgsql as
+    $$ begin return net.http_post(url := 'https://example.com'); end $$;`;
+
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe("create schema if not exists extensions; create extension if not exists pg_net with schema extensions");
+    await db.sql.unsafe(sqlText);
+    return checkNetAccess(db.sql);
+  }
+
+  it("rejects a client-callable function that calls net.http_post", async () => {
+    // Functions are executable by PUBLIC unless revoked.
+    const problems = await checked(CALLER);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.notify_partner\(\) uses the net schema \(pg_net\) and anon and authenticated can execute it/)]);
+  });
+
+  it("rejects a SECURITY DEFINER function a client can call", async () => {
+    const problems = await checked(`${CALLER.replace("language plpgsql", "language plpgsql security definer")} grant execute on function public.notify_partner() to anon;`);
+
+    expect(problems).toHaveLength(1);
+    expect(problems[0]).toMatch(/notify_partner\(\) uses the net schema/);
+  });
+
+  it("rejects a quoted or http_get/http_delete reference, and a procedure", async () => {
+    const problems = await checked(
+      `create function public.a() returns void language sql as $$ select "net"."http_get"('https://example.com') $$;
+       create procedure public.b() language plpgsql as $$ begin perform net.http_delete('https://example.com'); end $$;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.a\(\)/), expect.stringMatching(/^public\.b\(\)/)]);
+  });
+
+  it("passes the same function once EXECUTE is revoked from public, anon and authenticated", async () => {
+    const problems = await checked(`${CALLER} revoke all on function public.notify_partner() from public, anon, authenticated;`);
+
+    expect(problems).toEqual([]);
+  });
+
+  it("still rejects it when only anon and authenticated are revoked but PUBLIC keeps EXECUTE", async () => {
+    const problems = await checked(`${CALLER} revoke all on function public.notify_partner() from anon, authenticated;`);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.notify_partner\(\)/)]);
+  });
+
+  it("passes a function only service_role can execute", async () => {
+    const problems = await checked(
+      `${CALLER} revoke all on function public.notify_partner() from public, anon, authenticated; grant execute on function public.notify_partner() to service_role;`,
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("passes a client-callable function that does not use pg_net", async () => {
+    const problems = await checked("create function public.ping() returns int language sql as $$ select 1 $$;");
+
+    expect(problems).toEqual([]);
+  });
+
+  it("rejects a view on net._http_response that anon can read", async () => {
+    const problems = await checked(
+      `create view public.http_log as select * from net._http_response; grant select on public.http_log to anon;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.http_log is a view on the net schema \(pg_net\) that anon can read/)]);
+  });
+
+  it("passes that view once clients cannot read it", async () => {
+    const problems = await checked(
+      `create view public.http_log as select * from net._http_response; revoke all on public.http_log from public, anon, authenticated;`,
+    );
+
+    expect(problems).toEqual([]);
   });
 });
 

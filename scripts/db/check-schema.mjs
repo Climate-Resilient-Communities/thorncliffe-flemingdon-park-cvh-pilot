@@ -5,13 +5,18 @@
 //    The app reaches its tables only through the server's own connection.
 //  - Ownership: every app table is listed in the spine's table ownership table;
 //    a table in a schema named after a module must be owned by that module.
+//  - Network access: no function, procedure or view of the app that references
+//    the net schema (pg_net: net.http_post and the like) is executable or
+//    selectable by anon or authenticated, directly or through PUBLIC. pg_net's
+//    own objects cannot be revoked (supabase_admin owns them), so the app's
+//    wrappers around them are checked instead.
 //
 // Usage: MIGRATE_DATABASE_URL=postgres://... node scripts/db/check-schema.mjs
 
 import { createRequire } from "node:module";
 import { pathToFileURL } from "node:url";
 import postgres from "postgres";
-import { migrationRelationCondition, notExtensionMember } from "./schemas.mjs";
+import { appSchemaCondition, migrationRelationCondition, notExtensionMember } from "./schemas.mjs";
 
 const require = createRequire(import.meta.url);
 const { readTableOwnership } = require("../table-ownership.cjs");
@@ -92,6 +97,67 @@ export async function checkRls(sql) {
   return problems;
 }
 
+// A reference to the net schema in a definition: net.http_post, "net"."http_get", net._http_response.
+const NET_REFERENCE = String.raw`\m"?net"?[[:space:]]*\.[[:space:]]*"?[a-z_]`;
+
+/**
+ * pg_net lets the database make HTTP requests, and its net.* functions cannot
+ * be revoked from clients (supabase_admin owns them). So no function, procedure,
+ * view or materialized view of the app that references the net schema may be
+ * executable (functions) or selectable (views) by anon or authenticated, whether
+ * granted to them, to a role they belong to, or to PUBLIC. A SECURITY DEFINER
+ * function is no exception: it is how a client would borrow the owner's access.
+ * Functions only service_role and postgres can execute pass.
+ *
+ * @param {import("postgres").Sql} sql
+ * @returns {Promise<string[]>}
+ */
+export async function checkNetAccess(sql) {
+  const functions = await sql.unsafe(`
+    select n.nspname as schema, p.proname as name, p.prokind as kind,
+           pg_get_function_identity_arguments(p.oid) as args,
+           (select array_agg(r.rolname order by r.rolname) from pg_roles r
+             where r.oid in ${CLIENTS} and has_function_privilege(r.oid, p.oid, 'EXECUTE'))::text[] as reachable_by
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where p.prokind in ('f', 'p') and ${appSchemaCondition("n")}
+      and not exists (select 1 from pg_depend d where d.classid = 'pg_proc'::regclass and d.objid = p.oid and d.deptype = 'e')
+      and pg_get_functiondef(p.oid) ~* '${NET_REFERENCE}'
+    order by 1, 2, 4`);
+  const views = await sql.unsafe(`
+    select n.nspname as schema, c.relname as name, c.relkind as kind,
+           (select array_agg(r.rolname order by r.rolname) from pg_roles r
+             where r.oid in ${CLIENTS} and has_table_privilege(r.oid, c.oid, 'SELECT'))::text[] as reachable_by
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind in ('v', 'm') and ${appSchemaCondition("n")} and ${notExtensionMember("c")}
+      and (pg_get_viewdef(c.oid) ~* '${NET_REFERENCE}'
+        or exists (select 1 from pg_depend d
+                   join pg_rewrite rw on rw.oid = d.objid
+                   join pg_class dc on dc.oid = d.refobjid
+                   join pg_namespace dn on dn.oid = dc.relnamespace
+                   where d.classid = 'pg_rewrite'::regclass and d.refclassid = 'pg_class'::regclass
+                     and rw.ev_class = c.oid and dn.nspname = 'net'))
+    order by 1, 2`);
+
+  const problems = [];
+  for (const f of functions) {
+    if (!f.reachable_by?.length) continue;
+    const signature = `${f.schema}.${f.name}(${f.args})`;
+    problems.push(
+      `${signature} uses the net schema (pg_net) and ${f.reachable_by.join(" and ")} can execute it: ` +
+        `add "revoke all on ${f.kind === "p" ? "procedure" : "function"} ${signature} from public, anon, authenticated"`,
+    );
+  }
+  for (const v of views) {
+    if (!v.reachable_by?.length) continue;
+    const name = `${v.schema}.${v.name}`;
+    problems.push(
+      `${name} is a ${v.kind === "m" ? "materialized view" : "view"} on the net schema (pg_net) that ${v.reachable_by.join(" and ")} can read: ` +
+        `add "revoke all on ${name} from public, anon, authenticated"`,
+    );
+  }
+  return problems;
+}
+
 /**
  * @param {import("postgres").Sql} sql
  * @param {Record<string, string>} owners table name -> owning module
@@ -132,6 +198,7 @@ async function main() {
     const sections = [
       ["Row level security", await checkRls(sql)],
       ["Table ownership", await checkOwnership(sql, readTableOwnership())],
+      ["Network access", await checkNetAccess(sql)],
     ];
     for (const [title, problems] of sections) {
       if (problems.length === 0) {
