@@ -31,7 +31,7 @@ export default staffPage(
             <h1>{englishText("staff.smsTest.title")}</h1>
             <p>{englishText("staff.smsTest.lead")}</p>
           </Stack>
-          <p role="alert">{englishText("staff.smsTest.errors.forbidden")}</p>
+          <p role="alert" className="hub-error">{englishText("staff.smsTest.errors.forbidden")}</p>
         </Stack>
       </Screen>
     ),

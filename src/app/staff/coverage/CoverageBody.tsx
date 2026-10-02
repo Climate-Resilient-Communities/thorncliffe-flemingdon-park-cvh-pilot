@@ -126,7 +126,7 @@ function Building({ view, actions, initial }: { view: CoverageBuildingView; acti
 function Missing({ view }: { view: CoverageMissingView }) {
   return (
     <Stack gap="related">
-      <p role="alert">{view.message}</p>
+      <p role="alert" className="hub-error">{view.message}</p>
       <a className="tap hub-link" href={view.back.href}>
         {view.back.label}
       </a>

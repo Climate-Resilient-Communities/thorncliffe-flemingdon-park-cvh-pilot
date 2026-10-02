@@ -78,29 +78,29 @@ export function AddPersonForm({ labels, roles, note, initialState = { status: "i
 
   return (
     // A new key after each refusal re-renders the fields with the values just entered.
-    <form action={formAction} key={state.status === "refused" ? JSON.stringify(state) : "new"}>
+    <form className="hub-form" action={formAction} key={state.status === "refused" ? JSON.stringify(state) : "new"}>
       <Stack gap="stack">
         {note && <p>{note}</p>}
         {state.status === "refused" && (
-          <p id={ERROR_ID} role="alert">
+          <p id={ERROR_ID} role="alert" className="hub-error">
             {state.message}
           </p>
         )}
         <Field name="username" label={labels.username} hint={labels.usernameHint} state={state}>
-          {(attributes) => <input className="tap" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false} required {...attributes} />}
+          {(attributes) => <input className="hub-input" type="text" autoComplete="off" autoCapitalize="none" spellCheck={false} required {...attributes} />}
         </Field>
         <Field name="firstName" label={labels.firstName} hint={labels.nameHint} state={state}>
-          {(attributes) => <input className="tap" type="text" autoComplete="off" required {...attributes} />}
+          {(attributes) => <input className="hub-input" type="text" autoComplete="off" required {...attributes} />}
         </Field>
         <Field name="lastName" label={labels.lastName} state={state}>
-          {(attributes) => <input className="tap" type="text" autoComplete="off" required {...attributes} />}
+          {(attributes) => <input className="hub-input" type="text" autoComplete="off" required {...attributes} />}
         </Field>
         <Field name="email" label={labels.email} hint={labels.emailHint} state={state}>
-          {(attributes) => <input className="tap" type="email" autoComplete="off" required {...attributes} />}
+          {(attributes) => <input className="hub-input" type="email" autoComplete="off" required {...attributes} />}
         </Field>
         <Field name="role" label={labels.role} state={state}>
           {(attributes) => (
-            <select className="tap" required {...attributes} defaultValue={attributes.defaultValue ?? roles[0]?.value}>
+            <select className="hub-input" required {...attributes} defaultValue={attributes.defaultValue ?? roles[0]?.value}>
               {roles.map((role) => (
                 <option key={role.value} value={role.value}>
                   {role.label}
@@ -109,7 +109,7 @@ export function AddPersonForm({ labels, roles, note, initialState = { status: "i
             </select>
           )}
         </Field>
-        <button className="tap" type="submit" disabled={pending}>
+        <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
           {labels.submit}
         </button>
       </Stack>

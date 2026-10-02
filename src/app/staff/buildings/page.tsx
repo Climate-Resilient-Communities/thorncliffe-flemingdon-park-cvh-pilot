@@ -27,7 +27,7 @@ export default staffPage(
     action: "buildings.manage",
     refused: () => (
       <Screen surface="staff">
-        <p role="alert">{englishText("staff.buildings.errors.forbidden")}</p>
+        <p role="alert" className="hub-error">{englishText("staff.buildings.errors.forbidden")}</p>
       </Screen>
     ),
   },

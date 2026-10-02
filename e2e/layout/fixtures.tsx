@@ -8,6 +8,20 @@ import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directo
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import type { ComponentProps, ReactNode } from "react";
+import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
+import { SignOutButton } from "@/app/staff/SignOutButton";
+import { SignInForm } from "@/app/staff/sign-in/SignInForm";
+import { ChoosePasswordForm } from "@/app/staff/setup/password/ChoosePasswordForm";
+import { EnrolAuthenticator } from "@/app/staff/setup/authenticator/EnrolAuthenticator";
+import { AddPersonForm, type AddPersonLabels } from "@/app/staff/people/AddPersonForm";
+import { ReissueForm } from "@/app/staff/people/ReissueForm";
+import { ResetAuthenticatorForm } from "@/app/staff/people/ResetAuthenticatorForm";
+import { ResetPasswordForm } from "@/app/staff/people/ResetPasswordForm";
+import type { AddPersonState } from "@/app/staff/people/addPerson";
+import type { ReissueState } from "@/app/staff/people/reissue";
+import type { ResetAuthenticatorState } from "@/app/staff/people/resetAuthenticator";
+import type { ResetPasswordState } from "@/app/staff/people/resetPassword";
+import { englishText } from "@/i18n/text";
 import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/staff/alerts/audience/AudienceBody";
@@ -458,7 +472,7 @@ function AroundTheScreen({
       }}
       signOut={
         <form method="post" action="/api/staff/sign-out">
-          <button type="submit" className="tap">
+          <button type="submit" className="hub-button hub-button--secondary">
             {texts.signOut}
           </button>
         </form>
@@ -585,7 +599,7 @@ export function ProvidersFixture({
       }}
       signOut={
         <form method="post" action="/api/staff/sign-out">
-          <button type="submit" className="tap">
+          <button type="submit" className="hub-button hub-button--secondary">
             {texts.signOut}
           </button>
         </form>
@@ -641,7 +655,7 @@ export function SmsTestFixture({
       }}
       signOut={
         <form method="post" action="/api/staff/sign-out">
-          <button type="submit" className="tap">
+          <button type="submit" className="hub-button hub-button--secondary">
             {texts.signOut}
           </button>
         </form>
@@ -683,7 +697,7 @@ export function DirectoryFixture({
       }}
       signOut={
         <form method="post" action="/api/staff/sign-out">
-          <button type="submit" className="tap">
+          <button type="submit" className="hub-button hub-button--secondary">
             {texts.signOut}
           </button>
         </form>
@@ -702,5 +716,158 @@ export function DirectoryFixture({
         </Stack>
       </Screen>
     </HubShell>
+  );
+}
+
+// ---- The staff screens made of forms (S01.05, S01.07, S01.08, S01.10, S01.11) -----------------------------------------
+
+/**
+ * A staff page outside the Hub shell (sign-in, the authenticator code, the two setup gates): the page's own <main>, heading
+ * and lead, and its real form, as the page markup has them. Words are the catalog's. The form posts with fetch, so a
+ * screenshot that needs an answer replaces `fetch` in the page first (e2e/hub/staff-forms.spec.ts).
+ */
+export function StaffGateFixture({ page }: { page: "sign-in" | "code" | "password" | "authenticator" }) {
+  const signOut = <SignOutButton label={englishText("staff.signOut")} />;
+  const unavailable = englishText("staff.authenticator.errors.unavailable");
+  const body = {
+    "sign-in": (
+      <>
+        <Stack gap="related">
+          <h1>{englishText("staff.signIn.title")}</h1>
+          <p>{englishText("staff.signIn.lead")}</p>
+        </Stack>
+        <SignInForm
+          labels={{
+            username: englishText("staff.signIn.username"),
+            password: englishText("staff.signIn.password"),
+            submit: englishText("staff.signIn.submit"),
+            unavailable: englishText("staff.signIn.unavailable"),
+          }}
+        />
+      </>
+    ),
+    code: (
+      <>
+        <Stack gap="related">
+          <h1>{englishText("staff.authenticator.code.title")}</h1>
+          <p>{englishText("staff.authenticator.code.lead")}</p>
+        </Stack>
+        <AuthenticatorCodeForm
+          labels={{ code: englishText("staff.authenticator.code.code"), submit: englishText("staff.authenticator.code.submit"), unavailable }}
+        />
+        <p>{englishText("staff.authenticator.code.lost")}</p>
+        {signOut}
+      </>
+    ),
+    password: (
+      <>
+        <Stack gap="related">
+          <h1>{englishText("staff.setup.password.title")}</h1>
+          <p>{englishText("staff.setup.password.lead")}</p>
+        </Stack>
+        <ChoosePasswordForm
+          labels={{
+            password: englishText("staff.setup.password.password"),
+            passwordHint: englishText("staff.setup.password.passwordHint"),
+            confirm: englishText("staff.setup.password.confirm"),
+            submit: englishText("staff.setup.password.submit"),
+            unavailable: englishText("staff.setup.password.errors.unavailable"),
+          }}
+        />
+        {signOut}
+      </>
+    ),
+    authenticator: (
+      <>
+        <Stack gap="related">
+          <h1>{englishText("staff.setup.authenticator.title")}</h1>
+          <p>{englishText("staff.setup.authenticator.lead")}</p>
+          <p>{englishText("staff.setup.authenticator.install")}</p>
+        </Stack>
+        <EnrolAuthenticator
+          labels={{
+            start: englishText("staff.setup.authenticator.start"),
+            scan: englishText("staff.setup.authenticator.scan"),
+            qrAlt: englishText("staff.setup.authenticator.qrAlt"),
+            key: englishText("staff.setup.authenticator.key", { key: "{key}" }),
+            keyHint: englishText("staff.setup.authenticator.keyHint"),
+            unavailable,
+            code: { code: englishText("staff.setup.authenticator.code"), submit: englishText("staff.setup.authenticator.submit"), unavailable },
+          }}
+        />
+        {signOut}
+      </>
+    ),
+  }[page];
+  return (
+    <main>
+      <Screen surface="staff">
+        <div className="hub-gate">
+          <Stack gap="section-hub">{body}</Stack>
+        </div>
+      </Screen>
+    </main>
+  );
+}
+
+/**
+ * The People screen in the Hub shell, as an Admin sees it: the real forms (add a person, reset password, reset
+ * authenticator, re-issue) with the state each starts in. Their actions are the harness's stand-ins
+ * (e2e/helpers/people-actions-stub.ts).
+ */
+export function PeopleFixture({
+  texts,
+  brand,
+  add,
+  resetPassword,
+  resetAuthenticator,
+  reissue,
+  refusal,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  add?: AddPersonState;
+  resetPassword?: ResetPasswordState;
+  resetAuthenticator?: ResetAuthenticatorState;
+  reissue?: ReissueState;
+  /** Instead of the forms: why this person may not add anyone. */
+  refusal?: "forbidden";
+}) {
+  const roles = (["ambassador", "coordinator", "director", "admin"] as const).map((role) => ({ value: role, label: englishText(`staff.roles.${role}`) }));
+  // The browser bundle cannot take AddPersonBody (it reaches the identity module and node:crypto), so its labels are read here.
+  const addPersonLabels = Object.fromEntries(
+    ["username", "usernameHint", "firstName", "lastName", "nameHint", "email", "emailHint", "role", "submit", "addAnother"].map((key) => [key, englishText(`staff.people.${key}` as "staff.people.username")]),
+  ) as unknown as AddPersonLabels;
+  const labelsOf = (prefix: "resetPassword" | "resetAuthenticator" | "reissue") => ({
+    title: englishText(`staff.${prefix}.title`),
+    lead: englishText(`staff.${prefix}.lead`),
+    username: englishText(`staff.${prefix}.username`),
+    submit: englishText(`staff.${prefix}.submit`),
+  });
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/people">
+      <Screen surface="staff" testId="screen">
+        <Stack gap="section-hub">
+          <Stack gap="related">
+            <h1>{texts.heading}</h1>
+            {texts.paragraphs.map((text) => (
+              <p key={text}>{text}</p>
+            ))}
+          </Stack>
+          {refusal ? (
+            <p role="alert" className="hub-error">
+              {englishText(`staff.people.errors.${refusal}`)}
+            </p>
+          ) : (
+            <>
+              <AddPersonForm labels={addPersonLabels} roles={roles} initialState={add} />
+              <ResetPasswordForm labels={labelsOf("resetPassword")} initialState={resetPassword} />
+              <ResetAuthenticatorForm labels={labelsOf("resetAuthenticator")} initialState={resetAuthenticator} />
+              <ReissueForm labels={labelsOf("reissue")} initialState={reissue} />
+            </>
+          )}
+        </Stack>
+      </Screen>
+    </AroundTheScreen>
   );
 }

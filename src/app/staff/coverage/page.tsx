@@ -30,7 +30,7 @@ export default staffPage(
     action: "coverage.view",
     refused: () => (
       <Screen surface="staff">
-        <p role="alert">{englishText("staff.coverage.errors.forbidden")}</p>
+        <p role="alert" className="hub-error">{englishText("staff.coverage.errors.forbidden")}</p>
       </Screen>
     ),
   },

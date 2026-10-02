@@ -62,7 +62,7 @@ export function AudienceBody({ screen, actions, initial }: { screen: AudienceScr
   if (screen.kind === "missing") {
     return (
       <Stack gap="related">
-        <p role="alert">{screen.message}</p>
+        <p role="alert" className="hub-error">{screen.message}</p>
         <a className="tap hub-link" href={screen.back.href}>
           {screen.back.label}
         </a>

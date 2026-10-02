@@ -40,14 +40,14 @@ export function AuthenticatorCodeForm({ labels }: { labels: AuthenticatorCodeLab
     <form onSubmit={submit} noValidate>
       <Stack gap="stack">
         {message && (
-          <p id={ERROR_ID} role="alert">
+          <p id={ERROR_ID} role="alert" className="hub-error">
             {message}
           </p>
         )}
         <Stack gap="label">
           <label htmlFor="code">{labels.code}</label>
           <input
-            className="tap"
+            className="hub-input"
             id="code"
             name="code"
             type="text"
@@ -59,7 +59,7 @@ export function AuthenticatorCodeForm({ labels }: { labels: AuthenticatorCodeLab
             aria-describedby={message ? ERROR_ID : undefined}
           />
         </Stack>
-        <button className="tap" type="submit" disabled={pending}>
+        <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
           {labels.submit}
         </button>
       </Stack>
