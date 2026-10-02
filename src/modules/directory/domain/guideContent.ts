@@ -19,24 +19,42 @@
 // blank is the refusal, and a translation of a text with "911" in it that lost "911" is not loaded.
 //
 // Pure and browser-safe: the SHA-256 hasher and today's date are passed in (PlanOptions).
-import { LANG_CODES, type LangCode } from "@/contracts/lang";
+import type { LangCode } from "@/contracts/lang";
+import {
+  PLACEHOLDER_PREFIX,
+  TRANSLATED_LANGS,
+  checkAttribution,
+  englishReviewHash,
+  evaluateTranslation,
+  isIsoDate,
+  isPlaceholder,
+  present,
+  type Attribution,
+  type LoadedTranslation,
+  type Hasher,
+  type ReviewSource,
+  type TranslationFile,
+  type TranslationRecord,
+  type UnavailableReason as SharedUnavailableReason,
+} from "@/contracts/contentReview";
 
-/** Languages with a translation file: every code except English, the source. */
-export const TRANSLATED_LANGS = LANG_CODES.filter((lang) => lang !== "en") as Exclude<LangCode, "en">[];
-
-/** Values starting with this (any case) stand in for an owner or reviewer nobody has named yet. */
-export const PLACEHOLDER_PREFIX = "PLACEHOLDER";
+// The review rules shared with the terms (S07.01) live in src/contracts/contentReview.ts.
+export {
+  PLACEHOLDER_PREFIX,
+  TRANSLATED_LANGS,
+  englishReviewHash,
+  isIsoDate,
+  isPlaceholder,
+  type Hasher,
+  type LoadedTranslation,
+  type ReviewSource,
+  type TranslationFile,
+  type TranslationRecord,
+};
 
 export const GUIDE_SECTIONS = ["before", "during", "after"] as const;
 
 // ---------------------------------------------------------------- file shapes (all fields may be missing)
-export interface ReviewSource {
-  reviewer?: string | null;
-  date?: string | null;
-  /** englishReviewHash of the English the owner reviewed (scripts/review_translations.py records it). */
-  sourceHash?: string | null;
-}
-
 export interface GuideSource {
   id: string;
   owner?: string | null;
@@ -66,28 +84,6 @@ export interface NumbersFile {
   numbers: NumberSource[];
 }
 
-export interface TranslationRecord {
-  source?: string;
-  sourceHash?: string;
-  text?: string | null;
-  model?: string;
-  status?: "machine" | "reviewed";
-  reviewer?: string | null;
-  reviewedOn?: string | null;
-  translatedOn?: string;
-  conversion?: {
-    from?: string;
-    fromTextHash?: string;
-    openccVersion?: string;
-    config?: string;
-  };
-}
-
-export interface TranslationFile {
-  language?: string;
-  texts: Record<string, TranslationRecord | null | undefined>;
-}
-
 export interface ContentInput {
   guides: GuideSource[];
   numbers: NumbersFile;
@@ -95,16 +91,11 @@ export interface ContentInput {
 }
 
 // ---------------------------------------------------------------- text keys and hashes
-/** SHA-256 hex of a UTF-8 string (adapters/hash.ts), as scripts/content_catalogue.py computes it. */
-export type Hasher = (text: string) => string;
-
 export interface PlanOptions {
   hash: Hasher;
   /** Today as YYYY-MM-DD; no date in the files may be later. */
   today: string;
 }
-
-const present = (value: string | null | undefined): value is string => typeof value === "string" && value.trim() !== "";
 
 /** Text keys of a guide, relative to the guide: title, when911, before.0 ... after.n. */
 export function guideTexts(guide: GuideSource): Record<string, string> {
@@ -143,92 +134,14 @@ export function contentTexts(input: Pick<ContentInput, "guides" | "numbers">): R
   return texts;
 }
 
-/**
- * What an English review covers: a hash over the English texts (key and text, in file order) of
- * a guide, or of the numbers list. scripts/content_catalogue.py computes the same value.
- */
-export function englishReviewHash(texts: Record<string, string>, hash: Hasher): string {
-  return hash(JSON.stringify(Object.entries(texts)));
-}
-
 /** The 911 texts, by key: the 911 number's own texts and every guide's "when to call 911". */
 export function is911Key(key: string): boolean {
   return key.startsWith("number.911.") || (key.startsWith("guide.") && key.endsWith(".when911"));
 }
 
 // ---------------------------------------------------------------- checks
-export function isPlaceholder(value: string | null | undefined): boolean {
-  return !present(value) || value.trim().toUpperCase().startsWith(PLACEHOLDER_PREFIX);
-}
-
-/** A real calendar date written YYYY-MM-DD. */
-export function isIsoDate(value: unknown): value is string {
-  if (typeof value !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(value)) return false;
-  const parsed = new Date(`${value}T00:00:00Z`);
-  return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === value;
-}
-
-const same = (a: string, b: string) => a.trim().replace(/\s+/g, " ").toLowerCase() === b.trim().replace(/\s+/g, " ").toLowerCase();
-
-interface Attribution {
-  owner: string;
-  lastUpdated: string;
-  englishReviewer: string;
-  englishReviewedOn: string;
-}
-
-/** The owner, last-updated date and English review of a guide or the numbers list, or why they are refused. */
-function checkAttribution(
-  source: { owner?: string | null; lastUpdated?: string | null; englishReview?: ReviewSource | null },
-  expectedHash: string,
-  today: string,
-): { ok: Attribution } | { reasons: string[] } {
-  const reasons: string[] = [];
-  const owner = source.owner;
-  const review = source.englishReview;
-  if (!present(owner)) reasons.push("no owner is named");
-  else if (isPlaceholder(owner)) reasons.push("the owner is still a placeholder");
-  if (!isIsoDate(source.lastUpdated)) reasons.push("no valid last-updated date");
-  else if (source.lastUpdated > today) reasons.push("the last-updated date is in the future");
-  if (!review || (!present(review.reviewer) && !review.date)) reasons.push("no English review is recorded");
-  else {
-    if (!present(review.reviewer)) reasons.push("the English review has no reviewer");
-    else if (isPlaceholder(review.reviewer)) reasons.push("the English reviewer is still a placeholder");
-    else if (present(owner) && !isPlaceholder(owner) && !same(review.reviewer, owner)) {
-      reasons.push("the English review was not completed by the owner");
-    }
-    if (!isIsoDate(review.date)) reasons.push("the English review has no valid date");
-    else {
-      if (review.date > today) reasons.push("the English review date is in the future");
-      if (isIsoDate(source.lastUpdated) && review.date < source.lastUpdated) {
-        reasons.push("the English review is dated before the last update");
-      }
-    }
-    if (reasons.length === 0) {
-      if (!present(review.sourceHash)) reasons.push("the English review records no source hash (the English it reviewed)");
-      else if (review.sourceHash !== expectedHash) reasons.push("the English changed since the owner reviewed it");
-    }
-  }
-  if (reasons.length > 0) return { reasons };
-  return {
-    ok: {
-      owner: owner as string,
-      lastUpdated: source.lastUpdated as string,
-      englishReviewer: (review as ReviewSource).reviewer as string,
-      englishReviewedOn: (review as ReviewSource).date as string,
-    },
-  };
-}
-
 // ---------------------------------------------------------------- translations
-export type UnavailableReason =
-  | "not_translated"
-  | "stale"
-  | "machine"
-  | "review_incomplete"
-  | "incomplete_record"
-  | "zh_changed_or_not_reviewed"
-  | "lost_911";
+export type UnavailableReason = Exclude<SharedUnavailableReason, "lost_required"> | "lost_911";
 
 export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   not_translated: "not translated yet",
@@ -240,48 +153,12 @@ export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   lost_911: "does not contain 911",
 };
 
-export interface LoadedTranslation {
-  text: string;
-  provenance: Record<string, unknown>;
-}
+type GuideEvaluation = { loaded: LoadedTranslation } | { unavailable: UnavailableReason } | { blank: true };
 
-type Evaluation = { loaded: LoadedTranslation } | { unavailable: UnavailableReason } | { blank: true };
-
-function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput, hash: Hasher): Evaluation {
-  const record = input.translations[lang]?.texts[key];
-  if (!record) return { unavailable: "not_translated" };
-  if (!present(record.text)) return { blank: true };
-  if (!present(record.model) || !present(record.sourceHash)) return { unavailable: "incomplete_record" };
-  if (record.sourceHash !== hash(english)) return { unavailable: "stale" };
-  if (record.status !== "reviewed") return { unavailable: "machine" };
-  if (isPlaceholder(record.reviewer) || !isIsoDate(record.reviewedOn)) return { unavailable: "review_incomplete" };
-
-  const provenance: Record<string, unknown> = {
-    model: record.model,
-    status: "reviewed",
-    reviewer: record.reviewer,
-    reviewedOn: record.reviewedOn,
-    sourceHash: record.sourceHash,
-  };
-  if (lang === "zh-Hant") {
-    const conversion = record.conversion;
-    const zh = input.translations.zh?.texts[key];
-    if (
-      conversion?.from !== "zh" ||
-      !present(conversion.fromTextHash) ||
-      !present(conversion.openccVersion) ||
-      !present(conversion.config)
-    ) {
-      return { unavailable: "incomplete_record" };
-    }
-    const zhCurrent =
-      zh && present(zh.text) && zh.sourceHash === hash(english) && zh.status === "reviewed" &&
-      hash(zh.text) === conversion.fromTextHash;
-    if (!zhCurrent) return { unavailable: "zh_changed_or_not_reviewed" };
-    provenance.conversion = { ...conversion };
-  }
-  if (english.includes("911") && !record.text.includes("911")) return { unavailable: "lost_911" };
-  return { loaded: { text: record.text, provenance } };
+function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput, hash: Hasher): GuideEvaluation {
+  const result = evaluateTranslation(lang, key, english, input.translations, hash, ["911"]);
+  if ("unavailable" in result && result.unavailable === "lost_required") return { unavailable: "lost_911" };
+  return result as GuideEvaluation;
 }
 
 // ---------------------------------------------------------------- the plan

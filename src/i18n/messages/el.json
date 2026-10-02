@@ -30,6 +30,16 @@
       "sun": "Κυριακή"
     }
   },
+  "terms": {
+    "version": "[EN] Version",
+    "owner": "[EN] Owner",
+    "updated": "[EN] Last updated",
+    "privacyContact": "[EN] Privacy contact",
+    "draftTitle": "[EN] Draft: not yet published",
+    "draftBody": "[EN] This text has not been approved yet. It is not the final terms. Do not sign up on the strength of it.",
+    "draftWhy": "[EN] Not published because:",
+    "translationNote": "[EN] Some of this page has not been translated into {lang} yet. Those parts show in English."
+  },
   "shell": {
     "cvhName": "Κοινοτικός Εικονικός Κόμβος",
     "hubName": "[EN] Thorncliffe Park Community Hub",
