@@ -14,7 +14,7 @@ import { baseChoices, choicesStore } from "./choices-store";
 import { ChoiceButton, ChoiceOption, StepActions, type StepMode } from "./parts";
 import { useBuildingList, useChoices } from "./use-choices";
 
-const matches = (text: string, query: string) => text.toLowerCase().includes(query.trim().toLowerCase());
+const textMatches = (text: string, query: string) => text.toLowerCase().includes(query.trim().toLowerCase());
 
 /**
  * R-35: where I live. The resident picks one or more of the pilot buildings (their own or a relative's) and, for
@@ -35,7 +35,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
 
   const list = state.status === "ready" ? state.list : null;
   const shown = useMemo(
-    () => (list ? sortBuildings(list.buildings).filter((b) => query.trim() === "" || matches(b.address, query) || matches(b.neighbourhood, query)) : []),
+    () => (list ? sortBuildings(list.buildings).filter((b) => query.trim() === "" || textMatches(b.address, query) || textMatches(b.neighbourhood, query)) : []),
     [list, query],
   );
 

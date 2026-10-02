@@ -1,10 +1,5 @@
 import { z } from "zod";
-
-/** A building number from the register (`building.rsn`). */
-export const RsnSchema = z.string().regex(/^[0-9]{1,9}$/);
-
-/** A floor's stable id (`building_floor.id`): a rename keeps it. */
-export const FloorIdSchema = z.uuid();
+import { FloorIdSchema, RsnSchema } from "./places";
 
 /**
  * The building list a resident's phone keeps (`GET /api/buildings`): the pilot buildings and their floors, the same for

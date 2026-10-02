@@ -3,7 +3,8 @@
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useState, type ReactNode } from "react";
-import { GROUPS, type DeviceChoices, type Group } from "@/contracts/deviceChoices";
+import type { DeviceChoices } from "@/contracts/deviceChoices";
+import { GROUPS, type Group } from "@/contracts/groups";
 import type { LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
