@@ -6,7 +6,7 @@ import { HomeNow } from "@/ui/home";
 import { isLaunchCode } from "@/i18n/languages";
 
 // Home's client component runs on the phone, so it gets just these parts of the language's catalog, not the whole of it.
-const NAMESPACES = ["R03", "status", "neighbourhoods", "time", "x02", "x04"] as const;
+const NAMESPACES = ["R03", "status", "neighbourhoods", "time", "x01", "x02", "x04"] as const;
 
 /**
  * Home (R-03, S02.11): the resident's buildings with their status, the neighbourhood, and the current alerts, from the

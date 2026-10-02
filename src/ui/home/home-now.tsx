@@ -9,6 +9,7 @@ import { useBuildingList, useChoices } from "../choices/use-choices";
 import { useGateBuildingList } from "../choices/building-list-context";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
 import { agoText } from "./feed-poll";
@@ -163,6 +164,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
   const t = useTranslations("R03");
   const neighbourhoods = useTranslations("neighbourhoods");
   const time = useTranslations("time");
+  const x01 = useTranslations("x01");
   const choices = useChoices();
   const gate = useGateBuildingList();
   const own = useBuildingList(gate === null);
@@ -177,6 +179,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
       <Screen surface="resident" testId="home">
         <Stack gap="section-resident">
           {heading}
+          <Not911 variant="inline" t={x01} />
           {children}
         </Stack>
       </Screen>
@@ -253,6 +256,9 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
               </Stack>
             </section>
           )}
+
+          {/* The short 911 notice (owner decision 36; prototype R-03's X01_Not911 inline), the shared component. */}
+          <Not911 variant="inline" t={x01} />
 
           {children}
         </Stack>

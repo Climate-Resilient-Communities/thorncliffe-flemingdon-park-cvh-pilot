@@ -18,9 +18,11 @@ const state = vi.hoisted(() => ({ content: undefined as unknown as ResidentConte
 
 vi.mock("next-intl/server", () => ({
   setRequestLocale: () => undefined,
+  getMessages: async ({ locale }: { locale: string }) => (locale === "ur" ? ur : en),
   getTranslations: async ({ locale, namespace }: { locale: string; namespace?: string }) =>
     createTranslator({ locale, messages: (locale === "ur" ? ur : en) as unknown as AbstractIntlMessages, namespace } as never),
 }));
+vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useRouter: () => ({ replace: () => undefined, push: () => undefined, prefetch: () => undefined }), usePathname: () => "/en" }));
 vi.mock("./source", () => ({
   loadResidentContent: async () => (state.empty ? { guides: [], numbers: [] } : state.content),
   loadBuildingContacts: async () => [],
@@ -29,11 +31,15 @@ vi.mock("./source", () => ({
 import ReadyPage from "./page";
 import GuidePage from "./[guide]/page";
 import NumbersPage from "./numbers/page";
+import HomePage from "../page";
 
 /** The marker the 911 block carries (src/ui/emergency/not-911.tsx). */
 export const hasNot911 = (html: string) => (html.match(/data-component="not-911"/g) ?? []).length;
 
 type Render = (lang: string) => Promise<ReactElement>;
+
+/** The pages that must draw the inline (one-line) 911 block, not the full one: `data-variant` is on the marker. */
+const inlineOnly = new Set(["Be ready", "home"]);
 
 /**
  * The pages that must draw the 911 block. The alert and check-in screens (E04, E08) add themselves here when they are built:
@@ -46,6 +52,8 @@ const PAGES: { name: string; render: Render }[] = [
   })),
   { name: "essential numbers", render: async (lang) => (await NumbersPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
   { name: "Be ready", render: async (lang) => (await ReadyPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
+  // Home (R-03, owner decision 36): the short notice at the bottom, drawn on the server render before the phone's choices are read.
+  { name: "home", render: async (lang) => (await HomePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
 ];
 
 beforeEach(() => {
@@ -54,11 +62,12 @@ beforeEach(() => {
 });
 
 describe("the 911 block", () => {
-  it("is on every guide, the essential-numbers page and Be ready, exactly once, in English and in Urdu", async () => {
+  it("is on every guide, the essential-numbers page, Be ready and home, exactly once, in English and in Urdu", async () => {
     for (const { name, render } of PAGES) {
       for (const lang of ["en", "ur"]) {
         const html = renderToStaticMarkup(await render(lang));
         expect(hasNot911(html), `${name} (${lang})`).toBe(1);
+        if (inlineOnly.has(name)) expect(html, `${name} (${lang})`).toContain('data-variant="inline"');
       }
     }
   });
@@ -80,7 +89,7 @@ describe("the 911 block", () => {
   });
 
   it("is the one component: no page of the list writes its own copy of the words", () => {
-    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
+    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
     for (const source of sources) {
       expect(source).toMatch(/<Not911 /);
       expect(source).not.toMatch(/not an emergency service/i);

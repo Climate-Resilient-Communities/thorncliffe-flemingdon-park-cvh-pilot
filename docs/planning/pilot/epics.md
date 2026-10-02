@@ -115,7 +115,7 @@ NFR-N9: Total build and running cost within about CAD 1,000 for two months (curr
 - AR-24: derived building/neighbourhood status in `status.ts` with phase and precedence (AD-19).
 - AR-25: versioned public feed with feed_version, edge cache, polling, service-worker highest-version rule, archive endpoint, share URL `?l=` (AD-17).
 - AR-26: device-only personalisation, no cookies on resident routes (asserted), aggregate usage beacon (AD-3).
-- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers and check-in screens (AD-16).
+- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers, home (inline) and check-in screens (AD-16).
 
 ### UX Design Requirements
 
@@ -1218,7 +1218,7 @@ So that I know what to do before, during and after a disruption.
 ### Story S02.11 — Resident home shows their buildings and the current alerts
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** UX-DR5, AR-20 (`FeedV1`), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
+- **Traces:** UX-DR5, AR-20 (`FeedV1`), AR-27 (911 block), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
 
 As a resident,
 I want a home screen that starts with my buildings,
@@ -1242,6 +1242,10 @@ So that I can see at a glance whether anything affects me.
 **Given** home is visible
 **When** 60 seconds pass
 **Then** the feed is fetched again; a response with a lower `feed_version` than the highest seen is discarded
+
+**Given** home (R-03)
+**When** it is shown, with or without chosen buildings
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is at the bottom, under "Everyday", and nowhere else on the screen
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 

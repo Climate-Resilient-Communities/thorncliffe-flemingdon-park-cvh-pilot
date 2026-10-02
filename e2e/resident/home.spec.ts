@@ -253,6 +253,56 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
   });
 
+  test("a newer ask replacing one still in flight is a failure: the note shows at once, without waiting for the timeout", async ({ page }) => {
+    await stubFeed(page, [feedOf(4)]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+
+    await page.unroute("**/api/feed**");
+    let asked = 0;
+    await page.route("**/api/feed**", () => {
+      asked += 1;
+    });
+    const setVisibility = (state: "hidden" | "visible") =>
+      page.evaluate((value) => {
+        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
+        document.dispatchEvent(new Event("visibilitychange"));
+      }, state);
+
+    // The first ask hangs. No time passes, so the timeout has not fired.
+    await setVisibility("hidden");
+    await setVisibility("visible");
+    await expect.poll(() => asked).toBe(1);
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+
+    // A second ask replaces it while it is still in flight.
+    await setVisibility("hidden");
+    await setVisibility("visible");
+    await expect.poll(() => asked).toBe(2);
+    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+  });
+
+  test("shows the short 911 notice (the shared inline block) last, below everything else on home", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+
+    const notice = page.locator('[data-component="not-911"]');
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute("data-variant", "inline");
+    await expect(notice).toContainText("911");
+    const below = await page.evaluate(() => {
+      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().bottom;
+      return box('[data-component="not-911"]') >= box('[data-testid="home-alerts"]');
+    });
+    expect(below).toBe(true);
+  });
+
   test("polls nothing while the page is hidden, and asks once, straight away, when it is visible again", async ({ page }) => {
     const seen = await stubFeed(page, [feedOf(1)]);
     await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
