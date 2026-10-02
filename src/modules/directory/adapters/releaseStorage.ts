@@ -4,7 +4,7 @@
 // from its own origin (src/app/api/directory).
 import { mkdir, readFile, writeFile } from "node:fs/promises";
 import path from "node:path";
-import { createClient } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
 import type { DirectoryStorage } from "../application/ports";
 
 /** The private bucket. Created private if it is missing; its files are read only through the app. */
@@ -73,18 +73,24 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
   const bucket = config.bucket ?? DIRECTORY_BUCKET;
   const base = config.fetch ?? fetch;
   const timeoutMs = config.timeoutMs ?? DEFAULT_STORAGE_TIMEOUT_MS;
-  const client = createClient(config.url, config.secretKey, {
-    auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: {
-      fetch: (input, init) => {
-        const deadline = AbortSignal.timeout(timeoutMs);
-        return base(input, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline });
-      },
-    },
-  });
+  // supabase-js is large and only the publish and the resident routes need it, so it loads on first use (the seed scripts import this module).
+  let clientPromise: Promise<SupabaseClient> | undefined;
+  const getClient = () =>
+    (clientPromise ??= import("@supabase/supabase-js").then(({ createClient }) =>
+      createClient(config.url, config.secretKey, {
+        auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
+        global: {
+          fetch: (input, init) => {
+            const deadline = AbortSignal.timeout(timeoutMs);
+            return base(input, { ...init, signal: init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline });
+          },
+        },
+      }),
+    ));
   let ready: Promise<void> | undefined;
 
   const ensureBucket = async () => {
+    const client = await getClient();
     const found = await client.storage.getBucket(bucket);
     if (!found.error) {
       if (found.data.public) throw new Error("the directory bucket is public; it must be private");
@@ -106,7 +112,7 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
     async put(file, body) {
       const key = checked(file);
       await open();
-      const { error } = await client.storage.from(bucket).upload(key, new Blob([body], { type: "application/json" }), {
+      const { error } = await (await getClient()).storage.from(bucket).upload(key, new Blob([body], { type: "application/json" }), {
         upsert: true,
         contentType: "application/json",
         cacheControl: "31536000",
@@ -116,7 +122,7 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
     async get(file) {
       const key = checked(file);
       await open();
-      const { data, error } = await client.storage.from(bucket).download(key);
+      const { data, error } = await (await getClient()).storage.from(bucket).download(key);
       if (error) {
         const status = (error as { status?: number | string; statusCode?: number | string }).status ?? (error as { statusCode?: number | string }).statusCode;
         if (String(status) === "404" || /not.?found|does not exist/i.test(error.message)) return null;
