@@ -117,3 +117,60 @@ test.describe("line height by script", () => {
     expect(await size()).toBe(22);
   });
 });
+
+test.describe("base typography on unclassed elements", () => {
+  const read = (page: Page, selector: string) =>
+    page.evaluate((query) => {
+      const style = getComputedStyle(document.querySelector(query)!);
+      return {
+        size: parseFloat(style.fontSize),
+        lineHeight: parseFloat(style.lineHeight),
+        ratio: Math.round((parseFloat(style.lineHeight) / parseFloat(style.fontSize)) * 1000) / 1000,
+        family: style.fontFamily,
+        color: style.color,
+      };
+    }, selector);
+
+  const cases = [
+    { name: "an en resident page", surface: undefined, options: {}, size: 18, ratio: 1.5, line: 27 },
+    { name: "a lang=ur resident page", surface: undefined, options: { lang: "ur" }, size: 18, ratio: 1.9, line: 34.2 },
+    { name: "basic mode", surface: undefined, options: { basic: true }, size: 22, ratio: 1.5, line: 33 },
+    { name: "the staff surface", surface: "staff" as const, options: {}, size: 16, ratio: 1.45, line: 23.2 },
+    { name: "the staff surface in ur", surface: "staff" as const, options: { lang: "ur" }, size: 16, ratio: 1.9, line: 30.4 },
+  ];
+  for (const { name, surface, options, size, ratio, line } of cases) {
+    test(`a plain <p> in ${name} is ${size}px with line height ${ratio}`, async ({ page }) => {
+      await mount(page, "BareText", { surface }, options);
+      const found = await read(page, "p");
+
+      expect(found.size).toBe(size);
+      expect(found.ratio).toBe(ratio);
+      expect(found.lineHeight).toBeCloseTo(line, 1);
+    });
+  }
+
+  test("body uses the sans family and the text colour token", async ({ page }) => {
+    await mount(page, "BareText", {});
+    const found = await read(page, "p");
+    const text = await page.evaluate(() => {
+      const probe = document.body.appendChild(document.createElement("div"));
+      probe.style.color = "var(--text)";
+      return getComputedStyle(probe).color;
+    });
+
+    expect(found.family).toContain("Public Sans");
+    expect(found.color).toBe(text);
+  });
+
+  test("h1 to h3 use the type tokens and the tight line height", async ({ page }) => {
+    await mount(page, "BareText", {});
+    expect(await read(page, "h1")).toMatchObject({ size: 27, ratio: 1.25 });
+    expect(await read(page, "h2")).toMatchObject({ size: 23, ratio: 1.25 });
+    expect(await read(page, "h3")).toMatchObject({ size: 20, ratio: 1.25 });
+    await mount(page, "BareText", {}, { lang: "ur" });
+    expect((await read(page, "h2")).ratio).toBe(1.6);
+    await mount(page, "BareText", { surface: "staff" });
+    expect(await read(page, "h1")).toMatchObject({ size: 27, ratio: 1.25 });
+    expect(await read(page, "h3")).toMatchObject({ size: 18, ratio: 1.25 });
+  });
+});

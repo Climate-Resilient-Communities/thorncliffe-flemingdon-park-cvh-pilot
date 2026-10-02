@@ -182,6 +182,56 @@ test.describe("Screen actions", () => {
   });
 });
 
+test.describe("Screen actions region surface and alignment", () => {
+  const cases = [
+    { name: "resident 390", fixture: "ResidentActionsScreen", width: 390 },
+    { name: "staff 1280", fixture: "ActionsScreen", width: 1280 },
+  ] as const;
+  for (const { name, fixture, width } of cases) {
+    for (const lang of ["en", "ur"]) {
+      test(`covers scrolled content and aligns with the page column at ${name} in ${lang}`, async ({ page }) => {
+        await page.setViewportSize({ width, height: 600 });
+        await mount(page, fixture, {}, { lang });
+        const actions = page.getByRole("region", { name: "Approval actions" });
+        await page.evaluate(() => window.scrollTo(0, 500));
+        const rtl = lang === "ur";
+        const edge = (rect: { left: number; right: number }) => (rtl ? rect.right : rect.left);
+
+        const background = await computed(actions, "background-color");
+        expect(background).not.toBe("rgba(0, 0, 0, 0)");
+        expect(background).toMatch(/^rgb\(/);
+        const colour = (property: "backgroundColor" | "color", token: string) =>
+          page.evaluate(
+            ([prop, name]) => {
+              const probe = document.body.appendChild(document.createElement("div"));
+              probe.style[prop as "color"] = `var(${name})`;
+              return getComputedStyle(probe)[prop as "color"];
+            },
+            [property, token] as const,
+          );
+        expect(background).toBe(await colour("backgroundColor", "--surface"));
+        expect(await computed(actions, "border-top-color")).toBe(await colour("color", "--border"));
+        expect(await computed(actions, "border-top-width")).toBe("1px");
+        expect(await computed(actions, "border-top-style")).toBe("solid");
+        expect(await computed(actions, "z-index")).not.toBe("auto");
+
+        expect(edge(await box(page.getByTestId("first-action")))).toBeCloseTo(edge(await box(page.getByTestId("field-0"))), 0);
+        const region = await box(actions);
+        expect(region.left).toBe(0);
+        expect(region.width).toBe(width);
+
+        const covered = await page.evaluate(() => {
+          const bar = document.querySelector(".layout-screen__actions")!;
+          const rect = bar.getBoundingClientRect();
+          const hit = document.elementFromPoint(rect.left + rect.width / 2, rect.top + rect.height / 2);
+          return !!hit && bar.contains(hit);
+        });
+        expect(covered).toBe(true);
+      });
+    }
+  }
+});
+
 test.describe("Screen inset=\"none\"", () => {
   test("puts the bleed map across the full main area, with no negative margin anywhere", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });

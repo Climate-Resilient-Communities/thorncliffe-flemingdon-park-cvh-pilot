@@ -43,6 +43,8 @@
   --radius-card: 16px;
   --radius-header: 88px;
   --radius-disc: 50%;
+  /* type.families (base typography) */
+  --app-font-sans: "Public Sans", Calibri, Carlito, Arial, sans-serif;
   /* color, light theme */
   --tpch-orange: #f15a28;
   --tpch-blue: #1a75bb;

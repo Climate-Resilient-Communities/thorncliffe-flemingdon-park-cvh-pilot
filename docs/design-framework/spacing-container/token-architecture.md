@@ -193,10 +193,13 @@ Components reach the generated type primitives (`--app-fs-*`, `--app-lh-*`) only
 | `--type-h3-size` | `var(--app-fs-h3)` | Font size of third-level headings (`text-h3`) |
 | `--type-h2-size` | `var(--app-fs-h2)` | Font size of second-level headings (`text-h2`) |
 | `--type-h1-size` | `var(--app-fs-h1)` | Font size of page titles (`text-h1`) |
+| `--type-family-sans` | `var(--app-font-sans)` | Font family of all text (`tokens.json` → `type.families.sans`); applied by the base layer below |
 | `--type-body-line-height` | `var(--app-lh-body)` | Line height of caption, body, alert and lead text; follows the surface and the script (section 6) |
 | `--type-tight-line-height` | `var(--app-lh-h2)` | Line height of H3, H2 and H1; follows the script. The generator fails if the three roles ever take different line-height tokens |
 
 A custom property that is a `var()` is substituted where it is declared and inherited as that value, so these tokens are declared for every element (`:where(*)` in `semantic.css`) and read the primitives that element inherits. The generator also repeats the `--app-lh-*` mappings inside the `:lang()` blocks, so a `lang` subtree inside a page gets its script's line height.
+
+**Base layer** (`theme.css`, `@layer base`): `body`, every `[data-surface]` element (the staff Screen) and every `div[lang]` get `font-family: var(--type-family-sans)`, `font-size: var(--type-body-size)`, `line-height: var(--type-body-line-height)` and `color: var(--text)`, so an unclassed `<p>` is 18px / 1.5 on a resident page (22px in basic mode, 1.9 in `ur`) and 16px / 1.45 on the staff surface. The surface and `lang` elements repeat the declarations because the tokens resolve per element and the values inherited from `body` would otherwise be the resident ones. `h1`, `h2` and `h3` take `--type-h1-size`, `--type-h2-size`, `--type-h3-size` and `--type-tight-line-height`.
 
 ## 4. Layer 3: component tokens
 

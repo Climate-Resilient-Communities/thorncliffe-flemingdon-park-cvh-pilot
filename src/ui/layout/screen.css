@@ -80,8 +80,23 @@
     row-gap: 0;
   }
 
+  /*
+   * The prototype's .cvh-pubbar: the page surface with a top border, above the page content so a
+   * scrolled field never shows through. The region is full width; its inner element takes the body's
+   * inline inset and maximum inline size, so the buttons line up with the page column.
+   */
   .layout-screen__actions {
     position: sticky;
     inset-block-end: 0;
+    z-index: 2;
+    background-color: var(--surface);
+    border-block-start: var(--offset-align-hairline) solid var(--border);
+  }
+
+  .layout-screen__actions-inner {
+    inline-size: 100%;
+    max-inline-size: var(--screen-max-inline-size);
+    margin-inline: auto;
+    padding-inline: var(--screen-inset-inline);
   }
 }

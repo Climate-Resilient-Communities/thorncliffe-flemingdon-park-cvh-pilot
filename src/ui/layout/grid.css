@@ -11,11 +11,11 @@
     gap: var(--gap-grid);
   }
 
-  /* A cell may be narrower than its content and breaks an unbreakable word (a URL, a long compound), so
-     text wraps inside its column instead of running under the next one. */
+  /* A cell may be narrower than its content; only a word that cannot fit on a line of its own (a URL, a
+     long compound) is broken, so ordinary words are never split and text wraps inside its column. */
   .layout-grid > * {
     min-inline-size: 0;
-    overflow-wrap: anywhere;
+    overflow-wrap: break-word;
   }
 
   .layout-grid:is(ul, ol) {

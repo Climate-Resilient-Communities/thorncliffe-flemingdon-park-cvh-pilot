@@ -45,25 +45,38 @@ export function StaffScreen({ width }: { width?: "default" | "review" | "publish
   );
 }
 
+const approvalActions = (
+  <Inline gap="target">
+    <button className="tap" data-testid="first-action">
+      Approve
+    </button>
+    <button className="tap">Return to author</button>
+  </Inline>
+);
+
+// Positioned fields (z-index auto) stand in for page content that must never paint over the actions region.
+const actionFields = Array.from({ length: 24 }, (_, index) => (
+  <Stack gap="label" key={index}>
+    <label htmlFor={`field-${index}`}>Field {index + 1}</label>
+    <input id={`field-${index}`} data-testid={`field-${index}`} style={{ blockSize: 44, position: "relative", zIndex: 1, background: "transparent" }} />
+  </Stack>
+));
+
 export function ActionsScreen() {
   return (
     <main>
-      <Screen
-        surface="staff"
-        actions={
-          <Inline gap="target">
-            <button className="tap">Approve</button>
-            <button className="tap">Return to author</button>
-          </Inline>
-        }
-        actionsLabel="Approval actions"
-      >
-        {Array.from({ length: 24 }, (_, index) => (
-          <Stack gap="label" key={index}>
-            <label htmlFor={`field-${index}`}>Field {index + 1}</label>
-            <input id={`field-${index}`} data-testid={`field-${index}`} style={{ blockSize: 44 }} />
-          </Stack>
-        ))}
+      <Screen surface="staff" actions={approvalActions} actionsLabel="Approval actions">
+        {actionFields}
+      </Screen>
+    </main>
+  );
+}
+
+export function ResidentActionsScreen() {
+  return (
+    <main>
+      <Screen surface="resident" actions={approvalActions} actionsLabel="Approval actions">
+        {actionFields}
       </Screen>
     </main>
   );
@@ -286,4 +299,57 @@ export function StaffTypePage() {
       <TypeSample />
     </Screen>
   );
+}
+
+/** Text items (not targets) in an Inline: the row and column gaps of meta-inline and type-grid-inline. */
+export function TextRow({ gap, items }: { gap: "meta-inline" | "type-grid-inline"; items: string[] }) {
+  return (
+    <Screen surface="resident">
+      <Inline gap={gap} as="ul" testId="inline">
+        {items.map((item) => (
+          <li key={item}>{item}</li>
+        ))}
+      </Inline>
+    </Screen>
+  );
+}
+
+/** Three short links in a 3-column grid at a narrow width: ordinary words must not be split. */
+export function FinancialGrid() {
+  return (
+    <Screen surface="resident">
+      <Grid cols={3} testId="grid">
+        {["Financial help", "Food support", "Housing advice"].map((label) => (
+          <p key={label}>{label}</p>
+        ))}
+      </Grid>
+    </Screen>
+  );
+}
+
+/** A link inside running text (exempt) and a standalone small link (not exempt). */
+export function InlineTextLinks() {
+  return (
+    <Screen surface="resident">
+      <p data-tap-exempt="inline-text">
+        Read the <a href="#guide">heat guide</a> before you go out.
+      </p>
+      <a href="#standalone" data-testid="standalone">
+        More
+      </a>
+    </Screen>
+  );
+}
+
+/** Unclassed elements: the base layer alone styles them. */
+export function BareText({ surface }: { surface?: "staff" }) {
+  const content = (
+    <>
+      <h1>Heading one</h1>
+      <h2>Heading two</h2>
+      <h3>Heading three</h3>
+      <p>Plain paragraph</p>
+    </>
+  );
+  return surface === "staff" ? <Screen surface="staff">{content}</Screen> : content;
 }

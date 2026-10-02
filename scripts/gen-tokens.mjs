@@ -224,6 +224,9 @@ export function buildPrimitives(tokens) {
   const [resident, basic, staff] = typeSets(tokens);
   const lineHeights = lineHeightBlocks(tokens, resident, staff);
 
+  const families = tokens.type?.families;
+  if (typeof families?.sans !== "string") throw missing("type.families.sans", "the base typography (section 3.4)");
+
   const root = [
     "  /* spacing.app (G1) */",
     declarations(spacing),
@@ -231,6 +234,8 @@ export function buildPrimitives(tokens) {
     declarations(sizes),
     "  /* radius */",
     declarations(radius),
+    "  /* type.families (base typography) */",
+    declarations([["app-font-sans", families.sans]]),
     `  /* color, ${launch} theme */`,
     declarations(colours.map((token) => [token.name, colourValue(themed(token, launch), colourNames)])),
     "  /* type: Screens: resident (G7) */",

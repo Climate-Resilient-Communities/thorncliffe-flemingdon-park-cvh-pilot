@@ -72,7 +72,7 @@ describe("Grid", () => {
   it("lets every cell shrink and break an unbreakable word, so text wraps inside its column", () => {
     expect(css.filter((d) => d.selector === ".layout-grid > *").map((d) => `${d.prop}: ${d.value}`)).toEqual([
       "min-inline-size: 0",
-      "overflow-wrap: anywhere",
+      "overflow-wrap: break-word",
     ]);
   });
 

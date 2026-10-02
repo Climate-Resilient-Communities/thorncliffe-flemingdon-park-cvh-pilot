@@ -14,7 +14,7 @@ export function ScreenActions({ label, children }: ScreenActionsProps) {
   useEffect(() => (region.current ? reserveActionsSpace(region.current) : undefined), []);
   return (
     <div ref={region} className="layout-screen__actions" role="region" aria-label={label}>
-      {children}
+      <div className="layout-screen__actions-inner">{children}</div>
     </div>
   );
 }

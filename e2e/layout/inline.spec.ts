@@ -69,4 +69,25 @@ test.describe("Inline", () => {
     expect(button.height).toBeGreaterThanOrEqual(tap);
     await expectNoHorizontalOverflow(page);
   });
+
+  for (const { gap, column, row } of [
+    { gap: "meta-inline" as const, column: 18, row: 4 },
+    { gap: "type-grid-inline" as const, column: 18, row: 14 },
+  ]) {
+    test(`gap="${gap}" wraps at 320px with a ${column}px column gap and a ${row}px row gap`, async ({ page }) => {
+      await page.setViewportSize({ width: 320, height: 800 });
+      const items = ["Issued 2 hours ago", "Toronto Public Health", "Heat warning", "Read time 2 min"];
+      await mount(page, "TextRow", { gap, items });
+      const boxes = await Promise.all(items.map((_, index) => box(inline(page).locator("li").nth(index))));
+      const rows = [...new Set(boxes.map((item) => Math.round(item.top)))].sort((a, b) => a - b);
+
+      expect(await tokenPx(page, `--gap-${gap}`)).toBe(column);
+      expect(await computed(inline(page), "column-gap")).toBe(`${column}px`);
+      expect(await computed(inline(page), "row-gap")).toBe(`${row}px`);
+      expect(rows.length, "the items wrap onto at least two rows").toBeGreaterThanOrEqual(2);
+      const firstRow = boxes.filter((item) => Math.round(item.top) === rows[0]);
+      expect(rows[1] - Math.max(...firstRow.map((item) => item.bottom))).toBeCloseTo(row, 0);
+      if (firstRow.length > 1) expect(firstRow[1].left - firstRow[0].right).toBeCloseTo(column, 0);
+    });
+  }
 });

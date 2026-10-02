@@ -26,3 +26,37 @@
   min-block-size: var(--tap-current);
   min-inline-size: var(--tap-current);
 }
+
+/*
+ * Base typography (token-architecture.md section 3.4): unclassed text takes the type tokens, so a plain
+ * <p> is the body style of its surface, mode and language. The type tokens are declared on every element
+ * and resolve against what that element inherits, so the elements that start a surface (the staff Screen)
+ * or a language subtree (a div with lang) set the size and line height again for the text inside them.
+ */
+@layer base {
+  :where(body, [data-surface], div[lang]) {
+    font-family: var(--type-family-sans);
+    font-size: var(--type-body-size);
+    line-height: var(--type-body-line-height);
+    color: var(--text);
+  }
+
+  /* Same specificity as Tailwind's preflight (font-size: inherit), declared after it. */
+  h1,
+  h2,
+  h3 {
+    line-height: var(--type-tight-line-height);
+  }
+
+  h1 {
+    font-size: var(--type-h1-size);
+  }
+
+  h2 {
+    font-size: var(--type-h2-size);
+  }
+
+  h3 {
+    font-size: var(--type-h3-size);
+  }
+}

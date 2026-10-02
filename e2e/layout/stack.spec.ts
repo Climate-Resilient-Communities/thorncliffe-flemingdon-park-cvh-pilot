@@ -32,7 +32,7 @@ test.describe("Stack", () => {
     await expect(page.getByRole("list").getByRole("listitem")).toHaveCount(3);
   });
 
-  test("keeps block positions in ur, and align=start follows the inline start", async ({ page }) => {
+  test("keeps the block gaps in ur, and align=start follows the inline start", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });
     await mount(page, "StackFixture", { align: "start" });
     const en = await children(page);
@@ -41,7 +41,10 @@ test.describe("Stack", () => {
     const ur = await children(page);
     const urContainer = await box(stack(page));
 
-    expect(ur.map((child) => child.top)).toEqual(en.map((child) => child.top));
+    // Rows are taller in ur (the base line height follows the script); the gap the Stack sets is the same.
+    const gaps = (boxes: typeof en) => boxes.slice(1).map((child, index) => Math.round(child.top - boxes[index].bottom));
+    expect(ur[0].top).toBe(en[0].top);
+    expect(gaps(ur)).toEqual(gaps(en));
     for (const child of en) expect(child.left).toBeCloseTo(container.left, 0);
     for (const child of ur) expect(child.right).toBeCloseTo(urContainer.right, 0);
     expect(en[0].width).toBeLessThan(container.width);

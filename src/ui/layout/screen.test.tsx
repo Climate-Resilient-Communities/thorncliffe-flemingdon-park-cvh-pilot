@@ -25,7 +25,7 @@ describe("Screen", () => {
       '<div class="layout-screen" data-surface="staff" data-width="review" data-inset="default" data-testid="o-05">' +
         '<div class="layout-screen__bleed"><div>map</div></div>' +
         '<div class="layout-screen__body"><p>body</p></div>' +
-        '<div class="layout-screen__actions" role="region" aria-label="Approval"><button>Approve</button></div></div>',
+        '<div class="layout-screen__actions" role="region" aria-label="Approval"><div class="layout-screen__actions-inner"><button>Approve</button></div></div></div>',
     );
   });
 

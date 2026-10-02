@@ -83,6 +83,26 @@ test.describe("equal-column Grid", () => {
   });
 });
 
+test.describe("Grid cell wrapping", () => {
+  test("a 3-column grid at 320px does not split an ordinary word", async ({ page }) => {
+    await page.setViewportSize({ width: 320, height: 800 });
+    await mount(page, "FinancialGrid", {});
+
+    const lines = await cells(page).first().evaluate((cell) => {
+      const text = cell.firstChild as Text;
+      const start = text.data.indexOf("Financial");
+      const range = document.createRange();
+      range.setStart(text, start);
+      range.setEnd(text, start + "Financial".length);
+      return range.getClientRects().length;
+    });
+    expect(lines, "the word Financial is on one line").toBe(1);
+    expect(await computed(cells(page).first(), "overflow-wrap")).toBe("break-word");
+    expect(await computed(cells(page).first(), "min-inline-size")).toBe("0px");
+    await expectNoHorizontalOverflow(page);
+  });
+});
+
 test.describe("two-column Grid in a fixture hub-page container", () => {
   const variants: { variant: GridTwoColumn; aside: number | "even"; gap: number }[] = [
     { variant: "aside", aside: 380, gap: 28 },
@@ -158,6 +178,22 @@ test.describe("two-column Grid in a fixture hub-page container", () => {
       await expectAsideStickiness(grid(page));
     });
   }
+
+  test("the aside variant is sticky at 800px of content width and not sticky at 799px", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 500 });
+    for (const [width, sticky] of [[800, true], [799, false]] as const) {
+      await mount(page, "TwoColumnPage", { variant: "aside", labels: longestLabels("en"), tall: true, width });
+      expect(await computed(page.getByTestId("aside"), "position"), `${width}px`).toBe(sticky ? "sticky" : "static");
+      if (sticky) await expectAsideStickiness(grid(page));
+      else {
+        await expectOneColumn(grid(page));
+        await page.evaluate(() => window.scrollTo(0, 0));
+        const before = (await box(page.getByTestId("aside"))).top;
+        await page.evaluate(() => window.scrollTo(0, 400));
+        expect((await box(page.getByTestId("aside"))).top, "the aside scrolls with the page").toBeCloseTo(before - 400, 0);
+      }
+    }
+  });
 
   test("keeps the actions in Screen's actions slot in both layouts", async ({ page }) => {
     for (const width of [799, 800]) {

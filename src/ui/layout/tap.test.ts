@@ -10,7 +10,7 @@ describe("tap rule", () => {
   });
 
   it("sets a minimum block and inline size only, on logical properties", () => {
-    expect(layoutDeclarations("src/ui/tokens/theme.css").map((d) => `${d.prop}: ${d.value}`)).toEqual([
+    expect(layoutDeclarations("src/ui/tokens/theme.css").filter((d) => d.at.includes("@utility tap")).map((d) => `${d.prop}: ${d.value}`)).toEqual([
       "min-block-size: var(--tap-current)",
       "min-inline-size: var(--tap-current)",
     ]);

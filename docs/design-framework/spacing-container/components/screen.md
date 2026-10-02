@@ -18,7 +18,8 @@ Screen  (div, data-surface)
 │   │           staff: the content box is the query container "hub-page" (container-type: inline-size)
 │   └─ children (Stack, Inline, Grid, content components)
 ├─ bleed?      optional full-width region at the block start, outside the inline gutter (map, applied-filter bar)
-└─ actions?    optional sticky region at the block end, full width, outside the inline gutter
+└─ actions?    optional sticky region at the block end, full width, with a surface background, a top border and a stacking level;
+    └─ inner   its contents sit inside the same inline inset and maximum inline size as the body, centred like it
 ```
 
 ## Props
@@ -61,7 +62,7 @@ Hub pages whose main-column sections use another rhythm (22px on O-01, O-03, O-0
 - **Resident (320, 390, 768 px):** no change by width. The body fills the shell's main area at every width; resident content is not capped (G5).
 - **Staff:** one switch at the Hub breakpoint (700 px viewport, Tailwind variant `hub:`), the same switch that shows the shell's side navigation. Below it, the narrow inset (16px); at or above it, the wide inset (24px). The maximum inline size applies at every width, with the body centred by `margin-inline: auto` on the body (the one margin a primitive may set on its own inner element, because centring is its job).
 - **Query container (staff):** the body is the query container `hub-page` (`container-type: inline-size; container-name: hub-page`). Its content box, inside the page padding, is the width a two-column `Grid` measures (switch at 800px, `grid.md`). `Screen` itself never changes columns, and nothing in a page reads the Hub breakpoint to change columns (`component-boundaries.md` 3.2).
-- **Actions region:** `position: sticky; inset-block-end: 0`. Action buttons inside it are full width when the slot is narrower than two buttons side by side; they size from the slot, never from the viewport (R8).
+- **Actions region:** `position: sticky; inset-block-end: 0`, with the page surface colour (`--surface`) as its background, a 1px top border in `--border` (`--offset-align-hairline`) and `z-index: 2`, so scrolled content never shows through (the prototype's `.cvh-pubbar`). The region itself stays full width; an inner wrapper (`layout-screen__actions-inner`) takes the body's `--screen-inset-inline` and `--screen-max-inline-size` and is centred like the body, so the buttons line up with the page column on both surfaces and in RTL. Action buttons inside it are full width when the slot is narrower than two buttons side by side; they size from the slot, never from the viewport (R8).
 
 ## RTL behaviour
 
@@ -117,6 +118,10 @@ No change. Gaps and insets stay the same in basic mode (G2, as in the prototype)
 **Given** `Screen` with `actions`
 **When** the body is longer than the viewport and the user scrolls
 **Then** the actions region stays visible at the block end, has the accessible name from `actionsLabel`, and tabbing to the last field in the body scrolls it fully above the actions region
+
+**Given** `Screen` with `actions` on a resident screen at 390 px and on a staff screen at 1280 px, in `en` and `ur`
+**When** the body has been scrolled so that fields lie behind the actions region
+**Then** the region's computed background is opaque and equals `--surface`, it has a 1px solid top border in `--border` and a `z-index` other than `auto`, the element at the region's centre point is inside the region, the region spans the full viewport width, and the first action's inline-start edge equals the inline-start edge of the body's content (left in `en`, right in `ur`)
 
 **Given** `Screen inset="none"` with a map in `bleed`
 **When** rendered at 390 px
