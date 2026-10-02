@@ -117,6 +117,11 @@
     background-color: var(--surface-raised);
   }
 
+  /* The live region is always there; while it is empty it is out of the flow, so it adds no gap above the first section. */
+  .home-live:empty {
+    position: absolute;
+  }
+
   /* The feed could not be read, or the screen shows an older answer: a note, not an error. */
   .home-note {
     padding: var(--inset-card-compact);

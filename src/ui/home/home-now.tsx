@@ -198,7 +198,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
           {heading}
 
           {/* One live region, always mounted, so a screen reader hears the note when it is put into it. */}
-          <div role="status" data-testid="feed-status">
+          <div className="home-live" role="status" data-testid="feed-status">
             {feed.failed && (
               <div className="home-note" data-testid="feed-failed">
                 <ResidentText as="p">
