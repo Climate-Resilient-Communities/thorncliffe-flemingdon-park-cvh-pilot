@@ -13,8 +13,10 @@ import { confirmFromForm, providerIdOf, publishFromForm, unpublishFromForm, type
 const ROUTE = "/staff/providers";
 const deps = { db: directoryDb };
 
+// These actions declare no `context`, so a `bad_request` cannot arise; it reads as forbidden.
 const REFUSAL_KEYS: Record<ActionRefusal, string> = {
   forbidden: "staff.providers.errors.forbidden",
+  bad_request: "staff.providers.errors.forbidden",
   setup_incomplete: "staff.setup.incomplete",
   aal2_required: "staff.authenticator.required",
 };
