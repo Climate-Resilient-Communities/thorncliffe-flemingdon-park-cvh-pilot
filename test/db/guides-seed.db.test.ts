@@ -6,7 +6,16 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { record } from "@/modules/audit";
 import { readContentCatalogue, SeedRefusedError, seedGuidesAndNumbers } from "@/modules/directory";
-import { sourceHash, type ContentInput, type TranslationRecord } from "@/modules/directory/domain/guideContent";
+import { sourceHash } from "@/modules/directory/adapters/hash";
+import {
+  englishReviewHash,
+  guideKey,
+  guideTexts,
+  numberKey,
+  numberTexts,
+  type ContentInput,
+  type TranslationRecord,
+} from "@/modules/directory/domain/guideContent";
 import { createDb, type Db } from "@/platform/db";
 import { ROOT, connect, serverUrl } from "./helpers";
 
@@ -17,12 +26,31 @@ vi.mock("@/modules/audit", async (importOriginal) => {
 });
 
 const WHEN_911 = "Call 911 if someone is in danger.";
+const TODAY = "2026-12-01";
+
+/** Records the owner's English review hash on every guide and the numbers list that has none yet (the owner's sign-off). */
+function stamp(input: ContentInput): ContentInput {
+  for (const g of input.guides) {
+    if (g.englishReview && g.englishReview.sourceHash === undefined) {
+      const texts = Object.fromEntries(Object.entries(guideTexts(g)).map(([k, v]) => [guideKey(g.id, k), v]));
+      g.englishReview.sourceHash = englishReviewHash(texts, sourceHash);
+    }
+  }
+  const review = input.numbers.englishReview;
+  if (review && review.sourceHash === undefined) {
+    const texts = Object.fromEntries(
+      input.numbers.numbers.flatMap((n) => Object.entries(numberTexts(n)).map(([k, v]) => [numberKey(n.id, k), v])),
+    );
+    review.sourceHash = englishReviewHash(texts, sourceHash);
+  }
+  return input;
+}
 
 function validInput(): ContentInput {
-  const attribution = { owner: "Ana Reyes", lastUpdated: "2026-10-02", englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" } };
+  const attribution = () => ({ owner: "Ana Reyes", lastUpdated: "2026-10-02", englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" } });
   const guide = (id: string) => ({
     id,
-    ...attribution,
+    ...attribution(),
     readMins: 3,
     title: `Title of ${id}`,
     when911: WHEN_911,
@@ -33,7 +61,7 @@ function validInput(): ContentInput {
   return {
     guides: [guide("power"), guide("flood")],
     numbers: {
-      ...attribution,
+      ...attribution(),
       numbers: [
         { id: "911", number: "911", emergency: true, label: "Emergency", when: "Call 911 right now.", lastChecked: "2026-10-03" },
         { id: "hub", number: "(416) 421-8997", label: "Talk to someone at the Hub", lastChecked: "2026-10-03" },
@@ -60,6 +88,7 @@ describe("guide and essential_number seed", () => {
   let sql: ReturnType<typeof connect>;
   let db: Db;
   const audit = vi.mocked(record);
+  const seed = (input: ContentInput) => seedGuidesAndNumbers(db, stamp(input), { today: TODAY });
 
   beforeAll(async () => {
     sql = connect(serverUrl());
@@ -88,6 +117,8 @@ describe("guide and essential_number seed", () => {
       numbers_loaded: 2,
       rows_changed_guide: guides,
       rows_changed_number: numbers,
+      guides_removed: 0,
+      numbers_removed: 0,
       translations_loaded: 0,
       translations_not_yet: 15 * 13 - 1,
     },
@@ -95,6 +126,12 @@ describe("guide and essential_number seed", () => {
     failures: 0,
   });
 
+  const auditEvents = async () =>
+    (
+      await sql.unsafe(
+        "select action, outcome, meta from audit_event where subject_type = 'guides_and_numbers' and action = 'seed.run' order by id",
+      )
+    ).map((e) => ({ ...e }));
   const rows = async () => ({
     guides: await sql.unsafe("select * from guide order by id"),
     numbers: await sql.unsafe("select * from essential_number order by sort_order"),
@@ -117,9 +154,9 @@ describe("guide and essential_number seed", () => {
       zh: { texts: { "guide.power.title": reviewed("Title of power", "停电"), "number.911.when": reviewed("Call 911 right now.", "现在就拨打911") } },
     };
 
-    const first = await seedGuidesAndNumbers(db, input);
+    const first = await seed(input);
     const afterFirst = await rows();
-    const second = await seedGuidesAndNumbers(db, input);
+    const second = await seed(input);
     const afterSecond = await rows();
 
     expect(first.changed).toEqual({ guides: 2, numbers: 2 });
@@ -145,8 +182,8 @@ describe("guide and essential_number seed", () => {
     input.translations = { ur: { texts: { "guide.power.title": reviewed("Old title", "پرانا") } } };
     const before = await auditCount();
 
-    await seedGuidesAndNumbers(db, input);
-    await seedGuidesAndNumbers(db, input);
+    await seed(input);
+    await seed(input);
 
     expect(audit).toHaveBeenCalledTimes(2);
     expect(audit.mock.calls[0][0]).not.toBe(db); // the transaction, not the pool
@@ -163,14 +200,14 @@ describe("guide and essential_number seed", () => {
     audit.mockRejectedValueOnce(new Error("audit unavailable"));
     const before = await auditCount();
 
-    await expect(seedGuidesAndNumbers(db, validInput())).rejects.toThrow("audit unavailable");
+    await expect(seed(validInput())).rejects.toThrow("audit unavailable");
 
     expect(await rows()).toEqual({ guides: [], numbers: [] });
     expect(await auditCount()).toBe(before);
   });
 
   it("lets the app's role read the tables and nobody else", async () => {
-    await seedGuidesAndNumbers(db, validInput());
+    await seed(validInput());
 
     // As the app signs in (S01.04): the login role has no password until the owner sets one;
     // here a throwaway one, on a disposable server.
@@ -208,12 +245,12 @@ describe("guide and essential_number seed", () => {
   });
 
   it("updates a row when its English or review changes and leaves the other rows alone", async () => {
-    await seedGuidesAndNumbers(db, validInput());
+    await seed(validInput());
     const before = await rows();
     const changed = validInput();
     changed.guides[0].title = "Power cut";
 
-    const result = await seedGuidesAndNumbers(db, changed);
+    const result = await seed(changed);
 
     expect(result.changed).toEqual({ guides: 1, numbers: 0 });
     const after = await rows();
@@ -234,7 +271,7 @@ describe("guide and essential_number seed", () => {
       },
     };
 
-    const result = await seedGuidesAndNumbers(db, input);
+    const result = await seed(input);
 
     const { guides } = await rows();
     expect(guides.find((g) => g.id === "power")!.texts.title).toEqual({ en: "Title of power" });
@@ -249,14 +286,14 @@ describe("guide and essential_number seed", () => {
   });
 
   it("refuses a guide without an owner and leaves its existing row as it was", async () => {
-    await seedGuidesAndNumbers(db, validInput());
+    await seed(validInput());
     const before = await rows();
     const input = validInput();
     input.guides[0].owner = null;
     input.guides[0].title = "Changed but refused";
     input.guides[1].englishReview = { reviewer: "Ana Reyes", date: null };
 
-    const result = await seedGuidesAndNumbers(db, input);
+    const result = await seed(input);
 
     expect(result.partial).toBe(true);
     expect(result.report.guides).toEqual([
@@ -264,13 +301,59 @@ describe("guide and essential_number seed", () => {
       { id: "flood", loaded: false, reasons: ["the English review has no valid date"] },
     ]);
     expect((await rows()).guides).toEqual(before.guides);
+    // the numbers were loaded, so this is an ok run that counts the two refused guides
+    const last = (await auditEvents()).at(-1);
+    expect(last).toMatchObject({ outcome: "ok", meta: { failures: 2, counts: { guides_refused: 2, numbers_loaded: 2 } } });
+  });
+
+  it("deletes the guides and numbers that left the files, in one run, and keeps sort_order consistent", async () => {
+    const withExtras = () => {
+      const input = validInput();
+      input.guides.push({ ...input.guides[0], id: "hydro", title: "Title of hydro", englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" } });
+      input.numbers.numbers.splice(1, 0, { id: "smoke", number: "416-555-0100", label: "Smoke alarm help", lastChecked: "2026-10-03" });
+      return input;
+    };
+    await seed(withExtras());
+    expect((await rows()).numbers.map((n) => [n.id, n.sort_order])).toEqual([["911", 0], ["smoke", 1], ["hub", 2]]);
+    expect((await rows()).guides.map((g) => g.id)).toEqual(["flood", "hydro", "power"]);
+
+    const input = withExtras();
+    input.guides = input.guides.filter((g) => g.id !== "hydro");
+    input.numbers.numbers = input.numbers.numbers.filter((n) => n.id !== "smoke");
+    const result = await seed(input);
+
+    const after = await rows();
+    expect(after.guides.map((g) => g.id)).toEqual(["flood", "power"]);
+    expect(after.numbers.map((n) => [n.id, n.sort_order])).toEqual([["911", 0], ["hub", 1]]);
+    expect(result.removed).toEqual({ guides: 1, numbers: 1 });
+    expect(result.changed).toEqual({ guides: 0, numbers: 1 }); // hub moved up
+    expect((await auditEvents()).at(-1)).toMatchObject({ meta: { counts: { guides_removed: 1, numbers_removed: 1 } } });
+    expect((await seed(input)).removed).toEqual({ guides: 0, numbers: 0 });
+  });
+
+  it("never deletes a guide that is in the file but refused, nor any number while the list is refused", async () => {
+    await seed(validInput());
+    const before = await rows();
+    const input = validInput();
+    input.guides[0].owner = null; // power is in the file but refused
+    input.guides.splice(1, 1, { ...input.guides[1], id: "hydro", englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" } }); // flood left the file, hydro is new
+    input.numbers.numbers = [input.numbers.numbers[0]]; // hub left the file ...
+    input.numbers.numbers[0].lastChecked = null; // ... but the list is refused
+
+    const result = await seed(input);
+
+    expect(result.removed).toEqual({ guides: 1, numbers: 0 });
+    const after = await rows();
+    expect(after.guides.map((g) => g.id)).toEqual(["hydro", "power"]);
+    expect(after.guides.find((g) => g.id === "power")).toEqual(before.guides.find((g) => g.id === "power"));
+    expect(after.numbers).toEqual(before.numbers);
   });
 
   it("refuses the numbers list when a number has no last-checked date", async () => {
     const input = validInput();
     input.numbers.numbers[1].lastChecked = undefined;
 
-    const result = await seedGuidesAndNumbers(db, input);
+    const result = await seed(input);
 
     expect(result.report.numbers).toEqual({ loaded: false, reasons: ["number hub has no valid last-checked date"] });
     const loaded = await rows();
@@ -285,17 +368,23 @@ describe("guide and essential_number seed", () => {
       "a translation of a 911 text is blank",
       (i: ContentInput) => void (i.translations = { fr: { texts: { "number.911.when": { ...reviewed("Call 911 right now.", "x"), text: "" } } } }),
     ],
-  ])("refuses the whole run and writes nothing when %s", async (_, break911) => {
+  ])("refuses the whole run, writes nothing and audits the refusal when %s", async (_, break911) => {
     const input = validInput();
     break911(input);
+    const before = await auditEvents();
 
-    await expect(seedGuidesAndNumbers(db, input)).rejects.toBeInstanceOf(SeedRefusedError);
+    await expect(seed(input)).rejects.toBeInstanceOf(SeedRefusedError);
 
     expect(await rows()).toEqual({ guides: [], numbers: [] });
-    expect(audit).not.toHaveBeenCalled();
+    expect(audit).not.toHaveBeenCalled(); // no ok record: the refusal has its own
+    expect((await auditEvents()).slice(before.length)).toEqual([
+      { action: "seed.run", outcome: "refused", meta: { seed: "guides_and_numbers", failures: 1 } },
+    ]);
   });
 
   it("loads nothing from the committed catalogue until the owner fills the placeholders", async () => {
+    const before = await auditEvents();
+
     const result = await seedGuidesAndNumbers(db, readContentCatalogue(path.join(ROOT, "data", "catalogue")));
 
     expect(result.partial).toBe(true);
@@ -303,5 +392,9 @@ describe("guide and essential_number seed", () => {
     expect(result.report.numbers.loaded).toBe(false);
     expect(result.report.translations.loaded).toBe(0);
     expect(await rows()).toEqual({ guides: [], numbers: [] });
+    // nothing was loaded and the run failed: audited as refused, not as an ok seed
+    expect((await auditEvents()).slice(before.length)).toEqual([
+      { action: "seed.run", outcome: "refused", meta: { seed: "guides_and_numbers", failures: result.report.guides.length + 1 } },
+    ]);
   });
 });

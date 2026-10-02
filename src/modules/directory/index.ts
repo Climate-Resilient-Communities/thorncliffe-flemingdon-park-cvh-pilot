@@ -1,3 +1,11 @@
 export { readContentCatalogue } from "./adapters/catalogueFiles";
-export { SeedRefusedError, seedGuidesAndNumbers, type SeedResult } from "./application/seedGuides";
-export { formatSeedReport, planSeed, type ContentInput, type SeedReport } from "./domain/guideContent";
+export {
+  checkGuidesLaunch,
+  formatLaunchGaps,
+  planGuidesAndNumbers,
+  SeedRefusedError,
+  seedGuidesAndNumbers,
+  type SeedOptions,
+  type SeedResult,
+} from "./application/seedGuides";
+export { formatSeedReport, type ContentInput, type LaunchGap, type SeedReport } from "./domain/guideContent";

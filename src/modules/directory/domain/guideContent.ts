@@ -9,13 +9,16 @@
 //  - a translation is loaded only when it is `reviewed` (reviewer and date) and current, i.e.
 //    its source hash matches the English now; any other text shows in English with
 //    translation.unavailable and the report says why;
-//  - the 911 number and every "when to call 911" text can never be missing or blank, in any
-//    language: if one is, the whole run is refused (nothing is loaded).
+//  - the 911 number and every "when to call 911" text (the 911 keys, see is911Key) can never be
+//    missing or blank, in any language: if one is, the whole run is refused (nothing is loaded);
+//  - the English review is tied to the English it reviewed (a hash of the English texts) and
+//    cannot be older than the last update or dated in the future, else it is refused.
 //
 // A null translation is not a blank 911: it means "English with translation.unavailable", so
 // every language always resolves to a non-empty 911 text. A translation that is present but
-// blank is the refusal, and a translation of a 911 text that does not contain "911" is not loaded.
-import { createHash } from "node:crypto";
+// blank is the refusal, and a translation of a text with "911" in it that lost "911" is not loaded.
+//
+// Pure and browser-safe: the SHA-256 hasher and today's date are passed in (PlanOptions).
 import { LANG_CODES, type LangCode } from "@/contracts/lang";
 
 /** Languages with a translation file: every code except English, the source. */
@@ -30,6 +33,8 @@ export const GUIDE_SECTIONS = ["before", "during", "after"] as const;
 export interface ReviewSource {
   reviewer?: string | null;
   date?: string | null;
+  /** englishReviewHash of the English the owner reviewed (scripts/review_translations.py records it). */
+  sourceHash?: string | null;
 }
 
 export interface GuideSource {
@@ -90,9 +95,13 @@ export interface ContentInput {
 }
 
 // ---------------------------------------------------------------- text keys and hashes
-/** SHA-256 of the English text; scripts/content_catalogue.py computes the same value. */
-export function sourceHash(text: string): string {
-  return createHash("sha256").update(text, "utf8").digest("hex");
+/** SHA-256 hex of a UTF-8 string (adapters/hash.ts), as scripts/content_catalogue.py computes it. */
+export type Hasher = (text: string) => string;
+
+export interface PlanOptions {
+  hash: Hasher;
+  /** Today as YYYY-MM-DD; no date in the files may be later. */
+  today: string;
 }
 
 const present = (value: string | null | undefined): value is string => typeof value === "string" && value.trim() !== "";
@@ -134,6 +143,19 @@ export function contentTexts(input: Pick<ContentInput, "guides" | "numbers">): R
   return texts;
 }
 
+/**
+ * What an English review covers: a hash over the English texts (key and text, in file order) of
+ * a guide, or of the numbers list. scripts/content_catalogue.py computes the same value.
+ */
+export function englishReviewHash(texts: Record<string, string>, hash: Hasher): string {
+  return hash(JSON.stringify(Object.entries(texts)));
+}
+
+/** The 911 texts, by key: the 911 number's own texts and every guide's "when to call 911". */
+export function is911Key(key: string): boolean {
+  return key.startsWith("number.911.") || (key.startsWith("guide.") && key.endsWith(".when911"));
+}
+
 // ---------------------------------------------------------------- checks
 export function isPlaceholder(value: string | null | undefined): boolean {
   return !present(value) || value.trim().toUpperCase().startsWith(PLACEHOLDER_PREFIX);
@@ -156,17 +178,18 @@ interface Attribution {
 }
 
 /** The owner, last-updated date and English review of a guide or the numbers list, or why they are refused. */
-function checkAttribution(source: {
-  owner?: string | null;
-  lastUpdated?: string | null;
-  englishReview?: ReviewSource | null;
-}): { ok: Attribution } | { reasons: string[] } {
+function checkAttribution(
+  source: { owner?: string | null; lastUpdated?: string | null; englishReview?: ReviewSource | null },
+  expectedHash: string,
+  today: string,
+): { ok: Attribution } | { reasons: string[] } {
   const reasons: string[] = [];
   const owner = source.owner;
   const review = source.englishReview;
   if (!present(owner)) reasons.push("no owner is named");
   else if (isPlaceholder(owner)) reasons.push("the owner is still a placeholder");
   if (!isIsoDate(source.lastUpdated)) reasons.push("no valid last-updated date");
+  else if (source.lastUpdated > today) reasons.push("the last-updated date is in the future");
   if (!review || (!present(review.reviewer) && !review.date)) reasons.push("no English review is recorded");
   else {
     if (!present(review.reviewer)) reasons.push("the English review has no reviewer");
@@ -175,6 +198,16 @@ function checkAttribution(source: {
       reasons.push("the English review was not completed by the owner");
     }
     if (!isIsoDate(review.date)) reasons.push("the English review has no valid date");
+    else {
+      if (review.date > today) reasons.push("the English review date is in the future");
+      if (isIsoDate(source.lastUpdated) && review.date < source.lastUpdated) {
+        reasons.push("the English review is dated before the last update");
+      }
+    }
+    if (reasons.length === 0) {
+      if (!present(review.sourceHash)) reasons.push("the English review records no source hash (the English it reviewed)");
+      else if (review.sourceHash !== expectedHash) reasons.push("the English changed since the owner reviewed it");
+    }
   }
   if (reasons.length > 0) return { reasons };
   return {
@@ -214,12 +247,12 @@ export interface LoadedTranslation {
 
 type Evaluation = { loaded: LoadedTranslation } | { unavailable: UnavailableReason } | { blank: true };
 
-function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput): Evaluation {
+function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, input: ContentInput, hash: Hasher): Evaluation {
   const record = input.translations[lang]?.texts[key];
   if (!record) return { unavailable: "not_translated" };
   if (!present(record.text)) return { blank: true };
   if (!present(record.model) || !present(record.sourceHash)) return { unavailable: "incomplete_record" };
-  if (record.sourceHash !== sourceHash(english)) return { unavailable: "stale" };
+  if (record.sourceHash !== hash(english)) return { unavailable: "stale" };
   if (record.status !== "reviewed") return { unavailable: "machine" };
   if (isPlaceholder(record.reviewer) || !isIsoDate(record.reviewedOn)) return { unavailable: "review_incomplete" };
 
@@ -242,8 +275,8 @@ function evaluate(lang: Exclude<LangCode, "en">, key: string, english: string, i
       return { unavailable: "incomplete_record" };
     }
     const zhCurrent =
-      zh && present(zh.text) && zh.sourceHash === sourceHash(english) && zh.status === "reviewed" &&
-      sourceHash(zh.text) === conversion.fromTextHash;
+      zh && present(zh.text) && zh.sourceHash === hash(english) && zh.status === "reviewed" &&
+      hash(zh.text) === conversion.fromTextHash;
     if (!zhCurrent) return { unavailable: "zh_changed_or_not_reviewed" };
     provenance.conversion = { ...conversion };
   }
@@ -288,6 +321,8 @@ export interface SeedPlan {
   report: SeedReport;
   /** Reasons the whole run is refused (911 rules); when non-empty nothing may be loaded. */
   refusals: string[];
+  /** Every guide id in guides.json, refused or not: a guide row not in this list was removed from the file. */
+  fileGuideIds: string[];
 }
 
 function planTexts(
@@ -296,18 +331,19 @@ function planTexts(
   input: ContentInput,
   report: SeedReport,
   refusals: string[],
+  hash: Hasher,
 ): PlannedTexts {
   const planned: PlannedTexts = { texts: {}, translations: {} };
   for (const [key, english] of Object.entries(texts)) {
     planned.texts[key] = { en: english };
     for (const lang of TRANSLATED_LANGS) {
-      const result = evaluate(lang, keyOf(key), english, input);
+      const result = evaluate(lang, keyOf(key), english, input, hash);
       if ("loaded" in result) {
         planned.texts[key][lang] = result.loaded.text;
         (planned.translations[key] ??= {})[lang] = result.loaded.provenance;
         report.translations.loaded += 1;
       } else if ("blank" in result) {
-        if (english.includes("911")) {
+        if (is911Key(keyOf(key))) {
           refusals.push(`${keyOf(key)} is blank in ${lang}: a 911 text can never be empty in any language`);
         }
         report.translations.unavailable.push({ key: keyOf(key), lang, reason: "incomplete_record" });
@@ -320,7 +356,7 @@ function planTexts(
 }
 
 /** What the seed may load from the files, and why the rest is refused or shown in English. */
-export function planSeed(input: ContentInput): SeedPlan {
+export function planSeed(input: ContentInput, { hash, today }: PlanOptions): SeedPlan {
   const report: SeedReport = {
     guides: [],
     numbers: { loaded: false, reasons: [] },
@@ -343,9 +379,14 @@ export function planSeed(input: ContentInput): SeedPlan {
   }
 
   const guides: PlannedGuide[] = [];
+  const idCount = new Map<string, number>();
+  for (const guide of input.guides) idCount.set(guide.id, (idCount.get(guide.id) ?? 0) + 1);
   for (const guide of input.guides) {
     const reasons: string[] = [];
-    const attribution = checkAttribution(guide);
+    if ((idCount.get(guide.id) ?? 0) > 1) reasons.push(`guide ${guide.id} appears twice`);
+    const texts = guideTexts(guide);
+    const reviewed = Object.fromEntries(Object.entries(texts).map(([key, english]) => [guideKey(guide.id, key), english]));
+    const attribution = checkAttribution(guide, englishReviewHash(reviewed, hash), today);
     if ("reasons" in attribution) reasons.push(...attribution.reasons);
     const sectionsOk = GUIDE_SECTIONS.every((s) => (guide[s] ?? []).length > 0 && (guide[s] ?? []).every(present));
     if (!present(guide.title) || !sectionsOk) reasons.push("the title, or a before, during or after section, is empty");
@@ -354,14 +395,18 @@ export function planSeed(input: ContentInput): SeedPlan {
       report.guides.push({ id: guide.id, loaded: false, reasons });
       continue;
     }
-    const planned = planTexts(guideTexts(guide), (key) => guideKey(guide.id, key), input, report, refusals);
+    const planned = planTexts(texts, (key) => guideKey(guide.id, key), input, report, refusals, hash);
     guides.push({ id: guide.id, readMins: guide.readMins as number, ...attribution.ok, ...planned });
     report.guides.push({ id: guide.id, loaded: true, reasons: [] });
   }
 
   const numbers: PlannedNumber[] = [];
   const reasons: string[] = [];
-  const attribution = checkAttribution(input.numbers);
+  const numbersReviewed: Record<string, string> = {};
+  for (const number of input.numbers.numbers) {
+    for (const [key, english] of Object.entries(numberTexts(number))) numbersReviewed[numberKey(number.id, key)] = english;
+  }
+  const attribution = checkAttribution(input.numbers, englishReviewHash(numbersReviewed, hash), today);
   if ("reasons" in attribution) reasons.push(...attribution.reasons);
   const seen = new Set<string>();
   for (const number of input.numbers.numbers) {
@@ -370,11 +415,12 @@ export function planSeed(input: ContentInput): SeedPlan {
     if (!present(number.number)) reasons.push(`number ${number.id} has no phone number`);
     if (!present(number.label)) reasons.push(`number ${number.id} has no label`);
     if (!isIsoDate(number.lastChecked)) reasons.push(`number ${number.id} has no valid last-checked date`);
+    else if (number.lastChecked > today) reasons.push(`number ${number.id} has a last-checked date in the future`);
   }
   if (input.numbers.numbers.length === 0) reasons.push("the list has no numbers");
   if (reasons.length === 0 && "ok" in attribution) {
     input.numbers.numbers.forEach((number, index) => {
-      const planned = planTexts(numberTexts(number), (key) => numberKey(number.id, key), input, report, refusals);
+      const planned = planTexts(numberTexts(number), (key) => numberKey(number.id, key), input, report, refusals, hash);
       numbers.push({
         id: number.id,
         sortOrder: index,
@@ -389,7 +435,7 @@ export function planSeed(input: ContentInput): SeedPlan {
   } else {
     report.numbers = { loaded: false, reasons };
   }
-  return { guides, numbers, report, refusals };
+  return { guides, numbers, report, refusals, fileGuideIds: input.guides.map((g) => g.id) };
 }
 
 /** The report as lines for the terminal and the CI log. */
@@ -418,4 +464,38 @@ export function formatSeedReport(report: SeedReport): string[] {
     for (const u of others) lines.push(`  ${u.lang} ${u.key}: ${UNAVAILABLE_TEXT[u.reason]}`);
   }
   return lines;
+}
+
+// ---------------------------------------------------------------- the launch check
+export interface LaunchGap {
+  key: string;
+  lang: Exclude<LangCode, "en">;
+  reason: UnavailableReason;
+}
+
+/**
+ * Every launch language x 911 key (`number.911.*`, `guide.*.when911`) that has no current,
+ * reviewed translation. The seed still loads such a text in English with translation.unavailable
+ * (owner decision 2026-10-02); launch is not ready until this list is empty.
+ */
+export function launchGaps(input: ContentInput, { hash }: Pick<PlanOptions, "hash">): LaunchGap[] {
+  const gaps: LaunchGap[] = [];
+  for (const [key, english] of Object.entries(contentTexts(input))) {
+    if (!is911Key(key)) continue;
+    for (const lang of TRANSLATED_LANGS) {
+      const result = evaluate(lang, key, english, input, hash);
+      if ("loaded" in result) continue;
+      gaps.push({ key, lang, reason: "blank" in result ? "incomplete_record" : result.unavailable });
+    }
+  }
+  return gaps;
+}
+
+/** The launch gaps as lines for the terminal; one line saying so when launch-ready. */
+export function formatLaunchGaps(gaps: LaunchGap[]): string[] {
+  if (gaps.length === 0) return ["Launch check passed: every launch language has a reviewed, current 911 translation"];
+  return [
+    `Launch check FAILED: ${gaps.length} 911 text(s) without a reviewed, current translation (shown in English with translation.unavailable)`,
+    ...gaps.map((g) => `  ${g.lang} ${g.key}: ${UNAVAILABLE_TEXT[g.reason]}`),
+  ];
 }

@@ -1,21 +1,42 @@
 import { describe, expect, it } from "vitest";
+import { createHash } from "node:crypto";
 import {
+  englishReviewHash,
+  formatLaunchGaps,
   formatSeedReport,
-  planSeed,
-  sourceHash,
+  guideKey,
+  guideTexts,
+  is911Key,
+  launchGaps,
+  numberKey,
+  numberTexts,
+  planSeed as plan,
+  TRANSLATED_LANGS,
   type ContentInput,
   type GuideSource,
+  type NumbersFile,
   type TranslationRecord,
 } from "./guideContent";
 
+const sourceHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex"); // the adapter's hasher, injected
 const WHEN_911 = "Call 911 if someone is in danger.";
+const TODAY = "2026-12-01";
+const planSeed = (i: ContentInput, today = TODAY) => plan(i, { hash: sourceHash, today });
+
+/** The English review hash of a guide or the numbers list, as the owner's sign-off would record it. */
+const guideHash = (g: GuideSource) =>
+  englishReviewHash(Object.fromEntries(Object.entries(guideTexts(g)).map(([k, v]) => [guideKey(g.id, k), v])), sourceHash);
+const numbersHash = (n: NumbersFile) =>
+  englishReviewHash(
+    Object.fromEntries(n.numbers.flatMap((x) => Object.entries(numberTexts(x)).map(([k, v]) => [numberKey(x.id, k), v]))),
+    sourceHash,
+  );
 
 function guide(id: string, change: Partial<GuideSource> = {}): GuideSource {
-  return {
+  const g: GuideSource = {
     id,
     owner: "Ana Reyes",
     lastUpdated: "2026-10-02",
-    englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" },
     readMins: 3,
     title: `Title of ${id}`,
     when911: WHEN_911,
@@ -24,23 +45,21 @@ function guide(id: string, change: Partial<GuideSource> = {}): GuideSource {
     after: ["Plug things back in."],
     ...change,
   };
+  g.englishReview ??= "englishReview" in change ? null : { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: guideHash(g) };
+  return g;
 }
 
 function input(change: Partial<ContentInput> = {}): ContentInput {
-  return {
-    guides: [guide("power"), guide("flood")],
-    numbers: {
-      owner: "Ana Reyes",
-      lastUpdated: "2026-10-02",
-      englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" },
-      numbers: [
-        { id: "911", number: "911", emergency: true, label: "Emergency", when: "Call 911 right now.", lastChecked: "2026-10-03" },
-        { id: "hub", number: "(416) 421-8997", label: "Talk to someone at the Hub", lastChecked: "2026-10-03" },
-      ],
-    },
-    translations: {},
-    ...change,
+  const numbers: NumbersFile = {
+    owner: "Ana Reyes",
+    lastUpdated: "2026-10-02",
+    numbers: [
+      { id: "911", number: "911", emergency: true, label: "Emergency", when: "Call 911 right now.", lastChecked: "2026-10-03" },
+      { id: "hub", number: "(416) 421-8997", label: "Talk to someone at the Hub", lastChecked: "2026-10-03" },
+    ],
   };
+  numbers.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: numbersHash(numbers) };
+  return { guides: [guide("power"), guide("flood")], numbers, translations: {}, ...change };
 }
 
 const reviewed = (english: string, text: string, change: Partial<TranslationRecord> = {}): TranslationRecord => ({
@@ -65,6 +84,13 @@ describe("sourceHash", () => {
   });
 });
 
+describe("is911Key", () => {
+  it("is true for the 911 number's texts and every guide's when911, and nothing else", () => {
+    expect(["number.911.label", "number.911.when", "guide.power.when911"].every(is911Key)).toBe(true);
+    expect(["number.hub.label", "guide.power.title", "guide.power.during.0", "guide.911.title"].some(is911Key)).toBe(false);
+  });
+});
+
 describe("attribution rules", () => {
   it("loads a guide and the numbers list that name an owner, a date and an English review by the owner", () => {
     const plan = planSeed(input());
@@ -82,6 +108,10 @@ describe("attribution rules", () => {
     ["no last-updated date", { lastUpdated: null }, "no valid last-updated date"],
     ["an impossible last-updated date", { lastUpdated: "2026-02-31" }, "no valid last-updated date"],
     ["no English review", { englishReview: null }, "no English review is recorded"],
+    ["an English review in the future", { englishReview: { reviewer: "Ana Reyes", date: "2026-12-02" } }, "the English review date is in the future"],
+    ["an English review dated before the last update", { englishReview: { reviewer: "Ana Reyes", date: "2026-10-01" } }, "the English review is dated before the last update"],
+    ["an English review that records no source hash", { englishReview: { reviewer: "Ana Reyes", date: "2026-10-03" } }, "the English review records no source hash (the English it reviewed)"],
+    ["an English review of other English", { englishReview: { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: sourceHash("other") } }, "the English changed since the owner reviewed it"],
     ["no reviewer", { englishReview: { reviewer: "", date: "2026-10-03" } }, "the English review has no reviewer"],
     ["a placeholder reviewer", { englishReview: { reviewer: "placeholder: later", date: "2026-10-03" } }, "the English reviewer is still a placeholder"],
     ["no review date", { englishReview: { reviewer: "Ana Reyes", date: null } }, "the English review has no valid date"],
@@ -92,6 +122,54 @@ describe("attribution rules", () => {
     expect(plan.guides.map((g) => g.id)).toEqual(["flood"]);
     expect(plan.report.guides.find((g) => g.id === "power")).toEqual({ id: "power", loaded: false, reasons: [reason] });
     expect(plan.refusals).toEqual([]);
+  });
+
+  it("refuses a guide whose last-updated date is in the future", () => {
+    const result = planSeed(input({ guides: [guide("power", { lastUpdated: "2026-12-02" })] }));
+
+    expect(result.report.guides[0]).toEqual({
+      id: "power",
+      loaded: false,
+      reasons: ["the last-updated date is in the future", "the English review is dated before the last update"],
+    });
+  });
+
+  it("refuses a guide whose English changed after the owner reviewed it, and the numbers list likewise", () => {
+    const base = input();
+    base.guides[0].during = ["Use a flashlight, never candles."];
+    base.numbers.numbers[1].label = "Talk to the Hub";
+
+    const result = planSeed(base);
+
+    expect(result.report.guides.find((g) => g.id === "power")).toEqual({
+      id: "power",
+      loaded: false,
+      reasons: ["the English changed since the owner reviewed it"],
+    });
+    expect(result.guides.map((g) => g.id)).toEqual(["flood"]);
+    expect(result.report.numbers).toEqual({ loaded: false, reasons: ["the English changed since the owner reviewed it"] });
+  });
+
+  it("refuses the numbers list for dates in the future and a review older than the last update", () => {
+    const future = input();
+    future.numbers.numbers[1].lastChecked = "2026-12-02";
+    const stale = input();
+    stale.numbers.englishReview = { ...stale.numbers.englishReview, date: "2026-10-01" };
+
+    expect(planSeed(future).report.numbers.reasons).toEqual(["number hub has a last-checked date in the future"]);
+    expect(planSeed(stale).report.numbers.reasons).toEqual(["the English review is dated before the last update"]);
+    expect(planSeed(future, "2026-12-02").report.numbers.loaded).toBe(true);
+  });
+
+  it("refuses every guide that shares an id with another", () => {
+    const result = planSeed(input({ guides: [guide("power"), guide("flood"), guide("power", { title: "Another" })] }));
+
+    expect(result.guides.map((g) => g.id)).toEqual(["flood"]);
+    expect(result.report.guides.filter((g) => !g.loaded)).toEqual([
+      { id: "power", loaded: false, reasons: ["guide power appears twice"] },
+      { id: "power", loaded: false, reasons: ["guide power appears twice"] },
+    ]);
+    expect(result.fileGuideIds).toEqual(["power", "flood", "power"]);
   });
 
   it("refuses a guide with an empty section", () => {
@@ -242,6 +320,22 @@ describe("911 rules", () => {
     }
   });
 
+  it("treats the 911 texts by key: a blank fr number.911.label refuses the run although the English has no 911", () => {
+    const blank: TranslationRecord = { ...reviewed("Emergency", "x"), text: "" };
+    const result = planSeed(input({ translations: { fr: { texts: { "number.911.label": blank } } } }));
+
+    expect(result.refusals).toEqual(["number.911.label is blank in fr: a 911 text can never be empty in any language"]);
+  });
+
+  it("does not refuse a blank translation of a text that only mentions 911 but is not a 911 key", () => {
+    const g = guide("power", { during: ["Call 911 first, then use a flashlight."] });
+    const blank: TranslationRecord = { ...reviewed("Call 911 first, then use a flashlight.", "x"), text: "" };
+    const result = planSeed(input({ guides: [g], translations: { fr: { texts: { "guide.power.during.0": blank } } } }));
+
+    expect(result.refusals).toEqual([]);
+    expect(result.report.translations.unavailable).toContainEqual({ key: "guide.power.during.0", lang: "fr", reason: "incomplete_record" });
+  });
+
   it("does not load a translation of a 911 text that lost 911", () => {
     const plan = planSeed(input({ translations: { ur: { texts: { "guide.power.when911": reviewed(WHEN_911, "خطرے میں ہیں تو فون کریں") } } } }));
 
@@ -266,5 +360,59 @@ describe("report", () => {
     expect(lines[0]).toBe("Guides loaded: 1 of 2 (flood)");
     expect(lines).toContain("  REFUSED guide power: no owner is named");
     expect(lines.some((l) => l.startsWith("Not translated yet (English with translation.unavailable):") && l.includes("ur 8"))).toBe(true);
+  });
+});
+
+describe("launch check (911 texts reviewed and current in every launch language)", () => {
+  const KEYS_911 = [
+    ["number.911.label", "Emergency"],
+    ["number.911.when", "Call 911 right now."],
+    ["guide.power.when911", WHEN_911],
+    ["guide.flood.when911", WHEN_911],
+  ] as const;
+  const hash = { hash: sourceHash };
+
+  /** A reviewed, current translation of every 911 text in every launch language, zh-Hant converted from zh. */
+  function allReviewed(): ContentInput["translations"] {
+    const out: ContentInput["translations"] = {};
+    for (const lang of TRANSLATED_LANGS) {
+      const texts: Record<string, TranslationRecord> = {};
+      for (const [key, english] of KEYS_911) {
+        const text = english.includes("911") ? `${lang} 911` : `${lang} text`;
+        texts[key] =
+          lang === "zh-Hant"
+            ? reviewed(english, text, { model: "opencc", conversion: { from: "zh", fromTextHash: sourceHash(`zh ${text.slice(text.indexOf(" ") + 1)}`), openccVersion: "1.4.2", config: "cn to twp" } })
+            : reviewed(english, text);
+      }
+      out[lang] = { texts };
+    }
+    return out;
+  }
+
+  it("fails for every language x 911 key when nothing is translated", () => {
+    const gaps = launchGaps(input(), hash);
+
+    expect(gaps).toHaveLength(TRANSLATED_LANGS.length * KEYS_911.length);
+    expect(gaps.every((g) => g.reason === "not_translated")).toBe(true);
+    expect(gaps.map((g) => g.key)).not.toContain("guide.power.title");
+    expect(formatLaunchGaps(gaps)[0]).toContain("Launch check FAILED: 60");
+    expect(formatLaunchGaps(gaps)).toContain("  ur guide.power.when911: not translated yet");
+  });
+
+  it("passes when every launch language has a reviewed, current translation of every 911 text", () => {
+    const gaps = launchGaps(input({ translations: allReviewed() }), hash);
+
+    expect(gaps).toEqual([]);
+    expect(formatLaunchGaps(gaps)).toEqual(["Launch check passed: every launch language has a reviewed, current 911 translation"]);
+  });
+
+  it("fails for one stale translation, and for one that is only a machine translation", () => {
+    const stale = allReviewed();
+    stale.ur!.texts["guide.flood.when911"] = reviewed("Call 911 if someone was in danger.", "ur 911");
+    const machine = allReviewed();
+    machine.es!.texts["number.911.when"] = reviewed("Call 911 right now.", "es 911", { status: "machine", reviewer: null, reviewedOn: null });
+
+    expect(launchGaps(input({ translations: stale }), hash)).toEqual([{ key: "guide.flood.when911", lang: "ur", reason: "stale" }]);
+    expect(launchGaps(input({ translations: machine }), hash)).toEqual([{ key: "number.911.when", lang: "es", reason: "machine" }]);
   });
 });
