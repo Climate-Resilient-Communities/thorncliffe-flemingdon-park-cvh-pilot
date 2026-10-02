@@ -3943,6 +3943,23 @@
         "notRequired": "[EN] Your authenticator setup has changed. Reload the page.",
         "unavailable": "[EN] The authenticator is not working right now. Try again in a few minutes."
       }
+    },
+    "resetAuthenticator": {
+      "title": "[EN] Reset an authenticator",
+      "lead": "[EN] For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.",
+      "username": "[EN] Their username",
+      "submit": "[EN] Reset authenticator",
+      "done": "[EN] Authenticator reset for {username}.",
+      "doneLine": "[EN] They were signed out on every device. At their next sign-in they set up a new authenticator.",
+      "shortfall": "[EN] This leaves fewer than two usable Admins. Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role.",
+      "providerNote": "[EN] The old authenticator could not be deleted from the sign-in service just now. It no longer works here, and it is removed when they set up the new one.",
+      "errors": {
+        "notFound": "[EN] No account has that username.",
+        "forbidden": "[EN] Only an Admin can reset an authenticator.",
+        "selfAction": "[EN] You cannot reset your own authenticator. Ask another Admin.",
+        "notResettable": "[EN] This account is suspended or removed, so its authenticator cannot be reset.",
+        "noAuthenticator": "[EN] Only Admins and Coordinators have an authenticator."
+      }
     }
   }
 }

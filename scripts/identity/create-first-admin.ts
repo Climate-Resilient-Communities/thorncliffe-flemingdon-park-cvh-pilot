@@ -79,9 +79,12 @@ const REISSUE_REFUSALS: Record<FirstAdminReissueError, string> = {
 /**
  * The environment rules of S01.02 (src/platform/config/env.ts), and production only: the first
  * Admin is created once, in the one production project, never from a preview or a laptop's
- * development settings.
+ * development settings. scripts/recover-admin (S01.11) applies the same rules under its own name.
  */
-export function productionEnvironment(source: Record<string, string | undefined>): { ok: true; env: Env } | { ok: false; problems: string[] } {
+export function productionEnvironment(
+  source: Record<string, string | undefined>,
+  script = "create-first-admin",
+): { ok: true; env: Env } | { ok: false; problems: string[] } {
   let env: Env;
   try {
     env = parseEnv(source);
@@ -92,7 +95,7 @@ export function productionEnvironment(source: Record<string, string | undefined>
   if (env.environment !== "production") {
     return {
       ok: false,
-      problems: [`VERCEL_ENV: create-first-admin runs only in production (VERCEL_ENV=production), not in ${env.environment}`],
+      problems: [`VERCEL_ENV: ${script} runs only in production (VERCEL_ENV=production), not in ${env.environment}`],
     };
   }
   return { ok: true, env };

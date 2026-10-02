@@ -1,4 +1,4 @@
-import { and, eq, isNull, lt, ne } from "drizzle-orm";
+import { and, eq, gt, inArray, isNotNull, isNull, lt, ne } from "drizzle-orm";
 import type { StaffSessionStore } from "../application/ports";
 import { staffSession } from "./schema";
 
@@ -51,6 +51,15 @@ export const drizzleStaffSessionStore: StaffSessionStore = {
       .where(and(eq(staffSession.id, id), eq(staffSession.staffAccountId, staffId), isNull(staffSession.revokedAt)))
       .returning({ id: staffSession.id });
     return rows.length > 0;
+  },
+
+  async withLiveAal2(db, staffIds, since) {
+    if (staffIds.length === 0) return [];
+    const rows = await db
+      .selectDistinct({ staffId: staffSession.staffAccountId })
+      .from(staffSession)
+      .where(and(inArray(staffSession.staffAccountId, [...staffIds]), isNull(staffSession.revokedAt), isNotNull(staffSession.aal2At), gt(staffSession.createdAt, since)));
+    return rows.map((row) => row.staffId);
   },
 
   async revokeAll(db, staffId, at, options = {}) {

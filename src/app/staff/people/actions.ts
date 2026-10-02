@@ -5,6 +5,7 @@ import { staffAction, type ActionRefusal } from "../guard";
 import { identity, staffAuth } from "../identity";
 import { addPersonFromForm, addPersonValues, type AddPersonState } from "./addPerson";
 import { reissueFromForm, reissueUsername, type ReissueState } from "./reissue";
+import { resetAuthenticatorFromForm, resetAuthenticatorUsername, type ResetAuthenticatorState } from "./resetAuthenticator";
 import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from "./resetPassword";
 
 // Without a session the guard sends the person to sign-in; another setup gate, a role the policy
@@ -40,4 +41,11 @@ export const resetPasswordAction = staffAction(
   { route: "/staff/people", access: "hub", action: "accounts.manage" },
   async (session, _previous: ResetPasswordState, form: FormData): Promise<ResetPasswordState> => resetPasswordFromForm({ identity }, session, form),
   (error, _previous, form): ResetPasswordState => ({ status: "refused", message: refusalMessage(error, "staff.resetPassword.errors.forbidden"), username: resetUsername(form) }),
+);
+
+/** "Reset authenticator" (S01.11), on the same page: Admin only, never on oneself, from an aal2 session. */
+export const resetAuthenticatorAction = staffAction(
+  { route: "/staff/people", access: "hub", action: "accounts.manage" },
+  async (session, _previous: ResetAuthenticatorState, form: FormData): Promise<ResetAuthenticatorState> => resetAuthenticatorFromForm({ identity }, session, form),
+  (error, _previous, form): ResetAuthenticatorState => ({ status: "refused", message: refusalMessage(error, "staff.resetAuthenticator.errors.forbidden"), username: resetAuthenticatorUsername(form) }),
 );

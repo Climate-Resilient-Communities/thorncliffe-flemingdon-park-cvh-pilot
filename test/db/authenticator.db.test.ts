@@ -522,7 +522,7 @@ describe("the authenticator reset hook (for S01.11)", () => {
     await signIn(device, "admin2");
     await verify(device, codeFor(second.authUserId));
 
-    expect(await factorReset().resetFactor({ staffId: second.id, actorStaffId: first.id, cause: "lost_device" })).toEqual({ ok: true, value: { adminShortfall: true } });
+    expect(await factorReset().resetFactor({ staffId: second.id, actorStaffId: first.id, cause: "lost_device" })).toEqual({ ok: true, value: { adminShortfall: true, providerCleared: true } });
 
     expect(await current(device)).toBeNull();
     expect(idp.users.get(second.authUserId)!.authenticatorEnrolled).toBe(false);
@@ -539,7 +539,7 @@ describe("the authenticator reset hook (for S01.11)", () => {
     const { first } = await twoAdmins();
     const third = await account("admin3", "admin", { enrolled: true });
 
-    expect(await factorReset().resetFactor({ staffId: third.id, actorStaffId: first.id, cause: "lost_device" })).toEqual({ ok: true, value: { adminShortfall: false } });
+    expect(await factorReset().resetFactor({ staffId: third.id, actorStaffId: first.id, cause: "lost_device" })).toEqual({ ok: true, value: { adminShortfall: false, providerCleared: true } });
     expect((await auditOf(["factor.reset"]))[0].meta).toEqual({ recovery: "lost_device" });
   });
 });
