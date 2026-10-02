@@ -36,6 +36,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     idp.users.set(authUserId, { login: "x", password: "x", authenticatorEnrolled: true });
   }
   const permitted = vi.fn(async () => {});
+  const released = vi.fn<StaffStore["removeAssignments"]>(async () => []);
   const lockedAdmins = vi.fn();
   const lockedAccount = vi.fn();
   const lockTimeouts: number[] = [];
@@ -56,6 +57,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     setStatus: async (_tx, staffId, status) => void (rows.get(staffId)!.status = status),
     setRole: async (_tx, staffId, role) => void (rows.get(staffId)!.role = role),
     clearFactorEnrolment: async (_tx, staffId) => void (rows.get(staffId)!.factorEnrolledAt = null),
+    removeAssignments: released,
   } as Partial<StaffStore> as StaffStore;
   const recorded: AuditEvent[] = [];
   const refused: AuditEvent[] = [];
@@ -86,7 +88,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
   const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: lockReads, revocation };
   const service = createStaffChangeService(deps);
   const { beginAdminRecovery } = createAdminRecovery(deps);
-  return { service, beginAdminRecovery, db, lockReads, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts, openSessions, generations, revokedIn };
+  return { service, beginAdminRecovery, db, lockReads, released, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts, openSessions, generations, revokedIn };
 }
 
 const RULE = { ok: false, error: "two_admin_rule" };
@@ -179,6 +181,37 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
     expect(generations.get(D)).toBe(1);
     expect(revokedIn).toEqual([TX]);
     expect(recorded.at(-1)).toEqual({ action: "session.revoked", actorStaffId: A, subjectType: "staff_account", subjectId: D, meta: { cause, sessions: 2 } });
+  });
+
+  it("ends an Ambassador's assignments when the role changes to another, in the change's transaction, each audited as removed with reason role_changed (S01.14)", async () => {
+    const { service, released, recorded } = setup([{ id: A }, { id: B }, { id: D, role: "ambassador" }]);
+    released.mockResolvedValueOnce([
+      { rsn: "7001", floorIds: null },
+      { rsn: "7002", floorIds: ["01900000-0000-7000-8000-0000000000f1"] },
+    ]);
+
+    expect(await service.changeRole(A, D, "coordinator")).toEqual({ ok: true, value: undefined });
+
+    expect(released).toHaveBeenCalledWith(TX, D);
+    expect(recorded.filter((event) => event.action === "assignment.removed")).toEqual([
+      { action: "assignment.removed", actorStaffId: A, subjectType: "building", subjectId: "7001", meta: { reason: "role_changed", staff_id: D, rsn: "7001", floor_ids: null } },
+      { action: "assignment.removed", actorStaffId: A, subjectType: "building", subjectId: "7002", meta: { reason: "role_changed", staff_id: D, rsn: "7002", floor_ids: ["01900000-0000-7000-8000-0000000000f1"] } },
+    ]);
+  });
+
+  it("leaves alone the assignments of an account that was not an Ambassador, and of one whose change is refused", async () => {
+    const { service, released } = setup([{ id: A }, { id: B }, { id: C, role: "coordinator" }, { id: D, role: "ambassador" }]);
+
+    expect(await service.changeRole(A, C, "director")).toEqual({ ok: true, value: undefined });
+    expect(await service.changeRole(A, D, "ambassador")).toEqual({ ok: false, error: "no_change" });
+    expect(released).not.toHaveBeenCalled();
+  });
+
+  it("refuses a role change that fails the two-Admin rule without touching the assignments", async () => {
+    const { service, released } = setup([{ id: A }, { id: B }]);
+
+    expect(await service.changeRole(A, B, "ambassador")).toEqual(RULE);
+    expect(released).not.toHaveBeenCalled();
   });
 
   it("refuses changes to any Admin during a shortfall, and lets everything else continue", async () => {

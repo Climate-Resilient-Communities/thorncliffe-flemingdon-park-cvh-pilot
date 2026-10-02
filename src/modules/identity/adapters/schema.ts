@@ -1,10 +1,10 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
 // db/migrations/20261002110000_staff_account.sql, 20261002130000_sign_in.sql,
-// 20261002131000_staff_session.sql, 20261002150000_session_revocation.sql and
-// 20261002160000_authenticator.sql; the drift test compares them.
-// The bootstrap row's forward-only trigger and the grants live only in the migration.
+// 20261002131000_staff_session.sql, 20261002150000_session_revocation.sql,
+// 20261002160000_authenticator.sql and 20261002240000_ambassador_assignment.sql; the drift test compares them.
+// The bootstrap row's forward-only trigger, the assignments' triggers and the grants live only in the migration.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, integer, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, foreignKey, index, integer, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 import { STAFF_STATUSES } from "../domain/staffAccount";
 
@@ -140,6 +140,68 @@ export const staffSession = pgTable(
     pgPolicy("staff_session_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("staff_session_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("staff_session_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * places' building and building_floor, named here only so the foreign keys below can be declared: Drizzle
+ * needs table objects, and identity may not import places (AD-2). Not exported, so nothing reads or writes
+ * them through this module; the real definitions are src/modules/places/adapters/schema.ts.
+ */
+const buildingKey = pgTable("building", { rsn: text().primaryKey() });
+const buildingFloorKey = pgTable("building_floor", { id: uuid().primaryKey() });
+
+/**
+ * An Ambassador's assignment to a building (S01.14): every floor of it (`allFloors`, the spine's
+ * `floors = null`) or the floors `ambassadorAssignmentFloor` lists. Whether it covers anything is decided
+ * when asked: an active Ambassador covers, a suspended, locked or removed account does not.
+ */
+export const ambassadorAssignment = pgTable(
+  "ambassador_assignment",
+  {
+    staffId: uuid("staff_id")
+      .notNull()
+      .references(() => staffAccount.id),
+    rsn: text()
+      .notNull()
+      .references(() => buildingKey.rsn),
+    allFloors: boolean("all_floors").notNull(),
+    assignedBy: uuid("assigned_by")
+      .notNull()
+      .references(() => staffAccount.id),
+    assignedAt: timestamp("assigned_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.staffId, t.rsn] }),
+    index("ambassador_assignment_rsn_idx").on(t.rsn),
+    index("ambassador_assignment_assigned_by_idx").on(t.assignedBy),
+    pgPolicy("ambassador_assignment_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("ambassador_assignment_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("ambassador_assignment_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+    pgPolicy("ambassador_assignment_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * A floor an assignment lists, by the floor's id. The foreign key to the floor is `on delete restrict`: the
+ * database refuses to delete a floor an assignment lists. A trigger (migration only) makes the floor one of
+ * the assigned building's.
+ */
+export const ambassadorAssignmentFloor = pgTable(
+  "ambassador_assignment_floor",
+  {
+    staffId: uuid("staff_id").notNull(),
+    rsn: text().notNull(),
+    floorId: uuid("floor_id").notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.staffId, t.floorId] }),
+    foreignKey({ name: "ambassador_assignment_floor_assignment_fk", columns: [t.staffId, t.rsn], foreignColumns: [ambassadorAssignment.staffId, ambassadorAssignment.rsn] }).onDelete("cascade"),
+    foreignKey({ name: "ambassador_assignment_floor_floor_fk", columns: [t.floorId], foreignColumns: [buildingFloorKey.id] }).onDelete("restrict"),
+    index("ambassador_assignment_floor_floor_idx").on(t.floorId),
+    pgPolicy("ambassador_assignment_floor_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("ambassador_assignment_floor_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("ambassador_assignment_floor_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();
 

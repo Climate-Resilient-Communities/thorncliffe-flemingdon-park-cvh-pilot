@@ -990,7 +990,7 @@ So that residents only see listings the Hub has checked.
 ### Story S02.05 — Admin publishes a directory release residents can download
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** AR-15 (publish), FR-D2, D-5 (`zh-Hant`), AR-20 · **Depends on:** S02.04 · **Branch:** `e02-s05-directory-release`
+- **Traces:** AR-15 (publish), FR-D2, D-5 (`zh-Hant`), AD-20 contracts · **Depends on:** S02.04 · **Branch:** `e02-s05-directory-release`
 
 As a Hub Admin,
 I want to publish the directory as one numbered release,

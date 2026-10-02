@@ -102,3 +102,21 @@ export const buildingFloor = pgTable(
     pgPolicy("building_floor_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();
+
+/**
+ * S04.03: the types of disruption, seeded by the migration (20261002250000_alert_lifecycle.sql).
+ * `direct` is whether an Ambassador's post of that type may appear on the web at once (D-1, AD-5):
+ * true for the lower-risk types, false for fire and "Other", null (not decided, counts as false)
+ * for the neighbourhood-wide ones. The app only reads it.
+ */
+export const disruptionType = pgTable(
+  "disruption_type",
+  {
+    id: text().primaryKey(),
+    direct: boolean(),
+  },
+  (t) => [
+    check("disruption_type_id_format", sql`${t.id} ~ '^[a-z][a-z_]{1,19}$'`),
+    pgPolicy("disruption_type_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();

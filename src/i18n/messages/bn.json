@@ -1337,7 +1337,8 @@
       "people": "[EN] People",
       "smsTest": "[EN] Test text",
       "buildings": "[EN] Buildings",
-      "providers": "[EN] Providers"
+      "providers": "[EN] Providers",
+      "directory": "[EN] Directory"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4086,6 +4087,75 @@
         "remove": "[EN] Remove contact"
       }
     },
+    "coverage": {
+      "title": "[EN] Ambassador coverage",
+      "lead": "[EN] Which floors of the pilot buildings have an active ambassador assigned, and which do not. Check-ins can only be promised for floors with an ambassador.",
+      "summary": "[EN] Buildings with every floor covered: {covered} of {total}. Floors without an ambassador: {gaps}.",
+      "empty": "[EN] No buildings have been imported yet. Ask IT to run the buildings seed.",
+      "viewOf": "[EN] Coverage of {address}",
+      "back": "[EN] All buildings",
+      "floorsCovered": "[EN] Floors covered: {covered} of {total}.",
+      "allCovered": "[EN] Every floor is covered.",
+      "noneCovered": "[EN] No floor is covered.",
+      "noFloors": "[EN] No floors are listed for this building yet.",
+      "coveredLabel": "[EN] Covered:",
+      "notCoveredLabel": "[EN] Not covered:",
+      "floorsTitle": "[EN] Floors",
+      "coveredBy": "[EN] Covered by {names}",
+      "notCovered": "[EN] Not covered",
+      "assignmentsTitle": "[EN] Ambassadors assigned",
+      "noAssignments": "[EN] No ambassador is assigned to this building.",
+      "allFloors": "[EN] All floors",
+      "someFloors": "[EN] Floors {labels}",
+      "notCoveringNow": "[EN] Not covering now: {reason}.",
+      "inactive": {
+        "locked_pending_reissue": "[EN] the account is locked until an Admin re-issues the starting password",
+        "suspended": "[EN] the account is suspended",
+        "removed": "[EN] the account was removed",
+        "notAmbassador": "[EN] the account is no longer an ambassador"
+      },
+      "remove": "[EN] Remove {name}",
+      "removeConfirm": "[EN] Remove {name} from this building? They stay an ambassador and stop covering it.",
+      "removeYes": "[EN] Yes, remove {name}",
+      "removeKeep": "[EN] Keep {name}",
+      "assign": {
+        "title": "[EN] Assign an ambassador",
+        "person": "[EN] Ambassador",
+        "choose": "[EN] Choose an ambassador",
+        "noAmbassadors": "[EN] There is no active ambassador to assign. Add one under People first.",
+        "scope": "[EN] Which floors",
+        "all": "[EN] All floors, including floors added later",
+        "some": "[EN] Only the floors chosen here",
+        "pick": "[EN] Choose floors",
+        "range": "[EN] Or every floor from one to another, as the building lists its floors now (floors added later are not included)",
+        "from": "[EN] From floor",
+        "to": "[EN] To floor",
+        "none": "[EN] None",
+        "submit": "[EN] Assign",
+        "noFloors": "[EN] Add floors to this building before assigning an ambassador to some of them."
+      },
+      "saved": {
+        "assigned": "[EN] Assignment saved.",
+        "removed": "[EN] Assignment removed."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin, a Coordinator or a Director can see coverage.",
+        "assignForbidden": "[EN] Only an Admin can assign ambassadors.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
+        "buildingNotFound": "[EN] That building does not exist.",
+        "accountNotFound": "[EN] That person does not exist. Reload the page.",
+        "notAmbassador": "[EN] Only an ambassador can be assigned to a building.",
+        "accountNotActive": "[EN] That ambassador is not active, so they cannot be assigned.",
+        "noFloors": "[EN] Choose at least one floor, or choose all floors.",
+        "floorNotInBuilding": "[EN] One of those floors is not a floor of this building. Reload the page.",
+        "rangeIncomplete": "[EN] Choose both ends of the range of floors, or neither.",
+        "notAssigned": "[EN] That ambassador is not assigned to this building.",
+        "choosePerson": "[EN] Choose an ambassador.",
+        "chooseScope": "[EN] Choose which floors: all floors, or only the floors you pick.",
+        "allWithFloors": "[EN] You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.",
+        "rangeReversed": "[EN] The range goes from a higher floor to a lower one. Put the lower floor first."
+      }
+    },
     "resetAuthenticator": {
       "title": "[EN] Reset an authenticator",
       "lead": "[EN] For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.",
@@ -4134,6 +4204,69 @@
         "notPublished": "[EN] This provider is not published.",
         "forbidden": "[EN] Only an Admin can change providers.",
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
+      }
+    },
+    "directory": {
+      "title": "[EN] Directory release",
+      "lead": "[EN] Publishing sends every published provider to residents as one numbered release, in every language. A release is never changed afterwards: the next publish makes a new one.",
+      "none": "[EN] No release has been published yet. Residents see no directory until one is.",
+      "current": "[EN] Current release: {number}, published {date}.",
+      "currentCounts": "[EN] Providers: {providers}. Categories: {categories}. Languages: {languages}.",
+      "publishedNow": "[EN] Providers published now: {published} of {total}.",
+      "publish": "[EN] Publish directory",
+      "publishing": "[EN] Publishing",
+      "publishHint": "[EN] This takes a few seconds. Residents keep the current release until the new one is complete.",
+      "done": "[EN] Release {number} is now current. Providers: {providers}. Languages: {languages}.",
+      "resumed": "[EN] Files already stored when this publish continued: {files}.",
+      "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
+      "staleItem": "{name}: {field}, {language}",
+      "fields": {
+        "services": "[EN] Services",
+        "emergencyRole": "[EN] Emergency role",
+        "name": "[EN] Name"
+      },
+      "languages": {
+        "en": "[EN] English",
+        "ur": "[EN] Urdu",
+        "ps": "[EN] Pashto",
+        "tl": "[EN] Tagalog",
+        "prs": "[EN] Dari",
+        "gu": "[EN] Gujarati",
+        "ta": "[EN] Tamil",
+        "el": "[EN] Greek",
+        "sk": "[EN] Slovak",
+        "bn": "[EN] Bengali",
+        "hi": "[EN] Hindi",
+        "pa": "[EN] Punjabi",
+        "zh": "[EN] Chinese (Simplified)",
+        "es": "[EN] Spanish",
+        "fr": "[EN] French",
+        "zhHant": "[EN] Chinese (Traditional)"
+      },
+      "failed": "[EN] Publish failed: {reason}",
+      "previousStays": "[EN] The previous release is still current.",
+      "lastFailed": "[EN] The last publish failed: {reason}",
+      "running": "[EN] A publish is already running. Wait a few minutes, then check the current release here.",
+      "inProgress": "[EN] A publish is in progress: release {number}. Reload this page in a minute to see whether it finished.",
+      "stalled": "[EN] A publish stopped before it finished: release {number}. Press Publish directory to continue it; the files already stored are kept.",
+      "catalogueMismatch": "[EN] The database holds catalogue {loaded}, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.",
+      "catalogueNeverLoaded": "[EN] The database holds no loaded catalogue, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.",
+      "commitNamed": "[EN] commit {sha}",
+      "commitUnknown": "[EN] the commit this deployment was built from",
+      "problems": "[EN] What is wrong: {list}",
+      "reasons": {
+        "storageUnavailable": "[EN] the files could not be stored",
+        "invalidCatalogue": "[EN] the catalogue could not be turned into a release",
+        "catalogueUnreadable": "[EN] the catalogue files are missing from this deployment",
+        "catalogueNotLoaded": "[EN] the database holds a different catalogue than this deployment",
+        "searchMismatch": "[EN] the search data does not match this release",
+        "gaveUp": "[EN] an earlier publish stopped three times",
+        "unexpected": "[EN] something went wrong"
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can publish the directory.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
       }
     }
   },

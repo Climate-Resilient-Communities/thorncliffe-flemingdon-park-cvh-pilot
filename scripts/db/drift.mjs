@@ -51,9 +51,11 @@ export async function introspect(sql) {
     }
     const constraints = await sql.unsafe(
       `select conrelid as oid, contype as type, pg_get_constraintdef(oid) as definition
-       from pg_constraint where conrelid = any($1::oid[]) and contype <> 'n'`,
+       from pg_constraint where conrelid = any($1::oid[]) and contype not in ('n', 't')`,
       [oids],
     );
+    // A constraint trigger (contype 't') is a trigger, which Drizzle cannot express and this check leaves to the
+    // migrations (the grants and the triggers live only there); it is not a table constraint.
     // A constraint added NOT VALID (expand-only: existing rows are not scanned) has the same shape as
     // a validated one, and Drizzle cannot say NOT VALID, so the validation state is not compared.
     for (const c of constraints) byOid.get(c.oid).constraints.push(c.definition.replace(/ NOT VALID$/, ""));

@@ -84,6 +84,10 @@ describe("toAuditRecord", () => {
     ["building.floor_removed", { floor_id: FLOOR, reason: "floor_has_assignments", assignments: 2 }],
     ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: null }],
     ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR] }],
+    ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR], previous_floor_ids: null }],
+    ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: null, previous_floor_ids: [FLOOR] }],
+    ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR] }],
+    ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: null, reason: "role_changed" }],
     ["seed.run", { seed: "buildings", counts: { buildings: 43, floors: 812 }, warnings: 1 }],
     ["sms.test_sent", { http_status: 201, provider_status: "queued" }],
     ["sms.test_sent", { http_status: 400, provider_error_code: 30032, reason: "provider_error" }],
@@ -113,6 +117,15 @@ describe("toAuditRecord", () => {
         /fields outside the schema: admin_shortfall/,
       );
     }
+  });
+
+  it("keeps the assignment records strict: role_changed is a reason of assignment.removed only, and no other field is accepted", () => {
+    const attempt = (action: "assignment.saved" | "assignment.removed", meta: object) => () => toAuditRecord(event({ action, meta } as unknown as Partial<AuditEvent>), "ok");
+
+    expect(attempt("assignment.saved", { reason: "role_changed" })).toThrow(AuditRecordError);
+    expect(attempt("assignment.removed", { reason: "other" })).toThrow(AuditRecordError);
+    expect(attempt("assignment.removed", { previous_floor_ids: null })).toThrow(/fields outside the schema: previous_floor_ids/);
+    expect(attempt("assignment.saved", { previous_floor_ids: [FLOOR, "x"] })).toThrow("assignment.saved: meta.previous_floor_ids.1 is invalid");
   });
 
   it("keeps the authenticator reset's reason to a fixed list, never free text (S01.11)", () => {
@@ -189,6 +202,44 @@ describe("toAuditRecord", () => {
     it("accepts a leap day and refuses one in a year that has none", () => {
       expect(() => toAuditRecord(provider({ meta: { confirmed_on: "2028-02-29", previous: null } } as Partial<AuditEvent>), "ok")).not.toThrow();
       expect(() => toAuditRecord(provider({ meta: { confirmed_on: "2026-02-29", previous: null } } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    });
+  });
+
+  describe("directory.published (S02.05)", () => {
+    const COUNTS = { release: 3, providers: 99, categories: 8, files: 16, translations: 1200, fallbacks: 300, stale: 2 };
+    const published = (overrides: Partial<AuditEvent> = {}) =>
+      event({ action: "directory.published", subjectType: "directory_release", subjectId: "3", meta: COUNTS, ...overrides } as Partial<AuditEvent>);
+
+    it("records the release number and counts, with the release as the subject", () => {
+      expect(toAuditRecord(published(), "ok")).toMatchObject({ action: "directory.published", subjectType: "directory_release", subjectId: "3", outcome: "ok", meta: COUNTS });
+      expect(toAuditRecord(published({ meta: { ...COUNTS, attempts: 2, resumed_files: 5 } } as Partial<AuditEvent>), "ok").meta).toMatchObject({ attempts: 2, resumed_files: 5 });
+    });
+
+    it("records a refusal with its reason, and for a failed publish the failure code", () => {
+      expect(toAuditRecord(published({ meta: { reason: "publish_failed", failure: "storage_unavailable" } } as Partial<AuditEvent>), "refused").meta).toEqual({
+        reason: "publish_failed",
+        failure: "storage_unavailable",
+      });
+      expect(toAuditRecord(published({ subjectId: null, meta: { reason: "publish_running" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "publish_running" });
+    });
+
+    it("rejects a failure that is not a code", () => {
+      expect(() => toAuditRecord(published({ meta: { reason: "publish_failed", failure: "the store said: ECONNREFUSED" } } as Partial<AuditEvent>), "refused")).toThrow(AuditRecordError);
+    });
+
+    it.each(["release", "providers", "categories", "files", "translations", "fallbacks", "stale"])("rejects an ok record with no %s", (field) => {
+      const rest = Object.fromEntries(Object.entries(COUNTS).filter(([key]) => key !== field));
+      expect(() => toAuditRecord(published({ meta: rest } as Partial<AuditEvent>), "ok")).toThrow(`meta is missing ${field}`);
+    });
+
+    it.each([
+      ["a hash", { catalogue_hash: "a".repeat(64) }],
+      ["a provider name", { name: "Thorncliffe Legal Clinic" }],
+      ["a stale text", { stale_texts: ["M001"] }],
+      ["a count that is not a number", { providers: "99" }],
+      ["a negative count", { providers: -1 }],
+    ])("rejects %s", (_, extra) => {
+      expect(() => toAuditRecord(published({ meta: { ...COUNTS, ...extra } } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
     });
   });
 
@@ -379,4 +430,63 @@ describe("findSensitiveValue", () => {
       expect(findSensitiveValue(value)).toBeNull();
     },
   );
+});
+
+describe("alert lifecycle actions (S04.03)", () => {
+  const ENTRY = "5a1e0c9d-2b7f-4e83-9c14-6d0f8a3b2e71";
+  const HASH_WITH_LONG_DIGIT_RUN = `${"1234567890".repeat(6)}abcd`;
+  const alertEvent = (action: string, meta: Record<string, unknown>, subjectType = "alert_entry") =>
+    event({ action, subjectType, subjectId: ENTRY, meta } as unknown as Partial<AuditEvent>);
+
+  it.each([
+    ["alert.created", { entry_id: ENTRY, kind: "ack", types: ["power", "water"] }, "alert"],
+    ["entry.submitted", { entry_id: ENTRY, version: 1, content_hash: HASH_WITH_LONG_DIGIT_RUN }, "alert_entry"],
+    ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "retranslate" }, "alert_entry"],
+    ["entry.discarded", { entry_id: ENTRY, version: 0, from: "draft" }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64) }, "alert_entry"],
+  ])("accepts %s with its strict meta, a content hash included", (action, meta, subjectType) => {
+    expect(toAuditRecord(alertEvent(action, meta, subjectType), "ok").meta).toEqual(meta);
+  });
+
+  it("accepts a refusal with only its reason, including alert_closed", () => {
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "alert_closed" }), "refused")).toMatchObject({ outcome: "refused", meta: { reason: "alert_closed" } });
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "self_action" }), "refused").meta).toEqual({ reason: "self_action" });
+  });
+
+  it.each([
+    ["alert.created", { kind: "ack" }],
+    ["entry.submitted", { entry_id: ENTRY, version: 1 }],
+    ["entry.returned", { entry_id: ENTRY, version: 1 }],
+    ["entry.discarded", { version: 1, from: "draft" }],
+    ["entry.approved", { entry_id: ENTRY, content_hash: "a".repeat(64) }],
+  ])("requires the entry id and frozen facts on an ok %s: %j", (action, meta) => {
+    expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(/meta is missing/);
+  });
+
+  it.each([
+    ["the text", "entry.submitted", { entry_id: ENTRY, version: 1, content_hash: "a".repeat(64), text: "Power is out" }],
+    ["a note", "entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", note: "fix the floor" }],
+    ["a person's id other than the actor", "entry.approved", { entry_id: ENTRY, version: 1, content_hash: "a".repeat(64), approver_id: ENTRY }],
+    ["a hash that is not a SHA-256", "entry.approved", { entry_id: ENTRY, version: 1, content_hash: "abc" }],
+    ["a return reason outside the list", "entry.returned", { entry_id: ENTRY, version: 1, returned_for: "because" }],
+    ["a discard from a status that cannot be discarded", "entry.discarded", { entry_id: ENTRY, from: "approved" }],
+    ["a kind outside the list", "alert.created", { entry_id: ENTRY, kind: "rumour" }],
+  ])("rejects %s", (_, action, meta) => {
+    expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("passes a SHA-256 at meta.content_hash even when it holds a long run of digits, and nowhere else", () => {
+    expect(findSensitiveValue({ content_hash: HASH_WITH_LONG_DIGIT_RUN })).toBeNull();
+    expect(findSensitiveValue({ content_hash: `${HASH_WITH_LONG_DIGIT_RUN} ` })).toBe("meta.content_hash");
+    expect(findSensitiveValue(HASH_WITH_LONG_DIGIT_RUN)).toBe("meta");
+  });
+
+  it("flags a phone number followed by 54 hex digits in any field other than content_hash", () => {
+    const hidden = `4165551234${"a".repeat(54)}`;
+    expect(hidden).toHaveLength(64);
+    expect(findSensitiveValue({ note: hidden })).toBe("meta.note");
+    expect(findSensitiveValue({ nested: { content_hash: hidden }, list: [hidden] })).toBe("meta.nested.content_hash");
+    expect(findSensitiveValue({ list: [hidden] })).toBe("meta.list[0]");
+    expect(findSensitiveValue({ entry_id: hidden })).toBe("meta.entry_id");
+  });
 });

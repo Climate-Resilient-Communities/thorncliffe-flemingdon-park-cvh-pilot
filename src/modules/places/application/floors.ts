@@ -60,6 +60,22 @@ export interface BuildingDetail extends BuildingSummary {
   floors: FloorView[];
 }
 
+export interface FloorPlanFloor {
+  id: string;
+  label: string;
+  /** Orders the floors of a building, lowest first. */
+  sortOrder: number;
+}
+
+/** A building with its floors, as the coverage view needs it. */
+export interface BuildingFloorPlan {
+  rsn: string;
+  address: string;
+  neighbourhoodId: string;
+  neighbourhoodName: string;
+  floors: FloorPlanFloor[];
+}
+
 export type FloorRefusal = FloorLabelError | ContactError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
 
 /** An expected outcome as a value (spine: Errors). A refusal to remove a floor lists the Ambassadors who block it. */
@@ -198,6 +214,22 @@ export function createBuildingService(deps: BuildingServiceDeps) {
         confirmedAt: row.floorsConfirmedAt,
         notInRegisterSince: row.notInRegisterSince,
       }));
+    },
+
+    /**
+     * Every building with its floors, lowest first, by neighbourhood and address: what the coverage view
+     * (S01.14) lays the assignments over. A building with no floors yet has an empty list.
+     */
+    async listFloorPlans(): Promise<BuildingFloorPlan[]> {
+      const rows = await db
+        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhoodName: neighbourhood.name })
+        .from(building)
+        .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
+        .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));
+      const floors = await db.select().from(buildingFloor).orderBy(asc(buildingFloor.sortOrder), asc(buildingFloor.label));
+      const byBuilding = new Map<string, FloorPlanFloor[]>();
+      for (const floor of floors) byBuilding.set(floor.rsn, [...(byBuilding.get(floor.rsn) ?? []), { id: floor.id, label: floor.label, sortOrder: floor.sortOrder }]);
+      return rows.map((row) => ({ ...row, floors: byBuilding.get(row.rsn) ?? [] }));
     },
 
     /** One building with its facts and floors; null when there is none with that rsn. */

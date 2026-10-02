@@ -1,7 +1,7 @@
 import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { StaffStore } from "../application/ports";
 import type { StaffAccount } from "../domain/staffAccount";
-import { staffAccount, staffBootstrap, type StaffAccountRow } from "./schema";
+import { ambassadorAssignment, ambassadorAssignmentFloor, staffAccount, staffBootstrap, type StaffAccountRow } from "./schema";
 
 // Any fixed key: it only serialises the identity module's account writers.
 const ACCOUNTS_LOCK_KEY = 7_315_420_052;
@@ -179,6 +179,19 @@ export const drizzleStaffStore: StaffStore = {
 
   async setRole(tx, staffId, role) {
     await tx.update(staffAccount).set({ role }).where(eq(staffAccount.id, staffId));
+  },
+
+  async removeAssignments(tx, staffId) {
+    // The floors each assignment listed, read before the assignments go (their floor rows follow, on delete cascade).
+    const listed = await tx
+      .select({ rsn: ambassadorAssignmentFloor.rsn, floorId: ambassadorAssignmentFloor.floorId })
+      .from(ambassadorAssignmentFloor)
+      .where(eq(ambassadorAssignmentFloor.staffId, staffId))
+      .orderBy(asc(ambassadorAssignmentFloor.floorId));
+    const removed = await tx.delete(ambassadorAssignment).where(eq(ambassadorAssignment.staffId, staffId)).returning({ rsn: ambassadorAssignment.rsn, allFloors: ambassadorAssignment.allFloors });
+    return removed
+      .map((row) => ({ rsn: row.rsn, floorIds: row.allFloors ? null : listed.filter((floor) => floor.rsn === row.rsn).map((floor) => floor.floorId) }))
+      .sort((a, b) => a.rsn.localeCompare(b.rsn));
   },
 
   async beginPasswordReset(tx, staffId, at) {
