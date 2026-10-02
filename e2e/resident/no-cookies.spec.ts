@@ -51,3 +51,13 @@ test("the building list sets no cookie", async ({ request }) => {
 
   expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
 });
+
+// S03.04: a question is personal. /api/search sets no cookie, whether it answers or refuses, and is never cacheable.
+test("the search endpoint sets no cookie and is not cacheable, for a question and for a refused one", async ({ request }) => {
+  for (const data of [{ q: "", lang: "en" }, { q: "a question", lang: "xx" }, { q: "a question", lang: "en" }]) {
+    const response = await request.post("/api/search", { data, maxRedirects: 0 });
+
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(data)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
+});

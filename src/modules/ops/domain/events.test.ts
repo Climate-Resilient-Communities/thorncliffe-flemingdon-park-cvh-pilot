@@ -44,6 +44,20 @@ describe("ops events", () => {
     }
   });
 
+  it("turns a search that could not answer into a row of a reason and a duration, and refuses anything else (S03.04)", () => {
+    expect(toOpsEventRecord({ kind: "search.unavailable", subjectType: "directory_release", subjectId: "2", detail: { reason: "timed_out", ms: 2203 } })).toEqual({
+      kind: "search.unavailable",
+      severity: "warning",
+      subjectType: "directory_release",
+      subjectId: "2",
+      detail: { reason: "timed_out", ms: 2203 },
+    });
+    expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 1003 } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 1003 } });
+    for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
+    }
+  });
+
   it("names the publish failure reasons the directory job gives", () => {
     expect([...PUBLISH_FAILURE_REASONS]).toEqual([
       "storage_unavailable",
