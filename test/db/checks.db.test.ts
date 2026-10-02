@@ -55,6 +55,87 @@ describe("RLS check", () => {
   });
 });
 
+describe("RLS check cannot be sidestepped", () => {
+  const PROTECTED = "create table audit_event (id int primary key); alter table audit_event enable row level security;";
+
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(sqlText);
+    return checkRls(db.sql);
+  }
+
+  it("rejects a view that clients can read, since it runs as its owner and skips RLS", async () => {
+    // Supabase's default privileges give anon and authenticated every new relation in public.
+    const problems = await checked(`${PROTECTED} create view audit_feed as select * from audit_event; grant select on audit_feed to anon;`);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_feed is a view that anon can read/)]);
+  });
+
+  it("passes a security_invoker view, which applies the table's RLS to the caller", async () => {
+    const problems = await checked(
+      `${PROTECTED} create view audit_feed with (security_invoker = true) as select * from audit_event; grant select on audit_feed to anon, authenticated;`,
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("passes a view that clients cannot read", async () => {
+    const problems = await checked(
+      `${PROTECTED} create view audit_feed as select * from audit_event; revoke all on audit_feed from public, anon, authenticated;`,
+    );
+
+    expect(problems).toEqual([]);
+  });
+
+  it("rejects a materialized view that clients can read (it has no RLS)", async () => {
+    const problems = await checked(
+      `${PROTECTED} create materialized view audit_copy as select * from audit_event; grant select on audit_copy to authenticated;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_copy is a materialized view that authenticated can read/)]);
+  });
+
+  it("rejects a table owned by a client role, to which RLS does not apply", async () => {
+    const problems = await checked(
+      `create schema audit; grant usage, create on schema audit to anon;
+       create table audit.audit_event (id int); alter table audit.audit_event enable row level security;
+       alter table audit.audit_event owner to anon;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^audit\.audit_event is owned by anon/)]);
+  });
+
+  it("rejects a policy for a role that anon is a member of", async () => {
+    // Roles belong to the server, not the database: this one is removed afterwards.
+    let problems: string[];
+    try {
+      problems = await checked(
+        `${PROTECTED} create role cvh_test_readers; grant cvh_test_readers to anon;
+         create policy audit_event_read on audit_event for select to cvh_test_readers using (true);`,
+      );
+    } finally {
+      await db?.drop();
+      db = undefined;
+      const admin = connect(serverUrl());
+      await admin.unsafe("drop role if exists cvh_test_readers");
+      await admin.end({ timeout: 5 });
+    }
+
+    expect(problems).toEqual([expect.stringMatching(/policy "audit_event_read" for cvh_test_readers \(anon is a member\)/)]);
+  });
+
+  it("checks a table a migration placed in a Supabase schema", async () => {
+    const problems = await checked("create schema if not exists extensions; create table extensions.audit_event (id int);");
+
+    expect(problems).toEqual([expect.stringMatching(/^extensions\.audit_event has row level security disabled/)]);
+    expect(await checkOwnership(db!.sql, owners)).toEqual([]);
+    await db!.sql.unsafe("create table extensions.widget (id int)");
+    expect(await checkOwnership(db!.sql, owners)).toEqual([
+      expect.stringMatching(/^extensions\.widget is not in the table ownership table/),
+    ]);
+  });
+});
+
 describe("table ownership check (AD-2)", () => {
   it("passes a table in the spine's ownership table", async () => {
     const { sql } = await migrated("valid");
