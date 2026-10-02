@@ -13,6 +13,39 @@ for (const language of LANGUAGES) {
       await expect(html).toHaveAttribute("dir", language.dir);
     });
 
+    for (const width of [320, 390] as const) {
+      test(`keeps every navigation label inside its item at ${width}px: four equal columns, nothing wider than its item`, async ({ page }) => {
+        await openResident(page, `/${language.code}`, width);
+
+        const measured = await page.evaluate(() => {
+          const nav = document.querySelector('[data-testid="shell-nav"]')!;
+          const navBox = nav.getBoundingClientRect();
+          return [...nav.querySelectorAll("a")].map((item) => {
+            const box = item.getBoundingClientRect();
+            const label = item.querySelector(".shell-nav__label")!;
+            const range = document.createRange();
+            range.selectNodeContents(label);
+            const text = range.getBoundingClientRect();
+            return {
+              width: box.width,
+              left: box.left - navBox.left,
+              overflow: item.scrollWidth - item.clientWidth,
+              textStart: text.left - box.left,
+              textEnd: box.right - text.right,
+            };
+          });
+        });
+
+        expect(measured).toHaveLength(4);
+        for (const item of measured) {
+          expect(item.width).toBeCloseTo(width / 4, 0);
+          expect(item.overflow).toBeLessThanOrEqual(0);
+          expect(item.textStart).toBeGreaterThanOrEqual(-0.5);
+          expect(item.textEnd).toBeGreaterThanOrEqual(-0.5);
+        }
+      });
+    }
+
     for (const width of WIDTHS) {
       test(`has no horizontal scrolling at ${width}px and matches its baseline screenshot`, async ({ page }) => {
         await openResident(page, `/${language.code}`, width);

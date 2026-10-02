@@ -6,11 +6,62 @@ export const WIDTHS = [320, 390, 768] as const;
 /** A phone-shaped height for each test width. */
 export const HEIGHTS: Record<(typeof WIDTHS)[number], number> = { 320: 640, 390: 844, 768: 1024 };
 
-/** Opens a resident page and waits until the fonts it uses are loaded, so text has its final size. */
+/** The Noto family each script needs (a page's <html data-script>); Latin languages need none: Public Sans carries them. */
+export const SCRIPT_FAMILY: Record<string, string | null> = {
+  latin: null,
+  naskh: "Noto Naskh Arabic",
+  gujarati: "Noto Sans Gujarati",
+  tamil: "Noto Sans Tamil",
+  greek: "Noto Sans",
+  bengali: "Noto Sans Bengali",
+  devanagari: "Noto Sans Devanagari",
+  gurmukhi: "Noto Sans Gurmukhi",
+  sc: "Noto Sans SC",
+};
+
+/**
+ * Waits until every font file the visible text needs is loaded, not only until the fonts already requested are:
+ * document.fonts.ready resolves at once when layout has not yet asked for a face, which is how a baseline was once
+ * taken in a fallback serif. For each visible run of text this asks the browser to load the face (and the
+ * unicode-range slices) that run uses, waits for all of them, then checks that the page's script family is loaded and
+ * that no face is still loading.
+ */
+export async function waitForFonts(page: Page) {
+  const { script, loaded, loading } = await page.evaluate(async () => {
+    await document.fonts.ready;
+    const requests: Promise<unknown>[] = [];
+    const seen = new Set<string>();
+    const walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT);
+    for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+      const text = node.textContent?.trim();
+      const element = node.parentElement;
+      if (!text || !element?.checkVisibility()) continue;
+      const style = getComputedStyle(element);
+      const face = `${style.fontStyle} ${style.fontWeight} ${style.fontSize} ${style.fontFamily}`;
+      if (seen.has(face + text)) continue;
+      seen.add(face + text);
+      requests.push(document.fonts.load(face, text));
+    }
+    await Promise.all(requests);
+    await document.fonts.ready;
+    const faces = [...document.fonts];
+    const family = (face: FontFace) => face.family.replace(/["']/g, "");
+    return {
+      script: document.documentElement.dataset.script ?? "latin",
+      loaded: [...new Set(faces.filter((face) => face.status === "loaded").map(family))],
+      loading: faces.filter((face) => face.status === "loading").map(family),
+    };
+  });
+  const own = SCRIPT_FAMILY[script];
+  if (loading.length > 0) throw new Error(`fonts still loading: ${loading.join(", ")}`);
+  if (own && !loaded.includes(own)) throw new Error(`the ${script} page did not load ${own} (loaded: ${loaded.join(", ") || "none"})`);
+}
+
+/** Opens a resident page and waits until the fonts its text uses are loaded, so text has its final size. */
 export async function openResident(page: Page, path: string, width: number, height = HEIGHTS[width as keyof typeof HEIGHTS] ?? 844) {
   await page.setViewportSize({ width, height });
   const response = await page.goto(path);
-  await page.evaluate(() => document.fonts.ready);
+  await waitForFonts(page);
   return response;
 }
 

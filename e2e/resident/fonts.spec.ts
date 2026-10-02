@@ -1,21 +1,10 @@
 import { expect, test } from "@playwright/test";
-import { LANGUAGES } from "./helpers";
+import { LANGUAGES, SCRIPT_FAMILY as NOTO_FAMILY } from "./helpers";
 
 // S02.02, AD-16: a page downloads only its own language's Noto subset, from the app's own origin.
 
-// The Noto family each launch language's script needs (design/prototype/cvh/data.js: font). Latin languages
-// need none: Public Sans carries them.
-const NOTO_FAMILY: Record<string, string | null> = {
-  latin: null,
-  naskh: "Noto Naskh Arabic",
-  gujarati: "Noto Sans Gujarati",
-  tamil: "Noto Sans Tamil",
-  greek: "Noto Sans",
-  bengali: "Noto Sans Bengali",
-  devanagari: "Noto Sans Devanagari",
-  gurmukhi: "Noto Sans Gurmukhi",
-  sc: "Noto Sans SC",
-};
+// NOTO_FAMILY is the Noto family each launch language's script needs (design/prototype/cvh/data.js: font). Latin
+// languages need none: Public Sans carries them.
 const ALL_NOTO = Object.values(NOTO_FAMILY).filter((family): family is string => family !== null);
 
 for (const language of LANGUAGES) {

@@ -15,8 +15,12 @@ export default defineConfig({
     toHaveScreenshot: {
       animations: "disabled",
       caret: "hide",
-      // Text anti-aliasing differs a little between machines; a moved box or a changed script is far above this.
-      maxDiffPixelRatio: 0.02,
+      // Baselines are made with the Chromium that CI installs for this @playwright/test (chromium-1243, Chrome 153).
+      // `threshold` is the colour distance (0 to 1) at which one pixel counts as different, so the soft edge pixels
+      // that anti-aliasing varies by a shade do not; `maxDiffPixels` then allows only 100 pixels that really differ.
+      // A text line that moved by a pixel, a changed alignment or a gap is thousands of pixels.
+      threshold: 0.2,
+      maxDiffPixels: 100,
     },
   },
   forbidOnly: !!process.env.CI,
