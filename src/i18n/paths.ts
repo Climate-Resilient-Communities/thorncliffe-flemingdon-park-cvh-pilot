@@ -4,6 +4,10 @@ import { DEFAULT_LANGUAGE, isLaunchCode, type LaunchCode } from "./languages";
 // is not a launch language is an unknown language code, not another page.
 const LANGUAGE_SHAPE = /^[A-Za-z]{2,3}(?:-[A-Za-z0-9]{2,8})*$/;
 
+// Traditional Chinese (zh-Hant, zh-Hant-TW) is not a UI language: it is a conversion of the zh content (D-5), so
+// its URLs go to /zh/.
+const TRADITIONAL_CHINESE = /^zh-hant(?:-[a-z0-9]{2,8})*$/i;
+
 // First segments that are routes of the app, not languages, though they have the shape of a code.
 const RESERVED_SEGMENTS = new Set(["api"]);
 
@@ -22,11 +26,13 @@ export function pathInLanguage(pathname: string, code: LaunchCode): string {
 }
 
 /**
- * Where a request for an unknown language code goes: the same path under /en/ ("/xx/map" is "/en/map").
- * Null when the path needs no redirect: it has a launch language, or its first segment is not language-shaped.
+ * Where a request for an unknown language code goes: the same path under /en/ ("/xx/map" is "/en/map"), except
+ * Traditional Chinese, which goes to /zh/ ("/zh-Hant/ready" is "/zh/ready").
+ * Null when the path needs no redirect: it has a launch
+ * language, or its first segment is not language-shaped.
  */
 export function unknownLanguageRedirect(pathname: string): string | null {
   const { first, rest } = split(pathname);
   if (isLaunchCode(first) || RESERVED_SEGMENTS.has(first) || !LANGUAGE_SHAPE.test(first)) return null;
-  return `/${DEFAULT_LANGUAGE}${rest}`;
+  return `/${TRADITIONAL_CHINESE.test(first) ? "zh" : DEFAULT_LANGUAGE}${rest}`;
 }

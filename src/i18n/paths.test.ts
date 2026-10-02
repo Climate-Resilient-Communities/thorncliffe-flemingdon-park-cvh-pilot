@@ -8,7 +8,12 @@ describe("unknownLanguageRedirect", () => {
     ["/xx/map", "/en/map"],
     ["/xx/buildings/12345", "/en/buildings/12345"],
     ["/EN/map", "/en/map"],
-    ["/zh-Hant/ready", "/en/ready"],
+    ["/zh-Hant/ready", "/zh/ready"],
+    ["/zh-Hant", "/zh"],
+    ["/ZH-hant/map", "/zh/map"],
+    ["/zh-Hant-TW/map", "/zh/map"],
+    ["/zh-TW/map", "/en/map"],
+    ["/zh-Hans", "/en"],
     ["/ur-PK", "/en"],
     ["/fra/search", "/en/search"],
   ])("sends %s to %s", (from, to) => {
