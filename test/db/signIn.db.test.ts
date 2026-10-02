@@ -19,11 +19,13 @@ import {
   type StaffAuthService,
 } from "../../src/modules/identity";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
-import { createDb, type Db } from "../../src/platform/db";
+import { DB_POOL_MAX, createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
 let owner: ReturnType<typeof connect>;
 let app: Db;
+/** The app's connection string (cvh_app_login), for clients with their own pool size. */
+let appUrl: string;
 let auditBaseline = 0;
 
 let idp: MemoryIdentityProvider;
@@ -53,7 +55,8 @@ beforeAll(async () => {
   const url = new URL(serverUrl());
   url.username = "cvh_app_login";
   url.password = password;
-  app = createDb(url.href);
+  appUrl = url.href;
+  app = createDb(appUrl);
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
 });
 
@@ -526,6 +529,86 @@ describe("the two-Admin rule (S01.06)", () => {
     expect(await accounts.suspendAccount(second, first)).toEqual({ ok: false, error: "two_admin_rule" });
     advance(minutes(15));
     expect(await accounts.adminShortfallBanner(second)).toBe(false);
+  });
+});
+
+/**
+ * Runs `run` with the identity services wired to a client of its own with at most `max`
+ * connections, failing (instead of hanging) when it does not finish within `withinMs`. The client
+ * is closed afterwards, its stuck connections too.
+ */
+async function withPool<T>(max: number, withinMs: number, run: (services: ReturnType<typeof wire>) => Promise<T>): Promise<{ value: T; ms: number }> {
+  const pooled = createDb(appUrl, { max });
+  const started = performance.now();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const stalled = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`stalled: not finished after ${withinMs} ms with a pool of ${max}`)), withinMs);
+    });
+    const value = await Promise.race([run(wire({ db: pooled })), stalled]);
+    return { value, ms: performance.now() - started };
+  } finally {
+    clearTimeout(timer);
+    await pooled.$client.end({ timeout: 1 });
+  }
+}
+
+describe("transactions never take a second pool connection (the pool cannot deadlock)", () => {
+  const admins = async () => {
+    const first = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", own: "admin password one", enrolled: true });
+    const second = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${first}, ${second}, now())`;
+    return { first, second };
+  };
+
+  // Each failure holds the username's advisory lock in a transaction; the fifth runs the recovery
+  // exception's usability check inside it. Were that check to read through the pool, the other
+  // connections, all waiting for the same advisory lock, would leave it none: the pool deadlocks.
+  it.each([
+    ["the app's pool size", DB_POOL_MAX],
+    ["a small pool", 3],
+  ])("30 concurrent wrong passwords for an Admin username finish promptly with %s, lock once and audit every attempt", async (_, max) => {
+    const { first } = await admins();
+
+    const { value: results, ms } = await withPool(max, 10_000, ({ auth: pooled }) =>
+      Promise.all(Array.from({ length: 30 }, (_, i) => pooled.signIn(browser().sessions(), { username: "admin1", password: `wrong ${i}`, client: `198.51.100.${i + 1}` }))),
+    );
+
+    expect(ms).toBeLessThan(5_000);
+    expect(results.every((result) => !result.ok && result.error === "sign_in_failed")).toBe(true);
+    expect(await owner`select kind from sign_in_lock`).toEqual([{ kind: "username" }]);
+    expect(await auditsOf("auth.locked")).toEqual([
+      { actor_staff_id: null, action: "auth.locked", subject_id: first, outcome: "ok", meta: { lock: "failed_sign_in", admin_shortfall: true } },
+    ]);
+    const failed = await auditsOf("auth.failed");
+    expect(failed).toHaveLength(30);
+    expect(failed.every((record) => record.actor_staff_id === first && record.outcome === "refused")).toBe(true);
+    const counted = failed.filter((record) => record.meta.reason === "wrong_password").map((record) => record.meta.attempts as number);
+    expect([...counted].sort((a, b) => a - b)).toEqual(Array.from({ length: counted.length }, (_, i) => i + 1));
+    expect(counted.length).toBeGreaterThanOrEqual(5);
+    expect(failed.filter((record) => record.meta.reason === "throttled")).toHaveLength(30 - counted.length);
+  });
+
+  // The same check runs in an Admin's password reset (the recovery exception) and in a change that
+  // takes an Admin away (the two-Admin rule), each holding the Admin rows' locks others wait for.
+  it("concurrent password resets of an Admin and demotions of Admins finish promptly with a small pool", async () => {
+    const { first, second } = await admins();
+    const third = await account({ username: "admin3", firstName: "Cy", lastName: "Admin", role: "admin", own: "admin password three", enrolled: true });
+    // A fourth, so demoting the second leaves two usable Admins whenever the reset lands.
+    await account({ username: "admin4", firstName: "Di", lastName: "Admin", role: "admin", own: "admin password four", enrolled: true });
+
+    const { value: settled, ms } = await withPool(2, 10_000, ({ accounts: pooled }) =>
+      Promise.allSettled([
+        ...Array.from({ length: 4 }, () => pooled.resetPassword(first, "admin3")),
+        ...Array.from({ length: 4 }, () => pooled.changeRole(first, second, "director")),
+      ]),
+    );
+
+    expect(ms).toBeLessThan(5_000);
+    expect(settled.every((outcome) => outcome.status === "fulfilled")).toBe(true);
+    expect((await auditsOf("password.reset")).filter((record) => record.outcome === "ok").length).toBeGreaterThanOrEqual(1);
+    expect((await row(third)).must_change_password).toBe(true);
+    expect((await owner`select role from staff_account where id = ${second}`)[0].role).toBe("director");
   });
 });
 

@@ -129,6 +129,12 @@ export interface PolicyContext {
   assignments?: readonly PolicyAssignment[];
   /** The building, and floor where it matters, the action is on. */
   target?: { rsn: string; floorId?: string | null };
+  /**
+   * Every building the action is on, when it covers more than one (an alert for several
+   * buildings). `assigned_building` then needs each of them assigned, together with `target`'s if
+   * that is given too; an empty list is not satisfied (an action on no building has no scope).
+   */
+  targets?: readonly string[];
   /** The entry the action is on (correction, withdrawal, approval). */
   entry?: PolicyEntry;
   /** Whether the target's alert is open (check-in rows). */
@@ -138,8 +144,15 @@ export interface PolicyContext {
 /** `allowed`; `forbidden` (the role never may); `out_of_scope` (the role may, but not here). */
 export type PolicyDecision = "allowed" | "forbidden" | "out_of_scope";
 
+/** The buildings an action is on: `targets` and `target`'s; none when it names no building (or an empty list). */
+function buildingsOf(target: PolicyContext["target"], targets: PolicyContext["targets"]): string[] {
+  if (targets?.length === 0) return [];
+  return [...(targets ?? []), ...(target ? [target.rsn] : [])];
+}
+
 function holds(rule: PolicyRule, context: PolicyContext): boolean {
-  const { actorId, assignments = [], target, entry } = context;
+  const { actorId, assignments = [], target, targets, entry } = context;
+  const buildings = buildingsOf(target, targets);
   switch (rule) {
     case "yes":
     case "read_only":
@@ -147,7 +160,7 @@ function holds(rule: PolicyRule, context: PolicyContext): boolean {
     case "no":
       return false;
     case "assigned_building":
-      return target !== undefined && assignments.some((assignment) => assignment.rsn === target.rsn);
+      return buildings.length > 0 && buildings.every((rsn) => assignments.some((assignment) => assignment.rsn === rsn));
     case "assigned_floor_open_alert":
       return (
         context.alertOpen === true &&
@@ -158,6 +171,9 @@ function holds(rule: PolicyRule, context: PolicyContext): boolean {
     case "own_pending_entry":
       return actorId !== undefined && entry !== undefined && entry.authorId === actorId && entry.status === "pending_approval";
     case "not_editor":
+      // The approve use case (E04) must not rely on this check alone: it re-checks the author with
+      // can(authorRole, "alert.author", ...) against the author's current status and assignments,
+      // at approval time, as the spine requires.
       return actorId !== undefined && entry !== undefined && !entry.editorIds.includes(actorId) && entry.authorId !== actorId;
   }
 }

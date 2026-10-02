@@ -20,7 +20,7 @@ import type { AuditWriter } from "./accounts";
 import type { AuthSessions, FactorEnrolment, IdentityProvider, OperationalLog, PasswordCheck, StaffSessionStore, StaffStore, ThrottleStore } from "./ports";
 import { DEFAULT_LOCK_TIMEOUT_MS, adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
 import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
-import { hasEnrolledAuthenticator } from "./usability";
+import { hasEnrolledAuthenticator, type SignInLockReader } from "./usability";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
 
@@ -143,7 +143,7 @@ export function throttleHash(throttleKey: string, purpose: "username" | "client"
  * Reads the failed-sign-in lock of a username: its end while in force, else null. One of the facts
  * of isUsableAdmin (S01.05's bootstrap completion; S01.06 and S01.14 use it too).
  */
-export function signInLockReader(deps: { throttle: ThrottleStore; throttleKey: string; now: () => Date }) {
+export function signInLockReader(deps: { throttle: ThrottleStore; throttleKey: string; now: () => Date }): SignInLockReader {
   return async (executor: DbExecutor, username: string): Promise<Date | null> => {
     const keyHash = throttleHash(deps.throttleKey, "username", normaliseUsername(username));
     const until = await deps.throttle.lockedUntil(executor, [{ kind: "username", keyHash }]);
@@ -797,16 +797,17 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
     /**
      * Audits a staff request the role policy refused (S01.12: 403): `forbidden` when the role may
-     * never do `permission`, `out_of_scope` when it may but not on this building, floor or entry.
+     * never do `permission`, `out_of_scope` when it may but not on this building, floor or entry;
+     * or one whose facts the guard could not read (`bad_request`, status 400).
      * `route` is the route pattern, never a value from the request.
      */
-    async refuseByPolicy(staffId: string, route: string, permission: string, reason: "forbidden" | "out_of_scope"): Promise<void> {
+    async refuseByPolicy(staffId: string, route: string, permission: string, reason: "forbidden" | "out_of_scope" | "bad_request", status: 403 | 400 = 403): Promise<void> {
       await audit.recordRefusal(db, {
         action: "permission.denied",
         actorStaffId: staffId,
         subjectType: "staff_account",
         subjectId: staffId,
-        meta: { status: 403, route, permission, reason },
+        meta: { status, route, permission, reason },
       });
     },
 

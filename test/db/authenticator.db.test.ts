@@ -23,11 +23,12 @@ import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { stdoutOperationalLog } from "../../src/modules/identity/adapters/operationalLog";
 import { drizzleStaffSessionStore } from "../../src/modules/identity/adapters/sessionStore";
 import { drizzleStaffStore } from "../../src/modules/identity/adapters/staffStore";
+import { drizzleThrottleStore } from "../../src/modules/identity/adapters/throttleStore";
 import { createAdminRecovery } from "../../src/modules/identity/application/adminRecovery";
 import { createFactorReset } from "../../src/modules/identity/application/factorReset";
 import { createSessionRevocation } from "../../src/modules/identity/application/sessionRevocation";
-import { throttleHash } from "../../src/modules/identity/application/staffAuth";
-import { createDb, type Db } from "../../src/platform/db";
+import { signInLockReader, throttleHash } from "../../src/modules/identity/application/staffAuth";
+import { DB_POOL_MAX, createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
 let owner: ReturnType<typeof connect>;
@@ -540,5 +541,117 @@ describe("the authenticator reset hook (for S01.11)", () => {
 
     expect(await factorReset().resetFactor({ staffId: third.id, actorStaffId: first.id, cause: "lost_device" })).toEqual({ ok: true, value: { adminShortfall: false } });
     expect((await auditOf(["factor.reset"]))[0].meta).toEqual({ recovery: "lost_device" });
+  });
+});
+
+/**
+ * Runs `run` with a client of its own holding at most `max` connections, failing (instead of
+ * hanging) when it does not finish within `withinMs`. The client is closed afterwards.
+ */
+async function withPool<T>(max: number, withinMs: number, run: (db: Db) => Promise<T>): Promise<{ value: T; ms: number }> {
+  const pooled = createDb(appUrl, { max });
+  const started = performance.now();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    const stalled = new Promise<never>((_, reject) => {
+      timer = setTimeout(() => reject(new Error(`stalled: not finished after ${withinMs} ms with a pool of ${max}`)), withinMs);
+    });
+    const value = await Promise.race([run(pooled), stalled]);
+    return { value, ms: performance.now() - started };
+  } finally {
+    clearTimeout(timer);
+    await pooled.$client.end({ timeout: 1 });
+  }
+}
+
+describe("transactions never take a second pool connection (the pool cannot deadlock)", () => {
+  // The wrong code that reaches the username limit runs the recovery exception's usability check
+  // inside the transaction holding the throttle's advisory lock, which every other attempt waits
+  // for. Read through the pool, that check would find no connection left.
+  it.each([
+    ["the app's pool size", DB_POOL_MAX],
+    ["a small pool", 3],
+  ])("30 concurrent wrong authenticator codes for an enrolled Admin finish promptly with %s, lock once and audit every attempt", async (_, max) => {
+    const { first } = await twoAdmins();
+    const device = browser();
+    expect(await signIn(device, "admin1")).toMatchObject({ ok: true, gate: "authenticator_code" });
+    const session = (await current(device))!;
+    const wrong = wrongFor(first.authUserId);
+    const before = (await auditOf(["auth.failed"])).length;
+
+    // The 5 codes that reach the provider are held there until all 5 have arrived, then let go
+    // together with the other 25 attempts, so their failure transactions and the others'
+    // reservations all queue on the same advisory lock at once.
+    let arrived = 0;
+    let allArrived!: () => void;
+    let letGo!: () => void;
+    const fiveArrived = new Promise<void>((resolve) => (allArrived = resolve));
+    const held = new Promise<void>((resolve) => (letGo = resolve));
+    const real = device.sessions();
+    const holding: typeof real = {
+      ...real,
+      verifyFactor: async (input) => {
+        arrived += 1;
+        if (arrived === 5) allArrived();
+        await held;
+        return real.verifyFactor(input);
+      },
+    };
+
+    const { value: results, ms } = await withPool(max, 10_000, async (pooled) => {
+      const pooledAuth = createStaffAuth({ db: pooled, idp, throttleKey: THROTTLE_KEY, passwordPepper: PEPPER, now: () => clock, sleep: async () => {}, monotonicMs: () => 0 });
+      const attempt = (sessions: typeof real) => pooledAuth.verifyAuthenticatorCode(session, { code: wrong, client: CLIENT }, sessions);
+      const first = Array.from({ length: 5 }, () => attempt(holding));
+      await fiveArrived;
+      const rest = Array.from({ length: 25 }, () => attempt(real));
+      letGo();
+      return Promise.all([...first, ...rest]);
+    });
+
+    expect(ms).toBeLessThan(5_000);
+    expect(results.filter((result) => !result.ok && result.error === "code_invalid")).toHaveLength(5);
+    expect(results.filter((result) => !result.ok && result.error === "code_locked")).toHaveLength(25);
+    expect(await owner`select kind from sign_in_lock`).toEqual([{ kind: "username" }]);
+    expect(await auditOf(["auth.locked"])).toEqual([
+      { actor_staff_id: null, action: "auth.locked", subject_id: first.id, outcome: "ok", meta: { lock: "failed_sign_in", admin_shortfall: true } },
+    ]);
+    const failed = (await auditOf(["auth.failed"])).slice(before);
+    expect(failed).toHaveLength(30);
+    expect(failed.every((row) => row.actor_staff_id === first.id && row.outcome === "refused")).toBe(true);
+    expect(failed.filter((row) => row.meta.reason === "wrong_code")).toHaveLength(5);
+    expect(failed.filter((row) => row.meta.reason === "throttled")).toHaveLength(25);
+    expect(await current(device)).toMatchObject({ gate: "authenticator_code", aal: "aal1" });
+  });
+
+  // An authenticator reset is a recovery action too: the same check, under the Admin rows' locks.
+  it("concurrent authenticator resets of Admins finish promptly with a small pool", async () => {
+    const { first, second } = await twoAdmins();
+    const third = await account("admin3", "admin", { enrolled: true });
+
+    const { value: results, ms } = await withPool(2, 10_000, (pooled) => {
+      const now = () => clock;
+      const reset = createFactorReset({
+        db: pooled,
+        store: drizzleStaffStore,
+        idp,
+        audit,
+        log: stdoutOperationalLog,
+        beginAdminRecovery: createAdminRecovery({
+          store: drizzleStaffStore,
+          idp,
+          now,
+          signInLockedUntil: signInLockReader({ throttle: drizzleThrottleStore, throttleKey: THROTTLE_KEY, now }),
+        }).beginAdminRecovery,
+        revocation: createSessionRevocation({ store: drizzleStaffStore, sessions: drizzleStaffSessionStore, audit, now }),
+      });
+      return Promise.all(
+        [second, third, second, third, second, third].map((target) => reset.resetFactor({ staffId: target.id, actorStaffId: first.id, cause: "lost_device" })),
+      );
+    });
+
+    expect(ms).toBeLessThan(5_000);
+    expect(results.every((result) => result.ok)).toBe(true);
+    expect(await auditOf(["factor.reset"])).toHaveLength(6);
+    expect((await owner`select count(*)::int as n from staff_account where factor_enrolled_at is null`)[0].n).toBe(2);
   });
 });
