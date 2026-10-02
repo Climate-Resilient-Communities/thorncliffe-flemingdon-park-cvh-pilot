@@ -836,7 +836,7 @@ Residents open the CVH in any phone browser, choose their language and what matt
 | Published provider | A provider in the current directory release that the Hub has published and given a last-confirmed date. Unconfirmed providers are loaded but never shown to residents. |
 | Release | One numbered, immutable set of directory files: one listing file per launch language plus `zh-Hant`, and a manifest. Only one release is current. |
 | Machine-translation label | The catalog string shown on any text that was machine-translated, with a one-tap "Show English" that reveals the English original in place. |
-| Not known | Shown (translated) wherever a provider or building detail is missing; a field is never hidden silently or shown blank. |
+| Not known | Shown (translated) wherever a provider or building detail is missing; a field is never hidden silently or shown blank. Every screen uses the one translated string `status.unknown` (decision 2026-10-02); screen-specific copies such as the prototype's untranslated `R12.unknown` are not used. |
 | Offline-readable | After the app has been loaded once with signal, the following open without signal: home with the last feed and building status, essential numbers, guides already opened, and the directory listing file of the current language. Map tiles of areas already viewed are included only if the chosen tile provider permits caching (S02.07). Each shows "Last updated {time}". |
 | Personal choices vs usage events | Personal choices (buildings, floors, groups, muted topics, basic mode) never leave the phone, except in the SMS sign-up and edit-link requests in E07. Usage events (S02.15) are a separate, fixed, aggregate-only message: `{evt, lang, nbhd?}`, no identifier of any kind, never a building, floor or group. |
 | Proposed engineering budget | A performance limit set by the team to protect older phones and slow connections (NFR-N3). It is not a PRD requirement: the PRD sets no numbers. Budgets live in `perf-budget.json` and may be changed by the team with a written reason in the change. |
@@ -862,7 +862,7 @@ So that no string is re-authored by hand (design tokens are generated in S01.16)
 
 **Given** CI
 **When** strings are generated
-**Then** CI publishes a per-language report of missing keys, and fails if any language is missing a key in the 911 block, the machine-translation label or "Not known"
+**Then** CI publishes a per-language report of missing keys, and fails if any language is missing a key in the 911 block, the machine-translation label or "Not known" (`status.unknown`)
 
 **Given** a generated catalog file is edited by hand
 **When** CI runs
