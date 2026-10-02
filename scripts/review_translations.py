@@ -24,6 +24,14 @@ Guides and essential numbers (S02.09):
                                                       # record a native reader's review of a language's current
                                                       # machine translations (--keys to limit it to some texts)
 
+  python3 scripts/review_translations.py --content --mark-english-reviewed --reviewer "Owner" --reviewed-on 2026-10-20
+                                                      # the owner signs off the English now in guides.json and
+                                                      # numbers.json: records reviewer, date and a hash of that English
+                                                      # (--guide ID for one guide, --numbers for the numbers list)
+
+--mark-english-reviewed ties the review to the English it covered: the seed refuses a guide or the
+numbers list whose English changed after the sign-off. The reviewer must be the file's owner.
+
 --content writes review/content-translation-status.json. --mark-reviewed changes status
 "machine" to "reviewed" (with reviewer and date) only on translations that are current
 (their source hash matches the English); zh-Hant follows zh and is never marked by hand.
@@ -32,6 +40,7 @@ import argparse
 import json
 import re
 import unicodedata
+from datetime import date
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -235,9 +244,51 @@ def mark_reviewed(lang, reviewer, reviewed_on, keys):
         print(f'zh-Hant: {changed} converted from zh, {kept} unchanged, {missing} null')
 
 
+def mark_english_reviewed(reviewer, reviewed_on, guide_id, numbers_only):
+    """Record the owner's English review (reviewer, date, hash of the English) in guides.json / numbers.json."""
+    import content_catalogue as cc
+
+    if cc.is_placeholder(reviewer):
+        raise SystemExit('--reviewer must name the owner who read the English')
+    if not cc.valid_date(reviewed_on):
+        raise SystemExit('--reviewed-on must be a date, YYYY-MM-DD')
+    if reviewed_on > date.today().isoformat():
+        raise SystemExit('--reviewed-on cannot be in the future')
+
+    def sign(item, texts, label):
+        owner = item.get('owner')
+        if cc.is_placeholder(owner):
+            raise SystemExit(f'{label}: the owner is not named yet')
+        if ' '.join(owner.lower().split()) != ' '.join(reviewer.lower().split()):
+            raise SystemExit(f'{label}: the English review must be by the owner ({owner})')
+        if not cc.valid_date(item.get('lastUpdated')) or reviewed_on < item['lastUpdated']:
+            raise SystemExit(f'{label}: the review cannot be dated before the last update ({item.get("lastUpdated")})')
+        item['englishReview'] = {'reviewer': reviewer, 'date': reviewed_on,
+                                 'sourceHash': cc.english_review_hash(texts)}
+        print(f'{label}: English review recorded for {reviewer} on {reviewed_on}')
+
+    if not numbers_only:
+        guides = cc.read_json(cc.GUIDES_PATH)
+        chosen = [g for g in guides['guides'] if not guide_id or g['id'] == guide_id]
+        if guide_id and not chosen:
+            raise SystemExit(f'No guide {guide_id}')
+        for g in chosen:
+            sign(g, {f'guide.{g["id"]}.{k}': v for k, v in cc.guide_texts(g).items()}, f'guide {g["id"]}')
+        cc.write_json(cc.GUIDES_PATH, guides, sort_keys=False)
+    if numbers_only or not guide_id:
+        numbers = cc.read_json(cc.NUMBERS_PATH)
+        texts = {}
+        for n in numbers['numbers']:
+            texts.update({f'number.{n["id"]}.{k}': v for k, v in cc.number_texts(n).items()})
+        sign(numbers, texts, 'essential numbers')
+        cc.write_json(cc.NUMBERS_PATH, numbers, sort_keys=False)
+
+
 def content_main(args):
     import content_catalogue as cc
 
+    if args.mark_english_reviewed:
+        return mark_english_reviewed(args.reviewer, args.reviewed_on, args.guide, args.numbers)
     if args.mark_reviewed:
         return mark_reviewed(args.mark_reviewed, args.reviewer, args.reviewed_on,
                              set(args.keys.split(',')) if args.keys else None)
@@ -257,6 +308,10 @@ def main():
     ap.add_argument('--mark-reviewed', metavar='LANG', help='with --content: record a native reader\'s review')
     ap.add_argument('--reviewer', help='with --mark-reviewed: the reader\'s name')
     ap.add_argument('--reviewed-on', help='with --mark-reviewed: the review date, YYYY-MM-DD')
+    ap.add_argument('--mark-english-reviewed', action='store_true',
+                    help='with --content: record the owner\'s review of the current English (--reviewer, --reviewed-on)')
+    ap.add_argument('--guide', help='with --mark-english-reviewed: only this guide id (default: every guide and the numbers)')
+    ap.add_argument('--numbers', action='store_true', help='with --mark-english-reviewed: only the numbers list')
     ap.add_argument('--keys', help='with --mark-reviewed: comma-separated text keys (default: all current machine texts)')
     args = ap.parse_args()
     if args.content:

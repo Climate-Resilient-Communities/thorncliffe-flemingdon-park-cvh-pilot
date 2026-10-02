@@ -204,9 +204,11 @@ def chat(key, model, system, text):
     raise RuntimeError(f'{model}: gave up after repeated errors')
 
 
-def translate(key, lang, text, unavailable, avoid=None):
+def translate(key, lang, text, unavailable, avoid=None, strict_numbers=False):
     """Try each model on the route; return (record or None, list of attempt notes).
-    A model in `avoid` (it gave a bad translation before) is tried last, not first."""
+    A model in `avoid` (it gave a bad translation before) is tried last, not first.
+    With strict_numbers an answer that loses a number of the English (911!) is rejected like any
+    other bad answer, so the next model on the route is tried; otherwise it is returned with a warning."""
     attempts = []
     route = [m for m in ROUTES[lang] if m != avoid] + ([avoid] if avoid in ROUTES[lang] else [])
     for model in route:
@@ -227,6 +229,9 @@ def translate(key, lang, text, unavailable, avoid=None):
             continue
         record = {'source': text, 'text': out, 'model': model}
         lost = missing_numbers(text, out)
+        if lost and strict_numbers:
+            attempts.append(f'{model}: rejected (numbers missing from translation: {", ".join(lost)}) | output: {out[:400]}')
+            continue
         if lost:
             record['warnings'] = [f'numbers missing from translation: {", ".join(lost)}']
         return record, attempts
@@ -292,18 +297,14 @@ def run_content(args):
         stale = data['staleDropped']
         todo = [] if args.init_files else \
             [k for k in texts if data['texts'][k] is None and (args.retry_failed or k not in data['failed'])]
-        print(f'{lang}: {sum(1 for r in data["texts"].values() if r)} translated, {len(stale)} stale dropped, '
-              f'{len(todo)} to translate')
+        print(f'{lang}: {sum(1 for r in data["texts"].values() if r)} translated, {len(data["moved"])} moved to a new key, '
+              f'{len(stale)} stale dropped, {len(todo)} to translate')
 
         def work(k):
-            return k, translate(key, lang, texts[k], unavailable)
+            return k, translate(key, lang, texts[k], unavailable, strict_numbers=True)
 
         with ThreadPoolExecutor(max_workers=args.workers) as pool:
             for k, (rec, attempts) in pool.map(work, todo):
-                if rec and rec.get('warnings'):
-                    # A guide that loses a number (911!) must not be kept, whatever the model.
-                    attempts.append(f'{rec["model"]}: rejected ({"; ".join(rec["warnings"])})')
-                    rec = None
                 if rec:
                     data['texts'][k] = cc.new_record(texts[k], rec['text'], rec['model'])
                     data['failed'].pop(k, None)

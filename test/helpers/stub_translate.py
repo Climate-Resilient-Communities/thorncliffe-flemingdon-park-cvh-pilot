@@ -3,7 +3,9 @@
 No API is called: the Cohere key lookup and the chat call are replaced. Every call is appended to
 the file named by STUB_CALL_LOG as one JSON line {"model", "text"}. The stub answers in the
 target language's script (so the script checks pass) and keeps the digits of the English, or,
-with STUB_MODE=english, answers with the English unchanged (which the checks reject).
+with STUB_MODE=english, answers with the English unchanged (which the checks reject). With
+STUB_DROP_DIGITS_FIRST=1 the first model of the language's route leaves the digits out (a lost
+911) and the second keeps them.
 
   CVH_CATALOGUE_DIR=<folder> STUB_CALL_LOG=<file> python3 stub_translate.py --content --langs ur,zh
 """
@@ -35,6 +37,8 @@ def fake_chat(key, model, system, text):
     out = ''
     while len(out) < len(text) * 0.9:
         out += WORDS[lang]
+    if os.environ.get('STUB_DROP_DIGITS_FIRST') and model == t.ROUTES[lang][0]:
+        return out.strip()
     return (out.strip() + ' ' + ' '.join(sorted(set(re.findall(r'\d+', text))))).strip()
 
 

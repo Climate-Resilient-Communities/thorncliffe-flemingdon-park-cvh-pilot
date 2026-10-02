@@ -5,7 +5,19 @@ import { cpSync, existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } 
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
-import { TRANSLATED_LANGS, contentTexts, sourceHash } from "@/modules/directory/domain/guideContent";
+import { sourceHash } from "@/modules/directory/adapters/hash";
+import {
+  TRANSLATED_LANGS,
+  contentTexts,
+  englishReviewHash,
+  guideKey,
+  guideTexts,
+  numberKey,
+  numberTexts,
+  planSeed,
+  type GuideSource,
+  type NumberSource,
+} from "@/modules/directory/domain/guideContent";
 
 const ROOT = path.join(__dirname, "..");
 const STUB = path.join(ROOT, "test", "helpers", "stub_translate.py");
@@ -72,15 +84,29 @@ describe("content text keys and hashes", () => {
   it("are the same in the Python scripts and the seed, for the committed catalogue", () => {
     const script = [
       "import json, sys; sys.path.insert(0, 'scripts'); import content_catalogue as c",
-      "print(json.dumps({k: [v, c.source_hash(v)] for k, v in c.content_texts().items()}))",
+      "texts = c.content_texts()",
+      "guides = c.read_json(c.GUIDES_PATH)['guides']; numbers = c.read_json(c.NUMBERS_PATH)['numbers']",
+      "reviews = {g['id']: c.english_review_hash({'guide.%s.%s' % (g['id'], k): v for k, v in c.guide_texts(g).items()}) for g in guides}",
+      "reviews['numbers'] = c.english_review_hash({'number.%s.%s' % (n['id'], k): v for n in numbers for k, v in c.number_texts(n).items()})",
+      "print(json.dumps({'texts': {k: [v, c.source_hash(v)] for k, v in texts.items()}, 'reviews': reviews}))",
     ].join("\n");
-    const python = JSON.parse(execFileSync("python3", ["-c", script], { cwd: ROOT, env: { ...process.env, CVH_CATALOGUE_DIR: path.join(ROOT, "data", "catalogue") }, encoding: "utf8" }));
+    const { texts: python, reviews } = JSON.parse(execFileSync("python3", ["-c", script], { cwd: ROOT, env: { ...process.env, CVH_CATALOGUE_DIR: path.join(ROOT, "data", "catalogue") }, encoding: "utf8" }));
     const guides = JSON.parse(readFileSync(path.join(ROOT, "data", "catalogue", "guides.json"), "utf8")).guides;
     const numbers = JSON.parse(readFileSync(path.join(ROOT, "data", "catalogue", "numbers.json"), "utf8"));
     const seed = contentTexts({ guides, numbers });
 
     expect(Object.keys(python)).toEqual(Object.keys(seed));
     for (const [key, english] of Object.entries(seed)) expect(python[key]).toEqual([english, sourceHash(english)]);
+    const ts: Record<string, string> = {
+      numbers: englishReviewHash(
+        Object.fromEntries(numbers.numbers.flatMap((n: NumberSource) => Object.entries(numberTexts(n)).map(([k, v]) => [numberKey(n.id, k), v]))),
+        sourceHash,
+      ),
+    };
+    for (const g of guides as GuideSource[]) {
+      ts[g.id] = englishReviewHash(Object.fromEntries(Object.entries(guideTexts(g)).map(([k, v]) => [guideKey(g.id, k), v])), sourceHash);
+    }
+    expect(reviews).toEqual(ts);
   });
 });
 
@@ -130,6 +156,52 @@ describe("translate_catalogue.py --content", () => {
     const after = readLang("ur").texts;
     expect(after["guide.power.during.0"].sourceHash).toBe(sourceHash("Use a flashlight, never candles."));
     expect(after["guide.power.title"]).toEqual(before["guide.power.title"]);
+  });
+
+  it("moves a translation to its new key when a line is inserted, translating only the new line", () => {
+    translate(["--langs", "ur,es"]);
+    run(REVIEW, ["--content", "--mark-reviewed", "ur", "--reviewer", "Wei Chen", "--reviewed-on", "2026-11-02"]);
+    const before = readLang("ur").texts;
+    rmSync(log);
+
+    edit("guides.json", (g) => g.guides[0].before.unshift("Charge your phone before the storm."));
+    translate(["--langs", "ur,es"]);
+
+    expect(calls()).toHaveLength(2); // the one new line, once per language
+    expect(calls().every((c) => c.text === "Charge your phone before the storm.")).toBe(true);
+    const after = readLang("ur").texts;
+    expect(after["guide.power.before.0"]).toMatchObject({ source: "Charge your phone before the storm.", status: "machine", reviewer: null });
+    expect(after["guide.power.before.1"]).toEqual(before["guide.power.before.0"]);
+    expect(after["guide.power.before.2"]).toEqual(before["guide.power.before.1"]);
+    expect(after["guide.power.before.1"]).toMatchObject({ status: "reviewed", reviewer: "Wei Chen" });
+    expect(after["guide.power.title"]).toEqual(before["guide.power.title"]);
+  });
+
+  it("moves the zh and zh-Hant translations with the line, with the review", () => {
+    translate(["--langs", "zh,zh-Hant"]);
+    run(REVIEW, ["--content", "--mark-reviewed", "zh", "--reviewer", "Wei Chen", "--reviewed-on", "2026-11-02"]);
+    rmSync(log);
+
+    edit("guides.json", (g) => g.guides[0].before.unshift("Charge your phone before the storm."));
+    translate(["--langs", "zh,zh-Hant"]);
+
+    expect(calls()).toHaveLength(1);
+    const hant = readLang("zh-Hant").texts;
+    expect(hant["guide.power.before.1"]).toMatchObject({ source: "Keep a flashlight where you can find it in the dark.", status: "reviewed", reviewer: "Wei Chen" });
+    expect(hant["guide.power.before.0"]).toMatchObject({ status: "machine" });
+  });
+
+  it("tries the next model when the first one loses a number such as 911", () => {
+    translate(["--langs", "es"], { STUB_DROP_DIGITS_FIRST: "1" });
+
+    const texts = readLang("es").texts;
+    expect(Object.values(texts).every((r) => r !== null)).toBe(true);
+    const whenCalls = calls().filter((c) => c.text === "Call 911 if someone is in danger.");
+    expect(whenCalls).toHaveLength(2);
+    expect(whenCalls[0].model).not.toBe(whenCalls[1].model);
+    expect(texts["guide.power.when911"].model).toBe(whenCalls[1].model);
+    expect(texts["guide.power.when911"].text).toContain("911");
+    expect(calls().filter((c) => c.text === "Power outage")).toHaveLength(1); // no number to lose: the first model is kept
   });
 
   it("drops a translation whose English changed when no API is available", () => {
@@ -201,6 +273,35 @@ describe("review status (review_translations.py --content)", () => {
     expect(() => run(REVIEW, ["--content", "--mark-reviewed", "zh", "--reviewer", "PLACEHOLDER: later", "--reviewed-on", "2026-11-02"])).toThrow();
     expect(() => run(REVIEW, ["--content", "--mark-reviewed", "zh-Hant", "--reviewer", "Wei Chen", "--reviewed-on", "2026-11-02"])).toThrow();
     expect(readLang("zh").texts["guide.power.title"].status).toBe("machine");
+  });
+
+  it("records the owner's English review with a hash of the English the seed checks", () => {
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"]);
+
+    const guides = JSON.parse(readFileSync(path.join(dir, "guides.json"), "utf8"));
+    const numbers = JSON.parse(readFileSync(path.join(dir, "numbers.json"), "utf8"));
+    expect(guides.guides[0].englishReview).toMatchObject({ reviewer: "Ana Reyes", date: "2026-10-02" });
+    const options = { hash: sourceHash, today: "2026-12-01" };
+    const plan = planSeed({ guides: guides.guides, numbers, translations: {} }, options);
+    expect(plan.report.guides).toEqual([{ id: "power", loaded: true, reasons: [] }]);
+    expect(plan.report.numbers).toEqual({ loaded: true, reasons: [] });
+
+    edit("guides.json", (g) => (g.guides[0].title = "Power cut"));
+    const changed = JSON.parse(readFileSync(path.join(dir, "guides.json"), "utf8"));
+    expect(planSeed({ guides: changed.guides, numbers, translations: {} }, options).report.guides[0].reasons).toEqual([
+      "the English changed since the owner reviewed it",
+    ]);
+  });
+
+  it("refuses an English review by someone other than the owner, a placeholder, a future date or one before the last update", () => {
+    const sign = (reviewer: string, on: string) => () =>
+      run(REVIEW, ["--content", "--mark-english-reviewed", "--reviewer", reviewer, "--reviewed-on", on]);
+
+    expect(sign("Sam Lee", "2026-10-02")).toThrow();
+    expect(sign("PLACEHOLDER: later", "2026-10-02")).toThrow();
+    expect(sign("Ana Reyes", "2999-01-01")).toThrow();
+    expect(sign("Ana Reyes", "2026-10-01")).toThrow();
+    expect(JSON.parse(readFileSync(path.join(dir, "guides.json"), "utf8")).guides[0].englishReview.sourceHash).toBeUndefined();
   });
 
   it("reports stale translations without changing any file", () => {

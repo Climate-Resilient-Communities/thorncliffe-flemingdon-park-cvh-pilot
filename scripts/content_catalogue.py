@@ -64,55 +64,90 @@ def write_json(path, data, sort_keys=True):
     path.write_text(json.dumps(data, ensure_ascii=False, indent=1, sort_keys=sort_keys) + '\n', encoding='utf-8')
 
 
+def guide_texts(g):
+    """{key: English} of one guide, keys relative to the guide (title, when911, before.0 ...)."""
+    texts = {}
+    for field in ('title', 'when911'):
+        if g.get(field):
+            texts[field] = g[field]
+    for section in GUIDE_SECTIONS:
+        for i, line in enumerate(g.get(section) or []):
+            if line:
+                texts[f'{section}.{i}'] = line
+    return texts
+
+
+def number_texts(n):
+    """{key: English} of one number: label and, for 911, when."""
+    return {field: n[field] for field in ('label', 'when') if n.get(field)}
+
+
 def content_texts():
     """{key: English} for every text of the guides and the numbers page, in file order."""
     texts = {}
     if GUIDES_PATH.exists():
         for g in read_json(GUIDES_PATH)['guides']:
-            for field in ('title', 'when911'):
-                if g.get(field):
-                    texts[f'guide.{g["id"]}.{field}'] = g[field]
-            for section in GUIDE_SECTIONS:
-                for i, line in enumerate(g.get(section) or []):
-                    if line:
-                        texts[f'guide.{g["id"]}.{section}.{i}'] = line
+            for key, english in guide_texts(g).items():
+                texts[f'guide.{g["id"]}.{key}'] = english
     if NUMBERS_PATH.exists():
         for n in read_json(NUMBERS_PATH)['numbers']:
-            for field in ('label', 'when'):
-                if n.get(field):
-                    texts[f'number.{n["id"]}.{field}'] = n[field]
+            for key, english in number_texts(n).items():
+                texts[f'number.{n["id"]}.{key}'] = english
     return texts
 
 
+def english_review_hash(texts):
+    """What an English review covers: SHA-256 over [[key, English], ...] (compact JSON, file order) of
+    a guide's texts or of the numbers list's texts, keys in full. guideContent.ts englishReviewHash
+    computes the same value; the seed refuses a review whose hash is not the current English's."""
+    return source_hash(json.dumps([[k, v] for k, v in texts.items()], ensure_ascii=False, separators=(',', ':')))
+
+
+def is_911_key(key):
+    return key.startswith('number.911.') or (key.startswith('guide.') and key.endswith('.when911'))
+
+
 def critical_keys(texts):
-    """Keys of the texts that carry 911: they must survive translation (and never be blank)."""
-    return [k for k, en in texts.items() if '911' in en]
+    """Keys of the texts that carry 911: the 911 keys, and any text that mentions 911. They must
+    survive translation (and the 911 keys are never blank)."""
+    return [k for k, en in texts.items() if is_911_key(k) or '911' in en]
 
 
 def load_content(lang, texts):
     """The translation file of a language, with a null entry for every current text.
-    Records whose English has changed since are dropped (set to null) and counted in
-    data['staleDropped'] (not saved)."""
+    A record whose English has changed since is dropped (set to null) and counted in
+    data['staleDropped'] (not saved) unless another key of the same file holds a record of exactly
+    the current English (its sourceHash matches): lines are keyed by position (before.0, before.1),
+    so inserting a line shifts the others, and that record, with its review status, moves to the new
+    key instead of being translated again (data['moved'], not saved)."""
     path = CONTENT_DIR / f'{lang}.json'
     data = read_json(path) if path.exists() else {'language': lang, 'texts': {}, 'failed': {}}
     data.setdefault('failed', {})
     old = data.get('texts', {})
-    fresh, dropped = {}, []
+    keep = {k for k, english in texts.items() if old.get(k) and old[k].get('sourceHash') == source_hash(english)}
+    spare = {}  # sourceHash -> records not kept at their own key, in file order
+    for k, rec in old.items():
+        if rec and k not in keep and rec.get('sourceHash'):
+            spare.setdefault(rec['sourceHash'], []).append(rec)
+    fresh, dropped, moved = {}, [], []
     for key, english in texts.items():
-        rec = old.get(key)
-        if rec and rec.get('sourceHash') != source_hash(english):
+        rec = old.get(key) if key in keep else None
+        if rec is None and spare.get(source_hash(english)):
+            rec = spare[source_hash(english)].pop(0)
+            moved.append(key)
+        elif rec is None and old.get(key):
             dropped.append(key)
-            rec = None
         fresh[key] = rec
     data['texts'] = fresh
     data['failed'] = {k: v for k, v in data['failed'].items() if k in texts and fresh.get(k) is None
                       and v.get('source') == texts[k]}
     data['staleDropped'] = dropped
+    data['moved'] = moved
     return data
 
 
 def save_content(lang, data):
-    data = {k: v for k, v in data.items() if k != 'staleDropped'}
+    data = {k: v for k, v in data.items() if k not in ('staleDropped', 'moved')}
     data['language'] = lang
     data['models'] = {}
     for rec in data['texts'].values():
