@@ -594,7 +594,8 @@ function engineFile(dir: string, source: string, name = "engine.mjs") {
 
 const REAL_QUESTIONS = parseQuestions(REAL, IDS).questions;
 
-describe("scripts/search-test-set", () => {
+// Each cli() spawns the script, which bundles it with esbuild first: slow on a loaded machine.
+describe("scripts/search-test-set", { timeout: 60_000 }, () => {
   it("validate passes on the committed set and reports the questions nobody has checked yet", () => {
     const { code, out } = cli(["validate"]);
     expect(code).toBe(0);
