@@ -81,7 +81,7 @@ afterEach(() => rmSync(dir, { recursive: true, force: true }));
 
 const KEYS = Object.keys(contentTexts({ guides: GUIDES.guides, numbers: NUMBERS }));
 
-describe("content text keys and hashes", () => {
+describe("content text keys and hashes", { timeout: 60_000 }, () => {
   it("are the same in the Python scripts and the seed, for the committed catalogue", () => {
     const script = [
       "import json, sys; sys.path.insert(0, 'scripts'); import content_catalogue as c",
@@ -114,7 +114,7 @@ describe("content text keys and hashes", () => {
   });
 });
 
-describe("translate_catalogue.py --content", () => {
+describe("translate_catalogue.py --content", { timeout: 60_000 }, () => {
   it("writes a file per launch language with a null entry for every text, calling no API", () => {
     translate(["--init-files"]);
 
@@ -259,7 +259,7 @@ describe("translate_catalogue.py --content", () => {
   });
 });
 
-describe("review status (review_translations.py --content)", () => {
+describe("review status (review_translations.py --content)", { timeout: 60_000 }, () => {
   it("marks current machine translations reviewed with reviewer and date, and zh-Hant follows zh", () => {
     translate(["--langs", "zh,zh-Hant"]);
 

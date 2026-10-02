@@ -26,6 +26,23 @@ export {
   type ProviderOptions,
   type ProviderResult,
 } from "./application/providers";
+export { readResidentContent, type ResidentContent } from "./application/residentContent";
+export { readResidentContentFixtureFile } from "./adapters/residentContentFixture";
+export {
+  GUIDE_ORDER,
+  dialNumber,
+  guideView,
+  numbersView,
+  orderGuides,
+  shownText,
+  type GuideRecord,
+  type GuideSectionId,
+  type GuideView,
+  type NumberRecord,
+  type NumberView,
+  type NumbersView,
+  type ShownText,
+} from "./domain/residentContent";
 export { formatSeedReport, type ContentInput, type LaunchGap, type SeedReport } from "./domain/guideContent";
 export { PROVIDER_ID, type ProviderCatalogueInput, type ProviderSeedPlan, type ProviderSeedReport } from "./domain/providerCatalogue";
 export { PROVIDER_ERRORS, torontoDate, type ProviderError } from "./domain/providerState";
