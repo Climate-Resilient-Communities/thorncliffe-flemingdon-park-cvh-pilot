@@ -25,8 +25,29 @@ jobs:
     name: Checks
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # A disposable database built like Supabase's (pg_cron, pg_net, the anon and
+    # authenticated roles), the image Supabase CLI 2.119.0 runs locally. It never
+    # holds real data and is gone when the job ends.
+    services:
+      postgres:
+        image: supabase/postgres:17.11.0.002
+        env:
+          POSTGRES_PASSWORD: postgres
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -h 127.0.0.1"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 30
+    env:
+      CI_DATABASE_URL: postgres://postgres:postgres@localhost:5432/postgres
     steps:
+      # Full history: the destructive-migration check compares with origin/main
+      # and checks that a contract note's release is an ancestor of production.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -41,6 +62,27 @@ jobs:
       - run: npm run check:logical
       - run: npm test
       - run: npm run lint:deps
+      # Also records what each migration removed, read from the database, for
+      # the destructive-change check below (DO blocks, EXECUTE, CASCADE).
+      - name: Apply all migrations to a fresh database
+        run: npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
+        env:
+          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      - name: Check RLS and table ownership
+        run: npm run db:check
+        env:
+          MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      - name: Database tests (runner, checks, Drizzle drift)
+        run: npm run test:db
+        env:
+          TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
+      # Reads the release in production from PRODUCTION_URL only when a migration
+      # carries a contract note. On main this branch's changes are already in
+      # origin/main; the production job checks pending migrations again.
+      - name: Check migrations for destructive changes
+        run: npm run db:check-destructive -- --base origin/main --removals "$RUNNER_TEMP/migration-removals.json"
+        env:
+          PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
       # Fails if a catalog is stale or a required string is missing; the per-language report
       # of missing keys goes to the job summary. Runs even if an earlier check failed.
       - if: ${{ !cancelled() }}
@@ -147,12 +189,14 @@ jobs:
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
       PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
     steps:
-      - name: Check Vercel settings
+      - name: Check Vercel and database settings
         env:
           HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+          HAS_DATABASE: ${{ secrets.PRODUCTION_DATABASE_URL != '' }}
         run: |
           missing=()
           [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
+          [ "$HAS_DATABASE" = true ] || missing+=("secret PRODUCTION_DATABASE_URL")
           [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
           [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
           [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
@@ -164,7 +208,10 @@ jobs:
             echo "::error title=Production not deployed::The variable PRODUCTION_URL must be a full https:// URL."
             exit 1
           fi
+      # Full history: a contract note's release must be an ancestor of production.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: actions/setup-node@v7
         with:
           node-version: 22
@@ -189,6 +236,17 @@ jobs:
         run: vercel build --prod
         env:
           APP_VERSION: ${{ github.sha }}
+      # Migrations reach production before the app that needs them (AD-15). Each
+      # runs in its own transaction; a failure rolls that one back and stops the
+      # job here, so nothing is deployed and production keeps the previous
+      # release. Edits to applied migrations, and destructive changes whose
+      # contract release is not yet in production, stop it before anything runs.
+      # Previews never get this secret and never migrate.
+      - name: Migrate the production database
+        if: steps.head.outputs.current == 'true'
+        run: npm run db:migrate -- --check-destructive
+        env:
+          MIGRATE_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
       # Deploy without taking the production domains, then promote explicitly:
       # after an instant rollback Vercel stops assigning them automatically.
       - name: Deploy
