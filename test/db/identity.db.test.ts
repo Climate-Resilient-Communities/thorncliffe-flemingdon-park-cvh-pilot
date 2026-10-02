@@ -251,7 +251,8 @@ describe("scripts/create-first-admin", () => {
     VERCEL_ENV: "production",
     SMS_MODE: "live",
     PUBLIC_BASE_URL: "https://project-6qcs4.vercel.app",
-    DATABASE_URL: appUrl,
+    // Only parsed (the connection is stubbed below): production must name the app role and the pooler port.
+    DATABASE_URL: "postgres://cvh_app_login.ref:pw@pooler.example:6543/postgres",
     SUPABASE_SECRET_KEY: "sb_secret_test_only",
     NEXT_PUBLIC_SUPABASE_URL: "https://example-project.supabase.co",
     NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test_only",
