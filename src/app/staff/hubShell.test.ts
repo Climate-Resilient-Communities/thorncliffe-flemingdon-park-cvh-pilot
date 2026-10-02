@@ -60,7 +60,7 @@ describe("hubNavigation", () => {
     expect(administration?.items).toEqual([
       { id: "people", label: "People", href: "/staff/people", icon: "person" },
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
-      { id: "directory", label: "Directory", href: "/staff/directory", icon: "inbox" },
+      { id: "directory", label: "Directory", href: "/staff/directory", icon: "layers" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
       { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
@@ -79,6 +79,16 @@ describe("hubNavigation", () => {
     expect(HUB_NAV_ICONS).toContain("phone");
     const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
     for (const icon of HUB_NAV_ICONS) expect(stylesheet, icon).toContain(`.hub-ico--${icon} {`);
+  });
+
+  it("gives Directory a layers icon of its own: not the inbox Providers uses, and one the shell's stylesheet draws", () => {
+    const directory = items("admin").find((item) => item.href === "/staff/directory");
+    const providers = items("admin").find((item) => item.href === "/staff/providers");
+    expect(directory?.icon).toBe("layers");
+    expect(directory?.icon).not.toBe(providers?.icon);
+    expect(HUB_NAV_ICONS).toContain("layers");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    expect(stylesheet).toContain(".hub-ico--layers {");
   });
 
   it("links an item only to a page that exists; the others are text until their story builds the page", () => {

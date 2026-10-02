@@ -46,6 +46,7 @@ function provider(id: string, change: Partial<SnapshotProvider> = {}): SnapshotP
     lastConfirmed: "2026-09-20",
     locations: [{ street: "1 Overlea Blvd", city: "Toronto", postal: "M4H 1C6", lat: 43.7, lng: -79.34 }],
     categoryIds: ["c-legal"],
+    withheld: null,
     ...change,
   };
 }
@@ -142,13 +143,56 @@ describe("planRelease: which text ships in a language", () => {
     expect(files.zh.providers.find((p) => p.id === "M002")?.services.status).toBe("fallback_en");
     expect(files["zh-Hant"].providers.find((p) => p.id === "M002")?.services.status).toBe("fallback_en");
     expect(report.stale).toEqual([
-      { subject: "M002", text: "services", lang: "fr" },
-      { subject: "M002", text: "services", lang: "zh" },
-      { subject: "M002", text: "services", lang: "zh-Hant" },
+      { subject: "M002", name: "Provider M002", text: "services", lang: "fr" },
+      { subject: "M002", name: "Provider M002", text: "services", lang: "zh" },
+      { subject: "M002", name: "Provider M002", text: "services", lang: "zh-Hant" },
     ]);
     expect(counts.stale).toBe(3);
     // Nothing of the stale Chinese is in any file.
     for (const file of plan([stale]).raw) expect(file.body).not.toContain("免费软务");
+  });
+
+  // The seed never loads a stale translation: the provider row has the English only, and `withheld` is the seed's note of it.
+  describe("a translation the seed withheld (provider.withheld)", () => {
+    const seeded = (withheld: SnapshotProvider["withheld"]) =>
+      provider("M002", { name: "Legal Aid Ontario", texts: { services: { en: ENGLISH } }, translations: {}, withheld });
+
+    it("is reported by provider name and language when stale, although no translation is in the row", () => {
+      const { files, report, counts } = plan([seeded({ services: { ur: "stale", fr: "stale" } })]);
+
+      expect(report.stale).toEqual([
+        { subject: "M002", name: "Legal Aid Ontario", text: "services", lang: "fr" },
+        { subject: "M002", name: "Legal Aid Ontario", text: "services", lang: "ur" },
+      ]);
+      expect(counts.stale).toBe(2);
+      expect(files.ur.providers[0].services).toMatchObject({ status: "fallback_en", body: ENGLISH, notice: TRANSLATION_UNAVAILABLE });
+      expect(report.unavailable).toContainEqual({ lang: "ur", reason: "stale", count: 1 });
+    });
+
+    it("reports the zh-Hant conversion of a stale zh as stale too", () => {
+      const { files, report } = plan([seeded({ services: { zh: "stale" } })]);
+
+      expect(report.stale.map((item) => item.lang)).toEqual(["zh", "zh-Hant"]);
+      expect(files["zh-Hant"].providers[0].services.status).toBe("fallback_en");
+    });
+
+    it("keeps an unreviewed or incomplete one out of the stale list, with its own reason", () => {
+      const { report } = plan([seeded({ services: { ur: "machine", fr: "review_incomplete" } })]);
+
+      expect(report.stale).toEqual([]);
+      expect(report.unavailable).toContainEqual({ lang: "ur", reason: "machine", count: 1 });
+      expect(report.unavailable).toContainEqual({ lang: "fr", reason: "review_incomplete", count: 1 });
+    });
+
+    it("names the emergency role separately from the services", () => {
+      const p = provider("M002", { texts: { services: { en: ENGLISH }, emergency_role: { en: "Calls 911 for you." } }, translations: {}, withheld: { emergency_role: { ur: "stale" } } });
+
+      expect(plan([p]).report.stale).toEqual([{ subject: "M002", name: "Provider M002", text: "emergency_role", lang: "ur" }]);
+    });
+
+    it("a provider the seed has not noted anything for (null) reports nothing", () => {
+      expect(plan([seeded(null)]).report.stale).toEqual([]);
+    });
   });
 
   it.each([

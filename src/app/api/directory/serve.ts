@@ -3,7 +3,8 @@
 //
 //  - the manifest is `no-store`: it names the current release and changes when one is published;
 //  - a listing file is immutable: a release's files never change, so each is cached for a year, by the browser
-//    and by the service worker, under a URL that names the release;
+//    and by the service worker, under a URL that names the release, and by the CDN (`CDN-Cache-Control`, on a
+//    complete release's file only: an error answer is `no-store` and never cached anywhere);
 //  - an unknown release or language is 404, with the AD-20 error body.
 import { DirectoryErrorV1 } from "@/contracts/directory";
 import { currentManifest, readListing, type DirectoryStorage } from "@/modules/directory";
@@ -16,6 +17,7 @@ export interface DirectoryServeDeps {
 
 const NO_STORE = "no-store";
 const IMMUTABLE = "public, max-age=31536000, immutable";
+const CDN_ONE_YEAR = "max-age=31536000";
 
 function failure(status: 404 | 503, code: "no_release" | "not_found" | "unavailable"): Response {
   const body = DirectoryErrorV1.parse({ v: 1, error: { code, message_key: `directory.${code}` } });
@@ -43,5 +45,5 @@ export async function listingResponse(deps: DirectoryServeDeps, release: string,
     return failure(503, "unavailable");
   }
   if (!read.found) return read.reason === "not_found" ? failure(404, "not_found") : failure(503, "unavailable");
-  return new Response(read.body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": IMMUTABLE } });
+  return new Response(read.body, { headers: { "Content-Type": "application/json; charset=utf-8", "Cache-Control": IMMUTABLE, "CDN-Cache-Control": CDN_ONE_YEAR } });
 }

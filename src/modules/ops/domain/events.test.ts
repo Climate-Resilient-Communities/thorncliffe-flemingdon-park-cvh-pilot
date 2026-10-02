@@ -45,6 +45,14 @@ describe("ops events", () => {
   });
 
   it("names the publish failure reasons the directory job gives", () => {
-    expect([...PUBLISH_FAILURE_REASONS]).toEqual(["storage_unavailable", "invalid_catalogue", "search_mismatch", "gave_up", "unexpected"]);
+    expect([...PUBLISH_FAILURE_REASONS]).toEqual([
+      "storage_unavailable",
+      "invalid_catalogue",
+      "catalogue_unreadable",
+      "catalogue_not_loaded",
+      "search_mismatch",
+      "gave_up",
+      "unexpected",
+    ]);
   });
 });

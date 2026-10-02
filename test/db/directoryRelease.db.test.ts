@@ -8,7 +8,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vites
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { DirectoryListingV1, DirectoryManifestV1, ListingTextSchema } from "@/contracts/directory";
 import { LANG_CODES } from "@/contracts/lang";
-import { record } from "@/modules/audit";
+import { record, recordRefusal } from "@/modules/audit";
 import {
   PUBLISH_FAILURE_CODES,
   currentManifest,
@@ -18,12 +18,17 @@ import {
   publishDirectory,
   publishProvider,
   readListing,
+  seedProviders,
   unpublishProvider,
   confirmProvider,
+  type ProviderCatalogueInput,
   type PublishDeps,
   type PublishFailure,
   type ReleaseSearch,
 } from "@/modules/directory";
+import { directoryRelease } from "@/modules/directory/adapters/schema";
+import { catalogueTextId } from "@/modules/directory/adapters/hash";
+import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
 import { createDb, type Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
@@ -32,7 +37,7 @@ import { connect, serverUrl } from "./helpers";
 // The real audit module writes audit_event; the spy only lets a test make it fail once.
 vi.mock("@/modules/audit", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/modules/audit")>();
-  return { ...actual, record: vi.fn(actual.record) };
+  return { ...actual, record: vi.fn(actual.record), recordRefusal: vi.fn(actual.recordRefusal) };
 });
 
 const ENGLISH = "Free legal help. Call 911 in an emergency.";
@@ -55,6 +60,8 @@ describe("the directory release (S02.05)", () => {
   let mark = 0;
   const staffId = randomUUID();
   const audit = vi.mocked(record);
+  const refusal = vi.mocked(recordRefusal);
+  let owner: Db;
 
   async function wipe() {
     await sql.unsafe(`
@@ -62,6 +69,7 @@ describe("the directory release (S02.05)", () => {
       delete from directory_release;
       alter table directory_release enable trigger directory_release_guard;
       delete from ops_event;
+      delete from catalogue_load;
       delete from provider_category; delete from provider_location; delete from provider; delete from category`);
   }
 
@@ -75,6 +83,7 @@ describe("the directory release (S02.05)", () => {
     url.username = "cvh_app_login";
     url.password = password;
     app = createDb(url.href);
+    owner = createDb(serverUrl());
     appSql = connect(url.href);
     await sql`
       insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password)
@@ -90,11 +99,13 @@ describe("the directory release (S02.05)", () => {
     await sql.unsafe("alter role cvh_app_login password null");
     await appSql.end({ timeout: 5 });
     await app.$client.end({ timeout: 5 });
+    await owner.$client.end({ timeout: 5 });
     await sql.end({ timeout: 5 });
   });
 
   beforeEach(async () => {
     audit.mockClear();
+    refusal.mockClear();
     await wipe();
     await load();
     [{ max: mark }] = await sql`select coalesce(max(id), 0)::int as max from audit_event`;
@@ -106,6 +117,8 @@ describe("the directory release (S02.05)", () => {
    * M003: confirmed, not published; M004: not confirmed; M005: left the catalogue.
    */
   async function load() {
+    // The seed ran with the catalogue this deployment carries (what deps().catalogue reports).
+    await sql`insert into catalogue_load (hash, git_commit) values (${"b".repeat(64)}, 'abc1234def')`;
     await sql`insert into category (id, name, sort_order, labels, translations) values ('c-legal', 'Legal', 1, ${sql.json({ en: "Legal", ur: "قانونی" })}, ${sql.json({ ur: prov("Legal") })})`;
     await sql`insert into category (id, name, sort_order, labels) values ('c-health', 'Health', 2, ${sql.json({ en: "Health" })})`;
     const rows: [string, string, boolean, boolean, string | null, Record<string, string>, Record<string, unknown>][] = [
@@ -196,9 +209,58 @@ describe("the directory release (S02.05)", () => {
       // A language with no translation at all shows the English too.
       expect(listing(d, 1, "hi").providers[0].services).toMatchObject({ status: "fallback_en", body: ENGLISH, notice: "translation.unavailable" });
       expect((await currentReleaseSummary(app))?.report.stale).toEqual([
-        { subject: "M002", text: "services", lang: "zh" },
-        { subject: "M002", text: "services", lang: "zh-Hant" },
+        { subject: "M002", name: "Flemingdon Health Centre", text: "services", lang: "zh" },
+        { subject: "M002", name: "Flemingdon Health Centre", text: "services", lang: "zh-Hant" },
       ]);
+    });
+
+    // The rows above are written by hand, with a translation the seed would never have loaded. The seed leaves the stale
+    // translation out of `texts` and notes it in `withheld`; this goes through the seed to the report.
+    it("reports a stale translation by provider name and language when the provider came through the real seed", async () => {
+      await wipe();
+      const text = "Free legal help. Call 911 in an emergency.";
+      const catalogue = (source: string): ProviderCatalogueInput => ({
+        catalogue: {
+          labels: { categories: { Legal: { id: catalogueTextId("Legal"), en: "Legal" } }, subcategories: {} },
+          providers: [
+            {
+              id: "M010",
+              name: "Legal Aid Ontario",
+              categories: ["Legal"],
+              subcategories: [],
+              address: { street: "1 Overlea Blvd", city: "East York", postal: "M4H 1C6" },
+              location: { lat: 43.7, lng: -79.34 },
+              contact: { phone: [], email: [], social: [], web: [] },
+              services: { id: catalogueTextId(text), en: text },
+              emergencyRole: null,
+              sourceNotes: [],
+              lastConfirmed: null,
+            },
+          ],
+        },
+        translations: {
+          ur: { texts: { [catalogueTextId(text)]: { source, text: UR, model: "command-a-translate", status: "reviewed", reviewer: "A. Reviewer", reviewedOn: "2026-09-01" } } },
+        },
+      });
+      const version = { hash: "b".repeat(64), gitCommit: "abc1234def" };
+      await seedProviders(owner, catalogue("An older English text."), version);
+      await confirmProvider(app, staffId, "M010", "2026-09-30", { now: () => new Date("2026-10-02T15:00:00Z") });
+      await publishProvider(app, staffId, "M010", { now: () => new Date("2026-10-02T15:00:00Z") });
+      const d = deps();
+
+      const first = await publish(d);
+
+      // The row holds the English only: the stale Urdu is nowhere in it, yet the release reports it.
+      expect((await sql`select texts, withheld from provider where id = 'M010'`)[0]).toMatchObject({ texts: { services: { en: text } }, withheld: { services: { ur: "stale" } } });
+      expect(first).toMatchObject({ ok: true, release: 1, counts: { stale: 1 } });
+      expect((await currentReleaseSummary(app))?.report.stale).toEqual([{ subject: "M010", name: "Legal Aid Ontario", text: "services", lang: "ur" }]);
+      expect(listing(d, 1, "ur").providers[0].services).toMatchObject({ status: "fallback_en", body: text, notice: "translation.unavailable" });
+
+      // Retranslated and reviewed: the next release has nothing stale.
+      await seedProviders(owner, catalogue(text), version);
+      expect(await publish(d)).toMatchObject({ ok: true, release: 2, counts: { stale: 0 } });
+      expect((await currentReleaseSummary(app))?.report.stale).toEqual([]);
+      expect(listing(d, 2, "ur").providers[0].services).toMatchObject({ status: "ok", body: UR });
     });
 
     it("records the source version, the files' hashes and the counts, and audits directory.published with the release number and counts", async () => {
@@ -321,7 +383,7 @@ describe("the directory release (S02.05)", () => {
       expect(new Set(lists).size).toBe(1);
       expect(await auditOf("directory.published")).toMatchObject([
         { subject_id: "1", outcome: "ok" },
-        { subject_id: null, outcome: "refused", meta: { reason: "conflict" } },
+        { subject_id: null, outcome: "refused", meta: { reason: "publish_running" } },
         { subject_id: "2", outcome: "ok", meta: { release: 2, resumed_files: 5, attempts: 2 } },
       ]);
     });
@@ -398,7 +460,7 @@ describe("the directory release (S02.05)", () => {
       ]);
       expect(await auditOf("directory.published")).toMatchObject([
         { subject_id: "1", outcome: "ok" },
-        { subject_id: "2", outcome: "refused", meta: { reason: "publish_failed" } },
+        { subject_id: "2", outcome: "refused", meta: { reason: "publish_failed", failure: "storage_unavailable" } },
       ]);
       expect((await latestReleaseSummary(app))?.failure).toBe("storage_unavailable");
     });
@@ -438,14 +500,17 @@ describe("the directory release (S02.05)", () => {
       expect(d.failures).toEqual([{ release: null, reason: "invalid_catalogue", attempts: 1, filesStored: 0 }]);
     });
 
-    it("a catalogue that cannot be read is a failed publish too", async () => {
-      const d = deps({ catalogue: async () => Promise.reject(new Error("no files")) });
+    it("a catalogue that cannot be read (its files are not in the function) is a failed publish of its own kind, not retried", async () => {
+      const d = deps({ catalogue: async () => Promise.reject(new Error("ENOENT: data/catalogue")), sleep: vi.fn(async () => {}) });
 
-      expect(await publish(d)).toMatchObject({ ok: false, reason: "invalid_catalogue", release: null });
+      expect(await publish(d)).toMatchObject({ ok: false, reason: "catalogue_unreadable", release: null, attempts: 1 });
+      expect(d.sleep).not.toHaveBeenCalled();
       expect(await releases()).toEqual([]);
+      expect(d.failures).toEqual([{ release: null, reason: "catalogue_unreadable", attempts: 1, filesStored: 0 }]);
+      expect(await auditOf("directory.published")).toMatchObject([{ outcome: "refused", meta: { reason: "publish_failed", failure: "catalogue_unreadable" } }]);
     });
 
-    it("a build stopped three times, found by the next press, is closed as gave_up (ops_event) and a new release is built", async () => {
+    it("a build stopped three times, found by the next press, is closed as gave_up and that failure is the answer; the press after it builds", async () => {
       const first = deps();
       const stopped = deps({
         storage: first.storage,
@@ -461,9 +526,16 @@ describe("the directory release (S02.05)", () => {
       const d = deps({ storage: first.storage, now: () => new Date("2026-10-02T15:05:00Z") });
       const result = await publish(d);
 
-      expect(result).toMatchObject({ ok: true, release: 2 });
-      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "gave_up", attempts: 3 }, { number: 2, status: "complete", is_current: true }]);
+      // The Admin is told, in this press: nothing is built in the same breath.
+      expect(result).toEqual({ ok: false, reason: "gave_up", release: 1, attempts: 3, detail: [] });
+      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "gave_up", attempts: 3 }]);
       expect(d.failures).toEqual([{ release: 1, reason: "gave_up", attempts: 3, filesStored: 1 }]);
+      expect(await auditOf("directory.published")).toMatchObject([{ subject_id: "1", outcome: "refused", meta: { reason: "publish_failed", failure: "gave_up" } }]);
+
+      // The next press builds a new release, and the gave_up failure is not told a second time.
+      expect(await publish(d)).toMatchObject({ ok: true, release: 2 });
+      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "gave_up", attempts: 3 }, { number: 2, status: "complete", is_current: true }]);
+      expect(d.failures).toHaveLength(1);
     });
 
     it("rolls the whole completion back when the audit record cannot be written: the previous release stays current", async () => {
@@ -484,6 +556,320 @@ describe("the directory release (S02.05)", () => {
     it("every failure code the job can give is one ops_event accepts", async () => {
       const { PUBLISH_FAILURE_REASONS } = await import("@/modules/ops");
       expect([...PUBLISH_FAILURE_CODES].sort()).toEqual([...PUBLISH_FAILURE_REASONS].sort());
+    });
+  });
+
+  // ------------------------------------------------------------ the catalogue the database holds
+  describe("the catalogue the database holds (catalogue_load)", () => {
+    const loaded = (hash: string, commit: string | null = null) => sql`insert into catalogue_load (hash, git_commit) values (${hash}, ${commit})`;
+    const toOps = (failure: PublishFailure) =>
+      recordOpsEvent(app, { kind: "directory.publish_failed", ...(failure.release === null ? {} : { subjectType: "directory_release", subjectId: String(failure.release) }), detail: { reason: failure.reason, attempts: failure.attempts, files_stored: failure.filesStored } });
+
+    it("refuses to publish when the latest load is not the catalogue this deployment carries: nothing is built, ops_event and the audit trail hear of it, the Admin is told what to run", async () => {
+      await sql`delete from catalogue_load`;
+      await loaded("a".repeat(64), "1111111");
+      const d = deps({ onFailure: toOps, sleep: vi.fn(async () => {}) });
+
+      const result = await publish(d);
+
+      expect(result).toEqual({
+        ok: false,
+        reason: "catalogue_not_loaded",
+        release: null,
+        attempts: 1,
+        detail: [],
+        catalogue: { loaded: "a".repeat(64), deployed: "b".repeat(64), commit: "abc1234def" },
+      });
+      // Retrying cannot fix it, and nothing was written to the store or the release table.
+      expect(d.sleep).not.toHaveBeenCalled();
+      expect(d.storage.puts).toEqual([]);
+      expect(await releases()).toEqual([]);
+      expect((await sql`select kind, subject_id, detail from ops_event`).map((e) => ({ ...e }))).toEqual([
+        { kind: "directory.publish_failed", subject_id: null, detail: { reason: "catalogue_not_loaded", attempts: 1, files_stored: 0 } },
+      ]);
+      expect(await auditOf("directory.published")).toMatchObject([{ subject_id: null, outcome: "refused", meta: { reason: "publish_failed", failure: "catalogue_not_loaded" } }]);
+    });
+
+    it("refuses when the seed never ran (no load at all)", async () => {
+      await sql`delete from catalogue_load`;
+
+      expect(await publish(deps())).toMatchObject({ ok: false, reason: "catalogue_not_loaded", catalogue: { loaded: null, deployed: "b".repeat(64), commit: "abc1234def" } });
+      expect(await releases()).toEqual([]);
+    });
+
+    it("the latest load decides: an older load of another catalogue does not matter, a newer one does", async () => {
+      await sql`delete from catalogue_load`;
+      await loaded("a".repeat(64));
+      await loaded("b".repeat(64));
+      expect(await publish(deps())).toMatchObject({ ok: true, release: 1 });
+
+      await loaded("c".repeat(64));
+      expect(await publish(deps())).toMatchObject({ ok: false, reason: "catalogue_not_loaded", catalogue: { loaded: "c".repeat(64) } });
+      expect(await releases()).toMatchObject([{ number: 1, is_current: true }]);
+    });
+
+    it("does not resume a build made for another catalogue: it is closed as abandoned and the new one is built", async () => {
+      const first = deps();
+      const stopped = deps({
+        storage: first.storage,
+        hook: async (point, detail) => {
+          if (point === "file_stored" && detail.lang === LANG_CODES[1]) await new Promise(() => {});
+        },
+      });
+      void publish(stopped);
+      while (first.storage.puts.length < 2) await sleepMs(20);
+      await sleepMs(100);
+      // The app is deployed with another catalogue and the seed has loaded it.
+      await loaded("c".repeat(64), "9999999");
+
+      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), catalogue: async () => ({ hash: "c".repeat(64), gitCommit: "9999999" }) }));
+
+      expect(result).toMatchObject({ ok: true, release: 2, resumedFiles: 0 });
+      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "abandoned" }, { number: 2, status: "complete", is_current: true }]);
+      expect((await sql`select catalogue_hash from directory_release where number = 2`)[0].catalogue_hash).toBe("c".repeat(64));
+    });
+
+    it("is refused rather than resumed when the deployment and the database disagree, even for a build in progress", async () => {
+      const first = deps();
+      const stopped = deps({
+        storage: first.storage,
+        hook: async (point, detail) => {
+          if (point === "file_stored" && detail.lang === LANG_CODES[0]) await new Promise(() => {});
+        },
+      });
+      void publish(stopped);
+      while (first.storage.puts.length < 1) await sleepMs(20);
+      await sleepMs(100);
+      await loaded("c".repeat(64));
+
+      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") }));
+
+      expect(result).toMatchObject({ ok: false, reason: "catalogue_not_loaded" });
+      expect(await releases()).toMatchObject([{ number: 1, status: "building" }]);
+    });
+  });
+
+  // ------------------------------------------------------------ the lease, the clock and the audit trail
+  describe("a failing job: the lease token, the time budget and the audit trail", () => {
+    const failingStore = (d: Harness): Harness => {
+      d.storage.put = async () => {
+        throw new Error("the store is down");
+      };
+      return d;
+    };
+
+    it("a job whose claim was taken over cannot close the release that is now another job's: it answers publish_running and tells ops nothing", async () => {
+      const putting = gate();
+      const reached = gate();
+      const slow = deps({ maxAttempts: 1 });
+      // The store call hangs until the test lets it fail, long after another job took the claim over.
+      slow.storage.put = async () => {
+        reached.open();
+        await putting.promise;
+        throw new Error("the store is down");
+      };
+      const running = publish(slow);
+      await reached.promise;
+      const takerHeld = gate();
+      const takerAt = gate();
+      const taker = deps({
+        now: () => new Date("2026-10-02T15:10:00Z"),
+        hook: async (point, detail) => {
+          if (point === "file_stored" && detail.lang === LANG_CODES[0]) {
+            takerAt.open();
+            await takerHeld.promise;
+          }
+        },
+      });
+      const taking = publish(taker);
+      await takerAt.promise;
+      expect(await releases()).toMatchObject([{ number: 1, status: "building", leased: true }]);
+
+      putting.open();
+      const lost = await running;
+
+      // The release is still the taker's, building, and the first job told no one it failed.
+      expect(lost).toMatchObject({ ok: false, reason: "publish_running", release: 1 });
+      expect(await releases()).toMatchObject([{ number: 1, status: "building", leased: true, attempts: 2 }]);
+      expect(slow.failures).toEqual([]);
+      expect(await sql`select id from ops_event`).toHaveLength(0);
+      expect(await auditOf("directory.published")).toMatchObject([{ subject_id: "1", outcome: "refused", meta: { reason: "publish_running" } }]);
+      takerHeld.open();
+      expect(await taking).toMatchObject({ ok: true, release: 1 });
+      expect(await releases()).toMatchObject([{ number: 1, status: "complete", is_current: true }]);
+    });
+
+    it("stops retrying when the time budget is spent: the lease is let go, ops hears of it, the release stays building and the next press resumes it", async () => {
+      let t = Date.parse("2026-10-02T15:00:00Z");
+      const slept: number[] = [];
+      const d = failingStore(
+        deps({
+          now: () => new Date(t),
+          sleep: async (ms) => {
+            slept.push(ms);
+            t += ms;
+          },
+          budgetMs: 1200,
+        }),
+      );
+
+      const result = await publish(d);
+
+      // Pass 1 fails and waits 500 ms (fits); pass 2 fails and would wait 1500 ms more: past the 1200 ms budget, so it stops there, not at three.
+      expect(result).toEqual({ ok: false, reason: "storage_unavailable", release: 1, attempts: 2, detail: [] });
+      expect(slept).toEqual([500]);
+      expect(await releases()).toEqual([{ number: 1, status: "building", is_current: false, attempts: 2, failure: null, leased: false, staged: true }]);
+      expect(d.failures).toEqual([{ release: 1, reason: "storage_unavailable", attempts: 2, filesStored: 0 }]);
+      expect(await auditOf("directory.published")).toMatchObject([{ subject_id: "1", outcome: "refused", meta: { reason: "publish_failed", failure: "storage_unavailable" } }]);
+
+      // The store is back: the next press resumes the same release (its third pass) without waiting for any lease to run out.
+      const healthy = deps();
+      expect(await publish(healthy)).toMatchObject({ ok: true, release: 1, attempts: 3 });
+    });
+
+    it("also stops after a slow file when the clock has run past the budget, leaving the files stored so far for the next press", async () => {
+      let t = Date.parse("2026-10-02T15:00:00Z");
+      const d = deps({ now: () => new Date(t), budgetMs: 40_000 });
+      const put = d.storage.put.bind(d.storage);
+      d.storage.put = async (path, body) => {
+        await put(path, body);
+        t += 25_000; // each file takes 25 s
+      };
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: false, reason: "storage_unavailable", release: 1 });
+      expect(d.storage.puts).toHaveLength(2);
+      expect(await releases()).toMatchObject([{ number: 1, status: "building", leased: false }]);
+      expect(d.failures).toEqual([{ release: 1, reason: "storage_unavailable", attempts: 1, filesStored: 2 }]);
+      const next = deps({ storage: d.storage });
+      expect(await publish(next)).toMatchObject({ ok: true, release: 1, resumedFiles: 2 });
+    });
+
+    it("a refusal that cannot be written to the audit trail never turns the answer into a crash", async () => {
+      // A failed publish ...
+      refusal.mockImplementationOnce(async () => {
+        throw new Error("audit is down");
+      });
+      expect(await publish(failingStore(deps()))).toMatchObject({ ok: false, reason: "storage_unavailable", release: 1 });
+      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "storage_unavailable" }]);
+
+      // ... and a publish refused because another is running.
+      const held = gate();
+      const reached = gate();
+      const first = deps({
+        hook: async (point) => {
+          if (point === "snapshot_taken") {
+            reached.open();
+            await held.promise;
+          }
+        },
+      });
+      const running = publish(first);
+      await reached.promise;
+      refusal.mockImplementationOnce(async () => {
+        throw new Error("audit is down");
+      });
+      expect(await publish(deps({ storage: first.storage }))).toMatchObject({ ok: false, reason: "publish_running" });
+      held.open();
+      expect(await running).toMatchObject({ ok: true });
+    });
+
+    it("reads one language's staged text at a time, never the whole staged column", async () => {
+      const selected: unknown[] = [];
+      const spy = new Proxy(app, {
+        get(target, prop, receiver) {
+          const value = Reflect.get(target, prop, receiver);
+          if (prop === "select") {
+            return (...args: unknown[]) => {
+              selected.push(args[0]);
+              return (value as (...a: unknown[]) => unknown).apply(target, args);
+            };
+          }
+          return typeof value === "function" ? value.bind(target) : value;
+        },
+      }) as Db;
+
+      expect(await publishDirectory(spy, deps(), staffId)).toMatchObject({ ok: true, release: 1 });
+
+      const columns = selected.filter((fields): fields is Record<string, unknown> => typeof fields === "object" && fields !== null).flatMap((fields) => Object.values(fields));
+      expect(columns).not.toContain(directoryRelease.staged);
+      expect(columns.length).toBeGreaterThan(0);
+    });
+  });
+
+  // ------------------------------------------------------------ the seed and the publish exclude each other
+  describe("the seed and a publish", () => {
+    const seedInput = (): ProviderCatalogueInput => ({
+      catalogue: {
+        labels: { categories: { Seeded: { id: catalogueTextId("Seeded"), en: "Seeded" } }, subcategories: {} },
+        providers: [
+          {
+            id: "M001",
+            name: "Renamed By The Seed",
+            categories: ["Seeded"],
+            subcategories: [],
+            address: { street: "1 Overlea Blvd", city: "East York", postal: "M4H 1C6" },
+            location: { lat: 43.7, lng: -79.34 },
+            contact: { phone: [], email: [], social: [], web: [] },
+            services: { id: catalogueTextId("Free legal help."), en: "Free legal help." },
+            emergencyRole: null,
+            sourceNotes: [],
+            lastConfirmed: null,
+          },
+        ],
+      },
+      translations: {},
+    });
+    const version = { hash: "b".repeat(64), gitCommit: "abc1234def" };
+
+    it("a seed waits for the publish lock: it cannot run while a claim holds it", async () => {
+      const release = gate();
+      const locked = gate();
+      // Its own connection: `sql` has one, and the test reads through it meanwhile.
+      const holder = connect(serverUrl());
+      const holding = holder.begin(async (tx) => {
+        await tx`select pg_advisory_xact_lock(${PUBLISH_LOCK_KEY})`;
+        locked.open();
+        await release.promise;
+      });
+      await locked.promise;
+
+      const seeding = seedProviders(owner, seedInput(), version);
+
+      expect(await stillPending(seeding)).toBe(true);
+      expect((await sql`select name from provider where id = 'M001'`)[0].name).toBe("Thorncliffe Legal Clinic");
+      release.open();
+      await holding;
+      await holder.end({ timeout: 5 });
+      await expect(seeding).resolves.toBeDefined();
+    });
+
+    it("a seed cannot change the providers while a claim is taking its snapshot: the release is the providers as they were", async () => {
+      const held = gate();
+      const reached = gate();
+      const d = deps({
+        hook: async (point) => {
+          if (point === "snapshot_locked") {
+            reached.open();
+            await held.promise;
+          }
+        },
+      });
+      const publishing = publish(d);
+      await reached.promise;
+
+      const seeding = seedProviders(owner, seedInput(), version);
+      expect(await stillPending(seeding)).toBe(true);
+      expect((await sql`select name from provider where id = 'M001'`)[0].name).toBe("Thorncliffe Legal Clinic");
+      held.open();
+      const result = await publishing;
+      await seeding;
+
+      expect(result).toMatchObject({ ok: true, release: 1 });
+      expect(listing(d, 1, "en").providers.map((p) => [p.id, p.name])).toEqual([["M001", "Thorncliffe Legal Clinic"], ["M002", "Flemingdon Health Centre"]]);
+      // The seed ran after the claim: M001 is now the seed's.
+      expect((await sql`select name from provider where id = 'M001'`)[0].name).toBe("Renamed By The Seed");
     });
   });
 
@@ -550,7 +936,7 @@ describe("the directory release (S02.05)", () => {
       expect(second).toMatchObject({ ok: false, reason: "publish_running" });
       expect(done).toMatchObject({ ok: true, release: 1 });
       expect(await releases()).toMatchObject([{ number: 1, status: "complete", is_current: true }]);
-      expect(await auditOf("directory.published")).toMatchObject([{ outcome: "refused", meta: { reason: "conflict" } }, { outcome: "ok", subject_id: "1" }]);
+      expect(await auditOf("directory.published")).toMatchObject([{ outcome: "refused", meta: { reason: "publish_running" } }, { outcome: "ok", subject_id: "1" }]);
     });
 
     it("a job whose claim was taken over stops without writing or completing anything", async () => {
@@ -691,25 +1077,27 @@ describe("the directory release (S02.05)", () => {
   // ------------------------------------------------------------ the tables
   describe("the tables", () => {
     it("have row level security, nothing for the client roles, and for the app only what the job needs", async () => {
-      const rls = await sql.unsafe("select relname, relrowsecurity as rls from pg_class where relname in ('directory_release', 'ops_event') and relkind = 'r' order by 1");
-      expect(rls.map((t) => ({ ...t }))).toEqual([{ relname: "directory_release", rls: true }, { relname: "ops_event", rls: true }]);
+      const rls = await sql.unsafe("select relname, relrowsecurity as rls from pg_class where relname in ('catalogue_load', 'directory_release', 'ops_event') and relkind = 'r' order by 1");
+      expect(rls.map((t) => ({ ...t }))).toEqual([{ relname: "catalogue_load", rls: true }, { relname: "directory_release", rls: true }, { relname: "ops_event", rls: true }]);
       const clients = await sql.unsafe(
         `select r.rolname, c.relname from pg_roles r, pg_class c
-         where r.rolname in ('anon', 'authenticated', 'service_role') and c.relname in ('directory_release', 'ops_event') and c.relkind = 'r'
+         where r.rolname in ('anon', 'authenticated', 'service_role') and c.relname in ('catalogue_load', 'directory_release', 'ops_event') and c.relkind = 'r'
            and has_table_privilege(r.oid, c.oid, 'select, insert, update, delete, truncate, references, trigger')`,
       );
       expect(clients).toEqual([]);
       const sequences = await sql.unsafe(
-        `select r.rolname from pg_roles r where r.rolname in ('anon', 'authenticated', 'service_role') and has_sequence_privilege(r.oid, 'ops_event_id_seq', 'usage, select, update')`,
+        `select r.rolname from pg_roles r where r.rolname in ('anon', 'authenticated', 'service_role') and (has_sequence_privilege(r.oid, 'ops_event_id_seq', 'usage, select, update') or has_sequence_privilege(r.oid, 'catalogue_load_id_seq', 'usage, select, update'))`,
       );
       expect(sequences).toEqual([]);
 
       const access = await sql.unsafe(
         `select c.relname, has_table_privilege('cvh_app', c.oid, 'select') as can_select, has_table_privilege('cvh_app', c.oid, 'insert') as can_insert,
                 has_table_privilege('cvh_app', c.oid, 'delete') as can_delete, has_table_privilege('cvh_app', c.oid, 'update') as can_update_table
-         from pg_class c where c.relname in ('directory_release', 'ops_event') and c.relkind = 'r' order by 1`,
+         from pg_class c where c.relname in ('catalogue_load', 'directory_release', 'ops_event') and c.relkind = 'r' order by 1`,
       );
       expect(access.map((t) => ({ ...t }))).toEqual([
+        // Written by the seed (the owner role) only: the app reads it.
+        { relname: "catalogue_load", can_select: true, can_insert: false, can_delete: false, can_update_table: false },
         { relname: "directory_release", can_select: true, can_insert: true, can_delete: false, can_update_table: false },
         { relname: "ops_event", can_select: true, can_insert: true, can_delete: false, can_update_table: false },
       ]);

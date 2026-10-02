@@ -232,6 +232,15 @@ describe("CVH_FAKE_DIRECTORY_DIR", () => {
       );
     }
   });
+
+  it("must be an absolute path: a relative one names a different folder for each process", () => {
+    for (const relative of ["releases", "./releases", "../releases", "~/releases"]) {
+      expect(problemsOf({ ...local, CVH_FAKE_DIRECTORY_DIR: relative }), relative).toContain("CVH_FAKE_DIRECTORY_DIR: must be an absolute path");
+    }
+    for (const absolute of ["/tmp/releases", "C:\\releases", "C:/releases"]) {
+      expect(parseEnv({ ...local, CVH_FAKE_DIRECTORY_DIR: absolute }).fakeDirectoryDir, absolute).toBe(absolute);
+    }
+  });
 });
 
 describe("STAFF_PASSWORD_PEPPER", () => {

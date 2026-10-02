@@ -2,7 +2,7 @@
 // hand to match db/migrations; test/db/drift.db.test.ts compares them with the migrated database.
 // Grants (select to cvh_app, none to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
-import { boolean, check, date, doublePrecision, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, date, doublePrecision, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -57,6 +57,9 @@ export interface ProviderContact {
   web: string[];
 }
 
+/** Translations the seed withheld, by text key and language, with the reason (a UnavailableReason other than not_translated). */
+export type ProviderWithheld = Record<string, Record<string, string>>;
+
 export interface ProviderSubcategory {
   name: string;
   labels: Record<string, string>;
@@ -72,6 +75,8 @@ export const provider = pgTable(
     texts: jsonb().$type<ProviderTexts>().notNull(),
     translations: jsonb().$type<ContentProvenance>().notNull().default({}),
     sourceNotes: jsonb("source_notes").$type<string[]>().notNull().default([]),
+    /** text key -> language -> why the seed did not load that translation (stale, machine, ...); null until the seed has run since S02.05. */
+    withheld: jsonb().$type<ProviderWithheld | null>(),
     inCatalogue: boolean("in_catalogue").notNull().default(true),
     published: boolean().notNull().default(false),
     publishedAt: timestamp("published_at", { withTimezone: true }),
@@ -83,6 +88,7 @@ export const provider = pgTable(
     check("provider_published_after_confirmation", sql`not ${t.published} or ${t.lastConfirmed} is not null`),
     check("provider_published_in_catalogue", sql`not ${t.published} or ${t.inCatalogue}`),
     check("provider_published_at_when_published", sql`${t.published} = (${t.publishedAt} is not null)`),
+    check("provider_withheld_object", sql`${t.withheld} is null or jsonb_typeof(${t.withheld}) = 'object'`),
     pgPolicy("provider_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("provider_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
@@ -192,5 +198,21 @@ export const directoryRelease = pgTable(
     pgPolicy("directory_release_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("directory_release_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("directory_release_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/** One run of the provider seed: the catalogue files it loaded, so the publish job can tell the database holds the deployed catalogue. */
+export const catalogueLoad = pgTable(
+  "catalogue_load",
+  {
+    id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    hash: text().notNull(),
+    gitCommit: text("git_commit"),
+    loadedAt: timestamp("loaded_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    check("catalogue_load_hash", sql`${t.hash} ~ '^[0-9a-f]{64}$'`),
+    check("catalogue_load_git_commit", sql`${t.gitCommit} is null or ${t.gitCommit} ~ '^[0-9a-f]{7,40}$'`),
+    pgPolicy("catalogue_load_app_select", { for: "select", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();

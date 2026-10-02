@@ -20,14 +20,23 @@
 --    set together, so every reader sees either release, never none and never two.
 --  - `catalogue_hash` (sha256 of the committed data/catalogue/ files) and `git_commit` record the
 --    source version of the release; `search` is E03's search data (null until then, and the
---    manifest then says search is unavailable).
+--    manifest then says search is unavailable). The publish job takes its snapshot from the provider
+--    rows in Postgres, which the seed (`npm run seed:providers`) loaded from the catalogue files, so
+--    it records a catalogue_hash only if `catalogue_load` says those rows came from the same files.
 --
 -- ops_event (owned by the ops module) is the log the health job and the weekly review read:
 -- failed publishes now, other conditions in later stories. No personal data: `detail` is checked
 -- per kind in the app (src/modules/ops/domain/events.ts).
 --
+-- catalogue_load (owned by the directory module) is one row per run of the provider seed, written in the
+-- seed's own transaction: the sha256 of the data/catalogue/ files it loaded (the same catalogueHash() the
+-- publish job computes from the deployed files) and the commit it ran from. The job refuses to publish
+-- when the latest load is not the hash of the deployed catalogue, so a release never claims a
+-- catalogue_hash that the database does not hold.
+--
 -- Who writes what: the app (cvh_app, through cvh_app_login) inserts and updates the columns the
--- job moves and nothing else, and deletes nothing. Supabase's default privileges grant every new
+-- job moves and nothing else, and deletes nothing. The seed runs as the migration role: it alone
+-- writes catalogue_load and provider.withheld; the app only reads them. Supabase's default privileges grant every new
 -- table to anon, authenticated and service_role, so each table takes those back.
 
 create table directory_release (
@@ -189,3 +198,33 @@ grant select, insert on table ops_event to cvh_app;
 
 create policy ops_event_app_select on ops_event for select to cvh_app using (true);
 create policy ops_event_app_insert on ops_event for insert to cvh_app with check (true);
+
+-- The seed's record of what it loaded. Written only by the seed (the owner role); the app reads the
+-- latest row (order by id desc) before every publish. Rows are kept: the history of loads.
+create table catalogue_load (
+  id bigint generated always as identity primary key,
+  -- sha256 of the data/catalogue/ files (scripts and the app share catalogueHash()).
+  hash text not null,
+  -- The commit the seed ran from, when known.
+  git_commit text,
+  loaded_at timestamptz not null default now(),
+  constraint catalogue_load_hash check (hash ~ '^[0-9a-f]{64}$'),
+  constraint catalogue_load_git_commit check (git_commit is null or git_commit ~ '^[0-9a-f]{7,40}$')
+);
+alter table catalogue_load enable row level security;
+
+revoke all on table catalogue_load from public, anon, authenticated, service_role;
+revoke all on sequence catalogue_load_id_seq from public, anon, authenticated, service_role;
+grant select on table catalogue_load to cvh_app;
+
+create policy catalogue_load_app_select on catalogue_load for select to cvh_app using (true);
+
+-- S02.04's provider table gains the translations the seed withheld: {"services": {"ur": "stale"}}, by text
+-- key and language, with why (stale, machine, review_incomplete, ...). The seed loads only reviewed,
+-- current translations, so a stale one is never in `texts`; this is the only place the release report
+-- can learn that it exists. Null until the seed has run again; written only by the seed.
+alter table provider add column withheld jsonb;
+-- NOT VALID: the column is new, so every existing row has it null and already passes; the check
+-- applies to every row written from now on, without a validation scan of the existing ones.
+alter table provider
+  add constraint provider_withheld_object check (withheld is null or jsonb_typeof(withheld) = 'object') not valid;

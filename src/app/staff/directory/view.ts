@@ -11,12 +11,24 @@ export interface ProviderTotals {
 /**
  * The words of the Directory release screen for the current release, the newest release of any status (a failed one
  * shows only while no newer release is current) and the providers now in the catalogue. `day` writes a time as the Hub's
- * calendar day (Toronto).
+ * calendar day (Toronto); `now` tells a publish in progress (its run holds a live lease) from one that stalled.
  */
-export function directoryReleaseView(current: ReleaseSummary | null, latest: ReleaseSummary | null, providers: ProviderTotals, day: (date: Date) => string): DirectoryReleaseView {
+export function directoryReleaseView(
+  current: ReleaseSummary | null,
+  latest: ReleaseSummary | null,
+  providers: ProviderTotals,
+  day: (date: Date) => string,
+  now: Date,
+): DirectoryReleaseView {
   // A build the next press closed as too old ("abandoned") is not a failure the Admin needs to see.
   const failed = latest !== null && latest.status === "failed" && latest.failure !== "abandoned" && (current === null || latest.number > current.number) ? latest : null;
   const stale = current === null ? [] : staleLines(current.report);
+  // A release still being built is the newest one: a run holds its lease (in progress), or the run stopped (stalled).
+  const stalled = latest !== null && latest.status === "building" && (latest.leaseUntil === null || latest.leaseUntil <= now);
+  const building =
+    latest !== null && latest.status === "building"
+      ? { stalled, text: englishText(stalled ? "staff.directory.stalled" : "staff.directory.inProgress", { number: latest.number }) }
+      : null;
   return {
     current:
       current === null
@@ -32,6 +44,7 @@ export function directoryReleaseView(current: ReleaseSummary | null, latest: Rel
     none: englishText("staff.directory.none"),
     publishedNow: englishText("staff.directory.publishedNow", { published: providers.published, total: providers.total }),
     stale: stale.length === 0 ? null : { heading: englishText("staff.directory.staleHeading", { count: stale.length }), items: stale },
+    building,
     lastFailed: failed
       ? `${englishText("staff.directory.lastFailed", { reason: failureReason(failed.failure ?? "unexpected") })}. ${englishText("staff.directory.previousStays")}`
       : null,

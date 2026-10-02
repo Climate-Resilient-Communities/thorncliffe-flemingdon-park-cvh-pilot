@@ -4,7 +4,6 @@ import { useActionState } from "react";
 import { Stack } from "@/ui";
 import { publishDirectoryAction } from "./actions";
 import type { PublishState } from "./publishRelease";
-import { StaleList } from "./StaleList";
 
 export interface PublishDirectoryLabels {
   publish: string;
@@ -42,7 +41,6 @@ export function PublishDirectory({ labels }: { labels: PublishDirectoryLabels })
             {state.notes.map((note) => (
               <p key={note}>{note}</p>
             ))}
-            {state.stale ? <StaleList heading={state.stale.heading} items={state.stale.items} testId="publish-stale" /> : null}
           </>
         ) : null}
         {state.status === "refused" ? (

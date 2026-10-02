@@ -11,7 +11,9 @@
 //    keeping a 911 the English has. Any other text, and any text that is null in the catalogue, is
 //    published as the English text with status `fallback_en` and the `translation.unavailable` notice;
 //  - a translation whose recorded source hash no longer matches the English is stale: it is not
-//    published, and the release report lists it by provider and language;
+//    published, and the release report lists it by provider and language. The seed never loads a stale
+//    translation, so it leaves a note of it on the provider (`withheld`: text key -> language -> why), and
+//    that note, not the loaded text, is what the report is made from;
 //  - zh-Hant is never read from the catalogue: it is converted from the reviewed zh text with OpenCC
 //    (status `script_converted`), and only while that zh text is itself reviewed and current;
 //  - every shipped text keeps its traceability: the English original, the hash of that English, the
@@ -49,6 +51,8 @@ export interface SnapshotProvider {
   texts: Record<string, Record<string, string>>;
   /** text key -> language -> where the translation came from. */
   translations: Record<string, Record<string, Record<string, unknown>>>;
+  /** text key -> language -> why the seed did not load a translation the files have (`stale`, `machine`, ...); null before the seed has run since S02.05. */
+  withheld: Record<string, Record<string, string>> | null;
   /** YYYY-MM-DD; a published provider always has one. */
   lastConfirmed: string;
   locations: { street: string; city: string; postal: string | null; lat: number; lng: number }[];
@@ -76,6 +80,8 @@ export interface ReleaseInput {
 export interface StaleText {
   /** A provider id (`M001`), `category:<id>` or `subcategory:<name>`. */
   subject: string;
+  /** What the Admin reads for the subject: the provider's name, the category's English name or the subcategory's name, as at the snapshot. */
+  name: string;
   /** `services`, `emergency_role` or `name`. */
   text: string;
   lang: Exclude<LangCode, "en">;
@@ -155,6 +161,8 @@ interface TextSources {
   labels: Record<string, string>;
   /** language -> where that translation came from; absent for texts that kept no provenance. */
   provenance: Record<string, Record<string, unknown>> | null;
+  /** language -> why the seed did not load a translation the files have; null when the seed kept no note. */
+  withheld?: Record<string, string> | null;
 }
 
 /**
@@ -166,6 +174,7 @@ function listingText(
   english: string,
   sources: TextSources,
   subject: string,
+  name: string,
   label: string,
   input: ReleaseInput,
   tally: Tally,
@@ -190,7 +199,7 @@ function listingText(
     const entry = tally.unavailable.get(slot) ?? { lang: lang as Exclude<LangCode, "en">, reason, count: 0 };
     entry.count += 1;
     tally.unavailable.set(slot, entry);
-    if (stale) tally.stale.push({ subject, text: label, lang: lang as Exclude<LangCode, "en"> });
+    if (stale) tally.stale.push({ subject, name, text: label, lang: lang as Exclude<LangCode, "en"> });
     return {
       lang,
       body: english,
@@ -209,7 +218,10 @@ function listingText(
   if (lang === "zh-Hant") {
     const zhText = sources.labels.zh;
     const zhProvenance = provenanceOf("zh");
-    if (!present(zhText)) return fallback("not_translated", false);
+    if (!present(zhText)) {
+      // The zh text exists but the seed did not load it: its conversion is withheld for the same reason.
+      return sources.withheld?.zh ? fallback("zh_changed_or_not_reviewed", sources.withheld.zh === "stale") : fallback("not_translated", false);
+    }
     const model = `opencc-js ${zhHant.openccVersion}`;
     const conversion = { from: "zh" as const, from_text_hash: hash(zhText), opencc_version: zhHant.openccVersion, config: zhHant.config };
     if (noProvenance) {
@@ -249,7 +261,10 @@ function listingText(
   }
 
   const text = sources.labels[lang];
-  if (!present(text)) return fallback("not_translated", false);
+  if (!present(text)) {
+    const why = sources.withheld?.[lang];
+    return why ? fallback(why as UnavailableReason, why === "stale") : fallback("not_translated", false);
+  }
   if (noProvenance) {
     tally.translations += 1;
     return { lang, body: text, machine: true, model: null, status: "ok", source_hash: sourceHash, original, review_status: "reviewed", reviewed_on: null };
@@ -290,7 +305,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       return {
         id: c.id,
         sort_order: c.sortOrder,
-        name: listingText(lang, english, { labels: c.labels, provenance: c.translations }, `category:${c.id}`, "name", input, tally),
+        name: listingText(lang, english, { labels: c.labels, provenance: c.translations }, `category:${c.id}`, english, "name", input, tally),
       };
     })
     .filter((c): c is NonNullable<typeof c> => c !== null);
@@ -304,12 +319,12 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
     }
     const role = p.texts.emergency_role?.en;
     const text = (key: string, english: string) =>
-      listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {} }, p.id, key, input, tally);
+      listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null }, p.id, p.name, key, input, tally);
     providers.push({
       id: p.id,
       name: p.name,
       category_ids: p.categoryIds,
-      subcategories: p.subcategories.map((s) => listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: null }, `subcategory:${s.name}`, "name", input, tally)),
+      subcategories: p.subcategories.map((s) => listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: null }, `subcategory:${s.name}`, s.name, "name", input, tally)),
       locations: p.locations.map((l) => ({ street: l.street, city: l.city, postal: l.postal, lat: l.lat, lng: l.lng })),
       contact: { phone: p.contact.phone ?? [], email: p.contact.email ?? [], social: p.contact.social ?? [], web: p.contact.web ?? [] },
       services: text("services", services),

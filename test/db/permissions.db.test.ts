@@ -121,6 +121,9 @@ async function reset() {
     await tx`delete from audit_event where id > ${auditBaseline}`;
     await tx`delete from directory_release`;
     await tx`delete from ops_event`;
+    await tx`delete from catalogue_load`;
+    // The seed ran with the catalogue the publish dependencies below report.
+    await tx`insert into catalogue_load (hash) values (${"a".repeat(64)})`;
     await tx`delete from provider_category`;
     await tx`delete from provider_location`;
     await tx`delete from provider`;

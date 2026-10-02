@@ -3,6 +3,7 @@
 // the idempotent upsert on the real data/catalogue files, the schema refusals, removed providers,
 // the Admins' fields surviving a re-run, the publish/confirm rules with their audit records, and
 // what the app's role may and may not do to the tables.
+import { spawnSync } from "node:child_process";
 import { randomBytes, randomUUID } from "node:crypto";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -10,6 +11,7 @@ import { migrate } from "../../scripts/db/migrate.mjs";
 import { record } from "@/modules/audit";
 import {
   ProviderSeedRefusedError,
+  catalogueHash,
   confirmProvider,
   listProviders,
   publishProvider,
@@ -74,7 +76,7 @@ describe("provider catalogue (S02.04)", () => {
   const audit = vi.mocked(record);
 
   async function wipe() {
-    await sql.unsafe("delete from provider_category; delete from provider_location; delete from provider; delete from category");
+    await sql.unsafe("delete from catalogue_load; delete from provider_category; delete from provider_location; delete from provider; delete from category");
   }
 
   beforeAll(async () => {
@@ -113,7 +115,9 @@ describe("provider catalogue (S02.04)", () => {
     [{ max: mark }] = await sql`select coalesce(max(id), 0)::int as max from audit_event`;
   });
 
-  const seed = (catalogue: ProviderCatalogueInput) => seedProviders(owner, catalogue);
+  // The sha256 of the catalogue files a run loaded (the tests' own; the real one is catalogueHash()) and the commit it ran from.
+  const VERSION = { hash: "1".repeat(64), gitCommit: "3ac94e1" };
+  const seed = (catalogue: ProviderCatalogueInput, version: { hash: string; gitCommit: string | null } = VERSION) => seedProviders(owner, catalogue, version);
   const providers = () => sql.unsafe("select * from provider order by id");
   const everything = async () => ({
     providers: await providers(),
@@ -396,6 +400,91 @@ describe("provider catalogue (S02.04)", () => {
       // The English changed since it was translated: stale, not loaded.
       await seed(withRecord(reviewedRecord({ source: "Older services text" })));
       expect((await row("M001")).texts.services).toEqual({ en: english });
+    });
+  });
+
+  describe("what the seed records for the directory release (S02.05)", () => {
+    const english = "Services of M001";
+    const record = (change: Record<string, unknown> = {}) => ({
+      source: english,
+      text: "خدمات",
+      model: "command-a-translate-08-2025",
+      status: "reviewed",
+      reviewer: "Wei Chen",
+      reviewedOn: "2026-11-02",
+      ...change,
+    });
+    const withRecord = (value: unknown) => input([entry("M001")], { ur: { texts: { [catalogueTextId(english)]: value as never } } });
+    const loads = async () => (await sql.unsafe("select hash, git_commit from catalogue_load order by id")).map((l) => ({ ...l }));
+
+    it("writes a catalogue_load row with the hash and the commit, in every run, newest last", async () => {
+      await seed(input([entry("M001")]));
+      await seed(input([entry("M001")]), { hash: "2".repeat(64), gitCommit: null });
+
+      expect(await loads()).toEqual([
+        { hash: "1".repeat(64), git_commit: "3ac94e1" },
+        { hash: "2".repeat(64), git_commit: null },
+      ]);
+    });
+
+    it("is written by the seed script itself, with the hash of the catalogue files as the publish job computes it and the build's commit", async () => {
+      const commit = "0123456789abcdef0123456789abcdef01234567";
+      const result = spawnSync("node", [path.join(ROOT, "scripts", "seed", "providers.mjs")], {
+        cwd: ROOT,
+        encoding: "utf8",
+        env: { ...process.env, SEED_DATABASE_URL: serverUrl(), MIGRATE_DATABASE_URL: "", APP_VERSION: commit },
+      });
+
+      expect(result.status, result.stderr).toBe(0);
+      expect(await loads()).toEqual([{ hash: await catalogueHash(path.join(ROOT, "data", "catalogue")), git_commit: commit }]);
+    }, 90_000);
+
+    it("writes the row in the run's own transaction: a run that rolls back leaves none, and a run that is refused leaves none", async () => {
+      audit.mockImplementationOnce(async () => {
+        throw new Error("audit is down");
+      });
+      await expect(seed(input([entry("M001")]))).rejects.toThrow(/audit is down/);
+      await expect(seed(input([entry("M001", { id: "bad" })]))).rejects.toBeInstanceOf(ProviderSeedRefusedError);
+
+      expect(await loads()).toEqual([]);
+      expect(await sql`select id from provider`).toHaveLength(0);
+    });
+
+    it("rejects a hash that is not a sha256 and a commit that is not a commit", async () => {
+      await expect(seed(input([entry("M001")]), { hash: "not a hash", gitCommit: null })).rejects.toMatchObject({ cause: { message: expect.stringMatching(/catalogue_load_hash/) } });
+      await expect(seed(input([entry("M001")]), { hash: "1".repeat(64), gitCommit: "HEAD" })).rejects.toMatchObject({ cause: { message: expect.stringMatching(/catalogue_load_git_commit/) } });
+    });
+
+    it("notes on the provider the translations it withheld, by text key and language, with why", async () => {
+      await seed(withRecord(record({ source: "Older services text" })));
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "stale" } });
+
+      await seed(withRecord(record({ status: "machine", reviewer: null, reviewedOn: null })));
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "machine" } });
+
+      // Loaded, so nothing is withheld; a language with no translation at all is not "withheld" either.
+      await seed(withRecord(record()));
+      expect((await row("M001")).withheld).toEqual({});
+      expect((await row("M001")).texts.services).toEqual({ en: english, ur: "خدمات" });
+    });
+
+    it("keeps the note when nothing changed (a second run changes no row) and writes the row again when only the note changes", async () => {
+      await seed(withRecord(record({ source: "Older services text" })));
+      const again = await seed(withRecord(record({ source: "Older services text" })));
+      expect(again.changed.providers).toBe(0);
+
+      // The same loaded texts (English only), a different reason: the provider row is written again.
+      const other = await seed(withRecord(record({ status: "machine", reviewer: null, reviewedOn: null })));
+      expect(other.changed.providers).toBe(1);
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "machine" } });
+    });
+
+    it("is not writable by the app's role (the Admins' columns only)", async () => {
+      await seed(input([entry("M001")]));
+
+      await expect(appSql.unsafe("update provider set withheld = '{}' where id = 'M001'")).rejects.toThrow(/permission denied/);
+      await expect(appSql.unsafe("insert into catalogue_load (hash) values (repeat('1', 64))")).rejects.toThrow(/permission denied/);
+      await expect(appSql.unsafe("select hash from catalogue_load")).resolves.toHaveLength(1);
     });
   });
 

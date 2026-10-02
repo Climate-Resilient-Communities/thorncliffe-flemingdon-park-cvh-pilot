@@ -10,6 +10,8 @@ const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 export const PUBLISH_FAILURE_REASONS = [
   "storage_unavailable",
   "invalid_catalogue",
+  "catalogue_unreadable",
+  "catalogue_not_loaded",
   "search_mismatch",
   "gave_up",
   "unexpected",

@@ -199,9 +199,16 @@ describe("toAuditRecord", () => {
       expect(toAuditRecord(published({ meta: { ...COUNTS, attempts: 2, resumed_files: 5 } } as Partial<AuditEvent>), "ok").meta).toMatchObject({ attempts: 2, resumed_files: 5 });
     });
 
-    it("records a refusal with its reason only", () => {
-      expect(toAuditRecord(published({ meta: { reason: "publish_failed" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "publish_failed" });
-      expect(toAuditRecord(published({ subjectId: null, meta: { reason: "conflict" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "conflict" });
+    it("records a refusal with its reason, and for a failed publish the failure code", () => {
+      expect(toAuditRecord(published({ meta: { reason: "publish_failed", failure: "storage_unavailable" } } as Partial<AuditEvent>), "refused").meta).toEqual({
+        reason: "publish_failed",
+        failure: "storage_unavailable",
+      });
+      expect(toAuditRecord(published({ subjectId: null, meta: { reason: "publish_running" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "publish_running" });
+    });
+
+    it("rejects a failure that is not a code", () => {
+      expect(() => toAuditRecord(published({ meta: { reason: "publish_failed", failure: "the store said: ECONNREFUSED" } } as Partial<AuditEvent>), "refused")).toThrow(AuditRecordError);
     });
 
     it.each(["release", "providers", "categories", "files", "translations", "fallbacks", "stale"])("rejects an ok record with no %s", (field) => {

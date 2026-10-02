@@ -3,7 +3,7 @@
 // tag zh-Hant-TW the app uses for zh-Hant. The version and the configuration are recorded beside each converted text.
 import type { ZhHantConverter } from "../domain/directoryRelease";
 
-/** The installed opencc-js version; test/directory-opencc.test.ts keeps it equal to node_modules/opencc-js/package.json. */
+/** The installed opencc-js version; src/modules/directory/adapters/openccConverter.test.ts keeps it equal to node_modules/opencc-js/package.json. */
 export const OPENCC_VERSION = "1.4.2";
 const FROM = "cn";
 const TO = "twp";

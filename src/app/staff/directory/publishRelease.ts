@@ -2,12 +2,12 @@ import { englishText } from "@/i18n/text";
 import { publishDirectory, type PublishDeps, type PublishResult } from "@/modules/directory";
 import type { Db } from "@/platform/db";
 import type { StaffSession } from "../session";
-import { failureReason, staleLines } from "./words";
+import { catalogueMismatchText, failureReason } from "./words";
 
 /** What the Publish directory button shows after it was pressed. Every text is already resolved from the catalog. */
 export type PublishState =
   | { status: "idle" }
-  | { status: "done"; message: string; notes: string[]; stale: { heading: string; items: string[] } | null }
+  | { status: "done"; message: string; notes: string[] }
   | { status: "refused"; message: string; problems: string | null };
 
 export interface PublishActionDeps {
@@ -23,10 +23,6 @@ function done(result: Extract<PublishResult, { ok: true }>): PublishState {
     status: "done",
     message: englishText("staff.directory.done", { number: result.release, providers: result.counts.providers, languages: result.counts.languages }),
     notes,
-    stale:
-      result.report.stale.length === 0
-        ? null
-        : { heading: englishText("staff.directory.staleHeading", { count: result.report.stale.length }), items: staleLines(result.report) },
   };
 }
 
@@ -35,7 +31,11 @@ function refused(result: Extract<PublishResult, { ok: false }>): PublishState {
   return {
     status: "refused",
     message: `${englishText("staff.directory.failed", { reason: failureReason(result.reason) })}. ${englishText("staff.directory.previousStays")}`,
-    problems: result.detail.length === 0 ? null : englishText("staff.directory.problems", { list: result.detail.join("; ") }),
+    problems: result.catalogue
+      ? catalogueMismatchText(result.catalogue)
+      : result.detail.length === 0
+        ? null
+        : englishText("staff.directory.problems", { list: result.detail.join("; ") }),
   };
 }
 

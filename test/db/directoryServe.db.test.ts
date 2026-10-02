@@ -34,6 +34,7 @@ describe("the directory routes' answers", () => {
       alter table directory_release disable trigger directory_release_guard;
       delete from directory_release;
       alter table directory_release enable trigger directory_release_guard;
+      delete from catalogue_load;
       delete from provider_category; delete from provider_location; delete from provider; delete from category`);
     storage.files.clear();
   }
@@ -68,6 +69,8 @@ describe("the directory routes' answers", () => {
 
   beforeEach(async () => {
     await wipe();
+    // The seed ran with the catalogue this deployment carries (the hash publishDeps() reports).
+    await sql`insert into catalogue_load (hash) values (${"b".repeat(64)})`;
     await sql`insert into category (id, name, sort_order, labels) values ('c-legal', 'Legal', 1, ${sql.json({ en: "Legal" })})`;
     await sql`
       insert into provider (id, name, texts, published, published_at, last_confirmed)
@@ -128,6 +131,7 @@ describe("the directory routes' answers", () => {
         const response = await listingResponse(serve, v, file);
         expect(response.status, lang).toBe(200);
         expect(response.headers.get("Cache-Control")).toBe("public, max-age=31536000, immutable");
+        expect(response.headers.get("CDN-Cache-Control")).toBe("max-age=31536000");
         expect(response.headers.get("Content-Type")).toMatch(/^application\/json/);
         expect(response.headers.get("Set-Cookie")).toBeNull();
         const body = await response.text();
@@ -162,6 +166,8 @@ describe("the directory routes' answers", () => {
 
       expect(response.status).toBe(404);
       expect(response.headers.get("Cache-Control")).toBe("no-store");
+      // Only a complete release's file is cached by the CDN, never an error.
+      expect(response.headers.get("CDN-Cache-Control")).toBeNull();
       expect((await errorOf(response)).error.code).toBe("not_found");
     });
 
@@ -182,6 +188,7 @@ describe("the directory routes' answers", () => {
       const broken = await listingResponse({ ...serve, storage: () => ({ put: async () => {}, get: async () => { throw new Error("down"); } }) }, "1", "en.json");
       expect(broken.status).toBe(503);
       expect(broken.headers.get("Cache-Control")).toBe("no-store");
+      expect(broken.headers.get("CDN-Cache-Control")).toBeNull();
       storage.files.set("releases/1/en.json", "{}");
       expect((await listingResponse(serve, "1", "en.json")).status).toBe(503);
     });

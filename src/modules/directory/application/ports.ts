@@ -20,8 +20,25 @@ export interface CatalogueVersion {
 }
 
 /** Why a publish failed: the Admin's "Publish failed" and the ops_event name it (src/modules/ops/domain/events.ts keeps the same list). */
-export const PUBLISH_FAILURE_CODES = ["storage_unavailable", "invalid_catalogue", "search_mismatch", "gave_up", "unexpected"] as const;
+export const PUBLISH_FAILURE_CODES = [
+  "storage_unavailable",
+  "invalid_catalogue",
+  /** The committed catalogue files are not in the deployed function (data/catalogue/ cannot be read). */
+  "catalogue_unreadable",
+  /** The database holds another catalogue than this deployment carries: the seed has to run (or run again) before a publish. */
+  "catalogue_not_loaded",
+  "search_mismatch",
+  "gave_up",
+  "unexpected",
+] as const;
 export type PublishFailureCode = (typeof PUBLISH_FAILURE_CODES)[number];
+
+/** For `catalogue_not_loaded`: the hash of the last catalogue the seed loaded (null: it never ran), the hash this deployment carries, and its commit. */
+export interface CatalogueMismatch {
+  loaded: string | null;
+  deployed: string;
+  commit: string | null;
+}
 
 /** A publish that gave up: what ops_event records, from a port so directory never imports ops (AD-2). */
 export interface PublishFailure {
@@ -49,6 +66,8 @@ export interface PublishDeps {
   maxAttempts?: number;
   /** How long a job's claim lasts without a sign of life. */
   leaseMs?: number;
+  /** How long a run keeps retrying before it lets go of its lease and answers `storage_unavailable` (the function has 60 s). */
+  budgetMs?: number;
   /**
    * Called at named points of the job; a test throws or waits here to stop it part way or to interleave another change.
    * `snapshot_locked` is inside the claim's transaction, with the providers' rows locked and the release not yet stored.

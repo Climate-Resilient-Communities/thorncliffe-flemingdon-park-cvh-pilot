@@ -1,12 +1,15 @@
 // The directory publish job (S02.05, AD-11, AD-14): an Admin publishes the directory as one numbered release.
 //
 // The job is built to be stopped and run again, and to be safe against other changes:
-//  - claim: one transaction under an advisory lock takes the snapshot of the published providers
+//  - claim: one transaction under an advisory lock (the provider seed takes the same one) first checks that the
+//    latest `catalogue_load` is the hash of the catalogue this deployment carries, so the providers in Postgres
+//    are the ones the release will say it was made from; then takes the snapshot of the published providers
 //    (a row lock on each, `for share`, so a provider cannot be published, unpublished or re-confirmed
 //    between the snapshot and the moment it commits, and the snapshot cannot be taken in the middle of one),
 //    plans every file, and stores the release as `building` with the files' text staged in the row. A
 //    publish already running (a live lease) is refused; a stopped one (lease expired) is resumed with the
-//    same staged files, so a release is always built from one snapshot;
+//    same staged files, so a release is always built from one snapshot. A stopped build found with three
+//    passes behind it is closed `gave_up` and that failure is the answer of this press; the next one builds;
 //  - store: each file in turn goes to the private bucket, then is marked stored (under the lease token);
 //    a resumed job skips the files already marked;
 //  - complete: one transaction, again under the advisory lock, checks every file is stored and any search
@@ -14,15 +17,18 @@
 //    Readers see the old release or the new one, never a mix (one unique partial index, two statements, one
 //    commit). Until then the previous release stays current;
 //  - give up: three passes (this run's retries and earlier runs' count together); the release is closed
-//    `failed`, the failure goes to ops_event through a port, the audit trail records the refusal, and the
-//    previous release stays current.
+//    `failed` (under the lease token: a run whose claim was taken over closes nothing), the failure goes to
+//    ops_event through a port, the audit trail records the refusal, and the previous release stays current;
+//  - the clock: the function has `maxDuration` seconds (src/app/staff/directory/page.tsx), so a run stops retrying
+//    after PUBLISH_BUDGET_MS, lets go of its lease and answers `storage_unavailable` with an ops_event; the build
+//    stays `building` and the next press resumes it from the files already stored.
 // Reads inside a transaction use the transaction (test/transaction-executor.test.ts).
 import { randomUUID } from "node:crypto";
 import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
 import { record, recordRefusal } from "@/modules/audit";
 import type { Db, DbExecutor, DbTransaction } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
-import { directoryRelease, category, provider, providerCategory, providerLocation, type ReleaseFileEntry } from "../adapters/schema";
+import { catalogueLoad, directoryRelease, category, provider, providerCategory, providerLocation, type ReleaseFileEntry } from "../adapters/schema";
 import {
   RELEASE_LANGS,
   ReleaseDataError,
@@ -34,20 +40,35 @@ import {
   type SnapshotCategory,
   type SnapshotProvider,
 } from "../domain/directoryRelease";
-import type { PublishDeps, PublishFailure, PublishFailureCode } from "./ports";
+import type { CatalogueMismatch, PublishDeps, PublishFailure, PublishFailureCode } from "./ports";
+import { PUBLISH_LOCK_KEY } from "./publishLock";
 
-/** Held for the whole of a claim and of a completion: publishes and pointer changes are serialised. */
-export const PUBLISH_LOCK_KEY = 4417203115;
+export { PUBLISH_LOCK_KEY };
 
 export const MAX_ATTEMPTS = 3;
-const DEFAULT_LEASE_MS = 2 * 60 * 1000;
+/**
+ * How long a run's claim lasts without a sign of life. It must outlast the function: a lease that ends while the
+ * function may still be running would let a second press take the release over (test/publishBudget.test.ts keeps
+ * it above the page's `maxDuration` with a margin).
+ */
+export const DEFAULT_LEASE_MS = 2 * 60 * 1000;
+/** A run stops retrying after this long (the function's `maxDuration` is 60 s): it lets go of its lease and the next press resumes. */
+export const PUBLISH_BUDGET_MS = 40 * 1000;
 /** A stopped build older than this is not resumed: its snapshot is too old to publish as "now". */
 export const RESUME_WINDOW_MS = 30 * 60 * 1000;
 const BACKOFF_MS = [500, 1500];
 
 export type PublishResult =
   | { ok: true; release: number; counts: ReleaseCounts; report: ReleaseReport; attempts: number; resumedFiles: number }
-  | { ok: false; reason: PublishFailureCode | "publish_running"; release: number | null; attempts: number; detail: string[] };
+  | {
+      ok: false;
+      reason: PublishFailureCode | "publish_running";
+      release: number | null;
+      attempts: number;
+      detail: string[];
+      /** For `catalogue_not_loaded`: what the database holds and what this deployment has. */
+      catalogue?: CatalogueMismatch;
+    };
 
 /** A step that failed for a reason the Admin is told, and whether another pass can fix it. */
 class PublishStepError extends Error {
@@ -57,6 +78,7 @@ class PublishStepError extends Error {
     readonly retryable: boolean,
     /** What the Admin is told beyond the code: ids and codes of what is wrong, never text from the catalogue. */
     readonly detail: string[] = [],
+    readonly catalogue?: CatalogueMismatch,
   ) {
     super(code);
   }
@@ -90,6 +112,7 @@ async function takeSnapshot(tx: DbTransaction): Promise<{ providers: SnapshotPro
     contact: row.contact,
     texts: row.texts,
     translations: row.translations,
+    withheld: row.withheld,
     lastConfirmed: row.lastConfirmed as string,
     locations: locations.filter((l) => l.providerId === row.id).map((l) => ({ street: l.street, city: l.city, postal: l.postal, lat: l.lat, lng: l.lng })),
     categoryIds: links.filter((l) => l.providerId === row.id).map((l) => l.categoryId),
@@ -107,23 +130,23 @@ interface Claim {
   resumedFiles: number;
 }
 
-type ClaimResult = { claim: Claim } | { running: true };
-
+/** A stopped build the claim closed after three passes; reported once, with the claim that closed it. */
 interface Closed {
   release: number;
   attempts: number;
-  filesStored: number;
 }
+
+type ClaimResult = { claim: Claim } | { running: true } | { gaveUp: Closed };
 
 const storedCount = (files: Record<string, ReleaseFileEntry>) => Object.values(files).filter((file) => file.stored_at !== null).length;
 
-async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now: Date, closed: Closed[]): Promise<ClaimResult> {
+async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now: Date): Promise<ClaimResult> {
   const max = deps.maxAttempts ?? MAX_ATTEMPTS;
   const lease = deps.leaseMs ?? DEFAULT_LEASE_MS;
   const token = (deps.newToken ?? randomUUID)();
   // The catalogue's version is read before the transaction: it is files on disk, not rows.
   const version = await deps.catalogue().catch(() => {
-    throw new PublishStepError("invalid_catalogue", false);
+    throw new PublishStepError("catalogue_unreadable", false);
   });
   const zhHant = await deps.zhHant();
   return db.transaction(async (tx): Promise<ClaimResult> => {
@@ -132,7 +155,16 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
     if (open) {
       const live = open.leaseUntil !== null && open.leaseToken !== null && open.leaseUntil > now;
       if (live) return { running: true };
-      const fresh = now.getTime() - open.startedAt.getTime() <= RESUME_WINDOW_MS;
+    }
+    // The providers in Postgres are what the seed loaded: a release may say it was made from this deployment's catalogue only if the
+    // latest load was of the same files. Read with the transaction, under the lock the seed also takes.
+    const [load] = await tx.select({ hash: catalogueLoad.hash }).from(catalogueLoad).orderBy(desc(catalogueLoad.id)).limit(1);
+    if (!load || load.hash !== version.hash) {
+      throw new PublishStepError("catalogue_not_loaded", false, [], { loaded: load?.hash ?? null, deployed: version.hash, commit: version.gitCommit });
+    }
+    if (open) {
+      // A build of another catalogue (the app was deployed in between) is not resumed: it would publish the old files as the new ones.
+      const fresh = now.getTime() - open.startedAt.getTime() <= RESUME_WINDOW_MS && open.catalogueHash === version.hash;
       if (fresh && open.attempts < max && open.staged !== null) {
         await tx
           .update(directoryRelease)
@@ -146,7 +178,8 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
         .update(directoryRelease)
         .set({ status: "failed", failure: gaveUp ? "gave_up" : "abandoned", staged: null, leaseToken: null, leaseUntil: null })
         .where(eq(directoryRelease.number, open.number));
-      if (gaveUp) closed.push({ release: open.number, attempts: open.attempts, filesStored: storedCount(open.files) });
+      // The Admin is told about the build that stopped three times; the next press builds a new release.
+      if (gaveUp) return { gaveUp: { release: open.number, attempts: open.attempts } };
     }
 
     const { providers, categories } = await takeSnapshot(tx);
@@ -184,19 +217,28 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
   });
 }
 
-/** Writes every file not yet stored, in order, marking each as it lands; the lease token is checked at every step. */
-async function storeFiles(db: Db, deps: PublishDeps, claim: Claim, clock: () => Date): Promise<void> {
+/**
+ * Writes every file not yet stored, in order, marking each as it lands; the lease token is checked at every step.
+ * Only the file about to be written is read from the staged text, never all sixteen at once. Stops with a retryable
+ * `storage_unavailable` when `deadline` has passed: the run has no time for the rest, and the caller lets go of the lease.
+ */
+async function storeFiles(db: Db, deps: PublishDeps, claim: Claim, clock: () => Date, deadline: number): Promise<void> {
   const lease = deps.leaseMs ?? DEFAULT_LEASE_MS;
   for (;;) {
     const [row] = await db
-      .select({ files: directoryRelease.files, staged: directoryRelease.staged, status: directoryRelease.status, leaseToken: directoryRelease.leaseToken })
+      .select({ files: directoryRelease.files, status: directoryRelease.status, leaseToken: directoryRelease.leaseToken })
       .from(directoryRelease)
       .where(eq(directoryRelease.number, claim.release));
     if (!row || row.status !== "building" || row.leaseToken !== claim.token) throw new LeaseLostError();
     const lang = RELEASE_LANGS.find((code) => row.files[code]?.stored_at === null);
     if (lang === undefined) return;
+    if (clock().getTime() >= deadline) throw new PublishStepError("storage_unavailable", true);
     const entry = row.files[lang];
-    const body = row.staged?.[lang];
+    const [staged] = await db
+      .select({ body: sql<string | null>`${directoryRelease.staged} ->> ${lang}` })
+      .from(directoryRelease)
+      .where(eq(directoryRelease.number, claim.release));
+    const body = staged?.body ?? undefined;
     if (body === undefined || sha256Hex(body) !== entry.sha256) throw new PublishStepError("unexpected", false);
     try {
       await deps.storage.put(entry.path, body);
@@ -291,51 +333,91 @@ export async function publishDirectory(db: Db, deps: PublishDeps, actorStaffId: 
   const clock = deps.now ?? (() => new Date());
   const sleep = deps.sleep ?? pad;
   const max = deps.maxAttempts ?? MAX_ATTEMPTS;
-  const closed: Closed[] = [];
+  const deadline = clock().getTime() + (deps.budgetMs ?? PUBLISH_BUDGET_MS);
   let localAttempts = 0;
   let claim: Claim | null = null;
 
-  const fail = async (code: PublishFailureCode | "publish_running", attempts: number, detail: string[] = []): Promise<PublishResult> => {
-    const release = claim?.release ?? null;
-    if (code === "publish_running") {
-      await recordRefusal(db, { action: "directory.published", actorStaffId, subjectType: "directory_release", subjectId: release === null ? null : String(release), meta: { reason: "conflict" } });
-      return { ok: false, reason: code, release, attempts, detail };
+  /** The audit trail's refusal; like `tell`, a failure to write it never turns the answer into a crash. */
+  const refuse = async (reason: "publish_running" | "publish_failed", release: number | null, failure?: PublishFailureCode): Promise<void> => {
+    try {
+      await recordRefusal(db, {
+        action: "directory.published",
+        actorStaffId,
+        subjectType: "directory_release",
+        subjectId: release === null ? null : String(release),
+        meta: failure === undefined ? { reason } : { reason, failure },
+      });
+    } catch {
+      // The answer to the Admin stands; the release row and ops_event hold what happened.
     }
+  };
+
+  const running = async (release: number | null, attempts: number): Promise<PublishResult> => {
+    await refuse("publish_running", release);
+    return { ok: false, reason: "publish_running", release, attempts, detail: [] };
+  };
+
+  /**
+   * A failed publish: the failure is told to ops_event and the audit trail. `close` also closes the release this run
+   * claimed, under the run's lease token: if the claim was taken over meanwhile, nothing is closed and the answer is
+   * `publish_running`. Without `close` the release is left as it is (already closed by the claim that found it stopped
+   * three times, or left `building` with its lease released for the next press to resume).
+   */
+  const fail = async (
+    code: PublishFailureCode,
+    attempts: number,
+    detail: string[] = [],
+    options: { release?: number | null; close?: boolean; catalogue?: CatalogueMismatch } = {},
+  ): Promise<PublishResult> => {
+    const release = options.release === undefined ? (claim?.release ?? null) : options.release;
     let filesStored = 0;
-    if (claim) {
-      const [row] = await db.select({ files: directoryRelease.files }).from(directoryRelease).where(eq(directoryRelease.number, claim.release)).catch(() => []);
-      filesStored = row ? storedCount(row.files) : 0;
-      await db
+    if (release !== null) {
+      const [row] = await db.select({ files: directoryRelease.files }).from(directoryRelease).where(eq(directoryRelease.number, release)).catch(() => []);
+      if (row) filesStored = storedCount(row.files);
+    }
+    if (options.close && claim) {
+      const closed = await db
         .update(directoryRelease)
         .set({ status: "failed", failure: code, staged: null, leaseToken: null, leaseUntil: null })
-        .where(and(eq(directoryRelease.number, claim.release), eq(directoryRelease.status, "building")))
-        .catch(() => undefined);
+        .where(and(eq(directoryRelease.number, claim.release), eq(directoryRelease.leaseToken, claim.token), eq(directoryRelease.status, "building")))
+        .returning({ number: directoryRelease.number })
+        .catch(() => null);
+      // Someone took the release over (or closed it): it is theirs now, and not this run's failure to report.
+      if (closed !== null && closed.length === 0) return await running(claim.release, attempts);
     }
     await tell(deps, { release, reason: code, attempts, filesStored });
-    await recordRefusal(db, { action: "directory.published", actorStaffId, subjectType: "directory_release", subjectId: release === null ? null : String(release), meta: { reason: "publish_failed" } });
-    return { ok: false, reason: code, release, attempts, detail };
+    await refuse("publish_failed", release, code);
+    return { ok: false, reason: code, release, attempts, detail, ...(options.catalogue ? { catalogue: options.catalogue } : {}) };
   };
 
   for (;;) {
     localAttempts += 1;
     try {
-      const claimed = await claimRelease(db, deps, actorStaffId, clock(), closed);
-      // A stalled build this call closed after three passes is a failed publish too (ops_event), whatever happens next.
-      for (const item of closed.splice(0)) await tell(deps, { release: item.release, reason: "gave_up", attempts: item.attempts, filesStored: item.filesStored });
-      if ("running" in claimed) return await fail("publish_running", localAttempts);
+      const claimed = await claimRelease(db, deps, actorStaffId, clock());
+      if ("running" in claimed) return await running(null, localAttempts);
+      // A stalled build this claim closed after three passes is this press's answer: a failed publish (ops_event, audit),
+      // whatever the providers look like now. The next press builds.
+      if ("gaveUp" in claimed) {
+        const item = claimed.gaveUp;
+        return await fail("gave_up", item.attempts, [], { release: item.release });
+      }
       claim = claimed.claim;
       await deps.hook?.("snapshot_taken", { release: claim.release });
-      await storeFiles(db, deps, claim, clock);
+      await storeFiles(db, deps, claim, clock, deadline);
       const done = await completeRelease(db, deps, claim, actorStaffId, clock);
       return { ok: true, release: claim.release, counts: done.counts, report: done.report, attempts: claim.attempts, resumedFiles: claim.resumedFiles };
     } catch (error) {
-      if (error instanceof LeaseLostError) return await fail("publish_running", claim?.attempts ?? localAttempts);
+      if (error instanceof LeaseLostError) return await running(claim?.release ?? null, claim?.attempts ?? localAttempts);
       const step = classify(error);
       const attempts = claim?.attempts ?? localAttempts;
-      if (claim) await releaseLease(db, claim);
+      const wait = BACKOFF_MS[Math.min(localAttempts - 1, BACKOFF_MS.length - 1)];
       const exhausted = attempts >= max || localAttempts >= max;
-      if (!step.retryable || exhausted) return await fail(step.code, attempts, step.detail);
-      await sleep(BACKOFF_MS[Math.min(localAttempts - 1, BACKOFF_MS.length - 1)]);
+      if (!step.retryable || exhausted) return await fail(step.code, attempts, step.detail, { close: true, catalogue: step.catalogue });
+      // Another pass is due, but it must fit the function's time: past the budget the run lets go of its lease, tells ops,
+      // and leaves the release building for the next press to resume from the files already stored.
+      if (claim) await releaseLease(db, claim);
+      if (clock().getTime() + wait >= deadline) return await fail(step.code, attempts, step.detail);
+      await sleep(wait);
     }
   }
 }
@@ -357,6 +439,8 @@ export interface ReleaseSummary {
   publishedAt: Date | null;
   failure: string | null;
   attempts: number;
+  /** The claim of the run building it: a live lease means a publish is in progress, none (or an old one) a stalled build. */
+  leaseUntil: Date | null;
   counts: ReleaseCounts;
   report: ReleaseReport;
 }
@@ -369,6 +453,7 @@ const summaryColumns = {
   publishedAt: directoryRelease.publishedAt,
   failure: directoryRelease.failure,
   attempts: directoryRelease.attempts,
+  leaseUntil: directoryRelease.leaseUntil,
   counts: directoryRelease.counts,
   report: directoryRelease.report,
 };

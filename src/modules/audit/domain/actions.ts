@@ -173,6 +173,8 @@ export const AUDIT_META = {
     attempts: count.optional(),
     /** Files already stored when a stopped publish resumed. */
     resumed_files: count.optional(),
+    /** On a refusal with reason `publish_failed`: why the publish failed (a PublishFailureCode). */
+    failure: code.optional(),
   }),
 
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.

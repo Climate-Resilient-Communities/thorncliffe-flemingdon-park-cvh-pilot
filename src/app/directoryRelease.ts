@@ -4,6 +4,7 @@
 //
 // Locally (never on Vercel: the environment check refuses it there), CVH_FAKE_DIRECTORY_DIR keeps the
 // files in a folder instead of the Supabase Storage bucket, for the end-to-end tests.
+import "server-only";
 import { fileDirectoryStorage, supabaseDirectoryStorage, type DirectoryStorage } from "@/modules/directory";
 import { getEnv } from "@/platform/config/env";
 

@@ -9,7 +9,8 @@ import { directoryReleaseView } from "./view";
 
 export const metadata: Metadata = { title: englishText("staff.directory.title") };
 
-// Publishing runs in the server action of this page: enough time for all the files, and the job's retries.
+// Publishing runs in the server action of this page: enough time for all the files, and the job's retries. The job
+// stops retrying after PUBLISH_BUDGET_MS (40 s) and its lease outlasts this by a margin (test/publishBudget.test.ts).
 export const maxDuration = 60;
 
 function DirectoryHeading() {
@@ -45,7 +46,7 @@ export default staffPage(
     const db = directoryDb();
     const [current, latest, providers] = await Promise.all([currentReleaseSummary(db), latestReleaseSummary(db), listProviders(db)]);
     const inCatalogue = providers.filter((p) => p.inCatalogue);
-    const view = directoryReleaseView(current, latest, { published: inCatalogue.filter((p) => p.published).length, total: inCatalogue.length }, torontoDate);
+    const view = directoryReleaseView(current, latest, { published: inCatalogue.filter((p) => p.published).length, total: inCatalogue.length }, torontoDate, new Date());
     return (
       <Screen surface="staff">
         <Stack gap="section-hub">
