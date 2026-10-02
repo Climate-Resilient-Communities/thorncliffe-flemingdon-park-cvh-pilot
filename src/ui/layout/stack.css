@@ -1,0 +1,81 @@
+/* Stack (docs/design-framework/spacing-container/components/stack.md). Gaps only; no margins. */
+@layer components {
+  .layout-stack {
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--gap-stack);
+  }
+
+  .layout-stack:is(ul, ol) {
+    list-style: none;
+  }
+
+  .layout-stack[data-gap="subline"] {
+    gap: var(--gap-subline);
+  }
+
+  .layout-stack[data-gap="label"] {
+    gap: var(--gap-label);
+  }
+
+  .layout-stack[data-gap="tight"] {
+    gap: var(--gap-tight);
+  }
+
+  .layout-stack[data-gap="related"] {
+    gap: var(--gap-related);
+  }
+
+  .layout-stack[data-gap="target"] {
+    gap: var(--gap-target);
+  }
+
+  .layout-stack[data-gap="icon"] {
+    gap: var(--gap-icon);
+  }
+
+  .layout-stack[data-gap="grid"] {
+    gap: var(--gap-grid);
+  }
+
+  .layout-stack[data-gap="stack"] {
+    gap: var(--gap-stack);
+  }
+
+  .layout-stack[data-gap="section-resident"] {
+    gap: var(--gap-section-resident);
+  }
+
+  .layout-stack[data-gap="section-hub"] {
+    gap: var(--gap-section-hub);
+  }
+
+  .layout-stack[data-gap="section-hub-main"] {
+    gap: var(--gap-section-hub-main);
+  }
+
+  .layout-stack[data-gap="section-hub-review"] {
+    gap: var(--gap-section-hub-review);
+  }
+
+  .layout-stack[data-gap="panel"] {
+    gap: var(--gap-panel);
+  }
+
+  .layout-stack[data-gap="paragraph"] {
+    gap: var(--gap-paragraph);
+  }
+
+  .layout-stack[data-align="start"] {
+    align-items: flex-start;
+  }
+
+  .layout-stack[data-align="center"] {
+    align-items: center;
+  }
+
+  .layout-stack[data-align="end"] {
+    align-items: flex-end;
+  }
+}

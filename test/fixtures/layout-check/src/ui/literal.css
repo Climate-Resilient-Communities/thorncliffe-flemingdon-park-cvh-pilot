@@ -1,0 +1,21 @@
+.shell {
+  inline-size: 800px;
+}
+
+@media (width >= 700px) {
+  .shell {
+    display: grid;
+  }
+}
+
+@container hub-page (min-width: 800px) {
+  .columns {
+    display: grid;
+  }
+}
+
+@media (width >= 1088px) {
+  .wide {
+    display: grid;
+  }
+}

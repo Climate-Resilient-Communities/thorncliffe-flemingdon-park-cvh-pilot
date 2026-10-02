@@ -19,7 +19,13 @@
     "test:db": "vitest run --config vitest.db.config.mts",
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:check": "node scripts/db/check-schema.mjs",
-    "db:check-destructive": "node scripts/db/check-destructive.mjs"
+    "db:check-destructive": "node scripts/db/check-destructive.mjs",
+    "gen:tokens": "node scripts/gen-tokens.mjs",
+    "check:tokens": "node scripts/gen-tokens.mjs --check",
+    "check:spacing": "node scripts/check-css.mjs spacing",
+    "check:layout": "node scripts/check-css.mjs layout",
+    "check:layers": "node scripts/check-css.mjs layers",
+    "test:layout": "playwright test -c playwright.layout.config.ts"
   },
   "dependencies": {
     "@serwist/turbopack": "9.5.12",
@@ -48,8 +54,10 @@
     "@types/react-dom": "19.3.0",
     "dependency-cruiser": "18.5.0",
     "drizzle-kit": "0.31.11",
+    "esbuild": "0.28.2",
     "eslint": "9.39.5",
     "eslint-config-next": "16.3.8",
+    "postcss": "8.5.28",
     "supabase": "2.119.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",

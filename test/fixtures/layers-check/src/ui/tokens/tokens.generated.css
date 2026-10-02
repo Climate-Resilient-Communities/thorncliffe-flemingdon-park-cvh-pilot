@@ -1,0 +1,14 @@
+:root {
+  --app-space-5: 10px;
+  --radius-card: 16px;
+  --surface: #fafafa;
+}
+
+[data-theme="dark"] {
+  --surface: #002a45;
+}
+
+:root {
+  --app-fs-body: 18px;
+  --ink: #002a45;
+}

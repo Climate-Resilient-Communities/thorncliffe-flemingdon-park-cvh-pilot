@@ -1,0 +1,18 @@
+.card {
+  --card-inset: var(--gap-icon);
+  --card-gap: calc(var(--gap-icon) * 2);
+  padding: var(--card-inset);
+  gap: var(--app-space-5);
+  color: var(--undeclared-ink);
+}
+
+[data-theme="dark"] .card {
+  --gap-icon: var(--gap-icon);
+  --radius-card: var(--radius-card);
+  background: var(--surface);
+}
+
+.copy {
+  font-size: var(--type-body-size);
+  color: var(--color-ink);
+}
