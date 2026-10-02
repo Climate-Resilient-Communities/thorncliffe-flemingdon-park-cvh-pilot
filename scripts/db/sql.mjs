@@ -153,7 +153,45 @@ const RENAME_CONSTRAINT = re(String.raw`^rename\s+constraint\b`);
 const SET_SCHEMA = re(String.raw`^set\s+schema\s+(${IDENT})$`);
 const DROP_COLUMN = re(String.raw`^drop\s+(?:column\s+)?(?:if\s+exists\s+)?(${IDENT})`);
 const DROP_CONSTRAINT = re(String.raw`^drop\s+constraint\b`);
+const DROP_VIEW = re(String.raw`^drop\s+(materialized\s+)?view\s+(?:if\s+exists\s+)?(.+?)(?:\s+(?:cascade|restrict))?$`);
+const DROP_ROUTINE = re(String.raw`^drop\s+(function|procedure)\s+(?:if\s+exists\s+)?(.+?)(?:\s+(?:cascade|restrict))?$`);
+const DROP_POLICY = re(String.raw`^drop\s+policy\s+(?:if\s+exists\s+)?(${IDENT})\s+on\s+(${NAME})`);
+const DROP_TYPE = re(String.raw`^drop\s+(type|domain)\s+(?:if\s+exists\s+)?(.+?)(?:\s+(?:cascade|restrict))?$`);
+const RENAME_ENUM_VALUE = re(String.raw`^alter\s+type\s+(${NAME})\s+rename\s+value\b`);
+const RENAME_VIEW = re(String.raw`^alter\s+(materialized\s+)?view\s+(?:if\s+exists\s+)?(${NAME})\s+rename\s+(?:column\b.*\s)?to\s+`);
+const REVOKE = re(String.raw`^revoke\b(.*)$`);
+const REVOKE_MEMBERSHIP = re(String.raw`^revoke\s+(?:admin\s+option\s+for\s+)?"?cvh_app"?\s+from\b`);
+const SET_NOT_NULL = re(String.raw`^alter\s+(?:column\s+)?(${IDENT})\s+set\s+not\s+null$`);
+const DROP_DEFAULT = re(String.raw`^alter\s+(?:column\s+)?(${IDENT})\s+drop\s+default$`);
+const DISABLE_RLS = re(String.raw`^disable\s+row\s+level\s+security$`);
+const ADD_CONSTRAINT = re(String.raw`^add\s+(?:constraint\s+${IDENT}\s+)?(check|foreign\s+key|unique|primary\s+key|exclude)\b(.*)$`);
+const ADD_COLUMN = re(String.raw`^add\s+(?:column\s+)?(?:if\s+not\s+exists\s+)?(${IDENT})\s+(.+)$`);
 const ALTER_TYPE = re(String.raw`^alter\s+(?:column\s+)?(${IDENT})\s+(?:set\s+data\s+)?type\s+(.+?)(?:\s+(?:collate|using)\b.*)?$`);
+
+/** The text with everything inside parentheses removed, so words in a type, default or check do not count. */
+function withoutParentheses(text) {
+  let depth = 0;
+  let out = "";
+  for (const c of text) {
+    if (c === "(") depth += 1;
+    else if (c === ")") depth = Math.max(0, depth - 1);
+    else if (depth === 0) out += c;
+  }
+  return out;
+}
+
+/** The grantees of a REVOKE statement: what follows its last top-level FROM. */
+function revokedFrom(code) {
+  const text = withoutParentheses(code);
+  const at = text.search(/\sfrom\s(?![\s\S]*\sfrom\s)/i);
+  if (at === -1) return [];
+  return text
+    .slice(at)
+    .replace(/^\s*from\s+/i, "")
+    .replace(/\s+(?:granted\s+by\s+\S+)?\s*(?:cascade|restrict)?\s*$/i, "")
+    .split(",")
+    .map((grantee) => grantee.trim().replace(/^group\s+/i, "").replace(/^"(.*)"$/, "$1").toLowerCase());
+}
 
 /** Splits "a, b(c, d), e" at commas outside parentheses. */
 function splitTopLevel(text) {
@@ -191,6 +229,22 @@ export function findDestructiveChanges(source) {
       changes.push(`drops table ${match[1]}`);
     } else if ((match = DROP_SCHEMA.exec(code))) {
       changes.push(`drops schema ${match[1]} (and every table in it)`);
+    } else if ((match = DROP_VIEW.exec(code))) {
+      changes.push(`drops ${match[1] ? "materialized view" : "view"} ${match[2]}`);
+    } else if ((match = DROP_ROUTINE.exec(code))) {
+      changes.push(`drops ${match[1].toLowerCase()} ${match[2]}`);
+    } else if ((match = DROP_POLICY.exec(code))) {
+      changes.push(`drops policy ${match[1]} on ${match[2]}`);
+    } else if ((match = DROP_TYPE.exec(code))) {
+      changes.push(`drops ${match[1].toLowerCase()} ${match[2]}`);
+    } else if ((match = RENAME_ENUM_VALUE.exec(code))) {
+      changes.push(`renames a value of enum type ${match[1]}`);
+    } else if ((match = RENAME_VIEW.exec(code))) {
+      changes.push(`renames ${match[1] ? "materialized view" : "view"} ${match[2]} or one of its columns`);
+    } else if (REVOKE_MEMBERSHIP.test(code)) {
+      changes.push("revokes the role cvh_app from a login role (the app loses all its access)");
+    } else if (REVOKE.test(code) && revokedFrom(code).includes("cvh_app")) {
+      changes.push("revokes privileges from the app role cvh_app");
     } else if ((match = ALTER_TABLE.exec(code))) {
       const table = match[1];
       for (const action of splitTopLevel(match[2])) {
@@ -205,8 +259,26 @@ export function findDestructiveChanges(source) {
           changes.push(`moves table ${table} to schema ${m[1]}`);
         } else if (DROP_CONSTRAINT.test(action)) {
           continue;
+        } else if (DISABLE_RLS.test(action)) {
+          changes.push(`disables row level security on ${table}`);
+        } else if ((m = ADD_CONSTRAINT.exec(action))) {
+          if (!/\bnot\s+valid\b/i.test(withoutParentheses(m[2]))) {
+            changes.push(
+              `adds a ${m[1].toLowerCase().replace(/\s+/g, " ")} constraint to ${table} ` +
+                `(rows the previous release writes may violate it; add it NOT VALID and validate later)`,
+            );
+          }
         } else if ((m = DROP_COLUMN.exec(action))) {
           changes.push(`drops column ${table}.${m[1]}`);
+        } else if ((m = SET_NOT_NULL.exec(action))) {
+          changes.push(`makes column ${table}.${m[1]} not null (the previous release may still write nulls)`);
+        } else if ((m = DROP_DEFAULT.exec(action))) {
+          changes.push(`drops the default of column ${table}.${m[1]} (the previous release may rely on it)`);
+        } else if ((m = ADD_COLUMN.exec(action)) && !/^(?:constraint|check|foreign|unique|primary|exclude)$/i.test(m[1])) {
+          const rest = withoutParentheses(m[2]);
+          if (/\bnot\s+null\b/i.test(rest) && !/\b(?:default|generated)\b/i.test(rest)) {
+            changes.push(`adds column ${table}.${m[1]} as not null without a default (the previous release does not write it)`);
+          }
         } else if ((m = ALTER_TYPE.exec(action))) {
           changes.push(`changes the type of column ${table}.${m[1]} to ${m[2]} (may narrow it)`);
         }
