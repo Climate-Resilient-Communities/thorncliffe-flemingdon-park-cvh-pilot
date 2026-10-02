@@ -17,11 +17,16 @@ type Messages = { [key: string]: string | string[] | Messages };
 const LANGUAGES = ["ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"];
 const ALL = ["en", ...LANGUAGES];
 
-function leaves(messages: Messages, prefix = ""): Record<string, string | string[]> {
-  return Object.entries(messages).reduce<Record<string, string | string[]>>((all, [key, value]) => {
-    if (typeof value === "string" || Array.isArray(value)) return { ...all, [prefix + key]: value };
-    return { ...all, ...leaves(value, `${prefix}${key}.`) };
-  }, {});
+function leaves(
+  messages: Messages,
+  prefix = "",
+  all: Record<string, string | string[]> = {},
+): Record<string, string | string[]> {
+  for (const [key, value] of Object.entries(messages)) {
+    if (typeof value === "string" || Array.isArray(value)) all[prefix + key] = value;
+    else leaves(value, `${prefix}${key}.`, all);
+  }
+  return all;
 }
 
 const read = (dir: string, code: string): Messages =>
@@ -182,14 +187,12 @@ describe("string catalogs", () => {
     expect(fr["x04.label"]).toBe("Traduit automatiquement");
   });
 
-  it("all parse as message format", () => {
-    for (const code of ALL) {
-      const t = translator(COMMITTED, code);
-      for (const [key, value] of Object.entries(leaves(read(COMMITTED, code)))) {
-        if (typeof value !== "string") continue;
-        const values = Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(([, name]) => [name, "x"]));
-        expect(() => t(key, values), `${code} ${key}`).not.toThrow();
-      }
+  it.each(ALL)("all parse as message format in %s", (code) => {
+    const t = translator(COMMITTED, code);
+    for (const [key, value] of Object.entries(leaves(read(COMMITTED, code)))) {
+      if (typeof value !== "string") continue;
+      const values = Object.fromEntries([...value.matchAll(/\{(\w+)\}/g)].map(([, name]) => [name, "x"]));
+      expect(() => t(key, values), `${code} ${key}`).not.toThrow();
     }
   });
 });
