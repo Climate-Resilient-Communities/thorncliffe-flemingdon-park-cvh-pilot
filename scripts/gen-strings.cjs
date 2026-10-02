@@ -67,11 +67,20 @@ function markList(list) {
   });
 }
 
-const present = (value) => value !== undefined && value !== null && value !== "" && !(Array.isArray(value) && value.length === 0);
+// A language's own value counts when it exists; "" is a deliberate translation, an empty list is not.
+const present = (value) => value !== undefined && value !== null && !(Array.isArray(value) && value.length === 0);
+
+/** True when an English value has no letters outside {placeholders}: numbers, "", "{nbhd}". */
+function deliberate(value) {
+  if (Array.isArray(value)) return value.every(deliberate);
+  return typeof value !== "string" || !/\p{L}/u.test(value.replace(/\{\w+\}/g, ""));
+}
 
 /**
  * Lays one language over English. A key the language lacks takes the English text behind
- * the visible "[EN]" marker, never an empty string. Lists count as one key.
+ * the visible "[EN]" marker, never an empty string, unless the English has no words
+ * (numbers, "", "{nbhd}"): that is copied as is and not counted missing. A language's own
+ * "" is a translation. Lists count as one key.
  *
  * @returns {{ messages: object, missing: string[] }} `missing` holds dotted key paths
  */
@@ -88,7 +97,7 @@ function mergeLanguage(english, table, code) {
         out[key] = walk(value, own, `${keyPath}.`);
       } else if (present(own)) {
         out[key] = own;
-      } else if (code === SOURCE_LANGUAGE) {
+      } else if (code === SOURCE_LANGUAGE || deliberate(value)) {
         out[key] = value;
       } else {
         missing.push(keyPath);
@@ -115,6 +124,12 @@ function mergeLanguage(english, table, code) {
  */
 function generateCatalogs(source = SOURCE) {
   const { languages, tables } = loadPrototype(source);
+  for (const key of REQUIRED_KEYS) {
+    const value = key.split(".").reduce((node, part) => (isObject(node) ? node[part] : undefined), tables[SOURCE_LANGUAGE]);
+    if (typeof value !== "string" || value.trim() === "") {
+      throw new Error(`Required key "${key}" does not resolve to a non-empty string in English`);
+    }
+  }
   const files = {};
   const report = [];
   for (const code of [...new Set([SOURCE_LANGUAGE, ...languages.map((language) => language.code)])]) {

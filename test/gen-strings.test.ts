@@ -2,6 +2,7 @@ import { spawnSync } from "node:child_process";
 import { cpSync, mkdirSync, mkdtempSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
+import vm from "node:vm";
 import { createTranslator } from "next-intl";
 import { afterAll, beforeAll, describe, expect, it } from "vitest";
 import { MARKER, REQUIRED_KEYS, generateCatalogs } from "../scripts/gen-strings.cjs";
@@ -67,6 +68,47 @@ const REQUIRED = {
 };
 const complete = `{ ${Object.values(REQUIRED).join(", ")} }`;
 
+// The prototype's string tables, loaded the way its pages load them.
+function loadTables(source: string): Record<string, unknown> {
+  const window: Record<string, unknown> = {};
+  const context = vm.createContext({ window });
+  const run = (file: string) => vm.runInContext(readFileSync(path.join(source, file), "utf8"), context);
+  const files = readdirSync(source).filter((file) => /^strings\..+\.js$/.test(file));
+  for (const file of ["strings.en.js", "strings.en.screens.js"]) run(file);
+  for (const file of files) if (!file.startsWith("strings.en")) run(file);
+  return (window as { CVH_STRINGS: Record<string, unknown> }).CVH_STRINGS;
+}
+
+const hasWords = (value: unknown): boolean =>
+  Array.isArray(value)
+    ? value.some(hasWords)
+    : typeof value === "string" && /\p{L}/u.test(value.replace(/\{\w+\}/g, ""));
+
+// Dotted keys each language lacks, worked out from the sources alone: a key is lacking when
+// the language has no value for it (a list with no entries counts as none; "" is a value)
+// and the English value has words.
+function expectedMissingKeys(): Record<string, string[]> {
+  const tables = loadTables(PROTOTYPE) as Record<string, Record<string, unknown>>;
+  const walk = (en: Record<string, unknown>, tr: unknown, prefix: string, out: string[]) => {
+    for (const [key, value] of Object.entries(en)) {
+      const own = tr && typeof tr === "object" && !Array.isArray(tr) ? (tr as Record<string, unknown>)[key] : undefined;
+      if (value && typeof value === "object" && !Array.isArray(value)) {
+        walk(value as Record<string, unknown>, own, `${prefix}${key}.`, out);
+      } else {
+        const has = own !== undefined && own !== null && !(Array.isArray(own) && own.length === 0);
+        if (!has && hasWords(value)) out.push(prefix + key);
+      }
+    }
+    return out;
+  };
+  return Object.fromEntries(LANGUAGES.map((code) => [code, walk(tables.en, tables[code], "", [])]));
+}
+
+function expectedMissing(): Record<string, number> {
+  const keys = expectedMissingKeys();
+  return { en: 0, ...Object.fromEntries(LANGUAGES.map((code) => [code, keys[code].length])) };
+}
+
 beforeAll(() => {
   work = mkdtempSync(path.join(tmpdir(), "gen-strings-"));
 });
@@ -107,8 +149,8 @@ describe("string catalogs", () => {
     const dir = writePrototype(
       "missing",
       {
-        en: "{ a: { b: 'Hello {name}', c: 'Plain' }, list: ['One', '12%', ''] }",
-        fr: "{ a: { b: '', c: 'Simple' }, list: [] }",
+        en: `{ a: { b: 'Hello {name}', c: 'Plain' }, list: ['One', '12%', ''], ...${complete} }`,
+        fr: `{ a: { c: 'Simple' }, list: [], ...${complete} }`,
       },
       ["fr"],
     );
@@ -124,13 +166,14 @@ describe("string catalogs", () => {
 
   it("have every key in every language, each either translated or English behind the marker", () => {
     const en = leaves(read(COMMITTED, "en"));
+    const enValue = (key: string) => en[key];
 
     for (const code of LANGUAGES) {
       const catalog = leaves(read(COMMITTED, code));
       expect(Object.keys(catalog)).toEqual(Object.keys(en));
       for (const [key, value] of Object.entries(catalog)) {
         if (typeof value !== "string") continue;
-        expect(value, `${code} ${key}`).not.toBe("");
+        if (value === "") expect(enValue(key) === "" || (code === "zh" && key === "time.join")).toBe(true);
         expect(value, `${code} ${key}`).not.toBe(key);
       }
     }
@@ -152,19 +195,57 @@ describe("string catalogs", () => {
 });
 
 describe("string report and checks", () => {
-  it("count the keys each language lacks", () => {
+  it("count exactly the keys each language lacks, computed from the prototype sources", () => {
     const { report } = generateCatalogs();
     const counts = Object.fromEntries(report.map(({ code, missing }) => [code, missing]));
+    const expected = expectedMissing();
 
     expect(counts.en).toBe(0);
+    expect(counts).toEqual(expected);
     for (const code of LANGUAGES) {
-      const marked = Object.values(leaves(read(COMMITTED, code))).filter(
-        (value) => typeof value === "string" && value.startsWith(MARKER),
+      const marked = Object.values(leaves(read(COMMITTED, code))).filter((value) =>
+        JSON.stringify(value).includes(`"${MARKER}`),
       );
-      // Lists with no words are missing without being marked; there are few.
-      expect(marked.length).toBeLessThanOrEqual(counts[code]);
-      expect(marked.length).toBeGreaterThan(counts[code] - 20);
+      expect(marked.length, code).toBe(counts[code]);
     }
+  });
+
+  it("keep a deliberately empty translation and count it present", () => {
+    const zh = leaves(read(COMMITTED, "zh"));
+    const { report } = generateCatalogs();
+    const missing = expectedMissingKeys().zh;
+
+    expect(zh["time.join"]).toBe("");
+    expect(missing).not.toContain("time.join");
+    expect(report.find(({ code }) => code === "zh")?.missing).toBe(missing.length);
+  });
+
+  it("copy an English value with no words unmarked and do not count it missing", () => {
+    const fr = leaves(read(COMMITTED, "fr"));
+
+    expect(fr["R03.myNeighbourhood"]).toBe("{nbhd}");
+    expect(expectedMissingKeys().fr).not.toContain("R03.myNeighbourhood");
+
+    const dir = writePrototype(
+      "deliberate",
+      { en: `{ p: '{nbhd}', e: '', n: '12%', w: 'Words', ...${complete} }`, fr: complete },
+      ["fr"],
+    );
+    const out = path.join(work, "deliberate-out");
+    const result = generate("--source", dir, "--out", out);
+    const catalog = read(out, "fr");
+
+    expect(result.stdout).toContain("| fr | 1 | none |");
+    expect([catalog.p, catalog.e, catalog.n, catalog.w]).toEqual(["{nbhd}", "", "12%", `${MARKER}Words`]);
+  });
+
+  it("keep a present-but-empty translation of an English text as empty", () => {
+    const dir = writePrototype("empty-translation", { en: `{ j: 'and', ...${complete} }`, fr: `{ j: '', ...${complete} }` }, ["fr"]);
+    const out = path.join(work, "empty-translation-out");
+    const result = generate("--source", dir, "--out", out);
+
+    expect(result.stdout).toContain("| fr | 0 | none |");
+    expect(read(out, "fr").j).toBe("");
   });
 
   it("print the per-language report", () => {
@@ -179,9 +260,51 @@ describe("string report and checks", () => {
     const { report } = generateCatalogs();
 
     expect(report.flatMap(({ requiredMissing }) => requiredMissing)).toEqual([]);
-    expect(REQUIRED_KEYS).toEqual(
-      expect.arrayContaining(["x01.call", "x01.short", "x04.label", "x09.unknown", "status.unknown"]),
+  });
+
+  it("require exactly the 911 block, the machine-translation label and Not known", () => {
+    expect([...REQUIRED_KEYS]).toEqual([
+      "x01.text",
+      "x01.call",
+      "x01.short",
+      "x01.sms",
+      "x01.print",
+      "x04.label",
+      "x09.unknown",
+      "status.unknown",
+    ]);
+  });
+
+  it.each(REQUIRED_KEYS)("fail when %s is removed from a language of the real prototype", (key) => {
+    const copy = path.join(work, `remove-${key}`);
+    cpSync(PROTOTYPE, copy, { recursive: true });
+    const file = path.join(copy, "strings.fr.js");
+    const [group, leaf] = key.split(".");
+    const before = readFileSync(file, "utf8");
+    const table = loadTables(copy).fr as Record<string, Record<string, unknown>>;
+    expect(typeof table[group][leaf]).toBe("string");
+    // Append a statement that deletes the key after the table is defined.
+    writeFileSync(file, `${before}\ndelete window.CVH_STRINGS.fr.${group}.${leaf};\n`);
+    const result = generate("--source", copy, "--out", path.join(work, `remove-out-${key}`));
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(`"fr" is missing required keys: ${key}`);
+  });
+
+  it.each(REQUIRED_KEYS)("fail naming %s when English lacks it", (key) => {
+    const copy = path.join(work, `rename-${key}`);
+    cpSync(PROTOTYPE, copy, { recursive: true });
+    const file = path.join(copy, "strings.en.js");
+    const [group, leaf] = key.split(".");
+    writeFileSync(
+      file,
+      `${readFileSync(file, "utf8")}\nwindow.CVH_STRINGS.en.${group}.${leaf}Renamed = window.CVH_STRINGS.en.${group}.${leaf};\ndelete window.CVH_STRINGS.en.${group}.${leaf};\n`,
     );
+    const result = generate("--source", copy, "--out", path.join(work, `rename-out-${key}`));
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain(key);
+    expect(result.stderr).toMatch(/required/i);
   });
 
   it.each([
@@ -251,6 +374,24 @@ describe("stale catalogs", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toContain("en.json (differs)");
+  });
+
+  it("fail generation, naming the key, when a required key is not a non-empty English string", () => {
+    const copy = path.join(work, "renamed");
+    cpSync(PROTOTYPE, copy, { recursive: true });
+    const file = path.join(copy, "strings.en.js");
+    writeFileSync(file, readFileSync(file, "utf8").replace("x04: { label:", "x04: { labelRenamed:"));
+    const result = generate("--source", copy, "--out", path.join(work, "renamed-out"));
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toMatch(/required key "x04\.label"/i);
+  });
+
+  it("runs the strings check even when an earlier CI step failed", () => {
+    const workflow = readFileSync(path.join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
+    const checks = workflow.slice(workflow.indexOf("  checks:"), workflow.indexOf("  preview:"));
+
+    expect(checks).toMatch(/- if: \$\{\{ !cancelled\(\) \}\}\n\s+run: npm run check:strings/);
   });
 
   it("is a step of the Checks job in CI", () => {
