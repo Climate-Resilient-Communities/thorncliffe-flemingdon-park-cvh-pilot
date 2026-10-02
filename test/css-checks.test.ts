@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkLayers, checkLayout, checkSpacing, isNegative, readSources, runCheck } from "../scripts/check-css.mjs";
+import { checkLayers, checkLayout, checkLogical, checkSpacing, isNegative, readSources, runCheck } from "../scripts/check-css.mjs";
 
 describe("spacing check on hostile input", () => {
   it("reads a very long run of digits in a margin value in linear time", () => {
@@ -178,6 +178,95 @@ describe("layout literal check", () => {
   });
 });
 
+describe("logical CSS check", () => {
+  const { problems } = checkLogical(readSources(fixture("logical-check")));
+  const inFile = (name: string) => problems.filter(({ file }) => file.endsWith(name));
+  const lines = (name: string) => [...new Set(inFile(name).map(({ line }) => line))];
+
+  it("rejects left and right, physical margin, padding and border properties, physical float and text-align", () => {
+    expect(lines("physical.css").filter((line) => ![13, 14, 18].includes(line) && line <= 21)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 19, 20, 21]);
+    expect(inFile("physical.css").find(({ line }) => line === 1)?.message).toContain('physical property "left"');
+    expect(inFile("physical.css").find(({ line }) => line === 11)?.message).toContain('"text-align: left" is physical');
+    expect(inFile("physical.css").find(({ line }) => line === 9)?.message).toContain('"float: left" is physical');
+  });
+
+  it("rejects 3- and 4-value margin and padding shorthands, counting a var() or calc() as one value", () => {
+    expect(inFile("physical.css").filter(({ line }) => [13, 14, 18].includes(line)).map(({ line, message }) => ({ line, message }))).toEqual([
+      { line: 13, message: expect.stringContaining("has 3 values") },
+      { line: 14, message: expect.stringContaining("has 4 values") },
+      { line: 18, message: expect.stringContaining("has 3 values") },
+    ]);
+  });
+
+  it("rejects an inset, border-width, border-color or border-style whose right and left values differ, and a border-radius whose left and right corners differ", () => {
+    const named = (line: number) => inFile("physical.css").find((finding) => finding.line === line)?.message;
+
+    expect(named(22)).toContain('"inset: 0 var(--gap-icon) 0 var(--gap-target)" is physical: its right and left values differ');
+    expect(named(23)).toContain('"border-width: 1px 2px 3px 4px" is physical');
+    expect(named(24)).toContain('"border-color: red blue red green" is physical');
+    expect(named(25)).toContain('"border-style: solid dashed solid dotted" is physical');
+    expect(named(26)).toContain('"border-radius: 4px 0 0 4px" is physical: its left and right corners differ');
+    expect(named(27)).toContain('"border-radius: 4px 8px" is physical');
+    expect(named(28)).toContain('"border-radius: 4px / 2px 6px" is physical');
+    expect(named(33)).toContain('"border-radius: 4px 8px 4px 8px/2px" is physical');
+  });
+
+  it("reads the keywords in any letter case", () => {
+    expect(inFile("physical.css").filter(({ line }) => line === 29 || line === 30).map(({ message }) => message)).toEqual([
+      expect.stringContaining('"text-align: LEFT" is physical'),
+      expect.stringContaining('"float: Right" is physical'),
+    ]);
+    expect(lines("styles-case.tsx")).toEqual([2, 3, 4]);
+  });
+
+  it("rejects a [dir] selector other than the icon-mirroring rule, and any :dir() selector", () => {
+    expect(inFile("physical.css").filter(({ line }) => line === 19 || line === 20).map(({ message }) => message)).toEqual([
+      expect.stringContaining('[dir] selector "[dir=\"rtl\"] .card"'),
+      expect.stringContaining("[dir] selector \":root[dir='rtl'] .card\""),
+    ]);
+    expect(inFile("physical.css").filter(({ line }) => line === 31 || line === 32).map(({ message }) => message)).toEqual([
+      expect.stringContaining('selector ".ac:dir(rtl)"'),
+      expect.stringContaining('selector ":dir(ltr) .card"'),
+    ]);
+  });
+
+  it("rejects the physical Tailwind utilities, with variants, in @apply and in class strings", () => {
+    const named = [...inFile("classes.tsx"), ...inFile("physical.css")].map(({ message }) => /"([^"]+)"/.exec(message)![1]);
+
+    expect(named).toEqual(
+      expect.arrayContaining([
+        "pl-4", "pr-2", "ml-2", "mr-auto", "-ml-1", "left-0", "right-1/2", "-left-2", "border-l", "border-r", "border-l-2",
+        "rounded-l-lg", "rounded-r-md", "space-x-4", "pl-3", "mr-2", "text-left", "text-right", "pl-2", "mr-4",
+      ]),
+    );
+    expect(inFile("classes.tsx").filter(({ line }) => line === 10 || line === 11)).toHaveLength(3);
+  });
+
+  it("rejects a side prefix with a spacing token of the theme, as well as with a number", () => {
+    expect(inFile("tokens.tsx").map(({ line, message }) => ({ line, utility: /"([^"]+)"/.exec(message)![1] }))).toEqual([
+      { line: 2, utility: "pl-icon" },
+      { line: 2, utility: "-mr-card" },
+      { line: 2, utility: "left-gutter" },
+      { line: 3, utility: "pr-icon" },
+      { line: 3, utility: "ml-card" },
+    ]);
+  });
+
+  it("does not take prose (right-click, left-hand) or a locale tag (ml-IN, mr-IN) for a utility", () => {
+    expect(inFile("prose.tsx")).toEqual([]);
+  });
+
+  it("rejects physical style-object keys and values", () => {
+    expect(lines("styles.tsx")).toEqual([4, 5, 6, 7, 8, 9, 10, 11]);
+  });
+
+  it("allows logical properties, 1- and 2-value shorthands, symmetric 4-value shorthands, logical utilities, prose and the icon-mirroring rule", () => {
+    expect(inFile("allowed.css")).toEqual([]);
+    expect(lines("classes.tsx").filter((line) => line > 11)).toEqual([]);
+    expect(lines("styles.tsx").filter((line) => line > 11)).toEqual([]);
+  });
+});
+
 describe("token layer check", () => {
   const { problems } = checkLayers(readSources(fixture("layers-check")));
 
@@ -222,7 +311,7 @@ describe("token layer check", () => {
 });
 
 describe("the checks on src/", () => {
-  it.each(["spacing", "layout", "layers"])("%s passes", (name) => {
+  it.each(["spacing", "layout", "logical", "layers"])("%s passes", (name) => {
     const result = spawnSync("node", ["scripts/check-css.mjs", name], { encoding: "utf8" });
 
     expect(result.stderr).toBe("");

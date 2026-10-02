@@ -21,6 +21,14 @@ test("health reports ok and the deployed version", async ({ request }) => {
   });
 });
 
+test("staff pages send visitors without a session to sign-in, and are never stored", async ({ request }) => {
+  const response = await get(request, "/staff/people");
+
+  expect(response.status()).toBe(307);
+  expect(new URL(response.headers()["location"] ?? "", "http://host").pathname).toBe("/staff/sign-in");
+  expect(response.headers()["cache-control"] ?? "").toMatch(/(^|,)\s*no-store\s*(,|$)/i);
+});
+
 test("staff sign-in is never stored", async ({ request }) => {
   const response = await get(request, "/staff/sign-in");
 

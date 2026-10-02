@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { STAFF_ROLES } from "../../../contracts/staffRoles";
 
 /**
  * The audit actions and the allow-listed `meta` of each (S01.04, AD-13, AD-14).
@@ -12,7 +13,14 @@ import { z } from "zod";
  * Later epics add their actions here (each with its own strict schema).
  */
 
-export const STAFF_ROLES = ["ambassador", "coordinator", "director", "admin"] as const;
+export { STAFF_ROLES };
+
+/**
+ * The actor of what the system does by itself: scripts run by IT
+ * (scripts/create-first-admin), jobs, and sign-in attempts for usernames that
+ * match no account. It is stored as a null actor_staff_id.
+ */
+export const SYSTEM_ACTOR = null;
 
 /** Why an action was refused or failed: a code, never a message or an input. */
 export const REFUSAL_REASONS = [
@@ -138,7 +146,7 @@ type MetaField<A extends AuditAction> = Record<string, never> extends AuditMeta<
 
 export type AuditEvent<A extends AuditAction = AuditAction> = {
   action: A;
-  /** The staff member who acted; null for the system (scripts, jobs, unknown usernames). */
+  /** The staff member who acted; SYSTEM_ACTOR (null) for the system (scripts, jobs, unknown usernames). */
   actorStaffId: string | null;
   /** What the action was on, as a lower_snake_case type (`staff_account`, `building`). */
   subjectType: string;
