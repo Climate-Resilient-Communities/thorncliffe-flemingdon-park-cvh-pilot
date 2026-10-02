@@ -14,6 +14,16 @@
 //    usable by anon, authenticated or PUBLIC. Supabase's default privileges
 //    grant them every new sequence, and nextval() or setval() by a client
 //    would burn ids or rewrite the counter.
+//  - Functions: no function or procedure of the app (an extension's excluded) is
+//    executable by anon or authenticated, directly or through PUBLIC. PostgreSQL
+//    grants EXECUTE on every new function to PUBLIC, and Supabase's default
+//    privileges grant it to anon and authenticated as well.
+//  - SECURITY DEFINER: every such function of the app pins its search_path
+//    (a SET search_path in the function), or a caller could shadow the objects
+//    it uses with their own.
+//  - Column privileges: no column of an app relation is granted to anon,
+//    authenticated or PUBLIC column by column, which the table-level checks
+//    above (RLS, views) do not see.
 //
 // Usage: MIGRATE_DATABASE_URL=postgres://... node scripts/db/check-schema.mjs
 
@@ -190,6 +200,93 @@ export async function checkSequences(sql) {
     );
 }
 
+const routineKind = (kind) => (kind === "p" ? "procedure" : "function");
+
+/**
+ * No function or procedure of the app may be executable by anon or
+ * authenticated, granted to them, to a role they belong to, or to PUBLIC
+ * (which PostgreSQL gives every new function). Functions owned by an extension
+ * are not the app's.
+ *
+ * @param {import("postgres").Sql} sql
+ * @returns {Promise<string[]>}
+ */
+export async function checkFunctionExecute(sql) {
+  const rows = await sql.unsafe(`
+    select n.nspname as schema, p.proname as name, p.prokind as kind,
+           pg_get_function_identity_arguments(p.oid) as args,
+           (select array_agg(r.rolname order by r.rolname) from pg_roles r
+             where r.oid in ${CLIENTS} and has_function_privilege(r.oid, p.oid, 'EXECUTE'))::text[] as reachable_by
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where p.prokind in ('f', 'p') and ${appSchemaCondition("n")}
+      and not exists (select 1 from pg_depend d where d.classid = 'pg_proc'::regclass and d.objid = p.oid and d.deptype = 'e')
+    order by 1, 2, 4`);
+  return rows
+    .filter((f) => f.reachable_by?.length)
+    .map((f) => {
+      const signature = `${f.schema}.${f.name}(${f.args})`;
+      return (
+        `${signature} is a ${routineKind(f.kind)} that ${f.reachable_by.join(" and ")} can execute: ` +
+        `add "revoke all on ${routineKind(f.kind)} ${signature} from public, anon, authenticated"`
+      );
+    });
+}
+
+/**
+ * A SECURITY DEFINER function runs with its owner's rights, so the objects it
+ * names must not be replaceable by the caller: it has to carry its own
+ * `set search_path` (proconfig).
+ *
+ * @param {import("postgres").Sql} sql
+ * @returns {Promise<string[]>}
+ */
+export async function checkSecurityDefiner(sql) {
+  const rows = await sql.unsafe(`
+    select n.nspname as schema, p.proname as name, p.prokind as kind, pg_get_function_identity_arguments(p.oid) as args
+    from pg_proc p join pg_namespace n on n.oid = p.pronamespace
+    where p.prokind in ('f', 'p') and p.prosecdef and ${appSchemaCondition("n")}
+      and not exists (select 1 from pg_depend d where d.classid = 'pg_proc'::regclass and d.objid = p.oid and d.deptype = 'e')
+      and not exists (select 1 from unnest(coalesce(p.proconfig, '{}')) c where c ~* '^search_path=')
+    order by 1, 2, 4`);
+  return rows.map((f) => {
+    const signature = `${f.schema}.${f.name}(${f.args})`;
+    return (
+      `${signature} is a SECURITY DEFINER ${routineKind(f.kind)} without a pinned search_path: ` +
+      `add "set search_path = ''" to its definition and name every object with its schema`
+    );
+  });
+}
+
+/**
+ * No column of an app relation may carry a privilege of its own for anon,
+ * authenticated, a role either belongs to, or PUBLIC. The table-level checks
+ * (has_table_privilege) are false for such a relation, so it would pass them.
+ *
+ * @param {import("postgres").Sql} sql
+ * @returns {Promise<string[]>}
+ */
+export async function checkColumnPrivileges(sql) {
+  const rows = await sql.unsafe(`
+    select n.nspname as schema, c.relname as name, a.attname as column,
+           (select array_agg(distinct case when g.grantee = 0 then 'public' else pg_get_userbyid(g.grantee) end || ' ' || g.privilege_type)
+            from aclexplode(a.attacl) g
+            where g.grantee = 0 or exists (select 1 from pg_roles cr where cr.oid in ${CLIENTS} and pg_has_role(cr.oid, g.grantee, 'MEMBER')))::text[] as granted
+    from pg_attribute a
+    join pg_class c on c.oid = a.attrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    where a.attacl is not null and a.attnum > 0 and not a.attisdropped
+      and c.relkind in ('r', 'p', 'v', 'm', 'f')
+      and ${migrationRelationCondition("c", "n", { includeHistory: true })} and ${notExtensionMember("c")}
+    order by 1, 2, 3`);
+  return rows
+    .filter((r) => r.granted?.length)
+    .map(
+      (r) =>
+        `${r.schema}.${r.name}.${r.column} has a column privilege (${r.granted.join(", ")}) for a client role: ` +
+        `add "revoke all (${r.column}) on ${r.schema}.${r.name} from public, anon, authenticated"`,
+    );
+}
+
 /**
  * @param {import("postgres").Sql} sql
  * @param {Record<string, string>} owners table name -> owning module
@@ -232,6 +329,9 @@ async function main() {
       ["Table ownership", await checkOwnership(sql, readTableOwnership())],
       ["Network access", await checkNetAccess(sql)],
       ["Sequences", await checkSequences(sql)],
+      ["Function execute", await checkFunctionExecute(sql)],
+      ["Security definer", await checkSecurityDefiner(sql)],
+      ["Column privileges", await checkColumnPrivileges(sql)],
     ];
     for (const [title, problems] of sections) {
       if (problems.length === 0) {
