@@ -338,7 +338,7 @@ describe("a call on a building (the Ambassador's scope, S01.14's assignments as 
     );
     const action = staffAction(
       { route: "/staff/scope-check", access: "hub", action: "alert.author", context: async (_session, rsn: string) => ({ target: { rsn } }) },
-      async (_session, rsn: string) => {
+      async (_session, _facts, rsn: string) => {
         ran.push(`action ${rsn}`);
         await owner`update staff_account set first_name = 'Changed' where username = ${TARGET_USERNAME}`;
         return "done";
@@ -383,6 +383,101 @@ describe("a call on a building (the Ambassador's scope, S01.14's assignments as 
       ]);
     }
     if (expected !== "allowed") expect(ran).toEqual([]);
+  });
+
+  /** Endpoints whose context is "loaded from the database": the building the request claims is not the one the call is on. */
+  async function claimedVersusReal() {
+    const { staffAction, staffJson, staffRoute } = await import("../../src/app/staff/guard");
+    const handled: (string | undefined)[] = [];
+    const real = async (claimed: string) => ({ target: { rsn: claimed === "7001" ? "7002" : claimed } });
+    const route = staffRoute(
+      { route: "/api/staff/scope-check", access: "hub", action: "alert.author", context: async (request) => real(String(((await request.json()) as { rsn: string }).rsn)) },
+      async (_request, _session, facts) => {
+        handled.push(facts.target?.rsn);
+        await owner`update staff_account set first_name = 'Changed' where username = ${TARGET_USERNAME}`;
+        return staffJson({ ok: true });
+      },
+    );
+    const action = staffAction(
+      { route: "/staff/scope-check", access: "hub", action: "alert.author", context: async (_session, claimed: string) => real(claimed) },
+      async (_session, facts) => {
+        handled.push(facts.target?.rsn);
+        return "done";
+      },
+      (error) => error,
+    );
+    const post = (rsn: string) =>
+      route(new Request("http://localhost/api/staff/scope-check", { method: "POST", headers: { "content-type": "application/json", host: "localhost" }, body: JSON.stringify({ rsn }) }));
+    return { handled, post, action };
+  }
+
+  it("judges the facts the handler acts on: a request claiming building 7001 for a call on 7002 is judged, and handled, as 7002", async () => {
+    const { phone } = await signedIn("coordinator", "hub");
+    wired.sessions = phone.sessions;
+    const { handled, post, action } = await claimedVersusReal();
+    // A Coordinator needs no facts to be allowed; the handler still gets the judged ones.
+    expect((await post("7001")).status).toBe(200);
+    expect(await action("7001")).toBe("done");
+    expect(handled).toEqual(["7002", "7002"]);
+  });
+
+  it("refuses an Ambassador assigned to the claimed building 7001 when the call is on 7002", async () => {
+    const { id, phone } = await signedIn("ambassador", "hub");
+    wired.sessions = phone.sessions;
+    wired.assignments = ASSIGNMENTS.ambassador;
+    const { handled, post, action } = await claimedVersusReal();
+    const before = await businessData();
+    const since = await lastAuditId();
+    const response = await post("7001");
+    expect(response.status).toBe(403);
+    expect(await action("7001")).toBe("forbidden");
+    expect(handled).toEqual([]);
+    expect(await businessData(), "business data unchanged").toEqual(before);
+    expect((await denialsSince(since)).map((denial) => [denial.actor_staff_id, denial.meta.reason])).toEqual([[id, "out_of_scope"], [id, "out_of_scope"]]);
+  });
+
+  it("answers 400 bad_request, with one permission.denied record and nothing changed, when the context cannot read the call", async () => {
+    const { staffAction, staffRoute, staffJson } = await import("../../src/app/staff/guard");
+    const { id, phone } = await signedIn("coordinator", "hub");
+    wired.sessions = phone.sessions;
+    const ran: string[] = [];
+    const route = staffRoute(
+      { route: "/api/staff/scope-check", access: "hub", action: "alert.author", context: async (request) => ({ target: { rsn: String(((await request.json()) as { rsn: string }).rsn) } }) },
+      async () => {
+        ran.push("route");
+        await owner`update staff_account set first_name = 'Changed' where username = ${TARGET_USERNAME}`;
+        return staffJson({ ok: true });
+      },
+    );
+    const action = staffAction(
+      {
+        route: "/staff/scope-check",
+        access: "hub",
+        action: "alert.author",
+        context: async (_session, form: FormData) => {
+          if (!form.get("rsn")) throw new Error("no building");
+          return { target: { rsn: String(form.get("rsn")) } };
+        },
+      },
+      async () => {
+        ran.push("action");
+        return "done";
+      },
+      (error) => error,
+    );
+    const before = await businessData();
+    const since = await lastAuditId();
+    const malformed = await route(new Request("http://localhost/api/staff/scope-check", { method: "POST", headers: { "content-type": "application/json", host: "localhost" }, body: "{not json" }));
+    expect(malformed.status).toBe(400);
+    expect(await malformed.json()).toEqual({ error: "bad_request" });
+    expect(await action(new FormData())).toBe("bad_request");
+    expect(ran).toEqual([]);
+    expect(await businessData(), "business data unchanged").toEqual(before);
+    const meta = (routePattern: string) => ({ status: 400, permission: "alert.author", route: routePattern, reason: "bad_request" });
+    expect(await denialsSince(since)).toEqual([
+      { actor_staff_id: id, outcome: "refused", meta: meta("/api/staff/scope-check") },
+      { actor_staff_id: id, outcome: "refused", meta: meta("/staff/scope-check") },
+    ]);
   });
 
   it("refuses an Ambassador as out of scope until S01.14 gives them assignments (the real scope reads none)", async () => {

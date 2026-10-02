@@ -797,16 +797,17 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
     /**
      * Audits a staff request the role policy refused (S01.12: 403): `forbidden` when the role may
-     * never do `permission`, `out_of_scope` when it may but not on this building, floor or entry.
+     * never do `permission`, `out_of_scope` when it may but not on this building, floor or entry;
+     * or one whose facts the guard could not read (`bad_request`, status 400).
      * `route` is the route pattern, never a value from the request.
      */
-    async refuseByPolicy(staffId: string, route: string, permission: string, reason: "forbidden" | "out_of_scope"): Promise<void> {
+    async refuseByPolicy(staffId: string, route: string, permission: string, reason: "forbidden" | "out_of_scope" | "bad_request", status: 403 | 400 = 403): Promise<void> {
       await audit.recordRefusal(db, {
         action: "permission.denied",
         actorStaffId: staffId,
         subjectType: "staff_account",
         subjectId: staffId,
-        meta: { status: 403, route, permission, reason },
+        meta: { status, route, permission, reason },
       });
     },
 

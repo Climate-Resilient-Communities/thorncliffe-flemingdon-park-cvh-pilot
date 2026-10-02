@@ -10,12 +10,13 @@ import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from ".
 
 // Without a session the guard sends the person to sign-in; another setup gate, a role the policy
 // refuses (S01.12: accounts are Admin-only) and a session below aal2 answer here.
-const REFUSAL_KEYS: Record<Exclude<ActionRefusal, "forbidden">, string> = {
+// (These actions declare no `context`, so a `bad_request` cannot arise; it reads as forbidden.)
+const REFUSAL_KEYS: Record<Exclude<ActionRefusal, "forbidden" | "bad_request">, string> = {
   setup_incomplete: "staff.setup.incomplete",
   aal2_required: "staff.authenticator.required",
 };
 
-const refusalMessage = (error: ActionRefusal, forbiddenKey: string) => englishText(error === "forbidden" ? forbiddenKey : REFUSAL_KEYS[error]);
+const refusalMessage = (error: ActionRefusal, forbiddenKey: string) => englishText(error === "forbidden" || error === "bad_request" ? forbiddenKey : REFUSAL_KEYS[error]);
 
 // Every account change is the policy action `accounts.manage` (AD-4: Admins only), which is also
 // privileged (S01.10): the guard refuses any other role, then a session below aal2, before the
