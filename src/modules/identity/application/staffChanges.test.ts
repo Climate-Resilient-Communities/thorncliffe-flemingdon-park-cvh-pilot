@@ -8,6 +8,7 @@ import type { StaffStore } from "./ports";
 import { adminShortfallMeta, createAdminRecovery } from "./adminRecovery";
 import { createSessionRevocation } from "./sessionRevocation";
 import { createStaffChangeService } from "./staffChanges";
+import type { SignInLockReader } from "./usability";
 
 const id = (n: number) => `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`;
 const [A, B, C, D] = [1, 2, 3, 4].map(id);
@@ -78,10 +79,12 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     audit,
     now: () => new Date(),
   });
-  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: async () => null, revocation };
+  // Where each failed-sign-in lock was read: the transaction inside one, never a second connection.
+  const lockReads = vi.fn<SignInLockReader>(async () => null);
+  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: lockReads, revocation };
   const service = createStaffChangeService(deps);
   const { beginAdminRecovery } = createAdminRecovery(deps);
-  return { service, beginAdminRecovery, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts, openSessions, generations, revokedIn };
+  return { service, beginAdminRecovery, db, lockReads, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts, openSessions, generations, revokedIn };
 }
 
 const RULE = { ok: false, error: "two_admin_rule" };
@@ -110,6 +113,19 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
       { action: "account.suspended", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { role: "admin" } },
       { action: "session.revoked", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { cause: "suspended", sessions: 2 } },
     ]);
+  });
+
+  it("reads the Admins' failed-sign-in locks inside the change through its transaction, and the banner's through the client", async () => {
+    const { service, db, lockReads } = setup([{ id: A }, { id: B }, { id: C }]);
+
+    expect(await service.changeRole(A, C, "director")).toEqual({ ok: true, value: undefined });
+    expect(lockReads.mock.calls.length).toBeGreaterThan(0);
+    expect(lockReads.mock.calls.every(([executor]) => executor === TX)).toBe(true);
+
+    lockReads.mockClear();
+    await service.adminShortfallBanner(A);
+    expect(lockReads.mock.calls.length).toBeGreaterThan(0);
+    expect(lockReads.mock.calls.every(([executor]) => executor === db)).toBe(true);
   });
 
   it("counts an Admin without an authenticator as not usable", async () => {
@@ -203,6 +219,15 @@ describe("the recovery exception (internal to the identity module)", () => {
     expect(lockedAdmins).toHaveBeenCalledWith(B);
     expect(lockTimeouts).toEqual([4321]);
     expect(adminShortfallMeta(recovery)).toEqual({ admin_shortfall: true });
+  });
+
+  it("reads each Admin's failed-sign-in lock through the caller's transaction, never the pool", async () => {
+    const { beginAdminRecovery, lockReads } = setup([{ id: A }, { id: B }, { id: C }]);
+
+    await beginAdminRecovery(TX, C);
+
+    expect(lockReads).toHaveBeenCalledTimes(3);
+    expect(lockReads.mock.calls.every(([executor]) => executor === TX)).toBe(true);
   });
 
   it("carries no flag when two usable Admins remain", async () => {
