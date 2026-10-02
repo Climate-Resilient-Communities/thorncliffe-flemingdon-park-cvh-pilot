@@ -1,6 +1,6 @@
 # Inline
 
-> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
+> **Status: approved framework (2026-10-01); token values decided by the design owner on 2026-10-02 (G1–G10, `token-architecture.md` section 11).** The rules, primitives and token values here are implementation requirements for S01.16 and the stories that use them. Values come from `design/prototype/ds/cvrh/tokens.json`; rare values and where they are used are in [`rare-spacing-inventory.md`](../rare-spacing-inventory.md). The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 **Status:** Pilot · **File:** `src/ui/layout/inline.tsx` (with `Inline.Grow`) · **Built in:** S01.16
 
@@ -26,7 +26,7 @@ Inline  (div | ul | p)  display: flex; flex-direction: row; flex-wrap; gap; alig
 
 | Prop | Type (allowed values only) | Default | Notes |
 | --- | --- | --- | --- |
-| `gap` | `'label' \| 'icon' \| 'grid' \| 'panel'` and, once closed, `'tight' \| 'stack' \| 'target'` | `'icon'` | `--gap-icon` (10px) matches the prototype's `.cvh-row` default |
+| `gap` | `'label' \| 'tight' \| 'related' \| 'target' \| 'icon' \| 'grid' \| 'stack' \| 'panel' \| 'meta-inline' \| 'type-grid-inline'` | `'icon'` | `--gap-icon` (10px) matches the prototype's `.cvh-row` default |
 | `align` | `'center' \| 'start' \| 'end' \| 'baseline' \| 'stretch'` | `'center'` | Block-axis alignment |
 | `justify` | `'start' \| 'center' \| 'end' \| 'between'` | `'start'` | `'between'` puts the first and last child at opposite ends |
 | `wrap` | `boolean` | `true` | Translated labels vary in length; wrapping is the default so nothing overflows at 320 px |
@@ -41,15 +41,18 @@ Not included: `justify="around" | "evenly"` (source has them; unused), `directio
 
 | Prop value | Semantic token | Primitive | Value |
 | --- | --- | --- | --- |
-| `label` | `--gap-label` | `--space-1` | 4px |
-| `icon` | `--gap-icon` | `--space-2` | 10px |
-| `grid` | `--gap-grid` | `--space-3` | 17px |
-| `panel` | `--gap-panel` | `--space-4` | 24px |
-| `tight` | `--gap-tight` | — | Blocked by G1 |
-| `stack` | `--gap-stack` | — | Blocked by G1 |
-| `target` | `--gap-target` | — | Blocked by G3 (prototype "8px between targets") |
+| `label` | `--gap-label` | `--app-space-2` | 4px |
+| `tight` | `--gap-tight` | `--app-space-3` | 6px |
+| `related` | `--gap-related` | `--app-space-4` | 8px |
+| `target` | `--gap-target` | `--app-space-4` | 8px (G3, "8px between targets") |
+| `icon` | `--gap-icon` | `--app-space-5` | 10px |
+| `grid` | `--gap-grid` | `--app-space-5` | 10px |
+| `stack` | `--gap-stack` | `--app-space-6` | 12px |
+| `panel` | `--gap-panel` | `--app-space-10` | 24px |
+| `meta-inline` | `--gap-meta-inline`, row `--gap-meta-block` | `--app-space-18px` (rare), `--app-space-2` | 18px column gap, 4px row gap; only list-row metadata (O-01) |
+| `type-grid-inline` | `--gap-type-grid-inline`, row `--gap-type-grid-block` | `--app-space-18px` (rare), `--app-space-7` | 18px column gap, 14px row gap; only the disruption type grid (X-13) |
 
-When `wrap` is on, the same token is used for the row gap and the column gap (one value, `gap`). A wrapping row of touch targets uses `gap="target"`.
+When `wrap` is on, the same token is used for the row gap and the column gap (one value, `gap`). A wrapping row of touch targets uses `gap="target"`. `meta-inline` and `type-grid-inline` set the column gap; when they wrap, their row gaps are `--gap-meta-block` (4px) and `--gap-type-grid-block` (14px), as in the prototype. Their items are text, not targets; a wrapping row of targets uses `gap="target"`, so no two targets are closer than 8px.
 
 ## Responsive behaviour
 

@@ -27,7 +27,7 @@ This document breaks the CVH pilot into epics and stories, built from the pilot 
 
 **Pilot lean cut (approved 2026-10-01).** This is the lean pilot plan from the approved Sprint Change Proposal. Some stories were simplified to pilot scale and some deferred to the MVP (see "Deferred to MVP" at the end). The approved full plan is kept unchanged as the MVP reference in `docs/planning/mvp/reference/pilot-epics-full.md`.
 
-**Totals.** Build 494 h across 91 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated.
+**Totals.** Build 495.5 h across 91 stories (E01–E09). Manual operations during the pilot: 18 h (see "Manual operations"). Contingent: about 3 h if the first embedding model misses the search launch bar (S03.07). The build estimate became 494 h with the approved spacing framework change (2026-10-01; S01.16 added). Only the build saving against the full plan (532 h → 488 h before that change) is comparable, because the full plan left operations unstated.
 
 ## Requirements Inventory
 
@@ -158,7 +158,7 @@ UX-DR19: Accessibility: screen-reader labels on every control, status never by c
 | Rehearse a full drill in production; rehearse one database restore with `scripts/restore-reconcile` (S09.03) | Hub + IT | Before launch |
 | Manual Lighthouse run (mobile preset, Slow 4G, cold cache, median of 3) on `/en/`, `/ur/` and the directory page; record Largest Contentful Paint, Total Blocking Time and JavaScript transferred against the proposed budgets (LCP ≤ 4 s, TBT ≤ 600 ms, JS ≤ 200 KB compressed); note any miss with an action | IT | Before launch |
 | Rehearse the re-consent campaign on the drill roster in production (S09.07) | Hub + IT | By day 55 |
-| Reconcile `tokens.json` with the approved prototype: one spacing scale from the prototype's values; each rare value kept as a named step where an approved screen needs it, or changed by a recorded design decision; resident gutter, touch targets, target spacing, Hub breakpoint and container widths added (gaps G1–G10 in `docs/design-framework/spacing-container/token-architecture.md`) | Design owner | Before S01.16 |
+| Reconcile `tokens.json` with the approved prototype: one spacing scale from the prototype's values; each rare value kept as a named step where an approved screen needs it, or changed by a recorded design decision; resident gutter, touch targets, target spacing, Hub breakpoint and container widths added (gaps G1–G10 in `docs/design-framework/spacing-container/token-architecture.md`). **Done 2026-10-02:** `tokens.json` version 3; decisions in §11; rare values in `rare-spacing-inventory.md` | Design owner | Before S01.16 |
 | Storage decision for the deletion ledger: confirm Supabase Storage exposes and enforces a retention policy of at least the database backup window plus one day with no early deletion or overwrite (configuration readable at run time), or record an alternative store with the same guarantees (S09.03) | IT | **Before S09.03 implementation starts** |
 | Verified ledger enforcement in production: with the app's credentials, deleting or overwriting a ledger object before its retention expires is refused, and the configured retention matches the procedures (S09.03) | IT + Hub | **Before launch (launch gate)** |
 | Plan launch events with staff-assisted sign-up | Hub | Before launch |
@@ -283,7 +283,7 @@ The feed endpoint in S02.11 returns `feed_version: 0` until S04.03 creates the t
 
 Admins create staff accounts; staff sign in safely; the 43 buildings and floors are seeded and ambassadors assigned; coverage and the audit trail work; a first text arrives from production.
 
-**Epic estimate:** 87.5 h across 16 stories (4 S, 12 M) · **Epic actual:** —
+**Epic estimate:** 89 h across 16 stories (4 S, 12 M) · **Epic actual:** —
 
 **Shared foundations reused by later stories and epics:** environment configuration (S01.02), design tokens and layout primitives (S01.16), migrations and RLS (S01.03), the audit trail (S01.04), accounts and sessions (S01.05–S01.11), the role policy (S01.12), buildings and floors (S01.13), coverage (S01.14). Each story creates only the tables it needs and names the stories it depends on.
 
@@ -558,7 +558,7 @@ So that a lost phone or a departed volunteer cannot keep access.
 
 ### Story S01.16 — Developer generates the shared design tokens and layout primitives
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** UX-DR1, UX-DR19 (spacing, targets), AR-27 (tokens), NFR-N2 · **Depends on:** S01.01 · **Branch:** `e01-s16-tokens-layout`
 - **Note:** placed before S01.09 in this document because S01.09 depends on it; story IDs are not renumbered, and execution order follows declared dependencies.
 
@@ -568,17 +568,23 @@ So that the Hub and resident screens share one look and nobody hard-codes spacin
 
 **Acceptance Criteria:**
 
-**Given** `design/prototype/ds/cvrh/tokens.json`, reconciled with the approved prototype (Launch Readiness)
+**Given** `design/prototype/ds/cvrh/tokens.json` version 3 (decisions G1–G10 in `docs/design-framework/spacing-container/token-architecture.md` §11)
 **When** `npm run gen:tokens` runs
-**Then** it writes CSS custom properties and a Tailwind v4 theme for light and navy, spacing and radius written once on `:root` and colour per theme, and a snapshot test fails if any generated value differs from `tokens.json`
+**Then** it generates only the app groups: `spacing.app` (common and rare steps), `size`, the "Screens" type sets for resident, basic mode and staff, `type.lineHeights` by script, `radius` and `color`; spacing, size and radius are written once on `:root`, colour per theme (light and navy), the basic-mode type set under `[data-basic="true"]` and line heights per language
+**And** the slides and documents spacing (`spacing.tokens`) and the slide and document type groups are not generated
+**And** a snapshot test fails if any generated value differs from `tokens.json`
 
-**Given** a token that a primitive needs and that `tokens.json` does not define yet (an unresolved gap in `docs/design-framework/spacing-container/token-architecture.md` §11)
+**Given** a token that a primitive or `semantic.css` needs and that `tokens.json` does not define
 **When** `npm run gen:tokens` runs
-**Then** the generator writes no default value, fails, and names the missing token and its gap
+**Then** the generator writes no default value, fails, and names the missing token
+
+**Given** `app-breakpoint-hub` (700 px) and `app-container-hub-two-column-min` (800 px)
+**When** the theme is generated
+**Then** they are written as literals only into Tailwind's `@theme`, as `--breakpoint-hub` (variant `hub:`, viewport) and `--container-hub-two-column` (variant `@hub-two-column:`, container), and a check fails on any other `700px` or `800px` in a media or container query in `src/`
 
 **Given** the Tailwind theme
-**When** a fixture using `p-4`, `gap-2` and `md:flex` is built
-**Then** none of them produces CSS (the default spacing scale and breakpoints are removed), and the token-based utilities (for example `gap-icon`, `ps-*`, `pe-*`) compile to `var()` of semantic tokens
+**When** a fixture using `p-4`, `gap-2`, `md:flex` and `@md:flex` is built
+**Then** none of them produces CSS (the default spacing scale, breakpoints and container sizes are removed), the token-based utilities (for example `gap-icon`, `ps-*`, `pe-*`) compile to `var()` of semantic tokens, `hub:` compiles to `@media (width >= 700px)` and `@hub-two-column:` to `@container (width >= 800px)`
 
 **Given** a fixture using an arbitrary spacing value such as `p-[13px]` (Tailwind compiles arbitrary values whatever the theme defines)
 **When** the spacing check runs
@@ -588,6 +594,11 @@ So that the Hub and resident screens share one look and nobody hard-codes spacin
 **When** their unit, type and Playwright tests run
 **Then** the acceptance criteria in `docs/design-framework/spacing-container/components/*.md` pass
 
+**Given** the two-column `Grid` inside a staff `Screen`, whose content box (inside the page padding) is the query container
+**When** the container is 799 px and then 800 px wide, in `en` and `ur` with the longest translated labels
+**Then** at 799 px it is one column, main content first, the aside after it filling the width, not sticky, with `--gap-section-hub` between them; at 800 px it is a flexible main column and the aside (380 px, or 300 px for the compact variant) with the page's gap (`--gap-columns-hub` or `--gap-panel`)
+**And** neither layout overflows horizontally, a 1280 px viewport whose container is 799 px still stacks, and a shared Playwright helper runs these boundary checks for the page stories
+
 **Given** the spacing check (proportionate)
 **When** it runs in CI on `src/`
 **Then** it fails on a literal length in `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` that is not `0` and not an approved spacing token, on an arbitrary Tailwind spacing value, and on a negative margin, unless the line carries a reviewed `/* spacing-exception: reason */` comment, which the check lists in its report
@@ -595,7 +606,7 @@ So that the Hub and resident screens share one look and nobody hard-codes spacin
 
 ### Story S01.09 — Staff use a phone-first Hub
 
-- **Size:** M · **Estimate:** 4.5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** —
 - **Traces:** UX-DR15, NFR-N5, AR-3 · **Depends on:** S01.07, S01.16 · **Branch:** `e01-s09-hub-shell`
 
 As a Coordinator approving from my phone,
@@ -624,6 +635,10 @@ So that I can act quickly away from a desk.
 **Given** the top bar at 390 px
 **When** the signed-in person, role and sign-out wrap
 **Then** they stay reachable without horizontal scrolling
+
+**Given** the Hub shell at a viewport of 699 px and then 700 px, in `en` and `ur` with the longest translated labels
+**When** it is rendered
+**Then** at 699 px the side navigation is hidden and the narrow page inset applies, at 700 px the side navigation is shown, the top bar keeps at least its 60 px minimum and grows with the labels, and neither layout overflows horizontally
 
 ### Story S01.10 — Admins and Coordinators must use an authenticator code
 
@@ -1878,6 +1893,10 @@ So that the web and, later, texts reach exactly the people it is for.
 **When** the audience includes a building they are not assigned to
 **Then** it is refused at submit and again at approval against their current assignments
 
+**Given** the audience pages (O-03, O-04) at content widths of 799 px and 800 px (viewports of 1087 px and 1088 px with the side navigation) and at viewports of 699 px and 700 px, in `en` and `ur` with the longest translated labels
+**When** each page is rendered
+**Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, and no layout overflows horizontally (S01.16 boundary helper)
+
 ### Story S04.05 — Hub staff log a disruption and write an acknowledgement or alert
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
@@ -1918,6 +1937,10 @@ So that residents know we are on it before we have the details.
 **Given** a thread with a possible duplicate (an open non-drill thread overlapping in audience and type)
 **When** the author submits
 **Then** the approver will see a "possible duplicate" link; a duplicate is handled by withdrawing it with reason "duplicate" (S05.02; merging is deferred to the MVP)
+
+**Given** the acknowledgement composer (O-12) and the alert composer (O-02) at content widths of 799 px and 800 px (viewports of 1087 px and 1088 px with the side navigation) and at viewports of 699 px and 700 px, in `en` and `ur` with the longest translated labels
+**When** each composer is rendered
+**Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, the publish actions stay in the sticky actions region in both layouts, and no layout overflows horizontally (S01.16 boundary helper)
 
 ### Story S04.06 — Each text is rendered once and frozen at submit
 
@@ -2009,6 +2032,10 @@ So that a mistake is caught by a second person before residents see it.
 **When** it renders
 **Then** it offers Approve, "Return to author" with a note and Discard, and never an "edit and approve" action, because whoever edits becomes an editor and cannot approve (two-person rule)
 
+**Given** the approval view (O-05) and the ambassador post review (O-07) at content widths of 799 px and 800 px (viewports of 1087 px and 1088 px with the side navigation) and at viewports of 699 px and 700 px, in `en` and `ur` with the longest translated labels
+**When** each view is rendered
+**Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, the approval actions stay in the sticky actions region in both layouts, and no layout overflows horizontally (S01.16 boundary helper)
+
 ### Story S04.08 — Residents read approved alerts in their language, with origin and verification
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
@@ -2090,6 +2117,10 @@ So that nothing sits unapproved while residents wait.
 **When** they open the Hub home
 **Then** it is read-only, and every action endpoint returns 403 (S01.12 list)
 
+**Given** the Hub home (O-01) and the published view (O-06) at content widths of 799 px and 800 px (viewports of 1087 px and 1088 px with the side navigation) and at viewports of 699 px and 700 px, in `en` and `ur` with the longest translated labels
+**When** each page is rendered
+**Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, and no layout overflows horizontally (S01.16 boundary helper)
+
 ## E05 — Alerts stay current: updates, corrections, closing, status and sharing
 
 A disruption stays one running thread: staff add updates, correct or withdraw what residents saw (shown in place, never quietly replaced), close it with a final entry or let it expire, and residents see building and neighbourhood status derived from those threads, a readable archive, and a one-step share that always shows the live, standard alert. With E05 done, `RESIDENT_ALERTS_ENABLED` may be turned on in production.
@@ -2147,6 +2178,10 @@ So that residents follow one running story instead of many separate alerts.
 **Given** the thread was closed while the update was being written or waited for approval
 **When** it is submitted or approved
 **Then** it is refused with `ALERT_CLOSED` ("This alert is already closed"), and a closed thread offers no "Add an update"
+
+**Given** the promote (O-13) and update (O-14) pages at content widths of 799 px and 800 px (viewports of 1087 px and 1088 px with the side navigation) and at viewports of 699 px and 700 px, in `en` and `ur` with the longest translated labels
+**When** each page is rendered
+**Then** below 800 px of content width it is one column with the main content first and the aside filling the width, at 800 px and above it is two columns with the page's approved gap, the publish actions stay in the sticky actions region in both layouts, and no layout overflows horizontally (S01.16 boundary helper)
 
 ### Story S05.02 — Hub staff correct or withdraw what residents saw, in the open
 

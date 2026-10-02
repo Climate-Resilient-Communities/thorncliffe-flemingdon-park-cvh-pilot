@@ -1,6 +1,6 @@
 # Stack
 
-> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
+> **Status: approved framework (2026-10-01); token values decided by the design owner on 2026-10-02 (G1–G10, `token-architecture.md` section 11).** The rules, primitives and token values here are implementation requirements for S01.16 and the stories that use them. Values come from `design/prototype/ds/cvrh/tokens.json`; rare values and where they are used are in [`rare-spacing-inventory.md`](../rare-spacing-inventory.md). The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 **Status:** Pilot · **File:** `src/ui/layout/stack.tsx` · **Built in:** S01.16
 
@@ -23,7 +23,7 @@ Stack  (div | ul | ol | section | fieldset)  display: flex; flex-direction: colu
 
 | Prop | Type (allowed values only) | Default | Notes |
 | --- | --- | --- | --- |
-| `gap` | `'label' \| 'icon' \| 'grid' \| 'paragraph' \| 'panel'` and, once their gaps are closed, `'tight' \| 'stack' \| 'section'` | `'stack'` once G1 is closed; until then the prop is required | Maps to `--gap-{value}` |
+| `gap` | `'subline' \| 'label' \| 'tight' \| 'related' \| 'target' \| 'icon' \| 'grid' \| 'stack' \| 'section-resident' \| 'section-hub' \| 'section-hub-main' \| 'section-hub-review' \| 'panel' \| 'paragraph'` | `'stack'` | Maps to `--gap-{value}` (table below) |
 | `align` | `'stretch' \| 'start' \| 'center' \| 'end'` | `'stretch'` | Cross-axis (inline) alignment; logical by nature |
 | `as` | `'div' \| 'ul' \| 'ol' \| 'section' \| 'fieldset'` | `'div'` | Use `ul`/`ol` for lists of alerts, listings, round items |
 | `testId` | `string` | none | |
@@ -34,18 +34,26 @@ Not included (deliberately): `justify` (source has it; no pilot screen distribut
 
 | Prop value | Semantic token | Primitive | Value |
 | --- | --- | --- | --- |
-| `label` | `--gap-label` | `--space-1` | 4px |
-| `icon` | `--gap-icon` | `--space-2` | 10px |
-| `grid` | `--gap-grid` | `--space-3` | 17px |
-| `paragraph` | `--gap-paragraph` | `--space-4` | 24px |
-| `panel` | `--gap-panel` | `--space-4` | 24px |
-| `tight` | `--gap-tight` | — | Blocked by G1 (prototype 2–6px) |
-| `stack` | `--gap-stack` | — | Blocked by G1 (prototype 12px) |
-| `section` | `--gap-section` | — | Blocked by G1 (prototype 16px resident, 20px Hub) |
+| `subline` | `--gap-subline` | `--app-space-1` | 2px |
+| `label` | `--gap-label` | `--app-space-2` | 4px |
+| `tight` | `--gap-tight` | `--app-space-3` | 6px |
+| `related` | `--gap-related` | `--app-space-4` | 8px |
+| `target` | `--gap-target` | `--app-space-4` | 8px (G3) |
+| `icon` | `--gap-icon` | `--app-space-5` | 10px |
+| `grid` | `--gap-grid` | `--app-space-5` | 10px |
+| `stack` | `--gap-stack` | `--app-space-6` | 12px |
+| `section-resident` | `--gap-section-resident` | `--app-space-8` | 16px (G1) |
+| `section-hub` | `--gap-section-hub` | `--app-space-9` | 20px (G1) |
+| `section-hub-main` | `--gap-section-hub-main` | `--app-space-22px` (rare) | 22px; only the main-column sections of O-01, O-03, O-04, O-14, O-15 |
+| `section-hub-review` | `--gap-section-hub-review` | `--app-space-18px` (rare) | 18px; only the main-column sections of O-07, O-12 |
+| `panel` | `--gap-panel` | `--app-space-10` | 24px |
+| `paragraph` | `--gap-paragraph` | `--app-space-10` | 24px |
+
+Use `section-resident` on resident and ambassador screens and `section-hub` on Hub pages; the two rare section gaps are only for the pages named, where the prototype shows them (`rare-spacing-inventory.md`).
 
 ## Responsive behaviour
 
-None. The gap is the same at every width. A screen that needs a different rhythm at the Hub breakpoint uses `Grid` or a different `Stack`, not a responsive gap.
+None. The gap is the same at every width. A Hub page that is two columns at one width and one column at another uses `Grid twoColumn`, whose stacked gap is fixed (`grid.md`), not a responsive `Stack` gap.
 
 ## RTL behaviour
 
