@@ -16,6 +16,20 @@ changed text. Needs COHERE_API_KEY in .env at the repository root.
   python3 scripts/translate_catalogue.py --langs ur,ps   # some languages
   python3 scripts/translate_catalogue.py                 # everything still missing
   python3 scripts/translate_catalogue.py --redo          # the 'redo' items from the review
+
+Guides and essential numbers (S02.09) go through the same models, prompt and checks:
+
+  python3 scripts/translate_catalogue.py --content --init-files   # write the per-language files, no API call
+  python3 scripts/translate_catalogue.py --content                # translate new or changed text only
+  python3 scripts/translate_catalogue.py --content --langs zh,zh-Hant
+
+The English is data/catalogue/guides.json and numbers.json; the output is
+data/catalogue/translations/content/<lang>.json (see scripts/content_catalogue.py). A text is
+sent only when it has no translation or its English changed (the stored source hash no longer
+matches); a text any model fails stays null (English with translation.unavailable). zh-Hant is
+never translated: it is converted from zh with OpenCC (scripts/opencc_convert.mjs), recording
+the source hash, OpenCC version and configuration. Every new translation is "machine" until
+scripts/review_translations.py --content --mark-reviewed records a native reader's review.
 """
 import argparse
 import json
@@ -190,9 +204,11 @@ def chat(key, model, system, text):
     raise RuntimeError(f'{model}: gave up after repeated errors')
 
 
-def translate(key, lang, text, unavailable, avoid=None):
+def translate(key, lang, text, unavailable, avoid=None, strict_numbers=False):
     """Try each model on the route; return (record or None, list of attempt notes).
-    A model in `avoid` (it gave a bad translation before) is tried last, not first."""
+    A model in `avoid` (it gave a bad translation before) is tried last, not first.
+    With strict_numbers an answer that loses a number of the English (911!) is rejected like any
+    other bad answer, so the next model on the route is tried; otherwise it is returned with a warning."""
     attempts = []
     route = [m for m in ROUTES[lang] if m != avoid] + ([avoid] if avoid in ROUTES[lang] else [])
     for model in route:
@@ -213,6 +229,9 @@ def translate(key, lang, text, unavailable, avoid=None):
             continue
         record = {'source': text, 'text': out, 'model': model}
         lost = missing_numbers(text, out)
+        if lost and strict_numbers:
+            attempts.append(f'{model}: rejected (numbers missing from translation: {", ".join(lost)}) | output: {out[:400]}')
+            continue
         if lost:
             record['warnings'] = [f'numbers missing from translation: {", ".join(lost)}']
         return record, attempts
@@ -259,6 +278,47 @@ def probe(key, langs):
         print(f'{lang:4} {rec["model"] if rec else "FAILED":32} {rec["text"] if rec else ""}')
 
 
+def run_content(args):
+    """Translate the guides and essential numbers (S02.09); see the module docstring."""
+    import content_catalogue as cc  # noqa: E402  (same folder)
+
+    texts = cc.content_texts()
+    if not texts:
+        sys.exit('No guides or numbers found in data/catalogue (guides.json, numbers.json).')
+    langs = args.langs.split(',') if args.langs else list(cc.CONTENT_LANGS)
+    bad = [l for l in langs if l not in cc.CONTENT_LANGS]
+    if bad:
+        sys.exit(f'Unknown language code(s): {", ".join(bad)}')
+    model_langs = [l for l in langs if l in ROUTES]
+    key = None if args.init_files else api_key(args.key_var)
+    unavailable = set()
+    for lang in model_langs:
+        data = cc.load_content(lang, texts)
+        stale = data['staleDropped']
+        todo = [] if args.init_files else \
+            [k for k in texts if data['texts'][k] is None and (args.retry_failed or k not in data['failed'])]
+        print(f'{lang}: {sum(1 for r in data["texts"].values() if r)} translated, {len(data["moved"])} moved to a new key, '
+              f'{len(stale)} stale dropped, {len(todo)} to translate')
+
+        def work(k):
+            return k, translate(key, lang, texts[k], unavailable, strict_numbers=True)
+
+        with ThreadPoolExecutor(max_workers=args.workers) as pool:
+            for k, (rec, attempts) in pool.map(work, todo):
+                if rec:
+                    data['texts'][k] = cc.new_record(texts[k], rec['text'], rec['model'])
+                    data['failed'].pop(k, None)
+                else:
+                    data['failed'][k] = {'source': texts[k], 'attempts': attempts}
+        cc.save_content(lang, data)
+        if todo:
+            print(f'  {lang}: done, {sum(1 for r in data["texts"].values() if r)}/{len(texts)} translated, '
+                  f'{len(data["failed"])} failed')
+    if 'zh-Hant' in langs:
+        changed, kept, missing = cc.convert_zh_hant(texts)
+        print(f'zh-Hant: {changed} converted from zh, {kept} unchanged, {missing} without a zh translation (null)')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument('--langs', help='comma-separated language codes (default: all 14)')
@@ -269,7 +329,14 @@ def main():
     ap.add_argument('--failed-only', action='store_true', help='retry only texts that failed before')
     ap.add_argument('--key-var', default='COHERE_API_KEY', help='name of the API key variable in .env')
     ap.add_argument('--workers', type=int, default=4)
+    ap.add_argument('--content', action='store_true',
+                    help='translate the guides and essential numbers (data/catalogue/guides.json, numbers.json)')
+    ap.add_argument('--init-files', action='store_true',
+                    help='with --content: write the per-language files (null where untranslated) and drop stale '
+                         'entries, without calling any API')
     args = ap.parse_args()
+    if args.content:
+        return run_content(args)
 
     langs = args.langs.split(',') if args.langs else list(ROUTES)
     bad = [l for l in langs if l not in ROUTES]
