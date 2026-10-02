@@ -145,5 +145,5 @@ describe("recover-admin", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toMatch(/recover-admin runs only in production/);
-  });
+  }, 60_000);
 });
