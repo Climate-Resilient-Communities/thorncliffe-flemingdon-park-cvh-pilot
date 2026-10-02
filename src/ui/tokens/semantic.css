@@ -58,3 +58,21 @@
   --size-aside-staff: var(--app-aside-staff);
   --size-aside-staff-compact: var(--app-aside-staff-compact);
 }
+
+/*
+ * 3.4 Type. The generated --app-fs-* and --app-lh-* primitives switch per surface, basic mode and
+ * language, and a custom property that is a var() is substituted where it is declared and inherited as
+ * that value. These therefore apply to every element, so each one resolves against the primitives it
+ * inherits: text-body in a staff Screen, in basic mode or in a lang="ur" subtree follows them.
+ */
+:where(*) {
+  --type-caption-size: var(--app-fs-caption);
+  --type-body-size: var(--app-fs-body);
+  --type-alert-size: var(--app-fs-alert);
+  --type-lead-size: var(--app-fs-lead);
+  --type-h3-size: var(--app-fs-h3);
+  --type-h2-size: var(--app-fs-h2);
+  --type-h1-size: var(--app-fs-h1);
+  --type-body-line-height: var(--app-lh-body);
+  --type-tight-line-height: var(--app-lh-h2);
+}

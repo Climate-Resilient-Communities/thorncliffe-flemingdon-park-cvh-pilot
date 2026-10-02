@@ -1,0 +1,20 @@
+.ok {
+  gap: normal;
+  padding-inline: max(var(--gutter-resident), env(safe-area-inset-left));
+  margin: -0;
+  margin-block: -0px auto;
+  --card-inset: var(--gap-icon);
+  padding-block: var(--card-inset);
+  min-block-size: var(--tap);
+}
+
+.bad {
+  gap: var(--gap-icon, 13px);
+  margin-inline-start: calc(0px - var(--gap-icon));
+  margin-inline-end: calc(0 - var(--gap-icon));
+  padding: var(--size-icon);
+  --bad-inset: var(--size-icon);
+  padding-inline: var(--bad-inset);
+  padding-block: var(--tap, 1rem);
+  padding-inline-end: env(safe-area-inset-left, 12px);
+}

@@ -7,3 +7,8 @@
 [data-theme="dark"] {
   --surface: #002a45;
 }
+
+:root {
+  --app-fs-body: 18px;
+  --ink: #002a45;
+}

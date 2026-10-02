@@ -12,6 +12,15 @@
 /* Tailwind's `container` sizes itself by breakpoint; only the Hub shell reads the breakpoint (hub:). */
 @source not inline("container");
 
+/*
+ * The breakpoint and container tokens also make size utilities in Tailwind (max-w-hub-two-column,
+ * max-w-screen-hub) that compile to a literal 700px or 800px. 700 and 800 exist only in the two variants'
+ * queries (token-architecture.md section 7), so the plain and hub:/@hub-two-column: forms are blocked here,
+ * and check:layout rejects the names in any other form.
+ */
+@source not inline("{,hub:,@hub-two-column:}{w,min-w,max-w,basis,columns,inline,min-inline,max-inline}-hub-two-column");
+@source not inline("{,hub:,@hub-two-column:}{w,min-w,max-w}-screen-hub");
+
 /* Minimum touch target: 44px, 56px in basic mode (touch-target.md). --tap-current is in layout/tap.css. */
 @utility tap {
   min-block-size: var(--tap-current);

@@ -11,3 +11,8 @@
   --radius-card: var(--radius-card);
   background: var(--surface);
 }
+
+.copy {
+  font-size: var(--type-body-size);
+  color: var(--color-ink);
+}

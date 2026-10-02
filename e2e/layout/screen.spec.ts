@@ -1,7 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
-import { reserveActionsSpace } from "@/ui/layout/actions-space";
 import { box, checkHubShellBoundaries, computed, expectNoHorizontalOverflow, tokenPx } from "../helpers/hub-layout-boundaries";
-import { mount } from "../helpers/layout-fixture";
+import { mount, mountHydrated } from "../helpers/layout-fixture";
 
 const body = (page: Page) => page.locator(".layout-screen__body");
 const px = async (page: Page, property: string) => parseFloat(await computed(body(page), property));
@@ -137,13 +136,38 @@ test.describe("Screen actions", () => {
     }
   });
 
-  test("keep the focused field above them: tabbing to the last field scrolls it clear", async ({ page }) => {
+  test("ScreenActions reserves their block size as the scroll padding once hydrated, and not before", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 600 });
     await mount(page, "ActionsScreen", {});
+    expect(await page.evaluate(() => document.documentElement.style.scrollPaddingBlockEnd), "static markup runs no effect").toBe("");
+
+    await mountHydrated(page, "ActionsScreen", {});
+    const actions = page.getByRole("region", { name: "Approval actions" });
+    const height = (await box(actions)).height;
+
+    expect(height).toBeGreaterThan(0);
+    expect(await page.evaluate(() => document.documentElement.style.scrollPaddingBlockEnd)).toBe(`${height}px`);
+  });
+
+  test("ScreenActions keeps the reserved space in step when the actions region grows", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await mountHydrated(page, "ActionsScreen", {});
+    const actions = page.getByRole("region", { name: "Approval actions" });
+    const before = (await box(actions)).height;
+    await actions.evaluate((region) => {
+      const extra = document.createElement("div");
+      extra.style.blockSize = "40px";
+      region.append(extra);
+    });
+    await expect.poll(() => page.evaluate(() => document.documentElement.style.scrollPaddingBlockEnd)).toBe(`${before + 40}px`);
+  });
+
+  test("keep the focused field above them: tabbing to the last field scrolls it clear", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    // The hydrated fixture: ScreenActions' own effect reserves the space, nothing in the test does.
+    await mountHydrated(page, "ActionsScreen", {});
     const actions = page.getByRole("region", { name: "Approval actions" });
     const last = page.getByTestId("field-23");
-    // ScreenActions runs this on mount; the fixture is static HTML, so the test runs it.
-    await actions.evaluate(reserveActionsSpace);
     const height = (await box(actions)).height;
 
     expect(await page.evaluate(() => document.documentElement.style.scrollPaddingBlockEnd)).toBe(`${height}px`);

@@ -10,6 +10,7 @@ import {
   THEME_FILE,
   TOKENS_FILE,
   generate,
+  langSelectors,
   readInputs,
 } from "../scripts/gen-tokens.mjs";
 
@@ -92,17 +93,53 @@ describe("gen:tokens output", () => {
     }
   });
 
-  it("writes the line heights on :root and per language with :lang()", () => {
+  it("writes the line heights on :root and per language with :lang(), covering the app codes and their BCP-47 tags", () => {
     for (const token of tokens.type.lineHeights) {
       if (!token.languages) {
         expect(root.get(`--${token.name}`), token.name).toBe(String(token.value));
         continue;
       }
-      const selector = token.languages.map((language: string) => `:lang(${language})`).join(", ");
       const base = token.name.replace(/-(arabic|indic|chinese)$/, "");
-      expect(primitives.get(selector)?.get(`--${base}`), token.name).toBe(String(token.value));
+      const selector = [...primitives.keys()].find((candidate) => !candidate.includes("data-surface") && primitives.get(candidate)!.get(`--${base}`) === String(token.value) && candidate.startsWith(":lang("));
+      expect(selector, token.name).toBeDefined();
+      for (const language of token.languages as string[]) {
+        expect(selector!.split(", "), `${token.name}: ${language}`).toContain(`:lang(${language.split("-")[0]})`);
+      }
     }
-    expect(primitives.get(":lang(zh-Hans), :lang(zh-Hant)")?.has("--lh-tight")).toBe(false);
+    expect(primitives.has(":lang(zh)")).toBe(true);
+    expect(primitives.get(":lang(zh)")?.has("--lh-tight")).toBe(false);
+    expect(primitives.has(":lang(zh-Hans), :lang(zh-Hant)")).toBe(false);
+    expect(langSelectors(["ur", "ps", "prs"])).toEqual([":lang(ur)", ":lang(ps)", ":lang(prs)", ":lang(fa)"]);
+    expect(langSelectors(["zh-Hans", "zh-Hant"])).toEqual([":lang(zh)"]);
+    expect(langSelectors(["hi", "pa"])).toEqual([":lang(hi)", ":lang(pa)"]);
+  });
+
+  it("repeats the --app-lh-* mappings inside each :lang() block, and for the staff surface in compound selectors", () => {
+    const arabic = primitives.get(":lang(ur), :lang(ps), :lang(prs), :lang(fa)")!;
+    const arabicStaff = primitives.get(
+      ["ur", "ps", "prs", "fa"].flatMap((tag) => [`[data-surface="staff"]:lang(${tag})`, `[data-surface="staff"] :lang(${tag})`]).join(", "),
+    )!;
+
+    for (const role of ["caption", "body", "alert", "lead", "h3", "h2", "h1"]) {
+      expect(arabic.get(`--app-lh-${role}`), role).toBe(root.get(`--app-lh-${role}`));
+      expect(arabicStaff.get(`--app-lh-${role}`), role).toBe(primitives.get('[data-surface="staff"]')!.get(`--app-lh-${role}`));
+    }
+    // Arabic script replaces the staff body line height (owner decision, 2026-10-02); Indic and Chinese do not.
+    expect(arabic.get("--lh-body-staff")).toBe("1.9");
+    expect(primitives.get(":lang(hi), :lang(pa), :lang(gu), :lang(bn), :lang(ta)")!.has("--lh-body-staff")).toBe(false);
+    expect(primitives.get(":lang(zh)")!.has("--lh-body-staff")).toBe(false);
+  });
+
+  it("records in tokens.json that Arabic script applies on resident and staff screens and overrides lh-body-staff", () => {
+    const usage = (name: string): string => tokens.type.lineHeights.find((token: Token & { usage: string }) => token.name === name).usage;
+
+    expect(tokens.version).toBe(3);
+    expect(usage("lh-body-arabic")).toMatch(/resident and staff screens/);
+    expect(usage("lh-body-arabic")).toMatch(/overrides lh-body-staff/);
+    expect(usage("lh-tight-arabic")).toMatch(/resident and staff screens/);
+    expect(usage("lh-body-staff")).toMatch(/Arabic-script text .*overrides it/);
+    expect(usage("lh-body-staff")).toMatch(/Indic and Chinese text keep it/);
+    expect(tokens.type.lineHeights.find((token: Token) => token.name === "lh-body-staff").value).toBe(1.45);
   });
 
   it("does not generate the slides and documents spacing or type groups", () => {
@@ -126,6 +163,21 @@ describe("gen:tokens output", () => {
     expect(theme).toContain(`--breakpoint-hub: ${value("breakpoint", "app-breakpoint-hub")};`);
     expect(theme).toContain(`--container-hub-two-column: ${value("container", "app-container-hub-two-column-min")};`);
     expect(read(PRIMITIVES_FILE)).not.toMatch(/700px|800px/);
+  });
+
+  it("resets Tailwind's type scale and palette, and maps text-{role} to the semantic type tokens only", () => {
+    const text = [...theme.matchAll(/--text-([\w-]+): (.+);/g)].map(([, name, value]) => [name, value]);
+
+    expect(theme).toContain("--text-*: initial;");
+    expect(theme.indexOf("--color-*: initial;")).toBeGreaterThan(-1);
+    expect(theme.indexOf("--color-*: initial;")).toBeLessThan(theme.indexOf("--color-surface:"));
+    expect(text.map(([name]) => name)).toEqual(
+      ["caption", "body", "alert", "lead", "h3", "h2", "h1"].flatMap((role) => [role, `${role}--line-height`]),
+    );
+    for (const [name, value] of text) {
+      expect(value).toMatch(name.endsWith("--line-height") ? /^var\(--type-(body|tight)-line-height\)$/ : /^var\(--type-[\w-]+-size\)$/);
+    }
+    expect(text).toContainEqual(["h2--line-height", "var(--type-tight-line-height)"]);
   });
 
   it("maps Tailwind spacing to semantic tokens only and removes the default scale", () => {
@@ -173,6 +225,17 @@ describe("gen:tokens without a token it needs", () => {
     expect(() => generate(withoutToken(["container", "tokens"], "app-container-hub-two-column-min"))).toThrow(
       /"app-container-hub-two-column-min" \(decision G4\)/,
     );
+  });
+
+  it("fails when a group gives roles of one kind different line heights, or semantic.css lacks a type token", () => {
+    const changed = inputs();
+    const staff = changed.tokens.type.groups.find((group: { name: string }) => group.name === "Screens: staff");
+    staff.styles.find((style: { name: string }) => style.name === "screen-staff-h1").lineHeight = "lh-body";
+    expect(() => generate(changed)).toThrow(/h1 lh-body but h3 lh-tight; the tight line height must be one token/);
+
+    const noType = inputs();
+    noType.semanticCss = noType.semanticCss.replace("--type-h1-size", "--type-h1-sizes");
+    expect(() => generate(noType)).toThrow(/does not define --type-h1-size/);
   });
 
   it("fails on a type style whose line height tokens.json lacks", () => {

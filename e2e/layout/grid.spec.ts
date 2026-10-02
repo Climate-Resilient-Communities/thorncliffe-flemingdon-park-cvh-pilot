@@ -5,10 +5,12 @@ import {
   checkHubTwoColumnBoundaries,
   computed,
   contentWidth,
+  expectAsideStickiness,
   expectNoHorizontalOverflow,
   expectOneColumn,
   expectTwoColumns,
   hubPage,
+  setContentWidth,
   tokenPx,
 } from "../helpers/hub-layout-boundaries";
 import { mount } from "../helpers/layout-fixture";
@@ -100,7 +102,7 @@ test.describe("two-column Grid in a fixture hub-page container", () => {
         await expectOneColumn(grid(page));
         expect((await box(page.getByTestId("aside"))).width).toBe(799);
         expect(await computed(grid(page), "row-gap")).toBe("20px");
-        await expectNoHorizontalOverflow(page, hubPage(page));
+        await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
 
         await mount(page, "TwoColumnPage", { variant, labels, width: 800 }, { lang });
         expect(await contentWidth(hubPage(page))).toBe(800);
@@ -112,7 +114,7 @@ test.describe("two-column Grid in a fixture hub-page container", () => {
         expect(await computed(grid(page), "column-gap")).toBe(`${gap}px`);
         if (lang === "ur") expect(main.left, "main column at the right in RTL").toBeGreaterThan(side.left);
         else expect(main.left, "main column at the left").toBeLessThan(side.left);
-        await expectNoHorizontalOverflow(page, hubPage(page));
+        await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
       });
     }
   }
@@ -124,6 +126,38 @@ test.describe("two-column Grid in a fixture hub-page container", () => {
     expect(await page.evaluate(() => window.innerWidth)).toBe(1280);
     await expectOneColumn(grid(page));
   });
+
+  test("measures the container's fractional content width: 799.5px is one column and reported as 799.5", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await mount(page, "TwoColumnPage", { variant: "aside", labels: longestLabels("en"), width: 799.5 });
+
+    expect(await contentWidth(hubPage(page))).toBeCloseTo(799.5, 2);
+    expect(await hubPage(page).evaluate((element) => element.clientWidth), "clientWidth rounds, which is why it is not used").toBeGreaterThanOrEqual(
+      Math.round(799.5 + 48),
+    );
+    await expectOneColumn(grid(page));
+    await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
+
+    await mount(page, "TwoColumnPage", { variant: "aside", labels: longestLabels("en"), width: 800.5 });
+    expect(await contentWidth(hubPage(page))).toBeCloseTo(800.5, 2);
+    await expectTwoColumns(grid(page));
+  });
+
+  for (const { variant, sticky } of [
+    { variant: "aside" as const, sticky: true },
+    { variant: "aside-compact" as const, sticky: false },
+    { variant: "even" as const, sticky: false },
+    { variant: "even-inner" as const, sticky: false },
+  ]) {
+    test(`${variant}: the aside ${sticky ? "stays at its sticky offset while the page scrolls" : "is not sticky and scrolls away"}`, async ({ page }) => {
+      await page.setViewportSize({ width: 1280, height: 500 });
+      await mount(page, "TwoColumnPage", { variant, labels: longestLabels("en"), tall: true, width: 800 });
+
+      await expectTwoColumns(grid(page));
+      expect(await computed(page.getByTestId("aside"), "inset-block-start")).toBe(sticky ? "0px" : "auto");
+      await expectAsideStickiness(grid(page));
+    });
+  }
 
   test("keeps the actions in Screen's actions slot in both layouts", async ({ page }) => {
     for (const width of [799, 800]) {
@@ -152,6 +186,51 @@ test.describe("two-column Grid in a fixture hub-page container", () => {
   });
 });
 
+test.describe("the shared boundary helper's negative tests", () => {
+  test("fails when the switch is a viewport query that agrees at 799/800 of content width but not at a 1280px viewport", async ({ page }) => {
+    // Content width + the 24px page insets = 848px of viewport: the 799/800 loop cannot tell the switches apart.
+    const viewportSwitch = `@media (width >= 848px) {
+      .layout-grid[data-two-column="aside"] { grid-template-columns: minmax(0, 1fr) var(--size-aside-staff); gap: var(--gap-columns-hub); }
+    }`;
+    const open = (frameCss: string) => (lang: "en" | "ur") =>
+      mount(page, "TwoColumnPage", { variant: "aside", labels: longestLabels(lang) }, { lang, frameCss });
+
+    // Without the final step the viewport switch passes the loop; the helper's 1280px / 799px step is what fails it.
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(viewportSwitch)("en");
+    await setContentWidth(page, 799);
+    await expectOneColumn(grid(page));
+    await setContentWidth(page, 800);
+    await expectTwoColumns(grid(page));
+
+    const check = checkHubTwoColumnBoundaries(page, { open: open(viewportSwitch), languages: ["en"] });
+    await expect(check).rejects.toThrow(/one column track/);
+  });
+
+  test("fails when a token in the main column runs under the aside", async ({ page }) => {
+    // Without wrapping, the unbreakable token overflows its cell, under the next column.
+    const noWrapping = `.layout-grid > * { overflow-wrap: normal; min-inline-size: auto; }`;
+    const check = checkHubTwoColumnBoundaries(page, {
+      open: (lang) => mount(page, "TwoColumnPage", { variant: "aside", labels: longestLabels(lang) }, { lang, frameCss: noWrapping }),
+      languages: ["en"],
+    });
+
+    await expect(check).rejects.toThrow(/grid cell 1 scrollWidth <= clientWidth/);
+  });
+
+  test("passes the same pages with the primitives' own wrapping, for the unbreakable token of each language", async ({ page }) => {
+    for (const lang of ["en", "ur"] as const) {
+      const labels = longestLabels(lang);
+      expect(labels.unbreakable.length, lang).toBeGreaterThanOrEqual(160);
+      expect(labels.unbreakable, lang).not.toMatch(/\s/);
+      await page.setViewportSize({ width: 1280, height: 800 });
+      await mount(page, "TwoColumnPage", { variant: "aside", labels, width: 800 }, { lang });
+      await expectTwoColumns(grid(page));
+      await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
+    }
+  });
+});
+
 test.describe("two-column Grid in the Hub shell", () => {
   for (const { variant, gap } of [
     { variant: "aside" as const, gap: 28 },
@@ -171,7 +250,7 @@ test.describe("two-column Grid in the Hub shell", () => {
             expect(await computed(grid(page), "column-gap")).toBe(`${gap}px`);
           }
           await expect(page.getByRole("region", { name: "Approval" }).getByRole("button")).toBeVisible();
-          await expectNoHorizontalOverflow(page, hubPage(page));
+          await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
         }
       });
     }

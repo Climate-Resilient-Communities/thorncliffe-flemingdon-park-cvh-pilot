@@ -1,3 +1,9 @@
 :root {
   --gap-icon: var(--app-space-5);
 }
+
+:root {
+  --gutter-resident: var(--app-space-8);
+  --size-icon: var(--app-icon);
+  --tap: var(--app-tap);
+}

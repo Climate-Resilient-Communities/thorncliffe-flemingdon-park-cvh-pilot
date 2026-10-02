@@ -5,6 +5,9 @@
   --breakpoint-*: initial;
   --container-*: initial;
   --radius-*: initial;
+  /* Tailwind's default type scale (text-lg) and palette (bg-red-500) are removed as well. */
+  --text-*: initial;
+  --color-*: initial;
 
   /* app-breakpoint-hub: variant hub:, the Hub shell only (viewport) */
   --breakpoint-hub: 700px;
@@ -45,6 +48,22 @@
   --spacing-align-icon: var(--offset-align-icon);
   --spacing-tap: var(--tap);
   --spacing-tap-basic: var(--tap-basic);
+
+  /* Type (text-body, text-h2): semantic type tokens only (section 3.4). */
+  --text-caption: var(--type-caption-size);
+  --text-caption--line-height: var(--type-body-line-height);
+  --text-body: var(--type-body-size);
+  --text-body--line-height: var(--type-body-line-height);
+  --text-alert: var(--type-alert-size);
+  --text-alert--line-height: var(--type-body-line-height);
+  --text-lead: var(--type-lead-size);
+  --text-lead--line-height: var(--type-body-line-height);
+  --text-h3: var(--type-h3-size);
+  --text-h3--line-height: var(--type-tight-line-height);
+  --text-h2: var(--type-h2-size);
+  --text-h2--line-height: var(--type-tight-line-height);
+  --text-h1: var(--type-h1-size);
+  --text-h1--line-height: var(--type-tight-line-height);
 
   /* Radius (rounded-card). `reference` keeps Tailwind from emitting these as variables, so
      --radius-card: var(--radius-card) is never declared and cannot be circular. */

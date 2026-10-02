@@ -3,3 +3,6 @@
 
 /* Tailwind generates utilities only for classes used in src/. */
 @source "../";
+/* Unit tests describe classes rather than use them: their strings add no CSS (check:spacing skips them for that reason). */
+@source not "../**/*.test.*";
+@source not "../**/*.spec.*";

@@ -37,6 +37,29 @@ describe("Tailwind 4.3.3 with the CVH theme", () => {
     },
   );
 
+  it.each(["text-lg", "text-base", "text-sm", "text-xl", "text-2xl", "bg-red-500", "text-blue-600", "border-gray-200", "bg-white", "bg-black"])(
+    "produces no CSS for Tailwind's default type scale and palette: %s",
+    (utility) => {
+      expect(rules.has(utility)).toBe(false);
+    },
+  );
+
+  it.each([
+    ["text-body", "var(--type-body-size)", "var(--type-body-line-height)"],
+    ["text-caption", "var(--type-caption-size)", "var(--type-body-line-height)"],
+    ["text-alert", "var(--type-alert-size)", "var(--type-body-line-height)"],
+    ["text-lead", "var(--type-lead-size)", "var(--type-body-line-height)"],
+    ["text-h3", "var(--type-h3-size)", "var(--type-tight-line-height)"],
+    ["text-h2", "var(--type-h2-size)", "var(--type-tight-line-height)"],
+    ["text-h1", "var(--type-h1-size)", "var(--type-tight-line-height)"],
+  ])("compiles %s to the semantic type tokens", (utility, size, lineHeight) => {
+    const declarations = rules.get(utility)?.declarations ?? "";
+
+    expect(declarations).toContain(`font-size: ${size}`);
+    expect(declarations).toContain(lineHeight);
+    expect(declarations).not.toContain("--app-");
+  });
+
   it("generates no utility for the layout primitives' class names", () => {
     for (const name of ["layout-screen", "layout-stack", "layout-inline", "layout-grid"]) expect(rules.has(name), name).toBe(false);
   });
@@ -86,6 +109,28 @@ describe("Tailwind 4.3.3 with the CVH theme", () => {
 
   it("still compiles arbitrary values, which is why the spacing check rejects them", () => {
     expect(rules.get("p-[13px]")?.declarations).toBe("padding: 13px");
+  });
+
+  it.each([
+    "w-hub-two-column",
+    "max-w-hub-two-column",
+    "min-w-hub-two-column",
+    "basis-hub-two-column",
+    "columns-hub-two-column",
+    "inline-hub-two-column",
+    "max-inline-hub-two-column",
+    "min-inline-hub-two-column",
+    "hub:max-w-hub-two-column",
+    "hub:min-w-hub-two-column",
+    "@hub-two-column:w-hub-two-column",
+    "@hub-two-column:max-w-hub-two-column",
+    "max-w-screen-hub",
+    "w-screen-hub",
+    "min-w-screen-hub",
+    "hub:max-w-screen-hub",
+    "@hub-two-column:max-w-screen-hub",
+  ])("compiles no size utility from the breakpoint or container token, which would carry a literal 700px or 800px: %s", (utility) => {
+    expect(rules.has(utility)).toBe(false);
   });
 
   it("emits 700px and 800px only in the two variants' queries", () => {

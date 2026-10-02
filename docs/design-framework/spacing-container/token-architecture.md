@@ -180,6 +180,24 @@ Resident content has no maximum inline size: it fills the shell at every width (
 | `--size-reading` | Resident content stays uncapped (G5) |
 | `--rule-length`, `--rule-thickness`, `--bar-thickness` | Slide and document decorations; no pilot screen uses them (the prototype's `.cvh-rule` is a 1px border) |
 
+### 3.4 Type
+
+Components reach the generated type primitives (`--app-fs-*`, `--app-lh-*`) only through these tokens (decision of the design owner, 2026-10-02). The primitives switch per surface (resident, staff), basic mode and language, so each token follows them; Tailwind exposes them as `text-{role}` with the role's line height (`--text-{role}`, `--text-{role}--line-height`), and Tailwind's own type scale (`text-lg`, `text-base`) and colour palette (`bg-red-500`) are removed.
+
+| Semantic token | Resolves to | Job |
+| --- | --- | --- |
+| `--type-caption-size` | `var(--app-fs-caption)` | Font size of captions and fine print (`text-caption`) |
+| `--type-body-size` | `var(--app-fs-body)` | Font size of body text (`text-body`) |
+| `--type-alert-size` | `var(--app-fs-alert)` | Font size of alert text (`text-alert`) |
+| `--type-lead-size` | `var(--app-fs-lead)` | Font size of lead paragraphs (`text-lead`) |
+| `--type-h3-size` | `var(--app-fs-h3)` | Font size of third-level headings (`text-h3`) |
+| `--type-h2-size` | `var(--app-fs-h2)` | Font size of second-level headings (`text-h2`) |
+| `--type-h1-size` | `var(--app-fs-h1)` | Font size of page titles (`text-h1`) |
+| `--type-body-line-height` | `var(--app-lh-body)` | Line height of caption, body, alert and lead text; follows the surface and the script (section 6) |
+| `--type-tight-line-height` | `var(--app-lh-h2)` | Line height of H3, H2 and H1; follows the script. The generator fails if the three roles ever take different line-height tokens |
+
+A custom property that is a `var()` is substituted where it is declared and inherited as that value, so these tokens are declared for every element (`:where(*)` in `semantic.css`) and read the primitives that element inherits. The generator also repeats the `--app-lh-*` mappings inside the `:lang()` blocks, so a `lang` subtree inside a page gets its script's line height.
+
 ## 4. Layer 3: component tokens
 
 Component tokens are declared next to the component and alias layer 2. Examples of the pattern (names only; values follow from layer 2):
@@ -226,7 +244,7 @@ Rule: a component token name starts with the component's file name (`--screen-�
 | No 3- or 4-value shorthands | `padding: 6px 10px 6px var(--gutter)` (prototype `.cvh-rhead__top`) is physical on the inline axis and needed a `[dir="rtl"]` override. Write `padding-block` plus `padding-inline-start` and `padding-inline-end` instead. The 1- and 2-value forms are allowed because they are symmetric. |
 | No directional box-shadow | `box-shadow: inset 3px 0 0` (prototype `.cvh-side__item.is-active`) needed a `[dir="rtl"]` override. Use `border-inline-start` for a side indicator. Block-axis shadows (`inset 0 3px 0`) are allowed. |
 | Mirrored icons | Direction icons mirror, media and clock icons do not (prototype `cvh.css` rule on `.cvh-ico--arrow` and others). This is an icon rule, not a spacing one; listed because it is the only `[dir="rtl"]` rule that stays. |
-| Line height by script | `tokens.json` → `type.lineHeights` (G10): default body 1.5 and tight 1.25; staff body 1.45; Arabic script (`ur`, `ps`, `prs`) body 1.9 and tight 1.6; Indic (`hi`, `pa`, `gu`, `bn`, `ta`) body 1.75 and tight 1.45; Chinese (`zh-Hans` and `zh-Hant`) body 1.7, tight 1.25. This changes block size, not spacing tokens. Stacks must not assume a fixed row height. |
+| Line height by script | `tokens.json` → `type.lineHeights` (G10): default body 1.5 and tight 1.25; staff body 1.45; Arabic script (`ur`, `ps`, `prs`) body 1.9 and tight 1.6 on resident and staff screens alike (overriding the staff body 1.45); Indic (`hi`, `pa`, `gu`, `bn`, `ta`) body 1.75 and tight 1.45, and Chinese (`zh-Hans` and `zh-Hant`) body 1.7 and tight 1.25, on resident screens, with the staff body 1.45 kept on staff screens. The `:lang()` selectors cover the app codes and their BCP-47 tags (`zh` covers `zh-Hans` and `zh-Hant`; `prs` is also `fa`, e.g. `fa-AF`; `pa` covers `pa-Guru`). This changes block size, not spacing tokens. Stacks must not assume a fixed row height. |
 | Fonts | Only the active language's Noto subset is loaded (AD-16, S02.02). Spacing does not change by font. |
 
 ### Tailwind utilities allowed for direction-sensitive spacing
@@ -396,3 +414,4 @@ Decided by the design owner on 2026-10-02; recorded in `tokens.json` version 3. 
 - The 800px container rule also applies to O-01, O-06, O-12 and O-14, which keep their existing column proportions.
 - `--gap-subline` (2px), `--gap-tight` (6px) and `--gap-related` (8px) name the 2, 6 and 8px steps; the home-tile grid gap is 10px; the slide-only decorations (`--rule-length`, `--rule-thickness`, `--bar-thickness`) are not generated for the app; check-in mark buttons are 8px apart.
 - The prototype is preserved for the remaining differences: list-row metadata keeps a 4px row gap and the disruption type grid a 14px row gap (`--gap-meta-block`, `--gap-type-grid-block`; their items are text, not targets, so the 8px target spacing does not apply); the equal-column blocks inside O-06 and O-12 keep 10px; each Hub screen with its own maximum keeps it as a named variant (O-06 960px, O-11 920px, O-14 and O-15 980px, O-16 900px), and 1040px is the default only where no screen-specific maximum exists. O-18 stays out of the pilot.
+- Staff screens: Arabic-script text uses body 1.9 and tight 1.6 like resident screens; Indic and Chinese text keep the staff body 1.45 (2026-10-02).

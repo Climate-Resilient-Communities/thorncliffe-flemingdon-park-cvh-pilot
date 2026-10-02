@@ -43,6 +43,14 @@ const BUILD_TIME = [
   },
 ];
 
+// Semantic type tokens (section 3.4): role -> which line height it takes. Each role is --type-{role}-size
+// (and --text-{role} in Tailwind); the line heights are --type-body-line-height and --type-tight-line-height.
+const TYPE_ROLES = { caption: "body", body: "body", alert: "body", lead: "body", h3: "tight", h2: "tight", h1: "tight" };
+
+// Arabic-script text uses body 1.9 / tight 1.6 on staff screens too, so lh-body-arabic also replaces
+// lh-body-staff (owner decision of 2026-10-02, section 11); Indic and Chinese keep lh-body-staff.
+const STAFF_BODY_OVERRIDES = { "lh-body-arabic": "lh-body-staff" };
+
 // Tokens a primitive or the tap rule needs even before semantic.css names them.
 const REQUIRED = ["app-tap", "app-tap-basic"];
 
@@ -109,17 +117,45 @@ function typeSets(tokens) {
       throw new TokenError(`"${TYPE_GROUPS[index].name}" does not have the same roles as "${TYPE_GROUPS[0].name}" (${roles})`);
     }
   });
-  return sets.map((set) =>
+  // Semantic type tokens name two line heights, body and tight (section 3.4); a role's line height must
+  // be the same token in every group, or one semantic token could not stand for it.
+  sets.forEach((set, index) => {
+    for (const { role, lineHeight } of set) {
+      const kind = TYPE_ROLES[role];
+      if (!kind) throw new TokenError(`Type role "${role}" in "${TYPE_GROUPS[index].name}" has no semantic type token (section 3.4)`);
+      const first = set.find((style) => TYPE_ROLES[style.role] === kind);
+      if (first.lineHeight !== lineHeight) {
+        throw new TokenError(
+          `"${TYPE_GROUPS[index].name}" gives ${role} ${lineHeight} but ${first.role} ${first.lineHeight}; the ${kind} line height must be one token`,
+        );
+      }
+    }
+  });
+  const flat = sets.map((set) =>
     set.flatMap(({ role, fontSize, lineHeight }) => [
       [`app-fs-${role}`, fontSize],
       [`app-lh-${role}`, `var(--${lineHeight})`],
     ]),
   );
+  // The line-height mappings are repeated inside :lang() blocks, which must not change basic mode's.
+  const lh = (entries) => entries.filter(([name]) => name.startsWith("app-lh-"));
+  if (JSON.stringify(lh(flat[0])) !== JSON.stringify(lh(flat[1]))) {
+    throw new TokenError(`"${TYPE_GROUPS[1].name}" line heights differ from "${TYPE_GROUPS[0].name}"; :lang() blocks assume they match`);
+  }
+  return flat;
+}
+
+// Selectors for an app LangCode: :lang() matches by BCP-47 prefix, so a region or script subtag
+// (zh-Hans, pa-Guru) is covered by its primary subtag; Dari is prs in the app and fa-AF as a tag.
+const LANG_ALIASES = { prs: ["prs", "fa"] };
+export function langSelectors(languages) {
+  const tags = languages.flatMap((language) => LANG_ALIASES[language] ?? [language.split("-")[0]]);
+  return [...new Set(tags)].map((tag) => `:lang(${tag})`);
 }
 
 // Line heights by script: a token with `languages` overrides the token whose name it extends
 // (lh-body-arabic -> lh-body) for those languages (G10).
-function lineHeightBlocks(tokens) {
+function lineHeightBlocks(tokens, resident, staff) {
   const all = list(tokens, "type.lineHeights");
   const base = all.filter((token) => !token.languages);
   const byLanguages = new Map();
@@ -130,17 +166,29 @@ function lineHeightBlocks(tokens) {
     if (!target) throw new TokenError(`Line height "${token.name}" extends no line height without languages`);
     const key = token.languages.join(",");
     if (!byLanguages.has(key)) byLanguages.set(key, { languages: token.languages, entries: [] });
-    byLanguages.get(key).entries.push([target.name, String(token.value), token.name]);
+    const entries = byLanguages.get(key).entries;
+    entries.push([target.name, String(token.value), token.name]);
+    const staffTarget = STAFF_BODY_OVERRIDES[token.name];
+    if (staffTarget) {
+      if (!base.some((candidate) => candidate.name === staffTarget)) throw missing(staffTarget, `the staff override of "${token.name}"`);
+      entries.push([staffTarget, String(token.value), token.name]);
+    }
   }
+  const mapping = (set) => set.filter(([name]) => name.startsWith("app-lh-"));
   return {
     root: base.map((token) => [token.name, String(token.value)]),
-    languages: [...byLanguages.values()].map(({ languages, entries }) =>
-      block(
-        languages.map((language) => `:lang(${language})`).join(", "),
-        `type.lineHeights: ${entries.map(([, , name]) => name).join(", ")}`,
-        entries.map(([name, value]) => [name, value]),
-      ),
-    ),
+    // A custom property that is a var() is substituted where it is declared and inherited as that value, so
+    // the --app-lh-* mappings are declared again wherever --lh-* changes: in the :lang() block (a lang
+    // subtree inside a page), and for the staff surface in the compound selectors that beat [data-surface].
+    languages: [...byLanguages.values()].flatMap(({ languages, entries }) => {
+      const selectors = langSelectors(languages);
+      const staffSelectors = selectors.flatMap((selector) => [`${STAFF_SELECTOR}${selector}`, `${STAFF_SELECTOR} ${selector}`]);
+      const note = `type.lineHeights: ${[...new Set(entries.map(([, , name]) => name))].join(", ")}`;
+      return [
+        block(selectors.join(", "), note, [...entries.map(([name, value]) => [name, value]), ...mapping(resident)]),
+        block(staffSelectors.join(", "), `${note}, on the staff surface`, mapping(staff)),
+      ];
+    }),
   };
 }
 
@@ -174,7 +222,7 @@ export function buildPrimitives(tokens) {
     return token.value[theme];
   };
   const [resident, basic, staff] = typeSets(tokens);
-  const lineHeights = lineHeightBlocks(tokens);
+  const lineHeights = lineHeightBlocks(tokens, resident, staff);
 
   const root = [
     "  /* spacing.app (G1) */",
@@ -233,6 +281,19 @@ export function checkReferences(primitivesCss, sources) {
   }
 }
 
+// --text-{role} and --text-{role}--line-height for every --type-{role}-size in semantic.css.
+function typeLines(semanticCss) {
+  const names = new Set(customProperties(semanticCss, SEMANTIC_FILE).map((property) => property.name));
+  const need = (name) => {
+    if (!names.has(name)) throw new TokenError(`${SEMANTIC_FILE} does not define --${name}, needed by the Tailwind text-${name.split("-")[1]} utility (section 3.4)`);
+  };
+  return Object.entries(TYPE_ROLES).flatMap(([role, kind]) => {
+    need(`type-${role}-size`);
+    need(`type-${kind}-line-height`);
+    return [`  --text-${role}: var(--type-${role}-size);`, `  --text-${role}--line-height: var(--type-${kind}-line-height);`];
+  });
+}
+
 /** Tailwind @theme (theme.generated.css): resets, the two build-time literals and the token mappings. */
 export function buildTheme(tokens, semanticCss) {
   const buildTime = BUILD_TIME.map(({ group, token, theme, note }) => {
@@ -255,11 +316,17 @@ export function buildTheme(tokens, semanticCss) {
     "  --breakpoint-*: initial;",
     "  --container-*: initial;",
     "  --radius-*: initial;",
+    "  /* Tailwind's default type scale (text-lg) and palette (bg-red-500) are removed as well. */",
+    "  --text-*: initial;",
+    "  --color-*: initial;",
     "",
     ...buildTime,
     "",
     "  /* Spacing utilities (gap-icon, p-card, ps-gutter): semantic tokens only, never primitives. */",
     ...[...spacing].map(([utility, name]) => `  --spacing-${utility}: var(--${name});`),
+    "",
+    "  /* Type (text-body, text-h2): semantic type tokens only (section 3.4). */",
+    ...typeLines(semanticCss),
     "",
     "  /* Radius (rounded-card). `reference` keeps Tailwind from emitting these as variables, so",
     "     --radius-card: var(--radius-card) is never declared and cannot be circular. */",

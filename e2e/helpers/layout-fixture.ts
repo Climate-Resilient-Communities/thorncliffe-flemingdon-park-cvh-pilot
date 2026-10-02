@@ -45,6 +45,41 @@ async function loadRenderer(): Promise<Render> {
   return bundle.exports.render;
 }
 
+// The same fixtures with their client code running: bundled for the browser, hydrated over the server
+// markup. Only effects (such as ScreenActions') need it; everything else uses the static `mount`.
+let clientBundle: Promise<string> | undefined;
+
+async function loadClientBundle(): Promise<string> {
+  const result = await build({
+    stdin: {
+      contents: `
+        import { createElement, useEffect } from "react";
+        import { hydrateRoot } from "react-dom/client";
+        import * as fixtures from "./e2e/layout/fixtures";
+        function Hydrated({ children }) {
+          // A parent's effects run after its children's: when this is set, every fixture effect has run.
+          useEffect(() => void (document.documentElement.dataset.hydrated = "true"), []);
+          return children;
+        }
+        window.__hydrate = (name, props) =>
+          hydrateRoot(document.getElementById("root"), createElement(Hydrated, null, createElement(fixtures[name], props)));
+      `,
+      resolveDir: ROOT,
+      loader: "tsx",
+    },
+    bundle: true,
+    platform: "browser",
+    format: "iife",
+    jsx: "automatic",
+    tsconfig: path.join(ROOT, "tsconfig.json"),
+    define: { "process.env.NODE_ENV": '"production"' },
+    minify: true,
+    write: false,
+    logLevel: "silent",
+  });
+  return result.outputFiles[0].text;
+}
+
 type FixtureName = keyof typeof Fixtures;
 
 export type MountOptions = {
@@ -54,6 +89,14 @@ export type MountOptions = {
   frameCss?: string;
 };
 
+function documentFor(html: string, css: string, { lang = "en", basic = false, frameCss = "" }: MountOptions = {}) {
+  const attributes = [`lang="${lang}"`, `dir="${RTL.has(lang) ? "rtl" : "ltr"}"`, basic ? 'data-basic="true"' : ""].join(" ");
+  return (
+    `<!doctype html><html ${attributes}><head><meta charset="utf-8"><style>${css}</style>` +
+    `<style>${frameCss}</style></head><body>${html}</body></html>`
+  );
+}
+
 export async function mount<Name extends FixtureName>(
   page: Page,
   name: Name,
@@ -61,9 +104,20 @@ export async function mount<Name extends FixtureName>(
   { lang = "en", basic = false, frameCss = "" }: MountOptions = {},
 ) {
   const render = await (renderer ??= loadRenderer());
-  const attributes = [`lang="${lang}"`, `dir="${RTL.has(lang) ? "rtl" : "ltr"}"`, basic ? 'data-basic="true"' : ""].join(" ");
-  await page.setContent(
-    `<!doctype html><html ${attributes}><head><meta charset="utf-8"><style>${await appCss()}</style>` +
-      `<style>${frameCss}</style></head><body>${render(name, props)}</body></html>`,
-  );
+  await page.setContent(documentFor(render(name, props), await appCss(), { lang, basic, frameCss }));
+}
+
+/** Like `mount`, then hydrates the fixture in the page and waits until its effects have run. */
+export async function mountHydrated<Name extends FixtureName>(
+  page: Page,
+  name: Name,
+  props: ComponentProps<(typeof Fixtures)[Name]>,
+  options: MountOptions = {},
+) {
+  const render = await (renderer ??= loadRenderer());
+  const html = `<div id="root" style="display: contents">${render(name, props)}</div>`;
+  await page.setContent(documentFor(html, await appCss(), options));
+  await page.addScriptTag({ content: await (clientBundle ??= loadClientBundle()) });
+  await page.evaluate(([fixture, fixtureProps]) => (window as unknown as { __hydrate: (n: string, p: unknown) => void }).__hydrate(fixture, fixtureProps), [name, props] as const);
+  await page.locator("html[data-hydrated]").waitFor({ state: "attached" });
 }

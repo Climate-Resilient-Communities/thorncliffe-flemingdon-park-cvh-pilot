@@ -41,10 +41,53 @@ describe("spacing check", () => {
     ]);
   });
 
+  it("accepts gap: normal, env(safe-area-inset-*) in max(), -0, component tokens over spacing tokens and --tap", () => {
+    expect(findings(problems, "src/ui/hardening.css").filter(({ line }) => line < 10)).toEqual([]);
+  });
+
+  it("rejects literal var() fallbacks, calc(0 - …) negatives, size tokens and component tokens over non-spacing tokens", () => {
+    expect(findings(problems, "src/ui/hardening.css")).toEqual([
+      { line: 12, message: expect.stringContaining("literal fallback 13px in var(--gap-icon, 13px)") },
+      { line: 13, message: 'negative margin "margin-inline-start: calc(0px - var(--gap-icon))"' },
+      { line: 14, message: 'negative margin "margin-inline-end: calc(0 - var(--gap-icon))"' },
+      { line: 15, message: expect.stringContaining("--size-icon in \"padding\" is not an approved spacing token") },
+      { line: 17, message: expect.stringContaining("--bad-inset in \"padding-inline\" is not an approved spacing token") },
+      { line: 18, message: expect.stringContaining("literal fallback 1rem in var(--tap, 1rem)") },
+      { line: 19, message: expect.stringContaining("literal fallback 12px in env(safe-area-inset-left, 12px)") },
+    ]);
+  });
+
+  it("checks quoted and kebab-case style keys and flags non-literal identifier values, not types", () => {
+    expect(findings(problems, "src/app/style-keys.tsx")).toEqual([
+      { line: 3, message: 'negative margin "margin-top: -4px"' },
+      { line: 5, message: expect.stringContaining("literal length 13px in \"padding-left: 13px\"") },
+      { line: 7, message: expect.stringContaining('"size" is not a literal in style "padding"; use a spacing token or a spacing-exception') },
+      { line: 9, message: expect.stringContaining('"props.gap" is not a literal in style "rowGap"') },
+    ]);
+  });
+
+  it("rejects the 1px utilities (p-px, gap-x-px, hub:ms-px, space-y-px), negative utilities with their own message, and (--app-*) shorthand", () => {
+    expect(findings(problems, "src/app/utilities.tsx")).toEqual([
+      { line: 1, message: expect.stringContaining('"p-px"') },
+      { line: 1, message: expect.stringContaining('"gap-x-px"') },
+      { line: 1, message: expect.stringContaining('"ms-px"') },
+      { line: 1, message: expect.stringContaining('"space-y-px"') },
+      { line: 1, message: expect.stringContaining('"mt-px"') },
+      { line: 3, message: 'negative margin utility "-mt-px"' },
+      { line: 3, message: 'negative margin utility "-mbs-2"' },
+      { line: 3, message: 'negative margin utility "-mbs-2"' },
+      { line: 3, message: 'negative margin utility "-mbe-3"' },
+      { line: 5, message: expect.stringContaining('primitive --app-tap via "w-(--app-tap)"') },
+      { line: 5, message: expect.stringContaining('primitive --app-lh-body via "hub:leading-(--app-lh-body)"') },
+      { line: 5, message: expect.stringContaining('arbitrary spacing class "gap-(--gap-icon)"') },
+    ]);
+  });
+
   it("allows a line with a reviewed spacing-exception comment and lists it", () => {
     expect(problems.map((problem) => problem.file)).not.toContain("src/ui/exception.css");
     expect(exceptions).toEqual([
       expect.objectContaining({ file: "src/app/arbitrary.tsx", line: 11, reason: "optical alignment approved in review" }),
+      expect.objectContaining({ file: "src/app/style-keys.tsx", line: 13, reason: "measured at runtime" }),
       expect.objectContaining({ file: "src/ui/exception.css", line: 2, reason: "centres the map pin's image on its point" }),
     ]);
   });
@@ -59,7 +102,7 @@ describe("spacing check", () => {
 
     expect(code).toBe(1);
     expect(output).toContain('src/app/arbitrary.tsx:1: arbitrary spacing class "p-[13px]"');
-    expect(output).toContain("Reviewed spacing exceptions (2):");
+    expect(output).toContain("Reviewed spacing exceptions (3):");
   });
 });
 
@@ -67,7 +110,7 @@ describe("layout literal check", () => {
   const { problems } = checkLayout(readSources(fixture("layout-check")));
 
   it("rejects 700px and 800px in media and container queries, in CSS, strings and arbitrary variants", () => {
-    expect(problems).toEqual([
+    expect(problems.filter(({ file }) => !file.endsWith("variants.css") && !file.endsWith("units.tsx") && !file.endsWith("sizes.tsx"))).toEqual([
       { file: "src/app/(resident)/home/page.tsx", line: 5, message: expect.stringContaining("Grid twoColumn is for Hub pages only") },
       { file: "src/app/(resident)/home/page.tsx", line: 6, message: expect.stringContaining('"min-[700px]"') },
       { file: "src/app/(resident)/home/page.tsx", line: 7, message: expect.stringContaining('"@min-[800px]"') },
@@ -77,12 +120,43 @@ describe("layout literal check", () => {
     ]);
   });
 
+  it("catches @custom-variant and @apply queries, 700.0px, rem and em equivalents and any letter case in CSS", () => {
+    expect(problems.filter(({ file }) => file.endsWith("variants.css")).map(({ line, message }) => ({ line, message }))).toEqual([
+      { line: 1, message: expect.stringContaining("@media (min-width: 700px)") },
+      { line: 4, message: expect.stringContaining("@media(min-width:700px)") },
+      { line: 7, message: expect.stringContaining("700.0px") },
+      { line: 13, message: expect.stringContaining("43.75rem") },
+      { line: 19, message: expect.stringContaining("50em") },
+      { line: 25, message: expect.stringContaining("800PX") },
+    ]);
+  });
+
+  it("catches rem, em, decimal and upper-case literals in arbitrary variants and query strings, and leaves other widths alone", () => {
+    expect(problems.filter(({ file }) => file.endsWith("units.tsx")).map(({ line, message }) => ({ line, message }))).toEqual([
+      { line: 1, message: expect.stringContaining('"min-[43.75rem]"') },
+      { line: 1, message: expect.stringContaining('"@min-[50em]"') },
+      { line: 3, message: expect.stringContaining('"MIN-[700PX]"') },
+      { line: 5, message: expect.stringContaining("700.0px") },
+      { line: 7, message: expect.stringContaining("50rem") },
+    ]);
+  });
+
+  it("rejects size utilities from the hub breakpoint and container tokens, which compile to a literal 700px or 800px", () => {
+    expect(problems.filter(({ file }) => file.endsWith("sizes.tsx")).map(({ line, message }) => ({ line, message }))).toEqual([
+      { line: 1, message: expect.stringContaining('"max-w-hub-two-column"') },
+      { line: 1, message: expect.stringContaining('"w-screen-hub"') },
+    ]);
+  });
+
   it("leaves the generated @theme, sizes outside queries and other query widths alone", () => {
     const files = problems.map((problem) => `${problem.file}:${problem.line}`);
 
     expect(files).not.toContain("src/ui/tokens/theme.generated.css:2");
     expect(files).not.toContain("src/ui/literal.css:2");
     expect(files).not.toContain("src/ui/literal.css:17");
+    expect(files).not.toContain("src/ui/variants.css:31");
+    expect(files).not.toContain("src/ui/variants.css:32");
+    expect(files).not.toContain("src/ui/variants.css:39");
   });
 });
 
@@ -101,6 +175,8 @@ describe("token layer check", () => {
     expect(problems.filter((problem) => problem.message.includes("--app-* primitive"))).toEqual([
       expect.objectContaining({ file: "src/ui/card.css", line: 5 }),
       expect.objectContaining({ file: "src/ui/leak.ts", line: 1 }),
+      expect.objectContaining({ file: "src/ui/leak.ts", line: 2, message: expect.stringContaining("--app-tap") }),
+      expect.objectContaining({ file: "src/ui/leak.ts", line: 2, message: expect.stringContaining("--app-lh-body") }),
     ]);
   });
 
@@ -112,9 +188,18 @@ describe("token layer check", () => {
   });
 
   it("rejects a var() with no declaration in the token files", () => {
-    expect(problems.filter((problem) => problem.message.includes("not declared"))).toEqual([
-      expect.objectContaining({ file: "src/ui/card.css", line: 6, message: expect.stringContaining("--undeclared-ink") }),
+    expect(problems.filter((problem) => problem.message.includes("not declared")).map(({ file, line, message }) => ({ file, line, message }))).toEqual([
+      { file: "src/ui/card.css", line: 6, message: expect.stringContaining("--undeclared-ink") },
+      { file: "src/ui/card.css", line: 17, message: expect.stringContaining("--color-ink") },
     ]);
+  });
+
+  it("does not count a Tailwind theme variable declared only in the @theme reference block as declared", () => {
+    expect(problems.filter((problem) => problem.message.includes("--color-ink")).map(({ line }) => line)).toEqual([17]);
+  });
+
+  it("accepts var(--type-body-size) in component CSS: a semantic type token is declared", () => {
+    expect(problems.filter((problem) => problem.line === 16 && problem.file === "src/ui/card.css")).toEqual([]);
   });
 });
 

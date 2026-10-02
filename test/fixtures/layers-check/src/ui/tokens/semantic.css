@@ -3,3 +3,7 @@
   --gap-raw: 10px;
   --gap-fallback: var(--app-space-5, 10px);
 }
+
+:where(*) {
+  --type-body-size: var(--app-fs-body);
+}

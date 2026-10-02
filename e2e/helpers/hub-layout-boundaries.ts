@@ -51,14 +51,32 @@ export async function tokenPx(page: Page, token: string): Promise<number> {
   return parseFloat(value);
 }
 
-/** The width of the hub-page container's content box: what @hub-two-column: measures. */
+/**
+ * The width of the hub-page container's content box: what @hub-two-column: measures. It is the box's
+ * fractional width minus padding and border, not clientWidth, which rounds to a whole pixel.
+ */
 export const contentWidth = (container: Locator) =>
   container.evaluate((element) => {
     const style = getComputedStyle(element);
-    return element.clientWidth - parseFloat(style.paddingInlineStart) - parseFloat(style.paddingInlineEnd);
+    const sides = ["padding-inline-start", "padding-inline-end", "border-inline-start-width", "border-inline-end-width"];
+    return element.getBoundingClientRect().width - sides.reduce((sum, side) => sum + parseFloat(style.getPropertyValue(side)), 0);
   });
 
-export async function expectNoHorizontalOverflow(page: Page, container?: Locator) {
+/**
+ * No horizontal overflow of the document, of the hub-page container, or (with `grid`) of any grid cell:
+ * a cell whose text runs past its box would sit under the next column.
+ */
+export async function expectNoHorizontalOverflow(page: Page, container?: Locator, grid?: Locator) {
+  // The cells first: they name the column that overflows.
+  if (grid) {
+    const cells = await grid.locator(":scope > *").evaluateAll((elements) =>
+      elements.map((element, index) => ({ index, scrollWidth: element.scrollWidth, clientWidth: element.clientWidth })),
+    );
+    expect(cells.length, "the grid has cells").toBeGreaterThan(0);
+    for (const cell of cells) {
+      expect(cell.scrollWidth, `grid cell ${cell.index + 1} scrollWidth <= clientWidth`).toBeLessThanOrEqual(cell.clientWidth);
+    }
+  }
   const root = await page.evaluate(() => ({
     scrollWidth: document.documentElement.scrollWidth,
     clientWidth: document.documentElement.clientWidth,
@@ -83,6 +101,29 @@ export async function expectOneColumn(grid: Locator) {
   expect(asideBox.width, "the aside fills the width").toBeCloseTo(gridBox.width, 0);
   expect(mainBox.width, "the main column fills the width").toBeCloseTo(gridBox.width, 0);
   expect(await computed(aside, "position"), "the aside is not sticky").not.toBe("sticky");
+}
+
+/**
+ * The aside variant's aside is sticky at the top of the viewport (inset-block-start: 0) and stays there
+ * while the page scrolls; in the other variants it scrolls away with the page. Needs a page taller than the
+ * viewport, with a main column longer than the aside.
+ */
+export async function expectAsideStickiness(grid: Locator) {
+  const page = grid.page();
+  const variant = (await grid.getAttribute("data-two-column")) as TwoColumnVariant;
+  const aside = grid.locator(":scope > *").nth(1);
+  const scrollable = await page.evaluate(() => document.documentElement.scrollHeight - window.innerHeight);
+  expect(scrollable, "the page scrolls far enough to test stickiness").toBeGreaterThan(200);
+
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const start = (await box(aside)).top;
+  for (const scrolled of [100, 200]) {
+    await page.evaluate((y) => window.scrollTo(0, y), start + scrolled);
+    const top = (await box(aside)).top;
+    if (VARIANTS[variant].sticky) expect(top, `the aside stays at its sticky offset after scrolling ${scrolled}px`).toBeCloseTo(0, 0);
+    else expect(top, `the ${variant} aside scrolls with the page`).toBeLessThan(-scrolled / 2);
+  }
+  await page.evaluate(() => window.scrollTo(0, 0));
 }
 
 const VARIANTS = {
@@ -115,7 +156,9 @@ export async function expectTwoColumns(grid: Locator) {
   }
   expect(mainBox.width + gap + asideBox.width, "the columns fill the width").toBeCloseTo(gridBox.width, 0);
   expect(rtl ? mainBox.right : mainBox.left, "main column at the inline start").toBeCloseTo(rtl ? gridBox.right : gridBox.left, 0);
-  expect(await computed(aside, "position")).toBe(spec.sticky ? "sticky" : "static");
+  const position = await computed(aside, "position");
+  if (spec.sticky) expect(position, "the aside is sticky").toBe("sticky");
+  else expect(position, "the aside is not sticky").not.toBe("sticky");
 }
 
 async function openPage(page: Page, target: HubPageTarget, lang: HubLanguage) {
@@ -135,7 +178,7 @@ export async function setContentWidth(page: Page, width: number) {
   const container = hubPage(page);
   for (let attempt = 0; attempt < 3; attempt += 1) {
     const current = await contentWidth(container);
-    if (current === width) return;
+    if (Math.abs(current - width) < 0.01) return;
     const { screen, insets } = await container.evaluate((element) => {
       const style = getComputedStyle(element);
       return {
@@ -146,12 +189,13 @@ export async function setContentWidth(page: Page, width: number) {
     const viewport = page.viewportSize() ?? { width: 1280, height: 800 };
     await page.setViewportSize({ width: viewport.width - screen + width + insets, height: viewport.height });
   }
-  expect(await contentWidth(container), "hub-page content width (is the page's maximum inline size wide enough?)").toBe(width);
+  expect(await contentWidth(container), "hub-page content width (is the page's maximum inline size wide enough?)").toBeCloseTo(width, 2);
 }
 
 /**
  * The two-column switch: at 799 px of content width the page is one column, at 800 px two, in each
- * language, with no horizontal overflow; then a 1280 px viewport whose container is 799 px stacks.
+ * language, with no horizontal overflow (of the page, the container and every grid cell); then a 1280 px
+ * viewport whose container is constrained to 799 px stacks.
  */
 export async function checkHubTwoColumnBoundaries(page: Page, target: HubPageTarget) {
   const grid = target.grid ?? defaultGrid;
@@ -162,9 +206,28 @@ export async function checkHubTwoColumnBoundaries(page: Page, target: HubPageTar
       await setContentWidth(page, width);
       if (width < TWO_COLUMN_MIN) await expectOneColumn(grid(page));
       else await expectTwoColumns(grid(page));
-      await expectNoHorizontalOverflow(page, hubPage(page));
+      await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
     }
+    await expectStackedInWideViewport(page, grid);
   }
+}
+
+/**
+ * A 1280px viewport whose hub-page content box is constrained to 799px: the grid follows the container,
+ * not the viewport, so it is one column. A style tag fixes the Screen body's inline size (the page itself
+ * is untouched), and the viewport is left at 1280px.
+ */
+async function expectStackedInWideViewport(page: Page, grid: (page: Page) => Locator) {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.addStyleTag({
+    content: `.layout-screen[data-surface="staff"] > .layout-screen__body {
+      box-sizing: content-box !important; inline-size: ${TWO_COLUMN_MIN - 1}px !important; max-inline-size: none !important;
+    }`,
+  });
+  expect(await page.evaluate(() => window.innerWidth), "a 1280px viewport").toBe(1280);
+  expect(await contentWidth(hubPage(page)), "hub-page content width constrained to 799px").toBe(TWO_COLUMN_MIN - 1);
+  await expectOneColumn(grid(page));
+  await expectNoHorizontalOverflow(page, hubPage(page), grid(page));
 }
 
 /** The shell breakpoint: the narrow page inset at a 699 px viewport, the wide one at 700 px. */

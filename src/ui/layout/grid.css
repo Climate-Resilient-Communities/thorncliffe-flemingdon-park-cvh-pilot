@@ -11,6 +11,13 @@
     gap: var(--gap-grid);
   }
 
+  /* A cell may be narrower than its content and breaks an unbreakable word (a URL, a long compound), so
+     text wraps inside its column instead of running under the next one. */
+  .layout-grid > * {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
   .layout-grid:is(ul, ol) {
     list-style: none;
   }

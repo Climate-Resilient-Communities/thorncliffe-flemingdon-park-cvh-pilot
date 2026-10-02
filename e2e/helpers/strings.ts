@@ -24,12 +24,23 @@ export function prototypeStrings(lang: string): string[] {
   return found;
 }
 
-/** The longest translated labels of a language: its longest strings and its longest single words. */
+/** The unbreakable token's length in characters: far wider than any column, so only breaking it avoids overflow. */
+const UNBREAKABLE_LENGTH = 160;
+
+/**
+ * The longest translated labels of a language: its longest strings and its longest single words, and one
+ * unbreakable token (the longest word repeated, with no space) such as a URL, a reference number or a
+ * compound word that a column must break rather than overflow.
+ */
 export function longestLabels(lang: string, count = 3) {
   const strings = prototypeStrings(lang);
   const byLength = (a: string, b: string) => b.length - a.length;
+  const allWords = [...new Set(strings.flatMap((text) => text.split(/\s+/)))].sort(byLength);
+  // Letters only: a hyphen or punctuation would give the browser a place to break the token.
+  const word = allWords.find((candidate) => /^[\p{L}\p{M}]+$/u.test(candidate))!;
   return {
     sentences: [...strings].sort(byLength).slice(0, count),
-    words: [...new Set(strings.flatMap((text) => text.split(/\s+/)))].sort(byLength).slice(0, count),
+    words: allWords.slice(0, count),
+    unbreakable: word.repeat(Math.ceil(UNBREAKABLE_LENGTH / word.length)),
   };
 }

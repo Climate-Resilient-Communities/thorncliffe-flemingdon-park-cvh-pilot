@@ -3,12 +3,12 @@
 // produce React elements). Inline styles here size the test frames only; src/ never uses them.
 import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type StackGap } from "@/ui";
 
-export type Labels = { sentences: string[]; words: string[] };
+export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
 
 function LabelList({ labels }: { labels: Labels }) {
   return (
     <Stack gap="stack">
-      {[...labels.words, ...labels.sentences].map((text) => (
+      {[labels.unbreakable, ...labels.words, ...labels.sentences].map((text) => (
         <p key={text}>{text}</p>
       ))}
     </Stack>
@@ -187,7 +187,7 @@ export function MarkButtons() {
 }
 
 /** A staff Screen; with `width`, framed so that its hub-page content box is exactly that many px. */
-export function TwoColumnPage({ variant, labels, width }: { variant: GridTwoColumn; labels: Labels; width?: number }) {
+export function TwoColumnPage({ variant, labels, width, tall }: { variant: GridTwoColumn; labels: Labels; width?: number; tall?: boolean }) {
   return (
     <div style={width ? { inlineSize: `calc(${width}px + 2 * var(--inset-page-staff))` } : undefined}>
       <Screen surface="staff" width="review" actions={<button className="tap">Approve</button>} actionsLabel="Approval">
@@ -195,6 +195,7 @@ export function TwoColumnPage({ variant, labels, width }: { variant: GridTwoColu
           <Stack gap="section-hub" testId="main">
             <h1>Main column</h1>
             <LabelList labels={labels} />
+            {tall && <div style={{ blockSize: 1200, background: "#eee" }}>A long main column</div>}
           </Stack>
           <Stack gap="stack" testId="aside">
             <h2>Aside</h2>
@@ -230,6 +231,59 @@ export function TapTargets() {
           More
         </a>
       </Inline>
+    </Screen>
+  );
+}
+
+const TypeSample = () => (
+  <>
+    <p data-role="body" className="text-body">
+      Body text
+    </p>
+    <h2 data-role="tight" className="text-h2">
+      Heading
+    </h2>
+  </>
+);
+
+// Screen's props are a union on the surface, so a surface chosen at run time is written out.
+const OnSurface = ({ surface, children }: { surface: "resident" | "staff"; children: import("react").ReactNode }) =>
+  surface === "staff" ? <Screen surface="staff">{children}</Screen> : <Screen surface="resident">{children}</Screen>;
+
+/** A lang subtree for each tag inside one Screen (the page's own language is the mount option). */
+export function LangProbes({ surface, tags }: { surface: "resident" | "staff"; tags: string[] }) {
+  return (
+    <OnSurface surface={surface}>
+      {tags.map((tag) => (
+        <div key={tag} lang={tag}>
+          <TypeSample />
+        </div>
+      ))}
+    </OnSurface>
+  );
+}
+
+/** The lang element contains the Screen, so the staff surface sits inside the language subtree. */
+export function LangAroundScreen({ tag, surface }: { tag: string; surface: "resident" | "staff" }) {
+  return (
+    <div lang={tag}>
+      <OnSurface surface={surface}>
+        <TypeSample />
+      </OnSurface>
+    </div>
+  );
+}
+
+/** Text outside any Screen: the page's own language and surface apply. */
+export function PlainText() {
+  return <TypeSample />;
+}
+
+/** A staff Screen whose text is in the page's own language. */
+export function StaffTypePage() {
+  return (
+    <Screen surface="staff">
+      <TypeSample />
     </Screen>
   );
 }

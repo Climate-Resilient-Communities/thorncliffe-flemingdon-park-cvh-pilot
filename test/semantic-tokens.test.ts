@@ -5,13 +5,17 @@ import { describe, expect, it } from "vitest";
 
 const read = (file: string) => readFileSync(path.join(__dirname, "..", file), "utf8");
 
-function declarations(file: string) {
+// `only` limits it to the rules with that selector (the generated type and line-height primitives are
+// redeclared per surface, basic mode and language; the :root values are the resident ones).
+function declarations(file: string, only?: string) {
   const found = new Map<string, string>();
-  postcss.parse(read(file)).walkDecls(/^--/, (decl) => void found.set(decl.prop, decl.value));
+  postcss.parse(read(file)).walkDecls(/^--/, (decl) => {
+    if (!only || (decl.parent as postcss.Rule).selector === only) found.set(decl.prop, decl.value);
+  });
   return found;
 }
 
-// token-architecture.md sections 3.1 and 3.2: semantic token, the primitive it resolves to, its value.
+// token-architecture.md sections 3.1, 3.2 and 3.4: semantic token, the primitive it resolves to, its value.
 const SEMANTIC_TOKENS: [string, string, string][] = [
   ["--gap-subline", "--app-space-1", "2px"],
   ["--gap-label", "--app-space-2", "4px"],
@@ -63,19 +67,38 @@ const SEMANTIC_TOKENS: [string, string, string][] = [
   ["--size-side-nav", "--app-side-nav", "240px"],
   ["--size-aside-staff", "--app-aside-staff", "380px"],
   ["--size-aside-staff-compact", "--app-aside-staff-compact", "300px"],
+  ["--type-caption-size", "--app-fs-caption", "18px"],
+  ["--type-body-size", "--app-fs-body", "18px"],
+  ["--type-alert-size", "--app-fs-alert", "20px"],
+  ["--type-lead-size", "--app-fs-lead", "21px"],
+  ["--type-h3-size", "--app-fs-h3", "20px"],
+  ["--type-h2-size", "--app-fs-h2", "23px"],
+  ["--type-h1-size", "--app-fs-h1", "27px"],
+  ["--type-body-line-height", "--app-lh-body", "var(--lh-body)"],
+  ["--type-tight-line-height", "--app-lh-h2", "var(--lh-tight)"],
 ];
 
 describe("semantic.css", () => {
   const semantic = declarations("src/ui/tokens/semantic.css");
-  const primitives = declarations("src/ui/tokens/tokens.generated.css");
+  const primitives = declarations("src/ui/tokens/tokens.generated.css", ":root");
 
-  it("declares exactly the semantic tokens of token-architecture.md sections 3.1 and 3.2", () => {
+  it("declares exactly the semantic tokens of token-architecture.md sections 3.1, 3.2 and 3.4", () => {
     expect([...semantic.keys()].sort()).toEqual(SEMANTIC_TOKENS.map(([name]) => name).sort());
   });
 
   it.each(SEMANTIC_TOKENS)("%s is var(%s), %s", (name, primitive, value) => {
     expect(semantic.get(name)).toBe(`var(${primitive})`);
     expect(primitives.get(primitive)).toBe(value);
+  });
+
+  it("documents the type tokens as the 3.4 Type table", () => {
+    const doc = read("docs/design-framework/spacing-container/token-architecture.md");
+    const section = doc.slice(doc.indexOf("### 3.4 Type"), doc.indexOf("## 4. Layer 3"));
+
+    expect(section).toMatch(/^### 3\.4 Type/);
+    for (const [name, primitive] of SEMANTIC_TOKENS.filter(([token]) => token.startsWith("--type-"))) {
+      expect(section, name).toContain(`| \`${name}\` | \`var(${primitive})\` |`);
+    }
   });
 
   it("resolves --tap, --tap-basic and --gap-target to 44px, 56px and 8px (G3)", () => {
