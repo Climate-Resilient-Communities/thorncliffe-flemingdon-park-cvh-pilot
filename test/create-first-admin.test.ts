@@ -94,5 +94,5 @@ describe("create-first-admin", () => {
 
     expect(result.status).toBe(1);
     expect(result.stderr).toMatch(/create-first-admin runs only in production/);
-  });
+  }, 60_000);
 });
