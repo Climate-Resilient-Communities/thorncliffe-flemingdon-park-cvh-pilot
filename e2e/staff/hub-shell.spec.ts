@@ -33,12 +33,18 @@ test("every staff page and API route, and a staff path that does not exist, answ
   page,
   request,
 }) => {
-  const paths = [...staffRoutes(), "/staff/does-not-exist", "/staff/does/not/exist", "/api/staff/does-not-exist"];
+  // /staff/buildings/x has the shape of the public building page (/{lang}/buildings/{rsn}, S02.08), which is cached
+  // publicly; under /staff it must still be no-store.
+  const paths = [...staffRoutes(), "/staff/does-not-exist", "/staff/does/not/exist", "/api/staff/does-not-exist", "/staff/buildings/x"];
   const noStore = async (client: Pick<typeof request, "get">, state: string) => {
     for (const path of paths) {
       const response = await client.get(path, { maxRedirects: 0 });
       expect(response.headers()["cache-control"], `${state}: GET ${path} (${response.status()})`).toBe("no-store");
     }
+    // /api/buildings/x is not a staff path (so not no-store by our rule), but it must never get the public building
+    // page's shared-cache header.
+    const api = await client.get("/api/buildings/x", { maxRedirects: 0 });
+    expect(api.headers()["cache-control"] ?? "", `${state}: GET /api/buildings/x (${api.status()})`).not.toMatch(/public|s-maxage|stale-while-revalidate/);
   };
 
   await noStore(request, "signed out");

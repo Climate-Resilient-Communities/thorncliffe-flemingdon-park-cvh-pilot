@@ -19,7 +19,7 @@ vi.mock("./editFloors", () => ({
 }));
 
 const revalidateTag = vi.hoisted(() => vi.fn());
-vi.mock("next/cache", () => ({ revalidateTag }));
+vi.mock("next/cache", () => ({ revalidateTag, updateTag: vi.fn() }));
 vi.mock("next/navigation", () => ({
   redirect: (location: string) => {
     throw new Error(`NEXT_REDIRECT ${location}`);

@@ -1056,6 +1056,36 @@
       noChange: 'Nothing to change: the floor already has that label.', alreadyConfirmed: 'This building is already confirmed.',
       noFloors: 'Add at least one floor before confirming the building.', buildingNotFound: 'That building does not exist.',
       floorNotFound: 'That floor does not exist any more. Reload the page.', forbidden: 'Only an Admin can change buildings and floors.' } } } });
+  /* Ambassador assignments and the coverage view (S01.14): which floors have an Ambassador. Not a prototype screen. */
+  m(en, { hub: { nav: { coverage: 'Coverage' } } });
+  m(en, { staff: { coverage: {
+    title: 'Ambassador coverage',
+    lead: 'Which floors of the pilot buildings have an active ambassador assigned, and which do not. Check-ins can only be promised for floors with an ambassador.',
+    summary: 'Buildings with every floor covered: {covered} of {total}. Floors without an ambassador: {gaps}.',
+    empty: 'No buildings have been imported yet. Ask IT to run the buildings seed.',
+    viewOf: 'Coverage of {address}', back: 'All buildings',
+    floorsCovered: 'Floors covered: {covered} of {total}.', allCovered: 'Every floor is covered.', noneCovered: 'No floor is covered.', noFloors: 'No floors are listed for this building yet.',
+    coveredLabel: 'Covered:', notCoveredLabel: 'Not covered:',
+    floorsTitle: 'Floors', coveredBy: 'Covered by {names}', notCovered: 'Not covered',
+    assignmentsTitle: 'Ambassadors assigned', noAssignments: 'No ambassador is assigned to this building.',
+    allFloors: 'All floors', someFloors: 'Floors {labels}', notCoveringNow: 'Not covering now: {reason}.',
+    inactive: { locked_pending_reissue: 'the account is locked until an Admin re-issues the starting password', suspended: 'the account is suspended',
+      removed: 'the account was removed', notAmbassador: 'the account is no longer an ambassador' },
+    remove: 'Remove {name}', removeConfirm: 'Remove {name} from this building? They stay an ambassador and stop covering it.',
+    removeYes: 'Yes, remove {name}', removeKeep: 'Keep {name}',
+    assign: { title: 'Assign an ambassador', person: 'Ambassador', choose: 'Choose an ambassador', noAmbassadors: 'There is no active ambassador to assign. Add one under People first.',
+      scope: 'Which floors', all: 'All floors, including floors added later', some: 'Only the floors chosen here', pick: 'Choose floors', range: 'Or every floor from one to another, as the building lists its floors now (floors added later are not included)',
+      from: 'From floor', to: 'To floor', none: 'None', submit: 'Assign', noFloors: 'Add floors to this building before assigning an ambassador to some of them.' },
+    saved: { assigned: 'Assignment saved.', removed: 'Assignment removed.' },
+    errors: { forbidden: 'Only an Admin, a Coordinator or a Director can see coverage.', assignForbidden: 'Only an Admin can assign ambassadors.',
+      aal2Required: 'An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.',
+      buildingNotFound: 'That building does not exist.', accountNotFound: 'That person does not exist. Reload the page.',
+      notAmbassador: 'Only an ambassador can be assigned to a building.', accountNotActive: 'That ambassador is not active, so they cannot be assigned.',
+      noFloors: 'Choose at least one floor, or choose all floors.', floorNotInBuilding: 'One of those floors is not a floor of this building. Reload the page.',
+      rangeIncomplete: 'Choose both ends of the range of floors, or neither.', notAssigned: 'That ambassador is not assigned to this building.', choosePerson: 'Choose an ambassador.',
+      chooseScope: 'Choose which floors: all floors, or only the floors you pick.',
+      allWithFloors: 'You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.',
+      rangeReversed: 'The range goes from a higher floor to a lower one. Put the lower floor first.' } } } });
   /* An Admin's "Reset authenticator" (S01.11). Not a prototype screen. */
   m(en, { staff: { resetAuthenticator: { title: 'Reset an authenticator', lead: 'For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.',
     username: 'Their username', submit: 'Reset authenticator', done: 'Authenticator reset for {username}.',
@@ -1099,4 +1129,72 @@
     listFailed: 'The list of buildings could not be loaded just now. Your choices are still saved.',
     buildingByRsn: 'Building {rsn}', floorsOne: '1 floor chosen', floorsMany: '{n} floors chosen',
     buildingsNone: 'None chosen', removeItem: 'Remove: {item}' } });
+
+  /* The building contact on the Admin's building screen (S02.08). Not a prototype screen. */
+  m(en, { staff: { buildings: {
+    contact: { title: 'Building contact', lead: 'A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.',
+      current: 'Provided by the Hub, last updated {date}', none: 'No contact entered yet. Residents see "Not known".',
+      role: 'Role', roleHint: 'Which office the number reaches.', roleChoose: 'Choose a role',
+      phone: 'Phone number', phoneHint: '10 digits, like 416 555 0123.',
+      workNumber: 'This is a work or office number the building agreed to publish.',
+      submit: 'Save contact', remove: 'Remove contact' },
+    saved: { contact: 'Building contact saved.', contactRemoved: 'Building contact removed.' },
+    errors: { roleInvalid: 'Choose one of the roles in the list.',
+      phoneInvalid: 'Enter a 10-digit phone number, like 416 555 0123.',
+      roleWithoutPhone: 'Enter a phone number for this role, or remove the contact.',
+      phoneWithoutRole: 'Choose a role for this number, or remove the contact.',
+      notWorkNumber: 'Confirm that this is a work or office number the building agreed to publish.',
+      contactNoChange: 'Nothing to change: the contact is already saved like this.' } } } });
+  /* The building page a resident opens at /{lang}/buildings/{rsn} (S02.08, FR-D4-P, NFR-N7). Not a prototype screen. */
+  m(en, { building: {
+    registerTitle: 'From the City register', updated: 'Last updated {date}',
+    registerLead: 'The City of Toronto keeps a register of apartment buildings. These facts come from it.',
+    checking: 'The Hub is checking this building\'s details. What you see here may change.',
+    facts: { storeys: 'Storeys', elevators: 'Elevators', emergencyPower: 'Emergency power', coolingRoom: 'Cooling room', airConditioning: 'Air conditioning', barrierFree: 'Barrier-free entrance' },
+    airNone: 'None', airIndividual: 'Individual units',
+    roles: { superintendent: 'Superintendent', buildingManagement: 'Building management', propertyOffice: 'Property office' },
+    contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}' } });
+  /* Directory release (S02.05): the Admin publishes the directory as one numbered release. Not a prototype screen. */
+  m(en, { hub: { nav: { directory: 'Directory' } }, staff: { directory: {
+    title: 'Directory release',
+    lead: 'Publishing sends every published provider to residents as one numbered release, in every language. A release is never changed afterwards: the next publish makes a new one.',
+    none: 'No release has been published yet. Residents see no directory until one is.',
+    current: 'Current release: {number}, published {date}.',
+    currentCounts: 'Providers: {providers}. Categories: {categories}. Languages: {languages}.',
+    publishedNow: 'Providers published now: {published} of {total}.',
+    publish: 'Publish directory',
+    publishing: 'Publishing',
+    publishHint: 'This takes a few seconds. Residents keep the current release until the new one is complete.',
+    done: 'Release {number} is now current. Providers: {providers}. Languages: {languages}.',
+    resumed: 'Files already stored when this publish continued: {files}.',
+    fallbacks: 'Texts with no reviewed translation yet, shown in English: {count}.',
+    staleHeading: 'Translations not published because the English changed after they were made: {count}. Residents see the English for these.',
+    staleItem: '{name}: {field}, {language}',
+    fields: { services: 'Services', emergencyRole: 'Emergency role', name: 'Name' },
+    languages: {
+      en: 'English', ur: 'Urdu', ps: 'Pashto', tl: 'Tagalog', prs: 'Dari', gu: 'Gujarati', ta: 'Tamil', el: 'Greek',
+      sk: 'Slovak', bn: 'Bengali', hi: 'Hindi', pa: 'Punjabi', zh: 'Chinese (Simplified)', es: 'Spanish', fr: 'French',
+      zhHant: 'Chinese (Traditional)' },
+    failed: 'Publish failed: {reason}',
+    previousStays: 'The previous release is still current.',
+    lastFailed: 'The last publish failed: {reason}',
+    running: 'A publish is already running. Wait a few minutes, then check the current release here.',
+    inProgress: 'A publish is in progress: release {number}. Reload this page in a minute to see whether it finished.',
+    stalled: 'A publish stopped before it finished: release {number}. Press Publish directory to continue it; the files already stored are kept.',
+    catalogueMismatch: 'The database holds catalogue {loaded}, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.',
+    catalogueNeverLoaded: 'The database holds no loaded catalogue, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.',
+    commitNamed: 'commit {sha}',
+    commitUnknown: 'the commit this deployment was built from',
+    problems: 'What is wrong: {list}',
+    reasons: {
+      storageUnavailable: 'the files could not be stored',
+      invalidCatalogue: 'the catalogue could not be turned into a release',
+      catalogueUnreadable: 'the catalogue files are missing from this deployment',
+      catalogueNotLoaded: 'the database holds a different catalogue than this deployment',
+      searchMismatch: 'the search data does not match this release',
+      gaveUp: 'an earlier publish stopped three times',
+      unexpected: 'something went wrong' },
+    errors: {
+      forbidden: 'Only an Admin can publish the directory.',
+      aal2Required: 'An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.' } } } });
 })();

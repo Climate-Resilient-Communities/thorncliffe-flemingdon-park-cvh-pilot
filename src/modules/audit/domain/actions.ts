@@ -56,9 +56,18 @@ export const REFUSAL_REASONS = [
   "floor_has_assignments",
   "not_allowlisted",
   "provider_error",
+  /** A directory publish gave up after its attempts (S02.05); the previous release stays current. */
+  "publish_failed",
+  /** A directory publish is already running (S02.05). */
+  "publish_running",
   /** S01.15: the test text cannot be sent here (not production with SMS_MODE live, or Twilio not set up). */
   "not_available",
+  /** A change to a thread that is closed (S04.03, ALERT_CLOSED). */
+  "alert_closed",
 ] as const;
+
+/** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
+const REMOVAL_REASONS = [...REFUSAL_REASONS, "role_changed"] as const;
 
 const ROUTE_PATTERN = /^(\/([a-z][a-z-]*|\[[a-z_]+\]))+$/;
 
@@ -79,6 +88,12 @@ const isoDate = z.string().refine(isIsoDate, "must be a real date written YYYY-M
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
+/** A SHA-256 as 64 lower-case hex digits (an entry's content hash). */
+const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** An alert entry's kind (AD-5). */
+const entryKind = z.enum(["ack", "update", "correction", "withdrawal", "final"]);
+/** The floors of an assignment by id; null is every floor of the building. */
+const floorIds = z.array(id).max(200).nullable();
 /** A policy action name such as `alert.approve`. */
 const permission = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,3}$/).max(64);
 /**
@@ -140,10 +155,25 @@ export const AUDIT_META = {
   "building.floor_renamed": meta({ floor_id: id.optional(), from: floorLabel.optional(), to: floorLabel.optional() }),
   "building.floor_removed": meta({ floor_id: id.optional(), label: floorLabel.optional(), assignments: count.optional() }),
   "building.confirmed": meta({ floors: count.optional() }),
+  // S02.08: an Admin entered, changed or removed the building contact. The role and number are never in meta.
+  "building.contact_changed": meta({ cleared: flag.optional() }),
 
-  // Ambassador assignments (S01.14). `floor_ids: null` is the whole building.
-  "assignment.saved": meta({ staff_id: id.optional(), rsn: rsn.optional(), floor_ids: z.array(id).max(200).nullable().optional() }),
-  "assignment.removed": meta({ staff_id: id.optional(), rsn: rsn.optional() }),
+  // Ambassador assignments (S01.14). `floor_ids: null` is the whole building. `previous_floor_ids` is what a replaced
+  // assignment listed (absent on a first assignment). `assignment.removed` records the floors the assignment listed,
+  // and its reason may also be `role_changed`: the account left the Ambassador role and its assignments went with it.
+  "assignment.saved": meta({
+    staff_id: id.optional(),
+    rsn: rsn.optional(),
+    floor_ids: floorIds.optional(),
+    previous_floor_ids: floorIds.optional(),
+  }),
+  // Not built with meta(): its `reason` is the common list plus `role_changed`, which a spread of `common` would intersect away.
+  "assignment.removed": z.strictObject({
+    reason: z.enum(REMOVAL_REASONS).optional(),
+    staff_id: id.optional(),
+    rsn: rsn.optional(),
+    floor_ids: floorIds.optional(),
+  }),
 
   // Providers (S02.04): an Admin publishes or unpublishes a provider and sets its last-confirmed date.
   // The subject is the provider (type `provider`, its catalogue id); listing text is never in meta.
@@ -151,6 +181,35 @@ export const AUDIT_META = {
   "provider.published": meta({ last_confirmed: isoDate.optional() }),
   "provider.unpublished": meta({}),
   "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
+
+  // Alert threads and entries (S04.03). `alert.created` is on the thread (subject `alert`) and names its first
+  // draft; the others are on the entry (subject `alert_entry`). `content_hash` is the frozen text's SHA-256, never
+  // text. `entry_id` (and `version`, `content_hash` where the entry has them) are required on an ok record.
+  "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional() }),
+  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+  "entry.returned": meta({ entry_id: id.optional(), version: count.optional(), returned_for: z.enum(["edit", "return", "retranslate"]).optional() }),
+  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional() }),
+  "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+  // The directory release (S02.05): an Admin publishes the directory as one numbered release. The subject is the
+  // release (type `directory_release`, its number); `meta` holds counts only. The release number and the counts are
+  // required on an ok record (REQUIRED_WHEN_OK), absent on a refusal, which carries its reason.
+  "directory.published": meta({
+    release: count.optional(),
+    providers: count.optional(),
+    categories: count.optional(),
+    files: count.optional(),
+    /** Texts published in a language other than English. */
+    translations: count.optional(),
+    /** Texts published as English with translation.unavailable. */
+    fallbacks: count.optional(),
+    /** Translations withheld because the English changed since they were made. */
+    stale: count.optional(),
+    attempts: count.optional(),
+    /** Files already stored when a stopped publish resumed. */
+    resumed_files: count.optional(),
+    /** On a refusal with reason `publish_failed`: why the publish failed (a PublishFailureCode). */
+    failure: code.optional(),
+  }),
 
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.
   "seed.run": meta({ seed: code, counts: z.record(code, count).optional(), warnings: count.optional(), failures: count.optional() }),
@@ -180,6 +239,12 @@ export type AuditOutcome = "ok" | "refused";
 const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "provider.confirmed": ["confirmed_on"],
   "provider.published": ["last_confirmed"],
+  "alert.created": ["entry_id"],
+  "entry.submitted": ["entry_id", "version", "content_hash"],
+  "entry.returned": ["entry_id", "version", "returned_for"],
+  "entry.discarded": ["entry_id", "from"],
+  "entry.approved": ["entry_id", "version", "content_hash"],
+  "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
@@ -241,16 +306,22 @@ function hasEmailAddress(value: string): boolean {
 const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
 // A Twilio message SID: SM or MM and 32 lowercase hex digits, which can hold long digit runs.
 const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
+// A SHA-256 in hex (an entry's content hash): 64 hex digits, which can hold long digit runs.
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+// The one place in an audit record's meta where a SHA-256 is expected, and so where the phone check is skipped.
+const CONTENT_HASH_PATH = "meta.content_hash";
 
 /**
  * Defensive check on values (the strict schemas are the main guard): the path
  * of the first string that looks like an email address or a phone number, or
- * of a number with ten or more digits. Whole values that are UUIDs or Twilio
- * message SIDs are skipped (their hex can hold long digit runs).
+ * of a number with ten or more digits. Whole values that are UUIDs or Twilio message SIDs are
+ * skipped (their hex can hold long digit runs), and so is a SHA-256 at `meta.content_hash` only: in
+ * any other field a 64-digit hex string is checked like any text, so a phone number cannot hide in
+ * one.
  */
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
-    if (UUID.test(value) || TWILIO_SID.test(value)) return null;
+    if (UUID.test(value) || TWILIO_SID.test(value) || (path === CONTENT_HASH_PATH && SHA256_HEX.test(value))) return null;
     return hasEmailAddress(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;

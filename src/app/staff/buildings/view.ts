@@ -1,7 +1,7 @@
 // What the buildings screen shows (S01.13): the view models for the list and for one building, with
 // every text already resolved from the English catalog, so the components that draw them know none of it.
 import { englishText } from "@/i18n/text";
-import type { BuildingDetail, BuildingSummary } from "@/modules/places";
+import { CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, displayPhone, type BuildingDetail, type BuildingSummary } from "@/modules/places";
 import { BUILDINGS_PAGE } from "./editFloors";
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.buildings.${key}`, values);
@@ -59,6 +59,27 @@ export interface BuildingView {
   floors: { title: string; lead: string; empty?: string; rows: FloorRowView[]; rename: string; remove: string };
   add: { title: string; label: string; hint: string; place: string; top: string; bottom: string; submit: string };
   confirm?: { title: string; lead: string; submit: string };
+  contact: {
+    title: string;
+    lead: string;
+    /** "Provided by the Hub, last updated Oct 1, 2026", or "No contact entered yet." */
+    current: string;
+    role: string;
+    roleHint: string;
+    /** The first, empty choice of the role list: "Choose a role". */
+    roleChoose: string;
+    /** The fixed list of roles: the code that is stored, and its label. */
+    roles: { code: string; label: string }[];
+    phone: string;
+    phoneHint: string;
+    /** "This is a work or office number the building agreed to publish." The form needs it checked to save. */
+    workNumber: string;
+    submit: string;
+    /** Removes the saved contact; shown only when there is one. */
+    remove?: string;
+    /** What the form starts with: the saved contact (the number as (416) 555-0123), and the confirmation unchecked. */
+    value: { role: string; phone: string; workNumber: boolean };
+  };
 }
 
 export interface MissingView {
@@ -104,6 +125,10 @@ export function savedNotice(query: SavedQuery): string | undefined {
       return label && LABEL.test(label) ? t("saved.removed", { label }) : undefined;
     case "confirmed":
       return n && COUNT.test(n) ? t("saved.confirmed", { n }) : undefined;
+    case "contact":
+      return t("saved.contact");
+    case "contactRemoved":
+      return t("saved.contactRemoved");
     default:
       return undefined;
   }
@@ -190,6 +215,21 @@ export function buildingView(building: BuildingDetail, notice?: string): Buildin
       top: t("add.top"),
       bottom: t("add.bottom"),
       submit: t("add.submit"),
+    },
+    contact: {
+      title: t("contact.title"),
+      lead: t("contact.lead"),
+      current: building.contact ? t("contact.current", { date: formatDay(building.contact.updatedAt) }) : t("contact.none"),
+      role: t("contact.role"),
+      roleHint: t("contact.roleHint"),
+      roleChoose: t("contact.roleChoose"),
+      roles: CONTACT_ROLES.map((code) => ({ code, label: englishText(`building.roles.${CONTACT_ROLE_LABEL_KEYS[code]}`) })),
+      phone: t("contact.phone"),
+      phoneHint: t("contact.phoneHint"),
+      workNumber: t("contact.workNumber"),
+      submit: t("contact.submit"),
+      ...(building.contact ? { remove: t("contact.remove") } : {}),
+      value: { role: building.contact?.role ?? "", phone: building.contact ? displayPhone(building.contact.phone) : "", workNumber: false },
     },
     ...(building.confirmedAt ? {} : { confirm: { title: t("confirm.title"), lead: t("confirm.lead"), submit: t("confirm.submit") } }),
   };

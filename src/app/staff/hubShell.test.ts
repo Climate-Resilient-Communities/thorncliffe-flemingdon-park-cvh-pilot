@@ -2,6 +2,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/contracts/staffRoles";
+import { can } from "@/modules/identity";
 import { HUB_NAV_ICONS } from "@/ui/hub";
 import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser, hubTabTitle } from "./hubShell";
 import type { StaffSession } from "./session";
@@ -34,10 +35,21 @@ describe("hubShellUser", () => {
 describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
-  it("lists the pilot's three disruption screens in the prototype's order, with the home first, and People and Buildings for Admins", () => {
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
+  it("lists the pilot's three disruption screens in the prototype's order, with the home first, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
+    expect(items("ambassador").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "People", "Providers", "Buildings", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Test text"]);
+  });
+
+  it("adds Coverage for exactly the roles whose policy allows coverage.view, with an icon no other item uses", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/coverage"), role).toBe(can(role, "coverage.view"));
+    }
+    const coverage = items("admin").find((item) => item.id === "coverage");
+    expect(coverage).toEqual({ id: "coverage", label: "Coverage", href: "/staff/coverage", icon: "ready" });
+    expect(items("admin").filter((item) => item.icon === coverage?.icon)).toHaveLength(1);
   });
 
   it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {
@@ -49,16 +61,18 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
-  it("adds Administration with People, Providers, Buildings and Test text for Admins only", () => {
+  it("adds Administration with People, Providers, Directory, Buildings and Test text for Admins only", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/people"), role).toBe(role === "admin");
       expect(items(role).some((item) => item.href === "/staff/providers"), role).toBe(role === "admin");
+      expect(items(role).some((item) => item.href === "/staff/directory"), role).toBe(role === "admin");
       expect(items(role).some((item) => item.href === "/staff/buildings"), role).toBe(role === "admin");
     }
     const administration = hubNavigation("admin").find((section) => section.id === "admin");
     expect(administration?.items).toEqual([
       { id: "people", label: "People", href: "/staff/people", icon: "person" },
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
+      { id: "directory", label: "Directory", href: "/staff/directory", icon: "layers" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
       { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
@@ -77,6 +91,16 @@ describe("hubNavigation", () => {
     expect(HUB_NAV_ICONS).toContain("phone");
     const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
     for (const icon of HUB_NAV_ICONS) expect(stylesheet, icon).toContain(`.hub-ico--${icon} {`);
+  });
+
+  it("gives Directory a layers icon of its own: not the inbox Providers uses, and one the shell's stylesheet draws", () => {
+    const directory = items("admin").find((item) => item.href === "/staff/directory");
+    const providers = items("admin").find((item) => item.href === "/staff/providers");
+    expect(directory?.icon).toBe("layers");
+    expect(directory?.icon).not.toBe(providers?.icon);
+    expect(HUB_NAV_ICONS).toContain("layers");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    expect(stylesheet).toContain(".hub-ico--layers {");
   });
 
   it("links an item only to a page that exists; the others are text until their story builds the page", () => {

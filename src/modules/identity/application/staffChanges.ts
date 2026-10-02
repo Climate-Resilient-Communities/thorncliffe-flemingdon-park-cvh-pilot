@@ -128,6 +128,19 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
             subjectId: target.id,
             meta: { from: target.role, to: change.role },
           });
+          // S01.14: only an Ambassador is assigned to a building, so leaving the role ends the assignments, each
+          // audited as removed (reason role_changed), in this transaction: none is left to come back with the role.
+          if (target.role === "ambassador" && change.role !== "ambassador") {
+            for (const gone of await store.removeAssignments(tx, target.id)) {
+              await audit.record(tx, {
+                action: "assignment.removed",
+                actorStaffId: actor.id,
+                subjectType: "building",
+                subjectId: gone.rsn,
+                meta: { reason: "role_changed", staff_id: target.id, rsn: gone.rsn, floor_ids: gone.floorIds },
+              });
+            }
+          }
         } else {
           await store.setStatus(tx, target.id, change.kind === "suspend" ? "suspended" : "removed");
           await audit.record(tx, {

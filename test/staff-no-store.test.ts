@@ -3,12 +3,18 @@
 // route added outside /staff or /api/staff, or a changed rule, fails here. e2e/staff/hub-shell.spec.ts requests each of
 // the same routes from the production build and reads the header itself.
 import { readdirSync, statSync } from "node:fs";
+import { createRequire } from "node:module";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import nextConfig from "../next.config";
+import { LAUNCH_CODES } from "../src/i18n/languages";
 
+// The matcher Next itself compiles a header `source` with (it ships no types).
+const { pathToRegexp } = createRequire(import.meta.url)("next/dist/compiled/path-to-regexp") as { pathToRegexp: (source: string) => RegExp };
 const APP = path.join(__dirname, "..", "src", "app");
-const rules = (await nextConfig.headers?.()) ?? [];
+const allRules = (await nextConfig.headers?.()) ?? [];
+/** The rules of the staff surface; the resident building page has its own (S02.08), checked below. */
+const rules = allRules.filter((rule) => /staff/.test(rule.source));
 
 function walk(dir: string): string[] {
   return readdirSync(dir).flatMap((name) => {
@@ -45,6 +51,26 @@ describe("next.config.ts headers", () => {
   it("match /staff itself, any path below it, and the same under /api/staff, and nothing else", () => {
     for (const url of ["/staff", "/staff/people", "/staff/a/b/c", "/api/staff", "/api/staff/me", "/api/staff/a/b"]) expect(covered(url), url).toBe(true);
     for (const url of ["/", "/en", "/api/health", "/staffing", "/api/staffing/x", "/en/staff"]) expect(covered(url), url).toBe(false);
+  });
+
+  it("give the public building page (and only it) a shared-cache lifetime of 5 minutes plus 1 minute stale, never no-store", () => {
+    const others = allRules.filter((rule) => !rules.includes(rule));
+    expect(others.map((rule) => rule.source)).toEqual([`/:lang(${LAUNCH_CODES.join("|")})/buildings/:rsn`]);
+    expect(others[0].headers).toEqual([{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }]);
+  });
+
+  it("let no rule that is not a staff rule match any /staff or /api path, so the public cache header never reaches the staff surface or an API", () => {
+    const others = allRules.filter((rule) => !rules.includes(rule));
+    const onDisk = [...routeFiles(path.join(APP, "staff")), ...routeFiles(path.join(APP, "api"))].map(urlOf);
+    const lookalikes = ["/staff", "/staff/buildings/x", "/staff/buildings/4154146", "/api/buildings/x", "/api/buildings/4154146", "/api/staff/buildings/x", "/api/health", "/api/en/buildings/x"];
+
+    expect(onDisk.length).toBeGreaterThan(8);
+    for (const rule of others) {
+      const matches = pathToRegexp(rule.source);
+      for (const url of [...onDisk, ...lookalikes]) expect(matches.test(url), `${rule.source} must not match ${url}`).toBe(false);
+    }
+    // The pinned rule still matches the building pages it is for, in every launch language.
+    for (const rule of others) for (const code of LAUNCH_CODES) expect(pathToRegexp(rule.source).test(`/${code}/buildings/4154146`), code).toBe(true);
   });
 
   it("cover every staff page and API route on disk", () => {

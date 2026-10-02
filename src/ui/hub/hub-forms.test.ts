@@ -43,6 +43,17 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
     expect(value(".hub-input", "min-block-size")).toBe("var(--tap-current)");
   });
 
+  it("makes the label of a checkbox or radio the tap target (.hub-choice), with the control at the icon size in the ink colour", () => {
+    expect(value(".hub-choice", "display")).toBe("inline-flex");
+    expect(value(".hub-choice", "align-items")).toBe("center");
+    expect(value(".hub-choice", "min-block-size")).toBe("var(--tap-current)");
+    expect(value(".hub-choice", "min-inline-size")).toBe("var(--tap-current)");
+    expect(value(".hub-choice", "padding-inline")).toBe("var(--gap-label)");
+    expect(value(".hub-choice > input", "inline-size")).toBe("var(--size-icon)");
+    expect(value(".hub-choice > input", "block-size")).toBe("var(--size-icon)");
+    expect(value(".hub-choice > input", "accent-color")).toBe("var(--ink)");
+  });
+
   it("uses no colour or length literal: tokens only", () => {
     const text = readSource(FILE).replace(/\/\*[\s\S]*?\*\//g, "");
     expect(text).not.toMatch(/rgb\(|rgba\(|#[0-9a-f]{3,8}\b/i);

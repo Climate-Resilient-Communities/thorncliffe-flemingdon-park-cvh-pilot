@@ -7,8 +7,8 @@
 // view to a role the policy refuses, and is not audited.
 //
 // The app writes with its own credentials (cvh_app_login); Supabase Auth is the in-memory fake,
-// whose TOTP codes are computed here (memoryTotp.ts). Ambassador assignments arrive with S01.14:
-// until then the guard's scope (src/app/staff/scope.ts) is replaced by a stub.
+// whose TOTP codes are computed here (memoryTotp.ts). The guard's scope (src/app/staff/scope.ts) is replaced by
+// a stub that hands the guard the assignments each caller is given; the real scope is tested at the end.
 import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
@@ -16,9 +16,11 @@ import { migrate } from "../../scripts/db/migrate.mjs";
 import { GATE_PAGES, SIGN_IN_PAGE, type SetupGate } from "../../src/contracts/staffAuth";
 import type { StaffRole } from "../../src/contracts/staffRoles";
 import {
+  createAssignments,
   createIdentity,
   createStaffAuth,
   pepperPassword,
+  type AssignmentService,
   type AuthSessions,
   type CookieJar,
   type IdentityService,
@@ -26,9 +28,10 @@ import {
   type StaffAuthService,
 } from "../../src/modules/identity";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
-import { NO_ASSIGNMENTS, createBuildingService } from "../../src/modules/places";
+import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
+import { memoryDirectoryStorage } from "../../src/modules/directory";
 import { createDb, type Db } from "../../src/platform/db";
 import { PROVIDER_ID, ROLE_CALLERS, STAFF_ENDPOINTS, TARGET_USERNAME, type RoleCaller, type StaffEndpoint } from "../permissions/endpoints";
 import { connect, serverUrl } from "./helpers";
@@ -40,7 +43,9 @@ const wired = vi.hoisted(() => ({
   sessions: null as null | (() => unknown),
   assignments: [] as unknown[],
   places: null as unknown,
+  assignmentService: null as unknown,
   db: null as unknown,
+  publish: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -55,10 +60,13 @@ vi.mock("../../src/app/staff/identity", () => ({
 // A provider change asks Next to refresh the list, which only a request inside Next can do.
 vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 // The providers screen (S02.04) reads and writes through the app's database connection.
-vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db }));
+// "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
+vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
 // The buildings page and its actions (S01.13) read and write through the places module on the app's own connection.
 vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }));
-// The S01.14 stub: the assignments the guard reads for the caller.
+// The coverage page and its actions (S01.14) read and write through identity's assignments on the app's own connection.
+vi.mock("../../src/app/staff/assignments", () => ({ assignments: () => wired.assignmentService }));
+// The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
 const ROOT = path.join(__dirname, "..", "..");
@@ -91,6 +99,12 @@ beforeAll(async () => {
   url.password = password;
   app = createDb(url.href);
   wired.db = app;
+  wired.publish = {
+    storage: memoryDirectoryStorage(),
+    catalogue: async () => ({ hash: "a".repeat(64), gitCommit: null }),
+    zhHant: async () => ({ convert: (text: string) => text, openccVersion: "1.4.2", config: "test" }),
+    onFailure: async () => {},
+  };
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
   const tables = await owner<{ name: string; table_name: string }[]>`
     select format('%I.%I', table_schema, table_name) as name, table_name
@@ -107,21 +121,29 @@ async function reset() {
   await owner.begin(async (tx) => {
     await tx.unsafe(`
       alter table audit_event disable trigger audit_event_no_update_or_delete;
-      alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
+      alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;
+      alter table directory_release disable trigger directory_release_guard;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
+    await tx`delete from directory_release`;
+    await tx`delete from ops_event`;
+    await tx`delete from catalogue_load`;
+    // The seed ran with the catalogue the publish dependencies below report.
+    await tx`insert into catalogue_load (hash) values (${"a".repeat(64)})`;
     await tx`delete from provider_category`;
     await tx`delete from provider_location`;
     await tx`delete from provider`;
     await tx`delete from category`;
     await tx`delete from staff_bootstrap`;
     await tx`delete from staff_session`;
+    await tx`delete from ambassador_assignment`;
     await tx`update staff_account set created_by = null`;
     await tx`delete from staff_account`;
     await tx`delete from sign_in_failure`;
     await tx`delete from sign_in_lock`;
     await tx.unsafe(`
       alter table audit_event enable trigger audit_event_no_update_or_delete;
-      alter table staff_bootstrap enable trigger staff_bootstrap_forward_only;`);
+      alter table staff_bootstrap enable trigger staff_bootstrap_forward_only;
+      alter table directory_release enable trigger directory_release_guard;`);
   });
 }
 
@@ -148,10 +170,12 @@ beforeEach(async () => {
   wired.auth = auth;
   wired.sessions = null;
   wired.assignments = [];
+  const assignmentService = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
+  wired.assignmentService = assignmentService;
   wired.places = createBuildingService({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
-    assignments: NO_ASSIGNMENTS,
+    assignments: { onFloor: (executor, floor) => assignmentService.onFloor(executor, floor) },
   });
   // Two usable Admins and a completed bootstrap, as the Hub runs; and the account the account actions aim at.
   const first = await account("admina", "admin", { enrolled: true });
@@ -347,7 +371,7 @@ describe.each(STAFF_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint] as const
   });
 });
 
-describe("a call on a building (the Ambassador's scope, S01.14's assignments as a stub)", () => {
+describe("a call on a building (the Ambassador's scope, the assignments given by the stub)", () => {
   /** A route and an action on one building, as an alert-authoring endpoint of E04 will be: the policy action `alert.author`. */
   async function scopedEndpoints() {
     const { staffAction, staffJson, staffRoute } = await import("../../src/app/staff/guard");
@@ -504,10 +528,100 @@ describe("a call on a building (the Ambassador's scope, S01.14's assignments as 
     ]);
   });
 
-  it("refuses an Ambassador as out of scope until S01.14 gives them assignments (the real scope reads none)", async () => {
+  it("reads the Ambassador's real assignments for the guard's scope, and nothing for an Ambassador with none", async () => {
     const { assignmentsOf } = await vi.importActual<typeof import("../../src/app/staff/scope")>("../../src/app/staff/scope");
-    const { phone } = await signedIn("ambassador", "hub");
+    const { id, phone } = await signedIn("ambassador", "hub");
     const session = await auth.currentSession(phone.sessions());
     expect(await assignmentsOf(session!)).toEqual([]);
+
+    await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H') on conflict do nothing`;
+    await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values ('7001', 'TP', '4 Milepost Pl', 43.7, -79.34, ${T0}) on conflict do nothing`;
+    const floorId = "01900000-0000-7000-8000-00000000f001";
+    await owner`insert into building_floor (id, rsn, label, sort_order) values (${floorId}, '7001', '3', 3) on conflict do nothing`;
+    try {
+      // The assigner is an Admin (the use case re-reads the actor's authority), not the Ambassador themself.
+      const assigner = await account("assigner", "admin");
+      const saved = await (wired.assignmentService as AssignmentService).assign(assigner.id, { staffId: id, rsn: "7001", floorIds: [floorId] });
+      expect(saved.ok).toBe(true);
+      expect(await assignmentsOf(session!)).toEqual([{ rsn: "7001", floorIds: [floorId] }]);
+    } finally {
+      await owner`delete from ambassador_assignment`;
+      await owner`delete from building_floor where rsn = '7001'`;
+      await owner`delete from building where rsn = '7001'`;
+    }
+  });
+});
+
+describe("the coverage actions as an Admin (S01.14): they act on the building the guard judged", () => {
+  const FLOOR_3 = "01900000-0000-7000-8000-00000000f003";
+  const FLOOR_4 = "01900000-0000-7000-8000-00000000f004";
+
+  async function withBuilding<T>(run: () => Promise<T>): Promise<T> {
+    await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H') on conflict do nothing`;
+    await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values ('7001', 'TP', '4 Milepost Pl', 43.7, -79.34, ${T0})`;
+    await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at) values ('7002', 'TP', '6 Milepost Pl', 43.7, -79.34, ${T0})`;
+    await owner`insert into building_floor (id, rsn, label, sort_order) values (${FLOOR_3}, '7001', '3', 3), (${FLOOR_4}, '7002', '4', 4)`;
+    try {
+      return await run();
+    } finally {
+      await owner`delete from ambassador_assignment`;
+      await owner`delete from building_floor where rsn in ('7001', '7002')`;
+      await owner`delete from building where rsn in ('7001', '7002')`;
+    }
+  }
+
+  const formOf = (fields: Record<string, string>) => {
+    const data = new FormData();
+    for (const [name, value] of Object.entries(fields)) data.set(name, value);
+    return data;
+  };
+
+  it("assigns the Ambassador to the building named in the form, saves and audits it, and sends the Admin back to the building", async () => {
+    await withBuilding(async () => {
+      const { id, phone } = await signedIn("admin", "hub");
+      wired.sessions = phone.sessions;
+      const nia = await account("nia", "ambassador");
+      const { assignAmbassadorAction, removeAssignmentAction } = await import("../../src/app/staff/coverage/actions");
+      const since = await lastAuditId();
+
+      const assigned = await redirectOr(() => assignAmbassadorAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, scope: "some", floorId: FLOOR_3 })));
+      expect(assigned).toEqual({ redirect: "/staff/coverage?building=7001&done=assigned" });
+      expect(await owner`select rsn, all_floors, assigned_by from ambassador_assignment where staff_id = ${nia.id}`).toEqual([{ rsn: "7001", all_floors: false, assigned_by: id }]);
+      expect(await owner`select action, outcome, subject_id, meta from audit_event where id > ${since} and action like 'assignment.%'`).toEqual([
+        { action: "assignment.saved", outcome: "ok", subject_id: "7001", meta: { staff_id: nia.id, rsn: "7001", floor_ids: [FLOOR_3] } },
+      ]);
+
+      // A floor of the other building is refused in the form's own words, and nothing changes.
+      const refused = await redirectOr(() => assignAmbassadorAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, scope: "some", floorId: FLOOR_4 })));
+      expect(refused).toEqual({ value: { status: "refused", message: "One of those floors is not a floor of this building. Reload the page." } });
+      expect(await owner`select count(*)::int as n from ambassador_assignment_floor where floor_id = ${FLOOR_4}`).toEqual([{ n: 0 }]);
+
+      // Removing asks first: the first submit changes nothing.
+      const asked = await redirectOr(() => removeAssignmentAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, name: "Nia Mensah" })));
+      expect(asked).toEqual({ value: { status: "confirm", message: "Remove Nia Mensah from this building? They stay an ambassador and stop covering it." } });
+      expect(await owner`select count(*)::int as n from ambassador_assignment`).toEqual([{ n: 1 }]);
+
+      const removed = await redirectOr(() => removeAssignmentAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, confirm: "1" })));
+      expect(removed).toEqual({ redirect: "/staff/coverage?building=7001&done=removed" });
+      expect(await owner`select count(*)::int as n from ambassador_assignment`).toEqual([{ n: 0 }]);
+    });
+  });
+
+  it("refuses an account that is not an Ambassador, and a form that names no building, without changing anything", async () => {
+    await withBuilding(async () => {
+      const { phone } = await signedIn("admin", "hub");
+      wired.sessions = phone.sessions;
+      const { assignAmbassadorAction } = await import("../../src/app/staff/coverage/actions");
+      const coordinator = await account("coord", "coordinator");
+      const before = await businessData();
+
+      expect(await redirectOr(() => assignAmbassadorAction({ status: "idle" }, formOf({ rsn: "7001", staffId: coordinator.id, scope: "all" })))).toEqual({
+        value: { status: "refused", message: "Only an ambassador can be assigned to a building." },
+      });
+      expect(await redirectOr(() => assignAmbassadorAction({ status: "idle" }, formOf({ staffId: coordinator.id, scope: "all" })))).toEqual({
+        value: { status: "refused", message: "That building does not exist." },
+      });
+      expect(await businessData()).toEqual(before);
+    });
   });
 });
