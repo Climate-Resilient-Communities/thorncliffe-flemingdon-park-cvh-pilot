@@ -34,11 +34,13 @@ function setup(accounts: Partial<StaffAccount>[], options: { bootstrap?: Bootstr
     } as StaffAccount);
   }
   const generations = new Map<string, number>();
+  const steps: string[] = [];
   const store = {
     findById: async (_db, staffId) => (rows.has(staffId) ? { ...rows.get(staffId)! } : null),
     findByUsername: async (_db, username) => [...rows.values()].find((row) => row.username === username) ?? null,
     readBootstrap: async () => bootstrap,
-    setLockTimeout: async () => {},
+    setLockTimeout: async () => void steps.push("lock_timeout"),
+    lockAccount: async (_tx, staffId) => (steps.push("lock_account"), rows.has(staffId) ? { ...rows.get(staffId)! } : null),
     beginPasswordReset: async (_tx, staffId, at) => {
       const row = rows.get(staffId)!;
       if (row.status !== "active" && row.status !== "locked_pending_reissue") return false;
@@ -90,10 +92,11 @@ function setup(accounts: Partial<StaffAccount>[], options: { bootstrap?: Bootstr
     revocation,
     beginAdminRecovery: async (_tx, targetId) => {
       recoveries.push(targetId);
+      steps.push("recovery");
       return { adminShortfall: rows.get(targetId)?.role === "admin" && options.shortfall === true };
     },
   });
-  return { service, rows, idp, recorded, refused, generations, openSessions, recoveries, log, transactions };
+  return { service, rows, idp, recorded, refused, generations, openSessions, recoveries, log, transactions, steps };
 }
 
 const admin = (n: string, username: string, extra: Partial<StaffAccount> = {}) => ({ id: n, username, ...extra });
@@ -117,6 +120,15 @@ describe("an Admin's Reset password (S01.08)", () => {
       { action: "session.revoked", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { cause: "password_reset", sessions: 2 } },
     ]);
     expect(t.recoveries).toEqual([C]);
+  });
+
+  it("takes the account's lock under a lock timeout before changing it, like a password change and a re-issue", async () => {
+    const t = setup([admin(A, "admina"), admin(B, "adminb"), { id: C, username: "aokafor", role: "ambassador" }]);
+
+    expect((await t.service.resetPassword(A, "aokafor")).ok).toBe(true);
+
+    // First transaction, then the second (which sets its own timeout).
+    expect(t.steps).toEqual(["lock_timeout", "recovery", "lock_account", "lock_timeout"]);
   });
 
   it("resets an Admin's password as a recovery action, flagged admin_shortfall when it leaves fewer than two usable Admins", async () => {

@@ -383,6 +383,9 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       }
       const now = deps.now();
       if (!(await store.reissueStartingPassword(tx, target.id, now))) throw new Error("re-issue not recorded under the account lock");
+      // One count of revocations covers every way a starting password is issued again (a re-issue
+      // here, an Admin's reset): "choose your password" refuses if it moved since the request began.
+      await store.bumpSessionGeneration(tx, target.id);
       await sessionStore.revokeAll(tx, target.id, now);
       await audit.record(tx, { action: "password.reissued", actorStaffId, subjectType: "staff_account", subjectId: target.id });
       return "reissued" as const;
@@ -475,6 +478,8 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       input: { password: string; confirm: string },
       current?: CurrentSession,
     ): Promise<Result<{ gate: SetupGate }, ChangePasswordError>> {
+      // Read before the account, so a reset or re-issue in between can only make the check below refuse.
+      const generation = await store.sessionGeneration(db, staffId);
       const account = await store.findById(db, staffId);
       const refuse = async (code: ChangePasswordError, reason: AuditReason) => {
         await audit.recordRefusal(db, { action: "password.changed", actorStaffId: staffId, subjectType: "staff_account", subjectId: staffId, meta: { reason } });
@@ -497,6 +502,9 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         if (!locked || locked.status !== "active" || !locked.mustChangePassword) return { done: false as const, error: "not_required" as const };
         // Still the starting password this request read: a re-issue or reset since then started a new one.
         if (locked.startingPasswordIssuedAt?.getTime() !== account.startingPasswordIssuedAt?.getTime()) return { done: false as const, error: "not_required" as const };
+        // Nor any revocation (an Admin's reset, a re-issue) since the request began: it may have issued
+        // the same starting password again within the same millisecond.
+        if ((await store.sessionGeneration(tx, staffId)) !== generation) return { done: false as const, error: "not_required" as const };
         if (current) {
           // A re-issue (or a suspension) meanwhile revoked the session this request came from.
           const opened = await sessionStore.find(tx, current.sessionId);
