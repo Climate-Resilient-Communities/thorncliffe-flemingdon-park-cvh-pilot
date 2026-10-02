@@ -24,6 +24,7 @@ export {
   AuditRecordError,
   REFUSAL_REASONS,
   STAFF_ROLES,
+  SYSTEM_ACTOR,
   type AuditAction,
   type AuditEvent,
   type AuditMeta,

@@ -36,6 +36,9 @@ beforeAll(async () => {
     create table ${SCHEMA}.widget (id uuid primary key, label text not null);
     grant usage on schema ${SCHEMA} to cvh_app;
     grant select, insert, update, delete on ${SCHEMA}.widget to cvh_app;`);
+  // Every actor is a staff account (the foreign key S01.05 added): the actor of these records.
+  await owner`insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password)
+              values (${ACTOR}, ${randomUUID()}, ${`audit_test_${randomBytes(4).toString("hex")}`}, 'Audit', 'Test', 'audit.test@example.org', 'admin', false)`;
   // The migration creates the login role without a password; the owner sets
   // one in production. Here a throwaway one, on a disposable server.
   const password = randomBytes(18).toString("hex");
@@ -48,15 +51,14 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app?.$client.end({ timeout: 5 });
-  // The records of this file name random staff ids that no staff_account row
-  // will ever match, and the table is append-only, so S01.05's foreign key on
-  // actor_staff_id could not be added next to them. As the owner, in one
-  // transaction, take the triggers away, delete exactly this file's rows and
-  // put the triggers back.
+  // The table is append-only and its records point at this file's staff
+  // account. As the owner, in one transaction, take the trigger away, delete
+  // exactly this file's rows, put the trigger back and remove the account.
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where actor_staff_id = ${ACTOR} or subject_id = any(${createdSubjects})`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
+    await tx`delete from staff_account where id = ${ACTOR}`;
   });
   await owner.unsafe(`drop schema if exists ${SCHEMA} cascade; alter role cvh_app_login password null`);
   await owner.end({ timeout: 5 });
