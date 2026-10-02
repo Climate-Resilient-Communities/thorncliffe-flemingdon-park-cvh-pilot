@@ -1,0 +1,32 @@
+#!/usr/bin/env node
+// Resets one Admin's authenticator, in production (S01.11). See identity/recover-admin.ts for usage.
+// The script is TypeScript that uses the app's identity module, so this launcher bundles it with
+// esbuild (a dev dependency: run `npm ci` first) into node_modules/.cache and runs it.
+"use strict";
+
+const path = require("node:path");
+const { pathToFileURL } = require("node:url");
+
+async function launch() {
+  const { build } = require("esbuild");
+  const root = path.join(__dirname, "..");
+  const outfile = path.join(root, "node_modules", ".cache", "cvh-scripts", "recover-admin.mjs");
+  await build({
+    entryPoints: [path.join(__dirname, "identity", "recover-admin.ts")],
+    outfile,
+    bundle: true,
+    platform: "node",
+    format: "esm",
+    target: "node22",
+    packages: "external",
+    tsconfig: path.join(root, "tsconfig.json"),
+    logLevel: "error",
+  });
+  const { main } = await import(pathToFileURL(outfile).href);
+  process.exitCode = await main(process.argv.slice(2));
+}
+
+launch().catch((error) => {
+  console.error(error instanceof Error ? error.message : String(error));
+  process.exitCode = 1;
+});

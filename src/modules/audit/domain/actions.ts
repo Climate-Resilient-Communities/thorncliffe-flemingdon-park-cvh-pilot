@@ -22,6 +22,13 @@ export { STAFF_ROLES };
  */
 export const SYSTEM_ACTOR = null;
 
+/**
+ * Why an authenticator was reset (S01.11), a fixed list because audit meta has no free text:
+ * `lost_device` is the reason of an Admin's "Reset authenticator" and one IT may name;
+ * `all_admins_lost_access` is IT's reason when no usable Admin can sign in (scripts/recover-admin).
+ */
+export const FACTOR_RESET_REASONS = ["lost_device", "device_broken", "all_admins_lost_access"] as const;
+
 /** Why an action was refused or failed: a code, never a message or an input. */
 export const REFUSAL_REASONS = [
   "wrong_password",
@@ -99,7 +106,7 @@ export const AUDIT_META = {
   "factor.enrolled": meta({}),
   "factor.reset": meta({
     admin_shortfall: adminShortfall.optional(),
-    recovery: z.enum(["lost_device", "all_admins_lost_access"]).optional(),
+    recovery: z.enum(FACTOR_RESET_REASONS).optional(),
   }),
 
   // Sign-in and sessions (S01.07, S01.08, S01.10)
