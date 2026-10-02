@@ -169,4 +169,29 @@ export const drizzleStaffStore: StaffStore = {
   async setRole(tx, staffId, role) {
     await tx.update(staffAccount).set({ role }).where(eq(staffAccount.id, staffId));
   },
+
+  async beginPasswordReset(tx, staffId, at) {
+    const rows = await tx
+      .update(staffAccount)
+      .set({ status: "locked_pending_reissue", mustChangePassword: true, startingPasswordIssuedAt: at, startingPasswordUsedAt: null })
+      .where(and(eq(staffAccount.id, staffId), inArray(staffAccount.status, ["active", "locked_pending_reissue"])))
+      .returning({ id: staffAccount.id });
+    return rows.length > 0;
+  },
+
+  async sessionGeneration(db, staffId) {
+    const [row] = await db
+      .select({ generation: staffAccount.sessionGeneration })
+      .from(staffAccount)
+      .where(eq(staffAccount.id, staffId))
+      .limit(1);
+    return row ? row.generation : null;
+  },
+
+  async bumpSessionGeneration(tx, staffId) {
+    await tx
+      .update(staffAccount)
+      .set({ sessionGeneration: sql`${staffAccount.sessionGeneration} + 1` })
+      .where(eq(staffAccount.id, staffId));
+  },
 };

@@ -8,6 +8,7 @@ import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import { isUsernameFormat, loginForUsername, normaliseUsername } from "../domain/newAccount";
 import { validateOwnPassword, type OwnPasswordError } from "../domain/ownPassword";
 import { err, ok, type Result } from "../domain/result";
+import { sessionStanding } from "../domain/sessionLimits";
 import { setupGate } from "../domain/setupGate";
 import { CLIENT_LIMIT, THROTTLE_RETENTION_MS, USERNAME_LIMIT, isLocked, lockAfterFailure } from "../domain/signInThrottle";
 import type { StaffAccount } from "../domain/staffAccount";
@@ -251,6 +252,9 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     // The provider is asked for an unknown username too, but that alone does not make the answers
     // take as long: the paths after it differ (an account or none, a recovery check, a lock). The
     // timing is evened out by signIn, which pads every refusal to MIN_REFUSAL_MS.
+    // S01.08: the account's revocation count before the password is checked. A revocation that
+    // lands after this (a password reset, a suspension) refuses this sign-in below.
+    const generation = account ? await store.sessionGeneration(db, account.id) : null;
     const check = plausible ? await sessions.checkPassword({ login: loginForUsername(username), password: pepper(input.password) }) : null;
     if (check && !check.ok && check.error === "unavailable") {
       log.error("identity.sign_in_unavailable", { has_account: account !== null });
@@ -282,6 +286,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       if (await throttled(tx, usernameHash, clientHash, now)) return "throttled" as const;
       const current = await store.lockAccount(tx, account.id);
       if (!current || current.status !== "active") return "forbidden" as const;
+      if ((await store.sessionGeneration(tx, current.id)) !== generation) return "revoked" as const;
       const currentStanding = startingPasswordStanding(current, now);
       if (currentStanding === "expired" || currentStanding === "used") return currentStanding;
       if (currentStanding === "valid") await store.markStartingPasswordUsed(tx, current.id, now);
@@ -298,6 +303,13 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     if (decision === "forbidden") {
       await check.discard();
       return recordFailure(account, usernameHash, clientHash, "forbidden", now);
+    }
+    if (decision === "revoked") {
+      // The account's sessions were revoked while the password was checked: it may have been the
+      // old password. Not counted as a failure; the person signs in again.
+      await check.discard();
+      await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "conflict" } });
+      return { ok: false, error: "sign_in_failed" };
     }
     if (decision === "expired" || decision === "used") {
       await check.discard();
@@ -386,9 +398,11 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
      * session, the app checks that it opened that session itself (an unrevoked staff_session row
      * for this account), then the staff_account is loaded and the request is rejected unless its
      * status is `active` (a starting password still in use is an `active` account at gate 1) and,
-     * on a starting password, that password has not expired. A rejected session is signed out
-     * (ended at the provider, its cookie cleared where the response can still set cookies).
-     * Returns null for no session and every rejection.
+     * on a starting password, that password has not expired. S01.08 adds the session limits of the
+     * account's role (sessionLimits.ts: 30 minutes idle for Ambassadors, 12 hours for everyone),
+     * measured on the row's created_at and last_seen_at; an expired session is revoked. A rejected
+     * session is signed out (ended at the provider, its cookie cleared where the response can
+     * still set cookies). Returns null for no session and every rejection.
      */
     async currentSession(sessions: AuthSessions): Promise<StaffSession | null> {
       const user = await sessions.currentUser();
@@ -401,6 +415,13 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const usable =
         bound && account.status === "active" && !(account.mustChangePassword && startingPasswordStanding(account, now) === "expired");
       if (!usable || !opened || !account) {
+        await sessions.signOut();
+        return null;
+      }
+      // S01.08: the session limits of the account's current role. An ended session is revoked, so
+      // it stays ended whatever changes later (a new role, a clock moved back).
+      if (sessionStanding(opened, account.role, now) !== "active") {
+        await sessionStore.revoke(db, opened.id, now);
         await sessions.signOut();
         return null;
       }

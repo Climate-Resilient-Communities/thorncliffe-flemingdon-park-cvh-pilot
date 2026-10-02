@@ -12,6 +12,8 @@ import { createAccountService, type AccountService, type AuditWriter } from "./a
 import type { IdentityProvider } from "./application/ports";
 import { createAdminRecovery } from "./application/adminRecovery";
 import { passwordPepper } from "./application/passwordPepper";
+import { createPasswordResetService, type PasswordResetService } from "./application/passwordReset";
+import { createSessionRevocation } from "./application/sessionRevocation";
 import { createStaffAuthService, signInLockReader, type StaffAuthService } from "./application/staffAuth";
 import { createStaffChangeService, type StaffChangeService } from "./application/staffChanges";
 
@@ -60,8 +62,11 @@ function lockReader(wiring: IdentityWiring) {
   return (username: string) => read(wiring.db, username);
 }
 
-/** The identity module's use cases: accounts and bootstrap (S01.05), and changes under the two-Admin rule (S01.06). */
-export type IdentityService = AccountService & StaffChangeService;
+/**
+ * The identity module's use cases: accounts and bootstrap (S01.05), changes under the two-Admin rule
+ * (S01.06), each ending the account's sessions, and an Admin's password reset (S01.08).
+ */
+export type IdentityService = AccountService & StaffChangeService & PasswordResetService;
 
 /** The identity use cases, wired to the identity tables, the audit trail and the given identity provider. */
 export function createIdentity(wiring: IdentityWiring): IdentityService {
@@ -77,7 +82,14 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
     lockTimeoutMs: wiring.lockTimeoutMs,
     pepper: passwordPepper(wiring.passwordPepper),
   };
-  return { ...createAccountService(deps), ...createStaffChangeService(deps) };
+  // Session revocation and the recovery exception stay inside the module (S01.08, S01.06).
+  const revocation = createSessionRevocation({ store: drizzleStaffStore, sessions: drizzleStaffSessionStore, audit: deps.audit, now: deps.now });
+  const { beginAdminRecovery } = createAdminRecovery(deps);
+  return {
+    ...createAccountService(deps),
+    ...createStaffChangeService({ ...deps, revocation }),
+    ...createPasswordResetService({ ...deps, revocation, beginAdminRecovery }),
+  };
 }
 
 /**
@@ -132,6 +144,8 @@ export type {
 export { MIN_REFUSAL_MS, REQUIRED_TOKEN_LIFETIME_SECONDS } from "./application/staffAuth";
 export type { ChangePasswordError, CurrentSession, FirstAdminReissueError, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
 export { type StaffChangeService } from "./application/staffChanges";
+export type { PasswordResetService, ResetPasswordError } from "./application/passwordReset";
+export { AMBASSADOR_IDLE_MS, SESSION_ABSOLUTE_MS, sessionLimits } from "./domain/sessionLimits";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
 export { setupGate } from "./domain/setupGate";
 export { CLIENT_LIMIT, USERNAME_LIMIT } from "./domain/signInThrottle";
