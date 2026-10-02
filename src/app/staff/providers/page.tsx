@@ -4,7 +4,8 @@ import { listProviders, torontoDate } from "@/modules/directory";
 import { Screen, Stack } from "@/ui";
 import { directoryDb } from "../directory";
 import { staffPage } from "../guard";
-import { ProviderList, type ProviderListLabels, type ProviderRowData } from "./ProviderList";
+import { ProviderList, type ProviderRowData } from "./ProviderList";
+import { providerListLabels } from "./labels";
 
 export const metadata: Metadata = { title: englishText("staff.providers.title") };
 
@@ -16,27 +17,6 @@ function ProvidersHeading() {
       <p>{englishText("staff.providers.lead")}</p>
     </Stack>
   );
-}
-
-const LABEL_KEYS = [
-  "statusPublished",
-  "statusUnpublished",
-  "statusRemoved",
-  "removedNote",
-  "neverConfirmed",
-  "confirmDate",
-  "confirmedOn",
-  "dateHint",
-  "saveDate",
-  "publish",
-  "unpublish",
-] as const;
-
-/** The list's labels from the catalog, resolved on the server so the catalog never reaches the browser. `{date}` stays for the row to fill. */
-function providerListLabels(): ProviderListLabels {
-  return Object.fromEntries(
-    LABEL_KEYS.map((key) => [key, key === "confirmedOn" ? englishText("staff.providers.confirmedOn", { date: "{date}" }) : englishText(`staff.providers.${key}`)]),
-  ) as unknown as ProviderListLabels;
 }
 
 /**

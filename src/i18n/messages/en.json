@@ -3973,7 +3973,7 @@
       "removedNote": "No longer in the catalogue. It is unpublished and kept with its last-confirmed date, and cannot be published or confirmed.",
       "neverConfirmed": "Not confirmed yet",
       "confirmedOn": "Last confirmed {date}",
-      "confirmDate": "Last confirmed on",
+      "confirmDate": "Date last confirmed",
       "dateHint": "Today or earlier.",
       "saveDate": "Save date",
       "publish": "Publish",
@@ -3991,7 +3991,8 @@
         "notInCatalogue": "This provider is no longer in the catalogue, so it cannot be published or confirmed.",
         "alreadyPublished": "This provider is already published.",
         "notPublished": "This provider is not published.",
-        "forbidden": "Only an Admin can change providers."
+        "forbidden": "Only an Admin can change providers.",
+        "aal2Required": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
       }
     }
   }

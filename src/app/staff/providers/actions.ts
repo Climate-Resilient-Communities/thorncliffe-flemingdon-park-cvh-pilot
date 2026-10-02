@@ -18,7 +18,7 @@ const REFUSAL_KEYS: Record<ActionRefusal, string> = {
   forbidden: "staff.providers.errors.forbidden",
   bad_request: "staff.providers.errors.forbidden",
   setup_incomplete: "staff.setup.incomplete",
-  aal2_required: "staff.authenticator.required",
+  aal2_required: "staff.providers.errors.aal2Required",
 };
 
 const refused = (error: ActionRefusal, _previous: ProviderActionState, form: FormData): ProviderActionState => ({

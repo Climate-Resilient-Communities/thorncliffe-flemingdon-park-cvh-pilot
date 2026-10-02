@@ -1024,11 +1024,12 @@
     statusPublished: 'Published', statusUnpublished: 'Not published', statusRemoved: 'Not in catalogue',
     removedNote: 'No longer in the catalogue. It is unpublished and kept with its last-confirmed date, and cannot be published or confirmed.',
     neverConfirmed: 'Not confirmed yet', confirmedOn: 'Last confirmed {date}',
-    confirmDate: 'Last confirmed on', dateHint: 'Today or earlier.', saveDate: 'Save date',
+    confirmDate: 'Date last confirmed', dateHint: 'Today or earlier.', saveDate: 'Save date',
     publish: 'Publish', unpublish: 'Unpublish',
     done: { published: '{name} is published.', unpublished: '{name} is no longer published.', confirmed: '{name} was confirmed on {date}.' },
     errors: { confirmFirst: 'Confirm this provider first', dateInvalid: 'Choose a date.', dateInFuture: 'The date cannot be later than today.',
       notFound: 'That provider is not in the list.', notInCatalogue: 'This provider is no longer in the catalogue, so it cannot be published or confirmed.',
       alreadyPublished: 'This provider is already published.', notPublished: 'This provider is not published.',
-      forbidden: 'Only an Admin can change providers.' } } } });
+      forbidden: 'Only an Admin can change providers.',
+      aal2Required: 'An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.' } } } });
 })();

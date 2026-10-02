@@ -108,7 +108,10 @@ async function signInToTheHub(page: Page, role: Role) {
 }
 
 const row = (page: Page, id: string) => page.getByTestId(`provider-${id}`);
+/** The row's status region: always in the page, with text only after a change was made. */
 const message = (page: Page, id: string) => page.getByTestId(`provider-${id}-message`);
+/** The row's refusal: in the page only while the last change was refused. */
+const refusal = (page: Page, id: string) => page.getByTestId(`provider-${id}-error`);
 
 async function shot(page: Page, name: string) {
   if (shots) await page.screenshot({ path: path.join(shots, `${name}.png`), fullPage: true });
@@ -137,8 +140,21 @@ test("an Admin sees Providers under Administration and the loaded catalogue with
   await expect(page.getByTestId("provider-summary")).toHaveText("0 of 3 providers published. 2 not confirmed yet.");
 
   await expect(page.getByTestId("provider-M901-status")).toHaveText("Not published");
-  await expect(page.getByTestId("provider-M901-confirmed")).toHaveText("Not confirmed yet");
-  await expect(page.getByTestId("provider-M902-confirmed")).toHaveText("Last confirmed 2026-09-20");
+  // The date is shown once, in its field: no "Last confirmed" line for a provider in the catalogue.
+  await expect(page.getByTestId("provider-M901-confirmed")).toHaveCount(0);
+  await expect(page.getByTestId("provider-M902-confirmed")).toHaveCount(0);
+  await expect(row(page, "M901").getByLabel("Date last confirmed")).toHaveValue("");
+  await expect(page.getByTestId("provider-M901-date-hint")).toHaveText("Not confirmed yet");
+  await expect(row(page, "M902").getByLabel("Date last confirmed")).toHaveValue("2026-09-20");
+  await expect(page.getByTestId("provider-M902-date-hint")).toHaveText("Today or earlier.");
+  // Publish waits for a saved date, and says why.
+  await expect(row(page, "M901").getByRole("button", { name: "Publish" })).toBeDisabled();
+  await expect(page.getByTestId("provider-M901-publish-hint")).toHaveText("Confirm this provider first");
+  await expect(row(page, "M902").getByRole("button", { name: "Publish" })).toBeEnabled();
+  await expect(page.getByTestId("provider-M902-publish-hint")).toHaveCount(0);
+  // Every row keeps an empty status region for its done messages.
+  await expect(message(page, "M901")).toHaveAttribute("role", "status");
+  await expect(message(page, "M901")).toHaveText("");
   // A provider that left the catalogue: flagged, its date kept, and nothing to press.
   await expect(page.getByTestId("provider-M904-status")).toHaveText("Not in catalogue");
   await expect(page.getByTestId("provider-M904-confirmed")).toHaveText("Last confirmed 2026-08-15");
@@ -152,7 +168,7 @@ test("an Admin sees Providers under Administration and the loaded catalogue with
   await shot(page, "providers-1280-list");
 });
 
-test("publishing a provider with no last-confirmed date is refused with 'Confirm this provider first'; after the date it publishes and unpublishes, all audited", async ({ page }) => {
+test("publishing a provider with no last-confirmed date is disabled, and refused by the server with 'Confirm this provider first'; after the date it publishes and unpublishes, all audited", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   const admin = await signInToTheHub(page, "admin");
   await page.goto("/staff/providers");
@@ -160,18 +176,27 @@ test("publishing a provider with no last-confirmed date is refused with 'Confirm
   await shot(page, "providers-390-list");
 
   const m901 = row(page, "M901");
+  await expect(m901.getByRole("button", { name: "Publish" })).toBeDisabled();
+  // The button is disabled in the browser, so the server's refusal is reached by enabling it.
+  await m901.getByRole("button", { name: "Publish" }).evaluate((button) => ((button as HTMLButtonElement).disabled = false));
   await m901.getByRole("button", { name: "Publish" }).click();
-  await expect(message(page, "M901")).toHaveText("Confirm this provider first");
-  await expect(message(page, "M901")).toHaveAttribute("role", "alert");
+  await expect(refusal(page, "M901")).toHaveText("Confirm this provider first");
+  await expect(refusal(page, "M901")).toHaveAttribute("role", "alert");
+  await expect(refusal(page, "M901")).toHaveClass(/hub-error/);
+  await expect(message(page, "M901")).toHaveAttribute("role", "status");
+  await expect(message(page, "M901")).toHaveText("");
   expect(await providerRow("M901")).toMatchObject({ published: false, last_confirmed: null });
   expect((await audits("M901", "provider.published")).map((a) => [a.outcome, a.meta])).toEqual([["refused", { reason: "validation" }]]);
   await shot(page, "providers-390-confirm-first-refusal");
 
   // A date after today cannot be picked (max) and, sent anyway, is refused by the server.
-  await m901.getByLabel("Last confirmed on").fill(YESTERDAY);
+  await m901.getByLabel("Date last confirmed").fill(YESTERDAY);
   await m901.getByRole("button", { name: "Save date" }).click();
   await expect(message(page, "M901")).toHaveText(`Thorncliffe Neighbourhood Office was confirmed on ${YESTERDAY}.`);
-  await expect(page.getByTestId("provider-M901-confirmed")).toHaveText(`Last confirmed ${YESTERDAY}`);
+  await expect(refusal(page, "M901")).toHaveCount(0);
+  await expect(m901.getByLabel("Date last confirmed")).toHaveValue(YESTERDAY);
+  await expect(page.getByTestId("provider-M901-date-hint")).toHaveText("Today or earlier.");
+  await expect(m901.getByRole("button", { name: "Publish" })).toBeEnabled();
   expect(await providerRow("M901")).toMatchObject({ last_confirmed: YESTERDAY, published: false });
   expect((await audits("M901", "provider.confirmed")).map((a) => a.meta)).toEqual([{ confirmed_on: YESTERDAY, previous: null }]);
 
@@ -188,7 +213,7 @@ test("publishing a provider with no last-confirmed date is refused with 'Confirm
 
   await m901.getByRole("button", { name: "Unpublish" }).click();
   await expect(page.getByTestId("provider-M901-status")).toHaveText("Not published");
-  await expect(page.getByTestId("provider-M901-confirmed")).toHaveText(`Last confirmed ${YESTERDAY}`);
+  await expect(m901.getByLabel("Date last confirmed")).toHaveValue(YESTERDAY);
   expect(await providerRow("M901")).toMatchObject({ published: false, last_confirmed: YESTERDAY });
   expect((await audits("M901", "provider.unpublished")).map((a) => a.outcome)).toEqual(["ok"]);
 
@@ -200,7 +225,7 @@ test("the date field stops at today, and a later date sent to the server anyway 
   await signInToTheHub(page, "admin");
   await page.goto("/staff/providers");
 
-  const input = row(page, "M902").getByLabel("Last confirmed on");
+  const input = row(page, "M902").getByLabel("Date last confirmed");
   const max = await input.getAttribute("max");
   expect(max).toMatch(/^\d{4}-\d{2}-\d{2}$/);
   const later = new Date(`${max}T00:00:00Z`);
@@ -213,7 +238,9 @@ test("the date field stops at today, and a later date sent to the server anyway 
   }, later.toISOString().slice(0, 10));
   await row(page, "M902").getByRole("button", { name: "Save date" }).click();
 
-  await expect(message(page, "M902")).toHaveText("The date cannot be later than today.");
+  await expect(refusal(page, "M902")).toHaveText("The date cannot be later than today.");
+  await expect(refusal(page, "M902")).toHaveAttribute("role", "alert");
+  await expect(message(page, "M902")).toHaveText("");
   expect((await providerRow("M902")).last_confirmed).toBe("2026-09-20");
   expect((await audits("M902", "provider.confirmed")).map((a) => [a.outcome, a.meta])).toEqual([["refused", { reason: "validation" }]]);
 });

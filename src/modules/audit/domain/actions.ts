@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { isIsoDate } from "@/contracts/contentReview";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 
 /**
@@ -70,8 +71,8 @@ const flag = z.boolean();
 const adminShortfall = z.literal(true);
 /** A lower_snake_case code (seed names, count keys, provider status). */
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
-/** A calendar date written YYYY-MM-DD (a provider's last-confirmed date). */
-const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
+/** A real calendar date written YYYY-MM-DD (a provider's last-confirmed date): 2026-02-31 is refused. */
+const isoDate = z.string().refine(isIsoDate, "must be a real date written YYYY-MM-DD");
 /** The City register's building number. */
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
@@ -144,6 +145,7 @@ export const AUDIT_META = {
 
   // Providers (S02.04): an Admin publishes or unpublishes a provider and sets its last-confirmed date.
   // The subject is the provider (type `provider`, its catalogue id); listing text is never in meta.
+  // `last_confirmed` / `confirmed_on` are required on an ok record (REQUIRED_WHEN_OK), absent on a refusal.
   "provider.published": meta({ last_confirmed: isoDate.optional() }),
   "provider.unpublished": meta({}),
   "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
@@ -162,6 +164,16 @@ export const AUDIT_META = {
 export type AuditAction = keyof typeof AUDIT_META;
 export type AuditMeta<A extends AuditAction> = z.input<(typeof AUDIT_META)[A]>;
 export type AuditOutcome = "ok" | "refused";
+
+/**
+ * Meta fields an `ok` record must carry although the schema leaves them optional (a `refused` record
+ * carries only its reason). A provider's confirmation names the date it set; its publication the
+ * last-confirmed date it published on.
+ */
+const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
+  "provider.confirmed": ["confirmed_on"],
+  "provider.published": ["last_confirmed"],
+};
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
 
@@ -258,7 +270,19 @@ const SUBJECT_TYPE = /^[a-z][a-z0-9_]{0,39}$/;
  * 3 to 6 digits, like the provider M001) or a Twilio message SID: nothing a
  * phone number, an email address, a username or a token can be written as.
  */
-const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|[A-Z][0-9]{3,6}|(?:SM|MM)[0-9a-f]{32})$/;
+const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|(?:SM|MM)[0-9a-f]{32})$/;
+/**
+ * Extra subject id forms allowed for one subject type only, so the wider form is not open to every
+ * subject: a provider's catalogue id (one capital letter and 3 to 6 digits, like M001).
+ */
+const SUBJECT_ID_BY_TYPE: Readonly<Record<string, RegExp>> = {
+  provider: /^[A-Z][0-9]{3,6}$/,
+};
+
+function isSubjectId(subjectType: string, subjectId: string): boolean {
+  if (UUID.test(subjectId) || SUBJECT_ID.test(subjectId)) return true;
+  return Object.hasOwn(SUBJECT_ID_BY_TYPE, subjectType) && SUBJECT_ID_BY_TYPE[subjectType].test(subjectId);
+}
 
 /**
  * A path segment safe to print: an array index, or a key of the action's own
@@ -290,7 +314,7 @@ export function toAuditRecord(event: AuditEvent, outcome: AuditOutcome): AuditRe
   if (!SUBJECT_TYPE.test(event.subjectType)) {
     throw new AuditRecordError(`${action}: subjectType must be a lower_snake_case type`);
   }
-  if (event.subjectId !== null && (!(UUID.test(event.subjectId) || SUBJECT_ID.test(event.subjectId)) || findSensitiveValue(event.subjectId))) {
+  if (event.subjectId !== null && (!isSubjectId(event.subjectType, event.subjectId) || findSensitiveValue(event.subjectId))) {
     throw new AuditRecordError(`${action}: subjectId must be an id, never personal data`);
   }
 
@@ -304,6 +328,11 @@ export function toAuditRecord(event: AuditEvent, outcome: AuditOutcome): AuditRe
       return `${where} has fields outside the schema: ${keys.join(", ")}`;
     });
     throw new AuditRecordError(`${action}: ${problems.join("; ")}`);
+  }
+  if (outcome === "ok") {
+    const data = parsed.data as Record<string, unknown>;
+    const missing = (REQUIRED_WHEN_OK[action] ?? []).filter((field) => data[field] === undefined);
+    if (missing.length > 0) throw new AuditRecordError(`${action}: meta is missing ${missing.join(", ")}`);
   }
   const sensitive = findSensitiveValue(parsed.data);
   if (sensitive) throw new AuditRecordError(`${action}: ${sensitive} looks like a phone number or email address`);

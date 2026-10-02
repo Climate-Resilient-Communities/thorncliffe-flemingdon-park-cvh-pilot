@@ -178,6 +178,42 @@ describe("provider catalogue (S02.04)", () => {
     });
   });
 
+  describe("the last-confirmed date guard", () => {
+    const toronto = async (days: number) =>
+      (await sql.unsafe("select ((now() at time zone 'America/Toronto')::date + $1::int)::text as day", [days]))[0].day as string;
+
+    it("refuses a date after today in Toronto, on update and on insert, for the owner and for the app's role", async () => {
+      await sql.unsafe("insert into provider (id, name, texts) values ('M001', 'A', '{}')");
+      const tomorrow = await toronto(1);
+
+      await expect(sql.unsafe(`update provider set last_confirmed = '${tomorrow}' where id = 'M001'`)).rejects.toThrow(/cannot be in the future/);
+      await expect(appSql.unsafe(`update provider set last_confirmed = '${tomorrow}' where id = 'M001'`)).rejects.toThrow(/cannot be in the future/);
+      await expect(sql.unsafe(`update provider set last_confirmed = '2099-01-01' where id = 'M001'`)).rejects.toThrow(/cannot be in the future/);
+      await expect(sql.unsafe(`insert into provider (id, name, texts, last_confirmed) values ('M002', 'B', '{}', '${tomorrow}')`)).rejects.toThrow(/cannot be in the future/);
+      expect((await row("M001")).last_confirmed).toBeNull();
+    });
+
+    it("accepts today in Toronto and any earlier date, and an update of other columns on a row that has one", async () => {
+      await sql.unsafe("insert into provider (id, name, texts) values ('M001', 'A', '{}')");
+
+      await expect(appSql.unsafe(`update provider set last_confirmed = '${await toronto(0)}' where id = 'M001'`)).resolves.toBeDefined();
+      await expect(appSql.unsafe("update provider set last_confirmed = '2020-02-29' where id = 'M001'")).resolves.toBeDefined();
+      await expect(sql.unsafe("update provider set name = 'B' where id = 'M001'")).resolves.toBeDefined();
+    });
+
+    it("keeps the guard function out of reach of the client roles, with its search_path pinned", async () => {
+      const [fn] = await sql.unsafe(`
+        select has_function_privilege('anon', p.oid, 'EXECUTE') as anon,
+               has_function_privilege('authenticated', p.oid, 'EXECUTE') as authenticated,
+               has_function_privilege('public', p.oid, 'EXECUTE') as public,
+               p.proconfig as config
+        from pg_proc p where p.proname = 'provider_last_confirmed_not_future'`);
+
+      expect(fn).toMatchObject({ anon: false, authenticated: false, public: false });
+      expect(fn.config).toContain('search_path=""');
+    });
+  });
+
   describe("the seed", () => {
     it("loads the real data/catalogue files, and running it twice changes nothing", async () => {
       const files = readProviderCatalogue(path.join(ROOT, "data", "catalogue"));
@@ -481,6 +517,81 @@ describe("provider catalogue (S02.04)", () => {
       expect(results.filter((r) => r.ok)).toHaveLength(1);
       expect(results.filter((r) => !r.ok)).toEqual([{ ok: false, error: "already_published" }]);
       expect((await auditOf("provider.published")).filter((e) => e.outcome === "ok")).toHaveLength(1);
+    });
+
+    describe("a publish at the same time as the seed removing the provider", () => {
+      // A second connection holds the provider's row lock while the two competing transactions queue behind
+      // it in a known order; releasing it lets the first in line go first.
+      async function race<A, B>(first: "publish" | "seed", publish: () => Promise<A>, remove: () => Promise<B>) {
+        const holder = connect(serverUrl());
+        const probe = connect(serverUrl());
+        let release!: () => void;
+        const released = new Promise<void>((resolve) => (release = resolve));
+        let locked!: () => void;
+        const hasLock = new Promise<void>((resolve) => (locked = resolve));
+        const holding = holder.begin(async (tx) => {
+          await tx`select id from provider where id = 'M001' for update`;
+          locked();
+          await released;
+        });
+        const waiters = async (n: number) => {
+          for (let i = 0; i < 200; i += 1) {
+            const [{ count }] = await probe`select count(*)::int as count from pg_stat_activity where wait_event_type = 'Lock' and datname = current_database()`;
+            if (count >= n) return;
+            await new Promise((resolve) => setTimeout(resolve, 25));
+          }
+          throw new Error("the competing transactions never queued on the row lock");
+        };
+        try {
+          await hasLock;
+          let publishing: Promise<A>;
+          let removing: Promise<B>;
+          if (first === "publish") {
+            publishing = publish();
+            await waiters(1);
+            removing = remove();
+          } else {
+            removing = remove();
+            await waiters(1);
+            publishing = publish();
+          }
+          await waiters(2);
+          release();
+          await holding;
+          return { publish: await publishing, seeded: await removing };
+        } finally {
+          release();
+          await holding.catch(() => undefined);
+          await holder.end({ timeout: 5 });
+          await probe.end({ timeout: 5 });
+        }
+      }
+      const run = (first: "publish" | "seed") =>
+        race(first, () => publishProvider(app, staffId, "M001", { now: NOW }), () => seed(input([entry("M002", { categories: ["Health & Wellness", "Non-Profits"] })])));
+
+      beforeEach(async () => {
+        await confirmProvider(app, staffId, "M001", TODAY, { now: NOW });
+        await confirmProvider(app, staffId, "M002", TODAY, { now: NOW });
+      });
+
+      it("publish first: the seed then unpublishes it, so the end state is flagged and unpublished, with both audited", async () => {
+        const { publish, seeded } = await run("publish");
+
+        expect(publish).toMatchObject({ ok: true });
+        expect(seeded.removed).toEqual({ flagged: 1, unpublished: 1 });
+        expect(await row("M001")).toMatchObject({ in_catalogue: false, published: false, published_at: null, last_confirmed: TODAY });
+        expect((await auditOf("provider.published")).map((e) => [e.subject_id, e.outcome])).toEqual([["M001", "ok"]]);
+        expect((await seedRuns()).at(-1)?.meta).toMatchObject({ counts: { providers_not_in_catalogue: 1, providers_unpublished: 1 } });
+      });
+
+      it("seed first: the publish is refused as not in the catalogue, the refusal is audited, and nothing is published", async () => {
+        const { publish, seeded } = await run("seed");
+
+        expect(seeded.removed).toEqual({ flagged: 1, unpublished: 0 });
+        expect(publish).toEqual({ ok: false, error: "not_in_catalogue" });
+        expect(await row("M001")).toMatchObject({ in_catalogue: false, published: false, published_at: null, last_confirmed: TODAY });
+        expect((await auditOf("provider.published")).map((e) => [e.subject_id, e.outcome, e.meta])).toEqual([["M001", "refused", { reason: "conflict" }]]);
+      });
     });
 
     it("lists the providers with their categories, state and street", async () => {

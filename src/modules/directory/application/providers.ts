@@ -8,7 +8,7 @@
 // audit record. Each change locks the provider's row, applies domain/providerState.ts, and writes
 // the audit record in the same transaction; a refusal is audited in its own transaction after.
 import { asc, eq, sql } from "drizzle-orm";
-import { record, recordRefusal, type AuditAction } from "@/modules/audit";
+import { record, recordRefusal, type AuditMeta } from "@/modules/audit";
 import type { Db } from "@/platform/db";
 import { category, provider, providerCategory, providerLocation } from "../adapters/schema";
 import {
@@ -77,14 +77,38 @@ const REFUSAL_REASON: Record<ProviderError, "not_found" | "validation" | "confli
   not_published: "conflict",
 };
 
+/** The audit record of a change, typed per action: each action carries its own meta. */
+type ProviderAudit =
+  | { action: "provider.published"; meta: AuditMeta<"provider.published"> }
+  | { action: "provider.unpublished"; meta: AuditMeta<"provider.unpublished"> }
+  | { action: "provider.confirmed"; meta: AuditMeta<"provider.confirmed"> };
+
 type Change = {
-  action: Extract<AuditAction, "provider.published" | "provider.unpublished" | "provider.confirmed">;
   decide: (state: ProviderState) => ProviderDecision;
-  /** The columns to write, given the row's state; and the audit meta. */
-  apply: (state: ProviderState, now: Date) => { set: Partial<typeof provider.$inferInsert>; meta: Record<string, string | null> };
+  /** The columns to write, given the row's state; and the audit record. */
+  apply: (state: ProviderState, now: Date) => { set: Partial<typeof provider.$inferInsert>; audit: ProviderAudit };
 };
 
-async function change(db: Db, actorStaffId: string, providerId: string, change: Change, options: ProviderOptions): Promise<ProviderResult> {
+function recordChange(tx: Parameters<typeof record>[0], actorStaffId: string, providerId: string, audit: ProviderAudit) {
+  const subject = { actorStaffId, subjectType: "provider", subjectId: providerId };
+  switch (audit.action) {
+    case "provider.published":
+      return record(tx, { ...subject, action: audit.action, meta: audit.meta });
+    case "provider.unpublished":
+      return record(tx, { ...subject, action: audit.action, meta: audit.meta });
+    case "provider.confirmed":
+      return record(tx, { ...subject, action: audit.action, meta: audit.meta });
+  }
+}
+
+async function change(
+  db: Db,
+  actorStaffId: string,
+  providerId: string,
+  action: ProviderAudit["action"],
+  change: Change,
+  options: ProviderOptions,
+): Promise<ProviderResult> {
   const now = (options.now ?? (() => new Date()))();
   const outcome = await db.transaction(async (tx): Promise<ProviderResult> => {
     const [row] = await tx
@@ -96,23 +120,17 @@ async function change(db: Db, actorStaffId: string, providerId: string, change: 
     const state: ProviderState = { published: row.published, inCatalogue: row.inCatalogue, lastConfirmed: row.lastConfirmed };
     const decision = change.decide(state);
     if (!decision.ok) return decision;
-    const { set, meta } = change.apply(state, now);
+    const { set, audit } = change.apply(state, now);
     await tx
       .update(provider)
       .set({ ...set, updatedAt: sql`now()` })
       .where(eq(provider.id, providerId));
-    await record(tx, {
-      action: change.action,
-      actorStaffId,
-      subjectType: "provider",
-      subjectId: providerId,
-      meta,
-    } as Parameters<typeof record>[1]);
+    await recordChange(tx, actorStaffId, providerId, audit);
     return { ok: true, name: row.name, lastConfirmed: set.lastConfirmed === undefined ? state.lastConfirmed : set.lastConfirmed };
   });
   if (!outcome.ok) {
     await recordRefusal(db, {
-      action: change.action,
+      action,
       actorStaffId,
       subjectType: "provider",
       subjectId: PROVIDER_ID.test(providerId) ? providerId : null,
@@ -128,10 +146,14 @@ export function publishProvider(db: Db, actorStaffId: string, providerId: string
     db,
     actorStaffId,
     providerId,
+    "provider.published",
     {
-      action: "provider.published",
       decide: decidePublish,
-      apply: (state, now) => ({ set: { published: true, publishedAt: now }, meta: { last_confirmed: state.lastConfirmed } }),
+      // decidePublish refused a provider with no date; the audit record requires it.
+      apply: (state, now) => ({
+        set: { published: true, publishedAt: now },
+        audit: { action: "provider.published", meta: { last_confirmed: state.lastConfirmed ?? undefined } },
+      }),
     },
     options,
   );
@@ -143,10 +165,10 @@ export function unpublishProvider(db: Db, actorStaffId: string, providerId: stri
     db,
     actorStaffId,
     providerId,
+    "provider.unpublished",
     {
-      action: "provider.unpublished",
       decide: decideUnpublish,
-      apply: () => ({ set: { published: false, publishedAt: null }, meta: {} }),
+      apply: () => ({ set: { published: false, publishedAt: null }, audit: { action: "provider.unpublished", meta: {} } }),
     },
     options,
   );
@@ -158,10 +180,13 @@ export function confirmProvider(db: Db, actorStaffId: string, providerId: string
     db,
     actorStaffId,
     providerId,
+    "provider.confirmed",
     {
-      action: "provider.confirmed",
       decide: (state) => decideConfirm(state, date, torontoDate((options.now ?? (() => new Date()))())),
-      apply: (state) => ({ set: { lastConfirmed: date }, meta: { confirmed_on: date, previous: state.lastConfirmed } }),
+      apply: (state) => ({
+        set: { lastConfirmed: date },
+        audit: { action: "provider.confirmed", meta: { confirmed_on: date, previous: state.lastConfirmed } },
+      }),
     },
     options,
   );

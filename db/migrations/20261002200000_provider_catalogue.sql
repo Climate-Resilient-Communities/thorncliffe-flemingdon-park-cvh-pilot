@@ -54,7 +54,7 @@ create table provider_location (
   lat double precision not null,
   lng double precision not null,
   primary key (provider_id, seq),
-  -- The Toronto bounding box (src/modules/directory/domain/torontoBounds.ts).
+  -- The Toronto bounding box (src/contracts/torontoBounds.ts).
   constraint provider_location_in_toronto check (lat between 43.58 and 43.86 and lng between -79.64 and -79.11)
 );
 
@@ -91,3 +91,24 @@ create policy provider_app_update on provider for update to cvh_app using (true)
 create policy provider_location_app_select on provider_location for select to cvh_app using (true);
 create policy category_app_select on category for select to cvh_app using (true);
 create policy provider_category_app_select on provider_category for select to cvh_app using (true);
+
+-- A last-confirmed date is never in the future (Toronto's calendar day, the Hub's own). A CHECK
+-- cannot hold this because now() is not immutable, so a trigger does: the Admin's screen refuses a
+-- future date first, and this is the guard under it (a script, a query run by hand).
+create function provider_last_confirmed_not_future() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+begin
+  if new.last_confirmed > (now() at time zone 'America/Toronto')::date then
+    raise exception 'provider.last_confirmed cannot be in the future'
+      using errcode = 'check_violation', constraint = 'provider_last_confirmed_not_future';
+  end if;
+  return new;
+end
+$$;
+revoke all on function provider_last_confirmed_not_future() from public, anon, authenticated, service_role;
+
+create trigger provider_last_confirmed_not_future
+  before insert or update on provider
+  for each row execute function provider_last_confirmed_not_future();

@@ -9,7 +9,7 @@ import {
   type ProviderCatalogueInput,
   type ProviderTranslationRecord,
 } from "./providerCatalogue";
-import { TORONTO_BOUNDS, inToronto } from "./torontoBounds";
+import { TORONTO_BOUNDS, inToronto } from "@/contracts/torontoBounds";
 
 const ROOT = path.join(__dirname, "..", "..", "..", "..");
 const sourceHash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");

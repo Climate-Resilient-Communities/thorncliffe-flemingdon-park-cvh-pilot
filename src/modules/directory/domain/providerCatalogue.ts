@@ -30,7 +30,7 @@ import {
   type TranslationRecord,
   type UnavailableReason,
 } from "@/contracts/contentReview";
-import { TORONTO_BOUNDS } from "./torontoBounds";
+import { TORONTO_BOUNDS } from "@/contracts/torontoBounds";
 
 /** The languages the provider translation files cover: every launch language but English and zh-Hant. */
 export const PROVIDER_LANGS = TRANSLATED_LANGS.filter((lang) => lang !== "zh-Hant") as Exclude<LangCode, "en" | "zh-Hant">[];
