@@ -199,7 +199,8 @@ step npm run lint:deps
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:check
 TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:db
-# On main HEAD is origin/main, so the base is its first parent (as in the workflow).
+# On main HEAD is origin/main, so the base is its first parent. (The workflow uses the commit before
+# the push instead, to cover a multi-commit push; locally there is no push, so one commit is all there is.)
 base=origin/main
 if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then base=HEAD~1; fi
 PRODUCTION_URL="" step npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"

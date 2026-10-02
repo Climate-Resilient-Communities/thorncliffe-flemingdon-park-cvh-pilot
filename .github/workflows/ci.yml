@@ -78,12 +78,17 @@ jobs:
           TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       # Reads the release in production from PRODUCTION_URL only when a migration
       # carries a contract note. On main HEAD is origin/main, so comparing with it
-      # would check nothing: there the base is the first parent (the main it was
-      # merged into). The production job checks pending migrations again.
+      # would check nothing: there the base is the commit before the push (all of a
+      # multi-commit push), or the first parent when that is unknown (a new branch,
+      # a forced push). The production job checks pending migrations again.
       - name: Check migrations for destructive changes
         run: |
           base=origin/main
-          if [ "$GITHUB_REF" = refs/heads/main ]; then base=HEAD~1; fi
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            base=HEAD~1
+            before=${{ github.event.before }}
+            if [[ "$before" =~ [1-9a-f] ]] && git merge-base --is-ancestor "$before" HEAD; then base=$before; fi
+          fi
           npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
@@ -128,9 +133,11 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    # Holds the preview-scoped Vercel secrets. Any branch may deploy to it, so it
-    # must never hold production secrets (the production database URL, the production
-    # VERCEL_TOKEN): those live in the production environment, limited to main.
+    # Previews share the single Supabase project, so `vercel pull --environment=preview`
+    # brings its DATABASE_URL and SUPABASE_SECRET_KEY (change proposal 2026-10-02-single-supabase).
+    # This environment keeps PRODUCTION_DATABASE_URL (the migration secret) and production
+    # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
+    # only if the owner creates it with minimal scope.
     environment: preview
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}

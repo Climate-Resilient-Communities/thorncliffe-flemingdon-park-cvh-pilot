@@ -147,6 +147,10 @@ describe("scripts/ci/local.sh mirrors the Checks job", () => {
     expect(problems[0]).toMatch(/differs in local\.sh/);
   });
 
+  it("compares with the first parent of origin/main when HEAD is origin/main, and otherwise with origin/main", () => {
+    expect(scriptText).toMatch(/base=origin\/main\nif \[ "\$\(git rev-parse HEAD\)" = "\$\(git rev-parse origin\/main\)" \]; then base=HEAD~1; fi/);
+  });
+
   it("reports a different order", () => {
     const script = scriptText.replace("step npm run lint\nstep npm run typecheck\n", "step npm run typecheck\nstep npm run lint\n");
 
