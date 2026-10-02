@@ -3,6 +3,7 @@
 // produce React elements). Inline styles here size the test frames only; src/ never uses them.
 import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type StackGap } from "@/ui";
 import { HubShell } from "@/ui/hub/hub-shell";
+import type { HubNavSection } from "@/ui/hub/hub-nav";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
 
@@ -378,14 +379,20 @@ export type HubShellTexts = {
   personName: string;
   signOut: string;
   logoAlt: string;
-  sections: [string, string];
-  /** Five navigation labels: the first two sections' items (the third is an unbuilt page). */
-  items: [string, string, string, string, string];
+  /**
+   * The navigation, as the pilot's menu is for an Admin: the real hubNavigation("admin") with its ids, hrefs and
+   * icons (e2e/helpers/hub-shell.ts), and the labels of the language under test. The fixture invents none of it.
+   */
+  navigation: readonly HubNavSection[];
   heading: string;
   paragraphs: string[];
 };
 
-/** The Hub shell with a staff Screen inside it, in the texts of the language under test. */
+/**
+ * The Hub shell with a staff Screen inside it, signed in as an Admin (who sees every item the pilot's menu has). The
+ * menu and the words are the app's own, passed in as texts: hubNavigation("admin") and hubShellLabels() for the real
+ * English, the same structure with the longest translated labels for the language tests. The fixture only lays them out.
+ */
 export function HubShellFixture({
   texts,
   brand,
@@ -397,30 +404,10 @@ export function HubShellFixture({
   signedIn?: boolean;
   current?: string | null;
 }) {
-  const [first, second] = texts.sections;
-  const [a, b, c, d, e] = texts.items;
   return (
     <HubShell
-      user={signedIn ? { displayName: texts.personName, role: "coordinator" } : null}
-      navigation={[
-        {
-          id: "disruption",
-          label: first,
-          items: [
-            { id: "incidents", label: a, href: "/staff", exact: true, icon: "now" },
-            { id: "compose", label: b, href: null, icon: "pencil" },
-            { id: "moderation", label: c, href: "/staff/moderation", icon: "inbox" },
-          ],
-        },
-        {
-          id: "admin",
-          label: second,
-          items: [
-            { id: "rounds", label: d, href: "/staff/rounds", icon: "person" },
-            { id: "people", label: e, href: "/staff/people", icon: "person" },
-          ],
-        },
-      ]}
+      user={signedIn ? { displayName: texts.personName, role: "admin" } : null}
+      navigation={texts.navigation}
       currentPath={current}
       labels={{
         appName: texts.appName,

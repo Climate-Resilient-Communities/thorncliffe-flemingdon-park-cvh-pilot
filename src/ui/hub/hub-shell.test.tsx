@@ -21,7 +21,7 @@ const props: HubShellProps = {
   ],
   currentPath: "/staff",
   labels: {
-    appName: "Hub and partner space",
+    appName: "Hub",
     menu: "Menu",
     closeMenu: "Close menu",
     signedInAs: "Signed in as {name}, {role}",
@@ -37,7 +37,8 @@ describe("HubShell", () => {
 
   it("has one navigation in the side and one in the menu drawer, each named, and one main with the screen", () => {
     expect(html.match(/<nav /g)).toHaveLength(2);
-    expect(html.match(/aria-label="Hub and partner space"/g)).toHaveLength(2);
+    expect(html.match(/<nav [^>]*aria-label="Hub"/g)).toHaveLength(2);
+    expect(html).toContain('<span class="hub-top__app">Hub</span>');
     expect(html.match(/<main /g)).toHaveLength(1);
     expect(html).toContain('<main class="hub-main" data-testid="hub-main">screen</main>');
     expect(html.match(/<header /g)).toHaveLength(1);
@@ -70,11 +71,21 @@ describe("HubShell", () => {
     expect(html).toContain('<div class="hub-shell" data-surface="staff"');
   });
 
-  it("announces the current page on its link only, and lists an unbuilt page as text", () => {
+  it("announces the current page on its link only, and lists an unbuilt page as a disabled link", () => {
     expect(html.match(/aria-current="page"/g)).toHaveLength(2); // the side's and the drawer's copy
     expect(html).toContain('<a class="hub-nav__item tap" href="/staff" aria-current="page"');
-    expect(html).toContain('<span class="hub-nav__item hub-nav__item--unbuilt"');
     expect(html).not.toMatch(/<a [^>]*>[^<]*(<span[^>]*><\/span>)?<span class="hub-nav__label">Compose an alert/);
+  });
+
+  it("marks an unbuilt page aria-disabled, as a link role with no href, no tabindex and no element a browser would focus", () => {
+    const unbuilt = html.match(/<span class="hub-nav__item hub-nav__item--unbuilt"[^>]*>/g)!;
+
+    expect(unbuilt).toHaveLength(2); // the side's and the drawer's copy
+    for (const tag of unbuilt) {
+      expect(tag).toContain('role="link"');
+      expect(tag).toContain('aria-disabled="true"');
+      expect(tag).not.toMatch(/href|tabindex/i);
+    }
   });
 });
 
@@ -148,6 +159,28 @@ describe("hub-shell.css", () => {
     expect(sources.match(/<button/g)).toHaveLength(2);
     expect(sources.match(/<button[^>]*className="[^"]*\btap\b/g)).toHaveLength(2);
     expect(sources).toMatch(/<a\s[^>]*className="hub-nav__item tap"/);
+  });
+
+  it("gives every nav item, linked or not, the tap height as its minimum block size", () => {
+    const item = css.filter((d) => d.selector === ".hub-nav__item" && !d.at.length);
+
+    expect(item.find((d) => d.prop === "min-block-size")?.value).toBe("var(--tap)");
+    expect(css.filter((d) => d.selector.includes("--unbuilt") && (d.prop === "display" || d.prop === "min-block-size" || d.prop === "block-size"))).toEqual([]);
+  });
+
+  it("takes the logo, the symbol, the heading inset and the backdrop from tokens, as the prototype sizes them", () => {
+    const value = (selector: string, prop: string) => css.find((d) => d.selector === selector && d.prop === prop && !d.at.length)?.value;
+
+    expect(value(".hub-logo", "block-size")).toBe("var(--size-logo-hub)");
+    expect(value(".hub-symbol", "block-size")).toBe("var(--size-symbol-hub)");
+    expect(value(".hub-nav__heading", "padding-inline")).toBe("var(--gap-icon)");
+    expect(value(".hub-drawer::backdrop", "background-color")).toBe("var(--scrim)");
+    expect(readSource("src/ui/hub/hub-shell.css")).not.toMatch(/rgb\(|rgba\(|#[0-9a-f]{3,8}\b/i);
+  });
+
+  it("locks the page behind the open drawer and keeps a scroll in the drawer from reaching it", () => {
+    expect(css.find((d) => d.selector === ":root:has(.hub-drawer[open])" && d.prop === "overflow")?.value).toBe("hidden");
+    expect(css.find((d) => d.selector === ".hub-drawer" && d.prop === "overscroll-behavior")?.value).toBe("contain");
   });
 
   it("uses the icon token for every icon and the topbar token for the bar", () => {

@@ -48,11 +48,11 @@
 
   .hub-logo {
     display: block;
-    block-size: var(--tap);
+    block-size: var(--size-logo-hub);
     inline-size: auto;
     align-self: flex-start;
-    margin-inline: var(--gap-label);
-    margin-block-end: var(--gap-tight);
+    margin-inline: var(--gap-tight);
+    margin-block: var(--gap-label) var(--gap-stack);
   }
 
   .hub-nav__section {
@@ -63,7 +63,7 @@
 
   .hub-nav__heading {
     padding-block: var(--gap-stack) var(--gap-label);
-    padding-inline: var(--gap-tight);
+    padding-inline: var(--gap-icon);
     overflow-wrap: anywhere;
     color: var(--text-muted);
     font-size: var(--type-caption-size);
@@ -80,11 +80,13 @@
     list-style: none;
   }
 
-  /* .cvh-side__item: an icon and a label that wraps, at least the tap height, the current page marked by a
-     coloured inline-start border (every item has one, transparent) and by colour. */
+  /* .cvh-side__item: an icon and a label that wraps, at least the tap height whether or not it is a link (a page
+     not built yet is the same size, so the list does not change height when its page is), the current page marked
+     by a coloured inline-start border (every item has one, transparent) and by colour. */
   .hub-nav__item {
     display: flex;
     align-items: center;
+    min-block-size: var(--tap);
     gap: var(--gap-icon);
     padding-block: var(--gap-label);
     padding-inline: var(--gap-icon);
@@ -107,7 +109,7 @@
     color: var(--accent-text);
   }
 
-  /* A page that is not built yet: text, not a link. */
+  /* A page that is not built yet: a disabled link (aria-disabled, no href, no tab stop), muted. */
   .hub-nav__item--unbuilt {
     color: var(--text-muted);
     font-weight: 400;
@@ -162,7 +164,7 @@
   .hub-symbol {
     display: block;
     flex: none;
-    block-size: var(--size-icon);
+    block-size: var(--size-symbol-hub);
     inline-size: auto;
   }
 
@@ -250,6 +252,8 @@
     padding: 0;
     border: 0;
     overflow-y: auto;
+    /* A scroll at the end of the drawer's own list does not carry on into the page behind it. */
+    overscroll-behavior: contain;
     background-color: var(--surface-raised);
     color: var(--text);
 
@@ -258,8 +262,14 @@
     }
   }
 
+  /* The page behind the open modal drawer does not scroll (the backdrop covers it, and a wheel or touch over the
+     backdrop would otherwise move the document). */
+  :root:has(.hub-drawer[open]) {
+    overflow: hidden;
+  }
+
   .hub-drawer::backdrop {
-    background-color: rgb(0 28 48 / 55%);
+    background-color: var(--scrim);
   }
 
   .hub-drawer__head {

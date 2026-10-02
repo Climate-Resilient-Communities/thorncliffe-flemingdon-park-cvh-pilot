@@ -24,6 +24,8 @@
   --app-icon: 24px;
   --app-icon-basic: 28px;
   --app-icon-staff: 20px;
+  --app-logo-hub: 36px;
+  --app-symbol-hub: 28px;
   --app-min-header-resident: 56px;
   --app-min-topbar-hub: 60px;
   --app-min-nav-item-resident: 64px;
@@ -74,6 +76,7 @@
   --accent-bar: var(--tpch-yellow);
   --danger: #b42318;
   --focus-ring: var(--tpch-blue);
+  --scrim: rgb(0 28 48 / 55%);
   /* type: Screens: resident (G7) */
   --app-fs-caption: 18px;
   --app-lh-caption: var(--lh-body);

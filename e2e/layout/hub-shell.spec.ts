@@ -109,7 +109,9 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      await expect(page.getByTestId("hub-drawer-nav").getByRole("link")).toHaveCount(4);
+      // The menu is the real one for an Admin: two pages that exist and two that are listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(2);
+      await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(2);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
       await expectShellDoesNotOverflow(page);
@@ -153,6 +155,32 @@ test.describe("at 390 px", () => {
     await menuButton(page).click();
     await page.getByTestId("hub-drawer-nav").getByRole("link", { name: "People" }).click();
     await expect(drawer(page)).toBeHidden();
+  });
+
+  test("while the menu is open the page behind it does not scroll, a wheel over the backdrop included; closed, it scrolls again", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await open(page, { texts: { ...REAL_TEXTS, paragraphs: Array.from({ length: 60 }, (_, index) => `Paragraph ${index + 1}. ${REAL_TEXTS.paragraphs[0]}`) } });
+    const scrollY = () => page.evaluate(() => window.scrollY);
+    expect(await page.evaluate(() => document.documentElement.scrollHeight > window.innerHeight)).toBe(true);
+
+    await menuButton(page).click();
+    await expect(drawer(page)).toBeVisible();
+    expect(await computed(page.locator("html"), "overflow-y")).toBe("hidden");
+    expect(await computed(drawer(page), "overscroll-behavior-y")).toBe("contain");
+    // The backdrop is the part of the viewport beside the drawer (the drawer is 240 px wide, from the inline start).
+    await page.mouse.move(340, 300);
+    await page.mouse.wheel(0, 400);
+    await page.mouse.wheel(0, 400);
+    expect(await scrollY()).toBe(0);
+
+    await page.keyboard.press("Escape");
+    await expect(drawer(page)).toBeHidden();
+    expect(await computed(page.locator("html"), "overflow-y")).not.toBe("hidden");
+    await page.mouse.move(340, 300);
+    await page.mouse.wheel(0, 400);
+    await expect.poll(scrollY).toBeGreaterThan(0);
   });
 
   test("a menu left open when the screen turns wide is closed, not left blocking the page", async ({ page }) => {
@@ -248,38 +276,81 @@ test.describe("what a screen reader reads", () => {
     await expect(page.getByRole("button", { name: "Close menu" })).toBeVisible();
   });
 
-  test("the current page is announced with aria-current=page on exactly one link, and an unbuilt page is plain text", async ({ page }) => {
+  test("the current page is announced with aria-current=page on exactly one link, and an unbuilt page is a disabled link", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     for (const [path, current] of [
       ["/staff", "Incidents"],
       ["/staff/people", "People"],
       ["/staff/people/", "People"],
-      ["/staff/moderation/queue", "Moderation"],
+      ["/staff/people/new", "People"],
     ] as const) {
       await open(page, { texts: REAL_TEXTS, current: path });
 
-      const links = page.getByTestId("hub-side").getByRole("link");
-      await expect(links).toHaveCount(4);
+      const links = page.getByTestId("hub-side").locator("a[href]");
+      await expect(links).toHaveCount(2);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
     }
     // The home is current only for its own path, not for every page below /staff.
-    await open(page, { texts: REAL_TEXTS, current: "/staff/rounds" });
+    await open(page, { texts: REAL_TEXTS, current: "/staff/people" });
     await expect(page.getByTestId("hub-side").getByRole("link", { name: "Incidents" })).not.toHaveAttribute("aria-current", "page");
-    // The unbuilt page: listed, not a link.
-    await expect(sideNav(page).getByTestId("hub-nav-compose")).toHaveText("Compose an alert");
-    await expect(page.getByRole("link", { name: "Compose an alert" })).toHaveCount(0);
+    // An unbuilt page is never current, whatever the path.
+    await expect(sideNav(page).getByTestId("hub-nav-compose")).not.toHaveAttribute("aria-current", /./);
     // A path outside every item: none current.
     await open(page, { texts: REAL_TEXTS, current: "/staff/elsewhere" });
     await expect(page.locator("[aria-current]")).toHaveCount(0);
+  });
+
+  test("an unbuilt page is listed as a disabled link: announced as unavailable, with no href and no tab stop, and the same size as a page", async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page, { texts: REAL_TEXTS });
+
+    for (const [id, name] of [
+      ["compose", "Compose an alert"],
+      ["rounds", "Check-in rounds"],
+    ] as const) {
+      const item = sideNav(page).getByTestId(`hub-nav-${id}`);
+      await expect(item).toHaveText(name);
+      await expect(item).toHaveAttribute("role", "link");
+      await expect(item).toHaveAttribute("aria-disabled", "true");
+      await expect(item).not.toHaveAttribute("href", /./);
+      await expect(item).not.toHaveAttribute("tabindex", /./);
+      // The accessibility tree has it as a disabled link; the built pages are enabled links.
+      await expect(sideNav(page).getByRole("link", { name, disabled: true })).toHaveCount(1);
+      await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(0);
+    }
+    for (const name of ["Incidents", "People"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
+
+    // Tab visits the pages and passes over the unbuilt ones.
+    await sideNav(page).getByTestId("hub-nav-incidents").focus();
+    await page.keyboard.press("Tab");
+    await expect(sideNav(page).getByTestId("hub-nav-people")).toBeFocused();
+    await sideNav(page).getByTestId("hub-nav-compose").focus();
+    await expect(sideNav(page).getByTestId("hub-nav-compose")).not.toBeFocused();
+  });
+
+  test("every item of the menu, linked or not, is at least the tap size high and muted when it is not a page yet", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await open(page, { texts: REAL_TEXTS });
+    const tap = await tokenPx(page, "--tap");
+
+    for (const id of ["incidents", "compose", "rounds", "people"]) {
+      expect((await box(sideNav(page).getByTestId(`hub-nav-${id}`))).height, id).toBeGreaterThanOrEqual(tap);
+    }
+    const colour = (id: string) => computed(sideNav(page).getByTestId(`hub-nav-${id}`), "color");
+    expect(await colour("compose")).toBe(await colour("rounds"));
+    expect(await colour("compose")).not.toBe(await colour("people"));
+    expect(await computed(sideNav(page).getByTestId("hub-nav-compose"), "font-weight")).toBe("400");
   });
 
   test("the person is read as one sentence with the name isolated, and sign-out is a named button", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, { texts: REAL_TEXTS });
 
-    await expect(page.getByTestId("hub-person")).toHaveText("Signed in as Priya Sharma, Coordinator");
+    await expect(page.getByTestId("hub-person")).toHaveText("Signed in as Priya Sharma, Admin");
     await expect(page.getByTestId("hub-person").locator("bdi")).toHaveText("Priya Sharma");
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
   });

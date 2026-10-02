@@ -16,11 +16,13 @@ export function hubShellUser(session: StaffSession | null): HubShellUser | null 
 }
 
 /**
- * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the four
- * screens the pilot builds; a screen whose story has not been built has no page yet, so its item has no link
- * (href null) and the story that builds the page sets it. The partner space ("This disruption") and the readiness
- * area ("Between disruptions") are not in the pilot. "Administration" is for Admins, as the pages in it are.
- * Which roles may open what is enforced by the server (S01.12); this only keeps the menu to what a person can use.
+ * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the three
+ * screens the pilot builds: incidents, composing an alert and check-in rounds. A screen whose story has not been
+ * built has no page yet, so its item has no link (href null) and the story that builds the page sets it. Moderation,
+ * the partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope, not in the
+ * pilot. "Administration" is for Admins, as the pages in it are.
+ * Which roles may open what is enforced by the server (S01.12). The menu is not filtered by role here yet: each
+ * story that gives an item its href also filters that item by the roles that may open its page.
  */
 export function hubNavigation(role: StaffRole): HubNavSection[] {
   const sections: HubNavSection[] = [
@@ -30,7 +32,6 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       items: [
         { id: "incidents", label: englishText("hub.nav.incidents"), href: "/staff", exact: true, icon: "now" },
         { id: "compose", label: englishText("hub.nav.compose"), href: null, icon: "pencil" },
-        { id: "moderation", label: englishText("hub.nav.moderation"), href: null, icon: "inbox" },
         { id: "rounds", label: englishText("hub.nav.rounds"), href: null, icon: "person" },
       ],
     },
@@ -45,9 +46,15 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   return sections;
 }
 
+/** The name of the tab on a staff page that sets none of its own: the pilot's "Hub", then the Hub's full name. */
+export function hubTabTitle(): string {
+  return `${englishText("staff.hub.title")} · ${englishText("shell.hubName")}`;
+}
+
 export function hubShellLabels(): HubShellLabels {
   return {
-    appName: englishText("hub.appName"),
+    // The pilot's name for the Hub (its home page's heading): "Hub and partner space" is the MVP's.
+    appName: englishText("staff.hub.title"),
     menu: englishText("hub.menu"),
     closeMenu: englishText("hub.closeMenu"),
     // Left as a template: the shell fills {name} and {role}, isolating the name.

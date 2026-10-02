@@ -7,7 +7,7 @@ import { HubNav, type HubNavSection } from "./hub-nav";
 export type HubShellUser = { displayName: string; role: StaffRole };
 
 export type HubShellLabels = {
-  /** "Hub and partner space": the name of the navigation and of the top bar. */
+  /** "Hub": the name of the navigation and of the top bar. */
   appName: string;
   menu: string;
   closeMenu: string;

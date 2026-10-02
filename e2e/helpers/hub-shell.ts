@@ -1,6 +1,8 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, type Locator, type Page } from "@playwright/test";
+import { hubNavigation, hubShellLabels } from "../../src/app/staff/hubShell";
+import { englishText } from "../../src/i18n/text";
 import type { HubShellTexts } from "../layout/fixtures";
 import { box, tokenPx } from "./hub-layout-boundaries";
 import { longestLabels } from "./strings";
@@ -11,29 +13,39 @@ export function hubBrand() {
   return { logoSrc: dataUri("hub-logo.png"), symbolSrc: dataUri("hub-symbol.png") };
 }
 
-/** The shell's real English words (from the catalog), as a coordinator sees them. */
-export const REAL_TEXTS: HubShellTexts = {
-  appName: "Hub and partner space",
-  menu: "Menu",
-  closeMenu: "Close menu",
-  signedInAs: "Signed in as {name}, {role}",
-  role: "Coordinator",
-  personName: "Priya Sharma",
-  signOut: "Sign out",
-  logoAlt: "Thorncliffe Park Community Hub",
-  sections: ["In a disruption", "Administration"],
-  items: ["Incidents", "Compose an alert", "Moderation", "Check-in rounds", "People"],
-  heading: "Right now",
-  paragraphs: ["Open incidents, most recent first. Anything waiting for you is at the top."],
-};
+/**
+ * The shell's real English words and menu: what hubShellLabels() and hubNavigation("admin") give the app, and the Hub
+ * home's own heading and line, as an Admin sees them. Nothing here is written out by hand but the person's name.
+ */
+function realTexts(): HubShellTexts {
+  const labels = hubShellLabels();
+  return {
+    appName: labels.appName,
+    menu: labels.menu,
+    closeMenu: labels.closeMenu,
+    signedInAs: labels.signedInAs,
+    role: labels.roles.admin,
+    personName: "Priya Sharma",
+    signOut: englishText("staff.signOut"),
+    logoAlt: labels.logoAlt,
+    navigation: hubNavigation("admin"),
+    heading: englishText("staff.hub.title"),
+    paragraphs: [englishText("staff.hub.lead")],
+  };
+}
+
+export const REAL_TEXTS: HubShellTexts = realTexts();
 
 /**
  * The longest translated labels of a language in every place the shell shows text: its longest sentences, its
  * longest words and one token that cannot break. The person's name is the longest sentence, which no real name
- * is, so the top bar has to wrap and grow.
+ * is, so the top bar has to wrap and grow. The menu keeps the real one's sections, items, hrefs and icons.
  */
 export function longestTexts(lang: string): HubShellTexts {
   const { sentences, words, unbreakable } = longestLabels(lang);
+  const sectionLabels = [sentences[2], unbreakable];
+  const itemLabels = [unbreakable, words[0], sentences[0], words[1], sentences[1]];
+  let next = 0;
   return {
     appName: sentences[2],
     menu: words[2],
@@ -43,8 +55,11 @@ export function longestTexts(lang: string): HubShellTexts {
     personName: sentences[0],
     signOut: sentences[1],
     logoAlt: sentences[2],
-    sections: [sentences[2], unbreakable],
-    items: [unbreakable, words[0], sentences[0], words[1], sentences[1]],
+    navigation: REAL_TEXTS.navigation.map((section, index) => ({
+      ...section,
+      label: sectionLabels[index % sectionLabels.length],
+      items: section.items.map((item) => ({ ...item, label: itemLabels[next++ % itemLabels.length] })),
+    })),
     heading: sentences[0],
     paragraphs: [sentences[0], sentences[1], sentences[2]],
   };

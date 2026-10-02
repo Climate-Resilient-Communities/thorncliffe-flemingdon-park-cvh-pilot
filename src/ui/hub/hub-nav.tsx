@@ -7,7 +7,7 @@ export type HubNavIcon = (typeof HUB_NAV_ICONS)[number];
 export type HubNavItem = {
   id: string;
   label: string;
-  /** Where it goes; null for a page that is not built yet, shown as plain text that cannot be followed. */
+  /** Where it goes; null for a page that is not built yet, listed as a disabled link: dimmed, not focusable, announced as unavailable. */
   href: string | null;
   /** True for the Hub's home: only that exact path is current, not every page below it. */
   exact?: boolean;
@@ -46,7 +46,9 @@ export function HubNav({ sections, currentPath }: HubNavProps): ReactNode {
         {section.items.map((item) => (
           <li key={item.id}>
             {item.href === null ? (
-              <span className="hub-nav__item hub-nav__item--unbuilt" data-testid={`hub-nav-${item.id}`}>
+              // The disabled-link pattern: a link role with aria-disabled and no href, so a screen reader announces the
+              // item as an unavailable link, and with no tabindex it is not in the tab order.
+              <span className="hub-nav__item hub-nav__item--unbuilt" role="link" aria-disabled="true" data-testid={`hub-nav-${item.id}`}>
                 <span className={`hub-ico hub-ico--${item.icon}`} aria-hidden="true" />
                 <span className="hub-nav__label">{item.label}</span>
               </span>

@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/contracts/staffRoles";
-import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser } from "./hubShell";
+import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser, hubTabTitle } from "./hubShell";
 import type { StaffSession } from "./session";
 
 const session = (overrides: Partial<StaffSession> = {}): StaffSession => ({
@@ -31,9 +31,19 @@ describe("hubShellUser", () => {
 describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
-  it("lists the pilot's four disruption screens in the prototype's order, with the home first", () => {
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Moderation", "Check-in rounds"]);
+  it("lists the pilot's three disruption screens in the prototype's order, with the home first, and People for Admins", () => {
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "People"]);
+  });
+
+  it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {
+    const everything = JSON.stringify(STAFF_ROLES.map((role) => hubNavigation(role)));
+
+    for (const mvp of ["Moderation", "moderation", "Partner space", "This disruption", "Between disruptions", "Readiness", "Playbooks"]) {
+      expect(everything, mvp).not.toContain(mvp);
+    }
+    for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
   it("adds Administration with People for Admins only", () => {
@@ -48,7 +58,7 @@ describe("hubNavigation", () => {
       if (item.href === null) continue;
       expect(existsSync(path.join(app, item.href, "page.tsx")), `${item.label}: ${item.href}`).toBe(true);
     }
-    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual(["compose", "moderation", "rounds"]);
+    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual(["compose", "rounds"]);
   });
 
   it("uses each id once and the English catalog's labels", () => {
@@ -63,11 +73,17 @@ describe("hubShellLabels", () => {
   it("has the catalog's words, a role name for every role, and the sentence left as a template for the shell to fill", () => {
     const labels = hubShellLabels();
 
-    expect(labels.appName).toBe("Hub and partner space");
+    // The pilot's name for the Hub, not the MVP's "Hub and partner space".
+    expect(labels.appName).toBe("Hub");
+    expect(JSON.stringify(labels)).not.toContain("partner");
     expect(labels.menu).toBe("Menu");
     expect(labels.signedInAs).toBe("Signed in as {name}, {role}");
     expect(Object.keys(labels.roles).sort()).toEqual([...STAFF_ROLES].sort());
     expect(labels.roles.coordinator).toBe("Coordinator");
+  });
+
+  it("names the tab Hub, then the Hub's full name, never the MVP's Hub and partner space", () => {
+    expect(hubTabTitle()).toBe("Hub · Thorncliffe Park Community Hub");
   });
 
   it("points at brand files that are in public/", () => {

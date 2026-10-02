@@ -66,14 +66,18 @@ test.describe("signed in at the Hub gate", () => {
       expect(right).toBeLessThanOrEqual(390);
     }
 
-    // The navigation is in the menu: the current page is announced, an unbuilt page is plain text, People is for Admins.
+    // The navigation is in the menu: the current page is announced, an unbuilt page is a disabled link, People is for
+    // Admins, and the pilot's menu has no Moderation (MVP) and no "partner space" wording.
     await page.getByRole("button", { name: "Menu" }).click();
     const menu = page.getByRole("dialog", { name: "Menu" });
-    await expect(menu.getByRole("navigation", { name: "Hub and partner space" })).toBeVisible();
+    await expect(menu.getByRole("navigation", { name: "Hub", exact: true })).toBeVisible();
     await expect(menu.getByRole("link", { name: "Incidents" })).toHaveAttribute("aria-current", "page");
-    await expect(menu.getByRole("link", { name: "Compose an alert" })).toHaveCount(0);
-    await expect(menu.getByText("Compose an alert")).toBeVisible();
+    await expect(menu.getByRole("link", { name: "Compose an alert", disabled: true })).toHaveCount(1);
+    await expect(menu.getByRole("link", { name: "Compose an alert", disabled: false })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Check-in rounds", disabled: true })).toHaveCount(1);
     await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
+    await expect(menu.getByText("Moderation")).toHaveCount(0);
+    await expect(page.getByText(/partner space/i)).toHaveCount(0);
     await page.keyboard.press("Escape");
     await expect(menu).toBeHidden();
   });
@@ -98,6 +102,53 @@ test.describe("signed in at the Hub gate", () => {
     // Sign out from the shell.
     await page.getByRole("button", { name: "Sign out" }).click();
     await expect(page).toHaveURL(/\/staff\/sign-in$/);
+  });
+});
+
+test.describe("the name of the Hub and the font", () => {
+  test("the shell's top bar and navigation say Hub, not the MVP's Hub and partner space", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 844 });
+    await signInToTheHub(page, sql, "Mira", "Costa");
+
+    await expect(page).toHaveTitle("Hub");
+    await expect(page.locator(".hub-top__app")).toHaveText("Hub");
+    await page.getByRole("button", { name: "Menu" }).click();
+    await expect(page.getByRole("dialog", { name: "Menu" }).getByRole("navigation", { name: "Hub", exact: true })).toBeVisible();
+  });
+
+  test("a staff page's stylesheets carry the Hub shell rules, which the staff layout imports and the resident layout does not", async ({ page }) => {
+    const sheets: Promise<string>[] = [];
+    page.on("response", (response) => {
+      if (response.request().resourceType() === "stylesheet") sheets.push(response.text());
+    });
+
+    await page.goto("/staff/sign-in");
+    await page.waitForLoadState("networkidle");
+
+    const css = (await Promise.all(sheets)).join("\n");
+    for (const rule of [".hub-shell", ".hub-drawer", ".hub-nav__item", ".hub-ico--menu"]) expect(css, rule).toContain(rule);
+  });
+
+  test("staff pages load Public Sans from the app, preload its Latin file, and declare no other font", async ({ page }) => {
+    const fontFiles: string[] = [];
+    page.on("response", (response) => {
+      if (response.request().resourceType() === "font") fontFiles.push(new URL(response.url()).pathname);
+    });
+    await page.setViewportSize({ width: 1280, height: 800 });
+    await page.goto("/staff/sign-in");
+    await page.evaluate(() => document.fonts.ready);
+
+    const families = (status?: string) =>
+      page.evaluate((wanted) => [...new Set([...document.fonts].filter((face) => !wanted || face.status === wanted).map((face) => face.family.replaceAll(/["']/g, "")))], status);
+    expect(await page.evaluate(() => document.fonts.check('16px "Public Sans"'))).toBe(true);
+    expect(await families("loaded")).toEqual(["Public Sans"]);
+    expect(await families()).toEqual(["Public Sans"]);
+    expect(await page.evaluate(() => getComputedStyle(document.querySelector("h1")!).fontFamily)).toMatch(/^"?Public Sans"?,/);
+    expect(fontFiles).toHaveLength(1);
+    expect(fontFiles[0]).toMatch(/public-sans-latin-wght-normal.*\.woff2$/);
+    // The Latin file is preloaded from the head, and it is the file that was used.
+    const preloads = await page.locator('link[rel="preload"][as="font"]').evaluateAll((links) => links.map((link) => new URL((link as HTMLLinkElement).href).pathname));
+    expect(preloads).toEqual(fontFiles);
   });
 });
 
