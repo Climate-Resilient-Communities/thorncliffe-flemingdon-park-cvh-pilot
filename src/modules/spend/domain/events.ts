@@ -5,8 +5,8 @@ import { z } from "zod";
 
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 
-/** What the call was for: a release's vectors, a resident's question (`search`, S03.04; `query` is the earlier name and is not written), a run of the search test set. */
-export const SPEND_PURPOSES = ["publish", "query", "search", "test_set"] as const;
+/** What the call was for: a release's vectors, a resident's question (`search`, S03.04), a run of the search test set (`test_set`). */
+export const SPEND_PURPOSES = ["publish", "search", "test_set"] as const;
 
 export type SpendPurpose = (typeof SPEND_PURPOSES)[number];
 

@@ -36,10 +36,12 @@ export const currentConsentVersion = termsService.currentConsentVersion;
 export const termsPageView = termsService.termsPageView;
 
 export {
+  DEFAULT_RATE_LIMIT_TIMEOUT_MS,
   RATE_LIMIT_RETENTION_MS,
   SEARCH_RATE_LIMIT,
   clientHash,
   createRateLimiter,
+  normaliseClientAddress,
   rateLimitKeyFromSecret,
   type RateLimitRule,
   type RateLimiter,

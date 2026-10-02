@@ -18,9 +18,11 @@ import {
   type Embedder,
   type PublishDeps,
   type QueryEmbedder,
+  type SearchDeps,
   type SearchFailureNote,
 } from "@/modules/directory";
 import { SPEND_LOCK_KEY } from "@/modules/spend";
+import { recordOpsEvent } from "@/modules/ops";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
@@ -170,9 +172,16 @@ describe("search", () => {
     }
   });
 
-  const service = (embedder: QueryEmbedder | null, extra: { onFailure?: (note: SearchFailureNote) => Promise<void>; legTimeoutMs?: number } = {}) =>
+  const service = (embedder: QueryEmbedder | null, extra: Partial<Pick<SearchDeps, "onFailure" | "legTimeoutMs" | "spendPurpose" | "log" | "defer" | "totalBudgetMs" | "snapshotFailureTtlMs" | "storage">> = {}) =>
     createSearch({ db: () => app, storage: () => storage, embedder, ...extra });
   const rows = (table: string) => sql.unsafe(`select * from ${table} order by id`).then((r) => r.map((row) => ({ ...row })));
+  const routeDeps = (embedder: QueryEmbedder | null, now?: () => Date): SearchRouteDeps => ({
+    search: () => service(embedder),
+    limiter: () => createRateLimiter({ db: app, key: "route-test-key", ...(now ? { now } : {}) }),
+    client: (headers) => headers.get("x-real-ip") ?? "unknown",
+  });
+  const post = (deps: SearchRouteDeps, body: unknown, headers: Record<string, string> = {}) =>
+    searchResponse(deps, new Request("https://x.test/api/search", { method: "POST", headers: { "x-real-ip": "198.51.100.7", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) }));
 
   describe("the answer", () => {
     it("returns SearchV1 with the providers that qualify, best first, and the release and the language of the question", async () => {
@@ -297,6 +306,28 @@ describe("search", () => {
 
       expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1 }]);
     });
+
+    it("does not download a bad release again, nor alert again, for 60 s: the next search fails at once, and the release is tried again after that", async () => {
+      await publish();
+      storage.files.set("releases/1/vectors.json", "{}");
+      const gets: string[] = [];
+      const counting = { put: storage.put, get: async (file: string) => (gets.push(file), storage.get(file)) };
+      const notes: SearchFailureNote[] = [];
+      const search = service(fakeQueryEmbedder().embedder, { storage: () => counting, snapshotFailureTtlMs: 150, onFailure: async (n) => void notes.push(n) });
+
+      for (let i = 0; i < 3; i++) await expect(search.search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+
+      expect(gets).toEqual(["releases/1/vectors.json"]);
+      expect(notes).toHaveLength(1);
+      // Each failed search is still one search_log row.
+      expect(await rows("search_log")).toMatchObject([{ status: "error" }, { status: "error" }, { status: "error" }]);
+
+      await new Promise((resolve) => setTimeout(resolve, 200));
+      await expect(search.search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+
+      expect(gets).toEqual(["releases/1/vectors.json", "releases/1/vectors.json"]);
+      expect(notes).toHaveLength(2);
+    });
   });
 
   describe("the request snapshot", () => {
@@ -361,6 +392,130 @@ describe("search", () => {
       expect((await rows("spend_event")).filter((r) => r.purpose !== "publish")).toMatchObject([{ purpose: "search" }, { purpose: "search", tokens_estimated: true }]);
       expect(await rows("search_log")).toMatchObject([{ status: "ok" }, { status: "error", result_count: 0, top_score: null }]);
     }, 15_000);
+
+    it("counts the 2.2 s leg from the start the caller passes in: a request that began 2 s ago has 0.2 s", async () => {
+      await publish();
+      const stalled = fakeQueryEmbedder({ stall: true });
+      const notes: SearchFailureNote[] = [];
+
+      const started = performance.now();
+      const failure = await service(stalled.embedder, { onFailure: async (n) => void notes.push(n) })
+        .search({ q: "lawyer", lang: "en" }, started - 2000)
+        .catch((e: unknown) => e);
+      const took = performance.now() - started;
+
+      expect(failure).toMatchObject({ code: "search_unavailable" });
+      expect(took).toBeLessThan(600);
+      expect(stalled.wasAborted()).toBe(true);
+      expect(notes).toMatchObject([{ reason: "timed_out" }]);
+      expect(notes[0]!.ms).toBeGreaterThanOrEqual(2150);
+    });
+
+    it("does not call the model, or count a spend, when the budget is spent before the call (a slow body or limiter)", async () => {
+      await publish();
+      const model = fakeQueryEmbedder();
+      const notes: SearchFailureNote[] = [];
+
+      const failure = await service(model.embedder, { onFailure: async (n) => void notes.push(n) })
+        .search({ q: "lawyer", lang: "en" }, performance.now() - 2300)
+        .catch((e: unknown) => e);
+
+      expect(failure).toMatchObject({ code: "search_unavailable" });
+      expect(model.calls).toEqual([]);
+      expect(notes).toMatchObject([{ reason: "timed_out" }]);
+      expect((await rows("spend_event")).filter((r) => r.purpose !== "publish")).toEqual([]);
+    });
+
+    it("answers within 2.5 s of the request start when the limiter is slow: the leg gets what is left", async () => {
+      await publish();
+      const stalled = fakeQueryEmbedder({ stall: true });
+      const slow: SearchRouteDeps = { ...routeDeps(stalled.embedder), limiterBudgetMs: 1800, limiter: () => ({ check: async () => (await new Promise((r) => setTimeout(r, 1500)), { allowed: true }) }) };
+
+      const started = performance.now();
+      const response = await post(slow, { q: "lawyer", lang: "en" });
+      const took = performance.now() - started;
+
+      expect(response.status).toBe(503);
+      expect(took).toBeLessThan(2500);
+      expect(took).toBeGreaterThanOrEqual(2150);
+      expect(stalled.wasAborted()).toBe(true);
+    }, 15_000);
+
+    it("answers 503 search_unavailable within 2.5 s, and calls no model, when the limiter never answers, and reports it", async () => {
+      await publish();
+      const model = fakeQueryEmbedder();
+      const reported: number[] = [];
+      const deferred: Promise<unknown>[] = [];
+      const hung: SearchRouteDeps = {
+        ...routeDeps(model.embedder),
+        limiter: () => ({ check: () => new Promise(() => undefined) }),
+        onLimiterFailure: async (ms) => void reported.push(ms),
+        defer: (work) => void deferred.push(work),
+      };
+
+      const started = performance.now();
+      const response = await post(hung, { q: "lawyer", lang: "en" });
+      const took = performance.now() - started;
+      await Promise.all(deferred);
+
+      expect(response.status).toBe(503);
+      expect(SearchErrorSchema.parse(await response.json()).error.code).toBe("search_unavailable");
+      expect(took).toBeLessThan(2500);
+      expect(model.calls).toEqual([]);
+      expect(reported).toHaveLength(1);
+      expect(reported[0]!).toBeGreaterThanOrEqual(950);
+    });
+
+    it("answers 503 within 2.5 s of the request start when the rate_limit table is locked, through the limiter's own lock and statement timeouts", async () => {
+      await publish();
+      const model = fakeQueryEmbedder();
+      const locked = gate();
+      const release = gate();
+      const holder = connect(serverUrl());
+      const holding = holder.begin(async (tx) => {
+        await tx.unsafe("lock table rate_limit in access exclusive mode");
+        locked.open();
+        await release.promise;
+      });
+      await locked.promise;
+      try {
+        const deps: SearchRouteDeps = { ...routeDeps(model.embedder), limiter: () => createRateLimiter({ db: app, key: "route-test-key", timeoutMs: 300 }) };
+
+        const started = performance.now();
+        const response = await post(deps, { q: "lawyer", lang: "en" });
+        const took = performance.now() - started;
+
+        expect(response.status).toBe(503);
+        expect(took).toBeGreaterThanOrEqual(250);
+        expect(took).toBeLessThan(2500);
+        expect(model.calls).toEqual([]);
+      } finally {
+        release.open();
+        await holding;
+        await holder.end({ timeout: 5 });
+      }
+    }, 15_000);
+
+    it("stops a count that waits for a lock after the limiter's own timeout, not the connection's", async () => {
+      const locked = gate();
+      const release = gate();
+      const holder = connect(serverUrl());
+      const holding = holder.begin(async (tx) => {
+        await tx.unsafe("lock table rate_limit in access exclusive mode");
+        locked.open();
+        await release.promise;
+      });
+      await locked.promise;
+      try {
+        const started = performance.now();
+        await expect(createRateLimiter({ db: app, key: "k", timeoutMs: 200 }).check(SEARCH_RATE_LIMIT, "203.0.113.5")).rejects.toThrow();
+        expect(performance.now() - started).toBeLessThan(1500);
+      } finally {
+        release.open();
+        await holding;
+        await holder.end({ timeout: 5 });
+      }
+    });
   });
 
   describe("spend and search_log", () => {
@@ -405,6 +560,39 @@ describe("search", () => {
       await service(fakeQueryEmbedder({ tokens: null }).embedder).search({ q: "lawyer", lang: "en" });
 
       expect(await rows("spend_event")).toMatchObject([{ purpose: "search", tokens_estimated: true }]);
+    });
+
+    it("counts the usage, as reported or estimated, of an embedding that answered with no usable vector", async () => {
+      await publish();
+      await sql`delete from spend_event`;
+      const answering = (answer: { vector: number[]; tokens: number | null }): QueryEmbedder => ({ embedQuery: async () => answer });
+      const notes: SearchFailureNote[] = [];
+      const onFailure = async (n: SearchFailureNote) => void notes.push(n);
+
+      for (const answer of [{ vector: [1, 0], tokens: 9 }, { vector: [], tokens: 4 }, { vector: undefined as unknown as number[], tokens: null }]) {
+        await expect(service(answering(answer), { onFailure }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+      }
+
+      expect(notes.map((n) => n.reason)).toEqual(["embed_invalid", "embed_invalid", "embed_invalid"]);
+      expect(await rows("spend_event")).toMatchObject([
+        { purpose: "search", tokens: "9", tokens_estimated: false },
+        { purpose: "search", tokens: "4", tokens_estimated: false },
+        { purpose: "search", tokens_estimated: true },
+      ]);
+    });
+
+    it("hands the writes still pending at the end of the budget to defer, which finishes them", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const deferred: Promise<unknown>[] = [];
+
+      const body = await service(fakeQueryEmbedder().embedder, { totalBudgetMs: 0, defer: (work) => void deferred.push(work) }).search({ q: "lawyer", lang: "en" });
+      await Promise.all(deferred);
+
+      expect(body.status).toBe("ok");
+      expect(deferred).toHaveLength(1);
+      expect(await rows("spend_event")).toMatchObject([{ purpose: "search" }]);
+      expect(await rows("search_log")).toMatchObject([{ status: "ok" }]);
     });
 
     it("stores in search_log only at, lang, query_lang, release_v, ms, result_count, status, top_score and translated_leg", async () => {
@@ -490,14 +678,6 @@ describe("search", () => {
   });
 
   describe("the route's answers", () => {
-    const routeDeps = (embedder: QueryEmbedder | null, now?: () => Date): SearchRouteDeps => ({
-      search: () => service(embedder),
-      limiter: () => createRateLimiter({ db: app, key: "route-test-key", ...(now ? { now } : {}) }),
-      client: (headers) => headers.get("x-real-ip") ?? "unknown",
-    });
-    const post = (deps: SearchRouteDeps, body: unknown, headers: Record<string, string> = {}) =>
-      searchResponse(deps, new Request("https://x.test/api/search", { method: "POST", headers: { "x-real-ip": "198.51.100.7", ...headers }, body: typeof body === "string" ? body : JSON.stringify(body) }));
-
     it("answers 200 with SearchV1, never cached, and sets no cookie", async () => {
       await publish();
 
@@ -568,6 +748,9 @@ describe("search", () => {
       expect(refused.status).toBe(429);
       expect(refused.headers.get("Cache-Control")).toBe("no-store");
       expect(refused.headers.get("Set-Cookie")).toBeNull();
+      // The oldest of the 30 leaves the window in at most 10 minutes.
+      const retryAfter = Number(refused.headers.get("Retry-After"));
+      expect(Number.isInteger(retryAfter) && retryAfter >= 1 && retryAfter <= 600).toBe(true);
       expect(SearchErrorSchema.parse(await refused.json())).toEqual({ error: { code: "rate_limited", message_key: "search.rate_limited" } });
       expect(model.calls).toHaveLength(30);
       expect((await post(deps, { q: "lawyer", lang: "en" }, { "x-real-ip": "198.51.100.8" })).status).toBe(200);
@@ -576,10 +759,33 @@ describe("search", () => {
     it("answers 503 and calls no model when the limit cannot be counted", async () => {
       await publish();
       const model = fakeQueryEmbedder();
-      const deps: SearchRouteDeps = { ...routeDeps(model.embedder), limiter: () => ({ check: async () => { throw new Error("db down"); } }) };
+      const deferred: Promise<unknown>[] = [];
+      const deps: SearchRouteDeps = {
+        ...routeDeps(model.embedder),
+        limiter: () => ({ check: async () => { throw new Error("db down"); } }),
+        // What the composition root does: the ops event, written after the response.
+        onLimiterFailure: (ms) => recordOpsEvent(app, { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms } }),
+        defer: (work) => void deferred.push(work),
+      };
 
       expect((await post(deps, { q: "lawyer", lang: "en" })).status).toBe(503);
+      await Promise.all(deferred);
+
       expect(model.calls).toEqual([]);
+      expect(await rows("ops_event")).toMatchObject([{ kind: "search.unavailable", detail: { reason: "rate_limit_failed" } }]);
+    });
+
+    it("counts the IPv6 addresses of one /64 as one client, and a mapped IPv4 address as that IPv4 client", async () => {
+      await publish();
+      const deps = routeDeps(fakeQueryEmbedder().embedder);
+      const asked = (address: string) => post(deps, { q: "lawyer", lang: "en" }, { "x-real-ip": address });
+
+      for (let i = 0; i < SEARCH_RATE_LIMIT.limit; i++) expect((await asked(`2001:db8:1:2:${i + 1}::${i + 7}`)).status).toBe(200);
+      expect((await asked("2001:db8:1:2:aaaa:bbbb:cccc:dddd")).status).toBe(429);
+      expect((await asked("2001:db8:1:3::1")).status).toBe(200);
+
+      for (let i = 0; i < SEARCH_RATE_LIMIT.limit; i++) expect((await asked(i % 2 ? "198.51.100.77" : "::ffff:198.51.100.77")).status).toBe(200);
+      expect((await asked("::ffff:c633:644d")).status).toBe(429);
     });
   });
 
@@ -589,8 +795,8 @@ describe("search", () => {
       const limiter = createRateLimiter({ db: app, key: "k", now: () => now });
 
       for (let i = 0; i < 30; i++) expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toEqual({ allowed: true });
-      expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toEqual({ allowed: false });
-      expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toEqual({ allowed: false });
+      expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toMatchObject({ allowed: false, retryAfterSeconds: 600 });
+      expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toMatchObject({ allowed: false, retryAfterSeconds: 600 });
       now = new Date("2026-10-02T12:10:01Z");
 
       expect(await limiter.check(SEARCH_RATE_LIMIT, "203.0.113.1")).toEqual({ allowed: true });
@@ -637,6 +843,26 @@ describe("search", () => {
         ["nothing", "no_clear_match", false, [], []],
         ["gone", "ok", false, ["M001"], ["M999"]],
       ]);
+    });
+
+    it("writes no search_log row for its questions and counts their embeddings as purpose test_set", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const q = (id: string, text: string) => TestQuestionSchema.parse({ id, lang: "en", q: text, form: "native", intent: "normal", expected: ["M001"], split: "tuning", author: "ab", added: "2026-10-01", checked_by: null, checked_on: null });
+      const engine = service(fakeQueryEmbedder({ tokens: 12 }).embedder, { spendPurpose: "test_set", log: false });
+
+      const results = await runQuestions([q("a", "a lawyer"), q("b", "see a doctor")], engine, { release: 1 });
+
+      expect(results.map((r) => r.status)).toEqual(["ok", "ok"]);
+      expect(await rows("search_log")).toEqual([]);
+      expect(await rows("spend_event")).toMatchObject([
+        { purpose: "test_set", tokens: "12" },
+        { purpose: "test_set", tokens: "12" },
+      ]);
+      // A resident's search, beside it, is still logged and counted as search.
+      await service(fakeQueryEmbedder().embedder).search({ q: "lawyer", lang: "en" });
+      expect((await rows("spend_event")).map((r) => r.purpose)).toEqual(["test_set", "test_set", "search"]);
+      expect(await rows("search_log")).toHaveLength(1);
     });
 
     it("records a failed search as error:search_unavailable and an unavailable release as unavailable", async () => {

@@ -22,8 +22,8 @@ export const PUBLISH_FAILURE_REASONS = [
 ] as const;
 export type PublishFailureReason = (typeof PUBLISH_FAILURE_REASONS)[number];
 
-/** Why a search could not answer (S03.04): the stage and how it ended. Never the question. */
-export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out"] as const;
+/** Why a search could not answer (S03.04): the stage and how it ended (`rate_limit_failed`: the per-client count could not be made). Never the question. */
+export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out", "rate_limit_failed"] as const;
 export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 
 export const OPS_EVENT_KINDS = {

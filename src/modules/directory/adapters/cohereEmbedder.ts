@@ -13,6 +13,21 @@ export interface CohereEmbedClient {
   };
 }
 
+let sdk: Promise<typeof import("cohere-ai")> | undefined;
+
+/**
+ * Loads the vendor's SDK once and keeps it. The composition root calls it at module load where a key is configured, so the
+ * first question on an instance does not pay the import inside the search's 2.2 s. A failed load is forgotten, so the next
+ * call tries again.
+ */
+export function warmCohere(): Promise<typeof import("cohere-ai")> {
+  if (!sdk) {
+    sdk = import("cohere-ai");
+    sdk.catch(() => (sdk = undefined));
+  }
+  return sdk;
+}
+
 export interface CohereEmbedderOptions {
   apiKey: string;
   model: string;
@@ -29,7 +44,7 @@ export function cohereEmbedder(options: CohereEmbedderOptions): Embedder {
     config: { model: options.model, inputType: "search_document", embeddingType: "float", dims: options.dims ?? null },
     async embedDocuments(texts, { signal }): Promise<EmbeddedTexts> {
       if (!client) {
-        const { CohereClient } = await import("cohere-ai");
+        const { CohereClient } = await warmCohere();
         client = new CohereClient({ token: options.apiKey }) as unknown as CohereEmbedClient;
       }
       // The job decides whether to try again (and how often): the SDK's own retries would hide the time they take.
@@ -63,7 +78,7 @@ export function cohereQueryEmbedder(options: CohereQueryEmbedderOptions): QueryE
       let response;
       try {
         if (!client) {
-          const { CohereClient } = await import("cohere-ai");
+          const { CohereClient } = await warmCohere();
           client = new CohereClient({ token: options.apiKey }) as unknown as CohereEmbedClient;
         }
         // No retries: the search has 2.2 s for the whole leg, and a retry would hide the time it takes.

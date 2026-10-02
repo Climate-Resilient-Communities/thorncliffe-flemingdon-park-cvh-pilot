@@ -81,5 +81,5 @@ export {
   type SearchStageReason,
 } from "./application/search";
 export { QueryEmbedError, type QueryEmbedder } from "./application/ports";
-export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
+export { cohereQueryEmbedder, warmCohere, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
 export { MAX_RESULTS, RRF_K, cosine, rankLegs, type SearchHit } from "./domain/searchRanking";

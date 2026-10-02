@@ -9,10 +9,11 @@
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`), then
 //    ranks (domain/searchRanking.ts: threshold first, top 5). The translated-question leg arrives with S03.05.
 //  - Time: the leg is cancelled and ignored when still running 2.2 s after the request started, and the whole request
-//    answers within 2.5 s. A search with no completed leg fails with `search_unavailable`; a release without search data,
+//    answers within 2.5 s. "Started" is when the route took the request (it passes that time in), so reading the body and
+//    the rate limiter count against the budget. A search with no completed leg fails with `search_unavailable`; a release without search data,
 //    or a deployment without an embedding key, answers `status: "unavailable"` (an expected outcome) and calls no model.
 //  - No transaction and no spend lock are held across the vendor call: the question's usage is one plain insert in
-//    `spend_event` (purpose `search`) after the call, outside the publish allowance (the lock and the allowance are the
+//    `spend_event` (purpose `search`; `test_set` for the test-set runner, which also writes no `search_log` row) after the call, outside the publish allowance (the lock and the allowance are the
 //    publish job's).
 //  - Privacy (AD-3): the question is held in this function's variables for the length of the request. It is never
 //    stored, logged, audited or put into an error: `search_log` takes counts and codes, ops events take a reason and a
@@ -22,7 +23,7 @@ import { DirectoryListingV1 } from "@/contracts/directory";
 import type { LangCode } from "@/contracts/lang";
 import { parseSearchRequest } from "@/contracts/search";
 import type { SearchV1 } from "@/contracts/searchTestSet";
-import { recordSpendEvent } from "@/modules/spend";
+import { recordSpendEvent, type SpendPurpose } from "@/modules/spend";
 import type { Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { directoryRelease, searchLog } from "../adapters/schema";
@@ -34,6 +35,9 @@ import type { DirectoryStorage, QueryEmbedder } from "./ports";
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
 export const SEARCH_SPEND_PURPOSE = "search";
+
+/** A release whose search data failed to load is not loaded again (nor alerted again) for this long. */
+export const SNAPSHOT_FAILURE_TTL_MS = 60_000;
 
 /** A leg still running this long after the request started is cancelled (the E03 definitions' search time limit). */
 export const DEFAULT_LEG_TIMEOUT_MS = 2200;
@@ -69,7 +73,14 @@ export interface SearchDeps {
   embedder: QueryEmbedder | null;
   /** Told when a search fails with `search_unavailable` (the app writes the ops event; directory may not import ops). A failure here changes nothing. */
   onFailure?: (note: SearchFailureNote) => Promise<void>;
+  /** What the embedding is counted under in spend_event: `search` (default), or `test_set` for the test-set runner. */
+  spendPurpose?: SpendPurpose;
+  /** Whether each search writes a `search_log` row (default true); the test-set runner's questions are not residents' searches. */
+  log?: boolean;
+  /** Handed the writes still pending when the response is ready, so the app can finish them after the response (`after()`). */
+  defer?: (work: Promise<unknown>) => void;
   /** Test seams. */
+  snapshotFailureTtlMs?: number;
   legTimeoutMs?: number;
   totalBudgetMs?: number;
   /** A monotonic clock in milliseconds. */
@@ -77,8 +88,11 @@ export interface SearchDeps {
 }
 
 export interface SearchService {
-  /** Answers one question with `SearchV1`; throws SearchFailure (`invalid_*` before any model is called, `search_unavailable` when no leg completed). */
-  search(input: { q: string; lang: LangCode; v?: number }): Promise<SearchV1>;
+  /**
+   * Answers one question with `SearchV1`; throws SearchFailure (`invalid_*` before any model is called, `search_unavailable` when no leg completed).
+   * `startedAt` is when the request started on this service's clock (the route takes it first thing); left out, now.
+   */
+  search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number): Promise<SearchV1>;
   /** Whether the current release holds the provider (the test-set runner reports expected providers a release lacks). Throws when the release has no search data. */
   has(providerId: string): Promise<boolean>;
 }
@@ -97,10 +111,17 @@ interface ReleaseData {
 
 /** A stage of the leg failed: carried to the failure note as a code. */
 class StageError extends Error {
-  constructor(readonly reason: SearchStageReason) {
+  /** `repeat`: the same failure as one already reported a moment ago, so it is not reported again. */
+  constructor(
+    readonly reason: SearchStageReason,
+    readonly repeat = false,
+  ) {
     super(reason);
   }
 }
+
+/** A release's search data failed to load a moment ago. */
+class RecentSnapshotFailure extends Error {}
 
 interface CurrentRelease {
   number: number;
@@ -173,22 +194,34 @@ export function createSearch(deps: SearchDeps): SearchService {
   const clock = deps.clock ?? (() => performance.now());
   const legMs = deps.legTimeoutMs ?? DEFAULT_LEG_TIMEOUT_MS;
   const totalMs = deps.totalBudgetMs ?? DEFAULT_TOTAL_BUDGET_MS;
+  const spendPurpose = deps.spendPurpose ?? SEARCH_SPEND_PURPOSE;
+  const writeLog = deps.log ?? true;
+  const failureTtlMs = deps.snapshotFailureTtlMs ?? SNAPSHOT_FAILURE_TTL_MS;
+  // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
+  const failedUntil = new Map<number, number>();
   // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it).
   const cache = new Map<number, Promise<ReleaseData>>();
 
   function dataOf(release: CurrentRelease, record: ReleaseSearchRecord): Promise<ReleaseData> {
     let loaded = cache.get(release.number);
     if (!loaded) {
+      const until = failedUntil.get(release.number);
+      if (until !== undefined && clock() < until) return Promise.reject(new RecentSnapshotFailure());
+      failedUntil.delete(release.number);
       loaded = loadReleaseData(deps.storage(), release, record);
       cache.set(release.number, loaded);
-      loaded.catch(() => cache.delete(release.number));
+      const number = release.number;
+      loaded.catch(() => {
+        cache.delete(number);
+        failedUntil.set(number, clock() + failureTtlMs);
+      });
       for (const number of [...cache.keys()]) if (number < release.number - 1) cache.delete(number);
     }
     return loaded;
   }
 
-  async function search(input: { q: string; lang: LangCode; v?: number }): Promise<SearchV1> {
-    const started = clock();
+  async function search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number): Promise<SearchV1> {
+    const started = startedAt ?? clock();
     const elapsed = () => Math.round(clock() - started);
     const parsed = parseSearchRequest(input);
     if (!parsed.ok) throw new SearchFailure(parsed.code);
@@ -197,7 +230,7 @@ export function createSearch(deps: SearchDeps): SearchService {
 
     const controller = new AbortController();
     // What a timed-out call may have used, for the spend record (a model call that was cancelled may still be billed).
-    const pending: { model: string; releaseV: number } = { model: "", releaseV: 0 };
+    const pending: { model: string; releaseV: number; answered: boolean; tokens: number | null } = { model: "", releaseV: 0, answered: false, tokens: null };
     let releaseV: number | null = null;
 
     const leg = async (): Promise<LegOutcome> => {
@@ -207,12 +240,14 @@ export function createSearch(deps: SearchDeps): SearchService {
         current = await readCurrent(deps.db());
         if (current) releaseV = current.number;
         if (current?.search && deps.embedder) data = await dataOf(current, current.search);
-      } catch {
-        throw new StageError("snapshot_failed");
+      } catch (error) {
+        throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure);
       }
       // No release, a release without search data, or no key: an expected outcome, and no model is called.
       if (!current || !data || !deps.embedder) return { kind: "none", releaseV: current?.number ?? null };
 
+      // The budget is already spent (a slow body or limiter): no call is made, and none is billed.
+      if (controller.signal.aborted) throw new StageError("timed_out");
       pending.model = data.model;
       pending.releaseV = data.releaseV;
       const callStarted = clock();
@@ -223,14 +258,19 @@ export function createSearch(deps: SearchDeps): SearchService {
         throw new StageError(controller.signal.aborted ? "timed_out" : "embed_failed");
       }
       const embedMs = Math.round(clock() - callStarted);
+      pending.answered = true;
+      pending.tokens = typeof embedded?.tokens === "number" ? embedded.tokens : null;
       const size = data.vectors[0]?.length;
-      if (size !== undefined && embedded.vector.length !== size) throw new StageError("embed_invalid");
+      const vector: unknown = embedded?.vector;
+      // An answer that is not a vector of the release's size was still billed.
+      if (!Array.isArray(vector) || vector.length === 0 || (size !== undefined && vector.length !== size)) throw new StageError("embed_invalid");
       const similarities = new Map<string, number>();
       data.ids.forEach((id, index) => similarities.set(id, cosine(embedded.vector, data.vectors[index]!)));
       return { kind: "answer", data, similarities, tokens: embedded.tokens, embedMs };
     };
 
     let failure: SearchStageReason | null = null;
+    let repeat = false;
     let outcome: LegOutcome | null = null;
     const work = leg();
     // The abandoned leg may still reject after the timeout: that is not unhandled.
@@ -241,36 +281,57 @@ export function createSearch(deps: SearchDeps): SearchService {
       else outcome = raced;
     } catch (error) {
       failure = error instanceof StageError ? error.reason : "embed_failed";
+      repeat = error instanceof StageError && error.repeat;
     }
 
     const writes: Promise<unknown>[] = [];
-    const log = (row: { status: "ok" | "no_clear_match" | "unavailable" | "error"; resultCount: number; topScore: number | null }) =>
+    // Waits for the writes for what is left of the budget; those still pending then are handed to the app to finish after the response.
+    const finish = async (pendingWrites: Promise<unknown>[]) => {
+      const all = Promise.allSettled(pendingWrites);
+      await Promise.race([all, sleep(totalMs - elapsed())]);
+      deps.defer?.(all);
+    };
+    const log = (row: { status: "ok" | "no_clear_match" | "unavailable" | "error"; resultCount: number; topScore: number | null }) => {
+      if (!writeLog) return;
       writes.push(
         Promise.resolve()
           .then(() => deps.db().insert(searchLog).values({ lang, queryLang, releaseV, ms: elapsed(), ...row }))
           .catch(() => undefined),
       );
+    };
 
     if (failure !== null || outcome === null) {
       const reason = failure ?? "embed_failed";
       const releaseAtFailure = releaseV;
-      if (reason === "timed_out" && pending.model !== "") {
-        // The cancelled call may have been billed: count it as an estimate.
+      if ((reason === "timed_out" || reason === "embed_invalid") && pending.model !== "") {
+        // A cancelled call may have been billed, and an answer that was no usable vector was: count what the vendor reported,
+        // or an estimate.
+        const reported = pending.answered ? pending.tokens : null;
         writes.push(
           Promise.resolve()
-            .then(() => recordSpendEvent(deps.db(), { kind: SEARCH_SPEND_KIND, purpose: SEARCH_SPEND_PURPOSE, model: pending.model, releaseV: pending.releaseV, tokens: estimateTokens([q]), tokensEstimated: true, ms: elapsed() }))
+            .then(() =>
+              recordSpendEvent(deps.db(), {
+                kind: SEARCH_SPEND_KIND,
+                purpose: spendPurpose,
+                model: pending.model,
+                releaseV: pending.releaseV,
+                tokens: reported ?? estimateTokens([q]),
+                tokensEstimated: reported === null,
+                ms: elapsed(),
+              }),
+            )
             .catch(() => undefined),
         );
       }
       log({ status: "error", resultCount: 0, topScore: null });
-      if (deps.onFailure) writes.push(Promise.resolve().then(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms: elapsed() })).catch(() => undefined));
-      await Promise.race([Promise.allSettled(writes), sleep(totalMs - elapsed())]);
+      if (deps.onFailure && !repeat) writes.push(Promise.resolve().then(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms: elapsed() })).catch(() => undefined));
+      await finish(writes);
       throw new SearchFailure("search_unavailable");
     }
 
     if (outcome.kind === "none") {
       log({ status: "unavailable", resultCount: 0, topScore: null });
-      await Promise.race([Promise.allSettled(writes), sleep(totalMs - elapsed())]);
+      await finish(writes);
       return { v: 1, release_v: outcome.releaseV ?? 0, query_lang: queryLang, status: "unavailable", emergency_first: false, results: [] };
     }
 
@@ -282,7 +343,7 @@ export function createSearch(deps: SearchDeps): SearchService {
         .then(() =>
           recordSpendEvent(deps.db(), {
             kind: SEARCH_SPEND_KIND,
-            purpose: SEARCH_SPEND_PURPOSE,
+            purpose: spendPurpose,
             model: data.model,
             releaseV: data.releaseV,
             tokens: outcome.tokens ?? estimateTokens([q]),
@@ -293,7 +354,7 @@ export function createSearch(deps: SearchDeps): SearchService {
         .catch(() => undefined),
     );
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null });
-    await Promise.race([Promise.allSettled(writes), sleep(totalMs - elapsed())]);
+    await finish(writes);
     return { v: 1, release_v: data.releaseV, query_lang: queryLang, status, emergency_first: emergencyFirst(results, data.emergency), results };
   }
 
