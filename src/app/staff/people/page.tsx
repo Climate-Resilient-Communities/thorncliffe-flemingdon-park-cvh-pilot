@@ -6,13 +6,14 @@ import { staffPage } from "../guard";
 import { identity } from "../identity";
 import { AddPersonBody } from "./AddPersonBody";
 import { ReissueForm } from "./ReissueForm";
+import { ResetAuthenticatorForm } from "./ResetAuthenticatorForm";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export const metadata: Metadata = { title: englishText("staff.people.title") };
 
 /**
  * "Add a person" (S01.05), with "Re-issue a starting password" (S01.07) and "Reset password" (S01.08)
- * for Admins. Staff at the
+ * and "Reset authenticator" (S01.11) for Admins. Staff at the
  * Hub only (the guard sends everyone else to sign-in or their setup gate); responses are no-store.
  */
 export default staffPage({ route: "/staff/people", access: "hub" }, async (session) => {
@@ -33,6 +34,16 @@ export default staffPage({ route: "/staff/people", access: "hub" }, async (sessi
                 lead: englishText("staff.resetPassword.lead"),
                 username: englishText("staff.resetPassword.username"),
                 submit: englishText("staff.resetPassword.submit"),
+              }}
+            />
+          )}
+          {mayManageAccounts({ id: session.staffId, role: session.role, status: "active" }) && (
+            <ResetAuthenticatorForm
+              labels={{
+                title: englishText("staff.resetAuthenticator.title"),
+                lead: englishText("staff.resetAuthenticator.lead"),
+                username: englishText("staff.resetAuthenticator.username"),
+                submit: englishText("staff.resetAuthenticator.submit"),
               }}
             />
           )}
