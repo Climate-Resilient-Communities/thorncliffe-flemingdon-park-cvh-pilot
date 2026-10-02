@@ -13,6 +13,7 @@ const session = (overrides: Partial<StaffSession> = {}): StaffSession => ({
   lastName: "Okafor",
   role: "ambassador",
   gate: "hub",
+  aal: "aal1",
   ...overrides,
 });
 
