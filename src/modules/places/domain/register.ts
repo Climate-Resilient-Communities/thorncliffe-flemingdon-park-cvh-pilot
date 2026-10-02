@@ -20,6 +20,8 @@
  * and the second case is a warning.
  */
 
+import { TORONTO_BOUNDS, inToronto } from "../../../contracts/torontoBounds";
+
 /** A neighbourhood of the pilot, and the postal area that defines it. */
 export interface PilotArea {
   fsa: string;
@@ -33,14 +35,6 @@ export const PILOT_AREAS: readonly PilotArea[] = [
   { fsa: "M4H", neighbourhoodId: "TP", name: "Thorncliffe Park", expected: 32 },
   { fsa: "M3C", neighbourhoodId: "FP", name: "Flemingdon Park", expected: 11 },
 ];
-
-/**
- * The box a building's coordinates must fall in. The City of Toronto spans roughly 43.58 to 43.86
- * degrees north and 79.64 to 79.12 degrees west; the box adds about two kilometres of margin all
- * round. It catches the usual data mistakes: latitude and longitude swapped, a missing sign, a
- * point at 0,0 or in another city. It does not check that a point is in the right neighbourhood.
- */
-export const TORONTO_BOUNDS = { minLatitude: 43.55, maxLatitude: 43.88, minLongitude: -79.66, maxLongitude: -79.1 } as const;
 
 /** A register feature as read from the GeoJSON file: anything, since the file is not trusted. */
 export type RegisterFeature = unknown;
@@ -152,9 +146,6 @@ function coordinatesOf(feature: Record<string, unknown>, props: Record<string, u
   return latitude !== null && longitude !== null ? { latitude, longitude } : null;
 }
 
-export const insideToronto = ({ latitude, longitude }: { latitude: number; longitude: number }): boolean =>
-  latitude >= TORONTO_BOUNDS.minLatitude && latitude <= TORONTO_BOUNDS.maxLatitude && longitude >= TORONTO_BOUNDS.minLongitude && longitude <= TORONTO_BOUNDS.maxLongitude;
-
 /** The register's last word on the six facts: what is understood, and what is a warning. */
 function readFacts(props: Record<string, unknown>, warn: (message: string) => void) {
   const yesNo = (field: string): boolean | null => {
@@ -226,7 +217,7 @@ export function parseMergeFile(text: string): { entries: MergeEntry[]; failures:
  * skipped without a check: only the pilot's rows are validated.
  *
  * A pilot row fails when it has no registration number (`RSN`), no address, no coordinates or
- * coordinates outside TORONTO_BOUNDS, or when its registration number appears on another pilot
+ * coordinates outside TORONTO_BOUNDS (src/contracts/torontoBounds.ts), or when its registration number appears on another pilot
  * row (all of them fail). A merge entry fails when it maps a registration to itself, to one that
  * is not a pilot row, to one that is itself folded into another, or when a registration is
  * mapped twice. A merge entry for a registration that is not a pilot row is only a warning.
@@ -274,8 +265,8 @@ export function planBuildingImport(features: readonly RegisterFeature[], merges:
     if (point === null) {
       problem("missing coordinates (geometry, LONGITUDE and LATITUDE)");
       valid = false;
-    } else if (!insideToronto(point)) {
-      problem(`coordinates ${point.latitude}, ${point.longitude} (latitude, longitude) are outside Toronto (${TORONTO_BOUNDS.minLatitude} to ${TORONTO_BOUNDS.maxLatitude} north, ${TORONTO_BOUNDS.minLongitude} to ${TORONTO_BOUNDS.maxLongitude})`);
+    } else if (!inToronto(point.latitude, point.longitude)) {
+      problem(`coordinates ${point.latitude}, ${point.longitude} (latitude, longitude) are outside Toronto (${TORONTO_BOUNDS.minLat} to ${TORONTO_BOUNDS.maxLat} north, ${TORONTO_BOUNDS.minLng} to ${TORONTO_BOUNDS.maxLng})`);
       valid = false;
     }
     if (!valid || rsn === null || address === null || point === null) return;

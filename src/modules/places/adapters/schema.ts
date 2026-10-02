@@ -1,5 +1,5 @@
 // Drizzle tables of the places module (AD-2: only tables this module owns). Written by hand to
-// match db/migrations/20261002190000_buildings_floors.sql; test/db/drift.db.test.ts compares them
+// match db/migrations/20261002210000_buildings_floors.sql; test/db/drift.db.test.ts compares them
 // with the migrated database. Grants (select, the confirmation columns and the floors to cvh_app,
 // none to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";

@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { formatImportReport } from "./importReport";
-import { PILOT_AREAS, TORONTO_BOUNDS, formatProblem, fsaOf, parseMergeFile, planBuildingImport as plan43, rsnOf, tidyAddress } from "./register";
+import { TORONTO_BOUNDS } from "../../../contracts/torontoBounds";
+import { PILOT_AREAS, formatProblem, fsaOf, parseMergeFile, planBuildingImport as plan43, rsnOf, tidyAddress } from "./register";
 
 /** A small register: no count of buildings expected. */
 const planBuildingImport = (features: Parameters<typeof plan43>[0], merges?: Parameters<typeof plan43>[1]) => plan43(features, merges, { checkCounts: false });
@@ -111,8 +112,8 @@ describe("a row that fails", () => {
       ["at the origin", 0, 0],
       ["a missing sign", 79.34, 43.7],
       ["another city (Ottawa)", -75.7, 45.42],
-      ["north of the box", -79.34, TORONTO_BOUNDS.maxLatitude + 0.001],
-      ["west of the box", TORONTO_BOUNDS.minLongitude - 0.001, 43.7],
+      ["north of the box", -79.34, TORONTO_BOUNDS.maxLat + 0.001],
+      ["west of the box", TORONTO_BOUNDS.minLng - 0.001, 43.7],
     ];
     for (const [name, longitude, latitude] of outside) {
       const failures = failing({ LONGITUDE: longitude, LATITUDE: latitude });
@@ -123,8 +124,8 @@ describe("a row that fails", () => {
 
   it("accepts the corners of the box", () => {
     for (const [longitude, latitude] of [
-      [TORONTO_BOUNDS.minLongitude, TORONTO_BOUNDS.minLatitude],
-      [TORONTO_BOUNDS.maxLongitude, TORONTO_BOUNDS.maxLatitude],
+      [TORONTO_BOUNDS.minLng, TORONTO_BOUNDS.minLat],
+      [TORONTO_BOUNDS.maxLng, TORONTO_BOUNDS.maxLat],
     ]) {
       expect(failing({ LONGITUDE: longitude, LATITUDE: latitude })).toEqual([]);
     }
@@ -161,7 +162,7 @@ describe("a row that fails", () => {
 
   it("is printed with its row, rsn and address", () => {
     const [failure] = failing({ RSN: 77, LATITUDE: 0, LONGITUDE: 0 });
-    expect(formatProblem(failure)).toBe("register row 1 (rsn 77, 1 Test St): coordinates 0, 0 (latitude, longitude) are outside Toronto (43.55 to 43.88 north, -79.66 to -79.1)");
+    expect(formatProblem(failure)).toBe("register row 1 (rsn 77, 1 Test St): coordinates 0, 0 (latitude, longitude) are outside Toronto (43.58 to 43.86 north, -79.64 to -79.11)");
     const plan = planBuildingImport([feature({ RSN: 77, LATITUDE: 0, LONGITUDE: 0 })]);
     expect(formatImportReport(plan)).toContain("Failures (1): nothing was imported.");
     expect(formatImportReport(plan).some((line) => line.startsWith("Would load"))).toBe(false);

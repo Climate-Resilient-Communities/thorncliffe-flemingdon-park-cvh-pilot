@@ -9,7 +9,6 @@ export { FLOOR_LABEL_MAX_LENGTH, checkFloorLabel, floorLabelKey, trimFloorLabel,
 export { formatImportReport } from "./domain/importReport";
 export {
   PILOT_AREAS,
-  TORONTO_BOUNDS,
   formatProblem,
   parseMergeFile,
   planBuildingImport,
