@@ -20,6 +20,11 @@ const USERNAME = /^[a-z][a-z0-9]*(?:[._-][a-z0-9]+)*$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const NAME_MAX = 100;
 
+/** True for a normalised username that an account could have (sign-in checks this before asking the provider). */
+export function isUsernameFormat(username: string): boolean {
+  return username.length >= 3 && username.length <= 32 && USERNAME.test(username);
+}
+
 /** Usernames are compared and stored in lower case, so "JDoe" and "jdoe" are the same username. */
 export function normaliseUsername(username: string): string {
   return username.trim().toLowerCase();

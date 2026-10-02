@@ -59,7 +59,7 @@ beforeEach(async () => {
   await resetIdentity();
   idp = memoryIdentityProvider();
   identity = createIdentity({ db: app, idp });
-  ({ beginAdminRecovery } = createAdminRecovery({ store: drizzleStaffStore, idp, now: () => new Date() }));
+  ({ beginAdminRecovery } = createAdminRecovery({ store: drizzleStaffStore, idp, now: () => new Date(), signInLockedUntil: async () => null }));
 });
 
 afterAll(async () => {

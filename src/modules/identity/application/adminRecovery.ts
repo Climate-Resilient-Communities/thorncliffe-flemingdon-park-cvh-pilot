@@ -22,6 +22,8 @@ export interface AdminRecoveryDeps {
   idp: IdentityProvider;
   now: () => Date;
   lockTimeoutMs?: number;
+  /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin. */
+  signInLockedUntil: (username: string) => Promise<Date | null>;
 }
 
 /**
@@ -39,7 +41,7 @@ export interface AdminRecoveryDeps {
  * It never refuses: blocking a recovery would stop the Admins recovering. Bootstrap never returns.
  */
 export function createAdminRecovery(deps: AdminRecoveryDeps) {
-  const { store, idp } = deps;
+  const { store } = deps;
 
   return {
     async beginAdminRecovery(tx: DbTransaction, targetId: string): Promise<AdminRecovery> {
@@ -53,7 +55,7 @@ export function createAdminRecovery(deps: AdminRecoveryDeps) {
       }
       const locked = await store.lockAdminsAndAccount(tx, targetId);
       await store.permitAdminShortfall(tx);
-      const standings = await adminStandings(idp, locked, deps.now());
+      const standings = await adminStandings(deps, locked, deps.now());
       return { adminShortfall: leavesAdminShortfall(standings, targetId) };
     },
   };

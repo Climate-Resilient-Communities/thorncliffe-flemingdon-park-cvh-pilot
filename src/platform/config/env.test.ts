@@ -211,6 +211,17 @@ describe("PUBLIC_BASE_URL in preview from VERCEL_URL", () => {
   });
 });
 
+describe("CVH_FAKE_IDENTITY_FILE", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(parseEnv({ ...local, CVH_FAKE_IDENTITY_FILE: "/tmp/fake.json" }).fakeIdentityFile).toBe("/tmp/fake.json");
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_IDENTITY_FILE: "/tmp/fake.json" })).toContain(
+        "CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel",
+      );
+    }
+  });
+});
+
 describe("Twilio credentials", () => {
   it.each([
     ["preview", preview],

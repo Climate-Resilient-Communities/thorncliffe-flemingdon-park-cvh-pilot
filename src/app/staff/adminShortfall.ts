@@ -2,7 +2,7 @@ import type { IdentityService } from "@/modules/identity";
 import type { StaffSession } from "./session";
 
 export interface AdminShortfallDeps {
-  session: () => Promise<StaffSession | null>;
+  session: () => Promise<Pick<StaffSession, "staffId"> | null>;
   identity: () => Pick<IdentityService, "adminShortfallBanner">;
   /** Operational error log (structured, no personal data). */
   logError: (fields: Record<string, string>) => void;

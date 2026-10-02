@@ -47,6 +47,16 @@ describe("during bootstrap", () => {
     for (const role of STAFF_ROLES) expect(decideUnderBootstrap(withSecond, SECOND, create(role))).toEqual(refused);
   });
 
+  it("lets one pending Admin re-issue the other's starting password, and nobody else's", () => {
+    const reissue = (targetId: string): StaffIntent => ({ kind: "reissue_starting_password", targetId });
+    expect(decideUnderBootstrap(withSecond, FIRST, reissue(SECOND))).toEqual({ ok: true, value: "allowed" });
+    expect(decideUnderBootstrap(withSecond, SECOND, reissue(FIRST))).toEqual({ ok: true, value: "allowed" });
+    expect(decideUnderBootstrap(withSecond, FIRST, reissue(FIRST))).toEqual(refused);
+    expect(decideUnderBootstrap(withSecond, FIRST, reissue(OTHER))).toEqual(refused);
+    expect(decideUnderBootstrap(pending, FIRST, reissue(OTHER))).toEqual(refused);
+    expect(decideUnderBootstrap(completed, FIRST, reissue(OTHER))).toEqual({ ok: true, value: "allowed" });
+  });
+
   it("refuses anyone else account creation", () => {
     expect(decideUnderBootstrap(pending, OTHER, create("admin"))).toEqual(refused);
   });

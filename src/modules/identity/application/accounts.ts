@@ -25,6 +25,8 @@ export interface AccountDeps {
   log: OperationalLog;
   now: () => Date;
   newId: () => string;
+  /** The failed-sign-in lock of a username (S01.07), an input of isUsableAdmin. */
+  signInLockedUntil: (username: string) => Promise<Date | null>;
 }
 
 export interface CreatedAccount {
@@ -289,7 +291,7 @@ export function createAccountService(deps: AccountDeps) {
       const now = deps.now();
       const usable = async (id: string) => {
         const account = await store.findById(db, id);
-        return account !== null && isAccountUsableAdmin(idp, account, now);
+        return account !== null && isAccountUsableAdmin(deps, account, now);
       };
       const ready = bootstrapCompletes(state, { firstAdmin: await usable(state.firstAdminId), secondAdmin: await usable(state.secondAdminId) });
       if (!ready) return false;

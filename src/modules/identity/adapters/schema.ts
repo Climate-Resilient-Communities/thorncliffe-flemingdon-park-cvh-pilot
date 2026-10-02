@@ -1,8 +1,9 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
-// db/migrations/20261002110000_staff_account.sql; the drift test compares them.
+// db/migrations/20261002110000_staff_account.sql and 20261002130000_sign_in.sql; the drift test
+// compares them.
 // The bootstrap row's forward-only trigger and the grants live only in the migration.
 import { sql } from "drizzle-orm";
-import { boolean, check, pgEnum, pgPolicy, pgRole, pgTable, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 import { STAFF_STATUSES } from "../domain/staffAccount";
 
@@ -25,6 +26,7 @@ export const staffAccount = pgTable(
     status: staffStatus().notNull().default("active"),
     mustChangePassword: boolean("must_change_password").notNull().default(true),
     startingPasswordIssuedAt: timestamp("starting_password_issued_at", { withTimezone: true }),
+    startingPasswordUsedAt: timestamp("starting_password_used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid("created_by").references((): AnyPgColumn => staffAccount.id),
   },
@@ -43,6 +45,7 @@ export const staffAccount = pgTable(
       "staff_account_starting_password_issued",
       sql`not ${t.mustChangePassword} or ${t.startingPasswordIssuedAt} is not null`,
     ),
+    check("staff_account_starting_password_used", sql`${t.startingPasswordUsedAt} is null or ${t.mustChangePassword}`),
     pgPolicy("staff_account_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("staff_account_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("staff_account_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
@@ -65,6 +68,47 @@ export const staffBootstrap = pgTable(
     pgPolicy("staff_bootstrap_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("staff_bootstrap_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("staff_bootstrap_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/** One checked, failed sign-in (S01.07). Username and client only as keyed hashes; kept at most 24 hours. */
+export const signInFailure = pgTable(
+  "sign_in_failure",
+  {
+    id: bigint({ mode: "number" }).primaryKey().generatedAlwaysAsIdentity(),
+    at: timestamp({ withTimezone: true }).notNull(),
+    usernameHash: text("username_hash").notNull(),
+    clientHash: text("client_hash").notNull(),
+  },
+  (t) => [
+    index("sign_in_failure_username_idx").on(t.usernameHash, t.at),
+    index("sign_in_failure_client_idx").on(t.clientHash, t.at),
+    index("sign_in_failure_at_idx").on(t.at),
+    check("sign_in_failure_username_hash_format", sql`${t.usernameHash} ~ '^[0-9a-f]{64}$'`),
+    check("sign_in_failure_client_hash_format", sql`${t.clientHash} ~ '^[0-9a-f]{64}$'`),
+    pgPolicy("sign_in_failure_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("sign_in_failure_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("sign_in_failure_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/** A username lock or a client block started by failed sign-ins (S01.07). */
+export const signInLock = pgTable(
+  "sign_in_lock",
+  {
+    kind: text().notNull(),
+    keyHash: text("key_hash").notNull(),
+    lockedUntil: timestamp("locked_until", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.kind, t.keyHash] }),
+    index("sign_in_lock_locked_until_idx").on(t.lockedUntil),
+    check("sign_in_lock_kind", sql`${t.kind} in ('username', 'client')`),
+    check("sign_in_lock_key_hash_format", sql`${t.keyHash} ~ '^[0-9a-f]{64}$'`),
+    pgPolicy("sign_in_lock_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("sign_in_lock_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("sign_in_lock_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+    pgPolicy("sign_in_lock_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();
 

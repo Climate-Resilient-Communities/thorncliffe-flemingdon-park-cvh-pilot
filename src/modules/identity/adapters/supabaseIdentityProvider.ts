@@ -16,7 +16,7 @@ export interface SupabaseAdminConfig {
 export const DEFAULT_PROVIDER_TIMEOUT_MS = 5000;
 
 /** A fetch that gives up after `ms`: the request is aborted, so the caller sees a failed call, never a hang. */
-function withTimeout(base: typeof fetch, ms: number): typeof fetch {
+export function withTimeout(base: typeof fetch, ms: number): typeof fetch {
   return (input, init) => {
     const deadline = AbortSignal.timeout(ms);
     const signal = init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
@@ -91,6 +91,17 @@ export function supabaseIdentityProvider(config: SupabaseAdminConfig): IdentityP
       const { data, error } = await admin.mfa.listFactors({ userId: authUserId });
       if (error) throw new Error(`Supabase Auth refused to list factors (status ${error.status ?? "unknown"}, code ${error.code ?? "none"})`);
       return data.factors.some((factor) => factor.factor_type === "totp" && factor.status === "verified");
+    },
+
+    async setPassword(authUserId, password) {
+      try {
+        const { error } = await admin.updateUserById(authUserId, { password });
+        if (!error) return { ok: true };
+        if (REJECTED.has(error.code ?? "") || error.status === 422 || error.status === 400) return { ok: false, error: "rejected" };
+        return { ok: false, error: "unavailable" };
+      } catch {
+        return { ok: false, error: "unavailable" };
+      }
     },
   };
 }
