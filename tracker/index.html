@@ -35,7 +35,7 @@ h2{margin-top:30px}
 .time-variance{font-size:11px;padding:6px 9px;border-radius:6px;background:var(--under-bg);color:var(--under-fg);white-space:nowrap}.time-variance.over{background:var(--over-bg);color:var(--over-fg)}.time-variance.missing{background:var(--warn-bg);color:var(--warn-fg)}
 @media(max-width:700px){.stats{grid-template-columns:1fr 1fr}summary{flex-wrap:wrap}.title{flex-basis:calc(100% - 100px)}.detail{padding:0 16px 16px}h1{font-size:30px}.time-pair{order:4;width:100%;min-width:0;justify-content:flex-start;gap:20px}.time-variance{margin-left:auto}}
 @media(prefers-reduced-motion:reduce){summary::before{transition:none}}
-</style><header><small>CLIMATE RESILIENT COMMUNITIES / DELIVERY</small><h1>The pilot, at a glance.</h1><p>Every epic. Every story. Evidence of what has been built.</p><div id="stamp">Loading the plan from GitHub…</div></header><main><div class="stats" id="stats"></div><div id="missing" class="alert" hidden></div><p class="note" id="reported"></p><div class="toolbar"><input id="search" aria-label="Search stories" placeholder="Search stories, IDs or acceptance criteria…"><select id="status" aria-label="Status"><option value="">All statuses</option><option>Done</option><option>Merged</option><option>In review</option><option>In progress</option><option>Planned</option><option>Deferred</option><option value="missing">Finished, hours missing</option></select><select id="epic" aria-label="Epic"><option value="">All epics</option></select><button id="refresh">↻ Refresh from GitHub</button><button id="collapse">Collapse all</button><span id="refresh-state" role="status" class="muted"></span></div><p class="muted" id="count"></p><div id="stories"></div><h2>Time: estimate vs actual</h2><p class="muted">Actuals are reported work hours, not calendar time between starting and finishing. Comparisons include only stories with recorded actuals. Missing hours never count as zero.</p><div id="time-summary" class="note"></div><div class="table-wrap"><table id="time-table"></table></div><h2>Created &amp; approved artifacts</h2><p class="muted">Repository references, separate from story completion.</p><div class="artifacts" id="artifacts"></div><footer id="foot"></footer></main><script>
+</style><header><small>CLIMATE RESILIENT COMMUNITIES / DELIVERY</small><h1>The pilot, at a glance.</h1><p>Every epic. Every story. Evidence of what has been built.</p><div id="stamp">Loading the plan from GitHub…</div></header><main><div class="stats" id="stats"></div><div id="missing" class="alert" hidden></div><p class="note" id="reported"></p><div class="toolbar"><input id="search" aria-label="Search stories" placeholder="Search stories, IDs or acceptance criteria…"><select id="status" aria-label="Status"><option value="">All statuses</option><option>Done</option><option>Merged</option><option>In review</option><option>In progress</option><option>Planned</option><option>Deferred</option><option value="missing">Finished, hours missing</option></select><select id="epic" aria-label="Epic"><option value="">All epics</option></select><button id="refresh">↻ Refresh from GitHub</button><button id="collapse">Collapse all</button><span id="refresh-state" role="status" class="muted"></span></div><p class="muted" id="count"></p><div id="stories"></div><h2>Time: estimate vs actual</h2><p class="muted">Actual is the clock time from starting work on a story to merging its PR, including review, fixes, CI and waiting for input. Comparisons include only stories with recorded actuals. Missing actuals never count as zero.</p><div id="time-summary" class="note"></div><div class="table-wrap"><table id="time-table"></table></div><h2>Created &amp; approved artifacts</h2><p class="muted">Repository references, separate from story completion.</p><div class="artifacts" id="artifacts"></div><footer id="foot"></footer></main><script>
 // Raw inputs: the plan text, deferred stories and PR list. Null means fetch everything live.
 let D=null;
 const REPO='Climate-Resilient-Communities/thorncliffe-flemingdon-park-cvh-pilot',BASE='https://github.com/'+REPO,API='https://api.github.com/repos/'+REPO,RAW='https://raw.githubusercontent.com/'+REPO+'/';
@@ -50,9 +50,17 @@ const $=id=>document.getElementById(id),esc=v=>String(v??'').replace(/[&<>"']/g,
 const idPattern=id=>new RegExp('(?<![A-Za-z0-9_])'+id.replace('.','\\.')+'(?!\\d)');
 const storyBlocks=text=>[...text.matchAll(/^### Story (S\d+\.\d+) — (.+)\n([\s\S]*?)(?=^### Story |^## |(?![\s\S]))/gm)];
 const field=(body,re)=>(body.match(re)||[])[1];
-const actualOf=body=>{const t=(field(body,/\*\*Actual:\*\* ([^\n]+)/)||'').trim();return /^\d/.test(t)?parseFloat(t):null};
+const actualText=body=>{const t=(field(body,/\*\*Actual:\*\* ([^\n]+)/)||'').trim();return /^\d/.test(t)?t:null};
+// Actual is "2 h 29 min (started 2026-10-01 23:27 UTC, merged 2026-10-02 01:56 UTC)"; the timestamps win over the written duration.
+const utc=(t,word)=>{const m=(t||'').match(new RegExp(word+' (\\d{4}-\\d\\d-\\d\\d \\d\\d:\\d\\d) UTC'));return m?new Date(m[1].replace(' ','T')+':00Z'):null};
+const parseActual=t=>{const started=utc(t,'started'),merged=utc(t,'merged');let hours=null;
+ if(started&&merged)hours=(merged-started)/36e5;
+ else if(t){const h=t.match(/([\d.]+)\s*h(?![a-z])/),m=t.match(/(\d+)\s*min/);if(h||m)hours=(h?parseFloat(h[1]):0)+(m?parseInt(m[1],10)/60:0);}
+ return {hours,started,merged}};
 const anchor=(sha,id,title)=>BASE+'/blob/'+sha+'/'+PLAN+'#story-'+id.toLowerCase().replace('.','')+'--'+title.toLowerCase().replace(/[^\p{L}\p{N}_ -]/gu,'').replaceAll(' ','-');
 const fmtH=n=>Math.round(n*10)/10+' h';
+const fmtDur=n=>{const t=Math.round(n*60),h=Math.floor(t/60),m=t%60;return h&&m?h+' h '+m+' min':h?h+' h':m+' min'};
+const fmtWhen=d=>d.toLocaleString('en-CA',{timeZone:'America/Toronto',month:'short',day:'numeric',hour:'numeric',minute:'2-digit'});
 
 function build(raw){
  const epics=[],stories=[];
@@ -61,9 +69,9 @@ function build(raw){
   epics.push({id:h[1],title:h[2].trim()});
   for(const [,id,title,body] of storyBlocks(block)){
    const prs=raw.prs.filter(p=>idPattern(id).test(p.title));
-   const dep=field(body,/\*\*Depends on:\*\* (.*?)(?: ·|\n)/);
+   const dep=field(body,/\*\*Depends on:\*\* (.*?)(?: ·|\n)/),branchA=parseActual(raw.branchActuals[id]),mainA=parseActual(actualText(body)),a=branchA.hours!=null?branchA:mainA;
    stories.push({id,epic:h[1],title:title.trim(),size:field(body,/\*\*Size:\*\* (\w+)/)||'',estimate:parseFloat(field(body,/\*\*Estimate:\*\* ([\d.]+) h/))||0,
-    actual:raw.branchActuals[id]??actualOf(body),actualSource:raw.branchActuals[id]!=null?'PR branch':'plan on main',
+    actual:a.hours,started:a.started,mergedAt:a.merged,actualSource:a===branchA?'PR branch':'plan on main',
     status:prs.some(p=>p.merged)?'Merged':prs.some(p=>p.state==='open')?'In review':'Planned',
     evidence:prs.some(p=>p.merged)?'Implementation PR merged. Delivery verification has not been recorded here.':prs.some(p=>p.state==='open')?'Open implementation PR on GitHub.':'',
     branch:field(body,/\*\*Branch:\*\* `([^`]+)`/)||'',dependencies:dep?dep.match(/S\d+\.\d+/g)||[]:[],traces:field(body,/\*\*Traces:\*\* (.*?)(?: ·|\n)/)||'',
@@ -91,7 +99,7 @@ async function fetchLive(){
  const branchActuals={};
  await Promise.all(prs.filter(p=>/S\d+\.\d+/.test(p.title)).map(async p=>{
   let branchPlan;try{branchPlan=await text(p.head_sha+'/'+PLAN)}catch{return}
-  for(const [,id,,body] of storyBlocks(branchPlan))if(idPattern(id).test(p.title)){const a=actualOf(body);if(a!=null)branchActuals[id]=a;}
+  for(const [,id,,body] of storyBlocks(branchPlan))if(idPattern(id).test(p.title)){const a=actualText(body);if(a)branchActuals[id]=a;}
  }));
  return {sha:commit.sha,updated:new Date().toISOString(),live:true,plan,full,prs,branchActuals};
 }
@@ -113,25 +121,25 @@ function updateStats(){
  const a=active(),n=st=>a.filter(s=>st.includes(s.status)).length;
  $('stats').innerHTML=[[n(['Done'])+' / '+a.length,'Delivered with evidence'],[n(['Merged']),'Merged, awaiting verification'],[n(['In progress','In review']),'In progress or review'],[fmtH(a.reduce((t,s)=>t+s.estimate,0)),'Planned build effort · '+M.stories.filter(s=>s.status==='Deferred').length+' deferred']].map(([v,l])=>`<div class="stat"><strong>${v}</strong><span class="muted">${l}</span></div>`).join('');
  const miss=missingHours();$('missing').hidden=!miss.length;
- $('missing').innerHTML=miss.length?`<b>${miss.length}</b> finished ${miss.length>1?'stories have':'story has'} no actual hours recorded: ${miss.map(s=>`<b>${esc(s.id)}</b>`).join(', ')}. Add <code>**Actual:** N h</code> to ${miss.length>1?'each story':'the story'} in <a href="${BASE}/blob/main/${PLAN}" target="_blank" rel="noopener">epics.md</a>.`:'';
+ $('missing').innerHTML=miss.length?`<b>${miss.length}</b> finished ${miss.length>1?'stories have':'story has'} no actual hours recorded: ${miss.map(s=>`<b>${esc(s.id)}</b>`).join(', ')}. Record when work started and when the PR merged for ${miss.length>1?'each story':'the story'} in <a href="${BASE}/blob/main/${PLAN}" target="_blank" rel="noopener">epics.md</a>.`:'';
 }
 function variance(s){
  if(s.actual===null)return FINISHED.includes(s.status)?'<span class="time-variance missing">Hours not recorded</span>':'';
  if(s.actual===s.estimate)return '<span class="time-variance">On estimate</span>';
- return `<span class="time-variance ${s.actual>s.estimate?'over':''}">${fmtH(Math.abs(s.actual-s.estimate))} ${s.actual>s.estimate?'over':'under'} estimate</span>`;
+ return `<span class="time-variance ${s.actual>s.estimate?'over':''}">${fmtDur(Math.abs(s.actual-s.estimate))} ${s.actual>s.estimate?'over':'under'} estimate</span>`;
 }
 function render(){
  const q=$('search').value.toLowerCase(),status=$('status').value,epic=$('epic').value,miss=new Set(missingHours());
  const rows=M.stories.filter(s=>(!status||(status==='missing'?miss.has(s):s.status===status))&&(!epic||s.epic===epic)&&[s.id,s.title,s.traces,s.criteria].join(' ').toLowerCase().includes(q));
  $('count').textContent=rows.length+(rows.length===1?' story shown':' stories shown');
  $('stories').innerHTML=M.epics.map(e=>{const ss=rows.filter(s=>s.epic===e.id);if(!ss.length)return '';const all=active().filter(s=>s.epic===e.id),done=all.filter(s=>FINISHED.includes(s.status)).length;
-  return `<section class="epic"><div class="epichead"><h2>${esc(e.id)} · ${esc(e.title)}</h2><div class="muted">${done}/${all.length} done or merged · ${fmtH(all.reduce((t,s)=>t+s.estimate,0))} estimated</div><div class="bar"><i style="width:${all.length?done/all.length*100:0}%"></i></div></div>${ss.map(s=>`<details class="story"><summary><span class="sid">${s.id}</span><span class="title">${esc(s.title)}</span><span class="time-pair"><span class="time-metric"><small>Estimate</small><strong>${fmtH(s.estimate)}</strong></span><span class="time-metric"><small>Actual</small><strong>${s.actual===null?'—':fmtH(s.actual)}</strong></span>${variance(s)}</span><span class="badge ${s.status.replaceAll(' ','')}">${s.status}</span></summary><div class="detail"><p>${esc(s.evidence||'No implementation completion evidence recorded.')}</p><p><b>Size:</b> ${esc(s.size)} · <b>Reported actual:</b> ${s.actual===null?'Not recorded':fmtH(s.actual)+' (from the '+s.actualSource+')'}<br><b>Dependencies:</b> ${esc(s.dependencies.join(', ')||'None')}<br><b>Waiting for:</b> ${esc(s.waitingFor.join(', ')||'No listed unfinished dependencies')}<br><b>Branch:</b> ${esc(s.branch||'Not recorded')}</p><p><a href="${esc(s.url)}" target="_blank" rel="noopener">Open source story ↗</a>${s.prs.map(n=>` · <a href="${BASE}/pull/${n}" target="_blank" rel="noopener">PR #${n} ↗</a>`).join('')}</p><div class="criteria">${esc(s.criteria)}</div></div></details>`).join('')}</section>`}).join('')||'<p>No matching stories.</p>';
+  return `<section class="epic"><div class="epichead"><h2>${esc(e.id)} · ${esc(e.title)}</h2><div class="muted">${done}/${all.length} done or merged · ${fmtH(all.reduce((t,s)=>t+s.estimate,0))} estimated</div><div class="bar"><i style="width:${all.length?done/all.length*100:0}%"></i></div></div>${ss.map(s=>`<details class="story"><summary><span class="sid">${s.id}</span><span class="title">${esc(s.title)}</span><span class="time-pair"><span class="time-metric"><small>Estimate</small><strong>${fmtH(s.estimate)}</strong></span><span class="time-metric"><small>Actual</small><strong>${s.actual===null?'—':fmtDur(s.actual)}</strong></span>${variance(s)}</span><span class="badge ${s.status.replaceAll(' ','')}">${s.status}</span></summary><div class="detail"><p>${esc(s.evidence||'No implementation completion evidence recorded.')}</p><p><b>Size:</b> ${esc(s.size)} · <b>Actual:</b> ${s.actual===null?'Not recorded':fmtDur(s.actual)+' (from the '+s.actualSource+')'}${s.started?'<br><b>Started:</b> '+fmtWhen(s.started)+(s.mergedAt?' · <b>Merged:</b> '+fmtWhen(s.mergedAt):' · not merged yet')+' (Toronto time)':''}<br><b>Dependencies:</b> ${esc(s.dependencies.join(', ')||'None')}<br><b>Waiting for:</b> ${esc(s.waitingFor.join(', ')||'No listed unfinished dependencies')}<br><b>Branch:</b> ${esc(s.branch||'Not recorded')}</p><p><a href="${esc(s.url)}" target="_blank" rel="noopener">Open source story ↗</a>${s.prs.map(n=>` · <a href="${BASE}/pull/${n}" target="_blank" rel="noopener">PR #${n} ↗</a>`).join('')}</p><div class="criteria">${esc(s.criteria)}</div></div></details>`).join('')}</section>`}).join('')||'<p>No matching stories.</p>';
 }
 function updateTime(){
  const a=active(),recorded=a.filter(s=>s.actual!==null),actual=recorded.reduce((t,s)=>t+s.actual,0),est=recorded.reduce((t,s)=>t+s.estimate,0),miss=missingHours();
- const delta=n=>n===0?'On estimate':fmtH(Math.abs(n))+' '+(n>0?'over':'under');
- $('time-summary').textContent=recorded.length+' of '+a.length+' stories have reported actuals: '+fmtH(actual)+' actual versus '+fmtH(est)+' estimated for those same stories ('+delta(actual-est)+').'+(miss.length?' '+miss.length+' finished '+(miss.length>1?'stories are':'story is')+' missing hours and '+(miss.length>1?'are':'is')+' left out.':'')+' Hours are reported, not measured automatically.';
- $('time-table').innerHTML='<thead><tr><th>Epic</th><th>Full estimate</th><th>Recorded actual</th><th>Estimate for recorded stories</th><th>Difference</th><th>Recording coverage</th><th>Finished, hours missing</th></tr></thead><tbody>'+M.epics.map(e=>{const ss=a.filter(s=>s.epic===e.id);if(!ss.length)return '';const rr=ss.filter(s=>s.actual!==null),x=rr.reduce((t,s)=>t+s.actual,0),y=rr.reduce((t,s)=>t+s.estimate,0),mm=miss.filter(s=>s.epic===e.id).length;return `<tr><td>${esc(e.id)}</td><td>${fmtH(ss.reduce((t,s)=>t+s.estimate,0))}</td><td>${rr.length?fmtH(x):'Not recorded'}</td><td>${rr.length?fmtH(y):'—'}</td><td>${rr.length?delta(x-y):'—'}</td><td>${rr.length}/${ss.length} stories</td><td>${mm||'—'}</td></tr>`}).join('')+'</tbody>';
+ const delta=n=>n===0?'On estimate':fmtDur(Math.abs(n))+' '+(n>0?'over':'under');
+ $('time-summary').textContent=recorded.length+' of '+a.length+' stories have actuals: '+fmtDur(actual)+' actual versus '+fmtH(est)+' estimated for those same stories ('+delta(actual-est)+').'+(miss.length?' '+miss.length+' finished '+(miss.length>1?'stories are':'story is')+' missing hours and '+(miss.length>1?'are':'is')+' left out.':'')+' Actual is the time from starting work to merging the PR.';
+ $('time-table').innerHTML='<thead><tr><th>Epic</th><th>Full estimate</th><th>Recorded actual</th><th>Estimate for recorded stories</th><th>Difference</th><th>Recording coverage</th><th>Finished, hours missing</th></tr></thead><tbody>'+M.epics.map(e=>{const ss=a.filter(s=>s.epic===e.id);if(!ss.length)return '';const rr=ss.filter(s=>s.actual!==null),x=rr.reduce((t,s)=>t+s.actual,0),y=rr.reduce((t,s)=>t+s.estimate,0),mm=miss.filter(s=>s.epic===e.id).length;return `<tr><td>${esc(e.id)}</td><td>${fmtH(ss.reduce((t,s)=>t+s.estimate,0))}</td><td>${rr.length?fmtDur(x):'Not recorded'}</td><td>${rr.length?fmtH(y):'—'}</td><td>${rr.length?delta(x-y):'—'}</td><td>${rr.length}/${ss.length} stories</td><td>${mm||'—'}</td></tr>`}).join('')+'</tbody>';
 }
 
 let everLive=false;
