@@ -8,6 +8,20 @@ export interface SupabaseAdminConfig {
   secretKey: string;
   /** Test seam: the fetch the client uses. Tests pass a fake; nothing in a test reaches a real project. */
   fetch?: typeof fetch;
+  /** How long any call to Supabase Auth may take before it is abandoned and reported as a provider error (default 5 s). */
+  timeoutMs?: number;
+}
+
+/** The longest any call to Supabase Auth may take (S01.06: Admin rows can be locked while it runs). */
+export const DEFAULT_PROVIDER_TIMEOUT_MS = 5000;
+
+/** A fetch that gives up after `ms`: the request is aborted, so the caller sees a failed call, never a hang. */
+function withTimeout(base: typeof fetch, ms: number): typeof fetch {
+  return (input, init) => {
+    const deadline = AbortSignal.timeout(ms);
+    const signal = init?.signal ? AbortSignal.any([init.signal, deadline]) : deadline;
+    return base(input, { ...init, signal });
+  };
 }
 
 const TAKEN = new Set(["email_exists", "user_already_exists", "identity_already_exists", "conflict"]);
@@ -29,7 +43,7 @@ const REJECTED = new Set(["weak_password", "validation_failed", "email_address_i
 export function supabaseIdentityProvider(config: SupabaseAdminConfig): IdentityProvider {
   const client = createClient(config.url, config.secretKey, {
     auth: { persistSession: false, autoRefreshToken: false, detectSessionInUrl: false },
-    global: config.fetch ? { fetch: config.fetch } : undefined,
+    global: { fetch: withTimeout(config.fetch ?? fetch, config.timeoutMs ?? DEFAULT_PROVIDER_TIMEOUT_MS) },
   });
   const admin = client.auth.admin;
 

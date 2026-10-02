@@ -103,3 +103,54 @@ describe("Supabase Auth identity provider", () => {
     expect(await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch: unverified.fetch }).hasVerifiedAuthenticator(USER_ID)).toBe(false);
   });
 });
+
+describe("Supabase Auth calls never hang (S01.06: Admin rows can be locked while they run)", () => {
+  /** A fetch that never answers; it ends only when the request is aborted, like the real one. */
+  function hangingFetch() {
+    const signals: AbortSignal[] = [];
+    const fetch = ((_input: RequestInfo | URL, init?: RequestInit) =>
+      new Promise<Response>((_resolve, reject) => {
+        const signal = init?.signal;
+        if (!signal) return; // no deadline passed: this would hang for ever, and the test fails by timing out
+        signals.push(signal);
+        signal.addEventListener("abort", () => reject(signal.reason));
+      })) as typeof globalThis.fetch;
+    return { fetch, signals };
+  }
+  const idp = (fetch: typeof globalThis.fetch) => supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch, timeoutMs: 40 });
+  const WITHIN = 1000;
+
+  it("reports a createLogin that hangs as unavailable", async () => {
+    const { fetch, signals } = hangingFetch();
+    const started = Date.now();
+
+    expect(await idp(fetch).createLogin({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" })).toEqual({ ok: false, error: "unavailable" });
+    expect(Date.now() - started).toBeLessThan(WITHIN);
+    expect(signals).toHaveLength(1);
+  });
+
+  it.each([
+    ["findLogin", (provider: ReturnType<typeof idp>) => provider.findLogin("jdoe@staff.cvh.invalid")],
+    ["deleteLogin", (provider: ReturnType<typeof idp>) => provider.deleteLogin(USER_ID)],
+    ["hasVerifiedAuthenticator (listFactors)", (provider: ReturnType<typeof idp>) => provider.hasVerifiedAuthenticator(USER_ID)],
+  ])("throws a provider error when %s hangs, within the timeout", async (_, call) => {
+    const { fetch } = hangingFetch();
+    const started = Date.now();
+
+    await expect(call(idp(fetch))).rejects.toThrow(/Supabase Auth refused/);
+    expect(Date.now() - started).toBeLessThan(WITHIN);
+  });
+
+  it("gives every request a deadline signal", async () => {
+    const seen = fakeFetch(() => ({ status: 200, body: {} }));
+    const signals: unknown[] = [];
+    const spy = ((input: RequestInfo | URL, init?: RequestInit) => {
+      signals.push(init?.signal);
+      return seen.fetch(input, init);
+    }) as typeof globalThis.fetch;
+
+    await supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch: spy }).deleteLogin(USER_ID);
+    expect(signals).toHaveLength(1);
+    expect(signals[0]).toBeInstanceOf(AbortSignal);
+  });
+});

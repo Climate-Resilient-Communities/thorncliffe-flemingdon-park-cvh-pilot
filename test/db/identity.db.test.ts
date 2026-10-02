@@ -425,8 +425,11 @@ describe("the bootstrap gate", () => {
       { actor_staff_id: firstId, action: "bootstrap.completed", subject_type: "staff_bootstrap", subject_id: null, outcome: "ok", meta: {} },
     ]);
 
-    // Usable Admins drop below two: bootstrap does not come back.
-    await owner`update staff_account set status = 'suspended' where id = ${secondId}`;
+    // Usable Admins drop below two (only a recovery can do that, S01.06): bootstrap does not come back.
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.admin_recovery', 'on', true)`;
+      await tx`update staff_account set must_change_password = true, starting_password_issued_at = now() where id = ${secondId}`;
+    });
     expect(await identity.checkBootstrap(firstId, { kind: "other" }, "building.confirm")).toEqual({ ok: true, value: undefined });
     const coordinator = await identity.addPerson(firstId, { ...omar, username: "coord", role: "coordinator" });
     expect(coordinator).toMatchObject({ ok: true, value: { role: "coordinator" } });

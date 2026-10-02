@@ -6,10 +6,10 @@ import { bootstrapCompletes, bootstrapPhase, decideUnderBootstrap, type Bootstra
 import { loginForUsername, validateNewAccount, type NewAccount, type NewAccountInput } from "../domain/newAccount";
 import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
-import { isUsableAdmin } from "../domain/usableAdmin";
 import type { IdentityProvider, OperationalLog, StaffStore } from "./ports";
+import { isAccountUsableAdmin } from "./usability";
 
-type AuditReason = (typeof REFUSAL_REASONS)[number];
+export type AuditReason = (typeof REFUSAL_REASONS)[number];
 
 /** The audit module's two writers (its index.ts), injected so tests can watch them. */
 export interface AuditWriter {
@@ -41,7 +41,7 @@ export type AddPersonView =
   | { allowed: false; refusal: "forbidden" | "bootstrap_incomplete" };
 
 /** The audit reason of each refusal (S01.04's REFUSAL_REASONS). */
-const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
+export const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
   username_invalid: "validation",
   first_name_missing: "validation",
   last_name_missing: "validation",
@@ -54,6 +54,11 @@ const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
   username_taken: "duplicate",
   admin_exists: "conflict",
   bootstrap_incomplete: "bootstrap_incomplete",
+  two_admin_rule: "two_admin_rule",
+  self_action: "self_action",
+  account_removed: "conflict",
+  no_change: "conflict",
+  not_found: "not_found",
   forbidden: "forbidden",
   unauthenticated: "unauthenticated",
   provider_error: "provider_error",
@@ -284,18 +289,7 @@ export function createAccountService(deps: AccountDeps) {
       const now = deps.now();
       const usable = async (id: string) => {
         const account = await store.findById(db, id);
-        if (!account) return false;
-        return isUsableAdmin(
-          {
-            role: account.role,
-            status: account.status,
-            mustChangePassword: account.mustChangePassword,
-            authenticatorEnrolled: await idp.hasVerifiedAuthenticator(account.authUserId),
-            // The failed-sign-in lock arrives with S01.07, which supplies it here.
-            signInLockedUntil: null,
-          },
-          now,
-        );
+        return account !== null && isAccountUsableAdmin(idp, account, now);
       };
       const ready = bootstrapCompletes(state, { firstAdmin: await usable(state.firstAdminId), secondAdmin: await usable(state.secondAdminId) });
       if (!ready) return false;
