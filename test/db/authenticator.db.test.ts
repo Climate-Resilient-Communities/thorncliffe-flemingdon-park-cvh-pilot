@@ -5,7 +5,7 @@
 // The app writes with its own credentials (cvh_app_login); Supabase Auth is the in-memory fake,
 // whose TOTP codes are computed here with RFC 6238 (memoryTotp.ts).
 import { randomBytes } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import * as audit from "../../src/modules/audit";
 import {
@@ -26,6 +26,7 @@ import { drizzleStaffStore } from "../../src/modules/identity/adapters/staffStor
 import { createAdminRecovery } from "../../src/modules/identity/application/adminRecovery";
 import { createFactorReset } from "../../src/modules/identity/application/factorReset";
 import { createSessionRevocation } from "../../src/modules/identity/application/sessionRevocation";
+import { throttleHash } from "../../src/modules/identity/application/staffAuth";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -227,6 +228,99 @@ describe("gate 2: an Admin or Coordinator without an authenticator", () => {
     expect((await owner`select count(*)::int as n from sign_in_lock where kind = 'username'`)[0].n).toBe(1);
   });
 
+  /** The device's sessions with verifyFactor watched: `reached` counts the codes that got to the provider; `hold` delays each. */
+  function watched(device: Browser, hold: () => Promise<void> = async () => {}) {
+    const real = device.sessions();
+    const state = { reached: 0 };
+    const sessions: typeof real = {
+      ...real,
+      verifyFactor: async (input) => {
+        state.reached += 1;
+        await hold();
+        return real.verifyFactor(input);
+      },
+    };
+    return { state, sessions };
+  }
+
+  it("refuses a right code that was being checked when the username lock started, and ends its provider session", async () => {
+    const person = await account("pat", "admin");
+    const device = browser();
+    await signIn(device, "pat");
+    await auth.startEnrolment((await current(device))!, device.sessions());
+    const session = (await current(device))!;
+
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const right = watched(device, () => held);
+    const pending = auth.verifyAuthenticatorCode(session, { code: codeFor(person.authUserId), client: CLIENT }, right.sessions);
+    await vi.waitFor(() => expect(right.state.reached).toBe(1));
+
+    // The username lock starts while the right code is inside the provider.
+    await owner`insert into sign_in_lock (kind, key_hash, locked_until) values ('username', ${throttleHash(THROTTLE_KEY, "username", "pat")}, ${new Date(clock.getTime() + 900_000)})`;
+    release();
+
+    expect(await pending).toEqual({ ok: false, error: "code_locked" });
+    expect(device.cookies.has(MEMORY_SESSION_COOKIE)).toBe(false);
+    expect((await owner`select factor_enrolled_at from staff_account where id = ${person.id}`)[0].factor_enrolled_at).toBeNull();
+    expect((await sessionRow(person.id)).aal2_at).toBeNull();
+    expect((await auditOf(["auth.failed"])).at(-1)).toMatchObject({ meta: { reason: "throttled" } });
+  });
+
+  it("refuses a right code held in the provider while 5 wrong codes run, however they interleave", async () => {
+    const person = await account("pat", "admin");
+    const device = browser();
+    await signIn(device, "pat");
+    await auth.startEnrolment((await current(device))!, device.sessions());
+    const session = (await current(device))!;
+
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const right = watched(device, () => held);
+    const pending = auth.verifyAuthenticatorCode(session, { code: codeFor(person.authUserId), client: CLIENT }, right.sessions);
+    await vi.waitFor(() => expect(right.state.reached).toBe(1));
+    const wrong = await Promise.all(
+      Array.from({ length: 5 }, () => auth.verifyAuthenticatorCode(session, { code: wrongFor(person.authUserId), client: CLIENT }, device.sessions())),
+    );
+    expect(wrong.every((result) => !result.ok)).toBe(true);
+    release();
+
+    expect(await pending).toEqual({ ok: false, error: "code_locked" });
+    expect((await sessionRow(person.id)).aal2_at).toBeNull();
+  });
+
+  it("lets at most 5 codes per username reach the provider when wrong codes are fired in parallel", async () => {
+    const person = await account("pat", "admin");
+    const device = browser();
+    await signIn(device, "pat");
+    await auth.startEnrolment((await current(device))!, device.sessions());
+    const session = (await current(device))!;
+
+    const seen = watched(device, () => new Promise((resolve) => setTimeout(resolve, 100)));
+    const results = await Promise.all(
+      Array.from({ length: 8 }, () => auth.verifyAuthenticatorCode(session, { code: wrongFor(person.authUserId), client: CLIENT }, seen.sessions)),
+    );
+    expect(seen.state.reached).toBe(5);
+    expect(results.filter((result) => !result.ok && result.error === "code_invalid")).toHaveLength(5);
+    expect(results.filter((result) => !result.ok && result.error === "code_locked")).toHaveLength(3);
+    expect((await owner`select count(*)::int as n from sign_in_failure`)[0].n).toBe(5);
+    expect((await owner`select count(*)::int as n from sign_in_lock where kind = 'username'`)[0].n).toBe(1);
+    expect(await auditOf(["auth.locked"])).toHaveLength(1);
+    // Locked: even the right code is refused.
+    expect(await verify(device, codeFor(person.authUserId))).toEqual({ ok: false, error: "code_locked" });
+  });
+
+  it("does not count a right code as a failure, so 4 wrong codes and a right one still sign in", async () => {
+    const person = await account("pat", "admin");
+    const device = browser();
+    await signIn(device, "pat");
+    await auth.startEnrolment((await current(device))!, device.sessions());
+    for (let attempt = 0; attempt < 4; attempt += 1) expect(await verify(device, wrongFor(person.authUserId))).toEqual({ ok: false, error: "code_invalid" });
+    expect(await verify(device, codeFor(person.authUserId))).toEqual({ ok: true, value: { gate: "hub" } });
+    expect((await owner`select count(*)::int as n from sign_in_failure`)[0].n).toBe(4);
+    expect((await owner`select count(*)::int as n from sign_in_lock`)[0].n).toBe(0);
+  });
+
   it("does not take a code from someone who is not at a code gate", async () => {
     const person = await account("amb", "ambassador");
     const device = browser();
@@ -333,6 +427,29 @@ describe("a role change to Admin or Coordinator", () => {
     expect(await accounts.changeRole(first.id, person.id, "coordinator")).toMatchObject({ ok: true });
 
     expect(await signIn(browser(), "cora")).toMatchObject({ ok: true, gate: "enrol_authenticator" });
+  });
+
+  it.each(["admin", "coordinator"] as const)("clears the factor flag before the role changes when promoting an Ambassador to %s", async (role) => {
+    const { first } = await twoAdmins();
+    const person = await account("amy", "ambassador");
+    // A stale flag, kept from an earlier authenticator role.
+    await owner`update staff_account set factor_enrolled_at = now() where id = ${person.id}`;
+    // Fails any write that leaves a new Admin or Coordinator with the flag set: that account would be usable for an instant.
+    await owner.unsafe(`
+      create function test_no_stale_flag() returns trigger language plpgsql as $fn$
+      begin
+        if new.role in ('admin', 'coordinator') and new.factor_enrolled_at is not null and old.role not in ('admin', 'coordinator') then
+          raise exception 'stale factor flag on a new authenticator role';
+        end if;
+        return new;
+      end $fn$;
+      create trigger test_no_stale_flag before update on staff_account for each row execute function test_no_stale_flag();`);
+    try {
+      expect(await accounts.changeRole(first.id, person.id, role)).toEqual({ ok: true, value: undefined });
+    } finally {
+      await owner.unsafe("drop trigger test_no_stale_flag on staff_account; drop function test_no_stale_flag();");
+    }
+    expect((await owner`select role, factor_enrolled_at from staff_account where id = ${person.id}`)[0]).toEqual({ role, factor_enrolled_at: null });
   });
 
   it("asks a Coordinator made Admin, who has an authenticator, for its code at next sign-in", async () => {
