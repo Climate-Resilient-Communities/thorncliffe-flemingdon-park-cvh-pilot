@@ -82,6 +82,11 @@ export const alertEntry = pgTable(
     check("alert_entry_text_valid", sql`btrim(${t.originalText}) <> '' and char_length(${t.originalText}) <= 600`),
     check("alert_entry_types_present", sql`cardinality(${t.types}) >= 1`),
     check("alert_entry_audience_valid", sql`jsonb_typeof(${t.audience}) = 'object' and ${t.audience} ->> 'scope' in ('neighbourhood', 'buildings')`),
+    // S04.04 (db/migrations/20261002290000_alert_audience_shape.sql): the shape of the one Audience value.
+    check(
+      "alert_entry_audience_shape",
+      sql`(jsonb_typeof(${t.audience} -> 'groups') = 'array' and jsonb_typeof(${t.audience} -> 'types') = 'array' and jsonb_array_length(${t.audience} -> 'types') >= 1 and ((${t.audience} ->> 'scope' = 'neighbourhood' and jsonb_typeof(${t.audience} -> 'neighbourhood_ids') = 'array' and jsonb_array_length(${t.audience} -> 'neighbourhood_ids') >= 1) or (${t.audience} ->> 'scope' = 'buildings' and jsonb_typeof(${t.audience} -> 'buildings') = 'array' and jsonb_array_length(${t.audience} -> 'buildings') >= 1))) is true`,
+    ),
     check("alert_entry_author_is_editor", sql`${t.authorId} = any (${t.editorIds})`),
     check("alert_entry_version_non_negative", sql`${t.version} >= 0`),
     check("alert_entry_hash_format", sql`${t.contentHash} is null or ${t.contentHash} ~ '^[0-9a-f]{64}$'`),

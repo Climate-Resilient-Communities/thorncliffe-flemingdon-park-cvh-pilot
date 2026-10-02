@@ -28,6 +28,9 @@
     font-weight: bold;
     text-align: center;
     cursor: pointer;
+    /* A long label wraps inside the button, even a word that cannot break, instead of pushing the button past its column (S04.04). */
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
   }
 
   .hub-button--primary {
@@ -60,6 +63,8 @@
     background-color: var(--surface-raised);
     color: var(--text);
     font: inherit;
+    /* A select is as wide as its longest option; never wider than its column (a long translated label is clipped, not overflowed). */
+    max-inline-size: 100%;
   }
 
   .hub-input:disabled {
@@ -99,6 +104,9 @@
     min-inline-size: var(--tap-current);
     padding-inline: var(--gap-label);
     cursor: pointer;
+    /* Its text wraps inside the column, even a word that cannot break (a long address, a long translated label), instead of running past it (S04.04). */
+    max-inline-size: 100%;
+    overflow-wrap: anywhere;
   }
 
   .hub-choice > input {
@@ -113,6 +121,14 @@
   .hub-choice:has(> input:disabled) {
     color: var(--text-muted);
     cursor: not-allowed;
+  }
+
+  /*
+   * A fieldset of a Hub form is as wide as its column. The browser's default is its widest word (min-width: min-content),
+   * which would push the whole form past the screen for a long label; with this a word wider than the column wraps (S04.04).
+   */
+  fieldset {
+    min-inline-size: 0;
   }
 
   .hub-error {

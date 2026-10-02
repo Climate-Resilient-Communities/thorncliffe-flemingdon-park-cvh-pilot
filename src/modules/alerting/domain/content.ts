@@ -1,8 +1,9 @@
+import { canonicalAudience, type Audience } from "../../../contracts/audience";
+
 /**
  * The content of an entry as the lifecycle sees it (S04.03): what a draft holds and a submit
- * freezes, and the rules about it that are the thread's, not the composer's. The audience's own
- * type and its matcher are S04.04's (src/contracts/audience.ts); here it is a value with a
- * `scope` and, for buildings, each building's `rsn`.
+ * freezes, and the rules about it that are the thread's, not the composer's. The audience is the one
+ * type of src/contracts/audience.ts (AD-7, S04.04), in its stored form.
  */
 
 export const PHASES = ["problem", "in_progress"] as const;
@@ -17,14 +18,13 @@ export const NEIGHBOURHOOD_ONLY_TYPES = ["heat", "smoke", "winter"] as const;
 /** Valid-until is at most 7 days ahead (proposed engineering budget, epic E04). */
 export const VALID_UNTIL_MAX_MS = 7 * 24 * 60 * 60 * 1000;
 
-export type AudienceValue = Record<string, unknown> & { scope: "neighbourhood" | "buildings" };
-
 export interface EntryContent {
   /** English, the authoring language. */
   text: string;
   /** Disruption type ids, no repeats. */
   types: readonly string[];
-  audience: AudienceValue;
+  /** Whom it is for; its `types` are these `types` (the matcher reads topics from the audience). */
+  audience: Audience;
   phase: Phase;
   validUntil: Date;
 }
@@ -40,9 +40,9 @@ export type ContentRefusal =
   | "VALID_UNTIL_INVALID";
 
 /** The buildings an audience names, by rsn; null when a `buildings` audience does not name them properly. */
-export function audienceBuildings(audience: AudienceValue): string[] | null {
+export function audienceBuildings(audience: { scope: string }): string[] | null {
   if (audience.scope !== "buildings") return [];
-  const listed = audience.buildings;
+  const listed = (audience as { buildings?: unknown }).buildings;
   if (!Array.isArray(listed) || listed.length === 0) return null;
   const rsns: string[] = [];
   for (const building of listed) {
@@ -65,9 +65,10 @@ export function contentRefusal(content: EntryContent): ContentRefusal | null {
   if (content.types.length === 0) return "TYPES_EMPTY";
   if (new Set(content.types).size !== content.types.length) return "TYPES_REPEATED";
   if (!(PHASES as readonly string[]).includes(content.phase)) return "PHASE_INVALID";
-  const scope = (content.audience as { scope?: unknown } | null)?.scope;
-  if (scope !== "neighbourhood" && scope !== "buildings") return "AUDIENCE_INVALID";
-  if (audienceBuildings(content.audience) === null) return "AUDIENCE_INVALID";
+  // The audience is the one Audience in its stored form (lists sorted, none empty, known groups), and the
+  // topics it carries are the entry's own types.
+  const audience = canonicalAudience(content.audience);
+  if (audience === null || audience.types.join("\n") !== [...content.types].sort().join("\n")) return "AUDIENCE_INVALID";
   if (content.audience.scope !== "neighbourhood" && content.types.some((type) => (NEIGHBOURHOOD_ONLY_TYPES as readonly string[]).includes(type))) {
     return "NEIGHBOURHOOD_ONLY_TYPE";
   }

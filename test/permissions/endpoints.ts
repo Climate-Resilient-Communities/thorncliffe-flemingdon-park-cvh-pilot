@@ -48,6 +48,8 @@ export interface StaffEndpoint extends EndpointBase {
   /** A route handler's JSON body, or a server action's form fields: a real request, which would change data if allowed. */
   body?: unknown;
   form?: Record<string, string>;
+  /** What a refused action's message starts with, when it is not the Admin-only default ("Only an Admin can ..."). */
+  forbiddenMessage?: RegExp;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -58,6 +60,12 @@ const EVERYONE = { ambassador: "allowed", coordinator: "allowed", director: "all
  * is refused, whatever building they are assigned to.
  */
 const COVERAGE_VIEWERS = { ambassador: "forbidden", coordinator: "allowed", director: "allowed", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
+/**
+ * Choosing who an alert is for (S04.04): `alert.author_wide`, the neighbourhood scope and the neighbourhood-only types, which a
+ * Coordinator and an Admin author. An Ambassador (who authors only for assigned buildings, in E08's own screens) and a
+ * Director are refused, whatever building they are assigned to.
+ */
+const WIDE_AUTHORS = { ambassador: "forbidden", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
 /** Gate 2 and the code gate: only Admins and Coordinators stand there; Ambassadors and Directors are at the Hub. */
 const AUTHENTICATOR_GATE = {
   ambassador: "setup_incomplete",
@@ -78,6 +86,9 @@ const NO_SUCH_BUILDING = "7001";
 const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction", "setContactAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
+const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
+/** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
+const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 
@@ -92,6 +103,18 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/sms-test", kind: "page", file: "src/app/staff/sms-test/page.tsx", export: "default", route: "/staff/sms-test", action: "sms.test_send", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/coverage", kind: "page", file: "src/app/staff/coverage/page.tsx", export: "default", route: "/staff/coverage", action: "coverage.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  { id: "page /staff/alerts/audience", kind: "page", file: "src/app/staff/alerts/audience/page.tsx", export: "default", route: "/staff/alerts/audience", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  {
+    id: "page /staff/alerts/audience/groups",
+    kind: "page",
+    file: "src/app/staff/alerts/audience/groups/page.tsx",
+    export: "default",
+    route: "/staff/alerts/audience/groups",
+    action: "alert.author_wide",
+    writes: "none",
+    gate: "hub",
+    expected: WIDE_AUTHORS,
+  },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
@@ -259,6 +282,36 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: ADMIN_ONLY,
     }),
   ),
+  // S04.04: the place picker (O-03) and the group picker (O-04), policy action `alert.author_wide`. The draft does not exist, so a
+  // Coordinator's or an Admin's call passes the guard and is then refused by the use case ("that alert draft was not found"),
+  // changing nothing. An Ambassador, a Director and an Ambassador outside their building are refused by the guard on the
+  // role alone: the neighbourhood scope and heat, smoke and winter storm are for a Coordinator or an Admin to author.
+  {
+    id: `action ${ALERT_AUDIENCE_ACTIONS}#savePlaceAction`,
+    kind: "action",
+    file: ALERT_AUDIENCE_ACTIONS,
+    export: "savePlaceAction",
+    route: "/staff/alerts/audience",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, scope: "neighbourhood", neighbourhood: "TP" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
+  {
+    id: `action ${ALERT_AUDIENCE_ACTIONS}#saveGroupsAction`,
+    kind: "action",
+    file: ALERT_AUDIENCE_ACTIONS,
+    export: "saveGroupsAction",
+    route: "/staff/alerts/audience/groups",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, group: "seniors" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
   // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({

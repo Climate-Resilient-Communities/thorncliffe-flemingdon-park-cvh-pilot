@@ -2,7 +2,7 @@
 // id and may not import places (AD-2), so the composition root hands identity this reader as its port.
 import { asc, eq } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
-import { building, buildingFloor } from "../adapters/schema";
+import { building, buildingFloor, neighbourhood } from "../adapters/schema";
 
 /** A floor as an assignment needs it: the stable id, the label people see, and the place in the building's order. */
 export interface FloorRecord {
@@ -22,4 +22,13 @@ export async function floorsOfBuilding(executor: DbExecutor, rsn: string, option
   if (!row) return null;
   const floors = await executor.select().from(buildingFloor).where(eq(buildingFloor.rsn, rsn)).orderBy(asc(buildingFloor.sortOrder), asc(buildingFloor.label));
   return floors.map((floor) => ({ id: floor.id, label: floor.label, sortOrder: floor.sortOrder }));
+}
+
+/**
+ * The ids of the neighbourhoods the pilot covers, sorted ("FP", "TP"), read through the executor given: what an
+ * alert's neighbourhood audience may name (S04.04). alerting may not import the table, so it reads it here.
+ */
+export async function neighbourhoodIds(executor: DbExecutor): Promise<string[]> {
+  const rows = await executor.select({ id: neighbourhood.id }).from(neighbourhood).orderBy(asc(neighbourhood.id));
+  return rows.map((row) => row.id);
 }

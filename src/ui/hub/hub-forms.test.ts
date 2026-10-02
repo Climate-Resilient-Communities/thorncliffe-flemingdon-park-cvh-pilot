@@ -33,6 +33,8 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
     expect(value(".hub-input", "border")).toBe("var(--offset-align-hairline) solid var(--control-border)");
     expect(value(".hub-input", "border-radius")).toBe("var(--radius-card)");
     expect(value(".hub-input", "background-color")).toBe("var(--surface-raised)");
+    expect(value(".hub-input", "max-inline-size")).toBe("100%");
+    expect(css.find((d) => d.selector === "fieldset" && d.prop === "min-inline-size")?.value).toBe("0");
     expect(value(".hub-error", "color")).toBe("var(--danger)");
     expect(value(".hub-error", "font-weight")).toBe("bold");
   });
@@ -40,6 +42,8 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
   it("looks inert when disabled, and meets the touch target", () => {
     expect(css.find((d) => d.selector.includes(".hub-button:disabled") && d.prop === "cursor")?.value).toBe("not-allowed");
     expect(value(".hub-button", "min-block-size")).toBe("var(--tap-current)");
+    expect(value(".hub-button", "max-inline-size")).toBe("100%");
+    expect(value(".hub-button", "overflow-wrap")).toBe("anywhere");
     expect(value(".hub-input", "min-block-size")).toBe("var(--tap-current)");
   });
 
@@ -49,6 +53,9 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
     expect(value(".hub-choice", "min-block-size")).toBe("var(--tap-current)");
     expect(value(".hub-choice", "min-inline-size")).toBe("var(--tap-current)");
     expect(value(".hub-choice", "padding-inline")).toBe("var(--gap-label)");
+    // Its text wraps in the column, even an unbreakable word (the audience pages' long labels, S04.04).
+    expect(value(".hub-choice", "max-inline-size")).toBe("100%");
+    expect(value(".hub-choice", "overflow-wrap")).toBe("anywhere");
     expect(value(".hub-choice > input", "inline-size")).toBe("var(--size-icon)");
     expect(value(".hub-choice > input", "block-size")).toBe("var(--size-icon)");
     expect(value(".hub-choice > input", "accent-color")).toBe("var(--ink)");

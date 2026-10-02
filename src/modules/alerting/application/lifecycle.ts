@@ -14,9 +14,11 @@ import { decidePolicy, meetsAssurance } from "../../identity";
 import type { Db, DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { alert, alertEntry, alertEntryTranslation, feedVersion } from "../adapters/schema";
-import { audienceBuildings, contentRefusal, isWideContent, sameContent, validUntilRefusal, type AudienceValue, type EntryContent, type Phase } from "../domain/content";
+import type { Audience } from "../../../contracts/audience";
+import { audienceBuildings, contentRefusal, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase } from "../domain/content";
 import { AUTHORED_KINDS, checkApproval, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
 import type { AlertRefusal } from "../domain/refusals";
+import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, EntryPreparer, FrozenContent, StaffDirectory } from "./ports";
 import { AUDIT_REASON } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
@@ -25,6 +27,8 @@ export interface AlertLifecycleDeps {
   db: Db;
   audit: AlertAudit;
   staff: StaffDirectory;
+  /** The places an audience may name (S04.04): read in the use case's own transaction. */
+  places: AudiencePlaces;
   now?: () => Date;
   newId?: () => string;
 }
@@ -130,7 +134,7 @@ const entryOf = (row: EntryRow): EntryView => ({
 const contentOf = (row: EntryRow): EntryContent => ({
   text: row.originalText,
   types: row.types,
-  audience: row.audience as AudienceValue,
+  audience: row.audience as Audience,
   phase: row.phase as Phase,
   validUntil: row.validUntil,
 });
@@ -140,7 +144,7 @@ const threadOf = (row: ThreadRow): ThreadView => ({ id: row.id, isDrill: row.isD
 type AuditedAction = "alert.created" | "entry.submitted" | "entry.returned" | "entry.discarded" | "entry.approved";
 
 export function createAlertLifecycle(deps: AlertLifecycleDeps) {
-  const { db, audit, staff } = deps;
+  const { db, audit, staff, places } = deps;
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
   /** The `is_drill` of the thread a transaction has read, for the record of a refusal that rolls it back. */
@@ -223,6 +227,31 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (refusal) throw new Refused(refusal);
   };
 
+  /** The places the audience names exist now (S04.04), read through the transaction: a floor removed since the picker was open is caught. */
+  async function mustExist(tx: DbTransaction, audience: Audience) {
+    const refusal = await placeRefusal(tx, places, audience);
+    if (refusal) throw new Refused(refusal);
+  }
+
+  /**
+   * Replaces a draft's content: the shape, the author's authority for the new scope and buildings, the places, then
+   * the write. Whoever saves a change becomes an editor (the trigger adds them). Shared by saving a draft and by
+   * choosing its audience, so both are judged by the one rule.
+   */
+  async function writeDraft(tx: DbTransaction, standing: StaffStanding, actor: AlertActor, entry: EntryRow, content: EntryContent): Promise<EntryView> {
+    if (entry.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
+    const invalid = contentRefusal(content);
+    if (invalid) throw new Refused(invalid);
+    mustAuthor(standing, actor.staffId, content);
+    await mustExist(tx, content.audience);
+    const [saved] = await tx
+      .update(alertEntry)
+      .set({ originalText: content.text, types: [...content.types], audience: content.audience, phase: content.phase, validUntil: content.validUntil })
+      .where(eq(alertEntry.id, entry.id))
+      .returning();
+    return entryOf(saved);
+  }
+
   /** Whether the transition is allowed by lifecycle.ts for this thread and entry. */
   function mustTransition(thread: ThreadRow, entry: EntryRow, to: EntryStatus) {
     const decision = requestTransition({ from: entry.status as EntryStatus, to, webPublished: entry.webPublishedAt !== null, threadOpen: thread.status === "open" });
@@ -240,6 +269,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (expected && !sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
     const invalid = contentRefusal(content) ?? validUntilRefusal(content.validUntil, now());
     if (invalid) throw new Refused(invalid);
+    await mustExist(tx, content.audience);
     if (!SHA256.test(frozen.contentHash) || !("en" in frozen.smsBodies) || frozen.translations.length === 0) {
       throw new Error("alerting: a submit freezes a SHA-256 content hash, an English SMS body and the translations");
     }
@@ -325,6 +355,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const invalid = contentRefusal(input.content) ?? validUntilRefusal(input.content.validUntil, createdAt);
         if (invalid) throw new Refused(invalid);
         mustAuthor(standing, actor.staffId, input.content);
+        await mustExist(tx, input.content.audience);
         await tx.execute(sql`select set_config('cvh.actor_id', ${actor.staffId}, true)`);
         const [thread] = await tx
           .insert(alert)
@@ -367,16 +398,39 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       // return, discard, approve), and a refused save changes nothing.
       return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { standing, entry } = await open(tx, actor, ref);
-        if (entry!.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
-        const invalid = contentRefusal(content);
-        if (invalid) throw new Refused(invalid);
-        mustAuthor(standing, actor.staffId, content);
-        const [saved] = await tx
-          .update(alertEntry)
-          .set({ originalText: content.text, types: [...content.types], audience: content.audience, phase: content.phase, validUntil: content.validUntil })
-          .where(eq(alertEntry.id, entry!.id))
-          .returning();
-        return entryOf(saved);
+        return writeDraft(tx, standing, actor, entry!, content);
+      });
+    },
+
+    /**
+     * The place picker (O-03, S04.04): sets who the draft is for by place, keeping its groups and types. The choice is
+     * a whole neighbourhood, or buildings each with the whole building or floors (ticked, or a range from one floor to
+     * another by the building's order); the use case turns it into the one Audience value (floors by floor id, sorted
+     * and without repeats) inside this transaction, reading the buildings and floors through it. An empty selection, a
+     * floor that is not in its building and a reversed range are refused, each with its reason; an Ambassador's choice
+     * of a building they are not assigned to is refused like any other save (the role policy, AD-4).
+     */
+    async chooseAudiencePlace(actor: AlertActor, ref: EntryRef, choice: PlaceChoice): Promise<AlertResult<EntryView>> {
+      return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
+        const { standing, entry } = await open(tx, actor, ref);
+        const current = contentOf(entry!);
+        const resolved = await resolvePlace(tx, places, choice, { groups: current.audience.groups, types: current.types });
+        if (!resolved.ok) throw new Refused(resolved.error);
+        return writeDraft(tx, standing, actor, entry!, { ...current, audience: resolved.value });
+      });
+    },
+
+    /**
+     * The group picker (O-04, S04.04): sets the groups of the draft's audience, keeping its place. Groups narrow who is
+     * texted; every web reader still sees the alert. A group nobody offers is refused; none chosen is no narrowing.
+     */
+    async chooseAudienceGroups(actor: AlertActor, ref: EntryRef, groups: readonly string[]): Promise<AlertResult<EntryView>> {
+      return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
+        const { standing, entry } = await open(tx, actor, ref);
+        const current = contentOf(entry!);
+        const resolved = resolveGroups(groups);
+        if (!resolved.ok) throw new Refused(resolved.error);
+        return writeDraft(tx, standing, actor, entry!, { ...current, audience: { ...current.audience, groups: resolved.value } });
       });
     },
 
