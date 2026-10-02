@@ -48,6 +48,8 @@ export const REFUSAL_REASONS = [
   "floor_has_assignments",
   "not_allowlisted",
   "provider_error",
+  /** S01.15: the test text cannot be sent here (not production with SMS_MODE live, or Twilio not set up). */
+  "not_available",
 ] as const;
 
 const ROUTE_PATTERN = /^(\/([a-z][a-z-]*|\[[a-z_]+\]))+$/;

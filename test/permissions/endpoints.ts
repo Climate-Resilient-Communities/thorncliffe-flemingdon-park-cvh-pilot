@@ -66,11 +66,13 @@ const AUTHENTICATOR_GATE = {
 export const TARGET_USERNAME = "target";
 
 const PEOPLE_ACTIONS = "src/app/staff/people/actions.ts";
+const SMS_TEST_ACTIONS = "src/app/staff/sms-test/actions.ts";
 
 export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   // ---- pages ----
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/sms-test", kind: "page", file: "src/app/staff/sms-test/page.tsx", export: "default", route: "/staff/sms-test", action: "sms.test_send", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -179,6 +181,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { username: TARGET_USERNAME },
+    expected: ADMIN_ONLY,
+  },
+  // S01.15 (the first-text spike; E06 removes it). Called as an allowed Admin, the action reaches the use case,
+  // which in the test's environment (no production variables) answers that texts cannot be sent: no provider is called.
+  {
+    id: `action ${SMS_TEST_ACTIONS}#sendTestTextAction`,
+    kind: "action",
+    file: SMS_TEST_ACTIONS,
+    export: "sendTestTextAction",
+    route: "/staff/sms-test",
+    action: "sms.test_send",
+    writes: "business",
+    gate: "hub",
+    form: { requestId: "01900000-0000-7000-8000-00000000f015", number: "+14165550101" },
     expected: ADMIN_ONLY,
   },
 ];

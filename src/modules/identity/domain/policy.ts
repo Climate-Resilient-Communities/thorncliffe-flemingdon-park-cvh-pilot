@@ -58,7 +58,9 @@ export const AUTHORITY_MATRIX = [
   },
   {
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "accounts.manage", "spend.cap", "sending.pause"],
+    // `sms.test_send` (S01.15): the first-text spike, one test text from production to an approved phone;
+    // an Admin does it, like the other things that touch what the Hub sends (E06 removes it).
+    actions: ["drill.run", "guide.publish", "accounts.manage", "spend.cap", "sending.pause", "sms.test_send"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

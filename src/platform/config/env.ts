@@ -35,8 +35,16 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        NEXT_PUBLIC_ variable, never printed. The same value wherever the same
  *                                                        Supabase project is used; changing it makes every password unusable
  *                                                        until each is re-issued
- * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
- *                      server   optional; production only (start-up fails if set elsewhere); secret
+ * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID, TWILIO_FROM_NUMBER (and any other TWILIO_ variable)
+ *                      server   optional; production only (start-up fails if set elsewhere); secret.
+ *                                                        TWILIO_FROM_NUMBER is the verified toll-free number (E.164) the S01.15
+ *                                                        spike sends from; the page that sends the test text needs the account SID,
+ *                                                        auth token and that number, and without them shows that Twilio is not set up
+ * SMS_TEST_ALLOWLIST   server   optional; production only (start-up fails if set elsewhere)
+ *                                                        the E.164 numbers (comma-separated) the S01.15 test text may go to, set in
+ *                                                        production's Vercel variables, never in the repository. Empty or unset:
+ *                                                        no number is approved and nothing can be sent. A malformed entry fails
+ *                                                        start-up (the message names the rule, never the value)
  * CVH_FAKE_IDENTITY_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
@@ -49,7 +57,11 @@ export const TWILIO_VARIABLES = [
   "TWILIO_ACCOUNT_SID",
   "TWILIO_AUTH_TOKEN",
   "TWILIO_MESSAGING_SERVICE_SID",
+  "TWILIO_FROM_NUMBER",
 ] as const;
+
+/** An E.164 number: "+", a non-zero country code digit, up to 14 more digits (at least 8 digits in all). */
+export const E164_PATTERN = /^\+[1-9][0-9]{7,14}$/;
 
 // Vercel and .env files leave unset variables as empty strings.
 const optionalText = z.preprocess(
@@ -70,6 +82,8 @@ const rawSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalText,
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
+  TWILIO_FROM_NUMBER: optionalText,
+  SMS_TEST_ALLOWLIST: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
 });
@@ -85,7 +99,9 @@ export interface Env {
   supabaseSecretKey?: string;
   supabaseUrl?: string;
   supabasePublishableKey?: string;
-  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
+  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string; fromNumber?: string };
+  /** The numbers the S01.15 test text may go to (E.164, production only); empty when none is approved. */
+  smsTestAllowlist: string[];
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
@@ -291,6 +307,24 @@ export function staffPasswordPepperProblem(value: string | undefined): string | 
   return undefined;
 }
 
+/**
+ * SMS_TEST_ALLOWLIST (S01.15): comma-separated E.164 numbers, production only. Messages name the rule,
+ * never an entry. Outside production the variable must be absent (numbers never go into a preview).
+ */
+function parseSmsTestAllowlist(value: string | undefined, environment: AppEnvironment, problems: string[]): string[] {
+  if (value === undefined) return [];
+  if (environment !== "production") {
+    problems.push("SMS_TEST_ALLOWLIST: only allowed in production (the approved numbers are set in production's variables only)");
+    return [];
+  }
+  const entries = value.split(",").map((entry) => entry.trim()).filter((entry) => entry !== "");
+  if (entries.some((entry) => !E164_PATTERN.test(entry))) {
+    problems.push("SMS_TEST_ALLOWLIST: every entry must be an E.164 number such as +18885550100, separated by commas (the entries are not shown)");
+    return [];
+  }
+  return [...new Set(entries)];
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
@@ -307,6 +341,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     if (present.length > 0) {
       problems.push(`${present.join(", ")}: Twilio credentials are only allowed in production`);
     }
+  }
+
+  const smsTestAllowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
+  if (environment === "production" && raw.TWILIO_FROM_NUMBER !== undefined && !E164_PATTERN.test(raw.TWILIO_FROM_NUMBER.trim())) {
+    problems.push("TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)");
   }
 
   const onVercel = raw.VERCEL !== undefined || raw.VERCEL_ENV !== undefined;
@@ -355,8 +394,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
             accountSid: raw.TWILIO_ACCOUNT_SID,
             authToken: raw.TWILIO_AUTH_TOKEN,
             messagingServiceSid: raw.TWILIO_MESSAGING_SERVICE_SID,
+            fromNumber: raw.TWILIO_FROM_NUMBER?.trim(),
           }
         : undefined,
+    smsTestAllowlist,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };

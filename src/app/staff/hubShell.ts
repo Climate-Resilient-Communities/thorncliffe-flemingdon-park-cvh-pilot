@@ -3,7 +3,7 @@
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
-import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
+import type { HubNavItem, HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
 import type { StaffSession } from "./session";
 
 /**
@@ -37,14 +37,12 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       ],
     },
   ];
-  // The people page is the policy action `accounts.manage` (S01.12): shown to the roles that may open it.
-  if (can(role, "accounts.manage")) {
-    sections.push({
-      id: "admin",
-      label: englishText("hub.sections.admin"),
-      items: [{ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" }],
-    });
-  }
+  // The people page is the policy action `accounts.manage` (S01.12), the first-text spike's page (S01.15, E06 removes
+  // it) is `sms.test_send`: each is shown to the roles that may open it.
+  const admin: HubNavItem[] = [];
+  if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
+  if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "inbox" });
+  if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }
 

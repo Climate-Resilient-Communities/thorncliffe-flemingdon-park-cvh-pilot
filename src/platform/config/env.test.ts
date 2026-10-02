@@ -465,3 +465,40 @@ describe("failClosedEnvironment (what the terms page uses to decide whether a dr
     expect(() => failClosedEnvironment({ VERCEL: "1", SMS_MODE: "bogus", PUBLIC_BASE_URL: "nonsense" })).not.toThrow();
   });
 });
+
+describe("the first-text spike's variables (S01.15)", () => {
+  // Obviously fake numbers (the 555-01xx range), never real ones.
+  const FROM = "+18885550100";
+  const ALLOWED = "+14165550101";
+  const OTHER = "+14165550102";
+
+  it("reads the from-number with the Twilio credentials and the allowlist, in production", () => {
+    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: ` ${FROM} `, SMS_TEST_ALLOWLIST: ` ${ALLOWED}, ${OTHER} ,${ALLOWED},, ` });
+    expect(env.twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
+    expect(env.smsTestAllowlist).toEqual([ALLOWED, OTHER]);
+  });
+
+  it("has no approved number when the allowlist is unset or blank", () => {
+    expect(parseEnv(production).smsTestAllowlist).toEqual([]);
+    expect(parseEnv({ ...production, SMS_TEST_ALLOWLIST: "  " }).smsTestAllowlist).toEqual([]);
+    expect(parseEnv(preview).smsTestAllowlist).toEqual([]);
+  });
+
+  it("fails start-up when an allowlist entry is not an E.164 number, without printing any entry", () => {
+    for (const bad of [`${ALLOWED},4165550101`, "+0123456789", "not a number", `${ALLOWED};${OTHER}`, "+1 416 555 0101"]) {
+      const problems = problemsOf({ ...production, SMS_TEST_ALLOWLIST: bad });
+      expect(problems).toHaveLength(1);
+      expect(problems[0]).toMatch(/^SMS_TEST_ALLOWLIST: every entry must be an E\.164 number/);
+      expect(problems.join("\n")).not.toContain("5550101");
+    }
+  });
+
+  it("fails start-up when the allowlist is set outside production, and when the from-number is malformed", () => {
+    for (const base of [preview, local, { ...local, VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, SMS_TEST_ALLOWLIST: ALLOWED }).join("\n")).toMatch(/SMS_TEST_ALLOWLIST: only allowed in production/);
+    }
+    const problems = problemsOf({ ...production, ...twilio, TWILIO_FROM_NUMBER: "8885550100" });
+    expect(problems).toEqual(["TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)"]);
+    expect(problemsOf({ ...preview, TWILIO_FROM_NUMBER: FROM }).join("\n")).toMatch(/TWILIO_FROM_NUMBER: Twilio credentials are only allowed in production/);
+  });
+});
