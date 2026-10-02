@@ -41,9 +41,9 @@ const vectorOfText = (text: string) => {
 };
 /** Words, not the vectors above, decide a question; a question naming nothing is "other". */
 const vectorOfQuestion = (q: string) => {
-  const v = [0, 0, 0, 0];
+  const v: number[] = [0, 0, 0, 0];
   for (const [pattern, add] of SUBJECTS) if (pattern.test(q)) add.forEach((x, i) => (v[i] += x));
-  if (v.every((x) => x === 0)) v[3] = 1;
+  if (!v.some((x) => x !== 0)) v[3] = 1;
   return v;
 };
 
@@ -425,7 +425,7 @@ describe("search", () => {
     function captureOutput() {
       const lines: string[] = [];
       const grab = (...args: unknown[]) => void lines.push(args.map((a) => (typeof a === "string" ? a : inspect(a, { depth: 8 }))).join(" "));
-      const spies = (["log", "info", "warn", "error", "debug"] as const).map((level) => vi.spyOn(console, level).mockImplementation(grab));
+      const spies: { mockRestore(): void }[] = (["log", "info", "warn", "error", "debug"] as const).map((level) => vi.spyOn(console, level).mockImplementation(grab));
       const write = (chunk: unknown) => (lines.push(String(chunk)), true);
       spies.push(vi.spyOn(process.stdout, "write").mockImplementation(write as never), vi.spyOn(process.stderr, "write").mockImplementation(write as never));
       return { lines, restore: () => spies.forEach((spy) => spy.mockRestore()) };
