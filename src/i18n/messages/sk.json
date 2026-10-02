@@ -3831,8 +3831,17 @@
         "forbidden": "[EN] Only an Admin can add people.",
         "unauthenticated": "[EN] Sign in to continue.",
         "providerError": "[EN] The account could not be created, and nothing was saved. Try again.",
-        "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy."
+        "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy.",
+        "selfAction": "[EN] You cannot change your own account. Ask another Admin.",
+        "accountRemoved": "[EN] This account was removed and cannot be changed.",
+        "noChange": "[EN] Nothing to change: the account is already like that.",
+        "notFound": "[EN] That account does not exist."
       }
+    },
+    "admins": {
+      "twoAdminRule": "[EN] There must always be at least two usable Admins",
+      "shortfallBanner": "[EN] Fewer than two usable Admins",
+      "shortfallLine": "[EN] Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role."
     }
   }
 }

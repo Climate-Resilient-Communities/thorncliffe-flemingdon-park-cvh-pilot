@@ -957,4 +957,9 @@
       adminExists: 'An Admin already exists. The first Admin can be created only once.', forbidden: 'Only an Admin can add people.',
       unauthenticated: 'Sign in to continue.', providerError: 'The account could not be created, and nothing was saved. Try again.',
       providerRejected: "Supabase rejected the starting password; check the project's password policy." } } } });
+  /* The two-Admin rule (S01.06): refusals of account changes and the shortfall banner. Not a prototype screen. */
+  m(en, { staff: { admins: { twoAdminRule: 'There must always be at least two usable Admins', shortfallBanner: 'Fewer than two usable Admins',
+    shortfallLine: 'Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role.' },
+  people: { errors: { selfAction: 'You cannot change your own account. Ask another Admin.', accountRemoved: 'This account was removed and cannot be changed.',
+    noChange: 'Nothing to change: the account is already like that.', notFound: 'That account does not exist.' } } } });
 })();
