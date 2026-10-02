@@ -22,6 +22,7 @@ export const recordRefusal = recorder.recordRefusal;
 export {
   AUDIT_ACTIONS,
   AuditRecordError,
+  FACTOR_RESET_REASONS,
   REFUSAL_REASONS,
   STAFF_ROLES,
   SYSTEM_ACTOR,

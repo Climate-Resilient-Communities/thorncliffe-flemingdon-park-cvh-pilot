@@ -3979,6 +3979,23 @@
         "duplicateRequest": "This request was already sent. Nothing more was sent. Press the button again to send a new one.",
         "unavailable": "The test text could not be sent right now. Nothing was sent."
       }
+    },
+    "resetAuthenticator": {
+      "title": "Reset an authenticator",
+      "lead": "For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.",
+      "username": "Their username",
+      "submit": "Reset authenticator",
+      "done": "Authenticator reset for {username}.",
+      "doneLine": "They were signed out on every device. At their next sign-in they set up a new authenticator.",
+      "shortfall": "This leaves fewer than two usable Admins. Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role.",
+      "providerNote": "The old authenticator could not be deleted from the sign-in service just now. It no longer works here, and it is removed when they set up the new one.",
+      "errors": {
+        "notFound": "No account has that username.",
+        "forbidden": "Only an Admin can reset an authenticator.",
+        "selfAction": "You cannot reset your own authenticator. Ask another Admin.",
+        "notResettable": "This account is suspended or removed, so its authenticator cannot be reset.",
+        "noAuthenticator": "Only Admins and Coordinators have an authenticator."
+      }
     }
   }
 }

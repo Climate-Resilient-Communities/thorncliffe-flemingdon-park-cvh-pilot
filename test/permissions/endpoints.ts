@@ -197,6 +197,18 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     form: { requestId: "01900000-0000-7000-8000-00000000f015", number: "+14165550101" },
     expected: ADMIN_ONLY,
   },
+  {
+    id: `action ${PEOPLE_ACTIONS}#resetAuthenticatorAction`,
+    kind: "action",
+    file: PEOPLE_ACTIONS,
+    export: "resetAuthenticatorAction",
+    route: "/staff/people",
+    action: "accounts.manage",
+    writes: "business",
+    gate: "hub",
+    form: { username: TARGET_USERNAME },
+    expected: ADMIN_ONLY,
+  },
 ];
 
 /** The endpoints anyone may call, without a session (S01.07): listed so the completeness check knows them. */

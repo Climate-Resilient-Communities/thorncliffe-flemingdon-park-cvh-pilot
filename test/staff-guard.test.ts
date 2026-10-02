@@ -382,11 +382,16 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
 });
 
 describe("privileged actions (S01.10: account changes run only at aal2)", () => {
-  it("are Add a person, Re-issue and Reset password, each marked accounts.manage", async () => {
+  it("are Add a person, Re-issue, Reset password and Reset authenticator, each marked accounts.manage", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
     const exportsOf: Record<string, unknown> = await import("../src/app/staff/people/actions");
     const marked = Object.entries(exportsOf).map(([name, value]) => [name, guardSpecOf(value)?.privileged]);
-    expect(Object.fromEntries(marked)).toEqual({ addPersonAction: "accounts.manage", reissueAction: "accounts.manage", resetPasswordAction: "accounts.manage" });
+    expect(Object.fromEntries(marked)).toEqual({
+      addPersonAction: "accounts.manage",
+      reissueAction: "accounts.manage",
+      resetPasswordAction: "accounts.manage",
+      resetAuthenticatorAction: "accounts.manage",
+    });
   });
 
   it("let an aal2 session through to the action's own code", async () => {
