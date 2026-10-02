@@ -3,6 +3,8 @@
 @import "../ui/shell/font.css";
 @import "../ui/shell/icons.css";
 @import "../ui/shell/shell.css";
+@import "../ui/hub/hub-icons.css";
+@import "../ui/hub/hub-shell.css";
 
 /* Tailwind generates utilities only for classes used in src/. */
 @source "../";
