@@ -228,7 +228,8 @@ test("an Admin enters, changes and removes the building contact: owned by the Hu
   await page.getByLabel("Phone number").fill("416 555 0199");
   await page.getByRole("button", { name: "Save contact" }).click();
   await expect(page.getByRole("status")).toHaveText("Building contact saved.");
-  expect((await saved())[0]).toMatchObject({ contact_phone: "416-555-0199" });
+  // The notice is the same as after the first save, so wait for the row, not the notice.
+  await expect.poll(async () => (await saved())[0].contact_phone).toBe("416-555-0199");
 
   // Emptying both fields removes it.
   await page.getByLabel("Role", { exact: true }).fill("");
