@@ -4,3 +4,4 @@ export { Inline, INLINE_GAPS, type InlineGap, type InlineGrowProps, type InlineP
 export { Screen, SCREEN_WIDTHS, type ScreenProps, type ScreenWidth } from "./layout/screen";
 export { Stack, STACK_GAPS, type StackGap, type StackProps } from "./layout/stack";
 export { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "./text/resident-text";
+export { ContentText } from "./text/content-text";
