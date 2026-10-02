@@ -7,7 +7,7 @@ const PREVIEW_URL = "https://cvh-pilot-git-feature-x.vercel.app";
 const SECRET = "SuperSecretPw123";
 
 const supabase = {
-  DATABASE_URL: "postgres://pooler.example/db",
+  DATABASE_URL: "postgres://cvh_app_login.abcdefghijklmnopqrst:pw@aws-0-ca-central-1.pooler.supabase.com:6543/postgres",
   SUPABASE_SECRET_KEY: "secret",
   NEXT_PUBLIC_SUPABASE_URL: "https://x.supabase.co",
   NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "publishable",
@@ -268,6 +268,51 @@ describe("secrets in browser variables", () => {
   it("accepts a publishable or legacy anon key", () => {
     expect(() => parseEnv({ ...production, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_abc" })).not.toThrow();
     expect(() => parseEnv({ ...production, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: jwt("anon") })).not.toThrow();
+  });
+});
+
+describe("DATABASE_URL role and port", () => {
+  const url = (user: string, port = "6543", password = "pw") => `postgres://${user}:${password}@aws-0-ca-central-1.pooler.supabase.com:${port}/postgres`;
+
+  it.each(["cvh_app_login", "cvh_app_login.abcdefghijklmnopqrst"])("accepts %s on the transaction pooler in production and preview", (user) => {
+    expect(() => parseEnv({ ...production, DATABASE_URL: url(user) })).not.toThrow();
+    expect(() => parseEnv({ ...preview, DATABASE_URL: url(user) })).not.toThrow();
+  });
+
+  it.each([
+    ["the owner role", "postgres"],
+    ["the owner role with a project ref", "postgres.abcdefghijklmnopqrst"],
+    ["a look-alike role", "cvh_app_login_admin"],
+    ["a role with another suffix", "cvh_app_loginx.ref"],
+    ["an empty user name", ""],
+  ])("rejects %s in production and preview without showing the URL or password", (_name, user) => {
+    for (const base of [production, preview]) {
+      const problems = problemsOf({ ...base, DATABASE_URL: url(user, "6543", SECRET) });
+
+      expect(problems).toEqual([expect.stringMatching(/^DATABASE_URL: must connect as the app's role cvh_app_login/)]);
+      expect(problems.join("\n")).not.toContain(SECRET);
+      expect(problems.join("\n")).not.toContain("pooler.supabase.com");
+      if (user !== "") expect(problems.join("\n")).not.toContain(user);
+    }
+  });
+
+  it.each(["5432", "5433", ""])("rejects port %j, which is not the transaction pooler", (port) => {
+    const value = port === "" ? "postgres://cvh_app_login.ref:pw@db.example/postgres" : url("cvh_app_login.ref", port);
+
+    expect(problemsOf({ ...production, DATABASE_URL: value })).toEqual([
+      "DATABASE_URL: must use the transaction pooler, port 6543",
+    ]);
+  });
+
+  it("reports both the role and the port, and a value that is not a URL, without echoing them", () => {
+    expect(problemsOf({ ...production, DATABASE_URL: url("postgres", "5432", SECRET) })).toHaveLength(2);
+    const problems = problemsOf({ ...preview, DATABASE_URL: `not a url ${SECRET}` });
+
+    expect(problems).toEqual(["DATABASE_URL: not a valid postgres:// URL"]);
+  });
+
+  it("does not check the connection in local development", () => {
+    expect(() => parseEnv({ ...local, DATABASE_URL: "postgres://postgres:postgres@localhost:5432/postgres" })).not.toThrow();
   });
 });
 
