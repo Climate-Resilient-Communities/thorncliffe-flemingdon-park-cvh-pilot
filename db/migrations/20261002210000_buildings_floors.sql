@@ -12,13 +12,15 @@
 --
 -- `building_floor` gives every floor a stable id (UUIDv7, given by the app) that survives
 -- renames: assignments and check-ins refer to it. The label is what people see: 1 to 8
--- letters, digits, spaces and hyphens, with no spaces at either end, and unique within the
+-- letters, digits, spaces and hyphens, with at least one letter or digit, no spaces at either
+-- end and no two spaces in a row, and unique within the
 -- building ignoring case and spaces (`label_key`, compared by the unique constraint).
 -- `sort_order` orders the floors in lists, lowest first.
 --
 -- The seed (scripts/seed/buildings.mjs) runs as the migrating role and writes all three
 -- tables. The app's role (cvh_app, S01.04) reads them, confirms a building (two columns) and
--- edits floors; it can add or delete no building and no neighbourhood. No table here has a
+-- adds, deletes and updates floors (only label, sort_order and confirmed: never the rsn or the id);
+-- it can add or delete no building and no neighbourhood. No table here has a
 -- sequence. Supabase's default privileges grant every new table in public to anon,
 -- authenticated and service_role, so each table takes those back.
 
@@ -76,12 +78,13 @@ create table building_floor (
   sort_order integer not null,
   confirmed boolean not null default false,
   created_at timestamptz not null default now(),
-  constraint building_floor_label_format check (label ~ '^[A-Za-z0-9 -]{1,8}$' and label = btrim(label)),
+  constraint building_floor_label_format check (label ~ '^[A-Za-z0-9 -]{1,8}$' and label ~ '[A-Za-z0-9]' and label = btrim(label) and label !~ '  '),
   constraint building_floor_label_unique unique (rsn, label_key)
 );
 alter table building_floor enable row level security;
 revoke all on table building_floor from public, anon, authenticated, service_role;
-grant select, insert, update, delete on table building_floor to cvh_app;
+grant select, insert, delete on table building_floor to cvh_app;
+grant update (label, sort_order, confirmed) on table building_floor to cvh_app;
 create policy building_floor_app_select on building_floor for select to cvh_app using (true);
 create policy building_floor_app_insert on building_floor for insert to cvh_app with check (true);
 create policy building_floor_app_update on building_floor for update to cvh_app using (true) with check (true);

@@ -3957,6 +3957,7 @@
       "confirmedOn": "Floors confirmed on {date}",
       "unconfirmed": "Floors not confirmed yet",
       "notInRegister": "Not in latest register",
+      "registerLabel": "Register status:",
       "notInRegisterLine": "The latest import did not find this building in the City register. It is kept as it is. Check whether it still belongs in the pilot.",
       "edit": "Edit floors",
       "editOf": "Edit floors of {address}",
@@ -3981,6 +3982,11 @@
       "floorLabel": "Label of the floor now called {label}",
       "rename": "Rename",
       "remove": "Remove",
+      "renameOf": "Rename floor {label}",
+      "removeOf": "Remove floor {label}",
+      "removeConfirm": "Remove floor {label}? This cannot be undone.",
+      "removeYes": "Yes, remove floor {label}",
+      "removeKeep": "Keep floor {label}",
       "add": {
         "title": "Add a floor",
         "label": "Label",
@@ -4004,7 +4010,7 @@
       "errors": {
         "labelEmpty": "Enter a label for the floor.",
         "labelTooLong": "A label can have at most 8 characters.",
-        "labelCharacters": "Use only letters, digits, spaces and hyphens in a label.",
+        "labelCharacters": "Use only letters, digits, spaces and hyphens in a label, with at least one letter or digit.",
         "labelDuplicate": "This building already has a floor with that label. Labels count as the same when they differ only by capital letters or spaces.",
         "floorHasAssignments": "Reassign or remove the ambassadors on this floor first",
         "ambassadors": "Ambassadors on this floor: {names}",

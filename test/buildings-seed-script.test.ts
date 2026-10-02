@@ -8,6 +8,7 @@ import { main } from "../scripts/seed/buildings-seed";
 
 const ROOT = path.join(__dirname, "..");
 const NO_ENV = {} as NodeJS.ProcessEnv;
+const envOf = (vars: Record<string, string>) => vars as unknown as NodeJS.ProcessEnv;
 
 function capture() {
   const out: string[] = [];
@@ -73,9 +74,37 @@ describe("npm run seed:buildings -- --dry-run", () => {
     });
   });
 
-  it("refuses to run for real without a database URL", async () => {
-    const { err } = capture();
-    expect(await main([], NO_ENV, ROOT)).toBe(1);
-    expect(err).toEqual(["SEED_DATABASE_URL is not set (use the same session-mode connection as the migrations)"]);
+  describe("for real, the database URL", () => {
+    const URL_OK = "postgres://u:p@localhost:5432/db";
+
+    it("is required: no URL exits 1", async () => {
+      const { err } = capture();
+      expect(await main([], NO_ENV, ROOT)).toBe(1);
+      expect(err.join("\n")).toContain("SEED_DATABASE_URL is not set");
+    });
+
+    it("has no fallback: a MIGRATE_DATABASE_URL alone exits 1", async () => {
+      const { err } = capture();
+      expect(await main([], envOf({ MIGRATE_DATABASE_URL: URL_OK }), ROOT)).toBe(1);
+      expect(err.join("\n")).toContain("SEED_DATABASE_URL is not set");
+    });
+
+    it("refuses the transaction pooler", async () => {
+      const { err } = capture();
+      expect(await main([], envOf({ SEED_DATABASE_URL: "postgres://u:p@localhost:6543/db" }), ROOT)).toBe(1);
+      expect(err.join("\n")).toContain("SEED_DATABASE_URL points at the transaction pooler");
+    });
+
+    it("refuses a remote host without --yes, before connecting", async () => {
+      const { err } = capture();
+      expect(await main([], envOf({ SEED_DATABASE_URL: "postgres://u:p@db.example.supabase.co:5432/postgres" }), ROOT)).toBe(1);
+      expect(err.join("\n")).toContain("db.example.supabase.co");
+      expect(err.join("\n")).toContain("--yes");
+    });
+
+    it("never connects with --dry-run, even with a remote URL and no --yes", async () => {
+      capture();
+      expect(await main(["--dry-run"], envOf({ SEED_DATABASE_URL: "postgres://u:p@db.example.supabase.co:5432/postgres" }), ROOT)).toBe(0);
+    });
   });
 });

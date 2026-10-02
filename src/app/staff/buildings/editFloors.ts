@@ -9,7 +9,9 @@ import type { StaffSession } from "../session";
 export type EditState =
   | { status: "idle" }
   | { status: "refused"; message: string; detail?: string; /** The label as it was typed, to show again. */ label?: string; place?: FloorPlace }
-  | { status: "saved"; location: string };
+  | { status: "saved"; location: string }
+  /** Removing is destructive: the first submit only asks, and the form then posts `confirm=1`. */
+  | { status: "confirm"; message: string };
 
 export interface EditDeps {
   buildings: () => Pick<BuildingService, "addFloor" | "renameFloor" | "removeFloor" | "confirmBuilding">;
@@ -72,9 +74,14 @@ export async function renameFloorFromForm(deps: EditDeps, session: Session, form
   return { status: "saved", location: savedLocation(rsn, { done: "renamed", from: result.value.previousLabel, to: result.value.label }) };
 }
 
-/** "Remove" a floor, unless Ambassadors are assigned to it: then they are listed. */
+/**
+ * "Remove" a floor, unless Ambassadors are assigned to it: then they are listed. Removing cannot be
+ * undone, so the floor is removed only when the form carries `confirm=1`; the first submit changes
+ * nothing and returns the question. (`label` is only the text of the question: the floor is the id.)
+ */
 export async function removeFloorFromForm(deps: EditDeps, session: Session, form: FormData): Promise<EditState> {
   const rsn = text(form, "rsn");
+  if (text(form, "confirm") !== "1") return { status: "confirm", message: englishText("staff.buildings.removeConfirm", { label: text(form, "label").slice(0, 8) }) };
   const result = await deps.buildings().removeFloor(session.staffId, { rsn, floorId: text(form, "floorId") });
   return result.ok ? { status: "saved", location: savedLocation(rsn, { done: "removed", label: result.value.label }) } : refusal(result.error, { ambassadors: result.ambassadors });
 }

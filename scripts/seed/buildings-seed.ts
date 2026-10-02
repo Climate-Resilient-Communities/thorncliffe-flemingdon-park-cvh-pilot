@@ -1,6 +1,10 @@
 // Seed of the pilot's 43 buildings and their floors (S01.13, AD-25). Run through scripts/seed/buildings.mjs (this file is what it bundles):
 //
-//   SEED_DATABASE_URL=postgres://... npm run seed:buildings [-- --file <register.geojson>] [-- --merge <building-merge.csv>] [-- --dry-run]
+//   SEED_DATABASE_URL=postgres://... npm run seed:buildings [-- --file <register.geojson>] [-- --merge <building-merge.csv>] [-- --dry-run] [-- --yes]
+//
+// SEED_DATABASE_URL is required, with no fallback to MIGRATE_DATABASE_URL: a seed must never reach a database by
+// accident. It must be a session-mode connection (not the transaction pooler, port 6543). A host other than
+// localhost, 127.0.0.1 or ::1 is refused unless --yes is passed. --dry-run never connects.
 //
 // Reads data/seed/apartment_building_reg.geojson, keeps the rows whose postal area is M4H (Thorncliffe
 // Park, 32 buildings) or M3C (Flemingdon Park, 11), and upserts them by rsn with their address,
@@ -9,8 +13,9 @@
 // the register no longer lists is flagged "not in latest register" and kept. data/seed/building-merge.csv
 // (optional) maps registrations that are one building to a primary rsn.
 //
-// Exit code 0: loaded (warnings are listed in the report). Exit code 1: refused, with nothing changed, because
-// a row failed validation (the report lists every failing row), or the run failed.
+// Exit code 0: loaded (warnings are listed in the report). Exit code 1: refused, with nothing changed, because the URL is
+// missing, unusable or remote without --yes,
+// or a row failed validation (the report lists every failing row), or the run failed.
 // --dry-run reads only the files, never the database: the same report, as "would load".
 import path from "node:path";
 import { record, recordRefusal } from "@/modules/audit";
@@ -24,7 +29,10 @@ import {
   type PlacesAuditEvent,
 } from "@/modules/places";
 import { createDb } from "@/platform/db";
+import { checkMigrationUrl } from "../db/migrate.mjs";
 import type { AuditEvent } from "@/modules/audit";
+
+const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1"];
 
 const option = (argv: string[], name: string) => {
   const at = argv.indexOf(name);
@@ -53,9 +61,16 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
     return plan.failures.length > 0 ? 1 : 0;
   }
 
-  const url = env.SEED_DATABASE_URL ?? env.MIGRATE_DATABASE_URL;
-  if (!url) {
-    console.error("SEED_DATABASE_URL is not set (use the same session-mode connection as the migrations)");
+  const url = env.SEED_DATABASE_URL ?? "";
+  try {
+    checkMigrationUrl(url, "SEED_DATABASE_URL");
+  } catch (error) {
+    console.error(error instanceof Error ? error.message : String(error));
+    return 1;
+  }
+  const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
+  if (!LOCAL_HOSTS.includes(host) && !argv.includes("--yes")) {
+    console.error(`SEED_DATABASE_URL points at ${host}, not at this machine: pass --yes to seed that database`);
     return 1;
   }
   const db = createDb(url);

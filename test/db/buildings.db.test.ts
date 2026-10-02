@@ -312,6 +312,19 @@ describe("the buildings seed, with fixture registers", () => {
     expect(merged.warnings).toEqual([]);
     expect((await owner`select rsn from building order by rsn`).map((row) => row.rsn)).toEqual(["201"]);
   });
+
+  it("reports a building loaded before and now merged into another as merged, not as missing from the register", async () => {
+    const twins = [feature(201, { SITE_ADDRESS: "85-95  THORNCLIFFE PARK DR " }), feature(202, { SITE_ADDRESS: "85-95  THORNCLIFFE PARK DR " })];
+    await seed(planOf(twins));
+
+    const merged = await seed(planOf(twins, [{ line: 2, rsn: "202", primaryRsn: "201" }]));
+
+    expect(merged.notInRegister).toEqual([]);
+    expect(merged.counts.buildings_flagged).toBe(0);
+    expect(merged.warnings.map((warning) => warning.message)).toEqual([expect.stringContaining("merged into rsn 201")]);
+    expect(merged.warnings.some((warning) => warning.message.includes("not in latest register"))).toBe(false);
+    expect((await owner`select rsn, not_in_register_since from building order by rsn`).map((row) => [row.rsn, row.not_in_register_since])).toEqual([["201", null], ["202", null]]);
+  });
 });
 
 describe("the app's role and the buildings tables", () => {
@@ -341,6 +354,32 @@ describe("the app's role and the buildings tables", () => {
     expect(await as("truncate building_floor")).toBe("42501");
   });
 
+  it("updates only the confirm columns of building, and only label, sort_order and confirmed of building_floor", async () => {
+    const as = async (statement: string) => {
+      try {
+        await app.$client.unsafe(statement);
+        return "ok";
+      } catch (error) {
+        return (error as { code?: string }).code ?? "error";
+      }
+    };
+    const [floor] = await owner`select id from building_floor where rsn = '301' order by sort_order limit 1`;
+    const floorWhere = `where id = '${floor.id}'`;
+    expect(await as(`update building_floor set label = 'Z1' ${floorWhere}`)).toBe("ok");
+    expect(await as(`update building_floor set sort_order = 20 ${floorWhere}`)).toBe("ok");
+    expect(await as(`update building_floor set confirmed = true ${floorWhere}`)).toBe("ok");
+    expect(await as(`update building_floor set rsn = '9' ${floorWhere}`)).toBe("42501");
+    expect(await as(`update building_floor set id = '${randomUUID()}' ${floorWhere}`)).toBe("42501");
+    expect(await as(`update building_floor set created_at = now() ${floorWhere}`)).toBe("42501");
+    // A generated column: refused as such (428C9) before the privilege is looked at.
+    expect(await as(`update building_floor set label_key = 'x' ${floorWhere}`)).toBe("428C9");
+    expect(await as("update building set rsn = '302' where rsn = '301'")).toBe("42501");
+    expect(await as("update building set not_in_register_since = now() where rsn = '301'")).toBe("42501");
+    expect(await as("update building set facts_updated_at = now() where rsn = '301'")).toBe("42501");
+    expect(await as("update building set storeys = 3 where rsn = '301'")).toBe("42501");
+    expect(await as("update building set floors_confirmed_at = null, floors_confirmed_by = null where rsn = '301'")).toBe("ok");
+  });
+
   it("is the only role besides the owner that reaches the tables: anon, authenticated and service_role have no privilege on them", async () => {
     const rows = await owner`
       select r.rolname, c.relname, has_table_privilege(r.rolname, c.oid, 'select, insert, update, delete, truncate, references, trigger') as any_privilege,
@@ -356,7 +395,7 @@ describe("the app's role and the buildings tables", () => {
 
   it("refuses a floor label the table does not allow, whatever the app says", async () => {
     const [{ id }] = await floorsOf("301");
-    for (const label of ["", " ", " G", "G ", "123456789", "1.5", "é"]) {
+    for (const label of ["", " ", " G", "G ", "123456789", "1.5", "é", "-", "- -", "  ", "P  1", "1  2"]) {
       await expect(owner`update building_floor set label = ${label} where id = ${id}`, JSON.stringify(label)).rejects.toThrow();
     }
     await expect(owner`insert into building_floor (id, rsn, label, sort_order) values (${randomUUID()}, '301', ' 1', 9)`).rejects.toThrow();
@@ -491,6 +530,18 @@ describe("editing floors as an Admin", () => {
     assigned = [];
     expect((await service.removeFloor(ADMIN, { rsn: "401", floorId: target.id })).ok).toBe(true);
     expect(await labels()).not.toContain("5");
+  });
+
+  it("audits the refusal for a tampered floor id that is shaped like a UUID but is not one, without the id in the meta", async () => {
+    const tampered = "11111111-1111-1111-1111-111111111111";
+    const since = (await denied()).length;
+    expect(await service.removeFloor(ADMIN, { rsn: "401", floorId: tampered })).toEqual({ ok: false, error: "floor_not_found" });
+    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: tampered, label: "Z" })).toEqual({ ok: false, error: "floor_not_found" });
+    const refusals = await denied(since);
+    expect(refusals.map((row) => [row.action, row.subject_id, row.meta])).toEqual([
+      ["building.floor_removed", "401", { reason: "not_found" }],
+      ["building.floor_renamed", "401", { reason: "not_found" }],
+    ]);
   });
 
   it("refuses a floor or building that does not exist, or that belongs to another building", async () => {

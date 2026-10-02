@@ -17,6 +17,10 @@ const audit: PlacesAudit = {
  * Who is assigned to a floor. Until S01.14 creates `ambassador_assignment` nobody is, so a floor can
  * always be removed. S01.14 replaces this with identity's reader of the assignments that name the floor.
  */
+// S01.14 MUST replace NO_ASSIGNMENTS here with the real reader in the same change that creates
+// `ambassador_assignment`: while this stays, the removal guard sees nobody and a floor with Ambassadors
+// assigned can be removed. src/app/staff/places.test.ts fails once that migration exists and this still
+// names NO_ASSIGNMENTS.
 const assignments: FloorAssignments = NO_ASSIGNMENTS;
 
 /** The building and floor use cases (S01.13). */

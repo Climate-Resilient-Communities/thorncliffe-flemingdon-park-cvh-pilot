@@ -212,17 +212,20 @@ export async function migrate({ sql, dir = MIGRATIONS_DIR, checkPending, recordR
   return { applied: done, removals };
 }
 
-/** Refuses Supabase's transaction pooler: the runner's transactions and SETs need a session. */
-export function checkMigrationUrl(url) {
-  if (!url) throw new MigrationError("MIGRATE_DATABASE_URL is not set", ["give the runner a database URL"]);
+/**
+ * Refuses Supabase's transaction pooler: the runner's transactions and SETs need a session.
+ * `name` is the variable the URL came from, for the messages (the seeds reuse this check).
+ */
+export function checkMigrationUrl(url, name = "MIGRATE_DATABASE_URL") {
+  if (!url) throw new MigrationError(`${name} is not set`, ["give the runner a database URL"]);
   let parsed;
   try {
     parsed = new URL(url);
   } catch {
-    throw new MigrationError("MIGRATE_DATABASE_URL is not a valid URL", ["expected postgres://user:password@host:port/database"]);
+    throw new MigrationError(`${name} is not a valid URL`, ["expected postgres://user:password@host:port/database"]);
   }
   if (parsed.port === "6543") {
-    throw new MigrationError("MIGRATE_DATABASE_URL points at the transaction pooler (port 6543)", [
+    throw new MigrationError(`${name} points at the transaction pooler (port 6543)`, [
       "migrations need a session: use the session pooler (port 5432)",
     ]);
   }

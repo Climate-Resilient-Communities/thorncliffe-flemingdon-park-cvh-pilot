@@ -27,6 +27,17 @@ describe("floor labels", () => {
     expect(checkFloorLabel(label, [])).toEqual({ ok: false, error: "label_characters" });
   });
 
+  it("collapses runs of spaces inside a label into one", () => {
+    expect(checkFloorLabel("P  1", [])).toEqual({ ok: true, label: "P 1" });
+    expect(checkFloorLabel("  a   b  ", [])).toEqual({ ok: true, label: "a b" });
+    expect(trimFloorLabel("1    2")).toBe("1 2");
+    expect(checkFloorLabel("P   1", ["P 1"])).toEqual({ ok: false, error: "label_duplicate" });
+  });
+
+  it.each(["-", "--", "- -", " - ", "-- --"])("needs at least one letter or digit: refuses %j", (label) => {
+    expect(checkFloorLabel(label, [])).toEqual({ ok: false, error: "label_characters" });
+  });
+
   it("refuses a label the building already has, ignoring case and spaces", () => {
     const others = ["1", "G", "P 1", "2-3"];
     expect(checkFloorLabel("g", others)).toEqual({ ok: false, error: "label_duplicate" });

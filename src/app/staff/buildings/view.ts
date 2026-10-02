@@ -19,7 +19,8 @@ export interface ListItemView {
   storeys: string;
   floors: string;
   status: { confirmed: boolean; text: string };
-  notInRegister?: string;
+  /** "Register" and "Not in latest register": a labelled line of its own. */
+  notInRegister?: { label: string; status: string };
 }
 
 export interface ListView {
@@ -36,6 +37,12 @@ export interface FloorRowView {
   label: string;
   /** "Label of the floor now called 3": the input's accessible name. */
   inputLabel: string;
+  /** "Rename floor 3" and "Remove floor 3": each button's accessible name. */
+  renameName: string;
+  removeName: string;
+  /** The confirm step of a removal: "Yes, remove floor 3" and "Keep floor 3". */
+  removeYes: string;
+  removeKeep: string;
   note?: string;
 }
 
@@ -75,7 +82,14 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 const LABEL = /^[A-Za-z0-9 -]{1,8}$/;
 const COUNT = /^[0-9]{1,3}$/;
 
-/** What the page tells the person about the change they just saved, or nothing for a query that is not one. */
+/**
+ * What the page tells the person about the change they just saved, or nothing for a query that is not one.
+ *
+ * The notice is read from the query string, so anyone who can open this page can make it say "Floor 3
+ * renamed to 3A" without a change having been saved. Accepted: the page is Admin-only, the values are
+ * limited to the floor label alphabet (1 to 8 letters, digits, spaces, hyphens) or a count, the text is
+ * rendered as text and fixed by our own strings, and the notice changes nothing and grants nothing.
+ */
 export function savedNotice(query: SavedQuery): string | undefined {
   const label = first(query.label);
   const from = first(query.from);
@@ -114,7 +128,7 @@ export function listView(buildings: readonly BuildingSummary[], notice?: string)
       storeys: building.storeys === null ? t("storeysUnknown") : t("storeysRegister", { n: building.storeys }),
       floors: t("floorsCount", { n: building.floorCount }),
       status: statusOf(building),
-      ...(building.notInRegisterSince ? { notInRegister: t("notInRegister") } : {}),
+      ...(building.notInRegisterSince ? { notInRegister: { label: t("registerLabel"), status: t("notInRegister") } } : {}),
     });
     groups.set(building.neighbourhoodId, group);
   }
@@ -159,6 +173,10 @@ export function buildingView(building: BuildingDetail, notice?: string): Buildin
         id: floor.id,
         label: floor.label,
         inputLabel: t("floorLabel", { label: floor.label }),
+        renameName: t("renameOf", { label: floor.label }),
+        removeName: t("removeOf", { label: floor.label }),
+        removeYes: t("removeYes", { label: floor.label }),
+        removeKeep: t("removeKeep", { label: floor.label }),
         ...(floor.confirmed ? {} : { note: t("floorUnconfirmed") }),
       })),
       rename: t("rename"),

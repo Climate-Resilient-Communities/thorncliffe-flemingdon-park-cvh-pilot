@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import type { EditState } from "./editFloors";
 import type { BuildingView, FloorRowView } from "./view";
@@ -44,8 +44,12 @@ export function FloorRow({
 }) {
   const [renameState, renameForm, renaming] = useActionState(rename, initialRename);
   const [removeState, removeForm, removing] = useActionState(remove, initialRemove);
+  // "Keep" hides the question without a round trip; a new question (a new state object) shows again.
+  const [dismissed, setDismissed] = useState<EditState | null>(null);
+  const asking = removeState.status === "confirm" && dismissed !== removeState;
   const renameError = `rename-error-${floor.id}`;
   const removeError = `remove-error-${floor.id}`;
+  const removeQuestion = `remove-question-${floor.id}`;
   const shown = renameState.status === "refused" && renameState.label !== undefined ? renameState.label : floor.label;
   return (
     <li data-testid={`floor-${floor.id}`}>
@@ -67,7 +71,7 @@ export function FloorRow({
                 aria-describedby={renameState.status === "refused" ? renameError : undefined}
                 aria-invalid={renameState.status === "refused" || undefined}
               />
-              <button className="tap" type="submit" disabled={renaming}>
+              <button className="tap" type="submit" disabled={renaming} aria-label={floor.renameName}>
                 {labels.rename}
               </button>
             </Inline>
@@ -75,9 +79,27 @@ export function FloorRow({
           <form action={removeForm}>
             <input type="hidden" name="rsn" value={rsn} />
             <input type="hidden" name="floorId" value={floor.id} />
-            <button className="tap" type="submit" disabled={removing}>
-              {labels.remove}
-            </button>
+            <input type="hidden" name="label" value={floor.label} />
+            {removeState.status === "confirm" && asking ? (
+              <Stack gap="label">
+                <p id={removeQuestion} role="alert">
+                  {removeState.message}
+                </p>
+                <Inline gap="target" align="center">
+                  <input type="hidden" name="confirm" value="1" />
+                  <button className="tap" type="submit" disabled={removing} aria-describedby={removeQuestion}>
+                    {floor.removeYes}
+                  </button>
+                  <button className="tap" type="button" onClick={() => setDismissed(removeState)}>
+                    {floor.removeKeep}
+                  </button>
+                </Inline>
+              </Stack>
+            ) : (
+              <button className="tap" type="submit" disabled={removing} aria-label={floor.removeName}>
+                {labels.remove}
+              </button>
+            )}
           </form>
           {floor.note && <span>{floor.note}</span>}
         </Inline>

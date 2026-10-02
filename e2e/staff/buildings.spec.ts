@@ -27,7 +27,7 @@ test.beforeAll(async () => {
   await sql`delete from sign_in_lock`;
   await sql`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H'), ('FP', 'Flemingdon Park', 'M3C') on conflict do nothing`;
   await sql`insert into building (rsn, neighbourhood_id, address, latitude, longitude, storeys, elevators, emergency_power, cooling_room, air_conditioning, barrier_free_entrance, facts_updated_at)
-            values (${RSN}, 'TP', ${ADDRESS}, 43.7, -79.34, 14, 3, true, null, 'None', false, '2026-10-05T12:00:00Z')`;
+            values (${RSN}, 'TP', ${ADDRESS}, 43.7, -79.34, 14, 3, true, null, 'None', false, '2026-10-01T12:00:00Z')`;
   for (let floor = 1; floor <= 14; floor += 1) {
     await sql`insert into building_floor (id, rsn, label, sort_order) values (${randomUUID()}, ${RSN}, ${String(floor)}, ${floor})`;
   }
@@ -102,36 +102,48 @@ test("an Admin edits a building's floors and confirms it, and every change is au
   expect(root.scrollWidth).toBeLessThanOrEqual(root.clientWidth);
 
   // The register's facts, with "Not known" where it is silent.
-  for (const line of ["Storeys: 14", "Elevators: 3", "Emergency power: Yes", "Cooling room: Not known", "Air conditioning: None", "Barrier-free entrance: No", "Last updated Oct 5, 2026"]) {
+  for (const line of ["Storeys: 14", "Elevators: 3", "Emergency power: Yes", "Cooling room: Not known", "Air conditioning: None", "Barrier-free entrance: No", "Last updated Oct 1, 2026"]) {
     await expect(page.getByText(line)).toBeVisible();
   }
 
   // Rename floor 3 to 3A: the page says so, and the floor keeps its id and its place.
   const [{ id: floorId }] = await sql`select id from building_floor where rsn = ${RSN} and label = '3'`;
   await floorRow(page, "3").getByLabel("Label of the floor now called 3").fill("3A");
-  await floorRow(page, "3").getByRole("button", { name: "Rename" }).click();
+  await floorRow(page, "3").getByRole("button", { name: "Rename floor 3", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Floor 3 is now called 3A.");
   expect((await sql`select label from building_floor where id = ${floorId}`)[0].label).toBe("3A");
+  await expect(floorRow(page, "3A")).toHaveCount(1);
+  await expect(floorRow(page, "3")).toHaveCount(0);
 
   // A label the rules refuse is refused with the reason, shows what was typed and saves nothing.
   const before = await floorLabels();
   await floorRow(page, "4").getByLabel("Label of the floor now called 4").fill("123456789");
-  await floorRow(page, "4").getByRole("button", { name: "Rename" }).click();
+  await floorRow(page, "4").getByRole("button", { name: "Rename floor 4", exact: true }).click();
   await expect(floorRow(page, "123456789").getByRole("alert")).toHaveText("A label can have at most 8 characters.");
   await page.getByLabel("Label", { exact: true }).fill("3 a");
   await page.getByRole("button", { name: "Add floor" }).click();
   await expect(page.locator("#add-floor-error")).toHaveText("This building already has a floor with that label. Labels count as the same when they differ only by capital letters or spaces.");
   await page.getByLabel("Label", { exact: true }).fill("2.5");
   await page.getByRole("button", { name: "Add floor" }).click();
-  await expect(page.locator("#add-floor-error")).toHaveText("Use only letters, digits, spaces and hyphens in a label.");
+  await expect(page.locator("#add-floor-error")).toHaveText("Use only letters, digits, spaces and hyphens in a label, with at least one letter or digit.");
   await page.getByLabel("Label", { exact: true }).fill("   ");
   await page.getByRole("button", { name: "Add floor" }).click();
   await expect(page.locator("#add-floor-error")).toHaveText("Enter a label for the floor.");
   expect(await floorLabels()).toEqual(before);
 
   // No floor 13; a ground floor G and a lobby L below floor 1.
-  await floorRow(page, "13").getByRole("button", { name: "Remove" }).click();
+  // Removing asks first: the first tap changes nothing, "Keep" cancels, and only the confirm button removes.
+  await expect(page.getByRole("button", { name: "Remove floor 13", exact: true })).toHaveCount(1);
+  await floorRow(page, "13").getByRole("button", { name: "Remove floor 13", exact: true }).click();
+  await expect(floorRow(page, "13").getByRole("alert")).toHaveText("Remove floor 13? This cannot be undone.");
+  expect(await floorLabels()).toContain("13");
+  await floorRow(page, "13").getByRole("button", { name: "Keep floor 13", exact: true }).click();
+  await expect(floorRow(page, "13").getByRole("alert")).toHaveCount(0);
+  expect(await floorLabels()).toContain("13");
+  await floorRow(page, "13").getByRole("button", { name: "Remove floor 13", exact: true }).click();
+  await floorRow(page, "13").getByRole("button", { name: "Yes, remove floor 13", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Floor 13 removed.");
+  expect(await floorLabels()).not.toContain("13");
   await page.getByLabel("Label", { exact: true }).fill("G");
   await page.getByLabel("Where it goes").selectOption("bottom");
   await page.getByRole("button", { name: "Add floor" }).click();

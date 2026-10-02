@@ -82,7 +82,7 @@ export const buildingFloor = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
-    check("building_floor_label_format", sql`${t.label} ~ '^[A-Za-z0-9 -]{1,8}$' and ${t.label} = btrim(${t.label})`),
+    check("building_floor_label_format", sql`${t.label} ~ '^[A-Za-z0-9 -]{1,8}$' and ${t.label} ~ '[A-Za-z0-9]' and ${t.label} = btrim(${t.label}) and ${t.label} !~ '  '`),
     unique("building_floor_label_unique").on(t.rsn, t.labelKey),
     pgPolicy("building_floor_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("building_floor_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),

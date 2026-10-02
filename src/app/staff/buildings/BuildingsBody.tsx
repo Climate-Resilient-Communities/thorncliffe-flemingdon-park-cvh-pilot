@@ -40,16 +40,20 @@ function List({ view }: { view: ListView }) {
             </h2>
             <Stack as="ul" gap="related">
               {group.items.map((item) => (
-                <li key={item.rsn} data-testid={`building-${item.rsn}`}>
+                <li key={item.rsn} className="hub-list-item" data-testid={`building-${item.rsn}`}>
                   <Stack gap="subline">
                     {/* A real link: a full page load, like the Hub's navigation. */}
-                    <a className="tap" href={item.href} aria-label={item.linkLabel}>
+                    <a className="tap hub-link" href={item.href} aria-label={item.linkLabel}>
                       {item.address}
                     </a>
                     <p>
                       {item.storeys}. {item.floors}. {item.status.text}.
                     </p>
-                    {item.notInRegister && <p role="note">{item.notInRegister}</p>}
+                    {item.notInRegister && (
+                      <p role="note" className="hub-flag">
+                        <span className="hub-flag__label">{item.notInRegister.label}</span> {item.notInRegister.status}
+                      </p>
+                    )}
                   </Stack>
                 </li>
               ))}
@@ -65,7 +69,7 @@ function Building({ view, actions, initial }: { view: BuildingView; actions: Bui
   return (
     <Stack gap="section-hub">
       <Stack gap="related">
-        <a className="tap" href={view.back.href}>
+        <a className="tap hub-link" href={view.back.href}>
           {view.back.label}
         </a>
         <h1>{view.address}</h1>

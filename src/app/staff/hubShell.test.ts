@@ -56,7 +56,7 @@ describe("hubNavigation", () => {
     const administration = hubNavigation("admin").find((section) => section.id === "admin");
     expect(administration?.items).toEqual([
       { id: "people", label: "People", href: "/staff/people", icon: "person" },
-      { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "pencil" },
+      { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
     ]);
   });
 

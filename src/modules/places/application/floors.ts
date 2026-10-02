@@ -2,6 +2,7 @@
 // staff guard has already refused anyone but an Admin (policy action `buildings.manage`); every
 // change is audited in its own transaction, and a refused change is audited as refused with a reason.
 import { and, asc, eq, sql } from "drizzle-orm";
+import { z } from "zod";
 import type { Db } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
@@ -62,7 +63,12 @@ export interface BuildingServiceDeps {
   newId?: () => string;
 }
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * The same rule as the audit trail's schema for a floor id (`z.uuid()`, RFC 9562 versions and variants): an id
+ * that passes a looser pattern but not this one would make the refusal's own audit event fail, leaving the
+ * refusal unaudited. 11111111-1111-1111-1111-111111111111 is such an id.
+ */
+const isFloorId = (value: string): boolean => z.uuid().safeParse(value).success;
 const RSN = /^[0-9]{1,9}$/;
 
 /** Found inside a transaction: nothing was written, and the refusal is audited after the rollback. */
@@ -138,7 +144,7 @@ export function createBuildingService(deps: BuildingServiceDeps) {
         subjectId: RSN.test(rsn) ? rsn : null,
         meta: {
           reason: REASONS[refusal.error],
-          ...(floorId !== undefined && UUID.test(floorId) ? { floor_id: floorId } : {}),
+          ...(floorId !== undefined && isFloorId(floorId) ? { floor_id: floorId } : {}),
           ...(action === "building.floor_removed" && label !== undefined ? { label } : {}),
           ...(ambassadors !== undefined ? { assignments: ambassadors.length } : {}),
         },
@@ -229,7 +235,7 @@ export function createBuildingService(deps: BuildingServiceDeps) {
       return change(actorStaffId, "building.floor_renamed", input.rsn, async (tx) => {
         await lockBuilding(tx, input.rsn);
         const floors = await floorsOf(tx, input.rsn);
-        const floor = UUID.test(input.floorId) ? floors.find((candidate) => candidate.id === input.floorId) : undefined;
+        const floor = isFloorId(input.floorId) ? floors.find((candidate) => candidate.id === input.floorId) : undefined;
         if (!floor) throw new Refused("floor_not_found", { floorId: input.floorId });
         const checked = checkFloorLabel(input.label, floors.filter((other) => other.id !== floor.id).map((other) => other.label));
         if (!checked.ok) throw new Refused(checked.error, { floorId: floor.id });
@@ -253,7 +259,7 @@ export function createBuildingService(deps: BuildingServiceDeps) {
     removeFloor(actorStaffId: string, input: { rsn: string; floorId: string }): Promise<FloorResult<FloorView>> {
       return change(actorStaffId, "building.floor_removed", input.rsn, async (tx) => {
         await lockBuilding(tx, input.rsn);
-        const [floor] = UUID.test(input.floorId) ? await tx.select().from(buildingFloor).where(and(eq(buildingFloor.id, input.floorId), eq(buildingFloor.rsn, input.rsn))) : [];
+        const [floor] = isFloorId(input.floorId) ? await tx.select().from(buildingFloor).where(and(eq(buildingFloor.id, input.floorId), eq(buildingFloor.rsn, input.rsn))) : [];
         if (!floor) throw new Refused("floor_not_found", { floorId: input.floorId });
         const assigned = await assignments.onFloor(tx, { rsn: input.rsn, floorId: floor.id });
         if (assigned.length > 0) throw new Refused("floor_has_assignments", { floorId: floor.id, label: floor.label, ambassadors: assigned });

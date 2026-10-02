@@ -39,7 +39,7 @@ describe("Add a floor (server action)", () => {
   it.each([
     ["label_empty", "Enter a label for the floor."],
     ["label_too_long", "A label can have at most 8 characters."],
-    ["label_characters", "Use only letters, digits, spaces and hyphens in a label."],
+    ["label_characters", "Use only letters, digits, spaces and hyphens in a label, with at least one letter or digit."],
     ["label_duplicate", "This building already has a floor with that label. Labels count as the same when they differ only by capital letters or spaces."],
     ["building_not_found", "That building does not exist."],
   ] as const)("shows the reason a label is refused (%s) and keeps what was typed", async (error, message) => {
@@ -71,11 +71,21 @@ describe("Rename (server action)", () => {
 });
 
 describe("Remove (server action)", () => {
+  it("only asks on the first submit: nothing is removed without confirm=1", async () => {
+    const removeFloor = vi.fn();
+    const { deps: d } = deps({ removeFloor });
+
+    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR, label: "13" }))).toEqual({ status: "confirm", message: "Remove floor 13? This cannot be undone." });
+    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR, label: "13", confirm: "0" }))).toMatchObject({ status: "confirm" });
+    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR, label: "13", confirm: "yes" }))).toMatchObject({ status: "confirm" });
+    expect(removeFloor).not.toHaveBeenCalled();
+  });
+
   it("removes the floor and goes back to the building", async () => {
     const removeFloor = vi.fn(async () => ({ ok: true as const, value: { id: FLOOR, label: "13", confirmed: true } }));
     const { deps: d } = deps({ removeFloor });
 
-    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR }))).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=removed&label=13" });
+    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR, confirm: "1" }))).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=removed&label=13" });
     expect(removeFloor).toHaveBeenCalledWith(ADMIN, { rsn: "7", floorId: FLOOR });
   });
 
@@ -91,7 +101,7 @@ describe("Remove (server action)", () => {
       })),
     });
 
-    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR }))).toEqual({
+    expect(await removeFloorFromForm(d, session, form({ rsn: "7", floorId: FLOOR, confirm: "1" }))).toEqual({
       status: "refused",
       message: "Reassign or remove the ambassadors on this floor first",
       detail: "Ambassadors on this floor: Nia Mensah, Omar Farouk",

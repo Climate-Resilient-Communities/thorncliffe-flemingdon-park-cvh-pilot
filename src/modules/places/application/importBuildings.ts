@@ -152,7 +152,17 @@ export async function importBuildings(db: Db, plan: ImportPlan, deps: ImportDeps
       }
     }
 
-    const missing = [...existing.values()].filter((row) => !loaded.has(row.rsn));
+    // A building loaded before that the merge file now folds into another is not missing from the
+    // register: it is reported as merged into its primary, and not flagged.
+    const mergedInto = new Map(plan.buildings.flatMap((planned) => planned.mergedRsns.map((rsn) => [rsn, planned.rsn] as const)));
+    const absent = [...existing.values()].filter((row) => !loaded.has(row.rsn));
+    for (const row of absent) {
+      const primary = mergedInto.get(row.rsn);
+      if (primary !== undefined) {
+        warnings.push({ source: "merge", row: null, rsn: row.rsn, address: row.address, message: `merged into rsn ${primary} by building-merge.csv: kept as it was, not flagged; check its floors and assignments at /staff/buildings` });
+      }
+    }
+    const missing = absent.filter((row) => !mergedInto.has(row.rsn));
     const newlyMissing = missing.filter((row) => row.notInRegisterSince === null);
     if (newlyMissing.length > 0) {
       await tx

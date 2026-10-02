@@ -1,0 +1,32 @@
+/*
+ * Small rules for the content of Hub pages (S01.13), shared by every staff screen: a link that looks like one, the
+ * divider between the items of a list, and a flag line for a status that needs a person's attention. Tokens only.
+ * The hub button and input styles are a separate story (after S02.04), not here.
+ */
+@layer components {
+  /* A link inside content: the link colour and an underline, so it is not mistaken for text. */
+  .hub-link {
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
+  /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
+  .hub-list-item {
+    padding-block-end: var(--gap-related);
+    border-block-end: var(--offset-align-hairline) solid var(--border);
+  }
+
+  /* A status that needs attention, as its own line: a label, the status, on the warm surface with the accent bar. */
+  .hub-flag {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border-inline-start: var(--offset-align-icon) solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-flag__label {
+    font-weight: 700;
+  }
+}
