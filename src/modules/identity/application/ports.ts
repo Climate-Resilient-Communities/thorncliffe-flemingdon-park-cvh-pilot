@@ -186,8 +186,12 @@ export interface StaffStore {
   markStartingPasswordUsed(tx: DbTransaction, id: string, at: Date): Promise<void>;
   /** `active` → `locked_pending_reissue`, only while a starting password is in use. True when it changed. */
   lockPendingReissue(tx: DbTransaction, id: string): Promise<boolean>;
-  /** The person replaced the starting password: clears `must_change_password` and the starting password's dates. */
-  completePasswordChange(tx: DbTransaction, id: string): Promise<boolean>;
+  /**
+   * The person replaced the starting password: clears `must_change_password` and the starting
+   * password's dates, only while the account is still active on the starting password issued at
+   * `issuedAt` (a re-issue or reset since then changes it). True when it changed.
+   */
+  completePasswordChange(tx: DbTransaction, id: string, issuedAt: Date | null): Promise<boolean>;
   /** An Admin re-issued the starting password: active again, a new 24-hour window, unused. */
   reissueStartingPassword(tx: DbTransaction, id: string, issuedAt: Date): Promise<boolean>;
   usernameTaken(db: DbExecutor, username: string): Promise<boolean>;

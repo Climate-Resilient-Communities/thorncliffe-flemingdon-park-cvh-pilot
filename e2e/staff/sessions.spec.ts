@@ -41,6 +41,19 @@ async function newAccount(role: "ambassador" | "admin") {
   return { id, username, password, authUserId };
 }
 
+/** A new Ambassador still on the starting password issued a moment ago (gate 1). */
+async function newAccountOnStartingPassword() {
+  const username = `amb${randomBytes(3).toString("hex")}`;
+  const password = "rvh-ann-okafor";
+  const fake = memoryIdentityProvider({ file: fakeFile });
+  const authUserId = fake.plant(`${username}@staff.cvh.invalid`, { password: pepperPassword(pepper as string, password), createdAt: new Date() });
+  const id = randomUUID();
+  await sql`
+    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
+    values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', 'ambassador', true, now())`;
+  return { id, username, password };
+}
+
 /** Two usable Admins with bootstrap completed (the database holds one bootstrap row for every test). */
 async function adminAfterBootstrap() {
   const first = await newAccount("admin");
@@ -123,4 +136,45 @@ test("an Admin's Reset password shows the new starting password once and signs t
   await expect(phone.page).toHaveURL(/\/staff\/setup\/password$/);
   await phone.context.close();
   await desk.context.close();
+});
+
+test("an Admin whose session ended is sent to sign-in when they submit Reset password", async ({ browser }) => {
+  const admin = await adminAfterBootstrap();
+  const target = await newAccount("ambassador");
+  const desk = await newPage(browser);
+  await signIn(desk.page, admin.username, admin.password);
+  await desk.page.goto("/staff/people");
+  const reset = desk.page.getByRole("region", { name: "Reset a password" });
+  await reset.getByLabel("Their username").fill(target.username);
+
+  // The session ends (revoked, like an idle limit or a role change) while the form is open.
+  await sql`update staff_session set revoked_at = now() where staff_account_id = ${admin.id}`;
+  await reset.getByRole("button", { name: "Reset password" }).click();
+
+  await expect(desk.page).toHaveURL(/\/staff\/sign-in$/);
+  // Nothing was reset.
+  const [state] = await sql`select must_change_password from staff_account where id = ${target.id}`;
+  expect(state.must_change_password).toBe(false);
+  await desk.context.close();
+});
+
+test("an Ambassador whose gate-1 session went idle is told to ask an Admin for a new starting password", async ({ browser }) => {
+  const ambassador = await newAccountOnStartingPassword();
+  const { context, page } = await newPage(browser);
+  await page.goto("/staff/sign-in");
+  await page.getByLabel("Username").fill(ambassador.username);
+  await page.getByLabel("Password", { exact: true }).fill(ambassador.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page).toHaveURL(/\/staff\/setup\/password$/);
+  await sql`update staff_session set created_at = created_at - interval '31 minutes', last_seen_at = last_seen_at - interval '31 minutes'
+            where staff_account_id = ${ambassador.id}`;
+  await page.goto("/staff/setup/password");
+  await expect(page).toHaveURL(/\/staff\/sign-in$/);
+
+  // The starting password was valid once: using it again says so, and what to do.
+  await page.getByLabel("Username").fill(ambassador.username);
+  await page.getByLabel("Password", { exact: true }).fill(ambassador.password);
+  await page.getByRole("button", { name: "Sign in" }).click();
+  await expect(page.locator("#sign-in-error")).toHaveText("Your starting password has expired or was already used. Ask an Admin for a new starting password.");
+  await context.close();
 });

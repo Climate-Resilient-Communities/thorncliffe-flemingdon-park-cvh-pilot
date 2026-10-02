@@ -320,3 +320,144 @@ describe("an Admin's Reset password", () => {
     }
   });
 });
+
+describe("an Admin's Reset password racing the person's \"Choose your password\" (S01.07 serialisation, S01.08)", () => {
+  const START = "rvh-ann-okafor";
+  const OWN = "a long new password";
+
+  /** An account still on its starting password (gate 1), issued at the clock's time. */
+  async function onStartingPassword(username: string): Promise<{ id: string; authUserId: string }> {
+    const authUserId = idp.plant(`${username}@staff.cvh.invalid`, { password: peppered(START) });
+    const id = `01900000-0000-7000-8000-${String(nextId++).padStart(12, "0")}`;
+    await owner`
+      insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
+      values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', 'ambassador', true, ${clock})`;
+    return { id, authUserId };
+  }
+
+  /** Services over a provider whose setPassword, once it has answered for a password `matches` accepts, waits for release(). */
+  function pausingProvider(matches: (password: string) => boolean) {
+    let release!: () => void;
+    const gate = new Promise<void>((resolve) => (release = resolve));
+    let reached!: () => void;
+    const paused = new Promise<void>((resolve) => (reached = resolve));
+    const provider: MemoryIdentityProvider = {
+      ...idp,
+      setPassword: async (authUserId, password) => {
+        const result = await idp.setPassword(authUserId, password);
+        if (matches(password)) {
+          reached();
+          await gate;
+        }
+        return result;
+      },
+    };
+    const wiring = { db: app, idp: provider, throttleKey: THROTTLE_KEY, passwordPepper: PEPPER, now: () => clock, sleep: async () => {}, monotonicMs: () => 0 };
+    const raced = createIdentity(wiring);
+    return { paused, release, accounts: raced, auth: createStaffAuth({ ...wiring, accounts: raced }) };
+  }
+
+  /** Resolves once some transaction waits for a row lock. */
+  async function lockWaiter(): Promise<void> {
+    const watcher = connect(serverUrl());
+    try {
+      for (let attempt = 0; attempt < 400; attempt += 1) {
+        const [{ waiting }] = await watcher`select count(*)::int as waiting from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock'`;
+        if (waiting > 0) return;
+        await new Promise((resolve) => setTimeout(resolve, 25));
+      }
+      throw new Error("no transaction ever waited for a lock");
+    } finally {
+      await watcher.end({ timeout: 5 });
+    }
+  }
+
+  const stateOf = async (id: string) =>
+    (await owner`select status, must_change_password, starting_password_issued_at, starting_password_used_at from staff_account where id = ${id}`)[0];
+  const providerPassword = (authUserId: string) => idp.users.get(authUserId)!.password;
+
+  it("holds the reset until the person's change has finished, then the reset wins: provider and database both on the starting password with a fresh window", async () => {
+    const [adminA] = await admins();
+    const { id, authUserId } = await onStartingPassword("aokafor");
+    const race = pausingProvider((password) => password === peppered(OWN));
+
+    // The person's call reaches the provider and stops there, holding the account's lock.
+    const changing = race.auth.changePassword(id, { password: OWN, confirm: OWN });
+    await race.paused;
+    // The Admin's reset starts meanwhile and has to wait for that lock.
+    const resetting = race.accounts.resetPassword(adminA, "aokafor");
+    await lockWaiter();
+    advance(minutes(5));
+    race.release();
+
+    expect(await changing).toMatchObject({ ok: true });
+    expect(await resetting).toEqual({ ok: true, value: { username: "aokafor", startingPassword: START } });
+    // Never "own password chosen" in the database with the starting password at the provider.
+    expect(providerPassword(authUserId)).toBe(peppered(START));
+    expect(await stateOf(id)).toEqual({ status: "active", must_change_password: true, starting_password_issued_at: clock, starting_password_used_at: null });
+    expect(await signIn(device(), "aokafor", OWN)).toEqual({ ok: false, error: "sign_in_failed" });
+    expect(await signIn(device(), "aokafor", START)).toMatchObject({ ok: true, gate: "choose_password" });
+    advance(hours(23));
+    expect(await signIn(device(), "aokafor", START)).toEqual({ ok: false, error: "starting_password_expired" });
+  });
+
+  it("refuses the person's change while the reset is between its provider call and its second transaction", async () => {
+    // The opposite interleaving: the reset has set the starting password at the provider and has
+    // not yet made the account active again when the person submits.
+    const [adminA] = await admins();
+    const { id, authUserId } = await onStartingPassword("aokafor");
+    const race = pausingProvider((password) => password === peppered(START));
+
+    const resetting = race.accounts.resetPassword(adminA, "aokafor");
+    await race.paused;
+    expect(await race.auth.changePassword(id, { password: OWN, confirm: OWN })).toEqual({ ok: false, error: "not_required" });
+    race.release();
+
+    expect(await resetting).toMatchObject({ ok: true });
+    expect(providerPassword(authUserId)).toBe(peppered(START));
+    expect(await stateOf(id)).toEqual({ status: "active", must_change_password: true, starting_password_issued_at: clock, starting_password_used_at: null });
+    expect(await signIn(device(), "aokafor", START)).toMatchObject({ ok: true, gate: "choose_password" });
+  });
+
+  it("refuses the person's change when a reset finished after the request read the account, even in the same millisecond", async () => {
+    const { id, authUserId } = await onStartingPassword("aokafor");
+
+    // The request reads the account, then waits for its lock, which another transaction holds
+    // while it does what a finished reset does: same starting password, same clock, one more revocation.
+    let changing!: ReturnType<StaffAuthService["changePassword"]>;
+    await owner.begin(async (tx) => {
+      await tx`select 1 from staff_account where id = ${id} for update`;
+      changing = auth.changePassword(id, { password: OWN, confirm: OWN });
+      await lockWaiter();
+      await tx`update staff_account set session_generation = session_generation + 1, starting_password_issued_at = ${clock} where id = ${id}`;
+    });
+
+    expect(await changing).toEqual({ ok: false, error: "not_required" });
+    expect(providerPassword(authUserId)).toBe(peppered(START));
+    expect(await stateOf(id)).toMatchObject({ status: "active", must_change_password: true });
+  });
+
+  it("counts a revocation when an Admin re-issues a starting password, and when IT re-issues the first Admin's", async () => {
+    const [adminA, adminB] = await admins();
+    const { id } = await onStartingPassword("aokafor");
+    await owner`update staff_account set status = 'locked_pending_reissue' where id = ${id}`;
+    const generation = async (staffId: string) => (await owner`select session_generation from staff_account where id = ${staffId}`)[0].session_generation as number;
+
+    const before = await generation(id);
+    expect((await auth.reissueStartingPassword(adminA, "aokafor")).ok).toBe(true);
+    expect(await generation(id)).toBe(before + 1);
+
+    // The first Admin, still on a starting password while bootstrap is in progress.
+    await owner.begin(async (tx) => {
+      await tx.unsafe("alter table staff_bootstrap disable trigger staff_bootstrap_forward_only");
+      await tx`delete from staff_bootstrap`;
+      await tx`update staff_account set must_change_password = true, starting_password_issued_at = ${clock} where id = ${adminA}`;
+      await tx`insert into staff_bootstrap (first_admin_id) values (${adminA})`;
+      await tx.unsafe("alter table staff_bootstrap enable trigger staff_bootstrap_forward_only");
+    });
+    const first = await generation(adminA);
+    expect((await auth.reissueFirstAdminStartingPassword("admina")).ok).toBe(true);
+    expect(await generation(adminA)).toBe(first + 1);
+    expect(adminB).toBeTruthy();
+  });
+});

@@ -4,7 +4,8 @@
 // src/app/api/staff exports anything that is not.
 //
 // Each wrapper resolves the session (./session.ts) and applies the setup sequence before the
-// route's own code runs: no session → sign-in (pages) or 401 `unauthenticated`; a session at
+// route's own code runs: no session → sign-in (pages and actions) or 401 `unauthenticated` (route
+// handlers); a session at
 // another setup gate than the route's → that gate's page (pages) or 403 `setup_incomplete`
 // (route handlers and actions). Fail closed: a route must name its access, and only the sign-in
 // page and the sign-in and sign-out calls are public.
@@ -103,7 +104,7 @@ function refusalResponse(decision: Exclude<GuardDecision, { kind: "allow" }>): R
 }
 
 /** Why a server action was refused, for its own answer. */
-export type ActionRefusal = "unauthenticated" | "setup_incomplete" | "aal2_required";
+export type ActionRefusal = "setup_incomplete" | "aal2_required";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
@@ -202,9 +203,12 @@ export async function readJson<T>(request: Request, schema: { safeParse(value: u
 // ---- Server actions ----------------------------------------------------------------------------
 
 /**
- * A staff server action at `access`. `refused` turns a refusal into the action's own answer (for
- * example a form state with the message), given the action's arguments: a server action has no
- * status of its own, so `aal2_required` is the 403 of an action, answered before its own code.
+ * A staff server action at `access`. Without a session the person is sent to the sign-in page
+ * (Next's `redirect`, which works in a server action; the session ended: idle, 12 hours, or
+ * revoked); nothing of the action runs. `refused` turns the other refusals, another setup gate or
+ * a session below `aal2` for a privileged action, into the action's own answer (for example a form
+ * state with the message), given the action's arguments: a server action has no status of its
+ * own, so `aal2_required` is the 403 of an action, answered before its own code.
  */
 export function staffAction<A extends unknown[], R>(
   spec: GuardSpec & { access: Exclude<RouteAccess, "public"> },
@@ -215,7 +219,8 @@ export function staffAction<A extends unknown[], R>(
     const decision = decide(spec, await currentStaffSession());
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
-      return refused(decision.kind === "unauthenticated" ? "unauthenticated" : decision.kind === "aal_required" ? "aal2_required" : "setup_incomplete", ...args);
+      if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
+      return refused(decision.kind === "aal_required" ? "aal2_required" : "setup_incomplete", ...args);
     }
     return act(decision.session as StaffSession, ...args);
   };

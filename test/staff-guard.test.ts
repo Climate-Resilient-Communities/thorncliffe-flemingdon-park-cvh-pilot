@@ -328,14 +328,15 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
     }
   });
 
-  it("refuse without a session and at another gate, before their own code", async () => {
+  it("send a person without a session to sign-in, and refuse at another gate, before their own code", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
     const exportsOf: Record<string, (...args: unknown[]) => Promise<{ status: string; message?: string }>> = await import(file);
     for (const [name, action] of Object.entries(exportsOf)) {
       const spec = guardSpecOf(action);
       if (!spec || spec.access === "public") continue;
       session.current = null;
-      expect(await action({ status: "idle" }, new FormData()), name).toMatchObject({ status: "refused", message: "Sign in to continue." });
+      expect(await redirectOf(() => action({ status: "idle" }, new FormData())), name).toBe("/staff/sign-in");
+      expect(audits.unauthenticated.at(-1), name).toEqual(["staff.request", spec.route]);
       for (const gate of SETUP_GATES) {
         if (admits(spec.access, gate)) continue;
         session.current = atGate(gate);

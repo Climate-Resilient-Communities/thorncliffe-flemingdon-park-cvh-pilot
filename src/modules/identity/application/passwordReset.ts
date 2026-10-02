@@ -35,6 +35,8 @@ export interface PasswordResetDeps {
   /** S01.06's recovery exception, called first in the reset's transaction (internal to the module). */
   beginAdminRecovery: (tx: DbTransaction, targetId: string) => Promise<AdminRecovery>;
   revocation: Pick<SessionRevocation, "revokeAll">;
+  /** How long a transaction waits for the account's row lock (default DEFAULT_LOCK_TIMEOUT_MS). */
+  lockTimeoutMs?: number;
 }
 
 /** A refusal found inside the transaction (nothing was written). */
@@ -88,7 +90,12 @@ export function createPasswordResetService(deps: PasswordResetDeps) {
 
       try {
         await db.transaction(async (tx) => {
+          // Serialised with "choose your password" and a re-issue (staffAuth.ts): the lock timeout,
+          // then the account row's lock (the recovery exception takes it too, with the Admin rows
+          // first when the target is an Admin), and only then the account is changed.
+          await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
           const recovery = await deps.beginAdminRecovery(tx, target.id);
+          if (!(await store.lockAccount(tx, target.id))) throw new ResetRefusal("not_found");
           const current = await store.findById(tx, actor.id);
           if (!current || !mayManageAccounts(current)) throw new ResetRefusal("forbidden");
           if (!(await store.beginPasswordReset(tx, target.id, deps.now()))) throw new ResetRefusal("not_resettable");
@@ -114,7 +121,7 @@ export function createPasswordResetService(deps: PasswordResetDeps) {
         finished = await db.transaction(async (tx) => {
           // Only this account's row: it is not usable before or after (a starting password is in
           // use), so the two-Admin rule has nothing to count.
-          await store.setLockTimeout(tx, DEFAULT_LOCK_TIMEOUT_MS);
+          await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
           if (!(await store.reissueStartingPassword(tx, target.id, deps.now()))) return false;
           await store.bumpSessionGeneration(tx, target.id);
           return true;

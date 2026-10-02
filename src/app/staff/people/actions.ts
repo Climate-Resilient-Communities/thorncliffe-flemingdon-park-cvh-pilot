@@ -1,15 +1,15 @@
 "use server";
 
 import { englishText } from "@/i18n/text";
-import { REFUSAL_MESSAGE_KEYS } from "@/modules/identity";
 import { staffAction, type ActionRefusal } from "../guard";
 import { identity, staffAuth } from "../identity";
 import { addPersonFromForm, addPersonValues, type AddPersonState } from "./addPerson";
 import { reissueFromForm, reissueUsername, type ReissueState } from "./reissue";
 import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from "./resetPassword";
 
+// Without a session the guard sends the person to sign-in; another setup gate and a session below
+// aal2 answer here.
 const REFUSAL_KEYS: Record<ActionRefusal, string> = {
-  unauthenticated: REFUSAL_MESSAGE_KEYS.unauthenticated,
   setup_incomplete: "staff.setup.incomplete",
   aal2_required: "staff.authenticator.required",
 };
