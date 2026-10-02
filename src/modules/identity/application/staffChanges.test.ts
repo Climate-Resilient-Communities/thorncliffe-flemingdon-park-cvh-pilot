@@ -117,12 +117,11 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
     ]);
   });
 
-  it("reads the Admins' failed-sign-in locks inside the change through its transaction, and the banner's through the client", async () => {
+  it("does not read the Admins' failed-sign-in locks in a change (they do not count there), but the banner's through the client", async () => {
     const { service, db, lockReads } = setup([{ id: A }, { id: B }, { id: C }]);
 
     expect(await service.changeRole(A, C, "director")).toEqual({ ok: true, value: undefined });
-    expect(lockReads.mock.calls.length).toBeGreaterThan(0);
-    expect(lockReads.mock.calls.every(([executor]) => executor === TX)).toBe(true);
+    expect(lockReads).not.toHaveBeenCalled();
 
     lockReads.mockClear();
     await service.adminShortfallBanner(A);
