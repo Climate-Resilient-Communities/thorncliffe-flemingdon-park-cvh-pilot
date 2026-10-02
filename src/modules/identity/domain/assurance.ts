@@ -15,9 +15,11 @@ import { needsAuthenticator } from "./setupGate";
  * The names are policy actions (./policy.ts, S01.12): a route or action names its policy action,
  * the guard asks `can(role, action, context)` first and then, for these, requires `aal2`. Only
  * `accounts.manage` has server actions today (Add a person, Re-issue, Reset password) and so has
- * `buildings.manage` (rename, add and remove floors, confirm a building); each story that adds
- * one of the others names it on its route or action. `provider.manage` (S02.04) is
- * publishing a provider and confirming it.
+ * `buildings.manage` (rename, add and remove floors, confirm a building); each story
+ * that adds one of the others names it on its route or action. `provider.manage` (S02.04) is
+ * publishing a provider and confirming it. `sms.test_send` (S01.15, the first-text spike) is the
+ * one action that is not in the spine's list: a test text sent from production, Admin only; E06
+ * removes it with the spike.
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -31,6 +33,7 @@ export const PRIVILEGED_ACTIONS = [
   "spend.cap",
   "sending.pause",
   "buildings.manage",
+  "sms.test_send",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];
