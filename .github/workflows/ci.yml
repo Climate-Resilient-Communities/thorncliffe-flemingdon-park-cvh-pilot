@@ -55,6 +55,7 @@ jobs:
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
     steps:
       - name: Check Vercel settings
         id: vercel
@@ -65,34 +66,42 @@ jobs:
           [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
           [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
           [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
+          [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::warning title=Vercel preview not built::Checks passed, but no preview was deployed because the repository has no ${missing[*]}."
-            echo "configured=false" >> "$GITHUB_OUTPUT"
-          else
-            echo "configured=true" >> "$GITHUB_OUTPUT"
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
-      - if: steps.vercel.outputs.configured == 'true'
+          # Vercel makes a project's first deployment production, even from "vercel deploy".
+          headers=$(curl -sSI "${PRODUCTION_URL%/}/" || true)
+          if grep -qi '^x-vercel-error: *DEPLOYMENT_NOT_FOUND' <<< "$headers"; then
+            echo "::warning title=Vercel preview not built::Production has no deployment yet, and Vercel would make this preview production. The first deployment comes from main."
+            echo "deploy=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "deploy=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.vercel.outputs.deploy == 'true'
         uses: actions/checkout@v7
-      - if: steps.vercel.outputs.configured == 'true'
+      - if: steps.vercel.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
-      - if: steps.vercel.outputs.configured == 'true'
+      - if: steps.vercel.outputs.deploy == 'true'
         run: |
           npm ci
           npm install --global "$VERCEL_CLI"
-      - if: steps.vercel.outputs.configured == 'true'
+      - if: steps.vercel.outputs.deploy == 'true'
         run: vercel pull --yes --environment=preview
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
       # vercel build needs no token once vercel pull has fetched the project settings.
-      - if: steps.vercel.outputs.configured == 'true'
+      - if: steps.vercel.outputs.deploy == 'true'
         run: vercel build
         env:
           APP_VERSION: ${{ github.sha }}
       - name: Deploy preview
-        if: steps.vercel.outputs.configured == 'true'
+        if: steps.vercel.outputs.deploy == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
