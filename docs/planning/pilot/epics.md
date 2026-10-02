@@ -1473,6 +1473,18 @@ So that I can read them even when my phone is set to another language.
 **When** the unit tests run
 **Then** each returns the expected result; Pashto is never returned as Urdu or Dari when Pashto marker letters are present
 
+**Given** a question in a native script mixed with Latin-script words (for example "مجھے food bank چاہیے", "TCHC维修电话", "ਮੈਨੂੰ doctor ਚਾਹੀਦਾ")
+**When** the existing rules, applied to just the non-Latin part, are confident in one launch language
+**Then** the question is confident in that language; only if the native part is itself not confident (for example "food كتاب") does it stay `romanized_or_mixed` (owner decision 2026-10-02)
+
+**Given** Pashto written without Pashto-only letters (for example "مرسته")
+**When** `eld` reads it as `fa`
+**Then** it is returned as `prs` confident; this is an accepted pilot limitation, pinned by a fixture (owner decision 2026-10-02)
+
+**Given** Arabic-script text containing ھ or ہ (for example "کھانا", "مکان کا کرایہ")
+**When** no Pashto letter is present
+**Then** it is `ur` confident, because Dari and Pashto do not use those letters; Pashto letters still take precedence, and Pashto and Urdu letters together stay `ambiguous_arabic` (owner decision 2026-10-02)
+
 **Given** a question that is not confident
 **When** `query_lang` is chosen
 **Then** it is the page language
