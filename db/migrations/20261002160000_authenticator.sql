@@ -32,6 +32,14 @@ alter table staff_session add column aal2_at timestamptz;
 -- an authenticator reset (a recovery action, which the rule allows) and when promoting someone who
 -- is not an Admin. Adding the column to the trigger's list is a change to a trigger on an existing
 -- table, for a later migration with a contract note once this release is in production.
+-- KNOWN GAP until then: an app write that clears factor_enrolled_at on an Admin is not checked by
+-- the trigger (this release does it only in a reset or a promotion). Follow-up after S01.10 is in
+-- production: add factor_enrolled_at to the trigger's column list, with a `-- contract: <SHA of the
+-- S01.10 production release>` note.
+-- KNOWN GAP until then: an app write that clears factor_enrolled_at on an Admin (never done by this
+-- release outside a reset or a promotion) is not checked by the trigger. Follow-up after S01.10 is
+-- deployed: add factor_enrolled_at to the trigger's column list, with a `-- contract: <SHA of the
+-- S01.10 production release>` note.
 create or replace function staff_account_keep_two_usable_admins() returns trigger
 language plpgsql
 set search_path = ''
