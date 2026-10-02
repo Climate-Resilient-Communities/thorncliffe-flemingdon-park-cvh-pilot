@@ -19,6 +19,11 @@ function done(result: Extract<PublishResult, { ok: true }>): PublishState {
   const notes: string[] = [];
   if (result.resumedFiles > 0) notes.push(englishText("staff.directory.resumed", { files: result.resumedFiles }));
   if (result.counts.fallbacks - result.counts.stale > 0) notes.push(englishText("staff.directory.fallbacks", { count: result.counts.fallbacks - result.counts.stale }));
+  notes.push(
+    result.search === null
+      ? englishText("staff.directory.searchNone")
+      : englishText("staff.directory.searchData", { vectors: result.search.vectors, reused: result.search.reused, embedded: result.search.embedded }),
+  );
   return {
     status: "done",
     message: englishText("staff.directory.done", { number: result.release, providers: result.counts.providers, languages: result.counts.languages }),

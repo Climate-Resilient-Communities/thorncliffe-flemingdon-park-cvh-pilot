@@ -50,6 +50,37 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        smsTestProblem names the rule (never the value), no number is approved and
  *                                                        the page shows that texts are not set up. Set outside production it does
  *                                                        fail start-up: that is a secret-placement rule
+ * COHERE_API_KEY (and any other COHERE_ variable)
+ *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
+ *                                                        the one key of the pilot (AD-15), used by the directory publish job
+ *                                                        to embed each provider's search text (S03.02) and later by search
+ *                                                        and translation. Never absent by accident: a set-but-blank value
+ *                                                        fails start-up in every environment (unset the variable instead).
+ *                                                        Unset, a release is published without search data only while no
+ *                                                        release has had any; once the current release has search data, a
+ *                                                        publish without the key is refused (search_not_configured). Never a
+ *                                                        NEXT_PUBLIC_ variable (nor a variable whose name contains COHERE,
+ *                                                        nor one holding the key), never printed. Tests and ci:local never
+ *                                                        use it: the embedding model is behind a port with a fake
+ * SEARCH_EMBED_MODEL   server   optional                 the embedding model a release's search data is made with and every
+ *                                                        question is embedded with; default embed-v4.0 (AD-11; a config value
+ *                                                        the test set can change)
+ * SEARCH_THRESHOLD     server   optional                 the similarity (0 to 1) below which a question has no clear match,
+ *                                                        recorded on each release. PROVISIONAL default 0.3: S03.07 chooses it
+ *                                                        from the tuning subset; changing it means publishing a new release,
+ *                                                        which copies the existing vectors
+ * SEARCH_EMERGENCY_CATEGORIES
+ *                      server   optional                 comma-separated English names of the categories whose results put
+ *                                                        the 911 block first, recorded on each release; default
+ *                                                        "Support & Emergency Services". A name the catalogue does not have
+ *                                                        refuses the publish (search_config_invalid)
+ * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
+ *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
+ *                                                        tokens the directory publish may use in a calendar month
+ *                                                        (America/Toronto), counted from spend_event rows with purpose
+ *                                                        `publish` only, while Cohere's price is unknown. Questions and
+ *                                                        test-set runs have allowances of their own. The publish job refuses
+ *                                                        to embed past it. Defaults 500 calls and 2,000,000 tokens
  * CVH_FAKE_IDENTITY_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
@@ -111,9 +142,36 @@ const rawSchema = z.object({
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
+  COHERE_API_KEY: optionalText,
+  SEARCH_EMBED_MODEL: optionalText,
+  SEARCH_THRESHOLD: optionalText,
+  SEARCH_EMERGENCY_CATEGORIES: optionalText,
+  EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
+  EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
 
 type Raw = z.infer<typeof rawSchema>;
+
+/** The settings of search that a release records or the publish job obeys (S03.02). */
+export interface SearchSettings {
+  /** The Cohere embedding model id. */
+  embedModel: string;
+  /** Similarity below which a question has no clear match (provisional until S03.07). */
+  threshold: number;
+  /** English names of the categories that put the 911 block first. */
+  emergencyCategories: string[];
+  /** Embedding usage the calendar month may reach: calls and input tokens. */
+  allowance: { callsPerMonth: number; tokensPerMonth: number };
+}
+
+export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
+  embedModel: "embed-v4.0",
+  threshold: 0.3,
+  emergencyCategories: ["Support & Emergency Services"],
+  allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
+};
+
+const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
 export interface Env {
   environment: AppEnvironment;
@@ -136,6 +194,10 @@ export interface Env {
   fakeGuidesFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
+  /** Cohere's API key: set only in production. The publish job embeds search data when it is set, and publishes without when not. */
+  cohereApiKey?: string;
+  /** The search settings, with their defaults; they apply only where a key is configured. */
+  search: SearchSettings;
   /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
   staffPasswordPepper?: string;
   /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
@@ -361,6 +423,44 @@ function parseSmsTestAllowlist(value: string | undefined, environment: AppEnviro
   return { allowlist: [...new Set(entries)] };
 }
 
+/** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
+function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
+  if (value === undefined) return fallback;
+  if (!/^[0-9]{1,12}$/.test(value.trim()) || Number(value) < 1) {
+    problems.push(`${name}: must be a whole number of at least 1`);
+    return fallback;
+  }
+  return Number(value);
+}
+
+function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
+  const defaults = DEFAULT_SEARCH_SETTINGS;
+  const embedModel = raw.SEARCH_EMBED_MODEL?.trim() ?? defaults.embedModel;
+  if (!EMBED_MODEL_ID.test(embedModel)) problems.push("SEARCH_EMBED_MODEL: must be a model id such as embed-v4.0 (letters, digits, dots, hyphens, underscores)");
+  let threshold = defaults.threshold;
+  if (raw.SEARCH_THRESHOLD !== undefined) {
+    const text = raw.SEARCH_THRESHOLD.trim();
+    const value = Number(text);
+    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.3");
+    else threshold = value;
+  }
+  let emergencyCategories = defaults.emergencyCategories;
+  if (raw.SEARCH_EMERGENCY_CATEGORIES !== undefined) {
+    const names = [...new Set(raw.SEARCH_EMERGENCY_CATEGORIES.split(",").map((name) => name.trim()).filter((name) => name !== ""))];
+    if (names.length === 0 || names.some((name) => name.length > 100)) problems.push("SEARCH_EMERGENCY_CATEGORIES: must list at least one category name, separated by commas (each at most 100 characters)");
+    else emergencyCategories = names;
+  }
+  return {
+    embedModel,
+    threshold,
+    emergencyCategories,
+    allowance: {
+      callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
+      tokensPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
+    },
+  };
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
@@ -378,6 +478,20 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
       problems.push(`${present.join(", ")}: Twilio credentials are only allowed in production`);
     }
   }
+
+  if (environment !== "production") {
+    const present = Object.keys(source)
+      .filter((name) => name.startsWith("COHERE_") && (source[name] ?? "").trim() !== "")
+      .sort();
+    if (present.length > 0) {
+      problems.push(`${present.join(", ")}: Cohere credentials are only allowed in production`);
+    }
+  }
+  // A key that is set but blank is a deployment mistake that would silently switch search off: the variable must be unset or hold the key.
+  if (source.COHERE_API_KEY !== undefined && source.COHERE_API_KEY.trim() === "") {
+    problems.push("COHERE_API_KEY: set but blank; unset it or give it the key");
+  }
+  const search = parseSearchSettings(raw, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -403,8 +517,14 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   }
 
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
+  const cohereKey = raw.COHERE_API_KEY?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
+    if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && value.trim() !== "") {
+      if (name.toUpperCase().includes("COHERE") || (cohereKey !== undefined && value.trim() === cohereKey)) {
+        problems.push(`${name}: holds or names the Cohere key; NEXT_PUBLIC_ variables are sent to browsers`);
+      }
+    }
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
       problems.push(`${name}: holds a Supabase secret key; NEXT_PUBLIC_ variables are sent to browsers`);
     }
@@ -448,6 +568,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
         : undefined,
     smsTestAllowlist,
     smsTestProblem,
+    cohereApiKey: raw.COHERE_API_KEY?.trim(),
+    search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
     fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
