@@ -23,6 +23,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret
+ * CVH_FAKE_IDENTITY_FILE
+ *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
+ *                                                        in against the in-memory identity fake kept in this file instead of
+ *                                                        Supabase Auth (the end-to-end tests); never a real account
  */
 
 export type AppEnvironment = "production" | "preview" | "development";
@@ -52,6 +56,7 @@ const rawSchema = z.object({
   TWILIO_ACCOUNT_SID: optionalText,
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
+  CVH_FAKE_IDENTITY_FILE: optionalText,
 });
 
 type Raw = z.infer<typeof rawSchema>;
@@ -66,6 +71,8 @@ export interface Env {
   supabaseUrl?: string;
   supabasePublishableKey?: string;
   twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
+  /** Local development only: the identity fake's state file (end-to-end tests). */
+  fakeIdentityFile?: string;
 }
 
 export class EnvError extends Error {
@@ -199,6 +206,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     }
   }
 
+  const onVercel = raw.VERCEL !== undefined || raw.VERCEL_ENV !== undefined;
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_IDENTITY_FILE !== undefined) {
+    problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
+  }
+
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
@@ -235,6 +247,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
             messagingServiceSid: raw.TWILIO_MESSAGING_SERVICE_SID,
           }
         : undefined,
+    fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
   };
 }
 

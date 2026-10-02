@@ -20,4 +20,6 @@ export interface StaffAccount {
   status: StaffStatus;
   mustChangePassword: boolean;
   startingPasswordIssuedAt: Date | null;
+  /** When the starting password was used for its one successful sign-in (S01.07); null until then. */
+  startingPasswordUsedAt: Date | null;
 }

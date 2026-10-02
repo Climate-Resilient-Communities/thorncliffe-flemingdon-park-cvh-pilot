@@ -25,6 +25,8 @@ export interface AccountDeps {
   log: OperationalLog;
   now: () => Date;
   newId: () => string;
+  /** The failed-sign-in lock of a username (S01.07), an input of isUsableAdmin. */
+  signInLockedUntil: (db: Db, username: string) => Promise<Date | null>;
 }
 
 export interface CreatedAccount {
@@ -291,8 +293,7 @@ export function createAccountService(deps: AccountDeps) {
             status: account.status,
             mustChangePassword: account.mustChangePassword,
             authenticatorEnrolled: await idp.hasVerifiedAuthenticator(account.authUserId),
-            // The failed-sign-in lock arrives with S01.07, which supplies it here.
-            signInLockedUntil: null,
+            signInLockedUntil: await deps.signInLockedUntil(db, account.username),
           },
           now,
         );

@@ -78,5 +78,16 @@ export function supabaseIdentityProvider(config: SupabaseAdminConfig): IdentityP
       if (error) throw new Error(`Supabase Auth refused to list factors (status ${error.status ?? "unknown"}, code ${error.code ?? "none"})`);
       return data.factors.some((factor) => factor.factor_type === "totp" && factor.status === "verified");
     },
+
+    async setPassword(authUserId, password) {
+      try {
+        const { error } = await admin.updateUserById(authUserId, { password });
+        if (!error) return { ok: true };
+        if (REJECTED.has(error.code ?? "") || error.status === 422 || error.status === 400) return { ok: false, error: "rejected" };
+        return { ok: false, error: "unavailable" };
+      } catch {
+        return { ok: false, error: "unavailable" };
+      }
+    },
   };
 }
