@@ -1184,6 +1184,7 @@ So that residents read checked text, not a live machine translation.
 **When** it runs
 **Then** `guide` and `essential_number` are upserted from those files, running it twice changes nothing, and `seed.run` is audited
 **And** the 911 number and "when to call 911" text cannot be null in any language (the script refuses to load)
+**And** a null 911 translation falls back to the checked English with `translation.unavailable`; launch is refused by the launch check (`npm run seed:guides -- --launch-check`) until every launch language has a reviewed, current 911 translation (owner decision 2026-10-02)
 
 ### Story S02.10 — Resident reads a guide and the essential numbers
 
