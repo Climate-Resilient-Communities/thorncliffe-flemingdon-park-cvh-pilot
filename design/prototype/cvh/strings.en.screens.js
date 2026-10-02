@@ -1112,4 +1112,47 @@
       alreadyPublished: 'This provider is already published.', notPublished: 'This provider is not published.',
       forbidden: 'Only an Admin can change providers.',
       aal2Required: 'An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.' } } } });
+  /* Directory release (S02.05): the Admin publishes the directory as one numbered release. Not a prototype screen. */
+  m(en, { hub: { nav: { directory: 'Directory' } }, staff: { directory: {
+    title: 'Directory release',
+    lead: 'Publishing sends every published provider to residents as one numbered release, in every language. A release is never changed afterwards: the next publish makes a new one.',
+    none: 'No release has been published yet. Residents see no directory until one is.',
+    current: 'Current release: {number}, published {date}.',
+    currentCounts: 'Providers: {providers}. Categories: {categories}. Languages: {languages}.',
+    publishedNow: 'Providers published now: {published} of {total}.',
+    publish: 'Publish directory',
+    publishing: 'Publishing',
+    publishHint: 'This takes a few seconds. Residents keep the current release until the new one is complete.',
+    done: 'Release {number} is now current. Providers: {providers}. Languages: {languages}.',
+    resumed: 'Files already stored when this publish continued: {files}.',
+    fallbacks: 'Texts with no reviewed translation yet, shown in English: {count}.',
+    staleHeading: 'Translations not published because the English changed after they were made: {count}. Residents see the English for these.',
+    staleItem: '{name}: {field}, {language}',
+    fields: { services: 'Services', emergencyRole: 'Emergency role', name: 'Name' },
+    languages: {
+      en: 'English', ur: 'Urdu', ps: 'Pashto', tl: 'Tagalog', prs: 'Dari', gu: 'Gujarati', ta: 'Tamil', el: 'Greek',
+      sk: 'Slovak', bn: 'Bengali', hi: 'Hindi', pa: 'Punjabi', zh: 'Chinese (Simplified)', es: 'Spanish', fr: 'French',
+      zhHant: 'Chinese (Traditional)' },
+    failed: 'Publish failed: {reason}',
+    previousStays: 'The previous release is still current.',
+    lastFailed: 'The last publish failed: {reason}',
+    running: 'A publish is already running. Wait a few minutes, then check the current release here.',
+    inProgress: 'A publish is in progress: release {number}. Reload this page in a minute to see whether it finished.',
+    stalled: 'A publish stopped before it finished: release {number}. Press Publish directory to continue it; the files already stored are kept.',
+    catalogueMismatch: 'The database holds catalogue {loaded}, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.',
+    catalogueNeverLoaded: 'The database holds no loaded catalogue, this deployment has {deployed}: run `npm run seed:providers` from {commit}, then publish.',
+    commitNamed: 'commit {sha}',
+    commitUnknown: 'the commit this deployment was built from',
+    problems: 'What is wrong: {list}',
+    reasons: {
+      storageUnavailable: 'the files could not be stored',
+      invalidCatalogue: 'the catalogue could not be turned into a release',
+      catalogueUnreadable: 'the catalogue files are missing from this deployment',
+      catalogueNotLoaded: 'the database holds a different catalogue than this deployment',
+      searchMismatch: 'the search data does not match this release',
+      gaveUp: 'an earlier publish stopped three times',
+      unexpected: 'something went wrong' },
+    errors: {
+      forbidden: 'Only an Admin can publish the directory.',
+      aal2Required: 'An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.' } } } });
 })();

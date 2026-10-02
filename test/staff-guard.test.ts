@@ -324,6 +324,7 @@ const GENERIC_AAL2_MESSAGE = "This needs a sign-in confirmed with an authenticat
 const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/providers/actions.ts": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.",
   "src/app/staff/coverage/actions.ts": "An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
+  "src/app/staff/directory/actions.ts": "An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.",
 };
 
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {

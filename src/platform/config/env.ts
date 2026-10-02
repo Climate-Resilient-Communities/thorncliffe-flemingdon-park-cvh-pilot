@@ -18,7 +18,9 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        run with it: they use PRODUCTION_DATABASE_URL, as postgres on the
  *                                                        session pooler (port 5432)
  * SUPABASE_SECRET_KEY  server   production, preview      secret; Supabase Auth's Admin API (identity's adapter, built only in
- *                                                        server code and scripts/create-first-admin), never in a NEXT_PUBLIC_ variable
+ *                                                        server code and scripts/create-first-admin) and the private Storage
+ *                                                        bucket of the directory release files (src/app/directoryRelease.ts,
+ *                                                        S02.05), never in a NEXT_PUBLIC_ variable
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
  *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key.
  *                                                        The Supabase project's JWT expiry (Auth > Settings > "JWT expiry
@@ -52,7 +54,15 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
  *                                                        Supabase Auth (the end-to-end tests); never a real account
+ * CVH_FAKE_DIRECTORY_DIR
+ *                      server   optional; local development only (start-up fails on Vercel): the directory release files
+ *                                                        are kept in this folder instead of the private Supabase Storage
+ *                                                        bucket (the end-to-end tests); an absolute path (a relative one would
+ *                                                        name a different folder for each process that reads it)
  */
+
+/** A POSIX path from the root, or a Windows drive path. */
+const ABSOLUTE_PATH = /^(\/|[A-Za-z]:[\\/])/;
 
 export type AppEnvironment = "production" | "preview" | "development";
 
@@ -88,6 +98,7 @@ const rawSchema = z.object({
   TWILIO_FROM_NUMBER: optionalText,
   SMS_TEST_ALLOWLIST: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
+  CVH_FAKE_DIRECTORY_DIR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
 });
 
@@ -109,6 +120,8 @@ export interface Env {
   smsTestProblem?: string;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
+  /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
+  fakeDirectoryDir?: string;
   /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
   staffPasswordPepper?: string;
   /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
@@ -363,6 +376,12 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
   }
 
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_DIRECTORY_DIR !== undefined) {
+    problems.push("CVH_FAKE_DIRECTORY_DIR: the local directory store is only allowed in local development, never on Vercel");
+  } else if (raw.CVH_FAKE_DIRECTORY_DIR !== undefined && !ABSOLUTE_PATH.test(raw.CVH_FAKE_DIRECTORY_DIR)) {
+    problems.push("CVH_FAKE_DIRECTORY_DIR: must be an absolute path");
+  }
+
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
@@ -410,6 +429,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsTestAllowlist,
     smsTestProblem,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
+    fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };
 }

@@ -79,6 +79,7 @@ const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
+const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -91,6 +92,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/sms-test", kind: "page", file: "src/app/staff/sms-test/page.tsx", export: "default", route: "/staff/sms-test", action: "sms.test_send", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/coverage", kind: "page", file: "src/app/staff/coverage/page.tsx", export: "default", route: "/staff/coverage", action: "coverage.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
+  { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -272,6 +274,19 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: ADMIN_ONLY,
     }),
   ),
+  // S02.05: "Publish directory" (policy action `guide.publish`, Admins at aal2).
+  {
+    id: `action ${DIRECTORY_ACTIONS}#publishDirectoryAction`,
+    kind: "action",
+    file: DIRECTORY_ACTIONS,
+    export: "publishDirectoryAction",
+    route: "/staff/directory",
+    action: "guide.publish",
+    writes: "business",
+    gate: "hub",
+    form: {},
+    expected: ADMIN_ONLY,
+  },
 ];
 
 /** The endpoints anyone may call, without a session (S01.07): listed so the completeness check knows them. */

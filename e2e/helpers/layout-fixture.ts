@@ -13,14 +13,20 @@ const RTL = new Set(["ur", "ps", "prs"]);
 
 type Render = (name: string, props: unknown) => string;
 
-// The providers list imports its server actions, which reach the database; the harness renders it without a server,
-// so those imports are answered by e2e/helpers/provider-actions-stub.ts (a refusal and a done message to photograph).
+// The providers list and the Publish directory button import their server actions, which reach the database; the harness
+// renders them without a server, so those imports are answered by e2e/helpers/provider-actions-stub.ts and
+// e2e/helpers/directory-actions-stub.ts (a refusal and a done message to photograph).
+const STUBS: { importer: RegExp; stub: string }[] = [
+  { importer: /providers[\\/]ProviderList\.tsx$/, stub: "provider-actions-stub.ts" },
+  { importer: /directory[\\/]PublishDirectory\.tsx$/, stub: "directory-actions-stub.ts" },
+];
 const providerActionsStub: Plugin = {
-  name: "provider-actions-stub",
+  name: "server-actions-stub",
   setup(build) {
-    build.onResolve({ filter: /^\.\/actions$/ }, (args) =>
-      /providers[\\/]ProviderList\.tsx$/.test(args.importer) ? { path: path.join(ROOT, "e2e", "helpers", "provider-actions-stub.ts") } : undefined,
-    );
+    build.onResolve({ filter: /^\.\/actions$/ }, (args) => {
+      const match = STUBS.find(({ importer }) => importer.test(args.importer));
+      return match ? { path: path.join(ROOT, "e2e", "helpers", match.stub) } : undefined;
+    });
   },
 };
 

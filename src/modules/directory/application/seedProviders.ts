@@ -8,12 +8,17 @@
 //    (`in_catalogue = false`), never deleted, and its last-confirmed date is kept;
 //  - `published` and `last_confirmed` of a provider still in the file are never touched: the Hub's
 //    Admins own them (application/providers.ts);
+//  - a provider keeps `withheld`: the translations of the files that were not loaded although they exist (stale, machine,
+//    ...), by text key and language, which is how the directory release reports the stale ones (S02.05);
+//  - the run records the hash of the catalogue files it loaded in `catalogue_load`, in the same transaction, and takes the
+//    publish lock first, so a directory publish and a seed never overlap: a release is built from providers that
+//    `catalogue_load` describes;
 //  - when the file fails its schema, nothing is written and the refusal is audited.
 import { and, eq, inArray, notInArray, or, sql } from "drizzle-orm";
 import { record, recordRefusal } from "@/modules/audit";
 import type { Db } from "@/platform/db";
 import { catalogueTextId, sourceHash } from "../adapters/hash";
-import { category, provider, providerCategory, providerLocation } from "../adapters/schema";
+import { catalogueLoad, category, provider, providerCategory, providerLocation } from "../adapters/schema";
 import {
   formatProviderFailures,
   formatProviderReport,
@@ -22,6 +27,8 @@ import {
   type ProviderSeedPlan,
   type ProviderSeedReport,
 } from "../domain/providerCatalogue";
+import type { CatalogueVersion } from "./ports";
+import { PUBLISH_LOCK_KEY } from "./publishLock";
 
 const SEED_CODE = "provider_catalogue";
 
@@ -48,8 +55,12 @@ export interface ProviderSeedResult {
 
 const CHUNK = 200;
 
-/** Loads the provider catalogue. Throws ProviderSeedRefusedError, before any write, when the file fails its schema. */
-export async function seedProviders(db: Db, input: ProviderCatalogueInput): Promise<ProviderSeedResult> {
+/**
+ * Loads the provider catalogue. `version` is the sha256 of the catalogue files the input was read from (the same
+ * catalogueHash() the publish job computes) and the commit the seed runs from; it is recorded in `catalogue_load`.
+ * Throws ProviderSeedRefusedError, before any write, when the file fails its schema.
+ */
+export async function seedProviders(db: Db, input: ProviderCatalogueInput, version: CatalogueVersion): Promise<ProviderSeedResult> {
   const plan = planProviders(input);
   if (plan.failures.length > 0) {
     await recordRefusal(db, {
@@ -71,6 +82,8 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput): Prom
   const categoryIds = plan.categories.map((c) => c.id);
 
   await db.transaction(async (tx) => {
+    // Never while a publish is claiming or completing a release (and the other way round).
+    await tx.execute(sql`select pg_advisory_xact_lock(${PUBLISH_LOCK_KEY})`);
     // Categories first: the providers link to them.
     for (const c of plan.categories) {
       const rows = await tx
@@ -125,6 +138,7 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput): Prom
           contact: p.contact,
           texts: p.texts,
           translations: p.translations,
+          withheld: p.withheld,
           sourceNotes: p.sourceNotes,
           inCatalogue: true,
         })
@@ -137,12 +151,13 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput): Prom
             contact: sql`excluded.contact`,
             texts: sql`excluded.texts`,
             translations: sql`excluded.translations`,
+            withheld: sql`excluded.withheld`,
             sourceNotes: sql`excluded.source_notes`,
             inCatalogue: sql`excluded.in_catalogue`,
             updatedAt: sql`now()`,
           },
-          setWhere: sql`(${provider.name}, ${provider.subcategories}, ${provider.contact}, ${provider.texts}, ${provider.translations}, ${provider.sourceNotes}, ${provider.inCatalogue})
-            is distinct from (excluded.name, excluded.subcategories, excluded.contact, excluded.texts, excluded.translations, excluded.source_notes, excluded.in_catalogue)`,
+          setWhere: sql`(${provider.name}, ${provider.subcategories}, ${provider.contact}, ${provider.texts}, ${provider.translations}, ${provider.withheld}, ${provider.sourceNotes}, ${provider.inCatalogue})
+            is distinct from (excluded.name, excluded.subcategories, excluded.contact, excluded.texts, excluded.translations, excluded.withheld, excluded.source_notes, excluded.in_catalogue)`,
         })
         .returning({ id: provider.id });
       changed.providers += rows.length;
@@ -192,6 +207,9 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput): Prom
     linksRemoved = stale.length;
     linksAdded = missing.length;
     changed.categoryLinks = linksAdded + linksRemoved;
+
+    // What this run loaded, for the publish job to compare with the catalogue it was deployed with.
+    await tx.insert(catalogueLoad).values({ hash: version.hash, gitCommit: version.gitCommit });
 
     const { translations } = plan.report;
     const notYet = translations.unavailable.filter((u) => u.reason === "not_translated").reduce((sum, u) => sum + u.count, 0);

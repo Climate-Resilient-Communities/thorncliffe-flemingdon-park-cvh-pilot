@@ -109,7 +109,7 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: six pages that exist (Incidents, Coverage, People, Providers, Buildings and the first-text spike's Test text) and two that are listed but not built yet.
+      // The menu is the real one for an Admin: six pages that exist (Incidents, Coverage, People, Providers, Directory, Buildings and the first-text spike's Test text) and two that are listed but not built yet.
       await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(6);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(2);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
@@ -284,6 +284,7 @@ test.describe("what a screen reader reads", () => {
       ["/staff/people/", "People"],
       ["/staff/people/new", "People"],
       ["/staff/providers", "Providers"],
+      ["/staff/directory", "Directory"],
       ["/staff/sms-test", "Test text"],
       ["/staff/buildings", "Buildings"],
       ["/staff/coverage", "Coverage"],
@@ -326,7 +327,7 @@ test.describe("what a screen reader reads", () => {
       await expect(sideNav(page).getByRole("link", { name, disabled: true })).toHaveCount(1);
       await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(0);
     }
-    for (const name of ["Incidents", "Coverage", "People", "Buildings", "Test text"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
+    for (const name of ["Incidents", "Coverage", "People", "Directory", "Buildings", "Test text"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
 
     // Tab visits the pages and passes over the unbuilt ones.
     await sideNav(page).getByTestId("hub-nav-incidents").focus();

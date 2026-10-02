@@ -202,6 +202,44 @@ describe("toAuditRecord", () => {
     });
   });
 
+  describe("directory.published (S02.05)", () => {
+    const COUNTS = { release: 3, providers: 99, categories: 8, files: 16, translations: 1200, fallbacks: 300, stale: 2 };
+    const published = (overrides: Partial<AuditEvent> = {}) =>
+      event({ action: "directory.published", subjectType: "directory_release", subjectId: "3", meta: COUNTS, ...overrides } as Partial<AuditEvent>);
+
+    it("records the release number and counts, with the release as the subject", () => {
+      expect(toAuditRecord(published(), "ok")).toMatchObject({ action: "directory.published", subjectType: "directory_release", subjectId: "3", outcome: "ok", meta: COUNTS });
+      expect(toAuditRecord(published({ meta: { ...COUNTS, attempts: 2, resumed_files: 5 } } as Partial<AuditEvent>), "ok").meta).toMatchObject({ attempts: 2, resumed_files: 5 });
+    });
+
+    it("records a refusal with its reason, and for a failed publish the failure code", () => {
+      expect(toAuditRecord(published({ meta: { reason: "publish_failed", failure: "storage_unavailable" } } as Partial<AuditEvent>), "refused").meta).toEqual({
+        reason: "publish_failed",
+        failure: "storage_unavailable",
+      });
+      expect(toAuditRecord(published({ subjectId: null, meta: { reason: "publish_running" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "publish_running" });
+    });
+
+    it("rejects a failure that is not a code", () => {
+      expect(() => toAuditRecord(published({ meta: { reason: "publish_failed", failure: "the store said: ECONNREFUSED" } } as Partial<AuditEvent>), "refused")).toThrow(AuditRecordError);
+    });
+
+    it.each(["release", "providers", "categories", "files", "translations", "fallbacks", "stale"])("rejects an ok record with no %s", (field) => {
+      const rest = Object.fromEntries(Object.entries(COUNTS).filter(([key]) => key !== field));
+      expect(() => toAuditRecord(published({ meta: rest } as Partial<AuditEvent>), "ok")).toThrow(`meta is missing ${field}`);
+    });
+
+    it.each([
+      ["a hash", { catalogue_hash: "a".repeat(64) }],
+      ["a provider name", { name: "Thorncliffe Legal Clinic" }],
+      ["a stale text", { stale_texts: ["M001"] }],
+      ["a count that is not a number", { providers: "99" }],
+      ["a negative count", { providers: -1 }],
+    ])("rejects %s", (_, extra) => {
+      expect(() => toAuditRecord(published({ meta: { ...COUNTS, ...extra } } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    });
+  });
+
   it("does not echo a field name that could itself carry data", () => {
     expect(() => toAuditRecord(event({ meta: { "jane@example.com": 1 } as never }), "ok")).toThrow(
       "password.changed: meta has fields outside the schema: (unnamed)",
