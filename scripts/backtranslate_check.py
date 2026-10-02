@@ -13,6 +13,11 @@ Writes data/catalogue/review/backtranslation-<lang>.json
 Major problems are picked up by scripts/review_translations.py as 'redo', minor as 'review'.
 
   python3 scripts/backtranslate_check.py --langs ps,prs
+  python3 scripts/backtranslate_check.py --content --langs ps,prs   # guides and numbers (S02.09)
+
+With --content the input is data/catalogue/translations/content/<lang>.json and the output
+review/content-backtranslation-<lang>.json; a cached result is kept only while the translation
+it checked is unchanged.
 """
 import argparse
 import json
@@ -62,13 +67,20 @@ def main():
     ap.add_argument('--langs', required=True)
     ap.add_argument('--workers', type=int, default=3)
     ap.add_argument('--key-var', default='COHERE_API_KEY', help='name of the API key variable in .env')
+    ap.add_argument('--content', action='store_true', help='check the guides and essential numbers')
     args = ap.parse_args()
     key = api_key(args.key_var)
     REVIEW_DIR.mkdir(parents=True, exist_ok=True)
 
     for lang in args.langs.split(','):
-        texts = json.loads((TRANSLATIONS_DIR / f'{lang}.json').read_text(encoding='utf-8'))['texts']
-        path = REVIEW_DIR / f'backtranslation-{lang}.json'
+        if args.content:
+            import content_catalogue as cc
+            # Untranslated (null) texts have nothing to check.
+            texts = {k: r for k, r in cc.load_content(lang, cc.content_texts())['texts'].items() if r}
+            path = cc.REVIEW_DIR / f'content-backtranslation-{lang}.json'
+        else:
+            texts = json.loads((TRANSLATIONS_DIR / f'{lang}.json').read_text(encoding='utf-8'))['texts']
+            path = REVIEW_DIR / f'backtranslation-{lang}.json'
         results = json.loads(path.read_text(encoding='utf-8')) if path.exists() else {}
         # Keep a cached result only if it was for the same translation.
         results = {k: v for k, v in results.items() if k in texts and v.get('text') == texts[k]['text']}
