@@ -56,12 +56,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
           <p>{labels.removedNote}</p>
         ) : (
           <Stack gap="stack">
-            <form
-              action={(form) => {
-                setLast("confirm");
-                confirm(form);
-              }}
-            >
+            <form action={confirm} onSubmit={() => setLast("confirm")}>
               <input type="hidden" name="providerId" value={row.id} />
               <Stack gap="label">
                 <label htmlFor={`confirm-${row.id}`}>{labels.confirmDate}</label>
@@ -83,12 +78,7 @@ function ProviderRow({ row, today, labels }: { row: ProviderRowData; today: stri
                 <small id={`confirm-${row.id}-hint`}>{labels.dateHint}</small>
               </Stack>
             </form>
-            <form
-              action={(form) => {
-                setLast(row.published ? "unpublish" : "publish");
-                (row.published ? unpublish : publish)(form);
-              }}
-            >
+            <form action={row.published ? unpublish : publish} onSubmit={() => setLast(row.published ? "unpublish" : "publish")}>
               <input type="hidden" name="providerId" value={row.id} />
               <button className="tap" type="submit" disabled={busy} aria-describedby={messageId}>
                 {row.published ? labels.unpublish : labels.publish}
