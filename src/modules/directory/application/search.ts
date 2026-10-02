@@ -246,8 +246,9 @@ export function createSearch(deps: SearchDeps): SearchService {
       // No release, a release without search data, or no key: an expected outcome, and no model is called.
       if (!current || !data || !deps.embedder) return { kind: "none", releaseV: current?.number ?? null };
 
-      // The budget is already spent (a slow body or limiter): no call is made, and none is billed.
-      if (controller.signal.aborted) throw new StageError("timed_out");
+      // The budget is already spent (a slow body or limiter): no call is made, and none is billed. The clock is read here, not
+      // only the abort: the timer that aborts may not have run yet when the release read settles first.
+      if (controller.signal.aborted || clock() - started >= legMs) throw new StageError("timed_out");
       pending.model = data.model;
       pending.releaseV = data.releaseV;
       const callStarted = clock();
