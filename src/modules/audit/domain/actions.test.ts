@@ -213,6 +213,33 @@ describe("error messages never echo values", () => {
 
 describe("findSensitiveValue", () => {
   it.each([
+    ["letters with no @", "a".repeat(50_000)],
+    ["@ signs with no dot", "a@".repeat(25_000)],
+    ["dots and @ signs", "a@b.".repeat(12_500) + " "],
+    ["digits that are not a phone number", "1 ".repeat(9) + "x".repeat(50_000)],
+    ["spaces", " ".repeat(50_000)],
+    ["a local part that never ends", `${"a".repeat(50_000)}@`],
+  ])("scans 50,000 characters of %s in under 100 ms", (_name, value) => {
+    const start = performance.now();
+    findSensitiveValue(value);
+    expect(performance.now() - start).toBeLessThan(100);
+  });
+
+  it.each([
+    ["a@b.c", true],
+    ["see jane.doe@example.org now", true],
+    ["x@y@z.com", true],
+    ["@b.cc", false],
+    ["a@.c", false],
+    ["a@b.", false],
+    ["a@bc", false],
+    ["a @ b.c", false],
+    ["user@@host.org", false],
+  ])("finds an email address in %j: %s", (value, found) => {
+    expect(findSensitiveValue(value)).toBe(found ? "meta" : null);
+  });
+
+  it.each([
     ["4165550123", "meta"],
     ["(416) 555-0123", "meta"],
     ["+1 416 555 0123", "meta"],
