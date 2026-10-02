@@ -32,20 +32,21 @@ async function clear() {
 /** The hash of the data/catalogue/ files this server was built with: what `npm run seed:providers` records. */
 const deployedCatalogue = () => catalogueHash(path.join(process.cwd(), "data", "catalogue"));
 
-// The e2e database is disposable: the catalogue starts as the test's own.
+// The e2e database is disposable: the catalogue starts as the test's own. The providers carry ids of the committed catalogue
+// (M006, M007, M008) because a release names the neighbourhood of each from the Hub's list in data/catalogue/, which knows no other id.
 async function loadProviders() {
   await clear();
   // The seed ran with the catalogue the server carries.
   await sql`insert into catalogue_load (hash) values (${await deployedCatalogue()})`;
   await sql`insert into category (id, name, sort_order, labels) values ('e2e-category', 'Community Resilience', 90, ${sql.json({ en: "Community Resilience" })})`;
   const rows: [string, string, boolean][] = [
-    ["M901", "Thorncliffe Neighbourhood Office", true],
-    ["M902", "Flemingdon Health Centre", true],
-    ["M903", "East York Food Bank", false],
+    ["M007", "Thorncliffe Neighbourhood Office", true],
+    ["M006", "Flemingdon Health Centre", true],
+    ["M008", "East York Food Bank", false],
   ];
   for (const [id, name, published] of rows) {
-    // M901's Urdu translation is stale: the seed left it out of the texts and noted it in `withheld`.
-    const withheld = id === "M901" ? sql.json({ services: { ur: "stale" } }) : null;
+    // M007's Urdu translation is stale: the seed left it out of the texts and noted it in `withheld`.
+    const withheld = id === "M007" ? sql.json({ services: { ur: "stale" } }) : null;
     await sql`
       insert into provider (id, name, texts, withheld, published, published_at, last_confirmed)
       values (${id}, ${name}, ${sql.json({ services: { en: `Services of ${name}. Call 911 in an emergency.` } })}, ${withheld}, ${published}, ${published ? new Date() : null}, '2026-09-20')`;
@@ -165,11 +166,13 @@ test("an Admin publishes the directory: release 1 is current, audited, and the p
     expect(response.headers()["set-cookie"]).toBeUndefined();
     const file = DirectoryListingV1.parse(await response.json());
     expect(file).toMatchObject({ release_v: 1, lang });
-    expect(file.providers.map((p) => p.id)).toEqual(["M901", "M902"]);
+    expect(file.providers.map((p) => p.id)).toEqual(["M006", "M007"]);
+    // The neighbourhoods are the Hub's list (data/catalogue/provider-neighbourhoods.json), not the address the test gave both: M006 is Flemingdon Park, M007 Thorncliffe Park.
+    expect(file.providers.map((p) => [p.id, p.neighbourhood_ids])).toEqual([["M006", ["FP"]], ["M007", ["TP"]]]);
   }
   // English fallback for a language with no translation: the listing says so.
   const fr = DirectoryListingV1.parse(await (await request.get("/api/directory/1/fr.json")).json());
-  expect(fr.providers[0].services).toMatchObject({ status: "fallback_en", notice: "translation.unavailable", body: "Services of Thorncliffe Neighbourhood Office. Call 911 in an emergency." });
+  expect(fr.providers.find((p) => p.id === "M007")!.services).toMatchObject({ status: "fallback_en", notice: "translation.unavailable", body: "Services of Thorncliffe Neighbourhood Office. Call 911 in an emergency." });
 
   // An unknown release or language is a 404.
   for (const path of ["/api/directory/2/en.json", "/api/directory/0/en.json", "/api/directory/1/xx.json", "/api/directory/1/en", "/api/directory/abc/en.json"]) {
@@ -189,14 +192,14 @@ test("a change after a release is a new release: the first is never modified, an
   await expect(page.getByTestId("publish-message")).toHaveText(/^Release 1 is now current/);
   const first = await (await request.get("/api/directory/1/en.json")).text();
 
-  await sql`update provider set published = false, published_at = null where id = 'M902'`;
+  await sql`update provider set published = false, published_at = null where id = 'M006'`;
   await publishButton(page).click();
 
   await expect(page.getByTestId("publish-message")).toHaveText("Release 2 is now current. Providers: 1. Languages: 16.");
   await expectNoHorizontalScroll(page);
   expect(DirectoryManifestV1.parse(await (await request.get("/api/directory/manifest")).json()).release_v).toBe(2);
   expect(await (await request.get("/api/directory/1/en.json")).text()).toBe(first);
-  expect(DirectoryListingV1.parse(await (await request.get("/api/directory/2/en.json")).json()).providers.map((p) => p.id)).toEqual(["M901"]);
+  expect(DirectoryListingV1.parse(await (await request.get("/api/directory/2/en.json")).json()).providers.map((p) => p.id)).toEqual(["M007"]);
   expect((await sql`select number, is_current from directory_release order by number`).map((r) => [r.number, r.is_current])).toEqual([[1, false], [2, true]]);
 });
 
@@ -206,12 +209,12 @@ test("a publish that cannot finish says 'Publish failed' with the reason, keeps 
   await publishButton(page).click();
   await expect(page.getByTestId("publish-message")).toHaveText(/^Release 1 is now current/);
   // A provider with no English text cannot be turned into a listing: retrying cannot fix it, so the job gives up at once.
-  await sql`update provider set texts = ${sql.json({ services: { ur: "x" } })} where id = 'M902'`;
+  await sql`update provider set texts = ${sql.json({ services: { ur: "x" } })} where id = 'M006'`;
 
   await publishButton(page).click();
 
   await expect(page.getByTestId("publish-error")).toContainText("Publish failed: the catalogue could not be turned into a release. The previous release is still current.");
-  await expect(page.getByTestId("publish-error")).toContainText("provider M902 has no English services text");
+  await expect(page.getByTestId("publish-error")).toContainText("provider M006 has no English services text");
   await expect(page.getByTestId("publish-error")).toHaveAttribute("role", "alert");
   await expect(page.getByTestId("publish-message")).toHaveText("");
   expect(DirectoryManifestV1.parse(await (await request.get("/api/directory/manifest")).json()).release_v).toBe(1);

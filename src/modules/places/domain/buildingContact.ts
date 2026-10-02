@@ -8,6 +8,11 @@
  * (+14165550123) and shown as (416) 555-0123.
  */
 
+import { phone } from "@/contracts/phone";
+
+// The formatter itself lives in src/contracts/phone.ts (browser-safe) so the resident directory can show numbers on the phone too.
+export { displayPhone, phone } from "@/contracts/phone";
+
 /** The roles an Admin can choose, as stored. The resident page and the staff form show each as a translated label. */
 export const CONTACT_ROLES = ["superintendent", "building_management", "property_office"] as const;
 export type ContactRole = (typeof CONTACT_ROLES)[number];
@@ -35,17 +40,6 @@ export type ContactError = "role_invalid" | "phone_invalid" | "role_without_phon
 export type ContactCheck = { ok: true; contact: { role: ContactRole; phone: string } | null } | { ok: false; error: ContactError };
 
 /**
- * The prototype's phone formatter (design/prototype/cvh/lib.js, `phone`): accepts any common format and gives it back as
- * (416) 555-0123. `ok` is false unless the input has 10 digits, or 11 with a leading 1.
- */
-export function phone(input: unknown): { ok: boolean; digits: string; formatted: string | null } {
-  let digits = String(input || "").replace(/\D/g, "");
-  if (digits.length === 11 && digits[0] === "1") digits = digits.slice(1);
-  if (digits.length !== 10) return { ok: false, digits, formatted: null };
-  return { ok: true, digits, formatted: `(${digits.slice(0, 3)}) ${digits.slice(3, 6)}-${digits.slice(6)}` };
-}
-
-/**
  * The phone number as it is stored: +14165550123. A leading country code 1 is accepted ("+1 (416) 555-0123");
  * anything else that is not a ten-digit North American number is refused.
  */
@@ -55,11 +49,6 @@ export function normalizePhone(input: string): string | null {
   const { ok, digits } = phone(trimmed);
   if (!ok || !PHONE_DIGITS.test(digits)) return null;
   return `+1${digits}`;
-}
-
-/** A stored number as a resident or an Admin reads it: (416) 555-0123. */
-export function displayPhone(stored: string): string {
-  return phone(stored).formatted ?? stored;
 }
 
 /** The link that dials a stored number. */

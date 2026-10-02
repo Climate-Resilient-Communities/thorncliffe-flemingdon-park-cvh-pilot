@@ -56,8 +56,13 @@ const CATEGORIES: SnapshotCategory[] = [
   { id: "c-unused", sortOrder: 1, labels: { en: "Unused" }, translations: {} },
 ];
 
-function plan(providers: SnapshotProvider[], categories = CATEGORIES, number = 7) {
-  const input: ReleaseInput = { number, catalogueHash: HASH, providers, categories, hash: sha256Hex, zhHant };
+function plan(
+  providers: SnapshotProvider[],
+  categories = CATEGORIES,
+  number = 7,
+  neighbourhoods: ReleaseInput["neighbourhoods"] = Object.fromEntries(providers.map((p) => [p.id, ["TP"] as const])),
+) {
+  const input: ReleaseInput = { number, catalogueHash: HASH, providers, categories, neighbourhoods, hash: sha256Hex, zhHant };
   const result = planRelease(input);
   const files = Object.fromEntries(result.files.map((file) => [file.lang, DirectoryListingV1.parse(JSON.parse(file.body))]));
   return { ...result, files, raw: result.files };
@@ -94,6 +99,21 @@ describe("planRelease: the files of a release", () => {
       expect(file.sha256).toBe(sha256Hex(file.body));
       expect(file.bytes).toBe(Buffer.byteLength(file.body, "utf8"));
     }
+  });
+
+  it("gives each provider the neighbourhoods of the Hub's list in every language's file, whatever its address is", () => {
+    // M001 is at an M4H address and M002 at an M3C one, but the list decides: the address is never read for it.
+    const providers = [provider("M001"), provider("M002", { locations: [{ street: "5 Gateway Blvd", city: "North York", postal: "M3C 1H9", lat: 43.71, lng: -79.33 }] }), provider("M003"), provider("M004")];
+    const { files } = plan(providers, CATEGORIES, 7, { M001: [], M002: ["TP"], M003: ["TP", "FP"], M004: ["FP"] });
+
+    for (const lang of LANG_CODES) expect(files[lang].providers.map((p) => [p.id, p.neighbourhood_ids])).toEqual([["M001", []], ["M002", ["TP"]], ["M003", ["TP", "FP"]], ["M004", ["FP"]]]);
+  });
+
+  it("stops the release, naming the provider, when the Hub's list does not name a published provider", () => {
+    const attempt = () => plan([provider("M001"), provider("M002")], CATEGORIES, 7, { M001: ["TP"] });
+
+    expect(attempt).toThrow(ReleaseDataError);
+    expect(attempt).toThrow("provider M002 is not in provider-neighbourhoods.json");
   });
 
   it("an empty snapshot is a valid release with no providers", () => {

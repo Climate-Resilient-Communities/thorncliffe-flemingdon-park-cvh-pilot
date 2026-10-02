@@ -1196,6 +1196,21 @@
     airNone: 'None', airIndividual: 'Individual units',
     roles: { superintendent: 'Superintendent', buildingManagement: 'Building management', propertyOffice: 'Property office' },
     contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}' } });
+  /* The directory a resident browses at /{lang}/directory and /{lang}/directory/{id} (S02.06, FR-D2, UX-DR10, UX-DR11). Not a prototype screen: R-10, R-12, R-13 show the same facts. */
+  m(en, { directory: {
+    title: 'Services and organisations',
+    lead: 'What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.',
+    count: '{n} services', countOne: '1 service',
+    topic: 'Topic', emergency: 'Helps in an emergency', emergencyRole: 'Emergency role',
+    lastConfirmed: 'Last confirmed by the Hub {date}',
+    lastUpdated: 'Last updated {time}',
+    loading: 'Loading the directory',
+    couldNotLoad: 'The directory could not load',
+    couldNotLoadBody: 'The Hub can help you find a service by phone.',
+    couldNotLoadNumbers: 'The numbers page lists the other numbers you may need.',
+    numbersLink: 'See the essential numbers',
+    backToList: 'All services and organisations',
+    suggestApply: 'Show only {place}' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },
