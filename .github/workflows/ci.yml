@@ -58,30 +58,31 @@ jobs:
       PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
     steps:
       - name: Check Vercel settings
-        id: vercel
+        id: settings
         env:
           HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+          HAS_BYPASS: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET != '' }}
         run: |
           missing=()
           [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
+          [ "$HAS_BYPASS" = true ] || missing+=("secret VERCEL_AUTOMATION_BYPASS_SECRET")
           [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
           [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
           [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
           if [ ${#missing[@]} -gt 0 ]; then
             echo "::warning title=Vercel preview not built::Checks passed, but no preview was deployed because the repository has no ${missing[*]}."
-            echo "deploy=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Vercel makes a project's first deployment production, even from "vercel deploy".
-          headers=$(curl -sSI "${PRODUCTION_URL%/}/" || true)
-          if grep -qi '^x-vercel-error: *DEPLOYMENT_NOT_FOUND' <<< "$headers"; then
-            echo "::warning title=Vercel preview not built::Production has no deployment yet, and Vercel would make this preview production. The first deployment comes from main."
-            echo "deploy=false" >> "$GITHUB_OUTPUT"
+            echo "ok=false" >> "$GITHUB_OUTPUT"
           else
-            echo "deploy=true" >> "$GITHUB_OUTPUT"
+            echo "ok=true" >> "$GITHUB_OUTPUT"
           fi
-      - if: steps.vercel.outputs.deploy == 'true'
+      - if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
+      - name: Confirm production already has a deployment
+        id: vercel
+        if: steps.settings.outputs.ok == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: scripts/ci/preview-gate.sh
       - if: steps.vercel.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
@@ -101,12 +102,23 @@ jobs:
         env:
           APP_VERSION: ${{ github.sha }}
       - name: Deploy preview
+        id: deploy
         if: steps.vercel.outputs.deploy == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           url=$(vercel deploy --prebuilt --json | jq -er .url)
+          url="https://${url#https://}"
+          echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+      # Previews are behind Deployment Protection; the bypass secret is sent as a header.
+      - name: Smoke check the preview
+        if: steps.vercel.outputs.deploy == 'true'
+        run: npm run test:smoke
+        env:
+          SMOKE_BASE_URL: ${{ steps.deploy.outputs.url }}
+          EXPECTED_VERSION: ${{ github.sha }}
+          VERCEL_AUTOMATION_BYPASS_SECRET: ${{ secrets.VERCEL_AUTOMATION_BYPASS_SECRET }}
 
   production:
     name: Vercel production
@@ -144,40 +156,41 @@ jobs:
       - run: |
           npm ci
           npm install --global "$VERCEL_CLI"
-      # inspect, promote and rollback ignore VERCEL_ORG_ID, so they are given the team as --scope.
+      - name: Check this commit is still the head of main
+        id: head
+        run: scripts/ci/main-head.sh
       - name: Record the current production deployment
         id: previous
+        if: steps.head.outputs.current == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: |
-          if id=$(vercel inspect "$PRODUCTION_URL" --json --scope "$VERCEL_ORG_ID" | jq -er .id); then
-            echo "id=$id" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          # Only a URL that serves nothing yet (first deploy) may go without a rollback target.
-          status=$(curl -s -o /dev/null -w '%{http_code}' "${PRODUCTION_URL%/}/api/health" || true)
-          if [ "$status" = 404 ]; then
-            echo "::warning title=No rollback target::No deployment serves $PRODUCTION_URL yet, so a failed smoke check cannot be rolled back."
-          else
-            echo "::error title=Production not deployed::Could not look up the deployment serving $PRODUCTION_URL (it answers HTTP $status), so a failed smoke check could not be rolled back."
-            exit 1
-          fi
-      - run: vercel pull --yes --environment=production
+        run: scripts/ci/rollback-target.sh
+      - if: steps.head.outputs.current == 'true'
+        run: vercel pull --yes --environment=production
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-      - run: vercel build --prod
+      - if: steps.head.outputs.current == 'true'
+        run: vercel build --prod
         env:
           APP_VERSION: ${{ github.sha }}
       # Deploy without taking the production domains, then promote explicitly:
       # after an instant rollback Vercel stops assigning them automatically.
       - name: Deploy
         id: deploy
+        if: steps.head.outputs.current == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
           url=$(vercel deploy --prebuilt --prod --skip-domain --json | jq -er .url)
           echo "url=$url" >> "$GITHUB_OUTPUT"
+      # Checked again just before promoting: main may have moved during the build.
+      - name: Check this commit is still the head of main before promoting
+        id: head_at_promote
+        if: steps.deploy.outcome == 'success'
+        run: scripts/ci/main-head.sh
+      # promote and rollback ignore VERCEL_ORG_ID, so they are given the team as --scope.
       - name: Promote to production
+        if: steps.head_at_promote.outputs.current == 'true'
         run: vercel promote "$DEPLOYMENT_URL" --yes --scope "$VERCEL_ORG_ID"
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
@@ -185,7 +198,7 @@ jobs:
       # Runs even if promote failed: the promotion may still have gone through.
       - name: Smoke check production
         id: smoke
-        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
+        if: ${{ !cancelled() && steps.head_at_promote.outputs.current == 'true' }}
         run: npm run test:smoke
         env:
           SMOKE_BASE_URL: ${{ vars.PRODUCTION_URL }}
