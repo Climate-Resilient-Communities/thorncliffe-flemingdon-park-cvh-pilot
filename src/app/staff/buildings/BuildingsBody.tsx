@@ -1,4 +1,5 @@
 import { Stack } from "@/ui";
+import type { EditState } from "./editFloors";
 import { AddFloorForm, ConfirmForm, FloorRow, type FloorAction } from "./FloorForms";
 import type { BuildingView, BuildingsScreen, ListView, MissingView } from "./view";
 
@@ -7,6 +8,15 @@ export interface BuildingActions {
   rename: FloorAction;
   remove: FloorAction;
   confirm: FloorAction;
+}
+
+/** Test seam: forms already in the state they reach after a refusal (the screenshots show them). */
+export interface BuildingsInitial {
+  /** By floor id. */
+  rename?: Record<string, EditState>;
+  remove?: Record<string, EditState>;
+  add?: EditState;
+  confirm?: EditState;
 }
 
 function Notice({ text }: { text?: string }) {
@@ -51,7 +61,7 @@ function List({ view }: { view: ListView }) {
   );
 }
 
-function Building({ view, actions }: { view: BuildingView; actions: BuildingActions }) {
+function Building({ view, actions, initial }: { view: BuildingView; actions: BuildingActions; initial?: BuildingsInitial }) {
   return (
     <Stack gap="section-hub">
       <Stack gap="related">
@@ -82,14 +92,23 @@ function Building({ view, actions }: { view: BuildingView; actions: BuildingActi
           {view.floors.empty && <p>{view.floors.empty}</p>}
           <Stack as="ul" gap="related">
             {view.floors.rows.map((floor) => (
-              <FloorRow key={floor.id} rsn={view.rsn} floor={floor} labels={view.floors} rename={actions.rename} remove={actions.remove} />
+              <FloorRow
+                key={floor.id}
+                rsn={view.rsn}
+                floor={floor}
+                labels={view.floors}
+                rename={actions.rename}
+                remove={actions.remove}
+                initialRename={initial?.rename?.[floor.id]}
+                initialRemove={initial?.remove?.[floor.id]}
+              />
             ))}
           </Stack>
         </Stack>
       </section>
 
-      <AddFloorForm rsn={view.rsn} labels={view.add} action={actions.add} />
-      {view.confirm && <ConfirmForm rsn={view.rsn} labels={view.confirm} action={actions.confirm} />}
+      <AddFloorForm rsn={view.rsn} labels={view.add} action={actions.add} initialState={initial?.add} />
+      {view.confirm && <ConfirmForm rsn={view.rsn} labels={view.confirm} action={actions.confirm} initialState={initial?.confirm} />}
 
       <section aria-labelledby="facts-title">
         <Stack gap="related">
@@ -120,8 +139,8 @@ function Missing({ view }: { view: MissingView }) {
 }
 
 /** The screen's body for a resolved view: the list of buildings, one building's editor, or a building that is not there. */
-export function BuildingsBody({ screen, actions }: { screen: BuildingsScreen; actions: BuildingActions }) {
+export function BuildingsBody({ screen, actions, initial }: { screen: BuildingsScreen; actions: BuildingActions; initial?: BuildingsInitial }) {
   if (screen.kind === "list") return <List view={screen} />;
-  if (screen.kind === "building") return <Building view={screen} actions={actions} />;
+  if (screen.kind === "building") return <Building view={screen} actions={actions} initial={initial} />;
   return <Missing view={screen} />;
 }
