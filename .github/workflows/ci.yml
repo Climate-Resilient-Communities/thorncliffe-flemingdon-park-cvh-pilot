@@ -93,6 +93,12 @@ jobs:
       - run: npm run build
         env:
           APP_VERSION: ${{ github.sha }}
+      # Staff sign-in and the first setup gate in a browser (S01.07), against the build just made, with
+      # the identity fake instead of Supabase Auth and the disposable database above (as cvh_app_login).
+      - name: Staff sign-in end to end
+        run: npm run test:staff
+        env:
+          STAFF_TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       # The resident shell in every language at 320, 390 and 768 px (baseline screenshots, right-to-left
       # mirroring, light/navy boxes, language control, fonts, no cookies), against the build just made. It runs
       # in the pinned Playwright image (scripts/resident-docker.sh), the one environment the baselines are made
