@@ -19,6 +19,12 @@ import { getEnv } from "../config/env";
  */
 export type Db = PostgresJsDatabase & { $client: postgres.Sql };
 
+/** The transaction Drizzle passes to `db.transaction(async (tx) => ...)`. */
+export type DbTransaction = Parameters<Parameters<Db["transaction"]>[0]>[0];
+
+/** Where a write can run: the client itself, or inside a caller's transaction. */
+export type DbExecutor = Db | DbTransaction;
+
 /** Creates a client for a pooler URL. No connection is opened until the first query. */
 export function createDb(url: string): Db {
   const client = postgres(url, { prepare: false });
