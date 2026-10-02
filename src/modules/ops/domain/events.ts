@@ -13,6 +13,9 @@ export const PUBLISH_FAILURE_REASONS = [
   "catalogue_unreadable",
   "catalogue_not_loaded",
   "search_mismatch",
+  "embedding_unavailable",
+  "usage_allowance_exceeded",
+  "search_config_invalid",
   "gave_up",
   "unexpected",
 ] as const;

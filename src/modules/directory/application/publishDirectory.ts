@@ -12,6 +12,11 @@
 //    passes behind it is closed `gave_up` and that failure is the answer of this press; the next one builds;
 //  - store: each file in turn goes to the private bucket, then is marked stored (under the lease token);
 //    a resumed job skips the files already marked;
+//  - search (S03.02): when the deployment has an embedding model, the claim also stages the search text of each
+//    provider of the same snapshot; after the files, the job embeds what the previous release's vectors do not
+//    already hold, in chunks it keeps in the release row, and stores `releases/{n}/vectors.json` (releaseSearch.ts).
+//    A stopped job resumes after the last kept chunk; the vectors are checked against the listing files before the
+//    release can be made current;
 //  - complete: one transaction, again under the advisory lock, checks every file is stored and any search
 //    data matches, clears the previous release's `is_current`, sets this one's, and writes the audit record.
 //    Readers see the old release or the new one, never a mix (one unique partial index, two statements, one
@@ -32,7 +37,6 @@ import { catalogueLoad, directoryRelease, category, provider, providerCategory, 
 import {
   RELEASE_LANGS,
   ReleaseDataError,
-  ReleaseSearchSchema,
   checkReleaseSearch,
   planRelease,
   type ReleaseCounts,
@@ -42,6 +46,8 @@ import {
 } from "../domain/directoryRelease";
 import type { CatalogueMismatch, PublishDeps, PublishFailure, PublishFailureCode } from "./ports";
 import { PUBLISH_LOCK_KEY } from "./publishLock";
+import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
+import { buildSearchData, planSearch, verifySearchData } from "./releaseSearch";
 
 export { PUBLISH_LOCK_KEY };
 
@@ -59,7 +65,16 @@ export const RESUME_WINDOW_MS = 30 * 60 * 1000;
 const BACKOFF_MS = [500, 1500];
 
 export type PublishResult =
-  | { ok: true; release: number; counts: ReleaseCounts; report: ReleaseReport; attempts: number; resumedFiles: number }
+  | {
+      ok: true;
+      release: number;
+      counts: ReleaseCounts;
+      report: ReleaseReport;
+      attempts: number;
+      resumedFiles: number;
+      /** The release's search data: how many vectors it holds and how many were copied from the previous release; null for a release without search. */
+      search: { vectors: number; reused: number; embedded: number } | null;
+    }
   | {
       ok: false;
       reason: PublishFailureCode | "publish_running";
@@ -69,25 +84,6 @@ export type PublishResult =
       /** For `catalogue_not_loaded`: what the database holds and what this deployment has. */
       catalogue?: CatalogueMismatch;
     };
-
-/** A step that failed for a reason the Admin is told, and whether another pass can fix it. */
-class PublishStepError extends Error {
-  override name = "PublishStepError";
-  constructor(
-    readonly code: PublishFailureCode,
-    readonly retryable: boolean,
-    /** What the Admin is told beyond the code: ids and codes of what is wrong, never text from the catalogue. */
-    readonly detail: string[] = [],
-    readonly catalogue?: CatalogueMismatch,
-  ) {
-    super(code);
-  }
-}
-
-/** The job's claim on the release was taken over (or the release was closed): this run stops without touching anything. */
-class LeaseLostError extends Error {
-  override name = "LeaseLostError";
-}
 
 const pad = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 
@@ -122,13 +118,7 @@ async function takeSnapshot(tx: DbTransaction): Promise<{ providers: SnapshotPro
 }
 
 // ---------------------------------------------------------------- the steps
-interface Claim {
-  release: number;
-  token: string;
-  /** The pass number this claim is (1 for a new release). */
-  attempts: number;
-  resumedFiles: number;
-}
+type Claim = ReleaseClaim;
 
 /** A stopped build the claim closed after three passes; reported once, with the claim that closed it. */
 interface Closed {
@@ -198,6 +188,8 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
       files[file.lang] = { path: `releases/${next}/${file.lang}.json`, sha256: file.sha256, bytes: file.bytes, stored_at: null };
       staged[file.lang] = file.body;
     }
+    // The search text of the same snapshot, staged beside the listings: the vectors can only describe these providers.
+    if (deps.search) staged.search = planSearch(deps.search, providers, categories);
     await tx.insert(directoryRelease).values({
       number: next,
       status: "building",
@@ -257,20 +249,29 @@ async function storeFiles(db: Db, deps: PublishDeps, claim: Claim, clock: () => 
 }
 
 /** Makes the release current, in one transaction. */
-async function completeRelease(db: Db, deps: PublishDeps, claim: Claim, actorStaffId: string, clock: () => Date): Promise<{ counts: ReleaseCounts; report: ReleaseReport }> {
-  const [row] = await db.select({ catalogueHash: directoryRelease.catalogueHash }).from(directoryRelease).where(eq(directoryRelease.number, claim.release));
-  if (!row) throw new LeaseLostError();
-  // E03: the search data of this release, asked outside the transaction (it is a call out). Checked again where it counts, below.
-  const search = deps.search ? await deps.search({ number: claim.release, catalogueHash: row.catalogueHash }) : null;
-  const checkedSearch = search === null ? null : ReleaseSearchSchema.parse(search);
+async function completeRelease(
+  db: Db,
+  deps: PublishDeps,
+  claim: Claim,
+  actorStaffId: string,
+  clock: () => Date,
+  built: { vectors: number; reused: number; embedded: number } | null,
+): Promise<{ counts: ReleaseCounts; report: ReleaseReport; search: { vectors: number; reused: number; embedded: number } | null }> {
   await deps.hook?.("before_current", { release: claim.release });
+  // S03.02: the vectors file is read back from the store and checked against the listing files outside the transaction (it is a
+  // call out, and the release's files are fixed by now); the transaction checks again, under the row lock, that it is still the
+  // data that was checked.
+  const verified = await verifySearchData(db, deps, claim);
+  await deps.hook?.("search_verified", { release: claim.release });
   const now = clock();
   return db.transaction(async (tx) => {
     await tx.execute(sql`select pg_advisory_xact_lock(${PUBLISH_LOCK_KEY})`);
     const [release] = await tx.select().from(directoryRelease).where(eq(directoryRelease.number, claim.release)).for("update");
     if (!release || release.status !== "building" || release.leaseToken !== claim.token) throw new LeaseLostError();
-    const verdict = checkReleaseSearch({ number: release.number, catalogueHash: release.catalogueHash }, checkedSearch);
-    if (!verdict.ok) throw new PublishStepError("search_mismatch", false);
+    const verdict = checkReleaseSearch({ number: release.number, catalogueHash: release.catalogueHash }, verified?.search ?? null);
+    if (!verdict.ok) throw new PublishStepError("search_mismatch", false, [`search:${verdict.problem}`]);
+    if (verified !== null && (release.search as { sha256?: unknown } | null)?.sha256 !== verified.record.sha256) throw new PublishStepError("search_mismatch", false, ["vectors_changed"]);
+    if (verified === null && release.search !== null) throw new PublishStepError("search_mismatch", false, ["record_unchecked"]);
     if (RELEASE_LANGS.some((lang) => release.files[lang]?.stored_at == null)) throw new PublishStepError("unexpected", false);
 
     await tx.update(directoryRelease).set({ isCurrent: false }).where(eq(directoryRelease.isCurrent, true));
@@ -282,7 +283,6 @@ async function completeRelease(db: Db, deps: PublishDeps, claim: Claim, actorSta
         isCurrent: true,
         currentSince: now,
         staged: null,
-        search: checkedSearch === null ? null : { embed_model: checkedSearch.embedModel, vectors_path: checkedSearch.vectorsPath, catalogue_hash: checkedSearch.catalogueHash, release_v: checkedSearch.releaseV },
         leaseToken: null,
         leaseUntil: null,
       })
@@ -306,7 +306,7 @@ async function completeRelease(db: Db, deps: PublishDeps, claim: Claim, actorSta
         resumed_files: claim.resumedFiles,
       },
     });
-    return { counts, report };
+    return { counts, report, search: built };
   });
 }
 
@@ -404,8 +404,9 @@ export async function publishDirectory(db: Db, deps: PublishDeps, actorStaffId: 
       claim = claimed.claim;
       await deps.hook?.("snapshot_taken", { release: claim.release });
       await storeFiles(db, deps, claim, clock, deadline);
-      const done = await completeRelease(db, deps, claim, actorStaffId, clock);
-      return { ok: true, release: claim.release, counts: done.counts, report: done.report, attempts: claim.attempts, resumedFiles: claim.resumedFiles };
+      const built = await buildSearchData(db, deps, claim, { clock, leaseMs: deps.leaseMs ?? DEFAULT_LEASE_MS, deadline });
+      const done = await completeRelease(db, deps, claim, actorStaffId, clock, built);
+      return { ok: true, release: claim.release, counts: done.counts, report: done.report, attempts: claim.attempts, resumedFiles: claim.resumedFiles, search: done.search };
     } catch (error) {
       if (error instanceof LeaseLostError) return await running(claim?.release ?? null, claim?.attempts ?? localAttempts);
       const step = classify(error);

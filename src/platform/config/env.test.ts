@@ -566,3 +566,67 @@ describe("the first-text spike's variables (S01.15)", () => {
     expect(problemsOf({ ...preview, TWILIO_FROM_NUMBER: FROM }).join("\n")).toMatch(/TWILIO_FROM_NUMBER: Twilio credentials are only allowed in production/);
   });
 });
+
+describe("Cohere and the search settings (S03.02)", () => {
+  const KEY = "co-SuperSecretKey123";
+
+  it.each([
+    ["preview", preview],
+    ["development (Vercel)", { ...local, VERCEL_ENV: "development" }],
+    ["local", local],
+  ])("the Cohere key fails start-up in %s: a real key exists only in production", (_name, base) => {
+    expect(problemsOf({ ...base, COHERE_API_KEY: KEY })).toEqual(["COHERE_API_KEY: Cohere credentials are only allowed in production"]);
+  });
+
+  it("covers every COHERE_ variable and never prints a value", () => {
+    const problems = problemsOf({ ...preview, COHERE_API_KEY: KEY, COHERE_OTHER: KEY });
+
+    expect(problems).toEqual(["COHERE_API_KEY, COHERE_OTHER: Cohere credentials are only allowed in production"]);
+    expect(problems.join("\n")).not.toContain(KEY);
+  });
+
+  it("treats an empty key as absent, and the key is optional in production: a release then has no search data", () => {
+    expect(() => parseEnv({ ...preview, COHERE_API_KEY: " " })).not.toThrow();
+    expect(parseEnv(production).cohereApiKey).toBeUndefined();
+    expect(parseEnv({ ...production, COHERE_API_KEY: ` ${KEY} ` }).cohereApiKey).toBe(KEY);
+  });
+
+  it("has defaults: embed-v4.0, a provisional threshold, the emergency category and a monthly allowance", () => {
+    expect(parseEnv(local).search).toEqual({
+      embedModel: "embed-v4.0",
+      threshold: 0.3,
+      emergencyCategories: ["Support & Emergency Services"],
+      allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
+    });
+  });
+
+  it("reads the model, threshold, emergency categories and allowance", () => {
+    expect(
+      parseEnv({
+        ...production,
+        SEARCH_EMBED_MODEL: " embed-multilingual-v3.0 ",
+        SEARCH_THRESHOLD: "0.42",
+        SEARCH_EMERGENCY_CATEGORIES: " Support & Emergency Services , Crisis Lines,, Crisis Lines",
+        EMBED_ALLOWANCE_CALLS_PER_MONTH: "40",
+        EMBED_ALLOWANCE_TOKENS_PER_MONTH: "100000",
+      }).search,
+    ).toEqual({
+      embedModel: "embed-multilingual-v3.0",
+      threshold: 0.42,
+      emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
+      allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
+    });
+  });
+
+  it.each([
+    ["SEARCH_EMBED_MODEL", "embed v4", /SEARCH_EMBED_MODEL: must be a model id/],
+    ["SEARCH_THRESHOLD", "1.5", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_THRESHOLD", "high", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_THRESHOLD", "-0.2", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_EMERGENCY_CATEGORIES", " , ", /SEARCH_EMERGENCY_CATEGORIES: must list at least one category name/],
+    ["EMBED_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
+    ["EMBED_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
+  ])("refuses a bad %s (%s) and names the variable", (name, value, message) => {
+    expect(problemsOf({ ...production, [name]: value }).join("\n")).toMatch(message);
+  });
+});

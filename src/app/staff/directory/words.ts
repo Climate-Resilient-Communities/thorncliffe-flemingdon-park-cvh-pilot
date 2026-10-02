@@ -9,6 +9,9 @@ const REASON_KEYS: Record<PublishFailureCode, string> = {
   catalogue_unreadable: "staff.directory.reasons.catalogueUnreadable",
   catalogue_not_loaded: "staff.directory.reasons.catalogueNotLoaded",
   search_mismatch: "staff.directory.reasons.searchMismatch",
+  embedding_unavailable: "staff.directory.reasons.embeddingUnavailable",
+  usage_allowance_exceeded: "staff.directory.reasons.usageAllowanceExceeded",
+  search_config_invalid: "staff.directory.reasons.searchConfigInvalid",
   gave_up: "staff.directory.reasons.gaveUp",
   unexpected: "staff.directory.reasons.unexpected",
 };

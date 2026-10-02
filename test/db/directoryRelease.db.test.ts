@@ -24,9 +24,9 @@ import {
   type ProviderCatalogueInput,
   type PublishDeps,
   type PublishFailure,
-  type ReleaseSearch,
 } from "@/modules/directory";
 import { directoryRelease } from "@/modules/directory/adapters/schema";
+import { VectorsFileSchema } from "@/modules/directory/domain/searchData";
 import { catalogueTextId } from "@/modules/directory/adapters/hash";
 import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
@@ -69,6 +69,7 @@ describe("the directory release (S02.05)", () => {
       delete from directory_release;
       alter table directory_release enable trigger directory_release_guard;
       delete from ops_event;
+      delete from spend_event;
       delete from catalogue_load;
       delete from provider_category; delete from provider_location; delete from provider; delete from category`);
   }
@@ -873,43 +874,486 @@ describe("the directory release (S02.05)", () => {
     });
   });
 
-  // ------------------------------------------------------------ search data (E03)
+  // ------------------------------------------------------------ search data (S03.02)
   describe("search data of a release", () => {
-    const search = (change: Partial<ReleaseSearch> = {}): PublishDeps["search"] => async (release) => ({
-      embedModel: "embed-multilingual-v3.0",
-      vectorsPath: `releases/${release.number}/vectors.bin`,
-      catalogueHash: release.catalogueHash,
-      releaseV: release.number,
+    const MODEL = "embed-v4.0";
+    /** A vector that depends only on the text, like a real embedding: four numbers from its hash. */
+    const vectorOf = (text: string) => [0, 4, 8, 12].map((at) => parseInt(sha256Hex(text).slice(at, at + 4), 16) / 65535);
+
+    /** A fake of the embedding model: records every call, and fails or stalls on the calls a test names. */
+    function fakeEmbedder(options: { model?: string; failCalls?: number[]; stallCalls?: number[]; tokens?: number | null } = {}) {
+      const calls: string[][] = [];
+      const signals: AbortSignal[] = [];
+      const embedder = {
+        model: options.model ?? MODEL,
+        async embedDocuments(texts: string[], { signal }: { signal: AbortSignal }) {
+          calls.push(texts);
+          signals.push(signal);
+          const n = calls.length;
+          if (options.failCalls?.includes(n)) throw new Error("the embedding service is down");
+          if (options.stallCalls?.includes(n)) await new Promise((_, reject) => signal.addEventListener("abort", () => reject(new Error("aborted"))));
+          return { vectors: texts.map(vectorOf), tokens: options.tokens === undefined ? texts.join(" ").length : options.tokens };
+        },
+      };
+      return { embedder, calls, signals };
+    }
+    const searchOf = (embedder: ReturnType<typeof fakeEmbedder>["embedder"], change: Partial<NonNullable<PublishDeps["search"]>> = {}): NonNullable<PublishDeps["search"]> => ({
+      embedder,
+      threshold: 0.3,
+      emergencyCategories: ["Health"],
+      allowance: { callsPerMonth: 100, tokensPerMonth: 1_000_000 },
       ...change,
     });
+    const vectorsOf = (d: Harness, release: number) => VectorsFileSchema.parse(JSON.parse(d.storage.files.get(`releases/${release}/vectors.json`) as string));
+    const searchRow = async (release: number) => (await sql`select search from directory_release where number = ${release}`)[0].search;
+    const spend = () => sql.unsafe("select kind, purpose, model, release_v, calls, tokens, tokens_estimated, price_per_million_tokens_cad, ms from spend_event order by id").then((rows) => rows.map((r) => ({ ...r, tokens: Number(r.tokens) }) as Record<string, unknown>));
+    const M001_TEXT = "Thorncliffe Legal Clinic\nCategories: Legal\nServices: Free legal help. Call 911 in an emergency.";
+    const M002_TEXT = "Flemingdon Health Centre\nCategories: Health\nServices: Walk-in clinic.";
 
-    it("every release until E03 says search is unavailable", async () => {
-      await publish(deps());
+    it("a release published without a search model has none, and the manifest says search is unavailable", async () => {
+      const d = deps();
 
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: true, search: null });
       expect((await currentManifest(app))?.search).toEqual({ status: "unavailable" });
+      expect(await searchRow(1)).toBeNull();
+      expect([...d.storage.files.keys()].some((path) => path.includes("vectors"))).toBe(false);
+      expect(await spend()).toEqual([]);
     });
 
-    it("a release with matching search data says it is available, with the model and the vectors path", async () => {
-      const result = await publish(deps({ search: search() }));
+    it("embeds each published provider's search text once as a document and writes the vectors file into the same release", async () => {
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder) });
 
-      expect(result).toMatchObject({ ok: true });
-      expect(await currentManifest(app)).toMatchObject({ search: { status: "available", embed_model: "embed-multilingual-v3.0", vectors_path: "releases/1/vectors.bin" } });
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: true, release: 1, search: { vectors: 2, reused: 0, embedded: 2 } });
+      // One call, with the English search text of the two published providers: no contact details, address or other language.
+      expect(model.calls).toEqual([[M001_TEXT, M002_TEXT]]);
+      const file = vectorsOf(d, 1);
+      expect(file).toMatchObject({ v: 1, release_v: 1, catalogue_hash: "b".repeat(64), embed_model: MODEL, dims: 4 });
+      expect(file.providers).toEqual([
+        { id: "M001", text_hash: sha256Hex(M001_TEXT), vector: vectorOf(M001_TEXT) },
+        { id: "M002", text_hash: sha256Hex(M002_TEXT), vector: vectorOf(M002_TEXT) },
+      ]);
+      expect(file.providers.map((p) => p.id)).toEqual(listing(d, 1, "en").providers.map((p) => p.id));
+      // The release records the model, vector count, catalogue_hash, threshold and emergency categories.
+      const body = d.storage.files.get("releases/1/vectors.json") as string;
+      expect(await searchRow(1)).toMatchObject({
+        embed_model: MODEL,
+        vectors_path: "releases/1/vectors.json",
+        catalogue_hash: "b".repeat(64),
+        release_v: 1,
+        vector_count: 2,
+        dims: 4,
+        threshold: 0.3,
+        emergency_categories: ["Health"],
+        sha256: sha256Hex(body),
+        bytes: Buffer.byteLength(body, "utf8"),
+        reused: 0,
+        embedded: 2,
+      });
+      expect((await releases())[0]).toMatchObject({ status: "complete", is_current: true, staged: false });
     });
 
-    it.each([
-      ["another release number", { releaseV: 9 }],
-      ["another catalogue_hash", { catalogueHash: "d".repeat(64) }],
-    ])("refuses to make a release current when its search data has %s: the previous release stays current and ops hears of it", async (_name, change) => {
+    it("the manifest of a release with matching search data says it is available, with the model and the vectors path", async () => {
+      const d = deps({ search: searchOf(fakeEmbedder().embedder) });
+      await publish(d);
+
+      const manifest = await currentManifest(app);
+
+      expect(manifest?.search).toEqual({ status: "available", embed_model: MODEL, vectors_path: "releases/1/vectors.json" });
+      expect(DirectoryManifestV1.parse(manifest)).toMatchObject({ release_v: 1 });
+    });
+
+    it("keeps the vectors file private: no resident route reads it, and the listing reader refuses it by every name", async () => {
+      const d = deps({ search: searchOf(fakeEmbedder().embedder) });
+      await publish(d);
+
+      for (const file of ["vectors.json", "vectors", "../1/vectors.json", "en/../vectors.json"]) {
+        expect(await readListing(app, d.storage, "1", file), file).toEqual({ found: false, reason: "not_found" });
+      }
+      // Nor does the manifest list it among the files a phone is told to fetch.
+      expect(Object.values((await currentManifest(app))?.files ?? {}).some((path) => path.includes("vectors"))).toBe(false);
+    });
+
+    it("records each embedding call in spend_event: the model, the tokens the vendor billed and the release, with the price left null", async () => {
+      const model = fakeEmbedder({ tokens: 321 });
+      const d = deps({ search: searchOf(model.embedder) });
+
+      await publish(d);
+
+      expect(await spend()).toMatchObject([{ kind: "embed", purpose: "publish", model: MODEL, release_v: 1, calls: 1, tokens: 321, tokens_estimated: false, price_per_million_tokens_cad: null }]);
+    });
+
+    it("counts an estimate, and says so, when the vendor does not say how many tokens it billed", async () => {
+      const d = deps({ search: searchOf(fakeEmbedder({ tokens: null }).embedder) });
+
+      await publish(d);
+
+      const [row] = await spend();
+      expect(row).toMatchObject({ tokens_estimated: true });
+      expect(Number(row.tokens)).toBeGreaterThan(0);
+    });
+
+    it("copies the previous release's vectors, instead of embedding again, when the model and catalogue_hash match", async () => {
+      const model = fakeEmbedder();
+      const first = deps({ search: searchOf(model.embedder) });
+      await publish(first);
+      const before = { file: first.storage.files.get("releases/1/vectors.json"), row: await searchRow(1) };
+
+      const result = await publish(deps({ storage: first.storage, search: searchOf(model.embedder) }));
+
+      // No second call, no second spend row, and the new release has its own file with its own release number.
+      expect(model.calls).toHaveLength(1);
+      expect(await spend()).toHaveLength(1);
+      expect(result).toMatchObject({ ok: true, release: 2, search: { vectors: 2, reused: 2, embedded: 0 } });
+      const copied = vectorsOf(first, 2);
+      expect(copied).toMatchObject({ release_v: 2, catalogue_hash: "b".repeat(64), embed_model: MODEL });
+      expect(copied.providers).toEqual(vectorsOf(first, 1).providers);
+      expect(await searchRow(2)).toMatchObject({ vectors_path: "releases/2/vectors.json", release_v: 2, vector_count: 2, reused: 2, embedded: 0 });
+      expect((await currentManifest(app))?.search).toMatchObject({ status: "available", vectors_path: "releases/2/vectors.json" });
+      // The earlier release is exactly as it was published (S02.05): its file, its row, its listing files.
+      expect(first.storage.files.get("releases/1/vectors.json")).toBe(before.file);
+      expect(await searchRow(1)).toEqual(before.row);
+      expect((await releases())[0]).toMatchObject({ number: 1, status: "complete", is_current: false });
+    });
+
+    it("embeds only the providers whose search text changed, or that are new, and drops the ones no longer published", async () => {
+      const model = fakeEmbedder();
+      const first = deps({ search: searchOf(model.embedder) });
+      await publish(first);
+      await sql`update provider set name = 'Flemingdon Family Health Centre' where id = 'M002'`;
+      expect(await publishProvider(app, staffId, "M003", { now: () => new Date("2026-10-02T15:00:00Z") })).toMatchObject({ ok: true });
+      expect(await unpublishProvider(app, staffId, "M001")).toMatchObject({ ok: true });
+
+      const result = await publish(deps({ storage: first.storage, search: searchOf(model.embedder) }));
+
+      expect(result).toMatchObject({ ok: true, release: 2, search: { vectors: 2, reused: 0, embedded: 2 } });
+      expect(model.calls).toHaveLength(2);
+      expect(model.calls[1].map((text) => text.split("\n")[0])).toEqual(["Flemingdon Family Health Centre", "East York Food Bank"]);
+      expect(vectorsOf(first, 2).providers.map((p) => p.id)).toEqual(["M002", "M003"]);
+      expect(listing(first, 2, "en").providers.map((p) => p.id)).toEqual(["M002", "M003"]);
+    });
+
+    it("copies only what is still true when the catalogue_hash differs: a text that did not change keeps its vector", async () => {
+      const model = fakeEmbedder();
+      const first = deps({ search: searchOf(model.embedder) });
+      await publish(first);
+      await sql`update catalogue_load set hash = ${"c".repeat(64)}`;
+
+      const result = await publish(deps({ storage: first.storage, catalogue: async () => ({ hash: "c".repeat(64), gitCommit: "abc1234def" }), search: searchOf(model.embedder) }));
+
+      expect(result).toMatchObject({ ok: true, search: { reused: 2, embedded: 0 } });
+      expect(vectorsOf(first, 2)).toMatchObject({ release_v: 2, catalogue_hash: "c".repeat(64) });
+    });
+
+    it("embeds everything again when the model changed: a vector of one model is no use to another", async () => {
+      const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+      await publish(first);
+      const other = fakeEmbedder({ model: "embed-multilingual-v3.0" });
+
+      const result = await publish(deps({ storage: first.storage, search: searchOf(other.embedder) }));
+
+      expect(result).toMatchObject({ ok: true, release: 2, search: { reused: 0, embedded: 2 } });
+      expect(other.calls).toHaveLength(1);
+      expect(vectorsOf(first, 2).embed_model).toBe("embed-multilingual-v3.0");
+      expect((await currentManifest(app))?.search).toMatchObject({ embed_model: "embed-multilingual-v3.0" });
+    });
+
+    it("works in chunks, and an empty directory publishes with an empty vectors file", async () => {
+      const model = fakeEmbedder();
+      const chunked = deps({ search: searchOf(model.embedder, { chunkSize: 1 }) });
+      await publish(chunked);
+      expect(model.calls.map((texts) => texts.length)).toEqual([1, 1]);
+      expect((await spend()).map((row) => row.calls)).toEqual([1, 1]);
+
+      await wipe();
+      await sql`insert into catalogue_load (hash, git_commit) values (${"b".repeat(64)}, 'abc1234def')`;
+      const empty = deps({ search: searchOf(model.embedder, { emergencyCategories: [] }) });
+      const emptied = await publish(empty);
+      expect(emptied, JSON.stringify(emptied)).toMatchObject({ ok: true, search: { vectors: 0, embedded: 0 } });
+      expect(vectorsOf(empty, 1)).toMatchObject({ dims: 0, providers: [] });
+    });
+
+    // ---------------------------------------------------------- stopped, failing and slow embedding
+    it("resumes from the last completed chunk when the job is stopped part way, and residents keep the previous release meanwhile", async () => {
       const first = deps();
       await publish(first);
-      const d = deps({ storage: first.storage, search: search(change) });
+      const model = fakeEmbedder();
+      const stopped = deps({
+        storage: first.storage,
+        search: searchOf(model.embedder, { chunkSize: 1 }),
+        hook: async (point) => {
+          if (point === "chunk_embedded") await new Promise(() => {});
+        },
+      });
+      void publish(stopped);
+      while (model.calls.length < 1) await sleepMs(20);
+      await sleepMs(150);
+
+      // Nothing of release 2 is visible, and the first chunk is kept in the release.
+      expect((await currentManifest(app))?.release_v).toBe(1);
+      expect((await currentManifest(app))?.search).toEqual({ status: "unavailable" });
+      expect(await releases()).toMatchObject([{ number: 1, is_current: true }, { number: 2, status: "building", leased: true }]);
+      expect((await sql`select staged ? 'search_chunk_0' as kept, staged ? 'search_chunk_1' as more from directory_release where number = 2`)[0]).toEqual({ kept: true, more: false });
+
+      // The claim expires: the next run embeds only what the kept chunk lacks.
+      const later = fakeEmbedder();
+      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), search: searchOf(later.embedder, { chunkSize: 1 }) }));
+
+      expect(result).toMatchObject({ ok: true, release: 2, attempts: 2, search: { vectors: 2, embedded: 2 } });
+      expect(later.calls).toEqual([[M002_TEXT]]);
+      expect(model.calls).toEqual([[M001_TEXT]]);
+      expect(vectorsOf(first, 2).providers.map((p) => p.id)).toEqual(["M001", "M002"]);
+      expect(await spend()).toHaveLength(2);
+      expect((await currentManifest(app))?.release_v).toBe(2);
+    });
+
+    it("tries again after a failed call and does not embed the chunks it already has", async () => {
+      const model = fakeEmbedder({ failCalls: [2] });
+      const d = deps({ search: searchOf(model.embedder, { chunkSize: 1 }) });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: true, release: 1, attempts: 2 });
+      expect(model.calls).toEqual([[M001_TEXT], [M002_TEXT], [M002_TEXT]]);
+      // A call that failed was never billed: only the two that returned are recorded.
+      expect(await spend()).toHaveLength(2);
+      expect(d.failures).toEqual([]);
+    });
+
+    it("gives up after three failed passes: the previous release (with search) stays current, ops hears of it, and nothing of the new release is served", async () => {
+      const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+      await publish(first);
+      const down = fakeEmbedder({ failCalls: [1, 2, 3, 4, 5, 6] });
+      const failing = deps({ storage: first.storage, search: searchOf(down.embedder) });
+      await sql`update provider set name = 'Renamed Clinic' where id = 'M001'`;
+
+      const result = await publish(failing);
+
+      expect(result).toMatchObject({ ok: false, reason: "embedding_unavailable", release: 2, attempts: 3 });
+      expect(down.calls).toHaveLength(3);
+      expect(await releases()).toMatchObject([
+        { number: 1, status: "complete", is_current: true },
+        { number: 2, status: "failed", is_current: false, failure: "embedding_unavailable", staged: false },
+      ]);
+      expect(failing.failures).toMatchObject([{ release: 2, reason: "embedding_unavailable", attempts: 3 }]);
+      expect(await currentManifest(app)).toMatchObject({ release_v: 1, search: { status: "available", vectors_path: "releases/1/vectors.json" } });
+      expect(failing.storage.files.has("releases/2/vectors.json")).toBe(false);
+      expect(await readListing(app, failing.storage, "2", "en.json")).toEqual({ found: false, reason: "not_found" });
+    });
+
+    it("cuts off a call that takes too long and treats it as a failed pass, not as a hung publish", async () => {
+      const slow = fakeEmbedder({ stallCalls: [1] });
+      const d = deps({ search: searchOf(slow.embedder, { callTimeoutMs: 30 }) });
+
+      const result = await publish(d);
+
+      // The first pass was cut off; the second worked.
+      expect(result).toMatchObject({ ok: true, attempts: 2 });
+      expect(slow.signals[0].aborted).toBe(true);
+      expect(slow.calls).toHaveLength(2);
+    });
+
+    it("stops with the lease let go when the publish has no time left, keeping the build for the next press", async () => {
+      let late = false;
+      const model = fakeEmbedder();
+      const d = deps({
+        // The listing files are stored in time; the clock then runs past the budget before the first call.
+        now: () => new Date(Date.parse("2026-10-02T15:00:00Z") + (late ? 60 * 1000 : 0)),
+        hook: async (point, detail) => {
+          if (point === "file_stored" && detail.lang === LANG_CODES[LANG_CODES.length - 1]) late = true;
+        },
+        budgetMs: 40 * 1000,
+        search: searchOf(model.embedder),
+      });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: false, reason: "embedding_unavailable" });
+      expect(model.calls).toHaveLength(0);
+      expect((await releases())[0]).toMatchObject({ status: "building", leased: false });
+    });
+
+    // ---------------------------------------------------------- the usage allowance
+    it("refuses to embed when the month's calls would pass the allowance, before any call is made", async () => {
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'publish', ${MODEL}, 3, 1000)`;
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 3, tokensPerMonth: 1_000_000 } }) });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", release: 1, attempts: 1, detail: ["calls"] });
+      expect(model.calls).toHaveLength(0);
+      expect(d.failures).toMatchObject([{ release: 1, reason: "usage_allowance_exceeded" }]);
+      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "usage_allowance_exceeded" }]);
+      expect(await currentReleaseSummary(app)).toBeNull();
+    });
+
+    it("refuses when the tokens this release needs would pass the allowance, and keeps the previous release current", async () => {
+      const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+      await publish(first);
+      await sql`update provider set name = 'Another Name' where id = 'M002'`;
+      const model = fakeEmbedder();
+      const d = deps({ storage: first.storage, search: searchOf(model.embedder, { allowance: { callsPerMonth: 100, tokensPerMonth: 20 } }) });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", detail: ["tokens"] });
+      expect(model.calls).toHaveLength(0);
+      expect((await currentManifest(app))?.release_v).toBe(1);
+    });
+
+    it("counts the calendar month in Toronto: last month's usage and a call that is only allowed once more are not over the line", async () => {
+      // 2026-10-01 00:30 UTC is still September 30th in Toronto: last month's usage does not count against this month.
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T00:30:00Z")}, 'embed', 'publish', ${MODEL}, 50, 900000)`;
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 1, tokensPerMonth: 1_000_000 } }) });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: true });
+      expect(model.calls).toHaveLength(1);
+      // The next one, a month's allowance of one call spent, is refused.
+      await sql`update provider set name = 'Yet Another Name' where id = 'M001'`;
+      expect(await publish(deps({ storage: d.storage, search: searchOf(fakeEmbedder().embedder, { allowance: { callsPerMonth: 1, tokensPerMonth: 1_000_000 } }) }))).toMatchObject({
+        ok: false,
+        reason: "usage_allowance_exceeded",
+      });
+    });
+
+    // ---------------------------------------------------------- the check before the release goes live
+    /** Replaces the vectors file of the release being built, and the record that vouches for it, just before it is made current. */
+    function tamper(change: (file: ReturnType<typeof vectorsOf>) => unknown, options: { record?: boolean } = { record: true }): NonNullable<PublishDeps["hook"]> {
+      return async (point, detail) => {
+        if (point !== "before_current") return;
+        const path = `releases/${detail.release}/vectors.json`;
+        const current = VectorsFileSchema.parse(JSON.parse(storageOf.files.get(path) as string));
+        const body = JSON.stringify(change(current));
+        storageOf.files.set(path, body);
+        if (options.record) {
+          const count = (JSON.parse(body) as { providers: unknown[] }).providers.length;
+          await sql`update directory_release set search = search || ${sql.json({ sha256: sha256Hex(body), bytes: Buffer.byteLength(body, "utf8"), vector_count: count })} where number = ${detail.release}`;
+        }
+      };
+    }
+    let storageOf: ReturnType<typeof memoryDirectoryStorage>;
+
+    it.each([
+      ["another release number", (f: ReturnType<typeof vectorsOf>) => ({ ...f, release_v: 9 }), "release"],
+      ["another catalogue_hash", (f: ReturnType<typeof vectorsOf>) => ({ ...f, catalogue_hash: "d".repeat(64) }), "catalogue"],
+      ["another model than the release recorded", (f: ReturnType<typeof vectorsOf>) => ({ ...f, embed_model: "embed-v3.0" }), "model"],
+      ["a provider the listing files have missing", (f: ReturnType<typeof vectorsOf>) => ({ ...f, providers: f.providers.slice(0, 1) }), "en:missing:M002"],
+      [
+        "a provider no listing file has",
+        (f: ReturnType<typeof vectorsOf>) => ({ ...f, providers: [...f.providers, { id: "M009", text_hash: "e".repeat(64), vector: f.providers[0].vector }] }),
+        "en:extra:M009",
+      ],
+    ])("refuses to make a release current when its vectors have %s: the previous release stays current and ops hears of it", async (_name, change, problem) => {
+      const first = deps();
+      await publish(first);
+      storageOf = first.storage;
+      const d = deps({ storage: first.storage, search: searchOf(fakeEmbedder().embedder), hook: tamper(change) });
 
       const result = await publish(d);
 
       expect(result).toMatchObject({ ok: false, reason: "search_mismatch", release: 2, attempts: 1 });
+      expect((result as { detail: string[] }).detail).toContain(problem);
       expect((await currentManifest(app))?.release_v).toBe(1);
-      expect(await releases()).toMatchObject([{ number: 1, is_current: true }, { number: 2, status: "failed", failure: "search_mismatch" }]);
+      expect((await currentManifest(app))?.search).toEqual({ status: "unavailable" });
+      expect(await releases()).toMatchObject([{ number: 1, is_current: true }, { number: 2, status: "failed", failure: "search_mismatch", is_current: false }]);
       expect(d.failures).toMatchObject([{ release: 2, reason: "search_mismatch" }]);
+      expect(await readListing(app, first.storage, "2", "en.json")).toEqual({ found: false, reason: "not_found" });
+    });
+
+    it("refuses a vectors file that is not the one the release recorded (its bytes differ from the record), or that is gone", async () => {
+      const first = deps();
+      await publish(first);
+      storageOf = first.storage;
+      const swapped = deps({ storage: first.storage, search: searchOf(fakeEmbedder().embedder), hook: tamper((f) => ({ ...f, providers: [] }), { record: false }) });
+
+      expect(await publish(swapped)).toMatchObject({ ok: false, reason: "search_mismatch", detail: ["vectors_changed"] });
+
+      const gone = deps({
+        storage: first.storage,
+        search: searchOf(fakeEmbedder().embedder),
+        hook: async (point, detail) => {
+          if (point === "before_current") first.storage.files.delete(`releases/${detail.release}/vectors.json`);
+        },
+      });
+      expect(await publish(gone)).toMatchObject({ ok: false, reason: "search_mismatch", detail: ["vectors_missing"] });
+      expect((await currentManifest(app))?.release_v).toBe(1);
+    });
+
+    it("checks again under the row lock that the vectors are still the ones it checked", async () => {
+      const first = deps();
+      await publish(first);
+      storageOf = first.storage;
+      const d = deps({
+        storage: first.storage,
+        search: searchOf(fakeEmbedder().embedder),
+        hook: async (point, detail) => {
+          // After the check and before the transaction: the record is swapped for another one's.
+          if (point === "search_verified") await sql`update directory_release set search = search || ${sql.json({ sha256: "f".repeat(64) })} where number = ${detail.release}`;
+        },
+      });
+
+      expect(await publish(d)).toMatchObject({ ok: false, reason: "search_mismatch", detail: ["vectors_changed"] });
+      expect((await currentManifest(app))?.release_v).toBe(1);
+    });
+
+    // ---------------------------------------------------------- settings that do not fit
+    it("refuses an emergency category the catalogue does not have, before anything is embedded or built", async () => {
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder, { emergencyCategories: ["Support and Emergency"] }) });
+
+      const result = await publish(d);
+
+      expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", release: null, detail: ["emergency_category_unknown"] });
+      expect(model.calls).toHaveLength(0);
+      expect(await releases()).toEqual([]);
+      expect(d.failures).toMatchObject([{ release: null, reason: "search_config_invalid" }]);
+    });
+
+    it("does not resume a build with another model than the one it was planned for", async () => {
+      const first = deps();
+      const stopped = deps({
+        storage: first.storage,
+        search: searchOf(fakeEmbedder().embedder, { chunkSize: 1 }),
+        hook: async (point) => {
+          if (point === "chunk_embedded") await new Promise(() => {});
+        },
+      });
+      void publish(stopped);
+      while ((await sql`select count(*)::int as n from directory_release`)[0].n < 1) await sleepMs(20);
+      await sleepMs(200);
+
+      const other = fakeEmbedder({ model: "embed-multilingual-v3.0" });
+      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), search: searchOf(other.embedder) }));
+
+      expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["embed_model_changed"] });
+      expect(other.calls).toHaveLength(0);
+    });
+
+    it("does not publish a build planned with search data when the model is no longer configured", async () => {
+      const first = deps();
+      const stopped = deps({
+        storage: first.storage,
+        search: searchOf(fakeEmbedder().embedder, { chunkSize: 1 }),
+        hook: async (point) => {
+          if (point === "chunk_embedded") await new Promise(() => {});
+        },
+      });
+      void publish(stopped);
+      while ((await sql`select count(*)::int as n from directory_release`)[0].n < 1) await sleepMs(20);
+      await sleepMs(200);
+
+      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") }));
+
+      expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["search_not_configured"] });
+      expect((await currentManifest(app))).toBeNull();
     });
   });
 

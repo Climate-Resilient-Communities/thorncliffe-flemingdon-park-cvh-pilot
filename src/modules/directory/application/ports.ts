@@ -1,7 +1,7 @@
 // The ports of the directory release (S02.05): where the files are kept, what the catalogue's source
 // version is, and who is told when a publish fails. Implementations are in adapters/ and in the app's
 // composition root; tests use the fakes beside them.
-import type { ReleaseSearch, ZhHantConverter } from "../domain/directoryRelease";
+import type { ZhHantConverter } from "../domain/directoryRelease";
 
 /** The private place the release files are kept (Supabase Storage; a folder in local runs; memory in tests). */
 export interface DirectoryStorage {
@@ -28,6 +28,12 @@ export const PUBLISH_FAILURE_CODES = [
   /** The database holds another catalogue than this deployment carries: the seed has to run (or run again) before a publish. */
   "catalogue_not_loaded",
   "search_mismatch",
+  /** The embedding model could not be reached, or answered wrongly, or the publish ran out of time while embedding: the build stays, and the next press resumes it. */
+  "embedding_unavailable",
+  /** Embedding this release would take the month's usage allowance (calls or tokens) over its limit. */
+  "usage_allowance_exceeded",
+  /** The search settings do not fit this release (an emergency category the catalogue does not have, or another model than the staged one). */
+  "search_config_invalid",
   "gave_up",
   "unexpected",
 ] as const;
@@ -56,8 +62,8 @@ export interface PublishDeps {
   zhHant: () => Promise<ZhHantConverter>;
   /** Told once when a publish gives up. A failure here never changes the outcome. */
   onFailure: (failure: PublishFailure) => Promise<void>;
-  /** E03: the search data built for this release, or null (the default: every release until E03). Asked just before the release is made current. */
-  search?: (release: { number: number; catalogueHash: string }) => Promise<ReleaseSearch | null>;
+  /** S03.02: with this, the release carries the search data of its own listings; without it the release has none (search then says "unavailable"). */
+  search?: SearchBuild;
   /** Test seams. */
   now?: () => Date;
   sleep?: (ms: number) => Promise<void>;
@@ -72,5 +78,39 @@ export interface PublishDeps {
    * Called at named points of the job; a test throws or waits here to stop it part way or to interleave another change.
    * `snapshot_locked` is inside the claim's transaction, with the providers' rows locked and the release not yet stored.
    */
-  hook?: (point: "snapshot_locked" | "snapshot_taken" | "file_stored" | "before_current", detail: { release: number; lang?: string }) => Promise<void> | void;
+  hook?: (point: "snapshot_locked" | "snapshot_taken" | "file_stored" | "chunk_embedded" | "vectors_stored" | "before_current" | "search_verified", detail: { release: number; lang?: string }) => Promise<void> | void;
+}
+
+/** What one call of an embedding model gives back. */
+export interface EmbeddedTexts {
+  /** One vector per text, in the order of the texts. */
+  vectors: number[][];
+  /** The input tokens the vendor billed, or null when it did not say. */
+  tokens: number | null;
+}
+
+/**
+ * The embedding model (Cohere in production; a fake in every test): the only way the directory reaches it. Documents are
+ * embedded as documents (`input_type: search_document`); the question side, in S03.04, embeds as queries.
+ */
+export interface Embedder {
+  /** The model's id: the release records it, and every question is embedded with the same one. */
+  readonly model: string;
+  /** Throws when the call fails or `signal` aborts it. */
+  embedDocuments(texts: string[], options: { signal: AbortSignal }): Promise<EmbeddedTexts>;
+}
+
+/** How a release gets its search data (S03.02). */
+export interface SearchBuild {
+  embedder: Embedder;
+  /** The similarity below which a question has no clear match; recorded on the release (S03.04 reads it from there). */
+  threshold: number;
+  /** The English names of the categories whose results put the 911 block first; recorded on the release. */
+  emergencyCategories: string[];
+  /** What the month may use before the publish refuses to embed, in calls and tokens (money is not known yet). */
+  allowance: { callsPerMonth: number; tokensPerMonth: number };
+  /** Texts per call (default 32; the models take up to 96). A stopped job resumes after the last chunk it kept. */
+  chunkSize?: number;
+  /** The longest one call may take (default 15 s), and never longer than what is left of the publish's time. */
+  callTimeoutMs?: number;
 }

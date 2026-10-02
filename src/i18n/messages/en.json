@@ -4218,6 +4218,8 @@
       "publishHint": "This takes a few seconds. Residents keep the current release until the new one is complete.",
       "done": "Release {number} is now current. Providers: {providers}. Languages: {languages}.",
       "resumed": "Files already stored when this publish continued: {files}.",
+      "searchData": "Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
+      "searchNone": "This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "Texts with no reviewed translation yet, shown in English: {count}.",
       "staleHeading": "Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
@@ -4261,6 +4263,9 @@
         "catalogueUnreadable": "the catalogue files are missing from this deployment",
         "catalogueNotLoaded": "the database holds a different catalogue than this deployment",
         "searchMismatch": "the search data does not match this release",
+        "embeddingUnavailable": "the search data could not be made in time (the build is kept; press Publish again to continue it)",
+        "usageAllowanceExceeded": "making the search data would go over this month's usage allowance",
+        "searchConfigInvalid": "the search settings do not fit this release",
         "gaveUp": "an earlier publish stopped three times",
         "unexpected": "something went wrong"
       },

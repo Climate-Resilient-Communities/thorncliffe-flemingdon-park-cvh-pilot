@@ -9,7 +9,7 @@ import type { Db } from "@/platform/db";
 import { publishFromForm } from "./publishRelease";
 import { failureReason, languageName, staleLines } from "./words";
 
-const PUBLISH_FAILURE_CODES = ["storage_unavailable", "invalid_catalogue", "catalogue_unreadable", "catalogue_not_loaded", "search_mismatch", "gave_up", "unexpected"];
+const PUBLISH_FAILURE_CODES = ["storage_unavailable", "invalid_catalogue", "catalogue_unreadable", "catalogue_not_loaded", "search_mismatch", "embedding_unavailable", "usage_allowance_exceeded", "search_config_invalid", "gave_up", "unexpected"];
 
 const ADMIN = "01900000-0000-7000-8000-000000000001";
 const db = {} as Db;
@@ -25,6 +25,7 @@ const ok = (change: Record<string, unknown> = {}) => ({
   report: { stale: [], unavailable: [] },
   attempts: 1,
   resumedFiles: 0,
+  search: null,
   ...change,
 });
 
@@ -39,7 +40,7 @@ describe("Publish directory (server action work)", () => {
     const state = await publishFromForm(deps, session);
 
     expect(directory.publishDirectory).toHaveBeenCalledWith(db, publishDeps, ADMIN);
-    expect(state).toEqual({ status: "done", message: "Release 4 is now current. Providers: 99. Languages: 16.", notes: ["Texts with no reviewed translation yet, shown in English: 38."] });
+    expect(state).toEqual({ status: "done", message: "Release 4 is now current. Providers: 99. Languages: 16.", notes: ["Texts with no reviewed translation yet, shown in English: 38.", "This release has no search data, so search is not available to residents until a release has it."] });
   });
 
   it("does not list the stale texts itself: the page, read again after the publish, does (once)", async () => {
@@ -56,7 +57,13 @@ describe("Publish directory (server action work)", () => {
   it("says when it continued a stopped publish", async () => {
     directory.publishDirectory.mockResolvedValue(ok({ resumedFiles: 5, counts: { ...counts, fallbacks: 0, stale: 0 } }));
 
-    expect(await publishFromForm(deps, session)).toMatchObject({ status: "done", notes: ["Files already stored when this publish continued: 5."] });
+    expect(await publishFromForm(deps, session)).toMatchObject({ status: "done", notes: ["Files already stored when this publish continued: 5.", "This release has no search data, so search is not available to residents until a release has it."] });
+  });
+
+  it("says how many search vectors the release holds and how many were copied from the previous release", async () => {
+    directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, fallbacks: 0, stale: 0 }, search: { vectors: 99, reused: 97, embedded: 2 } }));
+
+    expect(await publishFromForm(deps, session)).toMatchObject({ status: "done", notes: ["Search data: 99 providers, 97 copied from the previous release, 2 made new."] });
   });
 
   it.each([
@@ -65,6 +72,9 @@ describe("Publish directory (server action work)", () => {
     ["catalogue_unreadable", "Publish failed: the catalogue files are missing from this deployment. The previous release is still current."],
     ["catalogue_not_loaded", "Publish failed: the database holds a different catalogue than this deployment. The previous release is still current."],
     ["search_mismatch", "Publish failed: the search data does not match this release. The previous release is still current."],
+    ["embedding_unavailable", "Publish failed: the search data could not be made in time (the build is kept; press Publish again to continue it). The previous release is still current."],
+    ["usage_allowance_exceeded", "Publish failed: making the search data would go over this month's usage allowance. The previous release is still current."],
+    ["search_config_invalid", "Publish failed: the search settings do not fit this release. The previous release is still current."],
     ["gave_up", "Publish failed: an earlier publish stopped three times. The previous release is still current."],
     ["unexpected", "Publish failed: something went wrong. The previous release is still current."],
   ])("shows 'Publish failed' with the reason for %s", async (reason, message) => {
