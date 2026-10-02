@@ -7,7 +7,7 @@ export const FALLBACK_MARKER = "[EN] ";
 export const isEnglishFallback = (text: string) => text.startsWith(FALLBACK_MARKER);
 
 /** The elements ResidentText can be: the block that holds the whole text. */
-export type ResidentTextTag = "p" | "h1" | "h2" | "h3" | "li" | "dt" | "dd" | "span" | "div";
+export type ResidentTextTag = "p" | "h1" | "h2" | "h3" | "li" | "dt" | "dd" | "span" | "div" | "legend";
 
 interface InlineProps {
   children: string;

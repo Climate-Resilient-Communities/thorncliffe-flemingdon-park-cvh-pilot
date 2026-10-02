@@ -106,6 +106,7 @@ beforeAll(async () => {
   wired.publish = {
     storage: memoryDirectoryStorage(),
     catalogue: async () => ({ hash: "a".repeat(64), gitCommit: null }),
+    neighbourhoods: async () => ({ reviewed: true, byProvider: { [PROVIDER_ID]: [] } }),
     zhHant: async () => ({ convert: (text: string) => text, openccVersion: "1.4.2", config: "test" }),
     onFailure: async () => {},
   };

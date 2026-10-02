@@ -10,6 +10,11 @@ export type NavItem = {
   icon: "now" | "search" | "map" | "ready";
   label: string;
   href: string;
+  /**
+   * Other paths whose pages and the pages below them also belong to this item, so it stays marked as the current one there
+   * (Find help is marked on the directory, whichever page it links to).
+   */
+  alsoCurrentOn?: readonly string[];
 };
 
 export type ResidentNavProps = {
@@ -17,10 +22,10 @@ export type ResidentNavProps = {
   items: readonly NavItem[];
 };
 
-/** The item whose page this is: the exact path, or a page below it (never home for every page). */
-function isCurrent(pathname: string, href: string, isHome: boolean) {
+/** The item whose page this is: the exact path of its link or of one of its other paths, or a page below one (never home for every page). */
+export function isCurrent(pathname: string, item: Pick<NavItem, "href" | "alsoCurrentOn">, isHome: boolean) {
   const path = pathname.replace(/\/$/, "");
-  return path === href || (!isHome && path.startsWith(`${href}/`));
+  return [item.href, ...(item.alsoCurrentOn ?? [])].some((href) => path === href || (!isHome && path.startsWith(`${href}/`)));
 }
 
 /**
@@ -37,7 +42,7 @@ export function ResidentNav({ label, items }: ResidentNavProps) {
           href={item.href}
           prefetch={false}
           className="shell-nav__item tap"
-          aria-current={isCurrent(pathname, item.href, item.id === "now") ? "page" : undefined}
+          aria-current={isCurrent(pathname, item, item.id === "now") ? "page" : undefined}
           data-testid={`shell-nav-${item.id}`}
         >
           <span className={`shell-ico shell-ico--${item.icon}`} aria-hidden="true" />
