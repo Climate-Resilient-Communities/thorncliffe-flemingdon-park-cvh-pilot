@@ -25,6 +25,7 @@
     "seed:guides": "node scripts/seed/guides.mjs",
     "seed:buildings": "node scripts/seed/buildings.mjs",
     "seed:providers": "node scripts/seed/providers.mjs",
+    "search-test-set": "node scripts/search-test-set/index.mjs",
     "gen:tokens": "node scripts/gen-tokens.mjs",
     "check:tokens": "node scripts/gen-tokens.mjs --check",
     "check:spacing": "node scripts/check-css.mjs spacing",
