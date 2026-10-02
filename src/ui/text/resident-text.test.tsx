@@ -21,6 +21,21 @@ describe("ResidentText", () => {
     expect(renderToStaticMarkup(<ResidentText>{"[EN] <b>&</b>"}</ResidentText>)).toBe('<bdi lang="en" dir="ltr">[EN] &lt;b&gt;&amp;&lt;/b&gt;</bdi>');
   });
 
+  it("as a block, puts lang and dir on the element itself when the whole text fell back to English, with no <bdi> inside", () => {
+    expect(renderToStaticMarkup(<ResidentText as="p">{"[EN] Nothing is happening right now."}</ResidentText>)).toBe(
+      '<p lang="en" dir="ltr">[EN] Nothing is happening right now.</p>',
+    );
+    expect(renderToStaticMarkup(<ResidentText as="h2" className="x" testId="t">{"[EN] Title"}</ResidentText>)).toBe(
+      '<h2 class="x" data-testid="t" lang="en" dir="ltr">[EN] Title</h2>',
+    );
+  });
+
+  it("as a block, leaves a translated string alone, and takes a fallback without the marker when told it is one", () => {
+    expect(renderToStaticMarkup(<ResidentText as="p">ابھی کچھ نہیں ہو رہا۔</ResidentText>)).toBe("<p>ابھی کچھ نہیں ہو رہا۔</p>");
+    expect(renderToStaticMarkup(<ResidentText as="li" fallback>Reply STOP.</ResidentText>)).toBe('<li lang="en" dir="ltr">Reply STOP.</li>');
+    expect(renderToStaticMarkup(<ResidentText as="li" fallback={false}>Reply STOP.</ResidentText>)).toBe("<li>Reply STOP.</li>");
+  });
+
   it("recognises a fallback by the marker at the start, not elsewhere", () => {
     expect(isEnglishFallback("[EN] Map")).toBe(true);
     expect(isEnglishFallback("Map [EN] ")).toBe(false);

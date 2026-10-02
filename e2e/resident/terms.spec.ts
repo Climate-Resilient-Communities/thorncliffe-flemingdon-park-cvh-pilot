@@ -48,7 +48,7 @@ test("/en/terms states in plain words everything the terms must say, with versio
     expect(text.toLowerCase(), phrase).toContain(phrase.toLowerCase());
   }
   // English has nothing standing in for a missing translation.
-  await expect(page.locator("main bdi[lang='en']")).toHaveCount(0);
+  await expect(page.locator("main bdi[lang='en'], main h1[lang], main h2[lang], main p.terms-line[lang]")).toHaveCount(0);
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
 
   await expect(page.getByTestId("terms-version")).toHaveText("2026-10-02.1");
@@ -107,41 +107,74 @@ for (const language of LANGUAGES) {
   }
 }
 
-test("a translation that is not available shows in English, marked and isolated as an English run, inside a right-to-left page", async ({ page }) => {
+test("a translation that is not available shows in English, in a left-to-right English block, inside a right-to-left page", async ({ page }) => {
   await openResident(page, "/ur/terms", 390);
 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
-  // Nothing is translated or reviewed yet, so every text of the terms is English standing in.
-  const runs = page.locator("main h1 > bdi, main h2 > bdi, main p.terms-line > bdi");
-  const count = await runs.count();
-  expect(count).toBeGreaterThan(20);
-  for (let index = 0; index < count; index += 1) {
-    const run = runs.nth(index);
-    await expect(run).toHaveAttribute("lang", "en");
-    await expect(run).toHaveAttribute("dir", "ltr");
-    expect(await run.innerText()).toMatch(/^\[EN\] /);
-  }
-  await expect(page.locator("main h1 > bdi")).toHaveText("[EN] Terms and privacy");
+  // Nothing is translated or reviewed yet, so every text of the terms is English standing in. Each is a block with
+  // lang="en" dir="ltr" on the heading or paragraph itself, not an inline run inside a right-to-left block.
+  const headings = page.locator("main h1[lang=en][dir=ltr], main h2[lang=en][dir=ltr]");
+  const lines = page.locator("main p.terms-line[lang=en][dir=ltr]");
+  expect(await headings.count()).toBe(8);
+  expect(await lines.count()).toBeGreaterThan(20);
+  await expect(page.locator("main p.terms-line:not([lang=en])")).toHaveCount(0);
+  await expect(page.locator("main h1:not([lang=en]), main h2:not([lang=en])")).toHaveCount(0);
+  await expect(page.locator("main :is(h1, h2, p.terms-line) bdi")).toHaveCount(0);
+  // The headings keep the visible "[EN]". The body paragraphs do not repeat it: the page says once that part of it is in English.
+  for (let index = 0; index < (await headings.count()); index += 1) expect(await headings.nth(index).innerText()).toMatch(/^\[EN\] /);
+  for (let index = 0; index < (await lines.count()); index += 1) expect(await lines.nth(index).innerText()).not.toMatch(/^\[EN\]/);
+  await expect(page.locator("main h1[lang=en]")).toHaveText("[EN] Terms and privacy");
   // The page's own words are Urdu's, and the note says that some of the page is in English.
   await expect(page.getByTestId("terms-translation-note")).toBeVisible();
   // The facts that are not words (version, date, contact) are left-to-right runs.
   for (const id of ["terms-version", "terms-updated", "terms-contact"]) await expect(page.getByTestId(id)).toHaveAttribute("dir", "ltr");
 });
 
-test("the right-to-left page starts its text at the right edge, the left-to-right page at the left", async ({ page }) => {
-  const edges = async (path: string) => {
-    await openResident(page, path, 390);
-    return page.evaluate(() => {
-      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect();
-      const heading = box("main h2");
-      const main = box("main");
-      return { fromStart: heading.left - main.left, fromEnd: main.right - heading.right, width: main.width };
-    });
+test("text starts at the edge its own direction says: English blocks at the left gutter, translated right-to-left blocks at the right", async ({ page }) => {
+  // The edges of the text itself (a Range over it), not of its element: a block is as wide as the page whatever its alignment.
+  const edges = async (path: string, selector: string, open = true) => {
+    if (open) await openResident(page, path, 390);
+    return page.evaluate((css) => {
+      const range = document.createRange();
+      range.selectNodeContents(document.querySelector(css)!);
+      const text = range.getBoundingClientRect();
+      const main = document.querySelector("main")!.getBoundingClientRect();
+      return { fromLeft: text.left - main.left, fromRight: main.right - text.right };
+    }, selector);
   };
-  const english = await edges("/en/terms");
-  const urdu = await edges("/ur/terms");
+  // No text of the Urdu page's main is translated yet, so make one the way the page would render it: a paragraph of the
+  // page's own, with Urdu text and no lang or dir of its own (a translated block inherits both from the page).
+  const translatedLine = async () => {
+    await openResident(page, "/ur/terms", 390);
+    await page.evaluate(() => {
+      const line = document.querySelector("main p.terms-line")!;
+      const probe = line.cloneNode(false) as HTMLElement;
+      probe.removeAttribute("lang");
+      probe.removeAttribute("dir");
+      probe.id = "translated-probe";
+      probe.textContent = "ہم آپ کا فون نمبر محفوظ رکھتے ہیں اور آپ کی زبان اور آپ کا محلہ بھی محفوظ رکھتے ہیں تاکہ پیغام صحیح جگہ پہنچے۔";
+      line.before(probe);
+    });
+    return edges("/ur/terms#probe", "#translated-probe", false);
+  };
+  const english = {
+    heading: await edges("/en/terms", "main h2"),
+    line: await edges("/en/terms", "main p.terms-line"),
+  };
+  const urdu = {
+    heading: await edges("/ur/terms", "main h2[lang=en][dir=ltr]"),
+    line: await edges("/ur/terms", "main p.terms-line[lang=en][dir=ltr]"),
+    translated: await translatedLine(),
+  };
+  const gutter = english.heading.fromLeft;
+  expect(gutter).toBeGreaterThan(10);
 
-  expect(Math.abs(urdu.fromEnd - english.fromStart)).toBeLessThanOrEqual(1);
+  // English standing in on the Urdu page starts at the left gutter, exactly where the English page starts.
+  expect(Math.abs(urdu.heading.fromLeft - gutter)).toBeLessThanOrEqual(1);
+  expect(Math.abs(urdu.line.fromLeft - english.line.fromLeft)).toBeLessThanOrEqual(1);
+  // Urdu's own text starts at the right gutter, the mirror of the English page.
+  expect(Math.abs(urdu.translated.fromRight - gutter)).toBeLessThanOrEqual(1);
+  expect(urdu.translated.fromLeft).toBeGreaterThan(gutter);
 });
 
 for (const code of ["en", "ur"]) {

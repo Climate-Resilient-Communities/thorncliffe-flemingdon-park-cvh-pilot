@@ -36,6 +36,10 @@
     color: var(--text-on-warm);
   }
 
+  .terms-draft__title {
+    font-weight: 700;
+  }
+
   .terms-draft__reasons {
     margin-block: 0;
     padding-inline-start: var(--gap-related);

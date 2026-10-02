@@ -10,9 +10,19 @@ import "./terms.css";
 // Prerendered at build time for every launch language (the layout's generateStaticParams) from the committed files.
 // The page reads no cookie and no header, and needs no database.
 
-/** One text of the terms: a translation as is, English standing in for a missing one marked and isolated (bidi). */
-function TermsLine({ text }: { text: TermsText }) {
-  return <ResidentText>{text.unavailable ? FALLBACK_MARKER + text.text : text.text}</ResidentText>;
+/**
+ * One text of the terms, as the whole content of its element: a translation as is, and English standing in for a
+ * missing one with lang="en" dir="ltr" on the element itself (so it reads and wraps from the left in a right-to-left
+ * page). `marked` puts the visible "[EN]" in front of it. The terms come from the content pipeline, not from UI string
+ * keys, so where the page says once that part of it is in English the body paragraphs go without the marker.
+ */
+function TermsBlock({ text, as, marked, className }: { text: TermsText; as: "h1" | "h2" | "p"; marked: boolean; className?: string }) {
+  const english = text.unavailable;
+  return (
+    <ResidentText as={as} className={className} fallback={english}>
+      {english && marked ? FALLBACK_MARKER + text.text : text.text}
+    </ResidentText>
+  );
 }
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/terms">): Promise<Metadata> {
@@ -42,6 +52,8 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
   const t = await getTranslations({ locale: lang, namespace: "terms" });
   const { document } = view;
   const someInEnglish = [document.title, ...document.sections.flatMap((s) => [s.heading, ...s.lines])].some((x) => x.unavailable);
+  // Where the page says once that part of it is in English, its body paragraphs go without the per-paragraph "[EN]".
+  const showNote = someInEnglish && lang !== "en";
 
   return (
     <Screen surface="resident" testId="terms">
@@ -49,14 +61,10 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
         {view.status === "draft" && (
           <div className="terms-draft" role="note" data-testid="terms-draft">
             <Stack gap="related">
-              <p>
-                <strong>
-                  <ResidentText>{t("draftTitle")}</ResidentText>
-                </strong>
-              </p>
-              <p>
-                <ResidentText>{t("draftBody")}</ResidentText>
-              </p>
+              <ResidentText as="p" className="terms-draft__title">
+                {t("draftTitle")}
+              </ResidentText>
+              <ResidentText as="p">{t("draftBody")}</ResidentText>
               {/* Why it is not published is for staff, in English. */}
               <p lang="en" dir="ltr">
                 {t("draftWhy")}
@@ -71,14 +79,10 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
         )}
 
         <Stack gap="related">
-          <h1>
-            <TermsLine text={document.title} />
-          </h1>
+          <TermsBlock as="h1" text={document.title} marked />
           <dl className="terms-facts" data-testid="terms-facts">
             <div className="terms-facts__item">
-              <dt>
-                <ResidentText>{t("version")}</ResidentText>
-              </dt>
+              <ResidentText as="dt">{t("version")}</ResidentText>
               <dd>
                 <bdi dir="ltr" data-testid="terms-version">
                   {view.consentVersion ?? "-"}
@@ -86,17 +90,13 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
               </dd>
             </div>
             <div className="terms-facts__item">
-              <dt>
-                <ResidentText>{t("owner")}</ResidentText>
-              </dt>
+              <ResidentText as="dt">{t("owner")}</ResidentText>
               <dd>
                 <bdi data-testid="terms-owner">{view.owner ?? "-"}</bdi>
               </dd>
             </div>
             <div className="terms-facts__item">
-              <dt>
-                <ResidentText>{t("updated")}</ResidentText>
-              </dt>
+              <ResidentText as="dt">{t("updated")}</ResidentText>
               <dd>
                 <bdi dir="ltr" data-testid="terms-updated">
                   {view.lastUpdated ?? "-"}
@@ -104,23 +104,19 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
               </dd>
             </div>
           </dl>
-          {someInEnglish && lang !== "en" && (
-            <p data-testid="terms-translation-note">
-              <ResidentText>{t("translationNote", { lang: languageOf(lang).native })}</ResidentText>
-            </p>
+          {showNote && (
+            <ResidentText as="p" testId="terms-translation-note">
+              {t("translationNote", { lang: languageOf(lang).native })}
+            </ResidentText>
           )}
         </Stack>
 
         {document.sections.map((section) => (
           <Stack key={section.id} as="section" gap="related" testId={`terms-section-${section.id}`}>
-            <h2>
-              <TermsLine text={section.heading} />
-            </h2>
+            <TermsBlock as="h2" text={section.heading} marked />
             <Stack gap="paragraph">
               {section.lines.map((line, index) => (
-                <p key={index} className="terms-line">
-                  <TermsLine text={line} />
-                </p>
+                <TermsBlock key={index} as="p" className="terms-line" text={line} marked={!showNote} />
               ))}
               {section.id === "contact" && (
                 <p className="terms-contact">

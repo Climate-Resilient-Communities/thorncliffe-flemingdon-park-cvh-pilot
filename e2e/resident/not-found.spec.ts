@@ -22,10 +22,10 @@ for (const language of LANGUAGES.filter(({ code }) => ["ur", "prs", "zh", "en", 
   });
 }
 
-test("the 404 of a right-to-left language shows the English fallback as an English run", async ({ page }) => {
+test("the 404 of a right-to-left language shows the English fallback as a left-to-right English block", async ({ page }) => {
   await openResident(page, "/ur/map", 390);
 
-  const run = page.locator("main h1 > bdi");
+  const run = page.locator("main h1");
   await expect(run).toHaveAttribute("lang", "en");
   await expect(run).toHaveAttribute("dir", "ltr");
   await expect(run).toHaveText("[EN] This page could not be found.");
@@ -37,7 +37,7 @@ test("English has no [EN] marker on its 404", async ({ page }) => {
   await openResident(page, "/en/ready/anything/deeper?x=1", 390);
 
   await expect(page.locator("main h1")).toHaveText("This page could not be found.");
-  await expect(page.locator("main bdi")).toHaveCount(0);
+  await expect(page.locator("main bdi, main [lang=en]")).toHaveCount(0);
 });
 
 test("a navigation link that has no page yet leads to the 404 in the same shell, with that link current", async ({ page }) => {
