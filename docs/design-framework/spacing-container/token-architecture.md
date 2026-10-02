@@ -1,10 +1,10 @@
 # Spacing token architecture
 
-> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
+> **Status: approved framework (2026-10-01); token values decided by the design owner on 2026-10-02 (G1–G10, section 11).** The rules, primitives and token values here are implementation requirements for S01.16 and the stories that use them. Values come from `design/prototype/ds/cvrh/tokens.json`; rare values and where they are used are in [`rare-spacing-inventory.md`](rare-spacing-inventory.md). The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
-How spacing, sizing and layout values reach CVH screens. Every value in this document is either copied from `design/prototype/ds/cvrh/tokens.json` (the only source of design tokens, AD-16) or is listed under [Gaps and decisions needed](#11-gaps-and-decisions-needed) with no value assigned.
+How spacing, sizing and layout values reach CVH screens. Every value in this document is copied from `design/prototype/ds/cvrh/tokens.json` (the only source of design tokens, AD-16). The design owner's decisions behind the screen values are in [section 11](#11-decisions-g1g10).
 
-Where a value appears in the prototype's `design/prototype/cvh/cvh.css` but not in `tokens.json`, it is quoted as an observation, never as a token.
+Where a value appears in the prototype's `design/prototype/cvh/cvh.css`, it is quoted as evidence for a token, never used directly.
 
 ## 1. Three layers
 
@@ -18,28 +18,39 @@ The layering comes from the source framework (`_bmad/wds/data/design-system/toke
 
 Rules:
 
-1. Layer 1 is generated. A snapshot test (S01.16) fails if any generated value differs from `tokens.json`.
+1. Layer 1 is generated from the app groups of `tokens.json` (`spacing.app`, `size`, the "Screens" type groups, `type.lineHeights`, `radius` and `color`). A snapshot test (S01.16) fails if any generated value differs from `tokens.json`.
 2. Layer 2 and layer 3 never contain a number. Every right-hand side is `var(--…)`. A CI check enforces this (see [Automated checks](#10-automated-checks)).
-3. Components and screens use layer 2 or 3. A file under `src/app/` or a content component under `src/ui/` that references `--space-N` directly fails the check.
-4. Spacing does not change with theme, language or script. Only colour changes between light and navy (section 5). Line height changes by script (section 6), spacing does not.
+3. Components and screens use layer 2 or 3. A file under `src/app/` or a content component under `src/ui/` that references an `--app-*` primitive directly fails the check.
+4. Spacing does not change with theme, language, script or basic mode. Only colour changes between light and navy (section 5). Line height changes by script (section 6); type, icon, target and navigation sizes change in basic mode (section 8); spacing does not.
 
 ## 2. Layer 1: primitives from `tokens.json`
 
 ### 2.1 Spacing
 
-Copied from `tokens.json` → `spacing.tokens`. The `usage` column is the text in `tokens.json`.
+`tokens.json` → `spacing.app` is the app's one spacing scale (decision G1). The common steps are the values the approved prototype uses most; the rare steps are kept only because a pilot component uses them, each with its locations recorded in `tokens.json` and in [`rare-spacing-inventory.md`](rare-spacing-inventory.md).
 
-| CSS custom property | Value | `tokens.json` usage |
-| --- | --- | --- |
-| `--space-1` | 4px | Short rule thickness; gap between label and input. |
-| `--space-2` | 10px | Accent bar thickness; icon-to-label gap. |
-| `--space-3` | 17px | Gutter inside a card grid. |
-| `--space-4` | 24px | Gutter between panels; paragraph gap; card padding on screens. |
-| `--space-5` | 29px | Card padding on slides. |
-| `--space-6` | 48px | Outer margin of card rows; the short rule's length. |
-| `--space-7` | 67px | Page inset for title blocks on slides. |
+| CSS custom property | Value | Kind | `tokens.json` usage (shortened) |
+| --- | --- | --- | --- |
+| `--app-space-1` | 2px | common | Heading to its one-line sub-text |
+| `--app-space-2` | 4px | common | Label to its control |
+| `--app-space-3` | 6px | common | Closely related lines and chips |
+| `--app-space-4` | 8px | common | Related items; minimum space between separate controls |
+| `--app-space-5` | 10px | common | Icon to label; tiles in a grid |
+| `--app-space-6` | 12px | common | Default stack gap; compact card padding |
+| `--app-space-7` | 14px | common | Component-specific card padding |
+| `--app-space-8` | 16px | common | Resident gutter and section gap; default card padding; narrow Hub inset |
+| `--app-space-9` | 20px | common | Hub section gap; stacked two-column gap |
+| `--app-space-10` | 24px | common | Resident bottom inset; Hub page inset; panels |
+| `--app-space-1px` | 1px | rare | Optical alignment of a check box or small icon |
+| `--app-space-3px` | 3px | rare | Optical alignment of an icon with body text |
+| `--app-space-7px` | 7px | rare | Hub side-nav count badge |
+| `--app-space-18px` | 18px | rare | Large resident buttons; Hub review sections; row metadata; type grid |
+| `--app-space-22px` | 22px | rare | Hub main-column sections |
+| `--app-space-28px` | 28px | rare | Main column to aside on Hub review pages |
 
-This is not a regular 4 px or 8 px grid. It was derived from slides and documents (`tokens.json` → `meta.source`). `--space-5` and `--space-7` are slide values and have no use on pilot screens.
+1 px is real spacing in these places (optical alignment), not only a border width.
+
+`tokens.json` → `spacing.tokens` (`space-1` to `space-7`: 4, 10, 17, 24, 29, 48 and 67 px) keeps its names and values for slides and documents. The design system's slide and document stylesheet (`components/bundle.css`) and the prototype read those names. It is **not generated for the app**, so the app still has exactly one spacing scale; prototype boards and slide spacing never reach `src/`.
 
 ### 2.2 Radius
 
@@ -52,68 +63,117 @@ This is not a regular 4 px or 8 px grid. It was derived from slides and document
 
 Radius is listed because containers and content components share it. Layout primitives never set a radius (see `component-boundaries.md`).
 
-### 2.3 Type sizes that affect layout
+### 2.3 Sizes
 
-`tokens.json` → `type.groups["Documents and screens"]` gives `doc-body` 16px / 1.5, `doc-body-sm` 15px, `doc-cta` 17px, `doc-heading` 21px and others. Spacing primitives do not depend on them. They matter here only because the resident type minimums used by the prototype (18 px body, 20 px alert, 22 px in basic mode) are not in `tokens.json` (gap G7).
+`tokens.json` → `size` (decisions G3, G5, G7, G8):
 
-### 2.4 Values the prototype uses that are not primitives
+| CSS custom property | Value | Job |
+| --- | --- | --- |
+| `--app-tap` | 44px | Minimum control size; inline-text links exempt |
+| `--app-tap-basic` | 56px | Minimum control size in basic mode |
+| `--app-icon`, `--app-icon-basic`, `--app-icon-staff` | 24px, 28px, 20px | Default icon: resident, basic mode, Hub and ambassador |
+| `--app-min-header-resident` | 56px | Resident header minimum block size (the prototype's earlier 60 px is overridden by 56 px) |
+| `--app-min-topbar-hub` | 60px | Hub top bar minimum block size |
+| `--app-min-nav-item-resident`, `--app-min-nav-item-resident-basic` | 64px, 80px | Resident navigation item minimum block size |
+| `--app-page-staff` | 1040px | Default Hub page maximum inline size |
+| `--app-page-staff-review` | 1080px | Only the pages that already use it: O-02, O-03, O-04, O-05, O-07, O-13 |
+| `--app-page-staff-partner` | 1140px | Only partner-space pages (P-01 to P-16, MVP) |
+| `--app-side-nav` | 240px | Hub side navigation |
+| `--app-aside-staff` | 380px | Aside on two-column Hub pages |
+| `--app-aside-staff-compact` | 300px | Side column on the pages that already use it: O-01, O-06, O-12, O-14 |
 
-The prototype's own stylesheet adds values on top of `tokens.json`. Its header says "Additions below them come from the brief, Section 9". These are **observations, not tokens**. The S01.16 generator will not produce them, and nothing in `src/` may hard-code them. Each one is a gap in section 11.
+The shell sizes are minimums. Translated text may make the header, top bar and navigation items taller.
 
-| Name in `cvh.css` | Observed value | Where | Gap |
+### 2.4 Type
+
+`tokens.json` → `type.groups` "Screens: resident", "Screens: basic mode" and "Screens: staff" (decision G7), and `type.lineHeights` (decision G10). Sizes in px:
+
+| Role | Resident | Basic mode | Staff | Line height |
+| --- | --- | --- | --- | --- |
+| Caption, body | 18 | 22 | 16 | `lh-body` (staff: `lh-body-staff`) |
+| Alert | 20 | 24 | 18 | `lh-body` |
+| Lead | 21 | 24 | 18 | `lh-body` |
+| H3 | 20 | 24 | 18 | `lh-tight` |
+| H2 | 23 | 26 | 21 | `lh-tight` |
+| H1 | 27 | 30 | 27 | `lh-tight` |
+
+Line heights are in section 6. The "Slides" and "Documents and screens" groups stay for slides and documents and are not generated for the app.
+
+### 2.5 Build-time values: breakpoint and container
+
+`tokens.json` → `breakpoint` and `container` (decision G4 and its 2026-10-02 refinement):
+
+| Token | Value | What it measures | Used for |
 | --- | --- | --- | --- |
-| `--gutter` | 16px | `:root`; used 19 times for screen and bar insets | G2 |
-| `--tap` | 44px (56px under `.cvh-basic`) | `:root`, `.cvh-basic` | G3 |
-| `.cvh-stack` default gap | 12px | `--gap` fallback | G1 |
-| `.cvh-row` default gap | 10px | `--gap` fallback (equals `--space-2`) | none |
-| `.cvh-screen` | padding 16px / gutter / 24px, gap 16px | resident screen body | G1, G2 |
-| `.cvh-hubbody` | padding 24px (16px when narrow) | Hub body | G1 for 16px |
-| `.cvh-card` | padding 16px (12px for `--tight`) | card | G6 |
-| Raw spacing values across `cvh.css` | 8px (203 uses), 10px (187), 12px (170), 6px (131), 14px (110), 4px (99), 16px (80), 2px (57), 24px (17), 20px (17), 18px (13) | padding, margin and gap declarations | G1 |
-| Raw spacing values in screen markup (`*.dc.html` inline `--gap`) | 8px (147), 6px (106), 10px (76), 4px (45), 2px (41), 12px (17) | inline `style` attributes | G1 |
+| `app-breakpoint-hub` | 700px | The viewport | The Hub shell only: below it the side navigation is hidden |
+| `app-container-hub-two-column-min` | 800px | The available content width inside the page padding | Two-column Hub pages only: below it main and aside stack |
 
-Only 4, 10 and 24 px from this list are on the `tokens.json` scale. `Lib_Foundations.dc.html` says "Spacing from the design system (4, 10, 17, 24, 29, 48, 67)", but the stylesheet mostly uses a different set. This drift is the same kind the source framework records in its README ("Known drift" between `Spacing.mdx` and `globals.css`) and has to be settled before S01.16 (gap G1).
+They are two different tokens and must not be swapped. CSS cannot read a custom property inside `@media` or `@container`, so the generator writes these two literals into Tailwind's `@theme` (section 9) and nowhere else.
 
 ## 3. Layer 2: semantic tokens
 
-### 3.1 Semantic tokens that can be defined now
+Each semantic token is one `var()` of a primitive and is named by its job (`naming-conventions.md`). Nothing here is a new number.
 
-Each one aliases a primitive whose `tokens.json` usage text describes the same job (one exception, `--inset-screen-end`, is marked). Nothing here is a new number.
+### 3.1 Spacing
 
-| Semantic token | Resolves to | Value | Basis in `tokens.json` | Used by |
-| --- | --- | --- | --- | --- |
-| `--gap-label` | `var(--space-1)` | 4px | "gap between label and input" | Field label to control; `Stack gap="label"` |
-| `--gap-icon` | `var(--space-2)` | 10px | "icon-to-label gap" | `Inline gap="icon"`; button, chip and nav item internals |
-| `--gap-grid` | `var(--space-3)` | 17px | "Gutter inside a card grid" | `Grid gap="grid"` (find tiles, card grids) |
-| `--gap-panel` | `var(--space-4)` | 24px | "Gutter between panels" | `Grid gap="panel"` (Hub main and aside columns) |
-| `--gap-paragraph` | `var(--space-4)` | 24px | "paragraph gap" | `Stack gap="paragraph"` (guide text) |
-| `--inset-card` | `var(--space-4)` | 24px | "card padding on screens" | Layer 3 tokens of cards (see G6 before use) |
-| `--inset-page-staff` | `var(--space-4)` | 24px | "Gutter between panels"; matches `.cvh-hubbody` padding 24px in the prototype | `Screen surface="staff"` at wide widths |
-| `--inset-screen-end` | `var(--space-4)` | 24px | Not named in `tokens.json`; the prototype's `.cvh-screen` bottom padding is 24px, which is `space-4` | `Screen surface="resident"` block-end inset (room above the bottom nav) |
-| `--rule-length` | `var(--space-6)` | 48px | "the short rule's length" | The short accent rule (content component) |
-| `--rule-thickness` | `var(--space-1)` | 4px | "Short rule thickness" | The short accent rule |
-| `--bar-thickness` | `var(--space-2)` | 10px | "Accent bar thickness" | Accent bars on panels and callouts |
-
-`--space-5`, `--space-6` (as an outer margin) and `--space-7` are slide and document values. They get no semantic name in the app. If a pilot screen needs them, add a semantic name here first.
-
-### 3.2 Semantic tokens that need a value (no value assigned)
-
-These names are reserved so specs and code can refer to them. Until the design owner sets a value in `tokens.json` (section 11), they are **not generated**, and the primitive specs in `components/` list them as "blocked by Gn".
-
-| Reserved semantic token | Job | Observed in prototype (not a token) | Gap |
+| Semantic token | Resolves to | Value | Job |
 | --- | --- | --- | --- |
-| `--gutter-resident` | Inline inset of resident screens, header, bars, sheets | 16px (`--gutter`) | G2 |
-| `--inset-page-staff-narrow` | Inline and block inset of Hub screens below the Hub breakpoint | 16px | G1 |
-| `--gap-section` | Space between sections of a screen | 16px resident (`.cvh-screen`), 20px Hub (`.cvh-hpage`) | G1 |
-| `--gap-stack` | Default gap between related items in a stack | 12px (`.cvh-stack`) | G1 |
-| `--gap-tight` | Gap between a title and its one-line sub-text | 2px to 6px | G1 |
-| `--gap-target` | Minimum space between two touch targets | 8px (`Lib_Foundations`: "8px between targets") | G3 |
-| `--tap` | Minimum touch target size | 44px (also the spine's Accessibility convention and UX-DR19) | G3 |
-| `--tap-basic` | Minimum touch target in basic mode | 56px (`Lib_Foundations`: "56 in bigger-text mode") | G3 |
-| `--size-page-staff` | Maximum inline size of a Hub page | 1040px, 1080px, 1140px in different screens | G5 |
-| `--size-side-nav` | Hub side navigation width | 240px | G5 |
-| `--size-aside-staff` | Hub aside column width (approval view, compose) | 380px | G5 |
-| `--size-reading` | Maximum inline size of resident reading content at 768 px | none (content stretches) | G5 |
+| `--gap-subline` | `var(--app-space-1)` | 2px | Heading to its one-line sub-text |
+| `--gap-label` | `var(--app-space-2)` | 4px | Label to its control; `Stack gap="label"` |
+| `--gap-tight` | `var(--app-space-3)` | 6px | Closely related lines and chips |
+| `--gap-related` | `var(--app-space-4)` | 8px | Related items in a row or list |
+| `--gap-target` | `var(--app-space-4)` | 8px | Minimum space between two separate controls (G3) |
+| `--gap-icon` | `var(--app-space-5)` | 10px | Icon to label; `Inline` default |
+| `--gap-grid` | `var(--app-space-5)` | 10px | Tiles in a grid (prototype home tiles) |
+| `--gap-stack` | `var(--app-space-6)` | 12px | Default stack gap |
+| `--gap-section-resident` | `var(--app-space-8)` | 16px | Between sections of a resident screen (G1) |
+| `--gap-section-hub` | `var(--app-space-9)` | 20px | Between sections of a Hub page; gap of a stacked two-column page (G1) |
+| `--gap-panel` | `var(--app-space-10)` | 24px | Between panels; column gap on O-01, O-06, O-12, O-14 |
+| `--gap-paragraph` | `var(--app-space-10)` | 24px | Guide paragraphs |
+| `--gap-columns-hub` | `var(--app-space-28px)` | 28px | Main column to aside on O-02, O-03, O-04, O-05, O-07, O-13 |
+| `--gap-section-hub-main` | `var(--app-space-22px)` | 22px | Main-column sections on O-01, O-03, O-04, O-14, O-15 |
+| `--gap-section-hub-review` | `var(--app-space-18px)` | 18px | Main-column sections on O-07, O-12 |
+| `--gap-meta-inline` | `var(--app-space-18px)` | 18px | Column gap of list-row metadata (O-01) |
+| `--gap-type-grid-inline` | `var(--app-space-18px)` | 18px | Column gap of the disruption type grid (X-13) |
+| `--gutter-resident` | `var(--app-space-8)` | 16px | Resident inline inset and block-start inset (G2) |
+| `--inset-screen-end` | `var(--app-space-10)` | 24px | Resident block-end inset (G2) |
+| `--inset-page-staff` | `var(--app-space-10)` | 24px | Hub page inset at and above the Hub breakpoint |
+| `--inset-page-staff-narrow` | `var(--app-space-8)` | 16px | Hub page inset below the Hub breakpoint |
+| `--inset-card` | `var(--app-space-8)` | 16px | Default card padding (G6) |
+| `--inset-card-compact` | `var(--app-space-6)` | 12px | Compact card padding (G6) |
+| `--inset-card-snug` | `var(--app-space-7)` | 14px | Card padding where an approved component shows 14px (G6) |
+| `--inset-button-large-inline` | `var(--app-space-18px)` | 18px | Inline padding of large resident buttons |
+| `--inset-count-badge-inline` | `var(--app-space-7px)` | 7px | Inline padding of the Hub side-nav count badge |
+| `--offset-align-hairline` | `var(--app-space-1px)` | 1px | Aligns a check box or small icon with the first text line |
+| `--offset-align-icon` | `var(--app-space-3px)` | 3px | Aligns an icon with the first line of body text |
+
+Gutter and insets are the same in basic mode (G2). Asymmetric card padding shown in an approved component is written as that component's layer 3 tokens over these semantic tokens.
+
+### 3.2 Sizes
+
+| Semantic token | Resolves to | Value |
+| --- | --- | --- |
+| `--tap`, `--tap-basic` | `var(--app-tap)`, `var(--app-tap-basic)` | 44px, 56px |
+| `--size-icon`, `--size-icon-basic`, `--size-icon-staff` | `var(--app-icon)`, `var(--app-icon-basic)`, `var(--app-icon-staff)` | 24px, 28px, 20px |
+| `--size-header-resident-min` | `var(--app-min-header-resident)` | 56px |
+| `--size-topbar-hub-min` | `var(--app-min-topbar-hub)` | 60px |
+| `--size-nav-item-resident-min`, `--size-nav-item-resident-min-basic` | `var(--app-min-nav-item-resident)`, `var(--app-min-nav-item-resident-basic)` | 64px, 80px |
+| `--size-page-staff` | `var(--app-page-staff)` | 1040px |
+| `--size-page-staff-review` | `var(--app-page-staff-review)` | 1080px |
+| `--size-page-staff-partner` | `var(--app-page-staff-partner)` | 1140px |
+| `--size-side-nav` | `var(--app-side-nav)` | 240px |
+| `--size-aside-staff` | `var(--app-aside-staff)` | 380px |
+| `--size-aside-staff-compact` | `var(--app-aside-staff-compact)` | 300px |
+
+Resident content has no maximum inline size: it fills the shell at every width (G5).
+
+### 3.3 Removed
+
+| Former name | Why |
+| --- | --- |
+| `--gap-section` | Split into `--gap-section-resident` (16px) and `--gap-section-hub` (20px), so neither is forced through the other's value |
+| `--size-reading` | Resident content stays uncapped (G5) |
+| `--rule-length`, `--rule-thickness`, `--bar-thickness` | Slide and document decorations; no pilot screen uses them (the prototype's `.cvh-rule` is a 1px border) |
 
 ## 4. Layer 3: component tokens
 
@@ -122,17 +182,18 @@ Component tokens are declared next to the component and alias layer 2. Examples 
 ```css
 /* src/ui/layout/screen.css */
 .screen[data-surface="resident"] {
-  --screen-inset-inline: var(--gutter-resident);   /* blocked by G2 */
-  --screen-gap: var(--gap-section);                /* blocked by G1 */
+  --screen-inset-inline: var(--gutter-resident);
+  --screen-gap: var(--gap-section-resident);
 }
 .screen[data-surface="staff"] {
   --screen-inset-inline: var(--inset-page-staff);
-  --screen-max-inline-size: var(--size-page-staff); /* blocked by G5 */
+  --screen-gap: var(--gap-section-hub);
+  --screen-max-inline-size: var(--size-page-staff);
 }
 
 /* src/ui/alerting/not-911-block.css (content component) */
 .not-911-block {
-  --not-911-block-inset: var(--inset-card);         /* see G6 */
+  --not-911-block-inset: var(--inset-card);
   --not-911-block-gap: var(--gap-icon);
 }
 ```
@@ -148,7 +209,7 @@ Rule: a component token name starts with the component's file name (`--screen-�
 | Where theme values go | Light values on `:root`; navy values under `[data-theme="dark"]` (the selector the design system's `components/bundle.css` already uses). The generator keeps the theme id `dark` from `tokens.json`; docs call it "navy". |
 | Spacing per theme | None. The generator writes spacing and radius once, on `:root`. A test asserts that no `--space-*` or `--radius-*` property appears inside a `[data-theme]` block. |
 | Layout per theme | None. Changing theme must not move anything. Screenshot tests at the same width in both themes must have identical element boxes (only colours differ). |
-| Prototype status | `cvh.css` defines only the light values; no prototype screen uses navy. Generating navy is required by UX-DR1 and S01.16. Whether any pilot screen uses it is a design decision (G9), not a spacing one. |
+| Pilot launch | Both themes are generated (UX-DR1, S01.16). Pilot screens launch in the light theme and the pilot ships no theme selector (G9; `tokens.json` → `color.launch`). The light and navy layout check in S02.02 stays, so navy cannot drift. |
 
 ## 6. Right to left, scripts and fonts
 
@@ -160,7 +221,7 @@ Rule: a component token name starts with the component's file name (`--screen-�
 | No 3- or 4-value shorthands | `padding: 6px 10px 6px var(--gutter)` (prototype `.cvh-rhead__top`) is physical on the inline axis and needed a `[dir="rtl"]` override. Write `padding-block` plus `padding-inline-start` and `padding-inline-end` instead. The 1- and 2-value forms are allowed because they are symmetric. |
 | No directional box-shadow | `box-shadow: inset 3px 0 0` (prototype `.cvh-side__item.is-active`) needed a `[dir="rtl"]` override. Use `border-inline-start` for a side indicator. Block-axis shadows (`inset 0 3px 0`) are allowed. |
 | Mirrored icons | Direction icons mirror, media and clock icons do not (prototype `cvh.css` rule on `.cvh-ico--arrow` and others). This is an icon rule, not a spacing one; listed because it is the only `[dir="rtl"]` rule that stays. |
-| Line height by script | The prototype raises line height for Arabic-script (`ur`, `ps`, `prs`: 1.9), Indic (1.75) and Chinese (1.7) text. This changes block size, not spacing tokens. Stacks must not assume a fixed row height. |
+| Line height by script | `tokens.json` → `type.lineHeights` (G10): default body 1.5 and tight 1.25; staff body 1.45; Arabic script (`ur`, `ps`, `prs`) body 1.9 and tight 1.6; Indic (`hi`, `pa`, `gu`, `bn`, `ta`) body 1.75 and tight 1.45; Chinese (`zh-Hans` and `zh-Hant`) body 1.7, tight 1.25. This changes block size, not spacing tokens. Stacks must not assume a fixed row height. |
 | Fonts | Only the active language's Noto subset is loaded (AD-16, S02.02). Spacing does not change by font. |
 
 ### Tailwind utilities allowed for direction-sensitive spacing
@@ -171,21 +232,25 @@ Rule: a component token name starts with the component's file name (`--screen-�
 
 In Tailwind v4, `px-*` and `mx-*` compile to `padding-inline` and `margin-inline`, so they are safe. Confirm this against the pinned Tailwind 4.3.3 output in the S01.16 test.
 
-## 7. Breakpoints and test widths
+## 7. Breakpoints, container queries and test widths
 
-`tokens.json` has **no breakpoints** (gap G4). What the plan and the prototype require:
-
-| Surface | Widths in the plan | What changes at those widths in the prototype |
+| Surface | Layout switch | Test widths |
 | --- | --- | --- |
-| Resident | 320, 390, 768 px (UX-DR3, S02.02) | Nothing. Resident screens are fluid; `ResidentApp_320` and `ResidentApp_768` render the same layout at a different frame width. No media query, no width logic in any `R*.dc.html`. |
-| Hub | 390 and 1280 px (UX-DR15, S01.09) | One switch. Every `O*.dc.html` sets `narrow = w < 700`; `.cvh-hub--narrow` hides the side navigation and collapses two-column layouts to one. |
-| Ambassador | phone (A-xx run inside the phone frame) | Nothing. |
+| Resident | None. Resident screens are fluid (`ResidentApp_320` and `ResidentApp_768` render the same layout at a different width). | 320, 390, 768 px (UX-DR3, S02.02) |
+| Hub shell | One viewport breakpoint, `app-breakpoint-hub` 700px: below it the side navigation is hidden and the narrow inset applies; at or above it the side navigation is shown. | 390, 699, 700, 1280 px (S01.09) |
+| Two-column Hub pages | One container query, `app-container-hub-two-column-min` 800px of available content width, measured inside the page padding (the staff `Screen` content box is the query container). | Content width 799 and 800 px (S01.16 fixture; viewport 1087 and 1088 px with the side navigation) |
+| Ambassador | None (A-xx run in the phone layout). | 390 px |
 
-Consequences for the pilot:
+Two-column Hub pages (O-01, O-02, O-03, O-04, O-05, O-06, O-07, O-12, O-13, O-14):
 
-- The resident surface needs **no breakpoint**. 320, 390 and 768 are test widths for screenshots, not layout switches.
-- The Hub needs **one breakpoint** (side navigation and two columns at and above it). Its value is not in `tokens.json`; the prototype switches at 700 px of frame width. Gap G4.
-- Tailwind's default breakpoints are removed so nobody uses `md:` or `lg:` by habit. The one Hub breakpoint is added once G4 is settled.
+- **Below 800 px of content width:** one column, main content first, then the aside, which fills the available width and is not sticky. The gap is `--gap-section-hub` (20px), as in the prototype's one-column variants.
+- **At 800 px and above:** a flexible main column (`minmax(0, 1fr)`) and the aside at `--size-aside-staff` (380px), with the page's approved gap: `--gap-columns-hub` (28px) on O-02, O-03, O-04, O-05, O-07, O-13. The pages that already use a 300px side column (O-01, O-06, O-12, O-14) keep it (`--size-aside-staff-compact`) with `--gap-panel` (24px), and their equal-column variants use two `minmax(0, 1fr)` columns; both follow the same 800px rule.
+- **Actions:** approval and publish actions stay in `Screen`'s sticky `actions` slot (the prototype's `.cvh-pubbar`) in both layouts.
+- **Why a container, not the viewport:** at 700px the side navigation (240px) and page inset (2 × 24px) leave 412px, too narrow for a 380px aside. The content width reaches 800px only at a viewport of 1088px; below the shell breakpoint it is at most 668px, so pages are always stacked there.
+
+Boundary checks: viewport 699 and 700 px for the shell; content width 799 and 800 px for two-column pages; each in `en` and `ur`, including the longest translated labels; neither layout may overflow horizontally (`scrollWidth` is not greater than `clientWidth` on the document or the page container).
+
+Tailwind's default breakpoints are removed so nobody uses `md:` or `lg:` by habit. The only responsive variants are `hub:` (shell) and `@hub-two-column:` (page columns).
 
 ## 8. Basic mode
 
@@ -193,12 +258,12 @@ Basic mode (X-07) is a device choice that switches to the prototype's basic layo
 
 | What changes in basic mode (prototype) | Token status |
 | --- | --- |
-| Touch target 44 → 56 px (`--tap`) | Not in `tokens.json` (G3) |
-| Type sizes up (body 22, alert 24, h1 30) and icon 24 → 28 px | Not in `tokens.json` (G7) |
-| Resident nav item min-height 64 → 80 px | Not in `tokens.json` (G8) |
+| Touch target 44 → 56 px | `--tap-basic` (G3) |
+| Type sizes up (body 22, alert 24, h1 30) and icon 24 → 28 px | "Screens: basic mode" type group, `--size-icon-basic` (G7) |
+| Resident nav item minimum 64 → 80 px | `--size-nav-item-resident-min-basic` (G8) |
 | Two-column tile grids become one column (`.cvh-basic .cvh-find-tiles`) | Behaviour, no token: `Grid` collapses (see `components/grid.md`) |
 | Decorative items and secondary lines hidden (`.cvh-decor`, `.cvh-hide-basic`) | Behaviour, no token |
-| Gaps and insets | **Unchanged** in the prototype. Spacing tokens have one value in both modes. |
+| Gaps and insets, including the resident gutter (16px) and bottom inset (24px) | **Unchanged** (G2). Spacing tokens have one value in both modes. |
 
 In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from device choices before first paint. Primitives and component tokens read it; nothing else does.
 
@@ -209,33 +274,35 @@ In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from 
 ```css
 /* src/ui/tokens/tokens.generated.css — GENERATED from design/prototype/ds/cvrh/tokens.json. Do not edit. */
 :root {
-  --space-1: 4px; --space-2: 10px; --space-3: 17px; --space-4: 24px;
-  --space-5: 29px; --space-6: 48px; --space-7: 67px;
+  --app-space-1: 2px; --app-space-2: 4px; --app-space-3: 6px; --app-space-4: 8px; --app-space-5: 10px;
+  --app-space-6: 12px; --app-space-7: 14px; --app-space-8: 16px; --app-space-9: 20px; --app-space-10: 24px;
+  --app-space-1px: 1px; --app-space-3px: 3px; --app-space-7px: 7px;
+  --app-space-18px: 18px; --app-space-22px: 22px; --app-space-28px: 28px;
+  --app-tap: 44px; --app-tap-basic: 56px; /* … every size token … */
+  --app-fs-body: 18px; /* … resident type set … */ --lh-body: 1.5; --lh-tight: 1.25;
   --radius-none: 0; --radius-card: 16px; --radius-header: 88px; --radius-disc: 50%;
   --surface: #fafafa; --surface-raised: #ffffff; /* … every colour token, light value … */
 }
+[data-basic="true"] { --app-fs-body: 22px; /* … basic-mode type set … */ }
+:lang(ur), :lang(ps), :lang(prs) { --lh-body: 1.9; --lh-tight: 1.6; } /* … Indic, Chinese … */
 [data-theme="dark"] {
   --surface: #002a45; --surface-raised: #1f4068; /* … every colour token with a dark value … */
 }
 ```
 
+The exact names of the generated type properties are S01.16's choice; they follow the `tokens.json` names. The staff type set applies on the staff surface.
+
 ```css
-/* src/ui/tokens/semantic.css — layer 2. Every value is a var() of a generated primitive. */
+/* src/ui/tokens/semantic.css — layer 2. Every value is a var() of a generated primitive (section 3). */
 :root {
-  --gap-label: var(--space-1);
-  --gap-icon: var(--space-2);
-  --gap-grid: var(--space-3);
-  --gap-panel: var(--space-4);
-  --gap-paragraph: var(--space-4);
-  --inset-card: var(--space-4);
-  --inset-page-staff: var(--space-4);
-  --inset-screen-end: var(--space-4);
-  --rule-length: var(--space-6);
-  --rule-thickness: var(--space-1);
-  --bar-thickness: var(--space-2);
-  /* Reserved, blocked by gaps G1–G5: --gutter-resident, --inset-page-staff-narrow, --gap-section,
-     --gap-stack, --gap-tight, --gap-target, --tap, --tap-basic, --size-page-staff,
-     --size-side-nav, --size-aside-staff, --size-reading */
+  --gap-subline: var(--app-space-1);
+  --gap-label: var(--app-space-2);
+  --gap-icon: var(--app-space-5);
+  --gutter-resident: var(--app-space-8);
+  --gap-columns-hub: var(--app-space-28px);
+  --tap: var(--app-tap);
+  --size-aside-staff: var(--app-aside-staff);
+  /* … every token in section 3 … */
 }
 ```
 
@@ -246,21 +313,23 @@ In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from 
 @import "./semantic.css";
 
 @theme inline {
-  /* Remove Tailwind's numeric spacing scale and default breakpoints. */
+  /* Remove Tailwind's numeric spacing scale, default breakpoints and container sizes. */
   --spacing-*: initial;
   --breakpoint-*: initial;
+  --container-*: initial;
+
+  /* Build-time values from tokens.json, written by the generator as literals (section 2.5). */
+  --breakpoint-hub: 700px;              /* app-breakpoint-hub: variant hub:, the shell only */
+  --container-hub-two-column: 800px;    /* app-container-hub-two-column-min: variant @hub-two-column:, page columns only */
 
   /* Spacing: semantic names only. Gives gap-icon, p-card, ps-gutter, and so on. */
   --spacing-label: var(--gap-label);
   --spacing-icon: var(--gap-icon);
-  --spacing-grid: var(--gap-grid);
-  --spacing-panel: var(--gap-panel);
-  --spacing-paragraph: var(--gap-paragraph);
   --spacing-card: var(--inset-card);
-  --spacing-page-staff: var(--inset-page-staff);
-  /* Added when the gaps are closed: --spacing-gutter, --spacing-section, --spacing-stack,
-     --spacing-tight, --spacing-target, --spacing-tap, --spacing-tap-basic,
-     --breakpoint-hub (G4). */
+  --spacing-gutter: var(--gutter-resident);
+  --spacing-target: var(--gap-target);
+  --spacing-tap: var(--tap);
+  /* … one line per spacing token in section 3.1 … */
 
   /* Radius */
   --radius-*: initial;
@@ -277,8 +346,8 @@ In the app, basic mode is a `data-basic="true"` attribute on `<html>`, set from 
 Notes for S01.16:
 
 - Tailwind v4 theme variables are themselves CSS custom properties. A theme variable may not point at a variable with the same name (`--radius-card: var(--radius-card)` is circular). Either have the generator write the radius values straight into `@theme`, or prefix the generated radius tokens. Pick one in S01.16 and add a test; the spacing namespace (`--spacing-*`) does not collide with `--space-*`.
-- Primitives (`--space-N`) are deliberately **not** exposed as Tailwind utilities, so `p-space-2` cannot be written. This applies the source rule "never Level 1 directly" through the build rather than by review.
-- Check in the S01.16 test that the reset really removes the default scale in Tailwind 4.3.3: a fixture using `p-4`, `gap-2` and `md:flex` must produce no CSS.
+- Primitives (`--app-*`) are deliberately **not** exposed as Tailwind utilities, so `p-app-space-2` cannot be written. This applies the source rule "never Level 1 directly" through the build rather than by review.
+- Check in the S01.16 test that the reset really removes the default scale in Tailwind 4.3.3: a fixture using `p-4`, `gap-2`, `md:flex` and `@md:flex` must produce no CSS, while `hub:flex` compiles to `@media (width >= 700px)` and `@hub-two-column:grid` to `@container (width >= 800px)`.
 - The reset does not stop arbitrary values: Tailwind compiles `p-[13px]` whatever the theme defines. The spacing check (section 10) rejects them instead.
 
 ## 10. Automated checks
@@ -289,29 +358,32 @@ These are the testable rules behind this document. They run in CI on `src/`.
 | --- | --- | --- |
 | Token snapshot | A generated value differs from `tokens.json` | S01.16 |
 | Semantic purity | A declaration in `semantic.css` or a component token has a value that is not a single `var(--…)` | S01.16 |
-| No primitives outside layer 2 | `var(--space-` appears in any file except `semantic.css` | S01.16 |
+| No primitives outside layer 2 | `var(--app-` appears in any file except `semantic.css` | S01.16 |
+| No layout literals | `700px` or `800px` appears in a media or container query in `src/` outside the generated `@theme` | S01.16 |
+| Shell breakpoint boundary | At a 699 px viewport the side navigation is hidden and at 700 px it is shown, in `en` and `ur`, with no horizontal overflow | S01.09 |
+| Two-column boundary | At 799 px of content width the page is one column (main first, aside full width) and at 800 px it is two columns with the page's gap, in `en` and `ur` with the longest translated labels, with no horizontal overflow; a 1280 px viewport with a 799 px container stacks | S01.16 (primitive), each two-column page story |
 | Spacing from tokens only (proportionate) | A `padding*`, `margin*`, `gap`, `row-gap` or `column-gap` value in `src/` is a literal length that is not `0` and not an approved spacing token; or a Tailwind spacing class uses an arbitrary value (`p-[13px]`, `gap-[1rem]`). It does **not** check border widths, icon and image sizes, positioning (`top`, `inset*`, `translate`) or line height. A reviewed exception is allowed with a `/* spacing-exception: reason */` comment, which the check lists in its report | S01.16 |
 | Logical CSS only | Any of `left`, `right`, `margin-left`, `margin-right`, `padding-left`, `padding-right`, `border-left*`, `border-right*`, `float: left/right`, `text-align: left/right`, a 3- or 4-value `margin`/`padding` shorthand, or a physical Tailwind utility (section 6) appears in `src/` | S02.02 (already named; widened here) |
 | No negative margins without a reason | A negative `margin*` or a `-m*` Tailwind utility appears in `src/` without a `spacing-exception` comment | S01.16 |
-| One value per theme | A `--space-*` or `--radius-*` appears inside a `[data-theme]` block | S01.16 |
+| One value per theme | An `--app-space-*`, size or `--radius-*` property appears inside a `[data-theme]` block | S01.16 |
 | No undeclared custom property | A `var(--x)` in `src/` has no matching `--x:` declaration in the generated, semantic or component token files (the check the source framework's `audit-css-custom-properties.js` runs) | S01.16 |
-| Touch targets | An interactive element's box is smaller than `--tap` (44 px; 56 px in basic mode) at 320 px | S02.14 (already named for 44 px; basic size added) |
+| Touch targets | A control's box is smaller than `--tap` (44 px; 56 px in basic mode) at 320 px, or two separate controls are closer than `--gap-target` (8 px); links inside text are exempt | S02.14 |
 
-## 11. Gaps and decisions needed (all unresolved)
+## 11. Decisions G1–G10
 
-These need a decision by the design owner (the person who maintains `tokens.json`) before S01.16. No value is proposed here; where the prototype shows a value, it is cited so the decision is quick.
+Decided by the design owner on 2026-10-02; recorded in `tokens.json` version 3. These are final: the values above are implementation requirements.
 
-| # | Gap | Evidence | Recommendation |
-| --- | --- | --- | --- |
-| G1 | **Unresolved.** The screen spacing scale used by the prototype (2, 6, 8, 12, 14, 16, 20 px and others) is not in `tokens.json`; `tokens.json` has 4, 10, 17, 24, 29, 48, 67 | Section 2.4 counts | Reconcile `tokens.json` with the approved prototype: replace its spacing steps with the values the prototype actually uses, so the app still has exactly one spacing scale (no second "screens" set). Rare values are not folded automatically: each is kept as a named step where an approved screen needs it, or changed by a recorded design decision. Details are in the change proposal. |
-| G2 | Resident gutter | `--gutter: 16px` in `cvh.css` | Add as a named screen token in `tokens.json`. |
-| G3 | Touch target sizes and target spacing | `--tap: 44px`, basic `56px`, "8px between targets" in `Lib_Foundations` | Add to `tokens.json` (44 is already required by the spine and UX-DR19; having it in the token file gives one source). |
-| G4 | No breakpoints | Hub switches at a frame width of 700 px (`O*.dc.html`); design system `bundle.css` uses `max-width: 767px` | Add one Hub breakpoint to `tokens.json`. No resident breakpoint is needed for the pilot. |
-| G5 | No size tokens for containers | Hub page max widths 1040, 1080, 1140; side nav 240; aside 380; resident content unbounded at 768 | Add one Hub page width, the side nav width and the aside width. Decide whether resident content should stop stretching at 768 px; the prototype does not cap it. |
-| G6 | Card padding disagrees | `tokens.json` says 24px "card padding on screens"; `.cvh-card` uses 16px, most cards 12–14px | Decide which wins. Until then content components use their own component tokens, flagged for review. |
-| G7 | Resident type minimums and basic-mode type sizes are not in `tokens.json` | `--fs-body: 18px`, basic `22px` etc. in `cvh.css` (brief Section 9) | Outside spacing, but it blocks basic mode the same way. Add a "screens" type set and a basic-mode set. |
-| G8 | Shell dimensions | Header min-height 60, nav item 64 (basic 80), Hub top bar 60 | Add as component tokens in `tokens.json`, or accept them as derived from `--tap` plus padding once G1 and G3 are settled. |
-| G9 | Navy theme on screens | `tokens.json` has navy; `cvh.css` and every screen are light only | Generate both (S01.16 requires it). Record that no pilot screen uses navy unless the design owner says otherwise. |
-| G10 | Line height by script | `cvh.css` sets 1.9 / 1.75 / 1.7 for Arabic, Indic, Chinese | Add to `tokens.json` type, so S02.02 does not hand-copy them. |
+| # | Gap | Decision |
+| --- | --- | --- |
+| G1 | Spacing scale | Common steps 2, 4, 6, 8, 10, 12, 14, 16, 20 and 24 px (`spacing.app`). Rarer values are kept where a pilot component uses them, with semantic names and recorded locations ([`rare-spacing-inventory.md`](rare-spacing-inventory.md)): 1, 3, 7, 18, 22 and 28 px. Prototype presentation boards and slide spacing are not generated for the app. Resident section gaps (16px) and Hub section gaps (20px) have separate semantic names. 1px is sometimes real spacing (alignment, badge padding), not only a border. |
+| G2 | Resident gutter | 16px on both inline sides and at the screen's top; 24px at the bottom. Unchanged in basic mode. |
+| G3 | Touch targets | Minimum 44 × 44px, 56 × 56px in basic mode; 8px between separate controls. The inline-text link exception stays. |
+| G4 | Breakpoints | One Hub shell breakpoint at 700px of viewport: narrow below, wide at or above; below it the side navigation is hidden. Resident pages stay fluid; 320, 390 and 768px are test widths. **Refined on 2026-10-02:** pages that need two columns use a container query at 800px of available content width inside the page padding (`app-container-hub-two-column-min`), a separate token from the shell breakpoint (section 7). |
+| G5 | Containers | Hub page maximum 1040px; side navigation 240px; aside 380px. 1080px and 1140px are named variants only for the screens that already use them. Resident content stays uncapped within its shell. |
+| G6 | Card padding | Default 16px, compact 12px. 14px or asymmetric padding only where an approved component shows it. The claim that screen cards use 24px is removed. |
+| G7 | Typography | Resident, basic-mode and staff type sets as in section 2.4, and default icons 24, 28 and 20px. |
+| G8 | Shell dimensions | Minimums: resident header 56px (the prototype's earlier 60px is overridden by 56px), Hub top bar 60px, resident navigation items 64px or 80px in basic mode. Translated text may grow them. |
+| G9 | Navy theme | Both themes are generated; pilot screens launch in light mode; no theme selector in the pilot. |
+| G10 | Line height by script | Default body 1.5, tight 1.25; staff body 1.45; Arabic script body 1.9, tight 1.6; Indic body 1.75, tight 1.45; Chinese body 1.7, for both Simplified and Traditional Chinese. |
 
-Until a gap is closed, the related semantic token stays reserved and unset, and the story that needs it carries an open item rather than a hard-coded number.
+Two points extend the decisions by analogy and are flagged for the design owner: the pages that already use a 300px side column (O-01, O-06, O-12, O-14) keep it and follow the same 800px rule, and their equal-column variants do too.

@@ -1,6 +1,6 @@
 # Naming conventions
 
-> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
+> **Status: approved framework (2026-10-01); token values decided by the design owner on 2026-10-02 (G1–G10, `token-architecture.md` section 11).** The rules, primitives and token values here are implementation requirements for S01.16 and the stories that use them. Values come from `design/prototype/ds/cvrh/tokens.json`; rare values and where they are used are in [`rare-spacing-inventory.md`](rare-spacing-inventory.md). The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 Naming rules for spacing tokens, layout primitives, their props and files. Adapted from the source framework's `_bmad/wds/data/design-system/naming-conventions.md` and `dilawriweb/packages/ui/THEMING.md`, and reconciled with the CVH spine's "Naming" convention (modules lowercase nouns, `src/ui/` holds tokens and components, generated catalogs and tokens are never edited by hand).
 
@@ -12,13 +12,18 @@ Every place where CVH differs from the source is marked **Differs** with the rea
 
 | Rule | Example |
 | --- | --- |
-| The CSS custom property is the `tokens.json` name with `--` in front, unchanged | `space-2` → `--space-2`; `radius-card` → `--radius-card`; `surface-raised` → `--surface-raised` |
+| The CSS custom property is the `tokens.json` name with `--` in front, unchanged | `app-space-5` → `--app-space-5`; `app-tap` → `--app-tap`; `radius-card` → `--radius-card`; `surface-raised` → `--surface-raised` |
+| The app spacing scale (`spacing.app` in `tokens.json`) is `app-space-{n}`, numbered by step from 2 px | `--app-space-1` = 2 px, `--app-space-4` = 8 px, `--app-space-8` = 16 px, `--app-space-10` = 24 px |
+| A rare step is `app-space-{value}px`, named by its value, and flagged `rare` with its `locations` in `tokens.json` | `--app-space-1px`, `--app-space-3px`, `--app-space-7px`, `--app-space-18px`, `--app-space-22px`, `--app-space-28px` (where each is used: `rare-spacing-inventory.md`) |
+| Other app primitives start with `app-` and name what they size | `--app-tap`, `--app-tap-basic`; `--app-icon`, `--app-icon-basic`, `--app-icon-staff`; `--app-min-header-resident`, `--app-min-topbar-hub`, `--app-min-nav-item-resident`, `--app-min-nav-item-resident-basic`; `--app-page-staff`, `--app-page-staff-review`, `--app-page-staff-partner`; `--app-side-nav`; `--app-aside-staff`, `--app-aside-staff-compact` |
+| Build-time values are named the same way but are not generated as custom properties; the generator writes them into Tailwind's `@theme` as literals (section 1.4) | `app-breakpoint-hub` (700 px), `app-container-hub-two-column-min` (800 px) |
+| The slides and documents set keeps its names and is not generated for the app | `space-1` … `space-7` (4, 10, 17, 24, 29, 48, 67 px): the design system's `ds/cvrh/components/bundle.css` and the prototype read `--space-1` … `--space-7` with these values, so they are not renamed. The app still has exactly one spacing scale |
 | No brand prefix is added | `--tpch-orange` stays as is because that is its name in `tokens.json` |
 | Theme variants keep the same name; the theme is a selector, not part of the name | `--surface` under `:root` and under `[data-theme="dark"]` |
 
 **Differs from source.**
-- Source names spacing `--spacing-{n}` (`--spacing-4`) and its primitives carry a brand prefix (`--dilawri-*`) so that layer 1 is visible in the name. CVH keeps the `tokens.json` names (`--space-{n}`, no prefix) because AD-16 says tokens are generated from `tokens.json`, and S01.16 requires a snapshot test against that file. Renaming would break the one-to-one check. Layer 1 is told apart by file (`tokens.generated.css`), and the CI check "no primitives outside layer 2" enforces the boundary instead of a prefix.
-- Source numbers its scale by multiplier (`spacing-4` = 16 px, 4 × 4 px). CVH numbers by step (`space-4` = 24 px, the fourth step). Developers used to Tailwind will expect `4` to mean 16 px. For this reason primitives are not exposed as Tailwind utilities at all (see `token-architecture.md` section 9).
+- Source names spacing `--spacing-{n}` (`--spacing-4`) and its primitives carry a brand prefix (`--dilawri-*`) so that layer 1 is visible in the name. CVH keeps the `tokens.json` names (`--app-space-{n}`, no brand prefix) because AD-16 says tokens are generated from `tokens.json`, and S01.16 requires a snapshot test against that file. Renaming would break the one-to-one check. The `app-` part comes from `tokens.json` and separates the app's values from the slides and documents set; it does not mark the layer. Layer 1 is told apart by file (`tokens.generated.css`), and the CI check "no primitives outside layer 2" enforces the boundary instead of a prefix.
+- Source numbers its scale by multiplier (`spacing-4` = 16 px, 4 × 4 px). CVH numbers the app scale by step from 2 px (`app-space-4` = 8 px, the fourth step; `app-space-8` = 16 px), and names rare steps by value (`app-space-18px`) so that a value kept for one component does not renumber the scale. Developers used to Tailwind will expect `4` to mean 16 px. For this reason primitives are not exposed as Tailwind utilities at all (see `token-architecture.md` section 9).
 
 ### 1.2 Semantic tokens (layer 2)
 
@@ -26,12 +31,14 @@ Format: `--{role}-{scope}`, kebab-case, general to specific.
 
 | Role word | Meaning | Examples |
 | --- | --- | --- |
-| `gap` | Space between siblings, set on the parent | `--gap-icon`, `--gap-grid`, `--gap-section` |
-| `inset` | Padding inside a region | `--inset-card`, `--inset-page-staff` |
+| `gap` | Space between siblings, set on the parent | `--gap-icon`, `--gap-grid`, `--gap-section-resident`, `--gap-section-hub` |
+| `inset` | Padding inside a region | `--inset-card`, `--inset-page-staff`, `--inset-button-large-inline` |
 | `gutter` | Inline inset of a whole surface, shared by its regions | `--gutter-resident` |
-| `size` | An inline or block size limit | `--size-page-staff`, `--size-side-nav` |
+| `offset` | A small optical shift that aligns one part with another, set inside a content component | `--offset-align-hairline` (1 px), `--offset-align-icon` (3 px) |
+| `size` | An inline or block size, or a size limit; minimums carry `-min` after the part they size | `--size-page-staff`, `--size-side-nav`, `--size-aside-staff`; icons `--size-icon`, `--size-icon-basic`, `--size-icon-staff`; shell minimums `--size-header-resident-min`, `--size-topbar-hub-min`, `--size-nav-item-resident-min` |
 | `tap` | Minimum touch target | `--tap`, `--tap-basic` |
-| `rule`, `bar` | Thickness or length of a decorative line | `--rule-length`, `--bar-thickness` |
+
+There are no `rule` or `bar` tokens in the app: rule and bar thickness and length are slide and document decorations, no pilot screen uses them, and the prototype's `.cvh-rule` is a 1 px border, not spacing.
 
 Rules:
 
@@ -39,7 +46,7 @@ Rules:
 - Never use a direction in a name: `--inset-inline-start-x` is fine if ever needed, `--padding-left` is not. Names describe logical axes only (`inline`, `block`, `start`, `end`).
 - A semantic token's value is always one `var()` of a primitive.
 
-**Differs from source.** The source WDS default scale uses T-shirt names (`space-3xs` … `space-3xl`, around `space-md`) and its Storybook docs use numeric names (`4`, `6`); the source README records that the two vocabularies were never mapped ("Two parallel spacing vocabularies … with no mapping between them"). CVH has one vocabulary: numbered primitives from `tokens.json`, named-by-job semantic tokens on top. T-shirt names are not used because the `tokens.json` steps are uneven (4, 10, 17, 24 …) and a T-shirt label would suggest a regular progression that is not there.
+**Differs from source.** The source WDS default scale uses T-shirt names (`space-3xs` … `space-3xl`, around `space-md`) and its Storybook docs use numeric names (`4`, `6`); the source README records that the two vocabularies were never mapped ("Two parallel spacing vocabularies … with no mapping between them"). CVH has one vocabulary: numbered primitives from `tokens.json`, named-by-job semantic tokens on top. T-shirt names are not used because the app steps are uneven (2, 4, 6, 8, 10, 12, 14, 16, 20, 24 px, with rare steps such as 18 and 22 px between them) and a T-shirt label would suggest a regular progression that is not there.
 
 ### 1.3 Component tokens (layer 3)
 
@@ -58,10 +65,13 @@ This follows the source format (`--{component}-{property}-{variant}`, e.g. `--bu
 
 | Tailwind namespace | CVH entries | Resulting utilities |
 | --- | --- | --- |
-| `--spacing-*` | Semantic names only, without the role word: `label`, `icon`, `grid`, `panel`, `paragraph`, `card`, `page-staff` (later `gutter`, `section`, `stack`, `tap` …) | `gap-icon`, `p-card`, `ps-gutter`, `py-section` |
+| `--spacing-*` | Semantic names only, without the role word, for example `label`, `icon`, `grid`, `stack`, `section-resident`, `section-hub`, `panel`, `paragraph`, `card`, `page-staff` (full list in `token-architecture.md` section 9) | `gap-icon`, `p-card`, `gap-section-hub` |
 | `--radius-*` | `card`, `disc` (and `header` if used) | `rounded-card`, `rounded-disc` |
 | `--color-*` | One per colour token | `bg-surface-raised`, `text-ink` |
-| `--breakpoint-*` | One Hub breakpoint once gap G4 is settled; working name `hub` | `hub:grid-cols-2` |
+| `--breakpoint-*` | `--breakpoint-hub: 700px`, from `app-breakpoint-hub` | Variant `hub:` (`@media (width >= 700px)`). **Hub shell only**: side navigation shown at or above it, hidden below it, and the page inset that switches with it |
+| `--container-*` | `--container-hub-two-column: 800px`, from `app-container-hub-two-column-min` | Variant `@hub-two-column:` (`@container (width >= 800px)`), measured on the `hub-page` query container (the `Screen` staff content box). **Two-column Hub pages only** (`Grid twoColumn`) |
+
+The generator writes both values into `@theme` as literals, because CSS cannot read a custom property inside `@media` or `@container`. They are two different tokens and are never used for each other's job: page columns never use `hub:`, and the shell never uses `@hub-two-column:`. No other file in `src/` may contain 700 or 800 as a layout literal.
 
 **Differs from source.** The source keeps Tailwind's numeric scale (`py-8`, `gap-6`, `px-3 md:px-6 lg:px-8` in `BlockLayout.tsx`) and its 5 default breakpoints. CVH removes both, because numeric utilities would let any Tailwind number into the app and bypass `tokens.json` (AD-16).
 
@@ -84,7 +94,7 @@ This follows the source format (`--{component}-{property}-{variant}`, e.g. `--bu
 
 | Rule | Example |
 | --- | --- |
-| Props that take spacing accept only token names from a TypeScript union, never numbers or strings with units | `gap: 'label' \| 'icon' \| 'grid' \| 'panel' \| 'paragraph'` |
+| Props that take spacing accept only token names from a TypeScript union, never numbers or strings with units | `gap: 'label' \| 'icon' \| 'stack' \| 'section-resident' \| 'panel'` |
 | Token names in props drop the role word (the prop says the role) | `<Stack gap="icon">` uses `--gap-icon`; `<Screen inset="page-staff">` uses `--inset-page-staff` |
 | Alignment props use logical values | `align: 'start' \| 'center' \| 'end' \| 'stretch' \| 'baseline'`; `justify: 'start' \| 'center' \| 'end' \| 'between'` |
 | Boolean props are adjectives or `is`-free verbs | `wrap`, `collapseInBasic` |

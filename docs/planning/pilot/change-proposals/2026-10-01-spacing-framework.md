@@ -1,7 +1,7 @@
 # Change Proposal — Spacing and container framework
 
 - **Date:** 2026-10-01
-- **Status:** Approved 2026-10-01 and applied to `docs/planning/pilot/epics.md` and AD-16 in the spine. Unresolved token values (G1–G10) still need the design owner's decisions before S01.16.
+- **Status:** Approved 2026-10-01 and applied to `docs/planning/pilot/epics.md` and AD-16 in the spine. Unresolved token values (G1–G10) still need the design owner's decisions before S01.16. **Update 2026-10-02:** the design owner decided G1–G10 (`token-architecture.md` §11, `tokens.json` version 3). Two observations in 2.1 were corrected: the resident header's 60px is overridden by 56px, and 1px is sometimes real spacing (alignment, badge padding), not only a border. G4 was refined with an 800px container query for two-column Hub pages, which adds 1 h to S01.16 and 0.5 h to S01.09 (build 494 → 495.5 h).
 - **Source:** the draft framework in `docs/design-framework/spacing-container/`, adapted from `lutic1/personal-website` (`design-framework/spacing-container-framework/`).
 - **Estimate impact:** +6 h of development, approved: build 488 → 494 h. Plus about 2 h of design-owner time.
 - **Not affected:** S01.01 (app skeleton) can start now, independently of every decision here.

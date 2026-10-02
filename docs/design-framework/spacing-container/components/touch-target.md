@@ -1,6 +1,6 @@
 # Touch target (`tap` rule)
 
-> **Status: approved framework (2026-10-01); unresolved token values are still draft.** The rules and primitives here are implementation requirements for S01.16 and the stories that use them. Token values marked **unresolved** have no approved value, stay draft until the design owner decides them in `tokens.json`, and nothing may hard-code them. The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
+> **Status: approved framework (2026-10-01); token values decided by the design owner on 2026-10-02 (G1–G10, `token-architecture.md` section 11).** The rules, primitives and token values here are implementation requirements for S01.16 and the stories that use them. Values come from `design/prototype/ds/cvrh/tokens.json`; rare values and where they are used are in [`rare-spacing-inventory.md`](../rare-spacing-inventory.md). The plan changes were applied from the change proposal [`docs/planning/pilot/change-proposals/2026-10-01-spacing-framework.md`](../../../planning/pilot/change-proposals/2026-10-01-spacing-framework.md) to `epics.md` and AD-16.
 
 **Status:** Pilot · **Files:** `src/ui/tokens/semantic.css` (tokens), `src/ui/tokens/theme.css` (`@utility tap`), `e2e/touch-targets.spec.ts` (check) · **Built in:** S01.16 (rule), checked in S02.14
 
@@ -31,12 +31,12 @@ None. The rule has no options. Components never pass a size to it.
 
 | Token | Layer | Value |
 | --- | --- | --- |
-| `--tap` | 2 | Blocked by G3. Required value 44px (spine, UX-DR19); not yet in `tokens.json` |
-| `--tap-basic` | 2 | Blocked by G3. Prototype 56px |
-| `--gap-target` | 2 | Blocked by G3. Prototype "8px between targets" |
+| `--tap` | 2 | 44px: `var(--app-tap)` (G3; spine, UX-DR19) |
+| `--tap-basic` | 2 | 56px: `var(--app-tap-basic)` (G3) |
+| `--gap-target` | 2 | 8px: `var(--app-space-4)` (G3, "8px between targets") |
 | `--tap-current` | 3 (of the rule) | `var(--tap)` or `var(--tap-basic)` |
 
-The value 44 is a requirement, not a design choice, so S01.16 may treat it as settled once it is added to `tokens.json`; the generator must still read it from there (AD-16).
+G3 is decided: 44px, 56px in basic mode, at least 8px between separate controls, and the inline-text link exception below kept. The value 44 is also a requirement, not only a design choice; the generator still reads it from `tokens.json` (AD-16). The prototype's round-page mark buttons are 6px apart; in the app they are 8px apart (`gap="target"`).
 
 ## Responsive behaviour
 
@@ -48,7 +48,7 @@ Uses only `min-block-size` and `min-inline-size`. No direction dependence.
 
 ## Basic mode
 
-`--tap-current` switches to `--tap-basic`. Nothing else in the rule changes. Resident nav items in basic mode are taller than `--tap-basic` in the prototype (80 px); that is a shell token (G8), not this rule.
+`--tap-current` switches to `--tap-basic`. Nothing else in the rule changes. Resident nav items in basic mode are taller than `--tap-basic` (80 px minimum, `--size-nav-item-resident-min-basic`); that is a shell token (G8), not this rule.
 
 ## Accessibility
 
@@ -67,7 +67,7 @@ Uses only `min-block-size` and `min-inline-size`. No direction dependence.
 
 ## Decision: inline-link exception approved
 
-- **Links inside running text.** The change proposal recommends allowing an exception for links inside a sentence or block of text (for example in guide body text), marked by `data-tap-exempt="inline-text"` on the text container, while every other interactive element keeps the 44 px minimum (56 px in basic mode). This matches the inline exception in WCAG's target-size criteria (2.5.5 in WCAG 2.1, 2.5.8 in WCAG 2.2). It still has to be checked against the pilot's own accessibility requirements: NFR-N2 targets WCAG 2.1 AA, and UX-DR19 says "44 px touch targets" without listing exceptions. The product owner confirmed (2026-10-01) that UX-DR19 means controls, with this inline-text exception; it takes effect when the change proposal is applied.
+- **Links inside running text.** The change proposal recommends allowing an exception for links inside a sentence or block of text (for example in guide body text), marked by `data-tap-exempt="inline-text"` on the text container, while every other interactive element keeps the 44 px minimum (56 px in basic mode). This matches the inline exception in WCAG's target-size criteria (2.5.5 in WCAG 2.1, 2.5.8 in WCAG 2.2). It still has to be checked against the pilot's own accessibility requirements: NFR-N2 targets WCAG 2.1 AA, and UX-DR19 says "44 px touch targets" without listing exceptions. The product owner confirmed (2026-10-01) that UX-DR19 means controls, with this inline-text exception; it takes effect when the change proposal is applied, and G3 (2026-10-02) keeps it.
 
 ## Acceptance criteria
 
@@ -89,4 +89,4 @@ Uses only `min-block-size` and `min-inline-size`. No direction dependence.
 
 **Given** `tokens.generated.css`
 **When** generated from `tokens.json`
-**Then** `--tap` resolves to 44px and the snapshot test passes; if `--tap` is missing from `tokens.json`, the generator fails with a message naming gap G3 rather than writing a default
+**Then** `--app-tap` is 44px, `--app-tap-basic` is 56px and `--app-space-4` is 8px, `--tap`, `--tap-basic` and `--gap-target` resolve to them, and the snapshot test passes; if `app-tap` or `app-tap-basic` is missing from `tokens.json`, the generator fails with a message naming G3 rather than writing a default
