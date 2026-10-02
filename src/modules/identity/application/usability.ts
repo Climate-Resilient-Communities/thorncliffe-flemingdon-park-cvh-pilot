@@ -29,6 +29,17 @@ export async function hasEnrolledAuthenticator(idp: IdentityProvider, account: P
   return account.factorEnrolledAt !== null && (await idp.hasVerifiedAuthenticator(account.authUserId));
 }
 
+/** How usability is counted. */
+export interface UsabilityOptions {
+  /**
+   * Leave the failed-sign-in lock out of the count. The Hub's account changes (suspend, remove,
+   * demote) use it: the lock is temporary and anyone can cause it with wrong passwords, so it must
+   * not decide whether an Admin may be suspended. Every other fact still counts. The database's
+   * two-Admin trigger does not see sign-in locks either.
+   */
+  ignoreSignInLock?: boolean;
+}
+
 /**
  * Whether the account is a usable Admin at `now`, gathering each fact from where it lives
  * (isUsableAdmin lists them). The identity provider is asked about the authenticator only when
@@ -37,7 +48,13 @@ export async function hasEnrolledAuthenticator(idp: IdentityProvider, account: P
  *
  * This is the one place the facts are gathered.
  */
-export async function isAccountUsableAdmin(sources: UsabilitySources, executor: DbExecutor, account: StaffAccount, now: Date): Promise<boolean> {
+export async function isAccountUsableAdmin(
+  sources: UsabilitySources,
+  executor: DbExecutor,
+  account: StaffAccount,
+  now: Date,
+  options: UsabilityOptions = {},
+): Promise<boolean> {
   if (account.role !== "admin" || account.status !== "active" || account.mustChangePassword || account.factorEnrolledAt === null) return false;
   return isUsableAdmin(
     {
@@ -45,15 +62,21 @@ export async function isAccountUsableAdmin(sources: UsabilitySources, executor: 
       status: account.status,
       mustChangePassword: account.mustChangePassword,
       authenticatorEnrolled: await hasEnrolledAuthenticator(sources.idp, account),
-      signInLockedUntil: await sources.signInLockedUntil(executor, account.username),
+      signInLockedUntil: options.ignoreSignInLock ? null : await sources.signInLockedUntil(executor, account.username),
     },
     now,
   );
 }
 
 /** The accounts as the two-Admin rule sees them, with database facts read through `executor`. */
-export async function adminStandings(sources: UsabilitySources, executor: DbExecutor, accounts: readonly StaffAccount[], now: Date): Promise<AdminStanding[]> {
+export async function adminStandings(
+  sources: UsabilitySources,
+  executor: DbExecutor,
+  accounts: readonly StaffAccount[],
+  now: Date,
+  options: UsabilityOptions = {},
+): Promise<AdminStanding[]> {
   return Promise.all(
-    accounts.map(async (account) => ({ id: account.id, role: account.role, usable: await isAccountUsableAdmin(sources, executor, account, now) })),
+    accounts.map(async (account) => ({ id: account.id, role: account.role, usable: await isAccountUsableAdmin(sources, executor, account, now, options) })),
   );
 }
