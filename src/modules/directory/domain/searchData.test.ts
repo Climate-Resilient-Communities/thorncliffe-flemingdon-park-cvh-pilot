@@ -1,11 +1,14 @@
 import { describe, expect, it } from "vitest";
 import { LANG_CODES } from "@/contracts/lang";
 import { createHash } from "node:crypto";
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import type { SnapshotCategory, SnapshotProvider } from "./directoryRelease";
 import {
   ReleaseSearchRecordSchema,
   SearchPlanSchema,
   VectorsFileSchema,
+  embeddingConfigKey,
   estimateTokens,
   listingProviderIds,
   searchItems,
@@ -20,6 +23,7 @@ import {
 
 const sha256Hex = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const HASH = "a".repeat(64);
+const CONFIG = { model: "embed-v4.0", inputType: "search_document", embeddingType: "float", dims: null };
 
 const provider = (id: string, change: Partial<SnapshotProvider> = {}): SnapshotProvider => ({
   id,
@@ -68,6 +72,28 @@ describe("the search text of a provider (S03.02)", () => {
     for (const secret of ["416-555-0100", "info@example.org", "example.org", "Overlea", "M4H", "مفت"]) expect(text).not.toContain(secret);
   });
 
+  it("scrubs phone numbers, emails, web addresses, postal codes and street addresses out of the services and the emergency role, and keeps the words and the short numbers", () => {
+    const text = searchTextOf(
+      provider("M001", {
+        texts: {
+          services: {
+            en: "Free legal help at 101 Coxwell Ave, East York M4C 3B6 (call 416-808-5500 or (416) 425-2485 ext. 12, email info@example.org, see https://www.example.org/help or toronto.ca/legal). Call 911 in an emergency or 211 for services.",
+          },
+          emergency_role: { en: "Walk-ins at 16 Thorncliffe Park Drive; phone +1 833 250 2290." },
+        },
+      }),
+      ["Legal"],
+    );
+
+    expect(text).toBe(
+      "Provider M001\nCategories: Legal\nServices: Free legal help at, East York (call or, email, see or). Call 911 in an emergency or 211 for services.\nEmergency role: Walk-ins at; phone.",
+    );
+  });
+
+  it("drops a line whose text is nothing but contact details", () => {
+    expect(searchTextOf(provider("M001", { texts: { services: { en: "416-808-5500" }, emergency_role: { en: "info@example.org" } } }), [])).toBe("Provider M001");
+  });
+
   it("leaves out the lines a provider has nothing for", () => {
     expect(searchTextOf(provider("M002", { texts: { services: { en: "Walk-in clinic." } } }), [])).toBe("Provider M002\nServices: Walk-in clinic.");
   });
@@ -101,11 +127,59 @@ describe("the allowance estimate", () => {
   });
 });
 
+describe("the real catalogue's search texts (S03.02)", () => {
+  // Written apart from the scrubber on purpose, and looser: anything that looks like a way to reach a provider.
+  const SUFFIX = "Ave|Avenue|St|Street|Rd|Road|Blvd|Boulevard|Dr|Drive|Cres|Crescent|Crt|Court|Ct|Pl|Place|Way|Lane|Ln|Pkwy|Parkway|Trail|Terrace|Gate|Gates|Circle|Cir|Hwy|Highway";
+  const LOOKS_LIKE: Record<string, RegExp> = {
+    phone: /\(?\d{3}\)?[\s.\-–]*\d{3}[\s.\-–]*\d{4}/,
+    shortPhone: /\b\d{3}[-.]\d{4}\b/,
+    email: /\S+@\S+|@/,
+    url: /https?:|www\.|\b[a-z0-9-]+\.(?:ca|com|org|net|edu|gov|info)\b/i,
+    street: new RegExp(String.raw`\b\d{1,6}[A-Za-z]?\s+(?:[A-Za-z0-9'’.-]+\s+){0,4}(?:${SUFFIX})\b`, "i"),
+    postal: /\b[A-Z]\d[A-Z][ -]?\d[A-Z]\d\b/i,
+  };
+
+  it("hold no phone number, email, web address, postal code or street address, in any provider", () => {
+    const file = JSON.parse(readFileSync(path.join(process.cwd(), "data", "catalogue", "providers.json"), "utf8")) as {
+      providers: { id: string; name: string; subcategories: string[]; services: { en: string }; emergencyRole: { en: string } | null }[];
+    };
+    const providers = file.providers.map((entry) =>
+      provider(entry.id, {
+        name: entry.name,
+        subcategories: entry.subcategories.map((name) => ({ name, labels: {} })),
+        texts: { services: { en: entry.services.en }, ...(entry.emergencyRole ? { emergency_role: { en: entry.emergencyRole.en } } : {}) },
+      }),
+    );
+
+    const items = searchItems(providers, categories, sha256Hex);
+
+    expect(items).toHaveLength(file.providers.length);
+    const leaks = items.flatMap((item) => Object.entries(LOOKS_LIKE).flatMap(([kind, pattern]) => (pattern.exec(item.text) ? [`${item.id} ${kind}: ${pattern.exec(item.text)?.[0]}`] : [])));
+    expect(leaks).toEqual([]);
+    // The scrub takes the details and not the sentence: the texts are still about the services.
+    expect(items.every((item) => item.text.includes("Services:") || item.text.includes("Emergency role:"))).toBe(true);
+    expect(items.find((item) => item.id === "M001")?.text).toMatch(/community policing/);
+  });
+});
+
+describe("the embedding config", () => {
+  it("is keyed by every part of it: model, input type, kind of numbers and dimension", () => {
+    const base = embeddingConfigKey(CONFIG);
+
+    expect(base).toBe("model=embed-v4.0;input_type=search_document;embedding_type=float;dims=default");
+    expect(embeddingConfigKey({ ...CONFIG, model: "embed-multilingual-v3.0" })).not.toBe(base);
+    expect(embeddingConfigKey({ ...CONFIG, inputType: "search_query" })).not.toBe(base);
+    expect(embeddingConfigKey({ ...CONFIG, embeddingType: "int8" })).not.toBe(base);
+    expect(embeddingConfigKey({ ...CONFIG, dims: 512 })).not.toBe(base);
+    expect(embeddingConfigKey({ ...CONFIG })).toBe(base);
+  });
+});
+
 describe("the plan staged with a release", () => {
   it("holds the model, threshold, emergency categories and the texts to embed, and reads back as written", () => {
     const items = searchItems([provider("M001")], categories, sha256Hex);
 
-    const plan = searchPlan({ embedModel: "embed-v4.0", threshold: 0.3, emergencyCategories: ["Support & Emergency Services"], items });
+    const plan = searchPlan({ embedConfig: CONFIG, threshold: 0.3, emergencyCategories: ["Support & Emergency Services"], items });
 
     expect(SearchPlanSchema.parse(JSON.parse(JSON.stringify(plan)))).toEqual(plan);
     expect(plan.items).toEqual([{ id: "M001", text: items[0].text, text_hash: items[0].textHash }]);
@@ -138,6 +212,8 @@ describe("the vectors file", () => {
 describe("the search record of a release", () => {
   const record = {
     embed_model: "embed-v4.0",
+    embed_config: { model: "embed-v4.0", input_type: "search_document", embedding_type: "float", dims: null },
+    embed_config_key: "model=embed-v4.0;input_type=search_document;embedding_type=float;dims=default",
     vectors_path: "releases/4/vectors.json",
     catalogue_hash: "b".repeat(64),
     release_v: 4,

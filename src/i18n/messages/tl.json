@@ -4264,7 +4264,8 @@
         "catalogueNotLoaded": "[EN] the database holds a different catalogue than this deployment",
         "searchMismatch": "[EN] the search data does not match this release",
         "embeddingUnavailable": "[EN] the search data could not be made in time (the build is kept; press Publish again to continue it)",
-        "usageAllowanceExceeded": "[EN] making the search data would go over this month's usage allowance",
+        "usageAllowanceExceeded": "[EN] making the search data would go over this month's usage allowance (the build is kept; press Publish again when the allowance allows it)",
+        "searchNotConfigured": "[EN] search is switched off on this deployment (no valid Cohere key), and the current release has search data, so publishing without it would take search away from residents; nothing was published",
         "searchConfigInvalid": "[EN] the search settings do not fit this release",
         "gaveUp": "[EN] an earlier publish stopped three times",
         "unexpected": "[EN] something went wrong"

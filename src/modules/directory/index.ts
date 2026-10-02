@@ -39,13 +39,14 @@ export {
   type DirectoryStorage,
   type EmbeddedTexts,
   type Embedder,
+  type EmbeddingConfig,
   type PublishDeps,
   type PublishFailure,
   type PublishFailureCode,
   type SearchBuild,
 } from "./application/ports";
 export { cohereEmbedder, type CohereEmbedClient, type CohereEmbedderOptions } from "./adapters/cohereEmbedder";
-export { DEFAULT_CALL_TIMEOUT_MS, DEFAULT_CHUNK_SIZE, EMBED_SPEND_KIND, vectorsPathOf } from "./application/releaseSearch";
+export { DEFAULT_CALL_TIMEOUT_MS, DEFAULT_CHUNK_SIZE, DEFAULT_VECTORS_GET_TIMEOUT_MS, DEFAULT_VECTORS_PUT_TIMEOUT_MS, EMBED_PUBLISH_PURPOSE, EMBED_SPEND_KIND, vectorsPathOf } from "./application/releaseSearch";
 export {
   ReleaseSearchRecordSchema,
   VectorsFileSchema,

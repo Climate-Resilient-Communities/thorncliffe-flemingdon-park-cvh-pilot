@@ -52,12 +52,16 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        fail start-up: that is a secret-placement rule
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
- *                                                        used by the directory publish job to embed each provider's search
- *                                                        text (S03.02) and later by search and translation. Without it a
- *                                                        release is published without search data and search says
- *                                                        "unavailable". Never a NEXT_PUBLIC_ variable, never printed. Tests
- *                                                        and ci:local never use it: the embedding model is behind a port
- *                                                        with a fake
+ *                                                        the one key of the pilot (AD-15), used by the directory publish job
+ *                                                        to embed each provider's search text (S03.02) and later by search
+ *                                                        and translation. Never absent by accident: a set-but-blank value
+ *                                                        fails start-up in every environment (unset the variable instead).
+ *                                                        Unset, a release is published without search data only while no
+ *                                                        release has had any; once the current release has search data, a
+ *                                                        publish without the key is refused (search_not_configured). Never a
+ *                                                        NEXT_PUBLIC_ variable (nor a variable whose name contains COHERE,
+ *                                                        nor one holding the key), never printed. Tests and ci:local never
+ *                                                        use it: the embedding model is behind a port with a fake
  * SEARCH_EMBED_MODEL   server   optional                 the embedding model a release's search data is made with and every
  *                                                        question is embedded with; default embed-v4.0 (AD-11; a config value
  *                                                        the test set can change)
@@ -70,10 +74,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        the 911 block first, recorded on each release; default
  *                                                        "Support & Emergency Services". A name the catalogue does not have
  *                                                        refuses the publish (search_config_invalid)
- * EMBED_ALLOWANCE_CALLS_PER_MONTH, EMBED_ALLOWANCE_TOKENS_PER_MONTH
- *                      server   optional                 the usage allowance (AD-15): how many embedding calls and input
- *                                                        tokens a calendar month (America/Toronto) may use, counted from
- *                                                        spend_event, while Cohere's price is unknown. The publish job refuses
+ * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
+ *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
+ *                                                        tokens the directory publish may use in a calendar month
+ *                                                        (America/Toronto), counted from spend_event rows with purpose
+ *                                                        `publish` only, while Cohere's price is unknown. Questions and
+ *                                                        test-set runs have allowances of their own. The publish job refuses
  *                                                        to embed past it. Defaults 500 calls and 2,000,000 tokens
  * CVH_FAKE_IDENTITY_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
@@ -134,8 +140,8 @@ const rawSchema = z.object({
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
-  EMBED_ALLOWANCE_CALLS_PER_MONTH: optionalText,
-  EMBED_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
+  EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
+  EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
 
 type Raw = z.infer<typeof rawSchema>;
@@ -442,8 +448,8 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     threshold,
     emergencyCategories,
     allowance: {
-      callsPerMonth: positiveInteger("EMBED_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
-      tokensPerMonth: positiveInteger("EMBED_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
+      callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
+      tokensPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
     },
   };
 }
@@ -474,6 +480,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
       problems.push(`${present.join(", ")}: Cohere credentials are only allowed in production`);
     }
   }
+  // A key that is set but blank is a deployment mistake that would silently switch search off: the variable must be unset or hold the key.
+  if (source.COHERE_API_KEY !== undefined && source.COHERE_API_KEY.trim() === "") {
+    problems.push("COHERE_API_KEY: set but blank; unset it or give it the key");
+  }
   const search = parseSearchSettings(raw, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
@@ -497,8 +507,14 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   }
 
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
+  const cohereKey = raw.COHERE_API_KEY?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
+    if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && value.trim() !== "") {
+      if (name.toUpperCase().includes("COHERE") || (cohereKey !== undefined && value.trim() === cohereKey)) {
+        problems.push(`${name}: holds or names the Cohere key; NEXT_PUBLIC_ variables are sent to browsers`);
+      }
+    }
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
       problems.push(`${name}: holds a Supabase secret key; NEXT_PUBLIC_ variables are sent to browsers`);
     }

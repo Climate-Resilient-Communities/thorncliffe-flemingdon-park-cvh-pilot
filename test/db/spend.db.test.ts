@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { monthlyUsage, recordSpendEvent } from "@/modules/spend";
+import { monthlyUsage, recordSpendEvent, withSpendLock } from "@/modules/spend";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -98,6 +98,39 @@ describe("spend_event (S03.02)", () => {
     await expect(sql.unsafe(statement)).rejects.toThrow(/violates check constraint/);
   });
 
+  describe("the spend lock", () => {
+    /** Each caller reads the usage, thinks, and records one call only if the allowance of one call is not yet used. */
+    const spendIfFree = (hold: number) =>
+      withSpendLock(app, async (tx) => {
+        const used = await monthlyUsage(tx, "embed", new Date(), "publish");
+        if (used.calls >= 1) return false;
+        await new Promise((resolve) => setTimeout(resolve, hold));
+        await recordSpendEvent(tx, embed);
+        return true;
+      });
+
+    it("lets one of two simultaneous callers take the last call: the second reads the first's usage", async () => {
+      const results = await Promise.all([spendIfFree(300), spendIfFree(0)]);
+
+      expect(results.filter(Boolean)).toHaveLength(1);
+      expect((await sql`select count(*)::int as n from spend_event`)[0].n).toBe(1);
+    });
+
+    it("is what makes it so: without it both callers read zero and both record", async () => {
+      const unlocked = async (hold: number) => {
+        const used = await monthlyUsage(app, "embed", new Date(), "publish");
+        if (used.calls >= 1) return false;
+        await new Promise((resolve) => setTimeout(resolve, hold));
+        await recordSpendEvent(app, embed);
+        return true;
+      };
+
+      const results = await Promise.all([unlocked(300), unlocked(0)]);
+
+      expect(results).toEqual([true, true]);
+    });
+  });
+
   describe("the month's usage", () => {
     const at = (iso: string, calls: number, tokens: number, kind = "embed") =>
       sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date(iso)}, ${kind}, 'publish', 'embed-v4.0', ${calls}, ${tokens})`;
@@ -129,6 +162,18 @@ describe("spend_event (S03.02)", () => {
       await at("2026-12-01T05:00:00Z", 1, 10);
 
       expect(await monthlyUsage(app, "embed", new Date("2026-12-10T12:00:00Z"))).toEqual({ calls: 1, tokens: 10 });
+    });
+
+    it("counts only the usage of one purpose when asked: the publish allowance is not used up by questions or test-set runs", async () => {
+      await at("2026-10-05T12:00:00Z", 2, 20);
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-06T12:00:00Z")}, 'embed', 'query', 'embed-v4.0', 100, 5000)`;
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-07T12:00:00Z")}, 'embed', 'test_set', 'embed-v4.0', 40, 900)`;
+      const now = new Date("2026-10-08T00:00:00Z");
+
+      expect(await monthlyUsage(app, "embed", now, "publish")).toEqual({ calls: 2, tokens: 20 });
+      expect(await monthlyUsage(app, "embed", now, "query")).toEqual({ calls: 100, tokens: 5000 });
+      expect(await monthlyUsage(app, "embed", now, "test_set")).toEqual({ calls: 40, tokens: 900 });
+      expect(await monthlyUsage(app, "embed", now)).toEqual({ calls: 142, tokens: 5920 });
     });
 
     it("reads inside a caller's transaction through the transaction", async () => {

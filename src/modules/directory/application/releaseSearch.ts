@@ -9,24 +9,33 @@
 //    spend_event first (money was spent whether or not the rest works), then the chunk is kept in the release row, under
 //    the lease token. A job that stops, fails or runs out of its 40 s starts the next pass at the first text not in a kept
 //    chunk, and the previous release stays current throughout;
-//  - a vector is a pure function of (model, text), so one the previous release already has under the same model for the
-//    same text is copied, not embedded again. When the model and catalogue_hash match the previous release, that is every
-//    vector. The earlier release and its file are only read, never written (S02.05);
-//  - the call is cut off by an abort signal at the shorter of `callTimeoutMs` and what is left of the publish's time, and
-//    the allowance (calls and tokens this calendar month, from spend_event) is checked before every call;
+//  - a vector is a pure function of (embedding config, text), where the config is the model, the input type, the kind of
+//    numbers and their count. One that an earlier release already has under the same config for the same text is copied,
+//    by the hash of the text, not embedded again: from the latest complete release with search data, and from the chunks
+//    the latest failed or abandoned release kept (its staged text is cleared on closing, its paid vectors are not). The
+//    earlier release and its file are only read, never written (S02.05);
+//  - the usage allowance is the publish allowance: only usage with the purpose `publish` counts. Before the first call the
+//    calls and tokens that all the remaining texts need are estimated and the build is refused up front if they do not fit;
+//    a refusal never closes the build: the lease is let go and the kept chunks wait for the next press. Each call then
+//    decides and records its usage in one transaction under the spend lock, so two callers cannot both take the last call;
+//  - a call is only started when at least `callTimeoutMs` of the publish's time is left, and is cut off by an abort signal
+//    at `callTimeoutMs`. A call that fails or is cut off is recorded too, as an estimate (it may have been billed);
 //  - the vectors file is private: `releases/{n}/vectors.json` in the same bucket, which no route serves (the routes serve
-//    only `<lang>.json` listing files), and the manifest names its path but a phone cannot fetch it.
-import { and, desc, eq, isNotNull, sql } from "drizzle-orm";
-import { monthlyUsage, recordSpendEvent } from "@/modules/spend";
+//    only `<lang>.json` listing files), and the manifest names its path but a phone cannot fetch it. Writing it and reading
+//    it back each have their own time limit.
+import { and, desc, eq, isNotNull, sql, type SQL } from "drizzle-orm";
+import { monthlyUsage, recordSpendEvent, withSpendLock } from "@/modules/spend";
 import type { Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { directoryRelease } from "../adapters/schema";
 import { RELEASE_LANGS, ReleaseSearchSchema, type ReleaseSearch, type SnapshotCategory, type SnapshotProvider } from "../domain/directoryRelease";
 import {
+  KeptSearchSchema,
   ReleaseSearchRecordSchema,
   SearchPlanSchema,
   VectorChunkSchema,
   VectorsFileSchema,
+  embeddingConfigRecord,
   estimateTokens,
   listingProviderIds,
   searchItems,
@@ -39,13 +48,17 @@ import {
   type SearchPlan,
   type VectorEntry,
 } from "../domain/searchData";
-import type { PublishDeps, SearchBuild } from "./ports";
+import type { EmbeddedTexts, PublishDeps, SearchBuild } from "./ports";
 import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
 
 export const DEFAULT_CHUNK_SIZE = 32;
 export const DEFAULT_CALL_TIMEOUT_MS = 15 * 1000;
+export const DEFAULT_VECTORS_PUT_TIMEOUT_MS = 10 * 1000;
+export const DEFAULT_VECTORS_GET_TIMEOUT_MS = 10 * 1000;
 /** The kind of usage the embedding calls are counted as in spend_event. */
 export const EMBED_SPEND_KIND = "embed";
+/** The purpose the publish job's calls are counted under: the publish allowance counts nothing else. */
+export const EMBED_PUBLISH_PURPOSE = "publish";
 
 const CHUNK_KEY = "search_chunk_";
 
@@ -58,6 +71,18 @@ export interface StepClock {
   deadline: number;
 }
 
+class TimedOut extends Error {}
+
+/** The result of `work`, or a TimedOut rejection when it has not settled after `ms`. */
+async function within<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  try {
+    return await Promise.race([work, new Promise<never>((_, reject) => void (timer = setTimeout(() => reject(new TimedOut()), ms)))]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 // ---------------------------------------------------------------- the plan (inside the claim)
 /**
  * The search plan of a release, as the text the claim stages with the listing files. Throws a PublishStepError when the
@@ -68,31 +93,74 @@ export function planSearch(build: SearchBuild, providers: SnapshotProvider[], ca
     throw new PublishStepError("search_config_invalid", false, ["emergency_category_unknown"]);
   }
   const items = searchItems(providers, categories, sha256Hex);
-  return JSON.stringify(searchPlan({ embedModel: build.embedder.model, threshold: build.threshold, emergencyCategories: build.emergencyCategories, items }));
+  return JSON.stringify(searchPlan({ embedConfig: build.embedder.config, threshold: build.threshold, emergencyCategories: build.emergencyCategories, items }));
+}
+
+// ---------------------------------------------------------------- what a closed build keeps
+/**
+ * The value of the `search` column for a build being closed as failed, as SQL over the row's own `staged`: the chunks it
+ * had embedded, flattened, under the embedding config key of its plan; null when it had none. The guard allows it because
+ * the row is still `building` in the statement that closes it.
+ */
+export function keptOnClose(): SQL {
+  return sql`(
+    select case when count(e.entry) = 0 then null else jsonb_build_object('kept', jsonb_build_object('embed_config_key', (${directoryRelease.staged} ->> 'search')::jsonb ->> 'embed_config_key', 'entries', jsonb_agg(e.entry))) end
+    from jsonb_each_text(${directoryRelease.staged}) as c(key, value)
+    cross join lateral jsonb_array_elements(c.value::jsonb) as e(entry)
+    where c.key like 'search\\_chunk\\_%'
+  )`;
+}
+
+/** The same, from a staged object already in hand (the claim closes a stopped build inside its own transaction). */
+export function keptOfStaged(staged: Record<string, string> | null): ReturnType<typeof KeptSearchSchema.parse> | null {
+  if (staged === null || staged.search === undefined) return null;
+  try {
+    const key = (JSON.parse(staged.search) as { embed_config_key?: unknown }).embed_config_key;
+    if (typeof key !== "string") return null;
+    const entries = Object.entries(staged)
+      .filter(([name]) => name.startsWith(CHUNK_KEY))
+      .flatMap(([, value]) => VectorChunkSchema.parse(JSON.parse(value)));
+    return entries.length === 0 ? null : { kept: { embed_config_key: key, entries } };
+  } catch {
+    return null;
+  }
 }
 
 // ---------------------------------------------------------------- what an earlier release has
-/** The vectors the latest complete release with search data holds under this model, by provider id; none when they cannot be read. */
-async function previousVectors(db: Db, deps: PublishDeps, model: string): Promise<Map<string, VectorEntry>> {
+/**
+ * The vectors that earlier releases hold under this embedding config, by the hash of their text: the latest complete
+ * release with search data (its file is read from the store), and the chunks the latest failed or abandoned release kept.
+ * Whatever cannot be read is left out, and its texts are embedded again.
+ */
+async function previousVectors(db: Db, deps: PublishDeps, build: SearchBuild, configKey: string): Promise<Map<string, number[]>> {
+  const found = new Map<string, number[]>();
+  const [failed] = await db
+    .select({ search: directoryRelease.search })
+    .from(directoryRelease)
+    .where(and(eq(directoryRelease.status, "failed"), sql`${directoryRelease.search} -> 'kept' ->> 'embed_config_key' = ${configKey}`))
+    .orderBy(desc(directoryRelease.number))
+    .limit(1);
+  const kept = KeptSearchSchema.safeParse(failed?.search);
+  if (kept.success) for (const entry of kept.data.kept.entries) found.set(entry.text_hash, entry.vector);
+
   const [previous] = await db
     .select({ search: directoryRelease.search })
     .from(directoryRelease)
     .where(and(eq(directoryRelease.status, "complete"), isNotNull(directoryRelease.search)))
     .orderBy(desc(directoryRelease.number))
     .limit(1);
-  const none = new Map<string, VectorEntry>();
   const record = ReleaseSearchRecordSchema.safeParse(previous?.search);
-  if (!record.success || record.data.embed_model !== model) return none;
+  if (!record.success || record.data.embed_config_key !== configKey) return found;
   try {
-    const body = await deps.storage.get(record.data.vectors_path);
-    if (body === null || sha256Hex(body) !== record.data.sha256) return none;
+    const body = await within(deps.storage.get(record.data.vectors_path), build.vectorsGetTimeoutMs ?? DEFAULT_VECTORS_GET_TIMEOUT_MS);
+    if (body === null || sha256Hex(body) !== record.data.sha256) return found;
     const file = VectorsFileSchema.safeParse(JSON.parse(body));
-    if (!file.success || file.data.embed_model !== model) return none;
-    return new Map(file.data.providers.map((entry) => [entry.id, entry] as const));
+    if (!file.success || file.data.embed_model !== build.embedder.model) return found;
+    for (const entry of file.data.providers) found.set(entry.text_hash, entry.vector);
   } catch {
     // An unreadable earlier file only means the vectors are embedded again.
-    return none;
   }
+  return found;
 }
 
 // ---------------------------------------------------------------- embedding
@@ -118,6 +186,10 @@ async function keptChunks(db: Db, release: number, plan: SearchPlan): Promise<Ke
 }
 
 const embeddingUnavailable = (...detail: string[]) => new PublishStepError("embedding_unavailable", true, detail);
+/** Over the allowance: told to the Admin and ops, but the build and its kept chunks stay for the next press. */
+const overAllowance = (what: "calls" | "tokens") => new PublishStepError("usage_allowance_exceeded", false, [what], undefined, true);
+
+const sameSet = (a: readonly string[], b: readonly string[]) => a.length === b.length && [...a].sort().join("\n") === [...b].sort().join("\n");
 
 /**
  * Embeds what the release's plan still lacks and writes the vectors file into the release, ready to be checked. A no-op for a
@@ -137,8 +209,6 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
     .where(eq(directoryRelease.number, claim.release));
   if (!row || row.status !== "building" || row.leaseToken !== claim.token) throw new LeaseLostError();
   if (row.plan === null) return null;
-  const stored = ReleaseSearchRecordSchema.safeParse(row.search);
-  if (stored.success) return { vectors: stored.data.vector_count, reused: stored.data.reused, embedded: stored.data.embedded };
 
   const build = deps.search;
   if (!build) throw new PublishStepError("search_config_invalid", false, ["search_not_configured"]);
@@ -148,44 +218,85 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
   } catch {
     throw new PublishStepError("unexpected", false);
   }
-  // The release was planned for one model: its texts are embedded with that one or not at all.
+  // The release was planned for one embedding config, one threshold and one list of emergency categories, and it is built and
+  // recorded with those or not at all: a resumed build does not take up settings changed since it was planned.
   if (build.embedder.model !== plan.embed_model) throw new PublishStepError("search_config_invalid", false, ["embed_model_changed"]);
+  if (JSON.stringify(embeddingConfigRecord(build.embedder.config)) !== JSON.stringify(plan.embed_config)) throw new PublishStepError("search_config_invalid", false, ["embed_config_changed"]);
+  if (build.threshold !== plan.threshold) throw new PublishStepError("search_config_invalid", false, ["threshold_changed"]);
+  if (!sameSet(build.emergencyCategories, plan.emergency_categories)) throw new PublishStepError("search_config_invalid", false, ["emergency_categories_changed"]);
 
-  const previous = await previousVectors(db, deps, plan.embed_model);
+  const stored = ReleaseSearchRecordSchema.safeParse(row.search);
+  if (stored.success) return { vectors: stored.data.vector_count, reused: stored.data.reused, embedded: stored.data.embedded };
+
+  const previous = await previousVectors(db, deps, build, plan.embed_config_key);
   const reusable = new Map<string, VectorEntry>();
   for (const item of plan.items) {
-    const old = previous.get(item.id);
-    if (old && old.text_hash === item.text_hash) reusable.set(item.id, old);
+    const old = previous.get(item.text_hash);
+    if (old) reusable.set(item.id, { id: item.id, text_hash: item.text_hash, vector: old });
   }
   const kept = await keptChunks(db, claim.release, plan);
   const have = (id: string) => reusable.get(id) ?? kept.entries.get(id);
   const chunkSize = Math.max(1, Math.min(96, build.chunkSize ?? DEFAULT_CHUNK_SIZE));
+  const callTimeoutMs = build.callTimeoutMs ?? DEFAULT_CALL_TIMEOUT_MS;
 
-  for (let remaining = plan.items.filter((item) => have(item.id) === undefined); remaining.length > 0; remaining = remaining.slice(chunkSize)) {
+  // Before the first call: would all the calls the rest of this build needs fit in what the month has left for publishing?
+  // A build that needs none (everything copied or kept) is never refused for the allowance.
+  const todo = plan.items.filter((item) => have(item.id) === undefined);
+  if (todo.length > 0) {
+    const used = await monthlyUsage(db, EMBED_SPEND_KIND, step.clock(), EMBED_PUBLISH_PURPOSE);
+    if (used.calls + Math.ceil(todo.length / chunkSize) > build.allowance.callsPerMonth) throw overAllowance("calls");
+    if (used.tokens + estimateTokens(todo.map((item) => item.text)) > build.allowance.tokensPerMonth) throw overAllowance("tokens");
+  }
+
+  for (let remaining = todo; remaining.length > 0; remaining = remaining.slice(chunkSize)) {
     const batch = remaining.slice(0, chunkSize);
     const texts = batch.map((item) => item.text);
     const now = step.clock();
-    const timeLeft = step.deadline - now.getTime();
-    // No time for another call: the job lets go of its lease, and the next press resumes after the last kept chunk.
-    if (timeLeft <= 0) throw embeddingUnavailable("out_of_time");
+    // Not enough time for a whole call: the job lets go of its lease, and the next press resumes after the last kept chunk.
+    if (step.deadline - now.getTime() < callTimeoutMs) throw embeddingUnavailable("out_of_time");
 
     const estimate = estimateTokens(texts);
-    const used = await monthlyUsage(db, EMBED_SPEND_KIND, now);
-    if (used.calls + 1 > build.allowance.callsPerMonth) throw new PublishStepError("usage_allowance_exceeded", false, ["calls"]);
-    if (used.tokens + estimate > build.allowance.tokensPerMonth) throw new PublishStepError("usage_allowance_exceeded", false, ["tokens"]);
-
-    const controller = new AbortController();
-    const timer = setTimeout(() => controller.abort(), Math.min(build.callTimeoutMs ?? DEFAULT_CALL_TIMEOUT_MS, timeLeft));
-    const started = Date.now();
-    let embedded: Awaited<ReturnType<SearchBuild["embedder"]["embedDocuments"]>>;
+    let outcome: { refused: "calls" | "tokens" } | { refused: null; embedded: EmbeddedTexts | null };
     try {
-      embedded = await build.embedder.embedDocuments(texts, { signal: controller.signal });
+      // Decide and record under the spend lock: the allowance is read, the call made and its usage inserted in one
+      // transaction, so a second caller sees this call's usage when it reads, not before.
+      outcome = await withSpendLock(db, async (tx) => {
+        const used = await monthlyUsage(tx, EMBED_SPEND_KIND, now, EMBED_PUBLISH_PURPOSE);
+        if (used.calls + 1 > build.allowance.callsPerMonth) return { refused: "calls" } as const;
+        if (used.tokens + estimate > build.allowance.tokensPerMonth) return { refused: "tokens" } as const;
+
+        const controller = new AbortController();
+        const timer = setTimeout(() => controller.abort(), callTimeoutMs);
+        const started = Date.now();
+        let embedded: EmbeddedTexts | null = null;
+        try {
+          embedded = await build.embedder.embedDocuments(texts, { signal: controller.signal });
+        } catch {
+          embedded = null;
+        } finally {
+          clearTimeout(timer);
+        }
+        // The vendor bills what it did whatever it answered, and may have billed a call that failed or was cut off: the
+        // usage is recorded before the answer is judged or kept, as an estimate when the vendor did not say.
+        await recordSpendEvent(tx, {
+          kind: EMBED_SPEND_KIND,
+          purpose: EMBED_PUBLISH_PURPOSE,
+          model: plan.embed_model,
+          releaseV: claim.release,
+          calls: 1,
+          tokens: embedded?.tokens ?? estimate,
+          tokensEstimated: embedded === null || embedded.tokens === null,
+          ms: Date.now() - started,
+        });
+        return { refused: null, embedded };
+      });
     } catch {
-      throw embeddingUnavailable("call_failed");
-    } finally {
-      clearTimeout(timer);
+      throw new PublishStepError("unexpected", true);
     }
-    const ms = Date.now() - started;
+    if (outcome.refused !== null) throw overAllowance(outcome.refused);
+    const embedded = outcome.embedded;
+    if (embedded === null) throw embeddingUnavailable("call_failed");
+
     const dims = embedded.vectors[0]?.length ?? 0;
     const vectors = embedded.vectors;
     const wellFormed =
@@ -193,22 +304,6 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
       dims > 0 &&
       vectors.every((vector) => Array.isArray(vector) && vector.length === dims && vector.every((n) => typeof n === "number" && Number.isFinite(n))) &&
       [...reusable.values(), ...kept.entries.values()].every((entry) => entry.vector.length === dims);
-
-    // The vendor billed the call whatever it answered: the usage is recorded before the answer is judged or kept.
-    try {
-      await recordSpendEvent(db, {
-        kind: EMBED_SPEND_KIND,
-        purpose: "publish",
-        model: plan.embed_model,
-        releaseV: claim.release,
-        calls: 1,
-        tokens: embedded.tokens ?? estimate,
-        tokensEstimated: embedded.tokens === null,
-        ms,
-      });
-    } catch {
-      throw new PublishStepError("unexpected", true);
-    }
     if (!wellFormed) throw embeddingUnavailable("bad_response");
 
     const chunk = batch.map((item, index) => ({ id: item.id, text_hash: item.text_hash, vector: vectors[index] }));
@@ -238,12 +333,14 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
   }
   const path = vectorsPathOf(claim.release);
   try {
-    await deps.storage.put(path, file.body);
+    await within(deps.storage.put(path, file.body), build.vectorsPutTimeoutMs ?? DEFAULT_VECTORS_PUT_TIMEOUT_MS);
   } catch {
     throw new PublishStepError("storage_unavailable", true);
   }
   const record: ReleaseSearchRecord = {
     embed_model: plan.embed_model,
+    embed_config: plan.embed_config,
+    embed_config_key: plan.embed_config_key,
     vectors_path: path,
     catalogue_hash: row.catalogueHash,
     release_v: claim.release,
@@ -292,7 +389,7 @@ export async function verifySearchData(db: Db, deps: PublishDeps, claim: Release
 
   let body: string | null;
   try {
-    body = await deps.storage.get(record.data.vectors_path);
+    body = await within(deps.storage.get(record.data.vectors_path), deps.search?.vectorsGetTimeoutMs ?? DEFAULT_VECTORS_GET_TIMEOUT_MS);
   } catch {
     throw new PublishStepError("storage_unavailable", true);
   }

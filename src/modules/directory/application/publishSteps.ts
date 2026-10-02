@@ -19,6 +19,11 @@ export class PublishStepError extends Error {
     /** What the Admin is told beyond the code: ids and codes of what is wrong, never text from the catalogue. */
     readonly detail: string[] = [],
     readonly catalogue?: CatalogueMismatch,
+    /**
+     * For a refusal that does not condemn the build (the usage allowance): the run tells the Admin and ops, lets go of its
+     * lease and leaves the release `building` with the chunks it has kept, instead of closing it as failed.
+     */
+    readonly keepBuild = false,
   ) {
     super(code);
   }

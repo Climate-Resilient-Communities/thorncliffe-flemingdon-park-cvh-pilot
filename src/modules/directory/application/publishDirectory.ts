@@ -16,7 +16,9 @@
 //    provider of the same snapshot; after the files, the job embeds what the previous release's vectors do not
 //    already hold, in chunks it keeps in the release row, and stores `releases/{n}/vectors.json` (releaseSearch.ts).
 //    A stopped job resumes after the last kept chunk; the vectors are checked against the listing files before the
-//    release can be made current;
+//    release can be made current. A deployment without an embedding model may not publish over a current release that
+//    has search data (search_not_configured, refused in the claim). A build closed as failed keeps the chunks it paid
+//    for in its `search` column, for the next release to copy; one refused for the usage allowance is not closed at all;
 //  - complete: one transaction, again under the advisory lock, checks every file is stored and any search
 //    data matches, clears the previous release's `is_current`, sets this one's, and writes the audit record.
 //    Readers see the old release or the new one, never a mix (one unique partial index, two statements, one
@@ -47,7 +49,7 @@ import {
 import type { CatalogueMismatch, PublishDeps, PublishFailure, PublishFailureCode } from "./ports";
 import { PUBLISH_LOCK_KEY } from "./publishLock";
 import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
-import { buildSearchData, planSearch, verifySearchData } from "./releaseSearch";
+import { buildSearchData, keptOfStaged, keptOnClose, planSearch, verifySearchData } from "./releaseSearch";
 
 export { PUBLISH_LOCK_KEY };
 
@@ -146,6 +148,17 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
       const live = open.leaseUntil !== null && open.leaseToken !== null && open.leaseUntil > now;
       if (live) return { running: true };
     }
+    // Search is never switched off by accident: a deployment without an embedding key (none set, or a blank one) may not
+    // publish over a current release that has search data, because residents would lose search with no one choosing it.
+    // Where no release has ever had search, publishing without it stays allowed.
+    if (!deps.search) {
+      const [current] = await tx
+        .select({ number: directoryRelease.number })
+        .from(directoryRelease)
+        .where(and(eq(directoryRelease.isCurrent, true), eq(directoryRelease.status, "complete"), isNotNull(directoryRelease.search)))
+        .limit(1);
+      if (current) throw new PublishStepError("search_not_configured", false, ["current_release_has_search"]);
+    }
     // The providers in Postgres are what the seed loaded: a release may say it was made from this deployment's catalogue only if the
     // latest load was of the same files. Read with the transaction, under the lock the seed also takes.
     const [load] = await tx.select({ hash: catalogueLoad.hash }).from(catalogueLoad).orderBy(desc(catalogueLoad.id)).limit(1);
@@ -166,7 +179,8 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
       const gaveUp = open.attempts >= max;
       await tx
         .update(directoryRelease)
-        .set({ status: "failed", failure: gaveUp ? "gave_up" : "abandoned", staged: null, leaseToken: null, leaseUntil: null })
+        // The staged text goes, the paid vectors do not: the next release copies the chunks this one kept (releaseSearch.ts).
+        .set({ status: "failed", failure: gaveUp ? "gave_up" : "abandoned", staged: null, search: keptOfStaged(open.staged), leaseToken: null, leaseUntil: null })
         .where(eq(directoryRelease.number, open.number));
       // The Admin is told about the build that stopped three times; the next press builds a new release.
       if (gaveUp) return { gaveUp: { release: open.number, attempts: open.attempts } };
@@ -378,7 +392,7 @@ export async function publishDirectory(db: Db, deps: PublishDeps, actorStaffId: 
     if (options.close && claim) {
       const closed = await db
         .update(directoryRelease)
-        .set({ status: "failed", failure: code, staged: null, leaseToken: null, leaseUntil: null })
+        .set({ status: "failed", failure: code, staged: null, search: keptOnClose(), leaseToken: null, leaseUntil: null })
         .where(and(eq(directoryRelease.number, claim.release), eq(directoryRelease.leaseToken, claim.token), eq(directoryRelease.status, "building")))
         .returning({ number: directoryRelease.number })
         .catch(() => null);
@@ -413,6 +427,12 @@ export async function publishDirectory(db: Db, deps: PublishDeps, actorStaffId: 
       const attempts = claim?.attempts ?? localAttempts;
       const wait = BACKOFF_MS[Math.min(localAttempts - 1, BACKOFF_MS.length - 1)];
       const exhausted = attempts >= max || localAttempts >= max;
+      // A refusal that does not condemn the build (the usage allowance) lets go of the lease and leaves it building with the
+      // chunks it has kept; the Admin and ops are told, and the next press resumes it.
+      if (step.keepBuild && claim) {
+        await releaseLease(db, claim);
+        return await fail(step.code, attempts, step.detail);
+      }
       if (!step.retryable || exhausted) return await fail(step.code, attempts, step.detail, { close: true, catalogue: step.catalogue });
       // Another pass is due, but it must fit the function's time: past the budget the run lets go of its lease, tells ops,
       // and leaves the release building for the next press to resume from the files already stored.

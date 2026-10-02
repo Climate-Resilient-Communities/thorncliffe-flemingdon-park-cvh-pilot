@@ -2,6 +2,7 @@
 // version is, and who is told when a publish fails. Implementations are in adapters/ and in the app's
 // composition root; tests use the fakes beside them.
 import type { ZhHantConverter } from "../domain/directoryRelease";
+import type { EmbeddingConfig } from "../domain/searchData";
 
 /** The private place the release files are kept (Supabase Storage; a folder in local runs; memory in tests). */
 export interface DirectoryStorage {
@@ -34,6 +35,8 @@ export const PUBLISH_FAILURE_CODES = [
   "usage_allowance_exceeded",
   /** The search settings do not fit this release (an emergency category the catalogue does not have, or another model than the staged one). */
   "search_config_invalid",
+  /** The deployment has no (valid) embedding key but the current release has search data: publishing without it would switch search off for residents, so nothing is published. */
+  "search_not_configured",
   "gave_up",
   "unexpected",
 ] as const;
@@ -81,6 +84,8 @@ export interface PublishDeps {
   hook?: (point: "snapshot_locked" | "snapshot_taken" | "file_stored" | "chunk_embedded" | "vectors_stored" | "before_current" | "search_verified", detail: { release: number; lang?: string }) => Promise<void> | void;
 }
 
+export type { EmbeddingConfig };
+
 /** What one call of an embedding model gives back. */
 export interface EmbeddedTexts {
   /** One vector per text, in the order of the texts. */
@@ -96,6 +101,11 @@ export interface EmbeddedTexts {
 export interface Embedder {
   /** The model's id: the release records it, and every question is embedded with the same one. */
   readonly model: string;
+  /**
+   * Everything besides the text that decides what a vector is: a vector is reused from an earlier release only when this
+   * whole configuration matches, not just the model id.
+   */
+  readonly config: EmbeddingConfig;
   /** Throws when the call fails or `signal` aborts it. */
   embedDocuments(texts: string[], options: { signal: AbortSignal }): Promise<EmbeddedTexts>;
 }
@@ -107,10 +117,17 @@ export interface SearchBuild {
   threshold: number;
   /** The English names of the categories whose results put the 911 block first; recorded on the release. */
   emergencyCategories: string[];
-  /** What the month may use before the publish refuses to embed, in calls and tokens (money is not known yet). */
+  /**
+   * What the month may use for publishing before the publish refuses to embed, in calls and tokens (money is not known
+   * yet). Only usage with the purpose `publish` counts against it: questions and test-set runs have their own.
+   */
   allowance: { callsPerMonth: number; tokensPerMonth: number };
   /** Texts per call (default 32; the models take up to 96). A stopped job resumes after the last chunk it kept. */
   chunkSize?: number;
-  /** The longest one call may take (default 15 s), and never longer than what is left of the publish's time. */
+  /** The longest one call may take (default 15 s). A call is only started when at least this much of the publish's time is left. */
   callTimeoutMs?: number;
+  /** The longest the store may take to write the vectors file (default 10 s). */
+  vectorsPutTimeoutMs?: number;
+  /** The longest the store may take to read a vectors file back (default 10 s). */
+  vectorsGetTimeoutMs?: number;
 }

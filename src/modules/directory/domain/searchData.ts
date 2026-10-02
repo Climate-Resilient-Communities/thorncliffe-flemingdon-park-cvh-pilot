@@ -5,9 +5,13 @@
 //
 // Rules:
 //  - the search text of a provider is its English name, its categories, its subcategories, its day-to-day services and
-//    its emergency role, nothing else: source notes, contact details and addresses are never embedded;
-//  - a vector is a pure function of (model, search text), so it is keyed by the hash of the text: the same text under
-//    the same model is embedded once, however many releases carry it;
+//    its emergency role, nothing else. The contact block, the address fields and the source notes are never read, and the
+//    free text of the services and the emergency role is scrubbed of phone numbers, emails, web addresses, postal codes
+//    and street addresses before it is hashed and embedded (scrubContactDetails), because a vector search matches
+//    meaning and those details are noise to it and personal data to the vendor;
+//  - a vector is a pure function of (embedding config, search text), so it is keyed by the hash of the text: the same
+//    text under the same config (model, input type, kind of numbers, dimension) is embedded once, however many releases
+//    carry it;
 //  - the vectors file names the release and the catalogue version it was made for, the model and the size of its
 //    vectors, and lists exactly the providers of the release's listing files, each once, with the hash of the text it was
 //    made from;
@@ -30,6 +34,43 @@ export interface SearchItem {
   textHash: string;
 }
 
+// ---------------------------------------------------------------- contact details in free text
+const STREET_SUFFIX =
+  "(?:Avenue|Ave|Street|St|Road|Rd|Boulevard|Blvd|Drive|Dr|Crescent|Cres|Court|Crt|Ct|Place|Pl|Way|Lane|Ln|Parkway|Pkwy|Trail|Terrace|Gates|Gate|Circle|Cir|Square|Highway|Hwy|Mews|Grove|Gardens|Heights)";
+const TAIL = String.raw`[^\s<>"')\]]`;
+
+// Applied in this order: an email before the web address it contains, a web address before anything made of digits, and a
+// phone number before a street address.
+const CONTACT_PATTERNS: readonly RegExp[] = [
+  /[A-Za-z0-9._%+-]+@[A-Za-z0-9-]+(?:\.[A-Za-z0-9-]+)+/g,
+  new RegExp(String.raw`\b(?:https?:\/\/|www\.)${TAIL}+`, "gi"),
+  new RegExp(String.raw`\b[a-z0-9][a-z0-9-]*(?:\.[a-z0-9-]+)*\.(?:ca|com|org|net|edu|gov|info|ngo|coop|app|io)\b(?:\/${TAIL}*)?`, "gi"),
+  // 416-808-5500, (416) 425-2485, an unclosed "(416-421-0792", +1 833 250 2290, with an extension.
+  /(?<!\d)(?:\+?1[\s.-]?)?(?:\(\s*\d{3}\s*\)?|\d{3})[\s.)–-]*\d{3}[\s.–-]*\d{4}(?!\d)(?:\s*(?:ext\.?|extension|x)\s*\d{1,6})?/gi,
+  /(?<![\d.])\d{3}[-.]\d{4}(?!\d)/g,
+  /(?<!\d)1?\d{10}(?!\d)/g,
+  /\b[A-Za-z]\d[A-Za-z][ -]?\d[A-Za-z]\d\b/g,
+  // 101 Coxwell Ave, 16 Thorncliffe Park Drive, 1313 Woodbine Ave E: a number, up to four capitalised words, a street word.
+  new RegExp(String.raw`\b\d{1,6}[A-Za-z]?(?:-\d{1,6})?\s+(?:[A-Z0-9][\w'’.-]*\s+){0,4}${STREET_SUFFIX}\b\.?(?:\s+(?:East|West|North|South|E|W|N|S)\b\.?)?`, "g"),
+];
+
+/**
+ * The text with its phone numbers, email addresses, web addresses, postal codes and street addresses taken out. Short
+ * service numbers (911, 211, 311) stay: they are what the text is about, not how to reach a provider.
+ */
+export function scrubContactDetails(text: string): string {
+  let out = text;
+  for (const pattern of CONTACT_PATTERNS) out = out.replace(pattern, " ");
+  return out
+    .replace(/\(\s*[,;/|]*\s*\)/g, " ")
+    .replace(/[ \t]+([,.;:!?)])/g, "$1")
+    .replace(/\([ \t]+/g, "(")
+    .replace(/([,;])(?:[ \t]*[,;])+/g, "$1")
+    .replace(/[ \t]{2,}/g, " ")
+    .replace(/[ \t]+$/gm, "")
+    .trim();
+}
+
 /** The English text of one provider that search matches a question against. */
 export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly string[]): string {
   const lines = [provider.name];
@@ -37,9 +78,9 @@ export function searchTextOf(provider: SnapshotProvider, categoryNames: readonly
   const subcategories = provider.subcategories.map((s) => s.name).filter(present);
   if (subcategories.length > 0) lines.push(`Subcategories: ${subcategories.join(", ")}`);
   const services = provider.texts.services?.en;
-  if (present(services)) lines.push(`Services: ${services.trim()}`);
+  if (present(services) && scrubContactDetails(services) !== "") lines.push(`Services: ${scrubContactDetails(services)}`);
   const role = provider.texts.emergency_role?.en;
-  if (present(role)) lines.push(`Emergency role: ${role.trim()}`);
+  if (present(role) && scrubContactDetails(role) !== "") lines.push(`Emergency role: ${scrubContactDetails(role)}`);
   return lines.join("\n");
 }
 
@@ -72,19 +113,58 @@ export function estimateTokens(texts: readonly string[]): number {
   return texts.reduce((sum, text) => sum + Math.ceil(encoder.encode(text).length / 3), 0);
 }
 
+// ---------------------------------------------------------------- the embedding config
+/** What makes one embedding of a text different from another: the model, the input type, the kind of numbers and their count. */
+export interface EmbeddingConfig {
+  model: string;
+  /** How the vendor is told what the text is for (documents are embedded as `search_document`). */
+  inputType: string;
+  /** The kind of numbers asked for (`float`). */
+  embeddingType: string;
+  /** The number of numbers in a vector when the config fixes it, or null when the model's own default applies. */
+  dims: number | null;
+}
+
+/** An embedding config as a release records it. */
+export const EmbeddingConfigRecordSchema = z.strictObject({
+  model: z.string().min(1),
+  input_type: z.string().min(1),
+  embedding_type: z.string().min(1),
+  dims: z.number().int().positive().nullable(),
+});
+
+export const embeddingConfigRecord = (config: EmbeddingConfig) => ({
+  model: config.model,
+  input_type: config.inputType,
+  embedding_type: config.embeddingType,
+  dims: config.dims,
+});
+
+/**
+ * The key a vector is reused by, besides its text: every part of the config. A vector of one model, input type, kind of
+ * numbers or dimension is no use to another, so a release copies from an earlier one only when the keys are equal.
+ */
+export function embeddingConfigKey(config: EmbeddingConfig): string {
+  return `model=${config.model};input_type=${config.inputType};embedding_type=${config.embeddingType};dims=${config.dims ?? "default"}`;
+}
+
 // ---------------------------------------------------------------- the plan staged with the release
 /** What the claim stages, from the one snapshot of the release: a resumed job embeds exactly these texts, whatever the providers look like now. */
 export const SearchPlanSchema = z.strictObject({
   embed_model: z.string().min(1),
+  embed_config: EmbeddingConfigRecordSchema,
+  embed_config_key: z.string().min(1),
   threshold: z.number().min(0).max(1),
   emergency_categories: z.array(z.string().min(1)),
   items: z.array(z.strictObject({ id: ProviderId, text: z.string().min(1), text_hash: Sha256 })),
 });
 export type SearchPlan = z.infer<typeof SearchPlanSchema>;
 
-export function searchPlan(input: { embedModel: string; threshold: number; emergencyCategories: readonly string[]; items: readonly SearchItem[] }): SearchPlan {
+export function searchPlan(input: { embedConfig: EmbeddingConfig; threshold: number; emergencyCategories: readonly string[]; items: readonly SearchItem[] }): SearchPlan {
   return {
-    embed_model: input.embedModel,
+    embed_model: input.embedConfig.model,
+    embed_config: embeddingConfigRecord(input.embedConfig),
+    embed_config_key: embeddingConfigKey(input.embedConfig),
     threshold: input.threshold,
     emergency_categories: [...input.emergencyCategories],
     items: input.items.map((item) => ({ id: item.id, text: item.text, text_hash: item.textHash })),
@@ -131,9 +211,23 @@ export function vectorsFileBody(input: { releaseV: number; catalogueHash: string
   return { body: JSON.stringify(VectorsFileSchema.parse(file)), dims };
 }
 
+/**
+ * What a release closed as failed keeps in its `search` column (the staged text is cleared on closing, the paid vectors are
+ * not): the chunks it had embedded, under the embedding config key they were made with, so the next release can copy them
+ * instead of paying for them again. Never mistaken for a release's record (that one has other fields, and a failed
+ * release is never served).
+ */
+export const KeptSearchSchema = z.strictObject({
+  kept: z.strictObject({ embed_config_key: z.string().min(1), entries: VectorChunkSchema }),
+});
+export type KeptSearch = z.infer<typeof KeptSearchSchema>;
+
 /** The `search` record of a release: what the manifest and the search route read, and what the release keeps of its vectors. */
 export const ReleaseSearchRecordSchema = z.strictObject({
   embed_model: z.string().min(1),
+  /** The whole embedding config and its key: what a later release compares before it copies any of these vectors. */
+  embed_config: EmbeddingConfigRecordSchema,
+  embed_config_key: z.string().min(1),
   vectors_path: z.string().min(1),
   catalogue_hash: Sha256,
   release_v: z.number().int().positive(),

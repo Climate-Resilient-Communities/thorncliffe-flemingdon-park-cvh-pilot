@@ -13,6 +13,7 @@ import {
   PUBLISH_FAILURE_CODES,
   currentManifest,
   currentReleaseSummary,
+  estimateTokens,
   latestReleaseSummary,
   memoryDirectoryStorage,
   publishDirectory,
@@ -30,6 +31,7 @@ import { VectorsFileSchema } from "@/modules/directory/domain/searchData";
 import { catalogueTextId } from "@/modules/directory/adapters/hash";
 import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
+import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { createDb, type Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { connect, serverUrl } from "./helpers";
@@ -881,11 +883,12 @@ describe("the directory release (S02.05)", () => {
     const vectorOf = (text: string) => [0, 4, 8, 12].map((at) => parseInt(sha256Hex(text).slice(at, at + 4), 16) / 65535);
 
     /** A fake of the embedding model: records every call, and fails or stalls on the calls a test names. */
-    function fakeEmbedder(options: { model?: string; failCalls?: number[]; stallCalls?: number[]; tokens?: number | null } = {}) {
+    function fakeEmbedder(options: { model?: string; failCalls?: number[]; stallCalls?: number[]; tokens?: number | null; dims?: number | null; inputType?: string } = {}) {
       const calls: string[][] = [];
       const signals: AbortSignal[] = [];
       const embedder = {
         model: options.model ?? MODEL,
+        config: { model: options.model ?? MODEL, inputType: options.inputType ?? "search_document", embeddingType: "float", dims: options.dims ?? null },
         async embedDocuments(texts: string[], { signal }: { signal: AbortSignal }) {
           calls.push(texts);
           signals.push(signal);
@@ -1119,8 +1122,11 @@ describe("the directory release (S02.05)", () => {
 
       expect(result).toMatchObject({ ok: true, release: 1, attempts: 2 });
       expect(model.calls).toEqual([[M001_TEXT], [M002_TEXT], [M002_TEXT]]);
-      // A call that failed was never billed: only the two that returned are recorded.
-      expect(await spend()).toHaveLength(2);
+      // The call that failed may have been billed: it is recorded too, as an estimate (the two that returned are as billed).
+      const rows = await spend();
+      expect(rows).toHaveLength(3);
+      expect(rows.map((row) => row.tokens_estimated)).toEqual([false, true, false]);
+      expect(rows[1]).toMatchObject({ kind: "embed", purpose: "publish", release_v: 1, calls: 1, tokens: estimateTokens([M002_TEXT]) });
       expect(d.failures).toEqual([]);
     });
 
@@ -1188,7 +1194,8 @@ describe("the directory release (S02.05)", () => {
       expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", release: 1, attempts: 1, detail: ["calls"] });
       expect(model.calls).toHaveLength(0);
       expect(d.failures).toMatchObject([{ release: 1, reason: "usage_allowance_exceeded" }]);
-      expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "usage_allowance_exceeded" }]);
+      // The build is not closed (that would throw away the chunks it has paid for): it waits, its lease let go.
+      expect(await releases()).toMatchObject([{ number: 1, status: "building", failure: null, leased: false, staged: true }]);
       expect(await currentReleaseSummary(app)).toBeNull();
     });
 
@@ -1302,6 +1309,359 @@ describe("the directory release (S02.05)", () => {
 
       expect(await publish(d)).toMatchObject({ ok: false, reason: "search_mismatch", detail: ["vectors_changed"] });
       expect((await currentManifest(app))?.release_v).toBe(1);
+    });
+
+    // ---------------------------------------------------------- the review of S03.02
+    const LATER = () => new Date("2026-10-02T15:10:00Z");
+    const never = () => new Promise<never>(() => {});
+    /** A build that stops for good after its first chunk (M001's) is kept: the next release stays building, its claim run out by LATER. */
+    async function stopAfterFirstChunk(first: Harness, change: Partial<NonNullable<PublishDeps["search"]>> = {}) {
+      const model = fakeEmbedder();
+      void publish(
+        deps({
+          storage: first.storage,
+          search: searchOf(model.embedder, { chunkSize: 1, ...change }),
+          hook: async (point) => {
+            if (point === "chunk_embedded") await never();
+          },
+        }),
+      );
+      while (model.calls.length < 1) await sleepMs(20);
+      await sleepMs(150);
+      return model;
+    }
+    const toOps = (failure: PublishFailure) =>
+      recordOpsEvent(app, { kind: "directory.publish_failed", ...(failure.release === null ? {} : { subjectType: "directory_release", subjectId: String(failure.release) }), detail: { reason: failure.reason, attempts: failure.attempts, files_stored: failure.filesStored } });
+
+    describe("a deployment without a search model", () => {
+      it("is refused when the current release has search data: nothing is built, ops_event and the audit trail hear of it, and search stays on", async () => {
+        const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+        await publish(first);
+        const bare = deps({ storage: first.storage, onFailure: toOps });
+
+        const result = await publish(bare);
+
+        expect(result).toMatchObject({ ok: false, reason: "search_not_configured", release: null, detail: ["current_release_has_search"] });
+        expect(await releases()).toMatchObject([{ number: 1, status: "complete", is_current: true }]);
+        expect((await currentManifest(app))?.search).toMatchObject({ status: "available", vectors_path: "releases/1/vectors.json" });
+        expect(bare.storage.puts.filter((path) => path.startsWith("releases/2/"))).toEqual([]);
+        expect((await sql`select kind, subject_id, detail from ops_event`).map((e) => ({ ...e }))).toEqual([
+          { kind: "directory.publish_failed", subject_id: null, detail: { reason: "search_not_configured", attempts: 1, files_stored: 0 } },
+        ]);
+        expect(await auditOf("directory.published")).toMatchObject([{}, { outcome: "refused", meta: { reason: "publish_failed", failure: "search_not_configured" } }]);
+      });
+
+      it("may still publish while no release has ever had search data", async () => {
+        const first = deps();
+        await publish(first);
+
+        expect(await publish(deps({ storage: first.storage }))).toMatchObject({ ok: true, release: 2, search: null });
+      });
+
+      it("is refused even to resume a build that was planned with search data", async () => {
+        const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+        await publish(first);
+        await sql`update provider set name = 'Another Name' where id = 'M002'`;
+        await stopAfterFirstChunk(first);
+
+        const result = await publish(deps({ storage: first.storage, now: LATER }));
+
+        expect(result).toMatchObject({ ok: false, reason: "search_not_configured" });
+        expect((await currentManifest(app))?.release_v).toBe(1);
+      });
+    });
+
+    describe("the usage allowance of the publish", () => {
+      it("is checked for all the calls the build still needs before the first one is made", async () => {
+        const model = fakeEmbedder();
+        const d = deps({ search: searchOf(model.embedder, { chunkSize: 1, allowance: { callsPerMonth: 1, tokensPerMonth: 1_000_000 } }) });
+
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", detail: ["calls"] });
+        expect(model.calls).toHaveLength(0);
+        expect(await spend()).toEqual([]);
+      });
+
+      it("is checked for the tokens of all the remaining texts too, not just the next chunk's", async () => {
+        const model = fakeEmbedder();
+        const oneChunk = estimateTokens([M001_TEXT]);
+        const d = deps({ search: searchOf(model.embedder, { chunkSize: 1, allowance: { callsPerMonth: 100, tokensPerMonth: oneChunk + 1 } }) });
+
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", detail: ["tokens"] });
+        expect(model.calls).toHaveLength(0);
+      });
+
+      it("never destroys the chunks already kept: the lease is let go, the build stays, and the next press resumes it", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const none = fakeEmbedder();
+        const refused = deps({ storage: first.storage, now: LATER, search: searchOf(none.embedder, { chunkSize: 1, allowance: { callsPerMonth: 1, tokensPerMonth: 1_000_000 } }) });
+
+        const result = await publish(refused);
+
+        expect(result).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", release: 2, detail: ["calls"] });
+        expect(none.calls).toHaveLength(0);
+        expect(refused.failures).toMatchObject([{ release: 2, reason: "usage_allowance_exceeded" }]);
+        expect(await releases()).toMatchObject([{ number: 1 }, { number: 2, status: "building", leased: false, staged: true }]);
+        expect((await sql`select staged ? 'search_chunk_0' as kept from directory_release where number = 2`)[0].kept).toBe(true);
+
+        // The allowance allows it again: the next press continues the same build after the kept chunk.
+        const next = fakeEmbedder();
+        const resumed = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1 }) }));
+
+        expect(resumed).toMatchObject({ ok: true, release: 2, attempts: 3, search: { vectors: 2, embedded: 2 } });
+        expect(next.calls).toEqual([[M002_TEXT]]);
+      });
+
+      it("counts the publish's own usage only: questions and test-set runs do not use up the publish allowance", async () => {
+        await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'query', ${MODEL}, 500, 9000000), (${new Date("2026-10-01T15:00:00Z")}, 'embed', 'test_set', ${MODEL}, 500, 9000000)`;
+        const model = fakeEmbedder();
+        const first = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 3, tokensPerMonth: 100_000 } }) });
+
+        expect(await publish(first)).toMatchObject({ ok: true });
+        expect(model.calls).toHaveLength(1);
+
+        // The publish's own call does count: an allowance of one call is spent by it.
+        await sql`update provider set name = 'Another Name' where id = 'M002'`;
+        const second = deps({ storage: first.storage, search: searchOf(fakeEmbedder().embedder, { allowance: { callsPerMonth: 1, tokensPerMonth: 100_000 } }) });
+        expect(await publish(second)).toMatchObject({ ok: false, reason: "usage_allowance_exceeded", detail: ["calls"] });
+      });
+
+      it("never refuses a publish that needs no call, however little allowance is left", async () => {
+        const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+        await publish(first);
+        const idle = fakeEmbedder();
+
+        const result = await publish(deps({ storage: first.storage, search: searchOf(idle.embedder, { allowance: { callsPerMonth: 1, tokensPerMonth: 1 } }) }));
+
+        expect(result).toMatchObject({ ok: true, release: 2, search: { reused: 2, embedded: 0 } });
+        expect(idle.calls).toHaveLength(0);
+      });
+
+      it("waits for the spend lock before it reads the allowance and makes a call", async () => {
+        const holder = connect(serverUrl());
+        const held = gate();
+        const letGo = gate();
+        const holding = holder.begin(async (tx) => {
+          await tx`select pg_advisory_xact_lock(${SPEND_LOCK_KEY})`;
+          held.open();
+          await letGo.promise;
+        });
+        await held.promise;
+        const model = fakeEmbedder();
+        const running = publish(deps({ search: searchOf(model.embedder) }));
+
+        expect(await stillPending(running)).toBe(true);
+        expect(model.calls).toHaveLength(0);
+        letGo.open();
+        await holding;
+
+        expect(await running).toMatchObject({ ok: true });
+        expect(model.calls).toHaveLength(1);
+        await holder.end({ timeout: 5 });
+      });
+    });
+
+    describe("the time of a publish", () => {
+      it("does not start a call that the time left cannot hold: out_of_time, without a call", async () => {
+        const model = fakeEmbedder();
+        // 10 s for the whole publish; one call may take 15 s.
+        const d = deps({ budgetMs: 10 * 1000, search: searchOf(model.embedder) });
+
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: false, reason: "embedding_unavailable", detail: ["out_of_time"] });
+        expect(model.calls).toHaveLength(0);
+      });
+
+      it("gives the write of the vectors file its own time limit: a store that hangs is a failed pass, not a hung publish", async () => {
+        const store = memoryDirectoryStorage();
+        let hung = false;
+        const storage = {
+          ...store,
+          async put(path: string, body: string) {
+            if (path.endsWith("vectors.json") && !hung) {
+              hung = true;
+              await never();
+            }
+            return store.put(path, body);
+          },
+        };
+        const d = deps({ storage, search: searchOf(fakeEmbedder().embedder, { vectorsPutTimeoutMs: 30 }) });
+
+        expect(await publish(d)).toMatchObject({ ok: true, attempts: 2 });
+        expect(hung).toBe(true);
+      });
+
+      it("gives the read of the vectors file its own time limit too", async () => {
+        const store = memoryDirectoryStorage();
+        let hung = false;
+        const storage = {
+          ...store,
+          async get(path: string) {
+            if (path.endsWith("vectors.json") && !hung) {
+              hung = true;
+              await never();
+            }
+            return store.get(path);
+          },
+        };
+        const d = deps({ storage, search: searchOf(fakeEmbedder().embedder, { vectorsGetTimeoutMs: 30 }) });
+
+        expect(await publish(d)).toMatchObject({ ok: true, attempts: 2 });
+        expect(hung).toBe(true);
+      });
+
+      it("records a call that was cut off as an estimate: it may have been billed", async () => {
+        const slow = fakeEmbedder({ stallCalls: [1] });
+        const d = deps({ search: searchOf(slow.embedder, { callTimeoutMs: 30 }) });
+
+        expect(await publish(d)).toMatchObject({ ok: true, attempts: 2 });
+
+        const rows = await spend();
+        expect(rows).toHaveLength(2);
+        expect(rows[0]).toMatchObject({ calls: 1, tokens: estimateTokens([M001_TEXT, M002_TEXT]), tokens_estimated: true, release_v: 1, purpose: "publish" });
+        expect(rows[1]).toMatchObject({ tokens_estimated: false });
+      });
+    });
+
+    describe("the embedding config", () => {
+      const KEY = "model=embed-v4.0;input_type=search_document;embedding_type=float;dims=default";
+
+      it("is recorded with the release, and a vector is copied only under the same config, not just the same model id", async () => {
+        const first = deps({ search: searchOf(fakeEmbedder().embedder) });
+        await publish(first);
+        expect(await searchRow(1)).toMatchObject({ embed_config: { model: MODEL, input_type: "search_document", embedding_type: "float", dims: null }, embed_config_key: KEY });
+
+        const wider = fakeEmbedder({ dims: 512 });
+        const second = await publish(deps({ storage: first.storage, search: searchOf(wider.embedder) }));
+        expect(second).toMatchObject({ ok: true, release: 2, search: { reused: 0, embedded: 2 } });
+        expect(wider.calls).toHaveLength(1);
+        expect(await searchRow(2)).toMatchObject({ embed_config: { dims: 512 }, embed_config_key: "model=embed-v4.0;input_type=search_document;embedding_type=float;dims=512" });
+
+        const query = fakeEmbedder({ inputType: "search_query" });
+        expect(await publish(deps({ storage: first.storage, search: searchOf(query.embedder) }))).toMatchObject({ ok: true, release: 3, search: { reused: 0, embedded: 2 } });
+      });
+
+      it("is the config a stopped build was planned with: another dimension of the same model does not resume it", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const other = fakeEmbedder({ dims: 512 });
+
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(other.embedder, { chunkSize: 1 }) }));
+
+        expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["embed_config_changed"] });
+        expect(other.calls).toHaveLength(0);
+      });
+    });
+
+    describe("a build that is resumed with other settings than it was planned with", () => {
+      it("is refused when the threshold differs", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const next = fakeEmbedder();
+
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1, threshold: 0.5 }) }));
+
+        expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["threshold_changed"] });
+        expect(next.calls).toHaveLength(0);
+      });
+
+      it("is refused when the emergency categories differ", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first, { emergencyCategories: ["Health", "Legal"] });
+        const next = fakeEmbedder();
+
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1, emergencyCategories: ["Legal"] }) }));
+
+        expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["emergency_categories_changed"] });
+        expect(next.calls).toHaveLength(0);
+      });
+
+      it("resumes when the settings are the same, whatever the order of the categories", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first, { emergencyCategories: ["Health", "Legal"] });
+        const next = fakeEmbedder();
+
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1, emergencyCategories: ["Legal", "Health"] }) }));
+
+        expect(result).toMatchObject({ ok: true, release: 2 });
+        expect(next.calls).toEqual([[M002_TEXT]]);
+      });
+    });
+
+    describe("the paid work of a build that did not finish", () => {
+      it("is copied by the next release when the build failed: only what was never embedded is embedded", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const down = fakeEmbedder({ failCalls: [1, 2, 3, 4, 5, 6] });
+
+        const failed = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(down.embedder, { chunkSize: 1 }) }));
+
+        expect(failed).toMatchObject({ ok: false, reason: "embedding_unavailable", release: 2, attempts: 3 });
+        expect(await releases()).toMatchObject([{ number: 1 }, { number: 2, status: "failed", staged: false }]);
+        const kept = (await sql`select search from directory_release where number = 2`)[0].search as { kept: { embed_config_key: string; entries: { id: string }[] } };
+        expect(kept.kept.entries.map((entry) => entry.id)).toEqual(["M001"]);
+
+        const next = fakeEmbedder();
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1 }) }));
+
+        expect(result).toMatchObject({ ok: true, release: 3, search: { vectors: 2, reused: 1, embedded: 1 } });
+        expect(next.calls).toEqual([[M002_TEXT]]);
+        expect(vectorsOf(first, 3).providers.find((p) => p.id === "M001")?.vector).toEqual(vectorOf(M001_TEXT));
+      });
+
+      it("is copied by the next release when the build was abandoned for being too old", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const next = fakeEmbedder();
+
+        const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:40:01Z"), search: searchOf(next.embedder, { chunkSize: 1 }) }));
+
+        expect(await releases()).toMatchObject([{ number: 1 }, { number: 2, status: "failed", failure: "abandoned" }, { number: 3, status: "complete" }]);
+        expect(result).toMatchObject({ ok: true, release: 3, search: { vectors: 2, reused: 1, embedded: 1 } });
+        expect(next.calls).toEqual([[M002_TEXT]]);
+      });
+
+      it("is copied after a build that gave up on the allowance", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const tight = { callsPerMonth: 1, tokensPerMonth: 1_000_000 };
+        for (let press = 0; press < 2; press += 1) await publish(deps({ storage: first.storage, now: LATER, search: searchOf(fakeEmbedder().embedder, { chunkSize: 1, allowance: tight }) }));
+        // The third press finds the build stopped three times: it is closed as gave_up, and that is its answer.
+        expect(await publish(deps({ storage: first.storage, now: LATER, search: searchOf(fakeEmbedder().embedder, { chunkSize: 1, allowance: tight }) }))).toMatchObject({ ok: false, reason: "gave_up", release: 2 });
+
+        const next = fakeEmbedder();
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(next.embedder, { chunkSize: 1 }) }));
+
+        expect(result).toMatchObject({ ok: true, release: 3, search: { reused: 1, embedded: 1 } });
+        expect(next.calls).toEqual([[M002_TEXT]]);
+      });
+
+      it("is not copied under another embedding config: a vector of another dimension is no use", async () => {
+        const first = deps();
+        await publish(first);
+        await stopAfterFirstChunk(first);
+        const down = fakeEmbedder({ failCalls: [1, 2, 3, 4, 5, 6] });
+        await publish(deps({ storage: first.storage, now: LATER, search: searchOf(down.embedder, { chunkSize: 1 }) }));
+
+        const wider = fakeEmbedder({ dims: 512 });
+        const result = await publish(deps({ storage: first.storage, now: LATER, search: searchOf(wider.embedder, { chunkSize: 1 }) }));
+
+        expect(result).toMatchObject({ ok: true, release: 3, search: { reused: 0, embedded: 2 } });
+        expect(wider.calls).toEqual([[M001_TEXT], [M002_TEXT]]);
+      });
     });
 
     // ---------------------------------------------------------- settings that do not fit

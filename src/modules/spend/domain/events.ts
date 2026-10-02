@@ -8,6 +8,8 @@ const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 /** What the call was for: a release's vectors, a resident's question, a run of the search test set. */
 export const SPEND_PURPOSES = ["publish", "query", "test_set"] as const;
 
+export type SpendPurpose = (typeof SPEND_PURPOSES)[number];
+
 export const SpendEventSchema = z.strictObject({
   /** The kind of usage. S03.02 writes `embed`; later stories add their own. */
   kind: code,

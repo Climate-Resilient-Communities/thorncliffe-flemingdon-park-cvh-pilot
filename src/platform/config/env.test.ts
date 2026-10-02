@@ -585,10 +585,27 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(problems.join("\n")).not.toContain(KEY);
   });
 
-  it("treats an empty key as absent, and the key is optional in production: a release then has no search data", () => {
-    expect(() => parseEnv({ ...preview, COHERE_API_KEY: " " })).not.toThrow();
+  it("fails start-up when the key is set but blank, in every environment: a blank key must not silently switch search off", () => {
+    for (const base of [production, preview, local]) {
+      for (const blank of ["", " ", "\t"]) {
+        expect(problemsOf({ ...base, COHERE_API_KEY: blank })).toEqual(["COHERE_API_KEY: set but blank; unset it or give it the key"]);
+      }
+    }
+  });
+
+  it("leaves the key optional: unset, there is none (the publish job decides what that means), and a key is trimmed", () => {
     expect(parseEnv(production).cohereApiKey).toBeUndefined();
+    expect(parseEnv(local).cohereApiKey).toBeUndefined();
     expect(parseEnv({ ...production, COHERE_API_KEY: ` ${KEY} ` }).cohereApiKey).toBe(KEY);
+  });
+
+  it("refuses a NEXT_PUBLIC_ variable that names Cohere, or that holds the key, and never shows the key", () => {
+    for (const leak of [{ NEXT_PUBLIC_COHERE_API_KEY: "anything" }, { NEXT_PUBLIC_COHERE: "x" }, { COHERE_API_KEY: KEY, NEXT_PUBLIC_ANYTHING: KEY }]) {
+      const problems = problemsOf({ ...production, ...leak });
+      expect(problems.join("\n")).toMatch(/NEXT_PUBLIC_[A-Z_]+: holds or names the Cohere key; NEXT_PUBLIC_ variables are sent to browsers/);
+      expect(problems.join("\n")).not.toContain(KEY);
+    }
+    expect(() => parseEnv({ ...production, COHERE_API_KEY: KEY, NEXT_PUBLIC_ANYTHING: "something else" })).not.toThrow();
   });
 
   it("has defaults: embed-v4.0, a provisional threshold, the emergency category and a monthly allowance", () => {
@@ -607,8 +624,8 @@ describe("Cohere and the search settings (S03.02)", () => {
         SEARCH_EMBED_MODEL: " embed-multilingual-v3.0 ",
         SEARCH_THRESHOLD: "0.42",
         SEARCH_EMERGENCY_CATEGORIES: " Support & Emergency Services , Crisis Lines,, Crisis Lines",
-        EMBED_ALLOWANCE_CALLS_PER_MONTH: "40",
-        EMBED_ALLOWANCE_TOKENS_PER_MONTH: "100000",
+        EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: "40",
+        EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: "100000",
       }).search,
     ).toEqual({
       embedModel: "embed-multilingual-v3.0",
@@ -624,8 +641,8 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_THRESHOLD", "high", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_THRESHOLD", "-0.2", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_EMERGENCY_CATEGORIES", " , ", /SEARCH_EMERGENCY_CATEGORIES: must list at least one category name/],
-    ["EMBED_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
-    ["EMBED_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
+    ["EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
+    ["EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
   ])("refuses a bad %s (%s) and names the variable", (name, value, message) => {
     expect(problemsOf({ ...production, [name]: value }).join("\n")).toMatch(message);
   });

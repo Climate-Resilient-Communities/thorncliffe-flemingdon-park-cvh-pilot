@@ -16,6 +16,7 @@ export const PUBLISH_FAILURE_REASONS = [
   "embedding_unavailable",
   "usage_allowance_exceeded",
   "search_config_invalid",
+  "search_not_configured",
   "gave_up",
   "unexpected",
 ] as const;

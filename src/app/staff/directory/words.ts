@@ -12,6 +12,7 @@ const REASON_KEYS: Record<PublishFailureCode, string> = {
   embedding_unavailable: "staff.directory.reasons.embeddingUnavailable",
   usage_allowance_exceeded: "staff.directory.reasons.usageAllowanceExceeded",
   search_config_invalid: "staff.directory.reasons.searchConfigInvalid",
+  search_not_configured: "staff.directory.reasons.searchNotConfigured",
   gave_up: "staff.directory.reasons.gaveUp",
   unexpected: "staff.directory.reasons.unexpected",
 };

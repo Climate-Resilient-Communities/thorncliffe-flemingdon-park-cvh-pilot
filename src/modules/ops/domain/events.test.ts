@@ -54,6 +54,7 @@ describe("ops events", () => {
       "embedding_unavailable",
       "usage_allowance_exceeded",
       "search_config_invalid",
+      "search_not_configured",
       "gave_up",
       "unexpected",
     ]);

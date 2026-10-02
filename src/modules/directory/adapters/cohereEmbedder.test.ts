@@ -25,6 +25,18 @@ describe("the Cohere embedder", () => {
     expect(embed).toHaveBeenCalledWith({ model: "embed-v4.0", texts: ["a", "b"], inputType: "search_document", embeddingTypes: ["float"] }, { abortSignal: signal, maxRetries: 0 });
   });
 
+  it("states its embedding config, and asks for the dimension only when one is set", async () => {
+    const { client, embed } = fakeClient({ embeddings: { float: [[1, 2]] } });
+    const signal = new AbortController().signal;
+    const model = cohereEmbedder({ apiKey: "k", model: "embed-v4.0", client });
+    const small = cohereEmbedder({ apiKey: "k", model: "embed-v4.0", dims: 512, client });
+
+    expect(model.config).toEqual({ model: "embed-v4.0", inputType: "search_document", embeddingType: "float", dims: null });
+    expect(small.config).toEqual({ model: "embed-v4.0", inputType: "search_document", embeddingType: "float", dims: 512 });
+    await small.embedDocuments(["a"], { signal });
+    expect(embed).toHaveBeenCalledWith(expect.objectContaining({ outputDimension: 512 }), expect.anything());
+  });
+
   it("says the tokens are unknown when the vendor does not bill any", async () => {
     const { client } = fakeClient({ embeddings: { float: [[1]] } });
 
