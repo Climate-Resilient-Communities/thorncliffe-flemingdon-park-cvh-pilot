@@ -72,6 +72,7 @@ Radius is listed because containers and content components share it. Layout prim
 | `--app-tap` | 44px | Minimum control size; inline-text links exempt |
 | `--app-tap-basic` | 56px | Minimum control size in basic mode |
 | `--app-icon`, `--app-icon-basic`, `--app-icon-staff` | 24px, 28px, 20px | Default icon: resident, basic mode, Hub and ambassador |
+| `--app-logo-hub`, `--app-symbol-hub` | 36px, 28px | Block size of the Hub logo (side navigation, menu drawer) and of the Hub symbol (phone top bar) |
 | `--app-min-header-resident` | 56px | Resident header minimum block size (the prototype's earlier 60 px is overridden by 56 px) |
 | `--app-min-topbar-hub` | 60px | Hub top bar minimum block size |
 | `--app-min-nav-item-resident`, `--app-min-nav-item-resident-basic` | 64px, 80px | Resident navigation item minimum block size |
@@ -159,6 +160,7 @@ Gutter and insets are the same in basic mode (G2). Asymmetric card padding shown
 | --- | --- | --- |
 | `--tap`, `--tap-basic` | `var(--app-tap)`, `var(--app-tap-basic)` | 44px, 56px |
 | `--size-icon`, `--size-icon-basic`, `--size-icon-staff` | `var(--app-icon)`, `var(--app-icon-basic)`, `var(--app-icon-staff)` | 24px, 28px, 20px |
+| `--size-logo-hub`, `--size-symbol-hub` | `var(--app-logo-hub)`, `var(--app-symbol-hub)` | 36px, 28px |
 | `--size-header-resident-min` | `var(--app-min-header-resident)` | 56px |
 | `--size-topbar-hub-min` | `var(--app-min-topbar-hub)` | 60px |
 | `--size-nav-item-resident-min`, `--size-nav-item-resident-min-basic` | `var(--app-min-nav-item-resident)`, `var(--app-min-nav-item-resident-basic)` | 64px, 80px |

@@ -28,6 +28,17 @@ describe("resident test image", () => {
     expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:resident:docker/);
   });
 
+  it("is the image of the Hub shell's screenshot script too, which sets its own flag", () => {
+    const hub = read("scripts/hub-docker.sh");
+
+    expect([...hub.matchAll(/mcr\.microsoft\.com\/playwright:([^"\s]+)"/g)].map((match) => match[1])).toEqual([`v${version}-noble`]);
+    expect(manifest.scripts["test:hub:docker"]).toBe("scripts/hub-docker.sh");
+    expect(manifest.scripts["test:hub:update"]).toBe("scripts/hub-docker.sh --update-snapshots=all");
+    expect(hub).toMatch(/-e HUB_PINNED_IMAGE=1/);
+    expect(read("e2e/hub/helpers.ts")).toMatch(/process\.env\.HUB_PINNED_IMAGE === "1"/);
+    expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:hub:docker/);
+  });
+
   it("sets the flag that lets the screenshot assertions run", () => {
     expect(script).toMatch(/-e RESIDENT_PINNED_IMAGE=1/);
     expect(read("e2e/resident/helpers.ts")).toMatch(/process\.env\.RESIDENT_PINNED_IMAGE === "1"/);
