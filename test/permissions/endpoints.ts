@@ -17,7 +17,7 @@ export type RoleCaller = (typeof ROLE_CALLERS)[number];
 /**
  * What a signed-in caller gets:
  *  - `allowed`: the guard lets the call through to its own code (no `permission.denied`);
- *  - `forbidden`: the role policy refuses it: 403 `forbidden` (a page: the Hub's home), one `permission.denied`;
+ *  - `forbidden`: the role policy refuses it: 403 `forbidden`, one `permission.denied` (a page: its refusal view or the Hub's home, unaudited);
  *  - `setup_incomplete`: the caller cannot be at the endpoint's gate: 403 `setup_incomplete` with
  *    one `permission.denied` (a page: their own gate's page, not audited).
  */

@@ -3,8 +3,8 @@
 // is called directly, as no session, as each role and as an Ambassador outside their assigned
 // building, through its real guard and session lookup. Refusals answer 401 (a server action: the
 // sign-in redirect, audited with status 401) or 403, leave the business data unchanged and add
-// exactly one `permission.denied` record; a page is not a call: it redirects, and is audited only
-// when the role policy refuses it.
+// exactly one `permission.denied` record; a page is not a call: it redirects, or shows its refusal
+// view to a role the policy refuses, and is not audited.
 //
 // The app writes with its own credentials (cvh_app_login); Supabase Auth is the in-memory fake,
 // whose TOTP codes are computed here (memoryTotp.ts). Ambassador assignments arrive with S01.14:
@@ -201,7 +201,7 @@ const denialsSince = (id: number) =>
     select actor_staff_id, outcome, meta from audit_event where id > ${id} and action = 'permission.denied' order by id`;
 const lastAuditId = async () => (await owner`select coalesce(max(id), 0)::int as max from audit_event`)[0].max as number;
 
-type Answer = { redirect: string } | { status: number; body: unknown } | { state: { status: string; message?: string } } | { rendered: true };
+type Answer = { redirect: string } | { status: number; body: unknown } | { state: { status: string; message?: string } } | { rendered: true } | { refusedView: true };
 
 async function redirectOr<T>(run: () => Promise<T>): Promise<{ redirect: string } | { value: T }> {
   try {
@@ -218,8 +218,10 @@ async function call(endpoint: StaffEndpoint): Promise<Answer> {
   const exportsOf: Record<string, unknown> = await import(path.join(ROOT, endpoint.file));
   const target = exportsOf[endpoint.export] as (...args: unknown[]) => Promise<unknown>;
   if (endpoint.kind === "page") {
+    const { PolicyRefusal } = await import("../../src/app/staff/guard");
     const answer = await redirectOr(() => target({}));
-    return "redirect" in answer ? answer : { rendered: true };
+    if ("redirect" in answer) return answer;
+    return (answer.value as { type?: unknown } | null)?.type === PolicyRefusal ? { refusedView: true } : { rendered: true };
   }
   if (endpoint.kind === "route") {
     const method = endpoint.export;
@@ -300,12 +302,13 @@ describe.each(STAFF_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint] as const
     expect(await businessData(), "business data unchanged").toEqual(before);
     if (endpoint.kind === "page") {
       if (expected === "forbidden") {
-        expect(answer).toEqual({ redirect: GATE_PAGES.hub });
-        expect(denials).toEqual([{ actor_staff_id: id, outcome: "refused", meta: { status: 403, permission: endpoint.action, route: endpoint.route, reason: "forbidden" } }]);
+        // The page's refusal view in place of its content, or the Hub's home for a page without one.
+        expect([{ refusedView: true }, { redirect: GATE_PAGES.hub }]).toContainEqual(answer);
       } else {
         expect(answer).toEqual({ redirect: GATE_PAGES[gate] });
-        expect(denials).toEqual([]);
       }
+      // A page shows: its refusal is not audited (the calls it would make are, by their own guards).
+      expect(denials).toEqual([]);
       return;
     }
     const meta = expected === "forbidden" ? { status: 403, permission: endpoint.action, route: endpoint.route, reason: "forbidden" } : { status: 403, route: endpoint.route, reason: "setup_incomplete" };

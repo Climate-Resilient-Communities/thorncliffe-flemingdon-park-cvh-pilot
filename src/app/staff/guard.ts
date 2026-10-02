@@ -12,10 +12,11 @@
 //
 // The role policy (S01.12): every guarded page, route handler and server action names its policy
 // action (`action`, one of identity's POLICY_ACTIONS). After the setup gate the guard asks
-// `can(role, action, context)`; a refusal is a 403 `forbidden` (pages: the Hub's home) with one
-// `permission.denied` record, before the route's own code. The context is the person's id and,
-// only when the role's rule depends on it, their assignments (./scope.ts) and the facts the route
-// gives about the call (`context`: the building, floor or entry it is on).
+// `can(role, action, context)`; a refused call is a 403 `forbidden` with one `permission.denied`
+// record, before the route's own code (a page shows its refusal view instead, unaudited). The
+// context is the person's id and, only when the role's rule depends on it, their assignments
+// (./scope.ts) and the facts the route gives about the call (`context`: the building, floor or
+// entry it is on).
 //
 // requireAal2 (S01.10): then, when the action is one of identity's PRIVILEGED_ACTIONS, the guard
 // refuses it with 403 `aal2_required` unless the session is `aal2` (the level the server read from
@@ -24,7 +25,7 @@
 // Without a session a route handler answers 401. A server action has no status of its own: it
 // sends the person to sign-in (Next's redirect) and audits the refusal with status 401.
 import { redirect } from "next/navigation";
-import type { ReactNode } from "react";
+import { createElement, type ReactNode } from "react";
 import { GATE_PAGES, SIGN_IN_PAGE, type SetupGate, type StaffApiError } from "@/contracts/staffAuth";
 import {
   decidePolicy,
@@ -180,19 +181,32 @@ export function staffError(status: number, error: StaffApiError, message?: strin
 
 // ---- Pages -------------------------------------------------------------------------------------
 
+/** Wraps what a page shows to a role its policy refuses (a marker for tests; it renders its children). */
+export function PolicyRefusal({ children }: { children: ReactNode }): ReactNode {
+  return children;
+}
+
 /**
  * A staff page at `access` (never `public`; see publicStaffPage), for the roles its policy action
- * allows: anyone else is sent to the Hub's home, which every role may open, and the refusal is
- * audited. A page is never privileged: it shows, and its actions act (and are asked for aal2).
+ * allows. Anyone else sees the page's `refused` view instead of its content, or, without one, is
+ * sent to the Hub's home, which every role may open. A page with server actions gives `refused`:
+ * a form posted without JavaScript renders its page after the action, and that render must not
+ * redirect away from the action's own answer. Like the setup gates' redirects, a page's refusal is
+ * not audited: a page shows; the calls it would make are refused and audited by their own guards.
+ * A page is never privileged: its actions are (and are asked for aal2).
  */
-export function staffPage<P>(spec: StaffSpec, render: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode) {
+export function staffPage<P>(
+  spec: StaffSpec & { refused?: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode },
+  render: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode,
+) {
+  const { refused } = spec;
   const page = async (props: P) => {
     const decision = await judge(spec, await currentStaffSession());
     if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
     if (decision.kind === "outside_gate") redirect(GATE_PAGES[decision.session.gate]);
     if (decision.kind === "denied") {
-      await auditRefusal(spec, decision);
-      redirect(GATE_PAGES.hub);
+      if (!refused) redirect(GATE_PAGES.hub);
+      return createElement(PolicyRefusal, null, await refused(decision.session, props));
     }
     // A page's privileged action is not asked for aal2 here; every server action on it is.
     return render(decision.session as StaffSession, props);

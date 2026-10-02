@@ -181,11 +181,14 @@ test("privileged account actions called directly by a Director (aal1) are refuse
   for (const [name, value] of fields) form.append(name, value);
   const response = await directorPage.request.post("/staff/people", { multipart: form, headers: { origin: baseURL as string } });
   expect(response.status()).toBe(200);
-  // S01.12: the role policy refuses a Director before the authenticator level is looked at (S01.10).
-  expect(await response.text()).toContain("Only an Admin can reset a password.");
+  // S01.12: the role policy refuses a Director before the authenticator level is looked at (S01.10);
+  // the page rendered after the action shows a Director its refusal, with no form.
+  const text = await response.text();
+  expect(text).toContain("Only an Admin can add people.");
+  expect(text).not.toContain('id="reset-password-title"');
 
-  const [denied] = await sql`select actor_staff_id, meta from audit_event where action = 'permission.denied' and actor_staff_id = ${director.id}`;
-  expect(denied.meta).toEqual({ status: 403, route: "/staff/people", permission: "accounts.manage", reason: "forbidden" });
+  const denials = await sql`select actor_staff_id, meta from audit_event where action = 'permission.denied' and actor_staff_id = ${director.id}`;
+  expect(denials.map((denied) => denied.meta)).toEqual([{ status: 403, route: "/staff/people", permission: "accounts.manage", reason: "forbidden" }]);
   const [untouched] = await sql`select status, must_change_password from staff_account where id = ${target.id}`;
   expect(untouched).toEqual({ status: "active", must_change_password: false });
   expect(await sql`select 1 from audit_event where action = 'password.reset' and subject_id = ${target.id}`).toHaveLength(0);
