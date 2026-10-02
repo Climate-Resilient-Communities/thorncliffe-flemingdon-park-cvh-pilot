@@ -61,6 +61,8 @@ const flag = z.boolean();
 const adminShortfall = z.literal(true);
 /** A lower_snake_case code (seed names, count keys, provider status). */
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
+/** A calendar date written YYYY-MM-DD (a provider's last-confirmed date). */
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 /** The City register's building number. */
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
@@ -128,6 +130,12 @@ export const AUDIT_META = {
   // Ambassador assignments (S01.14). `floor_ids: null` is the whole building.
   "assignment.saved": meta({ staff_id: id.optional(), rsn: rsn.optional(), floor_ids: z.array(id).max(200).nullable().optional() }),
   "assignment.removed": meta({ staff_id: id.optional(), rsn: rsn.optional() }),
+
+  // Providers (S02.04): an Admin publishes or unpublishes a provider and sets its last-confirmed date.
+  // The subject is the provider (type `provider`, its catalogue id); listing text is never in meta.
+  "provider.published": meta({ last_confirmed: isoDate.optional() }),
+  "provider.unpublished": meta({}),
+  "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
 
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.
   "seed.run": meta({ seed: code, counts: z.record(code, count).optional(), warnings: count.optional(), failures: count.optional() }),
@@ -235,10 +243,11 @@ export function findSensitiveValue(value: unknown, path = "meta"): string | null
 const SUBJECT_TYPE = /^[a-z][a-z0-9_]{0,39}$/;
 /**
  * A subject id is a uuid, a small integer id, a lower_snake_case code (no
- * hyphens, dots or colons, a letter first) or a Twilio message SID: nothing a
+ * hyphens, dots or colons, a letter first), a catalogue id (one capital letter and
+ * 3 to 6 digits, like the provider M001) or a Twilio message SID: nothing a
  * phone number, an email address, a username or a token can be written as.
  */
-const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|(?:SM|MM)[0-9a-f]{32})$/;
+const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|[A-Z][0-9]{3,6}|(?:SM|MM)[0-9a-f]{32})$/;
 
 /**
  * A path segment safe to print: an array index, or a key of the action's own

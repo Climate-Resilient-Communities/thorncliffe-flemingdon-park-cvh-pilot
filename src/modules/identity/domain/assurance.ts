@@ -10,7 +10,8 @@ import type { PolicyAction } from "./policy";
  * The names are policy actions (./policy.ts, S01.12): a route or action names its policy action,
  * the guard asks `can(role, action, context)` first and then, for these, requires `aal2`. Only
  * `accounts.manage` has server actions today (Add a person, Re-issue, Reset password); each story
- * that adds one of the others names it on its route or action.
+ * that adds one of the others names it on its route or action. `provider.manage` (S02.04) is
+ * publishing a provider and confirming it.
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -20,6 +21,7 @@ export const PRIVILEGED_ACTIONS = [
   "alert.withdraw",
   "drill.run",
   "guide.publish",
+  "provider.manage",
   "spend.cap",
   "sending.pause",
 ] as const satisfies readonly PolicyAction[];

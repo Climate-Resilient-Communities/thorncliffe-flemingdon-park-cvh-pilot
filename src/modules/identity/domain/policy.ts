@@ -57,8 +57,11 @@ export const AUTHORITY_MATRIX = [
     rules: { ambassador: "no", coordinator: "not_editor", director: "no", admin: "not_editor" },
   },
   {
+    // `guide.publish` is "publish directory" (S02.05's Publish directory). `provider.manage` (S02.04) is the same
+    // authority one step earlier: choosing which loaded providers are published and confirming them is what the
+    // directory is published from, so it follows the row's "publish directory" (Admin only, aal2).
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "accounts.manage", "spend.cap", "sending.pause"],
+    actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {

@@ -124,6 +124,30 @@ describe("toAuditRecord", () => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "refused")).toThrow(/fields outside the schema/);
   });
 
+  describe("provider actions (S02.04)", () => {
+    const provider = (overrides: Partial<AuditEvent>) =>
+      event({ action: "provider.confirmed", subjectType: "provider", subjectId: "M001", meta: { confirmed_on: "2026-10-01", previous: null }, ...overrides } as Partial<AuditEvent>);
+
+    it("accepts the catalogue id of a provider as the subject, with the date it was confirmed", () => {
+      expect(toAuditRecord(provider({}), "ok")).toMatchObject({ action: "provider.confirmed", subjectType: "provider", subjectId: "M001", meta: { confirmed_on: "2026-10-01", previous: null } });
+      expect(toAuditRecord(provider({ action: "provider.published", meta: { last_confirmed: "2026-10-01" } } as Partial<AuditEvent>), "ok").meta).toEqual({ last_confirmed: "2026-10-01" });
+      expect(toAuditRecord(provider({ action: "provider.unpublished", meta: {} } as Partial<AuditEvent>), "ok").meta).toEqual({});
+    });
+
+    it("records a refusal with its reason and no other detail", () => {
+      expect(toAuditRecord(provider({ action: "provider.published", meta: { reason: "validation" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "validation" });
+    });
+
+    it.each([
+      ["listing text", "provider.confirmed", { confirmed_on: "2026-10-01", services: "Free food bank" }],
+      ["a name", "provider.published", { name: "Thorncliffe Neighbourhood Office" }],
+      ["a phone number", "provider.unpublished", { phone: "416-421-3050" }],
+      ["a date that is not a date", "provider.confirmed", { confirmed_on: "yesterday" }],
+    ])("rejects %s", (_, action, meta) => {
+      expect(() => toAuditRecord(provider({ action, meta } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    });
+  });
+
   it("does not echo a field name that could itself carry data", () => {
     expect(() => toAuditRecord(event({ meta: { "jane@example.com": 1 } as never }), "ok")).toThrow(
       "password.changed: meta has fields outside the schema: (unnamed)",
@@ -158,6 +182,7 @@ describe("toAuditRecord", () => {
     ["a uuid", FLOOR],
     ["a small integer id", "4155426"],
     ["a lower_snake_case code", "guides_and_numbers"],
+    ["a catalogue id", "M001"],
     ["a Twilio message SID", "SM0123456789abcdef0123456789abcdef"],
     ["a Twilio message SID with a long run of digits", "MM00000000000000000000000000000000"],
   ])("accepts %s as subject id", (_, subjectId) => {
@@ -172,6 +197,8 @@ describe("toAuditRecord", () => {
     ["a ten digit number", "4165550199"],
     ["a SID of the wrong length", "SM0123"],
     ["an upper case SID", "SM0123456789ABCDEF0123456789ABCDEF"],
+    ["a capital letter and ten digits", "M4165550199"],
+    ["a catalogue id with a hyphen", "M-001"],
   ])("rejects %s as subject id", (_, subjectId) => {
     expect(() => toAuditRecord(event({ subjectId }), "ok")).toThrow(AuditRecordError);
   });

@@ -4,7 +4,7 @@ import { PRIVILEGED_ACTIONS, REQUIRED_ASSURANCE, isPrivilegedAction, meetsAssura
 describe("assurance of privileged actions", () => {
   it("lists the spine's privileged actions: approve, send, correct, withdraw, drill, publish, cap, pause and account changes", () => {
     expect([...PRIVILEGED_ACTIONS].sort()).toEqual(
-      ["accounts.manage", "alert.approve", "alert.correct", "alert.send", "alert.withdraw", "drill.run", "guide.publish", "sending.pause", "spend.cap"].sort(),
+      ["accounts.manage", "alert.approve", "alert.correct", "alert.send", "alert.withdraw", "drill.run", "guide.publish", "provider.manage", "sending.pause", "spend.cap"].sort(),
     );
   });
 
