@@ -69,7 +69,7 @@ function build(raw){
   epics.push({id:h[1],title:h[2].trim()});
   for(const [,id,title,body] of storyBlocks(block)){
    const prs=raw.prs.filter(p=>idPattern(id).test(p.title));
-   const dep=field(body,/\*\*Depends on:\*\* (.*?)(?: ·|\n)/),branchA=parseActual(raw.branchActuals[id]),mainA=parseActual(actualText(body)),a=branchA.hours!=null?branchA:mainA;
+   const dep=field(body,/\*\*Depends on:\*\* (.*?)(?: ·|\n)/),branchA=parseActual(raw.branchActuals[id]),mainA=parseActual(actualText(body)),a=mainA.hours!=null?mainA:branchA;
    stories.push({id,epic:h[1],title:title.trim(),size:field(body,/\*\*Size:\*\* (\w+)/)||'',estimate:parseFloat(field(body,/\*\*Estimate:\*\* ([\d.]+) h/))||0,
     actual:a.hours,started:a.started,mergedAt:a.merged,actualSource:a===branchA?'PR branch':'plan on main',
     status:prs.some(p=>p.merged)?'Merged':prs.some(p=>p.state==='open')?'In review':'Planned',
@@ -95,7 +95,7 @@ async function fetchLive(){
  const pulls=[];for(let page=1;;page++){const b=await json(API+'/pulls?state=all&per_page=100&page='+page);pulls.push(...b);if(b.length<100)break;}
  const prs=pulls.map(p=>({number:p.number,title:p.title,state:p.state,merged:!!p.merged_at,head_sha:p.head.sha}));
  const [plan,full]=await Promise.all([text(commit.sha+'/'+PLAN),text(commit.sha+'/'+FULL)]);
- // Hours are often recorded on the story's branch before it merges.
+ // Before a story merges, its Actual may exist only on its branch; main wins once it has one.
  const branchActuals={};
  await Promise.all(prs.filter(p=>/S\d+\.\d+/.test(p.title)).map(async p=>{
   let branchPlan;try{branchPlan=await text(p.head_sha+'/'+PLAN)}catch{return}
