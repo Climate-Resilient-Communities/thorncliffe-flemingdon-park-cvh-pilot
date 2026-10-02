@@ -17,7 +17,8 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        through the transaction pooler (port 6543). Migrations are not
  *                                                        run with it: they use PRODUCTION_DATABASE_URL, as postgres on the
  *                                                        session pooler (port 5432)
- * SUPABASE_SECRET_KEY  server   production, preview      secret
+ * SUPABASE_SECRET_KEY  server   production, preview      secret; Supabase Auth's Admin API (identity's adapter, built only in
+ *                                                        server code and scripts/create-first-admin), never in a NEXT_PUBLIC_ variable
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
  *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
