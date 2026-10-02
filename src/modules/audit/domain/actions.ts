@@ -62,6 +62,8 @@ export const REFUSAL_REASONS = [
   "publish_running",
   /** S01.15: the test text cannot be sent here (not production with SMS_MODE live, or Twilio not set up). */
   "not_available",
+  /** A change to a thread that is closed (S04.03, ALERT_CLOSED). */
+  "alert_closed",
 ] as const;
 
 /** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
@@ -86,6 +88,10 @@ const isoDate = z.string().refine(isIsoDate, "must be a real date written YYYY-M
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
+/** A SHA-256 as 64 lower-case hex digits (an entry's content hash). */
+const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** An alert entry's kind (AD-5). */
+const entryKind = z.enum(["ack", "update", "correction", "withdrawal", "final"]);
 /** The floors of an assignment by id; null is every floor of the building. */
 const floorIds = z.array(id).max(200).nullable();
 /** A policy action name such as `alert.approve`. */
@@ -174,6 +180,14 @@ export const AUDIT_META = {
   "provider.unpublished": meta({}),
   "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
 
+  // Alert threads and entries (S04.03). `alert.created` is on the thread (subject `alert`) and names its first
+  // draft; the others are on the entry (subject `alert_entry`). `content_hash` is the frozen text's SHA-256, never
+  // text. `entry_id` (and `version`, `content_hash` where the entry has them) are required on an ok record.
+  "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional() }),
+  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+  "entry.returned": meta({ entry_id: id.optional(), version: count.optional(), returned_for: z.enum(["edit", "return", "retranslate"]).optional() }),
+  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional() }),
+  "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
   // The directory release (S02.05): an Admin publishes the directory as one numbered release. The subject is the
   // release (type `directory_release`, its number); `meta` holds counts only. The release number and the counts are
   // required on an ok record (REQUIRED_WHEN_OK), absent on a refusal, which carries its reason.
@@ -223,6 +237,11 @@ export type AuditOutcome = "ok" | "refused";
 const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "provider.confirmed": ["confirmed_on"],
   "provider.published": ["last_confirmed"],
+  "alert.created": ["entry_id"],
+  "entry.submitted": ["entry_id", "version", "content_hash"],
+  "entry.returned": ["entry_id", "version", "returned_for"],
+  "entry.discarded": ["entry_id", "from"],
+  "entry.approved": ["entry_id", "version", "content_hash"],
   "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
 };
 
@@ -285,16 +304,22 @@ function hasEmailAddress(value: string): boolean {
 const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
 // A Twilio message SID: SM or MM and 32 lowercase hex digits, which can hold long digit runs.
 const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
+// A SHA-256 in hex (an entry's content hash): 64 hex digits, which can hold long digit runs.
+const SHA256_HEX = /^[0-9a-f]{64}$/;
+// The one place in an audit record's meta where a SHA-256 is expected, and so where the phone check is skipped.
+const CONTENT_HASH_PATH = "meta.content_hash";
 
 /**
  * Defensive check on values (the strict schemas are the main guard): the path
  * of the first string that looks like an email address or a phone number, or
- * of a number with ten or more digits. Whole values that are UUIDs or Twilio
- * message SIDs are skipped (their hex can hold long digit runs).
+ * of a number with ten or more digits. Whole values that are UUIDs or Twilio message SIDs are
+ * skipped (their hex can hold long digit runs), and so is a SHA-256 at `meta.content_hash` only: in
+ * any other field a 64-digit hex string is checked like any text, so a phone number cannot hide in
+ * one.
  */
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
-    if (UUID.test(value) || TWILIO_SID.test(value)) return null;
+    if (UUID.test(value) || TWILIO_SID.test(value) || (path === CONTENT_HASH_PATH && SHA256_HEX.test(value))) return null;
     return hasEmailAddress(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;

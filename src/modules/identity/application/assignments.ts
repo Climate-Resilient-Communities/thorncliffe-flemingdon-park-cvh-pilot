@@ -10,6 +10,7 @@
 import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
+import { readAssignments } from "../adapters/assignmentRead";
 import { ambassadorAssignment, ambassadorAssignmentFloor, staffAccount } from "../adapters/schema";
 import { actorCan } from "../domain/accountAuthority";
 import { coversNow, expandFloorRange, type FloorRef } from "../domain/coverage";
@@ -358,13 +359,7 @@ export function createAssignmentService(deps: AssignmentDeps) {
      */
     async assignmentsOf(staffId: string, executor: DbExecutor = db): Promise<PolicyAssignment[]> {
       if (!isUuid(staffId)) return [];
-      const rows = await executor
-        .select({ assignment: ambassadorAssignment, person: staffAccount })
-        .from(ambassadorAssignment)
-        .innerJoin(staffAccount, eq(staffAccount.id, ambassadorAssignment.staffId))
-        .where(eq(ambassadorAssignment.staffId, staffId));
-      // Only what counts now: a suspended, locked or removed account, or one no longer an Ambassador, has no scope.
-      return (await viewsOf(executor, rows)).filter((view) => view.covering).map(({ rsn, floorIds }) => ({ rsn, floorIds }));
+      return readAssignments(executor, staffId);
     },
 
     /** The active Ambassadors an Admin can assign. */
