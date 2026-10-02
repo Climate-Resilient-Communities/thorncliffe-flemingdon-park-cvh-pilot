@@ -1323,12 +1323,14 @@
       "ourSpaces": "Our spaces",
       "supplies": "Supplies",
       "decisions": "Decision log",
-      "capacity": "Our capacity"
+      "capacity": "Our capacity",
+      "people": "People"
     },
     "sections": {
       "disruption": "In a disruption",
       "between": "Between disruptions",
-      "thisDisruption": "This disruption"
+      "thisDisruption": "This disruption",
+      "admin": "Administration"
     },
     "partnerBand": "Partner space",
     "partnerBandLine": "Only Hub and partner staff can see this. Residents and ambassadors cannot.",
@@ -1379,7 +1381,8 @@
       "required": "Required",
       "backTo": "Back to {step}",
       "nextTo": "Next: {step}"
-    }
+    },
+    "closeMenu": "Close menu"
   },
   "A01": {
     "title": "My building",

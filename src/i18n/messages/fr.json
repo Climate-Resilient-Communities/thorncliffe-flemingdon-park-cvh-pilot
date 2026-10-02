@@ -1323,12 +1323,14 @@
       "ourSpaces": "[EN] Our spaces",
       "supplies": "[EN] Supplies",
       "decisions": "[EN] Decision log",
-      "capacity": "[EN] Our capacity"
+      "capacity": "[EN] Our capacity",
+      "people": "[EN] People"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
       "between": "[EN] Between disruptions",
-      "thisDisruption": "[EN] This disruption"
+      "thisDisruption": "[EN] This disruption",
+      "admin": "[EN] Administration"
     },
     "partnerBand": "[EN] Partner space",
     "partnerBandLine": "[EN] Only Hub and partner staff can see this. Residents and ambassadors cannot.",
@@ -1379,7 +1381,8 @@
       "required": "[EN] Required",
       "backTo": "[EN] Back to {step}",
       "nextTo": "[EN] Next: {step}"
-    }
+    },
+    "closeMenu": "[EN] Close menu"
   },
   "A01": {
     "title": "[EN] My building",
