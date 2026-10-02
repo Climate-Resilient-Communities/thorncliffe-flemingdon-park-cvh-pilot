@@ -1,18 +1,30 @@
-// TEMPORARY STUB from S02.09 (branch e02-s09-guide-content). S01.04 (the audit module) is built in
-// parallel and REPLACES this file at merge: take S01.04's version of src/modules/audit/index.ts and
-// delete this one. It only gives the guide seed the interface S01.04 exports, so the seed compiles
-// and calls it inside its transaction; it writes nothing.
+// The audit module's public interface (AD-2, AD-14). Other modules and the app
+// write audit records only through these functions.
+import { drizzleAuditStore } from "./adapters/auditStore";
+import { stdoutOperationalLog } from "./adapters/operationalLog";
+import { createAuditRecorder } from "./application/recorder";
 
-export interface AuditEventInput {
-  action: "seed.run";
-  actorStaffId: null;
-  subjectType: string;
-  subjectId: string | null;
-  meta?: object;
-}
+const recorder = createAuditRecorder({ store: drizzleAuditStore, log: stdoutOperationalLog });
 
-/** Records an audit event inside the caller's transaction `tx`. (Stub: records nothing.) */
-export async function record(tx: unknown, event: AuditEventInput): Promise<void> {
-  void tx;
-  void event;
-}
+/**
+ * `record(tx, event)`: writes the `ok` record inside the caller's transaction
+ * (or on the client). Throws if it cannot, so the caller's change rolls back.
+ */
+export const record = recorder.record;
+
+/**
+ * `recordRefusal(db, event)`: writes the `refused` record in its own
+ * transaction, after the refused change was rolled back or never started.
+ * Never throws; a failure is logged as an operational error.
+ */
+export const recordRefusal = recorder.recordRefusal;
+
+export {
+  AUDIT_ACTIONS,
+  AuditRecordError,
+  REFUSAL_REASONS,
+  STAFF_ROLES,
+  type AuditAction,
+  type AuditEvent,
+  type AuditMeta,
+} from "./domain/actions";

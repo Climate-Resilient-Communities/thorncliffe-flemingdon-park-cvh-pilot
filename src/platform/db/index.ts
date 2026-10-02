@@ -1,1 +1,1 @@
-export { createDb, getDb, resetDb, type Db } from "./client";
+export { createDb, getDb, resetDb, type Db, type DbExecutor, type DbTransaction } from "./client";
