@@ -1272,7 +1272,23 @@
     "changeGroups": "[EN] Change groups",
     "groupsNone": "[EN] None chosen",
     "chooseGroups": "[EN] Choose groups",
-    "langNote": "[EN] The language you read the CVH in."
+    "langNote": "[EN] The language you read the CVH in.",
+    "removedBuildingOne": "[EN] 1 building you saved is no longer in the building list, so it was removed.",
+    "removedBuildingMany": "[EN] {n} buildings you saved are no longer in the building list, so they were removed.",
+    "removedFloorOne": "[EN] 1 floor you saved no longer exists, so it was removed.",
+    "removedFloorMany": "[EN] {n} floors you saved no longer exist, so they were removed.",
+    "removedRest": "[EN] Everything else you chose is unchanged.",
+    "clearAll": "[EN] Clear everything",
+    "clearTitle": "[EN] Clear everything from this phone?",
+    "clearBody": "[EN] This removes your language, groups, buildings and floors from this phone. You will start again by choosing a language.",
+    "clearYes": "[EN] Yes, clear everything",
+    "loading": "[EN] Loading your buildings...",
+    "listFailed": "[EN] The list of buildings could not be loaded just now. Your choices are still saved.",
+    "buildingByRsn": "[EN] Building {rsn}",
+    "floorsOne": "[EN] 1 floor chosen",
+    "floorsMany": "[EN] {n} floors chosen",
+    "buildingsNone": "[EN] None chosen",
+    "removeItem": "[EN] Remove: {item}"
   },
   "R35": {
     "title": "[EN] Get alerts for your building",
@@ -1309,7 +1325,16 @@
     "floorOf": "[EN] {building}, floor {floor}",
     "checkinBy": "[EN] Check-ins by {method}",
     "changeAll": "[EN] Change what you chose",
-    "toHome": "[EN] Go to Now"
+    "toHome": "[EN] Go to Now",
+    "manyLine": "[EN] Choose your own building or a relative's. You can choose as many as you like.",
+    "chosenNone": "[EN] No buildings chosen yet",
+    "chosenOne": "[EN] 1 building chosen",
+    "chosenMany": "[EN] {n} buildings chosen",
+    "floorsIn": "[EN] Floors in {building}. Optional.",
+    "noFloorsListed": "[EN] No floors are listed for this building yet.",
+    "loading": "[EN] Loading the list of buildings...",
+    "loadFailed": "[EN] The list of buildings could not be loaded. Check your connection and try again, or skip this step.",
+    "retry": "[EN] Try again"
   },
   "hub": {
     "appName": "[EN] Hub and partner space",
