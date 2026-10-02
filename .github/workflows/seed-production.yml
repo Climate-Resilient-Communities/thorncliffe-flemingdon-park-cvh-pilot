@@ -1,0 +1,110 @@
+name: Seed production
+
+# Run by the owner from the Actions tab, so nobody needs the production database
+# URL on their own machine. Manual only; it runs from main, never from a branch.
+on:
+  workflow_dispatch:
+    inputs:
+      seed:
+        description: Which seed to run
+        type: choice
+        required: true
+        options:
+          - providers
+          - buildings
+          - guides
+      mode:
+        description: "dry-run reads the files and writes nothing; apply writes to production; launch-check (guides only) checks the launch languages"
+        type: choice
+        required: true
+        default: dry-run
+        options:
+          - dry-run
+          - apply
+          - launch-check
+
+permissions:
+  contents: read
+
+# Two seed runs never overlap, and a queued run is never cancelled half way.
+concurrency:
+  group: seed-production
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  seed:
+    name: Seed production
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # The production environment holds PRODUCTION_DATABASE_URL and accepts runs
+    # from main only (repository settings > Environments).
+    environment: production
+    env:
+      SEED: ${{ inputs.seed }}
+      MODE: ${{ inputs.mode }}
+    steps:
+      - name: Check the inputs
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error title=Seed not run::Seeds run from main only."
+            exit 1
+          fi
+          case "$SEED" in providers | buildings | guides) ;; *) echo "::error title=Seed not run::Unknown seed."; exit 1 ;; esac
+          case "$MODE" in
+            dry-run | apply) ;;
+            launch-check) [ "$SEED" = guides ] || { echo "::error title=Seed not run::launch-check is for the guides seed only."; exit 1; } ;;
+            *) echo "::error title=Seed not run::Unknown mode."; exit 1 ;;
+          esac
+      # The exact commit this run was started on, which is main's head.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Check this commit is still the head of main
+        run: |
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::error title=Seed not run::$GITHUB_SHA is no longer the head of main ($head); run the workflow again."
+            exit 1
+          fi
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run the seed
+        env:
+          SEED_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+        run: |
+          set -o pipefail
+          args=()
+          case "$MODE" in
+            dry-run) args+=(--dry-run) ;;
+            apply) args+=(--yes) ;;
+            launch-check) args+=(--launch-check) ;;
+          esac
+          npm run "seed:$SEED" -- "${args[@]}" 2>&1 | tee "$RUNNER_TEMP/seed-report.txt"
+      # The report (counts, warnings) goes to the job summary, after removing
+      # connection strings, the "Seeding host" line and anything shaped like a phone number.
+      - name: Write the report to the job summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## Seed $SEED ($MODE) at $GITHUB_SHA"
+            echo
+            echo '```text'
+            if [ -f "$RUNNER_TEMP/seed-report.txt" ]; then
+              sed -E \
+                -e '/^Seeding host /d' \
+                -e 's#[A-Za-z][A-Za-z0-9+.-]*://[^[:space:]]+#[url removed]#g' \
+                -e 's#\+?[0-9][0-9 ().-]{8,}[0-9]#[number removed]#g' \
+                "$RUNNER_TEMP/seed-report.txt"
+            else
+              echo "The seed produced no report."
+            fi
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
