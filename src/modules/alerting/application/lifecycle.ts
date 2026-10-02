@@ -465,17 +465,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // AD-5: approval re-checks the author against their current status and assignments.
         const author = await staff.standing(tx, row.authorId);
         if (!author || author.status !== "active" || authoringRefusal(author, row.authorId, contentOf(row)) !== null) throw new Refused("AUTHOR_NOT_ALLOWED");
-        const approvedAt = now();
+        // `approved_at` and `web_published_at` are not sent: the entry trigger sets both to the database's now().
         const [approved] = await tx
           .update(alertEntry)
-          .set({
-            status: "approved",
-            approvedBy: actor.staffId,
-            approvedAt,
-            approvedVersion: row.version,
-            approvedHash: row.contentHash,
-            webPublishedAt: approvedAt,
-          })
+          .set({ status: "approved", approvedBy: actor.staffId, approvedVersion: row.version, approvedHash: row.contentHash })
           .where(eq(alertEntry.id, row.id))
           .returning();
         if (!thread.isDrill) {

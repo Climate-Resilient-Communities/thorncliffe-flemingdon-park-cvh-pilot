@@ -491,7 +491,11 @@ describe("approval", () => {
 
     const approved = await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") });
 
-    expect(approved).toMatchObject({ ok: true, value: { status: "approved", approvedBy: coordB.id, webPublishedAt: NOW, approvedAt: NOW } });
+    expect(approved).toMatchObject({ ok: true, value: { status: "approved", approvedBy: coordB.id } });
+    // The database's clock times the approval, not the app's (`clock`).
+    const view = (approved as { value: { approvedAt: Date; webPublishedAt: Date } }).value;
+    expect(view.webPublishedAt).toEqual(view.approvedAt);
+    expect(Math.abs(view.approvedAt.getTime() - Date.now())).toBeLessThan(60_000);
     expect(await feedVersion()).toBe(before + 1);
     const row = await entryRow(ref.entryId);
     expect([row.approved_version, row.approved_hash]).toEqual([1, sha("v1")]);
@@ -856,19 +860,26 @@ describe("what the trigger allows, against direct SQL", () => {
     await expect(insert("update")).resolves.toBeDefined();
   });
 
-  it("publishes at the moment of approval: web_published_at equals approved_at, and neither is in the future", async () => {
-    const approve = (ref: EntryRef, approvedAt: string, publishedAt: string) =>
-      asApp(coordB.id, (tx) =>
-        tx.unsafe(
-          `update alert_entry set status = 'approved', approved_by = '${coordB.id}', approved_at = ${approvedAt}, approved_version = 1, approved_hash = '${sha("v1")}', web_published_at = ${publishedAt} where id = '${ref.entryId}'`,
-        ),
-      );
+  it("times an approval by the database clock: approved_at and web_published_at are now(), whatever the app sends", async () => {
     const ref = await newPending(authorA, "v1");
-    await expect(approve(ref, "now()", "now() + interval '1 hour'")).rejects.toThrow(/at the moment of approval/);
-    await expect(approve(ref, "now()", "now() - interval '1 second'")).rejects.toThrow(/at the moment of approval/);
-    await expect(approve(ref, "now() + interval '1 hour'", "now() + interval '1 hour'")).rejects.toThrow(/at the moment of approval/);
-    expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
-    await expect(approve(ref, "now() - interval '1 minute'", "now() - interval '1 minute'")).resolves.toBeDefined();
+    const [row] = await asApp(coordB.id, (tx) =>
+      tx`update alert_entry set status = 'approved', approved_by = ${coordB.id}, approved_at = '2000-01-01T00:00:00Z', approved_version = 1, approved_hash = ${sha("v1")}, web_published_at = '2099-01-01T00:00:00Z'
+         where id = ${ref.entryId} returning approved_at, web_published_at, now() as db_now`,
+    );
+    expect(row.approved_at.getTime()).toBe(row.db_now.getTime());
+    expect(row.web_published_at.getTime()).toBe(row.db_now.getTime());
+    const stored = await entryRow(ref.entryId);
+    expect(stored.approved_at.getTime()).toBe(row.db_now.getTime());
+    expect(stored.web_published_at.getTime()).toBe(row.db_now.getTime());
+  });
+
+  it("times a use-case approval by the database clock too, not by the app's clock", async () => {
+    const ref = await newPending(authorA, "v1");
+    const before = Date.now();
+    expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true });
+    const stored = await entryRow(ref.entryId);
+    expect(Math.abs(stored.approved_at.getTime() - before)).toBeLessThan(60_000);
+    expect(stored.web_published_at.getTime()).toBe(stored.approved_at.getTime());
   });
 });
 

@@ -26,8 +26,8 @@
 --  - nothing in a closed thread changes except an entry being discarded while the thread is
 --    closing (the session variable `cvh.closing` is 'on', set transaction-local by the close path,
 --    which E05 adds; the domain's `closing` flag in lifecycle.ts is the same rule);
---  - an approval publishes the entry at that moment: `web_published_at = approved_at`, not in the
---    future;
+--  - an approval is timed by the database: `approved_at` and `web_published_at` are set to now()
+--    whatever the app sends (no clock skew can refuse it, none can backdate it);
 --  - a thread is created by its acting account, at the database's clock.
 --
 -- Reads that lock follow AD-18: the use cases lock `alert`, then `alert_entry`, then
@@ -460,12 +460,10 @@ begin
        or new.submitted_at is distinct from old.submitted_at then
       raise exception 'alert_entry: the approval must name the version and hash that are pending' using errcode = 'check_violation';
     end if;
-    if new.approved_at is null or new.web_published_at is null then
-      raise exception 'alert_entry: approval is timed and publishes the entry' using errcode = 'check_violation';
-    end if;
-    if new.web_published_at <> new.approved_at or new.approved_at > now() then
-      raise exception 'alert_entry: approval publishes the entry at the moment of approval, not later than now' using errcode = 'check_violation';
-    end if;
+    -- The database's clock times the approval and the publication, whatever the app sent: the two
+    -- are the same instant, and neither can be backdated or set in the future.
+    new.approved_at := now();
+    new.web_published_at := new.approved_at;
   end if;
   return new;
 end
