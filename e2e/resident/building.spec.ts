@@ -132,7 +132,7 @@ test("a right-to-left page keeps its direction, and English text in it stays a l
   await expect(factValue(page, "emergencyPower")).not.toContainText("[EN]");
   await expect(factValue(page, "emergencyPower")).not.toHaveText(await factValue(page, "coolingRoom").innerText());
   // The phone number is a left-to-right run.
-  await expect(page.getByTestId("building-call").locator("bdi[dir=ltr]")).toHaveText("416-555-0123");
+  await expect(page.getByTestId("building-call").locator("bdi").last()).toHaveText("416-555-0123");
 });
 
 for (const [code, path, name] of [

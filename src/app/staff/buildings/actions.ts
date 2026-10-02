@@ -1,8 +1,9 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { englishText } from "@/i18n/text";
+import { buildingTag } from "../../buildingCache";
 import { staffAction, type ActionRefusal } from "../guard";
 import { buildings } from "../places";
 import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, setContactFromForm, type EditState } from "./editFloors";
@@ -50,14 +51,15 @@ export const removeFloorAction = staffAction(
 );
 
 /**
- * "Save contact" (S02.08). A saved contact is on the residents' building page at once: the cached pages of the
+ * "Save contact" (S02.08). A saved contact is on the residents' building page at once: the cached facts of the
  * building are dropped here, not left to expire.
  */
 export const setContactAction = staffAction(
   SPEC,
   async (session, _previous: EditState, form: FormData) => {
     const state = await setContactFromForm({ buildings }, session, form);
-    if (state.status === "saved") revalidatePath("/[lang]/buildings/[rsn]", "page");
+    const rsn = form.get("rsn");
+    if (state.status === "saved" && typeof rsn === "string" && /^[0-9]{1,9}$/.test(rsn)) updateTag(buildingTag(rsn));
     return finish(state);
   },
   (error) => refused(error),

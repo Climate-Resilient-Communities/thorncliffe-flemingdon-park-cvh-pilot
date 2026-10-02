@@ -8,16 +8,14 @@ import { buildingPageView, type FactValue, type Translate } from "./view";
 import "./building.css";
 
 // A building page is public and the same for every visitor (NFR-N7: the facts, their date and the Hub's contact).
-// It is rendered on the first request for a building and language, then served from the cache and rebuilt in the
-// background at most every 5 minutes, so the database is asked about a building rarely, not once per visit. When the
-// Hub saves a contact (the Admin's building screen), that action drops the cached pages at once. The register's own
-// facts change only when the buildings seed runs, so a few minutes of delay costs nothing.
-// Nothing is built ahead: the buildings come from the database, which a build does not reach.
-export const revalidate = 300;
+// Its one database read is kept in Next's data cache for 5 minutes (source.ts), shared by every visitor and every
+// language, and dropped at once when the Hub saves the building's contact (the Admin's building screen), so the
+// database is asked about a building rarely, not once per visit. The register's own facts change only when the
+// buildings seed runs, so a few minutes of delay costs nothing. Nothing is built ahead: the buildings come from
+// the database, which a build does not reach. The language layout fixes the languages (dynamicParams = false);
+// this page takes any building number, like the other pages under a language.
 export const dynamicParams = true;
-export function generateStaticParams(): { rsn: string }[] {
-  return [];
-}
+export const revalidate = 300;
 
 export async function generateMetadata({ params }: PageProps<"/[lang]/buildings/[rsn]">): Promise<Metadata> {
   const { lang, rsn } = await params;
@@ -79,7 +77,12 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
     <Screen surface="resident" testId="building-page">
       <Stack gap="section-resident">
         <Stack gap="related">
-          <h1 data-testid="building-address">{view.address}</h1>
+          <h1 data-testid="building-address">
+            {/* A street address is written in English and read left to right, whatever the page's language. */}
+            <bdi lang="en" dir="ltr">
+              {view.address}
+            </bdi>
+          </h1>
           <p className="building-neighbourhood">{view.neighbourhood}</p>
           {view.checking && (
             <div className="building-note" role="note" data-testid="building-checking">
