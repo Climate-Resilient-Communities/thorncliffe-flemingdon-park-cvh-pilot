@@ -158,7 +158,7 @@ function actionFields(html: string, headingId: string): [string, string][] {
   });
 }
 
-test("privileged account actions called directly from an aal1 session are refused and change nothing", async ({ page, browser, baseURL }) => {
+test("privileged account actions called directly by a Director (aal1) are refused by the role policy and change nothing", async ({ page, browser, baseURL }) => {
   // An Admin at aal2 opens the people page, whose forms carry the actions' ids.
   const admin = await newAccount("admin", { enrolled: true });
   await signIn(page, admin.username, admin.password);
@@ -181,10 +181,11 @@ test("privileged account actions called directly from an aal1 session are refuse
   for (const [name, value] of fields) form.append(name, value);
   const response = await directorPage.request.post("/staff/people", { multipart: form, headers: { origin: baseURL as string } });
   expect(response.status()).toBe(200);
-  expect(await response.text()).toContain("This needs a sign-in confirmed with an authenticator code.");
+  // S01.12: the role policy refuses a Director before the authenticator level is looked at (S01.10).
+  expect(await response.text()).toContain("Only an Admin can reset a password.");
 
   const [denied] = await sql`select actor_staff_id, meta from audit_event where action = 'permission.denied' and actor_staff_id = ${director.id}`;
-  expect(denied.meta).toEqual({ status: 403, route: "/staff/people", permission: "accounts.manage", reason: "aal_required" });
+  expect(denied.meta).toEqual({ status: 403, route: "/staff/people", permission: "accounts.manage", reason: "forbidden" });
   const [untouched] = await sql`select status, must_change_password from staff_account where id = ${target.id}`;
   expect(untouched).toEqual({ status: "active", must_change_password: false });
   expect(await sql`select 1 from audit_event where action = 'password.reset' and subject_id = ${target.id}`).toHaveLength(0);

@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
-import { mayManageAccounts } from "@/modules/identity";
+import { can } from "@/modules/identity";
 import { Screen, Stack } from "@/ui";
 import { staffPage } from "../guard";
 import { identity } from "../identity";
@@ -15,7 +15,7 @@ export const metadata: Metadata = { title: englishText("staff.people.title") };
  * for Admins. Staff at the
  * Hub only (the guard sends everyone else to sign-in or their setup gate); responses are no-store.
  */
-export default staffPage({ route: "/staff/people", access: "hub" }, async (session) => {
+export default staffPage({ route: "/staff/people", access: "hub", action: "accounts.manage" }, async (session) => {
   const view = await identity().addPersonView(session.staffId);
   return (
     <main>
@@ -26,7 +26,7 @@ export default staffPage({ route: "/staff/people", access: "hub" }, async (sessi
             <p>{englishText("staff.people.lead")}</p>
           </Stack>
           <AddPersonBody view={view} />
-          {mayManageAccounts({ id: session.staffId, role: session.role, status: "active" }) && (
+          {can(session.role, "accounts.manage") && (
             <ResetPasswordForm
               labels={{
                 title: englishText("staff.resetPassword.title"),

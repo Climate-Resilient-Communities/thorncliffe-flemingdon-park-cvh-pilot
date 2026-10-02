@@ -22,7 +22,7 @@ const REFUSALS: Record<ChangePasswordError, { status: number; key: string }> = {
  * `POST /api/staff/password` (gate 1, "Choose your password"): replaces the starting password with
  * the person's own. The answer names the next gate's page.
  */
-export const POST = staffRoute({ route: "/api/staff/password", access: "choose_password" }, async (request, session) => {
+export const POST = staffRoute({ route: "/api/staff/password", access: "choose_password", action: "account.own_setup" }, async (request, session) => {
   const body = await readJson(request, PasswordRequest);
   if (!body.ok) return body.response;
   // The provider ends every session on a password change; this request's session is reopened.

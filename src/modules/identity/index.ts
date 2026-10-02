@@ -167,7 +167,24 @@ export { PRIVILEGED_ACTIONS, REQUIRED_ASSURANCE, isPrivilegedAction, meetsAssura
 export { AUTHENTICATOR_CODE_DIGITS, normaliseAuthenticatorCode } from "./domain/authenticatorCode";
 export { CLIENT_LIMIT, USERNAME_LIMIT } from "./domain/signInThrottle";
 export { STARTING_PASSWORD_VALID_MS } from "./domain/startingPasswordWindow";
-export { mayManageAccounts, type Actor } from "./domain/accountAuthority";
+export { actorCan, type Actor } from "./domain/accountAuthority";
+export {
+  AUTHORITY_MATRIX,
+  POLICY_ACTIONS,
+  POLICY_RULES,
+  SELF_SERVICE_ACTIONS,
+  can,
+  decidePolicy,
+  isPolicyAction,
+  needsPolicyContext,
+  type MatrixRow,
+  type PolicyAction,
+  type PolicyAssignment,
+  type PolicyContext,
+  type PolicyDecision,
+  type PolicyEntry,
+  type PolicyRule,
+} from "./domain/policy";
 export { MIN_USABLE_ADMINS } from "./domain/adminFloor";
 export { bootstrapPhase, type BootstrapPhase, type BootstrapState, type StaffIntent } from "./domain/bootstrap";
 export { STAFF_LOGIN_DOMAIN, loginForUsername, type NewAccountInput } from "./domain/newAccount";

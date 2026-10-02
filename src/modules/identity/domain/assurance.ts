@@ -1,4 +1,5 @@
 import type { AssuranceLevel } from "../../../contracts/staffAuth";
+import type { PolicyAction } from "./policy";
 
 /**
  * The privileged actions (AD-4, spine "identity"): approve, send, correct, withdraw, drill,
@@ -6,10 +7,10 @@ import type { AssuranceLevel } from "../../../contracts/staffAuth";
  * Admin or Coordinator who entered an authenticator code at this sign-in. The pilot asks for the
  * code once per sign-in, never per action.
  *
- * The names are S01.12's policy action names (`can(role, action, context)`). Only
- * `accounts.manage` has a server action today (Add a person, Re-issue, Reset password; suspend,
- * remove and change role are module use cases with no request path yet); each story that adds
- * one of the others marks its route or action with the name, and S01.12 adds the role rules.
+ * The names are policy actions (./policy.ts, S01.12): a route or action names its policy action,
+ * the guard asks `can(role, action, context)` first and then, for these, requires `aal2`. Only
+ * `accounts.manage` has server actions today (Add a person, Re-issue, Reset password); each story
+ * that adds one of the others names it on its route or action.
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -21,7 +22,7 @@ export const PRIVILEGED_ACTIONS = [
   "guide.publish",
   "spend.cap",
   "sending.pause",
-] as const;
+] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];
 

@@ -1,6 +1,6 @@
 import { isStaffRole, type StaffRole } from "../../../contracts/staffRoles";
 import type { Db } from "../../../platform/db";
-import { mayManageAccounts } from "../domain/accountAuthority";
+import { actorCan } from "../domain/accountAuthority";
 import { decideAdminChange, hasAdminShortfall } from "../domain/adminFloor";
 import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import type { IdentityRefusal } from "../domain/refusals";
@@ -88,7 +88,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
 
   async function applyChange(actorId: string, targetId: string, change: StaffChange): Promise<Result<void, IdentityRefusal>> {
     const actor = await store.findById(db, actorId);
-    if (!actor || !mayManageAccounts(actor)) return refuseForbidden(actor ? actor.id : null);
+    if (!actor || !actorCan(actor, "accounts.manage")) return refuseForbidden(actor ? actor.id : null);
     if (!UUID.test(targetId)) return refuse(actor.id, null, change, "not_found");
     if (change.kind === "change_role" && !isStaffRole(change.role)) return refuse(actor.id, targetId, change, "role_invalid");
     const gate = decideUnderBootstrap(await store.readBootstrap(db), actor.id, { kind: "other" });
@@ -101,7 +101,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
         // a concurrent change committed, so two changes never both count the same Admins.
         const locked = await store.lockAdminsAndAccount(tx, targetId);
         const current = await store.findById(tx, actor.id);
-        if (!current || !mayManageAccounts(current)) throw new ChangeRefusal("forbidden");
+        if (!current || !actorCan(current, "accounts.manage")) throw new ChangeRefusal("forbidden");
         const target = locked.find((account) => account.id === targetId);
         if (!target) throw new ChangeRefusal("not_found");
         const decided = decideStaffChange(actor.id, target, change);
@@ -172,7 +172,7 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
      */
     async adminShortfallBanner(viewerId: string): Promise<boolean> {
       const viewer = await store.findById(db, viewerId);
-      if (!viewer || !mayManageAccounts(viewer)) return false;
+      if (!viewer || !actorCan(viewer, "accounts.manage")) return false;
       if (bootstrapPhase(await store.readBootstrap(db)) !== "completed") return false;
       return hasAdminShortfall(await adminStandings(deps, await store.listAdmins(db), deps.now()));
     },

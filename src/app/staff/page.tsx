@@ -8,7 +8,7 @@ import { SignOutButton } from "./SignOutButton";
 export const metadata: Metadata = { title: englishText("staff.hub.title") };
 
 /** The Hub: a placeholder at the last gate of the setup sequence until S01.09 builds the shell. */
-export default staffPage({ route: "/staff", access: "hub" }, (session) => (
+export default staffPage({ route: "/staff", access: "hub", action: "hub.open" }, (session) => (
   <main>
     <Screen surface="staff">
       <Stack gap="section-hub">

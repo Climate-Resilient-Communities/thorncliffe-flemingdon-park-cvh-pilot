@@ -1,7 +1,7 @@
 import type { StaffRole } from "../../../contracts/staffRoles";
 import type { Db, DbTransaction } from "../../../platform/db";
 import { SYSTEM_ACTOR, type AuditAction, type AuditEvent, type REFUSAL_REASONS } from "../../audit";
-import { mayManageAccounts } from "../domain/accountAuthority";
+import { actorCan } from "../domain/accountAuthority";
 import { bootstrapCompletes, bootstrapPhase, decideUnderBootstrap, type BootstrapPhase, type StaffIntent } from "../domain/bootstrap";
 import { loginForUsername, validateNewAccount, type NewAccount, type NewAccountInput } from "../domain/newAccount";
 import type { IdentityRefusal } from "../domain/refusals";
@@ -215,7 +215,7 @@ export function createAccountService(deps: AccountDeps) {
     /** What "Add a person" offers this actor: refused for anyone but an active Admin, and limited during bootstrap. */
     async addPersonView(actorId: string): Promise<AddPersonView> {
       const actor = await store.findById(db, actorId);
-      if (!actor || !mayManageAccounts(actor)) return { allowed: false, refusal: "forbidden" };
+      if (!actor || !actorCan(actor, "accounts.manage")) return { allowed: false, refusal: "forbidden" };
       const state = await store.readBootstrap(db);
       const roles = ALL_ROLES.filter((role) => decideUnderBootstrap(state, actor.id, { kind: "create_account", role }).ok);
       if (roles.length === 0) return { allowed: false, refusal: "bootstrap_incomplete" };
@@ -229,7 +229,7 @@ export function createAccountService(deps: AccountDeps) {
      */
     async addPerson(actorId: string, input: NewAccountInput): Promise<Result<CreatedAccount, IdentityRefusal>> {
       const actor = await store.findById(db, actorId);
-      if (!actor || !mayManageAccounts(actor)) return refusePermission(actor ? actor.id : null, "forbidden", "accounts.create");
+      if (!actor || !actorCan(actor, "accounts.manage")) return refusePermission(actor ? actor.id : null, "forbidden", "accounts.create");
       const valid = validateNewAccount(input);
       if (!valid.ok) return refuseCreation(actor.id, valid.error);
       const account = valid.value;
@@ -242,7 +242,7 @@ export function createAccountService(deps: AccountDeps) {
         // Read again under the lock: the actor may have lost the role, or a concurrent request
         // may have created the second Admin or taken the username.
         const current = await store.findById(tx, actor.id);
-        if (!current || !mayManageAccounts(current)) throw new Refusal("forbidden");
+        if (!current || !actorCan(current, "accounts.manage")) throw new Refusal("forbidden");
         const decided = decideUnderBootstrap(await store.readBootstrap(tx), actor.id, intent);
         if (!decided.ok) throw new Refusal(decided.error);
         if (await store.usernameTaken(tx, account.username)) throw new Refusal("username_taken");

@@ -20,7 +20,7 @@ const REFUSALS: Record<AuthenticatorCodeError, { status: number; error: StaffApi
  * confirms a new authenticator) or at the code gate after the password (the code of this sign-in).
  * When it is right the session is `aal2` for the rest of its 12 hours, and the answer names the Hub.
  */
-export const POST = staffRoute({ route: "/api/staff/factor/verify", access: ["enrol_authenticator", "authenticator_code"] }, async (request, session) => {
+export const POST = staffRoute({ route: "/api/staff/factor/verify", access: ["enrol_authenticator", "authenticator_code"], action: "account.own_setup" }, async (request, session) => {
   const body = await readJson(request, FactorCodeRequest);
   if (!body.ok) return body.response;
   const result = await staffAuth().verifyAuthenticatorCode(session, { code: body.value.code, client: clientAddress(request.headers) }, await requestAuthSessions());

@@ -7,35 +7,36 @@ import { addPersonFromForm, addPersonValues, type AddPersonState } from "./addPe
 import { reissueFromForm, reissueUsername, type ReissueState } from "./reissue";
 import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from "./resetPassword";
 
-// Without a session the guard sends the person to sign-in; another setup gate and a session below
-// aal2 answer here.
-const REFUSAL_KEYS: Record<ActionRefusal, string> = {
+// Without a session the guard sends the person to sign-in; another setup gate, a role the policy
+// refuses (S01.12: accounts are Admin-only) and a session below aal2 answer here.
+const REFUSAL_KEYS: Record<Exclude<ActionRefusal, "forbidden">, string> = {
   setup_incomplete: "staff.setup.incomplete",
   aal2_required: "staff.authenticator.required",
 };
 
-const refusalMessage = (error: ActionRefusal) => englishText(REFUSAL_KEYS[error]);
+const refusalMessage = (error: ActionRefusal, forbiddenKey: string) => englishText(error === "forbidden" ? forbiddenKey : REFUSAL_KEYS[error]);
 
-// Every account change is privileged (S01.10): it runs only from an aal2 session, whatever the
-// screen showed. The guard refuses it before the action's own code (requireAal2).
+// Every account change is the policy action `accounts.manage` (AD-4: Admins only), which is also
+// privileged (S01.10): the guard refuses any other role, then a session below aal2, before the
+// action's own code, whatever the screen showed.
 
 /** "Add a person" (S01.05). Called directly or from the form; the guard resolves the session on the server either way. */
 export const addPersonAction = staffAction(
-  { route: "/staff/people", access: "hub", privileged: "accounts.manage" },
+  { route: "/staff/people", access: "hub", action: "accounts.manage" },
   async (session, _previous: AddPersonState, form: FormData): Promise<AddPersonState> => addPersonFromForm({ identity }, session, form),
-  (error, _previous, form): AddPersonState => ({ status: "refused", message: refusalMessage(error), values: addPersonValues(form) }),
+  (error, _previous, form): AddPersonState => ({ status: "refused", message: refusalMessage(error, "staff.people.errors.forbidden"), values: addPersonValues(form) }),
 );
 
 /** "Re-issue a starting password" (S01.07), on the same page. */
 export const reissueAction = staffAction(
-  { route: "/staff/people", access: "hub", privileged: "accounts.manage" },
+  { route: "/staff/people", access: "hub", action: "accounts.manage" },
   async (session, _previous: ReissueState, form: FormData): Promise<ReissueState> => reissueFromForm({ staffAuth }, session, form),
-  (error, _previous, form): ReissueState => ({ status: "refused", message: refusalMessage(error), username: reissueUsername(form) }),
+  (error, _previous, form): ReissueState => ({ status: "refused", message: refusalMessage(error, "staff.reissue.errors.forbidden"), username: reissueUsername(form) }),
 );
 
 /** "Reset password" (S01.08), on the same page. */
 export const resetPasswordAction = staffAction(
-  { route: "/staff/people", access: "hub", privileged: "accounts.manage" },
+  { route: "/staff/people", access: "hub", action: "accounts.manage" },
   async (session, _previous: ResetPasswordState, form: FormData): Promise<ResetPasswordState> => resetPasswordFromForm({ identity }, session, form),
-  (error, _previous, form): ResetPasswordState => ({ status: "refused", message: refusalMessage(error), username: resetUsername(form) }),
+  (error, _previous, form): ResetPasswordState => ({ status: "refused", message: refusalMessage(error, "staff.resetPassword.errors.forbidden"), username: resetUsername(form) }),
 );

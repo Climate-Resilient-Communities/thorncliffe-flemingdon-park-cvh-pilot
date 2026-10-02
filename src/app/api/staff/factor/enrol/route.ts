@@ -10,7 +10,7 @@ export const dynamic = "force-dynamic";
  * or Coordinator who has none. The answer is the new secret and its QR code, shown once and never
  * stored by the app (no-store, like every staff answer); asking again replaces it with a new one.
  */
-export const POST = staffRoute({ route: "/api/staff/factor/enrol", access: "enrol_authenticator" }, async (_request, session) => {
+export const POST = staffRoute({ route: "/api/staff/factor/enrol", access: "enrol_authenticator", action: "account.own_setup" }, async (_request, session) => {
   const result = await staffAuth().startEnrolment(session, await requestAuthSessions());
   if (result.ok) {
     const enrolment: FactorEnrolment = { secret: result.value.secret, uri: result.value.uri, qrCode: result.value.qrCode };
