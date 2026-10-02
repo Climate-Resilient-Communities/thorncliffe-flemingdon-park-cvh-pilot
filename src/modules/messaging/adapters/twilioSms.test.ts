@@ -57,6 +57,28 @@ describe("the Twilio adapter", () => {
     expect(answer.kind === "rejected" && answer.message?.length).toBe(300);
   });
 
+  it("hides any phone number Twilio's error message quotes (a 21211 body), before the message goes anywhere", async () => {
+    const { sms } = provider(async () => json({ code: 21211, message: "The 'To' number +14165550101 is not a valid phone number.", status: 400 }, 400));
+
+    const answer = await sms.send(TEXT);
+
+    expect(answer).toEqual({ kind: "rejected", httpStatus: 400, errorCode: 21211, message: "The 'To' number [number] is not a valid phone number." });
+    expect(JSON.stringify(answer)).not.toContain("5550101");
+  });
+
+  it.each([
+    ["a number with spaces and dashes", "Cannot reach 416 555-0101 right now", "Cannot reach [number] right now"],
+    ["a number without a plus", "Invalid To 14165550101.", "Invalid To [number]."],
+    ["two numbers", "From +18885550100 to +14165550101 failed", "From [number] to [number] failed"],
+    ["a number near the 300 character cap (the cap cuts the masked text, never half a number)", `${"x".repeat(280)} +14165550101`, `${"x".repeat(280)} [number]`],
+  ])("hides %s in an error message", async (_name, message, expected) => {
+    const { sms } = provider(async () => json({ code: 21211, message }, 400));
+
+    const answer = await sms.send(TEXT);
+
+    expect(answer).toMatchObject({ kind: "rejected", message: expected });
+  });
+
   it("answers `unreachable` when the request fails or times out, without retrying", async () => {
     const failing = provider(async () => {
       throw new TypeError("fetch failed");

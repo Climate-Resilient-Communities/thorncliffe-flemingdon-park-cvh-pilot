@@ -41,7 +41,7 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   // it) is `sms.test_send`: each is shown to the roles that may open it.
   const admin: HubNavItem[] = [];
   if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
-  if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "inbox" });
+  if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }

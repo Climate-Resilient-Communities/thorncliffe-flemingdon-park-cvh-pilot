@@ -1,5 +1,5 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
-// db/migrations/20261002170000_sms_test_send.sql; the drift test compares them.
+// db/migrations/20261002220000_sms_test_send.sql; the drift test compares them.
 // The grants live only in the migration.
 import { sql } from "drizzle-orm";
 import { bigint, check, index, integer, pgPolicy, pgRole, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
@@ -24,7 +24,7 @@ export const smsTestSend = pgTable(
       .notNull()
       .references(() => staffAccountKey.id),
     numberHash: text("number_hash").notNull(),
-    claimedAt: timestamp("claimed_at", { withTimezone: true }).notNull(),
+    claimedAt: timestamp("claimed_at", { withTimezone: true }).notNull().defaultNow(),
     outcome: text().notNull().default("pending"),
     httpStatus: integer("http_status"),
     providerStatus: text("provider_status"),

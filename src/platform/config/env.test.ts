@@ -484,21 +484,53 @@ describe("the first-text spike's variables (S01.15)", () => {
     expect(parseEnv(preview).smsTestAllowlist).toEqual([]);
   });
 
-  it("fails start-up when an allowlist entry is not an E.164 number, without printing any entry", () => {
+  it("does not fail start-up when an allowlist entry is not an E.164 number: no number is approved, the rule is named, no entry is shown", () => {
     for (const bad of [`${ALLOWED},4165550101`, "+0123456789", "not a number", `${ALLOWED};${OTHER}`, "+1 416 555 0101"]) {
-      const problems = problemsOf({ ...production, SMS_TEST_ALLOWLIST: bad });
-      expect(problems).toHaveLength(1);
-      expect(problems[0]).toMatch(/^SMS_TEST_ALLOWLIST: every entry must be an E\.164 number/);
-      expect(problems.join("\n")).not.toContain("5550101");
+      const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: bad });
+      expect(env.smsTestAllowlist, bad).toEqual([]);
+      expect(env.smsTestProblem).toMatch(/^SMS_TEST_ALLOWLIST: every entry must be an E\.164 number/);
+      expect(env.smsTestProblem).not.toContain("5550101");
+      // The rest of the environment is untouched.
+      expect(env.twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
     }
   });
 
-  it("fails start-up when the allowlist is set outside production, and when the from-number is malformed", () => {
+  it("does not fail start-up when TWILIO_FROM_NUMBER is malformed: the from-number is dropped and the rule is named without the value", () => {
+    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: "9995550177", SMS_TEST_ALLOWLIST: ALLOWED });
+    expect(env.smsTestProblem).toBe("TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)");
+    expect(env.twilio?.fromNumber).toBeUndefined();
+    expect(env.twilio).toMatchObject({ accountSid: "AC123" });
+    expect(JSON.stringify(env.smsTestProblem)).not.toContain("9995550177");
+  });
+
+  it("has no smsTestProblem when the spike variables are well formed or unset", () => {
+    expect(parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: ALLOWED }).smsTestProblem).toBeUndefined();
+    expect(parseEnv(production).smsTestProblem).toBeUndefined();
+  });
+
+  it("logs the rule, once and without the value, when getEnv reads a malformed spike variable (and still returns the environment)", () => {
+    resetEnvCache();
+    for (const [k, v] of Object.entries({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM, SMS_TEST_ALLOWLIST: `${ALLOWED},oops-4165550199` })) vi.stubEnv(k, v);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+
+    const env = getEnv();
+    getEnv();
+
+    expect(env.smsTestAllowlist).toEqual([]);
+    expect(log).toHaveBeenCalledTimes(1);
+    const line = String(log.mock.calls[0][0]);
+    expect(JSON.parse(line)).toMatchObject({ evt: "env.sms_test_not_configured", rule: expect.stringMatching(/^SMS_TEST_ALLOWLIST: every entry/) });
+    expect(line).not.toContain("5550101");
+    expect(line).not.toContain("5550199");
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    resetEnvCache();
+  });
+
+  it("still fails start-up when the allowlist is set outside production (a secret-placement rule)", () => {
     for (const base of [preview, local, { ...local, VERCEL_ENV: "development" }]) {
       expect(problemsOf({ ...base, SMS_TEST_ALLOWLIST: ALLOWED }).join("\n")).toMatch(/SMS_TEST_ALLOWLIST: only allowed in production/);
     }
-    const problems = problemsOf({ ...production, ...twilio, TWILIO_FROM_NUMBER: "8885550100" });
-    expect(problems).toEqual(["TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)"]);
     expect(problemsOf({ ...preview, TWILIO_FROM_NUMBER: FROM }).join("\n")).toMatch(/TWILIO_FROM_NUMBER: Twilio credentials are only allowed in production/);
   });
 });

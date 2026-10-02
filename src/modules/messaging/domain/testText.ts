@@ -35,6 +35,20 @@ export function maskNumber(number: string): string {
 }
 
 /**
+ * The screen's labels for a list of numbers: each masked, and made unique when masks collide (two numbers that end
+ * in the same four digits), so the person can tell the choices apart: `+1 ••• ••• 0101`, `+1 ••• ••• 0101 (2)`.
+ */
+export function maskedLabels(numbers: readonly string[]): string[] {
+  const seen = new Map<string, number>();
+  return numbers.map((number) => {
+    const mask = maskNumber(number);
+    const count = (seen.get(mask) ?? 0) + 1;
+    seen.set(mask, count);
+    return count === 1 ? mask : `${mask} (${count})`;
+  });
+}
+
+/**
  * Why a press of "Send test text" was refused before the provider was called:
  *  - `invalid`: the request id or the number is not well formed;
  *  - `not_available`: this is not production with SMS_MODE live, or Twilio's account or number is not set;

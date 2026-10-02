@@ -1,4 +1,4 @@
-import type { DbTransaction } from "../../../platform/db";
+import type { DbExecutor, DbTransaction } from "../../../platform/db";
 
 /** What a text is sent with. `from` is the verified toll-free number (TWILIO_FROM_NUMBER). */
 export interface OutboundText {
@@ -30,29 +30,35 @@ export interface TestSendClaim {
   staffId: string;
   /** Keyed hash of the number (never the number). */
   numberHash: string;
-  claimedAt: Date;
-  /** A claim on the same number at or after this time makes this one a duplicate. */
-  windowStart: Date;
+  /** A claim on the same number within this long (by the database's clock) makes this one a duplicate. */
+  windowMs: number;
 }
 
 export type ClaimResult = { kind: "claimed"; id: number } | { kind: "duplicate_request" } | { kind: "duplicate_number" };
 
-/** What is recorded on a claim once the provider answered (or did not). */
+/** What is recorded on a claim once the provider answered (or did not). The completion time is the database's. */
 export interface TestSendResult {
   outcome: "sent" | "failed" | "unknown";
   httpStatus: number | null;
   providerStatus: string | null;
   messageId: string | null;
   errorCode: number | null;
-  completedAt: Date;
+}
+
+/** A claim that never got its answer recorded (the app crashed, or recording failed): the text may or may not have gone. */
+export interface PendingAttempt {
+  id: number;
+  claimedAt: Date;
 }
 
 /**
- * Port: the ledger of test sends (messaging's `sms_test_send`). Both calls run in the caller's
- * transaction and read through it only. `claim` must be race-safe: two claims on the same number
- * or the same request id at once let at most one through.
+ * Port: the ledger of test sends (messaging's `sms_test_send`). The claim and the completion run in the
+ * caller's transaction and read through it only; every time comparison is made by the database's clock.
+ * `claim` must be race-safe: two claims on the same number or the same request id at once let at most one through.
  */
 export interface TestSendStore {
   claim(tx: DbTransaction, claim: TestSendClaim): Promise<ClaimResult>;
   complete(tx: DbTransaction, id: number, result: TestSendResult): Promise<void>;
+  /** Claims still `pending` after `olderThanMs` (the database's clock), newest first, at most `limit`. */
+  listPending(executor: DbExecutor, olderThanMs: number, limit: number): Promise<PendingAttempt[]>;
 }

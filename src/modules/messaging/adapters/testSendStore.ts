@@ -1,9 +1,13 @@
-import { and, eq, gt, sql } from "drizzle-orm";
+import { and, desc, eq, gt, lt, sql } from "drizzle-orm";
 import type { TestSendStore } from "../application/ports";
 import { smsTestSend } from "./schema";
 
 /**
  * The ledger of test sends with Drizzle, in the caller's transaction (every read goes through `tx`).
+ *
+ * Time is the database's: claimed_at defaults to now() and every window is compared in SQL against
+ * now() minus an interval, so the app server's clock (which can be off, or differ between instances)
+ * never decides whether a text is a duplicate.
  *
  * Race safety: the claim first takes a transaction-scoped advisory lock keyed on the number's hash,
  * so two presses on the same number are serialised: the second waits for the first's claim to
@@ -21,13 +25,13 @@ export const drizzleTestSendStore: TestSendStore = {
     const recent = await tx
       .select({ id: smsTestSend.id })
       .from(smsTestSend)
-      .where(and(eq(smsTestSend.numberHash, claim.numberHash), gt(smsTestSend.claimedAt, claim.windowStart)))
+      .where(and(eq(smsTestSend.numberHash, claim.numberHash), gt(smsTestSend.claimedAt, sql`now() - ${intervalMs(claim.windowMs)}`)))
       .limit(1);
     if (recent.length > 0) return { kind: "duplicate_number" };
 
     const inserted = await tx
       .insert(smsTestSend)
-      .values({ requestId: claim.requestId, staffAccountId: claim.staffId, numberHash: claim.numberHash, claimedAt: claim.claimedAt })
+      .values({ requestId: claim.requestId, staffAccountId: claim.staffId, numberHash: claim.numberHash })
       .onConflictDoNothing({ target: smsTestSend.requestId })
       .returning({ id: smsTestSend.id });
     return inserted.length === 1 ? { kind: "claimed", id: inserted[0].id } : { kind: "duplicate_request" };
@@ -42,8 +46,20 @@ export const drizzleTestSendStore: TestSendStore = {
         providerStatus: result.providerStatus,
         providerMessageId: result.messageId,
         providerErrorCode: result.errorCode,
-        completedAt: result.completedAt,
+        completedAt: sql`now()`,
       })
       .where(and(eq(smsTestSend.id, id), eq(smsTestSend.outcome, "pending")));
   },
+
+  async listPending(executor, olderThanMs, limit) {
+    return executor
+      .select({ id: smsTestSend.id, claimedAt: smsTestSend.claimedAt })
+      .from(smsTestSend)
+      .where(and(eq(smsTestSend.outcome, "pending"), lt(smsTestSend.claimedAt, sql`now() - ${intervalMs(olderThanMs)}`)))
+      .orderBy(desc(smsTestSend.claimedAt))
+      .limit(limit);
+  },
 };
+
+/** A duration as a Postgres interval, built in SQL from a whole number of milliseconds (a bound parameter, never text). */
+const intervalMs = (ms: number) => sql`(${Math.trunc(ms)}::bigint * interval '1 millisecond')`;

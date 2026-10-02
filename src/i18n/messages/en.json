@@ -3949,7 +3949,7 @@
       "title": "Test text",
       "lead": "Send one test text from production to an approved phone, to learn whether the Twilio account and the toll-free number work. Nothing is retried automatically.",
       "previewOnly": "Texts are only sent from production",
-      "notConfigured": "Texts can go out from here, but the Twilio account, the toll-free number or the approved phone numbers are not set. Ask IT to set TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.",
+      "notConfigured": "Texts can go out from here, but the Twilio account, the toll-free number or the approved phone numbers are not set, or one of them is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.",
       "number": "Send to",
       "numberHint": "Only the approved phones are listed. The text is \"CVH test from production\".",
       "submit": "Send test text",
@@ -3969,6 +3969,11 @@
       "noAnswer": {
         "heading": "Twilio did not answer",
         "line": "The text may or may not have been sent. Nothing was retried, and no second text can go to this phone for 5 minutes."
+      },
+      "unknown": {
+        "heading": "Outcome unknown",
+        "lead": "These attempts were started, but Twilio’s answer was never recorded, so the text may or may not have been sent. Look at the phone. No second text can go to the same phone for 5 minutes after an attempt.",
+        "item": "Attempt {id}, started {time} UTC: outcome unknown"
       },
       "errors": {
         "forbidden": "Only an Admin can send a test text.",

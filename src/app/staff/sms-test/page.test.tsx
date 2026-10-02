@@ -12,6 +12,10 @@ vi.mock("../session", () => ({ currentStaffSession: async () => session.current 
 vi.mock("../identity", () => ({ identity: () => ({}), staffAuth: () => ({}) }));
 vi.mock("./actions", () => ({ sendTestTextAction: async () => ({ status: "idle" }) }));
 
+const attempts = vi.hoisted(() => ({ current: [] as { id: number; claimedAt: Date }[] }));
+vi.mock("@/platform/db", () => ({ getDb: () => ({}) }));
+vi.mock("@/modules/messaging", async (original) => ({ ...(await original<typeof import("@/modules/messaging")>()), listUnknownAttempts: async () => attempts.current }));
+
 const env = vi.hoisted(() => ({ current: null as unknown }));
 vi.mock("@/platform/config/env", () => ({
   getEnv: () => {
@@ -34,21 +38,23 @@ const ADMIN = (overrides: Partial<StaffSession> = {}): StaffSession => ({
 
 // Obviously fake numbers.
 const NUMBERS = ["+14165550101", "+14165550102"];
-const PRODUCTION: Pick<Env, "environment" | "smsMode" | "twilio" | "smsTestAllowlist"> = {
+const PRODUCTION: Pick<Env, "environment" | "smsMode" | "twilio" | "smsTestAllowlist" | "smsTestProblem"> = {
   environment: "production",
   smsMode: "live",
   twilio: { accountSid: "AC-fake", authToken: "fake-token", fromNumber: "+18885550100" },
   smsTestAllowlist: NUMBERS,
 };
 
-async function render(role: StaffRole = "admin") {
+async function element(role: StaffRole = "admin") {
   const { default: Page } = await import("./page");
   session.current = ADMIN({ role });
-  return renderToStaticMarkup((await Page({})) as never);
+  return Page({}) as Promise<never>;
 }
+const render = async (role: StaffRole = "admin") => renderToStaticMarkup(await element(role));
 
 beforeEach(() => {
   session.current = null;
+  attempts.current = [];
   env.current = PRODUCTION;
 });
 
@@ -62,6 +68,61 @@ describe("the Test text page", () => {
     expect(html).toContain("+1 ••• ••• 0101");
     expect(html).toContain('type="hidden" name="requestId"');
     expect(html).not.toContain("Texts are only sent from production");
+  });
+
+  it("never sends a full approved number to the browser: not in the HTML, not in the props the client form gets, only masked labels and opaque values", async () => {
+    const html = await render();
+    const props = JSON.stringify(await element());
+
+    for (const text of [html, props]) {
+      expect(text).not.toContain("+14165550101");
+      expect(text).not.toContain("+14165550102");
+      expect(text).not.toContain("4165550101");
+      expect(text).not.toContain("4165550102");
+      expect(text).not.toContain("+18885550100");
+    }
+    const values = [...html.matchAll(/<option value="([^"]*)"/g)].map((match) => match[1]);
+    expect(values).toHaveLength(2);
+    for (const value of values) expect(value).toMatch(/^[0-9a-f]{16}$/);
+    expect(new Set(values).size).toBe(2);
+    expect(html).toContain("+1 ••• ••• 0101");
+    expect(html).toContain("+1 ••• ••• 0102");
+  });
+
+  it("tells masked labels apart when two approved numbers end in the same four digits", async () => {
+    env.current = { ...PRODUCTION, smsTestAllowlist: ["+14165550101", "+16475550101"] };
+
+    const html = await render();
+
+    expect(html).toContain(">+1 ••• ••• 0101</option>");
+    expect(html).toContain(">+1 ••• ••• 0101 (2)</option>");
+  });
+
+  it("shows the notice, not the button, when a spike variable is malformed (smsTestProblem), without naming any value", async () => {
+    env.current = { ...PRODUCTION, smsTestAllowlist: [], smsTestProblem: "SMS_TEST_ALLOWLIST: every entry must be an E.164 number" };
+
+    const html = await render();
+
+    expect(html).toContain("not valid");
+    expect(html).not.toContain("<form");
+    expect(html).not.toContain("Texts are only sent from production");
+  });
+
+  it("lists attempts with an unknown outcome, by id and time and never a number", async () => {
+    attempts.current = [{ id: 12, claimedAt: new Date("2026-10-05T14:03:00Z") }];
+
+    const html = await render();
+
+    expect(html).toContain("Outcome unknown");
+    expect(html).toContain("Attempt 12, started 2026-10-05 14:03 UTC: outcome unknown");
+    expect(html).not.toContain("5550101");
+  });
+
+  it("lists no unknown attempts when there are none, and not on a preview", async () => {
+    expect(await render()).not.toContain("Outcome unknown");
+    attempts.current = [{ id: 12, claimedAt: new Date("2026-10-05T14:03:00Z") }];
+    env.current = { ...PRODUCTION, smsMode: "log" };
+    expect(await render()).not.toContain("Outcome unknown");
   });
 
   it.each([

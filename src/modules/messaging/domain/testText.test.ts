@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { AUDIT_REASON_OF, DUPLICATE_WINDOW_MS, TEST_TEXT_BODY, isAllowlisted, isE164, isRequestId, maskNumber } from "./testText";
+import { AUDIT_REASON_OF, DUPLICATE_WINDOW_MS, TEST_TEXT_BODY, isAllowlisted, isE164, isRequestId, maskNumber, maskedLabels } from "./testText";
 
 // Obviously fake numbers (the 555-01xx range).
 const A = "+14165550101";
@@ -35,6 +35,12 @@ describe("the first-text spike's rules", () => {
     expect(maskNumber(A)).toBe("+1 ••• ••• 0101");
     expect(maskNumber(A)).not.toContain("416");
     expect(maskNumber("+442071838750")).toBe("+44 ••• ••• 8750");
+  });
+
+  it("makes masked labels unique when two numbers end in the same four digits, so the choices can be told apart", () => {
+    expect(maskedLabels([A, B])).toEqual(["+1 ••• ••• 0101", "+1 ••• ••• 0102"]);
+    expect(maskedLabels([A, "+16475550101", B, "+19055550101"])).toEqual(["+1 ••• ••• 0101", "+1 ••• ••• 0101 (2)", "+1 ••• ••• 0102", "+1 ••• ••• 0101 (3)"]);
+    expect(new Set(maskedLabels([A, "+16475550101"])).size).toBe(2);
   });
 
   it("gives every refusal an audit reason from the audit catalogue's codes", () => {

@@ -6,8 +6,18 @@ import type { Db, DbTransaction } from "../../../platform/db";
 import type { AuditEvent } from "../../audit";
 import { FAKE_MESSAGE_SID, fakeSms } from "../adapters/fakeSms";
 import { DUPLICATE_WINDOW_MS, TEST_TEXT_BODY } from "../domain/testText";
-import type { ClaimResult, TestSendClaim, TestSendResult, TestSendStore } from "./ports";
-import { createTestTextService, numberHash, numberKeyFromSecret, type TestTextConfig } from "./sendTestText";
+import type { ClaimResult, PendingAttempt, TestSendClaim, TestSendResult, TestSendStore } from "./ports";
+import { createTestText } from "../index";
+import {
+  createTestTextService,
+  listUnknownAttempts,
+  numberChoice,
+  numberHash,
+  numberKeyFromSecret,
+  resolveNumberChoice,
+  UNKNOWN_AFTER_MS,
+  type TestTextConfig,
+} from "./sendTestText";
 
 // Obviously fake values.
 const ALLOWED = "+14165550101";
@@ -22,50 +32,104 @@ const KEY = numberKeyFromSecret("fake-auth-token");
 
 const LIVE: TestTextConfig = { live: true, allowlist: [ALLOWED, OTHER_ALLOWED], fromNumber: FROM };
 
-/** The ledger's rules in memory: a repeated request id, or a claim on the number inside the window, is refused. */
-function memoryStore() {
-  const rows: (TestSendClaim & { id: number; result?: TestSendResult })[] = [];
+/**
+ * The ledger's rules in memory: a repeated request id, or a claim on the number inside the window, is refused. The
+ * clock is the "database's": the store reads it, the use case never does.
+ */
+function memoryStore(databaseNow: () => Date) {
+  const rows: { id: number; requestId: string; numberHash: string; claimedAt: Date; result?: TestSendResult }[] = [];
   const store: TestSendStore = {
-    async claim(_tx, claim): Promise<ClaimResult> {
+    async claim(_tx, claim: TestSendClaim): Promise<ClaimResult> {
       if (rows.some((row) => row.requestId === claim.requestId)) return { kind: "duplicate_request" };
-      if (rows.some((row) => row.numberHash === claim.numberHash && row.claimedAt > claim.windowStart)) return { kind: "duplicate_number" };
+      const windowStart = databaseNow().getTime() - claim.windowMs;
+      if (rows.some((row) => row.numberHash === claim.numberHash && row.claimedAt.getTime() > windowStart)) return { kind: "duplicate_number" };
       const id = rows.length + 1;
-      rows.push({ ...claim, id });
+      rows.push({ id, requestId: claim.requestId, numberHash: claim.numberHash, claimedAt: databaseNow() });
       return { kind: "claimed", id };
     },
     async complete(_tx, id, result) {
       const row = rows.find((candidate) => candidate.id === id);
       if (row) row.result = result;
     },
+    async listPending(_executor, olderThanMs, limit): Promise<PendingAttempt[]> {
+      return rows
+        .filter((row) => row.result === undefined && row.claimedAt.getTime() < databaseNow().getTime() - olderThanMs)
+        .map(({ id, claimedAt }) => ({ id, claimedAt }))
+        .reverse()
+        .slice(0, limit);
+    },
   };
   return { store, rows };
 }
 
+type Audited = AuditEvent<"sms.test_sent"> | AuditEvent<"sms.test_attempted">;
+
 function setup(options: { config?: TestTextConfig; withProvider?: boolean } = {}) {
-  const { store, rows } = memoryStore();
-  const provider = fakeSms();
-  const records: AuditEvent<"sms.test_sent">[] = [];
-  const refusals: AuditEvent<"sms.test_sent">[] = [];
   let clock = new Date("2026-10-05T14:00:00Z");
-  const db = { transaction: async (run: (tx: DbTransaction) => Promise<unknown>) => run({} as DbTransaction) } as unknown as Db;
+  const { store, rows } = memoryStore(() => clock);
+  const provider = fakeSms();
+  const records: Audited[] = [];
+  const refusals: Audited[] = [];
+  const logged: { evt: string; fields: Record<string, unknown> }[] = [];
+  // Every call of the fake database's transaction, so a test can tell what ran inside which one.
+  const transactions: string[][] = [];
+  const events: string[] = [];
+  const claims: TestSendClaim[] = [];
+  const failures = { record: undefined as Error | undefined, attempt: undefined as Error | undefined, complete: undefined as Error | undefined };
+  const db = {
+    transaction: async (run: (tx: DbTransaction) => Promise<unknown>) => {
+      const log: string[] = [];
+      transactions.push(log);
+      return run({ log } as unknown as DbTransaction);
+    },
+  } as unknown as Db;
   const service = createTestTextService({
     db,
-    store,
+    store: {
+      ...store,
+      claim: async (tx, claim) => {
+        claims.push(claim);
+        const result = await store.claim(tx, claim);
+        (tx as unknown as { log: string[] }).log.push(`claim:${result.kind}`);
+        return result;
+      },
+      complete: async (tx, id, result) => {
+        if (failures.complete) throw failures.complete;
+        await store.complete(tx, id, result);
+      },
+    },
     provider: options.withProvider === false ? undefined : provider,
     audit: {
-      record: async (_tx, event) => void records.push(event),
+      record: async (tx, event) => {
+        if (failures.record && event.action === "sms.test_sent") throw failures.record;
+        if (failures.attempt && event.action === "sms.test_attempted") throw failures.attempt;
+        (tx as unknown as { log: string[] }).log.push(`audit:${event.action}`);
+        events.push(`audit:${event.action}`);
+        records.push(event);
+      },
       recordRefusal: async (_db, event) => void refusals.push(event),
     },
     config: options.config ?? LIVE,
-    numberKey: KEY,
-    now: () => clock,
+    numberKey: () => KEY,
+    log: { error: (evt, fields) => void logged.push({ evt, fields }) },
   });
+  const sendWithProviderLog = provider.send.bind(provider);
+  provider.send = async (text) => {
+    events.push("provider");
+    return sendWithProviderLog(text);
+  };
   return {
     service,
+    store,
     provider,
     records,
     refusals,
     rows,
+    logged,
+    transactions,
+    events,
+    claims,
+    failures,
     advance: (ms: number) => {
       clock = new Date(clock.getTime() + ms);
     },
@@ -81,13 +145,66 @@ describe("an approved number on production", () => {
 
     expect(t.provider.sent).toEqual([{ to: ALLOWED, from: FROM, body: TEST_TEXT_BODY }]);
     expect(t.refusals).toEqual([]);
+    // The subject is always the ledger row's id; the Twilio SID is in meta.
     expect(t.records).toEqual([
-      { action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: FAKE_MESSAGE_SID, meta: { http_status: 201, provider_status: "queued" } },
+      { action: "sms.test_attempted", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: "1" },
+      { action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: "1", meta: { http_status: 201, provider_status: "queued", twilio_sid: FAKE_MESSAGE_SID } },
     ]);
     expect(t.rows[0].result).toMatchObject({ outcome: "sent", providerStatus: "queued", messageId: FAKE_MESSAGE_SID });
     // The ledger holds the number only as a keyed hash.
     expect(t.rows[0].numberHash).toBe(numberHash(KEY, ALLOWED));
     expect(JSON.stringify([t.records, t.refusals, t.rows])).not.toContain("5550101");
+  });
+});
+
+describe("the attempt record (a send is never invisible to the audit trail)", () => {
+  it("is written in the claim's own transaction, before the provider is called", async () => {
+    const t = setup();
+
+    await t.send();
+
+    expect(t.transactions[0]).toEqual(["claim:claimed", "audit:sms.test_attempted"]);
+    expect(t.events.slice(0, 2)).toEqual(["audit:sms.test_attempted", "provider"]);
+  });
+
+  it("is not written for a press that is refused, and a claim whose record cannot be written sends nothing", async () => {
+    const t = setup();
+    await t.send(ALLOWED, REQUEST_1);
+    await t.send(ALLOWED, REQUEST_2);
+    expect(t.records.filter((event) => event.action === "sms.test_attempted")).toHaveLength(1);
+
+    const failing = setup();
+    failing.failures.attempt = new Error("audit down");
+    await expect(failing.send()).rejects.toThrow("audit down");
+    expect(failing.provider.sent).toEqual([]);
+  });
+});
+
+describe("when recording the answer fails", () => {
+  it("still shows Twilio's answer, logs sms_test.settle_failed with the claim id and no number, and leaves the claim pending", async () => {
+    const t = setup();
+    t.failures.complete = new Error(`insert failed for ${ALLOWED}`);
+
+    await expect(t.send()).resolves.toMatchObject({ kind: "sent", messageId: FAKE_MESSAGE_SID });
+
+    expect(t.logged).toEqual([{ evt: "sms_test.settle_failed", fields: { claimId: 1 } }]);
+    expect(JSON.stringify(t.logged)).not.toContain("5550101");
+    expect(t.rows[0].result).toBeUndefined();
+    // The attempt record was committed with the claim, so the send is in the audit trail even now.
+    expect(t.records.map((event) => event.action)).toEqual(["sms.test_attempted"]);
+    // And the number stays blocked.
+    await expect(t.send(ALLOWED, REQUEST_2)).resolves.toEqual({ kind: "refused", reason: "duplicate_number" });
+  });
+
+  it("lists the claim as outcome unknown after a minute, and not before", async () => {
+    const t = setup();
+    t.failures.complete = new Error("insert failed");
+    await t.send();
+
+    t.advance(UNKNOWN_AFTER_MS - 1_000);
+    expect(await listUnknownAttempts({} as Db, t.store)).toEqual([]);
+    t.advance(2_000);
+    expect(await listUnknownAttempts({} as Db, t.store)).toEqual([{ id: 1, claimedAt: new Date("2026-10-05T14:00:00Z") }]);
   });
 });
 
@@ -176,7 +293,7 @@ describe("when Twilio returns an error", () => {
     await expect(t.send()).resolves.toEqual({ kind: "provider_error", httpStatus: 400, errorCode: 30032, message: `The number ${ALLOWED} is not verified` });
 
     expect(t.provider.sent).toHaveLength(1);
-    expect(t.records).toEqual([]);
+    expect(t.records.map((event) => event.action)).toEqual(["sms.test_attempted"]);
     expect(t.refusals).toEqual([
       { action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: "1", meta: { reason: "provider_error", http_status: 400, provider_error_code: 30032 } },
     ]);
@@ -188,6 +305,18 @@ describe("when Twilio returns an error", () => {
     // Nothing is retried, and a second press is a duplicate until the window passes.
     await expect(t.send(ALLOWED, REQUEST_2)).resolves.toEqual({ kind: "refused", reason: "duplicate_number" });
     expect(t.provider.sent).toHaveLength(1);
+  });
+
+  it("keeps a rejection apart from no answer: only no answer carries outcome_unknown", async () => {
+    const rejected = setup();
+    rejected.provider.answer({ kind: "rejected", httpStatus: 400, errorCode: 30032, message: null });
+    await rejected.send();
+    const unreachable = setup();
+    unreachable.provider.answer({ kind: "unreachable" });
+    await unreachable.send();
+
+    expect(rejected.refusals[0].meta).not.toHaveProperty("outcome_unknown");
+    expect(unreachable.refusals[0].meta).toHaveProperty("outcome_unknown", true);
   });
 
   it("copes with an error that has no code or message", async () => {
@@ -208,8 +337,82 @@ describe("when Twilio returns an error", () => {
     await expect(t.send()).resolves.toEqual({ kind: "no_answer" });
 
     expect(t.rows[0].result).toMatchObject({ outcome: "unknown", httpStatus: null, errorCode: null });
-    expect(t.refusals[0].meta).toEqual({ reason: "provider_error" });
+    // Not a plain provider error: the text may have gone, and the audit trail says so.
+    expect(t.refusals).toEqual([
+      { action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: "1", meta: { reason: "provider_error", outcome_unknown: true } },
+    ]);
     await expect(t.send(ALLOWED, REQUEST_2)).resolves.toEqual({ kind: "refused", reason: "duplicate_number" });
     expect(t.provider.sent).toHaveLength(1);
+  });
+});
+
+describe("the clock", () => {
+  it("is the database's: the claim carries a window length, never a time read on the app server", async () => {
+    const t = setup();
+
+    await t.send();
+
+    expect(t.claims).toEqual([{ requestId: REQUEST_1, staffId: STAFF, numberHash: numberHash(KEY, ALLOWED), windowMs: DUPLICATE_WINDOW_MS }]);
+  });
+});
+
+describe("the number key", () => {
+  it("has no fallback: without Twilio's credentials a send that gets as far as hashing throws instead of using a made-up key", async () => {
+    const provider = fakeSms();
+    const db = { transaction: async (run: (tx: DbTransaction) => Promise<unknown>) => run({} as DbTransaction) } as unknown as Db;
+    const service = createTestText({ db, config: LIVE, provider, audit: { record: async () => {}, recordRefusal: async () => {} }, log: { error: () => {} } });
+
+    await expect(service.sendTestText({ actorStaffId: STAFF, requestId: REQUEST_1, number: ALLOWED })).rejects.toThrow(/credentials/);
+
+    expect(provider.sent).toEqual([]);
+  });
+
+  it("is not asked for when nothing can be sent anyway (no credentials, no provider): the press is refused as not available", async () => {
+    const refusals: unknown[] = [];
+    const db = { transaction: async (run: (tx: DbTransaction) => Promise<unknown>) => run({} as DbTransaction) } as unknown as Db;
+    const service = createTestText({
+      db,
+      config: { ...LIVE, live: false },
+      audit: { record: async () => {}, recordRefusal: async (_db, event) => void refusals.push(event.meta) },
+      log: { error: () => {} },
+    });
+
+    await expect(service.sendTestText({ actorStaffId: STAFF, requestId: REQUEST_1, number: ALLOWED })).resolves.toEqual({ kind: "refused", reason: "not_available" });
+    expect(refusals).toEqual([{ reason: "not_available" }]);
+  });
+});
+
+describe("the opaque number choice", () => {
+  it("is a short keyed hash that holds no part of the number, differs per number and key, and resolves back on the server only", () => {
+    const choices = [ALLOWED, OTHER_ALLOWED].map((number) => numberChoice(KEY, number));
+
+    expect(choices[0]).toMatch(/^[0-9a-f]{16}$/);
+    expect(choices[0]).not.toBe(choices[1]);
+    expect(numberChoice(numberKeyFromSecret("another-token"), ALLOWED)).not.toBe(choices[0]);
+    expect(JSON.stringify(choices)).not.toContain("5550101");
+    // It is not the ledger's hash either.
+    expect(numberHash(KEY, ALLOWED)).not.toContain(choices[0]);
+
+    expect(resolveNumberChoice(KEY, [ALLOWED, OTHER_ALLOWED], choices[1])).toBe(OTHER_ALLOWED);
+  });
+
+  it.each([["an unknown value", "0123456789abcdef"], ["the number itself", ALLOWED], ["a tampered value", "x"], ["nothing", ""]])("does not resolve %s", (_name, value) => {
+    expect(resolveNumberChoice(KEY, [ALLOWED, OTHER_ALLOWED], value)).toBeUndefined();
+  });
+
+  it("does not resolve the choice of a number that has left the allowlist", () => {
+    expect(resolveNumberChoice(KEY, [OTHER_ALLOWED], numberChoice(KEY, ALLOWED))).toBeUndefined();
+  });
+});
+
+describe("a choice that resolves to no approved number", () => {
+  it("is refused as not allowlisted, audited without a number, with no claim and no provider call", async () => {
+    const t = setup();
+
+    await expect(t.service.refuseNotAllowlisted(STAFF)).resolves.toEqual({ kind: "refused", reason: "not_allowlisted" });
+
+    expect(t.provider.sent).toEqual([]);
+    expect(t.rows).toEqual([]);
+    expect(t.refusals).toEqual([{ action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: null, meta: { reason: "not_allowlisted" } }]);
   });
 });

@@ -3,7 +3,7 @@
 import { englishText } from "@/i18n/text";
 import { randomUUID } from "node:crypto";
 import { staffAction, type ActionRefusal } from "../guard";
-import { smsTestService } from "./compose";
+import { resolveSmsTestChoice, smsTestService } from "./compose";
 import { sendTestFromForm, type SmsTestState } from "./sendTest";
 
 const REFUSAL_KEYS: Record<Exclude<ActionRefusal, "forbidden" | "bad_request">, string> = {
@@ -18,6 +18,6 @@ const refusalMessage = (error: ActionRefusal) => englishText(error === "forbidde
 // code, whatever the screen showed.
 export const sendTestTextAction = staffAction(
   { route: "/staff/sms-test", access: "hub", action: "sms.test_send" },
-  async (session, _previous: SmsTestState, form: FormData): Promise<SmsTestState> => sendTestFromForm({ service: smsTestService }, session, form),
+  async (session, _previous: SmsTestState, form: FormData): Promise<SmsTestState> => sendTestFromForm({ service: smsTestService, resolveNumber: resolveSmsTestChoice }, session, form),
   (error): SmsTestState => ({ status: "refused", message: refusalMessage(error), nextRequestId: randomUUID() }),
 );

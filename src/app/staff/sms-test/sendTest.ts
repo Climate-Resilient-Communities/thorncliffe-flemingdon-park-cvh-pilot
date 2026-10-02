@@ -15,7 +15,9 @@ export type SmsTestState =
   | { status: "refused"; message: string; nextRequestId: string };
 
 export interface SendTestDeps {
-  service: () => Pick<TestTextService, "sendTestText">;
+  service: () => Pick<TestTextService, "sendTestText" | "refuseNotAllowlisted">;
+  /** The approved number behind the form's opaque choice, resolved on the server; undefined when it resolves to none. */
+  resolveNumber: (choice: string) => string | undefined;
   newRequestId?: () => string;
 }
 
@@ -64,17 +66,27 @@ export function describeOutcome(outcome: SendTestTextOutcome, nextRequestId: str
 
 /**
  * The "Send test text" server action's work for an Admin at aal2 (the guard, ../guard.ts, has
- * already refused everyone else): hands the request id and the chosen number to the messaging
- * module, which checks the allowlist and duplicates, calls Twilio once and audits the outcome.
+ * already refused everyone else). The form carries an opaque choice, never a number: it is resolved
+ * here, on the server, from the approved numbers, and a choice that resolves to none (unknown,
+ * tampered, a number typed in) is refused and audited before the ledger or Twilio is touched. A
+ * resolved number goes with the request id to the messaging module, which checks the allowlist and
+ * duplicates, calls Twilio once and audits the outcome.
  */
 export async function sendTestFromForm(deps: SendTestDeps, session: Pick<StaffSession, "staffId">, form: FormData): Promise<SmsTestState> {
   const nextRequestId = (deps.newRequestId ?? randomUUID)();
   let outcome: SendTestTextOutcome;
   try {
-    outcome = await deps.service().sendTestText({ actorStaffId: session.staffId, requestId: text(form, "requestId"), number: text(form, "number") });
+    const number = deps.resolveNumber(text(form, "number"));
+    const service = deps.service();
+    outcome = number === undefined ? await service.refuseNotAllowlisted(session.staffId) : await service.sendTestText({ actorStaffId: session.staffId, requestId: text(form, "requestId"), number });
   } catch {
     // Not configured here (no database, no environment), or the ledger failed: nothing was sent.
     return { status: "refused", message: englishText("staff.smsTest.errors.unavailable"), nextRequestId };
   }
   return describeOutcome(outcome, nextRequestId);
+}
+
+/** One line for each attempt whose answer was never recorded: its id and when it started (UTC), never a number. */
+export function describeUnknownAttempts(attempts: readonly { id: number; claimedAt: Date }[]): string[] {
+  return attempts.map(({ id, claimedAt }) => englishText("staff.smsTest.unknown.item", { id, time: claimedAt.toISOString().slice(0, 16).replace("T", " ") }));
 }

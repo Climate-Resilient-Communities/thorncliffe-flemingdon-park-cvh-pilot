@@ -1,7 +1,8 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/contracts/staffRoles";
+import { HUB_NAV_ICONS } from "@/ui/hub";
 import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser, hubTabTitle } from "./hubShell";
 import type { StaffSession } from "./session";
 
@@ -58,6 +59,15 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/sms-test"), role).toBe(role === "admin");
     }
+  });
+
+  it("gives Test text a phone icon of its own: not the inbox another item uses, and one the shell's stylesheet draws", () => {
+    const smsTest = items("admin").find((item) => item.href === "/staff/sms-test");
+    expect(smsTest?.icon).toBe("phone");
+    expect(smsTest?.icon).not.toBe("inbox");
+    expect(HUB_NAV_ICONS).toContain("phone");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    for (const icon of HUB_NAV_ICONS) expect(stylesheet, icon).toContain(`.hub-ico--${icon} {`);
   });
 
   it("links an item only to a page that exists; the others are text until their story builds the page", () => {

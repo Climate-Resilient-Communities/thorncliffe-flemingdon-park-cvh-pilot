@@ -41,23 +41,40 @@ describe("describeOutcome", () => {
 });
 
 describe("sendTestFromForm", () => {
-  it("passes the signed-in person, the request id and the chosen number, and nothing else, to the use case", async () => {
-    const sendTestText = vi.fn(async () => ({ kind: "refused", reason: "not_allowlisted" }) as const);
+  const fake = () => ({
+    sendTestText: vi.fn(async () => ({ kind: "refused", reason: "duplicate_number" }) as const),
+    refuseNotAllowlisted: vi.fn(async () => ({ kind: "refused", reason: "not_allowlisted" }) as const),
+  });
+  const resolveNumber = (choice: string) => (choice === "choice-1" ? "+14165550101" : undefined);
+
+  it("resolves the opaque choice on the server and passes the signed-in person, the request id and the resolved number, and nothing else, to the use case", async () => {
+    const service = fake();
     const form = new FormData();
     form.set("requestId", "r1");
-    form.set("number", "n1");
+    form.set("number", "choice-1");
     form.set("extra", "ignored");
 
-    await sendTestFromForm({ service: () => ({ sendTestText }), newRequestId: () => NEXT }, { staffId: "s1" }, form);
+    await sendTestFromForm({ service: () => service, resolveNumber, newRequestId: () => NEXT }, { staffId: "s1" }, form);
 
-    expect(sendTestText).toHaveBeenCalledWith({ actorStaffId: "s1", requestId: "r1", number: "n1" });
+    expect(service.sendTestText).toHaveBeenCalledWith({ actorStaffId: "s1", requestId: "r1", number: "+14165550101" });
+    expect(service.refuseNotAllowlisted).not.toHaveBeenCalled();
   });
 
-  it("treats missing fields as empty text", async () => {
-    const sendTestText = vi.fn(async () => ({ kind: "refused", reason: "invalid" }) as const);
+  it.each([
+    ["an unknown choice", "choice-9"],
+    ["a tampered choice", "choice-1 "],
+    ["a full number typed in", "+14165550101"],
+    ["no choice at all", undefined],
+  ])("refuses %s as not on the approved list, audited, and never reaches the send", async (_name, choice) => {
+    const service = fake();
+    const form = new FormData();
+    form.set("requestId", "r1");
+    if (choice !== undefined) form.set("number", choice);
 
-    await sendTestFromForm({ service: () => ({ sendTestText }) }, { staffId: "s1" }, new FormData());
+    const state = await sendTestFromForm({ service: () => service, resolveNumber, newRequestId: () => NEXT }, { staffId: "s1" }, form);
 
-    expect(sendTestText).toHaveBeenCalledWith({ actorStaffId: "s1", requestId: "", number: "" });
+    expect(state).toEqual({ status: "refused", message: "That phone is not on the approved list. Nothing was sent.", nextRequestId: NEXT });
+    expect(service.refuseNotAllowlisted).toHaveBeenCalledWith("s1");
+    expect(service.sendTestText).not.toHaveBeenCalled();
   });
 });
