@@ -1,8 +1,9 @@
-import { existsSync } from "node:fs";
+import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/contracts/staffRoles";
 import { can } from "@/modules/identity";
+import { HUB_NAV_ICONS } from "@/ui/hub";
 import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser, hubTabTitle } from "./hubShell";
 import type { StaffSession } from "./session";
 
@@ -39,7 +40,7 @@ describe("hubNavigation", () => {
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Buildings"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Buildings", "Test text"]);
   });
 
   it("adds Coverage for exactly the roles whose policy allows coverage.view, with an icon no other item uses", () => {
@@ -60,7 +61,7 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
-  it("adds Administration with People, Providers and Buildings for Admins only", () => {
+  it("adds Administration with People, Providers, Buildings and Test text for Admins only", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/people"), role).toBe(role === "admin");
       expect(items(role).some((item) => item.href === "/staff/providers"), role).toBe(role === "admin");
@@ -71,7 +72,23 @@ describe("hubNavigation", () => {
       { id: "people", label: "People", href: "/staff/people", icon: "person" },
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
+      { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
+  });
+
+  it("adds the first-text spike's Test text for Admins only", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/sms-test"), role).toBe(role === "admin");
+    }
+  });
+
+  it("gives Test text a phone icon of its own: not the inbox another item uses, and one the shell's stylesheet draws", () => {
+    const smsTest = items("admin").find((item) => item.href === "/staff/sms-test");
+    expect(smsTest?.icon).toBe("phone");
+    expect(smsTest?.icon).not.toBe("inbox");
+    expect(HUB_NAV_ICONS).toContain("phone");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    for (const icon of HUB_NAV_ICONS) expect(stylesheet, icon).toContain(`.hub-ico--${icon} {`);
   });
 
   it("links an item only to a page that exists; the others are text until their story builds the page", () => {
