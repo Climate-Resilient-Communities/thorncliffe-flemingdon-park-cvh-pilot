@@ -85,7 +85,7 @@ function Building({ view, actions, initial }: { view: CoverageBuildingView; acti
           {view.floors.empty && <p>{view.floors.empty}</p>}
           <Stack as="ul" gap="related">
             {view.floors.rows.map((floor) => (
-              <li key={floor.id} data-testid={`floor-${floor.id}`} className={`hub-cover ${floor.covered ? "hub-cover--covered" : "hub-cover--uncovered"}`} aria-label={floor.name}>
+              <li key={floor.id} data-testid={`floor-${floor.id}`} className={`hub-cover ${floor.covered ? "hub-cover--covered" : "hub-cover--uncovered"}`}>
                 <span className="hub-cover__label">{floor.label}</span> {floor.state}
               </li>
             ))}

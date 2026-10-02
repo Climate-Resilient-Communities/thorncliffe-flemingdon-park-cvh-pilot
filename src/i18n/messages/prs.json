@@ -4080,7 +4080,6 @@
       "floorsTitle": "[EN] Floors",
       "coveredBy": "[EN] Covered by {names}",
       "notCovered": "[EN] Not covered",
-      "floorState": "[EN] Floor {label}: {state}",
       "assignmentsTitle": "[EN] Ambassadors assigned",
       "noAssignments": "[EN] No ambassador is assigned to this building.",
       "allFloors": "[EN] All floors",
@@ -4092,8 +4091,10 @@
         "removed": "[EN] the account was removed",
         "notAmbassador": "[EN] the account is no longer an ambassador"
       },
-      "remove": "[EN] Remove",
-      "removeOf": "[EN] Remove {name} from this building",
+      "remove": "[EN] Remove {name}",
+      "removeConfirm": "[EN] Remove {name} from this building? They stay an ambassador and stop covering it.",
+      "removeYes": "[EN] Yes, remove {name}",
+      "removeKeep": "[EN] Keep {name}",
       "assign": {
         "title": "[EN] Assign an ambassador",
         "person": "[EN] Ambassador",
@@ -4103,7 +4104,7 @@
         "all": "[EN] All floors, including floors added later",
         "some": "[EN] Only the floors chosen here",
         "pick": "[EN] Choose floors",
-        "range": "[EN] Or every floor from one to another",
+        "range": "[EN] Or every floor from one to another, as the building lists its floors now (floors added later are not included)",
         "from": "[EN] From floor",
         "to": "[EN] To floor",
         "none": "[EN] None",
@@ -4126,7 +4127,10 @@
         "floorNotInBuilding": "[EN] One of those floors is not a floor of this building. Reload the page.",
         "rangeIncomplete": "[EN] Choose both ends of the range of floors, or neither.",
         "notAssigned": "[EN] That ambassador is not assigned to this building.",
-        "choosePerson": "[EN] Choose an ambassador."
+        "choosePerson": "[EN] Choose an ambassador.",
+        "chooseScope": "[EN] Choose which floors: all floors, or only the floors you pick.",
+        "allWithFloors": "[EN] You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.",
+        "rangeReversed": "[EN] The range goes from a higher floor to a lower one. Put the lower floor first."
       }
     },
     "resetAuthenticator": {

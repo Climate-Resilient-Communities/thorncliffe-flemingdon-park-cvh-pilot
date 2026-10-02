@@ -10,6 +10,16 @@
     text-decoration: underline;
   }
 
+  /*
+   * A link that is also a touch target (the `tap` utility), in a column: as wide as its text and no wider, centred
+   * in its own height, so the target's minimum size does not open a gap between it and the line that follows.
+   */
+  .hub-link.tap {
+    display: inline-flex;
+    align-items: center;
+    align-self: flex-start;
+  }
+
   /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
   .hub-list-item {
     padding-block-end: var(--gap-related);

@@ -112,6 +112,22 @@ test("the assign form after a refusal at 390px", async ({ page }) => {
   await expectBaseline(page, "coverage-refused-390.png");
 });
 
+test("removing an assignment asks first, at 390px: the question, the confirm and the way to keep it", async ({ page }) => {
+  await open(
+    page,
+    390,
+    {
+      screen: coverageBuildingView(PLANS[1], ASSIGNMENTS, { ambassadors: AMBASSADORS }),
+      initial: { remove: { [OMAR]: { status: "confirm", message: "Remove Omar Farouk from this building? They stay an ambassador and stop covering it." } } },
+    },
+    2900,
+  );
+  await expect(page.getByTestId(`assignment-${OMAR}`)).toContainText("Remove Omar Farouk from this building? They stay an ambassador and stop covering it.");
+  await expect(page.getByRole("button", { name: "Yes, remove Omar Farouk" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Keep Omar Farouk" })).toBeVisible();
+  await expectBaseline(page, "coverage-remove-confirm-390.png");
+});
+
 test("all 43 buildings list their floors in words and fit the phone without scrolling sideways", async ({ page }) => {
   const forty3 = Array.from({ length: 43 }, (_, index) => plan(String(4154000 + index), `${index + 1} Test Dr`, ["G", ...range(1, 4 + (index % 9))]));
   const list = coverageListView(forty3, [assignment({ rsn: "4154000", floorIds: null }), assignment({ rsn: "4154001", floorIds: [floorId("4154001", 0)] })]);

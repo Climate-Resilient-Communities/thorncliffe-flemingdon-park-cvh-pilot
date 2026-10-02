@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState } from "react";
+import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import type { AssignState } from "./editAssignments";
 import type { AssignFormView, AssignmentRowView } from "./view";
@@ -19,18 +19,46 @@ function Refusal({ id, state }: { id: string; state: AssignState }) {
   );
 }
 
-/** "Remove" beside one assignment: the person stays an ambassador, they stop covering the building. */
+/**
+ * "Remove" beside one assignment: the person stays an ambassador, they stop covering the building. The button's
+ * text is its name ("Remove Omar Farouk"). Removing asks first, as removing a floor does (S01.13): the first
+ * submit returns the question, and "Yes, remove" posts `confirm=1`.
+ */
 export function RemoveAssignmentForm({ rsn, row, action, initialState = IDLE }: { rsn: string; row: AssignmentRowView; action: AssignAction; initialState?: AssignState }) {
   const [state, formAction, pending] = useActionState(action, initialState);
+  // "Keep" hides the question without a round trip; a new question (a new state object) shows again.
+  const [dismissed, setDismissed] = useState<AssignState | null>(null);
   const errorId = `remove-error-${row.staffId}`;
+  const questionId = `remove-question-${row.staffId}`;
   return (
     <form action={formAction}>
       <Stack gap="label">
         <input type="hidden" name="rsn" value={rsn} />
         <input type="hidden" name="staffId" value={row.staffId} />
-        <button className="hub-button hub-button--secondary" type="submit" disabled={pending} aria-label={row.removeName} aria-describedby={state.status === "refused" ? errorId : undefined}>
-          {row.remove}
-        </button>
+        <input type="hidden" name="name" value={row.name} />
+        {state.status === "confirm" && dismissed !== state ? (
+          <Stack gap="label">
+            <p id={questionId} role="alert">
+              {state.message}
+            </p>
+            <Inline gap="target" align="center">
+              <input type="hidden" name="confirm" value="1" />
+              <button className="hub-button hub-button--primary" type="submit" disabled={pending} aria-describedby={questionId}>
+                {row.removeYes}
+              </button>
+              <button className="hub-button hub-button--secondary" type="button" onClick={() => setDismissed(state)}>
+                {row.removeKeep}
+              </button>
+            </Inline>
+          </Stack>
+        ) : (
+          // In a row of its own, so the button is as wide as its text and not the width of the list item.
+          <Inline gap="label" align="center">
+            <button className="hub-button hub-button--secondary" type="submit" disabled={pending} aria-describedby={state.status === "refused" ? errorId : undefined}>
+              {row.remove}
+            </button>
+          </Inline>
+        )}
         <Refusal id={errorId} state={state} />
       </Stack>
     </form>
@@ -39,7 +67,9 @@ export function RemoveAssignmentForm({ rsn, row, action, initialState = IDLE }: 
 
 /**
  * "Assign an ambassador": who, then every floor or some. The floors are chosen by ticking them, or as a
- * range from one floor to another (the building's own order); both can be used together.
+ * range from one floor to another (the building's own order); both can be used together. Which floors
+ * ("all" or "only these") is chosen, not assumed: neither is selected to begin with, and a form sent without
+ * one is refused.
  */
 export function AssignForm({ rsn, labels, action, initialState = IDLE }: { rsn: string; labels: AssignFormView; action: AssignAction; initialState?: AssignState }) {
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -75,12 +105,12 @@ export function AssignForm({ rsn, labels, action, initialState = IDLE }: { rsn: 
               </select>
             </Stack>
             <fieldset>
-              <Stack gap="label">
+              <Stack gap="target">
                 <legend>{labels.scope}</legend>
-                <label>
-                  <input type="radio" name="scope" value="all" defaultChecked /> {labels.all}
+                <label className="hub-choice">
+                  <input type="radio" name="scope" value="all" /> {labels.all}
                 </label>
-                <label>
+                <label className="hub-choice">
                   <input type="radio" name="scope" value="some" disabled={labels.floors.length === 0} /> {labels.some}
                 </label>
                 {labels.noFloors && <p>{labels.noFloors}</p>}
@@ -91,9 +121,9 @@ export function AssignForm({ rsn, labels, action, initialState = IDLE }: { rsn: 
                 <fieldset>
                   <Stack gap="label">
                     <legend>{labels.pick}</legend>
-                    <Inline gap="related" wrap>
+                    <Inline gap="target" wrap>
                       {labels.floors.map((floor) => (
-                        <label key={floor.id}>
+                        <label key={floor.id} className="hub-choice">
                           <input type="checkbox" name="floorId" value={floor.id} /> {floor.label}
                         </label>
                       ))}

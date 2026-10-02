@@ -39,8 +39,6 @@ export interface FloorStateView {
   covered: boolean;
   /** "Covered by Ann Okafor, Bo Kim" or "Not covered". */
   state: string;
-  /** "Floor 3: Not covered", the item's accessible name. */
-  name: string;
 }
 
 export interface AssignmentRowView {
@@ -51,8 +49,11 @@ export interface AssignmentRowView {
   floors: string;
   /** Set when the person does not cover now: "Not covering now: the account is suspended." */
   inactive?: string;
+  /** "Remove Omar Farouk": the button's visible text is its name. */
   remove: string;
-  removeName: string;
+  /** "Yes, remove Omar Farouk" and "Keep Omar Farouk", the two buttons of the question. */
+  removeYes: string;
+  removeKeep: string;
 }
 
 export interface AssignFormView {
@@ -199,7 +200,7 @@ export function coverageBuildingView(
       rows: coverage.map((floor) => {
         const label = labelOf.get(floor.floorId) ?? "";
         const state = floor.covered ? t("coveredBy", { names: floor.staffIds.map((id) => namesOf.get(id) ?? "").join(", ") }) : t("notCovered");
-        return { id: floor.floorId, label, covered: floor.covered, state, name: t("floorState", { label, state }) };
+        return { id: floor.floorId, label, covered: floor.covered, state };
       }),
     },
     assignments: {
@@ -214,8 +215,9 @@ export function coverageBuildingView(
             ? t("allFloors")
             : t("someFloors", { labels: plan.floors.filter((floor) => assignment.floorIds?.includes(floor.id)).map((floor) => floor.label).join(", ") }),
         ...(assignment.covering ? {} : { inactive: t("notCoveringNow", { reason: inactiveReason(assignment) }) }),
-        remove: t("remove"),
-        removeName: t("removeOf", { name: personName(assignment) }),
+        remove: t("remove", { name: personName(assignment) }),
+        removeYes: t("removeYes", { name: personName(assignment) }),
+        removeKeep: t("removeKeep", { name: personName(assignment) }),
       })),
     },
     ...(options.ambassadors

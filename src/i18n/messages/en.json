@@ -4080,7 +4080,6 @@
       "floorsTitle": "Floors",
       "coveredBy": "Covered by {names}",
       "notCovered": "Not covered",
-      "floorState": "Floor {label}: {state}",
       "assignmentsTitle": "Ambassadors assigned",
       "noAssignments": "No ambassador is assigned to this building.",
       "allFloors": "All floors",
@@ -4092,8 +4091,10 @@
         "removed": "the account was removed",
         "notAmbassador": "the account is no longer an ambassador"
       },
-      "remove": "Remove",
-      "removeOf": "Remove {name} from this building",
+      "remove": "Remove {name}",
+      "removeConfirm": "Remove {name} from this building? They stay an ambassador and stop covering it.",
+      "removeYes": "Yes, remove {name}",
+      "removeKeep": "Keep {name}",
       "assign": {
         "title": "Assign an ambassador",
         "person": "Ambassador",
@@ -4103,7 +4104,7 @@
         "all": "All floors, including floors added later",
         "some": "Only the floors chosen here",
         "pick": "Choose floors",
-        "range": "Or every floor from one to another",
+        "range": "Or every floor from one to another, as the building lists its floors now (floors added later are not included)",
         "from": "From floor",
         "to": "To floor",
         "none": "None",
@@ -4126,7 +4127,10 @@
         "floorNotInBuilding": "One of those floors is not a floor of this building. Reload the page.",
         "rangeIncomplete": "Choose both ends of the range of floors, or neither.",
         "notAssigned": "That ambassador is not assigned to this building.",
-        "choosePerson": "Choose an ambassador."
+        "choosePerson": "Choose an ambassador.",
+        "chooseScope": "Choose which floors: all floors, or only the floors you pick.",
+        "allWithFloors": "You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.",
+        "rangeReversed": "The range goes from a higher floor to a lower one. Put the lower floor first."
       }
     },
     "resetAuthenticator": {

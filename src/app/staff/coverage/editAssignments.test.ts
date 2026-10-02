@@ -21,14 +21,42 @@ function deps(service: Partial<ReturnType<AssignDeps["assignments"]>>) {
 // Without a session, or as anyone but an Admin, the guard refuses the action before this code runs:
 // see test/db/permissions.db.test.ts, which calls the real actions.
 describe("Assign (server action)", () => {
-  it("assigns every floor of the judged building when the form says all floors, ignoring any floors ticked", async () => {
+  it("assigns every floor of the judged building when the form says all floors and nothing else", async () => {
     const assign = vi.fn(async () => ({ ok: true as const, value: { staffId: NIA, rsn: "4154146", floorIds: null } }));
     const { deps: d } = deps({ assign });
 
-    const state = await assignFromForm(d, session, "4154146", form({ staffId: NIA, scope: "all", floorId: [FLOOR_1], from: FLOOR_1, to: FLOOR_2 }));
+    // The range's two selects are always sent, empty when nothing is chosen.
+    const state = await assignFromForm(d, session, "4154146", form({ staffId: NIA, scope: "all", from: "", to: "" }));
 
     expect(assign).toHaveBeenCalledWith(ADMIN, { staffId: NIA, rsn: "4154146", floorIds: null });
     expect(state).toEqual({ status: "saved", location: "/staff/coverage?building=4154146&done=assigned" });
+  });
+
+  it.each([
+    ["a floor ticked", { floorId: [FLOOR_1] }],
+    ["a range", { from: FLOOR_1, to: FLOOR_2 }],
+    ["one end of a range", { from: FLOOR_1 }],
+    ["floors ticked and a range", { floorId: [FLOOR_1], from: FLOOR_1, to: FLOOR_2 }],
+  ])("refuses 'all floors' sent with %s, instead of dropping what was picked, and calls nothing", async (_, extra) => {
+    const { service, deps: d } = deps({});
+
+    const state = await assignFromForm(d, session, "4154146", form({ staffId: NIA, scope: "all", ...extra }));
+
+    expect(state).toEqual({ status: "refused", message: "You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick." });
+    expect(service.assign).not.toHaveBeenCalled();
+  });
+
+  it.each([
+    ["no scope", {}],
+    ["an empty scope", { scope: "" }],
+    ["an unknown scope", { scope: "everything" }],
+  ])("refuses %s: the scope is chosen, never assumed", async (_, extra) => {
+    const { service, deps: d } = deps({});
+
+    const state = await assignFromForm(d, session, "7", form({ staffId: NIA, floorId: [FLOOR_1], ...extra }));
+
+    expect(state).toEqual({ status: "refused", message: "Choose which floors: all floors, or only the floors you pick." });
+    expect(service.assign).not.toHaveBeenCalled();
   });
 
   it("assigns the floors ticked, by id, to the building the guard judged and not to one the form names", async () => {
@@ -73,6 +101,8 @@ describe("Assign (server action)", () => {
     ["account_not_active", "That ambassador is not active, so they cannot be assigned."],
     ["no_floors", "Choose at least one floor, or choose all floors."],
     ["floor_not_in_building", "One of those floors is not a floor of this building. Reload the page."],
+    ["range_reversed", "The range goes from a higher floor to a lower one. Put the lower floor first."],
+    ["forbidden", "Only an Admin can assign ambassadors."],
   ] as const)("shows the reason it is refused (%s) and saves nothing", async (error, message) => {
     const { deps: d } = deps({ assign: vi.fn(async () => ({ ok: false as const, error })) });
 
@@ -81,11 +111,26 @@ describe("Assign (server action)", () => {
 });
 
 describe("Remove an assignment (server action)", () => {
-  it("removes the person's assignment to the judged building and goes back to it", async () => {
+  it("asks first and removes nothing: the first submit returns the question, naming the person", async () => {
+    const { service, deps: d } = deps({});
+
+    const state = await removeFromForm(d, session, "7", form({ staffId: NIA, name: "Omar Farouk" }));
+
+    expect(state).toEqual({ status: "confirm", message: "Remove Omar Farouk from this building? They stay an ambassador and stop covering it." });
+    expect(service.remove).not.toHaveBeenCalled();
+  });
+
+  it("does not remove on any confirm value but 1", async () => {
+    const { service, deps: d } = deps({});
+    for (const confirm of ["", "0", "yes", "true"]) expect((await removeFromForm(d, session, "7", form({ staffId: NIA, name: "Omar", confirm }))).status).toBe("confirm");
+    expect(service.remove).not.toHaveBeenCalled();
+  });
+
+  it("removes the person's assignment to the judged building and goes back to it, once confirmed", async () => {
     const remove = vi.fn(async () => ({ ok: true as const, value: { staffId: NIA, rsn: "7" } }));
     const { deps: d } = deps({ remove });
 
-    const state = await removeFromForm(d, session, "7", form({ rsn: "9", staffId: NIA }));
+    const state = await removeFromForm(d, session, "7", form({ rsn: "9", staffId: NIA, confirm: "1" }));
 
     expect(remove).toHaveBeenCalledWith(ADMIN, { staffId: NIA, rsn: "7" });
     expect(state).toEqual({ status: "saved", location: "/staff/coverage?building=7&done=removed" });
@@ -93,7 +138,7 @@ describe("Remove an assignment (server action)", () => {
 
   it("shows the reason when it is refused", async () => {
     const { deps: d } = deps({ remove: vi.fn(async () => ({ ok: false as const, error: "not_assigned" as const })) });
-    expect(await removeFromForm(d, session, "7", form({ staffId: NIA }))).toEqual({ status: "refused", message: "That ambassador is not assigned to this building." });
+    expect(await removeFromForm(d, session, "7", form({ staffId: NIA, confirm: "1" }))).toEqual({ status: "refused", message: "That ambassador is not assigned to this building." });
   });
 });
 

@@ -523,7 +523,9 @@ describe("a call on a building (the Ambassador's scope, the assignments given by
     const floorId = "01900000-0000-7000-8000-00000000f001";
     await owner`insert into building_floor (id, rsn, label, sort_order) values (${floorId}, '7001', '3', 3) on conflict do nothing`;
     try {
-      const saved = await (wired.assignmentService as AssignmentService).assign(id, { staffId: id, rsn: "7001", floorIds: [floorId] });
+      // The assigner is an Admin (the use case re-reads the actor's authority), not the Ambassador themself.
+      const assigner = await account("assigner", "admin");
+      const saved = await (wired.assignmentService as AssignmentService).assign(assigner.id, { staffId: id, rsn: "7001", floorIds: [floorId] });
       expect(saved.ok).toBe(true);
       expect(await assignmentsOf(session!)).toEqual([{ rsn: "7001", floorIds: [floorId] }]);
     } finally {
@@ -578,7 +580,12 @@ describe("the coverage actions as an Admin (S01.14): they act on the building th
       expect(refused).toEqual({ value: { status: "refused", message: "One of those floors is not a floor of this building. Reload the page." } });
       expect(await owner`select count(*)::int as n from ambassador_assignment_floor where floor_id = ${FLOOR_4}`).toEqual([{ n: 0 }]);
 
-      const removed = await redirectOr(() => removeAssignmentAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id })));
+      // Removing asks first: the first submit changes nothing.
+      const asked = await redirectOr(() => removeAssignmentAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, name: "Nia Mensah" })));
+      expect(asked).toEqual({ value: { status: "confirm", message: "Remove Nia Mensah from this building? They stay an ambassador and stop covering it." } });
+      expect(await owner`select count(*)::int as n from ambassador_assignment`).toEqual([{ n: 1 }]);
+
+      const removed = await redirectOr(() => removeAssignmentAction({ status: "idle" }, formOf({ rsn: "7001", staffId: nia.id, confirm: "1" })));
       expect(removed).toEqual({ redirect: "/staff/coverage?building=7001&done=removed" });
       expect(await owner`select count(*)::int as n from ambassador_assignment`).toEqual([{ n: 0 }]);
     });

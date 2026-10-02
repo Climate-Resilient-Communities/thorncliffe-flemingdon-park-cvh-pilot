@@ -7,11 +7,12 @@
 // composition root (src/app/staff/assignments.ts) wires to places. The change locks the building row
 // through that port, as places' own floor edits do, so assigning a floor and removing it run one
 // after the other; the database refuses the rest (ambassador_assignment_floor's foreign key).
-import { and, asc, eq, inArray } from "drizzle-orm";
+import { and, asc, eq, inArray, sql } from "drizzle-orm";
 import { z } from "zod";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { ambassadorAssignment, ambassadorAssignmentFloor, staffAccount } from "../adapters/schema";
-import { assignmentCovers, coversNow, expandFloorRange, type FloorRef } from "../domain/coverage";
+import { actorCan } from "../domain/accountAuthority";
+import { coversNow, expandFloorRange, type FloorRef } from "../domain/coverage";
 import type { PolicyAssignment } from "../domain/policy";
 import { err, ok, type Result } from "../domain/result";
 import type { AuditWriter } from "./accounts";
@@ -30,6 +31,8 @@ export interface BuildingFloorsReader {
 }
 
 export type AssignRefusal =
+  /** The actor is no longer an active Admin (demoted or suspended since the request began). */
+  | "forbidden"
   | "building_not_found"
   | "account_not_found"
   /** The account is not an Ambassador (an Admin, Coordinator or Director is never assigned). */
@@ -41,12 +44,15 @@ export type AssignRefusal =
   /** A floor id that is not a floor of this building. */
   | "floor_not_in_building"
   /** A floor range with only one end given. */
-  | "range_incomplete";
+  | "range_incomplete"
+  /** A floor range that goes from a higher floor to a lower one: refused, not turned round. */
+  | "range_reversed";
 
-export type RemoveAssignmentRefusal = "building_not_found" | "account_not_found" | "not_assigned";
+export type RemoveAssignmentRefusal = "forbidden" | "building_not_found" | "account_not_found" | "not_assigned";
 
 /** The audit reason of each refusal (the audit module's REFUSAL_REASONS). */
-const REASONS: Record<AssignRefusal | RemoveAssignmentRefusal, "validation" | "not_found"> = {
+const REASONS: Record<AssignRefusal | RemoveAssignmentRefusal, "validation" | "not_found" | "forbidden"> = {
+  forbidden: "forbidden",
   building_not_found: "not_found",
   account_not_found: "not_found",
   not_ambassador: "validation",
@@ -54,6 +60,7 @@ const REASONS: Record<AssignRefusal | RemoveAssignmentRefusal, "validation" | "n
   no_floors: "validation",
   floor_not_in_building: "validation",
   range_incomplete: "validation",
+  range_reversed: "validation",
   not_assigned: "not_found",
 };
 
@@ -137,6 +144,12 @@ export function createAssignmentService(deps: AssignmentDeps) {
     return listed;
   }
 
+  /** The given floor ids in the building's own order, lowest first (the order every audit record lists them in). */
+  function inBuildingOrder(floors: readonly BuildingFloor[], ids: readonly string[]): string[] {
+    const wanted = new Set(ids);
+    return floors.filter((floor) => wanted.has(floor.id)).map((floor) => floor.id);
+  }
+
   async function viewsOf(executor: DbExecutor, rows: { assignment: typeof ambassadorAssignment.$inferSelect; person: typeof staffAccount.$inferSelect }[]): Promise<AssignmentView[]> {
     const listed = await listedFloors(executor, [...new Set(rows.map(({ assignment }) => assignment.staffId))]);
     return rows.map(({ assignment, person }) => ({
@@ -150,6 +163,16 @@ export function createAssignmentService(deps: AssignmentDeps) {
       covering: coversNow(person),
       assignedAt: assignment.assignedAt,
     }));
+  }
+
+  /**
+   * Reads the actor's account again under a share lock, at the top of the change's transaction: the request's
+   * guard judged the session some time ago, and the actor may have been demoted or suspended since (the
+   * same re-check as accounts.addPerson). Anyone but an active Admin is refused `forbidden`.
+   */
+  async function requireAdmin(tx: Tx, actorStaffId: string): Promise<void> {
+    const [current] = isUuid(actorStaffId) ? await tx.select().from(staffAccount).where(eq(staffAccount.id, actorStaffId)).for("share") : [];
+    if (!current || !actorCan(current, "accounts.manage")) throw new Refused("forbidden");
   }
 
   /** The audit meta of a refusal: only well-formed values, whatever the request said. */
@@ -176,6 +199,7 @@ export function createAssignmentService(deps: AssignmentDeps) {
     ): Promise<Result<AssignmentSaved, AssignRefusal>> {
       try {
         const saved = await db.transaction(async (tx: Tx) => {
+          await requireAdmin(tx, actorStaffId);
           if (!RSN.test(input.rsn)) throw new Refused("building_not_found");
           const floors = await floorReader.floorsOf(tx, input.rsn, { lock: true });
           if (floors === null) throw new Refused("building_not_found");
@@ -191,7 +215,8 @@ export function createAssignmentService(deps: AssignmentDeps) {
             if (input.range) {
               if (input.range.from === "" || input.range.to === "") throw new Refused("range_incomplete");
               const expanded = expandFloorRange(floors, input.range.from, input.range.to);
-              if (expanded === null) throw new Refused("floor_not_in_building");
+              if (expanded === "unknown_end") throw new Refused("floor_not_in_building");
+              if (expanded === "reversed") throw new Refused("range_reversed");
               for (const id of expanded) wanted.add(id);
             }
             if (wanted.size === 0) throw new Refused("no_floors");
@@ -200,6 +225,13 @@ export function createAssignmentService(deps: AssignmentDeps) {
             // The building's own order, lowest first, whatever order they were given in.
             chosen = floors.filter((floor) => wanted.has(floor.id)).map((floor) => floor.id);
           }
+
+          // What a replaced assignment listed, for the audit record: null is "every floor"; undefined is a first assignment.
+          const [existing] = await tx
+            .select({ allFloors: ambassadorAssignment.allFloors })
+            .from(ambassadorAssignment)
+            .where(and(eq(ambassadorAssignment.staffId, person.id), eq(ambassadorAssignment.rsn, input.rsn)));
+          const previous = existing ? (existing.allFloors ? null : inBuildingOrder(floors, (await listedFloors(tx, [person.id])).get(`${person.id}:${input.rsn}`) ?? [])) : undefined;
 
           const at = now();
           await tx
@@ -215,7 +247,7 @@ export function createAssignmentService(deps: AssignmentDeps) {
             actorStaffId,
             subjectType: "building",
             subjectId: input.rsn,
-            meta: { staff_id: person.id, rsn: input.rsn, floor_ids: chosen },
+            meta: { staff_id: person.id, rsn: input.rsn, floor_ids: chosen, ...(previous !== undefined ? { previous_floor_ids: previous } : {}) },
           });
           return { staffId: person.id, rsn: input.rsn, floorIds: chosen };
         });
@@ -237,9 +269,18 @@ export function createAssignmentService(deps: AssignmentDeps) {
     async remove(actorStaffId: string, input: { staffId: string; rsn: string }): Promise<Result<{ staffId: string; rsn: string }, RemoveAssignmentRefusal>> {
       try {
         await db.transaction(async (tx: Tx) => {
+          await requireAdmin(tx, actorStaffId);
           if (!RSN.test(input.rsn)) throw new Refused("building_not_found");
-          if ((await floorReader.floorsOf(tx, input.rsn, { lock: true })) === null) throw new Refused("building_not_found");
+          const building = await floorReader.floorsOf(tx, input.rsn, { lock: true });
+          if (building === null) throw new Refused("building_not_found");
           if (!isUuid(input.staffId)) throw new Refused("account_not_found");
+          // What the assignment listed, for the audit record (null for every floor), read before the floor rows go.
+          const [held] = await tx
+            .select({ allFloors: ambassadorAssignment.allFloors })
+            .from(ambassadorAssignment)
+            .where(and(eq(ambassadorAssignment.staffId, input.staffId), eq(ambassadorAssignment.rsn, input.rsn)));
+          if (!held) throw new Refused("not_assigned");
+          const floorIds = held.allFloors ? null : inBuildingOrder(building, (await listedFloors(tx, [input.staffId])).get(`${input.staffId}:${input.rsn}`) ?? []);
           // The floor rows go with the assignment (on delete cascade).
           const removed = await tx
             .delete(ambassadorAssignment)
@@ -251,7 +292,7 @@ export function createAssignmentService(deps: AssignmentDeps) {
             actorStaffId,
             subjectType: "building",
             subjectId: input.rsn,
-            meta: { staff_id: input.staffId, rsn: input.rsn },
+            meta: { staff_id: input.staffId, rsn: input.rsn, floor_ids: floorIds },
           });
         });
         return ok({ staffId: input.staffId, rsn: input.rsn });
@@ -276,15 +317,29 @@ export function createAssignmentService(deps: AssignmentDeps) {
      */
     async coversFloor(rsn: string, floorId: string, executor: DbExecutor = db): Promise<boolean> {
       if (!RSN.test(rsn) || !isUuid(floorId)) return false;
-      const floors = await floorReader.floorsOf(executor, rsn);
-      if (floors === null || !floors.some((floor) => floor.id === floorId)) return false;
-      const rows = await executor
-        .select({ assignment: ambassadorAssignment, person: staffAccount })
-        .from(ambassadorAssignment)
-        .innerJoin(staffAccount, eq(staffAccount.id, ambassadorAssignment.staffId))
-        .where(eq(ambassadorAssignment.rsn, rsn));
-      const covering = (await viewsOf(executor, rows)).filter((assignment) => assignment.covering);
-      return covering.some((assignment) => assignmentCovers(assignment, rsn, floorId));
+      // One query: the floor is a floor of that building (building_floor is places' table, read here by key only,
+      // as the foreign key above does), and an active Ambassador is assigned to the whole building or to that floor.
+      const rows = await executor.execute<{ covered: boolean }>(sql`select exists (
+          select 1
+          from ${ambassadorAssignment}
+          inner join ${staffAccount} on ${staffAccount.id} = ${ambassadorAssignment.staffId}
+          inner join building_floor on building_floor.rsn = ${ambassadorAssignment.rsn}
+          where ${ambassadorAssignment.rsn} = ${rsn}
+            and building_floor.id = ${floorId}
+            and ${staffAccount.role} = 'ambassador'
+            and ${staffAccount.status} = 'active'
+            and (
+              ${ambassadorAssignment.allFloors}
+              or exists (
+                select 1
+                from ${ambassadorAssignmentFloor}
+                where ${ambassadorAssignmentFloor.staffId} = ${ambassadorAssignment.staffId}
+                  and ${ambassadorAssignmentFloor.rsn} = ${ambassadorAssignment.rsn}
+                  and ${ambassadorAssignmentFloor.floorId} = ${floorId}
+              )
+            )
+        ) as covered`);
+      return rows[0]?.covered === true;
     },
 
     /** Every assignment, with the person and whether they cover now (the coverage view and the assignment lists). */
@@ -297,7 +352,10 @@ export function createAssignmentService(deps: AssignmentDeps) {
       return viewsOf(executor, rows);
     },
 
-    /** One person's assignments, as the role policy reads them (scope of an Ambassador's calls). */
+    /**
+     * One person's assignments that count now, as the role policy reads them (scope of an Ambassador's calls):
+     * the same `coversNow` test as `coversFloor`, so an account that does not cover has no scope either.
+     */
     async assignmentsOf(staffId: string, executor: DbExecutor = db): Promise<PolicyAssignment[]> {
       if (!isUuid(staffId)) return [];
       const rows = await executor
@@ -305,7 +363,8 @@ export function createAssignmentService(deps: AssignmentDeps) {
         .from(ambassadorAssignment)
         .innerJoin(staffAccount, eq(staffAccount.id, ambassadorAssignment.staffId))
         .where(eq(ambassadorAssignment.staffId, staffId));
-      return (await viewsOf(executor, rows)).map(({ rsn, floorIds }) => ({ rsn, floorIds }));
+      // Only what counts now: a suspended, locked or removed account, or one no longer an Ambassador, has no scope.
+      return (await viewsOf(executor, rows)).filter((view) => view.covering).map(({ rsn, floorIds }) => ({ rsn, floorIds }));
     },
 
     /** The active Ambassadors an Admin can assign. */

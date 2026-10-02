@@ -108,8 +108,8 @@ describe("Coverage: one building", () => {
 
     expect(out).toContain("<h1>7001 Test Dr</h1>");
     expect(out).toContain("Thorncliffe Park. Floors covered: 2 of 3.");
-    expect(out).toContain('aria-label="Floor G: Covered by Nia Mensah"');
-    expect(out).toContain('aria-label="Floor 2: Not covered"');
+    // The words are the item's own text: an aria-label on a list item would replace them for a screen reader.
+    expect(out).not.toMatch(/<li[^>]*aria-label/);
     expect(out).toMatch(/hub-cover--covered[^>]*><span class="hub-cover__label">G<\/span> Covered by Nia Mensah/);
     expect(out).toMatch(/hub-cover--uncovered[^>]*><span class="hub-cover__label">2<\/span> Not covered/);
   });
@@ -158,13 +158,58 @@ describe("Coverage: one building", () => {
     expect(out).toContain(`<option value="${NIA}">Nia Mensah</option>`);
     expect(out).toContain(`<option value="${OMAR}">Omar Farouk</option>`);
     expect(out).toContain('name="rsn" value="7001"');
-    expect(out).toContain('name="scope" checked="" value="all"');
+    expect(out).toContain('name="scope" value="all"');
     expect(out).toContain('name="scope" value="some"');
     for (const index of [0, 1, 2]) expect(out).toContain(`name="floorId" value="${floorId("7001", index)}"`);
-    expect(out).toContain("Or every floor from one to another");
-    expect(out).toContain('aria-label="Remove Nia Mensah from this building"');
-    expect(out).toMatch(/<button[^>]*>Remove<\/button>/);
+    expect(out).toContain("Or every floor from one to another, as the building lists its floors now (floors added later are not included)");
+    // The button's visible text is its name: no aria-label to replace it.
+    expect(out).toMatch(/<button[^>]*>Remove Nia Mensah<\/button>/);
+    expect(out).not.toMatch(/<button[^>]*aria-label/);
     expect(out).toMatch(/<button[^>]*>Assign<\/button>/);
+  });
+
+  it("pre-selects no scope: neither radio is checked, so the Admin must choose", () => {
+    const out = html(coverageBuildingView(one, [], { ambassadors }));
+
+    expect(out.match(/type="radio"/g)).toHaveLength(2);
+    expect(out).not.toMatch(/<input[^>]*checked/);
+  });
+
+  it("makes each radio and checkbox its label's tap target (hub-choice) and spaces the choices by the target gap", () => {
+    const out = html(coverageBuildingView(one, [], { ambassadors }));
+
+    // 2 radios and 3 floors: five labels, each one the target.
+    expect(out.match(/<label class="hub-choice">/g)).toHaveLength(5);
+    expect(out.match(/<label class="hub-choice"><input type="(?:radio|checkbox)"/g)).toHaveLength(5);
+    expect(out).toContain('class="layout-inline" data-gap="target" data-align="center" data-justify="start" data-wrap="true"');
+    expect(out).toMatch(/class="layout-stack"[^>]*data-gap="target"/);
+  });
+
+  it("keeps Remove as wide as its text: the button is alone in its own inline row, not stretched by the list item", () => {
+    const out = html(coverageBuildingView(one, [assignment({ rsn: "7001", floorIds: null })], { ambassadors }));
+
+    expect(out).toMatch(/<div class="layout-inline"[^>]*><button[^>]*>Remove Nia Mensah<\/button><\/div>/);
+  });
+
+  it("asks before removing: the question, a confirm button that posts confirm=1 and a way to keep the assignment", () => {
+    const out = renderToStaticMarkup(
+      <CoverageBody
+        screen={coverageBuildingView(one, [assignment({ rsn: "7001", floorIds: null })], { ambassadors })}
+        actions={actions}
+        initial={{ remove: { [NIA]: { status: "confirm", message: "Remove Nia Mensah from this building? They stay an ambassador and stop covering it." } } }}
+      />,
+    );
+
+    expect(out).toContain("Remove Nia Mensah from this building? They stay an ambassador and stop covering it.");
+    expect(out).toContain('name="confirm" value="1"');
+    expect(out).toMatch(/<button[^>]*type="submit"[^>]*>Yes, remove Nia Mensah<\/button>/);
+    expect(out).toMatch(/<button[^>]*type="button"[^>]*>Keep Nia Mensah<\/button>/);
+    expect(out).not.toContain(">Remove Nia Mensah</button>");
+  });
+
+  it("does not post confirm=1 before the question is asked", () => {
+    const out = html(coverageBuildingView(one, [assignment({ rsn: "7001", floorIds: null })], { ambassadors }));
+    expect(out).not.toContain('name="confirm"');
   });
 
   it("explains that there is nobody to assign, instead of an empty form", () => {

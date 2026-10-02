@@ -36,18 +36,19 @@ export function coversNow(account: { role: StaffRole; status: StaffStatus }): bo
 /**
  * The floor ids from one floor to another, inclusive, in the building's own order (`sortOrder`): the
  * order of the floors is the Admin's, so "G to 3" covers whatever the building lists between them
- * ("G", "1", "2", "3" or "G", "M", "3"). The two ends may be given in either order. Null when an end
- * is not one of the building's floors. The result is in the building's order, lowest first.
+ * ("G", "1", "2", "3" or "G", "M", "3"). The result is in the building's order, lowest first, and is
+ * the floors as they are now: a floor added later is not part of it. `"unknown_end"` when an end is
+ * not one of the building's floors; `"reversed"` when the first end is above the second (a reversed
+ * range is refused, not turned round, as the audience picker does, S04.04).
  */
-export function expandFloorRange(floors: readonly FloorRef[], fromId: string, toId: string): string[] | null {
+export function expandFloorRange(floors: readonly FloorRef[], fromId: string, toId: string): string[] | "unknown_end" | "reversed" {
   const from = floors.find((floor) => floor.id === fromId);
   const to = floors.find((floor) => floor.id === toId);
-  if (!from || !to) return null;
-  const low = Math.min(from.sortOrder, to.sortOrder);
-  const high = Math.max(from.sortOrder, to.sortOrder);
+  if (!from || !to) return "unknown_end";
+  if (from.sortOrder > to.sortOrder) return "reversed";
   return [...floors]
     .sort((a, b) => a.sortOrder - b.sortOrder)
-    .filter((floor) => floor.sortOrder >= low && floor.sortOrder <= high)
+    .filter((floor) => floor.sortOrder >= from.sortOrder && floor.sortOrder <= to.sortOrder)
     .map((floor) => floor.id);
 }
 

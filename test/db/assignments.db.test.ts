@@ -5,12 +5,13 @@
 // a listed floor, the shape of an assignment, who can be assigned, the grants).
 import { randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
-import { createAssignments, type AssignmentService } from "../../src/modules/identity";
+import { createAssignments, createIdentity, type AssignmentService } from "../../src/modules/identity";
+import { memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { createBuildingService, floorsOfBuilding, type BuildingService } from "../../src/modules/places";
-import { createDb, type Db } from "../../src/platform/db";
+import { createDb, type Db, type DbExecutor } from "../../src/platform/db";
 import { uuidv7 } from "../../src/platform/ids";
 import { connect, serverUrl } from "./helpers";
 
@@ -146,14 +147,38 @@ describe("assigning an Ambassador (the Admin's change, as the app's role)", () =
     ]);
   });
 
-  it("expands a range of floors by sort_order, whichever end is named first, and adds it to the floors ticked", async () => {
+  it("expands a range of floors by sort_order, from the lower floor to the higher, and adds it to the floors ticked", async () => {
     const nia = await person("ambassador");
 
     const forward = await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [], range: { from: floor(RSN_A, "G"), to: floor(RSN_A, "2") } });
     expect(forward).toEqual({ ok: true, value: { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G"), floor(RSN_A, "M"), floor(RSN_A, "2")] } });
 
-    const backward = await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")], range: { from: floor(RSN_A, "3"), to: floor(RSN_A, "M") } });
-    expect(backward).toEqual({ ok: true, value: { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G"), floor(RSN_A, "M"), floor(RSN_A, "2"), floor(RSN_A, "3")] } });
+    const ticked = await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")], range: { from: floor(RSN_A, "M"), to: floor(RSN_A, "3") } });
+    expect(ticked).toEqual({ ok: true, value: { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G"), floor(RSN_A, "M"), floor(RSN_A, "2"), floor(RSN_A, "3")] } });
+  });
+
+  it("refuses a reversed range (from a higher floor to a lower one) instead of turning it round, and keeps what the Ambassador had", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")] });
+
+    const reversed = await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [], range: { from: floor(RSN_A, "3"), to: floor(RSN_A, "M") } });
+
+    expect(reversed).toEqual({ ok: false, error: "range_reversed" });
+    expect((await listedOf(nia.id, RSN_A)).map((row) => row.floor_id)).toEqual([floor(RSN_A, "G")]);
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "assignment.saved", outcome: "refused", meta: { reason: "validation" } });
+  });
+
+  it("records the floors a replaced assignment listed (previous_floor_ids), and nothing for a first assignment", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "3"), floor(RSN_A, "G")] });
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: null });
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "2")] });
+
+    const [first, whole, listed] = await auditRows();
+    expect(first.meta).toEqual({ staff_id: nia.id, rsn: RSN_A, floor_ids: [floor(RSN_A, "G"), floor(RSN_A, "3")] });
+    expect(first.meta).not.toHaveProperty("previous_floor_ids");
+    expect(whole.meta).toEqual({ staff_id: nia.id, rsn: RSN_A, floor_ids: null, previous_floor_ids: [floor(RSN_A, "G"), floor(RSN_A, "3")] });
+    expect(listed.meta).toEqual({ staff_id: nia.id, rsn: RSN_A, floor_ids: [floor(RSN_A, "2")], previous_floor_ids: null });
   });
 
   it("assigns one Ambassador to several buildings", async () => {
@@ -223,7 +248,24 @@ describe("removing an assignment", () => {
     expect(await rowsOf(nia.id)).toEqual([]);
     expect(await listedOf(nia.id, RSN_A)).toEqual([]);
     expect((await owner`select status from staff_account where id = ${nia.id}`)[0].status).toBe("active");
-    expect((await auditRows()).at(-1)).toEqual({ action: "assignment.removed", outcome: "ok", actor_staff_id: admin.id, subject_type: "building", subject_id: RSN_A, meta: { staff_id: nia.id, rsn: RSN_A } });
+    // The record keeps the floors the assignment listed, in the building's order.
+    expect((await auditRows()).at(-1)).toEqual({
+      action: "assignment.removed",
+      outcome: "ok",
+      actor_staff_id: admin.id,
+      subject_type: "building",
+      subject_id: RSN_A,
+      meta: { staff_id: nia.id, rsn: RSN_A, floor_ids: [floor(RSN_A, "G"), floor(RSN_A, "2")] },
+    });
+  });
+
+  it("records floor_ids null when the removed assignment was every floor", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: null });
+
+    await assignments.remove(admin.id, { staffId: nia.id, rsn: RSN_A });
+
+    expect((await auditRows()).at(-1)?.meta).toEqual({ staff_id: nia.id, rsn: RSN_A, floor_ids: null });
   });
 
   it("removes only that building's assignment", async () => {
@@ -520,5 +562,161 @@ describe("the database's own guards", () => {
           from pg_class c where c.oid = format('public.%I', ${table}::text)::regclass`;
       expect(row).toEqual({ rls: true, anon: false, authenticated: false, service_role: false, truncate: false });
     }
+  });
+});
+
+describe("the Admin's authority is read again inside the change (not only by the request's guard)", () => {
+  const change = [
+    ["demoted to Coordinator", "update staff_account set role = 'coordinator' where id = $1"],
+    ["suspended", "update staff_account set status = 'suspended' where id = $1"],
+    ["removed", "update staff_account set status = 'removed' where id = $1"],
+  ] as const;
+
+  it.each(change)("refuses to assign when the actor was %s after the request began, saves nothing and audits it as forbidden", async (_name, statement) => {
+    const nia = await person("ambassador");
+    await owner.unsafe(statement, [admin.id]);
+
+    expect(await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: null })).toEqual({ ok: false, error: "forbidden" });
+
+    expect(await rowsOf(nia.id)).toEqual([]);
+    expect(await auditRows()).toMatchObject([{ action: "assignment.saved", outcome: "refused", actor_staff_id: admin.id, subject_id: RSN_A, meta: { reason: "forbidden", staff_id: nia.id, rsn: RSN_A } }]);
+  });
+
+  it.each(change)("refuses to remove when the actor was %s after the request began, keeps the assignment and audits it as forbidden", async (_name, statement) => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")] });
+    await owner.unsafe(statement, [admin.id]);
+
+    expect(await assignments.remove(admin.id, { staffId: nia.id, rsn: RSN_A })).toEqual({ ok: false, error: "forbidden" });
+
+    expect(await rowsOf(nia.id)).toHaveLength(1);
+    expect(await listedOf(nia.id, RSN_A)).toHaveLength(1);
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "assignment.removed", outcome: "refused", meta: { reason: "forbidden", staff_id: nia.id, rsn: RSN_A } });
+  });
+
+  it.each(["coordinator", "director", "ambassador"] as const)("refuses an actor who is a %s, whatever the guard let through", async (role) => {
+    const actor = await person(role);
+    const nia = await person("ambassador");
+    expect(await assignments.assign(actor.id, { staffId: nia.id, rsn: RSN_A, floorIds: null })).toEqual({ ok: false, error: "forbidden" });
+    expect(await rowsOf(nia.id)).toEqual([]);
+  });
+
+  it("refuses an actor id that is no account, and one that is no uuid", async () => {
+    const nia = await person("ambassador");
+    expect(await assignments.assign(uuidv7(), { staffId: nia.id, rsn: RSN_A, floorIds: null })).toEqual({ ok: false, error: "forbidden" });
+    expect(await assignments.remove("admin", { staffId: nia.id, rsn: RSN_A })).toEqual({ ok: false, error: "forbidden" });
+    expect(await rowsOf(nia.id)).toEqual([]);
+  });
+
+  it("waits for a demotion of the actor that is still uncommitted (the share lock), then refuses", async () => {
+    const nia = await person("ambassador");
+    let commit!: () => void;
+    const held = new Promise<void>((resolve) => (commit = resolve));
+    const demotion = owner.begin(async (tx) => {
+      await tx`update staff_account set role = 'coordinator' where id = ${admin.id}`;
+      await held;
+    });
+    await new Promise((resolve) => setTimeout(resolve, 200));
+
+    const pending = assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: null });
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    commit();
+    await demotion;
+
+    expect(await pending).toEqual({ ok: false, error: "forbidden" });
+    expect(await rowsOf(nia.id)).toEqual([]);
+  });
+});
+
+describe("an Ambassador who leaves the role loses the assignments (S01.14)", () => {
+  const identityService = () => createIdentity({ db: app, idp: memoryIdentityProvider(), passwordPepper: randomBytes(32).toString("hex") });
+
+  // A role change needs the two-Admin bootstrap to be over (the bootstrap gate); the row is removed again after each test.
+  const setBootstrap = (second: string | null) =>
+    owner.begin(async (tx) => {
+      await tx.unsafe("alter table staff_bootstrap disable trigger staff_bootstrap_forward_only");
+      await tx`delete from staff_bootstrap`;
+      if (second) await tx`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin.id}, ${second}, now())`;
+      await tx.unsafe("alter table staff_bootstrap enable trigger staff_bootstrap_forward_only");
+    });
+  beforeEach(async () => {
+    await setBootstrap((await person("admin", { first: "Sol", last: "Admin" })).id);
+  });
+  afterEach(async () => {
+    await setBootstrap(null);
+  });
+
+  it("deletes every assignment and floor row in the role change's transaction, auditing each as removed with reason role_changed", async () => {
+    const nia = await person("ambassador");
+    const other = await person("ambassador", { first: "Omar", last: "Farouk" });
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G"), floor(RSN_A, "3")] });
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_B, floorIds: null });
+    await assignments.assign(admin.id, { staffId: other.id, rsn: RSN_A, floorIds: null });
+    const since = (await owner`select coalesce(max(id), 0)::int as max from audit_event`)[0].max as number;
+    const identity = identityService();
+
+    expect(await identity.changeRole(admin.id, nia.id, "coordinator")).toEqual({ ok: true, value: undefined });
+
+    expect(await rowsOf(nia.id)).toEqual([]);
+    expect(await listedOf(nia.id, RSN_A)).toEqual([]);
+    expect(await rowsOf(other.id)).toHaveLength(1);
+    const removed = await owner<{ subject_id: string; actor_staff_id: string; meta: { floor_ids: string[] | null } & Record<string, unknown> }[]>`
+      select subject_id, actor_staff_id, meta from audit_event where id > ${since} and action = 'assignment.removed' and outcome = 'ok' order by subject_id`;
+    expect(removed).toHaveLength(2);
+    expect(removed[0]).toMatchObject({ subject_id: RSN_A, actor_staff_id: admin.id, meta: { reason: "role_changed", staff_id: nia.id, rsn: RSN_A } });
+    expect([...(removed[0].meta.floor_ids ?? [])].sort()).toEqual([floor(RSN_A, "G"), floor(RSN_A, "3")].sort());
+    expect(removed[1]).toMatchObject({ subject_id: RSN_B, actor_staff_id: admin.id, meta: { reason: "role_changed", staff_id: nia.id, rsn: RSN_B, floor_ids: null } });
+
+    // They do not come back when the account is made an Ambassador again.
+    expect(await identity.changeRole(admin.id, nia.id, "ambassador")).toEqual({ ok: true, value: undefined });
+    expect(await assignments.assignmentsOf(nia.id)).toEqual([]);
+    expect(await assignments.coversFloor(RSN_B, floor(RSN_B, "1"))).toBe(false);
+  });
+
+  it("keeps the assignments when the change is refused", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: null });
+    const identity = identityService();
+
+    expect(await identity.changeRole(admin.id, nia.id, "ambassador")).toEqual({ ok: false, error: "no_change" });
+    expect(await identity.changeRole(admin.id, nia.id, "owner")).toEqual({ ok: false, error: "role_invalid" });
+    expect(await rowsOf(nia.id)).toHaveLength(1);
+  });
+});
+
+describe("assignmentsOf follows coversNow", () => {
+  it("is empty for a suspended, locked or removed account and for one that is no longer an Ambassador, and back when active again", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")] });
+    expect(await assignments.assignmentsOf(nia.id)).toEqual([{ rsn: RSN_A, floorIds: [floor(RSN_A, "G")] }]);
+
+    for (const status of ["suspended", "locked_pending_reissue", "removed"]) {
+      await owner`update staff_account set status = ${status} where id = ${nia.id}`;
+      expect(await assignments.assignmentsOf(nia.id), status).toEqual([]);
+    }
+    await owner`update staff_account set status = 'active' where id = ${nia.id}`;
+    expect(await assignments.assignmentsOf(nia.id)).toHaveLength(1);
+    await owner`update staff_account set role = 'coordinator' where id = ${nia.id}`;
+    expect(await assignments.assignmentsOf(nia.id)).toEqual([]);
+  });
+});
+
+describe("coversFloor is one query", () => {
+  it("asks the database once per call, with a single exists, and reads nothing else (not the floors, not the assignments)", async () => {
+    const nia = await person("ambassador");
+    await assignments.assign(admin.id, { staffId: nia.id, rsn: RSN_A, floorIds: [floor(RSN_A, "G")] });
+    let calls = 0;
+    // An executor that offers only `execute`: any other way of reading would throw.
+    const counting = {
+      execute: (query: Parameters<Db["execute"]>[0]) => {
+        calls += 1;
+        return app.execute(query);
+      },
+    } as unknown as DbExecutor;
+
+    expect(await assignments.coversFloor(RSN_A, floor(RSN_A, "G"), counting)).toBe(true);
+    expect(await assignments.coversFloor(RSN_A, floor(RSN_A, "M"), counting)).toBe(false);
+    expect(await assignments.coversFloor("7999", floor(RSN_A, "G"), counting)).toBe(false);
+    expect(calls).toBe(3);
   });
 });

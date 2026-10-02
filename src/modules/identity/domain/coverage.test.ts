@@ -44,8 +44,9 @@ describe("expandFloorRange", () => {
     expect(expandFloorRange(FLOORS, "floor-m", "floor-3")).toEqual(["floor-m", "floor-2", "floor-3"]);
   });
 
-  it("takes the ends in either order", () => {
-    expect(expandFloorRange(FLOORS, "floor-3", "floor-m")).toEqual(["floor-m", "floor-2", "floor-3"]);
+  it("refuses a reversed range, with the higher floor first, instead of turning it round", () => {
+    expect(expandFloorRange(FLOORS, "floor-3", "floor-m")).toBe("reversed");
+    expect(expandFloorRange(FLOORS, "floor-2", "floor-g")).toBe("reversed");
   });
 
   it("is one floor when both ends are the same floor", () => {
@@ -57,10 +58,10 @@ describe("expandFloorRange", () => {
     expect(expandFloorRange([F3, G], "floor-g", "floor-3")).toEqual(["floor-g", "floor-3"]);
   });
 
-  it("is null when an end is not one of the building's floors", () => {
-    expect(expandFloorRange(FLOORS, "floor-g", "floor-other")).toBeNull();
-    expect(expandFloorRange(FLOORS, "", "floor-2")).toBeNull();
-    expect(expandFloorRange([], "floor-g", "floor-2")).toBeNull();
+  it("is unknown_end when an end is not one of the building's floors", () => {
+    expect(expandFloorRange(FLOORS, "floor-g", "floor-other")).toBe("unknown_end");
+    expect(expandFloorRange(FLOORS, "", "floor-2")).toBe("unknown_end");
+    expect(expandFloorRange([], "floor-g", "floor-2")).toBe("unknown_end");
   });
 });
 

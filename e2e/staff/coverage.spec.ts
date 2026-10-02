@@ -146,9 +146,21 @@ test("an Admin assigns an ambassador to all floors and to chosen floors, is refu
   await expect(page.getByText("No ambassador is assigned to this building.")).toBeVisible();
   for (const label of LABELS) await expect(floorState(page, label)).toContainText("Not covered");
 
-  // Nothing chosen, "only the floors chosen here" with no floor, and a range with one end are refused with the reason.
+  // Nothing chosen, no scope (none is pre-selected), "only the floors chosen here" with no floor, "all floors" with a floor
+  // ticked, and a range with one end are refused with the reason. (The form is reset after each answer.)
+  await expect(page.getByRole("radio", { checked: true })).toHaveCount(0);
   await page.getByRole("button", { name: "Assign", exact: true }).click();
   await expect(page.locator("#assign-error")).toHaveText("Choose an ambassador.");
+  await page.getByLabel("Ambassador", { exact: true }).selectOption({ label: nia.name });
+  await page.getByRole("button", { name: "Assign", exact: true }).click();
+  await expect(page.locator("#assign-error")).toHaveText("Choose which floors: all floors, or only the floors you pick.");
+  await page.getByLabel("Ambassador", { exact: true }).selectOption({ label: nia.name });
+  await page.getByLabel("All floors, including floors added later").check();
+  await page.getByLabel("2", { exact: true }).check();
+  await page.getByRole("button", { name: "Assign", exact: true }).click();
+  await expect(page.locator("#assign-error")).toHaveText(
+    "You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.",
+  );
   await page.getByLabel("Ambassador", { exact: true }).selectOption({ label: nia.name });
   await page.getByLabel("Only the floors chosen here").check();
   await page.getByRole("button", { name: "Assign", exact: true }).click();
@@ -162,6 +174,7 @@ test("an Admin assigns an ambassador to all floors and to chosen floors, is refu
 
   // All floors: every floor reads as covered, in words, and the list says so.
   await page.getByLabel("Ambassador", { exact: true }).selectOption({ label: nia.name });
+  await page.getByLabel("All floors, including floors added later").check();
   await page.getByRole("button", { name: "Assign", exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Assignment saved.");
   expect(await assignmentRow(nia.id)).toEqual({ all_floors: true, assigned_by: admin.id });
@@ -192,9 +205,16 @@ test("an Admin assigns an ambassador to all floors and to chosen floors, is refu
   await expect(item).toContainText("Covered: 2, 5, 6, 7");
   await expect(item).toContainText("Not covered: G, 1, 3, 4, 8");
 
-  // Remove it: the person stays, the building is uncovered again.
+  // Remove it: the first click only asks, "Keep" changes nothing, and "Yes, remove" removes. The person stays.
   await page.goto(`/staff/coverage?building=${RSN}`);
-  await page.getByRole("button", { name: `Remove ${nia.name} from this building` }).click();
+  await page.getByRole("button", { name: `Remove ${nia.name}`, exact: true }).click();
+  await expect(page.locator(`p[role="alert"]`)).toHaveText(`Remove ${nia.name} from this building? They stay an ambassador and stop covering it.`);
+  expect(await assignmentRow(nia.id)).toBeDefined();
+  await page.getByRole("button", { name: `Keep ${nia.name}`, exact: true }).click();
+  await expect(page.getByRole("button", { name: `Remove ${nia.name}`, exact: true })).toBeVisible();
+  expect(await assignmentRow(nia.id)).toBeDefined();
+  await page.getByRole("button", { name: `Remove ${nia.name}`, exact: true }).click();
+  await page.getByRole("button", { name: `Yes, remove ${nia.name}`, exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Assignment removed.");
   expect(await assignmentRow(nia.id)).toBeUndefined();
   await expect(page.getByText("No ambassador is assigned to this building.")).toBeVisible();
@@ -204,8 +224,9 @@ test("an Admin assigns an ambassador to all floors and to chosen floors, is refu
     { action: "assignment.saved", outcome: "refused", subject_id: RSN, meta: { reason: "validation" } },
     { action: "assignment.saved", outcome: "refused", subject_id: RSN, meta: { reason: "validation" } },
     { action: "assignment.saved", outcome: "ok", subject_id: RSN, meta: { staff_id: nia.id, rsn: RSN, floor_ids: null } },
-    { action: "assignment.saved", outcome: "ok", subject_id: RSN, meta: { staff_id: nia.id, rsn: RSN } },
-    { action: "assignment.removed", outcome: "ok", subject_id: RSN, meta: { staff_id: nia.id, rsn: RSN } },
+    // Replacing the whole-building assignment records what it was (null), and removing records the floors it listed.
+    { action: "assignment.saved", outcome: "ok", subject_id: RSN, meta: { staff_id: nia.id, rsn: RSN, previous_floor_ids: null } },
+    { action: "assignment.removed", outcome: "ok", subject_id: RSN, meta: { staff_id: nia.id, rsn: RSN, floor_ids: expect.any(Array) } },
   ]);
 });
 
@@ -221,7 +242,8 @@ test("a suspended ambassador is listed as not covering now, and their floors are
   await expect(row).toContainText("Not covering now: the account is suspended.");
   await expect(floorState(page, "G")).toContainText("Not covered");
   // The Admin can still remove it.
-  await row.getByRole("button", { name: `Remove ${person.name} from this building` }).click();
+  await row.getByRole("button", { name: `Remove ${person.name}`, exact: true }).click();
+  await row.getByRole("button", { name: `Yes, remove ${person.name}`, exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Assignment removed.");
   expect(await assignmentRow(person.id)).toBeUndefined();
 });
@@ -251,7 +273,8 @@ test("a floor an ambassador is assigned to cannot be removed: the refusal lists 
 
   // Remove the assignment, and the floor can go.
   await page.goto(`/staff/coverage?building=${RSN}`);
-  await page.getByRole("button", { name: `Remove ${person.name} from this building` }).click();
+  await page.getByRole("button", { name: `Remove ${person.name}`, exact: true }).click();
+  await page.getByRole("button", { name: `Yes, remove ${person.name}`, exact: true }).click();
   await expect(page.getByRole("status")).toHaveText("Assignment removed.");
   await page.goto(`/staff/buildings?building=${RSN}`);
   await floor.getByRole("button", { name: "Remove floor 8", exact: true }).click();
