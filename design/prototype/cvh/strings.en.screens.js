@@ -1200,6 +1200,12 @@
     airNone: 'None', airIndividual: 'Individual units',
     roles: { superintendent: 'Superintendent', buildingManagement: 'Building management', propertyOffice: 'Property office' },
     contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}' } });
+  /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
+  m(en, {
+    R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },
+    guides: { reviewed: 'Reviewed by the Hub, last updated {date}' },
+    R31: { checked: 'Checked by the Hub, last updated {date}',
+      noOthers: 'The other numbers could not be loaded right now. Try again in a few minutes.' } });
   /* Directory release (S02.05): the Admin publishes the directory as one numbered release. Not a prototype screen. */
   m(en, { hub: { nav: { directory: 'Directory' } }, staff: { directory: {
     title: 'Directory release',

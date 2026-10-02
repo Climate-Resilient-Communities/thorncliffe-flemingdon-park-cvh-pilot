@@ -1034,7 +1034,8 @@
     "more": "More ways to be ready",
     "checkinLine": "Your floor ambassador checks on you. Not an emergency service.",
     "numbersLine": "911, 211, 311, Toronto Hydro and the Hub",
-    "headsUpLine": "In the CVH only, never by text message"
+    "headsUpLine": "In the CVH only, never by text message",
+    "none": "The guides could not be loaded right now. If someone is in danger, call 911."
   },
   "R25": {
     "stagesNav": "Jump to",
@@ -1176,7 +1177,9 @@
     "calling": "Call {what}",
     "roles": {
       "superintendent": "superintendent"
-    }
+    },
+    "checked": "Checked by the Hub, last updated {date}",
+    "noOthers": "The other numbers could not be loaded right now. Try again in a few minutes."
   },
   "R32": {
     "title": "A heads-up before each season",
@@ -4415,5 +4418,8 @@
     },
     "contactTitle": "Building contact",
     "providedByHub": "Provided by the Hub, last updated {date}"
+  },
+  "guides": {
+    "reviewed": "Reviewed by the Hub, last updated {date}"
   }
 }
