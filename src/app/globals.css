@@ -1,5 +1,8 @@
 @import "../ui/tokens/theme.css";
 @import "../ui/layout/layout.css";
+@import "../ui/shell/font.css";
+@import "../ui/shell/icons.css";
+@import "../ui/shell/shell.css";
 
 /* Tailwind generates utilities only for classes used in src/. */
 @source "../";

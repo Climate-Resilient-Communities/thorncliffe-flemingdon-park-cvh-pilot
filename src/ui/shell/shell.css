@@ -1,0 +1,214 @@
+/*
+ * Resident shell (docs/design-framework/spacing-container/component-boundaries.md section 3.1; prototype
+ * C_ResidentHeader, C_ResidentNav, R02_LanguageControl and the "Resident shell" block of cvh.css).
+ * The shell owns the frame around screens: the header, the scrolling main, the bottom navigation and the
+ * language sheet. Insets are semantic tokens; direction comes only from logical properties and from the
+ * row order of Inline, so nothing here has a [dir] rule. Colours are the only thing a theme changes.
+ */
+@layer components {
+  .shell {
+    display: grid;
+    grid-template-rows: auto minmax(0, 1fr) auto;
+    block-size: 100dvh;
+    background-color: var(--surface);
+    color: var(--text);
+  }
+
+  .shell :focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* The one scroll container. Horizontal overflow is a bug, so it is not hidden: the tests measure it. */
+  .shell__main {
+    min-inline-size: 0;
+    overflow-y: auto;
+  }
+
+  /* Header: the prototype's .cvh-rhead__top. The logo and the language button swap ends in right-to-left. */
+  .shell-header {
+    min-block-size: var(--size-header-resident-min);
+    padding-block: var(--gap-tight);
+    padding-inline-start: var(--gutter-resident);
+    padding-inline-end: var(--gap-icon);
+    background-color: var(--surface-raised);
+    border-block-end: 1px solid var(--border);
+  }
+
+  /* The prototype's .cvh-rhead__logo is 34px high; the file is 4x that for sharp screens. */
+  .shell-logo {
+    display: block;
+    flex: none;
+    block-size: 34px;
+    inline-size: auto;
+  }
+
+  .shell-langbtn {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-tight);
+    max-inline-size: 55%;
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-icon);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .shell-langbtn__name {
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  /* Navigation: four equal items. The active one is marked by a block-start border (every item has one). */
+  .shell-nav {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    background-color: var(--surface-raised);
+    border-block-start: 1px solid var(--border);
+  }
+
+  .shell-nav__item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-label);
+    min-block-size: var(--size-nav-item-resident-min);
+    padding-block: var(--gap-tight);
+    padding-inline: var(--gap-label);
+    border-block-start: var(--offset-align-icon) solid transparent;
+    color: var(--text-muted);
+    font-size: var(--type-body-size);
+    font-weight: 700;
+    line-height: 1.15;
+    text-align: center;
+    text-decoration: none;
+    overflow-wrap: anywhere;
+  }
+
+  .shell-nav__item[aria-current="page"] {
+    color: var(--accent-text);
+    border-block-start-color: currentcolor;
+  }
+
+  :root[data-basic="true"] .shell-nav__item {
+    min-block-size: var(--size-nav-item-resident-min-basic);
+  }
+
+  .shell-nav__item .shell-ico {
+    inline-size: 26px;
+    block-size: 26px;
+  }
+
+  /* Language sheet (R-02): a modal dialog fixed to the block end of the viewport, the prototype's .cvh-sheet. */
+  .shell-sheet {
+    inset-block: auto 0;
+    inset-inline: 0;
+    inline-size: 100%;
+    max-inline-size: 100%;
+    max-block-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    background-color: transparent;
+    color: var(--text);
+  }
+
+  .shell-sheet::backdrop {
+    background-color: rgb(0 28 48 / 55%);
+  }
+
+  .shell-sheet__panel {
+    display: flex;
+    flex-direction: column;
+    max-block-size: 88dvh;
+    background-color: var(--surface-raised);
+    border-start-start-radius: var(--radius-card);
+    border-start-end-radius: var(--radius-card);
+  }
+
+  .shell-sheet__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-target);
+    padding-block-start: var(--gap-stack);
+    padding-block-end: var(--gap-target);
+    padding-inline-start: var(--gutter-resident);
+    padding-inline-end: var(--gap-target);
+    border-block-end: 1px solid var(--border);
+  }
+
+  .shell-sheet__title {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    font-size: var(--type-h2-size);
+  }
+
+  .shell-sheet__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-target);
+    padding-block: var(--gap-target) var(--gutter-resident);
+    padding-inline: var(--gutter-resident);
+    overflow-y: auto;
+  }
+
+  .shell-sheet__note {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .shell-sheet__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-target);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .shell-iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: var(--radius-card);
+    background-color: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .shell-langopt {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-stack);
+    min-block-size: var(--tap-basic);
+    padding-block: var(--gap-target);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-lead-size);
+    font-weight: 700;
+    line-height: 1.4;
+    text-decoration: none;
+  }
+
+  .shell-langopt[aria-current="true"] {
+    border-color: var(--accent-text);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+  }
+
+  .shell-langopt__check {
+    margin-inline-start: auto;
+    color: var(--accent-text);
+  }
+}

@@ -21,7 +21,9 @@
     "check:spacing": "node scripts/check-css.mjs spacing",
     "check:layout": "node scripts/check-css.mjs layout",
     "check:layers": "node scripts/check-css.mjs layers",
-    "test:layout": "playwright test -c playwright.layout.config.ts"
+    "check:logical": "node scripts/check-css.mjs logical",
+    "test:layout": "playwright test -c playwright.layout.config.ts",
+    "test:resident": "playwright test -c playwright.resident.config.ts"
   },
   "dependencies": {
     "@serwist/turbopack": "9.5.12",
