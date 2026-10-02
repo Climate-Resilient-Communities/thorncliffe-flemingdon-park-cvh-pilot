@@ -495,3 +495,7 @@ flowchart LR
 | Who receives cap-overrun and ops alerts out of hours (Admin on-call roster) | Hub | Before launch |
 | Translation timeout per language and total submit budget, from p99 latency tests against Cohere (AD-10) | IT | Before launch |
 | Keep unresolved "needs help" and "not reached" check-ins up to 24 hours after an alert closes, so the Hub can finish follow-up (AD-12; PRD C7 deletes at close). If approved, state it in the terms | Product owner | Before check-in build |
+
+## Map Tile Provider (S02.07)
+
+**Status: Proposed — awaiting IT confirmation.** Research and comparison in progress on branch `e02-s07-map`.
