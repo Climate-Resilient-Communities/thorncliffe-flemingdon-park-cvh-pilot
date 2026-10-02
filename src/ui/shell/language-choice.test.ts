@@ -15,11 +15,11 @@ describe("saveLanguageChoice", () => {
   });
 
   it("keeps the other choices that are saved", () => {
-    const storage = memory({ "cvh.choices": '{"v":1,"lang":"en","buildings":[7]}' });
+    const storage = memory({ "cvh.choices": '{"v":1,"lang":"en","buildings":["7"]}' });
 
     saveLanguageChoice(storage, "fr");
 
-    expect(JSON.parse(storage.items["cvh.choices"])).toEqual({ v: 1, lang: "fr", buildings: [7] });
+    expect(JSON.parse(storage.items["cvh.choices"])).toEqual({ v: 1, lang: "fr", buildings: ["7"] });
   });
 
   it("replaces a corrupt value instead of failing", () => {

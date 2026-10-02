@@ -1272,7 +1272,23 @@
     "changeGroups": "Change groups",
     "groupsNone": "None chosen",
     "chooseGroups": "Choose groups",
-    "langNote": "The language you read the CVH in."
+    "langNote": "The language you read the CVH in.",
+    "removedBuildingOne": "1 building you saved is no longer in the building list, so it was removed.",
+    "removedBuildingMany": "{n} buildings you saved are no longer in the building list, so they were removed.",
+    "removedFloorOne": "1 floor you saved no longer exists, so it was removed.",
+    "removedFloorMany": "{n} floors you saved no longer exist, so they were removed.",
+    "removedRest": "Everything else you chose is unchanged.",
+    "clearAll": "Clear everything",
+    "clearTitle": "Clear everything from this phone?",
+    "clearBody": "This removes your language, groups, buildings and floors from this phone. You will start again by choosing a language.",
+    "clearYes": "Yes, clear everything",
+    "loading": "Loading your buildings...",
+    "listFailed": "The list of buildings could not be loaded just now. Your choices are still saved.",
+    "buildingByRsn": "Building {rsn}",
+    "floorsOne": "1 floor chosen",
+    "floorsMany": "{n} floors chosen",
+    "buildingsNone": "None chosen",
+    "removeItem": "Remove: {item}"
   },
   "R35": {
     "title": "Get alerts for your building",
@@ -1309,7 +1325,16 @@
     "floorOf": "{building}, floor {floor}",
     "checkinBy": "Check-ins by {method}",
     "changeAll": "Change what you chose",
-    "toHome": "Go to Now"
+    "toHome": "Go to Now",
+    "manyLine": "Choose your own building or a relative's. You can choose as many as you like.",
+    "chosenNone": "No buildings chosen yet",
+    "chosenOne": "1 building chosen",
+    "chosenMany": "{n} buildings chosen",
+    "floorsIn": "Floors in {building}. Optional.",
+    "noFloorsListed": "No floors are listed for this building yet.",
+    "loading": "Loading the list of buildings...",
+    "loadFailed": "The list of buildings could not be loaded. Check your connection and try again, or skip this step.",
+    "retry": "Try again"
   },
   "hub": {
     "appName": "Hub and partner space",

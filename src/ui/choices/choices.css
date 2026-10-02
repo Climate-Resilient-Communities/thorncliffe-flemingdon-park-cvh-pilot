@@ -1,0 +1,214 @@
+/*
+ * First-run choices and "What I have told the CVH" (S02.03; prototype R01, R26, R34, R35 and the .cvh-option, .cvh-btn,
+ * .cvh-told and .cvh-picklist rules of cvh.css). Spacing from the semantic tokens, direction from logical properties
+ * only, so the screens mirror in Urdu, Pashto and Dari without a [dir] rule. Colours are existing tokens.
+ */
+@layer components {
+  /* Once the phone says this is a first visit, home stays hidden for the moment before the first-run steps open. */
+  .first-run-gate[data-state="redirecting"] {
+    visibility: hidden;
+  }
+
+  /* One option: a native radio button or checkbox with its words, the whole row is the target. */
+  .choice-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-stack);
+    padding: var(--inset-card-compact);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .choice-option:has(input:checked) {
+    border-color: var(--accent-text);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+  }
+
+  .choice-option:has(input:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .choice-option__input {
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    margin: 0;
+    accent-color: var(--accent-text);
+    cursor: pointer;
+  }
+
+  .choice-option__text {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .choice-option__label {
+    font-weight: 700;
+  }
+
+  .choice-option__line {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+    color: var(--text);
+  }
+
+  .choice-fieldset {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .choice-legend {
+    padding: 0;
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* The floors of a chosen building sit under it, set in from the start edge. */
+  .choice-floors {
+    margin-inline-start: var(--gap-stack);
+    padding-inline-start: var(--gap-stack);
+    border-inline-start: 2px solid var(--border);
+  }
+
+  .choice-list {
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .choice-input {
+    inline-size: 100%;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-related);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+    font: inherit;
+  }
+
+  .choice-hint {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .choice-note {
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  /* Buttons: the shared shape, then one variant. */
+  .choice-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-current);
+    min-inline-size: var(--tap-current);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-card);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    cursor: pointer;
+  }
+
+  .choice-btn--primary {
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .choice-btn--secondary {
+    border-color: var(--control-border);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .choice-btn--quiet {
+    background-color: transparent;
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
+  .choice-btn--danger {
+    border-color: var(--danger);
+    background-color: var(--surface-raised);
+    color: var(--danger);
+  }
+
+  .choice-btn:focus-visible,
+  .choice-input:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  /* Two actions side by side, equal; they stack when the words need the room. */
+  .choice-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--gap-target);
+  }
+
+  .choice-actions > * {
+    inline-size: 100%;
+  }
+
+  /* R-34: one thing the resident told the CVH, with what can be done about it. */
+  .choice-told {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    padding: var(--inset-card-compact);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .choice-told__key {
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .choice-told__value {
+    font-weight: 700;
+    color: var(--ink);
+    overflow-wrap: anywhere;
+  }
+
+  .choice-told__row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-label);
+    padding-block-start: var(--gap-label);
+    border-block-start: 1px solid var(--border);
+  }
+
+  .choice-told__row > :first-child {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .choice-told__acts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+  }
+}
