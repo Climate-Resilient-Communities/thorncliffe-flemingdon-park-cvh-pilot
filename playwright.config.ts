@@ -20,6 +20,8 @@ export default defineConfig({
     : {
         command: "npm run start",
         url: localUrl,
+        // The server refuses to start without a safe environment (S01.02); a local run is development.
+        env: { SMS_MODE: "log", PUBLIC_BASE_URL: localUrl },
         reuseExistingServer: !process.env.CI,
       },
 });
