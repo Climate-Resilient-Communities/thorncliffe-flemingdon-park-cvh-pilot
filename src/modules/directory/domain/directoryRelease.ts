@@ -18,9 +18,11 @@
 //    (status `script_converted`), and only while that zh text is itself reviewed and current;
 //  - every shipped text keeps its traceability: the English original, the hash of that English, the
 //    model or conversion, and the review status;
+//  - every provider carries `neighbourhood_ids`, taken from the Hub's list (data/catalogue/provider-neighbourhoods.json)
+//    and never from its address; a published provider that list does not name stops the release;
 //  - the files are deterministic: the same snapshot gives the same bytes.
 import { z } from "zod";
-import { TRANSLATION_UNAVAILABLE, DirectoryListingV1, type ListingText, type ListingProvider } from "@/contracts/directory";
+import { TRANSLATION_UNAVAILABLE, DirectoryListingV1, type ListingText, type ListingProvider, type NeighbourhoodId } from "@/contracts/directory";
 import {
   evaluateTranslation,
   present,
@@ -72,6 +74,8 @@ export interface ReleaseInput {
   catalogueHash: string;
   providers: SnapshotProvider[];
   categories: SnapshotCategory[];
+  /** provider id -> the neighbourhoods the Hub's list (data/catalogue/provider-neighbourhoods.json) puts it in. */
+  neighbourhoods: Readonly<Record<string, readonly NeighbourhoodId[]>>;
   hash: Hasher;
   zhHant: ZhHantConverter;
 }
@@ -317,6 +321,12 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       problems.push(`provider ${p.id} has no English services text`);
       continue;
     }
+    // The neighbourhood is the Hub's reviewed list, never worked out here: a published provider the list does not name stops the release.
+    const neighbourhoods = input.neighbourhoods[p.id];
+    if (neighbourhoods === undefined) {
+      problems.push(`provider ${p.id} is not in provider-neighbourhoods.json`);
+      continue;
+    }
     const role = p.texts.emergency_role?.en;
     const text = (key: string, english: string) =>
       listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null }, p.id, p.name, key, input, tally);
@@ -324,6 +334,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       id: p.id,
       name: p.name,
       category_ids: p.categoryIds,
+      neighbourhood_ids: [...neighbourhoods],
       subcategories: p.subcategories.map((s) => listingText(lang, s.name, { labels: { ...s.labels, en: s.name }, provenance: null }, `subcategory:${s.name}`, s.name, "name", input, tally)),
       locations: p.locations.map((l) => ({ street: l.street, city: l.city, postal: l.postal, lat: l.lat, lng: l.lng })),
       contact: { phone: p.contact.phone ?? [], email: p.contact.email ?? [], social: p.contact.social ?? [], web: p.contact.web ?? [] },
