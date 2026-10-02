@@ -8,9 +8,11 @@
 -- `translations` records where each loaded translation came from (model, review,
 -- source hash, and the OpenCC version and configuration for zh-Hant).
 --
--- Residents read these tables later through the server's own connection, so the
--- tables have row level security and no policy, and anon and authenticated get
--- no grants.
+-- Residents read these tables later through the server's own connection (the
+-- cvh_app role of S01.04's migration 20261002010000_audit_event.sql), which may
+-- only select; the seed writes as the migration role. Supabase's default
+-- privileges grant every new table in public to anon, authenticated and
+-- service_role, so each table takes those back.
 
 create table guide (
   id text primary key,
@@ -23,7 +25,9 @@ create table guide (
   translations jsonb not null default '{}'::jsonb
 );
 alter table guide enable row level security;
-revoke all on table guide from anon, authenticated;
+revoke all on table guide from public, anon, authenticated, service_role;
+grant select on table guide to cvh_app;
+create policy guide_app_select on guide for select to cvh_app using (true);
 
 create table essential_number (
   id text primary key,
@@ -39,4 +43,6 @@ create table essential_number (
   translations jsonb not null default '{}'::jsonb
 );
 alter table essential_number enable row level security;
-revoke all on table essential_number from anon, authenticated;
+revoke all on table essential_number from public, anon, authenticated, service_role;
+grant select on table essential_number to cvh_app;
+create policy essential_number_app_select on essential_number for select to cvh_app using (true);

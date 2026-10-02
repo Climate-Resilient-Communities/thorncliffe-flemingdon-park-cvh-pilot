@@ -102,21 +102,29 @@ export async function seedGuidesAndNumbers(db: Db, input: ContentInput): Promise
     }
 
     const { report } = plan;
-    const byReason: Record<string, number> = {};
-    for (const u of report.translations.unavailable) byReason[u.reason] = (byReason[u.reason] ?? 0) + 1;
+    const refusedGuides = report.guides.filter((g) => !g.loaded).length;
+    const warnings = report.translations.unavailable.filter((u) => u.reason !== "not_translated").length;
+    // seed.run allows only a seed code, counts, warnings and failures (src/modules/audit/domain/actions.ts):
+    // warnings are translations not loaded although they exist (stale, unreviewed, ...), failures are
+    // the guides and the numbers list that were refused.
     await record(tx, {
       action: "seed.run",
       actorStaffId: null,
       subjectType: "guides_and_numbers",
       subjectId: null,
       meta: {
-        guidesLoaded: report.guides.filter((g) => g.loaded).map((g) => g.id),
-        guidesRefused: report.guides.filter((g) => !g.loaded).map((g) => ({ id: g.id, reasons: g.reasons })),
-        numbersLoaded: report.numbers.loaded,
-        numbersRefused: report.numbers.reasons,
-        rowsChanged: changed,
-        translationsLoaded: report.translations.loaded,
-        translationsUnavailable: byReason,
+        seed: "guides_and_numbers",
+        counts: {
+          guides_loaded: report.guides.length - refusedGuides,
+          guides_refused: refusedGuides,
+          numbers_loaded: plan.numbers.length,
+          rows_changed_guide: changed.guides,
+          rows_changed_number: changed.numbers,
+          translations_loaded: report.translations.loaded,
+          translations_not_yet: report.translations.unavailable.length - warnings,
+        },
+        warnings,
+        failures: refusedGuides + (report.numbers.loaded ? 0 : 1),
       },
     });
   });

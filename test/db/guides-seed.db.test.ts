@@ -1,5 +1,6 @@
 // The guides and essential numbers seed against a real database (S02.09): idempotent upsert,
 // the refusals, and the seed.run audit inside the seed's transaction.
+import { randomBytes } from "node:crypto";
 import path from "node:path";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
@@ -9,7 +10,11 @@ import { sourceHash, type ContentInput, type TranslationRecord } from "@/modules
 import { createDb, type Db } from "@/platform/db";
 import { ROOT, connect, serverUrl } from "./helpers";
 
-vi.mock("@/modules/audit", () => ({ record: vi.fn(async () => {}) }));
+// The real audit module (S01.04) writes audit_event; the spy only lets one test make it fail.
+vi.mock("@/modules/audit", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/audit")>();
+  return { ...actual, record: vi.fn(actual.record) };
+});
 
 const WHEN_911 = "Call 911 if someone is in danger.";
 
@@ -73,21 +78,36 @@ describe("guide and essential_number seed", () => {
     await sql.unsafe("truncate guide, essential_number");
   });
 
+  const auditCount = async () =>
+    (await sql.unsafe("select count(*)::int as n from audit_event where subject_type = 'guides_and_numbers'"))[0].n as number;
+  const expectedMeta = (guides: number, numbers: number) => ({
+    seed: "guides_and_numbers",
+    counts: {
+      guides_loaded: 2,
+      guides_refused: 0,
+      numbers_loaded: 2,
+      rows_changed_guide: guides,
+      rows_changed_number: numbers,
+      translations_loaded: 0,
+      translations_not_yet: 15 * 13 - 1,
+    },
+    warnings: 1,
+    failures: 0,
+  });
+
   const rows = async () => ({
     guides: await sql.unsafe("select * from guide order by id"),
     numbers: await sql.unsafe("select * from essential_number order by sort_order"),
   });
 
-  it("creates both tables with row level security and no access for anon or authenticated", async () => {
-    const tables = await sql.unsafe(`
-      select c.relname, c.relrowsecurity as rls,
-             has_table_privilege('anon', c.oid, 'select') as anon_select,
-             has_table_privilege('authenticated', c.oid, 'select, insert, update, delete') as authenticated_any
-      from pg_class c where c.relname in ('guide', 'essential_number') and c.relkind = 'r' order by 1`);
+  it("creates both tables with row level security", async () => {
+    const tables = await sql.unsafe(
+      "select relname, relrowsecurity as rls from pg_class where relname in ('guide', 'essential_number') and relkind = 'r' order by 1",
+    );
 
     expect(tables.map((t) => ({ ...t }))).toEqual([
-      { relname: "essential_number", rls: true, anon_select: false, authenticated_any: false },
-      { relname: "guide", rls: true, anon_select: false, authenticated_any: false },
+      { relname: "essential_number", rls: true },
+      { relname: "guide", rls: true },
     ]);
   });
 
@@ -120,32 +140,71 @@ describe("guide and essential_number seed", () => {
     expect(afterFirst.numbers[1]).toMatchObject({ id: "hub", number: "(416) 421-8997", emergency: false });
   });
 
-  it("audits seed.run in the seed's transaction on every run", async () => {
+  it("audits seed.run in the seed's transaction on every run, with only the allowed meta", async () => {
     const input = validInput();
+    input.translations = { ur: { texts: { "guide.power.title": reviewed("Old title", "پرانا") } } };
+    const before = await auditCount();
 
     await seedGuidesAndNumbers(db, input);
     await seedGuidesAndNumbers(db, input);
 
     expect(audit).toHaveBeenCalledTimes(2);
-    expect(audit).toHaveBeenLastCalledWith(
-      expect.anything(),
-      expect.objectContaining({
-        action: "seed.run",
-        actorStaffId: null,
-        subjectType: "guides_and_numbers",
-        subjectId: null,
-        meta: expect.objectContaining({ guidesLoaded: ["power", "flood"], numbersLoaded: true, rowsChanged: { guides: 0, numbers: 0 } }),
-      }),
-    );
     expect(audit.mock.calls[0][0]).not.toBe(db); // the transaction, not the pool
+    const events = await sql.unsafe(
+      "select actor_staff_id, action, subject_type, subject_id, outcome, meta from audit_event where subject_type = 'guides_and_numbers' order by id",
+    );
+    expect(events.slice(before).map((e) => ({ ...e }))).toEqual([
+      { actor_staff_id: null, action: "seed.run", subject_type: "guides_and_numbers", subject_id: null, outcome: "ok", meta: expectedMeta(2, 2) },
+      { actor_staff_id: null, action: "seed.run", subject_type: "guides_and_numbers", subject_id: null, outcome: "ok", meta: expectedMeta(0, 0) },
+    ]);
   });
 
   it("rolls the rows back when the audit event cannot be recorded", async () => {
     audit.mockRejectedValueOnce(new Error("audit unavailable"));
+    const before = await auditCount();
 
     await expect(seedGuidesAndNumbers(db, validInput())).rejects.toThrow("audit unavailable");
 
     expect(await rows()).toEqual({ guides: [], numbers: [] });
+    expect(await auditCount()).toBe(before);
+  });
+
+  it("lets the app's role read the tables and nobody else", async () => {
+    await seedGuidesAndNumbers(db, validInput());
+
+    // As the app signs in (S01.04): the login role has no password until the owner sets one;
+    // here a throwaway one, on a disposable server.
+    const password = randomBytes(18).toString("hex");
+    await sql.unsafe(`alter role cvh_app_login password '${password}'`);
+    const url = new URL(serverUrl());
+    url.username = "cvh_app_login";
+    url.password = password;
+    const app = connect(url.href);
+    let readable;
+    let writeError: unknown;
+    try {
+      readable = await app.unsafe("select (select count(*)::int from guide) as guides, (select count(*)::int from essential_number) as numbers");
+      try {
+        await app.unsafe("delete from guide");
+      } catch (error) {
+        writeError = error;
+      }
+    } finally {
+      await app.end({ timeout: 5 });
+      await sql.unsafe("alter role cvh_app_login password null");
+    }
+    const privileges = await sql.unsafe(`
+      select r.rolname, bool_or(has_table_privilege(r.oid, c.oid, 'select, insert, update, delete')) as any_access
+      from pg_roles r, pg_class c
+      where r.rolname in ('anon', 'authenticated', 'service_role') and c.relname in ('guide', 'essential_number') and c.relkind = 'r'
+      group by 1 order by 1`);
+    expect({ ...readable[0] }).toEqual({ guides: 2, numbers: 2 });
+    expect(privileges.map((p) => ({ ...p }))).toEqual([
+      { rolname: "anon", any_access: false },
+      { rolname: "authenticated", any_access: false },
+      { rolname: "service_role", any_access: false },
+    ]);
+    expect(String(writeError)).toMatch(/permission denied/);
   });
 
   it("updates a row when its English or review changes and leaves the other rows alone", async () => {
