@@ -362,7 +362,7 @@ So that no environment other than production can text residents.
 
 ### Story S01.03 — Database changes are migrated, locked down and recoverable
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 48 min (started 2026-10-02 03:07 UTC, merged 2026-10-02 03:55 UTC)
 - **Traces:** AR-5, AR-4 · **Depends on:** S01.02 · **Branch:** `e01-s03-migrations-rls`
 - **CI settings:** GitHub secret `PRODUCTION_DATABASE_URL`: the Supabase **session pooler** connection string, port 5432 (`postgres://postgres.<project-ref>:<database password>@<pooler host>.pooler.supabase.com:5432/postgres`; GitHub's runners have no IPv6 for the direct connection, and the transaction pooler on 6543 is refused), used only by the production job's migrate step
 
@@ -406,7 +406,7 @@ So that a bad migration never leaves production half-changed or exposed.
 
 ### Story S01.04 — Every staff action leaves a permanent, safe audit record
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** 31 min (started 2026-10-02 03:55 UTC, merged 2026-10-02 04:26 UTC)
 - **Traces:** FR-G5, AR-18, AR-17 · **Depends on:** S01.03 · **Branch:** `e01-s04-audit-trail`
 
 As a Hub Admin,
@@ -447,7 +447,7 @@ So that the pilot can show who did what without storing anything sensitive.
 
 ### Story S01.05 — Admin can bootstrap the first Admin and create staff accounts
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h (started 2026-10-02 04:27 UTC, merged 2026-10-02 05:27 UTC)
 - **Traces:** FR-G1, FR-G2, AR-6, AR-23 · **Depends on:** S01.04 · **Branch:** `e01-s05-staff-accounts`
 
 As a Hub Admin,
@@ -875,7 +875,7 @@ So that no string is re-authored by hand (design tokens are generated in S01.16)
 
 ### Story S02.02 — Resident sees the CVH in their language, right to left where needed
 
-- **Size:** M · **Estimate:** 8 h · **Actual:** —
+- **Size:** M · **Estimate:** 8 h · **Actual:** 1 h 46 min (started 2026-10-02 03:30 UTC, merged 2026-10-02 05:16 UTC)
 - **Traces:** UX-DR3, UX-DR19 (RTL, fonts), AR-3, AR-26, NFR-N1, FR-A3 (interface) · **Depends on:** S02.01, S01.16 · **Branch:** `e02-s02-resident-shell`
 
 As a resident,
@@ -1152,7 +1152,7 @@ So that I know what my building has in a heat wave or outage.
 
 ### Story S02.09 — Guides and essential numbers are translated and reviewed offline
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 47 min (started 2026-10-02 03:55 UTC, merged 2026-10-02 04:42 UTC)
 - **Traces:** FR-D7, FR-A3 (guides), AR-25, NFR-N7 · **Depends on:** S01.03 · **Branch:** `e02-s09-guide-content`
 
 As a Hub Coordinator,
