@@ -34,10 +34,10 @@ describe("Add a person (screen)", () => {
 
   it("shows the refusal instead of the form when the person may not add anyone", () => {
     expect(renderToStaticMarkup(<AddPersonBody view={{ allowed: false, refusal: "bootstrap_incomplete" }} />)).toBe(
-      '<p role="alert">Finish setting up two Admins first</p>',
+      '<p role="alert" class="hub-error">Finish setting up two Admins first</p>',
     );
     expect(renderToStaticMarkup(<AddPersonBody view={{ allowed: false, refusal: "forbidden" }} />)).toBe(
-      '<p role="alert">Only an Admin can add people.</p>',
+      '<p role="alert" class="hub-error">Only an Admin can add people.</p>',
     );
   });
 
@@ -50,7 +50,7 @@ describe("Add a person (screen)", () => {
       />,
     );
 
-    expect(html).toContain('<p id="add-person-error" role="alert">That username is already taken. Choose another.</p>');
+    expect(html).toContain('<p id="add-person-error" role="alert" class="hub-error">That username is already taken. Choose another.</p>');
     expect(html).toMatch(/aria-describedby="username-hint add-person-error" aria-invalid="true" name="username" value="jdoe"/);
     expect(html).toMatch(/id="firstName"[^>]*value="Jane"/);
   });

@@ -20,6 +20,22 @@
     align-self: flex-start;
   }
 
+  /*
+   * The form card of a staff page outside the Hub shell (sign-in, the authenticator code, the two setup gates): a
+   * readable column, centred in the screen, on the page surface with a hairline, so the white fields and buttons in
+   * it stand out from it. As wide as the aside column; on a phone it fills the screen's inset. Centred with
+   * `align-self` in the Screen's flex column, so no margin is set.
+   */
+  .hub-gate {
+    align-self: center;
+    inline-size: 100%;
+    max-inline-size: var(--size-aside-staff);
+    padding: var(--inset-card);
+    border: var(--offset-align-hairline) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface);
+  }
+
   /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
   .hub-list-item {
     padding-block-end: var(--gap-related);

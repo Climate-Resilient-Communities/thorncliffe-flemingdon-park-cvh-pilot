@@ -138,7 +138,7 @@ function Building({ view, actions, initial }: { view: BuildingView; actions: Bui
 function Missing({ view }: { view: MissingView }) {
   return (
     <Stack gap="related">
-      <p role="alert">{view.message}</p>
+      <p role="alert" className="hub-error">{view.message}</p>
       <a className="tap" href={view.back.href}>
         {view.back.label}
       </a>
