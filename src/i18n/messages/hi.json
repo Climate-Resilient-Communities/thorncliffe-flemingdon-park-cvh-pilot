@@ -59,6 +59,8 @@
     "more": "और",
     "notInPrototype": "इस प्रोटोटाइप में नहीं",
     "notInPrototypeBody": "यह हिस्सा प्रोटोटाइप में नहीं बना है। कुछ नहीं बदला।",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "ठीक है",
     "about": "CVH के बारे में",
     "aboutBody": "कम्युनिटी वर्चुअल हब को Thorncliffe Park Community Hub, थॉर्नक्लिफ़ पार्क और फ़्लेमिंगडन पार्क के लिए चलाता है।",

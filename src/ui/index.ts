@@ -3,3 +3,4 @@ export { Grid, GRID_GAPS, GRID_TWO_COLUMNS, type GridGap, type GridProps, type G
 export { Inline, INLINE_GAPS, type InlineGap, type InlineGrowProps, type InlineProps } from "./layout/inline";
 export { Screen, SCREEN_WIDTHS, type ScreenProps, type ScreenWidth } from "./layout/screen";
 export { Stack, STACK_GAPS, type StackGap, type StackProps } from "./layout/stack";
+export { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "./text/resident-text";

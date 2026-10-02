@@ -59,6 +59,8 @@
     "more": "More",
     "notInPrototype": "Not in this prototype",
     "notInPrototypeBody": "This part is not built in the prototype. Nothing has changed.",
+    "pageNotFound": "This page could not be found.",
+    "pageNotFoundBody": "The link may be old or mistyped. Use the menu below to go on.",
     "ok": "OK",
     "about": "About the CVH",
     "aboutBody": "The Community Virtual Hub is run by Thorncliffe Park Community Hub for Thorncliffe Park and Flemingdon Park.",

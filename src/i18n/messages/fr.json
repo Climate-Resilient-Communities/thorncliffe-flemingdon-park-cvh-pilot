@@ -59,6 +59,8 @@
     "more": "Plus",
     "notInPrototype": "Pas dans ce prototype",
     "notInPrototypeBody": "Cette partie n'est pas construite dans le prototype. Rien n'a changé.",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "OK",
     "about": "À propos du CVH",
     "aboutBody": "Le Carrefour virtuel communautaire est géré par le Thorncliffe Park Community Hub pour Thorncliffe Park et Flemingdon Park.",
