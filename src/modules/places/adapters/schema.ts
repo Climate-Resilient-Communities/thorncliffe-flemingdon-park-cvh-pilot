@@ -1,5 +1,5 @@
 // Drizzle tables of the places module (AD-2: only tables this module owns). Written by hand to
-// match db/migrations/20261002210000_buildings_floors.sql; test/db/drift.db.test.ts compares them
+// match db/migrations/20261002210000_buildings_floors.sql and 20261002260000_building_contact.sql; test/db/drift.db.test.ts compares them
 // with the migrated database. Grants (select, the confirmation columns and the floors to cvh_app,
 // none to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
@@ -50,6 +50,11 @@ export const building = pgTable(
     notInRegisterSince: timestamp("not_in_register_since", { withTimezone: true }),
     floorsConfirmedAt: timestamp("floors_confirmed_at", { withTimezone: true }),
     floorsConfirmedBy: uuid("floors_confirmed_by"),
+    /** The building contact an Admin enters (S02.08): a role and a phone number, all four set or all null. */
+    contactRole: text("contact_role"),
+    contactPhone: text("contact_phone"),
+    contactOwner: text("contact_owner"),
+    contactUpdatedAt: timestamp("contact_updated_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
@@ -59,6 +64,13 @@ export const building = pgTable(
     check("building_storeys_valid", sql`${t.storeys} is null or ${t.storeys} between 1 and 150`),
     check("building_elevators_valid", sql`${t.elevators} is null or ${t.elevators} >= 0`),
     check("building_confirmation_complete", sql`(${t.floorsConfirmedAt} is null) = (${t.floorsConfirmedBy} is null)`),
+    check("building_contact_role_valid", sql`${t.contactRole} is null or (${t.contactRole} = btrim(${t.contactRole}) and char_length(${t.contactRole}) between 1 and 40 and ${t.contactRole} !~ '  ')`),
+    check("building_contact_phone_valid", sql`${t.contactPhone} is null or ${t.contactPhone} ~ '^[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}$'`),
+    check("building_contact_owner_valid", sql`${t.contactOwner} is null or ${t.contactOwner} = 'hub'`),
+    check(
+      "building_contact_complete",
+      sql`(${t.contactRole} is null and ${t.contactPhone} is null and ${t.contactOwner} is null and ${t.contactUpdatedAt} is null) or (${t.contactRole} is not null and ${t.contactPhone} is not null and ${t.contactOwner} is not null and ${t.contactUpdatedAt} is not null)`,
+    ),
     foreignKey({ name: "building_floors_confirmed_by_fkey", columns: [t.floorsConfirmedBy], foreignColumns: [staffAccountKey.id] }),
     index("building_neighbourhood_id_idx").on(t.neighbourhoodId),
     index("building_floors_confirmed_by_idx").on(t.floorsConfirmedBy),

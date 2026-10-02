@@ -6,7 +6,7 @@ import { AddFloorForm, FloorRow } from "./FloorForms";
 import { buildingView, listView, missingView, savedNotice } from "./view";
 
 const noop = async () => ({ status: "idle" as const });
-const actions: BuildingActions = { add: noop, rename: noop, remove: noop, confirm: noop };
+const actions: BuildingActions = { add: noop, rename: noop, remove: noop, confirm: noop, contact: noop };
 
 const summary = (change: Partial<BuildingSummary> = {}): BuildingSummary => ({
   rsn: "4154146",
@@ -21,6 +21,7 @@ const summary = (change: Partial<BuildingSummary> = {}): BuildingSummary => ({
 });
 
 const detail = (change: Partial<BuildingDetail> = {}): BuildingDetail => ({
+  contact: null,
   ...summary(),
   facts: { elevators: 2, emergencyPower: true, coolingRoom: null, airConditioning: "None", barrierFreeEntrance: false, updatedAt: new Date("2026-10-05T12:00:00Z") },
   floors: ["G", "1", "2", "3"].map((label, index) => ({ id: `01900000-0000-7000-8000-00000000000${index}`, label, confirmed: index > 1 })),
@@ -28,6 +29,30 @@ const detail = (change: Partial<BuildingDetail> = {}): BuildingDetail => ({
 });
 
 const html = (screen: Parameters<typeof BuildingsBody>[0]["screen"]) => renderToStaticMarkup(<BuildingsBody screen={screen} actions={actions} />);
+
+describe("Buildings and floors: the building contact", () => {
+  it("shows the saved contact with its owner and date, in a form to change it", () => {
+    const out = html(buildingView(detail({ contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub", updatedAt: new Date("2026-10-05T15:00:00Z") } })));
+
+    expect(out).toContain("Building contact");
+    expect(out).toContain("Provided by the Hub, last updated Oct 5, 2026");
+    expect(out).toContain('value="Superintendent"');
+    expect(out).toContain('value="416-555-0123"');
+    expect(out).toContain("Save contact");
+  });
+
+  it("says none was entered, with empty fields", () => {
+    const out = html(buildingView(detail()));
+    expect(out).toContain('Building contact');
+    expect(out).toContain('No contact entered yet. Residents see &quot;Not known&quot;.');
+    expect(out).toContain('name="role"');
+  });
+
+  it("tells the person when the contact was saved or removed", () => {
+    expect(savedNotice({ done: "contact" })).toBe("Building contact saved.");
+    expect(savedNotice({ done: "contactRemoved" })).toBe("Building contact removed.");
+  });
+});
 
 describe("Buildings and floors: the list", () => {
   it("groups the buildings by neighbourhood, with each one's floors and whether they are confirmed, in words", () => {

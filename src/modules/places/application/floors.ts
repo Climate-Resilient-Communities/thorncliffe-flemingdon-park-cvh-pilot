@@ -6,6 +6,7 @@ import { z } from "zod";
 import type { Db } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
+import { CONTACT_OWNER, checkContact, type ContactError } from "../domain/buildingContact";
 import { checkFloorLabel, type FloorLabelError } from "../domain/floorLabel";
 import type { AssignedAmbassador, FloorAssignments, PlacesAudit, PlacesAuditEvent } from "./ports";
 
@@ -41,13 +42,25 @@ export interface BuildingFacts {
   updatedAt: Date;
 }
 
+/** The building contact an Admin entered (S02.08); the Hub owns it. */
+export interface BuildingContact {
+  /** What residents call the person: "Superintendent". */
+  role: string;
+  /** 416-555-0123 */
+  phone: string;
+  owner: typeof CONTACT_OWNER;
+  updatedAt: Date;
+}
+
 export interface BuildingDetail extends BuildingSummary {
   facts: BuildingFacts;
+  /** Null when no contact was entered. */
+  contact: BuildingContact | null;
   /** Lowest first. */
   floors: FloorView[];
 }
 
-export type FloorRefusal = FloorLabelError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
+export type FloorRefusal = FloorLabelError | ContactError | "building_not_found" | "floor_not_found" | "floor_has_assignments" | "no_change" | "already_confirmed" | "no_floors";
 
 /** An expected outcome as a value (spine: Errors). A refusal to remove a floor lists the Ambassadors who block it. */
 export type FloorResult<T> = { ok: true; value: T } | { ok: false; error: FloorRefusal; ambassadors?: readonly AssignedAmbassador[] };
@@ -87,6 +100,13 @@ const REASONS: Record<FloorRefusal, "validation" | "duplicate" | "not_found" | "
   label_too_long: "validation",
   label_characters: "validation",
   label_duplicate: "duplicate",
+  role_empty: "validation",
+  role_too_long: "validation",
+  role_characters: "validation",
+  phone_empty: "validation",
+  phone_invalid: "validation",
+  role_without_phone: "validation",
+  phone_without_role: "validation",
   building_not_found: "not_found",
   floor_not_found: "not_found",
   floor_has_assignments: "floor_has_assignments",
@@ -103,6 +123,12 @@ function isLabelUniqueViolation(error: unknown): boolean {
     current = (current as { cause?: unknown }).cause;
   }
   return false;
+}
+
+/** The contact of a building row; null unless all of it is there (the database checks it is all or nothing). */
+export function contactOf(row: Pick<typeof building.$inferSelect, "contactRole" | "contactPhone" | "contactUpdatedAt">): BuildingContact | null {
+  if (row.contactRole === null || row.contactPhone === null || row.contactUpdatedAt === null) return null;
+  return { role: row.contactRole, phone: row.contactPhone, owner: CONTACT_OWNER, updatedAt: row.contactUpdatedAt };
 }
 
 const floorOf = (row: typeof buildingFloor.$inferSelect): FloorView => ({ id: row.id, label: row.label, confirmed: row.confirmed });
@@ -204,6 +230,7 @@ export function createBuildingService(deps: BuildingServiceDeps) {
           barrierFreeEntrance: row.barrierFreeEntrance,
           updatedAt: row.factsUpdatedAt,
         },
+        contact: contactOf(row),
         floors: floors.map(floorOf),
       };
     },
@@ -272,6 +299,41 @@ export function createBuildingService(deps: BuildingServiceDeps) {
           meta: { floor_id: floor.id, label: floor.label, assignments: 0 },
         });
         return floorOf(floor);
+      });
+    },
+
+    /**
+     * Enters, changes or removes the building contact (S02.08). The Hub is its owner and now its last-updated
+     * date. Both fields empty removes it; one without the other, a role with characters it may not have or a
+     * number that is not a North American one is refused with the reason, and nothing is saved. Saving what is
+     * already there is refused as no change, so the date means "last changed".
+     */
+    setContact(actorStaffId: string, input: { rsn: string; role: string; phone: string }): Promise<FloorResult<{ contact: BuildingContact | null }>> {
+      return change(actorStaffId, "building.contact_changed", input.rsn, async (tx) => {
+        const row = await lockBuilding(tx, input.rsn);
+        const checked = checkContact(input.role, input.phone);
+        if (!checked.ok) throw new Refused(checked.error);
+        const before = contactOf(row);
+        if ((checked.contact === null && before === null) || (checked.contact && before && checked.contact.role === before.role && checked.contact.phone === before.phone)) {
+          throw new Refused("no_change");
+        }
+        const at = now();
+        await tx
+          .update(building)
+          .set(
+            checked.contact
+              ? { contactRole: checked.contact.role, contactPhone: checked.contact.phone, contactOwner: CONTACT_OWNER, contactUpdatedAt: at }
+              : { contactRole: null, contactPhone: null, contactOwner: null, contactUpdatedAt: null },
+          )
+          .where(eq(building.rsn, input.rsn));
+        await audit.record(tx, {
+          action: "building.contact_changed",
+          actorStaffId,
+          subjectType: "building",
+          subjectId: input.rsn,
+          meta: checked.contact ? {} : { cleared: true },
+        });
+        return { contact: checked.contact ? { ...checked.contact, owner: CONTACT_OWNER, updatedAt: at } : null };
       });
     },
 

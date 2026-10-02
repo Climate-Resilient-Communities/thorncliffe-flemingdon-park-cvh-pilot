@@ -190,3 +190,59 @@ test("a building that is not there says so, and a building no longer in the regi
   await expect(page.getByText("The latest import did not find this building in the City register.")).toBeVisible();
   await expect(page.getByText("This building has no floors yet.")).toBeVisible();
 });
+
+test("an Admin enters, changes and removes the building contact: owned by the Hub, dated, audited, and refused with the reason when wrong", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  const admin = await signIn(page, "admin");
+  const rsn = String(700_000_000 + Math.floor(Math.random() * 99_999_999));
+  await sql`insert into building (rsn, neighbourhood_id, address, latitude, longitude, storeys, facts_updated_at)
+            values (${rsn}, 'TP', '5 Contact Ct', 43.7, -79.34, 3, '2026-09-28T12:00:00Z')`;
+  const since = (await sql`select coalesce(max(id), 0)::int as max from audit_event`)[0].max as number;
+  const saved = () => sql`select contact_role, contact_phone, contact_owner, contact_updated_at is not null as dated from building where rsn = ${rsn}`;
+
+  await page.goto(`/staff/buildings?building=${rsn}`);
+  await expect(page.getByRole("heading", { level: 2, name: "Building contact" })).toBeVisible();
+  await expect(page.getByTestId("contact-current")).toHaveText('No contact entered yet. Residents see "Not known".');
+
+  // Half a contact, and a number that is not one, are refused with the reason, and nothing is saved.
+  await page.getByLabel("Role", { exact: true }).fill("Superintendent");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.locator("#contact-error")).toHaveText("Enter a phone number for this role, or empty both fields to remove the contact.");
+  await expect(page.getByLabel("Role", { exact: true })).toHaveValue("Superintendent");
+  await page.getByLabel("Phone number").fill("555-0123");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.locator("#contact-error")).toHaveText("Enter a 10-digit phone number, like 416 555 0123.");
+  expect(await saved()).toEqual([{ contact_role: null, contact_phone: null, contact_owner: null, dated: false }]);
+
+  // A good one is saved with the Hub as its owner and a date, and the page says so.
+  await page.getByLabel("Phone number").fill("(416) 555-0123");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.getByRole("status")).toHaveText("Building contact saved.");
+  expect(await saved()).toEqual([{ contact_role: "Superintendent", contact_phone: "416-555-0123", contact_owner: "hub", dated: true }]);
+  await expect(page.getByTestId("contact-current")).toContainText("Provided by the Hub, last updated ");
+  await expect(page.getByLabel("Phone number")).toHaveValue("416-555-0123");
+
+  // Saving it again unchanged is refused; changing the number is saved.
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.locator("#contact-error")).toHaveText("Nothing to change: the contact is already saved like this.");
+  await page.getByLabel("Phone number").fill("416 555 0199");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.getByRole("status")).toHaveText("Building contact saved.");
+  expect((await saved())[0]).toMatchObject({ contact_phone: "416-555-0199" });
+
+  // Emptying both fields removes it.
+  await page.getByLabel("Role", { exact: true }).fill("");
+  await page.getByLabel("Phone number").fill("");
+  await page.getByRole("button", { name: "Save contact" }).click();
+  await expect(page.getByRole("status")).toHaveText("Building contact removed.");
+  expect(await saved()).toEqual([{ contact_role: null, contact_phone: null, contact_owner: null, dated: false }]);
+
+  expect(await sql`select action, outcome, subject_id, meta from audit_event where id > ${since} and actor_staff_id = ${admin.id} order by id`).toEqual([
+    { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "validation" } },
+    { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "validation" } },
+    { action: "building.contact_changed", outcome: "ok", subject_id: rsn, meta: {} },
+    { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "conflict" } },
+    { action: "building.contact_changed", outcome: "ok", subject_id: rsn, meta: {} },
+    { action: "building.contact_changed", outcome: "ok", subject_id: rsn, meta: { cleared: true } },
+  ]);
+});

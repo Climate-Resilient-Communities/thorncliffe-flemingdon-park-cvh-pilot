@@ -222,6 +222,17 @@ describe("CVH_FAKE_IDENTITY_FILE", () => {
   });
 });
 
+describe("CVH_FAKE_BUILDINGS_FILE", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(parseEnv({ ...local, CVH_FAKE_BUILDINGS_FILE: "/tmp/buildings.json" }).fakeBuildingsFile).toBe("/tmp/buildings.json");
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_BUILDINGS_FILE: "/tmp/buildings.json" })).toContain(
+        "CVH_FAKE_BUILDINGS_FILE: the buildings fake is only allowed in local development, never on Vercel",
+      );
+    }
+  });
+});
+
 describe("STAFF_PASSWORD_PEPPER", () => {
   const PEPPER = "3f9c2a7be14d58f06a1c9e3b7d2f4a8c5e6b1d0f9a2c4e7b8d3f6a1c0e5b9d2f";
 

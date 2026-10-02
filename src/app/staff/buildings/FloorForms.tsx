@@ -155,6 +155,64 @@ export function AddFloorForm({ rsn, labels, action, initialState = IDLE }: { rsn
   );
 }
 
+/**
+ * "Building contact" (S02.08): a role and a phone number, saved with the Hub as owner. Both empty removes it.
+ * After a refusal the form shows what was typed, with the reason.
+ */
+export function ContactForm({ rsn, labels, action, initialState = IDLE }: { rsn: string; labels: BuildingView["contact"]; action: FloorAction; initialState?: EditState }) {
+  const [state, formAction, pending] = useActionState(action, initialState);
+  const refused = state.status === "refused";
+  const typed = refused && state.contact ? state.contact : labels.value;
+  const errorId = "contact-error";
+  return (
+    <section aria-labelledby="contact-title">
+      <Stack gap="related">
+        <h2 id="contact-title">{labels.title}</h2>
+        <p>{labels.lead}</p>
+        <p data-testid="contact-current">{labels.current}</p>
+        <form action={formAction} key={refused ? JSON.stringify(state) : "contact"}>
+          <Stack gap="stack">
+            <input type="hidden" name="rsn" value={rsn} />
+            <Refusal id={errorId} state={state} />
+            <Stack gap="label">
+              <label htmlFor="contact-role">{labels.role}</label>
+              <p id="contact-role-hint">{labels.roleHint}</p>
+              <input
+                className="hub-input"
+                id="contact-role"
+                type="text"
+                name="role"
+                defaultValue={typed.role}
+                autoComplete="off"
+                maxLength={80}
+                aria-describedby={refused ? `contact-role-hint ${errorId}` : "contact-role-hint"}
+                aria-invalid={refused || undefined}
+              />
+            </Stack>
+            <Stack gap="label">
+              <label htmlFor="contact-phone">{labels.phone}</label>
+              <p id="contact-phone-hint">{labels.phoneHint}</p>
+              <input
+                className="hub-input"
+                id="contact-phone"
+                type="tel"
+                name="phone"
+                defaultValue={typed.phone}
+                autoComplete="off"
+                aria-describedby={refused ? `contact-phone-hint ${errorId}` : "contact-phone-hint"}
+                aria-invalid={refused || undefined}
+              />
+            </Stack>
+            <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
+              {labels.submit}
+            </button>
+          </Stack>
+        </form>
+      </Stack>
+    </section>
+  );
+}
+
 /** "Mark building confirmed": the Admin says the floors above are the floors people can be on. */
 export function ConfirmForm({ rsn, labels, action, initialState = IDLE }: { rsn: string; labels: NonNullable<BuildingView["confirm"]>; action: FloorAction; initialState?: EditState }) {
   const [state, formAction, pending] = useActionState(action, initialState);

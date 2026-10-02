@@ -59,6 +59,19 @@ export interface BuildingView {
   floors: { title: string; lead: string; empty?: string; rows: FloorRowView[]; rename: string; remove: string };
   add: { title: string; label: string; hint: string; place: string; top: string; bottom: string; submit: string };
   confirm?: { title: string; lead: string; submit: string };
+  contact: {
+    title: string;
+    lead: string;
+    /** "Provided by the Hub, last updated Oct 1, 2026", or "No contact entered yet." */
+    current: string;
+    role: string;
+    roleHint: string;
+    phone: string;
+    phoneHint: string;
+    submit: string;
+    /** What the form starts with: the saved contact. */
+    value: { role: string; phone: string };
+  };
 }
 
 export interface MissingView {
@@ -104,6 +117,10 @@ export function savedNotice(query: SavedQuery): string | undefined {
       return label && LABEL.test(label) ? t("saved.removed", { label }) : undefined;
     case "confirmed":
       return n && COUNT.test(n) ? t("saved.confirmed", { n }) : undefined;
+    case "contact":
+      return t("saved.contact");
+    case "contactRemoved":
+      return t("saved.contactRemoved");
     default:
       return undefined;
   }
@@ -190,6 +207,17 @@ export function buildingView(building: BuildingDetail, notice?: string): Buildin
       top: t("add.top"),
       bottom: t("add.bottom"),
       submit: t("add.submit"),
+    },
+    contact: {
+      title: t("contact.title"),
+      lead: t("contact.lead"),
+      current: building.contact ? t("contact.current", { date: formatDay(building.contact.updatedAt) }) : t("contact.none"),
+      role: t("contact.role"),
+      roleHint: t("contact.roleHint"),
+      phone: t("contact.phone"),
+      phoneHint: t("contact.phoneHint"),
+      submit: t("contact.submit"),
+      value: { role: building.contact?.role ?? "", phone: building.contact?.phone ?? "" },
     },
     ...(building.confirmedAt ? {} : { confirm: { title: t("confirm.title"), lead: t("confirm.lead"), submit: t("confirm.submit") } }),
   };

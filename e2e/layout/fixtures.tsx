@@ -481,7 +481,7 @@ export function BuildingsFixture({
   screen: BuildingsScreen;
   initial?: BuildingsInitial;
 }) {
-  const actions: BuildingActions = { add: noAction, rename: noAction, remove: noAction, confirm: noAction };
+  const actions: BuildingActions = { add: noAction, rename: noAction, remove: noAction, confirm: noAction, contact: noAction };
   return (
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/buildings">
       <Screen surface="staff" testId="screen">

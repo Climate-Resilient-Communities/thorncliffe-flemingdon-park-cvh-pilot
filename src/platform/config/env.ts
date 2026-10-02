@@ -41,6 +41,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
  *                                                        Supabase Auth (the end-to-end tests); never a real account
+ * CVH_FAKE_BUILDINGS_FILE
+ *                      server   optional; local development only (start-up fails on Vercel): the resident building
+ *                                                        page reads its buildings from this JSON file instead of the
+ *                                                        database (the resident page tests and their screenshots)
  */
 
 export type AppEnvironment = "production" | "preview" | "development";
@@ -71,6 +75,7 @@ const rawSchema = z.object({
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
+  CVH_FAKE_BUILDINGS_FILE: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
 });
 
@@ -88,6 +93,8 @@ export interface Env {
   twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
+  /** Local development only: sample buildings for the resident page tests, read instead of the database. */
+  fakeBuildingsFile?: string;
   /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
   staffPasswordPepper?: string;
   /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
@@ -314,6 +321,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
   }
 
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_BUILDINGS_FILE !== undefined) {
+    problems.push("CVH_FAKE_BUILDINGS_FILE: the buildings fake is only allowed in local development, never on Vercel");
+  }
+
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
@@ -358,6 +369,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
           }
         : undefined,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
+    fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };
 }

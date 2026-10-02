@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, savedLocation, type EditDeps } from "./editFloors";
+import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, savedLocation, setContactFromForm, type EditDeps } from "./editFloors";
 
 const ADMIN = "01900000-0000-7000-8000-000000000001";
 const FLOOR = "01900000-0000-7000-8000-0000000000f1";
@@ -12,7 +12,7 @@ const form = (fields: Record<string, string>) => {
 };
 
 function deps(service: Partial<ReturnType<EditDeps["buildings"]>>) {
-  const full = { addFloor: vi.fn(), renameFloor: vi.fn(), removeFloor: vi.fn(), confirmBuilding: vi.fn(), ...service };
+  const full = { addFloor: vi.fn(), renameFloor: vi.fn(), removeFloor: vi.fn(), confirmBuilding: vi.fn(), setContact: vi.fn(), ...service };
   return { service: full, deps: { buildings: () => full } as EditDeps };
 }
 
@@ -124,6 +124,36 @@ describe("Mark building confirmed (server action)", () => {
   ] as const)("refuses with the reason (%s)", async (error, message) => {
     const { deps: d } = deps({ confirmBuilding: vi.fn(async () => ({ ok: false as const, error })) });
     expect(await confirmFromForm(d, session, form({ rsn: "7" }))).toEqual({ status: "refused", message });
+  });
+});
+
+describe("Save contact (server action)", () => {
+  it("passes the role and number as typed and goes back to the building", async () => {
+    const setContact = vi.fn(async () => ({ ok: true as const, value: { contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub" as const, updatedAt: new Date() } } }));
+    const { deps: d } = deps({ setContact });
+
+    const state = await setContactFromForm(d, session, form({ rsn: "7", role: " Superintendent ", phone: "(416) 555-0123" }));
+
+    expect(setContact).toHaveBeenCalledWith(ADMIN, { rsn: "7", role: " Superintendent ", phone: "(416) 555-0123" });
+    expect(state).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=contact" });
+  });
+
+  it("says the contact was removed when both fields were emptied", async () => {
+    const { deps: d } = deps({ setContact: vi.fn(async () => ({ ok: true as const, value: { contact: null } })) });
+    expect(await setContactFromForm(d, session, form({ rsn: "7", role: "", phone: "" }))).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=contactRemoved" });
+  });
+
+  it.each([
+    ["role_too_long", "A role can have at most 40 characters."],
+    ["role_characters", "Use letters, digits and spaces in a role, with at least one letter. A few marks are allowed: . , ' & / -"],
+    ["phone_invalid", "Enter a 10-digit phone number, like 416 555 0123."],
+    ["role_without_phone", "Enter a phone number for this role, or empty both fields to remove the contact."],
+    ["phone_without_role", "Enter a role for this number, or empty both fields to remove the contact."],
+    ["no_change", "Nothing to change: the contact is already saved like this."],
+    ["building_not_found", "That building does not exist."],
+  ] as const)("shows the reason (%s) and keeps what was typed", async (error, message) => {
+    const { deps: d } = deps({ setContact: vi.fn(async () => ({ ok: false as const, error })) });
+    expect(await setContactFromForm(d, session, form({ rsn: "7", role: "Super", phone: "555" }))).toEqual({ status: "refused", message, contact: { role: "Super", phone: "555" } });
   });
 });
 

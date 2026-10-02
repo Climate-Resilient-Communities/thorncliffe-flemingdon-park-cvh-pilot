@@ -4006,7 +4006,9 @@
         "added": "[EN] Floor {label} added.",
         "renamed": "[EN] Floor {from} is now called {to}.",
         "removed": "[EN] Floor {label} removed.",
-        "confirmed": "[EN] Building confirmed with {n} floors."
+        "confirmed": "[EN] Building confirmed with {n} floors.",
+        "contact": "[EN] Building contact saved.",
+        "contactRemoved": "[EN] Building contact removed."
       },
       "errors": {
         "labelEmpty": "[EN] Enter a label for the floor.",
@@ -4020,7 +4022,24 @@
         "noFloors": "[EN] Add at least one floor before confirming the building.",
         "buildingNotFound": "[EN] That building does not exist.",
         "floorNotFound": "[EN] That floor does not exist any more. Reload the page.",
-        "forbidden": "[EN] Only an Admin can change buildings and floors."
+        "forbidden": "[EN] Only an Admin can change buildings and floors.",
+        "roleTooLong": "[EN] A role can have at most 40 characters.",
+        "roleCharacters": "[EN] Use letters, digits and spaces in a role, with at least one letter. A few marks are allowed: . , ' & / -",
+        "phoneInvalid": "[EN] Enter a 10-digit phone number, like 416 555 0123.",
+        "roleWithoutPhone": "[EN] Enter a phone number for this role, or empty both fields to remove the contact.",
+        "phoneWithoutRole": "[EN] Enter a role for this number, or empty both fields to remove the contact.",
+        "contactNoChange": "[EN] Nothing to change: the contact is already saved like this."
+      },
+      "contact": {
+        "title": "[EN] Building contact",
+        "lead": "[EN] Who residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it. Leave both fields empty to remove it.",
+        "current": "[EN] Provided by the Hub, last updated {date}",
+        "none": "[EN] No contact entered yet. Residents see \"Not known\".",
+        "role": "[EN] Role",
+        "roleHint": "[EN] What residents call the person, like Superintendent. Up to 40 characters. Do not enter a personal name.",
+        "phone": "[EN] Phone number",
+        "phoneHint": "[EN] 10 digits, like 416 555 0123.",
+        "submit": "[EN] Save contact"
       }
     },
     "resetAuthenticator": {
@@ -4073,5 +4092,24 @@
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
       }
     }
+  },
+  "building": {
+    "registerTitle": "[EN] From the City register",
+    "updated": "[EN] Last updated {date}",
+    "registerLead": "[EN] The City of Toronto keeps a register of apartment buildings. These facts come from it.",
+    "checking": "[EN] The Hub is checking this building's details. What you see here may change.",
+    "facts": {
+      "storeys": "[EN] Storeys",
+      "elevators": "[EN] Elevators",
+      "emergencyPower": "[EN] Emergency power",
+      "coolingRoom": "[EN] Cooling room",
+      "airConditioning": "[EN] Air conditioning",
+      "barrierFree": "[EN] Barrier-free entrance"
+    },
+    "airNone": "[EN] None",
+    "airIndividual": "[EN] Individual units",
+    "contactTitle": "[EN] Building contact",
+    "providedByHub": "[EN] Provided by the Hub, last updated {date}",
+    "call": "[EN] Call {role}"
   }
 }

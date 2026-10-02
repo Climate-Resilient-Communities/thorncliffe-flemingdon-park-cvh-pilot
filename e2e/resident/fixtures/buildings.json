@@ -1,0 +1,44 @@
+[
+  {
+    "rsn": "4154146",
+    "address": "4 Milepost Pl",
+    "neighbourhoodName": "Thorncliffe Park",
+    "storeys": 6,
+    "elevators": 2,
+    "emergencyPower": true,
+    "coolingRoom": false,
+    "airConditioning": "None",
+    "barrierFreeEntrance": true,
+    "factsUpdatedAt": "2026-09-28T16:00:00Z",
+    "checkingDetails": false,
+    "contact": { "role": "Superintendent", "phone": "416-555-0123", "updatedAt": "2026-09-30T16:00:00Z" }
+  },
+  {
+    "rsn": "4154159",
+    "address": "85-95 Thorncliffe Park Dr",
+    "neighbourhoodName": "Thorncliffe Park",
+    "storeys": null,
+    "elevators": null,
+    "emergencyPower": null,
+    "coolingRoom": false,
+    "airConditioning": null,
+    "barrierFreeEntrance": null,
+    "factsUpdatedAt": "2026-09-28T16:00:00Z",
+    "checkingDetails": false,
+    "contact": null
+  },
+  {
+    "rsn": "4154169",
+    "address": "26 Thorncliffe Park Dr",
+    "neighbourhoodName": "Thorncliffe Park",
+    "storeys": 28,
+    "elevators": 0,
+    "emergencyPower": true,
+    "coolingRoom": true,
+    "airConditioning": "Individual units",
+    "barrierFreeEntrance": false,
+    "factsUpdatedAt": "2026-09-15T16:00:00Z",
+    "checkingDetails": true,
+    "contact": null
+  }
+]

@@ -18,6 +18,7 @@ import {
   importBuildings,
   planBuildingImport,
   readMergeFile,
+  readPublicBuilding,
   readRegisterFile,
   type AssignedAmbassador,
   type BuildingService,
@@ -378,6 +379,25 @@ describe("the app's role and the buildings tables", () => {
     expect(await as("update building set facts_updated_at = now() where rsn = '301'")).toBe("42501");
     expect(await as("update building set storeys = 3 where rsn = '301'")).toBe("42501");
     expect(await as("update building set floors_confirmed_at = null, floors_confirmed_by = null where rsn = '301'")).toBe("ok");
+    // The contact (S02.08): its four columns, all or none, and nothing else of the register's.
+    expect(await as("update building set contact_role = 'Super', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("ok");
+    expect(await as("update building set contact_role = null, contact_phone = null, contact_owner = null, contact_updated_at = null where rsn = '301'")).toBe("ok");
+  });
+
+  it("refuses a half contact, a number or owner it does not allow, whatever the app says", async () => {
+    const as = async (statement: string) => {
+      try {
+        await app.$client.unsafe(statement);
+        return "ok";
+      } catch (error) {
+        return (error as { code?: string; constraint_name?: string }).constraint_name ?? "error";
+      }
+    };
+    expect(await as("update building set contact_role = 'Super' where rsn = '301'")).toBe("building_contact_complete");
+    expect(await as("update building set contact_role = 'Super', contact_phone = '555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_phone_valid");
+    expect(await as("update building set contact_role = 'Super', contact_phone = '416-555-0123', contact_owner = 'landlord', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_owner_valid");
+    expect(await as("update building set contact_role = ' Super', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_role_valid");
+    expect(await as(`update building set contact_role = '${"x".repeat(41)}', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'`)).toBe("building_contact_role_valid");
   });
 
   it("is the only role besides the owner that reaches the tables: anon, authenticated and service_role have no privilege on them", async () => {
@@ -402,6 +422,132 @@ describe("the app's role and the buildings tables", () => {
     await expect(owner`insert into building_floor (id, rsn, label, sort_order) values (${randomUUID()}, '301', '1', 9)`).rejects.toThrow(/building_floor_label_unique/);
     await expect(owner`insert into building_floor (id, rsn, label, sort_order) values (${randomUUID()}, '301', 'P 1', 9)`).resolves.toBeDefined();
     await expect(owner`insert into building_floor (id, rsn, label, sort_order) values (${randomUUID()}, '301', 'p1', 10)`).rejects.toThrow(/building_floor_label_unique/);
+  });
+});
+
+describe("the building page's reader (S02.08)", () => {
+  beforeEach(async () => {
+    await seed(planOf([feature(501, { CONFIRMED_STOREYS: 9, NO_OF_ELEVATORS: 0, IS_THERE_A_COOLING_ROOM: null, IS_THERE_EMERGENCY_POWER: "NO" }), feature(502, { AIR_CONDITIONING_TYPE: null })]));
+  });
+
+  it("reads one building with the facts the story lists, and not a staff-only field", async () => {
+    await service.confirmBuilding(ADMIN, { rsn: "501" });
+    const building = await readPublicBuilding(app, "501");
+
+    expect(building).toEqual({
+      rsn: "501",
+      address: "501 Test St",
+      neighbourhoodName: "Thorncliffe Park",
+      storeys: 9,
+      elevators: 0,
+      emergencyPower: false,
+      coolingRoom: null,
+      airConditioning: "None",
+      barrierFreeEntrance: true,
+      factsUpdatedAt: expect.any(Date),
+      checkingDetails: false,
+      contact: null,
+    });
+    // The confirmation's author, the coordinates and the floors never leave the module for a resident.
+    expect(Object.keys(building!).sort()).toEqual(
+      ["address", "airConditioning", "barrierFreeEntrance", "checkingDetails", "contact", "coolingRoom", "elevators", "emergencyPower", "factsUpdatedAt", "neighbourhoodName", "rsn", "storeys"].sort(),
+    );
+    expect(JSON.stringify(building)).not.toContain(ADMIN);
+  });
+
+  it("keeps a missing fact null (not known) and zero elevators 0", async () => {
+    expect(await readPublicBuilding(app, "502")).toMatchObject({ airConditioning: null });
+    expect(await readPublicBuilding(app, "501")).toMatchObject({ elevators: 0, coolingRoom: null });
+  });
+
+  it("opens a building that the latest register no longer lists, flagged as being checked", async () => {
+    await seed(planOf([feature(502)]));
+    expect(await readPublicBuilding(app, "501")).toMatchObject({ rsn: "501", checkingDetails: true });
+    expect(await readPublicBuilding(app, "502")).toMatchObject({ checkingDetails: false });
+  });
+
+  it("returns nothing for a building that does not exist or a number that is not one", async () => {
+    expect(await readPublicBuilding(app, "999")).toBeNull();
+    expect(await readPublicBuilding(app, "5; drop table building")).toBeNull();
+    expect(await readPublicBuilding(app, "")).toBeNull();
+  });
+});
+
+describe("the building contact (S02.08)", () => {
+  beforeEach(async () => {
+    await seed(planOf([feature(601), feature(602)]));
+    writeAudit.mockClear();
+  });
+
+  const NOW = new Date("2026-10-01T15:00:00Z");
+
+  it("saves the role and number with the Hub as owner and the date, audits building.contact_changed, and shows it to residents", async () => {
+    const dated = createBuildingService({ db: app, audit, assignments, now: () => NOW });
+
+    const saved = await dated.setContact(ADMIN, { rsn: "601", role: "  Building  superintendent ", phone: "(416) 555-0123" });
+
+    expect(saved).toEqual({ ok: true, value: { contact: { role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW } } });
+    expect(await buildingRow("601")).toMatchObject({ contact_role: "Building superintendent", contact_phone: "416-555-0123", contact_owner: "hub", contact_updated_at: NOW });
+    expect(await buildingRow("602")).toMatchObject({ contact_role: null, contact_owner: null });
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "building.contact_changed", outcome: "ok", actor_staff_id: ADMIN, subject_type: "building", subject_id: "601", meta: {} });
+    expect(JSON.stringify((await auditRows()).at(-1))).not.toContain("555");
+    expect((await dated.getBuilding("601"))?.contact).toEqual({ role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW });
+    expect((await readPublicBuilding(app, "601"))?.contact).toEqual({ role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW });
+    expect((await readPublicBuilding(app, "602"))?.contact).toBeNull();
+  });
+
+  it("changes the contact and its date, and refuses saving the same contact again so the date means last changed", async () => {
+    const first = createBuildingService({ db: app, audit, assignments, now: () => NOW });
+    await first.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+    const later = createBuildingService({ db: app, audit, assignments, now: () => new Date("2026-10-02T09:00:00Z") });
+
+    expect(await later.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416-555-0123" })).toEqual({ ok: false, error: "no_change" });
+    expect((await buildingRow("601")).contact_updated_at).toEqual(NOW);
+    expect(await later.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0199" })).toMatchObject({ ok: true });
+    expect((await buildingRow("601"))).toMatchObject({ contact_phone: "416-555-0199", contact_updated_at: new Date("2026-10-02T09:00:00Z") });
+  });
+
+  it("removes the contact when both fields are empty, audited as cleared, and residents then see none", async () => {
+    await service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+
+    expect(await service.setContact(ADMIN, { rsn: "601", role: " ", phone: "" })).toEqual({ ok: true, value: { contact: null } });
+    expect(await buildingRow("601")).toMatchObject({ contact_role: null, contact_phone: null, contact_owner: null, contact_updated_at: null });
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "building.contact_changed", outcome: "ok", meta: { cleared: true } });
+    expect((await readPublicBuilding(app, "601"))?.contact).toBeNull();
+    // Nothing to remove: refused, not audited as a change.
+    expect(await service.setContact(ADMIN, { rsn: "601", role: "", phone: "" })).toEqual({ ok: false, error: "no_change" });
+  });
+
+  it.each([
+    [{ role: "Superintendent", phone: "" }, "role_without_phone"],
+    [{ role: "", phone: "416 555 0123" }, "phone_without_role"],
+    [{ role: "Superintendent", phone: "555-0123" }, "phone_invalid"],
+    [{ role: "x".repeat(41), phone: "416 555 0123" }, "role_too_long"],
+    [{ role: "<script>", phone: "416 555 0123" }, "role_characters"],
+  ] as const)("refuses %j (%s), saves nothing and audits the refusal without what was typed", async (input, error) => {
+    expect(await service.setContact(ADMIN, { rsn: "601", ...input })).toEqual({ ok: false, error });
+
+    expect((await buildingRow("601")).contact_role).toBeNull();
+    const last = (await auditRows()).at(-1)!;
+    expect(last).toMatchObject({ action: "building.contact_changed", outcome: "refused", meta: { reason: "validation" } });
+    expect(JSON.stringify(last)).not.toContain("555");
+    expect(JSON.stringify(last)).not.toContain("script");
+  });
+
+  it("refuses a building that does not exist", async () => {
+    expect(await service.setContact(ADMIN, { rsn: "999", role: "Superintendent", phone: "416 555 0123" })).toEqual({ ok: false, error: "building_not_found" });
+  });
+
+  it("rolls the contact back when its audit record cannot be written", async () => {
+    writeAudit.mockRejectedValueOnce(new Error("audit unavailable"));
+    await expect(service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" })).rejects.toThrow("audit unavailable");
+    expect((await buildingRow("601")).contact_role).toBeNull();
+  });
+
+  it("is not touched by the register import: a facts update keeps the Hub's contact", async () => {
+    await service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+    await seed(planOf([feature(601, { CONFIRMED_STOREYS: 5 }), feature(602)]));
+    expect(await buildingRow("601")).toMatchObject({ storeys: 5, contact_role: "Superintendent", contact_phone: "416-555-0123" });
   });
 });
 
