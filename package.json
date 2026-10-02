@@ -23,6 +23,7 @@
     "gen:fonts": "node scripts/gen-fonts.mjs",
     "check:fonts": "node scripts/gen-fonts.mjs --check",
     "seed:guides": "node scripts/seed/guides.mjs",
+    "seed:buildings": "node scripts/seed/buildings.mjs",
     "seed:providers": "node scripts/seed/providers.mjs",
     "gen:tokens": "node scripts/gen-tokens.mjs",
     "check:tokens": "node scripts/gen-tokens.mjs --check",
