@@ -26,7 +26,8 @@
     "check:spacing": "node scripts/check-css.mjs spacing",
     "check:layout": "node scripts/check-css.mjs layout",
     "check:layers": "node scripts/check-css.mjs layers",
-    "test:layout": "playwright test -c playwright.layout.config.ts"
+    "test:layout": "playwright test -c playwright.layout.config.ts",
+    "ci:local": "bash scripts/ci/local.sh"
   },
   "dependencies": {
     "@serwist/turbopack": "9.5.12",
@@ -62,6 +63,7 @@
     "supabase": "2.119.0",
     "tailwindcss": "4.3.3",
     "typescript": "5.9.3",
-    "vitest": "5.0.3"
+    "vitest": "5.0.3",
+    "yaml": "2.9.1"
   }
 }
