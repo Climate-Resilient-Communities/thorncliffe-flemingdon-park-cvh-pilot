@@ -12,7 +12,8 @@
 //   - table constraints (check, foreign key, unique, primary key, exclusion),
 //   - policies,
 //   - what the app role cvh_app can do: table, sequence and function privileges, schema usage,
-//   - views and materialized views, functions and procedures, enum labels.
+//   - views and materialized views, functions and procedures, enum labels,
+//   - the non-internal triggers of each table (name, timing, events, function).
 // Additions that only widen what the previous release can do are not reported.
 
 import { appSchemaCondition, migrationRelationCondition, notExtensionMember } from "./schemas.mjs";
@@ -37,6 +38,7 @@ const qualified = (schema, name) => `quote_ident(${schema}) || '.' || quote_iden
  *   tables: Record<string, { rls: boolean, columns: Record<string, ColumnState> }>,
  *   constraints: Record<string, Record<string, { def: string, columns: string[] }>>,
  *   policies: Record<string, Record<string, string>>,
+ *   triggers: Record<string, Record<string, string>>,
  *   privileges: Record<string, string[]>,
  *   views: Record<string, string>,
  *   functions: Record<string, string>,
@@ -98,6 +100,29 @@ export async function snapshotColumns(sql) {
     where ${relation("c", "n")}`);
   const policies = {};
   for (const row of policyRows) (policies[row.table] ??= {})[row.name] = row.def;
+
+  // Triggers a table fires (not the internal ones behind foreign keys, nor copies on partitions). The
+  // definition is timing, events and function, e.g. "after update of role, status -> public.f()".
+  const triggerRows = await sql.unsafe(`
+    select ${qualified("n.nspname", "c.relname")} as "table", t.tgname as name,
+           case when t.tgtype & 2 <> 0 then 'before' when t.tgtype & 64 <> 0 then 'instead of' else 'after' end as timing,
+           concat_ws(' or ',
+             case when t.tgtype & 4 <> 0 then 'insert' end,
+             case when t.tgtype & 8 <> 0 then 'delete' end,
+             case when t.tgtype & 16 <> 0 then 'update' || coalesce(' of ' || (
+               select string_agg(a.attname, ', ' order by a.attnum) from pg_attribute a
+               where a.attrelid = t.tgrelid and a.attnum = any (t.tgattr::int2[])), '') end,
+             case when t.tgtype & 32 <> 0 then 'truncate' end) as events,
+           ${qualified("pn.nspname", "p.proname")} as function
+    from pg_trigger t
+    join pg_class c on c.oid = t.tgrelid
+    join pg_namespace n on n.oid = c.relnamespace
+    join pg_proc p on p.oid = t.tgfoid
+    join pg_namespace pn on pn.oid = p.pronamespace
+    where not t.tgisinternal and t.tgparentid = 0
+      and c.relkind in ('r', 'p', 'f') and ${relation("c", "n")}`);
+  const triggers = {};
+  for (const row of triggerRows) (triggers[row.table] ??= {})[row.name] = `${row.timing} ${row.events} -> ${row.function}()`;
 
   // Effective privileges of the app role (through PUBLIC and role membership too).
   const privileges = {};
@@ -166,7 +191,7 @@ export async function snapshotColumns(sql) {
     enums[row.name] = row.labels;
   }
 
-  return { tables, constraints, policies, privileges, views, functions, enums };
+  return { tables, constraints, policies, triggers, privileges, views, functions, enums };
 }
 
 const byName = ([a], [b]) => a.localeCompare(b);
@@ -243,6 +268,23 @@ export function compareColumns(before, after) {
     }
     for (const [name, def] of Object.entries(now).sort(byName)) {
       if (!(name in was) && def.includes(" restrictive ")) changes.push(`adds restrictive policy ${name} on ${table}`);
+    }
+  }
+
+  // A trigger can raise, which the previous release's writes did not expect. A trigger on a table the
+  // migration creates is not reported (before.tables lacks it): nothing wrote to that table before.
+  // A migration with a `-- contract:` note is then checked against the release in production (contracts.mjs).
+  for (const table of Object.keys(before.tables).sort()) {
+    if (!after.tables[table]) continue;
+    const was = before.triggers[table] ?? {};
+    for (const [name, def] of Object.entries(after.triggers[table] ?? {}).sort(byName)) {
+      if (!(name in was)) {
+        changes.push(
+          `adds trigger ${name} on ${table} (${def}), which can raise on writes the previous release makes (add a "-- contract: <commit SHA>" note once that release is in production, or create the trigger in the migration that creates the table)`,
+        );
+      } else if (was[name] !== def) {
+        changes.push(`changes trigger ${name} on ${table} from (${was[name]}) to (${def}) (it can raise on writes the previous release makes)`);
+      }
     }
   }
 

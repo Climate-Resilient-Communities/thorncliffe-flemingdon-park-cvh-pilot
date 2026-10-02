@@ -28,6 +28,7 @@ const BASE = `
   grant execute on function note_count() to cvh_app;
   create sequence note_seq;
   grant usage on sequence note_seq to cvh_app;
+  create function note_guard() returns trigger language plpgsql as $$ begin return null; end $$;
 `;
 
 describe("database snapshot of a migration", () => {
@@ -154,6 +155,66 @@ describe("database snapshot of a migration", () => {
     ["a replaced function with the same result", "create or replace function note_count() returns bigint language sql stable as $$ select 0::bigint $$;"],
   ])("does not report %s", async (_name, sql) => {
     expect(await changesBy(sql)).toEqual([]);
+  });
+
+  describe("triggers", () => {
+    const GUARD = "create trigger note_check after update of body, kind on note for each row execute function note_guard();";
+
+    it.each([
+      [
+        "a new BEFORE trigger on an existing table",
+        "create trigger note_before before insert or update on note for each row execute function note_guard();",
+        "adds trigger note_before on public.note (before insert or update -> public.note_guard())",
+      ],
+      [
+        "a new AFTER trigger on an existing table",
+        GUARD,
+        "adds trigger note_check on public.note (after update of body, kind -> public.note_guard())",
+      ],
+    ])("reports %s", async (_name, sql, change) => {
+      const changes = await changesBy(sql);
+
+      expect(changes).toHaveLength(1);
+      expect(changes[0].startsWith(change), changes[0]).toBe(true);
+      expect(changes[0]).toMatch(/-- contract: <commit SHA>/);
+    });
+
+    it("reports a trigger changed to fire on other events", async () => {
+      files.write("20260101000002_add.sql", GUARD);
+      files.write(
+        "20260101000003_change.sql",
+        "drop trigger note_check on note; create trigger note_check after update of body, kind or insert on note for each row execute function note_guard();",
+      );
+
+      const { removals } = await migrate({ sql: db.sql, dir: files.dir, recordRemovals: true });
+
+      expect(removals["20260101000003_change.sql"]).toEqual([
+        "changes trigger note_check on public.note from (after update of body, kind -> public.note_guard()) to (after insert or update of body, kind -> public.note_guard()) (it can raise on writes the previous release makes)",
+      ]);
+    });
+
+    it("does not report a trigger created in the migration that creates its table", async () => {
+      expect(
+        await changesBy(
+          "create table extra (id int primary key); create trigger extra_guard before insert on extra for each row execute function note_guard();",
+        ),
+      ).toEqual([]);
+    });
+
+    it("does not report a trigger that was already there, nor one that is dropped", async () => {
+      files.write("20260101000002_add.sql", GUARD);
+      files.write("20260101000003_unrelated.sql", "alter table note add column tag text;");
+      files.write("20260101000004_drop.sql", "drop trigger note_check on note;");
+
+      const { removals } = await migrate({ sql: db.sql, dir: files.dir, recordRemovals: true });
+
+      expect(removals["20260101000003_unrelated.sql"]).toEqual([]);
+      expect(removals["20260101000004_drop.sql"]).toEqual([]);
+    });
+
+    it("does not see the internal triggers behind a foreign key", async () => {
+      expect(await changesBy("create table child (id int primary key, note_id int references note (id));")).toEqual([]);
+    });
   });
 
   it("does not report a dropped table's privileges, policies and constraints again", async () => {
