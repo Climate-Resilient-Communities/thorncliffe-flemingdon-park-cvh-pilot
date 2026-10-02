@@ -13,9 +13,11 @@ let owner: ReturnType<typeof connect>;
 let app: Db;
 
 async function clear() {
+  // feed_version only goes up, by one (a trigger): it is read, never reset.
   await owner.unsafe("truncate building_floor, building, neighbourhood cascade");
-  await owner`update feed_version set version = 0 where id = 1`;
 }
+
+const versionNow = async () => Number((await owner`select version from feed_version where id = 1`)[0].version);
 
 beforeAll(async () => {
   owner = connect(serverUrl());
@@ -66,10 +68,11 @@ describe("the public feed", () => {
   it("carries the feed_version the database holds, and a later answer carries a higher one after a web-visible change", async () => {
     await seed();
     const feed = createFeed({ db: app });
+    const before = await versionNow();
 
-    expect((await feed.read("en")).feed_version).toBe(0);
+    expect((await feed.read("en")).feed_version).toBe(before);
     await owner`update feed_version set version = version + 1 where id = 1`;
-    expect((await feed.read("en")).feed_version).toBe(1);
+    expect((await feed.read("en")).feed_version).toBe(before + 1);
   });
 
   it("is the same for every language, bar nothing a language changes while there are no threads", async () => {
