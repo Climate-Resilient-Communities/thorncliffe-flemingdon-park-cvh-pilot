@@ -99,10 +99,11 @@ async function takeSnapshot(tx: DbTransaction): Promise<{ providers: SnapshotPro
     .orderBy(asc(provider.id))
     .for("share");
   const ids = rows.map((row) => row.id);
-  if (ids.length === 0) return { providers: [], categories: [] };
-  const locations = await tx.select().from(providerLocation).where(inArray(providerLocation.providerId, ids)).orderBy(asc(providerLocation.providerId), asc(providerLocation.seq));
-  const links = await tx.select().from(providerCategory).where(inArray(providerCategory.providerId, ids));
+  // The categories are the catalogue's, whether or not a provider is published: a release of no providers still names them,
+  // and the search settings (the emergency categories) are checked against them.
   const categoryRows = await tx.select().from(category).orderBy(asc(category.sortOrder));
+  const locations = ids.length === 0 ? [] : await tx.select().from(providerLocation).where(inArray(providerLocation.providerId, ids)).orderBy(asc(providerLocation.providerId), asc(providerLocation.seq));
+  const links = ids.length === 0 ? [] : await tx.select().from(providerCategory).where(inArray(providerCategory.providerId, ids));
   const providers: SnapshotProvider[] = rows.map((row) => ({
     id: row.id,
     name: row.name,

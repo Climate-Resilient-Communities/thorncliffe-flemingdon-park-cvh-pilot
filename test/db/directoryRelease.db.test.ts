@@ -1110,6 +1110,30 @@ describe("the directory release (S02.05)", () => {
       expect(vectorsOf(empty, 1)).toMatchObject({ dims: 0, providers: [] });
     });
 
+    it("publishes a directory with no published provider when the emergency category is in the catalogue, instead of reporting an unknown emergency category", async () => {
+      await sql`update provider set published = false, published_at = null, last_confirmed = null`;
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder, { emergencyCategories: ["Health"] }) });
+
+      const result = await publish(d);
+
+      expect(result, JSON.stringify(result)).toMatchObject({ ok: true, release: 1, counts: { providers: 0, categories: 0 }, search: { vectors: 0, embedded: 0 } });
+      expect(listing(d, 1, "en").providers).toEqual([]);
+      expect(vectorsOf(d, 1)).toMatchObject({ dims: 0, providers: [] });
+    });
+
+    it("still refuses an emergency category the catalogue does not have, with providers published or not", async () => {
+      for (const published of [true, false]) {
+        if (!published) await sql`update provider set published = false, published_at = null, last_confirmed = null`;
+        const d = deps({ search: searchOf(fakeEmbedder().embedder, { emergencyCategories: ["Not A Category"] }) });
+
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["emergency_category_unknown"] });
+        expect(await sql`select 1 from directory_release where status = 'complete'`).toHaveLength(0);
+      }
+    });
+
     // ---------------------------------------------------------- stopped, failing and slow embedding
     it("resumes from the last completed chunk when the job is stopped part way, and residents keep the previous release meanwhile", async () => {
       const first = deps();
