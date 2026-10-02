@@ -70,6 +70,7 @@ describe("toAuditRecord", () => {
     ["account.suspended", { reason: "two_admin_rule" }],
     ["factor.reset", { admin_shortfall: true, recovery: "all_admins_lost_access" }],
     ["factor.reset", { recovery: "lost_device" }],
+    ["factor.reset", { recovery: "all_admins_lost_access", attested: true, admin_shortfall: true }],
     ["factor.reset", { recovery: "device_broken" }],
     ["auth.signed_in", { aal: "aal2" }],
     ["auth.locked", { lock: "expired_starting_password" }],

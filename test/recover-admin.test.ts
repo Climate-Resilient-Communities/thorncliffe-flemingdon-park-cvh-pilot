@@ -65,6 +65,29 @@ describe("recover-admin", () => {
     expect(error).toMatch(/this does not change/);
   });
 
+  it("accepts --confirm-no-admin-can-sign-in only with --reason all_admins_lost_access, passing the attestation on", async () => {
+    const recoverAdmin = vi.fn(async () => ({ ok: true as const, value: { username: "jdoe", adminShortfall: true, providerCleared: true } }));
+
+    const wrong = await run(["--username", "jdoe", "--reason", "lost_device", "--confirm-no-admin-can-sign-in"], PRODUCTION, connecting(recoverAdmin));
+    expect(wrong).toMatchObject({ code: 2, error: expect.stringMatching(/valid only with --reason all_admins_lost_access/) });
+    expect(wrong.error).toMatch(/Usage: /);
+    expect(recoverAdmin).not.toHaveBeenCalled();
+
+    const right = await run([...ARGS, "--confirm-no-admin-can-sign-in"], PRODUCTION, connecting(recoverAdmin));
+    expect(right.code).toBe(0);
+    expect(recoverAdmin).toHaveBeenCalledWith("jdoe", "all_admins_lost_access", { attested: true });
+    expect(right.out).toMatch(/attested/);
+    expect(right.out).toMatch(/re-enrols an authenticator and resets the other Admin's authenticator from the Hub/);
+  });
+
+  it("explains the attestation in the usage text", async () => {
+    const { error } = await run(["--username", "jdoe"], PRODUCTION);
+
+    expect(error).toMatch(/--confirm-no-admin-can-sign-in/);
+    expect(error).toMatch(/live aal2 session/);
+    expect(error).toMatch(/re-enrols an authenticator, then resets the other Admin's authenticator from the Hub/);
+  });
+
   it("prints the next step after a reset, and the shortfall when there is one", async () => {
     const recoverAdmin = vi.fn(async () => ({ ok: true as const, value: { username: "jdoe", adminShortfall: true, providerCleared: true } }));
 
@@ -72,7 +95,7 @@ describe("recover-admin", () => {
 
     expect(code).toBe(0);
     expect(error).toBe("");
-    expect(recoverAdmin).toHaveBeenCalledWith("jdoe", "all_admins_lost_access");
+    expect(recoverAdmin).toHaveBeenCalledWith("jdoe", "all_admins_lost_access", { attested: false });
     expect(out).toMatch(/Authenticator reset for jdoe\./);
     expect(out).toMatch(/Audited as factor\.reset, actor system, reason all_admins_lost_access\./);
     expect(out).toMatch(/Next step: jdoe signs in with their own password and is taken to set up a new authenticator/);

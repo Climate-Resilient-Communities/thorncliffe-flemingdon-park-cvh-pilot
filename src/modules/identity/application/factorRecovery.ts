@@ -1,6 +1,6 @@
 import type { Db } from "../../../platform/db";
 import { SYSTEM_ACTOR, type FACTOR_RESET_REASONS } from "../../audit";
-import { mayManageAccounts } from "../domain/accountAuthority";
+import { actorCan } from "../domain/accountAuthority";
 import { decideUnderBootstrap } from "../domain/bootstrap";
 import { isUsernameFormat, normaliseUsername } from "../domain/newAccount";
 import { err, ok, type Result } from "../domain/result";
@@ -93,7 +93,7 @@ export function createFactorRecovery(deps: FactorRecoveryDeps) {
         await refuse(actor ? actor.id : null, subjectId, reason);
         return err(code);
       };
-      if (!actor || !mayManageAccounts(actor)) return refused("forbidden", "forbidden", null);
+      if (!actor || !actorCan(actor, "accounts.manage")) return refused("forbidden", "forbidden", null);
       const username = normaliseUsername(usernameInput);
       const target = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
       if (!target) return refused("not_found", "not_found", null);
@@ -104,7 +104,7 @@ export function createFactorRecovery(deps: FactorRecoveryDeps) {
 
       const check: FactorResetCheck = async (tx, locked) => {
         const current = await store.findById(tx, actor.id);
-        if (!current || !mayManageAccounts(current)) return "forbidden";
+        if (!current || !actorCan(current, "accounts.manage")) return "forbidden";
         if (!RESETTABLE.has(locked.status)) return "not_resettable";
         return needsAuthenticator(locked.role) ? null : "no_authenticator";
       };

@@ -292,6 +292,10 @@ describe("IT's recoverAdmin (scripts/recover-admin)", () => {
     // The first Admin is locked out by failed sign-ins (the lock reader says so), so they are not usable.
     const executors: unknown[] = [];
     const now = () => clock;
+    const lockReader = async (executor: unknown) => {
+      executors.push(executor);
+      return new Date(clock.getTime() + 15 * 60_000);
+    };
     const revocation = createSessionRevocation({ store: drizzleStaffStore, sessions: drizzleStaffSessionStore, audit, now });
     const factorReset = createFactorReset({
       db: app,
@@ -299,28 +303,39 @@ describe("IT's recoverAdmin (scripts/recover-admin)", () => {
       idp,
       audit,
       log: stdoutOperationalLog,
-      beginAdminRecovery: createAdminRecovery({ store: drizzleStaffStore, idp, now, signInLockedUntil: async () => null }).beginAdminRecovery,
+      // The recovery exception reads the locks too: through the same reader, so the assertion covers it.
+      beginAdminRecovery: createAdminRecovery({ store: drizzleStaffStore, idp, now, signInLockedUntil: lockReader }).beginAdminRecovery,
       revocation,
     });
-    const recovery = createFactorRecovery({
-      db: app,
-      store: drizzleStaffStore,
-      idp,
-      audit,
-      now,
-      factorReset,
-      signInLockedUntilIn: async (executor) => {
-        executors.push(executor);
-        return new Date(clock.getTime() + 15 * 60_000);
-      },
-    });
+    const recovery = createFactorRecovery({ db: app, store: drizzleStaffStore, idp, audit, now, factorReset, signInLockedUntil: lockReader, sessions: drizzleStaffSessionStore });
 
     expect((await recovery.recoverAdmin("admin2", "lost_device")).ok).toBe(true);
 
-    expect(executors).toHaveLength(1);
-    expect(executors[0]).not.toBe(app);
+    expect(executors.length).toBeGreaterThan(0);
+    expect(executors.every((executor) => executor !== app)).toBe(true);
     expect(await factorEnrolledAt(second.id)).toBeNull();
   });
+
+  it("completes on a pool of one connection: an Admin's reset and IT's recovery read everything through their transaction", async () => {
+    const { first } = await twoAdmins();
+    const url = new URL(serverUrl());
+    const password = randomBytes(18).toString("hex");
+    await owner.unsafe(`alter role cvh_app_login password '${password}'`);
+    url.username = "cvh_app_login";
+    url.password = password;
+    const single = createDb(url.href, { max: 1 });
+    try {
+      const wiring = { db: single, idp, throttleKey: THROTTLE_KEY, passwordPepper: PEPPER, now: () => clock, sleep: async () => {}, monotonicMs: () => 0 };
+      const identity = createIdentity(wiring);
+      const within = <T>(work: Promise<T>) =>
+        Promise.race([work, new Promise<never>((_, rejected) => setTimeout(() => rejected(new Error("the reset waited for a second pool connection")), 8000))]);
+
+      expect((await within(identity.resetAuthenticator(first.id, "admin2"))).ok).toBe(true);
+      expect((await within(identity.recoverAdmin("admin1", "all_admins_lost_access"))).ok).toBe(true);
+    } finally {
+      await single.$client.end({ timeout: 5 });
+    }
+  }, 20_000);
 
   it("refuses while another usable Admin exists, changing nothing, and audits the refusal as system", async () => {
     const { first, second } = await twoAdmins();
@@ -334,6 +349,89 @@ describe("IT's recoverAdmin (scripts/recover-admin)", () => {
     expect(await auditOf(["factor.reset", "session.revoked"])).toEqual([
       { actor_staff_id: null, action: "factor.reset", subject_id: second.id, outcome: "refused", meta: { reason: "conflict" } },
     ]);
+  });
+
+  it("with the attestation resets an Admin although another Admin counts as usable, audited as attested", async () => {
+    const { second } = await twoAdmins();
+    // Both Admins are usable on paper (active, enrolled), but both lost their phones: no live aal2 session exists.
+
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access", { attested: true })).toEqual({
+      ok: true,
+      value: { username: "admin2", adminShortfall: true, providerCleared: true },
+    });
+
+    expect(await factorEnrolledAt(second.id)).toBeNull();
+    expect(await auditOf(["factor.reset"])).toEqual([
+      { actor_staff_id: null, action: "factor.reset", subject_id: second.id, outcome: "ok", meta: { recovery: "all_admins_lost_access", admin_shortfall: true, attested: true } },
+    ]);
+    // Without the attestation the same state refuses.
+    await owner`update staff_account set factor_enrolled_at = now() where id = ${second.id}`;
+    idp.enrol(second.authUserId);
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access")).toEqual({ ok: false, error: "other_usable_admin" });
+  });
+
+  it("still refuses with the attestation while another Admin has a live aal2 session, who can reset from the Hub", async () => {
+    const { first, second } = await twoAdmins();
+    const device = await signedInAal2("admin1", first.authUserId);
+
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access", { attested: true })).toEqual({ ok: false, error: "other_admin_signed_in" });
+
+    expect(await factorEnrolledAt(second.id)).not.toBeNull();
+    expect(await current(device)).not.toBeNull();
+    expect(await auditOf(["factor.reset"])).toEqual([
+      { actor_staff_id: null, action: "factor.reset", subject_id: second.id, outcome: "refused", meta: { reason: "conflict" } },
+    ]);
+  });
+
+  it("does not count an aal1 session as a way in", async () => {
+    await twoAdmins();
+    await signIn(browser(), "admin1");
+
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access", { attested: true })).toMatchObject({ ok: true });
+  });
+
+  it("does not count an aal2 session opened more than 12 hours ago, but counts one opened just inside the limit", async () => {
+    const { first } = await twoAdmins();
+    await signedInAal2("admin1", first.authUserId);
+    const opened = (hours: number) => owner`update staff_session set created_at = ${new Date(clock.getTime() - hours * 3600_000)}, last_seen_at = ${new Date(clock.getTime() - hours * 3600_000)} where aal2_at is not null`;
+
+    await opened(11.9);
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access", { attested: true })).toEqual({ ok: false, error: "other_admin_signed_in" });
+    await opened(12.1);
+    expect(await accounts.recoverAdmin("admin2", "all_admins_lost_access", { attested: true })).toMatchObject({ ok: true });
+  });
+
+  it("refuses --confirm-no-admin-can-sign-in with another reason through the CLI as a usage error, changing nothing", async () => {
+    const { second } = await twoAdmins();
+    const lines: string[] = [];
+
+    const code = await runRecoverAdmin(["--username", "admin2", "--reason", "lost_device", "--confirm-no-admin-can-sign-in"], {
+      env: PRODUCTION,
+      out: (line) => lines.push(line),
+      error: (line) => lines.push(line),
+      connect: () => ({ identity: accounts, close: async () => {} }),
+    });
+
+    expect(code).toBe(2);
+    expect(lines.join("\n")).toMatch(/valid only with --reason all_admins_lost_access/);
+    expect(await factorEnrolledAt(second.id)).not.toBeNull();
+    expect(await auditOf(["factor.reset"])).toEqual([]);
+  });
+
+  it("resets through the CLI with the attestation when two Admins are usable on paper", async () => {
+    const { second } = await twoAdmins();
+    const lines: string[] = [];
+
+    const code = await runRecoverAdmin(["--username", "admin2", "--reason", "all_admins_lost_access", "--confirm-no-admin-can-sign-in"], {
+      env: PRODUCTION,
+      out: (line) => lines.push(line),
+      error: (line) => lines.push(line),
+      connect: () => ({ identity: accounts, close: async () => {} }),
+    });
+
+    expect(code).toBe(0);
+    expect(await factorEnrolledAt(second.id)).toBeNull();
+    expect((await auditOf(["factor.reset"]))[0]).toMatchObject({ outcome: "ok", meta: { attested: true, recovery: "all_admins_lost_access" } });
   });
 
   it("counts a locked Admin as not usable, and the same Admin as a reason to refuse once active again", async () => {
