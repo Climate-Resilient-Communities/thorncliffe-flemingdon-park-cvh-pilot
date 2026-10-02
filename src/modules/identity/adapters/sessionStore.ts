@@ -29,10 +29,12 @@ export const drizzleStaffSessionStore: StaffSessionStore = {
     const [old] = await tx
       .update(staffSession)
       .set({ revokedAt: to.at })
-      .where(and(eq(staffSession.id, from), eq(staffSession.staffAccountId, to.staffId)))
+      .where(and(eq(staffSession.id, from), eq(staffSession.staffAccountId, to.staffId), isNull(staffSession.revokedAt)))
       .returning({ createdAt: staffSession.createdAt });
-    const createdAt = old && old.createdAt < to.at ? old.createdAt : to.at;
+    if (!old) return false;
+    const createdAt = old.createdAt < to.at ? old.createdAt : to.at;
     await tx.insert(staffSession).values({ id: to.id, staffAccountId: to.staffId, createdAt, lastSeenAt: to.at });
+    return true;
   },
 
   async revoke(db, id, at) {

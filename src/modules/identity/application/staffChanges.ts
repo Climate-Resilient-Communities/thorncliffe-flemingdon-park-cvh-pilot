@@ -107,7 +107,8 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
         const decided = decideStaffChange(actor.id, target, change);
         if (!decided.ok) throw new ChangeRefusal(decided.error, target.role);
         if (takesAwayAnAdmin(target, change)) {
-          const standings = await adminStandings(deps, tx, locked.filter((account) => account.role === "admin"), deps.now());
+          // A failed-sign-in lock does not make an Admin unusable here: anyone can cause one, and it ends by itself.
+          const standings = await adminStandings(deps, tx, locked.filter((account) => account.role === "admin"), deps.now(), { ignoreSignInLock: true });
           const floor = decideAdminChange(standings, target.id);
           if (!floor.ok) throw new ChangeRefusal(floor.error, target.role);
         }
