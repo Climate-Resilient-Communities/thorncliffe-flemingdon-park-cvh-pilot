@@ -5,9 +5,10 @@ import { notFound } from "next/navigation";
 import { guideView, orderGuides } from "@/modules/directory";
 import { ContentText, ResidentText, Screen, Stack } from "@/ui";
 import { Not911 } from "@/ui/emergency";
-import { isLaunchCode } from "@/i18n/languages";
+import { isLaunchCode, languageOf } from "@/i18n/languages";
 import type { Translate } from "../../residentDates";
 import { guideIconClass } from "./icons";
+import { UnavailableNote } from "./unavailable-note";
 import { loadResidentContent } from "./source";
 import "./ready.css";
 
@@ -39,6 +40,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
   const content = await loadResidentContent();
   const guides = orderGuides(content.guides.flatMap((record) => guideView(record, lang) ?? []));
+  const showUnavailableNote = lang !== "en" && guides.some((guide) => guide.title.unavailable);
 
   return (
     <Screen surface="resident" testId="ready-page">
@@ -46,6 +48,7 @@ export default async function ReadyPage({ params }: PageProps<"/[lang]/ready">) 
         <Stack gap="related">
           <ResidentText as="h1">{t("R24.title")}</ResidentText>
           <ResidentText as="p">{t("R24.lead")}</ResidentText>
+          {showUnavailableNote && <UnavailableNote t={t} native={languageOf(lang).native} testId="ready-unavailable" />}
         </Stack>
 
         <section data-testid="ready-guides">

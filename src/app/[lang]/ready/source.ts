@@ -27,6 +27,17 @@ export const storeContacts = (list: BuildingWithContact[]): StoredBuildingContac
     contact: contact && { role: contact.role, phone: contact.phone, updatedAt: contact.updatedAt.toISOString() },
   }));
 
+/** What the pages get when the database cannot be read: nothing, which each page shows as its own "could not be loaded" state. */
+const NO_CONTENT: ResidentContent = { guides: [], numbers: [] };
+
+/**
+ * One line of operational log (spine: Logging) for a failed read, with no personal data: which read and the kind of
+ * error, never the error's message (a database message can carry the query) and never anything about the visitor.
+ */
+function logReadFailed(source: "guides" | "building_contacts", error: unknown): void {
+  console.log(JSON.stringify({ level: "error", evt: "resident.content_read_failed", module: "app", source, error: error instanceof Error ? error.constructor.name : "unknown" }));
+}
+
 let guidesFixture: { file: string; content: ResidentContent } | undefined;
 let buildingsFixture: { file: string; list: StoredBuildingContact[] } | undefined;
 
@@ -45,30 +56,45 @@ const readContactsCached = unstable_cache(async () => storeContacts(await listBu
  * every visitor and every language. The seed is a command run by IT, so nothing drops the entry: a reloaded guide shows
  * within the 5 minutes (and the shared cache in front of the app may hold the page for 1 minute more).
  * Called by a page and by its metadata in one request: the answer is shared (`cache`), so a render asks once.
+ *
+ * A failed read is caught here, outside `unstable_cache`, so the empty answer is never written to the data cache: the
+ * next visitor reads the database again. The pages get no guides and no numbers and say so; the 911 block is on them
+ * whatever happens.
  */
 export const loadResidentContent = cache(async (): Promise<ResidentContent> => {
-  const file = getEnv().fakeGuidesFile;
-  if (file) {
-    if (guidesFixture?.file !== file) guidesFixture = { file, content: readResidentContentFixtureFile(file) };
-    return guidesFixture.content;
+  try {
+    const file = getEnv().fakeGuidesFile;
+    if (file) {
+      if (guidesFixture?.file !== file) guidesFixture = { file, content: readResidentContentFixtureFile(file) };
+      return guidesFixture.content;
+    }
+    return await readContentCached();
+  } catch (error) {
+    logReadFailed("guides", error);
+    return NO_CONTENT;
   }
-  return readContentCached();
 });
 
 /**
  * Every pilot building with the contact the Hub entered, if any: the same list for every visitor, so the server never
  * learns which buildings a resident chose (AD-3). Kept in the data cache for 5 minutes and dropped when the Hub saves a contact.
+ * A failed read is caught outside the cache like the guides' one (an empty list is never kept): the page then has no building to show.
  */
 export const loadBuildingContacts = cache(async (): Promise<StoredBuildingContact[]> => {
-  const file = getEnv().fakeBuildingsFile;
-  if (file) {
-    if (buildingsFixture?.file !== file) {
-      const list = [...readBuildingsFixtureFile(file).values()]
-        .sort((a, b) => a.address.localeCompare(b.address) || a.rsn.localeCompare(b.rsn))
-        .map(({ rsn, address, contact }) => ({ rsn, address, contact }));
-      buildingsFixture = { file, list: storeContacts(list) };
+  try {
+    const file = getEnv().fakeBuildingsFile;
+    if (file) {
+      if (buildingsFixture?.file !== file) {
+        const list = [...readBuildingsFixtureFile(file).values()]
+          .sort((a, b) => a.address.localeCompare(b.address) || a.rsn.localeCompare(b.rsn))
+          .map(({ rsn, address, contact }) => ({ rsn, address, contact }));
+        buildingsFixture = { file, list: storeContacts(list) };
+      }
+      return buildingsFixture.list;
     }
-    return buildingsFixture.list;
+    return await readContactsCached();
+  } catch (error) {
+    logReadFailed("building_contacts", error);
+    return [];
   }
-  return readContactsCached();
 });

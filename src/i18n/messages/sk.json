@@ -1172,7 +1172,6 @@
       "superintendent": "[EN] superintendent"
     },
     "checked": "[EN] Checked by the Hub, last updated {date}",
-    "partlyUnavailable": "[EN] Some of this page has not been translated into {lang} yet. Those parts show in English.",
     "noOthers": "[EN] The other numbers could not be loaded right now. Try again in a few minutes."
   },
   "R32": {
@@ -4298,7 +4297,6 @@
     "providedByHub": "[EN] Provided by the Hub, last updated {date}"
   },
   "guides": {
-    "reviewed": "[EN] Reviewed by the Hub, last updated {date}",
-    "partlyUnavailable": "[EN] Some of this guide has not been translated into {lang} yet. Those parts show in English."
+    "reviewed": "[EN] Reviewed by the Hub, last updated {date}"
   }
 }

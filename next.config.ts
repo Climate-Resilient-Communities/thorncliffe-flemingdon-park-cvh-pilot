@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import createNextIntlPlugin from "next-intl/plugin";
+import { SHARED_CACHE_GUIDES } from "./src/app/guideCache";
 import { LAUNCH_CODES } from "./src/i18n/languages";
 
 const noStore = [{ key: "Cache-Control", value: "no-store" }];
@@ -29,8 +30,10 @@ const nextConfig: NextConfig = {
       // resident's own buildings in the browser, so nothing here depends on who asks), so a shared cache keeps them the
       // same few minutes. A reloaded guide or number, or a contact the Hub saves, reaches residents within about 6 minutes.
       // Pinned to the launch codes for the same reason as the building rule: an open `:lang` would match /staff/ready
-      // and /api/ready.
-      { source: `/:lang(${LAUNCH_CODES.join("|")})/ready/:guide?`, headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }] },
+      // and /api/ready. Only the page and the numbers page and the six launch guides: a guide id the database does not have
+      // is a 404, and a shared cache must not keep a 404 for an address anyone can make up (the default for a dynamic page,
+      // no-store, applies to it).
+      { source: `/:lang(${LAUNCH_CODES.join("|")})/ready/:guide(numbers|${SHARED_CACHE_GUIDES.join("|")})?`, headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }] },
     ];
   },
 };

@@ -5,9 +5,11 @@ import { notFound } from "next/navigation";
 import { guideView } from "@/modules/directory";
 import { ContentText, ResidentText, Screen, Stack } from "@/ui";
 import { Not911 } from "@/ui/emergency";
+import { isEnglishFallback } from "@/ui/text/resident-text";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
 import { guideIconClass } from "../icons";
+import { UnavailableNote } from "../unavailable-note";
 import { loadResidentContent } from "../source";
 import { GuideHashFocus } from "./guide-hash-focus";
 import { GUIDE_PARTS, headingId } from "./sections";
@@ -22,9 +24,15 @@ export const dynamic = "force-dynamic";
 
 const GUIDE_ID = /^[a-z0-9-]{1,40}$/;
 
+/**
+ * The guide, `null` when there is no such guide, or "unavailable" when no guide could be loaded at all (the database could
+ * not be read: source.ts then returns none, and the page says so with the 911 block instead of a 404).
+ */
 async function loadGuide(lang: string, id: string) {
   if (!GUIDE_ID.test(id)) return null;
-  const record = (await loadResidentContent()).guides.find((guide) => guide.id === id);
+  const { guides } = await loadResidentContent();
+  if (guides.length === 0) return "unavailable" as const;
+  const record = guides.find((guide) => guide.id === id);
   return record ? guideView(record, lang) : null;
 }
 
@@ -32,7 +40,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/ready/[gui
   const { lang, guide } = await params;
   if (!isLaunchCode(lang)) return {};
   const view = await loadGuide(lang, guide);
-  return view ? { title: view.title.text } : {};
+  return view && view !== "unavailable" ? { title: view.title.text } : {};
 }
 
 /**
@@ -51,7 +59,42 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
   const t = (await getTranslations({ locale: lang })) as unknown as Translate;
   const x01 = (key: "text" | "call" | "short") => t(`x01.${key}`);
   const language = languageOf(lang);
-  const unavailableNote = view.anyUnavailable && lang !== "en" ? (view.allUnavailable ? t("R25.unavailable", { lang: language.native }) : t("guides.partlyUnavailable", { lang: language.native })) : null;
+
+  if (view === "unavailable") {
+    return (
+      <Screen surface="resident" testId="guide-page">
+        <Stack gap="section-resident">
+          <Stack gap="related">
+            <Link href={`/${lang}/ready`} prefetch={false} className="ready-back tap" data-testid="guide-back">
+              <span className="shell-ico shell-ico--back shell-ico--mirror shell-ico--sm" aria-hidden="true" />
+              <ResidentText>{t("R24.title")}</ResidentText>
+            </Link>
+            <div className="ready-note" role="note" data-testid="guide-none">
+              <ResidentText as="p">{t("R24.none")}</ResidentText>
+            </div>
+          </Stack>
+          <Not911 variant="block" t={x01} />
+          {/* The guide is not there to say when to call 911, so the page offers the call itself. */}
+          <a
+            className="ready-btn ready-btn--primary ready-btn--large tap"
+            href="tel:911"
+            data-testid="guide-none-call911"
+            {...(isEnglishFallback(t("R31.call911")) ? { dir: "ltr", lang: "en" } : {})}
+          >
+            <span className="shell-ico shell-ico--phone" aria-hidden="true" />
+            <ResidentText>{t("R31.call911")}</ResidentText>
+          </a>
+          <Link href={`/${lang}/ready/numbers`} prefetch={false} className="ready-link tap" data-testid="guide-numbers">
+            <span className="shell-ico shell-ico--phone shell-ico--sm" aria-hidden="true" />
+            <ResidentText>{t("R25.numbers")}</ResidentText>
+            <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />
+          </Link>
+        </Stack>
+      </Screen>
+    );
+  }
+
+  const showUnavailableNote = view.anyUnavailable && lang !== "en";
 
   return (
     <Screen surface="resident" testId="guide-page">
@@ -71,11 +114,14 @@ export default async function GuidePage({ params }: PageProps<"/[lang]/ready/[gu
             {view.title.text}
           </ContentText>
           <GuideHashFocus openedDuring={t("R25.openedDuring")} />
-          {unavailableNote !== null && (
-            <div className="ready-note" role="note" data-testid="guide-unavailable">
-              <ResidentText as="p">{unavailableNote}</ResidentText>
-            </div>
-          )}
+          {showUnavailableNote &&
+            (view.allUnavailable ? (
+              <div className="ready-note" role="note" data-testid="guide-unavailable">
+                <ResidentText as="p">{t("R25.unavailable", { lang: language.native })}</ResidentText>
+              </div>
+            ) : (
+              <UnavailableNote t={t} native={language.native} testId="guide-unavailable" />
+            ))}
         </Stack>
 
         <Stack gap="related">

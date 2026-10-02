@@ -3,6 +3,7 @@ import Link from "next/link";
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { numbersView, type NumberView } from "@/modules/directory";
+import { displayPhone } from "@/modules/places";
 import { ContentText, ResidentText, Screen, Stack } from "@/ui";
 import { Not911 } from "@/ui/emergency";
 import { isEnglishFallback } from "@/ui/text/resident-text";
@@ -10,6 +11,7 @@ import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { dayOf, withDate, type Translate } from "../../../residentDates";
 import { loadBuildingContacts, loadResidentContent } from "../source";
 import { buildingContactCards } from "../view";
+import { UnavailableNote } from "../unavailable-note";
 import { ChosenContacts } from "./chosen-contacts";
 import "../ready.css";
 
@@ -30,6 +32,8 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/ready/numb
 /** One number, led by what it is for: its purpose, then the number as the Hub writes it and a call link with a text label. */
 function NumberRow({ row, t }: { row: NumberView; t: Translate }) {
   const call = t("R31.call");
+  // A ten-digit number reads like the buildings' ones, (416) 542-8000; 211, 311 and 911 are left as they are.
+  const shown = displayPhone(row.number);
   return (
     <li className="num" data-testid={`number-${row.id}`}>
       <ContentText as="p" unavailable={row.label.unavailable} className="num__purpose" testId={`number-${row.id}-purpose`}>
@@ -37,13 +41,13 @@ function NumberRow({ row, t }: { row: NumberView; t: Translate }) {
       </ContentText>
       <div className="num__row">
         <bdi dir="ltr" lang="en" className="num__digits" data-testid={`number-${row.id}-digits`}>
-          {row.number}
+          {shown}
         </bdi>
         {/* A "Call" that fell back to English makes the whole button English, left to right, so its words and the number read as one line. */}
         <a
           className="ready-btn ready-btn--secondary tap"
           href={`tel:${row.dial}`}
-          aria-label={`${t("R31.calling", { what: row.label.text })}, ${row.number}`}
+          aria-label={`${t("R31.calling", { what: row.label.text })}, ${shown}`}
           data-testid={`number-${row.id}-call`}
           {...(isEnglishFallback(call) ? { dir: "ltr", lang: "en" } : {})}
         >
@@ -74,7 +78,7 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
   const emergency = numbers.emergency;
   const cards = buildingContactCards(contacts, t, language.bcp47);
   const call911 = t("R31.call911");
-  const unavailableNote = numbers.anyUnavailable && lang !== "en" ? t("R31.partlyUnavailable", { lang: language.native }) : null;
+  const showUnavailableNote = numbers.anyUnavailable && lang !== "en";
 
   return (
     <Screen surface="resident" testId="numbers-page">
@@ -86,11 +90,7 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
           </Link>
           <ResidentText as="h1">{t("R31.title")}</ResidentText>
           <ResidentText as="p">{t("R31.lead")}</ResidentText>
-          {unavailableNote !== null && (
-            <div className="ready-note" role="note" data-testid="numbers-unavailable">
-              <ResidentText as="p">{unavailableNote}</ResidentText>
-            </div>
-          )}
+          {showUnavailableNote && <UnavailableNote t={t} native={language.native} testId="numbers-unavailable" />}
         </Stack>
 
         <section className="e911" aria-labelledby="numbers-911" data-testid="numbers-911">
@@ -141,7 +141,8 @@ export default async function NumbersPage({ params }: PageProps<"/[lang]/ready/n
           noneChosen={t("R31.noBuildingChosen")}
           chooseLabel={t("R31.chooseBuilding")}
           chooseHref={`/${lang}/choices/place`}
-          noContact={t("R31.noBuilding")}
+          // There is no floor-ambassador coverage yet (E01-S14), so the line must not promise an ambassador.
+          noContact={t("R31.noBuildingNoAmb")}
           call={t("R31.call")}
           callIsEnglish={isEnglishFallback(t("R31.call"))}
           buildings={cards}

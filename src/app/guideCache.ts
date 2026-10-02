@@ -8,3 +8,10 @@
 export const GUIDE_REVALIDATE_SECONDS = 300;
 
 export const GUIDE_CONTENT_TAG = "guide-content";
+
+/**
+ * The guides a shared cache may keep (next.config.ts): the six the pilot launches with (GUIDE_ORDER in the directory module,
+ * which a test keeps equal to this list). A page for any other guide id is a 404 and gets no public cache header, so a
+ * shared cache never keeps a 404 for a made-up address, and a guide added later is served fresh until it is added here.
+ */
+export const SHARED_CACHE_GUIDES = ["power", "flood", "elevator", "heat", "smoke", "fire"] as const;

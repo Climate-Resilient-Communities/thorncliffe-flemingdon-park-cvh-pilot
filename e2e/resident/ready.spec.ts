@@ -76,6 +76,37 @@ test.describe("Be ready (R-24)", () => {
     await expect(flood).toHaveAttribute("lang", "en");
     await expect(flood).toHaveAttribute("dir", "ltr");
     await expect(flood).toHaveAttribute("data-translation", "unavailable");
+    // Some titles are English, so the page says so once, in the catalog's x04 words.
+    await expect(page.getByTestId("ready-unavailable")).toHaveCount(1);
+    await expect(page.getByTestId("ready-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
+    await expect(page.getByTestId("ready-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
+  });
+
+  test("says nothing about translation in English", async ({ page }) => {
+    await openResident(page, READY, 390);
+
+    await expect(page.getByTestId("ready-unavailable")).toHaveCount(0);
+  });
+});
+
+test.describe("the back arrow", () => {
+  const transformOf = (page: Page) => page.locator(".ready-back .shell-ico--mirror").first().evaluate((icon) => getComputedStyle(icon).transform);
+
+  test("is turned around in a right-to-left language (the numbers page and a guide)", async ({ page }) => {
+    for (const path of ["/ur/ready/numbers", "/ur/ready/power"]) {
+      await openResident(page, path, 390);
+
+      await expect(page.locator("html"), path).toHaveAttribute("dir", "rtl");
+      expect(await transformOf(page), path).toBe("matrix(-1, 0, 0, 1, 0, 0)");
+    }
+  });
+
+  test("is not turned around in English", async ({ page }) => {
+    for (const path of [NUMBERS, POWER]) {
+      await openResident(page, path, 390);
+
+      expect(await transformOf(page), path).toBe("none");
+    }
   });
 });
 
@@ -160,6 +191,10 @@ test.describe("a guide (R-25)", () => {
       const response = await openResident(page, path, 390);
 
       expect(response!.status(), path).toBe(404);
+      // A shared cache must not keep the 404 of an address anyone can make up.
+      const cacheControl = response!.headers()["cache-control"] ?? "";
+      expect(cacheControl, path).not.toContain("s-maxage");
+      expect(cacheControl, path).not.toContain("public");
       await expect(page.getByTestId("shell-nav"), path).toBeVisible();
       await expect(page.locator("main h1"), path).toContainText("This page could not be found.");
     }
@@ -184,7 +219,9 @@ test.describe("a guide (R-25)", () => {
     await expect(translated).not.toHaveAttribute("lang", "en");
     // The page says so once.
     await expect(page.getByTestId("guide-unavailable")).toHaveCount(1);
-    await expect(page.getByTestId("guide-unavailable")).toContainText("اردو");
+    await expect(page.getByTestId("guide-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
+    await expect(page.getByTestId("guide-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
+    await expect(page.getByTestId("guide-unavailable")).not.toContainText("[EN]");
     // A guide with no translated text at all says it is not available in the language.
     await openResident(page, "/ur/ready/flood", 390);
     await expect(page.getByTestId("guide-unavailable")).toContainText("اردو");
@@ -229,11 +266,13 @@ test.describe("the essential numbers (R-31)", () => {
     expect(rows).toEqual([
       ["Help finding community, social and government services", "211", "tel:211", "Call"],
       ["City of Toronto services and non-emergency problems", "311", "tel:311", "Call"],
-      ["Report a power outage to Toronto Hydro", "416-542-8000", "tel:+14165428000", "Call"],
+      ["Report a power outage to Toronto Hydro", "(416) 542-8000", "tel:+14165428000", "Call"],
       ["Talk to someone at the Hub", "(416) 421-8997", "tel:+14164218997", "Call"],
     ]);
     // Every call link says what it calls, for a screen reader.
     await expect(page.getByTestId("number-211-call")).toHaveAttribute("aria-label", "Call Help finding community, social and government services, 211");
+    // A ten-digit number is written as the buildings' contacts are, in the text and for a screen reader; the link still dials the full number.
+    await expect(page.getByTestId("number-hydro-call")).toHaveAttribute("aria-label", "Call Report a power outage to Toronto Hydro, (416) 542-8000");
     await expect(page.getByTestId("numbers-checked")).toHaveText("Checked by the Hub, last updated September 30, 2026");
     // The numbers come before the resident's buildings, and the 911 block closes the page.
     await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
@@ -260,10 +299,12 @@ test.describe("the essential numbers (R-31)", () => {
     await expect(known.getByTestId("building-contact-call")).toHaveAttribute("aria-label", "Call Superintendent, (416) 555-0123");
     await expect(known.getByTestId("building-contact-provided")).toHaveText("Provided by the Hub, last updated September 30, 2026");
 
-    // No contact: the prototype's words for it (R31.noBuilding), not the building page's "Not known"; and no call link.
+    // No contact: the prototype's words for it with no floor ambassador (R31.noBuildingNoAmb: there is no ambassador
+    // coverage yet), not the building page's "Not known"; and no call link.
     const none = cards.nth(1);
     await expect(none).toHaveAttribute("data-rsn", "4154159");
-    await expect(none.getByTestId("building-contact-none")).toHaveText("We don't have a contact for your building yet. Your floor ambassador can help.");
+    await expect(none.getByTestId("building-contact-none")).toHaveText("We don't have a contact for your building yet. The Hub can help you reach your building management.");
+    await expect(none).not.toContainText("ambassador");
     await expect(none.getByTestId("building-contact-address")).toHaveText("85-95 Thorncliffe Park Dr");
     await expect(none.locator("a")).toHaveCount(0);
     await expect(section).not.toContainText("Not known");
@@ -321,9 +362,13 @@ test.describe("the essential numbers (R-31)", () => {
     await expect(purpose).toHaveAttribute("lang", "en");
     await expect(purpose).toHaveAttribute("dir", "ltr");
     await expect(purpose).toHaveAttribute("data-translation", "unavailable");
+    // The note is the catalog's own x04 wording, in Urdu, with the language named in its own script.
     await expect(page.getByTestId("numbers-unavailable")).toHaveCount(1);
+    await expect(page.getByTestId("numbers-unavailable")).toContainText("ابھی اس زبان میں دستیاب نہیں");
+    await expect(page.getByTestId("numbers-unavailable")).toContainText("اس کا ابھی اردو میں ترجمہ نہیں ہوا۔");
+    await expect(page.getByTestId("numbers-unavailable")).not.toContainText("[EN]");
     // A number is a left-to-right run whatever the page's direction.
-    await expect(page.getByTestId("number-hydro-digits")).toHaveText("416-542-8000");
+    await expect(page.getByTestId("number-hydro-digits")).toHaveText("(416) 542-8000");
     await expect(page.getByTestId("number-hydro-digits")).toHaveAttribute("dir", "ltr");
     await expect(page.getByTestId("numbers-911-digits").locator("bdi")).toHaveAttribute("dir", "ltr");
     // The English strings Urdu lacks are marked [EN] and set left to right.
