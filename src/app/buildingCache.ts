@@ -8,3 +8,11 @@
 export const BUILDING_REVALIDATE_SECONDS = 300;
 
 export const buildingTag = (rsn: string): string => `building:${rsn}`;
+
+/**
+ * The cache tag of the list of every building's contact (S02.10): the essential-numbers page shows the contacts of the
+ * buildings a resident chose, and the phone picks them out of this one list (AD-3). The Admin's building screen drops
+ * it with the building's own tag when it saves a contact, so the numbers page serves the new contact at once, within
+ * the same few minutes a shared cache in front of the app may still hold the old page.
+ */
+export const BUILDING_CONTACTS_TAG = "building-contacts";

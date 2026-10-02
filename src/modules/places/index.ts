@@ -5,6 +5,7 @@ export { readMergeFile, readRegisterFile } from "./adapters/registerFiles";
 export { createBuildingService } from "./application/floors";
 export { floorsOfBuilding, neighbourhoodIds, type FloorRecord } from "./application/floorReader";
 export type { BuildingContact, BuildingDetail, BuildingFacts, BuildingFloorPlan, BuildingService, BuildingServiceDeps, BuildingSummary, FloorPlace, FloorPlanFloor, FloorRefusal, FloorResult, FloorView } from "./application/floors";
+export { listBuildingContacts, type BuildingWithContact } from "./application/buildingContacts";
 export { readPublicBuilding, type PublicBuilding } from "./application/publicBuilding";
 export { createResidentBuildings, type ResidentBuilding, type ResidentBuildings, type ResidentFloor } from "./application/residentBuildings";
 export { BUILDINGS_SEED_CODE, BuildingImportRefusedError, importBuildings, type ImportCounts, type ImportDeps, type ImportResult } from "./application/importBuildings";

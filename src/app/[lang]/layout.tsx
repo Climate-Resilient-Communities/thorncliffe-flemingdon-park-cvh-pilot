@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import type { CSSProperties } from "react";
@@ -40,6 +41,10 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const language = languageOf(lang);
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
   const r02 = await getTranslations({ locale: lang, namespace: "R02" });
+  // The only part of the catalog a client component of the resident surface reads: the 911 block of error.tsx, which must
+  // be able to draw itself in the page's language when a render fails. Nothing else is sent to the browser.
+  const { x01 } = (await getMessages({ locale: lang })) as { x01: Record<"text" | "call" | "short", string> };
+  const clientMessages = { x01: { text: x01.text, call: x01.call, short: x01.short } };
   // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24).
   const nav: NavItem[] = [
     { id: "now", icon: "now", label: shell("nav.now"), href: `/${lang}` },
@@ -70,7 +75,9 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
           }}
           nav={{ label: shell("navLabel"), items: nav }}
         >
-          {children}
+          <NextIntlClientProvider locale={lang} messages={clientMessages}>
+            {children}
+          </NextIntlClientProvider>
         </ResidentShell>
       </body>
     </html>
