@@ -39,7 +39,9 @@ Terms and privacy page (S07.01, data/catalogue/terms.json; its texts are keyed t
 
 --terms records the owner's English review of the terms; --mark-counsel-reviewed records counsel's review of the
 current English, privacy contact and consent_version. Both are tied to a hash of that text: the terms are published
-only while the counsel review matches, so any later change needs a new review.
+only while the counsel review matches, so any later change needs a new review. Counsel's review also records
+the version and its text hash in terms.json publishedVersions: a consentVersion is never reused for changed text
+(bump consentVersion, YYYY-MM-DD.n), and when the text changed lastUpdated must have moved past the review it replaces.
 
 --content writes review/content-translation-status.json. --mark-reviewed changes status
 "machine" to "reviewed" (with reviewer and date) only on translations that are current
@@ -224,6 +226,9 @@ def content_status(texts):
             lost = missing_critical(english, rec['text'])
             if lost:
                 problems.append({'id': key, 'problem': 'lost or changed: ' + ', '.join(lost)})
+            lost_tokens = cc.lost_required_tokens(key, english, rec['text'])
+            if lost_tokens:
+                problems.append({'id': key, 'problem': 'lost required: ' + ', '.join(lost_tokens) + ' (the app shows the English instead)'})
             if rec['status'] == 'reviewed' and (cc.is_placeholder(rec.get('reviewer')) or not cc.valid_date(rec.get('reviewedOn'))):
                 problems.append({'id': key, 'problem': 'reviewed without a named reviewer and date'})
         status[lang] = {'texts': len(texts), **counts, 'problems': problems}
@@ -242,12 +247,21 @@ def mark_reviewed(lang, reviewer, reviewed_on, keys):
     texts = cc.content_texts()
     data = cc.load_content(lang, texts)
     marked = 0
+    refused = []
     for key, rec in data['texts'].items():
         if rec and rec['status'] == 'machine' and (not keys or key in keys):
+            lost = cc.lost_required_tokens(key, texts.get(key, ''), rec.get('text') or '')
+            if lost:
+                if keys:
+                    raise SystemExit(f'{key}: the translation lost {", ".join(lost)}, which a resident acts on; correct it before marking it reviewed')
+                refused.append(f'{key} (lost {", ".join(lost)})')
+                continue
             rec.update(status='reviewed', reviewer=reviewer, reviewedOn=reviewed_on)
             marked += 1
     cc.save_content(lang, data)
     print(f'{lang}: {marked} translations marked reviewed by {reviewer} on {reviewed_on}')
+    for item in refused:
+        print(f'{lang}: not marked reviewed, a required string is lost: {item}')
     if lang == 'zh':
         changed, kept, missing = cc.convert_zh_hant(texts)
         print(f'zh-Hant: {changed} converted from zh, {kept} unchanged, {missing} null')
@@ -293,6 +307,12 @@ def mark_english_reviewed(reviewer, reviewed_on, guide_id, numbers_only):
         cc.write_json(cc.NUMBERS_PATH, numbers, sort_keys=False)
 
 
+def version_date(version):
+    """The date part of a consent_version (YYYY-MM-DD.n), or None."""
+    match = re.match(r'^(\d{4}-\d{2}-\d{2})\.[1-9]\d*$', version or '')
+    return match.group(1) if match else None
+
+
 def mark_terms_reviewed(reviewer, reviewed_on, counsel):
     """Record the review of the current terms (S07.01) in terms.json: the owner's English review
     (englishReview) or counsel's (counselReview, which also records the consent_version it covered).
@@ -308,12 +328,27 @@ def mark_terms_reviewed(reviewer, reviewed_on, counsel):
     terms = cc.read_json(cc.TERMS_PATH)
     if not cc.valid_date(terms.get('lastUpdated')) or reviewed_on < terms['lastUpdated']:
         raise SystemExit(f'the review cannot be dated before the last update ({terms.get("lastUpdated")})')
-    record = {'reviewer': reviewer, 'date': reviewed_on, 'sourceHash': cc.english_review_hash(cc.terms_review_texts(terms))}
+    current = cc.english_review_hash(cc.terms_review_texts(terms))
+    record = {'reviewer': reviewer, 'date': reviewed_on, 'sourceHash': current}
+    previous = terms.get('counselReview' if counsel else 'englishReview') or {}
+    if previous.get('sourceHash') and previous['sourceHash'] != current:
+        # The text changed since the review this one replaces: "Last updated" must say so.
+        if cc.valid_date(previous.get('date')) and terms['lastUpdated'] <= previous['date']:
+            raise SystemExit(f'the text changed since the review of {previous["date"]}, but lastUpdated ({terms["lastUpdated"]}) '
+                             'has not moved past it; set lastUpdated to the date of the change')
+    version = terms.get('consentVersion')
+    if version_date(version) and terms['lastUpdated'] < version_date(version):
+        raise SystemExit(f'lastUpdated ({terms["lastUpdated"]}) is before the date of consentVersion {version}')
     if counsel:
         if cc.is_placeholder(terms.get('privacyContact')) or cc.is_placeholder(terms.get('owner')):
             raise SystemExit('counsel reviews the terms only once the owner and the privacy contact are named')
-        terms['counselReview'] = {**record, 'version': terms.get('consentVersion')}
-        print(f'terms {terms.get("consentVersion")}: counsel review recorded for {reviewer} on {reviewed_on}')
+        ledger = terms.get('publishedVersions') or {}
+        if ledger.get(version) not in (None, current):
+            raise SystemExit(f'consentVersion {version} was already published with different text; bump consentVersion '
+                             '(YYYY-MM-DD.n) before counsel reviews the changed terms')
+        terms['counselReview'] = {**record, 'version': version}
+        terms['publishedVersions'] = {**ledger, version: current}
+        print(f'terms {version}: counsel review recorded for {reviewer} on {reviewed_on}')
     else:
         owner = terms.get('owner')
         if cc.is_placeholder(owner):
@@ -321,7 +356,7 @@ def mark_terms_reviewed(reviewer, reviewed_on, counsel):
         if ' '.join(owner.lower().split()) != ' '.join(reviewer.lower().split()):
             raise SystemExit(f'terms: the English review must be by the owner ({owner})')
         terms['englishReview'] = record
-        print(f'terms {terms.get("consentVersion")}: English review recorded for {reviewer} on {reviewed_on}')
+        print(f'terms {version}: English review recorded for {reviewer} on {reviewed_on}')
     cc.write_json(cc.TERMS_PATH, terms, sort_keys=False)
 
 

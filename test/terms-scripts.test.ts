@@ -30,6 +30,9 @@ const nameOwnerAndContact = () =>
   editTerms((t) => {
     t.owner = "Ana Reyes";
     t.privacyContact = "privacy@example.org";
+    // Dated before today, whatever day the tests run (a review cannot be dated in the future).
+    t.consentVersion = "2026-09-10.1";
+    t.lastUpdated = "2026-09-10";
   });
 
 beforeEach(() => {
@@ -74,48 +77,139 @@ describe("the terms in the content pipeline", () => {
 
   it("records the owner's English review and counsel's review, and the app publishes exactly then", () => {
     // Nothing can be signed before the owner and the privacy contact are named.
-    expect(() => run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"])).toThrow();
-    expect(() => run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-10-02"])).toThrow();
+    expect(() => run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"])).toThrow();
+    expect(() => run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"])).toThrow();
     expect(plan().published).toBe(false);
 
     nameOwnerAndContact();
-    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"]);
-    expect(readTerms().englishReview).toMatchObject({ reviewer: "Ana Reyes", date: "2026-10-02" });
-    expect(plan().reasons).toEqual(["counsel review: no named reviewer", "counsel review: no valid date", "counsel review: covers version none, not 2026-10-02.1", "counsel review: records no source hash (the text it reviewed)"]);
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    expect(readTerms().englishReview).toMatchObject({ reviewer: "Ana Reyes", date: "2026-09-10" });
+    expect(plan().reasons).toEqual(["counsel review: no named reviewer", "counsel review: no valid date", "counsel review: covers version none, not 2026-09-10.1", "counsel review: records no source hash (the text it reviewed)"]);
 
-    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-10-02"]);
-    expect(readTerms().counselReview).toMatchObject({ reviewer: "Counsel Co.", date: "2026-10-02", version: "2026-10-02.1" });
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
+    expect(readTerms().counselReview).toMatchObject({ reviewer: "Counsel Co.", date: "2026-09-10", version: "2026-09-10.1" });
     expect(plan().reasons).toEqual([]);
     expect(plan().published).toBe(true);
   });
 
   it("stops publishing when the text, the contact or the version changes after counsel's review, until it is recorded again", () => {
     nameOwnerAndContact();
-    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"]);
-    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-10-02"]);
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
     expect(plan().published).toBe(true);
 
-    editTerms((t) => (t.sections![5].lines![0] = "Hub staff check every alert before it goes out."));
+    // A changed text is a new version, dated the day it changed: the version, lastUpdated and both reviews all move.
+    const revise = (version: string, on: string, change: (t: TermsSource) => void) =>
+      editTerms((t) => {
+        change(t);
+        t.consentVersion = version;
+        t.lastUpdated = on;
+      });
+    revise("2026-09-15.1", "2026-09-15", (t) => (t.sections![5].lines![0] = "Hub staff check every alert before it goes out."));
     expect(plan().published).toBe(false);
-    expect(plan().reasons).toContain("the English changed since the owner reviewed it");
+    expect(plan().reasons).toContain("the English review is dated before the last update");
     expect(plan().reasons).toContain("counsel review: the terms changed since counsel reviewed them, so a new review is needed");
 
     // The owner reviews the new English; counsel still has not seen it.
-    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"]);
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-15"]);
     expect(plan().reasons.every((r) => r.startsWith("counsel review:"))).toBe(true);
     expect(plan().published).toBe(false);
 
-    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-10-02"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-15"]);
     expect(plan().published).toBe(true);
 
-    editTerms((t) => (t.privacyContact = "other@example.org"));
+    revise("2026-09-16.1", "2026-09-16", (t) => (t.privacyContact = "other@example.org"));
     expect(plan().published).toBe(false);
-    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-10-02"]);
-    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-10-02"]);
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-16"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-16"]);
     expect(plan().published).toBe(true);
 
-    editTerms((t) => (t.consentVersion = "2026-10-09.1"));
-    expect(plan().reasons).toEqual(["counsel review: covers version 2026-10-02.1, not 2026-10-09.1"]);
+    editTerms((t) => (t.consentVersion = "2026-09-20.1"));
+    expect(plan().reasons).toEqual([
+      "the last-updated date (2026-09-16) is before the date of consent_version 2026-09-20.1",
+      "counsel review: covers version 2026-09-16.1, not 2026-09-20.1",
+    ]);
+  });
+
+  it("records every version counsel signs in publishedVersions", () => {
+    nameOwnerAndContact();
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
+
+    expect(readTerms().publishedVersions).toEqual({ "2026-09-10.1": readTerms().counselReview!.sourceHash });
+    // Re-recording counsel's review of the same text under the same version is harmless.
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-11"]);
+    expect(Object.keys(readTerms().publishedVersions!)).toEqual(["2026-09-10.1"]);
+  });
+
+  it("refuses to reuse a consent version for changed text, in the script and in the app, until the version is bumped", () => {
+    nameOwnerAndContact();
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
+    const signed = readTerms().publishedVersions;
+    expect(plan().published).toBe(true);
+
+    // The reviewer's repro: change the age line, then run both reviews again with the same version.
+    editTerms((t) => {
+      t.sections![4].lines![0] = "You must be 18 or older to sign up.";
+      t.lastUpdated = "2026-09-15";
+    });
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-15"]);
+    expect(() => run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-15"])).toThrow(/bump consentVersion/);
+    expect(readTerms().publishedVersions).toEqual(signed);
+    expect(plan().published).toBe(false);
+
+    // Were counsel's record forged by hand under the old version, the app still refuses it.
+    editTerms((t) => (t.counselReview = { reviewer: "Counsel Co.", date: "2026-09-15", version: "2026-09-10.1", sourceHash: t.englishReview!.sourceHash }));
+    expect(plan().reasons).toEqual(["consent_version 2026-09-10.1 was already published with different text: bump consentVersion"]);
+
+    editTerms((t) => (t.consentVersion = "2026-09-15.1"));
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-15"]);
+    expect(plan().reasons).toEqual([]);
+    expect(Object.keys(readTerms().publishedVersions!)).toEqual(["2026-09-10.1", "2026-09-15.1"]);
+  });
+
+  it("refuses a review of changed text while lastUpdated has not moved past the review it replaces", () => {
+    nameOwnerAndContact();
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
+
+    editTerms((t) => (t.title = "Terms and your privacy"));
+    expect(() => run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-15"])).toThrow(/lastUpdated/);
+    expect(readTerms().englishReview?.date).toBe("2026-09-10");
+
+    editTerms((t) => (t.lastUpdated = "2026-09-15"));
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-15"]);
+    expect(readTerms().englishReview?.date).toBe("2026-09-15");
+  });
+
+  it("refuses a lastUpdated that predates the consent version's date, in the script", () => {
+    nameOwnerAndContact();
+    editTerms((t) => (t.consentVersion = "2026-09-20.1"));
+
+    expect(() => run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-21"])).toThrow(/before the date of consentVersion/);
+  });
+
+  it("applies the app's required tokens to the terms in the status report and in --mark-reviewed", () => {
+    run(STUB, ["--content", "--langs", "es"]);
+    const status = () => JSON.parse(readFileSync(path.join(dir, "review", "content-translation-status.json"), "utf8")).es.problems as { id: string; problem: string }[];
+
+    run(REVIEW, ["--content"]);
+    const lost = status().filter((p) => p.problem.startsWith("lost required"));
+    // The stub's answer to "Reply STOP..." keeps no STOP.
+    expect(lost.map((p) => p.id)).toContain("terms.stop.0");
+    expect(lost.find((p) => p.id === "terms.stop.0")!.problem).toContain("STOP");
+
+    // A bulk mark skips that line and says so; the app then keeps showing English for it.
+    const out = run(REVIEW, ["--content", "--mark-reviewed", "es", "--reviewer", "Wei Chen", "--reviewed-on", "2026-11-02"]);
+    expect(out).toContain("not marked reviewed");
+    expect(out).toContain("terms.stop.0");
+    const file = JSON.parse(readFileSync(path.join(dir, "translations", "content", "es.json"), "utf8"));
+    expect(file.texts["terms.stop.0"].status).toBe("machine");
+    expect(file.texts["terms.title"].status).toBe("reviewed");
+
+    // Asking for that line by name is refused outright.
+    expect(() => run(REVIEW, ["--content", "--mark-reviewed", "es", "--reviewer", "Wei Chen", "--reviewed-on", "2026-11-02", "--keys", "terms.stop.0"])).toThrow(/lost STOP/);
   });
 
   it("refuses a review by the wrong person, a placeholder, a future date or one before the last update", () => {
@@ -125,13 +219,13 @@ describe("the terms in the content pipeline", () => {
     const counsel = (reviewer: string, on: string) => () =>
       run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", reviewer, "--reviewed-on", on]);
 
-    expect(english("Sam Lee", "2026-10-02")).toThrow();
-    expect(english("PLACEHOLDER: later", "2026-10-02")).toThrow();
+    expect(english("Sam Lee", "2026-09-10")).toThrow();
+    expect(english("PLACEHOLDER: later", "2026-09-10")).toThrow();
     expect(english("Ana Reyes", "2999-01-01")).toThrow();
-    expect(english("Ana Reyes", "2026-10-01")).toThrow();
-    expect(counsel("PLACEHOLDER: later", "2026-10-02")).toThrow();
+    expect(english("Ana Reyes", "2026-09-09")).toThrow();
+    expect(counsel("PLACEHOLDER: later", "2026-09-10")).toThrow();
     expect(counsel("Counsel Co.", "2999-01-01")).toThrow();
-    expect(counsel("Counsel Co.", "2026-10-01")).toThrow();
+    expect(counsel("Counsel Co.", "2026-09-09")).toThrow();
     expect(readTerms().englishReview?.sourceHash).toBeUndefined();
     expect(readTerms().counselReview?.sourceHash).toBeNull();
   });

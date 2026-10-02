@@ -41,6 +41,9 @@ TERMS_PATH = CATALOGUE_DIR / 'terms.json'
 CONTENT_DIR = CATALOGUE_DIR / 'translations/content'
 REVIEW_DIR = CATALOGUE_DIR / 'review'
 OPENCC_SCRIPT = ROOT / 'scripts/opencc_convert.mjs'
+# Strings a translation of the terms must keep where the English has them; src/contracts/termsRequiredTokens.json
+# is the one list, read here and by src/modules/subscriptions/domain/terms.ts (REQUIRED_TOKENS).
+TERMS_REQUIRED_TOKENS_PATH = ROOT / 'src/contracts/termsRequiredTokens.json'
 
 # The 14 translated languages of translate_catalogue.ROUTES, and zh-Hant converted from zh.
 MODEL_LANGS = ['ur', 'ps', 'tl', 'prs', 'gu', 'ta', 'el', 'sk', 'bn', 'hi', 'pa', 'zh', 'es', 'fr']
@@ -127,6 +130,17 @@ def english_review_hash(texts):
     a guide's texts or of the numbers list's texts, keys in full. guideContent.ts englishReviewHash
     computes the same value; the seed refuses a review whose hash is not the current English's."""
     return source_hash(json.dumps([[k, v] for k, v in texts.items()], ensure_ascii=False, separators=(',', ':')))
+
+
+def terms_required_tokens():
+    return json.loads(TERMS_REQUIRED_TOKENS_PATH.read_text(encoding='utf-8'))
+
+
+def lost_required_tokens(key, english, text):
+    """Required tokens (terms.* keys only) the English has and the translation lost: the app's lost_required rule."""
+    if not key.startswith('terms.'):
+        return []
+    return [token for token in terms_required_tokens() if token in english and token not in text]
 
 
 def is_911_key(key):

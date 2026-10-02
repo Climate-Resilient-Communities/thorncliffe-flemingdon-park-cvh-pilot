@@ -13,6 +13,9 @@
 //  - COUNSEL GATE: the text is published only while the counsel review recorded in the file covers exactly this
 //    version and exactly this English and contact (same hash) and is not older than the last update. Changing a
 //    word, the contact or the version after the review therefore stops publication until a new review is recorded;
+//  - a consent version is never reused for changed text: counsel's review appends the version and its text hash to
+//    publishedVersions, and a version in that ledger with a different hash is refused (bump consentVersion);
+//  - "last updated" cannot predate the date of the consent version (the day the text was settled);
 //  - a translation is loaded only when reviewed and current (stale after any English change); any other text shows
 //    in English with translation.unavailable (never blank, never machine-only);
 //  - a text that is not published is never shown to residents as final (TermsPlan.published false).
@@ -20,6 +23,7 @@
 // VERSIONING: a new version applies to new sign-ups only (see versionToRecord). An existing subscriber keeps the
 // version they accepted until the end-of-pilot re-consent (E09).
 import type { LangCode } from "@/contracts/lang";
+import requiredTokens from "@/contracts/termsRequiredTokens.json";
 import {
   TRANSLATED_LANGS,
   checkAttribution,
@@ -52,6 +56,8 @@ export interface TermsSource {
   lastUpdated?: string | null;
   englishReview?: ReviewSource | null;
   counselReview?: CounselReview | null;
+  /** Ledger of the consent versions counsel has signed: version to the hash of the text it was signed with. Append only. */
+  publishedVersions?: Record<string, string> | null;
   privacyContact?: string | null;
   title?: string | null;
   sections?: TermsSectionSource[] | null;
@@ -99,7 +105,7 @@ export const REQUIRED_FACTS: readonly { fact: string; pattern: RegExp }[] = [
 ];
 
 /** Strings a translation must keep where the English has them: they are what a resident acts on or can check. */
-export const REQUIRED_TOKENS = ["STOP", "0", "16", "Twilio", "Cohere", "Vercel", "Supabase"] as const;
+export const REQUIRED_TOKENS: readonly string[] = requiredTokens;
 
 /** `YYYY-MM-DD.n`: the date the text was settled and a counter for that day. */
 export const CONSENT_VERSION_FORMAT = /^\d{4}-\d{2}-\d{2}\.[1-9]\d*$/;
@@ -245,6 +251,16 @@ export function termsRefusals(terms: TermsSource, { hash, today }: TermsPlanOpti
     if (!pattern.test(english)) reasons.push(`the English no longer says ${fact}`);
   }
   if (/PLACEHOLDER/i.test(english)) reasons.push("the English text still holds a placeholder");
+
+  // A version names one text for good: the ledger of signed versions holds the hash each was signed with.
+  const signed = present(terms.consentVersion) ? terms.publishedVersions?.[terms.consentVersion] : undefined;
+  if (present(signed) && signed !== currentHash) {
+    reasons.push(`consent_version ${terms.consentVersion} was already published with different text: bump consentVersion`);
+  }
+  const versionDate = present(terms.consentVersion) && CONSENT_VERSION_FORMAT.test(terms.consentVersion) ? terms.consentVersion.slice(0, 10) : null;
+  if (versionDate && isIsoDate(terms.lastUpdated) && terms.lastUpdated < versionDate) {
+    reasons.push(`the last-updated date (${terms.lastUpdated}) is before the date of consent_version ${terms.consentVersion}`);
+  }
 
   // The counsel gate.
   const counsel = terms.counselReview;

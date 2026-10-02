@@ -8,6 +8,7 @@ import {
   NEW_VERSION_APPLIES_TO,
   REQUIRED_FACTS,
   REQUIRED_SECTIONS,
+  REQUIRED_TOKENS,
   formatTermsReport,
   planTerms,
   termsHeadingKey,
@@ -183,11 +184,56 @@ describe("the counsel review gate", () => {
   });
 
   it("stops publishing a new version that counsel did not review", () => {
-    const bumped = editedAfterReview((t) => (t.consentVersion = "2026-10-09.1"));
-    bumped.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: termsReviewHash(bumped, sha) };
+    const bumped = editedAfterReview((t) => {
+      t.consentVersion = "2026-10-09.1";
+      t.lastUpdated = "2026-10-09";
+    });
+    bumped.englishReview = { reviewer: "Ana Reyes", date: "2026-10-09", sourceHash: termsReviewHash(bumped, sha) };
+    bumped.counselReview = { ...bumped.counselReview!, date: "2026-10-09" };
 
     // The review covered 2026-10-02.1; only the version changed, so the hash alone still matches.
     expect(plan(bumped).reasons).toEqual(["counsel review: covers version 2026-10-02.1, not 2026-10-09.1"]);
+  });
+
+  it("refuses a consent version reused for changed text, until the version is bumped (the ledger of signed versions)", () => {
+    const signed = approved();
+    signed.publishedVersions = { "2026-10-02.1": termsReviewHash(signed, sha) };
+    expect(plan(signed).reasons).toEqual([]);
+
+    // The reviewer's case: the age line changes and both reviews are re-recorded under the same version.
+    const reused = approved({ publishedVersions: signed.publishedVersions });
+    reused.sections![4].lines![0] = "You must be 18 or older to sign up.";
+    const hash = termsReviewHash(reused, sha);
+    reused.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: hash };
+    reused.counselReview = { reviewer: "Counsel Co.", date: "2026-10-04", version: "2026-10-02.1", sourceHash: hash };
+    expect(plan(reused).published).toBe(false);
+    expect(plan(reused).reasons).toEqual(["consent_version 2026-10-02.1 was already published with different text: bump consentVersion"]);
+
+    // Bumping the version (and the date it carries) lets the new text through, and the ledger keeps the old version.
+    reused.consentVersion = "2026-10-09.1";
+    reused.lastUpdated = "2026-10-09";
+    const bumpedHash = termsReviewHash(reused, sha);
+    reused.englishReview = { reviewer: "Ana Reyes", date: "2026-10-09", sourceHash: bumpedHash };
+    reused.counselReview = { reviewer: "Counsel Co.", date: "2026-10-09", version: "2026-10-09.1", sourceHash: bumpedHash };
+    reused.publishedVersions = { ...signed.publishedVersions, "2026-10-09.1": bumpedHash };
+    expect(plan(reused).reasons).toEqual([]);
+  });
+
+  it("accepts a version that is not in the ledger yet, or whose ledger entry is the current text", () => {
+    expect(reasons(approved({ publishedVersions: {} }))).toEqual([]);
+    expect(reasons(approved({ publishedVersions: { "2026-09-01.1": "an older text" } }))).toEqual([]);
+  });
+
+  it("keeps the required tokens in the one JSON the Python review script also reads", () => {
+    expect(REQUIRED_TOKENS).toEqual(["STOP", "0", "16", "Twilio", "Cohere", "Vercel", "Supabase"]);
+  });
+
+  it("refuses a last-updated date earlier than the date of the consent version", () => {
+    const terms = approved({ consentVersion: "2026-10-09.1", lastUpdated: "2026-10-02" });
+    expect(reasons(terms)).toContain("the last-updated date (2026-10-02) is before the date of consent_version 2026-10-09.1");
+    expect(reasons(approved({ consentVersion: "2026-10-02.2" }))).not.toContain(
+      expect.stringContaining("before the date of consent_version"),
+    );
   });
 
   it("refuses an unnamed, undated, future-dated or hash-less counsel review", () => {
