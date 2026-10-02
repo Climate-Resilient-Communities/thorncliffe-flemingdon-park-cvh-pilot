@@ -203,7 +203,8 @@ TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:db
 # the push instead, to cover a multi-commit push; locally there is no push, so one commit is all there is.)
 base=origin/main
 if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then base=HEAD~1; fi
-PRODUCTION_URL="" step npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
+# A contract note needs the production release, so set PRODUCTION_URL to the production app's URL to check it.
+PRODUCTION_URL="${PRODUCTION_URL:-}" step npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
 always_step npm run check:strings
 replaced_step 'npx playwright install --with-deps chromium' verify_chromium
 step npm run test:layout
