@@ -14,20 +14,22 @@ export default publicStaffPage("/staff/sign-in", (session) => {
   return (
     <main>
       <Screen surface="staff">
-        <Stack gap="section-hub">
-          <Stack gap="related">
-            <h1>{englishText("staff.signIn.title")}</h1>
-            <p>{englishText("staff.signIn.lead")}</p>
+        <div className="hub-gate">
+          <Stack gap="section-hub">
+            <Stack gap="related">
+              <h1>{englishText("staff.signIn.title")}</h1>
+              <p>{englishText("staff.signIn.lead")}</p>
+            </Stack>
+            <SignInForm
+              labels={{
+                username: englishText("staff.signIn.username"),
+                password: englishText("staff.signIn.password"),
+                submit: englishText("staff.signIn.submit"),
+                unavailable: englishText("staff.signIn.unavailable"),
+              }}
+            />
           </Stack>
-          <SignInForm
-            labels={{
-              username: englishText("staff.signIn.username"),
-              password: englishText("staff.signIn.password"),
-              submit: englishText("staff.signIn.submit"),
-              unavailable: englishText("staff.signIn.unavailable"),
-            }}
-          />
-        </Stack>
+        </div>
       </Screen>
     </main>
   );

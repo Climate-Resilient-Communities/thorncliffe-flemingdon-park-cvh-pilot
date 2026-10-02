@@ -39,20 +39,20 @@ export function ChoosePasswordForm({ labels }: { labels: ChoosePasswordLabels })
     <form onSubmit={submit} noValidate>
       <Stack gap="stack">
         {message && (
-          <p id={ERROR_ID} role="alert">
+          <p id={ERROR_ID} role="alert" className="hub-error">
             {message}
           </p>
         )}
         <Stack gap="label">
           <label htmlFor="password">{labels.password}</label>
           <p id={HINT_ID}>{labels.passwordHint}</p>
-          <input className="tap" id="password" name="password" type="password" autoComplete="new-password" required aria-describedby={described(HINT_ID)} />
+          <input className="hub-input" id="password" name="password" type="password" autoComplete="new-password" required aria-describedby={described(HINT_ID)} />
         </Stack>
         <Stack gap="label">
           <label htmlFor="confirm">{labels.confirm}</label>
-          <input className="tap" id="confirm" name="confirm" type="password" autoComplete="new-password" required aria-describedby={described()} />
+          <input className="hub-input" id="confirm" name="confirm" type="password" autoComplete="new-password" required aria-describedby={described()} />
         </Stack>
-        <button className="tap" type="submit" disabled={pending}>
+        <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
           {labels.submit}
         </button>
       </Stack>

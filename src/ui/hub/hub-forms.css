@@ -7,6 +7,7 @@
  *   .hub-button            the shared shape; pair it with a variant
  *   .hub-button--primary   the one main action of a form (--ink on --on-deep)
  *   .hub-button--secondary a quieter action: --surface-raised with a --control-border hairline, like the shell's sign-out
+ *   .hub-form              a form that is a column of fields: readable width, not the whole page
  *   .hub-input             a text, date or number input
  *   .hub-check             a checkbox with its sentence beside it
  *   .hub-error             a refusal, shown as text (red and bold, never colour alone)
@@ -52,6 +53,11 @@
     background-color: var(--surface);
     color: var(--text-muted);
     cursor: not-allowed;
+  }
+
+  /* A form of a few fields is a column the width of the aside, not a row of fields across the whole page. */
+  .hub-form {
+    max-inline-size: var(--size-aside-staff);
   }
 
   .hub-input {

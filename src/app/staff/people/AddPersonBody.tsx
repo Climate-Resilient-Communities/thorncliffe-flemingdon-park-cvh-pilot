@@ -12,7 +12,7 @@ export function addPersonLabels(): AddPersonLabels {
 /** The screen's body for a resolved view: the form, or why this person may not add anyone. */
 export function AddPersonBody({ view }: { view: AddPersonView }) {
   if (!view.allowed) {
-    return <p role="alert">{englishText(REFUSAL_MESSAGE_KEYS[view.refusal])}</p>;
+    return <p role="alert" className="hub-error">{englishText(REFUSAL_MESSAGE_KEYS[view.refusal])}</p>;
   }
   return (
     <AddPersonForm

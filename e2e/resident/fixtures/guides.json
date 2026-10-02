@@ -1,0 +1,335 @@
+{
+  "guides": [
+    {
+      "id": "power",
+      "readMins": 3,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Power outage",
+          "ur": "بجلی کی بندش"
+        },
+        "when911": {
+          "en": "Call 911 if someone is in danger, there is a fire, or a person who uses powered medical equipment cannot breathe or is unwell.",
+          "ur": "اگر کسی کو خطرہ ہو، آگ لگی ہو، یا بجلی سے چلنے والے طبی آلات استعمال کرنے والا شخص سانس نہ لے سکے یا بیمار ہو تو 911 پر کال کریں۔"
+        },
+        "before.0": {
+          "en": "Keep a flashlight and spare batteries where you can find them in the dark.",
+          "ur": "ٹارچ اور اضافی بیٹریاں ایسی جگہ رکھیں جہاں اندھیرے میں مل جائیں۔"
+        },
+        "before.1": {
+          "en": "Charge a battery pack for your phone and keep it charged.",
+          "ur": "اپنے فون کا بیٹری پیک چارج کر کے رکھیں۔"
+        },
+        "before.2": {
+          "en": "Write down important phone numbers on paper."
+        },
+        "before.3": {
+          "en": "If you use medical equipment that needs power, ask your doctor or pharmacist about a backup plan."
+        },
+        "during.0": {
+          "en": "Use a flashlight, not candles.",
+          "ur": "ٹارچ استعمال کریں، موم بتیاں نہیں۔"
+        },
+        "during.1": {
+          "en": "Keep your fridge and freezer closed. Food stays cold for about 4 hours in the fridge and 24 hours in a full freezer.",
+          "ur": "اپنا فریج اور فریزر بند رکھیں۔ کھانا فریج میں تقریباً 4 گھنٹے اور بھرے ہوئے فریزر میں 24 گھنٹے ٹھنڈا رہتا ہے۔"
+        },
+        "during.2": {
+          "en": "Unplug electronics so they are not damaged when the power comes back."
+        },
+        "during.3": {
+          "en": "Check on neighbours who live alone, if it is safe to do so."
+        },
+        "after.0": {
+          "en": "Throw away food that has been above 4 degrees for more than 2 hours.",
+          "ur": "وہ کھانا پھینک دیں جو 2 گھنٹے سے زیادہ 4 ڈگری سے اوپر رہا ہو۔"
+        },
+        "after.1": {
+          "en": "Plug your electronics back in one at a time."
+        },
+        "after.2": {
+          "en": "If your power is still out when your neighbours' is back, call Toronto Hydro."
+        }
+      }
+    },
+    {
+      "id": "flood",
+      "readMins": 3,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Flood or plumbing failure"
+        },
+        "when911": {
+          "en": "Call 911 if water is near electrical outlets or panels, if someone is trapped, or if water is rising fast."
+        },
+        "before.0": {
+          "en": "Keep valuables and papers off the floor, in a plastic bag or box."
+        },
+        "before.1": {
+          "en": "Know where the water shut-off valve is in your unit, if there is one."
+        },
+        "before.2": {
+          "en": "Keep a few large bottles of drinking water."
+        },
+        "during.0": {
+          "en": "Stay out of flooded parking levels, stairwells and basements."
+        },
+        "during.1": {
+          "en": "Do not touch electrical outlets or equipment if you are standing in water."
+        },
+        "during.2": {
+          "en": "Tell your superintendent or building management about leaks straight away."
+        },
+        "during.3": {
+          "en": "If the water in your building is turned off, use bottled water for drinking and cooking."
+        },
+        "after.0": {
+          "en": "Take photos of any damage for your landlord and insurance."
+        },
+        "after.1": {
+          "en": "Throw away food that touched flood water."
+        },
+        "after.2": {
+          "en": "Open windows to dry things out. Ask for help if you see mould."
+        }
+      }
+    },
+    {
+      "id": "elevator",
+      "readMins": 2,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Elevator failure"
+        },
+        "when911": {
+          "en": "Call 911 if someone is trapped in an elevator and unwell, or if someone cannot get out of the building in an emergency."
+        },
+        "before.0": {
+          "en": "Keep a week of medicines and some food at home."
+        },
+        "before.1": {
+          "en": "Tell your floor ambassador if you cannot use the stairs."
+        },
+        "before.2": {
+          "en": "Keep the number for the building office or superintendent on paper."
+        },
+        "during.0": {
+          "en": "Use the stairs slowly and hold the handrail. Rest on the landings."
+        },
+        "during.1": {
+          "en": "Ask a neighbour or your floor ambassador to help carry groceries."
+        },
+        "during.2": {
+          "en": "If you need to get to an appointment, ask for help with transport."
+        },
+        "after.0": {
+          "en": "Report any problems with the elevator to building management."
+        },
+        "after.1": {
+          "en": "If repairs take a long time, you have the right to ask your landlord about it. Free legal help can explain your rights."
+        }
+      }
+    },
+    {
+      "id": "heat",
+      "readMins": 3,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Extreme heat"
+        },
+        "when911": {
+          "en": "Call 911 if someone is confused, has stopped sweating, has a very high temperature, or faints. These are signs of heat stroke."
+        },
+        "before.0": {
+          "en": "Find out which cool places are near you and when they are open."
+        },
+        "before.1": {
+          "en": "Get a fan, and curtains or blinds to block the sun."
+        },
+        "before.2": {
+          "en": "Ask your pharmacist if any of your medicines make heat harder on your body."
+        },
+        "during.0": {
+          "en": "Drink water often, even if you are not thirsty."
+        },
+        "during.1": {
+          "en": "Spend a few hours in a cool place each day."
+        },
+        "during.2": {
+          "en": "Keep blinds closed during the day and open windows at night if it is cooler outside."
+        },
+        "during.3": {
+          "en": "Take a cool shower or bath, or put your feet in cool water."
+        },
+        "during.4": {
+          "en": "Check on neighbours who live alone."
+        },
+        "after.0": {
+          "en": "Keep drinking water; your body needs time to recover."
+        },
+        "after.1": {
+          "en": "Tell a doctor or nurse if you still feel dizzy or unwell."
+        }
+      }
+    },
+    {
+      "id": "smoke",
+      "readMins": 3,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Wildfire smoke"
+        },
+        "when911": {
+          "en": "Call 911 if someone has chest pain, cannot breathe, or is very confused."
+        },
+        "before.0": {
+          "en": "Make a box-fan air filter, or find out where to get one."
+        },
+        "before.1": {
+          "en": "Keep a few well-fitting masks at home."
+        },
+        "before.2": {
+          "en": "If you have asthma or a heart condition, make sure your medicines are not expired."
+        },
+        "during.0": {
+          "en": "Stay indoors with windows and doors closed."
+        },
+        "during.1": {
+          "en": "Run a box-fan filter or an air purifier in one room and stay in that room."
+        },
+        "during.2": {
+          "en": "Wear a well-fitting mask if you have to go outside."
+        },
+        "during.3": {
+          "en": "Go to a space with filtered air if your home gets smoky."
+        },
+        "after.0": {
+          "en": "Air out your home when the air outside is clean again."
+        },
+        "after.1": {
+          "en": "Change or clean your fan filter."
+        },
+        "after.2": {
+          "en": "See a doctor if you still cough or feel short of breath."
+        }
+      }
+    },
+    {
+      "id": "fire",
+      "readMins": 2,
+      "lastUpdated": "2026-09-30",
+      "texts": {
+        "title": {
+          "en": "Fire and evacuation"
+        },
+        "when911": {
+          "en": "Call 911 as soon as you see fire or smoke, or hear a fire alarm with signs of fire. Do not wait for anyone else to call."
+        },
+        "before.0": {
+          "en": "Know where the two nearest stairwells are on your floor."
+        },
+        "before.1": {
+          "en": "Keep your keys, phone and medicines in one place by the door."
+        },
+        "before.2": {
+          "en": "Tell your floor ambassador if you will need help to leave the building."
+        },
+        "during.0": {
+          "en": "If the alarm sounds, feel your door. If it is hot, stay inside and put wet towels under the door."
+        },
+        "during.1": {
+          "en": "If it is safe to leave, use the stairs, not the elevator, and close doors behind you."
+        },
+        "during.2": {
+          "en": "Once you are out, stay out until the fire service says it is safe."
+        },
+        "after.0": {
+          "en": "Do not go back in until the fire service says it is safe."
+        },
+        "after.1": {
+          "en": "If you cannot go home, ask where the reception point is."
+        },
+        "after.2": {
+          "en": "Free help can replace household basics and explain your rights as a tenant."
+        }
+      }
+    }
+  ],
+  "numbers": [
+    {
+      "id": "911",
+      "sortOrder": 0,
+      "number": "911",
+      "emergency": true,
+      "lastUpdated": "2026-09-30",
+      "lastChecked": "2026-09-29",
+      "texts": {
+        "label": {
+          "en": "Emergency",
+          "ur": "ہنگامی صورتحال"
+        },
+        "when": {
+          "en": "Call 911 if someone's life or safety is in danger right now: fire, a medical emergency, or a crime happening now.",
+          "ur": "اگر کسی کی جان یا حفاظت ابھی خطرے میں ہو تو 911 پر کال کریں: آگ، طبی ہنگامی صورتحال، یا جرم جو ابھی ہو رہا ہو۔"
+        }
+      }
+    },
+    {
+      "id": "211",
+      "sortOrder": 1,
+      "number": "211",
+      "emergency": false,
+      "lastUpdated": "2026-09-30",
+      "lastChecked": "2026-09-29",
+      "texts": {
+        "label": {
+          "en": "Help finding community, social and government services"
+        }
+      }
+    },
+    {
+      "id": "311",
+      "sortOrder": 2,
+      "number": "311",
+      "emergency": false,
+      "lastUpdated": "2026-09-30",
+      "lastChecked": "2026-09-29",
+      "texts": {
+        "label": {
+          "en": "City of Toronto services and non-emergency problems"
+        }
+      }
+    },
+    {
+      "id": "hydro",
+      "sortOrder": 3,
+      "number": "416-542-8000",
+      "emergency": false,
+      "lastUpdated": "2026-09-30",
+      "lastChecked": "2026-09-29",
+      "texts": {
+        "label": {
+          "en": "Report a power outage to Toronto Hydro"
+        }
+      }
+    },
+    {
+      "id": "hub",
+      "sortOrder": 4,
+      "number": "(416) 421-8997",
+      "emergency": false,
+      "lastUpdated": "2026-09-30",
+      "lastChecked": "2026-09-29",
+      "texts": {
+        "label": {
+          "en": "Talk to someone at the Hub"
+        }
+      }
+    }
+  ]
+}
