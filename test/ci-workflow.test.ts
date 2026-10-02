@@ -178,6 +178,12 @@ describe("CI workflow (S01.03)", () => {
     expect(gate).toMatch(/VERCEL_TOKEN: \$\{\{ secrets\.VERCEL_TOKEN \}\}/);
   });
 
+  it("keeps main's trusted checkout out of the preview build's type check", () => {
+    // A sparse checkout still brings main's root files, next.config.ts among them; the build must not compile them.
+    const tsconfig = JSON.parse(readFileSync(path.join(__dirname, "..", "tsconfig.json"), "utf8"));
+    expect(tsconfig.exclude).toContain("trusted");
+  });
+
   it("checks destructive changes against what each migration removed from the CI database", () => {
     const all = steps(job("checks"));
     const migrateStep = all[stepIndex(all, /npm run db:migrate/)];
