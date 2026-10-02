@@ -1335,6 +1335,7 @@
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
       "people": "[EN] People",
+      "smsTest": "[EN] Test text",
       "buildings": "[EN] Buildings",
       "providers": "[EN] Providers",
       "directory": "[EN] Directory"
@@ -3945,6 +3946,46 @@
         "locked": "[EN] Too many wrong codes or passwords. Wait 15 minutes, then try again.",
         "notRequired": "[EN] Your authenticator setup has changed. Reload the page.",
         "unavailable": "[EN] The authenticator is not working right now. Try again in a few minutes."
+      }
+    },
+    "smsTest": {
+      "title": "[EN] Test text",
+      "lead": "[EN] Send one test text from production to an approved phone, to learn whether the Twilio account and the toll-free number work. Nothing is retried automatically.",
+      "previewOnly": "[EN] Texts are only sent from production",
+      "notConfigured": "[EN] Texts can go out from here, but the Twilio account, the toll-free number or the approved phones are not set, or one is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.",
+      "number": "[EN] Send to",
+      "numberHint": "[EN] Only the approved phones are listed. The text is \"CVH test from production\".",
+      "submit": "[EN] Send test text",
+      "sent": {
+        "heading": "[EN] Twilio accepted the test text",
+        "response": "[EN] Twilio’s response: HTTP {http}, status {status}",
+        "messageId": "[EN] Message id: {id}",
+        "line": "[EN] Delivery is not tracked in this check: look at the phone."
+      },
+      "failed": {
+        "heading": "[EN] Twilio did not send the test text",
+        "withCode": "[EN] Twilio error {code}: {message}",
+        "withoutCode": "[EN] Twilio answered HTTP {http}: {message}",
+        "bare": "[EN] Twilio answered HTTP {http} without an error message.",
+        "line": "[EN] Nothing was retried. Fix the cause, then press the button again."
+      },
+      "noAnswer": {
+        "heading": "[EN] Twilio did not answer",
+        "line": "[EN] The text may or may not have been sent. Nothing was retried, and no second text can go to this phone for 5 minutes."
+      },
+      "unknown": {
+        "heading": "[EN] Outcome unknown",
+        "lead": "[EN] These attempts were started, but Twilio’s answer was never recorded, so the text may or may not have been sent. Look at the phone. No second text can go to the same phone for 5 minutes after an attempt.",
+        "item": "[EN] Attempt {id}, started {time} UTC: outcome unknown"
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can send a test text.",
+        "invalid": "[EN] That request was not understood. Reload the page and try again.",
+        "notAvailable": "[EN] Texts cannot be sent from here. Nothing was sent.",
+        "notAllowlisted": "[EN] That phone is not on the approved list. Nothing was sent.",
+        "duplicateNumber": "[EN] A test text went to that phone in the last 5 minutes. Nothing was sent. Wait, then try again.",
+        "duplicateRequest": "[EN] This request was already sent. Nothing more was sent. Press the button again to send a new one.",
+        "unavailable": "[EN] The test text could not be sent right now. Nothing was sent."
       }
     },
     "buildings": {

@@ -5,7 +5,9 @@ import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type S
 import { HubShell } from "@/ui/hub/hub-shell";
 import type { HubNavSection } from "@/ui/hub/hub-nav";
 import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
-import type { ReactNode } from "react";
+import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
+import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
+import type { ComponentProps, ReactNode } from "react";
 import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
@@ -544,6 +546,53 @@ export function ProvidersFixture({
           <p>{summary}</p>
           <ProviderList rows={rows} today={today} labels={labels} />
         </Stack>
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Test text screen (S01.15), as an Admin sees it: the page's real body (SmsTestView) and the
+ * real, behaviour-free form (SendTestTextFormView) with the state a press would leave. The numbers are masked labels
+ * with opaque values, as the page gives them; nothing here is a phone number.
+ */
+export function SmsTestFixture({
+  texts,
+  brand,
+  availability,
+  form,
+  unknownAttempts,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  availability: "preview" | "not_configured" | "ready";
+  form: ComponentProps<typeof SendTestTextFormView>;
+  unknownAttempts?: string[];
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/sms-test"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="tap">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <SmsTestView availability={availability} unknownAttempts={unknownAttempts} form={availability === "ready" ? <SendTestTextFormView {...form} /> : null} />
       </Screen>
     </HubShell>
   );
