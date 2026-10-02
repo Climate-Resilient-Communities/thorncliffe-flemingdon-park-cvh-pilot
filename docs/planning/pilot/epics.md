@@ -282,6 +282,8 @@ Admins create staff accounts; staff sign in safely; the 43 buildings and floors 
 
 **Epic estimate:** 88.5 h across 16 stories (4 S, 12 M) · **Epic actual:** —
 
+**Epic exit:** before E01 is closed, every E01 component and screen is captured as screenshots and approved by the product owner: the S01.16 layout components (Screen, Stack, Inline, Grid in every variant, the tap rule) and every E01 screen and state (Hub shell at 390, 699, 700 and 1280 px; sign-in, MFA setup and recovery screens; account and building management screens), in `en` and `ur`, light theme, normal and basic mode where they apply.
+
 **Shared foundations reused by later stories and epics:** environment configuration (S01.02), design tokens and layout primitives (S01.16), migrations and RLS (S01.03), the audit trail (S01.04), accounts and sessions (S01.05–S01.11), the role policy (S01.12), buildings and floors (S01.13), coverage (S01.14). Each story creates only the tables it needs and names the stories it depends on.
 
 **Definitions used in this epic**
