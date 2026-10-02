@@ -59,6 +59,8 @@
     "more": "更多",
     "notInPrototype": "本原型中没有",
     "notInPrototypeBody": "这一部分尚未在原型中制作。没有任何更改。",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "好的",
     "about": "关于 CVH",
     "aboutBody": "社区虚拟中心由 Thorncliffe Park Community Hub 为 Thorncliffe Park 和 Flemingdon Park 运营。",

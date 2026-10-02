@@ -59,6 +59,8 @@
     "more": "Viac",
     "notInPrototype": "V tomto prototype nie je",
     "notInPrototypeBody": "Táto časť nie je v prototype vytvorená. Nič sa nezmenilo.",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "OK",
     "about": "O CVH",
     "aboutBody": "Komunitné virtuálne centrum prevádzkuje Thorncliffe Park Community Hub pre Thorncliffe Park a Flemingdon Park.",

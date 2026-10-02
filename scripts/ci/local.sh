@@ -193,6 +193,7 @@ step npm run check:tokens
 step npm run check:spacing
 step npm run check:layout
 step npm run check:layers
+step npm run check:logical
 step npm test
 step npm run lint:deps
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
@@ -203,6 +204,8 @@ always_step npm run check:strings
 replaced_step 'npx playwright install --with-deps chromium' verify_chromium
 step npm run test:layout
 APP_VERSION="$GITHUB_SHA" step npm run build
+# The resident tests run in the pinned Playwright image (scripts/resident-docker.sh), as in CI.
+CI=true step npm run test:resident:docker
 EXPECTED_VERSION="$GITHUB_SHA" step npm run test:smoke
 
 # --- result ------------------------------------------------------------------

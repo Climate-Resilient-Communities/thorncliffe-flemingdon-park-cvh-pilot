@@ -59,6 +59,8 @@
     "more": "نور",
     "notInPrototype": "په دې نمونه کې نشته",
     "notInPrototypeBody": "دا برخه په نمونه کې نه ده جوړه شوې. هیڅ بدلون نه دی راغلی.",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "سمه ده",
     "about": "د CVH په اړه",
     "aboutBody": "ټولنیز مجازي مرکز Thorncliffe Park Community Hub د تورنکلیف پارک او فلیمینګډن پارک لپاره چلوي.",
