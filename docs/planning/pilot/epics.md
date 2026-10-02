@@ -364,6 +364,7 @@ So that no environment other than production can text residents.
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** AR-5, AR-4 · **Depends on:** S01.02 · **Branch:** `e01-s03-migrations-rls`
+- **CI settings:** GitHub secret `PRODUCTION_DATABASE_URL`: the Supabase **session pooler** connection string, port 5432 (`postgres://postgres.<project-ref>:<database password>@<pooler host>.pooler.supabase.com:5432/postgres`; GitHub's runners have no IPv6 for the direct connection, and the transaction pooler on 6543 is refused), used only by the production job's migrate step
 
 As a developer,
 I want schema changes applied by CI with checks and a clear recovery path,
@@ -378,6 +379,11 @@ So that a bad migration never leaves production half-changed or exposed.
 **Given** any migration that creates a table
 **When** CI runs
 **Then** CI fails if the table has RLS disabled or has any anon or authenticated policy
+
+**Given** pg_net's `net.*` functions cannot be revoked from clients (Supabase owns them)
+**When** `db:check` runs after the migrations in CI
+**Then** it fails if any function, procedure, view or materialized view in an app schema references the `net` schema (`net.http_post`, `net._http_response` and the like) and `anon` or `authenticated` can execute or select it, directly or through PUBLIC, including a `SECURITY DEFINER` function
+**And** an object only `service_role` or `postgres` can reach passes
 
 **Given** a merge to `main`
 **When** CI applies migrations to production
