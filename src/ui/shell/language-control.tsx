@@ -4,6 +4,7 @@ import { usePathname } from "next/navigation";
 import { useId, useRef, type MouseEvent } from "react";
 import { pathInLanguage } from "@/i18n/paths";
 import type { LaunchCode } from "@/i18n/languages";
+import { ResidentText } from "../text/resident-text";
 import { deviceStorage, saveLanguageChoice } from "./language-choice";
 
 export type LanguageOption = { code: LaunchCode; bcp47: string; dir: "ltr" | "rtl"; native: string };
@@ -68,7 +69,7 @@ export function LanguageControl({ current, languages, labels }: LanguageControlP
           <div className="shell-sheet__head">
             <span className="shell-ico shell-ico--globe" aria-hidden="true" />
             <h2 className="shell-sheet__title" id={titleId}>
-              {labels.title}
+              <ResidentText>{labels.title}</ResidentText>
             </h2>
             <button
               type="button"
@@ -80,7 +81,9 @@ export function LanguageControl({ current, languages, labels }: LanguageControlP
             </button>
           </div>
           <div className="shell-sheet__body">
-            <p className="shell-sheet__note">{labels.note}</p>
+            <p className="shell-sheet__note">
+              <ResidentText>{labels.note}</ResidentText>
+            </p>
             <ul className="shell-sheet__list" role="list">
               {languages.map((language) => (
                 <li key={language.code}>

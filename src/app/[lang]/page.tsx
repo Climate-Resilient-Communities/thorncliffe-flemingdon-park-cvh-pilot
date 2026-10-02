@@ -1,6 +1,6 @@
 import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
-import { Screen, Stack } from "@/ui";
+import { ResidentText, Screen, Stack } from "@/ui";
 import { isLaunchCode } from "@/i18n/languages";
 
 /**
@@ -16,8 +16,12 @@ export default async function ResidentHome({ params }: PageProps<"/[lang]">) {
   return (
     <Screen surface="resident">
       <Stack gap="related">
-        <h1>{t("nothingActive")}</h1>
-        <p>{t("nothingActiveBody")}</p>
+        <h1>
+          <ResidentText>{t("nothingActive")}</ResidentText>
+        </h1>
+        <p>
+          <ResidentText>{t("nothingActiveBody")}</ResidentText>
+        </p>
       </Stack>
     </Screen>
   );
