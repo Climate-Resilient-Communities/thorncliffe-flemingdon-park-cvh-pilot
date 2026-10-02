@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
-import { DEVICE_CHOICES_KEY, GROUPS, parseDeviceChoices } from "./deviceChoices";
+import { DEVICE_CHOICES_KEY, parseDeviceChoices } from "./deviceChoices";
+import { GROUPS } from "./groups";
 
 describe("device choices", () => {
   it("live under cvh.choices", () => {
@@ -67,5 +68,20 @@ describe("device choices", () => {
 
   it("reads the value S02.02 saved, {v: 1, lang}, as it is", () => {
     expect(parseDeviceChoices('{"v":1,"lang":"ur"}')).toEqual({ v: 1, lang: "ur" });
+  });
+});
+
+describe("device choices share the schemas of the rest of the contracts", () => {
+  it("keep the same group ids a resident saved (R-26), in the same order", () => {
+    expect([...GROUPS]).toEqual(["seniors", "newcomers", "families", "checkin"]);
+    expect(parseDeviceChoices('{"v":1,"groups":["checkin","pensioners","seniors"]}')).toEqual({ v: 1, groups: ["checkin", "seniors"] });
+  });
+
+  it("keep a stored floor id that is a uuid, of either case, and drop one that is not, as before the schemas were unified", () => {
+    const lower = "01900000-0000-7000-8000-00000000abcd";
+    const upper = lower.toUpperCase();
+    expect(parseDeviceChoices(JSON.stringify({ v: 1, floors: [lower] }))).toEqual({ v: 1, floors: [lower] });
+    expect(parseDeviceChoices(JSON.stringify({ v: 1, floors: [upper] }))).toEqual({ v: 1, floors: [upper] });
+    expect(parseDeviceChoices(JSON.stringify({ v: 1, lang: "ur", floors: ["G"] }))).toEqual({ v: 1, lang: "ur" });
   });
 });

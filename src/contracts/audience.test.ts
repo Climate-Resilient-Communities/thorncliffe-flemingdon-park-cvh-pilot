@@ -10,10 +10,10 @@ import {
   profileFromDevice,
   type Audience,
   type AudienceProfile,
-  type DeviceAudienceChoices,
-  type DeviceBuildingList,
 } from "./audience";
-import { GROUPS } from "./groups";
+import type { BuildingList } from "./buildingList";
+import type { DeviceChoices } from "./deviceChoices";
+import { GROUPS, type Group } from "./groups";
 
 // ---- a small seeded generator: the same thousands of cases on every run, on every machine ----------------
 
@@ -256,27 +256,33 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
 
 // ---- profileFromDevice: the phone's saved choices and building list become the profile -------------------
 
-/** A building list shaped like S02.03's (`BuildingList`): every building has a neighbourhood and its floors. */
-const BUILDING_LIST: DeviceBuildingList = {
+/** A building list as S02.03 serves it (`BuildingList`): every building has a neighbourhood and its floors. */
+const BUILDING_LIST: BuildingList = {
+  v: 1,
+  generated_at: "2026-10-01T12:00:00.000Z",
   buildings: RSNS.map((rsn, index) => ({
     rsn,
+    address: `${rsn} Test Rd`,
     neighbourhoodId: index % 2 === 0 ? "TP" : "FP",
-    floors: [0, 1, 2, 3].map((n) => ({ id: floorId(rsn, n) })),
+    neighbourhood: index % 2 === 0 ? "Thorncliffe Park" : "Flemingdon Park",
+    floors: [0, 1, 2, 3].map((n) => ({ id: floorId(rsn, n), label: String(n) })),
   })),
 };
+/** Saved choices as S02.03 stores them (`DeviceChoices`). */
+const choicesOf = (fields: Omit<DeviceChoices, "v">): DeviceChoices => ({ v: 1, ...fields });
 const neighbourhoodOf = (rsn: string) => BUILDING_LIST.buildings.find((building) => building.rsn === rsn)!.neighbourhoodId;
 
-/** Saved choices as the phone could hold them: any buildings, floors of those buildings and of others, groups, muted topics. */
-function randomChoices(next: Next): DeviceAudienceChoices {
+/** Saved choices as the phone could hold them: any buildings, floors of those buildings and of others, groups. */
+function randomChoices(next: Next): DeviceChoices & { buildings: string[]; floors: string[]; groups: Group[] } {
   const buildings = some(next, RSNS, 0.35);
   const floors = some(next, FLOORS, 0.3);
-  return { buildings, floors, groups: some(next, GROUPS, 0.4), mutedTopics: some(next, TYPES, 0.3) };
+  return { v: 1, buildings, floors, groups: some(next, GROUPS, 0.4) };
 }
 
 describe("profileFromDevice: what the phone's choices say about its owner", () => {
   it("groups the saved floors under their building, and a building with no floor chosen gets []", () => {
     const [a, b, c] = ["4154146", "4154159", "4154169"];
-    const profile = profileFromDevice({ buildings: [a, b, c], floors: [floorId(a, 2), floorId(a, 1), floorId(b, 3)], groups: ["families"] }, BUILDING_LIST);
+    const profile = profileFromDevice(choicesOf({ buildings: [a, b, c], floors: [floorId(a, 2), floorId(a, 1), floorId(b, 3)], groups: ["families"] }), BUILDING_LIST);
     expect(profile.places).toEqual([
       { rsn: a, floors: [floorId(a, 1), floorId(a, 2)] },
       { rsn: b, floors: [floorId(b, 3)] },
@@ -289,15 +295,15 @@ describe("profileFromDevice: what the phone's choices say about its owner", () =
   it("derives the neighbourhoods from the saved buildings, sorted and without repeats", () => {
     const [a, b, c] = ["4154146", "4154159", "4154169"];
     expect([neighbourhoodOf(a), neighbourhoodOf(b), neighbourhoodOf(c)]).toEqual(["TP", "FP", "TP"]);
-    expect(profileFromDevice({ buildings: [a, c] }, BUILDING_LIST).neighbourhoodIds).toEqual(["TP"]);
-    expect(profileFromDevice({ buildings: [c, b, a] }, BUILDING_LIST).neighbourhoodIds).toEqual(["FP", "TP"]);
+    expect(profileFromDevice(choicesOf({ buildings: [a, c] }), BUILDING_LIST).neighbourhoodIds).toEqual(["TP"]);
+    expect(profileFromDevice(choicesOf({ buildings: [c, b, a] }), BUILDING_LIST).neighbourhoodIds).toEqual(["FP", "TP"]);
     // A saved building the list no longer has is still a place (the matcher names it by rsn) but tells nothing about the neighbourhood.
-    expect(profileFromDevice({ buildings: ["999"] }, BUILDING_LIST)).toMatchObject({ neighbourhoodIds: [], places: [{ rsn: "999", floors: [] }] });
+    expect(profileFromDevice(choicesOf({ buildings: ["999"] }), BUILDING_LIST)).toMatchObject({ neighbourhoodIds: [], places: [{ rsn: "999", floors: [] }] });
   });
 
   it("a phone with no building saved has no place and no neighbourhood; floors saved without their building are not used", () => {
-    expect(profileFromDevice({}, BUILDING_LIST)).toEqual({ neighbourhoodIds: [], places: [], groups: [], mutedTopics: [] });
-    const orphan = profileFromDevice({ floors: [floorId("4154146", 1)], groups: ["seniors"] }, BUILDING_LIST);
+    expect(profileFromDevice(choicesOf({}), BUILDING_LIST)).toEqual({ neighbourhoodIds: [], places: [], groups: [], mutedTopics: [] });
+    const orphan = profileFromDevice(choicesOf({ floors: [floorId("4154146", 1)], groups: ["seniors"] }), BUILDING_LIST);
     expect(orphan).toEqual({ neighbourhoodIds: [], places: [], groups: ["seniors"], mutedTopics: [] });
   });
 
@@ -319,6 +325,11 @@ describe("profileFromDevice: what the phone's choices say about its owner", () =
     }
   });
 
+  it("reads no muted topics from the device: a field the phone may hold under any name leaves the matcher's list empty", () => {
+    const profile = profileFromDevice({ ...choicesOf({ buildings: ["4154146"] }), mutedTopics: ["power"], muted: ["heat"] }, BUILDING_LIST);
+    expect(profile.mutedTopics).toEqual([]);
+  });
+
   it("is pure and does not depend on the order or repeats of the saved lists", () => {
     const next = random(0xfeed);
     const freeze = <T,>(value: T): T => {
@@ -328,24 +339,25 @@ describe("profileFromDevice: what the phone's choices say about its owner", () =
     const list = freeze(structuredClone(BUILDING_LIST));
     for (let i = 0; i < 1500; i += 1) {
       const choices = freeze(randomChoices(next));
-      const again: DeviceAudienceChoices = {
+      const again: DeviceChoices = {
+        v: 1,
         buildings: [...choices.buildings!, ...choices.buildings!].reverse(),
         floors: [...choices.floors!].reverse(),
         groups: [...choices.groups!, ...choices.groups!],
-        mutedTopics: [...choices.mutedTopics!].reverse(),
       };
       expect(profileFromDevice(again, list)).toEqual(profileFromDevice(choices, list));
     }
   });
 
-  it("decides the same as the matcher would from the sets: alerts reach a phone by its saved buildings, floors, groups and muted topics", () => {
+  it("decides the same as the matcher would from the sets: alerts reach a phone by its saved buildings, floors and groups", () => {
     const next = random(0x0badf00d);
     for (let i = 0; i < CASES; i += 1) {
       const audience = randomAudience(next);
       const choices = randomChoices(next);
       const saved = new Set(choices.buildings);
       const floorsSaved = (rsn: string) => BUILDING_LIST.buildings.find((b) => b.rsn === rsn)!.floors.map((f) => f.id).filter((id) => choices.floors!.includes(id));
-      const unmuted = audience.types.some((type) => type === "fire") || audience.types.some((type) => !choices.mutedTopics!.includes(type));
+      // The device holds no muted topics yet (see the TODO in `profileFromDevice`), so no topic is muted.
+      const unmuted = true;
       const grouped = audience.groups.length === 0 || audience.groups.some((group) => choices.groups!.includes(group));
       let place: boolean;
       if (audience.scope === "neighbourhood") place = saved.size === 0 || [...saved].some((rsn) => audience.neighbourhood_ids.includes(neighbourhoodOf(rsn)));
@@ -424,7 +436,7 @@ describe("one matcher, no copy", () => {
   it("the contract imports nothing but zod and the contract files beside it, so the server and the phone can both load it unchanged", () => {
     const source = readFileSync(path.join(__dirname, "audience.ts"), "utf8");
     const imports = [...source.matchAll(/^import .* from "([^"]+)"/gm)].map((match) => match[1]);
-    expect(imports).toEqual(["zod", "./groups", "./places"]);
+    expect(imports).toEqual(["zod", "./buildingList", "./deviceChoices", "./groups", "./places"]);
     expect(source).not.toMatch(/\b(Date|Math\.random|fetch|process|localStorage|window)\b/);
   });
 

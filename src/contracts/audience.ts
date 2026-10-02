@@ -6,6 +6,8 @@
 // Floors are named by their stable floor id (`building_floor.id`), never by label or number: renaming or
 // reordering a floor must not change who an alert reaches. (Pending owner decision 28; AD-7 says floor ids.)
 import { z } from "zod";
+import type { BuildingList } from "./buildingList";
+import type { DeviceChoices } from "./deviceChoices";
 import { GroupSchema, type Group } from "./groups";
 import { FloorIdSchema, RsnSchema } from "./places";
 
@@ -145,31 +147,16 @@ export function matches(audience: Audience, profile: AudienceProfile): boolean {
 }
 
 /**
- * What the phone saved (S02.03, `src/contracts/deviceChoices.ts`), as far as the matcher needs it: buildings by `rsn`, floors by
- * floor id (each in one of the chosen buildings), the groups and the muted topics. Structural, so this contract does not
- * import the device-choices module (which is for the phone's storage); `DeviceChoices` fits it.
- */
-export interface DeviceAudienceChoices {
-  buildings?: readonly string[];
-  floors?: readonly string[];
-  groups?: readonly string[];
-  /** Disruption type ids the resident muted (a later story adds the field; absent means none). */
-  mutedTopics?: readonly string[];
-}
-
-/** The building list the phone keeps (S02.03, `src/contracts/buildingList.ts`), as far as the matcher needs it. `BuildingList` fits it. */
-export interface DeviceBuildingList {
-  buildings: readonly { rsn: string; neighbourhoodId: string; floors: readonly { id: string }[] }[];
-}
-
-/**
  * The profile of a phone, from its saved choices and its building list; pure. Each saved building becomes a place
  * with the saved floors that belong to it under the list (a building with no floor chosen has `[]`: no floor recorded
  * there); a floor of a building that is not saved, or that no listed building has, is left out. The neighbourhoods are
  * those of the saved buildings the list knows, sorted and without repeats; a phone with no building saved (or none the
  * list knows) has none, which `matches` reads as "every neighbourhood".
  */
-export function profileFromDevice(choices: DeviceAudienceChoices, buildingList: DeviceBuildingList): AudienceProfile {
+export function profileFromDevice(choices: DeviceChoices, buildingList: BuildingList): AudienceProfile {
+  // TODO(muted topics on the phone): S02.03's `DeviceChoices` has no muted-topics field yet (FR-A9 puts them in E02, but no
+  // story in the pilot epics adds them to `cvh.choices`). When one does, read its ids here, `sortedUnique(choices.<field> ?? [])`,
+  // and until then a phone mutes nothing, so every topic reaches it (fire always does).
   const savedFloors = new Set(choices.floors ?? []);
   const listed = new Map(buildingList.buildings.map((building) => [building.rsn, building] as const));
   const rsns = sortedUnique(choices.buildings ?? []);
@@ -179,7 +166,7 @@ export function profileFromDevice(choices: DeviceAudienceChoices, buildingList: 
     if (building) neighbourhoodIds.push(building.neighbourhoodId);
     return { rsn, floors: sortedUnique((building?.floors ?? []).map((floor) => floor.id).filter((id) => savedFloors.has(id))) };
   });
-  return { neighbourhoodIds: sortedUnique(neighbourhoodIds), places, groups: sortedUnique(choices.groups ?? []), mutedTopics: sortedUnique(choices.mutedTopics ?? []) };
+  return { neighbourhoodIds: sortedUnique(neighbourhoodIds), places, groups: sortedUnique(choices.groups ?? []), mutedTopics: [] };
 }
 
 /** True when the person muted every topic of the alert and none of them overrides a mute. */
