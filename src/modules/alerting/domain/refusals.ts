@@ -27,4 +27,12 @@ export type AlertRefusal =
   /** The time of the first report is not a time, or is in the future. */
   | "REPORTED_AT_INVALID"
   /** Translating, rendering or hashing the draft failed: the entry stays a draft. */
-  | "PREPARATION_FAILED";
+  | "PREPARATION_FAILED"
+  /** The audience (S04.04): nothing chosen, a place that is not there, a floor not in its building, a bad range, a group nobody offers. */
+  | "AUDIENCE_EMPTY"
+  | "NEIGHBOURHOOD_NOT_FOUND"
+  | "BUILDING_NOT_FOUND"
+  | "FLOOR_NOT_IN_BUILDING"
+  | "FLOOR_RANGE_REVERSED"
+  | "FLOOR_RANGE_INCOMPLETE"
+  | "GROUP_UNKNOWN";
