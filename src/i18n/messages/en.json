@@ -3846,7 +3846,7 @@
       "password": "Password",
       "submit": "Sign in",
       "failed": "Username or password is incorrect",
-      "expired": "Your starting password has expired. Ask an Admin to re-issue it.",
+      "expired": "Your starting password has expired or was already used. Ask an Admin for a new starting password.",
       "unavailable": "Sign-in is not working right now. Try again in a few minutes."
     },
     "signOut": "Sign out",

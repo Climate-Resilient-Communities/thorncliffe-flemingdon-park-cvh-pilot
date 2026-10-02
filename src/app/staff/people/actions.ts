@@ -1,15 +1,14 @@
 "use server";
 
 import { englishText } from "@/i18n/text";
-import { REFUSAL_MESSAGE_KEYS } from "@/modules/identity";
 import { staffAction } from "../guard";
 import { identity, staffAuth } from "../identity";
 import { addPersonFromForm, addPersonValues, type AddPersonState } from "./addPerson";
 import { reissueFromForm, reissueUsername, type ReissueState } from "./reissue";
 import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from "./resetPassword";
 
-const refusalMessage = (error: "unauthenticated" | "setup_incomplete") =>
-  englishText(error === "unauthenticated" ? REFUSAL_MESSAGE_KEYS.unauthenticated : "staff.setup.incomplete");
+// Without a session the guard sends the person to sign-in; only another setup gate answers here.
+const refusalMessage = (_error: "setup_incomplete") => englishText("staff.setup.incomplete");
 
 /** "Add a person" (S01.05). Called directly or from the form; the guard resolves the session on the server either way. */
 export const addPersonAction = staffAction(

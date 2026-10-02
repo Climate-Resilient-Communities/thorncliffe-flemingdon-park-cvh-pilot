@@ -960,7 +960,7 @@
       passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.' } } } });
   /* Staff sign-in and the setup sequence's first gate (S01.07). Not a prototype screen. */
   m(en, { staff: { signIn: { title: 'Staff sign-in', lead: 'Sign in with the username and password you were given.', username: 'Username', password: 'Password', submit: 'Sign in',
-    failed: 'Username or password is incorrect', expired: 'Your starting password has expired. Ask an Admin to re-issue it.',
+    failed: 'Username or password is incorrect', expired: 'Your starting password has expired or was already used. Ask an Admin for a new starting password.',
     unavailable: 'Sign-in is not working right now. Try again in a few minutes.' },
   signOut: 'Sign out', signedInAs: 'Signed in as {name}, {role}',
   setup: { incomplete: 'Finish setting up your account first.',
