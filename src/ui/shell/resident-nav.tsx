@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ResidentText } from "../text/resident-text";
 
 export type NavItem = {
   /** The prototype's destination: now (R-03), help (R-09), map (R-14), ready (R-24). */
@@ -40,7 +41,9 @@ export function ResidentNav({ label, items }: ResidentNavProps) {
           data-testid={`shell-nav-${item.id}`}
         >
           <span className={`shell-ico shell-ico--${item.icon}`} aria-hidden="true" />
-          <span>{item.label}</span>
+          <span className="shell-nav__label">
+            <ResidentText>{item.label}</ResidentText>
+          </span>
         </Link>
       ))}
     </nav>
