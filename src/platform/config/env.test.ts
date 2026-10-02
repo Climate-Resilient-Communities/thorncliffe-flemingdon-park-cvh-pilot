@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EnvError, getEnv, parseEnv, resetEnvCache } from "./env";
+import { EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -334,5 +334,41 @@ describe("getEnv", () => {
     for (const [k, v] of Object.entries(preview)) vi.stubEnv(k, v);
     for (const k of Object.keys(twilio)) vi.stubEnv(k, "");
     expect(getEnv()).toBe(getEnv());
+  });
+});
+
+describe("failClosedEnvironment (what the terms page uses to decide whether a draft may be shown)", () => {
+  it("is development when VERCEL is unset", () => {
+    expect(failClosedEnvironment({})).toBe("development");
+    expect(failClosedEnvironment({ VERCEL: "", VERCEL_ENV: "" })).toBe("development");
+  });
+
+  it("is production when VERCEL is set and VERCEL_ENV is missing or empty", () => {
+    expect(failClosedEnvironment({ VERCEL: "1" })).toBe("production");
+    expect(failClosedEnvironment({ VERCEL: "1", VERCEL_ENV: "" })).toBe("production");
+  });
+
+  it("is production for an unknown VERCEL_ENV, whether or not VERCEL is set", () => {
+    expect(failClosedEnvironment({ VERCEL: "1", VERCEL_ENV: "staging" })).toBe("production");
+    expect(failClosedEnvironment({ VERCEL_ENV: "Preview" })).toBe("production");
+  });
+
+  it("follows a known VERCEL_ENV", () => {
+    expect(failClosedEnvironment({ VERCEL: "1", VERCEL_ENV: "preview" })).toBe("preview");
+    expect(failClosedEnvironment({ VERCEL: "1", VERCEL_ENV: "production" })).toBe("production");
+    expect(failClosedEnvironment({ VERCEL: "1", VERCEL_ENV: "development" })).toBe("development");
+  });
+
+  it("detects the environment as parseEnv does when Vercel's variables are sound, and is stricter when they are not", () => {
+    expect(failClosedEnvironment(preview)).toBe(parseEnv(preview).environment);
+    expect(failClosedEnvironment(production)).toBe(parseEnv(production).environment);
+    expect(failClosedEnvironment(local)).toBe(parseEnv(local).environment);
+    // parseEnv refuses to boot and treats the unknown as preview; this treats it as production.
+    expect(problemsOf({ ...preview, VERCEL_ENV: "staging" })[0]).toContain("VERCEL_ENV");
+    expect(failClosedEnvironment({ ...preview, VERCEL_ENV: "staging" })).toBe("production");
+  });
+
+  it("does not throw on a source that parseEnv would refuse", () => {
+    expect(() => failClosedEnvironment({ VERCEL: "1", SMS_MODE: "bogus", PUBLIC_BASE_URL: "nonsense" })).not.toThrow();
   });
 });

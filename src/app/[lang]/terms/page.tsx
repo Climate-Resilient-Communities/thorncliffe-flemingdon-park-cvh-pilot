@@ -3,21 +3,12 @@ import { getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { FALLBACK_MARKER, ResidentText, Screen, Stack } from "@/ui";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
+import { failClosedEnvironment } from "@/platform/config/env";
 import { termsPageMode, termsPageView, type TermsText } from "@/modules/subscriptions";
 import "./terms.css";
 
 // Prerendered at build time for every launch language (the layout's generateStaticParams) from the committed files.
 // The page reads no cookie and no header, and needs no database.
-
-/**
- * Where this build runs, failing closed: only an environment known to be a preview or local development may show
- * unpublished terms. Anything else, including a missing or unknown VERCEL_ENV on Vercel, counts as production.
- */
-function environment(): "production" | "preview" | "development" {
-  const vercelEnv = process.env.VERCEL_ENV;
-  if (vercelEnv === undefined || vercelEnv === "") return process.env.VERCEL ? "production" : "development";
-  return vercelEnv === "preview" || vercelEnv === "development" ? vercelEnv : "production";
-}
 
 /** One text of the terms: a translation as is, English standing in for a missing one marked and isolated (bidi). */
 function TermsLine({ text }: { text: TermsText }) {
@@ -28,7 +19,7 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/terms">): 
   const { lang } = await params;
   if (!isLaunchCode(lang)) return {};
   const view = termsPageView(lang);
-  if (termsPageMode(view, environment()) === "hidden") return {};
+  if (termsPageMode(view, failClosedEnvironment()) === "hidden") return {};
   // An unpublished draft is for staff to check: keep it out of search results.
   return { title: view.document.title.text, robots: view.status === "published" ? undefined : { index: false, follow: false } };
 }
@@ -45,7 +36,7 @@ export default async function TermsPage({ params }: PageProps<"/[lang]/terms">) 
   setRequestLocale(lang);
 
   const view = termsPageView(lang);
-  const mode = termsPageMode(view, environment());
+  const mode = termsPageMode(view, failClosedEnvironment());
   if (mode === "hidden") notFound();
 
   const t = await getTranslations({ locale: lang, namespace: "terms" });
