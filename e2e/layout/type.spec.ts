@@ -173,4 +173,20 @@ test.describe("base typography on unclassed elements", () => {
     expect(await read(page, "h1")).toMatchObject({ size: 27, ratio: 1.25 });
     expect(await read(page, "h3")).toMatchObject({ size: 18, ratio: 1.25 });
   });
+
+  test("h1 to h3 are bold and use the ink colour token", async ({ page }) => {
+    await mount(page, "BareText", {});
+    const ink = await page.evaluate(() => {
+      const probe = document.body.appendChild(document.createElement("div"));
+      probe.style.color = "var(--ink)";
+      return getComputedStyle(probe).color;
+    });
+    for (const selector of ["h1", "h2", "h3"]) {
+      const found = await page.locator(selector).first().evaluate((element) => {
+        const style = getComputedStyle(element);
+        return { weight: style.fontWeight, color: style.color };
+      });
+      expect(found, selector).toEqual({ weight: "700", color: ink });
+    }
+  });
 });

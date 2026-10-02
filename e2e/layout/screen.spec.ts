@@ -232,6 +232,19 @@ test.describe("Screen actions region surface and alignment", () => {
   }
 });
 
+test.describe("Screen actions bar block padding", () => {
+  for (const lang of ["en", "ur"]) {
+    test(`is 14px above and 16px below the first action in ${lang}`, async ({ page }) => {
+      await page.setViewportSize({ width: 390, height: 600 });
+      await mount(page, "ResidentActionsScreen", {}, { lang });
+      const bar = await box(page.getByRole("region", { name: "Approval actions" }));
+      const action = await box(page.getByTestId("first-action"));
+      expect(action.top - bar.top - 1).toBeCloseTo(14, 0);
+      expect(bar.bottom - action.bottom).toBeCloseTo(16, 0);
+    });
+  }
+});
+
 test.describe("Screen inset=\"none\"", () => {
   test("puts the bleed map across the full main area, with no negative margin anywhere", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 800 });

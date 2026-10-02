@@ -46,6 +46,8 @@
   h2,
   h3 {
     line-height: var(--type-tight-line-height);
+    font-weight: 700;
+    color: var(--ink);
   }
 
   h1 {

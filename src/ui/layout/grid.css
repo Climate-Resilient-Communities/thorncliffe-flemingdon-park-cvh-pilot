@@ -11,8 +11,8 @@
     gap: var(--gap-grid);
   }
 
-  /* A cell may be narrower than its content; only a word that cannot fit on a line of its own (a URL, a
-     long compound) is broken, so ordinary words are never split and text wraps inside its column. */
+  /* A cell may be narrower than its content. A word wider than its cell is broken (ordinary words
+     included), which only happens in very narrow cells; long unbreakable tokens never overflow. */
   .layout-grid > * {
     min-inline-size: 0;
     overflow-wrap: break-word;

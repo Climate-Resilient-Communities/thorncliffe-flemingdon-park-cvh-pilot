@@ -46,6 +46,8 @@ No `className`, `style`, `gap` or `padding` prop. Children are laid out as a col
 | `--screen-gap` (resident) | `--gap-section-resident` | `--app-space-8` | 16px (G1) |
 | `--screen-inset` (staff, at or above the Hub breakpoint) | `--inset-page-staff` | `--app-space-10` | 24px |
 | `--screen-inset` (staff, below the Hub breakpoint) | `--inset-page-staff-narrow` | `--app-space-8` | 16px |
+| `--screen-actions-inset-block-start` | `--inset-card-snug` | `--app-space-7` | 14px (the prototype's `.cvh-pubbar` top padding) |
+| `--screen-actions-inset-block-end` | `--gutter-resident` | `--app-space-8` | 16px (the prototype's `.cvh-pubbar` bottom padding) |
 | `--screen-gap` (staff) | `--gap-section-hub` | `--app-space-9` | 20px (G1) |
 | `--screen-max-inline-size` (staff, `width="default"`) | `--size-page-staff` | `--app-page-staff` | 1040px (G5) |
 | `--screen-max-inline-size` (staff, `width="review"`) | `--size-page-staff-review` | `--app-page-staff-review` | 1080px (G5) |

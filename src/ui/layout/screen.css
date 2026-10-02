@@ -8,6 +8,8 @@
   .layout-screen {
     display: flex;
     flex-direction: column;
+    --screen-actions-inset-block-start: var(--inset-card-snug);
+    --screen-actions-inset-block-end: var(--gutter-resident);
   }
 
   .layout-screen[data-surface="resident"] {
@@ -98,5 +100,7 @@
     max-inline-size: var(--screen-max-inline-size);
     margin-inline: auto;
     padding-inline: var(--screen-inset-inline);
+    padding-block-start: var(--screen-actions-inset-block-start);
+    padding-block-end: var(--screen-actions-inset-block-end);
   }
 }
