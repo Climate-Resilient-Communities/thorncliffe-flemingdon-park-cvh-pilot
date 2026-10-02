@@ -478,7 +478,7 @@ So that everyone gets a named account without the Hub sending email.
 
 ### Story S01.06 — There are always at least two usable Admins
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 44 min (started 2026-10-02 05:14 UTC, merged 2026-10-02 05:58 UTC)
 - **Traces:** FR-G2, AR-6 · **Depends on:** S01.05 · **Branch:** `e01-s06-two-admin-rule`
 
 As a Hub Admin,
@@ -506,7 +506,7 @@ So that the Hub can never lock itself out.
 
 ### Story S01.07 — Staff member signs in and replaces their starting password
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 3 min (started 2026-10-02 05:28 UTC, merged 2026-10-02 07:31 UTC)
 - **Traces:** FR-G2, NFR-N5, AR-6 · **Depends on:** S01.05 · **Branch:** `e01-s07-sign-in`
 
 As a staff member,
@@ -535,7 +535,7 @@ So that only I can act under my name.
 
 ### Story S01.08 — Sessions expire and are revoked when they should be
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 5 min (started 2026-10-02 06:59 UTC, merged 2026-10-02 08:04 UTC)
 - **Traces:** FR-G2, NFR-N5, AR-6 · **Depends on:** S01.07 · **Branch:** `e01-s08-sessions`
 
 As a Hub Admin,
@@ -611,7 +611,7 @@ So that the Hub and resident screens share one look and nobody hard-codes spacin
 
 ### Story S01.09 — Staff use a phone-first Hub
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** 2 h 8 min (started 2026-10-02 06:08 UTC, merged 2026-10-02 08:16 UTC)
 - **Traces:** UX-DR15, NFR-N5, AR-3 · **Depends on:** S01.07, S01.16 · **Branch:** `e01-s09-hub-shell`
 
 As a Coordinator approving from my phone,
@@ -647,7 +647,7 @@ So that I can act quickly away from a desk.
 
 ### Story S01.10 — Admins and Coordinators must use an authenticator code
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 59 min (started 2026-10-02 07:41 UTC, merged 2026-10-02 08:40 UTC)
 - **Traces:** FR-G2, NFR-N5, AR-6 · **Depends on:** S01.08 · **Branch:** `e01-s10-totp-enforcement`
 
 As a Hub Admin,
@@ -679,7 +679,7 @@ So that a stolen password alone can never approve, send or change anything.
 
 ### Story S01.11 — Admin can recover a lost authenticator safely
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 11 min (started 2026-10-02 08:17 UTC, merged 2026-10-02 09:28 UTC)
 - **Traces:** FR-G2, AR-6 · **Depends on:** S01.10, S01.06 · **Branch:** `e01-s11-factor-recovery`
 
 As a Coordinator who lost my phone,
@@ -703,7 +703,7 @@ So that I can get back in without weakening security for everyone.
 
 ### Story S01.12 — Each role can do exactly what the pilot allows, enforced on the server
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 57 min (started 2026-10-02 08:15 UTC, merged 2026-10-02 09:12 UTC)
 - **Traces:** FR-G1, AR-6 (AD-4 matrix) · **Depends on:** S01.10 · **Branch:** `e01-s12-role-policy`
 
 As a Hub Admin,
@@ -2847,7 +2847,7 @@ Residents read plain-language terms, sign up for texts on the web or with a staf
 
 ### Story S07.01 — Residents can read plain terms before signing up
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 40 min (started 2026-10-02 05:33 UTC, merged 2026-10-02 06:13 UTC)
 - **Traces:** NFR-N5 (terms), AR-17, FR-A2 · **Depends on:** S02.09 · **Branch:** `e07-s01-terms`
 
 As a resident,
