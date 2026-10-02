@@ -1,4 +1,4 @@
-import type { Db, DbExecutor } from "../../../platform/db";
+import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { AUDIT_ACTIONS, AuditRecordError, toAuditRecord, type AuditAction, type AuditEvent, type AuditRecord } from "../domain/actions";
 
 /** Port: stores one validated record using the given executor. */
@@ -12,7 +12,7 @@ export interface OperationalLog {
 }
 
 export interface AuditRecorder {
-  record<A extends AuditAction>(tx: DbExecutor, event: AuditEvent<A>): Promise<void>;
+  record<A extends AuditAction>(tx: DbTransaction, event: AuditEvent<A>): Promise<void>;
   recordRefusal<A extends AuditAction>(db: Db, event: AuditEvent<A>): Promise<void>;
 }
 

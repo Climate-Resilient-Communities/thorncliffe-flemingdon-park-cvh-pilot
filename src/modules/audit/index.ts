@@ -8,7 +8,7 @@ const recorder = createAuditRecorder({ store: drizzleAuditStore, log: stdoutOper
 
 /**
  * `record(tx, event)`: writes the `ok` record inside the caller's transaction
- * (or on the client). Throws if it cannot, so the caller's change rolls back.
+ * (a `DbTransaction`, so it cannot be written outside the change). Throws if it cannot, so the caller's change rolls back.
  */
 export const record = recorder.record;
 
