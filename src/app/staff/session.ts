@@ -1,20 +1,20 @@
-/** The signed-in staff member of a request, as the staff pages and actions need it. */
-export interface StaffSession {
-  staffId: string;
-}
+import type { StaffSession } from "@/modules/identity";
+import { identityConfigured, requestAuthSessions, staffAuth } from "./identity";
+
+export type { StaffSession };
 
 /**
- * The server-side session lookup of every staff page and action.
+ * The server-side session lookup of every staff page, route handler and server action, always
+ * through the guard (./guard.ts). Supabase Auth verifies the session in the request's cookies, the
+ * staff_account of its user is loaded, and the request has a session only when that account's
+ * status is `active` (AD-4); the result carries the setup gate the person is at. S01.08 adds the
+ * session limits and S01.10 the authenticator level here.
  *
- * Stub until S01.07 (sign-in), which replaces this function's body: it will read the Supabase
- * session from the request's cookies, verify it with Supabase Auth, load the staff_account by its
- * auth user and return it only when its status is active (AD-4); S01.07, S01.08 and S01.10 add the
- * setup gates, session limits and authenticator level there.
- *
- * Until then nobody is signed in, in every environment: every staff page sends the visitor to
- * sign-in and every staff action is refused as unauthenticated (fail closed). There is no
- * development or test bypass, so nothing behind it can be reached without a real session.
+ * Fail closed: where sign-in is not configured (no Supabase settings, as in the smoke checks)
+ * nobody is signed in; a provider or database failure throws, so the request fails rather than
+ * passing.
  */
 export async function currentStaffSession(): Promise<StaffSession | null> {
-  return null;
+  if (!identityConfigured()) return null;
+  return staffAuth().currentSession(await requestAuthSessions());
 }

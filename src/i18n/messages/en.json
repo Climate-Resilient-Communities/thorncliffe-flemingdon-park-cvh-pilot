@@ -3821,6 +3821,63 @@
         "providerError": "The account could not be created, and nothing was saved. Try again.",
         "providerRejected": "Supabase rejected the starting password; check the project's password policy."
       }
+    },
+    "signIn": {
+      "title": "Staff sign-in",
+      "lead": "Sign in with the username and password you were given.",
+      "username": "Username",
+      "password": "Password",
+      "submit": "Sign in",
+      "failed": "Username or password is incorrect",
+      "expired": "Your starting password has expired. Ask an Admin to re-issue it.",
+      "unavailable": "Sign-in is not working right now. Try again in a few minutes."
+    },
+    "signOut": "Sign out",
+    "signedInAs": "Signed in as {name}, {role}",
+    "setup": {
+      "incomplete": "Finish setting up your account first.",
+      "password": {
+        "title": "Choose your password",
+        "lead": "Your starting password works only this once. Choose a password that only you know.",
+        "password": "New password",
+        "passwordHint": "At least 10 characters. It cannot contain your username or be your starting password.",
+        "confirm": "Type the new password again",
+        "submit": "Save my password",
+        "errors": {
+          "tooShort": "Use at least 10 characters.",
+          "tooLong": "This password is too long. Use at most 72 letters, or fewer if you use symbols or other alphabets.",
+          "containsUsername": "Your password cannot contain your username.",
+          "isStartingPassword": "Choose a password that is not your starting password.",
+          "mismatch": "The two passwords are not the same. Type the same password twice.",
+          "rejected": "That password was not accepted. Choose a different one.",
+          "unavailable": "Your password could not be saved. Nothing changed. Try again.",
+          "notRequired": "There is no starting password to replace. Sign in again."
+        }
+      },
+      "authenticator": {
+        "title": "Set up your authenticator",
+        "lead": "Admins and Coordinators confirm each sign-in with a code from an authenticator app on their phone.",
+        "notYet": "Setting up an authenticator is not available yet. Your password is saved. Sign out for now."
+      }
+    },
+    "hub": {
+      "title": "Hub",
+      "lead": "You are signed in.",
+      "addPerson": "Add a person"
+    },
+    "reissue": {
+      "title": "Re-issue a starting password",
+      "lead": "For someone whose starting password expired before they used it, or who signed in once without choosing their own password.",
+      "username": "Their username",
+      "submit": "Re-issue",
+      "done": "New starting password for {username}: {password}",
+      "doneLine": "Give it to them in person. It works once, within 24 hours.",
+      "errors": {
+        "notFound": "No account has that username.",
+        "notReissuable": "This person already chose their own password, or their account is suspended or removed.",
+        "forbidden": "Only an Admin can re-issue a starting password.",
+        "providerError": "The starting password could not be re-issued, and nothing changed. Try again."
+      }
     }
   }
 }
