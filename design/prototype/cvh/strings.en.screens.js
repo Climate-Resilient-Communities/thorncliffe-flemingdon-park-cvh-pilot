@@ -951,9 +951,12 @@
       usernameTaken: 'That username is already taken. Choose another.', firstNameMissing: 'Enter the first name.', lastNameMissing: 'Enter the last name.',
       nameTooLong: 'A name can have at most 100 characters.',
       startingPasswordEmpty: 'The first and last name must each have a letter from a to z, because the starting password is made from them. Enter them as written in Latin letters.',
+      startingPasswordUnsupportedLetter: 'A name has a letter that cannot be written with a to z, so it cannot go into the starting password. Enter the name as written in Latin letters, using a plain a to z spelling for that letter.',
+      startingPasswordTooLong: 'The starting password would be longer than 72 characters. Shorten the name used for the password, for example the first given name and the first family name only.',
       emailInvalid: 'Enter an email address, like name@example.org.', roleInvalid: 'Choose a role.',
       adminExists: 'An Admin already exists. The first Admin can be created only once.', forbidden: 'Only an Admin can add people.',
-      unauthenticated: 'Sign in to continue.', providerError: 'The account could not be created, and nothing was saved. Try again.' } } } });
+      unauthenticated: 'Sign in to continue.', providerError: 'The account could not be created, and nothing was saved. Try again.',
+      providerRejected: "Supabase rejected the starting password; check the project's password policy." } } } });
   /* The two-Admin rule (S01.06): refusals of account changes and the shortfall banner. Not a prototype screen. */
   m(en, { staff: { admins: { twoAdminRule: 'There must always be at least two usable Admins', shortfallBanner: 'Fewer than two usable Admins',
     shortfallLine: 'Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role.' },

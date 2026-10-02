@@ -1,5 +1,5 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
-// db/migrations/20261002020000_staff_account.sql; the drift test compares them.
+// db/migrations/20261002110000_staff_account.sql; the drift test compares them.
 // The bootstrap row's forward-only trigger and the grants live only in the migration.
 import { sql } from "drizzle-orm";
 import { boolean, check, pgEnum, pgPolicy, pgRole, pgTable, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";

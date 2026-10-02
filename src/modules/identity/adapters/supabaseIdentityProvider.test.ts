@@ -78,6 +78,21 @@ describe("Supabase Auth identity provider", () => {
     );
   });
 
+  it("finds a login among the users, with its staff marker and creation time", async () => {
+    const users = [
+      { id: "u1", email: "other@staff.cvh.invalid", created_at: "2026-01-01T00:00:00Z", app_metadata: {} },
+      { id: USER_ID, email: "jdoe@staff.cvh.invalid", created_at: "2026-01-02T00:00:00Z", app_metadata: { cvh_staff: true } },
+    ];
+    const { fetch, calls } = fakeFetch(() => ({ status: 200, body: { users, aud: "authenticated" } }));
+    const idp = supabaseIdentityProvider({ url: URL_BASE, secretKey: SECRET, fetch });
+
+    expect(await idp.findLogin("jdoe@staff.cvh.invalid")).toEqual({ authUserId: USER_ID, createdAt: new Date("2026-01-02T00:00:00Z"), staffMarker: true });
+    expect(await idp.findLogin("other@staff.cvh.invalid")).toMatchObject({ authUserId: "u1", staffMarker: false });
+    expect(await idp.findLogin("nobody@staff.cvh.invalid")).toBeNull();
+    expect(calls[0]).toMatchObject({ method: "GET" });
+    expect(calls[0].url).toContain("/auth/v1/admin/users");
+  });
+
   it("finds a verified TOTP factor, and ignores unverified ones", async () => {
     const factors = (list: unknown[]) => fakeFetch(() => ({ status: 200, body: list }));
     const verified = factors([{ id: "f1", factor_type: "totp", status: "verified" }]);

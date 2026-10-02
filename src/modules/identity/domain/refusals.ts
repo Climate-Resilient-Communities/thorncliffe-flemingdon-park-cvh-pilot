@@ -14,7 +14,8 @@ export type IdentityRefusal =
   | "admin_exists"
   | "forbidden"
   | "unauthenticated"
-  | "provider_error";
+  | "provider_error"
+  | "provider_rejected";
 
 /** The catalog key of each refusal's message (src/i18n, from design/prototype/cvh/strings.en.screens.js). */
 export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
@@ -23,6 +24,8 @@ export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
   last_name_missing: "staff.people.errors.lastNameMissing",
   name_too_long: "staff.people.errors.nameTooLong",
   starting_password_empty: "staff.people.errors.startingPasswordEmpty",
+  starting_password_unsupported_letter: "staff.people.errors.startingPasswordUnsupportedLetter",
+  starting_password_too_long: "staff.people.errors.startingPasswordTooLong",
   email_invalid: "staff.people.errors.emailInvalid",
   role_invalid: "staff.people.errors.roleInvalid",
   username_taken: "staff.people.errors.usernameTaken",
@@ -36,6 +39,7 @@ export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
   forbidden: "staff.people.errors.forbidden",
   unauthenticated: "staff.people.errors.unauthenticated",
   provider_error: "staff.people.errors.providerError",
+  provider_rejected: "staff.people.errors.providerRejected",
 };
 
 /** The form field a refusal is about, so the screen can show the message next to it. */
@@ -45,6 +49,8 @@ export const REFUSAL_FIELDS: Partial<Record<IdentityRefusal, "username" | "first
   first_name_missing: "firstName",
   last_name_missing: "lastName",
   starting_password_empty: "firstName",
+  starting_password_unsupported_letter: "firstName",
+  starting_password_too_long: "firstName",
   email_invalid: "email",
   role_invalid: "role",
 };

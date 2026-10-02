@@ -44,6 +44,15 @@ describe("create-first-admin", () => {
     expect(connect).not.toHaveBeenCalled();
   });
 
+  it("says in the usage text that the database state is the real guard and how an orphaned login recovers", async () => {
+    const { output } = await run(["--username", "jdoe"], PRODUCTION);
+
+    expect(output).toMatch(/real guard is the database/);
+    expect(output).toMatch(/no Admin|an Admin exists or the bootstrap row exists/);
+    expect(output).toMatch(/advisory lock/);
+    expect(output).toMatch(/left behind in Supabase Auth[\s\S]*removed automatically/);
+  });
+
   it("requires every detail and refuses unknown options", async () => {
     expect(await run(["--username", "jdoe"], PRODUCTION)).toMatchObject({ code: 2, output: expect.stringMatching(/^Missing --first-name, --last-name, --email/) });
     expect(await run([...ARGS, "--role", "coordinator"], PRODUCTION)).toMatchObject({ code: 2, output: expect.stringMatching(/Unknown option '--role'/) });

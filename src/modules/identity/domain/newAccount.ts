@@ -53,6 +53,8 @@ export type NewAccountError =
   | "last_name_missing"
   | "name_too_long"
   | "starting_password_empty"
+  | "starting_password_unsupported_letter"
+  | "starting_password_too_long"
   | "email_invalid"
   | "role_invalid";
 

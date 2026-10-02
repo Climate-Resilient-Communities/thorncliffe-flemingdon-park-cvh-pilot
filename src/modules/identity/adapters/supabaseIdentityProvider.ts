@@ -14,6 +14,13 @@ const TAKEN = new Set(["email_exists", "user_already_exists", "identity_already_
 const REJECTED = new Set(["weak_password", "validation_failed", "email_address_invalid", "email_address_not_authorized", "bad_json"]);
 
 /**
+ * Starting passwords are `rvh-<first>-<last>` and can be as short as `rvh-a-b` (7 characters), so
+ * the Supabase project's minimum password length (Auth > Providers > Email) must stay at 7 or
+ * less, and its password-strength rules must not require digits or symbols. A project that asks
+ * for more rejects every short starting password (weak_password) and createLogin reports
+ * "rejected", which is not retryable: the Admin is told to check the project's password policy.
+ * Longer than 72 bytes is refused earlier, in the domain (bcrypt reads only the first 72).
+ *
  * IdentityProvider on Supabase Auth's Admin API, with the secret key. Server-only: it is built
  * in the composition root (src/app, scripts/) from the validated environment and never reaches a
  * browser bundle. It creates confirmed users (`email_confirm: true`), so Supabase sends no
@@ -46,6 +53,19 @@ export function supabaseIdentityProvider(config: SupabaseAdminConfig): IdentityP
       } catch {
         return { ok: false, error: "unavailable" };
       }
+    },
+
+    async findLogin(login) {
+      // The Admin API has no lookup by email: page through the users (a staff list is small).
+      const perPage = 200;
+      for (let page = 1; page <= 50; page += 1) {
+        const { data, error } = await admin.listUsers({ page, perPage });
+        if (error) throw new Error(`Supabase Auth refused to list users (status ${error.status ?? "unknown"}, code ${error.code ?? "none"})`);
+        const user = data.users.find((candidate) => candidate.email?.toLowerCase() === login.toLowerCase());
+        if (user) return { authUserId: user.id, createdAt: new Date(user.created_at), staffMarker: user.app_metadata?.cvh_staff === true };
+        if (data.users.length < perPage) return null;
+      }
+      return null;
     },
 
     async deleteLogin(authUserId) {

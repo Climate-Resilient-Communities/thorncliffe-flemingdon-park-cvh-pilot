@@ -1,6 +1,6 @@
 // Drizzle tables of the audit module (AD-2), written by hand to match
 // db/migrations/20261002010000_audit_event.sql (and the actor foreign key added
-// by 20261002020000_staff_account.sql); the drift test compares them.
+// by 20261002110000_staff_account.sql); the drift test compares them.
 // The append-only triggers and the grants live only in the migration.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, foreignKey, index, jsonb, pgEnum, pgPolicy, pgRole, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";

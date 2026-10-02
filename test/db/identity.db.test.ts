@@ -190,6 +190,62 @@ describe("the first Admin", () => {
   });
 });
 
+describe("a login left behind without an account", () => {
+  const login = "jdoe@staff.cvh.invalid";
+  const longAgo = new Date(Date.now() - 60 * 60 * 1000);
+
+  it("is removed and the account is created when no account is linked to it and it carries the staff marker", async () => {
+    const orphan = idp.plant(login, { createdAt: longAgo });
+
+    const result = await identity.createFirstAdmin(jane);
+
+    expect(result.ok).toBe(true);
+    expect(idp.users.has(orphan)).toBe(false);
+    const [account] = await owner`select auth_user_id from staff_account`;
+    expect(idp.findByLogin(login)?.[0]).toBe(account.auth_user_id);
+  });
+
+  it("keeps username_taken when the login has no staff marker", async () => {
+    const foreign = idp.plant(login, { createdAt: longAgo, staffMarker: false });
+
+    expect(await identity.createFirstAdmin(jane)).toEqual({ ok: false, error: "username_taken" });
+    expect(idp.users.has(foreign)).toBe(true);
+    expect(await accounts()).toEqual([]);
+  });
+
+  it("keeps username_taken when an account is linked to the login", async () => {
+    const linked = idp.plant(login, { createdAt: longAgo });
+    await owner`insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
+      values (${randomUUID()}, ${linked}, ${"someoneelse"}, 'Some', 'One', 'x@example.org', 'ambassador', true, now())`;
+
+    expect(await identity.createFirstAdmin(jane)).toEqual({ ok: false, error: "username_taken" });
+    expect(idp.users.has(linked)).toBe(true);
+  });
+
+  it("keeps a very recent login, which may belong to a request still saving its account", async () => {
+    const recent = idp.plant(login, { createdAt: new Date() });
+
+    expect(await identity.createFirstAdmin(jane)).toEqual({ ok: false, error: "username_taken" });
+    expect(idp.users.has(recent)).toBe(true);
+  });
+
+  it("tries only once: a login that cannot be deleted leaves username_taken", async () => {
+    idp.plant(login, { createdAt: longAgo });
+    idp.failDeletes(true);
+
+    expect(await identity.createFirstAdmin(jane)).toEqual({ ok: false, error: "username_taken" });
+  });
+});
+
+describe("a starting password the identity provider rejects", () => {
+  it("is refused as provider_rejected, which is not the retryable provider_error", async () => {
+    idp.failNext("rejected");
+
+    expect(await identity.createFirstAdmin(jane)).toEqual({ ok: false, error: "provider_rejected" });
+    expect(await accounts()).toEqual([]);
+  });
+});
+
 describe("scripts/create-first-admin", () => {
   const production = () => ({
     VERCEL_ENV: "production",

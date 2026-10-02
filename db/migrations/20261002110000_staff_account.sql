@@ -5,7 +5,7 @@
 -- name the starting password is made from, the email as a contact detail only
 -- (no mail is ever sent), the role and the status. Sign-in itself is Supabase
 -- Auth's: auth_user_id links to the auth user, created with a login made from
--- the username (src/modules/identity/domain/username.ts). It is not a foreign
+-- the username (loginForUsername in src/modules/identity/domain/newAccount.ts). It is not a foreign
 -- key, since the auth schema belongs to Supabase. Accounts are never deleted,
 -- only marked removed, so audit records keep pointing at them.
 --

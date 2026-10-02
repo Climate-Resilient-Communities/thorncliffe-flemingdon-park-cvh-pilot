@@ -5,10 +5,17 @@ import type { StaffAccount } from "../domain/staffAccount";
 export type CreateLoginError =
   /** An auth user with this login already exists. */
   | "login_taken"
-  /** The provider refused the request (for example its password rules). */
+  /** The provider refused the request itself, for example the project's password policy; retrying cannot help. */
   | "rejected"
   /** The provider could not be reached or failed. */
   | "unavailable";
+
+export interface FoundLogin {
+  authUserId: string;
+  createdAt: Date;
+  /** True when the provider user carries the marker createLogin sets (app_metadata.cvh_staff). */
+  staffMarker: boolean;
+}
 
 /**
  * Port: the identity provider that holds sign-in credentials (Supabase Auth, AD-4). The app keeps
@@ -19,6 +26,12 @@ export type CreateLoginError =
 export interface IdentityProvider {
   /** Creates a confirmed auth user with this login and password. Sends nothing to anyone. */
   createLogin(input: { login: string; password: string }): Promise<{ ok: true; authUserId: string } | { ok: false; error: CreateLoginError }>;
+  /**
+   * The auth user with this login, if any: its id, when it was created and whether it carries the
+   * app's staff marker (set by createLogin), so a login left behind by this app can be told from
+   * one made by anyone else. Throws on failure.
+   */
+  findLogin(login: string): Promise<FoundLogin | null>;
   /** Deletes an auth user; used to undo a createLogin whose account was then refused. Throws on failure. */
   deleteLogin(authUserId: string): Promise<void>;
   /** True when the auth user has a verified TOTP factor (S01.10 enrols them). Throws on failure. */
@@ -42,6 +55,8 @@ export interface NewStaffRow {
 export interface StaffStore {
   findById(db: DbExecutor, id: string): Promise<StaffAccount | null>;
   usernameTaken(db: DbExecutor, username: string): Promise<boolean>;
+  /** True when a staff_account is linked to this auth user. */
+  authUserLinked(db: DbExecutor, authUserId: string): Promise<boolean>;
   adminExists(db: DbExecutor): Promise<boolean>;
   readBootstrap(db: DbExecutor): Promise<BootstrapState | null>;
   /**
