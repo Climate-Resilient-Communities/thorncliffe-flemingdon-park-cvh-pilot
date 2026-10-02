@@ -49,12 +49,14 @@ describe("create-first-admin", () => {
     ["missing", ""],
     ["too short", "abcdef0123456789"],
   ])("refuses to run when STAFF_PASSWORD_PEPPER is %s, before connecting to anything, without showing it", async (_name, pepper) => {
-    const { code, output, connect } = await run(ARGS, { ...PRODUCTION, STAFF_PASSWORD_PEPPER: pepper });
+    for (const argv of [ARGS, ["--reissue", "--username", "jdoe"]]) {
+      const { code, output, connect } = await run(argv, { ...PRODUCTION, STAFF_PASSWORD_PEPPER: pepper });
 
-    expect(code).toBe(1);
-    expect(output).toMatch(/^Refusing to run: staff passwords are not configured: STAFF_PASSWORD_PEPPER is missing or too short/);
-    if (pepper !== "") expect(output).not.toContain(pepper);
-    expect(connect).not.toHaveBeenCalled();
+      expect(code).toBe(1);
+      expect(output).toMatch(/^Refusing to run: staff passwords are not configured: STAFF_PASSWORD_PEPPER is missing or too short/);
+      if (pepper !== "") expect(output).not.toContain(pepper);
+      expect(connect).not.toHaveBeenCalled();
+    }
   });
 
   it("says in the usage text that rotating the pepper means re-issuing every password", async () => {
@@ -62,6 +64,11 @@ describe("create-first-admin", () => {
 
     expect(output).toMatch(/HMAC-SHA-256\(STAFF_PASSWORD_PEPPER, password\)/);
     expect(output).toMatch(/Rotating the pepper makes every staff password stop\s+working: after a rotation every password must be re-issued/);
+  });
+
+  it("takes only --username with --reissue", async () => {
+    expect(await run(["--reissue"], PRODUCTION)).toMatchObject({ code: 2, output: expect.stringMatching(/^Missing --username/) });
+    expect(await run(["--reissue", ...ARGS], PRODUCTION)).toMatchObject({ code: 2, output: expect.stringMatching(/^--reissue takes only --username, not --first-name, --last-name, --email/) });
   });
 
   it("says in the usage text that the database state is the real guard and how an orphaned login recovers", async () => {

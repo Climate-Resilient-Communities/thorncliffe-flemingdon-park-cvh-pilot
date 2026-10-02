@@ -6,6 +6,7 @@
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import { runCreateFirstAdmin } from "../../scripts/identity/create-first-admin";
 import {
   MIN_REFUSAL_MS,
   MEMORY_SESSION_COOKIE,
@@ -891,6 +892,76 @@ describe("the purge of the sign-in tables", () => {
 
     expect(await signIn(browser(), "aokafor", "the right password")).toMatchObject({ ok: true });
     expect(await owner`select count(*)::int as n from sign_in_failure`).toEqual([{ n: 0 }]);
+  });
+});
+
+describe("IT's re-issue of the first Admin's starting password (scripts/create-first-admin --reissue)", () => {
+  const jane: Person = { username: "jdoe", firstName: "Jane", lastName: "Doe", role: "admin" };
+  const omar: Person = { username: "ofarouk", firstName: "Omar", lastName: "Farouk", role: "admin" };
+
+  async function bootstrapWith(first: Person, second?: Person, completed = false) {
+    const firstId = await account(first);
+    const secondId = second ? await account(second) : null;
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${firstId}, ${secondId}, ${completed ? clock : null})`;
+    return firstId;
+  }
+
+  it("re-issues it while bootstrap is in progress, revokes the account's sessions, and audits it with the system as actor", async () => {
+    const first = await bootstrapWith(jane);
+    const old = browser();
+    await signIn(old, "jdoe", "rvh-jane-doe");
+    advance(minutes(25 * 60));
+    expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toEqual({ ok: false, error: "starting_password_expired" });
+
+    expect(await auth.reissueFirstAdminStartingPassword("JDoe")).toEqual({ ok: true, value: { username: "jdoe", startingPassword: "rvh-jane-doe" } });
+
+    expect(await row(first)).toMatchObject({ status: "active", must_change_password: true, starting_password_issued_at: clock, starting_password_used_at: null });
+    expect((await auditsOf("password.reissued")).at(-1)).toEqual({ actor_staff_id: null, action: "password.reissued", subject_id: first, outcome: "ok", meta: {} });
+    expect(await auth.currentSession(old.sessions())).toBeNull();
+    expect((await sessionRows(first)).every((session) => session.revoked_at !== null)).toBe(true);
+    advance(minutes(23 * 60));
+    expect(await signIn(browser(), "jdoe", "rvh-jane-doe")).toMatchObject({ ok: true, gate: "choose_password" });
+  });
+
+  it.each([
+    ["no bootstrap yet", () => account(jane), "jdoe", "bootstrap_not_in_progress"],
+    ["bootstrap completed", () => bootstrapWith(jane, omar, true), "jdoe", "bootstrap_not_in_progress"],
+    ["the second Admin", () => bootstrapWith(jane, omar), "ofarouk", "not_first_admin"],
+    ["an unknown username", () => bootstrapWith(jane), "nobody", "not_first_admin"],
+    ["a first Admin who chose their own password", () => bootstrapWith({ ...jane, own: "my own password" }), "jdoe", "not_reissuable"],
+    ["a suspended first Admin", () => bootstrapWith({ ...jane, status: "suspended" }), "jdoe", "not_reissuable"],
+  ] as const)("is refused for %s, and audited", async (_name, arrange, username, error) => {
+    await arrange();
+    const before = idp.findByLogin(`${username}@staff.cvh.invalid`)?.[1].password;
+
+    expect(await auth.reissueFirstAdminStartingPassword(username)).toEqual({ ok: false, error });
+
+    expect(idp.findByLogin(`${username}@staff.cvh.invalid`)?.[1].password).toBe(before);
+    expect((await auditsOf("password.reissued")).at(-1)).toMatchObject({ actor_staff_id: null, outcome: "refused" });
+  });
+
+  it("runs from the script, which prints the starting password once", async () => {
+    await bootstrapWith(jane);
+    advance(minutes(25 * 60));
+    const out: string[] = [];
+    const error: string[] = [];
+    const env = {
+      VERCEL_ENV: "production",
+      SMS_MODE: "live",
+      PUBLIC_BASE_URL: "https://project-6qcs4.vercel.app",
+      DATABASE_URL: "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres",
+      SUPABASE_SECRET_KEY: "sb_secret_test_only",
+      NEXT_PUBLIC_SUPABASE_URL: "https://example-project.supabase.co",
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_test_only",
+      STAFF_PASSWORD_PEPPER: PEPPER,
+    };
+    const deps = { env, out: (l: string) => void out.push(l), error: (l: string) => void error.push(l), connect: () => ({ identity: accounts, staffAuth: auth, close: async () => {} }) };
+
+    expect(await runCreateFirstAdmin(["--reissue", "--username", "jdoe"], deps)).toBe(0);
+    expect(out.join("\n")).toContain("New starting password for jdoe: rvh-jane-doe");
+    expect(out.join("\n").match(/rvh-jane-doe/g)).toHaveLength(1);
+    expect(await runCreateFirstAdmin(["--reissue", "--username", "nobody"], deps)).toBe(1);
+    expect(error.join("\n")).toBe("Refused: that username is not the first Admin's (not_first_admin)");
   });
 });
 

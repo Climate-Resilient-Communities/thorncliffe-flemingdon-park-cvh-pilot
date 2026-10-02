@@ -130,7 +130,7 @@ export type {
   StaffSessionStore,
 } from "./application/ports";
 export { MIN_REFUSAL_MS, REQUIRED_TOKEN_LIFETIME_SECONDS } from "./application/staffAuth";
-export type { ChangePasswordError, CurrentSession, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
+export type { ChangePasswordError, CurrentSession, FirstAdminReissueError, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
 export { type StaffChangeService } from "./application/staffChanges";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
 export { setupGate } from "./domain/setupGate";

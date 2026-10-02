@@ -291,7 +291,7 @@ describe("scripts/create-first-admin", () => {
   async function run(env: Record<string, string>) {
     const out: string[] = [];
     const error: string[] = [];
-    const connect = vi.fn(() => ({ identity, close: async () => {} }));
+    const connect = vi.fn(() => ({ identity, staffAuth: { reissueFirstAdminStartingPassword: async () => ({ ok: false as const, error: "not_first_admin" as const }) }, close: async () => {} }));
     const code = await runCreateFirstAdmin(args, { env, out: (l) => out.push(l), error: (l) => error.push(l), connect });
     return { code, out: out.join("\n"), error: error.join("\n"), connect };
   }

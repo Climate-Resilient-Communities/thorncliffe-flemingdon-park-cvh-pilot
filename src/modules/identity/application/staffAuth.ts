@@ -4,7 +4,7 @@ import type { StaffRole } from "../../../contracts/staffRoles";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { SYSTEM_ACTOR, type REFUSAL_REASONS } from "../../audit";
 import { mayManageAccounts } from "../domain/accountAuthority";
-import { decideUnderBootstrap } from "../domain/bootstrap";
+import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import { isUsernameFormat, loginForUsername, normaliseUsername } from "../domain/newAccount";
 import { validateOwnPassword, type OwnPasswordError } from "../domain/ownPassword";
 import { err, ok, type Result } from "../domain/result";
@@ -91,6 +91,17 @@ export type ChangePasswordError = OwnPasswordError | "password_rejected" | "prov
 
 export type ReissueError = "forbidden" | "bootstrap_incomplete" | "not_found" | "not_reissuable" | "provider_error" | "passwords_not_configured";
 
+/**
+ * Why IT's re-issue of the first Admin's starting password (scripts/create-first-admin --reissue)
+ * was refused: bootstrap has not started or has ended, the username is not the first Admin's, or
+ * the first Admin is not pending on a starting password (chose their own, or suspended or removed).
+ */
+export type FirstAdminReissueError =
+  | "bootstrap_not_in_progress"
+  | "not_first_admin"
+  | "not_reissuable"
+  | "provider_error"
+  | "passwords_not_configured";
 
 /** Why a checked attempt failed, as the audit records it. */
 type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden">;
@@ -325,7 +336,8 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
   /**
    * Re-issues a starting password at the provider, then in the database when `stillAllowed` holds
-   * under the transaction, with every session revoked and `password.reissued` audited.
+   * under the transaction, with every session revoked and `password.reissued` audited (an Admin's
+   * re-issue, or IT's for the first Admin).
    */
   async function reissue(
     target: StaffAccount,
@@ -493,6 +505,41 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const result = await reissue(target, pepper(starting.value), actor.id, async (tx) => {
         const current = await store.findById(tx, actor.id);
         return current !== null && mayManageAccounts(current);
+      });
+      if (result !== "reissued") return refuse(result === "provider_error" ? "provider_error" : "not_reissuable", result, target.id);
+      return ok({ username: target.username, startingPassword: starting.value });
+    },
+
+    /**
+     * IT's way out of a first-Admin lockout (scripts/create-first-admin --reissue): while bootstrap
+     * is in progress, and only for the first Admin while they are still on a starting password
+     * (active or `locked_pending_reissue`), issues the starting password again with a new 24-hour
+     * window, revokes every session of the account (at the provider too) and audits
+     * `password.reissued` with the system as actor. Refused in every other state.
+     */
+    async reissueFirstAdminStartingPassword(usernameInput: string): Promise<Result<{ username: string; startingPassword: string }, FirstAdminReissueError>> {
+      const refuse = async (code: FirstAdminReissueError, reason: AuditReason, subjectId: string | null) => {
+        await audit.recordRefusal(db, { action: "password.reissued", actorStaffId: SYSTEM_ACTOR, subjectType: "staff_account", subjectId, meta: { reason } });
+        return err(code);
+      };
+      const state = await store.readBootstrap(db);
+      if (state === null || bootstrapPhase(state) !== "in_progress") return refuse("bootstrap_not_in_progress", "conflict", null);
+      const username = normaliseUsername(usernameInput);
+      const target = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
+      if (!target) return refuse("not_first_admin", "not_found", null);
+      if (target.id !== state.firstAdminId) return refuse("not_first_admin", "forbidden", target.id);
+      if (!target.mustChangePassword || (target.status !== "active" && target.status !== "locked_pending_reissue")) {
+        return refuse("not_reissuable", "conflict", target.id);
+      }
+      const starting = deriveStartingPassword(target.firstName, target.lastName);
+      if (!starting.ok) return refuse("not_reissuable", "validation", target.id);
+      const pepper = pepperFor("reissue_first_admin_starting_password");
+      if (!pepper) return refuse("passwords_not_configured", "provider_error", target.id);
+
+      const result = await reissue(target, pepper(starting.value), SYSTEM_ACTOR, async (tx) => {
+        await store.lockAccounts(tx);
+        const current = await store.readBootstrap(tx);
+        return current !== null && bootstrapPhase(current) === "in_progress" && current.firstAdminId === target.id;
       });
       if (result !== "reissued") return refuse(result === "provider_error" ? "provider_error" : "not_reissuable", result, target.id);
       return ok({ username: target.username, startingPassword: starting.value });
