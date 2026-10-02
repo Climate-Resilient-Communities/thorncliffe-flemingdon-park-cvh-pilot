@@ -24,6 +24,7 @@ describe("the directory routes' answers", () => {
   const publishDeps = (): PublishDeps => ({
     storage,
     catalogue: async () => ({ hash: "b".repeat(64), gitCommit: null }),
+    neighbourhoods: async () => ({ reviewed: true, byProvider: { M001: ["TP"] } }),
     zhHant: async () => ({ convert: (text: string) => text, openccVersion: "1.4.2", config: "test" }),
     onFailure: async () => {},
     sleep: async () => {},

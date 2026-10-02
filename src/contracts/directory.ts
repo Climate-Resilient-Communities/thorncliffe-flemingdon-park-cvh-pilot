@@ -52,11 +52,24 @@ const ContactSchema = z.strictObject({
   web: z.array(z.string()),
 });
 
+/**
+ * The pilot's two neighbourhoods, by the ids the building list uses (Thorncliffe Park, Flemingdon Park). The release says
+ * which a provider is in (`neighbourhood_ids` of the listing file); a phone never works it out from an address.
+ */
+export const NEIGHBOURHOOD_IDS = ["TP", "FP"] as const;
+export const NeighbourhoodIdSchema = z.enum(NEIGHBOURHOOD_IDS);
+export type NeighbourhoodId = z.infer<typeof NeighbourhoodIdSchema>;
+
 export const ListingProviderSchema = z.strictObject({
   id: z.string().regex(/^[A-Z][0-9]{3,6}$/),
   name: z.string().min(1),
   /** Ids of the listing's categories this provider is in. */
   category_ids: z.array(z.string().min(1)),
+  /**
+   * The neighbourhoods this provider is in, from the Hub's reviewed list (data/catalogue/provider-neighbourhoods.json);
+   * empty for a provider in neither. The directory's neighbourhood filter reads this and nothing else.
+   */
+  neighbourhood_ids: z.array(NeighbourhoodIdSchema),
   subcategories: z.array(ListingTextSchema),
   locations: z.array(
     z.strictObject({

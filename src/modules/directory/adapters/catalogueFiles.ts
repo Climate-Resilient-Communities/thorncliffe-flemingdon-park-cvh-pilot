@@ -3,6 +3,7 @@ import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import type { LangCode } from "@/contracts/lang";
 import { TRANSLATED_LANGS, type ContentInput, type GuideSource, type NumbersFile, type TranslationFile } from "../domain/guideContent";
+import { parseProviderNeighbourhoods, type ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
 import { PROVIDER_LANGS, type ProviderCatalogueInput, type ProviderTranslationFile } from "../domain/providerCatalogue";
 
 function readJson<T>(file: string): T {
@@ -25,6 +26,11 @@ export function readProviderCatalogue(catalogueDir: string): ProviderCatalogueIn
     if (existsSync(file)) translations[lang] = readJson<ProviderTranslationFile>(file);
   }
   return { catalogue, translations };
+}
+
+/** provider-neighbourhoods.json of a catalogue folder (S02.06), checked for its shape. Throws when it cannot be read or is not in shape. */
+export function readProviderNeighbourhoods(catalogueDir: string): ProviderNeighbourhoods {
+  return parseProviderNeighbourhoods(readJson<unknown>(path.join(catalogueDir, "provider-neighbourhoods.json")));
 }
 
 /** guides.json, numbers.json and translations/content/<lang>.json of a catalogue folder. A language without a file has no translations. */
