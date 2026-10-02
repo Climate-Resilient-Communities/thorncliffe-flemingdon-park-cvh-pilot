@@ -132,7 +132,7 @@ export type FirstAdminReissueError =
   | "passwords_not_configured";
 
 /** Why a checked attempt failed, as the audit records it. */
-type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden" | "wrong_code">;
+type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden" | "wrong_code" | "expired_starting_password">;
 
 /** The throttle's keyed hash of a username or a client address (HMAC-SHA-256, hex). */
 export function throttleHash(throttleKey: string, purpose: "username" | "client", value: string): string {
@@ -228,12 +228,25 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
    * username is locked). Serialised per username and per client, so concurrent failures are each
    * counted once and the lock starts at exactly the failure that reaches the limit.
    */
-  async function recordFailure(account: StaffAccount | null, usernameHash: string, clientHash: string, reason: FailureReason, now: Date) {
+  async function recordFailure(
+    account: StaffAccount | null,
+    usernameHash: string,
+    clientHash: string,
+    reason: FailureReason,
+    now: Date,
+    /**
+     * Work done in the same transaction, after the failure is stored and before the limits apply.
+     * With it the failure never starts an automatic account lock of its own (`within` decides
+     * the account's state), though the username lock and the client block still start.
+     */
+    within?: (tx: DbTransaction) => Promise<void>,
+  ) {
     const counts = await db.transaction(async (tx) => {
       await throttle.lockKeys(tx, [usernameHash, clientHash]);
       await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
       const inWindow = await throttle.recordFailure(tx, { at: now, usernameHash, clientHash }, windowsStartAt(now));
-      await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, inWindow.username === USERNAME_LIMIT.failures);
+      if (within) await within(tx);
+      await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, !within && inWindow.username === USERNAME_LIMIT.failures);
       return inWindow;
     });
     await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason, attempts: counts.username } });
@@ -241,28 +254,34 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
   }
 
   /**
-   * The right starting password, but expired (unused 24 hours after issue) or already used:
-   * an active account becomes `locked_pending_reissue` (expiry only) with `auth.locked` audited;
-   * otherwise the attempt is audited as `auth.failed`.
+   * The right starting password, but expired (unused 24 hours after issue) or already used. It is
+   * counted as a failed attempt against the username and the client like a wrong password
+   * (recordFailure, under the throttle's locks), so it cannot be tried without limit; the person
+   * still sees the expired message. An expired one on an `active` account makes it
+   * `locked_pending_reissue` with `auth.locked` audited, in the failure's transaction and after
+   * S01.06's recovery check; on an account that is already locked (or used) nothing changes and
+   * the recovery check does not run again.
    */
-  async function refuseStartingPassword(account: StaffAccount, standing: "expired" | "used"): Promise<SignInOutcome> {
-    const locked =
-      standing === "expired" &&
-      (await db.transaction(async (tx) => {
-        const recovery = await deps.beginAdminRecovery(tx, account.id);
-        if (!(await store.lockPendingReissue(tx, account.id))) return false;
-        await audit.record(tx, {
-          action: "auth.locked",
-          actorStaffId: SYSTEM_ACTOR,
-          subjectType: "staff_account",
-          subjectId: account.id,
-          meta: { lock: "expired_starting_password", reason: "expired_starting_password", ...adminShortfallMeta(recovery) },
-        });
-        return true;
-      }));
-    if (!locked) {
-      await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "expired_starting_password" } });
-    }
+  async function refuseStartingPassword(
+    account: StaffAccount,
+    standing: "expired" | "used",
+    usernameHash: string,
+    clientHash: string,
+    now: Date,
+  ): Promise<SignInOutcome> {
+    const locksAccount = standing === "expired" && account.status === "active";
+    await recordFailure(account, usernameHash, clientHash, "expired_starting_password", now, async (tx) => {
+      if (!locksAccount) return;
+      const recovery = await deps.beginAdminRecovery(tx, account.id);
+      if (!(await store.lockPendingReissue(tx, account.id))) return;
+      await audit.record(tx, {
+        action: "auth.locked",
+        actorStaffId: SYSTEM_ACTOR,
+        subjectType: "staff_account",
+        subjectId: account.id,
+        meta: { lock: "expired_starting_password", reason: "expired_starting_password", ...adminShortfallMeta(recovery) },
+      });
+    });
     return { ok: false, error: "starting_password_expired" };
   }
 
@@ -317,7 +336,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     const standing = startingPasswordStanding(account, now);
     if (standing === "expired" || standing === "used") {
       await check.discard();
-      return refuseStartingPassword(account, standing);
+      return refuseStartingPassword(account, standing, usernameHash, clientHash, now);
     }
     if (account.status !== "active") {
       await check.discard();
@@ -359,7 +378,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     }
     if (decision === "expired" || decision === "used") {
       await check.discard();
-      return refuseStartingPassword(account, decision);
+      return refuseStartingPassword(account, decision, usernameHash, clientHash, now);
     }
     await check.accept();
     checkTokenLifetime(check.tokenLifetimeSeconds);
@@ -374,7 +393,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
    * place in staff_session (keeping its start, for S01.08's absolute limit). If that fails, the
    * person is signed out and signs in again with the new password.
    */
-  async function reopenSession(account: StaffAccount, current: CurrentSession, providerPassword: string, now: Date) {
+  async function reopenSession(account: StaffAccount, current: CurrentSession, providerPassword: string, now: Date, generation: number | null) {
     let check: PasswordCheck;
     try {
       check = await current.sessions.checkPassword({ login: loginForUsername(account.username), password: providerPassword });
@@ -383,11 +402,32 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     }
     if (check.ok && check.authUserId === account.authUserId) {
       const opened = check;
-      await db.transaction((tx) => sessionStore.replace(tx, current.sessionId, { id: opened.sessionKey, staffId: account.id, at: now }));
-      await opened.accept();
-      return;
+      // A revocation that landed while the provider was asked (a role change, a factor reset, a
+      // suspension) must not be undone: under the account's lock the revocation count must be what
+      // the password change saw and the old session still open; replace revokes the old one only if
+      // it is open, and the new one is recorded only then.
+      let reopened = false;
+      try {
+        reopened = await db.transaction(async (tx) => {
+          await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
+          const locked = await store.lockAccount(tx, account.id);
+          if (!locked || locked.status !== "active") return false;
+          if ((await store.sessionGeneration(tx, account.id)) !== generation) return false;
+          const old = await sessionStore.find(tx, current.sessionId);
+          if (!old || old.revokedAt !== null || old.staffId !== account.id) return false;
+          return sessionStore.replace(tx, current.sessionId, { id: opened.sessionKey, staffId: account.id, at: now });
+        });
+      } catch {
+        reopened = false;
+      }
+      if (reopened) {
+        await opened.accept();
+        return;
+      }
+      await opened.discard();
+    } else if (check.ok) {
+      await check.discard();
     }
-    if (check.ok) await check.discard();
     log.error("identity.session_not_reopened", { staff_id: account.id });
     await sessionStore.revoke(db, current.sessionId, now);
     await current.sessions.signOut();
@@ -567,10 +607,10 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         if (!(await store.completePasswordChange(tx, staffId, locked.startingPasswordIssuedAt))) throw new Error("password change not recorded under the account lock");
         await sessionStore.revokeAll(tx, staffId, now, { keep: current?.sessionId });
         await audit.record(tx, { action: "password.changed", actorStaffId: staffId, subjectType: "staff_account", subjectId: staffId });
-        return { done: true as const };
+        return { done: true as const, generation };
       });
       if (!outcome.done) return refuse(outcome.error, outcome.error === "not_required" ? "conflict" : "provider_error");
-      if (current) await reopenSession(account, current, providerPassword, now);
+      if (current) await reopenSession(account, current, providerPassword, now, outcome.generation);
       if (account.role === "admin") await deps.completeBootstrapIfReady(staffId);
       const enrolled = needsAuthenticator(account.role) && (await hasEnrolledAuthenticator(idp, account));
       return ok({ gate: gateOf({ ...account, mustChangePassword: false }, enrolled, "aal1") });
@@ -756,7 +796,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         if (checked.sessionKey !== session.sessionId) {
           const old = await sessionStore.find(tx, session.sessionId);
           if (!old || old.revokedAt !== null || old.staffId !== current.id) return false;
-          await sessionStore.replace(tx, session.sessionId, { id: checked.sessionKey, staffId: current.id, at: now });
+          if (!(await sessionStore.replace(tx, session.sessionId, { id: checked.sessionKey, staffId: current.id, at: now }))) return false;
         }
         if (!(await sessionStore.markAal2(tx, checked.sessionKey, current.id, now))) return false;
         if (purpose === "unverified") {
