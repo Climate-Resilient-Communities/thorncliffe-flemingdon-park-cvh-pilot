@@ -2,6 +2,7 @@
 
 import { useTranslations } from "next-intl";
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { FeedThread } from "@/contracts/feed";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
@@ -155,9 +156,10 @@ function neighbourhoodName(n: Translator): (id: string) => string {
  *
  * The server's answer is the same for everyone (AD-3): the whole neighbourhood's feed. The choices are read from this
  * phone and applied here; nothing about them is sent. The feed is fetched when the page opens and every 60 seconds
- * after, and an answer older than one already seen is discarded (use-feed.ts).
+ * after, and an answer older than one already seen is discarded (use-feed.ts). `children` end the screen (the link to
+ * "What I have told the CVH").
  */
-export function HomeNow({ lang }: { lang: LaunchCode }) {
+export function HomeNow({ lang, children }: { lang: LaunchCode; children?: ReactNode }) {
   const t = useTranslations("R03");
   const neighbourhoods = useTranslations("neighbourhoods");
   const time = useTranslations("time");
@@ -173,7 +175,10 @@ export function HomeNow({ lang }: { lang: LaunchCode }) {
     // The phone has not been read yet (the server render and the first render): nothing is claimed about any place.
     return (
       <Screen surface="resident" testId="home">
-        {heading}
+        <Stack gap="section-resident">
+          {heading}
+          {children}
+        </Stack>
       </Screen>
     );
   }
@@ -243,6 +248,8 @@ export function HomeNow({ lang }: { lang: LaunchCode }) {
               </Stack>
             </section>
           )}
+
+          {children}
         </Stack>
       </div>
     </Screen>

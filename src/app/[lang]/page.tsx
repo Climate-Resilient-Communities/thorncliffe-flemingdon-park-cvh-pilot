@@ -24,9 +24,10 @@ export default async function ResidentHome({ params }: PageProps<"/[lang]">) {
   return (
     <FirstRunGate lang={lang}>
       <NextIntlClientProvider locale={lang} messages={messages}>
-        <HomeNow lang={lang} />
+        <HomeNow lang={lang}>
+          <ChoicesLink href={`/${lang}/choices`}>{shell("choices")}</ChoicesLink>
+        </HomeNow>
       </NextIntlClientProvider>
-      <ChoicesLink href={`/${lang}/choices`}>{shell("choices")}</ChoicesLink>
     </FirstRunGate>
   );
 }
