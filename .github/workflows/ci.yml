@@ -1,0 +1,209 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+
+permissions:
+  contents: read
+
+# Runs on main never overlap, so production is deployed in push order; on other
+# branches a newer push cancels the older run.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+defaults:
+  run:
+    shell: bash
+
+env:
+  VERCEL_CLI: vercel@62.1.0
+
+jobs:
+  checks:
+    name: Checks
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test
+      - run: npm run lint:deps
+      - run: npm run build
+        env:
+          APP_VERSION: ${{ github.sha }}
+      - name: Smoke check the production build
+        run: npm run test:smoke
+        env:
+          EXPECTED_VERSION: ${{ github.sha }}
+
+  # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
+  # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
+  preview:
+    name: Vercel preview
+    needs: checks
+    if: github.ref != 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+    steps:
+      - name: Check Vercel settings
+        id: vercel
+        env:
+          HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+        run: |
+          missing=()
+          [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
+          [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
+          [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::warning title=Vercel preview not built::Checks passed, but no preview was deployed because the repository has no ${missing[*]}."
+            echo "configured=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "configured=true" >> "$GITHUB_OUTPUT"
+          fi
+      - if: steps.vercel.outputs.configured == 'true'
+        uses: actions/checkout@v7
+      - if: steps.vercel.outputs.configured == 'true'
+        uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - if: steps.vercel.outputs.configured == 'true'
+        run: |
+          npm ci
+          npm install --global "$VERCEL_CLI"
+      - if: steps.vercel.outputs.configured == 'true'
+        run: vercel pull --yes --environment=preview
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      # vercel build needs no token once vercel pull has fetched the project settings.
+      - if: steps.vercel.outputs.configured == 'true'
+        run: vercel build
+        env:
+          APP_VERSION: ${{ github.sha }}
+      - name: Deploy preview
+        if: steps.vercel.outputs.configured == 'true'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prebuilt --json | jq -er .url)
+          echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
+
+  production:
+    name: Vercel production
+    needs: checks
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
+      VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
+      PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
+    steps:
+      - name: Check Vercel settings
+        env:
+          HAS_TOKEN: ${{ secrets.VERCEL_TOKEN != '' }}
+        run: |
+          missing=()
+          [ "$HAS_TOKEN" = true ] || missing+=("secret VERCEL_TOKEN")
+          [ -n "$VERCEL_ORG_ID" ] || missing+=("variable VERCEL_ORG_ID")
+          [ -n "$VERCEL_PROJECT_ID" ] || missing+=("variable VERCEL_PROJECT_ID")
+          [ -n "$PRODUCTION_URL" ] || missing+=("variable PRODUCTION_URL")
+          if [ ${#missing[@]} -gt 0 ]; then
+            echo "::error title=Production not deployed::The repository has no ${missing[*]}."
+            exit 1
+          fi
+          if [[ "$PRODUCTION_URL" != https://* ]]; then
+            echo "::error title=Production not deployed::The variable PRODUCTION_URL must be a full https:// URL."
+            exit 1
+          fi
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: |
+          npm ci
+          npm install --global "$VERCEL_CLI"
+      # inspect, promote and rollback ignore VERCEL_ORG_ID, so they are given the team as --scope.
+      - name: Record the current production deployment
+        id: previous
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          if id=$(vercel inspect "$PRODUCTION_URL" --json --scope "$VERCEL_ORG_ID" | jq -er .id); then
+            echo "id=$id" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          # Only a URL that serves nothing yet (first deploy) may go without a rollback target.
+          status=$(curl -s -o /dev/null -w '%{http_code}' "${PRODUCTION_URL%/}/api/health" || true)
+          if [ "$status" = 404 ]; then
+            echo "::warning title=No rollback target::No deployment serves $PRODUCTION_URL yet, so a failed smoke check cannot be rolled back."
+          else
+            echo "::error title=Production not deployed::Could not look up the deployment serving $PRODUCTION_URL (it answers HTTP $status), so a failed smoke check could not be rolled back."
+            exit 1
+          fi
+      - run: vercel pull --yes --environment=production
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+      - run: vercel build --prod
+        env:
+          APP_VERSION: ${{ github.sha }}
+      # Deploy without taking the production domains, then promote explicitly:
+      # after an instant rollback Vercel stops assigning them automatically.
+      - name: Deploy
+        id: deploy
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+        run: |
+          url=$(vercel deploy --prebuilt --prod --skip-domain --json | jq -er .url)
+          echo "url=$url" >> "$GITHUB_OUTPUT"
+      - name: Promote to production
+        run: vercel promote "$DEPLOYMENT_URL" --yes --scope "$VERCEL_ORG_ID"
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+      # Runs even if promote failed: the promotion may still have gone through.
+      - name: Smoke check production
+        id: smoke
+        if: ${{ !cancelled() && steps.deploy.outcome == 'success' }}
+        run: npm run test:smoke
+        env:
+          SMOKE_BASE_URL: ${{ vars.PRODUCTION_URL }}
+          EXPECTED_VERSION: ${{ github.sha }}
+      - name: Roll back after a failed smoke check
+        if: failure() && steps.smoke.outcome == 'failure'
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          DEPLOYMENT_URL: ${{ steps.deploy.outputs.url }}
+          PREVIOUS_DEPLOYMENT: ${{ steps.previous.outputs.id }}
+        run: |
+          {
+            echo "## Production smoke check failed"
+            echo
+            echo "Deployment $DEPLOYMENT_URL (commit $GITHUB_SHA) failed the smoke check against $PRODUCTION_URL; the failing checks are in the \"Smoke check production\" step."
+            echo
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ -z "$PREVIOUS_DEPLOYMENT" ]; then
+            echo "**Not rolled back: there was no earlier production deployment. Production is serving the failing deployment.**" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Production smoke check failed::No earlier production deployment to roll back to."
+            exit 1
+          fi
+          if vercel rollback "$PREVIOUS_DEPLOYMENT" --yes --scope "$VERCEL_ORG_ID"; then
+            echo "Rolled back to the previous production deployment $PREVIOUS_DEPLOYMENT." >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Production smoke check failed::Rolled back to the previous production deployment $PREVIOUS_DEPLOYMENT."
+          else
+            echo "**Rollback to $PREVIOUS_DEPLOYMENT failed. Production is serving the failing deployment.**" >> "$GITHUB_STEP_SUMMARY"
+            echo "::error title=Rollback failed::Production is serving the failing deployment $DEPLOYMENT_URL."
+            exit 1
+          fi
