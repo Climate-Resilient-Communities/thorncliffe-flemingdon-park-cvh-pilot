@@ -2,11 +2,13 @@
 // new page, route handler or server action under src/app/staff or src/app/api/staff is covered
 // the moment it exists: it fails here unless it is built with a guard wrapper (src/app/staff/guard.ts)
 // and refuses a request without a session, and one at an earlier setup gate, before its own code.
-import { readdirSync, readFileSync, statSync } from "node:fs";
+import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GATE_PAGES, type SetupGate } from "../src/contracts/staffAuth";
 import type { StaffSession } from "../src/modules/identity";
+import { findStaffSurface, routePathOf, staffSurfaceProblems } from "./helpers/staffSurface";
 
 const session = vi.hoisted(() => ({ current: null as StaffSession | null }));
 const audits = vi.hoisted(() => ({ unauthenticated: [] as unknown[][], outsideGate: [] as unknown[][] }));
@@ -33,35 +35,17 @@ vi.mock("../src/app/staff/identity", () => ({
 }));
 
 const ROOT = path.join(__dirname, "..");
-const STAFF_DIRS = [path.join(ROOT, "src", "app", "staff"), path.join(ROOT, "src", "app", "api", "staff")];
-const ROUTE_FILE = /^(page|route|layout|template|default|loading|error|not-found)\.(tsx?|jsx?)$/;
+const APP = path.join(ROOT, "src", "app");
 const HTTP_METHODS = ["GET", "HEAD", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"];
 
 /** The only routes anyone may use without a session. */
 const PUBLIC = new Set(["/staff/sign-in", "/api/staff/sign-in", "/api/staff/sign-out"]);
 
-function walk(dir: string): string[] {
-  return readdirSync(dir).flatMap((name) => {
-    const full = path.join(dir, name);
-    return statSync(full).isDirectory() ? walk(full) : [full];
-  });
-}
-
-const files = STAFF_DIRS.flatMap(walk).filter((file) => /\.(tsx?|jsx?)$/.test(file) && !/\.test\.(tsx?|jsx?)$/.test(file));
+const surface = findStaffSurface(APP, path.join(ROOT, "src"));
+const { pages, handlers, actionFiles } = surface;
 const relative = (file: string) => path.relative(ROOT, file);
 /** The URL path of a route file: its directory under src/app, without route groups. */
-const routePath = (file: string) =>
-  "/" +
-  path
-    .relative(path.join(ROOT, "src", "app"), path.dirname(file))
-    .split(path.sep)
-    .filter((segment) => !/^\(.*\)$/.test(segment))
-    .join("/");
-
-const pages = files.filter((file) => /\/page\.(tsx?|jsx?)$/.test(file));
-const handlers = files.filter((file) => /\/route\.(tsx?|jsx?)$/.test(file));
-const actionFiles = files.filter((file) => /^\s*["']use server["']/.test(readFileSync(file, "utf8")));
-const otherRouteFiles = files.filter((file) => ROUTE_FILE.test(path.basename(file)) && !/\/(page|route|layout)\.(tsx?|jsx?)$/.test(file));
+const routePath = (file: string) => routePathOf(APP, file);
 
 const atGate = (gate: SetupGate): StaffSession => ({
   staffId: "01900000-0000-7000-8000-000000000001",
@@ -103,9 +87,131 @@ describe("the staff routes on disk", () => {
     expect(actionFiles.map(relative)).toContain("src/app/staff/people/actions.ts");
   });
 
-  it("have no route files the guard cannot wrap (route.ts under /staff, templates, defaults, error pages)", () => {
-    expect(otherRouteFiles.map(relative)).toEqual([]);
-    expect(handlers.filter((file) => !file.includes(`${path.sep}api${path.sep}`)).map(relative)).toEqual([]);
+  it("have nothing the guard cannot cover: unwrappable route files, metadata routes, inline actions, generateMetadata", () => {
+    expect(staffSurfaceProblems(surface)).toEqual([]);
+  });
+});
+
+describe.each([...pages, ...surface.layouts].map((file) => [relative(file), file]))("page or layout %s", (_name, file) => {
+  it("exports no function Next.js would call outside the guard (generateMetadata and the like)", async () => {
+    const exportsOf: Record<string, unknown> = await import(file);
+    const functions = Object.entries(exportsOf).filter(([name, value]) => name !== "default" && typeof value === "function");
+    expect(functions.map(([name]) => name)).toEqual([]);
+  });
+});
+
+/** A throwaway src/ tree: `files` maps paths under it to their text. */
+function fixture(files: Record<string, string>) {
+  const root = mkdtempSync(path.join(tmpdir(), "cvh-staff-surface-"));
+  for (const [name, text] of Object.entries(files)) {
+    const full = path.join(root, name);
+    mkdirSync(path.dirname(full), { recursive: true });
+    writeFileSync(full, text);
+  }
+  const src = (name: string) => path.join(root, name);
+  return { surface: findStaffSurface(src("app"), root), src, remove: () => rmSync(root, { recursive: true, force: true }) };
+}
+
+const GUARDED_PAGE = `import { staffPage } from "@/app/staff/guard";\nexport default staffPage({ route: "/staff/x", access: "hub" }, () => null);\n`;
+
+describe("the enumeration of the staff surface (fixtures that must make the checks above fail)", () => {
+  it.each([
+    "app/staff/icon.tsx",
+    "app/staff/apple-icon.png",
+    "app/staff/people/opengraph-image.tsx",
+    "app/staff/people/twitter-image.jpg",
+    "app/staff/sitemap.ts",
+    "app/staff/manifest.ts",
+    "app/staff/robots.txt",
+    "app/api/staff/icon1.png",
+    "app/(admin)/staff/opengraph-image.alt.txt",
+  ])("flags the metadata route %s", (name) => {
+    const { surface: found, remove } = fixture({ [name]: "export default function Image() { return null; }\n", "app/staff/page.tsx": GUARDED_PAGE });
+    try {
+      expect(found.metadata.map((file) => path.basename(file))).toEqual([path.basename(name)]);
+      expect(staffSurfaceProblems(found)).toEqual([expect.stringMatching(/a metadata route under a staff URL/)]);
+    } finally {
+      remove();
+    }
+  });
+
+  it("does not flag metadata routes outside the staff URLs", () => {
+    const { surface: found, remove } = fixture({ "app/icon.png": "", "app/(site)/opengraph-image.tsx": "export default () => null;\n", "app/staff/page.tsx": GUARDED_PAGE });
+    try {
+      expect(staffSurfaceProblems(found)).toEqual([]);
+    } finally {
+      remove();
+    }
+  });
+
+  it("flags a function-level \"use server\" action in a staff file, or in a component a staff page imports", () => {
+    const { surface: found, remove } = fixture({
+      "app/staff/page.tsx": `import { Panel } from "@/components/Panel";\nexport default async function Page() {\n  async function act() {\n    "use server";\n  }\n  return null;\n}\n`,
+      "components/Panel.tsx": `export function Panel() {\n  const save = async () => {\n    'use server';\n  };\n  return null;\n}\n`,
+      "components/Unused.tsx": `export function Unused() {\n  async function act() {\n    "use server";\n  }\n}\n`,
+    });
+    try {
+      expect(found.inlineActions.map((file) => path.relative(path.dirname(found.appDir), file)).sort()).toEqual(["app/staff/page.tsx", "components/Panel.tsx"]);
+      expect(staffSurfaceProblems(found)).toEqual([
+        expect.stringMatching(/app\/staff\/page\.tsx: an inline "use server" action/),
+        expect.stringMatching(/components\/Panel\.tsx: an inline "use server" action/),
+      ]);
+    } finally {
+      remove();
+    }
+  });
+
+  it("finds \"use server\" files anywhere that staff pages import, directly or through another module, so each is checked as staff actions", () => {
+    const { surface: found, src, remove } = fixture({
+      "app/staff/people/page.tsx": `import { thing } from "../../shared/forms";\nexport default function Page() { return null; }\n`,
+      "app/shared/forms.ts": `export { save } from "@/app/lib/actions";\nexport const thing = 1;\n`,
+      "app/lib/actions.ts": `// Saves things.\n"use server";\nexport async function save() {}\n`,
+      "app/lib/elsewhere.ts": `"use server";\nexport async function notImportedByStaff() {}\n`,
+      "app/staff/own.ts": `'use server'\nexport async function own() {}\n`,
+    });
+    try {
+      expect(found.actionFiles.sort()).toEqual([src("app/lib/actions.ts"), src("app/staff/own.ts")]);
+    } finally {
+      remove();
+    }
+  });
+
+  it("finds pages, handlers and route files of route groups that resolve under /staff", () => {
+    const { surface: found, src, remove } = fixture({
+      "app/(x)/staff/hidden/page.tsx": "export default function Page() { return null; }\n",
+      "app/(x)/api/staff/hidden/route.ts": "export async function GET() { return new Response(); }\n",
+      "app/(x)/staff/loading.tsx": "export default function Loading() { return null; }\n",
+      "app/(x)/staff/route.ts": "export async function GET() { return new Response(); }\n",
+      "app/(x)/staffing/page.tsx": "export default function Page() { return null; }\n",
+    });
+    try {
+      expect(found.pages).toEqual([src("app/(x)/staff/hidden/page.tsx")]);
+      expect(routePathOf(found.appDir, found.pages[0])).toBe("/staff/hidden");
+      expect(found.handlers.sort()).toEqual([src("app/(x)/api/staff/hidden/route.ts"), src("app/(x)/staff/route.ts")]);
+      expect(staffSurfaceProblems(found)).toEqual([
+        expect.stringMatching(/app\/\(x\)\/staff\/loading\.tsx: a route file the guard cannot wrap/),
+        expect.stringMatching(/app\/\(x\)\/staff\/route\.ts: a route handler outside \/api\/staff/),
+      ]);
+    } finally {
+      remove();
+    }
+  });
+
+  it.each([
+    ["an async function", "export async function generateMetadata() { return {}; }"],
+    ["a const", "export const generateMetadata = async () => ({});"],
+    ["a re-export", "async function generateMetadata() { return {}; }\nexport { generateMetadata };"],
+    ["generateViewport", "export function generateViewport() { return {}; }"],
+  ])("flags generateMetadata and the like on a staff page or layout, as %s", (_name, code) => {
+    const { surface: found, remove } = fixture({ "app/staff/people/page.tsx": `${GUARDED_PAGE}${code}\n`, "app/staff/layout.tsx": `export default function L() { return null; }\n${code}\n` });
+    try {
+      expect(staffSurfaceProblems(found)).toEqual([
+        expect.stringMatching(/app\/staff\/layout\.tsx: exports generate(Metadata|Viewport), which Next.js calls outside the guard/),
+        expect.stringMatching(/app\/staff\/people\/page\.tsx: exports generate(Metadata|Viewport), which Next.js calls outside the guard/),
+      ]);
+    } finally {
+      remove();
+    }
   });
 });
 
