@@ -99,7 +99,7 @@ describe("the Test text page", () => {
   });
 
   it("shows the notice, not the button, when a spike variable is malformed (smsTestProblem), without naming any value", async () => {
-    env.current = { ...PRODUCTION, smsTestAllowlist: [], smsTestProblem: "SMS_TEST_ALLOWLIST: every entry must be an E.164 number" };
+    env.current = { ...PRODUCTION, smsTestProblem: "SMS_TEST_ALLOWLIST: every entry must be an E.164 number" };
 
     const html = await render();
 
