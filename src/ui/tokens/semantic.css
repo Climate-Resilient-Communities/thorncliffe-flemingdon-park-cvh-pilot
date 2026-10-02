@@ -43,6 +43,8 @@
   --size-icon: var(--app-icon);
   --size-icon-basic: var(--app-icon-basic);
   --size-icon-staff: var(--app-icon-staff);
+  --size-logo-hub: var(--app-logo-hub);
+  --size-symbol-hub: var(--app-symbol-hub);
   --size-header-resident-min: var(--app-min-header-resident);
   --size-topbar-hub-min: var(--app-min-topbar-hub);
   --size-nav-item-resident-min: var(--app-min-nav-item-resident);

@@ -937,6 +937,8 @@
   save: 'Save', saved: 'Saved. This takes effect now.', both: 'Thorncliffe Park and Flemingdon Park',
   nothingSummary: 'Nothing yet. You will see every alert for Thorncliffe Park and Flemingdon Park.', everyAlert: 'Every alert for {nbhd}',
   floorOf: '{building}, floor {floor}', checkinBy: 'Check-ins by {method}', changeAll: 'Change what you chose', toHome: 'Go to Now' } });
+  /* The Hub shell (S01.09): the menu drawer's close button, People and the Administration section. Not a prototype screen. */
+  m(en, { hub: { closeMenu: 'Close menu', nav: { people: 'People' }, sections: { admin: 'Administration' } } });
   /* Staff accounts (S01.05): Add a person, the first-Admin script and the setup gate. Not a prototype screen. */
   m(en, { staff: { roles: { ambassador: 'Ambassador', coordinator: 'Coordinator', director: 'Director', admin: 'Admin' },
   bootstrap: { incomplete: 'Finish setting up two Admins first',
