@@ -315,6 +315,55 @@ describe("the database trigger", () => {
     expect(remaining.map((row) => row.id).sort()).toEqual([b, c].sort());
   });
 
+  it.each(["repeatable read", "serializable"])(
+    "refuses to count in %s, where two transactions could each demote a different Admin on a stale snapshot",
+    async (level) => {
+      const [a, b] = [await account(), await account(), await account()];
+      const one = connect(appUrl);
+      const two = connect(appUrl);
+      let go!: () => void;
+      const release = new Promise<void>((resolve) => (go = resolve));
+      try {
+        // The reviewer's scenario: both snapshots are taken while three Admins exist, then each demotes another.
+        const first = one.begin(`isolation level ${level}`, async (tx) => {
+          await tx`select count(*) from staff_account`;
+          await release;
+          await tx`update staff_account set role = 'coordinator' where id = ${a}`;
+        });
+        const second = two.begin(`isolation level ${level}`, async (tx) => {
+          await tx`select count(*) from staff_account`;
+          await release;
+          await tx`update staff_account set role = 'coordinator' where id = ${b}`;
+        });
+        await new Promise((resolve) => setTimeout(resolve, 150));
+        go();
+
+        const results = await Promise.allSettled([first, second]);
+        expect(results.map((result) => result.status)).toEqual(["rejected", "rejected"]);
+        for (const result of results) expect(result).toMatchObject({ reason: { message: "two-Admin guard requires READ COMMITTED", code: "23514" } });
+      } finally {
+        await one.end({ timeout: 5 });
+        await two.end({ timeout: 5 });
+      }
+      expect(await admins()).toBe(3);
+    },
+  );
+
+  it("still lets a recovery transaction through in repeatable read, since it counts nothing", async () => {
+    await account();
+    const second = await account();
+    const sql = connect(appUrl);
+    try {
+      await sql.begin("isolation level repeatable read", async (tx) => {
+        await tx`select set_config('cvh.admin_recovery', 'on', true)`;
+        await tx`update staff_account set must_change_password = true, starting_password_issued_at = now() where id = ${second}`;
+      });
+    } finally {
+      await sql.end({ timeout: 5 });
+    }
+    expect(await admins()).toBe(2);
+  });
+
   it("lets a transaction that sets the recovery flag through, and the flag ends with it", async () => {
     await account();
     const second = await account();
