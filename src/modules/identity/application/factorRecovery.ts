@@ -1,4 +1,4 @@
-import type { Db } from "../../../platform/db";
+import type { Db, DbExecutor } from "../../../platform/db";
 import { SYSTEM_ACTOR, type FACTOR_RESET_REASONS } from "../../audit";
 import { mayManageAccounts } from "../domain/accountAuthority";
 import { decideUnderBootstrap } from "../domain/bootstrap";
@@ -8,8 +8,8 @@ import { needsAuthenticator } from "../domain/setupGate";
 import type { StaffAccount } from "../domain/staffAccount";
 import type { AuditReason, AuditWriter } from "./accounts";
 import type { FactorReset, FactorResetCheck } from "./factorReset";
-import type { StaffStore } from "./ports";
-import { adminStandings, type UsabilitySources } from "./usability";
+import type { IdentityProvider, StaffStore } from "./ports";
+import { adminStandings } from "./usability";
 
 export type ResetAuthenticatorError =
   | "forbidden"
@@ -43,8 +43,14 @@ export interface AuthenticatorResetDone {
 
 export type FactorResetReason = (typeof FACTOR_RESET_REASONS)[number];
 
-export interface FactorRecoveryDeps extends UsabilitySources {
+export interface FactorRecoveryDeps {
   db: Db;
+  idp: IdentityProvider;
+  /**
+   * The failed-sign-in lock of a username (S01.07), read through the given executor: inside the
+   * reset's transaction it is the transaction, never a second pool connection.
+   */
+  signInLockedUntilIn: (executor: DbExecutor, username: string) => Promise<Date | null>;
   store: StaffStore;
   audit: AuditWriter;
   now: () => Date;
@@ -127,7 +133,8 @@ export function createFactorRecovery(deps: FactorRecoveryDeps) {
         if (!RESETTABLE.has(locked.status)) return "not_resettable";
         // The Admin rows are locked (the recovery exception took them): this count cannot change under us.
         const others = (await store.listAdmins(tx)).filter((admin) => admin.id !== locked.id);
-        const standings = await adminStandings(deps, others, deps.now());
+        // Every read inside the transaction goes through the transaction's own connection.
+        const standings = await adminStandings({ idp: deps.idp, signInLockedUntil: (name) => deps.signInLockedUntilIn(tx, name) }, others, deps.now());
         return standings.some((admin) => admin.usable) ? "other_usable_admin" : null;
       };
       const result = await deps.factorReset.resetFactor({ staffId: target.id, actorStaffId: SYSTEM_ACTOR, cause: reason }, check);

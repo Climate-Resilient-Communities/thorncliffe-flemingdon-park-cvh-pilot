@@ -17,6 +17,14 @@ import {
 } from "../../src/modules/identity";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
+import * as audit from "../../src/modules/audit";
+import { stdoutOperationalLog } from "../../src/modules/identity/adapters/operationalLog";
+import { drizzleStaffSessionStore } from "../../src/modules/identity/adapters/sessionStore";
+import { drizzleStaffStore } from "../../src/modules/identity/adapters/staffStore";
+import { createAdminRecovery } from "../../src/modules/identity/application/adminRecovery";
+import { createFactorRecovery } from "../../src/modules/identity/application/factorRecovery";
+import { createFactorReset } from "../../src/modules/identity/application/factorReset";
+import { createSessionRevocation } from "../../src/modules/identity/application/sessionRevocation";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -277,6 +285,41 @@ describe("IT's recoverAdmin (scripts/recover-admin)", () => {
     ]);
     expect(await bootstrapCompleted()).toBe(true);
     expect(await signIn(browser(), "admin2")).toMatchObject({ ok: true, gate: "enrol_authenticator" });
+  });
+
+  it("reads the other Admins' sign-in locks through the reset's transaction, never a second pool connection", async () => {
+    const { second } = await twoAdmins();
+    // The first Admin is locked out by failed sign-ins (the lock reader says so), so they are not usable.
+    const executors: unknown[] = [];
+    const now = () => clock;
+    const revocation = createSessionRevocation({ store: drizzleStaffStore, sessions: drizzleStaffSessionStore, audit, now });
+    const factorReset = createFactorReset({
+      db: app,
+      store: drizzleStaffStore,
+      idp,
+      audit,
+      log: stdoutOperationalLog,
+      beginAdminRecovery: createAdminRecovery({ store: drizzleStaffStore, idp, now, signInLockedUntil: async () => null }).beginAdminRecovery,
+      revocation,
+    });
+    const recovery = createFactorRecovery({
+      db: app,
+      store: drizzleStaffStore,
+      idp,
+      audit,
+      now,
+      factorReset,
+      signInLockedUntilIn: async (executor) => {
+        executors.push(executor);
+        return new Date(clock.getTime() + 15 * 60_000);
+      },
+    });
+
+    expect((await recovery.recoverAdmin("admin2", "lost_device")).ok).toBe(true);
+
+    expect(executors).toHaveLength(1);
+    expect(executors[0]).not.toBe(app);
+    expect(await factorEnrolledAt(second.id)).toBeNull();
   });
 
   it("refuses while another usable Admin exists, changing nothing, and audits the refusal as system", async () => {
