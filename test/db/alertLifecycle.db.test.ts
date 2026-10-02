@@ -21,6 +21,8 @@ import {
   type EntryStatus,
   type FrozenContent,
 } from "../../src/modules/alerting";
+import { createAssignments } from "../../src/modules/identity";
+import { floorsOfBuilding } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -592,6 +594,66 @@ describe("approval", () => {
 });
 
 // --- a pending entry is frozen ------------------------------------------------------------------------
+
+describe("an Ambassador author and their assignments (S01.14)", () => {
+  const RSN = "4154146";
+  const OTHER_RSN = "4154147";
+  let madeNeighbourhood = false;
+
+  async function withBuildings<T>(run: () => Promise<T>): Promise<T> {
+    const existing = await owner`select 1 from neighbourhood where id = 'TP'`;
+    if (existing.length === 0) {
+      await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H')`;
+      madeNeighbourhood = true;
+    }
+    for (const rsn of [RSN, OTHER_RSN]) {
+      await owner`insert into building (rsn, neighbourhood_id, address, latitude, longitude, facts_updated_at)
+                  values (${rsn}, 'TP', ${`${rsn} Test Dr`}, 43.7, -79.34, '2026-10-01T12:00:00Z') on conflict do nothing`;
+    }
+    try {
+      return await run();
+    } finally {
+      await owner`delete from ambassador_assignment where staff_id = ${ambassador.id}`;
+      await owner`delete from building where rsn in (${RSN}, ${OTHER_RSN})`;
+      if (madeNeighbourhood) await owner`delete from neighbourhood where id = 'TP'`;
+      madeNeighbourhood = false;
+    }
+  }
+
+  it("creates an alert for an assigned building, and approval refuses once an Admin removes the assignment (AUTHOR_NOT_ALLOWED)", async () => {
+    await withBuildings(async () => {
+      const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
+      expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
+
+      const ref = await newDraft(ambassador);
+      const submitted = await alerting.submitEntry(actorOf(ambassador), ref, frozen("v1"));
+      expect(submitted).toMatchObject({ ok: true });
+
+      expect(await assignments.remove(adminC.id, { staffId: ambassador.id, rsn: RSN })).toMatchObject({ ok: true });
+      expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "AUTHOR_NOT_ALLOWED" });
+      expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
+    });
+  });
+
+  it("approves while the assignment stands", async () => {
+    await withBuildings(async () => {
+      const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
+      expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
+      const ref = await newDraft(ambassador);
+      expect(await alerting.submitEntry(actorOf(ambassador), ref, frozen("v1"))).toMatchObject({ ok: true });
+      expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true });
+    });
+  });
+
+  it("refuses an Ambassador's createAlert for a building they are not assigned to", async () => {
+    await withBuildings(async () => {
+      const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
+      expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: OTHER_RSN, floorIds: null })).toMatchObject({ ok: true });
+      const created = await alerting.createAlert(actorOf(ambassador), { kind: "ack", isDrill: false, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
+      expect(created).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    });
+  });
+});
 
 describe("a pending_approval entry", () => {
   it("cannot have its text, audience, types, valid-until, translations, SMS bodies, hash or version changed by direct SQL, by anyone", async () => {

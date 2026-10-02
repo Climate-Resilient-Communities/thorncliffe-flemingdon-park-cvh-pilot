@@ -88,3 +88,35 @@ describe("drift detection (fixture)", () => {
     expect(await findSchemaDrift(db.url, imports)).toContain(difference);
   });
 });
+
+describe("drift detection of what only SQL can say (fixture)", () => {
+  let db: FreshDatabase;
+
+  beforeAll(async () => {
+    db = await createFreshDatabase();
+    await migrate({ sql: db.sql, dir: path.join(FIXTURES, "drift", "migrations") });
+  });
+
+  afterAll(async () => {
+    await db.drop();
+  });
+
+  it("reports nothing for a constraint trigger, which Drizzle cannot say and the migrations own", async () => {
+    await db.sql.unsafe(`
+      create function audit_event_check_action() returns trigger language plpgsql as $$ begin return new; end $$;
+      create constraint trigger audit_event_check_action after insert on audit_event deferrable initially deferred
+        for each row execute function audit_event_check_action();`);
+    const [{ n }] = await db.sql`select count(*)::int as n from pg_constraint where conrelid = 'audit_event'::regclass and contype = 't'`;
+    expect(n).toBe(1);
+
+    expect(await findSchemaDrift(db.url, matching)).toEqual([]);
+  });
+
+  it("still reports a CHECK constraint that exists only in SQL", async () => {
+    await db.sql.unsafe(`alter table audit_event add constraint audit_event_action_not_blank check (action <> '')`);
+
+    expect(await findSchemaDrift(db.url, matching)).toEqual([
+      "public.audit_event: constraint CHECK ((action <> ''::text)) is in the migrations but not in the Drizzle schema",
+    ]);
+  });
+});

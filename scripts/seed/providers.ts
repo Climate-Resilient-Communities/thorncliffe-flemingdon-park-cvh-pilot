@@ -8,6 +8,9 @@
 // localhost needs --yes, otherwise nothing is written and the exit code is 1. The dry run never
 // touches a database.
 //
+// Records a catalogue_load row (the sha256 of the catalogue files, as the publish job computes it, and the commit)
+// in the same transaction: "Publish directory" refuses to publish a catalogue the database does not hold.
+//
 // Reads data/catalogue/providers.json and translations/{lang}.json and upserts provider,
 // provider_location, category and provider_category keyed by provider id. Running it twice changes
 // nothing; a provider that left providers.json is unpublished and flagged "not in catalogue",
@@ -17,17 +20,31 @@
 // Exit code 0: the catalogue was loaded (or, with --dry-run, would load).
 // Exit code 1: the file failed its schema, so nothing was loaded and every failing entry is listed;
 // or the run failed.
+import { execFileSync } from "node:child_process";
 import path from "node:path";
 import { createDb } from "@/platform/db";
 import { announceSeedTarget } from "./target";
 import {
+  catalogueHash,
   formatProviderFailures,
+  gitCommitOf,
   formatProviderReport,
   planProviders,
   ProviderSeedRefusedError,
   readProviderCatalogue,
   seedProviders,
 } from "@/modules/directory";
+
+/** The commit this run is made from: the deployed build's, else the checkout's HEAD; null when neither is known. */
+function commitOf(env: NodeJS.ProcessEnv, root: string): string | null {
+  const fromBuild = gitCommitOf(env.APP_VERSION) ?? gitCommitOf(env.GITHUB_SHA);
+  if (fromBuild) return fromBuild;
+  try {
+    return gitCommitOf(execFileSync("git", ["rev-parse", "HEAD"], { cwd: root, encoding: "utf8", stdio: ["ignore", "pipe", "ignore"] }));
+  } catch {
+    return null;
+  }
+}
 
 export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string): Promise<number> {
   const dirIndex = argv.indexOf("--dir");
@@ -48,7 +65,7 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
   if (!url) return 1;
   const db = createDb(url);
   try {
-    const result = await seedProviders(db, input);
+    const result = await seedProviders(db, input, { hash: await catalogueHash(dir), gitCommit: commitOf(env, root) });
     for (const line of formatProviderReport(result.report)) console.log(line);
     const { changed, removed } = result;
     console.log(

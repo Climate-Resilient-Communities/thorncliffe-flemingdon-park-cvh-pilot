@@ -4,11 +4,14 @@
 import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type StackGap } from "@/ui";
 import { HubShell } from "@/ui/hub/hub-shell";
 import type { HubNavSection } from "@/ui/hub/hub-nav";
+import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import type { ComponentProps, ReactNode } from "react";
 import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
+import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
+import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
@@ -494,6 +497,32 @@ export function BuildingsFixture({
 }
 
 /**
+ * The coverage screen (S01.14) as an Admin, a Coordinator or a Director sees it in the Hub shell: the app's own CoverageBody on a
+ * view built by the app's own view functions (e2e/hub/coverage.spec.ts), with the actions replaced by ones that do nothing
+ * and, where a picture needs it, a form already in its refused state (`initial`).
+ */
+export function CoverageFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: CoverageScreen;
+  initial?: CoverageInitial;
+}) {
+  const actions: CoverageActions = { assign: noAction, remove: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/coverage">
+      <Screen surface="staff" testId="screen">
+        <CoverageBody screen={screen} actions={actions} initial={initial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
  * The Hub shell around the Providers screen (S02.04), as an Admin sees it: the real ProviderList with the rows and
  * words the page gives it. Its actions are the harness's stand-ins (e2e/helpers/provider-actions-stub.ts).
  */
@@ -592,6 +621,56 @@ export function SmsTestFixture({
     >
       <Screen surface="staff" testId="screen">
         <SmsTestView availability={availability} unknownAttempts={unknownAttempts} form={availability === "ready" ? <SendTestTextFormView {...form} /> : null} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Directory release screen (S02.05), as an Admin sees it: the real DirectoryRelease with the
+ * words the page gives it. Its action is the harness's stand-in (e2e/helpers/directory-actions-stub.ts).
+ */
+export function DirectoryFixture({
+  texts,
+  brand,
+  view,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  view: DirectoryReleaseView;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/directory"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="tap">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <Stack gap="section-hub">
+          <Stack gap="related">
+            <h1>{texts.heading}</h1>
+            {texts.paragraphs.map((text) => (
+              <p key={text}>{text}</p>
+            ))}
+          </Stack>
+          <DirectoryRelease view={view} />
+        </Stack>
       </Screen>
     </HubShell>
   );
