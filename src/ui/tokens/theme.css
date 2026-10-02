@@ -1,0 +1,19 @@
+/*
+ * The app's Tailwind v4 theme (docs/design-framework/spacing-container/token-architecture.md section 9).
+ * Layer 1 and the @theme block are generated from tokens.json by `npm run gen:tokens`; layer 2 is
+ * semantic.css. Tailwind scans no files from here: the stylesheet that imports this names its sources,
+ * so docs and prototype files never add CSS to the app.
+ */
+@import "tailwindcss" source(none);
+@import "./tokens.generated.css";
+@import "./semantic.css";
+@import "./theme.generated.css";
+
+/* Tailwind's `container` sizes itself by breakpoint; only the Hub shell reads the breakpoint (hub:). */
+@source not inline("container");
+
+/* Minimum touch target: 44px, 56px in basic mode (touch-target.md). --tap-current is in layout/tap.css. */
+@utility tap {
+  min-block-size: var(--tap-current);
+  min-inline-size: var(--tap-current);
+}

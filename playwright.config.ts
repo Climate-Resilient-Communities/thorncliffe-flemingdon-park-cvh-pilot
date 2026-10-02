@@ -7,6 +7,8 @@ const bypassSecret = process.env.VERCEL_AUTOMATION_BYPASS_SECRET;
 
 export default defineConfig({
   testDir: "./e2e",
+  // The layout tests need no server; they run with playwright.layout.config.ts.
+  testIgnore: "layout/**",
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
   reporter: process.env.CI ? [["list"], ["github"]] : "list",

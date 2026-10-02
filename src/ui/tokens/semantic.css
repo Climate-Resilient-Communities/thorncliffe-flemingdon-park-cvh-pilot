@@ -1,0 +1,60 @@
+/*
+ * Layer 2: semantic tokens (docs/design-framework/spacing-container/token-architecture.md section 3).
+ * Every value is exactly one var() of a primitive generated from tokens.json; no numbers here.
+ * Spacing and sizes have one value in every theme, language and basic mode.
+ */
+:root {
+  /* 3.1 Spacing */
+  --gap-subline: var(--app-space-1);
+  --gap-label: var(--app-space-2);
+  --gap-tight: var(--app-space-3);
+  --gap-related: var(--app-space-4);
+  --gap-target: var(--app-space-4);
+  --gap-icon: var(--app-space-5);
+  --gap-grid: var(--app-space-5);
+  --gap-stack: var(--app-space-6);
+  --gap-section-resident: var(--app-space-8);
+  --gap-section-hub: var(--app-space-9);
+  --gap-panel: var(--app-space-10);
+  --gap-paragraph: var(--app-space-10);
+  --gap-columns-hub: var(--app-space-28px);
+  --gap-section-hub-main: var(--app-space-22px);
+  --gap-section-hub-review: var(--app-space-18px);
+  --gap-meta-inline: var(--app-space-18px);
+  --gap-type-grid-inline: var(--app-space-18px);
+  --gap-meta-block: var(--app-space-2);
+  --gap-type-grid-block: var(--app-space-7);
+  --gap-columns-inner: var(--app-space-5);
+  --gutter-resident: var(--app-space-8);
+  --inset-screen-end: var(--app-space-10);
+  --inset-page-staff: var(--app-space-10);
+  --inset-page-staff-narrow: var(--app-space-8);
+  --inset-card: var(--app-space-8);
+  --inset-card-compact: var(--app-space-6);
+  --inset-card-snug: var(--app-space-7);
+  --inset-button-large-inline: var(--app-space-18px);
+  --inset-count-badge-inline: var(--app-space-7px);
+  --offset-align-hairline: var(--app-space-1px);
+  --offset-align-icon: var(--app-space-3px);
+
+  /* 3.2 Sizes */
+  --tap: var(--app-tap);
+  --tap-basic: var(--app-tap-basic);
+  --size-icon: var(--app-icon);
+  --size-icon-basic: var(--app-icon-basic);
+  --size-icon-staff: var(--app-icon-staff);
+  --size-header-resident-min: var(--app-min-header-resident);
+  --size-topbar-hub-min: var(--app-min-topbar-hub);
+  --size-nav-item-resident-min: var(--app-min-nav-item-resident);
+  --size-nav-item-resident-min-basic: var(--app-min-nav-item-resident-basic);
+  --size-page-staff: var(--app-page-staff);
+  --size-page-staff-review: var(--app-page-staff-review);
+  --size-page-staff-partner: var(--app-page-staff-partner);
+  --size-page-staff-published: var(--app-page-staff-published);
+  --size-page-staff-log: var(--app-page-staff-log);
+  --size-page-staff-update: var(--app-page-staff-update);
+  --size-page-staff-resolve: var(--app-page-staff-resolve);
+  --size-side-nav: var(--app-side-nav);
+  --size-aside-staff: var(--app-aside-staff);
+  --size-aside-staff-compact: var(--app-aside-staff-compact);
+}

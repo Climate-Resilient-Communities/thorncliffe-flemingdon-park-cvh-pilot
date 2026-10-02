@@ -34,8 +34,15 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run check:tokens
+      - run: npm run check:spacing
+      - run: npm run check:layout
+      - run: npm run check:layers
       - run: npm test
       - run: npm run lint:deps
+      - name: Install Chromium for the layout tests
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:layout
       - run: npm run build
         env:
           APP_VERSION: ${{ github.sha }}

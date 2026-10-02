@@ -1,0 +1,3 @@
+/* The app's stylesheet, plus the tap utility, which Tailwind emits only once a component uses it. */
+@import "../../src/app/globals.css";
+@source inline("tap");

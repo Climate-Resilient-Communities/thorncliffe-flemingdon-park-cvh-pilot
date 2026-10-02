@@ -1,0 +1,5 @@
+:root {
+  --gap-icon: var(--app-space-5);
+  --gap-raw: 10px;
+  --gap-fallback: var(--app-space-5, 10px);
+}
