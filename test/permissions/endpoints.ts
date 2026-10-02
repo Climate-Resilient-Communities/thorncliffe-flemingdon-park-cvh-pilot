@@ -66,6 +66,7 @@ const AUTHENTICATOR_GATE = {
 export const TARGET_USERNAME = "target";
 
 const PEOPLE_ACTIONS = "src/app/staff/people/actions.ts";
+const SMS_TEST_ACTIONS = "src/app/staff/sms-test/actions.ts";
 const BUILDING_ACTIONS = "src/app/staff/buildings/actions.ts";
 /** A building that does not exist: an Admin's call passes the guard and is then refused by the use case, changing nothing. */
 const NO_SUCH_BUILDING = "7001";
@@ -81,6 +82,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/providers", kind: "page", file: "src/app/staff/providers/page.tsx", export: "default", route: "/staff/providers", action: "provider.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/sms-test", kind: "page", file: "src/app/staff/sms-test/page.tsx", export: "default", route: "/staff/sms-test", action: "sms.test_send", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
@@ -190,6 +192,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { username: TARGET_USERNAME },
+    expected: ADMIN_ONLY,
+  },
+  // S01.15 (the first-text spike; E06 removes it). Called as an allowed Admin, the action reaches the use case,
+  // which in the test's environment (no production variables) answers that texts cannot be sent: no provider is called.
+  {
+    id: `action ${SMS_TEST_ACTIONS}#sendTestTextAction`,
+    kind: "action",
+    file: SMS_TEST_ACTIONS,
+    export: "sendTestTextAction",
+    route: "/staff/sms-test",
+    action: "sms.test_send",
+    writes: "business",
+    gate: "hub",
+    form: { requestId: "01900000-0000-7000-8000-00000000f015", number: "+14165550101" },
     expected: ADMIN_ONLY,
   },
   ...BUILDING_ACTION_NAMES.map(
