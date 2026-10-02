@@ -85,7 +85,7 @@ type FixtureName = keyof typeof Fixtures;
 export type MountOptions = {
   lang?: string;
   basic?: boolean;
-  /** Test-only CSS for the fixture's frame, such as a stand-in shell. */
+  /** Test-only CSS for the fixture's frame, such as a wrong breakpoint switch to prove a test fails. */
   frameCss?: string;
 };
 

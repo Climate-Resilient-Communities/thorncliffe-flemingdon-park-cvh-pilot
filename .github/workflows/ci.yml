@@ -108,7 +108,14 @@ jobs:
         run: npm run test:resident:docker
         env:
           CI: "true"
-      # The diffs and actual screenshots of a failed comparison.
+      # The Hub shell at 390, 699, 700 and 1280 px in en and ur (baseline screenshots), in the same pinned image
+      # (scripts/hub-docker.sh). It renders the layout fixture with the app's compiled stylesheet, so it needs
+      # no server; the shell's behaviour is asserted in `npm run test:layout` and `npm run test:staff`.
+      - name: Test the Hub shell screenshots
+        run: npm run test:hub:docker
+        env:
+          CI: "true"
+      # The diffs and actual screenshots of a failed comparison (the resident surface's and the Hub shell's).
       - name: Upload the resident test results
         if: failure()
         uses: actions/upload-artifact@v4

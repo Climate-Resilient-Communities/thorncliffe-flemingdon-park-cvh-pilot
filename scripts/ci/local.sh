@@ -207,6 +207,8 @@ APP_VERSION="$GITHUB_SHA" step npm run build
 STAFF_TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:staff
 # The resident tests run in the pinned Playwright image (scripts/resident-docker.sh), as in CI.
 CI=true step npm run test:resident:docker
+# The Hub shell's screenshots run in the same pinned image (scripts/hub-docker.sh), as in CI.
+CI=true step npm run test:hub:docker
 EXPECTED_VERSION="$GITHUB_SHA" step npm run test:smoke
 
 # --- result ------------------------------------------------------------------
