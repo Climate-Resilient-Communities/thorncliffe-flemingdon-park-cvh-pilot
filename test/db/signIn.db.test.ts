@@ -980,3 +980,218 @@ describe("the staff session table", () => {
     await expect(app.$client`insert into staff_session (id, staff_account_id, created_at, last_seen_at) values ('not a hash', ${id}, now(), now())`).rejects.toThrow(/staff_session_id_format/);
   });
 });
+
+// F1: choosing a password and an Admin's re-issue (or IT's, for the first Admin) of the same
+// account were not serialised: each set the password at the provider first and the database after,
+// so the two could end disagreeing (the guessable starting password valid at the provider for good,
+// or a re-issue reported as done while the person's own password stood). Both now lock the
+// account's row, check the database again under it, set the password at the provider, and write.
+describe("choosing a password and a re-issue of the same account are serialised", () => {
+  const OWN = "a long new password";
+  const jane: Person = { username: "jdoe", firstName: "Jane", lastName: "Doe", role: "admin" };
+
+  async function hubAdmin() {
+    const admin = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", own: "admin password one", enrolled: true });
+    const second = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin}, ${second}, now())`;
+    return admin;
+  }
+  const authUserOf = async (id: string) => (await owner`select auth_user_id from staff_account where id = ${id}`)[0]!.auth_user_id as string;
+  const providerPassword = async (id: string) => idp.users.get(await authUserOf(id))!.password;
+  const settle = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+  /** The provider and the database agree: the starting password is valid once with a fresh window, or the person's own stands. */
+  async function expectConsistent(id: string, start: string) {
+    const state = await row(id);
+    const held = await providerPassword(id);
+    if (state.must_change_password) {
+      expect(held).toBe(peppered(start));
+      expect(state).toMatchObject({ status: "active", starting_password_issued_at: clock, starting_password_used_at: null });
+    } else {
+      expect(held).toBe(peppered(OWN));
+      expect(state).toMatchObject({ starting_password_issued_at: null, starting_password_used_at: null });
+    }
+    return state.must_change_password as boolean;
+  }
+
+  /** A provider whose first password update first starts `other` and gives it time to run, as a slow provider call would. */
+  function interleaving(other: () => Promise<unknown>) {
+    let started: Promise<unknown> | null = null;
+    const wrapped = {
+      ...idp,
+      async setPassword(authUserId: string, password: string) {
+        if (!started) {
+          started = other();
+          await settle(400);
+        }
+        return idp.setPassword(authUserId, password);
+      },
+    };
+    return { wrapped, finished: async () => started };
+  }
+
+  /** Holds the row lock of an account in another transaction until `release` is called. */
+  async function holdLock(id: string, beforeCommit?: (tx: typeof owner) => Promise<unknown>) {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    const lockTaken = new Promise<void>((resolve) => {
+      void owner.begin(async (tx) => {
+        await tx`select id from staff_account where id = ${id} for update`;
+        resolve();
+        await held;
+        await beforeCommit?.(tx as unknown as typeof owner);
+      });
+    });
+    await lockTaken;
+    return release;
+  }
+
+  function spyingProvider(calls: string[]) {
+    return {
+      ...idp,
+      async setPassword(authUserId: string, password: string) {
+        calls.push(password);
+        return idp.setPassword(authUserId, password);
+      },
+    };
+  }
+
+  it("a re-issue that starts while the person is choosing a password waits for it, then is refused", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const reissues: unknown[] = [];
+    const { auth: other } = wire();
+    const { wrapped, finished } = interleaving(async () => reissues.push(await other.reissueStartingPassword(admin, "aokafor")));
+    const { auth: chooser } = wire({ idp: wrapped });
+
+    expect(await chooser.changePassword(id, { password: OWN, confirm: OWN })).toEqual({ ok: true, value: { gate: "hub" } });
+    await finished();
+
+    expect(reissues).toEqual([{ ok: false, error: "not_reissuable" }]);
+    expect(await expectConsistent(id, ANN_START)).toBe(false);
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: false });
+  });
+
+  it("a password chosen while an Admin re-issues waits for it and then stands: the starting password is not left valid", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const changes: unknown[] = [];
+    const { auth: chooser } = wire();
+    const { wrapped, finished } = interleaving(async () => changes.push(await chooser.changePassword(id, { password: OWN, confirm: OWN })));
+    const { auth: reissuer } = wire({ idp: wrapped });
+
+    expect(await reissuer.reissueStartingPassword(admin, "aokafor")).toMatchObject({ ok: true });
+    await finished();
+
+    expect(changes).toEqual([{ ok: true, value: { gate: "hub" } }]);
+    expect(await expectConsistent(id, ANN_START)).toBe(false);
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: false });
+    expect(await signIn(browser(), "aokafor", OWN)).toMatchObject({ ok: true });
+  });
+
+  it("a password chosen from a session the re-issue revoked is refused, and the re-issued starting password stays valid once", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    const current = (await auth.currentSession(phone.sessions()))!;
+    const changes: unknown[] = [];
+    const { auth: chooser } = wire();
+    const { wrapped, finished } = interleaving(async () =>
+      changes.push(await chooser.changePassword(id, { password: OWN, confirm: OWN }, { sessions: phone.sessions(), sessionId: current.sessionId })),
+    );
+    const { auth: reissuer } = wire({ idp: wrapped });
+
+    expect(await reissuer.reissueStartingPassword(admin, "aokafor")).toMatchObject({ ok: true });
+    await finished();
+
+    expect(changes).toEqual([{ ok: false, error: "not_required" }]);
+    expect(await expectConsistent(id, ANN_START)).toBe(true);
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
+    expect(await signIn(browser(), "aokafor", ANN_START)).toEqual({ ok: false, error: "starting_password_expired" });
+  });
+
+  it("IT's re-issue of the first Admin and the first Admin choosing a password end consistent either way round", async () => {
+    for (const reissueFirst of [false, true]) {
+      await reset();
+      idp = memoryIdentityProvider();
+      const first = await account(jane);
+      await owner`insert into staff_bootstrap (first_admin_id) values (${first})`;
+      const { auth: plain } = wire();
+      const reissue = (who: StaffAuthService) => who.reissueFirstAdminStartingPassword("jdoe");
+      const change = (who: StaffAuthService) => who.changePassword(first, { password: OWN, confirm: OWN });
+      const { wrapped, finished } = interleaving(async () => (reissueFirst ? change(plain) : reissue(plain)));
+      const { auth: lead } = wire({ idp: wrapped });
+
+      await (reissueFirst ? reissue(lead) : change(lead));
+      await finished();
+
+      await expectConsistent(first, "rvh-jane-doe");
+    }
+  });
+
+  it("the second of the two waits for the first's row lock, then goes ahead and sees its committed state", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const calls: string[] = [];
+    const { auth: waiting } = wire({ idp: spyingProvider(calls) });
+    const release = await holdLock(id);
+
+    let settled = false;
+    const change = waiting.changePassword(id, { password: OWN, confirm: OWN }).finally(() => (settled = true));
+    await settle(500);
+    release();
+    expect(settled).toBe(false);
+    expect(calls).toEqual([]);
+
+    expect(await change).toEqual({ ok: true, value: { gate: "hub" } });
+    expect(calls).toEqual([peppered(OWN)]);
+    expect(await waiting.reissueStartingPassword(admin, "aokafor")).toEqual({ ok: false, error: "not_reissuable" });
+    expect(calls).toEqual([peppered(OWN)]);
+  });
+
+  it("a re-issue that commits between the person's first read and the locked re-check makes the password change refuse, and the provider is not touched", async () => {
+    const id = await account(ann);
+    const calls: string[] = [];
+    const { auth: chooser } = wire({ idp: spyingProvider(calls) });
+    const reissuedAt = new Date(clock.getTime() + minutes(5));
+    // Another transaction holds the row and commits a re-issue (a new window) while the change waits for the lock.
+    const release = await holdLock(id, (tx) => tx`update staff_account set starting_password_issued_at = ${reissuedAt} where id = ${id}`);
+
+    const change = chooser.changePassword(id, { password: OWN, confirm: OWN });
+    await settle(500);
+    release();
+
+    expect(await change).toEqual({ ok: false, error: "not_required" });
+    expect(calls).toEqual([]);
+    expect(await providerPassword(id)).toBe(peppered(ANN_START));
+    expect(await row(id)).toMatchObject({ must_change_password: true, status: "active", starting_password_issued_at: reissuedAt });
+    expect((await auditsOf("password.changed")).map((record) => [record.outcome, record.meta.reason])).toEqual([["refused", "conflict"]]);
+  });
+
+  it("a password change goes through on a starting password issued with microsecond precision", async () => {
+    const id = await account(ann);
+    await owner`update staff_account set starting_password_issued_at = '2026-10-05 14:00:00.123456+00' where id = ${id}`;
+
+    expect(await auth.changePassword(id, { password: OWN, confirm: OWN })).toEqual({ ok: true, value: { gate: "hub" } });
+
+    expect((await row(id)).must_change_password).toBe(false);
+  });
+
+  it("gives up with a lock timeout, without touching the provider, when the account's row stays locked", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const calls: string[] = [];
+    const { auth: impatient } = wire({ idp: spyingProvider(calls), lockTimeoutMs: 300 });
+    const release = await holdLock(id);
+
+    const refusals = await Promise.allSettled([impatient.reissueStartingPassword(admin, "aokafor"), impatient.changePassword(id, { password: OWN, confirm: OWN })]);
+    release();
+    expect(refusals.map((refusal) => refusal.status)).toEqual(["rejected", "rejected"]);
+    for (const refusal of refusals) expect(refusal).toMatchObject({ reason: { cause: { code: "55P03" } } });
+
+    expect(calls).toEqual([]);
+    expect(await providerPassword(id)).toBe(peppered(ANN_START));
+    expect((await row(id)).must_change_password).toBe(true);
+  });
+});

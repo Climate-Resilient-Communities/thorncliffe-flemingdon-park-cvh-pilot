@@ -218,6 +218,44 @@ function checkPublicBaseUrl(environment: AppEnvironment, raw: Raw, problems: str
   return url.origin;
 }
 
+const APP_DB_USER = /^cvh_app_login(?:\.[a-z0-9_-]+)?$/;
+const TRANSACTION_POOLER_PORT = "6543";
+
+/**
+ * In production and preview the app connects as its own role (cvh_app_login, or
+ * cvh_app_login.<project-ref> through Supabase's pooler) on the transaction pooler, never as
+ * the owner role. The messages name the rule only: not the URL, user name or password.
+ */
+function checkDatabaseUrl(value: string | undefined, problems: string[]) {
+  if (value === undefined) return;
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    problems.push("DATABASE_URL: not a valid postgres:// URL");
+    return;
+  }
+  if (url.protocol !== "postgres:" && url.protocol !== "postgresql:") {
+    problems.push("DATABASE_URL: must be a postgres:// URL");
+    return;
+  }
+  let user: string;
+  try {
+    user = decodeURIComponent(url.username);
+  } catch {
+    user = "";
+  }
+  if (!APP_DB_USER.test(user)) {
+    problems.push(
+      "DATABASE_URL: must connect as the app's role cvh_app_login or cvh_app_login.<project-ref>, " +
+        "never as the owner role or another role (the user name is not shown)",
+    );
+  }
+  if (url.port !== TRANSACTION_POOLER_PORT) {
+    problems.push(`DATABASE_URL: must use the transaction pooler, port ${TRANSACTION_POOLER_PORT}`);
+  }
+}
+
 /** True when a value is a Supabase secret key: an sb_secret_ key or a legacy service_role JWT. */
 function isSupabaseSecretKey(value: string): boolean {
   const trimmed = value.trim();
@@ -298,6 +336,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     ] as const) {
       if (raw[name] === undefined) problems.push(`${name}: required in ${environment}`);
     }
+    checkDatabaseUrl(raw.DATABASE_URL, problems);
   }
 
   if (problems.length > 0) throw new EnvError(problems);

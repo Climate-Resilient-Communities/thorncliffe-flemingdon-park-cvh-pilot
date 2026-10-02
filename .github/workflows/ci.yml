@@ -77,10 +77,19 @@ jobs:
         env:
           TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       # Reads the release in production from PRODUCTION_URL only when a migration
-      # carries a contract note. On main this branch's changes are already in
-      # origin/main; the production job checks pending migrations again.
+      # carries a contract note. On main HEAD is origin/main, so comparing with it
+      # would check nothing: there the base is the commit before the push (all of a
+      # multi-commit push), or the first parent when that is unknown (a new branch,
+      # a forced push). The production job checks pending migrations again.
       - name: Check migrations for destructive changes
-        run: npm run db:check-destructive -- --base origin/main --removals "$RUNNER_TEMP/migration-removals.json"
+        run: |
+          base=origin/main
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            base=HEAD~1
+            before=${{ github.event.before }}
+            if [[ "$before" =~ [1-9a-f] ]] && git merge-base --is-ancestor "$before" HEAD; then base=$before; fi
+          fi
+          npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
       # Fails if a catalog is stale or a required string is missing; the per-language report
@@ -131,12 +140,26 @@ jobs:
 
   # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
   # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
+  #
+  # Vercel's Hobby plan caps file uploads per day, so previews are limited to branches with an open
+  # pull request and deploys upload one tarball (--archive=tgz) instead of every built file. This
+  # workflow runs on push only, so a branch pushed before its pull request is opened gets no
+  # preview; the first push after opening the pull request gets one.
   preview:
     name: Vercel preview
     needs: checks
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Previews share the single Supabase project, so `vercel pull --environment=preview`
+    # brings its DATABASE_URL and SUPABASE_SECRET_KEY (change proposal 2026-10-02-single-supabase).
+    # This environment keeps PRODUCTION_DATABASE_URL (the migration secret) and production
+    # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
+    # only if the owner creates it with minimal scope.
+    environment: preview
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
@@ -162,12 +185,28 @@ jobs:
           fi
       - if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
-      - name: Confirm production already has a deployment
-        id: vercel
+      # The gates are the scripts that get a token before any branch code has
+      # run, so they come from main, not from the branch being previewed.
+      - name: Check out main's CI scripts
+        if: steps.settings.outputs.ok == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          path: trusted
+          sparse-checkout: scripts/ci
+          persist-credentials: false
+      - name: Confirm the branch has an open pull request
+        id: pr
         if: steps.settings.outputs.ok == 'true'
         env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: trusted/scripts/ci/open-pr-gate.sh
+      - name: Confirm production already has a deployment
+        id: vercel
+        if: steps.pr.outputs.open == 'true'
+        env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: scripts/ci/preview-gate.sh
+        run: trusted/scripts/ci/preview-gate.sh
       - if: steps.vercel.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
@@ -192,7 +231,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --json | jq -er .url)
           url="https://${url#https://}"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
@@ -211,6 +250,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The production environment holds VERCEL_TOKEN and PRODUCTION_DATABASE_URL and
+    # accepts deployments from main only (repository settings > Environments), so a
+    # push to any other branch cannot read them. The secrets checks below read
+    # `secrets.*` and work whether a secret is repository- or environment-scoped.
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
@@ -282,7 +328,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --prod --skip-domain --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --prod --skip-domain --json | jq -er .url)
           echo "url=$url" >> "$GITHUB_OUTPUT"
       # Checked again just before promoting: main may have moved during the build.
       - name: Check this commit is still the head of main before promoting

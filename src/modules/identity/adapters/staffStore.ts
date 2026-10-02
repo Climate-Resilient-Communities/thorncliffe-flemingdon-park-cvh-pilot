@@ -55,11 +55,21 @@ export const drizzleStaffStore: StaffStore = {
     return rows.length > 0;
   },
 
-  async completePasswordChange(tx, id) {
+  async completePasswordChange(tx, id, issuedAt) {
     const rows = await tx
       .update(staffAccount)
       .set({ mustChangePassword: false, startingPasswordIssuedAt: null, startingPasswordUsedAt: null })
-      .where(and(eq(staffAccount.id, id), eq(staffAccount.status, "active"), eq(staffAccount.mustChangePassword, true)))
+      .where(
+        and(
+          eq(staffAccount.id, id),
+          eq(staffAccount.status, "active"),
+          eq(staffAccount.mustChangePassword, true),
+          // The column keeps microseconds, a Date only milliseconds: compare at milliseconds.
+          issuedAt === null
+            ? isNull(staffAccount.startingPasswordIssuedAt)
+            : sql`date_trunc('milliseconds', ${staffAccount.startingPasswordIssuedAt}) = ${issuedAt.toISOString()}::timestamptz`,
+        ),
+      )
       .returning({ id: staffAccount.id });
     return rows.length > 0;
   },

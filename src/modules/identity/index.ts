@@ -98,6 +98,7 @@ export function createStaffAuth(wiring: IdentityWiring & { throttleKey: string; 
     sleep: wiring.sleep,
     monotonicMs: wiring.monotonicMs,
     minRefusalMs: wiring.minRefusalMs,
+    lockTimeoutMs: wiring.lockTimeoutMs,
     audit: wiring.audit ?? audit,
     log: stdoutOperationalLog,
     now: wiring.now ?? (() => new Date()),

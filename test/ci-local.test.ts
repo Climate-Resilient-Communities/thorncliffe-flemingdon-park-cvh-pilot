@@ -138,13 +138,17 @@ describe("scripts/ci/local.sh mirrors the Checks job", () => {
   });
 
   it("reports changed arguments", () => {
-    const script = scriptText.replace("--base origin/main", "--base origin/develop");
+    const script = scriptText.replace('--base "$base"', "--base origin/develop");
 
     const problems = compare(workflowText, script);
 
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/db:check-destructive -- --base origin\/main/);
+    expect(problems[0]).toMatch(/db:check-destructive -- --base "\$base"/);
     expect(problems[0]).toMatch(/differs in local\.sh/);
+  });
+
+  it("compares with the first parent of origin/main when HEAD is origin/main, and otherwise with origin/main", () => {
+    expect(scriptText).toMatch(/base=origin\/main\nif \[ "\$\(git rev-parse HEAD\)" = "\$\(git rev-parse origin\/main\)" \]; then base=HEAD~1; fi/);
   });
 
   it("reports a different order", () => {

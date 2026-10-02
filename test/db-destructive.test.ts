@@ -3,7 +3,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from "vitest";
-import { checkDestructiveMigrations, lookUpProductionRelease } from "../scripts/db/contracts.mjs";
+import { checkDestructiveMigrations, lookUpProductionRelease, unacceptedChanges } from "../scripts/db/contracts.mjs";
 import { findDestructiveChanges, findTransactionProblems, lexSql, readContractNotes } from "../scripts/db/sql.mjs";
 
 describe("destructive change detection", () => {
@@ -27,6 +27,61 @@ describe("destructive change detection", () => {
       "alter table audit_event alter action set data type numeric(10, 2) using action::numeric;",
       "changes the type of column audit_event.action to numeric(10, 2) (may narrow it)",
     ],
+    ["alter table audit_event alter column detail set not null;", "makes column audit_event.detail not null (the previous release may still write nulls)"],
+    ["alter table audit_event alter detail set not null;", "makes column audit_event.detail not null (the previous release may still write nulls)"],
+    [
+      "alter table audit_event add column note text not null;",
+      "adds column audit_event.note as not null without a default (the previous release does not write it)",
+    ],
+    [
+      "alter table audit_event add note varchar(20) not null;",
+      "adds column audit_event.note as not null without a default (the previous release does not write it)",
+    ],
+    [
+      "alter table audit_event add column if not exists note text not null check (note <> '');",
+      "adds column audit_event.note as not null without a default (the previous release does not write it)",
+    ],
+    [
+      "alter table audit_event alter column detail drop default;",
+      "drops the default of column audit_event.detail (the previous release may rely on it)",
+    ],
+    [
+      "alter table audit_event add constraint detail_len check (length(detail) < 20);",
+      "adds a check constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)",
+    ],
+    [
+      "alter table audit_event add check (detail <> '');",
+      "adds a check constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)",
+    ],
+    [
+      "alter table audit_event add constraint staff_fk foreign key (actor) references staff (id);",
+      "adds a foreign key constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)",
+    ],
+    [
+      "alter table audit_event add constraint detail_key unique (detail);",
+      "adds a unique constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)",
+    ],
+    [
+      "alter table audit_event add primary key (id);",
+      "adds a primary key constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)",
+    ],
+    ["drop view weekly_review;", "drops view weekly_review"],
+    ["drop materialized view if exists weekly_review cascade;", "drops materialized view weekly_review"],
+    ["drop function audit_event_append_only();", "drops function audit_event_append_only()"],
+    ["drop function if exists public.f(int) cascade;", "drops function public.f(int)"],
+    ["drop procedure p();", "drops procedure p()"],
+    ["drop policy audit_event_app_select on audit_event;", "drops policy audit_event_app_select on audit_event"],
+    ["drop policy if exists p on public.audit_event;", "drops policy p on public.audit_event"],
+    ["revoke select on table audit_event from cvh_app;", "revokes privileges from the app role cvh_app"],
+    ["REVOKE ALL ON ALL TABLES IN SCHEMA public FROM public, cvh_app CASCADE;", "revokes privileges from the app role cvh_app"],
+    ['revoke insert on audit_event from "cvh_app";', "revokes privileges from the app role cvh_app"],
+    ["revoke execute on function f() from group cvh_app;", "revokes privileges from the app role cvh_app"],
+    ["revoke cvh_app from cvh_app_login;", "revokes the role cvh_app from a login role (the app loses all its access)"],
+    ["alter type mood rename value 'sad' to 'blue';", "renames a value of enum type mood"],
+    ["drop type mood;", "drops type mood"],
+    ["drop type if exists public.mood cascade;", "drops type public.mood"],
+    ["alter table audit_event disable row level security;", "disables row level security on audit_event"],
+    ["alter view weekly_review rename to weekly;", "renames view weekly_review or one of its columns"],
   ])("flags %s", (sql, change) => {
     expect(findDestructiveChanges(sql)).toEqual([change]);
   });
@@ -45,12 +100,25 @@ describe("destructive change detection", () => {
     "alter table audit_event add column note text;",
     "alter table audit_event drop constraint audit_event_detail_check;",
     "alter table audit_event alter column detail drop not null;",
-    "alter table audit_event alter column detail drop default;",
     "alter table audit_event rename constraint a to b;",
     "alter table audit_event enable row level security;",
+    "alter table audit_event alter column detail set default 'x';",
+    "alter table audit_event add column note text not null default '';",
+    "alter table audit_event add column note text not null generated always as (detail || 'x') stored;",
+    "alter table audit_event add column id2 bigint generated always as identity not null;",
+    "alter table audit_event add column note text;",
+    "alter table audit_event add column note text check (note is not null);",
+    "alter table audit_event add constraint detail_len check (length(detail) < 20) not valid;",
+    "alter table audit_event add constraint staff_fk foreign key (actor) references staff (id) not valid;",
+    "alter table audit_event validate constraint detail_len;",
+    "revoke select on table audit_event from anon, authenticated;",
+    "revoke all on table audit_event from public, cvh_app_login;",
+    "grant select on table audit_event to cvh_app;",
+    "create view weekly_review as select 1;",
+    "alter type mood add value 'blue';",
+    "drop trigger t on audit_event;",
+    "alter table audit_event no force row level security;",
     "drop index audit_event_idx;",
-    "drop view weekly_review;",
-    "drop policy p on audit_event;",
     "-- drop table audit_event;\nselect 1;",
     "/* drop table audit_event; /* nested */ still a comment */ select 1;",
     "select 'drop table audit_event';",
@@ -314,5 +382,73 @@ describe("reading the release in production", () => {
     await expect(lookUpProductionRelease({ PRODUCTION_URL: "https://cvh.example.ca" })).rejects.toThrow(
       /did not report a commit SHA/,
     );
+  });
+});
+
+describe("CLI on a push to main", () => {
+  let repo: string;
+  const git = (args: string[]) => {
+    const result = spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+    if (result.status !== 0) throw new Error(result.stderr);
+    return result.stdout.trim();
+  };
+  const run = (base: string) =>
+    spawnSync("node", [path.join(__dirname, "..", "scripts/db/check-destructive.mjs"), "--base", base, "--dir", "db/migrations"], {
+      cwd: repo,
+      encoding: "utf8",
+      env: { ...process.env, PRODUCTION_URL: "" },
+    });
+
+  beforeAll(() => {
+    repo = mkdtempSync(path.join(tmpdir(), "cvh-main-push-"));
+    git(["init", "-q", "-b", "main"]);
+    git(["config", "user.email", "test@example.com"]);
+    git(["config", "user.name", "Test"]);
+    mkdirSync(path.join(repo, "db", "migrations"), { recursive: true });
+    writeFileSync(path.join(repo, "db/migrations/20260101000001_first.sql"), "create table t (id int);\n");
+    git(["add", "."]);
+    git(["commit", "-q", "-m", "first"]);
+    // The merge of a branch that adds a destructive migration, as a push to main sees it.
+    git(["checkout", "-q", "-b", "feature"]);
+    writeFileSync(path.join(repo, "db/migrations/20260101000002_drop.sql"), "drop table t;\n");
+    git(["add", "."]);
+    git(["commit", "-q", "-m", "drop"]);
+    git(["checkout", "-q", "main"]);
+    git(["merge", "-q", "--no-ff", "-m", "merge feature", "feature"]);
+  });
+
+  afterAll(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("checks nothing when HEAD is compared with itself (origin/main on a push to main)", () => {
+    const result = run("HEAD");
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/Checking 0 migration\(s\)/);
+  });
+
+  it("checks the merged migrations against the first parent, HEAD~1", () => {
+    const result = run("HEAD~1");
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toMatch(/Checking 1 migration\(s\)/);
+    expect(result.stderr).toMatch(/20260101000002_drop.sql drops table t/);
+  });
+});
+
+describe("changes accepted in migrations merged before their rule", () => {
+  const STAFF = "20261002110000_staff_account.sql";
+
+  it("accepts the foreign key on audit_event.actor_staff_id, worded by either check, and nothing else", () => {
+    const text = "adds a foreign key constraint to audit_event (rows the previous release writes may violate it; add it NOT VALID and validate later)";
+    const database = "adds constraint audit_event_actor_staff_id_fkey on public.audit_event: FOREIGN KEY (actor_staff_id) REFERENCES staff_account(id) (rows the previous release writes may violate it)";
+
+    expect(unacceptedChanges(STAFF, [text, database])).toEqual([]);
+    expect(unacceptedChanges(STAFF, ["drops table staff_account", "adds a unique constraint to audit_event (x)"])).toHaveLength(2);
+  });
+
+  it("accepts nothing for any other migration", () => {
+    expect(unacceptedChanges("20270101000000_new.sql", ["adds a foreign key constraint to audit_event (x)"])).toHaveLength(1);
   });
 });

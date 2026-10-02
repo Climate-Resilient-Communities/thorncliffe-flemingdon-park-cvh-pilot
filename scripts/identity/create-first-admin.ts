@@ -64,7 +64,8 @@ const USAGE =
   "password itself, so the script refuses to run without STAFF_PASSWORD_PEPPER (at least 32 random\n" +
   "bytes, for example `openssl rand -hex 32`). Rotating the pepper makes every staff password stop\n" +
   "working: after a rotation every password must be re-issued (this script for the first Admin during\n" +
-  "setup; otherwise an Admin's re-issue or reset).";
+  "setup; otherwise an Admin's re-issue or reset). Logins created before the pepper existed must be\n" +
+  "re-issued too (none exist in production).";
 
 /** What IT reads for each refusal of --reissue. */
 const REISSUE_REFUSALS: Record<FirstAdminReissueError, string> = {
