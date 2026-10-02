@@ -47,6 +47,8 @@ const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
   last_name_missing: "validation",
   name_too_long: "validation",
   starting_password_empty: "validation",
+  starting_password_unsupported_letter: "validation",
+  starting_password_too_long: "validation",
   email_invalid: "validation",
   role_invalid: "validation",
   username_taken: "duplicate",
@@ -55,7 +57,11 @@ const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
   forbidden: "forbidden",
   unauthenticated: "unauthenticated",
   provider_error: "provider_error",
+  provider_rejected: "provider_error",
 };
+
+/** An unlinked login must be at least this old before it counts as left behind (see removeOrphanedLogin). */
+const ORPHAN_MIN_AGE_MS = 5 * 60 * 1000;
 
 const ALL_ROLES: StaffRole[] = ["ambassador", "coordinator", "director", "admin"];
 
@@ -101,10 +107,36 @@ export function createAccountService(deps: AccountDeps) {
     }
   }
 
+  /**
+   * A login this app created earlier whose account was never saved (the delete after a refusal
+   * failed, or the process stopped between the two steps) blocks its username for ever. It is
+   * removed when no staff_account is linked to it and it carries the app's staff marker; a login
+   * younger than ORPHAN_MIN_AGE_MS may belong to a request still writing its account, so it stays.
+   */
+  async function removeOrphanedLogin(login: string): Promise<boolean> {
+    try {
+      const found = await idp.findLogin(login);
+      if (!found || !found.staffMarker) return false;
+      if (deps.now().getTime() - found.createdAt.getTime() < ORPHAN_MIN_AGE_MS) return false;
+      if (await store.authUserLinked(db, found.authUserId)) return false;
+      await idp.deleteLogin(found.authUserId);
+      log.error("identity.orphaned_login_removed", { auth_user_id: found.authUserId });
+      return true;
+    } catch (error) {
+      log.error("identity.orphaned_login_not_removed", { error: error instanceof Error ? error.constructor.name : "unknown" });
+      return false;
+    }
+  }
+
   async function createLogin(account: NewAccount): Promise<Result<string, IdentityRefusal>> {
-    const created = await idp.createLogin({ login: loginForUsername(account.username), password: account.startingPassword });
+    const input = { login: loginForUsername(account.username), password: account.startingPassword };
+    let created = await idp.createLogin(input);
+    if (!created.ok && created.error === "login_taken" && (await removeOrphanedLogin(input.login))) {
+      created = await idp.createLogin(input);
+    }
     if (created.ok) return ok(created.authUserId);
-    return err(created.error === "login_taken" ? "username_taken" : "provider_error");
+    if (created.error === "login_taken") return err("username_taken");
+    return err(created.error === "rejected" ? "provider_rejected" : "provider_error");
   }
 
   /**
@@ -218,6 +250,8 @@ export function createAccountService(deps: AccountDeps) {
      * as actor. `route` is the route pattern, never a value from the request.
      */
     async refuseUnauthenticated(permission: string, route: string): Promise<void> {
+      // One audit record per call, as the spec requires. Anyone can call the action without a
+      // session, so this volume is unbounded until rate limiting arrives (the future rate-limit story).
       await audit.recordRefusal(db, {
         action: "permission.denied",
         actorStaffId: SYSTEM_ACTOR,

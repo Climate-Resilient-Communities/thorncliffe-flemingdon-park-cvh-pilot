@@ -69,6 +69,9 @@ describe("Add a person (server action)", () => {
     ["bootstrap_incomplete", "Finish setting up two Admins first", undefined],
     ["username_taken", "That username is already taken. Choose another.", "username"],
     ["starting_password_empty", expect.stringContaining("Latin letters"), "firstName"],
+    ["starting_password_too_long", expect.stringContaining("Shorten the name used for the password"), "firstName"],
+    ["starting_password_unsupported_letter", expect.stringContaining("cannot be written with a to z"), "firstName"],
+    ["provider_rejected", "Supabase rejected the starting password; check the project's password policy.", undefined],
   ])("shows the %s refusal with its message", async (error, message, field) => {
     const { deps: d } = deps({ addPerson: vi.fn(async () => ({ ok: false as const, error })) });
 

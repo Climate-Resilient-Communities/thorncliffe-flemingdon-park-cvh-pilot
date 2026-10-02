@@ -31,7 +31,14 @@ export interface CliDeps {
 
 const USAGE =
   "Usage: node --env-file=<production env file> scripts/create-first-admin " +
-  "--username <username> --first-name <first name> --last-name <last name> --email <email>";
+  "--username <username> --first-name <first name> --last-name <last name> --email <email>\n\n" +
+  "The environment checks only stop a run from the wrong place. The real guard is the database: the\n" +
+  "script refuses when an Admin exists or the bootstrap row exists, checked under the accounts\n" +
+  "advisory lock, so running it twice, or at the same time, creates one Admin.\n\n" +
+  "If a run failed part-way and the username is reported as taken although no account exists,\n" +
+  "run the same command again: a sign-in left behind in Supabase Auth with no staff account, made\n" +
+  "by this app, is removed automatically (when it is over 5 minutes old) and the account is created.\n" +
+  "Nothing needs deleting by hand in the Supabase dashboard.";
 
 /**
  * The environment rules of S01.02 (src/platform/config/env.ts), and production only: the first

@@ -29,6 +29,11 @@ export const drizzleStaffStore: StaffStore = {
     return rows.length > 0;
   },
 
+  async authUserLinked(db, authUserId) {
+    const rows = await db.select({ id: staffAccount.id }).from(staffAccount).where(eq(staffAccount.authUserId, authUserId)).limit(1);
+    return rows.length > 0;
+  },
+
   async adminExists(db) {
     const rows = await db.select({ id: staffAccount.id }).from(staffAccount).where(eq(staffAccount.role, "admin")).limit(1);
     return rows.length > 0;

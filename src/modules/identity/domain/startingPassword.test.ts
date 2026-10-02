@@ -35,7 +35,70 @@ describe("starting password", () => {
     expect(deriveStartingPassword(first, last)).toEqual({ ok: false, error: "starting_password_empty" });
   });
 
-  it("keeps the Latin letters of a mixed name", () => {
+  it("spells the Latin part of a mixed name the same way", () => {
     expect(startingPasswordPart("Ahmad (احمد)")).toBe("ahmad");
+  });
+
+  it.each([
+    ["Kɔfi", "Boateng", "rvh-kofi-boateng"],
+    ["Ama", "Mɛnsah", "rvh-ama-mensah"],
+    ["Ərəb", "Əliyev", "rvh-ereb-eliyev"],
+    ["Ɖela", "Ƙofi", "rvh-dela-kofi"],
+    ["Ɓello", "Ɗanjuma", "rvh-bello-danjuma"],
+    ["Ʋivi", "Ƒiador", "rvh-vivi-fiador"],
+    ["Oʻzbek", "Hawaiʻi", "rvh-ozbek-hawaii"],
+    ["Ɛ", "Ɔ", "rvh-e-o"],
+  ])("spells African and Azerbaijani letters: %s %s", (first, last, expected) => {
+    expect(deriveStartingPassword(first, last)).toEqual({ ok: true, value: expected });
+  });
+
+  it.each([
+    ["an unmapped Latin-extended letter", "Ƣalim", "Doe"],
+    ["an unmapped letter in the last name", "Jane", "Doƣ"],
+    ["a native-script spelling beside the Latin one", "Ahmad (احمد)", "Doe"],
+    ["a Greek letter inside a Latin name", "Jαne", "Doe"],
+  ])("refuses a name whose letter would be dropped: %s", (_, first, last) => {
+    expect(deriveStartingPassword(first, last)).toEqual({ ok: false, error: "starting_password_unsupported_letter" });
+  });
+
+  it("never drops a letter silently: every letter either maps to a to z or is refused", () => {
+    for (let code = 0x41; code < 0x250; code += 1) {
+      const letter = String.fromCodePoint(code);
+      if (!/\p{L}/u.test(letter)) continue;
+      const result = deriveStartingPassword(`${letter}a`, "Doe");
+      if (result.ok) expect(result.value, letter).toMatch(/^rvh-[a-z]+-doe$/);
+      else expect(result.error, letter).toBe("starting_password_unsupported_letter");
+    }
+  });
+
+  describe("length", () => {
+    // "rvh-" + first + "-" + last: 5 characters beside the two names.
+    const name = (length: number) => "a".repeat(length);
+
+    it("accepts a starting password of exactly 72 bytes", () => {
+      const result = deriveStartingPassword(name(40), name(27));
+      expect(result.ok && result.value.length).toBe(72);
+    });
+
+    it("refuses one of 73 bytes", () => {
+      expect(deriveStartingPassword(name(40), name(28))).toEqual({ ok: false, error: "starting_password_too_long" });
+    });
+
+    it("accepts the whole of a long compound name while the password fits", () => {
+      const full = "Maria del Carmen Guadalupe Fernandez de la Torre y Gutierrez de Castro";
+      expect(deriveStartingPassword(full, "Ruiz")).toEqual({ ok: true, value: "rvh-mariadelcarmenguadalupefernandezdelatorreygutierrezdecastro-ruiz" });
+    });
+
+    it("refuses a very long compound name", () => {
+      expect(deriveStartingPassword("Maria del Carmen Guadalupe Josefina Isabel", "Fernandez de la Torre y Gutierrez de Castro")).toEqual({
+        ok: false,
+        error: "starting_password_too_long",
+      });
+    });
+
+    it("measures the password, not the typed name: spaces and accents do not count", () => {
+      const result = deriveStartingPassword("María del Carmen", "Fernández de la Torre y Gutiérrez");
+      expect(result).toEqual({ ok: true, value: "rvh-mariadelcarmen-fernandezdelatorreygutierrez" });
+    });
   });
 });
