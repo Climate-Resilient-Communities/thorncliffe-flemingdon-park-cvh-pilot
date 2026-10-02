@@ -1,7 +1,7 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkLayers, checkLayout, checkSpacing, readSources, runCheck } from "../scripts/check-css.mjs";
+import { checkLayers, checkLayout, checkLogical, checkSpacing, readSources, runCheck } from "../scripts/check-css.mjs";
 
 const fixture = (name: string) => path.join(__dirname, "fixtures", name);
 const findings = (list: { file: string; line: number; message: string }[], file: string) =>
@@ -160,6 +160,56 @@ describe("layout literal check", () => {
   });
 });
 
+describe("logical CSS check", () => {
+  const { problems } = checkLogical(readSources(fixture("logical-check")));
+  const inFile = (name: string) => problems.filter(({ file }) => file.endsWith(name));
+  const lines = (name: string) => [...new Set(inFile(name).map(({ line }) => line))];
+
+  it("rejects left and right, physical margin, padding and border properties, physical float and text-align", () => {
+    expect(lines("physical.css").filter((line) => ![13, 14, 18].includes(line))).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 15, 16, 17, 19, 20, 21]);
+    expect(inFile("physical.css").find(({ line }) => line === 1)?.message).toContain('physical property "left"');
+    expect(inFile("physical.css").find(({ line }) => line === 11)?.message).toContain('"text-align: left" is physical');
+    expect(inFile("physical.css").find(({ line }) => line === 9)?.message).toContain('"float: left" is physical');
+  });
+
+  it("rejects 3- and 4-value margin and padding shorthands, counting a var() or calc() as one value", () => {
+    expect(inFile("physical.css").filter(({ line }) => [13, 14, 18].includes(line)).map(({ line, message }) => ({ line, message }))).toEqual([
+      { line: 13, message: expect.stringContaining("has 3 values") },
+      { line: 14, message: expect.stringContaining("has 4 values") },
+      { line: 18, message: expect.stringContaining("has 3 values") },
+    ]);
+  });
+
+  it("rejects a [dir] selector other than the icon-mirroring rule", () => {
+    expect(inFile("physical.css").filter(({ line }) => line === 19 || line === 20).map(({ message }) => message)).toEqual([
+      expect.stringContaining('[dir] selector "[dir=\"rtl\"] .card"'),
+      expect.stringContaining("[dir] selector \":root[dir='rtl'] .card\""),
+    ]);
+  });
+
+  it("rejects the physical Tailwind utilities, with variants, in @apply and in class strings", () => {
+    const named = [...inFile("classes.tsx"), ...inFile("physical.css")].map(({ message }) => /"([^"]+)"/.exec(message)![1]);
+
+    expect(named).toEqual(
+      expect.arrayContaining([
+        "pl-4", "pr-2", "ml-2", "mr-auto", "-ml-1", "left-0", "right-1/2", "-left-2", "border-l", "border-r", "border-l-2",
+        "rounded-l-lg", "rounded-r-md", "space-x-4", "pl-3", "mr-2", "text-left", "text-right", "pl-2", "mr-4",
+      ]),
+    );
+    expect(inFile("classes.tsx").filter(({ line }) => line === 10 || line === 11)).toHaveLength(3);
+  });
+
+  it("rejects physical style-object keys and values", () => {
+    expect(lines("styles.tsx")).toEqual([4, 5, 6, 7, 8, 9, 10, 11]);
+  });
+
+  it("allows logical properties, 1- and 2-value shorthands, logical utilities, prose and the icon-mirroring rule", () => {
+    expect(inFile("allowed.css")).toEqual([]);
+    expect(lines("classes.tsx").filter((line) => line > 11)).toEqual([]);
+    expect(lines("styles.tsx").filter((line) => line > 11)).toEqual([]);
+  });
+});
+
 describe("token layer check", () => {
   const { problems } = checkLayers(readSources(fixture("layers-check")));
 
@@ -204,7 +254,7 @@ describe("token layer check", () => {
 });
 
 describe("the checks on src/", () => {
-  it.each(["spacing", "layout", "layers"])("%s passes", (name) => {
+  it.each(["spacing", "layout", "logical", "layers"])("%s passes", (name) => {
     const result = spawnSync("node", ["scripts/check-css.mjs", name], { encoding: "utf8" });
 
     expect(result.stderr).toBe("");

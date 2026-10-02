@@ -1,0 +1,12 @@
+/* Logical properties, one- and two-value shorthands and the icon-mirroring rule are all allowed. */
+.a { inset-inline-start: 0; inset-inline-end: var(--gap-icon); }
+.b { margin-inline-start: var(--gap-icon); margin-inline-end: auto; }
+.c { padding-inline: var(--gap-icon); padding-block: var(--gap-target) var(--gap-icon); }
+.d { border-inline-start: 1px solid; border-start-start-radius: 4px; }
+.e { float: inline-start; text-align: start; text-align: end; }
+.f { margin: 0; padding: var(--gap-icon) var(--gap-target); }
+.g { padding: calc(var(--gap-icon) + var(--gap-target)); }
+.h { @apply ps-2 me-4 text-start; }
+[dir="rtl"] .shell-ico--mirror { transform: scaleX(-1); }
+[dir="rtl"] .shell-ico--back, [dir="rtl"] .shell-ico--chevron { transform: scaleX(-1); }
+[dir="rtl"] .cvh-no-mirror .cvh-ico { transform: none; }

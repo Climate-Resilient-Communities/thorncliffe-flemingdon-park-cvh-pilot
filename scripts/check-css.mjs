@@ -2,6 +2,8 @@
 //
 //   node scripts/check-css.mjs spacing   spacing from tokens only; no arbitrary spacing; no negative margins
 //   node scripts/check-css.mjs layout    no 700px/800px layout literal; no Hub-only Grid props on resident routes
+//   node scripts/check-css.mjs logical   logical CSS only: no physical sides, no 3- or 4-value margin/padding, no [dir] selector
+//                                        except icon mirroring
 //   node scripts/check-css.mjs layers    semantic purity; primitives only in layer 2; one value per theme;
 //                                        no undeclared custom property
 //
@@ -372,10 +374,119 @@ export function checkLayers(sources) {
 }
 
 // ---------------------------------------------------------------------------------------------
+// Logical CSS only (S02.02, AD-16): resident layouts must work in both directions without per-direction
+// overrides, so physical properties, 3- and 4-value shorthands and [dir] selectors are rejected.
+
+const PHYSICAL_PROPERTY =
+  /^(?:left|right|(?:margin|padding|scroll-margin|scroll-padding)-(?:left|right)|border-(?:left|right)(?:-[a-z-]+)?|border-(?:top|bottom)-(?:left|right)-radius)$/;
+const PHYSICAL_KEYWORD_PROPERTY = { float: /^(?:left|right)$/, clear: /^(?:left|right)$/, "text-align": /^(?:left|right)$/ };
+const BOX_SHORTHAND = /^(?:margin|padding|scroll-margin|scroll-padding)$/;
+// A [dir] attribute selector, in any form ([dir=rtl], [ dir ="rtl" ], [dir|=...]).
+const DIR_SELECTOR = /\[\s*dir\s*[~|^$*]?=|\[\s*dir\s*\]/i;
+// The one allowed [dir] rule: an icon turned around in right-to-left, and its opt-out.
+const ICON_MIRROR_SELECTOR = /^\[dir=["']?rtl["']?\]\s+(?:\.[\w-]+\s+)?\.[\w-]*ico[\w-]*$/;
+const ICON_MIRROR_VALUE = /^(?:scaleX\(\s*-1\s*\)|none)$/i;
+
+// Tailwind utilities with a physical side, with any variant prefix (hover:pl-2, md:-ml-2, [&>p]:left-0),
+// and the direction variants and selectors that stand in for a [dir] rule.
+const PHYSICAL_UTILITY = new RegExp(
+  [
+    "(?<![\\w-])-?(?:pl|pr|ml|mr|left|right|scroll-pl|scroll-pr|scroll-ml|scroll-mr)-(?!to-)[^\\s\"'`]+",
+    "(?<![\\w-])(?:border-l|border-r)(?![\\w])(?:-[^\\s\"'`]+)?",
+    "(?<![\\w-])rounded-(?:l|r|tl|tr|bl|br)(?![\\w])(?:-[^\\s\"'`]+)?",
+    "(?<![\\w-])space-x-[^\\s\"'`]+",
+    "(?<![\\w-])(?:text|float|clear)-(?:left|right)(?![\\w-])",
+    "(?<![\\w-])\\[(?:margin|padding|border|inset)?-?(?:left|right)[\\w-]*:",
+    "(?<![\\w-])(?:rtl|ltr):[\\w\\[-]",
+    "\\[\\s*dir\\s*[~|^$*]?=",
+  ].join("|"),
+  "g",
+);
+// A style object with a physical key: marginLeft: 4, "padding-right": x, textAlign: "left", float: "right".
+const PHYSICAL_STYLE_KEY =
+  /(?<![\w$.-])(["']?)(margin(?:Left|Right)|padding(?:Left|Right)|scrollMargin(?:Left|Right)|scrollPadding(?:Left|Right)|border(?:Left|Right)\w*|border(?:Top|Bottom)(?:Left|Right)Radius|(?:margin|padding|scroll-margin|scroll-padding)-(?:left|right)|border-(?:left|right)[\w-]*)\1\s*:/g;
+const PHYSICAL_STYLE_VALUE = /(?<![\w$.-])(["']?)(textAlign|text-align|float|clear)\1\s*:\s*(["'`])(?:left|right)\3/g;
+const PHYSICAL_OFFSET_KEY = /(?<![\w$.-])(["']?)(left|right)\1\s*:\s*(?:-?\d*\.?\d+(?![\w.])|(["'`])[^"'`]*\3)/g;
+
+// Comments are prose ("right-to-left"), not code. A // starts a comment only at the start of a line or after
+// a space, so the // in a URL stays. Line numbers are kept.
+const blank = (comment) => comment.replace(/[^\n]/g, " ");
+const stripScriptComments = (text) => text.replace(/\/\*[\s\S]*?\*\//g, blank).replace(/(^|\s)\/\/[^\n]*/g, (match, lead) => lead + blank(match.slice(lead.length)));
+
+/** Top-level whitespace-separated values of a shorthand, keeping var(...) and calc(...) whole. */
+function shorthandValues(value) {
+  const values = [];
+  let depth = 0;
+  let current = "";
+  for (const char of value.replace(/\s*!important\s*$/i, "").trim()) {
+    if (char === "(") depth += 1;
+    else if (char === ")") depth -= 1;
+    if (/\s/.test(char) && depth === 0) {
+      if (current) values.push(current);
+      current = "";
+    } else {
+      current += char;
+    }
+  }
+  if (current) values.push(current);
+  return values;
+}
+
+export function checkLogical(sources) {
+  /** @type {Finding[]} */
+  const problems = [];
+  const add = (file, line, message) => problems.push({ file, line, message });
+
+  for (const source of sources.filter(isCss).filter((candidate) => !GENERATED.test(candidate.file))) {
+    const root = parse(source);
+    root.walkRules((rule) => {
+      if (!DIR_SELECTOR.test(rule.selector)) return;
+      const selectors = rule.selector.split(",").map((selector) => selector.trim());
+      const decls = (rule.nodes ?? []).filter((node) => node.type === "decl");
+      const mirrors =
+        selectors.every((selector) => ICON_MIRROR_SELECTOR.test(selector)) &&
+        decls.length > 0 &&
+        decls.every((decl) => decl.prop === "transform" && ICON_MIRROR_VALUE.test(decl.value.trim()));
+      if (!mirrors) add(source.file, rule.source.start.line, `[dir] selector "${rule.selector}"; only the icon-mirroring rule may select on direction`);
+    });
+    root.walkDecls((decl) => {
+      const line = decl.source.start.line;
+      const prop = decl.prop.toLowerCase();
+      const value = decl.value.trim();
+      if (PHYSICAL_PROPERTY.test(prop)) {
+        add(source.file, line, `physical property "${decl.prop}"; use the logical property (inset-inline-start, margin-inline-end, border-inline-start, ...)`);
+      } else if (PHYSICAL_KEYWORD_PROPERTY[prop]?.test(value.replace(/\s*!important\s*$/i, ""))) {
+        add(source.file, line, `"${decl.prop}: ${value}" is physical; use start or end (inline-start and inline-end for float)`);
+      } else if (BOX_SHORTHAND.test(prop) && shorthandValues(value).length > 2) {
+        add(source.file, line, `"${decl.prop}: ${value}" has ${shorthandValues(value).length} values; write the block and inline sides with logical properties`);
+      }
+    });
+    root.walkAtRules("apply", (rule) => {
+      for (const match of rule.params.matchAll(PHYSICAL_UTILITY)) {
+        add(source.file, rule.source.start.line, `physical utility "${match[0]}"; use the logical one (ps-, pe-, ms-, me-, start-, end-, border-s, border-e, rounded-s-, rounded-e-)`);
+      }
+    });
+  }
+
+  for (const source of sources.filter(isScript)) {
+    const text = stripScriptComments(source.text);
+    const report = (index, message) => add(source.file, lineAt(text, index), message);
+    for (const match of text.matchAll(PHYSICAL_UTILITY)) {
+      report(match.index, `physical utility or selector "${match[0]}"; use the logical one (ps-, pe-, ms-, me-, start-, end-, border-s, border-e, rounded-s-, rounded-e-, text-start, text-end)`);
+    }
+    for (const match of text.matchAll(PHYSICAL_STYLE_KEY)) report(match.index, `physical style property "${match[2]}"; use the logical property`);
+    for (const match of text.matchAll(PHYSICAL_STYLE_VALUE)) report(match.index, `physical style "${match[2]}: ${match[3]}..."; use start or end`);
+    for (const match of text.matchAll(PHYSICAL_OFFSET_KEY)) report(match.index, `physical style property "${match[2]}"; use insetInlineStart or insetInlineEnd`);
+  }
+  return { problems: byPosition(problems) };
+}
+
+// ---------------------------------------------------------------------------------------------
 
 export const CHECKS = {
   spacing: { title: "Spacing check", run: checkSpacing },
   layout: { title: "Layout literal check", run: checkLayout },
+  logical: { title: "Logical CSS check", run: checkLogical },
   layers: { title: "Token layer check", run: checkLayers },
 };
 

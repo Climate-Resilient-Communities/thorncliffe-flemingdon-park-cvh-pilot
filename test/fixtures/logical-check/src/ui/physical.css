@@ -1,0 +1,21 @@
+.a { left: 0; }
+.b { right: var(--gap-icon); }
+.c { margin-left: var(--gap-icon); }
+.d { margin-right: auto; }
+.e { padding-left: var(--gap-icon); }
+.f { padding-right: var(--gap-icon); }
+.g { border-left: 1px solid; }
+.h { border-right-color: red; }
+.i { float: left; }
+.j { float: right; }
+.k { text-align: left; }
+.l { text-align: right; }
+.m { margin: 0 var(--gap-icon) 0; }
+.n { padding: var(--gap-icon) 0 var(--gap-icon) var(--gap-target); }
+.o { border-top-left-radius: 4px; }
+.p { scroll-margin-left: 0; }
+.q { clear: right; }
+.r { padding: calc(var(--gap-icon) + 1px) var(--gap-target) var(--gap-icon); }
+[dir="rtl"] .card { margin-inline-start: 0; }
+:root[dir='rtl'] .card { padding-inline: 0; }
+.s { @apply pl-2 mr-4; }
