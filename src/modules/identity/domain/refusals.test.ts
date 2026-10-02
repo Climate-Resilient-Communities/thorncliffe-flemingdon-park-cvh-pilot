@@ -13,6 +13,10 @@ describe("refusal messages", () => {
     expect(englishText(REFUSAL_MESSAGE_KEYS.bootstrap_incomplete)).toBe("Finish setting up two Admins first");
   });
 
+  it("refuses a change that would leave fewer than two usable Admins with the agreed wording", () => {
+    expect(englishText(REFUSAL_MESSAGE_KEYS.two_admin_rule)).toBe("There must always be at least two usable Admins");
+  });
+
   it("explains a name that cannot make a starting password", () => {
     expect(englishText(REFUSAL_MESSAGE_KEYS.starting_password_empty)).toMatch(/Latin letters/);
   });

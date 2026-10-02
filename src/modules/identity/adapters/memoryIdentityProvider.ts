@@ -18,11 +18,20 @@ export function memoryIdentityProvider() {
   const details = new Map<string, { createdAt: Date; staffMarker: boolean }>();
   let nextFailure: CreateLoginError | null = null;
   let failDeletes = false;
+  let latency: { ms: number; fails: boolean } | null = null;
+  /** Every call takes `latency.ms` first, then fails like the real adapter's timeout does (or answers, if `fails` is false). */
+  const slow = async () => {
+    if (!latency) return;
+    await new Promise((resolve) => setTimeout(resolve, latency!.ms));
+    if (latency.fails) throw new Error("identity provider timed out");
+  };
 
   const provider: IdentityProvider & {
     users: Map<string, MemoryLogin>;
     failNext(error: CreateLoginError): void;
     failDeletes(fail: boolean): void;
+    /** Simulates a slow or hanging provider: each call waits `ms`, then times out (`fails`, the default) or answers. `null` ends it. */
+    delay(ms: number | null, options?: { fails?: boolean }): void;
     enrol(authUserId: string): void;
     findByLogin(login: string): [string, MemoryLogin] | undefined;
     /** Adds a login as if left behind earlier (or made by someone else, with `staffMarker: false`). */
@@ -34,6 +43,9 @@ export function memoryIdentityProvider() {
     },
     failDeletes(fail) {
       failDeletes = fail;
+    },
+    delay(ms, options = {}) {
+      latency = ms === null ? null : { ms, fails: options.fails ?? true };
     },
     enrol(authUserId) {
       const user = users.get(authUserId);
@@ -52,12 +64,18 @@ export function memoryIdentityProvider() {
     },
 
     async findLogin(login) {
+      await slow();
       const found = [...users.entries()].find(([, user]) => user.login === login);
       const extra = found ? details.get(found[0]) : undefined;
       return found ? { authUserId: found[0], createdAt: extra?.createdAt ?? new Date(0), staffMarker: extra?.staffMarker ?? true } : null;
     },
 
     async createLogin({ login, password }) {
+      try {
+        await slow();
+      } catch {
+        return { ok: false, error: "unavailable" };
+      }
       if (nextFailure) {
         const error = nextFailure;
         nextFailure = null;
@@ -71,12 +89,14 @@ export function memoryIdentityProvider() {
     },
 
     async deleteLogin(authUserId) {
+      await slow();
       if (failDeletes) throw new Error("delete failed");
       users.delete(authUserId);
       details.delete(authUserId);
     },
 
     async hasVerifiedAuthenticator(authUserId) {
+      await slow();
       return users.get(authUserId)?.authenticatorEnrolled ?? false;
     },
   };

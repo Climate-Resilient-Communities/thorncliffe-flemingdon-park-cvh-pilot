@@ -1,10 +1,15 @@
+import type { AdminFloorRefusal } from "./adminFloor";
 import type { BootstrapRefusal } from "./bootstrap";
 import type { NewAccountError } from "./newAccount";
+import type { StaffChangeRefusal } from "./staffChange";
 
 /** Every refusal of the identity module's account actions, as a code (spine: Errors). */
 export type IdentityRefusal =
   | NewAccountError
   | BootstrapRefusal
+  | AdminFloorRefusal
+  | StaffChangeRefusal
+  | "not_found"
   | "username_taken"
   | "admin_exists"
   | "forbidden"
@@ -26,6 +31,11 @@ export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
   username_taken: "staff.people.errors.usernameTaken",
   admin_exists: "staff.people.errors.adminExists",
   bootstrap_incomplete: "staff.bootstrap.incomplete",
+  two_admin_rule: "staff.admins.twoAdminRule",
+  self_action: "staff.people.errors.selfAction",
+  account_removed: "staff.people.errors.accountRemoved",
+  no_change: "staff.people.errors.noChange",
+  not_found: "staff.people.errors.notFound",
   forbidden: "staff.people.errors.forbidden",
   unauthenticated: "staff.people.errors.unauthenticated",
   provider_error: "staff.people.errors.providerError",

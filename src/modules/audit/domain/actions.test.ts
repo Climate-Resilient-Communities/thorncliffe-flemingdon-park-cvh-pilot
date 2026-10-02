@@ -84,6 +84,27 @@ describe("toAuditRecord", () => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "ok")).not.toThrow();
   });
 
+  it("carries admin_shortfall only as true, on the recovery actions and automatic locks (S01.06)", () => {
+    for (const [action, meta] of [
+      ["password.reset", {}],
+      ["password.reissued", {}],
+      ["factor.reset", { recovery: "lost_device" }],
+      ["auth.locked", { lock: "failed_sign_in" }],
+    ] as const) {
+      expect(toAuditRecord(event({ action, meta: { ...meta, admin_shortfall: true } } as Partial<AuditEvent>), "ok").meta, action).toMatchObject({
+        admin_shortfall: true,
+      });
+      expect(() => toAuditRecord(event({ action, meta: { ...meta, admin_shortfall: false } } as unknown as Partial<AuditEvent>), "ok"), action).toThrow(
+        AuditRecordError,
+      );
+    }
+    for (const action of ["account.suspended", "account.removed", "account.role_changed"] as const) {
+      expect(() => toAuditRecord(event({ action, meta: { admin_shortfall: true } } as Partial<AuditEvent>), "ok"), action).toThrow(
+        /fields outside the schema: admin_shortfall/,
+      );
+    }
+  });
+
   it("rejects a field outside the action's schema, naming the field but not its value", () => {
     const attempt = () => toAuditRecord(event({ meta: { password: "rvh-jane-doe" } as never }), "ok");
 
