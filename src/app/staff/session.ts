@@ -1,3 +1,4 @@
+import { cache } from "react";
 import type { StaffSession } from "@/modules/identity";
 import { identityConfigured, requestAuthSessions, staffAuth } from "./identity";
 
@@ -12,9 +13,9 @@ export type { StaffSession };
  *
  * Fail closed: where sign-in is not configured (no Supabase settings, as in the smoke checks)
  * nobody is signed in; a provider or database failure throws, so the request fails rather than
- * passing.
+ * passing. Looked up once per page render (the layout's banner and the page share it).
  */
-export async function currentStaffSession(): Promise<StaffSession | null> {
+export const currentStaffSession = cache(async (): Promise<StaffSession | null> => {
   if (!identityConfigured()) return null;
   return staffAuth().currentSession(await requestAuthSessions());
-}
+});
