@@ -727,7 +727,7 @@ So that no one can do more than their role allows, even by calling the server di
 
 ### Story S01.13 — Admin can import and confirm the 43 pilot buildings and their floors
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 15 min (started 2026-10-02 08:42 UTC, merged 2026-10-02 10:57 UTC)
 - **Traces:** FR-G3, FR-D4-P (data), AR-23 · **Depends on:** S01.12 · **Branch:** `e01-s13-buildings-floors`
 
 As a Hub Admin,
@@ -767,7 +767,7 @@ So that alerts, sign-ups and assignments all use one correct list.
 
 ### Story S01.14 — Admin can assign ambassadors and see which floors are covered
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 2 h 52 min (started 2026-10-02 10:58 UTC, merged 2026-10-02 13:50 UTC)
 - **Traces:** FR-E5, FR-G3, AR-16 · **Depends on:** S01.13 · **Branch:** `e01-s14-assignments-coverage`
 
 As a Hub Admin,
@@ -791,7 +791,7 @@ So that I know where check-ins can be promised before a disruption.
 
 ### Story S01.15 — Admin sees a first text arrive from production (spike)
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 40 min (started 2026-10-02 09:08 UTC, merged 2026-10-02 11:48 UTC)
 - **Traces:** AR-4 (SMS_MODE), Launch readiness (toll-free verification) · **Depends on:** S01.10 · **Branch:** `e01-s15-first-text-spike`
 - **Note:** labelled spike; E06 removes it when the outbound queue replaces it.
 
@@ -918,7 +918,7 @@ So that I can use the CVH without English.
 
 ### Story S02.03 — Resident makes first-run choices that stay on the phone
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 8 h 30 min (started 2026-10-02 11:19 UTC, merged 2026-10-02 19:49 UTC)
 - **Traces:** FR-A12, FR-A9 (on the phone), UX-DR4, AR-26 · **Depends on:** S02.02, S01.13 · **Branch:** `e02-s03-first-run-choices`
 
 As a resident,
@@ -956,7 +956,7 @@ So that the CVH shows me what matters to me without asking who I am.
 
 ### Story S02.04 — Hub loads the reviewed catalogue and confirms providers
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 44 min (started 2026-10-02 08:42 UTC, merged 2026-10-02 10:26 UTC)
 - **Traces:** FR-G4, NFR-N7, AR-15, AR-25 · **Depends on:** S01.12, S01.04 · **Branch:** `e02-s04-catalogue-providers`
 
 As a Hub Admin,
@@ -989,7 +989,7 @@ So that residents only see listings the Hub has checked.
 
 ### Story S02.05 — Admin publishes a directory release residents can download
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 1 min (started 2026-10-02 10:27 UTC, merged 2026-10-02 13:28 UTC)
 - **Traces:** AR-15 (publish), FR-D2, D-5 (`zh-Hant`), AD-20 contracts · **Depends on:** S02.04 · **Branch:** `e02-s05-directory-release`
 
 As a Hub Admin,
@@ -1127,7 +1127,7 @@ So that I can see what is close to me.
 
 ### Story S02.08 — Resident sees the facts about a building
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 4 h 3 min (started 2026-10-02 10:58 UTC, merged 2026-10-02 15:02 UTC)
 - **Traces:** FR-D4-P, NFR-N7 · **Depends on:** S01.13, S02.02 · **Branch:** `e02-s08-building-page`
 
 As a resident,
@@ -1188,7 +1188,7 @@ So that residents read checked text, not a live machine translation.
 
 ### Story S02.10 — Resident reads a guide and the essential numbers
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 7 h 5 min (started 2026-10-02 15:03 UTC, merged 2026-10-02 22:08 UTC)
 - **Traces:** FR-D7, UX-DR13, AR-27 (911 block) · **Depends on:** S02.09, S02.08 · **Branch:** `e02-s10-guides-numbers`
 
 As a resident,
@@ -1403,7 +1403,7 @@ Residents type a question in any launch language, romanized or mixed included, a
 
 ### Story S03.01 — Team can measure search with a test set from day one
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 9 min (started 2026-10-02 10:27 UTC, merged 2026-10-02 11:36 UTC)
 - **Traces:** FR-D2-Q (acceptance), AR-22 (AD-24) · **Depends on:** S02.04 · **Branch:** `e03-s01-test-set-runner`
 
 As a developer,
@@ -1433,7 +1433,7 @@ So that every search change is measured against real questions before it ships.
 
 ### Story S03.02 — Each new release carries the search data that matches its listings
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 6 h 7 min (started 2026-10-02 15:03 UTC, merged 2026-10-02 21:10 UTC)
 - **Traces:** AR-15 (search data), FR-D2-Q, AR-20 · **Depends on:** S02.05, S03.01 · **Branch:** `e03-s02-release-search-data`
 
 As a Hub Admin,
@@ -1834,7 +1834,7 @@ So that I never receive text in the wrong language presented as mine.
 
 ### Story S04.03 — Alert threads and entries follow one lifecycle
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 21 min (started 2026-10-02 10:58 UTC, merged 2026-10-02 14:20 UTC)
 - **Traces:** AR-8, AR-9, FR-A15, AR-24 · **Depends on:** S01.04, S01.12, S01.13 · **Branch:** `e04-s03-alert-lifecycle`
 
 As a Hub Coordinator,
@@ -1881,7 +1881,7 @@ So that nothing reaches residents without the checks we promised.
 
 ### Story S04.04 — Staff choose who an alert is for with one shared rule
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 5 h 27 min (started 2026-10-02 15:02 UTC, merged 2026-10-02 20:30 UTC)
 - **Traces:** FR-A1, AR-11 (matcher), AR-7, UX-DR16 (O-03, O-04) · **Depends on:** S04.03 · **Branch:** `e04-s04-audience-matcher`
 
 As a Hub Coordinator,
