@@ -201,6 +201,18 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: ADMIN_ONLY,
     }),
   ),
+  {
+    id: `action ${PEOPLE_ACTIONS}#resetAuthenticatorAction`,
+    kind: "action",
+    file: PEOPLE_ACTIONS,
+    export: "resetAuthenticatorAction",
+    route: "/staff/people",
+    action: "accounts.manage",
+    writes: "business",
+    gate: "hub",
+    form: { username: TARGET_USERNAME },
+    expected: ADMIN_ONLY,
+  },
 ];
 
 /** The endpoints anyone may call, without a session (S01.07): listed so the completeness check knows them. */

@@ -69,6 +69,9 @@ describe("toAuditRecord", () => {
     ["account.role_changed", { from: "ambassador", to: "coordinator" }],
     ["account.suspended", { reason: "two_admin_rule" }],
     ["factor.reset", { admin_shortfall: true, recovery: "all_admins_lost_access" }],
+    ["factor.reset", { recovery: "lost_device" }],
+    ["factor.reset", { recovery: "all_admins_lost_access", attested: true, admin_shortfall: true }],
+    ["factor.reset", { recovery: "device_broken" }],
     ["auth.signed_in", { aal: "aal2" }],
     ["auth.locked", { lock: "expired_starting_password" }],
     ["session.revoked", { cause: "role_changed", sessions: 2 }],
@@ -103,6 +106,13 @@ describe("toAuditRecord", () => {
         /fields outside the schema: admin_shortfall/,
       );
     }
+  });
+
+  it("keeps the authenticator reset's reason to a fixed list, never free text (S01.11)", () => {
+    for (const recovery of ["lost my phone on the bus", "other", ""]) {
+      expect(() => toAuditRecord(event({ action: "factor.reset", meta: { recovery } } as unknown as Partial<AuditEvent>), "ok"), recovery).toThrow(AuditRecordError);
+    }
+    expect(() => toAuditRecord(event({ action: "factor.reset", meta: { reason_text: "lost it" } } as unknown as Partial<AuditEvent>), "ok")).toThrow(/fields outside the schema/);
   });
 
   it("rejects a field outside the action's schema, naming the field but not its value", () => {

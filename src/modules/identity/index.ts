@@ -11,6 +11,8 @@ import { drizzleThrottleStore } from "./adapters/throttleStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
 import type { IdentityProvider } from "./application/ports";
 import { createAdminRecovery } from "./application/adminRecovery";
+import { createFactorRecovery, type FactorRecoveryService } from "./application/factorRecovery";
+import { createFactorReset } from "./application/factorReset";
 import { passwordPepper } from "./application/passwordPepper";
 import { createPasswordResetService, type PasswordResetService } from "./application/passwordReset";
 import { createSessionRevocation } from "./application/sessionRevocation";
@@ -66,9 +68,10 @@ function lockReader(wiring: IdentityWiring) {
 
 /**
  * The identity module's use cases: accounts and bootstrap (S01.05), changes under the two-Admin rule
- * (S01.06), each ending the account's sessions, and an Admin's password reset (S01.08).
+ * (S01.06), each ending the account's sessions, an Admin's password reset (S01.08) and the
+ * authenticator reset (S01.11).
  */
-export type IdentityService = AccountService & StaffChangeService & PasswordResetService;
+export type IdentityService = AccountService & StaffChangeService & PasswordResetService & FactorRecoveryService;
 
 /** The identity use cases, wired to the identity tables, the audit trail and the given identity provider. */
 export function createIdentity(wiring: IdentityWiring): IdentityService {
@@ -87,10 +90,12 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
   // Session revocation and the recovery exception stay inside the module (S01.08, S01.06).
   const revocation = createSessionRevocation({ store: drizzleStaffStore, sessions: drizzleStaffSessionStore, audit: deps.audit, now: deps.now });
   const { beginAdminRecovery } = createAdminRecovery(deps);
+  const factorReset = createFactorReset({ ...deps, beginAdminRecovery, revocation });
   return {
     ...createAccountService(deps),
     ...createStaffChangeService({ ...deps, revocation }),
     ...createPasswordResetService({ ...deps, revocation, beginAdminRecovery }),
+    ...createFactorRecovery({ ...deps, factorReset, sessions: drizzleStaffSessionStore }),
   };
 }
 
@@ -162,6 +167,7 @@ export type {
 } from "./application/staffAuth";
 export { type StaffChangeService } from "./application/staffChanges";
 export type { PasswordResetService, ResetPasswordError } from "./application/passwordReset";
+export type { AuthenticatorResetDone, FactorRecoveryService, FactorResetReason, RecoverAdminError, ResetAuthenticatorError } from "./application/factorRecovery";
 export { AMBASSADOR_IDLE_MS, SESSION_ABSOLUTE_MS, sessionLimits } from "./domain/sessionLimits";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
 export { AUTHENTICATOR_ROLES, needsAuthenticator, setupGate } from "./domain/setupGate";

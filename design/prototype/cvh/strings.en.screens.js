@@ -1035,4 +1035,13 @@
       noChange: 'Nothing to change: the floor already has that label.', alreadyConfirmed: 'This building is already confirmed.',
       noFloors: 'Add at least one floor before confirming the building.', buildingNotFound: 'That building does not exist.',
       floorNotFound: 'That floor does not exist any more. Reload the page.', forbidden: 'Only an Admin can change buildings and floors.' } } } });
+  /* An Admin's "Reset authenticator" (S01.11). Not a prototype screen. */
+  m(en, { staff: { resetAuthenticator: { title: 'Reset an authenticator', lead: 'For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.',
+    username: 'Their username', submit: 'Reset authenticator', done: 'Authenticator reset for {username}.',
+    doneLine: 'They were signed out on every device. At their next sign-in they set up a new authenticator.',
+    shortfall: 'This leaves fewer than two usable Admins. Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role.',
+    providerNote: 'The old authenticator could not be deleted from the sign-in service just now. It no longer works here, and it is removed when they set up the new one.',
+    errors: { notFound: 'No account has that username.', forbidden: 'Only an Admin can reset an authenticator.', selfAction: 'You cannot reset your own authenticator. Ask another Admin.',
+      notResettable: 'This account is suspended or removed, so its authenticator cannot be reset.',
+      noAuthenticator: 'Only Admins and Coordinators have an authenticator.' } } } });
 })();

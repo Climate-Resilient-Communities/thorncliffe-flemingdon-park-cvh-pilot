@@ -5,6 +5,7 @@ import { staffPage } from "../guard";
 import { identity } from "../identity";
 import { AddPersonBody } from "./AddPersonBody";
 import { ReissueForm } from "./ReissueForm";
+import { ResetAuthenticatorForm } from "./ResetAuthenticatorForm";
 import { ResetPasswordForm } from "./ResetPasswordForm";
 
 export const metadata: Metadata = { title: englishText("staff.people.title") };
@@ -20,7 +21,7 @@ function PeopleHeading() {
 }
 
 /**
- * "Add a person" (S01.05), with "Re-issue a starting password" (S01.07) and "Reset password" (S01.08):
+ * "Add a person" (S01.05), with "Re-issue a starting password" (S01.07), "Reset password" (S01.08) and "Reset authenticator" (S01.11):
  * the policy action `accounts.manage`, Admins only (S01.12). Staff at the Hub only (the guard sends
  * everyone else to sign-in or their setup gate); another role sees "Only an Admin can add people."
  * and no form, and each action of the page refuses it on its own. Responses are no-store. The shell
@@ -53,6 +54,14 @@ export default staffPage(
               lead: englishText("staff.resetPassword.lead"),
               username: englishText("staff.resetPassword.username"),
               submit: englishText("staff.resetPassword.submit"),
+            }}
+          />
+          <ResetAuthenticatorForm
+            labels={{
+              title: englishText("staff.resetAuthenticator.title"),
+              lead: englishText("staff.resetAuthenticator.lead"),
+              username: englishText("staff.resetAuthenticator.username"),
+              submit: englishText("staff.resetAuthenticator.submit"),
             }}
           />
           <ReissueForm
