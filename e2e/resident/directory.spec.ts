@@ -774,6 +774,8 @@ test.describe("baselines", () => {
 
         await openResident(page, `/${lang}/directory/P104`, width);
         await expect(page.getByTestId("provider-P104")).toBeVisible();
+        // The kept release shows "Last updated" until the manifest confirms it: the baseline is the confirmed page.
+        await expect(page.getByTestId("directory-last-updated")).toHaveCount(0);
         await shot(page, width, name("provider"));
       });
 
