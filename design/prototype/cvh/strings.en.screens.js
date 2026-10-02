@@ -1010,7 +1010,7 @@
   m(en, { hub: { nav: { smsTest: 'Test text' } },
   staff: { smsTest: { title: 'Test text', lead: 'Send one test text from production to an approved phone, to learn whether the Twilio account and the toll-free number work. Nothing is retried automatically.',
     previewOnly: 'Texts are only sent from production',
-    notConfigured: 'Texts can go out from here, but the Twilio account, the toll-free number or the approved phone numbers are not set, or one of them is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.',
+    notConfigured: 'Texts can go out from here, but the Twilio account, the toll-free number or the approved phones are not set, or one is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.',
     number: 'Send to', numberHint: 'Only the approved phones are listed. The text is "CVH test from production".', submit: 'Send test text',
     sent: { heading: 'Twilio accepted the test text', response: 'Twilio\u2019s response: HTTP {http}, status {status}', messageId: 'Message id: {id}',
       line: 'Delivery is not tracked in this check: look at the phone.' },
