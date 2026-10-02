@@ -2,8 +2,9 @@
 // (cvh_app_login) and the ports places may not wire itself: the audit trail (places has no edge to
 // audit in the spine's dependency diagram) and the Ambassadors assigned to a floor. Server only.
 import { record, recordRefusal, type AuditEvent } from "@/modules/audit";
-import { NO_ASSIGNMENTS, createBuildingService, type BuildingService, type FloorAssignments, type PlacesAudit } from "@/modules/places";
+import { createBuildingService, type BuildingService, type FloorAssignments, type PlacesAudit } from "@/modules/places";
 import { getDb } from "@/platform/db";
+import { assignments } from "./assignments";
 
 let service: BuildingService | undefined;
 
@@ -14,18 +15,18 @@ const audit: PlacesAudit = {
 };
 
 /**
- * Who is assigned to a floor. Until S01.14 creates `ambassador_assignment` nobody is, so a floor can
- * always be removed. S01.14 replaces this with identity's reader of the assignments that name the floor.
+ * Who is assigned to a floor: identity's reader of the assignments that list it (S01.14). The removal
+ * guard asks it inside the removal's transaction; the database refuses the delete anyway
+ * (ambassador_assignment_floor's foreign key is `on delete restrict`). src/app/staff/places.test.ts
+ * fails if this goes back to NO_ASSIGNMENTS.
  */
-// S01.14 MUST replace NO_ASSIGNMENTS here with the real reader in the same change that creates
-// `ambassador_assignment`: while this stays, the removal guard sees nobody and a floor with Ambassadors
-// assigned can be removed. src/app/staff/places.test.ts fails once that migration exists and this still
-// names NO_ASSIGNMENTS.
-const assignments: FloorAssignments = NO_ASSIGNMENTS;
+const assignedToFloors: FloorAssignments = {
+  onFloor: (executor, floor) => assignments().onFloor(executor, floor),
+};
 
 /** The building and floor use cases (S01.13). */
 export function buildings(): BuildingService {
-  return (service ??= createBuildingService({ db: getDb(), audit, assignments }));
+  return (service ??= createBuildingService({ db: getDb(), audit, assignments: assignedToFloors }));
 }
 
 /** Test seam: forget the composition. */

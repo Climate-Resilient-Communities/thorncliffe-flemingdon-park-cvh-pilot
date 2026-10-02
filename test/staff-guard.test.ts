@@ -323,6 +323,7 @@ const GENERIC_AAL2_MESSAGE = "This needs a sign-in confirmed with an authenticat
 /** Actions only an Admin may take say so: an Admin at aal1 is not told that Coordinators can do it (S02.04 review). */
 const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/providers/actions.ts": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.",
+  "src/app/staff/coverage/actions.ts": "An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
 };
 
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {
@@ -398,6 +399,13 @@ describe("privileged actions (S01.10: account changes run only at aal2)", () => 
       resetPasswordAction: "accounts.manage",
       resetAuthenticatorAction: "accounts.manage",
     });
+  });
+
+  it("include S01.14's assign and remove an Ambassador's assignment, each marked accounts.manage", async () => {
+    const { guardSpecOf } = await import("../src/app/staff/guard");
+    const exportsOf: Record<string, unknown> = await import("../src/app/staff/coverage/actions");
+    const marked = Object.entries(exportsOf).map(([name, value]) => [name, guardSpecOf(value)?.privileged]);
+    expect(Object.fromEntries(marked)).toEqual({ assignAmbassadorAction: "accounts.manage", removeAssignmentAction: "accounts.manage" });
   });
 
   it("let an aal2 session through to the action's own code", async () => {

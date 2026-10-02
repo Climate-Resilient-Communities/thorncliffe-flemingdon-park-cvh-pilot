@@ -2,6 +2,7 @@ import { existsSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { STAFF_ROLES } from "@/contracts/staffRoles";
+import { can } from "@/modules/identity";
 import { HUB_BRAND, hubNavigation, hubShellLabels, hubShellUser, hubTabTitle } from "./hubShell";
 import type { StaffSession } from "./session";
 
@@ -33,10 +34,21 @@ describe("hubShellUser", () => {
 describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
-  it("lists the pilot's three disruption screens in the prototype's order, with the home first, and People and Buildings for Admins", () => {
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
+  it("lists the pilot's three disruption screens in the prototype's order, with the home first, then Coverage for the roles that see it, and People and Buildings for Admins", () => {
+    expect(items("ambassador").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "People", "Providers", "Buildings"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Buildings"]);
+  });
+
+  it("adds Coverage for exactly the roles whose policy allows coverage.view, with an icon no other item uses", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/coverage"), role).toBe(can(role, "coverage.view"));
+    }
+    const coverage = items("admin").find((item) => item.id === "coverage");
+    expect(coverage).toEqual({ id: "coverage", label: "Coverage", href: "/staff/coverage", icon: "ready" });
+    expect(items("admin").filter((item) => item.icon === coverage?.icon)).toHaveLength(1);
   });
 
   it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {

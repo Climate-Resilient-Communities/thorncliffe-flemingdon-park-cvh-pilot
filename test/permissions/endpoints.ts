@@ -4,8 +4,8 @@
 // when a staff endpoint on disk is missing here (or listed here but gone), so each story that adds
 // an endpoint adds its row.
 //
-// Callers: no session, each role, and an Ambassador outside their assigned building (until S01.14
-// the assignments are a stub in the test). A role caller stands at the endpoint's `gate` when the
+// Callers: no session, each role, and an Ambassador outside their assigned building (the test gives the
+// guard's scope stub the assignments). A role caller stands at the endpoint's `gate` when the
 // role can be there (gate 1 for everyone; gate 2 and the code gate only for Admins and
 // Coordinators), at the Hub otherwise.
 import type { SetupGate } from "../../src/contracts/staffAuth";
@@ -53,6 +53,11 @@ export interface StaffEndpoint extends EndpointBase {
 
 const ADMIN_ONLY = { ambassador: "forbidden", coordinator: "forbidden", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
 const EVERYONE = { ambassador: "allowed", coordinator: "allowed", director: "allowed", admin: "allowed", ambassador_out_of_scope: "allowed" } as const;
+/**
+ * The coverage view (S01.14): `coverage.view` is for an Admin and a Coordinator, and a Director read-only; an Ambassador
+ * is refused, whatever building they are assigned to.
+ */
+const COVERAGE_VIEWERS = { ambassador: "forbidden", coordinator: "allowed", director: "allowed", admin: "allowed", ambassador_out_of_scope: "forbidden" } as const;
 /** Gate 2 and the code gate: only Admins and Coordinators stand there; Ambassadors and Directors are at the Hub. */
 const AUTHENTICATOR_GATE = {
   ambassador: "setup_incomplete",
@@ -71,6 +76,7 @@ const BUILDING_ACTIONS = "src/app/staff/buildings/actions.ts";
 const NO_SUCH_BUILDING = "7001";
 const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction"] as const;
+const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
@@ -82,6 +88,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/providers", kind: "page", file: "src/app/staff/providers/page.tsx", export: "default", route: "/staff/providers", action: "provider.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/coverage", kind: "page", file: "src/app/staff/coverage/page.tsx", export: "default", route: "/staff/coverage", action: "coverage.view", writes: "none", gate: "hub", expected: COVERAGE_VIEWERS },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -218,6 +225,22 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     form: { username: TARGET_USERNAME },
     expected: ADMIN_ONLY,
   },
+  // S01.14: assign an ambassador to a building and remove an assignment (policy action `accounts.manage`, Admins at aal2).
+  // The building does not exist, so an Admin's call passes the guard and is then refused by the use case, changing nothing.
+  ...(["assignAmbassadorAction", "removeAssignmentAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${COVERAGE_ACTIONS}#${name}`,
+      kind: "action",
+      file: COVERAGE_ACTIONS,
+      export: name,
+      route: "/staff/coverage",
+      action: "accounts.manage",
+      writes: "business",
+      gate: "hub",
+      form: { rsn: NO_SUCH_BUILDING, staffId: NO_SUCH_FLOOR, scope: "all" },
+      expected: ADMIN_ONLY,
+    }),
+  ),
   // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({

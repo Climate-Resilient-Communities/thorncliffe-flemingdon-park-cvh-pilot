@@ -1,0 +1,25 @@
+// The floors of a building as other modules read them (S01.14): identity's assignments refer to floors by
+// id and may not import places (AD-2), so the composition root hands identity this reader as its port.
+import { asc, eq } from "drizzle-orm";
+import type { DbExecutor } from "../../../platform/db";
+import { building, buildingFloor } from "../adapters/schema";
+
+/** A floor as an assignment needs it: the stable id, the label people see, and the place in the building's order. */
+export interface FloorRecord {
+  id: string;
+  label: string;
+  sortOrder: number;
+}
+
+/**
+ * The floors of a building, lowest first, or null when there is no building with that rsn. With `lock`
+ * the building's row is locked until the transaction ends, the lock every floor edit of this module
+ * takes (floors.ts#lockBuilding), so an assignment and a floor removal on one building run one after the other.
+ */
+export async function floorsOfBuilding(executor: DbExecutor, rsn: string, options: { lock?: boolean } = {}): Promise<FloorRecord[] | null> {
+  const found = executor.select({ rsn: building.rsn }).from(building).where(eq(building.rsn, rsn));
+  const [row] = options.lock ? await found.for("update") : await found;
+  if (!row) return null;
+  const floors = await executor.select().from(buildingFloor).where(eq(buildingFloor.rsn, rsn)).orderBy(asc(buildingFloor.sortOrder), asc(buildingFloor.label));
+  return floors.map((floor) => ({ id: floor.id, label: floor.label, sortOrder: floor.sortOrder }));
+}

@@ -29,4 +29,32 @@
   .hub-flag__label {
     font-weight: 700;
   }
+
+  /*
+   * Coverage of a floor or a group of floors (S01.14): always written out ("Covered: G, 1" / "Not covered: 2, 3"),
+   * with a bar and a surface that only add to the words. Covered is the green bar on the plain surface; not covered
+   * is the danger bar on the warm surface. Never colour alone.
+   */
+  .hub-cover {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-label);
+    border-inline-start: var(--offset-align-icon) solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .hub-cover--covered {
+    border-inline-start-color: var(--sprout-green);
+  }
+
+  .hub-cover--uncovered {
+    border-inline-start-color: var(--danger);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .hub-cover__label {
+    font-weight: 700;
+  }
 }

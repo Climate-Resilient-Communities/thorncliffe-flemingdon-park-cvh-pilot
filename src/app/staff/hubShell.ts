@@ -37,6 +37,9 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       ],
     },
   ];
+  // Coverage (S01.14) is `coverage.view`: an Admin and a Coordinator, and a Director read-only. It sits with the
+  // disruption screens because it says where a check-in round can be promised.
+  if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "coverage", label: englishText("hub.nav.coverage"), href: "/staff/coverage", icon: "ready" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
   // `accounts.manage` and the providers page `provider.manage` (S02.04), both Admin only; the buildings page is
   // `buildings.manage` (S01.13), also Admin only.
