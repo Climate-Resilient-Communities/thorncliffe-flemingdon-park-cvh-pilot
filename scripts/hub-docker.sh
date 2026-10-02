@@ -1,8 +1,10 @@
 #!/usr/bin/env bash
 # Runs the Hub shell's screenshot tests (playwright.hub.config.ts) inside the one image whose operating system
 # renders the baseline screenshots, the image scripts/resident-docker.sh uses. The text rasteriser (freetype,
-# fontconfig) and the system fonts belong to the OS, and the Hub's pages declare no web font, so baselines made
-# on another OS differ. CI and `npm run test:hub:docker` both run this script; arguments go to `playwright test`.
+# fontconfig) and the system fonts belong to the OS, so baselines made on another OS differ. The Latin text is set in
+# the self-hosted Public Sans (the harness inlines src/app/staff/fonts.generated.css with the files as data URIs and
+# fails unless the face has loaded); the system fonts still draw the glyphs it lacks, such as Urdu. CI and
+# `npm run test:hub:docker` both run this script; arguments go to `playwright test`.
 #
 # The tag is the exact @playwright/test version (test/resident-image.test.ts keeps the two equal). The image
 # holds the Chromium that version expects. node_modules comes from the host (the same linux x64).

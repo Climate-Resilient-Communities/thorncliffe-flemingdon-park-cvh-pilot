@@ -33,8 +33,8 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const { lang } = await params;
   if (!isLaunchCode(lang)) notFound();
   setRequestLocale(lang);
-  // The one font file every resident page needs (Latin text in any language), preloaded from here and from no other
-  // layout, so the staff and site pages preload nothing. The language's own Noto slices follow their text.
+  // The one font file every resident page needs (Latin text in any language), preloaded from here (the staff layout
+  // preloads its own copy of the file), so the site pages preload nothing. The language's own Noto slices follow their text.
   preload(PUBLIC_SANS_LATIN, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
 
   const language = languageOf(lang);

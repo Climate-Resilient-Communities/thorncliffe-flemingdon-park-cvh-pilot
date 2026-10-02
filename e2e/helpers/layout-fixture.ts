@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import path from "node:path";
-import type { Page } from "@playwright/test";
+import { expect, type Page } from "@playwright/test";
 import { build } from "esbuild";
 import type { ComponentProps } from "react";
 import type * as Fixtures from "../layout/fixtures";
@@ -14,6 +15,33 @@ type Render = (name: string, props: unknown) => string;
 
 let stylesheet: Promise<string> | undefined;
 let renderer: Promise<Render> | undefined;
+
+// page.setContent has no base URL, so a font file cannot be fetched by path: the staff layout's own stylesheet
+// (src/app/staff/fonts.generated.css, Public Sans Latin and Latin-extended) is inlined with each file as a data URI.
+// The harness therefore sets its text in the face the staff screens load, not in a system fallback.
+const STAFF_FONTS_CSS = path.join(ROOT, "src", "app", "staff", "fonts.generated.css");
+let fonts: string | undefined;
+
+function fontCss(): string {
+  return (fonts ??= readFileSync(STAFF_FONTS_CSS, "utf8").replace(/url\(([^)]+\.woff2)\)/g, (_, file: string) => {
+    const data = readFileSync(path.resolve(path.dirname(STAFF_FONTS_CSS), file)).toString("base64");
+    return `url(data:font/woff2;base64,${data})`;
+  }));
+}
+
+/** Waits for Public Sans to load and fails unless it is really the face in use, not a system fallback. */
+async function expectPublicSansLoaded(page: Page) {
+  await page.evaluate(async () => {
+    await document.fonts.load('16px "Public Sans"', "Aa");
+    await document.fonts.ready;
+  });
+  // check() is also true when no such face is declared at all, so the loaded face itself is asserted as well.
+  expect(await page.evaluate(() => document.fonts.check('16px "Public Sans"')), "Public Sans is available").toBe(true);
+  expect(
+    await page.evaluate(() => [...document.fonts].filter((face) => face.family.replaceAll(/["']/g, "") === "Public Sans" && face.status === "loaded").length),
+    "a Public Sans face is loaded",
+  ).toBeGreaterThan(0);
+}
 
 const appCss = () => (stylesheet ??= compileCss(path.join(ROOT, "e2e", "layout", "app.css"), { optimize: true }));
 
@@ -92,7 +120,7 @@ export type MountOptions = {
 function documentFor(html: string, css: string, { lang = "en", basic = false, frameCss = "" }: MountOptions = {}) {
   const attributes = [`lang="${lang}"`, `dir="${RTL.has(lang) ? "rtl" : "ltr"}"`, basic ? 'data-basic="true"' : ""].join(" ");
   return (
-    `<!doctype html><html ${attributes}><head><meta charset="utf-8"><style>${css}</style>` +
+    `<!doctype html><html ${attributes}><head><meta charset="utf-8"><style>${fontCss()}</style><style>${css}</style>` +
     `<style>${frameCss}</style></head><body>${html}</body></html>`
   );
 }
@@ -105,6 +133,7 @@ export async function mount<Name extends FixtureName>(
 ) {
   const render = await (renderer ??= loadRenderer());
   await page.setContent(documentFor(render(name, props), await appCss(), { lang, basic, frameCss }));
+  await expectPublicSansLoaded(page);
 }
 
 /** Like `mount`, then hydrates the fixture in the page and waits until its effects have run. */
@@ -120,4 +149,5 @@ export async function mountHydrated<Name extends FixtureName>(
   await page.addScriptTag({ content: await (clientBundle ??= loadClientBundle()) });
   await page.evaluate(([fixture, fixtureProps]) => (window as unknown as { __hydrate: (n: string, p: unknown) => void }).__hydrate(fixture, fixtureProps), [name, props] as const);
   await page.locator("html[data-hydrated]").waitFor({ state: "attached" });
+  await expectPublicSansLoaded(page);
 }
