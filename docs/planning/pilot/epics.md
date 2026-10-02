@@ -1663,7 +1663,7 @@ So that the choice is evidence, not guesswork, and can be repeated on the full t
 **Acceptance Criteria:**
 
 **Given** the pilot uses one embedding model, `embed-v4.0`
-**When** the runner is run against a preview deployment (the shared Supabase project) with the translated-question leg on and off, within the usage allowance
+**When** the runner is run against production's search use case (a preview has no Cohere key) with the translated-question leg on and off, within the usage allowance
 **Then** a report for the tuning subset is committed with hit rate per language, no-match and emergency accuracy, p50 and p95 time per question, and embedding usage; the choice is recorded in the spine and set as config
 
 **Given** the scores of correct and no-match questions
