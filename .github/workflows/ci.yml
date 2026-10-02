@@ -36,6 +36,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run lint:deps
+      # Fails if a catalog is stale or a required string is missing; the per-language report
+      # of missing keys goes to the job summary. Runs even if an earlier check failed.
+      - if: ${{ !cancelled() }}
+        run: npm run check:strings
       - run: npm run build
         env:
           APP_VERSION: ${{ github.sha }}

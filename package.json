@@ -12,6 +12,8 @@
     "lint": "eslint",
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
+    "gen:strings": "node scripts/gen-strings.cjs",
+    "check:strings": "node scripts/gen-strings.cjs --check",
     "lint:deps": "depcruise src --config .dependency-cruiser.cjs",
     "test:smoke": "playwright test e2e/smoke.spec.ts"
   },
