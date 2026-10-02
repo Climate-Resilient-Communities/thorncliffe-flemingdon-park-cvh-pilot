@@ -2,7 +2,7 @@ import { spawnSync } from "node:child_process";
 import { createRequire } from "node:module";
 import path from "node:path";
 import { afterEach, describe, expect, it } from "vitest";
-import { checkNetAccess, checkOwnership, checkRls } from "../../scripts/db/check-schema.mjs";
+import { checkNetAccess, checkOwnership, checkRls, checkSequences } from "../../scripts/db/check-schema.mjs";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { FIXTURES, ROOT, connect, createFreshDatabase, serverUrl, type FreshDatabase } from "./helpers";
 
@@ -208,6 +208,39 @@ describe("network access check (pg_net)", () => {
     const problems = await checked(
       `create view public.http_log as select * from net._http_response; revoke all on public.http_log from public, anon, authenticated;`,
     );
+
+    expect(problems).toEqual([]);
+  });
+});
+
+describe("sequence check", () => {
+  const TABLE =
+    "create table audit_event (id bigint generated always as identity primary key); alter table audit_event enable row level security;";
+  // What Supabase's default privileges give a new sequence in public (a fresh test database has none).
+  const SUPABASE_DEFAULTS = "grant all on sequence audit_event_id_seq to anon, authenticated, service_role;";
+
+  async function checked(sqlText: string) {
+    db = await createFreshDatabase();
+    await db.sql.unsafe(sqlText);
+    return checkSequences(db.sql);
+  }
+
+  it("rejects an identity sequence that keeps Supabase's default privileges for clients", async () => {
+    const problems = await checked(`${TABLE} ${SUPABASE_DEFAULTS}`);
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_event_id_seq is a sequence that anon and authenticated can use/)]);
+  });
+
+  it("rejects a sequence granted to PUBLIC", async () => {
+    const problems = await checked(
+      `${TABLE} ${SUPABASE_DEFAULTS} revoke all on sequence audit_event_id_seq from anon, authenticated, service_role; grant usage on sequence audit_event_id_seq to public;`,
+    );
+
+    expect(problems).toEqual([expect.stringMatching(/^public\.audit_event_id_seq is a sequence that public can use/)]);
+  });
+
+  it("passes once the privileges are revoked from clients", async () => {
+    const problems = await checked(`${TABLE} ${SUPABASE_DEFAULTS} revoke all on sequence audit_event_id_seq from public, anon, authenticated, service_role;`);
 
     expect(problems).toEqual([]);
   });

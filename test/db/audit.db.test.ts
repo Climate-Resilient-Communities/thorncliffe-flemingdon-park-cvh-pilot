@@ -13,6 +13,13 @@ import { connect, serverUrl } from "./helpers";
 
 const SCHEMA = "cvh_test_audit";
 const ACTOR = randomUUID();
+/** Every audit record this file writes is about a subject in this list (or has the ACTOR): they are removed afterwards. */
+const createdSubjects: string[] = [];
+const subject = () => {
+  const id = randomUUID();
+  createdSubjects.push(id);
+  return id;
+};
 
 let owner: ReturnType<typeof connect>;
 let app: Db;
@@ -41,6 +48,16 @@ beforeAll(async () => {
 
 afterAll(async () => {
   await app?.$client.end({ timeout: 5 });
+  // The records of this file name random staff ids that no staff_account row
+  // will ever match, and the table is append-only, so S01.05's foreign key on
+  // actor_staff_id could not be added next to them. As the owner, in one
+  // transaction, take the triggers away, delete exactly this file's rows and
+  // put the triggers back.
+  await owner.begin(async (tx) => {
+    await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
+    await tx`delete from audit_event where actor_staff_id = ${ACTOR} or subject_id = any(${createdSubjects})`;
+    await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
+  });
   await owner.unsafe(`drop schema if exists ${SCHEMA} cascade; alter role cvh_app_login password null`);
   await owner.end({ timeout: 5 });
 });
@@ -78,7 +95,7 @@ describe("the app's connection", () => {
 
 describe("audit.record", () => {
   it("commits the ok record with the change", async () => {
-    const id = randomUUID();
+    const id = subject();
 
     await app.transaction(async (tx) => {
       await insertWidget(tx, id, "first");
@@ -107,7 +124,7 @@ describe("audit.record", () => {
   });
 
   it("rolls the ok record back with the change", async () => {
-    const id = randomUUID();
+    const id = subject();
 
     await expect(
       app.transaction(async (tx) => {
@@ -122,7 +139,7 @@ describe("audit.record", () => {
   });
 
   it("fails the whole change when the ok record cannot be written (fail closed)", async () => {
-    const id = randomUUID();
+    const id = subject();
 
     await withoutAuditInsert(async () => {
       await expect(
@@ -138,7 +155,7 @@ describe("audit.record", () => {
   });
 
   it("fails the whole change when the ok record's meta is not allowed", async () => {
-    const id = randomUUID();
+    const id = subject();
 
     await expect(
       app.transaction(async (tx) => {
@@ -180,7 +197,7 @@ describe("audit.recordRefusal", () => {
   }
 
   it("leaves business data unchanged and adds exactly one refused record", async () => {
-    const id = randomUUID();
+    const id = subject();
     await insertWidget(app, id, "original");
 
     expect(await refusedRename(id)).toBe("refused");
@@ -200,7 +217,7 @@ describe("audit.recordRefusal", () => {
   });
 
   it("keeps the action refused and logs an operational error when the refused record cannot be written", async () => {
-    const id = randomUUID();
+    const id = subject();
     await insertWidget(app, id, "original");
     const log = vi.spyOn(console, "log").mockImplementation(() => {});
 
@@ -223,8 +240,8 @@ describe("audit_event is append-only", () => {
   let id: string;
 
   beforeAll(async () => {
-    id = randomUUID();
-    await audit.record(app, { action: "password.changed", actorStaffId: ACTOR, subjectType: "staff_account", subjectId: id });
+    id = subject();
+    await app.transaction((tx) => audit.record(tx, { action: "password.changed", actorStaffId: ACTOR, subjectType: "staff_account", subjectId: id }));
   });
 
   it.each([

@@ -10,6 +10,10 @@
 //    selectable by anon or authenticated, directly or through PUBLIC. pg_net's
 //    own objects cannot be revoked (supabase_admin owns them), so the app's
 //    wrappers around them are checked instead.
+//  - Sequences: no sequence of the app (an identity column's included) is
+//    usable by anon, authenticated or PUBLIC. Supabase's default privileges
+//    grant them every new sequence, and nextval() or setval() by a client
+//    would burn ids or rewrite the counter.
 //
 // Usage: MIGRATE_DATABASE_URL=postgres://... node scripts/db/check-schema.mjs
 
@@ -159,6 +163,34 @@ export async function checkNetAccess(sql) {
 }
 
 /**
+ * No sequence in an app schema may hold any privilege (USAGE, SELECT, UPDATE)
+ * for anon, authenticated (or a role either is a member of) or PUBLIC. The
+ * ACL is read directly, since has_sequence_privilege cannot ask about PUBLIC.
+ *
+ * @param {import("postgres").Sql} sql
+ * @returns {Promise<string[]>}
+ */
+export async function checkSequences(sql) {
+  const rows = await sql.unsafe(`
+    select n.nspname as schema, c.relname as name,
+           (select array_agg(distinct case when a.grantee = 0 then 'public' else pg_get_userbyid(a.grantee) end
+                             order by case when a.grantee = 0 then 'public' else pg_get_userbyid(a.grantee) end)
+            from aclexplode(coalesce(c.relacl, acldefault('S', c.relowner))) a
+            where a.privilege_type in ('USAGE', 'SELECT', 'UPDATE')
+              and (a.grantee = 0 or exists (select 1 from pg_roles cr where cr.oid in ${CLIENTS} and pg_has_role(cr.oid, a.grantee, 'MEMBER'))))::text[] as reachable_by
+    from pg_class c join pg_namespace n on n.oid = c.relnamespace
+    where c.relkind = 'S' and ${migrationRelationCondition("c", "n")} and ${notExtensionMember("c")}
+    order by 1, 2`);
+  return rows
+    .filter((r) => r.reachable_by?.length)
+    .map(
+      (r) =>
+        `${r.schema}.${r.name} is a sequence that ${r.reachable_by.join(" and ")} can use: ` +
+        `add "revoke all on sequence ${r.schema}.${r.name} from public, anon, authenticated, service_role"`,
+    );
+}
+
+/**
  * @param {import("postgres").Sql} sql
  * @param {Record<string, string>} owners table name -> owning module
  * @returns {Promise<string[]>}
@@ -199,6 +231,7 @@ async function main() {
       ["Row level security", await checkRls(sql)],
       ["Table ownership", await checkOwnership(sql, readTableOwnership())],
       ["Network access", await checkNetAccess(sql)],
+      ["Sequences", await checkSequences(sql)],
     ];
     for (const [title, problems] of sections) {
       if (problems.length === 0) {

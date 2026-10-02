@@ -12,7 +12,11 @@ import { PRODUCTION_HOST } from "./hosts";
  * SMS_MODE             server   always                   live (production only) | log (elsewhere)
  * PUBLIC_BASE_URL      server   always (preview: or VERCEL_URL)
  *                                                        public; https origin, no port or path (http://localhost in development)
- * DATABASE_URL         server   production, preview      secret
+ * DATABASE_URL         server   production, preview      secret; the app's own connection: in production and preview
+ *                                                        it must connect as cvh_app_login.<project-ref> (never as postgres)
+ *                                                        through the transaction pooler (port 6543). Migrations are not
+ *                                                        run with it: they use PRODUCTION_DATABASE_URL, as postgres on the
+ *                                                        session pooler (port 5432)
  * SUPABASE_SECRET_KEY  server   production, preview      secret
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
  *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
