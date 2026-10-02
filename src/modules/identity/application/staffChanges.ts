@@ -113,11 +113,13 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
         }
 
         if (change.kind === "change_role") {
-          await store.setRole(tx, target.id, change.role);
           // S01.10: given the Admin or Coordinator role from a role without an authenticator, the
           // person enrols one at their next sign-in (any factor left from an earlier role is
           // removed then) before using the new role. Their sessions end below, with the change.
+          // The flag is cleared BEFORE the role changes, so the account is never an Admin or
+          // Coordinator with a stale factor_enrolled_at.
           if (needsAuthenticator(change.role) && !needsAuthenticator(target.role)) await store.clearFactorEnrolment(tx, target.id);
+          await store.setRole(tx, target.id, change.role);
           await audit.record(tx, {
             action: "account.role_changed",
             actorStaffId: actor.id,

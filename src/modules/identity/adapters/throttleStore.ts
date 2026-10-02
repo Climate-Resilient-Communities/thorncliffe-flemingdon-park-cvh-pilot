@@ -5,6 +5,19 @@ import { signInFailure, signInLock } from "./schema";
 // A fixed seed for the advisory locks of sign-in keys: the key's 64-bit hash under this seed.
 const THROTTLE_LOCK_SEED = 7_315_420_071;
 
+type Counter = Parameters<ThrottleStore["countFailures"]>;
+
+async function countIn(tx: Counter[0], keys: Counter[1], windowsStart: Counter[2]) {
+  const [counts] = await tx
+    .select({
+      username: sql<number>`count(*) filter (where ${signInFailure.usernameHash} = ${keys.usernameHash} and ${signInFailure.at} > ${windowsStart.username.toISOString()}::timestamptz)`.mapWith(Number),
+      client: sql<number>`count(*) filter (where ${signInFailure.clientHash} = ${keys.clientHash} and ${signInFailure.at} > ${windowsStart.client.toISOString()}::timestamptz)`.mapWith(Number),
+    })
+    .from(signInFailure)
+    .where(or(eq(signInFailure.usernameHash, keys.usernameHash), eq(signInFailure.clientHash, keys.clientHash)));
+  return { username: counts?.username ?? 0, client: counts?.client ?? 0 };
+}
+
 /** The failed-sign-in throttle's tables through Drizzle (S01.07). */
 export const drizzleThrottleStore: ThrottleStore = {
   async lockKeys(tx, keyHashes) {
@@ -24,15 +37,14 @@ export const drizzleThrottleStore: ThrottleStore = {
   },
 
   async recordFailure(tx, failure, windowsStart) {
-    await tx.insert(signInFailure).values(failure);
-    const [counts] = await tx
-      .select({
-        username: sql<number>`count(*) filter (where ${signInFailure.usernameHash} = ${failure.usernameHash} and ${signInFailure.at} > ${windowsStart.username.toISOString()}::timestamptz)`.mapWith(Number),
-        client: sql<number>`count(*) filter (where ${signInFailure.clientHash} = ${failure.clientHash} and ${signInFailure.at} > ${windowsStart.client.toISOString()}::timestamptz)`.mapWith(Number),
-      })
-      .from(signInFailure)
-      .where(or(eq(signInFailure.usernameHash, failure.usernameHash), eq(signInFailure.clientHash, failure.clientHash)));
-    return { username: counts?.username ?? 0, client: counts?.client ?? 0 };
+    const [stored] = await tx.insert(signInFailure).values(failure).returning({ id: signInFailure.id });
+    return { ...(await countIn(tx, failure, windowsStart)), id: stored!.id };
+  },
+
+  countFailures: (tx, keys, windowsStart) => countIn(tx, keys, windowsStart),
+
+  async removeFailure(tx, id) {
+    await tx.delete(signInFailure).where(eq(signInFailure.id, id));
   },
 
   async setLock(tx, kind, keyHash, until) {

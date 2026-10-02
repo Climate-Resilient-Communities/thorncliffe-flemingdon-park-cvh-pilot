@@ -259,7 +259,15 @@ export interface ThrottleStore {
     tx: DbTransaction,
     failure: { at: Date; usernameHash: string; clientHash: string },
     windowsStart: { username: Date; client: Date },
+  ): Promise<{ username: number; client: number; id: number }>;
+  /** The failures in each window (pending authenticator-code attempts included), without storing one. */
+  countFailures(
+    tx: DbTransaction,
+    keys: { usernameHash: string; clientHash: string },
+    windowsStart: { username: Date; client: Date },
   ): Promise<{ username: number; client: number }>;
+  /** Deletes one stored failure (a pending code attempt that turned out right). */
+  removeFailure(tx: DbTransaction, id: number): Promise<void>;
   /** Starts or extends a lock (never shortens one). */
   setLock(tx: DbTransaction, kind: ThrottleKind, keyHash: string, until: Date): Promise<void>;
   /** Deletes failures and ended locks older than `before`. */

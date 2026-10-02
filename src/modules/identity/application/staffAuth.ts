@@ -189,6 +189,39 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     return { ok: false, error: "sign_in_failed" };
   }
 
+  const windowsStartAt = (now: Date) => ({ username: new Date(now.getTime() - USERNAME_LIMIT.windowMs), client: new Date(now.getTime() - CLIENT_LIMIT.windowMs) });
+
+  /**
+   * Starts the username lock and the client block a failure count reaches (inside the transaction
+   * holding the keys' locks). When `startsAccountLock` and the count reaches the username limit, a
+   * known account's lock is an automatic lock: S01.06's recovery exception, then the lock, with
+   * `auth.locked` audited.
+   */
+  async function applyLimits(
+    tx: DbTransaction,
+    account: StaffAccount | null,
+    usernameHash: string,
+    clientHash: string,
+    inWindow: { username: number; client: number },
+    now: Date,
+    startsAccountLock: boolean,
+  ) {
+    const usernameLock = lockAfterFailure(inWindow.username, USERNAME_LIMIT, now);
+    const clientLock = lockAfterFailure(inWindow.client, CLIENT_LIMIT, now);
+    const recovery = startsAccountLock && usernameLock !== null && account ? await deps.beginAdminRecovery(tx, account.id) : null;
+    if (usernameLock) await throttle.setLock(tx, "username", usernameHash, usernameLock);
+    if (clientLock) await throttle.setLock(tx, "client", clientHash, clientLock);
+    if (recovery && account) {
+      await audit.record(tx, {
+        action: "auth.locked",
+        actorStaffId: SYSTEM_ACTOR,
+        subjectType: "staff_account",
+        subjectId: account.id,
+        meta: { lock: "failed_sign_in", ...adminShortfallMeta(recovery) },
+      });
+    }
+  }
+
   /**
    * A checked attempt failed: stores it, starts the username lock or the client block when this
    * failure reaches a limit, and audits `auth.failed` (and `auth.locked` when a known account's
@@ -199,27 +232,8 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     const counts = await db.transaction(async (tx) => {
       await throttle.lockKeys(tx, [usernameHash, clientHash]);
       await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
-      const inWindow = await throttle.recordFailure(
-        tx,
-        { at: now, usernameHash, clientHash },
-        { username: new Date(now.getTime() - USERNAME_LIMIT.windowMs), client: new Date(now.getTime() - CLIENT_LIMIT.windowMs) },
-      );
-      const usernameLock = lockAfterFailure(inWindow.username, USERNAME_LIMIT, now);
-      const clientLock = lockAfterFailure(inWindow.client, CLIENT_LIMIT, now);
-      // A known account's username lock is an automatic lock: S01.06's recovery exception, then the lock.
-      const startsAccountLock = usernameLock !== null && account !== null && inWindow.username === USERNAME_LIMIT.failures;
-      const recovery = startsAccountLock && account ? await deps.beginAdminRecovery(tx, account.id) : null;
-      if (usernameLock) await throttle.setLock(tx, "username", usernameHash, usernameLock);
-      if (clientLock) await throttle.setLock(tx, "client", clientHash, clientLock);
-      if (recovery && account) {
-        await audit.record(tx, {
-          action: "auth.locked",
-          actorStaffId: SYSTEM_ACTOR,
-          subjectType: "staff_account",
-          subjectId: account.id,
-          meta: { lock: "failed_sign_in", ...adminShortfallMeta(recovery) },
-        });
-      }
+      const inWindow = await throttle.recordFailure(tx, { at: now, usernameHash, clientHash }, windowsStartAt(now));
+      await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, inWindow.username === USERNAME_LIMIT.failures);
       return inWindow;
     });
     await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason, attempts: counts.username } });
@@ -693,18 +707,48 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const clientHash = keyed("client", input.client);
       if (await throttled(db, usernameHash, clientHash, now)) return refuse("code_locked", "throttled");
 
+      // Each code attempt is stored as a pending failure before the provider is asked, under the
+      // keys' locks, so attempts fired in parallel are counted too: at most USERNAME_LIMIT.failures
+      // reach the provider per window. The row is deleted when the code turns out right (or could
+      // not be checked) and stays, as the failure, when it is wrong.
+      const reserved = await db.transaction(async (tx) => {
+        await throttle.lockKeys(tx, [usernameHash, clientHash]);
+        if (await throttled(tx, usernameHash, clientHash, now)) return null;
+        const windows = windowsStartAt(now);
+        const prior = await throttle.countFailures(tx, { usernameHash, clientHash }, windows);
+        if (prior.username >= USERNAME_LIMIT.failures || prior.client >= CLIENT_LIMIT.failures) return null;
+        return (await throttle.recordFailure(tx, { at: now, usernameHash, clientHash }, windows)).id;
+      });
+      if (reserved === null) return refuse("code_locked", "throttled");
+      const release = () => db.transaction((tx) => throttle.removeFailure(tx, reserved));
+
       const checked = await sessions.verifyFactor({ code, factor: purpose });
       if (!checked.ok) {
         if (checked.error === "invalid_code") {
-          await recordFailure(account, usernameHash, clientHash, "wrong_code", now);
+          // The pending failure stays. The locks start here, once: with attempts in flight the count
+          // may already include the one that reaches the limit, so a lock in force is not started again.
+          const counts = await db.transaction(async (tx) => {
+            await throttle.lockKeys(tx, [usernameHash, clientHash]);
+            await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
+            const inWindow = await throttle.countFailures(tx, { usernameHash, clientHash }, windowsStartAt(now));
+            const usernameLocked = isLocked(await throttle.lockedUntil(tx, [{ kind: "username", keyHash: usernameHash }]), now);
+            await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, !usernameLocked);
+            return inWindow;
+          });
+          await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "wrong_code", attempts: counts.username } });
           return err("code_invalid");
         }
+        await release();
         if (checked.error === "no_factor") return refuse("not_required", "not_found");
         log.error("identity.code_not_checked", { staff_id: account.id });
         return refuse("provider_error", "provider_error");
       }
 
       const recorded = await db.transaction(async (tx) => {
+        // A lock that wrong codes started while this one was being checked still refuses it.
+        await throttle.lockKeys(tx, [usernameHash, clientHash]);
+        await throttle.removeFailure(tx, reserved);
+        if (await throttled(tx, usernameHash, clientHash, now)) return "locked" as const;
         const current = await store.lockAccount(tx, account.id);
         if (!current || current.status !== "active" || current.mustChangePassword || !needsAuthenticator(current.role)) return false;
         // Supabase keeps the session's id when it raises it; if it ever did not, the raised session
@@ -722,6 +766,10 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         await audit.record(tx, { action: "auth.signed_in", actorStaffId: current.id, subjectType: "staff_account", subjectId: current.id, meta: { aal: "aal2" } });
         return true;
       });
+      if (recorded === "locked") {
+        await sessions.signOut();
+        return refuse("code_locked", "throttled");
+      }
       if (!recorded) {
         // Suspended, revoked or given another role while the code was checked: the raised session is not kept.
         await sessions.signOut();
