@@ -2,15 +2,18 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import {
-  AUDIENCE_GROUPS,
   AudienceSchema,
   audienceRsns,
   canonicalAudience,
   matches,
   normaliseAudience,
+  profileFromDevice,
   type Audience,
   type AudienceProfile,
+  type DeviceAudienceChoices,
+  type DeviceBuildingList,
 } from "./audience";
+import { GROUPS } from "./groups";
 
 // ---- a small seeded generator: the same thousands of cases on every run, on every machine ----------------
 
@@ -50,7 +53,7 @@ const TYPES = ["power", "water", "fire", "heat", "other", "elevator"] as const;
 function randomAudience(next: Next): Audience {
   const types = some(next, TYPES, 0.3);
   if (types.length === 0) types.push(pick(next, TYPES));
-  const groups = some(next, AUDIENCE_GROUPS, 0.25);
+  const groups = some(next, GROUPS, 0.25);
   if (next() < 0.4) {
     const ids = some(next, NEIGHBOURHOODS, 0.5);
     if (ids.length === 0) ids.push(pick(next, NEIGHBOURHOODS));
@@ -71,9 +74,10 @@ function randomAudience(next: Next): Audience {
 function randomProfile(next: Next): AudienceProfile {
   const rsns = some(next, RSNS, 0.3);
   return {
-    neighbourhoodId: next() < 0.1 ? null : pick(next, NEIGHBOURHOODS),
+    // Empty is "not known" (a phone with no building saved): reached by the neighbourhood alerts of every neighbourhood.
+    neighbourhoodIds: next() < 0.15 ? [] : some(next, NEIGHBOURHOODS, 0.5).concat(pick(next, NEIGHBOURHOODS)),
     places: rsns.map((rsn) => ({ rsn, floors: next() < 0.4 ? [] : some(next, FLOORS.filter((id) => id.includes(rsn.padStart(8, "0"))), 0.4) })),
-    groups: some(next, AUDIENCE_GROUPS, 0.3),
+    groups: some(next, GROUPS, 0.3),
     mutedTopics: some(next, TYPES, 0.35),
   };
 }
@@ -88,10 +92,10 @@ function reference(audience: Audience, profile: AudienceProfile): boolean {
   const safety = audience.types.includes("fire");
   if (!safety && unmuted.length === 0) return false;
   // Groups.
-  const shared = AUDIENCE_GROUPS.filter((group) => audience.groups.includes(group) && profile.groups.includes(group));
+  const shared = GROUPS.filter((group) => audience.groups.includes(group) && profile.groups.includes(group));
   if (audience.groups.length > 0 && shared.length === 0) return false;
   // Place.
-  if (audience.scope === "neighbourhood") return NEIGHBOURHOODS.some((id) => id === profile.neighbourhoodId && audience.neighbourhood_ids.includes(id));
+  if (audience.scope === "neighbourhood") return profile.neighbourhoodIds.length === 0 || NEIGHBOURHOODS.some((id) => profile.neighbourhoodIds.includes(id) && audience.neighbourhood_ids.includes(id));
   const recorded = new Set(profile.places.flatMap((place) => (place.floors.length === 0 ? [`${place.rsn}:none`] : place.floors.map((floor) => `${place.rsn}:${floor}`))));
   return audience.buildings.some((building) => {
     if (building.floors === null) return profile.places.some((place) => place.rsn === building.rsn);
@@ -139,7 +143,7 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
       const audience = randomAudience(next);
       const profile = randomProfile(next);
       const reversed: AudienceProfile = {
-        neighbourhoodId: profile.neighbourhoodId,
+        neighbourhoodIds: [...profile.neighbourhoodIds, ...profile.neighbourhoodIds].reverse(),
         places: [...profile.places, ...profile.places].reverse().map((place) => ({ rsn: place.rsn, floors: [...place.floors, ...place.floors].reverse() })),
         groups: [...profile.groups, ...profile.groups].reverse(),
         mutedTopics: [...profile.mutedTopics, ...profile.mutedTopics].reverse(),
@@ -154,8 +158,9 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
     for (let i = 0; i < CASES; i += 1) {
       const audience = randomAudience(next);
       if (audience.scope !== "neighbourhood") continue;
-      const profile = { ...randomProfile(next), mutedTopics: [], groups: [...AUDIENCE_GROUPS] };
-      expect(matches(audience, profile), "lives there").toBe(profile.neighbourhoodId !== null && audience.neighbourhood_ids.includes(profile.neighbourhoodId));
+      const profile = { ...randomProfile(next), mutedTopics: [], groups: [...GROUPS] };
+      const reached = profile.neighbourhoodIds.length === 0 || profile.neighbourhoodIds.some((id) => audience.neighbourhood_ids.includes(id));
+      expect(matches(audience, profile), "lives there, or is not known to live anywhere").toBe(reached);
       // Places make no difference to a neighbourhood alert.
       expect(matches(audience, { ...profile, places: [] })).toBe(matches(audience, profile));
     }
@@ -170,10 +175,27 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
     }
   });
 
+  it("a phone with no building saved is reached by the neighbourhood alerts of every neighbourhood (AD-7, decided default)", () => {
+    const next = random(0x0a11);
+    for (let i = 0; i < CASES; i += 1) {
+      const audience = randomAudience(next);
+      if (audience.scope !== "neighbourhood") continue;
+      const profile: AudienceProfile = { neighbourhoodIds: [], places: [], groups: [...GROUPS], mutedTopics: [] };
+      expect(matches(audience, profile), JSON.stringify(audience)).toBe(true);
+    }
+    // ... but it is still a person: groups and muted topics apply as for anyone.
+    const only: Audience = { scope: "neighbourhood", neighbourhood_ids: ["FP"], groups: ["seniors"], types: ["power"] };
+    expect(matches(only, { neighbourhoodIds: [], places: [], groups: ["families"], mutedTopics: [] })).toBe(false);
+    expect(matches(only, { neighbourhoodIds: [], places: [], groups: ["seniors"], mutedTopics: ["power"] })).toBe(false);
+    // A person who does live somewhere is reached by their own neighbourhood's alerts only.
+    expect(matches({ ...only, groups: [] }, { neighbourhoodIds: ["TP"], places: [], groups: [], mutedTopics: [] })).toBe(false);
+    expect(matches({ ...only, groups: [] }, { neighbourhoodIds: ["TP", "FP"], places: [], groups: [], mutedTopics: [] })).toBe(true);
+  });
+
   it("a building audience matches that building: the whole building, or those floors, or a profile with no floor recorded there", () => {
     const [a, b] = ["4154146", "4154159"];
     const audience: Audience = { scope: "buildings", buildings: [{ rsn: a, floors: [floorId(a, 1), floorId(a, 2)] }, { rsn: b, floors: null }], groups: [], types: ["power"] };
-    const person = (places: AudienceProfile["places"]): AudienceProfile => ({ neighbourhoodId: "TP", places, groups: [], mutedTopics: [] });
+    const person = (places: AudienceProfile["places"]): AudienceProfile => ({ neighbourhoodIds: ["TP"], places, groups: [], mutedTopics: [] });
     expect(matches(audience, person([{ rsn: a, floors: [floorId(a, 2)] }]))).toBe(true);
     expect(matches(audience, person([{ rsn: a, floors: [floorId(a, 3)] }]))).toBe(false);
     expect(matches(audience, person([{ rsn: a, floors: [] }]))).toBe(true);
@@ -185,7 +207,7 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
 
   it("groups intersect: any one shared group is enough; none named means no narrowing", () => {
     const base = { scope: "neighbourhood" as const, neighbourhood_ids: ["TP"], types: ["power"] };
-    const person = (groups: string[]): AudienceProfile => ({ neighbourhoodId: "TP", places: [], groups, mutedTopics: [] });
+    const person = (groups: string[]): AudienceProfile => ({ neighbourhoodIds: ["TP"], places: [], groups, mutedTopics: [] });
     expect(matches({ ...base, groups: ["seniors", "families"] }, person(["families", "newcomers"]))).toBe(true);
     expect(matches({ ...base, groups: ["seniors"] }, person(["families"]))).toBe(false);
     expect(matches({ ...base, groups: ["seniors"] }, person([]))).toBe(false);
@@ -201,7 +223,7 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
       expect(typeof answer).toBe("boolean");
       if (answer) {
         // Adding places and groups can never remove a match (only muting a topic does).
-        const wider = { ...profile, places: [...profile.places, { rsn: pick(next, RSNS), floors: [] }], groups: [...AUDIENCE_GROUPS] };
+        const wider = { ...profile, places: [...profile.places, { rsn: pick(next, RSNS), floors: [] }], groups: [...GROUPS] };
         expect(matches(audience, wider)).toBe(true);
       }
     }
@@ -228,6 +250,110 @@ describe("matches: the AD-7 rules, over thousands of generated audiences and pro
           expect(matches(audience, muteFirst)).toBe(matches(audience, unmuted));
         } else expect(matches(audience, muteFirst)).toBe(false);
       }
+    }
+  });
+});
+
+// ---- profileFromDevice: the phone's saved choices and building list become the profile -------------------
+
+/** A building list shaped like S02.03's (`BuildingList`): every building has a neighbourhood and its floors. */
+const BUILDING_LIST: DeviceBuildingList = {
+  buildings: RSNS.map((rsn, index) => ({
+    rsn,
+    neighbourhoodId: index % 2 === 0 ? "TP" : "FP",
+    floors: [0, 1, 2, 3].map((n) => ({ id: floorId(rsn, n) })),
+  })),
+};
+const neighbourhoodOf = (rsn: string) => BUILDING_LIST.buildings.find((building) => building.rsn === rsn)!.neighbourhoodId;
+
+/** Saved choices as the phone could hold them: any buildings, floors of those buildings and of others, groups, muted topics. */
+function randomChoices(next: Next): DeviceAudienceChoices {
+  const buildings = some(next, RSNS, 0.35);
+  const floors = some(next, FLOORS, 0.3);
+  return { buildings, floors, groups: some(next, GROUPS, 0.4), mutedTopics: some(next, TYPES, 0.3) };
+}
+
+describe("profileFromDevice: what the phone's choices say about its owner", () => {
+  it("groups the saved floors under their building, and a building with no floor chosen gets []", () => {
+    const [a, b, c] = ["4154146", "4154159", "4154169"];
+    const profile = profileFromDevice({ buildings: [a, b, c], floors: [floorId(a, 2), floorId(a, 1), floorId(b, 3)], groups: ["families"] }, BUILDING_LIST);
+    expect(profile.places).toEqual([
+      { rsn: a, floors: [floorId(a, 1), floorId(a, 2)] },
+      { rsn: b, floors: [floorId(b, 3)] },
+      { rsn: c, floors: [] },
+    ]);
+    expect(profile.groups).toEqual(["families"]);
+    expect(profile.mutedTopics).toEqual([]);
+  });
+
+  it("derives the neighbourhoods from the saved buildings, sorted and without repeats", () => {
+    const [a, b, c] = ["4154146", "4154159", "4154169"];
+    expect([neighbourhoodOf(a), neighbourhoodOf(b), neighbourhoodOf(c)]).toEqual(["TP", "FP", "TP"]);
+    expect(profileFromDevice({ buildings: [a, c] }, BUILDING_LIST).neighbourhoodIds).toEqual(["TP"]);
+    expect(profileFromDevice({ buildings: [c, b, a] }, BUILDING_LIST).neighbourhoodIds).toEqual(["FP", "TP"]);
+    // A saved building the list no longer has is still a place (the matcher names it by rsn) but tells nothing about the neighbourhood.
+    expect(profileFromDevice({ buildings: ["999"] }, BUILDING_LIST)).toMatchObject({ neighbourhoodIds: [], places: [{ rsn: "999", floors: [] }] });
+  });
+
+  it("a phone with no building saved has no place and no neighbourhood; floors saved without their building are not used", () => {
+    expect(profileFromDevice({}, BUILDING_LIST)).toEqual({ neighbourhoodIds: [], places: [], groups: [], mutedTopics: [] });
+    const orphan = profileFromDevice({ floors: [floorId("4154146", 1)], groups: ["seniors"] }, BUILDING_LIST);
+    expect(orphan).toEqual({ neighbourhoodIds: [], places: [], groups: ["seniors"], mutedTopics: [] });
+  });
+
+  it("agrees with a statement of it made from sets, for thousands of generated choices", () => {
+    const next = random(0xde71ce);
+    for (let i = 0; i < CASES; i += 1) {
+      const choices = randomChoices(next);
+      const profile = profileFromDevice(choices, BUILDING_LIST);
+      const saved = new Set(choices.buildings);
+      expect(profile.places.map((place) => place.rsn)).toEqual([...saved].sort());
+      for (const place of profile.places) {
+        const own = BUILDING_LIST.buildings.find((building) => building.rsn === place.rsn)!.floors.map((floor) => floor.id);
+        expect(place.floors, `floors of ${place.rsn}`).toEqual(own.filter((id) => choices.floors!.includes(id)).sort());
+      }
+      expect(profile.neighbourhoodIds).toEqual([...new Set([...saved].map(neighbourhoodOf))].sort());
+      // Nothing outside the saved buildings is ever a place or a floor.
+      const placed = new Set(profile.places.flatMap((place) => place.floors));
+      for (const id of placed) expect(choices.floors).toContain(id);
+    }
+  });
+
+  it("is pure and does not depend on the order or repeats of the saved lists", () => {
+    const next = random(0xfeed);
+    const freeze = <T,>(value: T): T => {
+      if (value && typeof value === "object") Object.values(value).forEach(freeze);
+      return Object.freeze(value);
+    };
+    const list = freeze(structuredClone(BUILDING_LIST));
+    for (let i = 0; i < 1500; i += 1) {
+      const choices = freeze(randomChoices(next));
+      const again: DeviceAudienceChoices = {
+        buildings: [...choices.buildings!, ...choices.buildings!].reverse(),
+        floors: [...choices.floors!].reverse(),
+        groups: [...choices.groups!, ...choices.groups!],
+        mutedTopics: [...choices.mutedTopics!].reverse(),
+      };
+      expect(profileFromDevice(again, list)).toEqual(profileFromDevice(choices, list));
+    }
+  });
+
+  it("decides the same as the matcher would from the sets: alerts reach a phone by its saved buildings, floors, groups and muted topics", () => {
+    const next = random(0x0badf00d);
+    for (let i = 0; i < CASES; i += 1) {
+      const audience = randomAudience(next);
+      const choices = randomChoices(next);
+      const saved = new Set(choices.buildings);
+      const floorsSaved = (rsn: string) => BUILDING_LIST.buildings.find((b) => b.rsn === rsn)!.floors.map((f) => f.id).filter((id) => choices.floors!.includes(id));
+      const unmuted = audience.types.some((type) => type === "fire") || audience.types.some((type) => !choices.mutedTopics!.includes(type));
+      const grouped = audience.groups.length === 0 || audience.groups.some((group) => choices.groups!.includes(group));
+      let place: boolean;
+      if (audience.scope === "neighbourhood") place = saved.size === 0 || [...saved].some((rsn) => audience.neighbourhood_ids.includes(neighbourhoodOf(rsn)));
+      else
+        place = audience.buildings.some(
+          (wanted) => saved.has(wanted.rsn) && (wanted.floors === null || floorsSaved(wanted.rsn).length === 0 || floorsSaved(wanted.rsn).some((id) => wanted.floors!.includes(id))),
+        );
+      expect(matches(audience, profileFromDevice(choices, BUILDING_LIST)), JSON.stringify({ audience, choices })).toBe(unmuted && grouped && place);
     }
   });
 });
@@ -295,10 +421,10 @@ describe("the Audience value: one stored form", () => {
 describe("one matcher, no copy", () => {
   const SRC = path.join(__dirname, "..");
 
-  it("the contract imports nothing but zod, so the server and the phone can both load it unchanged", () => {
+  it("the contract imports nothing but zod and the contract files beside it, so the server and the phone can both load it unchanged", () => {
     const source = readFileSync(path.join(__dirname, "audience.ts"), "utf8");
     const imports = [...source.matchAll(/^import .* from "([^"]+)"/gm)].map((match) => match[1]);
-    expect(imports).toEqual(["zod"]);
+    expect(imports).toEqual(["zod", "./groups", "./places"]);
     expect(source).not.toMatch(/\b(Date|Math\.random|fetch|process|localStorage|window)\b/);
   });
 

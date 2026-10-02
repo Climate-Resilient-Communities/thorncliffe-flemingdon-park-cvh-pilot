@@ -1,7 +1,8 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState, useReducer, useState } from "react";
 import { Inline, Stack } from "@/ui";
+import { floorControlsEnabled, initialRow, rowReducer } from "./buildingRowState";
 import type { AudienceState } from "./editAudience";
 import type { BuildingRowView, GroupsScreen, PlaceScreen } from "./view";
 
@@ -29,109 +30,92 @@ function toggled(values: ReadonlySet<string>, value: string, on: boolean): Set<s
 
 /**
  * One building of the picker: ticked or not, and when ticked the whole building or some floors (ticked, or a range from
- * one floor to another in the building's own order). Every control is controlled by this row's state, so a refusal that
- * resets the form (React 19 resets a form after its action) leaves the choices as they were. The floor controls are
- * always in the page, inside a <details> that is open for a ticked building, so they work before the page is hydrated.
+ * one floor to another in the building's own order). Every control is controlled by this row's state (buildingRowState.ts),
+ * so a refusal that resets the form (React 19 resets a form after its action) leaves the choices as they were.
+ *
+ * What is shown follows the controls themselves, in CSS (hub-forms.css, `:has()` on the building's checkbox and on the
+ * "Some floors" radio), so it works before the page is hydrated and without scripts: an unticked building shows its
+ * checkbox and nothing else; a ticked one adds the choice between the whole building and some floors; the floors and the
+ * range appear only for "Some floors". The floor controls are also disabled whenever they are hidden, so a floor ticked
+ * and then hidden (the whole building chosen, the building unticked) is not sent.
  */
 function BuildingRow({ row, labels }: { row: BuildingRowView; labels: PlaceScreen["floorLabels"] }) {
-  const [checked, setChecked] = useState(row.checked);
-  const [whole, setWhole] = useState(row.whole || row.floors.length === 0);
-  const [floors, setFloors] = useState<ReadonlySet<string>>(new Set(row.floors.filter((floor) => floor.checked).map((floor) => floor.id)));
-  const [from, setFrom] = useState("");
-  const [to, setTo] = useState("");
+  const [state, dispatch] = useReducer(rowReducer, row, initialRow);
+  const enabled = floorControlsEnabled(state);
   const name = (field: string) => `${field}-${row.rsn}`;
   return (
-    <li className="hub-list-item" data-testid={`building-${row.rsn}`}>
+    <li className="hub-list-item hub-building" data-testid={`building-${row.rsn}`}>
       <Stack gap="related">
         <label className="hub-choice">
-          <input type="checkbox" name="building" value={row.rsn} checked={checked} onChange={(event) => setChecked(event.target.checked)} /> {row.address}
+          <input type="checkbox" className="hub-building-tick" name="building" value={row.rsn} checked={state.checked} onChange={(event) => dispatch({ type: "building", checked: event.target.checked })} /> {row.address}
         </label>
-        <details open={checked || undefined}>
-          <summary className="tap hub-link">{labels.some}</summary>
+        <div className="hub-building-scope">
           <Stack gap="related">
             <fieldset>
               <Stack gap="target">
                 <legend>{row.floorsLegend}</legend>
                 <label className="hub-choice">
-                  <input type="radio" name={name("floors")} value="all" checked={whole} onChange={() => setWhole(true)} /> {labels.whole}
+                  <input type="radio" name={name("floors")} value="all" checked={state.whole} onChange={() => dispatch({ type: "whole" })} /> {labels.whole}
                 </label>
                 <label className="hub-choice">
-                  <input type="radio" name={name("floors")} value="some" checked={!whole} disabled={row.floors.length === 0} onChange={() => setWhole(false)} /> {labels.some}
+                  <input type="radio" className="hub-building-some" name={name("floors")} value="some" checked={!state.whole} disabled={row.floors.length === 0} onChange={() => dispatch({ type: "some" })} /> {labels.some}
                 </label>
                 {row.noFloors && <p>{row.noFloors}</p>}
               </Stack>
             </fieldset>
             {row.floors.length > 0 && (
-              <>
-                <fieldset>
-                  <Stack gap="label">
-                    <legend>{labels.pick}</legend>
-                    <Inline gap="target" wrap>
-                      {row.floors.map((floor) => (
-                        <label key={floor.id} className="hub-choice">
-                          <input
-                            type="checkbox"
-                            name={name("floor")}
-                            value={floor.id}
-                            checked={floors.has(floor.id)}
-                            onChange={(event) => {
-                              setFloors(toggled(floors, floor.id, event.target.checked));
-                              if (event.target.checked) setWhole(false);
-                            }}
-                          />{" "}
-                          {floor.label}
-                        </label>
-                      ))}
-                    </Inline>
-                  </Stack>
-                </fieldset>
-                <fieldset>
-                  <Stack gap="label">
-                    <legend>{labels.range}</legend>
-                    <Inline gap="related" align="center" wrap>
-                      <label htmlFor={`from-${row.rsn}`}>{labels.from}</label>
-                      <select
-                        className="hub-input"
-                        id={`from-${row.rsn}`}
-                        name={name("from")}
-                        value={from}
-                        onChange={(event) => {
-                          setFrom(event.target.value);
-                          if (event.target.value !== "") setWhole(false);
-                        }}
-                      >
-                        <option value="">{labels.none}</option>
+              <div className="hub-building-floors">
+                <Stack gap="related">
+                  <fieldset>
+                    <Stack gap="label">
+                      <legend>{labels.pick}</legend>
+                      <Inline gap="target" wrap>
                         {row.floors.map((floor) => (
-                          <option key={floor.id} value={floor.id}>
+                          <label key={floor.id} className="hub-choice">
+                            <input
+                              type="checkbox"
+                              name={name("floor")}
+                              value={floor.id}
+                              checked={state.floors.has(floor.id)}
+                              disabled={!enabled}
+                              onChange={(event) => dispatch({ type: "floor", id: floor.id, checked: event.target.checked })}
+                            />{" "}
                             {floor.label}
-                          </option>
+                          </label>
                         ))}
-                      </select>
-                      <label htmlFor={`to-${row.rsn}`}>{labels.to}</label>
-                      <select
-                        className="hub-input"
-                        id={`to-${row.rsn}`}
-                        name={name("to")}
-                        value={to}
-                        onChange={(event) => {
-                          setTo(event.target.value);
-                          if (event.target.value !== "") setWhole(false);
-                        }}
-                      >
-                        <option value="">{labels.none}</option>
-                        {row.floors.map((floor) => (
-                          <option key={floor.id} value={floor.id}>
-                            {floor.label}
-                          </option>
-                        ))}
-                      </select>
-                    </Inline>
-                  </Stack>
-                </fieldset>
-              </>
+                      </Inline>
+                    </Stack>
+                  </fieldset>
+                  <fieldset>
+                    <Stack gap="label">
+                      <legend>{labels.range}</legend>
+                      <Inline gap="related" align="center" wrap>
+                        <label htmlFor={`from-${row.rsn}`}>{labels.from}</label>
+                        <select className="hub-input" id={`from-${row.rsn}`} name={name("from")} value={state.from} disabled={!enabled} onChange={(event) => dispatch({ type: "from", value: event.target.value })}>
+                          <option value="">{labels.none}</option>
+                          {row.floors.map((floor) => (
+                            <option key={floor.id} value={floor.id}>
+                              {floor.label}
+                            </option>
+                          ))}
+                        </select>
+                        <label htmlFor={`to-${row.rsn}`}>{labels.to}</label>
+                        <select className="hub-input" id={`to-${row.rsn}`} name={name("to")} value={state.to} disabled={!enabled} onChange={(event) => dispatch({ type: "to", value: event.target.value })}>
+                          <option value="">{labels.none}</option>
+                          {row.floors.map((floor) => (
+                            <option key={floor.id} value={floor.id}>
+                              {floor.label}
+                            </option>
+                          ))}
+                        </select>
+                      </Inline>
+                    </Stack>
+                  </fieldset>
+                </Stack>
+              </div>
             )}
           </Stack>
-        </details>
+        </div>
       </Stack>
     </li>
   );

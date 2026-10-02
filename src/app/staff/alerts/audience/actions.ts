@@ -6,6 +6,11 @@ import { alerting } from "../../alerts";
 import { staffAction, type ActionRefusal } from "../../guard";
 import { saveGroupsFromForm, savePlaceFromForm, type AudienceState } from "./editAudience";
 
+// TODO(E08): this guard is `alert.author_wide`, so an Ambassador is refused here even for a draft of their own for a
+// building they are assigned to (`alert.author`, which the use case does judge). E08 (the Ambassador's alerts) decides
+// whether they pick the floors and groups of their own building drafts, and then guards these two actions by the scope
+// of the draft (`alert.author` for buildings, `alert.author_wide` for a neighbourhood) instead of one action for both.
+//
 // Choosing who an alert is for is the policy action `alert.author_wide` (S01.12, AD-4): the picker offers a whole
 // neighbourhood, which only a Coordinator or an Admin may author, so the guard refuses any other role (an
 // Ambassador, a Director) before the action's own code, whatever the screen showed. It is not a privileged

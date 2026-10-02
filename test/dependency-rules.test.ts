@@ -118,6 +118,18 @@ describe("dependency rules", () => {
     expect(violations).toHaveLength(2);
   });
 
+  it("reject the audience matcher importing anything but zod and the contract files beside it", async () => {
+    const { violations } = await check("deps-matcher-contract");
+
+    expect(violations).toEqual([
+      {
+        rule: "matcher-contract-is-pure",
+        from: at("deps-matcher-contract", "contracts/audience.ts"),
+        to: at("deps-matcher-contract", "platform/clock.ts"),
+      },
+    ]);
+  });
+
   it("allow exactly the module edges in the diagram", async () => {
     const { modules, dependencies } = readModuleGraph();
     const pairs = [APP_NODE, ...modules].flatMap((from) =>

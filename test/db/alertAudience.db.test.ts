@@ -300,6 +300,74 @@ describe("heat, smoke and winter storm, and who may author what (the policy chec
   });
 });
 
+describe("re-aiming a draft is authoring it, for the draft as it is and as it will be", () => {
+  const assigned = async (rsn = RSN) => {
+    const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
+    expect(await assignments.assign(admin.id, { staffId: ambassador.id, rsn, floorIds: null })).toMatchObject({ ok: true });
+  };
+
+  it("an Ambassador cannot take over a Coordinator's draft by aiming it at their own building", async () => {
+    await assigned();
+    // A Coordinator's neighbourhood draft, which an Ambassador may not author, and one for a building they are not assigned to.
+    const wide = await newDraft(coordinator, { audience: { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] } });
+    const elsewhere = await newDraft(coordinator, { audience: wholeBuilding(OTHER_RSN) });
+    const own = { scope: "buildings" as const, buildings: [{ rsn: RSN, floors: null }] };
+
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), wide, own)).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), elsewhere, own)).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    // The same through a plain save of the draft's content.
+    expect(await alerting.saveDraft(actorOf(ambassador), wide, content({ audience: wholeBuilding() }))).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(await alerting.saveDraft(actorOf(ambassador), elsewhere, content({ audience: wholeBuilding() }))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+
+    // Nothing changed, and the Ambassador is not an editor of either.
+    expect(((await storedAudience(wide.entryId)) as Audience).scope).toBe("neighbourhood");
+    expect(await storedAudience(elsewhere.entryId)).toEqual(wholeBuilding(OTHER_RSN));
+    expect((await alerting.getEntry(wide))?.editorIds).toEqual([coordinator.id]);
+    expect((await alerting.getEntry(elsewhere))?.editorIds).toEqual([coordinator.id]);
+  });
+
+  it("an Ambassador can still aim their own draft at another building they are assigned to", async () => {
+    await assigned();
+    await assigned(OTHER_RSN);
+    const ref = await newDraft(ambassador);
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), ref, { scope: "buildings", buildings: [{ rsn: OTHER_RSN, floors: null }] })).toMatchObject({ ok: true });
+    expect(await storedAudience(ref.entryId)).toEqual(wholeBuilding(OTHER_RSN));
+  });
+
+  it("the role and the policy are asked before any place is looked up: no one learns from a refusal which buildings exist", async () => {
+    await assigned();
+    const draft = await newDraft(coordinator);
+    const own = await newDraft(ambassador);
+    const nowhere = { scope: "buildings" as const, buildings: [{ rsn: "700999999", floors: null }] };
+    const wrongFloor = { scope: "buildings" as const, buildings: [{ rsn: OTHER_RSN, floors: { ids: [randomUUID()], ranges: [] } }] };
+
+    // A Director never authors: not allowed, not "no such building".
+    expect(await alerting.chooseAudiencePlace(actorOf(director), draft, nowhere)).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    expect(await alerting.chooseAudiencePlace(actorOf(director), draft, { scope: "neighbourhood", neighbourhoodIds: ["ZZ"] })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    // An Ambassador asks for a building that is not theirs, existing or not, with or without a bad floor: out of scope in every case.
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), own, nowhere)).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), own, wrongFloor)).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(await alerting.chooseAudiencePlace(actorOf(ambassador), own, { scope: "neighbourhood", neighbourhoodIds: ["ZZ"] })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    // Someone who may author it still hears about the place.
+    expect(await alerting.chooseAudiencePlace(actorOf(coordinator), draft, nowhere)).toEqual({ ok: false, error: "BUILDING_NOT_FOUND" });
+  });
+});
+
+describe("a draft that was approved", () => {
+  it("is no draft any more: neither its place nor its groups can be chosen, and nothing changes", async () => {
+    const ref = await newDraft(coordinator);
+    expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
+    expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { status: "approved" } });
+    const approved = await storedAudience(ref.entryId);
+
+    expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "neighbourhood", neighbourhoodIds: ["FP"] })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
+    expect(await alerting.chooseAudiencePlace(actorOf(secondCoordinator), ref, { scope: "buildings", buildings: [{ rsn: OTHER_RSN, floors: null }] })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
+    expect(await alerting.chooseAudienceGroups(actorOf(coordinator), ref, ["seniors"])).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
+    expect(await storedAudience(ref.entryId)).toEqual(approved);
+    expect((await alerting.getEntry(ref))?.status).toBe("approved");
+  });
+});
+
 describe("a floor removed after it was chosen", () => {
   it("is caught at submit: the draft names a floor that is no longer there", async () => {
     const ref = await newDraft();
@@ -310,6 +378,51 @@ describe("a floor removed after it was chosen", () => {
       expect((await alerting.getEntry(ref))?.status).toBe("draft");
     } finally {
       await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOOR("7")}, ${RSN}, '7', 7, true)`;
+    }
+  });
+
+  it("is caught at approval too: a floor removed while the entry waited is not a floor to text", async () => {
+    const ref = await newDraft();
+    expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "buildings", buildings: [{ rsn: RSN, floors: { ids: [FLOOR("7")], ranges: [] } }] })).toMatchObject({ ok: true });
+    expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
+    await owner`delete from building_floor where id = ${FLOOR("7")}`;
+    try {
+      expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "FLOOR_NOT_IN_BUILDING" });
+      expect((await alerting.getEntry(ref))?.status).toBe("pending_approval");
+    } finally {
+      await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOOR("7")}, ${RSN}, '7', 7, true)`;
+    }
+  });
+
+  it("waits for a floor edit in progress on the building (its row is locked FOR SHARE), then sees the floor gone", async () => {
+    const ref = await newDraft();
+    const floors = { scope: "buildings" as const, buildings: [{ rsn: RSN, floors: { ids: [FLOOR("8")], ranges: [] } }] };
+    expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, floors)).toMatchObject({ ok: true });
+
+    // A floor edit under way: it holds the building's row FOR UPDATE (the lock every floor edit takes) and will remove floor 8.
+    let editing!: () => void;
+    const locked = new Promise<void>((resolve) => (editing = resolve));
+    let finish!: () => void;
+    const gate = new Promise<void>((resolve) => (finish = resolve));
+    const edit = owner.begin(async (tx) => {
+      await tx`select rsn from building where rsn = ${RSN} for update`;
+      editing();
+      await gate;
+      await tx`delete from building_floor where id = ${FLOOR("8")}`;
+    });
+    try {
+      await locked;
+      let settled = false;
+      const saving = alerting.chooseAudiencePlace(actorOf(coordinator), ref, floors).finally(() => (settled = true));
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(settled, "the save waits for the floor edit instead of reading the floors around it").toBe(false);
+      finish();
+      await edit;
+      expect(await saving).toEqual({ ok: false, error: "FLOOR_NOT_IN_BUILDING" });
+    } finally {
+      finish();
+      await edit.catch(() => {});
+      await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOOR("8")}, ${RSN}, '8', 8, true) on conflict do nothing`;
     }
   });
 });
@@ -330,5 +443,31 @@ describe("the database's own check of the audience's shape", () => {
     await expect(attempt({ scope: "buildings", buildings: [], groups: [], types: ["power"] })).rejects.toThrow(/alert_entry_audience_shape/);
     await expect(attempt({ scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: [] })).rejects.toThrow(/alert_entry_audience_shape/);
     await expect(attempt({ scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: ["power"] })).resolves.toBeDefined();
+  });
+
+  it("refuses an audience whose types are not the entry's own types, either way round", async () => {
+    const ref = await newDraft();
+    const attempt = (audience: unknown) => withActor(coordinator.id, (tx) => tx`update alert_entry set audience = ${tx.json(audience as never)} where id = ${ref.entryId}`);
+    const building = { scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [] };
+    // The entry's types are ["power"].
+    await expect(attempt({ ...building, types: ["water"] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ ...building, types: ["power", "water"] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ ...building, types: ["power"] })).resolves.toBeDefined();
+  });
+
+  it("refuses a floors list that is empty or holds anything but strings, and ids and groups that are not strings", async () => {
+    const ref = await newDraft();
+    const attempt = (audience: unknown) => withActor(coordinator.id, (tx) => tx`update alert_entry set audience = ${tx.json(audience as never)} where id = ${ref.entryId}`);
+    const buildings = (floors: unknown, extra: object = {}) => ({ scope: "buildings", buildings: [{ rsn: RSN, ...extra, floors }], groups: [], types: ["power"] });
+    await expect(attempt(buildings([]))).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt(buildings([1]))).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt(buildings([FLOOR("1"), null]))).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt(buildings(FLOOR("1")))).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ scope: "buildings", buildings: [{ rsn: RSN }], groups: [], types: ["power"] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ ...buildings(null), groups: [1] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ scope: "neighbourhood", neighbourhood_ids: [7], groups: [], types: ["power"] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt({ scope: "neighbourhood", neighbourhood_ids: ["TP", 7], groups: [], types: ["power"] })).rejects.toThrow(/alert_entry_audience_shape/);
+    await expect(attempt(buildings([FLOOR("1"), FLOOR("2")]))).resolves.toBeDefined();
+    await expect(attempt(buildings(null))).resolves.toBeDefined();
   });
 });

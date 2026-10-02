@@ -1,3 +1,4 @@
+import { RsnSchema } from "@/contracts/places";
 import { englishText } from "@/i18n/text";
 import type { AlertLifecycle, AlertRefusal, BuildingChoice, PlaceChoice } from "@/modules/alerting";
 import type { StaffSession } from "../../session";
@@ -55,7 +56,6 @@ const text = (form: FormData, name: string) => {
 };
 const texts = (form: FormData, name: string) => form.getAll(name).filter((value): value is string => typeof value === "string" && value !== "");
 
-const RSN = /^[0-9]{1,9}$/;
 
 /** Where a saved choice lands: the next page, with what was done in the query (read back by ./view.ts). */
 export function savedLocation(page: "place" | "groups", ref: DraftRef): string {
@@ -73,7 +73,7 @@ export function placeChoiceFromForm(form: FormData): { ok: true; choice: PlaceCh
   const scope = text(form, "scope");
   if (scope !== "neighbourhood" && scope !== "buildings") return { ok: false, state: refused("chooseScope") };
   const neighbourhoods = [...new Set(texts(form, "neighbourhood"))];
-  const buildings = [...new Set(texts(form, "building"))].filter((rsn) => RSN.test(rsn));
+  const buildings = [...new Set(texts(form, "building"))].filter((rsn) => RsnSchema.safeParse(rsn).success);
   if (scope === "neighbourhood") {
     if (buildings.length > 0) return { ok: false, state: refused("bothScopes") };
     return { ok: true, choice: { scope, neighbourhoodIds: neighbourhoods } };

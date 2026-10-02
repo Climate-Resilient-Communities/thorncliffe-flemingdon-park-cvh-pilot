@@ -6,10 +6,8 @@
 // Floors are named by their stable floor id (`building_floor.id`), never by label or number: renaming or
 // reordering a floor must not change who an alert reaches. (Pending owner decision 28; AD-7 says floor ids.)
 import { z } from "zod";
-
-/** The groups a resident can choose (R-26, `groups.<id>` in the string catalog) and a Coordinator can aim at. */
-export const AUDIENCE_GROUPS = ["seniors", "newcomers", "families", "checkin"] as const;
-export type AudienceGroup = (typeof AUDIENCE_GROUPS)[number];
+import { GroupSchema, type Group } from "./groups";
+import { FloorIdSchema, RsnSchema } from "./places";
 
 /**
  * Types of disruption whose alerts ignore topic opt-outs: fire and evacuation (`disruption_type` id `fire`,
@@ -18,15 +16,10 @@ export type AudienceGroup = (typeof AUDIENCE_GROUPS)[number];
 export const SAFETY_OVERRIDE_TYPES: readonly string[] = ["fire"];
 
 const NEIGHBOURHOOD_ID = /^[A-Z]{2,6}$/;
-const RSN = /^[0-9]{1,9}$/;
-const FLOOR_ID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 const TYPE_ID = /^[a-z][a-z_]{1,19}$/;
 
 const NeighbourhoodIdSchema = z.string().regex(NEIGHBOURHOOD_ID);
-const RsnSchema = z.string().regex(RSN);
-const FloorIdSchema = z.string().regex(FLOOR_ID);
 const TypeIdSchema = z.string().regex(TYPE_ID);
-const GroupSchema = z.enum(AUDIENCE_GROUPS);
 
 /** A building of the audience, by `rsn`: `floors` is null for the whole building, else its floor ids. */
 const AudienceBuildingSchema = z.strictObject({
@@ -59,7 +52,7 @@ const sortedUnique = (values: readonly string[]) => [...new Set(values)].sort(by
  * Does not check that the value is an Audience; parse first.
  */
 export function normaliseAudience(audience: Audience): Audience {
-  const groups = sortedUnique(audience.groups) as AudienceGroup[];
+  const groups = sortedUnique(audience.groups) as Group[];
   const types = sortedUnique(audience.types);
   if (audience.scope === "neighbourhood") {
     return { scope: "neighbourhood", neighbourhood_ids: sortedUnique(audience.neighbourhood_ids), groups, types };
@@ -95,10 +88,24 @@ export function audienceRsns(audience: Audience): string[] {
 /**
  * What the matcher needs to know about one person, however it was learned: a subscriber row (SMS), the
  * device's choices (the phone), or a test. Nothing else about a person is ever used.
+ *
+ * Where each source gets it from:
+ *  - the phone: `profileFromDevice` below, from the saved choices and the building list;
+ *  - SMS (S07.07): a subscriber has one `subscriber.neighbourhood_id` and any number of `subscriber_place` rows, each
+ *    a building (`rsn`) with at most one floor (`floor_id`, null when no floor was recorded). The query that selects
+ *    recipients gives `neighbourhoodIds = [subscriber.neighbourhood_id]`, and `places` holds one entry per distinct
+ *    `rsn` of the subscriber's rows, with `floors` the `floor_id`s of those rows that are not null (so a building whose
+ *    rows all have a null floor is `{ rsn, floors: [] }`, "no floor recorded there"). Its SQL must equal `matches`
+ *    (the property test of AD-7); that is why `neighbourhoodIds` is a list and an empty one means "not known".
  */
 export interface AudienceProfile {
-  /** The neighbourhood they live in (required to subscribe; the phone derives it from a chosen building). Null when not known. */
-  neighbourhoodId: string | null;
+  /**
+   * The neighbourhoods they live in: those of the buildings they recorded (the phone derives them from the building list),
+   * or the one they gave when subscribing (SMS). EMPTY means unknown, and a person whose neighbourhood is unknown is
+   * reached by the neighbourhood alerts of every neighbourhood: a phone that has saved no building still shows an alert
+   * for the whole of Thorncliffe Park or Flemingdon Park, and hiding it would hide a warning for the want of a choice.
+   */
+  neighbourhoodIds: readonly string[];
   /**
    * The buildings they recorded, each with the floors they recorded in it (floor ids). A building with no
    * floors listed means no floor recorded there. Empty means no building recorded.
@@ -112,14 +119,15 @@ export interface AudienceProfile {
 
 /**
  * Whether an alert with this audience is for this person (AD-7). Every rule applies together:
- *  - topics: when every type of the alert is a topic the person muted, no, unless one of the types is a
- *    fire or evacuation (`SAFETY_OVERRIDE_TYPES`), which nobody can mute. An alert on several types still
- *    reaches someone who muted only some of them;
+ *  - topics: the alert is not for a person who muted every one of its types (a muted topic suppresses only when every
+ *    type of the alert is muted), unless one of the types is fire or evacuation (`SAFETY_OVERRIDE_TYPES`), which
+ *    nobody can mute: fire is never suppressed. An alert on several types still reaches someone who muted only some;
  *  - groups: when the audience names groups, the person must have chosen at least one of them; when it
  *    names none, groups play no part;
- *  - place: a neighbourhood audience is for everyone living there; a buildings audience is for a person who
- *    recorded one of its buildings and, when it lists floors in that building, one of those floors or no
- *    floor in it. A person with no building recorded is therefore reached by neighbourhood alerts only.
+ *  - place: a neighbourhood audience is for everyone living in one of its neighbourhoods, and for a person whose
+ *    neighbourhood is not known (no building saved: `neighbourhoodIds` is empty); a buildings audience is for a person
+ *    who recorded one of its buildings and, when it lists floors in that building, one of those floors or no floor in it.
+ *    A person with no building recorded is therefore reached by neighbourhood alerts only (of every neighbourhood).
  *    Several places that match are one match: the answer is a single yes or no.
  * Pure: the arguments are read, never changed.
  */
@@ -127,13 +135,51 @@ export function matches(audience: Audience, profile: AudienceProfile): boolean {
   if (mutedEverything(audience.types, profile.mutedTopics)) return false;
   if (audience.groups.length > 0 && !audience.groups.some((group) => profile.groups.includes(group))) return false;
   if (audience.scope === "neighbourhood") {
-    return profile.neighbourhoodId !== null && audience.neighbourhood_ids.includes(profile.neighbourhoodId);
+    return profile.neighbourhoodIds.length === 0 || audience.neighbourhood_ids.some((id) => profile.neighbourhoodIds.includes(id));
   }
   return audience.buildings.some((wanted) =>
     profile.places.some(
       (place) => place.rsn === wanted.rsn && (wanted.floors === null || place.floors.length === 0 || place.floors.some((floor) => wanted.floors!.includes(floor))),
     ),
   );
+}
+
+/**
+ * What the phone saved (S02.03, `src/contracts/deviceChoices.ts`), as far as the matcher needs it: buildings by `rsn`, floors by
+ * floor id (each in one of the chosen buildings), the groups and the muted topics. Structural, so this contract does not
+ * import the device-choices module (which is for the phone's storage); `DeviceChoices` fits it.
+ */
+export interface DeviceAudienceChoices {
+  buildings?: readonly string[];
+  floors?: readonly string[];
+  groups?: readonly string[];
+  /** Disruption type ids the resident muted (a later story adds the field; absent means none). */
+  mutedTopics?: readonly string[];
+}
+
+/** The building list the phone keeps (S02.03, `src/contracts/buildingList.ts`), as far as the matcher needs it. `BuildingList` fits it. */
+export interface DeviceBuildingList {
+  buildings: readonly { rsn: string; neighbourhoodId: string; floors: readonly { id: string }[] }[];
+}
+
+/**
+ * The profile of a phone, from its saved choices and its building list; pure. Each saved building becomes a place
+ * with the saved floors that belong to it under the list (a building with no floor chosen has `[]`: no floor recorded
+ * there); a floor of a building that is not saved, or that no listed building has, is left out. The neighbourhoods are
+ * those of the saved buildings the list knows, sorted and without repeats; a phone with no building saved (or none the
+ * list knows) has none, which `matches` reads as "every neighbourhood".
+ */
+export function profileFromDevice(choices: DeviceAudienceChoices, buildingList: DeviceBuildingList): AudienceProfile {
+  const savedFloors = new Set(choices.floors ?? []);
+  const listed = new Map(buildingList.buildings.map((building) => [building.rsn, building] as const));
+  const rsns = sortedUnique(choices.buildings ?? []);
+  const neighbourhoodIds: string[] = [];
+  const places = rsns.map((rsn) => {
+    const building = listed.get(rsn);
+    if (building) neighbourhoodIds.push(building.neighbourhoodId);
+    return { rsn, floors: sortedUnique((building?.floors ?? []).map((floor) => floor.id).filter((id) => savedFloors.has(id))) };
+  });
+  return { neighbourhoodIds: sortedUnique(neighbourhoodIds), places, groups: sortedUnique(choices.groups ?? []), mutedTopics: sortedUnique(choices.mutedTopics ?? []) };
 }
 
 /** True when the person muted every topic of the alert and none of them overrides a mute. */

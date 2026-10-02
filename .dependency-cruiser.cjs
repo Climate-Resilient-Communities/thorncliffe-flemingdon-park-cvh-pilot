@@ -61,6 +61,14 @@ module.exports = {
       to: { path: SRC, pathNot: [`${MODULES}$1/domain/`, `${SRC}(?:contracts|i18n)/`] },
     },
     {
+      name: "matcher-contract-is-pure",
+      comment:
+        "src/contracts/audience.ts is the one audience matcher (AD-7): the server, the phone and SMS selection import it, so it imports only zod and the contract files beside it (groups, places) and stays loadable unchanged in the browser. Nothing here can stop another file defining a second matcher; the no-other-matcher test in src/contracts/audience.test.ts does that, and this rule keeps the one definition importable by everyone",
+      severity: "error",
+      from: { path: `${SRC}contracts/audience\\.ts$` },
+      to: { pathNot: [`${SRC}contracts/(?:groups|places)\\.ts$`, "node_modules/zod/"] },
+    },
+    {
       name: "layer-imports-module",
       comment: "src/platform, src/contracts and src/i18n import nothing in src/modules (spine layer table)",
       severity: "error",

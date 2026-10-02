@@ -2,7 +2,8 @@
 // already resolved from the English catalog, so the components that draw them know none of it. The words come
 // through a `text` function (the catalog by default) so the layout tests can put the longest translated labels
 // of a language in every place without changing a component.
-import { AUDIENCE_GROUPS, type Audience } from "@/contracts/audience";
+import type { Audience } from "@/contracts/audience";
+import { GROUPS } from "@/contracts/groups";
 import { englishText } from "@/i18n/text";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "./editAudience";
@@ -96,6 +97,11 @@ export interface SavedQuery {
 
 const first = (value: string | string[] | undefined) => (Array.isArray(value) ? value[0] : value);
 
+// Accepted risk: "The place is saved." is chosen by `?done=place` in the URL, so a link with that query shows the notice
+// without anything having been saved. It is cosmetic: only two fixed words are read back, the text is a catalog string
+// (never the query's own), and the notice changes nothing and grants nothing. A session flash or a one-time token would
+// close it at the cost of state for a line of reassurance; the page that follows a save always shows the stored audience
+// beside it ("Who gets it now"), which is what to trust.
 export function savedNotice(query: SavedQuery, t: Text = catalogText): string | undefined {
   switch (first(query.done)) {
     case "place":
@@ -128,7 +134,7 @@ function stepsOf(ref: DraftRef, current: "place" | "groups", t: Text): StepsView
 /** The floors of a building by their labels, in the building's own order (lowest first), for the ids given. */
 const floorLabels = (plan: BuildingFloorPlan, ids: readonly string[]) => plan.floors.filter((floor) => ids.includes(floor.id)).map((floor) => floor.label);
 
-const groupName = (group: string, t: Text) => ((AUDIENCE_GROUPS as readonly string[]).includes(group) ? t(`groupNames.${group}`) : group);
+const groupName = (group: string, t: Text) => ((GROUPS as readonly string[]).includes(group) ? t(`groupNames.${group}`) : group);
 
 /** The audience in words (the aside of both pages, and what the approver will read in S04.07). */
 export function asideOf(audience: Audience, plans: readonly BuildingFloorPlan[], link: AsideView["link"], t: Text = catalogText): AsideView {
@@ -211,7 +217,7 @@ export function groupsScreen(plans: readonly BuildingFloorPlan[], audience: Audi
     legend: t("groupsFieldset"),
     hint: t("groupsHint"),
     webNote: t("groupsWeb"),
-    groups: AUDIENCE_GROUPS.map((group) => ({ id: group, label: t(`groupNames.${group}`), line: t(`groupLines.${group}`), checked: audience.groups.includes(group) })),
+    groups: GROUPS.map((group) => ({ id: group, label: t(`groupNames.${group}`), line: t(`groupLines.${group}`), checked: audience.groups.includes(group) })),
     submit: t("saveGroups"),
     aside: asideOf(audience, plans, { href: `${PLACE_PAGE}?${refQuery(ref)}`, label: t("toPlace") }, t),
   };

@@ -100,3 +100,48 @@ test("the same pages with the real English words fit the phone and the desktop",
     }
   }
 });
+
+// The floor controls follow the building's own controls in CSS (hub-forms.css, `:has()`), so this works in the static markup
+// the harness loads, with no script at all: the same as the page before it is hydrated, or with scripts off.
+test("shows a building's floors only when it is ticked and 'Some floors' is selected, with no script", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  const neighbourhood: Audience = { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] };
+  await mount(page, "AudienceFixture", { texts: REAL_TEXTS, brand, screen: placeScreen(plansFor("en"), neighbourhood, REF) });
+  const row = page.getByTestId("building-4154146");
+  const other = page.getByTestId("building-4154169");
+  const tick = row.locator('input[name="building"]');
+  const whole = row.locator('input[name="floors-4154146"][value="all"]');
+  const some = row.locator('input[name="floors-4154146"][value="some"]');
+  const floor = row.locator('input[name="floor-4154146"]').first();
+  const range = row.locator('select[name="from-4154146"]');
+
+  // Collapsed: the address and its checkbox, no floor control of any kind.
+  await expect(tick).toBeVisible();
+  for (const control of [whole, some, floor, range]) await expect(control).toBeHidden();
+  await expect(row.locator("details, summary")).toHaveCount(0);
+
+  // Ticked: the choice between the whole building and some floors, but not the floors.
+  await tick.check();
+  await expect(whole).toBeVisible();
+  await expect(some).toBeVisible();
+  await expect(floor).toBeHidden();
+  await expect(range).toBeHidden();
+
+  // Some floors: the floors and the range.
+  await some.check();
+  await expect(floor).toBeVisible();
+  await expect(range).toBeVisible();
+
+  // The whole building: the floors go again.
+  await whole.check();
+  await expect(floor).toBeHidden();
+  await expect(range).toBeHidden();
+  await expect(whole).toBeVisible();
+
+  // Unticked again: collapsed, and the other buildings were never opened.
+  await some.check();
+  await tick.uncheck();
+  for (const control of [whole, some, floor, range]) await expect(control).toBeHidden();
+  await expect(other.locator('input[name="floor-4154169"]').first()).toBeHidden();
+  await expect(other.locator('input[name="floors-4154169"]').first()).toBeHidden();
+});

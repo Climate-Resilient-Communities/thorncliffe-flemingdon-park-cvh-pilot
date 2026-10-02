@@ -74,15 +74,39 @@ describe("O-03, the place picker", () => {
     expect(out.match(/<label class="hub-choice"><input type="(?:checkbox|radio)"/g)?.length).toBe(controls);
   });
 
-  it("opens the floors of a ticked building, offers a range between two floors, and says when a building lists none", () => {
+  it("has no disclosure: the floor controls are always in the page, and CSS shows them by the state of the building's own controls", () => {
     const out = html(placeScreen(PLANS, BUILDINGS, REF));
-    expect(out).toMatch(/<details open=""><summary class="tap hub-link">Some floors<\/summary>/);
+    expect(out).not.toContain("<details");
+    expect(out).not.toContain("<summary");
+    // The hooks hub-forms.css reads: the building's checkbox, the "Some floors" radio, and the two blocks they show.
+    expect(input(out, "building", "4154146")).toContain('class="hub-building-tick"');
+    expect(input(out, "floors-4154159", "some")).toContain('class="hub-building-some"');
+    expect(input(out, "floors-4154159", "all")).not.toContain("hub-building-some");
+    expect(out.match(/class="hub-building-scope"/g)).toHaveLength(PLANS.length);
+    // Four buildings, one of which lists no floors: three have floors to show.
+    expect(out.match(/class="hub-building-floors"/g)).toHaveLength(3);
+  });
+
+  it("offers a range between two floors, and says when a building lists none", () => {
+    const out = html(placeScreen(PLANS, BUILDINGS, REF));
     expect(out).toContain("Or every floor from one to another, in the order the building lists them");
     expect(out).toContain('name="from-4154159"');
     expect(out).toContain('name="to-4154159"');
     expect(out).toContain("No floors are listed for this building, so only the whole building can be chosen.");
-    // The building with no floors can only be chosen whole.
+    // The building with no floors can only be chosen whole, and has no floors to show.
     expect(input(out, "floors-4244530", "some")).toContain('disabled=""');
+    expect(out).not.toContain('name="floor-4244530"');
+  });
+
+  it("sends the floors and range only of a ticked building with some floors chosen: the whole building, or an unticked one, disables them", () => {
+    const out = html(placeScreen(PLANS, BUILDINGS, REF));
+    const controls = (rsn: string) => [input(out, `floor-${rsn}`, floorId(rsn, 1)), ...(out.match(new RegExp(`<select [^>]*name="(?:from|to)-${rsn}"[^>]*>`, "g")) ?? [])];
+    // 85-95 Thorncliffe Park Dr: ticked, some floors.
+    for (const tag of controls("4154159")) expect(tag, tag).not.toContain("disabled");
+    // 4 Milepost Pl: ticked, the whole building.
+    for (const tag of controls("4154146")) expect(tag, tag).toContain('disabled=""');
+    // 5 Dufresne Crt: not ticked.
+    for (const tag of controls("4154763")) expect(tag, tag).toContain('disabled=""');
   });
 
   it("carries the draft in hidden fields and has one Save button", () => {

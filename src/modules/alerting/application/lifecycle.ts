@@ -81,6 +81,18 @@ export interface ApprovalBinding {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SHA256 = /^[0-9a-f]{64}$/;
 
+/**
+ * The audience a place choice asks for, with only what the role policy reads of it: the scope and the buildings by rsn.
+ * Nothing is looked up, so the policy can be asked before any place is.
+ */
+function askedFor(choice: PlaceChoice, current: EntryContent): Audience {
+  const { groups } = current.audience;
+  const types = [...current.types];
+  return choice.scope === "neighbourhood"
+    ? { scope: "neighbourhood", neighbourhood_ids: [...choice.neighbourhoodIds], groups, types }
+    : { scope: "buildings", buildings: choice.buildings.map((building) => ({ rsn: building.rsn, floors: null })), groups, types };
+}
+
 /** Found inside a transaction: nothing was written, and the refusal is audited after the rollback. */
 class Refused extends Error {
   constructor(readonly refusal: AlertRefusal) {
@@ -234,14 +246,18 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /**
-   * Replaces a draft's content: the shape, the author's authority for the new scope and buildings, the places, then
-   * the write. Whoever saves a change becomes an editor (the trigger adds them). Shared by saving a draft and by
+   * Replaces a draft's content: the shape, the actor's authority over the draft as it is now and for the new scope and
+   * buildings, the places, then the write. Whoever saves a change becomes an editor (the trigger adds them). Shared by saving a draft and by
    * choosing its audience, so both are judged by the one rule.
    */
   async function writeDraft(tx: DbTransaction, standing: StaffStanding, actor: AlertActor, entry: EntryRow, content: EntryContent): Promise<EntryView> {
     if (entry.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
     const invalid = contentRefusal(content);
     if (invalid) throw new Refused(invalid);
+    // Changing a draft is authoring it: the actor must be allowed to author what it holds now (an Ambassador cannot take
+    // over a Coordinator's neighbourhood draft, or a draft for a building they are not assigned to, by re-aiming it
+    // at one they are), and what it will hold.
+    mustAuthor(standing, actor.staffId, contentOf(entry));
     mustAuthor(standing, actor.staffId, content);
     await mustExist(tx, content.audience);
     const [saved] = await tx
@@ -414,6 +430,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { standing, entry } = await open(tx, actor, ref);
         const current = contentOf(entry!);
+        // The role and the policy come first, for the draft as it is and for the scope and buildings asked for, so that
+        // someone who may not do this learns nothing about which buildings, floors or neighbourhoods exist.
+        mustAuthor(standing, actor.staffId, current);
+        mustAuthor(standing, actor.staffId, { types: current.types, audience: askedFor(choice, current) });
         const resolved = await resolvePlace(tx, places, choice, { groups: current.audience.groups, types: current.types });
         if (!resolved.ok) throw new Refused(resolved.error);
         return writeDraft(tx, standing, actor, entry!, { ...current, audience: resolved.value });
@@ -519,6 +539,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // AD-5: approval re-checks the author against their current status and assignments.
         const author = await staff.standing(tx, row.authorId);
         if (!author || author.status !== "active" || authoringRefusal(author, row.authorId, contentOf(row)) !== null) throw new Refused("AUTHOR_NOT_ALLOWED");
+        // ... and the places it names are still there: a floor removed since the submit is not a floor to text.
+        await mustExist(tx, contentOf(row).audience);
         // `approved_at` and `web_published_at` are not sent: the entry trigger sets both to the database's now().
         const [approved] = await tx
           .update(alertEntry)

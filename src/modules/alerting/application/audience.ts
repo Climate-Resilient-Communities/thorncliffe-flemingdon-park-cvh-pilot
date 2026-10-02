@@ -6,7 +6,8 @@
 // A floor is named by its floor id. A floor range ("floors 4 to 6") is expanded at input, by the building's
 // own order (`sort_order`), with identity's `expandFloorRange` (S01.14), so the audience stores the floors
 // themselves and a floor added to the building later is not in it. A reversed range is refused, not turned round.
-import { AUDIENCE_GROUPS, normaliseAudience, type Audience } from "../../../contracts/audience";
+import { normaliseAudience, type Audience } from "../../../contracts/audience";
+import { GROUPS } from "../../../contracts/groups";
 import type { DbExecutor } from "../../../platform/db";
 import { expandFloorRange } from "../../identity";
 import type { AlertRefusal } from "../domain/refusals";
@@ -22,8 +23,12 @@ export interface AudienceFloor {
  * transaction's). The composition root wires places' readers; tests give fakes.
  */
 export interface AudiencePlaces {
-  /** The floors of a building, lowest first; null when there is no building with that rsn. */
-  floorsOf(executor: DbExecutor, rsn: string): Promise<readonly AudienceFloor[] | null>;
+  /**
+   * The floors of a building, lowest first; null when there is no building with that rsn. With `lock: "share"` the
+   * building's row is locked FOR SHARE until the transaction ends, so a floor edit (which locks the row FOR UPDATE)
+   * cannot slip in between the check and the commit.
+   */
+  floorsOf(executor: DbExecutor, rsn: string, options?: { lock?: "share" }): Promise<readonly AudienceFloor[] | null>;
   /** The ids of the neighbourhoods an alert may be for. */
   neighbourhoodIds(executor: DbExecutor): Promise<readonly string[]>;
 }
@@ -49,9 +54,9 @@ const fail = (error: AlertRefusal): { ok: false; error: AlertRefusal } => ({ ok:
 
 /** The groups a Coordinator may aim at, sorted and without repeats; a group nobody offers is refused. */
 export function resolveGroups(groups: readonly string[]): Resolved<Audience["groups"]> {
-  const offered: readonly string[] = AUDIENCE_GROUPS;
+  const offered: readonly string[] = GROUPS;
   if (groups.some((group) => !offered.includes(group))) return fail("GROUP_UNKNOWN");
-  return { ok: true, value: AUDIENCE_GROUPS.filter((group) => groups.includes(group)).sort() };
+  return { ok: true, value: GROUPS.filter((group) => groups.includes(group)).sort() };
 }
 
 /**
@@ -102,7 +107,9 @@ export async function resolvePlace(
 /**
  * Whether the places an audience names exist now: its neighbourhoods are the pilot's, its buildings are in the
  * register and each floor it lists is a floor of that building. Null when they do. Run inside the transaction
- * that saves or submits the entry, so a floor removed since the picker was open is caught.
+ * that saves, submits or approves the entry, so a floor removed since the picker was open is caught. Each building's row
+ * is locked FOR SHARE before its floors are read, and the lock is held to the end of the transaction: a floor removed by
+ * an edit that is under way is waited for (and then seen to be gone), and one that starts later waits for this commit.
  */
 export async function placeRefusal(executor: DbExecutor, places: AudiencePlaces, audience: Audience): Promise<AlertRefusal | null> {
   if (audience.scope === "neighbourhood") {
@@ -110,7 +117,7 @@ export async function placeRefusal(executor: DbExecutor, places: AudiencePlaces,
     return audience.neighbourhood_ids.every((id) => known.includes(id)) ? null : "NEIGHBOURHOOD_NOT_FOUND";
   }
   for (const wanted of audience.buildings) {
-    const floors = await places.floorsOf(executor, wanted.rsn);
+    const floors = await places.floorsOf(executor, wanted.rsn, { lock: "share" });
     if (floors === null) return "BUILDING_NOT_FOUND";
     if (wanted.floors?.some((id) => !floors.some((floor) => floor.id === id))) return "FLOOR_NOT_IN_BUILDING";
   }

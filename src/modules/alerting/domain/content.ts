@@ -1,4 +1,5 @@
 import { canonicalAudience, type Audience } from "../../../contracts/audience";
+import { RsnSchema } from "../../../contracts/places";
 
 /**
  * The content of an entry as the lifecycle sees it (S04.03): what a draft holds and a submit
@@ -47,8 +48,8 @@ export function audienceBuildings(audience: { scope: string }): string[] | null 
   const rsns: string[] = [];
   for (const building of listed) {
     const rsn = (building as { rsn?: unknown } | null)?.rsn;
-    if (typeof rsn !== "string" || !/^[0-9]{1,9}$/.test(rsn)) return null;
-    rsns.push(rsn);
+    if (!RsnSchema.safeParse(rsn).success) return null;
+    rsns.push(rsn as string);
   }
   return [...new Set(rsns)];
 }

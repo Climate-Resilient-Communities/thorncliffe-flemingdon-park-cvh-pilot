@@ -43,7 +43,10 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
     expect(css.find((d) => d.selector.includes(".hub-button:disabled") && d.prop === "cursor")?.value).toBe("not-allowed");
     expect(value(".hub-button", "min-block-size")).toBe("var(--tap-current)");
     expect(value(".hub-button", "max-inline-size")).toBe("100%");
-    expect(value(".hub-button", "overflow-wrap")).toBe("anywhere");
+    // `break-word`, not `anywhere`, on a button: `anywhere` would let its minimum width shrink to one letter. Only the choice label keeps `anywhere`.
+    expect(value(".hub-button", "overflow-wrap")).toBe("break-word");
+    // ... which only wraps text in a block: in an inline-flex button the label is one flex item that stays as wide as its longest word.
+    expect(value(".hub-button", "display")).toBe("inline-block");
     expect(value(".hub-input", "min-block-size")).toBe("var(--tap-current)");
   });
 
@@ -59,6 +62,15 @@ describe("hub-forms.css (the Hub's buttons, input and error line)", () => {
     expect(value(".hub-choice > input", "inline-size")).toBe("var(--size-icon)");
     expect(value(".hub-choice > input", "block-size")).toBe("var(--size-icon)");
     expect(value(".hub-choice > input", "accent-color")).toBe("var(--ink)");
+  });
+
+  it("hides a building's floor controls unless its checkbox is ticked and, for the floors and range, \"Some floors\" is selected, by CSS alone", () => {
+    const selectorsOf = (display: string) => css.filter((d) => d.prop === "display" && d.value === display && d.selector.includes(".hub-building")).flatMap((d) => d.selector.split(",").map((selector) => selector.trim()));
+    expect(selectorsOf("none")).toEqual([".hub-building-scope", ".hub-building-floors"]);
+    expect(selectorsOf("block")).toEqual([
+      ".hub-building:has(.hub-building-tick:checked) .hub-building-scope",
+      ".hub-building:has(.hub-building-tick:checked):has(.hub-building-some:checked) .hub-building-floors",
+    ]);
   });
 
   it("uses no colour or length literal: tokens only", () => {
