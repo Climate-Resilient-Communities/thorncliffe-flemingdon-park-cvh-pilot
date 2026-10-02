@@ -67,6 +67,7 @@ export const TARGET_USERNAME = "target";
 
 const PEOPLE_ACTIONS = "src/app/staff/people/actions.ts";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
+const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -76,6 +77,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/providers", kind: "page", file: "src/app/staff/providers/page.tsx", export: "default", route: "/staff/providers", action: "provider.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -213,6 +215,19 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: ADMIN_ONLY,
     }),
   ),
+  // S02.05: "Publish directory" (policy action `guide.publish`, Admins at aal2).
+  {
+    id: `action ${DIRECTORY_ACTIONS}#publishDirectoryAction`,
+    kind: "action",
+    file: DIRECTORY_ACTIONS,
+    export: "publishDirectoryAction",
+    route: "/staff/directory",
+    action: "guide.publish",
+    writes: "business",
+    gate: "hub",
+    form: {},
+    expected: ADMIN_ONLY,
+  },
 ];
 
 /** The endpoints anyone may call, without a session (S01.07): listed so the completeness check knows them. */

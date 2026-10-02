@@ -1335,7 +1335,8 @@
       "decisions": "Decision log",
       "capacity": "Our capacity",
       "people": "People",
-      "providers": "Providers"
+      "providers": "Providers",
+      "directory": "Directory"
     },
     "sections": {
       "disruption": "In a disruption",
@@ -3993,6 +3994,38 @@
         "notPublished": "This provider is not published.",
         "forbidden": "Only an Admin can change providers.",
         "aal2Required": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
+      }
+    },
+    "directory": {
+      "title": "Directory release",
+      "lead": "Publishing sends every published provider to residents as one numbered release, in every language. A release is never changed afterwards: the next publish makes a new one.",
+      "none": "No release has been published yet. Residents see no directory until one is.",
+      "current": "Current release: {number}, published {date}.",
+      "currentCounts": "Providers: {providers}. Categories: {categories}. Languages: {languages}.",
+      "publishedNow": "Providers published now: {published} of {total}.",
+      "publish": "Publish directory",
+      "publishing": "Publishing",
+      "publishHint": "This takes a few seconds. Residents keep the current release until the new one is complete.",
+      "done": "Release {number} is now current. Providers: {providers}. Languages: {languages}.",
+      "resumed": "Files already stored when this publish continued: {files}.",
+      "fallbacks": "Texts with no reviewed translation yet, shown in English: {count}.",
+      "staleHeading": "Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
+      "staleItem": "{subject}, {text}, {lang}",
+      "failed": "Publish failed: {reason}",
+      "previousStays": "The previous release is still current.",
+      "lastFailed": "The last publish failed: {reason}",
+      "running": "A publish is already running. Wait a few minutes, then check the current release here.",
+      "problems": "What is wrong: {list}",
+      "reasons": {
+        "storageUnavailable": "the files could not be stored",
+        "invalidCatalogue": "the catalogue could not be turned into a release",
+        "searchMismatch": "the search data does not match this release",
+        "gaveUp": "an earlier publish stopped three times",
+        "unexpected": "something went wrong"
+      },
+      "errors": {
+        "forbidden": "Only an Admin can publish the directory.",
+        "aal2Required": "An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
       }
     }
   }

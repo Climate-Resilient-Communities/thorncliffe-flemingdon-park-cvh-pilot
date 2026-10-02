@@ -1335,7 +1335,8 @@
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
       "people": "[EN] People",
-      "providers": "[EN] Providers"
+      "providers": "[EN] Providers",
+      "directory": "[EN] Directory"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -3993,6 +3994,38 @@
         "notPublished": "[EN] This provider is not published.",
         "forbidden": "[EN] Only an Admin can change providers.",
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
+      }
+    },
+    "directory": {
+      "title": "[EN] Directory release",
+      "lead": "[EN] Publishing sends every published provider to residents as one numbered release, in every language. A release is never changed afterwards: the next publish makes a new one.",
+      "none": "[EN] No release has been published yet. Residents see no directory until one is.",
+      "current": "[EN] Current release: {number}, published {date}.",
+      "currentCounts": "[EN] Providers: {providers}. Categories: {categories}. Languages: {languages}.",
+      "publishedNow": "[EN] Providers published now: {published} of {total}.",
+      "publish": "[EN] Publish directory",
+      "publishing": "[EN] Publishing",
+      "publishHint": "[EN] This takes a few seconds. Residents keep the current release until the new one is complete.",
+      "done": "[EN] Release {number} is now current. Providers: {providers}. Languages: {languages}.",
+      "resumed": "[EN] Files already stored when this publish continued: {files}.",
+      "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
+      "staleItem": "{subject}, {text}, {lang}",
+      "failed": "[EN] Publish failed: {reason}",
+      "previousStays": "[EN] The previous release is still current.",
+      "lastFailed": "[EN] The last publish failed: {reason}",
+      "running": "[EN] A publish is already running. Wait a few minutes, then check the current release here.",
+      "problems": "[EN] What is wrong: {list}",
+      "reasons": {
+        "storageUnavailable": "[EN] the files could not be stored",
+        "invalidCatalogue": "[EN] the catalogue could not be turned into a release",
+        "searchMismatch": "[EN] the search data does not match this release",
+        "gaveUp": "[EN] an earlier publish stopped three times",
+        "unexpected": "[EN] something went wrong"
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can publish the directory.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
       }
     }
   }

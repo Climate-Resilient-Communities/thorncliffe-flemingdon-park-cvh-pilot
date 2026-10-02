@@ -38,10 +38,11 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
     },
   ];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
-  // `accounts.manage` and the providers page `provider.manage` (S02.04), both Admin only.
+  // `accounts.manage` and the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05), all Admin only.
   const admin: HubNavSection["items"][number][] = [];
   if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
   if (can(role, "provider.manage")) admin.push({ id: "providers", label: englishText("hub.nav.providers"), href: "/staff/providers", icon: "inbox" });
+  if (can(role, "guide.publish")) admin.push({ id: "directory", label: englishText("hub.nav.directory"), href: "/staff/directory", icon: "inbox" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }
