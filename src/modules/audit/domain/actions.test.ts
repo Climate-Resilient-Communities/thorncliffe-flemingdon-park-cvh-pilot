@@ -367,3 +367,52 @@ describe("findSensitiveValue", () => {
     },
   );
 });
+
+describe("alert lifecycle actions (S04.03)", () => {
+  const ENTRY = "5a1e0c9d-2b7f-4e83-9c14-6d0f8a3b2e71";
+  const HASH_WITH_LONG_DIGIT_RUN = `${"1234567890".repeat(6)}abcd`;
+  const alertEvent = (action: string, meta: Record<string, unknown>, subjectType = "alert_entry") =>
+    event({ action, subjectType, subjectId: ENTRY, meta } as unknown as Partial<AuditEvent>);
+
+  it.each([
+    ["alert.created", { entry_id: ENTRY, kind: "ack", types: ["power", "water"] }, "alert"],
+    ["entry.submitted", { entry_id: ENTRY, version: 1, content_hash: HASH_WITH_LONG_DIGIT_RUN }, "alert_entry"],
+    ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "retranslate" }, "alert_entry"],
+    ["entry.discarded", { entry_id: ENTRY, version: 0, from: "draft" }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64) }, "alert_entry"],
+  ])("accepts %s with its strict meta, a content hash included", (action, meta, subjectType) => {
+    expect(toAuditRecord(alertEvent(action, meta, subjectType), "ok").meta).toEqual(meta);
+  });
+
+  it("accepts a refusal with only its reason, including alert_closed", () => {
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "alert_closed" }), "refused")).toMatchObject({ outcome: "refused", meta: { reason: "alert_closed" } });
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "self_action" }), "refused").meta).toEqual({ reason: "self_action" });
+  });
+
+  it.each([
+    ["alert.created", { kind: "ack" }],
+    ["entry.submitted", { entry_id: ENTRY, version: 1 }],
+    ["entry.returned", { entry_id: ENTRY, version: 1 }],
+    ["entry.discarded", { version: 1, from: "draft" }],
+    ["entry.approved", { entry_id: ENTRY, content_hash: "a".repeat(64) }],
+  ])("requires the entry id and frozen facts on an ok %s: %j", (action, meta) => {
+    expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(/meta is missing/);
+  });
+
+  it.each([
+    ["the text", "entry.submitted", { entry_id: ENTRY, version: 1, content_hash: "a".repeat(64), text: "Power is out" }],
+    ["a note", "entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", note: "fix the floor" }],
+    ["a person's id other than the actor", "entry.approved", { entry_id: ENTRY, version: 1, content_hash: "a".repeat(64), approver_id: ENTRY }],
+    ["a hash that is not a SHA-256", "entry.approved", { entry_id: ENTRY, version: 1, content_hash: "abc" }],
+    ["a return reason outside the list", "entry.returned", { entry_id: ENTRY, version: 1, returned_for: "because" }],
+    ["a discard from a status that cannot be discarded", "entry.discarded", { entry_id: ENTRY, from: "approved" }],
+    ["a kind outside the list", "alert.created", { entry_id: ENTRY, kind: "rumour" }],
+  ])("rejects %s", (_, action, meta) => {
+    expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("passes a SHA-256 as a whole value even when it holds a long run of digits", () => {
+    expect(findSensitiveValue(HASH_WITH_LONG_DIGIT_RUN)).toBeNull();
+    expect(findSensitiveValue(`${HASH_WITH_LONG_DIGIT_RUN} `)).toBe("meta");
+  });
+});

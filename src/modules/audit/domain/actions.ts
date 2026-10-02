@@ -56,6 +56,8 @@ export const REFUSAL_REASONS = [
   "floor_has_assignments",
   "not_allowlisted",
   "provider_error",
+  /** A change to a thread that is closed (S04.03, ALERT_CLOSED). */
+  "alert_closed",
 ] as const;
 
 const ROUTE_PATTERN = /^(\/([a-z][a-z-]*|\[[a-z_]+\]))+$/;
@@ -77,6 +79,10 @@ const isoDate = z.string().refine(isIsoDate, "must be a real date written YYYY-M
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
+/** A SHA-256 as 64 lower-case hex digits (an entry's content hash). */
+const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** An alert entry's kind (AD-5). */
+const entryKind = z.enum(["ack", "update", "correction", "withdrawal", "final"]);
 /** A policy action name such as `alert.approve`. */
 const permission = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,3}$/).max(64);
 /**
@@ -150,6 +156,15 @@ export const AUDIT_META = {
   "provider.unpublished": meta({}),
   "provider.confirmed": meta({ confirmed_on: isoDate.optional(), previous: isoDate.nullable().optional() }),
 
+  // Alert threads and entries (S04.03). `alert.created` is on the thread (subject `alert`) and names its first
+  // draft; the others are on the entry (subject `alert_entry`). `content_hash` is the frozen text's SHA-256, never
+  // text. `entry_id` (and `version`, `content_hash` where the entry has them) are required on an ok record.
+  "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional() }),
+  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+  "entry.returned": meta({ entry_id: id.optional(), version: count.optional(), returned_for: z.enum(["edit", "return", "retranslate"]).optional() }),
+  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional() }),
+  "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.
   "seed.run": meta({ seed: code, counts: z.record(code, count).optional(), warnings: count.optional(), failures: count.optional() }),
 
@@ -173,6 +188,11 @@ export type AuditOutcome = "ok" | "refused";
 const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "provider.confirmed": ["confirmed_on"],
   "provider.published": ["last_confirmed"],
+  "alert.created": ["entry_id"],
+  "entry.submitted": ["entry_id", "version", "content_hash"],
+  "entry.returned": ["entry_id", "version", "returned_for"],
+  "entry.discarded": ["entry_id", "from"],
+  "entry.approved": ["entry_id", "version", "content_hash"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
@@ -234,16 +254,18 @@ function hasEmailAddress(value: string): boolean {
 const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
 // A Twilio message SID: SM or MM and 32 lowercase hex digits, which can hold long digit runs.
 const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
+// A SHA-256 in hex (an entry's content hash): 64 hex digits, which can hold long digit runs.
+const SHA256_HEX = /^[0-9a-f]{64}$/;
 
 /**
  * Defensive check on values (the strict schemas are the main guard): the path
  * of the first string that looks like an email address or a phone number, or
- * of a number with ten or more digits. Whole values that are UUIDs or Twilio
+ * of a number with ten or more digits. Whole values that are UUIDs, SHA-256 hashes or Twilio
  * message SIDs are skipped (their hex can hold long digit runs).
  */
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
-    if (UUID.test(value) || TWILIO_SID.test(value)) return null;
+    if (UUID.test(value) || TWILIO_SID.test(value) || SHA256_HEX.test(value)) return null;
     return hasEmailAddress(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;
