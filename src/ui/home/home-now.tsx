@@ -224,9 +224,9 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
           ) : (
             <section aria-labelledby="home-invite-line" data-testid="home-invite">
               <Stack gap="related">
-                <p id="home-invite-line">
-                  <ResidentText>{t("noBuildingLine")}</ResidentText>
-                </p>
+                <div id="home-invite-line">
+                  <ResidentText as="p">{t("noBuildingLine")}</ResidentText>
+                </div>
                 <Link className="choice-btn choice-btn--secondary tap home-invite" href={`/${lang}/choices/place`} data-testid="home-choose-building">
                   <ResidentText>{t("noBuildingChosen")}</ResidentText>
                 </Link>
