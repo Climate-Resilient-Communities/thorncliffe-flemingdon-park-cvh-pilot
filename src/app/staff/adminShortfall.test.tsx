@@ -34,6 +34,34 @@ describe("the Fewer than two usable Admins banner (S01.06)", () => {
     expect(logError).toHaveBeenCalledWith({ error: "TypeError" });
   });
 
+  it("shows no banner when the check hangs, within the timeout, and logs without any message text", async () => {
+    const logError = vi.fn();
+    const identity = () => ({ adminShortfallBanner: () => new Promise<boolean>(() => {}) });
+    const started = Date.now();
+
+    expect(await showAdminShortfallBanner({ session: async () => ({ staffId: ADMIN }), identity, logError, timeoutMs: 30 })).toBe(false);
+
+    expect(Date.now() - started).toBeLessThan(1000);
+    expect(logError).toHaveBeenCalledWith({ error: "BannerTimeout" });
+  });
+
+  it("waits two seconds by default", async () => {
+    vi.useFakeTimers();
+    try {
+      const logError = vi.fn();
+      const identity = () => ({ adminShortfallBanner: () => new Promise<boolean>(() => {}) });
+      const pending = showAdminShortfallBanner({ session: async () => ({ staffId: ADMIN }), identity, logError });
+
+      await vi.advanceTimersByTimeAsync(1999);
+      expect(logError).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      expect(await pending).toBe(false);
+      expect(logError).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
   it("says what is wrong and what to do, as a status", () => {
     const html = renderToStaticMarkup(<AdminShortfallBanner />);
 
