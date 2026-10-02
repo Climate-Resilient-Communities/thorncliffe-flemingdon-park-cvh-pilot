@@ -937,4 +937,21 @@
   save: 'Save', saved: 'Saved. This takes effect now.', both: 'Thorncliffe Park and Flemingdon Park',
   nothingSummary: 'Nothing yet. You will see every alert for Thorncliffe Park and Flemingdon Park.', everyAlert: 'Every alert for {nbhd}',
   floorOf: '{building}, floor {floor}', checkinBy: 'Check-ins by {method}', changeAll: 'Change what you chose', toHome: 'Go to Now' } });
+  /* Staff accounts (S01.05): Add a person, the first-Admin script and the setup gate. Not a prototype screen. */
+  m(en, { staff: { roles: { ambassador: 'Ambassador', coordinator: 'Coordinator', director: 'Director', admin: 'Admin' },
+  bootstrap: { incomplete: 'Finish setting up two Admins first',
+    secondAdminOnly: 'Setup is not finished. You can add one more Admin now. Other people can be added once both Admins have their own password and authenticator.' },
+  people: { title: 'Add a person', lead: 'Each person gets their own account. Nothing is sent to them: give them their username and starting password yourself.',
+    username: 'Username', usernameHint: 'People sign in with it. 3 to 32 characters: letters a to z and digits, with a single . _ or - between them.',
+    firstName: 'First name', lastName: 'Last name', nameHint: 'As written in Latin letters. The starting password is made from the first and last name.',
+    email: 'Email', emailHint: 'Kept as a contact detail. The Hub does not send email.', role: 'Role', submit: 'Add person',
+    created: 'Account created for {name}', createdLine: 'Give them these in person. The starting password works once, within 24 hours. They choose their own password when they first sign in.',
+    createdUsername: 'Username: {username}', createdPassword: 'Starting password: {password}', addAnother: 'Add another person',
+    errors: { usernameInvalid: 'Use 3 to 32 characters: letters a to z and digits, starting with a letter, with a single . _ or - between them.',
+      usernameTaken: 'That username is already taken. Choose another.', firstNameMissing: 'Enter the first name.', lastNameMissing: 'Enter the last name.',
+      nameTooLong: 'A name can have at most 100 characters.',
+      startingPasswordEmpty: 'The first and last name must each have a letter from a to z, because the starting password is made from them. Enter them as written in Latin letters.',
+      emailInvalid: 'Enter an email address, like name@example.org.', roleInvalid: 'Choose a role.',
+      adminExists: 'An Admin already exists. The first Admin can be created only once.', forbidden: 'Only an Admin can add people.',
+      unauthenticated: 'Sign in to continue.', providerError: 'The account could not be created, and nothing was saved. Try again.' } } } });
 })();

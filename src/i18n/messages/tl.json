@@ -3775,5 +3775,49 @@
     "due": "[EN] Due {due}",
     "changed": "[EN] What changed: {label}",
     "newTag": "[EN] Added in this session"
+  },
+  "staff": {
+    "roles": {
+      "ambassador": "[EN] Ambassador",
+      "coordinator": "[EN] Coordinator",
+      "director": "[EN] Director",
+      "admin": "[EN] Admin"
+    },
+    "bootstrap": {
+      "incomplete": "[EN] Finish setting up two Admins first",
+      "secondAdminOnly": "[EN] Setup is not finished. You can add one more Admin now. Other people can be added once both Admins have their own password and authenticator."
+    },
+    "people": {
+      "title": "[EN] Add a person",
+      "lead": "[EN] Each person gets their own account. Nothing is sent to them: give them their username and starting password yourself.",
+      "username": "[EN] Username",
+      "usernameHint": "[EN] People sign in with it. 3 to 32 characters: letters a to z and digits, with a single . _ or - between them.",
+      "firstName": "[EN] First name",
+      "lastName": "[EN] Last name",
+      "nameHint": "[EN] As written in Latin letters. The starting password is made from the first and last name.",
+      "email": "[EN] Email",
+      "emailHint": "[EN] Kept as a contact detail. The Hub does not send email.",
+      "role": "[EN] Role",
+      "submit": "[EN] Add person",
+      "created": "[EN] Account created for {name}",
+      "createdLine": "[EN] Give them these in person. The starting password works once, within 24 hours. They choose their own password when they first sign in.",
+      "createdUsername": "[EN] Username: {username}",
+      "createdPassword": "[EN] Starting password: {password}",
+      "addAnother": "[EN] Add another person",
+      "errors": {
+        "usernameInvalid": "[EN] Use 3 to 32 characters: letters a to z and digits, starting with a letter, with a single . _ or - between them.",
+        "usernameTaken": "[EN] That username is already taken. Choose another.",
+        "firstNameMissing": "[EN] Enter the first name.",
+        "lastNameMissing": "[EN] Enter the last name.",
+        "nameTooLong": "[EN] A name can have at most 100 characters.",
+        "startingPasswordEmpty": "[EN] The first and last name must each have a letter from a to z, because the starting password is made from them. Enter them as written in Latin letters.",
+        "emailInvalid": "[EN] Enter an email address, like name@example.org.",
+        "roleInvalid": "[EN] Choose a role.",
+        "adminExists": "[EN] An Admin already exists. The first Admin can be created only once.",
+        "forbidden": "[EN] Only an Admin can add people.",
+        "unauthenticated": "[EN] Sign in to continue.",
+        "providerError": "[EN] The account could not be created, and nothing was saved. Try again."
+      }
+    }
   }
 }
