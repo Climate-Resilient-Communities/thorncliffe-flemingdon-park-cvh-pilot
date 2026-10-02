@@ -26,8 +26,13 @@ const editTerms = (change: (t: TermsSource) => void) => {
   change(terms);
   writeFileSync(path.join(dir, "terms.json"), JSON.stringify(terms, null, 1));
 };
+/** Fills every TODO(owner) the committed draft leaves in the English (test values only). */
+const settleTodos = (t: TermsSource) => {
+  for (const section of t.sections ?? []) section.lines = (section.lines ?? []).map((line) => line?.replace(/TODO\(owner\)/g, "test region") ?? line);
+};
 const nameOwnerAndContact = () =>
   editTerms((t) => {
+    settleTodos(t);
     t.owner = "Ana Reyes";
     t.privacyContact = "privacy@example.org";
     // Dated before today, whatever day the tests run (a review cannot be dated in the future).
@@ -84,7 +89,7 @@ describe("the terms in the content pipeline", () => {
     nameOwnerAndContact();
     run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
     expect(readTerms().englishReview).toMatchObject({ reviewer: "Ana Reyes", date: "2026-09-10" });
-    expect(plan().reasons).toEqual(["counsel review: no named reviewer", "counsel review: no valid date", "counsel review: covers version none, not 2026-09-10.1", "counsel review: records no source hash (the text it reviewed)"]);
+    expect(plan().reasons).toEqual(["counsel review: none is recorded"]);
 
     run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"]);
     expect(readTerms().counselReview).toMatchObject({ reviewer: "Counsel Co.", date: "2026-09-10", version: "2026-09-10.1" });
@@ -129,6 +134,32 @@ describe("the terms in the content pipeline", () => {
       "the last-updated date (2026-09-16) is before the date of consent_version 2026-09-20.1",
       "counsel review: covers version 2026-09-16.1, not 2026-09-20.1",
     ]);
+  });
+
+  it("refuses counsel's review of the draft: a draft consent version or a TODO(owner) left in the English", () => {
+    // The committed draft: TODO(owner) in the owner, the contact and the English, and version 2026-10-draft-1.
+    expect(() => run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "TODO(owner)", "--reviewed-on", "2026-09-10"])).toThrow(/--reviewer/);
+    expect(plan().reasons).toEqual(
+      expect.arrayContaining([
+        "the owner is still a placeholder",
+        "the privacy contact is still a placeholder",
+        "the consent_version is not written YYYY-MM-DD.n",
+        "the English text still holds a placeholder",
+      ]),
+    );
+
+    editTerms((t) => {
+      t.owner = "Ana Reyes";
+      t.privacyContact = "privacy@example.org";
+      t.lastUpdated = "2026-09-10";
+    });
+    run(REVIEW, ["--content", "--mark-english-reviewed", "--terms", "--reviewer", "Ana Reyes", "--reviewed-on", "2026-09-10"]);
+    expect(() => run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"])).toThrow(/draft version/);
+
+    editTerms((t) => (t.consentVersion = "2026-09-10.1"));
+    expect(() => run(REVIEW, ["--content", "--mark-counsel-reviewed", "--reviewer", "Counsel Co.", "--reviewed-on", "2026-09-10"])).toThrow(/TODO\(owner\)/);
+    expect(readTerms().counselReview?.reviewer).toBeNull();
+    expect(plan().published).toBe(false);
   });
 
   it("records every version counsel signs in publishedVersions", () => {

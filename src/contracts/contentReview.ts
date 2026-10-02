@@ -44,8 +44,11 @@ export type Hasher = (text: string) => string;
 
 export const present = (value: string | null | undefined): value is string => typeof value === "string" && value.trim() !== "";
 
+/** A "TODO(owner)" marker (any case, anywhere in the value) also stands in for something nobody has named yet. */
+export const TODO_MARKER = /TODO\(/i;
+
 export function isPlaceholder(value: string | null | undefined): boolean {
-  return !present(value) || value.trim().toUpperCase().startsWith(PLACEHOLDER_PREFIX);
+  return !present(value) || value.trim().toUpperCase().startsWith(PLACEHOLDER_PREFIX) || TODO_MARKER.test(value);
 }
 
 /** A real calendar date written YYYY-MM-DD. */

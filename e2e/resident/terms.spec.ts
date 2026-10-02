@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident } from "./helpers";
 
 // S07.01: /{lang}/terms inside the resident shell. Run against a local build (not production), so the terms, which are
-// still a draft (owner, privacy contact and counsel's review are placeholders), are shown under the draft banner
+// still a draft (owner, privacy contact, two regions and counsel's review are TODO(owner)), are shown under the draft banner
 // instead of being a 404; the 404 in production is covered by the unit tests of termsPageMode.
 
 /** Grows the viewport to the whole page, so a baseline shows every line and not only the first screen. */
@@ -51,10 +51,10 @@ test("/en/terms states in plain words everything the terms must say, with versio
   await expect(page.locator("main bdi[lang='en'], main h1[lang], main h2[lang], main p.terms-line[lang]")).toHaveCount(0);
   await expect(page.getByTestId("terms-translation-note")).toHaveCount(0);
 
-  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-02.1");
+  await expect(page.getByTestId("terms-version")).toHaveText("2026-10-draft-1");
   await expect(page.getByTestId("terms-updated")).toHaveText("2026-10-02");
-  await expect(page.getByTestId("terms-owner")).toContainText("PLACEHOLDER");
-  await expect(page.getByTestId("terms-contact")).toContainText("PLACEHOLDER");
+  await expect(page.getByTestId("terms-owner")).toContainText("TODO(owner)");
+  await expect(page.getByTestId("terms-contact")).toContainText("TODO(owner)");
 });
 
 test("terms that are not published are never shown as final: the page is marked as a draft, and kept from search", async ({ page }) => {

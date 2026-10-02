@@ -25,10 +25,21 @@ const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("
 const TODAY = "2026-12-01";
 const options = { hash: sha, today: TODAY };
 
-/** The committed English, named, reviewed by its owner and by counsel: the state S07.01 publishes in. */
+/** The committed draft with every TODO(owner) in its English filled (test values only). */
+function settled(): TermsSource {
+  const terms = JSON.parse(JSON.stringify(realTerms)) as TermsSource;
+  for (const section of terms.sections ?? []) section.lines = (section.lines ?? []).map((line) => line?.replace(/TODO\(owner\)/g, "test region") ?? line);
+  return terms;
+}
+
+/**
+ * The committed English, settled (no TODO(owner) left, a YYYY-MM-DD.n version in place of the draft one), named,
+ * reviewed by its owner and by counsel: the state S07.01 publishes in.
+ */
 function approved(change: Partial<TermsSource> = {}): TermsSource {
   const terms: TermsSource = {
-    ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource),
+    ...settled(),
+    consentVersion: "2026-10-02.1",
     owner: "Ana Reyes",
     privacyContact: "privacy@example.org",
     ...change,
@@ -64,19 +75,31 @@ describe("publishing the terms", () => {
     expect(formatTermsReport(result)[0]).toBe("Terms 2026-10-02.1 published");
   });
 
-  it("is not published as committed: the owner, the English review, the privacy contact and counsel's review are still to be named", () => {
+  it("is not published as committed: the draft version, the owner, the reviews, the privacy contact and two regions are still open", () => {
     const result = plan(realTerms as unknown as TermsSource);
 
     expect(result.published).toBe(false);
-    expect(result.reasons).toEqual(
-      expect.arrayContaining([
-        "the owner is still a placeholder",
-        "the English reviewer is still a placeholder",
-        "the privacy contact is still a placeholder",
-        "counsel review: no named reviewer",
-      ]),
-    );
+    expect(result.consentVersion).toBe("2026-10-draft-1");
+    expect(result.reasons).toEqual([
+      "the owner is still a placeholder",
+      "no English review is recorded",
+      "the privacy contact is still a placeholder",
+      "the consent_version is not written YYYY-MM-DD.n",
+      "the English text still holds a placeholder",
+      "counsel review: none is recorded",
+    ]);
     expect(formatTermsReport(result)[0]).toBe("Terms NOT published (draft):");
+  });
+
+  it("treats TODO(owner) as a placeholder, in a value or anywhere in the English", () => {
+    expect(reasons(approved({ owner: "TODO(owner)" }))).toContain("the owner is still a placeholder");
+    expect(reasons(approved({ privacyContact: "todo(owner): later" }))).toContain("the privacy contact is still a placeholder");
+    const todoInText = approved();
+    todoInText.sections![1].lines![1] = "Twilio sends the text messages. Where: TODO(owner).";
+    expect(reasons(todoInText)).toContain("the English text still holds a placeholder");
+    expect(reasons(approved({ counselReview: { reviewer: "TODO(owner)", date: "2026-10-04", version: "2026-10-02.1", sourceHash: "x" } }))).toContain(
+      "counsel review: no named reviewer",
+    );
   });
 
   it("refuses a missing or placeholder owner, privacy contact and English review", () => {
@@ -140,6 +163,9 @@ describe("publishing the terms", () => {
     // The processors, the regions the docs give, and the exact way to stop.
     expect(english).toContain("Its servers are in Montreal");
     expect(english).toContain("The database is in Canada");
+    // The docs give no region for Twilio or Cohere: the owner states them (still TODO(owner), so the draft is refused).
+    expect(english).toContain("Where Twilio does this: TODO(owner).");
+    expect(english).toContain("Where Cohere does this: TODO(owner).");
     expect(english).toContain("Reply STOP to any text from the Hub. Or reply 0, then reply 0 again to confirm.");
   });
 });

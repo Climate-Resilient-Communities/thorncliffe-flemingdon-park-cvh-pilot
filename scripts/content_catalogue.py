@@ -50,6 +50,7 @@ MODEL_LANGS = ['ur', 'ps', 'tl', 'prs', 'gu', 'ta', 'el', 'sk', 'bn', 'hi', 'pa'
 DERIVED = {'zh-Hant': 'zh'}
 CONTENT_LANGS = MODEL_LANGS + list(DERIVED)
 PLACEHOLDER_PREFIX = 'PLACEHOLDER'
+TODO_MARKER = 'TODO('
 GUIDE_SECTIONS = ('before', 'during', 'after')
 
 
@@ -209,7 +210,10 @@ def new_record(english, text, model):
 
 
 def is_placeholder(value):
-    return not value or str(value).strip().upper().startswith(PLACEHOLDER_PREFIX)
+    """Nobody named yet: empty, starting with PLACEHOLDER, or holding a TODO(owner) marker (any case).
+    src/contracts/contentReview.ts isPlaceholder is the same rule."""
+    text = str(value or '').strip()
+    return not text or text.upper().startswith(PLACEHOLDER_PREFIX) or TODO_MARKER in text.upper()
 
 
 # ---------------------------------------------------------------- zh-Hant from zh

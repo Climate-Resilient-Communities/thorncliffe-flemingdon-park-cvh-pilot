@@ -25,6 +25,7 @@
 import type { LangCode } from "@/contracts/lang";
 import requiredTokens from "@/contracts/termsRequiredTokens.json";
 import {
+  TODO_MARKER,
   TRANSLATED_LANGS,
   checkAttribution,
   englishReviewHash,
@@ -250,7 +251,7 @@ export function termsRefusals(terms: TermsSource, { hash, today }: TermsPlanOpti
   for (const { fact, pattern } of REQUIRED_FACTS) {
     if (!pattern.test(english)) reasons.push(`the English no longer says ${fact}`);
   }
-  if (/PLACEHOLDER/i.test(english)) reasons.push("the English text still holds a placeholder");
+  if (/PLACEHOLDER/i.test(english) || TODO_MARKER.test(english)) reasons.push("the English text still holds a placeholder");
 
   // A version names one text for good: the ledger of signed versions holds the hash each was signed with.
   const signed = present(terms.consentVersion) ? terms.publishedVersions?.[terms.consentVersion] : undefined;

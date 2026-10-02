@@ -1,22 +1,23 @@
 {
  "meta": {
   "source": "S07.01, the acceptance criteria in docs/planning/pilot/epics.md, and the spine (AD-9, AD-12, AD-15, P9, N5).",
-  "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version and a counsel review of exactly this English and version. Values starting with PLACEHOLDER are refused. Any change to the text, the contact or the version needs a new counsel review: python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE. Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
+  "status": "DRAFT 2026-10-draft-1: NOT reviewed by the owner, NOT reviewed by counsel, NOT published. /{lang}/terms stays a 404 in production and web sign-up stays closed until src/modules/subscriptions/domain/terms.ts accepts this file.",
+  "note": "English source of the terms and privacy page (/{lang}/terms). It is published only when src/modules/subscriptions/domain/terms.ts accepts it: a named owner, a last-updated date, an English review by that owner, a privacy contact, a consent version written YYYY-MM-DD.n (the draft version 2026-10-draft-1 is refused on purpose: replace it before the reviews), no PLACEHOLDER or TODO(owner) left in any value or line, and a counsel review of exactly this English and version. Any change to the text, the contact or the version needs a new counsel review: python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer NAME --reviewed-on DATE. Translations: data/catalogue/translations/content/<lang>.json, keys terms.*."
  },
- "consentVersion": "2026-10-02.1",
- "owner": "PLACEHOLDER: Hub Coordinator responsible for the terms, to be named by the Hub",
+ "consentVersion": "2026-10-draft-1",
+ "owner": "TODO(owner): the Hub Coordinator responsible for the terms, to be named by the Hub",
  "lastUpdated": "2026-10-02",
  "englishReview": {
-  "reviewer": "PLACEHOLDER: reviewer (the owner) to be named when the English review is done",
+  "reviewer": null,
   "date": null
  },
  "counselReview": {
-  "reviewer": "PLACEHOLDER: counsel to be named when the launch-readiness review is done",
+  "reviewer": null,
   "date": null,
   "version": null,
   "sourceHash": null
  },
- "privacyContact": "PLACEHOLDER: the privacy contact (an email address or a phone number) to be named by the Hub",
+ "privacyContact": "TODO(owner): the privacy contact (an email address or a phone number), to be named by the Hub",
  "title": "Terms and privacy",
  "sections": [
   {
@@ -37,8 +38,8 @@
    "heading": "Who handles your information",
    "lines": [
     "Four companies help us run the service. They handle information for us.",
-    "Twilio sends the text messages. It handles your phone number and our messages to you. It may do this outside Canada.",
-    "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. It may work outside Canada.",
+    "Twilio sends the text messages. It handles your phone number and our messages to you. Where Twilio does this: TODO(owner).",
+    "Cohere translates alerts and helps match questions you type in search. It never gets your phone number. Where Cohere does this: TODO(owner).",
     "Vercel runs the website. Its servers are in Montreal. If there is an outage, it may use servers in the United States.",
     "Supabase keeps the database that holds your number, language, neighbourhood and choices. The database is in Canada."
    ]

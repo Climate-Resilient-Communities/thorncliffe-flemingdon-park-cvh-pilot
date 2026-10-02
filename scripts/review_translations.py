@@ -342,6 +342,12 @@ def mark_terms_reviewed(reviewer, reviewed_on, counsel):
     if counsel:
         if cc.is_placeholder(terms.get('privacyContact')) or cc.is_placeholder(terms.get('owner')):
             raise SystemExit('counsel reviews the terms only once the owner and the privacy contact are named')
+        if not version_date(version):
+            raise SystemExit(f'consentVersion {version} is a draft version: set it to YYYY-MM-DD.n (the day the text was '
+                             'settled) and re-record the English review before counsel reviews the terms')
+        english = ' '.join(cc.terms_texts(terms).values()).upper()
+        if cc.PLACEHOLDER_PREFIX in english or cc.TODO_MARKER in english:
+            raise SystemExit('the English still holds a PLACEHOLDER or TODO(owner): settle the text before counsel reviews it')
         ledger = terms.get('publishedVersions') or {}
         if ledger.get(version) not in (None, current):
             raise SystemExit(f'consentVersion {version} was already published with different text; bump consentVersion '

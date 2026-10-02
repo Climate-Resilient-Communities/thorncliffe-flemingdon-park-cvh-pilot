@@ -9,7 +9,10 @@ import { createTermsService, termsPageMode } from "./termsService";
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
 function service(change: Partial<TermsSource> = {}, reviewed = true, afterReview: (t: TermsSource) => void = () => {}) {
-  const terms: TermsSource = { ...(JSON.parse(JSON.stringify(realTerms)) as TermsSource), owner: "Ana Reyes", privacyContact: "privacy@example.org", ...change };
+  const draft = JSON.parse(JSON.stringify(realTerms)) as TermsSource;
+  // Settle the draft: fill each TODO(owner) in the English and give it a YYYY-MM-DD.n version (test values only).
+  for (const section of draft.sections ?? []) section.lines = (section.lines ?? []).map((line) => line?.replace(/TODO\(owner\)/g, "test region") ?? line);
+  const terms: TermsSource = { ...draft, consentVersion: "2026-10-02.1", owner: "Ana Reyes", privacyContact: "privacy@example.org", ...change };
   const hash = termsReviewHash(terms, sha);
   if (reviewed) {
     terms.englishReview = { reviewer: "Ana Reyes", date: "2026-10-03", sourceHash: hash };
@@ -42,6 +45,7 @@ describe("the terms seam for the page and the web sign-up", () => {
     const unreviewed = service({}, false);
     expect(unreviewed.currentPublishedTerms("en")).toBeNull();
     expect(unreviewed.currentConsentVersion()).toBeNull();
+    expect(service({ privacyContact: "TODO(owner)" }).currentPublishedTerms("en")).toBeNull();
     const view = unreviewed.termsPageView("en");
     expect(view.status).toBe("draft");
     if (view.status === "draft") expect(view.reasons.length).toBeGreaterThan(0);
@@ -54,8 +58,8 @@ describe("the terms seam for the page and the web sign-up", () => {
     expect(currentConsentVersion()).toBeNull();
     const view = termsPageView("en");
     expect(view.status).toBe("draft");
-    expect(view.consentVersion).toBe("2026-10-02.1");
-    expect(bundledTermsInput().terms.consentVersion).toBe("2026-10-02.1");
+    expect(view.consentVersion).toBe("2026-10-draft-1");
+    expect(bundledTermsInput().terms.consentVersion).toBe("2026-10-draft-1");
   });
 
   it("names no new version until counsel has reviewed it, so an earlier version stays the one in force", () => {
