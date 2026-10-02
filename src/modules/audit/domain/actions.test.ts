@@ -81,6 +81,10 @@ describe("toAuditRecord", () => {
     ["building.floor_removed", { floor_id: FLOOR, reason: "floor_has_assignments", assignments: 2 }],
     ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: null }],
     ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR] }],
+    ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR], previous_floor_ids: null }],
+    ["assignment.saved", { staff_id: STAFF, rsn: "4155426", floor_ids: null, previous_floor_ids: [FLOOR] }],
+    ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR] }],
+    ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: null, reason: "role_changed" }],
     ["seed.run", { seed: "buildings", counts: { buildings: 43, floors: 812 }, warnings: 1 }],
     ["sms.test_sent", { http_status: 201, provider_status: "queued" }],
     ["sms.test_sent", { http_status: 400, provider_error_code: 30032, reason: "provider_error" }],
@@ -110,6 +114,15 @@ describe("toAuditRecord", () => {
         /fields outside the schema: admin_shortfall/,
       );
     }
+  });
+
+  it("keeps the assignment records strict: role_changed is a reason of assignment.removed only, and no other field is accepted", () => {
+    const attempt = (action: "assignment.saved" | "assignment.removed", meta: object) => () => toAuditRecord(event({ action, meta } as unknown as Partial<AuditEvent>), "ok");
+
+    expect(attempt("assignment.saved", { reason: "role_changed" })).toThrow(AuditRecordError);
+    expect(attempt("assignment.removed", { reason: "other" })).toThrow(AuditRecordError);
+    expect(attempt("assignment.removed", { previous_floor_ids: null })).toThrow(/fields outside the schema: previous_floor_ids/);
+    expect(attempt("assignment.saved", { previous_floor_ids: [FLOOR, "x"] })).toThrow("assignment.saved: meta.previous_floor_ids.1 is invalid");
   });
 
   it("keeps the authenticator reset's reason to a fixed list, never free text (S01.11)", () => {

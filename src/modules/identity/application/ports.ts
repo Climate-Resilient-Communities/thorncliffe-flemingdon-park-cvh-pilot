@@ -230,6 +230,11 @@ export interface StaffStore {
   setStatus(tx: DbTransaction, staffId: string, status: StaffAccount["status"]): Promise<void>;
   setRole(tx: DbTransaction, staffId: string, role: StaffAccount["role"]): Promise<void>;
   /**
+   * Deletes every ambassador assignment of the account (S01.14: a role other than Ambassador keeps none) and returns
+   * what each listed: the building and its floor ids, null for every floor. Their floor rows go with them.
+   */
+  removeAssignments(tx: DbTransaction, staffId: string): Promise<{ rsn: string; floorIds: string[] | null }[]>;
+  /**
    * An Admin's "Reset password" begins (S01.08): the account is held at `locked_pending_reissue`
    * with `must_change_password`, so neither its old password nor a half-finished reset signs in.
    * Only an `active` or `locked_pending_reissue` account. True when it changed.

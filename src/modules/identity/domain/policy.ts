@@ -130,7 +130,7 @@ export interface PolicyEntry {
 export interface PolicyContext {
   /** The staff member acting. */
   actorId?: string;
-  /** The actor's current assignments (S01.14). Until S01.14 nobody has any: an Ambassador covers nothing. */
+  /** The actor's current assignments (S01.14's `ambassador_assignment`, read by src/app/staff/scope.ts). An Ambassador with none covers nothing. */
   assignments?: readonly PolicyAssignment[];
   /** The building, and floor where it matters, the action is on. */
   target?: { rsn: string; floorId?: string | null };

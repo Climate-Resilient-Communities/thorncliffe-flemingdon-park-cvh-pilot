@@ -10,6 +10,8 @@ import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import type { ComponentProps, ReactNode } from "react";
 import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
+import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
+import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
@@ -489,6 +491,32 @@ export function BuildingsFixture({
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/buildings">
       <Screen surface="staff" testId="screen">
         <BuildingsBody screen={screen} actions={actions} initial={initial} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The coverage screen (S01.14) as an Admin, a Coordinator or a Director sees it in the Hub shell: the app's own CoverageBody on a
+ * view built by the app's own view functions (e2e/hub/coverage.spec.ts), with the actions replaced by ones that do nothing
+ * and, where a picture needs it, a form already in its refused state (`initial`).
+ */
+export function CoverageFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: CoverageScreen;
+  initial?: CoverageInitial;
+}) {
+  const actions: CoverageActions = { assign: noAction, remove: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/coverage">
+      <Screen surface="staff" testId="screen">
+        <CoverageBody screen={screen} actions={actions} initial={initial} />
       </Screen>
     </AroundTheScreen>
   );

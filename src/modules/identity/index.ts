@@ -9,6 +9,7 @@ import { drizzleStaffSessionStore } from "./adapters/sessionStore";
 import { drizzleStaffStore } from "./adapters/staffStore";
 import { drizzleThrottleStore } from "./adapters/throttleStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
+import { createAssignmentService, type AssignmentService, type BuildingFloorsReader } from "./application/assignments";
 import type { IdentityProvider } from "./application/ports";
 import { createAdminRecovery } from "./application/adminRecovery";
 import { createFactorRecovery, type FactorRecoveryService } from "./application/factorRecovery";
@@ -100,6 +101,15 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
 }
 
 /**
+ * The Ambassador assignments and `coversFloor` (S01.14), wired to the identity tables and the audit trail.
+ * `floors` is places' reader of a building's floors (identity may not import places, AD-2): the
+ * composition root passes `floorsOfBuilding` as `floorsOf`.
+ */
+export function createAssignments(wiring: { db: Db; floors: BuildingFloorsReader; audit?: AuditWriter; now?: () => Date }): AssignmentService {
+  return createAssignmentService({ db: wiring.db, floors: wiring.floors, audit: wiring.audit ?? audit, now: wiring.now });
+}
+
+/**
  * Sign-in, the session lookup, the setup gates' password change, the authenticator enrolment and
  * code check (S01.10) and the re-issue of starting passwords (S01.07), wired like createIdentity.
  * `accounts` is the IdentityService whose bootstrap completion runs after a password change or an
@@ -138,6 +148,18 @@ export { MEMORY_SESSION_COOKIE, memoryIdentityProvider, type MemoryIdentityProvi
 export { sessionCookieOptions, supabaseAuthSessions, type SupabaseSessionConfig } from "./adapters/supabaseAuthSessions";
 export { supabaseIdentityProvider, type SupabaseAdminConfig } from "./adapters/supabaseIdentityProvider";
 export type { AccountService, AddPersonView, CreatedAccount } from "./application/accounts";
+export type {
+  AmbassadorOption,
+  AssignRefusal,
+  AssignedAmbassador,
+  AssignmentService,
+  AssignmentView,
+  BuildingFloor,
+  BuildingFloorsReader,
+  FloorRange,
+  RemoveAssignmentRefusal,
+} from "./application/assignments";
+export { assignmentCovers, coversNow, expandFloorRange, floorCoverage, type AssignedFloors, type FloorCoverage, type FloorRef } from "./domain/coverage";
 export { PEPPER_NOT_CONFIGURED_MESSAGE, pepperPassword } from "./application/passwordPepper";
 export type {
   AuthSessions,

@@ -1056,6 +1056,36 @@
       noChange: 'Nothing to change: the floor already has that label.', alreadyConfirmed: 'This building is already confirmed.',
       noFloors: 'Add at least one floor before confirming the building.', buildingNotFound: 'That building does not exist.',
       floorNotFound: 'That floor does not exist any more. Reload the page.', forbidden: 'Only an Admin can change buildings and floors.' } } } });
+  /* Ambassador assignments and the coverage view (S01.14): which floors have an Ambassador. Not a prototype screen. */
+  m(en, { hub: { nav: { coverage: 'Coverage' } } });
+  m(en, { staff: { coverage: {
+    title: 'Ambassador coverage',
+    lead: 'Which floors of the pilot buildings have an active ambassador assigned, and which do not. Check-ins can only be promised for floors with an ambassador.',
+    summary: 'Buildings with every floor covered: {covered} of {total}. Floors without an ambassador: {gaps}.',
+    empty: 'No buildings have been imported yet. Ask IT to run the buildings seed.',
+    viewOf: 'Coverage of {address}', back: 'All buildings',
+    floorsCovered: 'Floors covered: {covered} of {total}.', allCovered: 'Every floor is covered.', noneCovered: 'No floor is covered.', noFloors: 'No floors are listed for this building yet.',
+    coveredLabel: 'Covered:', notCoveredLabel: 'Not covered:',
+    floorsTitle: 'Floors', coveredBy: 'Covered by {names}', notCovered: 'Not covered',
+    assignmentsTitle: 'Ambassadors assigned', noAssignments: 'No ambassador is assigned to this building.',
+    allFloors: 'All floors', someFloors: 'Floors {labels}', notCoveringNow: 'Not covering now: {reason}.',
+    inactive: { locked_pending_reissue: 'the account is locked until an Admin re-issues the starting password', suspended: 'the account is suspended',
+      removed: 'the account was removed', notAmbassador: 'the account is no longer an ambassador' },
+    remove: 'Remove {name}', removeConfirm: 'Remove {name} from this building? They stay an ambassador and stop covering it.',
+    removeYes: 'Yes, remove {name}', removeKeep: 'Keep {name}',
+    assign: { title: 'Assign an ambassador', person: 'Ambassador', choose: 'Choose an ambassador', noAmbassadors: 'There is no active ambassador to assign. Add one under People first.',
+      scope: 'Which floors', all: 'All floors, including floors added later', some: 'Only the floors chosen here', pick: 'Choose floors', range: 'Or every floor from one to another, as the building lists its floors now (floors added later are not included)',
+      from: 'From floor', to: 'To floor', none: 'None', submit: 'Assign', noFloors: 'Add floors to this building before assigning an ambassador to some of them.' },
+    saved: { assigned: 'Assignment saved.', removed: 'Assignment removed.' },
+    errors: { forbidden: 'Only an Admin, a Coordinator or a Director can see coverage.', assignForbidden: 'Only an Admin can assign ambassadors.',
+      aal2Required: 'An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.',
+      buildingNotFound: 'That building does not exist.', accountNotFound: 'That person does not exist. Reload the page.',
+      notAmbassador: 'Only an ambassador can be assigned to a building.', accountNotActive: 'That ambassador is not active, so they cannot be assigned.',
+      noFloors: 'Choose at least one floor, or choose all floors.', floorNotInBuilding: 'One of those floors is not a floor of this building. Reload the page.',
+      rangeIncomplete: 'Choose both ends of the range of floors, or neither.', notAssigned: 'That ambassador is not assigned to this building.', choosePerson: 'Choose an ambassador.',
+      chooseScope: 'Choose which floors: all floors, or only the floors you pick.',
+      allWithFloors: 'You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.',
+      rangeReversed: 'The range goes from a higher floor to a lower one. Put the lower floor first.' } } } });
   /* An Admin's "Reset authenticator" (S01.11). Not a prototype screen. */
   m(en, { staff: { resetAuthenticator: { title: 'Reset an authenticator', lead: 'For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.',
     username: 'Their username', submit: 'Reset authenticator', done: 'Authenticator reset for {username}.',

@@ -64,6 +64,9 @@ export const REFUSAL_REASONS = [
   "not_available",
 ] as const;
 
+/** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */
+const REMOVAL_REASONS = [...REFUSAL_REASONS, "role_changed"] as const;
+
 const ROUTE_PATTERN = /^(\/([a-z][a-z-]*|\[[a-z_]+\]))+$/;
 
 const role = z.enum(STAFF_ROLES);
@@ -83,6 +86,8 @@ const isoDate = z.string().refine(isIsoDate, "must be a real date written YYYY-M
 const rsn = z.string().regex(/^[0-9]{1,9}$/);
 /** A floor label as S01.13 allows it. */
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
+/** The floors of an assignment by id; null is every floor of the building. */
+const floorIds = z.array(id).max(200).nullable();
 /** A policy action name such as `alert.approve`. */
 const permission = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,3}$/).max(64);
 /**
@@ -145,9 +150,22 @@ export const AUDIT_META = {
   "building.floor_removed": meta({ floor_id: id.optional(), label: floorLabel.optional(), assignments: count.optional() }),
   "building.confirmed": meta({ floors: count.optional() }),
 
-  // Ambassador assignments (S01.14). `floor_ids: null` is the whole building.
-  "assignment.saved": meta({ staff_id: id.optional(), rsn: rsn.optional(), floor_ids: z.array(id).max(200).nullable().optional() }),
-  "assignment.removed": meta({ staff_id: id.optional(), rsn: rsn.optional() }),
+  // Ambassador assignments (S01.14). `floor_ids: null` is the whole building. `previous_floor_ids` is what a replaced
+  // assignment listed (absent on a first assignment). `assignment.removed` records the floors the assignment listed,
+  // and its reason may also be `role_changed`: the account left the Ambassador role and its assignments went with it.
+  "assignment.saved": meta({
+    staff_id: id.optional(),
+    rsn: rsn.optional(),
+    floor_ids: floorIds.optional(),
+    previous_floor_ids: floorIds.optional(),
+  }),
+  // Not built with meta(): its `reason` is the common list plus `role_changed`, which a spread of `common` would intersect away.
+  "assignment.removed": z.strictObject({
+    reason: z.enum(REMOVAL_REASONS).optional(),
+    staff_id: id.optional(),
+    rsn: rsn.optional(),
+    floor_ids: floorIds.optional(),
+  }),
 
   // Providers (S02.04): an Admin publishes or unpublishes a provider and sets its last-confirmed date.
   // The subject is the provider (type `provider`, its catalogue id); listing text is never in meta.
