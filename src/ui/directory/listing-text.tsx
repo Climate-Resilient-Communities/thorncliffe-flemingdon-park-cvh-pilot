@@ -21,15 +21,31 @@ type BlockTag = "p" | "span" | "div" | "li";
  * English on the element itself so its lines start at the left and wrap normally in a right-to-left page. A machine
  * translation shows its English original in place when `english` is on.
  */
-export function ListingBlock({ text, english = false, as: Tag = "p", className, testId }: { text: ListingText; english?: boolean; as?: BlockTag; className?: string; testId?: string }) {
+export function ListingBlock({
+  text,
+  english = false,
+  as: Tag = "p",
+  className,
+  testId,
+  contentLang,
+}: {
+  text: ListingText;
+  english?: boolean;
+  as?: BlockTag;
+  className?: string;
+  testId?: string;
+  /** The language this text is shown in when that is not the language of the page (search results in the language of the question): the element then says so for the browser and a screen reader. */
+  contentLang?: LaunchCode;
+}) {
   const original = english && text.machine;
   const asEnglish = original || isFallbackText(text);
+  const own = !asEnglish && contentLang ? languageOf(contentLang) : null;
   return (
     <Tag
       className={className}
       data-testid={testId}
-      lang={asEnglish ? "en" : undefined}
-      dir={asEnglish ? "ltr" : undefined}
+      lang={asEnglish ? "en" : own ? own.bcp47 : undefined}
+      dir={asEnglish ? "ltr" : own ? own.dir : undefined}
       data-translation={isFallbackText(text) ? "unavailable" : text.machine ? (original ? "original" : "machine") : undefined}
     >
       {original ? text.original.body : text.body}
@@ -98,14 +114,14 @@ export function Inline911({ testId = "inline-911" }: { testId?: string }) {
  * X-14, "How they can help": the provider's emergency role, and 911 named for an emergency. The role often names a service
  * that is not an emergency service (a place to charge a phone, a warm room), so the box always says who to call in danger.
  */
-export function HowTheyHelp({ role, english }: { role: ListingText; english: boolean }): ReactNode {
+export function HowTheyHelp({ role, english, contentLang }: { role: ListingText; english: boolean; contentLang?: LaunchCode }): ReactNode {
   const t = useTranslations();
   return (
     <div className="dir-help" data-testid="how-they-help">
       <ResidentText as="p" className="dir-help__label">
         {t("x14.label")}
       </ResidentText>
-      <ListingBlock text={role} english={english} className="dir-help__text" testId="emergency-role" />
+      <ListingBlock text={role} english={english} className="dir-help__text" testId="emergency-role" contentLang={contentLang} />
       <ResidentText as="p" className="dir-help__911" testId="help-911">
         {t("x01.call")}
       </ResidentText>

@@ -108,7 +108,20 @@ function Contacts({ provider }: { provider: ListingProvider }) {
  * file does not give reads "Not known". The machine-translation label and "Read it in English" sit on the card once, and
  * switch every machine-translated text of the card between the page language and its English original.
  */
-export function ProviderView({ provider, categories, lang, variant }: { provider: ListingProvider; categories: CategoryNames; lang: LaunchCode; variant: "card" | "page" }) {
+export function ProviderView({
+  provider,
+  categories,
+  lang,
+  variant,
+  contentLang,
+}: {
+  provider: ListingProvider;
+  categories: CategoryNames;
+  lang: LaunchCode;
+  variant: "card" | "page";
+  /** The language of the listing's texts when it is not the page's (search results in the language the question was written in). */
+  contentLang?: LaunchCode;
+}) {
   const t = useTranslations();
   const [english, setEnglish] = useState(false);
   const locale = languageOf(lang).bcp47;
@@ -146,13 +159,13 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
         <ul className="dir-tags" aria-label={t("directory.topic")}>
           {names.map((name, at) => (
             <li key={`${provider.category_ids[at]}`} className="dir-tag">
-              <ListingBlock text={name} english={english} as="span" />
+              <ListingBlock text={name} english={english} as="span" contentLang={contentLang} />
             </li>
           ))}
           {variant === "page" &&
             provider.subcategories.map((sub) => (
               <li key={sub.body} className="dir-tag dir-tag--quiet">
-                <ListingBlock text={sub} english={english} as="span" />
+                <ListingBlock text={sub} english={english} as="span" contentLang={contentLang} />
               </li>
             ))}
           {variant === "page" &&
@@ -174,7 +187,7 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
         <div className="dir-fact">
           <ResidentText as="dt">{t("R12.services")}</ResidentText>
           <dd data-testid="provider-services">
-            <ListingBlock text={provider.services} english={english} />
+            <ListingBlock text={provider.services} english={english} contentLang={contentLang} />
           </dd>
         </div>
         <div className="dir-fact">
@@ -185,7 +198,7 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
         </div>
         <div className="dir-fact">
           <ResidentText as="dt">{t("directory.emergencyRole")}</ResidentText>
-          <dd data-testid="provider-emergency">{provider.emergency_role ? <HowTheyHelp role={provider.emergency_role} english={english} /> : <Unknown>{t("status.unknown")}</Unknown>}</dd>
+          <dd data-testid="provider-emergency">{provider.emergency_role ? <HowTheyHelp role={provider.emergency_role} english={english} contentLang={contentLang} /> : <Unknown>{t("status.unknown")}</Unknown>}</dd>
         </div>
       </dl>
 

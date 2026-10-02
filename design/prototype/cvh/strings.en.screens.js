@@ -1211,6 +1211,13 @@
     numbersLink: 'See the essential numbers',
     backToList: 'All services and organisations',
     suggestApply: 'Show only {place}' } });
+  /* The ask screen a resident opens at /{lang}/search (S03.06, FR-D2-Q, UX-DR10): the wording R-09, R-10 and R-11 did not need, for a search that is waiting, cannot reach the server, is refused or is being updated. Not a prototype screen. */
+  m(en, {
+    R09: { searching: 'Searching', needsSignal: 'Search needs signal', needsSignalBody: 'You can still choose a topic below, or call the Hub.',
+      busy: 'Search is busy, try again in a few minutes', busyBody: 'You can choose a topic below, or call the Hub.',
+      updating: 'Search results are being updated, try again', updatingBody: 'You can choose a topic below while they are updated, or call the Hub.',
+      emergencyLine: 'In an emergency, call 911', browseAll: 'See all services and organisations', loading: 'Loading the topics' },
+    R10: { shownIn: 'Shown in {lang}' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },
