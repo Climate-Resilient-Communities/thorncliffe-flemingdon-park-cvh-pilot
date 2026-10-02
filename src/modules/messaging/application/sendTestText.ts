@@ -35,7 +35,7 @@ import type { ProviderAnswer, SmsProvider, TestSendStore } from "./ports";
 
 /** Where the use case writes audit records: the audit module's `record` and `recordRefusal`. */
 export interface TestTextAudit {
-  record(tx: DbTransaction, event: AuditEvent<"sms.test_sent">): Promise<void>;
+  record(tx: DbTransaction, event: AuditEvent<"sms.test_sent"> | AuditEvent<"sms.test_attempted">): Promise<void>;
   recordRefusal(db: Db, event: AuditEvent<"sms.test_sent">): Promise<void>;
 }
 

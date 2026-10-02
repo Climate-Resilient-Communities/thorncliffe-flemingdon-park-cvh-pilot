@@ -43,7 +43,7 @@ export function SendTestTextFormView({
         </div>
       ) : null}
       {state.status === "refused" ? (
-        <p id={ERROR_ID} role="alert">
+        <p id={ERROR_ID} role="alert" className="hub-error">
           {state.message}
         </p>
       ) : null}
@@ -52,7 +52,7 @@ export function SendTestTextFormView({
           <input type="hidden" name="requestId" value={requestId} />
           <Stack gap="label">
             <label htmlFor="sms-test-number">{labels.number}</label>
-            <select className="tap" id="sms-test-number" name="number" required defaultValue={numbers[0]?.value} aria-describedby={state.status === "refused" ? `${HINT_ID} ${ERROR_ID}` : HINT_ID}>
+            <select className="hub-input" id="sms-test-number" name="number" required defaultValue={numbers[0]?.value} aria-describedby={state.status === "refused" ? `${HINT_ID} ${ERROR_ID}` : HINT_ID}>
               {numbers.map((number) => (
                 <option key={number.value} value={number.value}>
                   {number.label}
@@ -61,7 +61,7 @@ export function SendTestTextFormView({
             </select>
             <p id={HINT_ID}>{labels.numberHint}</p>
           </Stack>
-          <button className="tap" type="submit" disabled={pending}>
+          <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
             {labels.submit}
           </button>
         </Stack>

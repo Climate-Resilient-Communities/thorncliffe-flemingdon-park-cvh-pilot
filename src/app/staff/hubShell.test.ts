@@ -37,7 +37,7 @@ describe("hubNavigation", () => {
   it("lists the pilot's three disruption screens in the prototype's order, with the home first, and People for Admins", () => {
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "People", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "People", "Providers", "Test text"]);
   });
 
   it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {
@@ -49,9 +49,10 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
-  it("adds Administration with People for Admins only", () => {
+  it("adds Administration with People and Providers for Admins only", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/people"), role).toBe(role === "admin");
+      expect(items(role).some((item) => item.href === "/staff/providers"), role).toBe(role === "admin");
     }
   });
 

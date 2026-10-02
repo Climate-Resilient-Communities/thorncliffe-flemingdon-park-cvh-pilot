@@ -144,6 +144,51 @@ describe("toAuditRecord", () => {
     expect(() => toAuditRecord(event({ action: "sms.test_sent", meta: { twilio_sid: "+14165550123" } } as unknown as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
   });
 
+  describe("provider actions (S02.04)", () => {
+    const provider = (overrides: Partial<AuditEvent>) =>
+      event({ action: "provider.confirmed", subjectType: "provider", subjectId: "M001", meta: { confirmed_on: "2026-10-01", previous: null }, ...overrides } as Partial<AuditEvent>);
+
+    it("accepts the catalogue id of a provider as the subject, with the date it was confirmed", () => {
+      expect(toAuditRecord(provider({}), "ok")).toMatchObject({ action: "provider.confirmed", subjectType: "provider", subjectId: "M001", meta: { confirmed_on: "2026-10-01", previous: null } });
+      expect(toAuditRecord(provider({ action: "provider.published", meta: { last_confirmed: "2026-10-01" } } as Partial<AuditEvent>), "ok").meta).toEqual({ last_confirmed: "2026-10-01" });
+      expect(toAuditRecord(provider({ action: "provider.unpublished", meta: {} } as Partial<AuditEvent>), "ok").meta).toEqual({});
+    });
+
+    it("records a refusal with its reason and no other detail", () => {
+      expect(toAuditRecord(provider({ action: "provider.published", meta: { reason: "validation" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "validation" });
+    });
+
+    it.each([
+      ["listing text", "provider.confirmed", { confirmed_on: "2026-10-01", services: "Free food bank" }],
+      ["a name", "provider.published", { name: "Thorncliffe Neighbourhood Office" }],
+      ["a phone number", "provider.unpublished", { phone: "416-421-3050" }],
+      ["a date that is not a date", "provider.confirmed", { confirmed_on: "yesterday" }],
+      ["a day that does not exist", "provider.confirmed", { confirmed_on: "2026-02-31" }],
+      ["a previous date that does not exist", "provider.confirmed", { confirmed_on: "2026-10-01", previous: "2026-13-01" }],
+      ["a last-confirmed date that does not exist", "provider.published", { last_confirmed: "2026-02-31" }],
+    ])("rejects %s", (_, action, meta) => {
+      expect(() => toAuditRecord(provider({ action, meta } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    });
+
+    it.each([
+      ["a confirmation with no confirmed_on", "provider.confirmed", { previous: null }],
+      ["a confirmation with an empty meta", "provider.confirmed", {}],
+      ["a publication with no last_confirmed", "provider.published", {}],
+    ])("rejects an ok record of %s", (_, action, meta) => {
+      expect(() => toAuditRecord(provider({ action, meta } as Partial<AuditEvent>), "ok")).toThrow(/meta is missing (confirmed_on|last_confirmed)/);
+    });
+
+    it("accepts the same events as refusals: a refusal carries only its reason", () => {
+      expect(toAuditRecord(provider({ action: "provider.confirmed", meta: { reason: "validation" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "validation" });
+      expect(toAuditRecord(provider({ action: "provider.published", meta: { reason: "validation" } } as Partial<AuditEvent>), "refused").meta).toEqual({ reason: "validation" });
+    });
+
+    it("accepts a leap day and refuses one in a year that has none", () => {
+      expect(() => toAuditRecord(provider({ meta: { confirmed_on: "2028-02-29", previous: null } } as Partial<AuditEvent>), "ok")).not.toThrow();
+      expect(() => toAuditRecord(provider({ meta: { confirmed_on: "2026-02-29", previous: null } } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    });
+  });
+
   it("does not echo a field name that could itself carry data", () => {
     expect(() => toAuditRecord(event({ meta: { "jane@example.com": 1 } as never }), "ok")).toThrow(
       "password.changed: meta has fields outside the schema: (unnamed)",
@@ -184,6 +229,27 @@ describe("toAuditRecord", () => {
     expect(() => toAuditRecord(event({ subjectId }), "ok")).not.toThrow();
   });
 
+  it("accepts a catalogue id as the subject of a provider, and only of a provider", () => {
+    expect(() => toAuditRecord(event({ action: "provider.unpublished", subjectType: "provider", subjectId: "M001", meta: {} }), "ok")).not.toThrow();
+    expect(() => toAuditRecord(event({ action: "provider.unpublished", subjectType: "provider", subjectId: "B1205", meta: {} }), "ok")).not.toThrow();
+  });
+
+  it.each([
+    ["a staff account", "account.suspended", "staff_account"],
+    ["a building", "building.confirmed", "building"],
+    ["a seed", "seed.run", "guides_and_numbers"],
+  ])("refuses a catalogue id such as B1205 as the subject of %s", (_, action, subjectType) => {
+    const meta = action === "seed.run" ? { seed: "buildings" } : {};
+    expect(() => toAuditRecord(event({ action, subjectType, subjectId: "B1205", meta } as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(event({ action, subjectType, subjectId: "M001", meta } as Partial<AuditEvent>), "refused")).toThrow(AuditRecordError);
+  });
+
+  it("refuses a provider subject that is not a catalogue id", () => {
+    for (const subjectId of ["M-001", "M4165550199", "M12", "MM001"]) {
+      expect(() => toAuditRecord(event({ action: "provider.unpublished", subjectType: "provider", subjectId, meta: {} }), "ok"), subjectId).toThrow(AuditRecordError);
+    }
+  });
+
   it.each([
     ["colons", "416:555:0199"],
     ["underscores between digits", "416_555_0199"],
@@ -192,6 +258,8 @@ describe("toAuditRecord", () => {
     ["a ten digit number", "4165550199"],
     ["a SID of the wrong length", "SM0123"],
     ["an upper case SID", "SM0123456789ABCDEF0123456789ABCDEF"],
+    ["a capital letter and ten digits", "M4165550199"],
+    ["a catalogue id with a hyphen", "M-001"],
   ])("rejects %s as subject id", (_, subjectId) => {
     expect(() => toAuditRecord(event({ subjectId }), "ok")).toThrow(AuditRecordError);
   });
