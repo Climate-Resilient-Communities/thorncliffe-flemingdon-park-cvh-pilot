@@ -55,6 +55,9 @@ create trigger audit_event_no_truncate
 -- Clients never reach the table: Supabase's default privileges grant every new
 -- table in public to anon, authenticated and service_role, so take them back.
 revoke all on table audit_event from public, anon, authenticated, service_role;
+-- The identity column's sequence gets the same default privileges: nextval()
+-- by a client role would burn ids and setval() could rewrite the counter.
+revoke all on sequence audit_event_id_seq from public, anon, authenticated, service_role;
 
 -- The app's own database role. Migrations run as the owner (postgres); the
 -- app connects as cvh_app_login, a member of cvh_app, which holds only the
@@ -63,13 +66,27 @@ revoke all on table audit_event from public, anon, authenticated, service_role;
 -- to the server, not the database, so they are created only if missing.
 -- cvh_app_login is created without a password, so it cannot sign in until
 -- the project owner sets one (never in a migration or the repository).
+-- If either role already exists (an earlier run, or made by hand) it must have
+-- the attributes below: the app's connection must never be able to bypass RLS,
+-- create roles or databases, or be a superuser.
 do $$
+declare
+  r pg_roles;
 begin
-  if not exists (select 1 from pg_roles where rolname = 'cvh_app') then
+  select * into r from pg_roles where rolname = 'cvh_app';
+  if not found then
     create role cvh_app nologin noinherit;
+  elsif r.rolsuper or r.rolbypassrls or r.rolcreaterole or r.rolcreatedb or r.rolcanlogin then
+    raise exception 'role cvh_app already exists with unexpected attributes (superuser %, bypassrls %, createrole %, createdb %, login %): it must be NOLOGIN without any of the others; fix or drop the role, then re-run',
+      r.rolsuper, r.rolbypassrls, r.rolcreaterole, r.rolcreatedb, r.rolcanlogin;
   end if;
-  if not exists (select 1 from pg_roles where rolname = 'cvh_app_login') then
+
+  select * into r from pg_roles where rolname = 'cvh_app_login';
+  if not found then
     create role cvh_app_login login inherit;
+  elsif r.rolsuper or r.rolbypassrls or r.rolcreaterole or r.rolcreatedb then
+    raise exception 'role cvh_app_login already exists with unexpected attributes (superuser %, bypassrls %, createrole %, createdb %): it must have none of them; fix or drop the role, then re-run',
+      r.rolsuper, r.rolbypassrls, r.rolcreaterole, r.rolcreatedb;
   end if;
 end
 $$;
