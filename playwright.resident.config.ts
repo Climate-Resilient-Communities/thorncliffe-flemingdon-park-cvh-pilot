@@ -37,8 +37,14 @@ export default defineConfig({
     command: `npm run start -- --port ${port}`,
     url: localUrl,
     // The server refuses to start without a safe environment (S01.02); a local run is development.
-    // CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) reads these sample buildings instead of the database.
-    env: { SMS_MODE: "log", PUBLIC_BASE_URL: localUrl, CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json") },
+    // CVH_FAKE_BUILDINGS_FILE: the building page (S02.08) and the contacts on the numbers page (S02.10) read these sample
+    // buildings instead of the database. CVH_FAKE_GUIDES_FILE: the guides and numbers pages (S02.10) read these sample rows.
+    env: {
+      SMS_MODE: "log",
+      PUBLIC_BASE_URL: localUrl,
+      CVH_FAKE_BUILDINGS_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "buildings.json"),
+      CVH_FAKE_GUIDES_FILE: path.join(__dirname, "e2e", "resident", "fixtures", "guides.json"),
+    },
     reuseExistingServer: !process.env.CI,
   },
 });

@@ -3,7 +3,7 @@
 import { updateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { englishText } from "@/i18n/text";
-import { buildingTag } from "../../buildingCache";
+import { BUILDING_CONTACTS_TAG, buildingTag } from "../../buildingCache";
 import { staffAction, type ActionRefusal } from "../guard";
 import { buildings } from "../places";
 import { addFloorFromForm, confirmFromForm, removeFloorFromForm, renameFloorFromForm, setContactFromForm, type EditState } from "./editFloors";
@@ -59,7 +59,11 @@ export const setContactAction = staffAction(
   async (session, _previous: EditState, form: FormData) => {
     const state = await setContactFromForm({ buildings }, session, form);
     const rsn = form.get("rsn");
-    if (state.status === "saved" && typeof rsn === "string" && /^[0-9]{1,9}$/.test(rsn)) updateTag(buildingTag(rsn));
+    if (state.status === "saved" && typeof rsn === "string" && /^[0-9]{1,9}$/.test(rsn)) {
+      updateTag(buildingTag(rsn));
+      // The essential-numbers page lists the contacts of the buildings a resident chose (S02.10).
+      updateTag(BUILDING_CONTACTS_TAG);
+    }
     return finish(state);
   },
   (error) => refused(error),

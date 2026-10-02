@@ -25,6 +25,12 @@ const nextConfig: NextConfig = {
       // The language is pinned to the launch codes: an open `:lang` would also match /staff/buildings/x and
       // /api/buildings/x, and this rule comes after the staff no-store rules, so it would win over them.
       { source: `/:lang(${LAUNCH_CODES.join("|")})/buildings/:rsn`, headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }] },
+      // S02.10: Be ready, a guide and the essential numbers are public and the same for everyone (the phone adds the
+      // resident's own buildings in the browser, so nothing here depends on who asks), so a shared cache keeps them the
+      // same few minutes. A reloaded guide or number, or a contact the Hub saves, reaches residents within about 6 minutes.
+      // Pinned to the launch codes for the same reason as the building rule: an open `:lang` would match /staff/ready
+      // and /api/ready.
+      { source: `/:lang(${LAUNCH_CODES.join("|")})/ready/:guide?`, headers: [{ key: "Cache-Control", value: "public, s-maxage=300, stale-while-revalidate=60" }] },
     ];
   },
 };

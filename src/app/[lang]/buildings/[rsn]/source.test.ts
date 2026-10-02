@@ -44,7 +44,7 @@ vi.mock("@/app/staff/guard", () => ({
 import { readPublicBuilding } from "@/modules/places";
 import { unstable_cache, updateTag } from "next/cache";
 import { setContactAction } from "@/app/staff/buildings/actions";
-import { BUILDING_REVALIDATE_SECONDS, buildingTag } from "@/app/buildingCache";
+import { BUILDING_CONTACTS_TAG, BUILDING_REVALIDATE_SECONDS, buildingTag } from "@/app/buildingCache";
 import { loadBuilding, restore, store } from "./source";
 
 const read = vi.mocked(readPublicBuilding);
@@ -160,9 +160,11 @@ describe("saving the contact reaches the resident", () => {
     const outcome = await save("4154146");
 
     expect(outcome.message).toBe("NEXT_REDIRECT /staff/buildings?building=4154146&done=contact");
-    expect(updateTag).toHaveBeenCalledTimes(1);
+    // The building's own entry, and the list of contacts the essential-numbers page draws (S02.10).
+    expect(updateTag).toHaveBeenCalledTimes(2);
     expect(updateTag).toHaveBeenCalledWith(buildingTag("4154146"));
     expect(updateTag).toHaveBeenCalledWith("building:4154146");
+    expect(updateTag).toHaveBeenCalledWith(BUILDING_CONTACTS_TAG);
     expect((await loadBuilding("4154146"))!.contact).toMatchObject({ role: "superintendent", phone: "+14165550123" });
     expect(read).toHaveBeenCalledTimes(2);
   });

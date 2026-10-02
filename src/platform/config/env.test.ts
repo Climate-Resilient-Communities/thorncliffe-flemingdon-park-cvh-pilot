@@ -233,6 +233,17 @@ describe("CVH_FAKE_BUILDINGS_FILE", () => {
   });
 });
 
+describe("CVH_FAKE_GUIDES_FILE", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(parseEnv({ ...local, CVH_FAKE_GUIDES_FILE: "/tmp/guides.json" }).fakeGuidesFile).toBe("/tmp/guides.json");
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_GUIDES_FILE: "/tmp/guides.json" })).toContain(
+        "CVH_FAKE_GUIDES_FILE: the guides fake is only allowed in local development, never on Vercel",
+      );
+    }
+  });
+});
+
 describe("CVH_FAKE_DIRECTORY_DIR", () => {
   it("is allowed only in local development, off Vercel", () => {
     expect(parseEnv({ ...local, CVH_FAKE_DIRECTORY_DIR: "/tmp/releases" }).fakeDirectoryDir).toBe("/tmp/releases");
