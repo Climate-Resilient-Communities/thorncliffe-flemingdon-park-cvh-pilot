@@ -131,3 +131,23 @@ export interface SearchBuild {
   /** The longest the store may take to read a vectors file back (default 10 s). */
   vectorsGetTimeoutMs?: number;
 }
+
+/**
+ * The question side of the embedding model (S03.04): a question is embedded as a query (`input_type: search_query`) with the
+ * model and vector size the release recorded, which the caller passes, so a question never meets vectors made by another
+ * model. Throws QueryEmbedError, never an error that holds the request: adapters wrap the vendor's failures and drop their
+ * bodies (AD-3).
+ */
+export interface QueryEmbedder {
+  embedQuery(input: { text: string; model: string; dims: number | null; signal: AbortSignal }): Promise<{ vector: number[]; tokens: number | null }>;
+}
+
+/** Why one question's embedding failed: a code only. The vendor's error, which may echo the request, is dropped. */
+export class QueryEmbedError extends Error {
+  override name = "QueryEmbedError";
+  readonly code: "embed_failed" | "aborted";
+  constructor(code: "embed_failed" | "aborted") {
+    super(code === "aborted" ? "The question's embedding was cancelled" : "The question's embedding failed");
+    this.code = code;
+  }
+}
