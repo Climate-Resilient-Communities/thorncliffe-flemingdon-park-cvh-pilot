@@ -347,9 +347,13 @@ So that no environment other than production can text residents.
 **When** `SMS_MODE` is anything but `live` in production or anything but `log` elsewhere
 **Then** the app refuses to start and logs which rule failed
 
-**Given** `PUBLIC_BASE_URL` (used in alert links, share links and texts)
-**When** it is missing, is not `https` (except `http://localhost` in local development), in production does not equal the production host set in `src/platform/config/hosts.ts`, or outside production equals the production host
-**Then** the app refuses to start and logs which rule failed
+**Given** `PUBLIC_BASE_URL` (used in alert links, share links and texts), which production and development must set explicitly
+**When** a preview (`VERCEL_ENV=preview`) has no `PUBLIC_BASE_URL`
+**Then** it is taken as `https://${VERCEL_URL}` (the deployment's own URL, set by Vercel) and checked by the rules below
+
+**Given** the resolved `PUBLIC_BASE_URL`
+**When** it is missing (in a preview: neither `PUBLIC_BASE_URL` nor `VERCEL_URL` is set), is not an `https` origin (except `http://localhost` in local development), in production does not equal the production host set in `src/platform/config/hosts.ts`, or outside production resolves to the production host
+**Then** the app refuses to start and logs which rule failed, without printing any secret value
 **And** an automated test covers each rejected combination of environment, `SMS_MODE` and `PUBLIC_BASE_URL`
 
 **Given** Twilio credentials

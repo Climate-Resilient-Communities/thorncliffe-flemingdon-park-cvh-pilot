@@ -3,17 +3,20 @@ import { PRODUCTION_HOST } from "./hosts";
 
 /**
  * Environment schema (AD-15), checked at boot by instrumentation.ts and on first use by getEnv().
- * Platform code: it must not import src/modules.
+ * Platform code: it must not import src/modules. Messages name variables and rules, never values
+ * that could be secret.
  *
  * Variable             Scope    Required                 Kind
- * VERCEL_ENV           server   set by Vercel            unset means local development
+ * VERCEL_ENV           server   set by Vercel            unset (and VERCEL unset) means local development
+ * VERCEL_URL           server   set by Vercel            preview only: PUBLIC_BASE_URL defaults to https://${VERCEL_URL}
  * SMS_MODE             server   always                   live (production only) | log (elsewhere)
- * PUBLIC_BASE_URL      server   always                   public; https (http://localhost in development)
+ * PUBLIC_BASE_URL      server   always (preview: or VERCEL_URL)
+ *                                                        public; https origin, no port or path (http://localhost in development)
  * DATABASE_URL         server   production, preview      secret
  * SUPABASE_SECRET_KEY  server   production, preview      secret
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
- *                      browser  production, preview      public
- * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID
+ *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
+ * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret
  */
 
@@ -32,7 +35,9 @@ const optionalText = z.preprocess(
 );
 
 const rawSchema = z.object({
+  VERCEL: optionalText,
   VERCEL_ENV: optionalText,
+  VERCEL_URL: optionalText,
   SMS_MODE: optionalText,
   PUBLIC_BASE_URL: optionalText,
   DATABASE_URL: optionalText,
@@ -43,6 +48,8 @@ const rawSchema = z.object({
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
 });
+
+type Raw = z.infer<typeof rawSchema>;
 
 export interface Env {
   environment: AppEnvironment;
@@ -67,12 +74,22 @@ export class EnvError extends Error {
   }
 }
 
-function resolveEnvironment(vercelEnv: string | undefined, problems: string[]): AppEnvironment {
-  if (vercelEnv === undefined) return "development";
+/** Quotes a value only when it is a short plain word (an enum such as SMS_MODE), so a secret is never printed. */
+function shown(value: string): string {
+  return /^\s*[A-Za-z]{1,16}\s*$/.test(value) ? JSON.stringify(value) : "a value that is not shown";
+}
+
+function resolveEnvironment(raw: Raw, problems: string[]): AppEnvironment {
+  const vercelEnv = raw.VERCEL_ENV;
+  if (vercelEnv === undefined) {
+    if (raw.VERCEL === undefined) return "development";
+    problems.push("VERCEL_ENV: missing on Vercel (VERCEL is set); expose Vercel's system environment variables");
+    return "preview";
+  }
   if (vercelEnv === "production" || vercelEnv === "preview" || vercelEnv === "development") {
     return vercelEnv;
   }
-  problems.push(`VERCEL_ENV: must be production, preview or development (got "${vercelEnv}")`);
+  problems.push(`VERCEL_ENV: must be production, preview or development (got ${shown(vercelEnv)})`);
   // Treat an unknown environment as the strictest non-production one.
   return "preview";
 }
@@ -83,47 +100,80 @@ function checkSmsMode(environment: AppEnvironment, smsMode: string | undefined, 
     problems.push(`SMS_MODE: required; must be "${expected}" in ${environment}`);
   } else if (smsMode !== expected) {
     problems.push(
-      `SMS_MODE: must be "${expected}" in ${environment}, not "${smsMode}" ` +
-        `("live" is allowed only in production, "log" everywhere else)`,
+      `SMS_MODE: must be "${expected}" in ${environment}, not ${shown(smsMode)} ` +
+        `("live" is allowed only in production, "log" everywhere else; exact lower case, no spaces)`,
     );
   }
 }
 
-function checkPublicBaseUrl(
-  environment: AppEnvironment,
-  value: string | undefined,
-  problems: string[],
-): string | undefined {
+/** Host as DNS resolves it: lower case (URL does that) and without the root's trailing dot. */
+const dnsHost = (hostname: string) => hostname.replace(/\.+$/, "");
+
+function checkPublicBaseUrl(environment: AppEnvironment, raw: Raw, problems: string[]): string | undefined {
+  let value = raw.PUBLIC_BASE_URL;
+  let name = "PUBLIC_BASE_URL";
+  if (value === undefined && environment === "preview" && raw.VERCEL_URL !== undefined) {
+    value = `https://${raw.VERCEL_URL.trim()}`;
+    name = "PUBLIC_BASE_URL (from VERCEL_URL)";
+  }
   if (value === undefined) {
-    problems.push("PUBLIC_BASE_URL: required (used in alert links, share links, texts and webhook checks)");
+    problems.push(
+      "PUBLIC_BASE_URL: required (used in alert links, share links, texts and webhook checks)" +
+        (environment === "preview" ? "; in preview it defaults to https://${VERCEL_URL}, which is also unset" : ""),
+    );
     return undefined;
   }
   let url: URL;
   try {
     url = new URL(value);
   } catch {
-    problems.push(`PUBLIC_BASE_URL: not a valid absolute URL ("${value}")`);
+    problems.push(`${name}: not a valid absolute URL`);
     return undefined;
   }
-  const localDev = environment === "development" && url.protocol === "http:" && url.hostname === "localhost";
+  if (url.username || url.password) {
+    // Nothing else is reported: any other message could carry the credentials' context.
+    problems.push(`${name}: must not contain credentials`);
+    return undefined;
+  }
+  const localDev =
+    environment === "development" && url.protocol === "http:" && url.hostname === "localhost";
   if (url.protocol !== "https:" && !localDev) {
     problems.push(
-      `PUBLIC_BASE_URL: must use https (http://localhost is allowed only in local development), got "${value}"`,
+      `${name}: must use https (http://localhost is allowed only in local development)`,
     );
+    return undefined;
   }
-  if (url.username || url.password) {
-    problems.push("PUBLIC_BASE_URL: must not contain credentials");
+  if (url.port !== "" && !localDev) {
+    problems.push(`${name}: must not include a port`);
   }
-  const onProductionHost = url.hostname.toLowerCase() === PRODUCTION_HOST;
-  if (environment === "production" && !onProductionHost) {
+  if (url.pathname !== "/" || url.search !== "" || url.hash !== "") {
+    problems.push(`${name}: must be an origin only (no path, query or fragment)`);
+  }
+  const host = dnsHost(url.hostname);
+  if (environment === "production" && url.hostname !== PRODUCTION_HOST) {
     problems.push(
-      `PUBLIC_BASE_URL: in production the host must be ${PRODUCTION_HOST} (src/platform/config/hosts.ts), got "${url.hostname}"`,
+      `${name}: in production the host must be ${PRODUCTION_HOST} (src/platform/config/hosts.ts), got ${url.hostname}`,
     );
   }
-  if (environment !== "production" && onProductionHost) {
-    problems.push(`PUBLIC_BASE_URL: ${environment} must not use the production host ${PRODUCTION_HOST}`);
+  if (environment !== "production" && host === PRODUCTION_HOST) {
+    problems.push(`${name}: ${environment} must not use the production host ${PRODUCTION_HOST}`);
   }
   return url.origin;
+}
+
+/** True when a value is a Supabase secret key: an sb_secret_ key or a legacy service_role JWT. */
+function isSupabaseSecretKey(value: string): boolean {
+  const trimmed = value.trim();
+  if (trimmed.startsWith("sb_secret_")) return true;
+  const parts = trimmed.split(".");
+  if (parts.length !== 3) return false;
+  try {
+    const base64 = parts[1].replace(/-/g, "+").replace(/_/g, "/");
+    const payload: unknown = JSON.parse(atob(base64.padEnd(Math.ceil(base64.length / 4) * 4, "=")));
+    return typeof payload === "object" && payload !== null && (payload as { role?: unknown }).role === "service_role";
+  } catch {
+    return false;
+  }
 }
 
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
@@ -131,14 +181,23 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
   const problems: string[] = [];
 
-  const environment = resolveEnvironment(raw.VERCEL_ENV, problems);
+  const environment = resolveEnvironment(raw, problems);
   checkSmsMode(environment, raw.SMS_MODE, problems);
-  const publicBaseUrl = checkPublicBaseUrl(environment, raw.PUBLIC_BASE_URL, problems);
+  const publicBaseUrl = checkPublicBaseUrl(environment, raw, problems);
 
   if (environment !== "production") {
-    const present = TWILIO_VARIABLES.filter((name) => raw[name] !== undefined);
+    const present = Object.keys(source)
+      .filter((name) => name.startsWith("TWILIO_") && (source[name] ?? "").trim() !== "")
+      .sort();
     if (present.length > 0) {
       problems.push(`${present.join(", ")}: Twilio credentials are only allowed in production`);
+    }
+  }
+
+  for (const name of Object.keys(source).sort()) {
+    const value = source[name];
+    if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
+      problems.push(`${name}: holds a Supabase secret key; NEXT_PUBLIC_ variables are sent to browsers`);
     }
   }
 
@@ -191,4 +250,17 @@ export function getEnv(): Env {
 /** Test seam: forget the cached environment. */
 export function resetEnvCache(): void {
   cached = undefined;
+}
+
+/**
+ * Start-up check (Node.js runtime only): validates the environment and, when it is unsafe, exits
+ * the process after getEnv has logged the failed rules, so the server never serves requests.
+ */
+export function checkEnvAtStartup(exit: (code: number) => never = (code) => process.exit(code)): void {
+  try {
+    getEnv();
+  } catch (error) {
+    if (!(error instanceof EnvError)) throw error;
+    exit(1);
+  }
 }
