@@ -49,7 +49,7 @@ describe("hubNavigation", () => {
     for (const role of STAFF_ROLES) expect(hubNavigation(role).map((section) => section.id), role).toEqual(role === "admin" ? ["disruption", "admin"] : ["disruption"]);
   });
 
-  it("adds Administration with People, Providers and Buildings for Admins only", () => {
+  it("adds Administration with People, Providers, Buildings and Test text for Admins only", () => {
     for (const role of STAFF_ROLES) {
       expect(items(role).some((item) => item.href === "/staff/people"), role).toBe(role === "admin");
       expect(items(role).some((item) => item.href === "/staff/providers"), role).toBe(role === "admin");
@@ -60,6 +60,7 @@ describe("hubNavigation", () => {
       { id: "people", label: "People", href: "/staff/people", icon: "person" },
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
+      { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
   });
 
