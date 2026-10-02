@@ -100,6 +100,7 @@ describe("search", () => {
     storage,
     catalogue: async () => ({ hash: "b".repeat(64), gitCommit: null }),
     zhHant: async () => ({ convert: (text: string) => text, openccVersion: "1.4.2", config: "test" }),
+    neighbourhoods: async () => ({ reviewed: true, byProvider: { M001: ["TP"], M002: ["FP"], M003: [] } }),
     onFailure: async () => {},
     sleep: async () => {},
     ...(change.search === false
