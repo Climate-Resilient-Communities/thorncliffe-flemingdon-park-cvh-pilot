@@ -17,8 +17,10 @@
 -- records a failure.
 
 alter table staff_account add column starting_password_used_at timestamptz;
+-- NOT VALID: the column is new, so every existing row has it null and already passes; the check
+-- applies to every row written from now on, without a validation scan of the existing ones.
 alter table staff_account
-  add constraint staff_account_starting_password_used check (starting_password_used_at is null or must_change_password);
+  add constraint staff_account_starting_password_used check (starting_password_used_at is null or must_change_password) not valid;
 
 create table sign_in_failure (
   id bigint generated always as identity primary key,
