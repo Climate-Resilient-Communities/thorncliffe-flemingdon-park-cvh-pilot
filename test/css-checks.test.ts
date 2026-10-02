@@ -1,7 +1,25 @@
 import { spawnSync } from "node:child_process";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { checkLayers, checkLayout, checkLogical, checkSpacing, readSources, runCheck } from "../scripts/check-css.mjs";
+import { checkLayers, checkLayout, checkLogical, checkSpacing, isNegative, readSources, runCheck } from "../scripts/check-css.mjs";
+
+describe("spacing check on hostile input", () => {
+  it("reads a very long run of digits in a margin value in linear time", () => {
+    const digits = "1".repeat(10_000);
+    const start = performance.now();
+
+    expect(isNegative(`${digits}px`)).toBe(false);
+    expect(isNegative(`calc(${digits} * 2)`)).toBe(false);
+    expect(isNegative(`calc(var(--x) * -${digits})`)).toBe(true);
+    expect(performance.now() - start).toBeLessThan(100);
+  });
+
+  it("still reads decimals in a calculated negative margin", () => {
+    expect(isNegative("calc(var(--x) * -.5)")).toBe(true);
+    expect(isNegative("calc(var(--x) * -0.0)")).toBe(false);
+    expect(isNegative("calc(2.5 * -var(--x))")).toBe(true);
+  });
+});
 
 const fixture = (name: string) => path.join(__dirname, "fixtures", name);
 const findings = (list: { file: string; line: number; message: string }[], file: string) =>

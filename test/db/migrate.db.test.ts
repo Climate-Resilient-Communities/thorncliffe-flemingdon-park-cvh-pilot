@@ -278,6 +278,7 @@ describe("migration runner", () => {
         "removes column public.audit_event.feeling (dropped or renamed)",
         "removes table public.gadget (dropped, renamed or moved)",
         "removes table public.widget (dropped, renamed or moved)",
+        "removes enum type public.mood (dropped, renamed or moved)",
       ],
     });
   });

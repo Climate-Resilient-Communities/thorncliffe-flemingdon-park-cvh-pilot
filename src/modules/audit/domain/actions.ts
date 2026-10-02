@@ -179,7 +179,26 @@ export class AuditRecordError extends Error {
 }
 
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
-const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+
+/**
+ * Whether the text holds something like local@domain.tld. Written as a scan of
+ * the whitespace-separated words rather than the regular expression
+ * /[^\s@]+@[^\s@]+\.[^\s@]+/, which backtracks quadratically on a long word
+ * without an "@" (50,000 letters take seconds).
+ */
+function hasEmailAddress(value: string): boolean {
+  for (const word of value.split(/\s+/)) {
+    if (word.length < 5) continue;
+    const parts = word.split("@");
+    for (let i = 1; i < parts.length; i += 1) {
+      const domain = parts[i];
+      const dot = domain.indexOf(".", 1);
+      if (parts[i - 1] !== "" && dot !== -1 && dot < domain.length - 1) return true;
+    }
+  }
+  return false;
+}
+
 // Ten or more digits, allowing the separators phone numbers are written with.
 const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
 // A Twilio message SID: SM or MM and 32 lowercase hex digits, which can hold long digit runs.
@@ -194,7 +213,7 @@ const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
     if (UUID.test(value) || TWILIO_SID.test(value)) return null;
-    return EMAIL.test(value) || PHONE.test(value) ? path : null;
+    return hasEmailAddress(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;
   if (Array.isArray(value)) {
