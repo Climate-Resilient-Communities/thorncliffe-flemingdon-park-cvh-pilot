@@ -56,14 +56,14 @@ async function open(page: Page, width: number, props: Omit<Parameters<typeof mou
 
 for (const width of [390, 1280]) {
   test(`the place picker with a whole neighbourhood at ${width}px`, async ({ page }) => {
-    await open(page, width, { screen: placeScreen(PLANS, NEIGHBOURHOOD, REF) }, width === 390 ? 2500 : 1300);
+    await open(page, width, { screen: placeScreen(PLANS, NEIGHBOURHOOD, REF) }, width === 390 ? 1500 : 1300);
     await expect(page.getByTestId("audience-sentence")).toHaveText("Everyone living in Thorncliffe Park.");
     await expectBaseline(page, `audience-place-neighbourhood-${width}.png`);
   });
 
   test(`the place picker with buildings, whole and chosen floors, and groups at ${width}px`, async ({ page }) => {
     const screen = placeScreen(PLANS, BUILDINGS, REF, { notice: savedNotice({ done: "place" }) });
-    await open(page, width, { screen }, width === 390 ? 3600 : 1600);
+    await open(page, width, { screen }, width === 390 ? 2100 : 1600);
     await expect(page.getByTestId("audience-sentence")).toHaveText("Residents of 4 Milepost Pl (all floors) and 85-95 Thorncliffe Park Dr (floors 4, 5, 6).");
     await expectBaseline(page, `audience-place-buildings-${width}.png`);
   });
@@ -80,7 +80,7 @@ test("the place picker after a refusal at 390px", async ({ page }) => {
     page,
     390,
     { screen: placeScreen(PLANS, BUILDINGS, REF), initial: { place: { status: "refused", message: "A range goes from a higher floor to a lower one. Put the lower floor first." } } },
-    4600,
+    2700,
   );
   await expect(page.locator("p.hub-error")).toHaveText("A range goes from a higher floor to a lower one. Put the lower floor first.");
   await expectBaseline(page, "audience-place-refused-390.png");
