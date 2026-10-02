@@ -25,6 +25,8 @@ import {
   type PolicyAssignment,
   type StaffAuthService,
 } from "../../src/modules/identity";
+import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
+import { NO_ASSIGNMENTS, createBuildingService } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { memoryDirectoryStorage } from "../../src/modules/directory";
@@ -38,6 +40,7 @@ const wired = vi.hoisted(() => ({
   auth: null as unknown,
   sessions: null as null | (() => unknown),
   assignments: [] as unknown[],
+  places: null as unknown,
   db: null as unknown,
   publish: null as unknown,
 }));
@@ -56,6 +59,8 @@ vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
 // The providers screen (S02.04) reads and writes through the app's database connection.
 // "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
 vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
+// The buildings page and its actions (S01.13) read and write through the places module on the app's own connection.
+vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }));
 // The S01.14 stub: the assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
@@ -156,6 +161,11 @@ beforeEach(async () => {
   wired.auth = auth;
   wired.sessions = null;
   wired.assignments = [];
+  wired.places = createBuildingService({
+    db: app,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+    assignments: NO_ASSIGNMENTS,
+  });
   // Two usable Admins and a completed bootstrap, as the Hub runs; and the account the account actions aim at.
   const first = await account("admina", "admin", { enrolled: true });
   const second = await account("adminb", "admin", { enrolled: true });

@@ -126,7 +126,7 @@ const CASES: { actions: readonly string[]; situation: string; context: PolicyCon
   { actions: ["alert.approve", "alert.send"], situation: "the actor's own entry", context: { entry: { authorId: ME, editorIds: [ME], status: "pending_approval" } }, expected: roles(false, false, false, false) },
   { actions: ["alert.approve", "alert.send"], situation: "no entry given", context: {}, expected: roles(false, false, false, false) },
   // Drills, publish directory, accounts, cap, pause: no | no | no | yes.
-  { actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001" } }, expected: roles(false, false, false, true) },
+  { actions: ["drill.run", "guide.publish", "provider.manage", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage"], situation: "any context", context: { assignments: [ASSIGNED], target: { rsn: "7001" } }, expected: roles(false, false, false, true) },
   // See open check-in rows: assigned floors, open alerts | no | no | yes.
   { actions: ["checkins.view_open"], situation: "an assigned floor of an open alert", context: { assignments: [ASSIGNED], target: { rsn: "7001", floorId: "floor-3" }, alertOpen: true }, expected: roles(true, false, false, true) },
   { actions: ["checkins.view_open"], situation: "a floor of a whole-building assignment, open alert", context: { assignments: [{ rsn: "7001", floorIds: null }], target: { rsn: "7001", floorId: "floor-9" }, alertOpen: true }, expected: roles(true, false, false, true) },

@@ -5,6 +5,9 @@ import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type S
 import { HubShell } from "@/ui/hub/hub-shell";
 import type { HubNavSection } from "@/ui/hub/hub-nav";
 import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
+import type { ReactNode } from "react";
+import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/app/staff/buildings/BuildingsBody";
+import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
@@ -407,6 +410,34 @@ export function HubShellFixture({
   current?: string | null;
 }) {
   return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn={signedIn} current={current}>
+      <Screen surface="staff" testId="screen">
+        <Stack gap="related">
+          <h1>{texts.heading}</h1>
+          {texts.paragraphs.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
+        </Stack>
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** The Hub shell around a screen, signed in as an Admin (or signed out, with no person and no menu). */
+function AroundTheScreen({
+  texts,
+  brand,
+  signedIn,
+  current,
+  children,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  signedIn: boolean;
+  current: string | null;
+  children: ReactNode;
+}) {
+  return (
     <HubShell
       user={signedIn ? { displayName: texts.personName, role: "admin" } : null}
       navigation={texts.navigation}
@@ -428,15 +459,36 @@ export function HubShellFixture({
       }
       brand={brand}
     >
-      <Screen surface="staff" testId="screen">
-        <Stack gap="related">
-          <h1>{texts.heading}</h1>
-          {texts.paragraphs.map((text) => (
-            <p key={text}>{text}</p>
-          ))}
-        </Stack>
-      </Screen>
+      {children}
     </HubShell>
+  );
+}
+
+const noAction = async () => ({ status: "idle" as const });
+
+/**
+ * The buildings screen (S01.13) as an Admin sees it in the Hub shell: the app's own BuildingsBody on a view built by
+ * the app's own view functions (e2e/hub/buildings.spec.ts), with the actions replaced by ones that do nothing and,
+ * where a picture needs it, a form already in its refused state (`initial`).
+ */
+export function BuildingsFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: BuildingsScreen;
+  initial?: BuildingsInitial;
+}) {
+  const actions: BuildingActions = { add: noAction, rename: noAction, remove: noAction, confirm: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/buildings">
+      <Screen surface="staff" testId="screen">
+        <BuildingsBody screen={screen} actions={actions} initial={initial} />
+      </Screen>
+    </AroundTheScreen>
   );
 }
 
