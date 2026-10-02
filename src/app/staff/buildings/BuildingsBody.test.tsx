@@ -167,7 +167,7 @@ describe("Buildings and floors: one building", () => {
   it("links back to the list, and says when there is no such building", () => {
     expect(html(buildingView(detail()))).toContain('<a class="tap hub-link" href="/staff/buildings">All buildings</a>');
     const missing = html(missingView());
-    expect(missing).toContain('<p role="alert">That building does not exist.</p>');
+    expect(missing).toContain('<p role="alert" class="hub-error">That building does not exist.</p>');
     expect(missing).toContain('href="/staff/buildings"');
   });
 });

@@ -39,19 +39,19 @@ export function SignInForm({ labels }: { labels: SignInLabels }) {
     <form onSubmit={submit} noValidate>
       <Stack gap="stack">
         {message && (
-          <p id={ERROR_ID} role="alert">
+          <p id={ERROR_ID} role="alert" className="hub-error">
             {message}
           </p>
         )}
         <Stack gap="label">
           <label htmlFor="username">{labels.username}</label>
-          <input className="tap" id="username" name="username" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required aria-describedby={message ? ERROR_ID : undefined} />
+          <input className="hub-input" id="username" name="username" type="text" autoComplete="username" autoCapitalize="none" spellCheck={false} required aria-describedby={message ? ERROR_ID : undefined} />
         </Stack>
         <Stack gap="label">
           <label htmlFor="password">{labels.password}</label>
-          <input className="tap" id="password" name="password" type="password" autoComplete="current-password" required aria-describedby={message ? ERROR_ID : undefined} />
+          <input className="hub-input" id="password" name="password" type="password" autoComplete="current-password" required aria-describedby={message ? ERROR_ID : undefined} />
         </Stack>
-        <button className="tap" type="submit" disabled={pending}>
+        <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
           {labels.submit}
         </button>
       </Stack>
