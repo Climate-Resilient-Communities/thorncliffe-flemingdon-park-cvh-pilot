@@ -2,6 +2,8 @@
 // e2e/helpers/layout-fixture.ts (Playwright's own JSX transform is for component testing and does not
 // produce React elements). Inline styles here size the test frames only; src/ never uses them.
 import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type StackGap } from "@/ui";
+import { HubShell } from "@/ui/hub/hub-shell";
+import type { HubNavSection } from "@/ui/hub/hub-nav";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
 
@@ -220,16 +222,27 @@ export function TwoColumnPage({ variant, labels, width, tall }: { variant: GridT
   );
 }
 
-// A stand-in for the Hub shell (S01.09): a 240px side navigation beside the main area, hidden below
-// the 700px shell breakpoint. Its CSS is SHELL_CSS in the specs.
+// The real Hub shell (S01.09) around a two-column page: the side navigation shows from the Hub breakpoint.
+const BLANK_IMAGE = "data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7";
 export function ShellPage({ variant, labels }: { variant: GridTwoColumn; labels: Labels }) {
   return (
-    <div className="shell">
-      <nav>Side navigation</nav>
-      <main>
-        <TwoColumnPage variant={variant} labels={labels} />
-      </main>
-    </div>
+    <HubShell
+      user={{ displayName: "Priya Sharma", role: "coordinator" }}
+      navigation={[{ id: "main", label: "Hub", items: [{ id: "incidents", label: "Incidents", href: "/staff", exact: true, icon: "now" }] }]}
+      currentPath="/staff"
+      labels={{
+        appName: "Hub and partner space",
+        menu: "Menu",
+        closeMenu: "Close menu",
+        signedInAs: "Signed in as {name}, {role}",
+        roles: { ambassador: "Ambassador", coordinator: "Coordinator", director: "Director", admin: "Admin" },
+        logoAlt: "Thorncliffe Park Community Hub",
+      }}
+      signOut={<button className="tap">Sign out</button>}
+      brand={{ logoSrc: BLANK_IMAGE, symbolSrc: BLANK_IMAGE }}
+    >
+      <TwoColumnPage variant={variant} labels={labels} />
+    </HubShell>
   );
 }
 
@@ -352,4 +365,75 @@ export function BareText({ surface }: { surface?: "staff" }) {
     </>
   );
   return surface === "staff" ? <Screen surface="staff">{content}</Screen> : content;
+}
+
+// ---- The Hub shell (S01.09) -------------------------------------------------------------------
+
+export type HubShellTexts = {
+  appName: string;
+  menu: string;
+  closeMenu: string;
+  /** With {name} and {role}. */
+  signedInAs: string;
+  role: string;
+  personName: string;
+  signOut: string;
+  logoAlt: string;
+  /**
+   * The navigation, as the pilot's menu is for an Admin: the real hubNavigation("admin") with its ids, hrefs and
+   * icons (e2e/helpers/hub-shell.ts), and the labels of the language under test. The fixture invents none of it.
+   */
+  navigation: readonly HubNavSection[];
+  heading: string;
+  paragraphs: string[];
+};
+
+/**
+ * The Hub shell with a staff Screen inside it, signed in as an Admin (who sees every item the pilot's menu has). The
+ * menu and the words are the app's own, passed in as texts: hubNavigation("admin") and hubShellLabels() for the real
+ * English, the same structure with the longest translated labels for the language tests. The fixture only lays them out.
+ */
+export function HubShellFixture({
+  texts,
+  brand,
+  signedIn = true,
+  current = "/staff",
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  signedIn?: boolean;
+  current?: string | null;
+}) {
+  return (
+    <HubShell
+      user={signedIn ? { displayName: texts.personName, role: "admin" } : null}
+      navigation={texts.navigation}
+      currentPath={current}
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="tap">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <Stack gap="related">
+          <h1>{texts.heading}</h1>
+          {texts.paragraphs.map((text) => (
+            <p key={text}>{text}</p>
+          ))}
+        </Stack>
+      </Screen>
+    </HubShell>
+  );
 }

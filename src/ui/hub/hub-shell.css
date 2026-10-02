@@ -1,0 +1,288 @@
+/*
+ * Hub shell (docs/design-framework/spacing-container/component-boundaries.md; prototype C_HubTop, C_HubSide,
+ * HubApp's menu overlay and the .cvh-hub*, .cvh-top and .cvh-side* rules of cvh.css).
+ * The shell owns the frame around Hub screens: the side navigation, the top bar, the menu drawer and the one
+ * <main>. The only switch by width is the Hub breakpoint (the hub: variant, whose width is in the theme alone):
+ * from it up the side navigation shows and the menu button goes; below it the reverse. Every length is a token;
+ * direction comes only from logical properties and from the row order of flex boxes, so no rule selects on it.
+ * The document scrolls (not the main), so sticky asides and sticky actions measure the viewport.
+ */
+@layer components {
+  .hub-shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    min-block-size: 100dvh;
+    background-color: var(--surface);
+    color: var(--text);
+
+    @variant hub {
+      grid-template-columns: var(--size-side-nav) minmax(0, 1fr);
+    }
+  }
+
+  .hub-shell :focus-visible,
+  .hub-drawer :focus-visible {
+    outline: var(--offset-align-icon) solid var(--focus-ring);
+    outline-offset: var(--offset-align-hairline);
+  }
+
+  /* Side navigation (.cvh-side): below the Hub breakpoint it is not displayed at all, so it is not in the
+     accessibility tree and has no tab stops; the menu drawer holds the same links. */
+  .hub-side {
+    display: none;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding-block: var(--gutter-resident);
+    padding-inline: var(--gap-stack);
+    background-color: var(--surface-raised);
+    border-inline-end: var(--offset-align-hairline) solid var(--border);
+
+    @variant hub {
+      display: flex;
+      position: sticky;
+      inset-block-start: 0;
+      block-size: 100dvh;
+      overflow-y: auto;
+    }
+  }
+
+  .hub-logo {
+    display: block;
+    block-size: var(--size-logo-hub);
+    inline-size: auto;
+    align-self: flex-start;
+    margin-inline: var(--gap-tight);
+    margin-block: var(--gap-label) var(--gap-stack);
+  }
+
+  .hub-nav__section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+  }
+
+  .hub-nav__heading {
+    padding-block: var(--gap-stack) var(--gap-label);
+    padding-inline: var(--gap-icon);
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+    font-size: var(--type-caption-size);
+    font-weight: bold;
+    line-height: var(--type-body-line-height);
+  }
+
+  .hub-nav__list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* .cvh-side__item: an icon and a label that wraps, at least the tap height whether or not it is a link (a page
+     not built yet is the same size, so the list does not change height when its page is), the current page marked
+     by a coloured inline-start border (every item has one, transparent) and by colour. */
+  .hub-nav__item {
+    display: flex;
+    align-items: center;
+    min-block-size: var(--tap);
+    gap: var(--gap-icon);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-icon);
+    border-inline-start: var(--offset-align-icon) solid transparent;
+    border-radius: var(--radius-card);
+    color: var(--ink);
+    font-size: var(--type-body-size);
+    font-weight: bold;
+    line-height: var(--type-body-line-height);
+    text-decoration: none;
+  }
+
+  a.hub-nav__item:hover {
+    background-color: color-mix(in srgb, var(--ink) 8%, var(--surface-raised));
+  }
+
+  .hub-nav__item[aria-current="page"] {
+    border-inline-start-color: currentcolor;
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+    color: var(--accent-text);
+  }
+
+  /* A page that is not built yet: a disabled link (aria-disabled, no href, no tab stop), muted. */
+  .hub-nav__item--unbuilt {
+    color: var(--text-muted);
+    font-weight: 400;
+  }
+
+  /* As wide as the item, so a long word breaks inside it instead of widening the navigation. */
+  .hub-nav__label {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    hyphens: auto;
+  }
+
+  /* Top bar (.cvh-top): at least the token height, growing and wrapping with the person and the labels. On a
+     phone the menu button, the symbol and the name come first and the person and sign-out wrap beneath; from
+     the Hub breakpoint the side navigation carries the brand and the bar holds only the person. */
+  .hub-column {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+
+  .hub-top {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--gap-icon);
+    row-gap: var(--gap-label);
+    min-block-size: var(--size-topbar-hub-min);
+    padding-block: var(--gap-tight);
+    padding-inline: var(--inset-page-staff-narrow);
+    background-color: var(--surface-raised);
+    border-block-end: var(--offset-align-hairline) solid var(--border);
+
+    @variant hub {
+      justify-content: flex-end;
+      padding-inline: var(--inset-page-staff);
+    }
+  }
+
+  .hub-top__brand {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-icon);
+    min-inline-size: 0;
+
+    @variant hub {
+      display: none;
+    }
+  }
+
+  .hub-symbol {
+    display: block;
+    flex: none;
+    block-size: var(--size-symbol-hub);
+    inline-size: auto;
+  }
+
+  .hub-top__app {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+    color: var(--ink);
+    font-weight: bold;
+  }
+
+  .hub-top__who {
+    display: flex;
+    flex: 1 1 auto;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: space-between;
+    column-gap: var(--gap-icon);
+    row-gap: var(--gap-label);
+    min-inline-size: 0;
+
+    @variant hub {
+      flex-grow: 0;
+      justify-content: flex-end;
+    }
+  }
+
+  .hub-top__person {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+    color: var(--text-muted);
+  }
+
+  /* The sign-out control comes from the app (a button); the shell only gives it the secondary button look. */
+  .hub-top__signout button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: var(--offset-align-hairline) solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: bold;
+    cursor: pointer;
+  }
+
+  .hub-main {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+
+  .hub-iconbtn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    flex: none;
+    padding: 0;
+    border: 0;
+    border-radius: var(--radius-card);
+    background-color: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* HubApp's menu overlay: a modal drawer from the inline-start edge, as wide as the side navigation. Where the
+     side navigation shows, neither the button nor the drawer is displayed. */
+  .hub-menu-button {
+    @variant hub {
+      display: none;
+    }
+  }
+
+  .hub-drawer {
+    inset-block: 0;
+    inset-inline: 0 auto;
+    block-size: 100%;
+    max-block-size: 100%;
+    inline-size: var(--size-side-nav);
+    max-inline-size: 100%;
+    margin: 0;
+    padding: 0;
+    border: 0;
+    overflow-y: auto;
+    /* A scroll at the end of the drawer's own list does not carry on into the page behind it. */
+    overscroll-behavior: contain;
+    background-color: var(--surface-raised);
+    color: var(--text);
+
+    @variant hub {
+      display: none;
+    }
+  }
+
+  /* The page behind the open modal drawer does not scroll (the backdrop covers it, and a wheel or touch over the
+     backdrop would otherwise move the document). */
+  :root:has(.hub-drawer[open]) {
+    overflow: hidden;
+  }
+
+  .hub-drawer::backdrop {
+    background-color: var(--scrim);
+  }
+
+  .hub-drawer__head {
+    display: flex;
+    justify-content: flex-end;
+    padding: var(--gap-label);
+  }
+
+  .hub-drawer__nav {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding-block: 0 var(--gutter-resident);
+    padding-inline: var(--gap-stack);
+  }
+}
