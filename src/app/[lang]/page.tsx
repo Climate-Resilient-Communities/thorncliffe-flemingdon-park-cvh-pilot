@@ -16,12 +16,8 @@ export default async function ResidentHome({ params }: PageProps<"/[lang]">) {
   return (
     <Screen surface="resident">
       <Stack gap="related">
-        <h1>
-          <ResidentText>{t("nothingActive")}</ResidentText>
-        </h1>
-        <p>
-          <ResidentText>{t("nothingActiveBody")}</ResidentText>
-        </p>
+        <ResidentText as="h1">{t("nothingActive")}</ResidentText>
+        <ResidentText as="p">{t("nothingActiveBody")}</ResidentText>
       </Stack>
     </Screen>
   );

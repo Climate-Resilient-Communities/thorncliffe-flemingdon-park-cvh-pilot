@@ -32,6 +32,17 @@ Guides and essential numbers (S02.09):
 --mark-english-reviewed ties the review to the English it covered: the seed refuses a guide or the
 numbers list whose English changed after the sign-off. The reviewer must be the file's owner.
 
+Terms and privacy page (S07.01, data/catalogue/terms.json; its texts are keyed terms.* in the same translation files):
+
+  python3 scripts/review_translations.py --content --mark-english-reviewed --terms --reviewer "Owner" --reviewed-on 2026-10-20
+  python3 scripts/review_translations.py --content --mark-counsel-reviewed --reviewer "Counsel" --reviewed-on 2026-10-25
+
+--terms records the owner's English review of the terms; --mark-counsel-reviewed records counsel's review of the
+current English, privacy contact and consent_version. Both are tied to a hash of that text: the terms are published
+only while the counsel review matches, so any later change needs a new review. Counsel's review also records
+the version and its text hash in terms.json publishedVersions: a consentVersion is never reused for changed text
+(bump consentVersion, YYYY-MM-DD.n), and when the text changed lastUpdated must have moved past the review it replaces.
+
 --content writes review/content-translation-status.json. --mark-reviewed changes status
 "machine" to "reviewed" (with reviewer and date) only on translations that are current
 (their source hash matches the English); zh-Hant follows zh and is never marked by hand.
@@ -215,6 +226,9 @@ def content_status(texts):
             lost = missing_critical(english, rec['text'])
             if lost:
                 problems.append({'id': key, 'problem': 'lost or changed: ' + ', '.join(lost)})
+            lost_tokens = cc.lost_required_tokens(key, english, rec['text'])
+            if lost_tokens:
+                problems.append({'id': key, 'problem': 'lost required: ' + ', '.join(lost_tokens) + ' (the app shows the English instead)'})
             if rec['status'] == 'reviewed' and (cc.is_placeholder(rec.get('reviewer')) or not cc.valid_date(rec.get('reviewedOn'))):
                 problems.append({'id': key, 'problem': 'reviewed without a named reviewer and date'})
         status[lang] = {'texts': len(texts), **counts, 'problems': problems}
@@ -233,12 +247,21 @@ def mark_reviewed(lang, reviewer, reviewed_on, keys):
     texts = cc.content_texts()
     data = cc.load_content(lang, texts)
     marked = 0
+    refused = []
     for key, rec in data['texts'].items():
         if rec and rec['status'] == 'machine' and (not keys or key in keys):
+            lost = cc.lost_required_tokens(key, texts.get(key, ''), rec.get('text') or '')
+            if lost:
+                if keys:
+                    raise SystemExit(f'{key}: the translation lost {", ".join(lost)}, which a resident acts on; correct it before marking it reviewed')
+                refused.append(f'{key} (lost {", ".join(lost)})')
+                continue
             rec.update(status='reviewed', reviewer=reviewer, reviewedOn=reviewed_on)
             marked += 1
     cc.save_content(lang, data)
     print(f'{lang}: {marked} translations marked reviewed by {reviewer} on {reviewed_on}')
+    for item in refused:
+        print(f'{lang}: not marked reviewed, a required string is lost: {item}')
     if lang == 'zh':
         changed, kept, missing = cc.convert_zh_hant(texts)
         print(f'zh-Hant: {changed} converted from zh, {kept} unchanged, {missing} null')
@@ -284,9 +307,64 @@ def mark_english_reviewed(reviewer, reviewed_on, guide_id, numbers_only):
         cc.write_json(cc.NUMBERS_PATH, numbers, sort_keys=False)
 
 
+def version_date(version):
+    """The date part of a consent_version (YYYY-MM-DD.n), or None."""
+    match = re.match(r'^(\d{4}-\d{2}-\d{2})\.[1-9]\d*$', version or '')
+    return match.group(1) if match else None
+
+
+def mark_terms_reviewed(reviewer, reviewed_on, counsel):
+    """Record the review of the current terms (S07.01) in terms.json: the owner's English review
+    (englishReview) or counsel's (counselReview, which also records the consent_version it covered).
+    Both are tied to a hash of the English and the privacy contact: any later change makes them stale."""
+    import content_catalogue as cc
+
+    if cc.is_placeholder(reviewer):
+        raise SystemExit('--reviewer must name the person who read the terms')
+    if not cc.valid_date(reviewed_on):
+        raise SystemExit('--reviewed-on must be a date, YYYY-MM-DD')
+    if reviewed_on > date.today().isoformat():
+        raise SystemExit('--reviewed-on cannot be in the future')
+    terms = cc.read_json(cc.TERMS_PATH)
+    if not cc.valid_date(terms.get('lastUpdated')) or reviewed_on < terms['lastUpdated']:
+        raise SystemExit(f'the review cannot be dated before the last update ({terms.get("lastUpdated")})')
+    current = cc.english_review_hash(cc.terms_review_texts(terms))
+    record = {'reviewer': reviewer, 'date': reviewed_on, 'sourceHash': current}
+    previous = terms.get('counselReview' if counsel else 'englishReview') or {}
+    if previous.get('sourceHash') and previous['sourceHash'] != current:
+        # The text changed since the review this one replaces: "Last updated" must say so.
+        if cc.valid_date(previous.get('date')) and terms['lastUpdated'] <= previous['date']:
+            raise SystemExit(f'the text changed since the review of {previous["date"]}, but lastUpdated ({terms["lastUpdated"]}) '
+                             'has not moved past it; set lastUpdated to the date of the change')
+    version = terms.get('consentVersion')
+    if version_date(version) and terms['lastUpdated'] < version_date(version):
+        raise SystemExit(f'lastUpdated ({terms["lastUpdated"]}) is before the date of consentVersion {version}')
+    if counsel:
+        if cc.is_placeholder(terms.get('privacyContact')) or cc.is_placeholder(terms.get('owner')):
+            raise SystemExit('counsel reviews the terms only once the owner and the privacy contact are named')
+        ledger = terms.get('publishedVersions') or {}
+        if ledger.get(version) not in (None, current):
+            raise SystemExit(f'consentVersion {version} was already published with different text; bump consentVersion '
+                             '(YYYY-MM-DD.n) before counsel reviews the changed terms')
+        terms['counselReview'] = {**record, 'version': version}
+        terms['publishedVersions'] = {**ledger, version: current}
+        print(f'terms {version}: counsel review recorded for {reviewer} on {reviewed_on}')
+    else:
+        owner = terms.get('owner')
+        if cc.is_placeholder(owner):
+            raise SystemExit('terms: the owner is not named yet')
+        if ' '.join(owner.lower().split()) != ' '.join(reviewer.lower().split()):
+            raise SystemExit(f'terms: the English review must be by the owner ({owner})')
+        terms['englishReview'] = record
+        print(f'terms {version}: English review recorded for {reviewer} on {reviewed_on}')
+    cc.write_json(cc.TERMS_PATH, terms, sort_keys=False)
+
+
 def content_main(args):
     import content_catalogue as cc
 
+    if args.mark_counsel_reviewed or (args.mark_english_reviewed and args.terms):
+        return mark_terms_reviewed(args.reviewer, args.reviewed_on, args.mark_counsel_reviewed)
     if args.mark_english_reviewed:
         return mark_english_reviewed(args.reviewer, args.reviewed_on, args.guide, args.numbers)
     if args.mark_reviewed:
@@ -312,6 +390,10 @@ def main():
                     help='with --content: record the owner\'s review of the current English (--reviewer, --reviewed-on)')
     ap.add_argument('--guide', help='with --mark-english-reviewed: only this guide id (default: every guide and the numbers)')
     ap.add_argument('--numbers', action='store_true', help='with --mark-english-reviewed: only the numbers list')
+    ap.add_argument('--terms', action='store_true',
+                    help="with --mark-english-reviewed: record the owner's review of the terms (terms.json) instead")
+    ap.add_argument('--mark-counsel-reviewed', action='store_true',
+                    help="with --content: record counsel's review of the current terms and consent version (--reviewer, --reviewed-on)")
     ap.add_argument('--keys', help='with --mark-reviewed: comma-separated text keys (default: all current machine texts)')
     args = ap.parse_args()
     if args.content:

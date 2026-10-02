@@ -37,9 +37,13 @@ ROOT = Path(__file__).resolve().parent.parent
 CATALOGUE_DIR = Path(os.environ.get('CVH_CATALOGUE_DIR') or ROOT / 'data/catalogue')
 GUIDES_PATH = CATALOGUE_DIR / 'guides.json'
 NUMBERS_PATH = CATALOGUE_DIR / 'numbers.json'
+TERMS_PATH = CATALOGUE_DIR / 'terms.json'
 CONTENT_DIR = CATALOGUE_DIR / 'translations/content'
 REVIEW_DIR = CATALOGUE_DIR / 'review'
 OPENCC_SCRIPT = ROOT / 'scripts/opencc_convert.mjs'
+# Strings a translation of the terms must keep where the English has them; src/contracts/termsRequiredTokens.json
+# is the one list, read here and by src/modules/subscriptions/domain/terms.ts (REQUIRED_TOKENS).
+TERMS_REQUIRED_TOKENS_PATH = ROOT / 'src/contracts/termsRequiredTokens.json'
 
 # The 14 translated languages of translate_catalogue.ROUTES, and zh-Hant converted from zh.
 MODEL_LANGS = ['ur', 'ps', 'tl', 'prs', 'gu', 'ta', 'el', 'sk', 'bn', 'hi', 'pa', 'zh', 'es', 'fr']
@@ -82,8 +86,31 @@ def number_texts(n):
     return {field: n[field] for field in ('label', 'when') if n.get(field)}
 
 
+def terms_texts(t):
+    """{key: English} of the terms and privacy text (S07.01): terms.title, terms.<section>.heading,
+    terms.<section>.<line index>. src/modules/subscriptions/domain/terms.ts builds the same keys."""
+    texts = {}
+    if t.get('title'):
+        texts['terms.title'] = t['title']
+    for section in t.get('sections') or []:
+        if not section.get('id'):
+            continue
+        if section.get('heading'):
+            texts[f'terms.{section["id"]}.heading'] = section['heading']
+        for i, line in enumerate(section.get('lines') or []):
+            if line:
+                texts[f'terms.{section["id"]}.{i}'] = line
+    return texts
+
+
+def terms_review_texts(t):
+    """What the English review and the counsel review of the terms cover: the translatable texts and the
+    privacy contact (not translated, but part of what a resident reads)."""
+    return {**terms_texts(t), 'terms.privacyContact': t.get('privacyContact') or ''}
+
+
 def content_texts():
-    """{key: English} for every text of the guides and the numbers page, in file order."""
+    """{key: English} for every text of the guides, the numbers page and the terms, in file order."""
     texts = {}
     if GUIDES_PATH.exists():
         for g in read_json(GUIDES_PATH)['guides']:
@@ -93,6 +120,8 @@ def content_texts():
         for n in read_json(NUMBERS_PATH)['numbers']:
             for key, english in number_texts(n).items():
                 texts[f'number.{n["id"]}.{key}'] = english
+    if TERMS_PATH.exists():
+        texts.update(terms_texts(read_json(TERMS_PATH)))
     return texts
 
 
@@ -101,6 +130,17 @@ def english_review_hash(texts):
     a guide's texts or of the numbers list's texts, keys in full. guideContent.ts englishReviewHash
     computes the same value; the seed refuses a review whose hash is not the current English's."""
     return source_hash(json.dumps([[k, v] for k, v in texts.items()], ensure_ascii=False, separators=(',', ':')))
+
+
+def terms_required_tokens():
+    return json.loads(TERMS_REQUIRED_TOKENS_PATH.read_text(encoding='utf-8'))
+
+
+def lost_required_tokens(key, english, text):
+    """Required tokens (terms.* keys only) the English has and the translation lost: the app's lost_required rule."""
+    if not key.startswith('terms.'):
+        return []
+    return [token for token in terms_required_tokens() if token in english and token not in text]
 
 
 def is_911_key(key):

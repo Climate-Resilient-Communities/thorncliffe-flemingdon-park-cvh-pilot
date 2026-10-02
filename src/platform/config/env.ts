@@ -91,19 +91,45 @@ function shown(value: string): string {
   return /^\s*[A-Za-z]{1,16}\s*$/.test(value) ? JSON.stringify(value) : "a value that is not shown";
 }
 
-function resolveEnvironment(raw: Raw, problems: string[]): AppEnvironment {
+/**
+ * Where this runs, from VERCEL and VERCEL_ENV. `fallback` is the environment to assume, with a problem to report,
+ * when Vercel's variables are missing or unknown: parseEnv assumes the strictest non-production one ("preview") and
+ * fails the boot; a caller that must fail closed (failClosedEnvironment) assumes "production".
+ */
+function detectEnvironment(
+  raw: Pick<Raw, "VERCEL" | "VERCEL_ENV">,
+  fallback: AppEnvironment,
+): { environment: AppEnvironment; problem?: string } {
   const vercelEnv = raw.VERCEL_ENV;
   if (vercelEnv === undefined) {
-    if (raw.VERCEL === undefined) return "development";
-    problems.push("VERCEL_ENV: missing on Vercel (VERCEL is set); expose Vercel's system environment variables");
-    return "preview";
+    if (raw.VERCEL === undefined) return { environment: "development" };
+    return {
+      environment: fallback,
+      problem: "VERCEL_ENV: missing on Vercel (VERCEL is set); expose Vercel's system environment variables",
+    };
   }
   if (vercelEnv === "production" || vercelEnv === "preview" || vercelEnv === "development") {
-    return vercelEnv;
+    return { environment: vercelEnv };
   }
-  problems.push(`VERCEL_ENV: must be production, preview or development (got ${shown(vercelEnv)})`);
-  // Treat an unknown environment as the strictest non-production one.
-  return "preview";
+  return {
+    environment: fallback,
+    problem: `VERCEL_ENV: must be production, preview or development (got ${shown(vercelEnv)})`,
+  };
+}
+
+function resolveEnvironment(raw: Raw, problems: string[]): AppEnvironment {
+  const { environment, problem } = detectEnvironment(raw, "preview");
+  if (problem) problems.push(problem);
+  return environment;
+}
+
+/**
+ * The environment for a caller that must fail closed (the terms page: only a known preview or local development may
+ * show unpublished text). Same detection as parseEnv, but a missing or unknown VERCEL_ENV on Vercel counts as
+ * production, and nothing else is validated or thrown: it reads only VERCEL and VERCEL_ENV.
+ */
+export function failClosedEnvironment(source: Record<string, string | undefined> = process.env): AppEnvironment {
+  return detectEnvironment(rawSchema.pick({ VERCEL: true, VERCEL_ENV: true }).parse(source), "production").environment;
 }
 
 function checkSmsMode(environment: AppEnvironment, smsMode: string | undefined, problems: string[]) {
