@@ -8,7 +8,7 @@ import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
 import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
 import type { IdentityProvider, OperationalLog, StaffStore } from "./ports";
-import { isAccountUsableAdmin } from "./usability";
+import { isAccountUsableAdmin, type SignInLockReader } from "./usability";
 
 export type AuditReason = (typeof REFUSAL_REASONS)[number];
 
@@ -29,7 +29,7 @@ export interface AccountDeps {
   /** What the provider stores for a password (passwordPepper.ts); null when STAFF_PASSWORD_PEPPER is not configured. */
   pepper: PasswordPepper | null;
   /** The failed-sign-in lock of a username (S01.07), an input of isUsableAdmin. */
-  signInLockedUntil: (username: string) => Promise<Date | null>;
+  signInLockedUntil: SignInLockReader;
 }
 
 export interface CreatedAccount {
@@ -300,7 +300,7 @@ export function createAccountService(deps: AccountDeps) {
       const now = deps.now();
       const usable = async (id: string) => {
         const account = await store.findById(db, id);
-        return account !== null && isAccountUsableAdmin(deps, account, now);
+        return account !== null && isAccountUsableAdmin(deps, db, account, now);
       };
       const ready = bootstrapCompletes(state, { firstAdmin: await usable(state.firstAdminId), secondAdmin: await usable(state.secondAdminId) });
       if (!ready) return false;
