@@ -1025,6 +1025,37 @@
       duplicateRequest: 'This request was already sent. Nothing more was sent. Press the button again to send a new one.',
       unavailable: 'The test text could not be sent right now. Nothing was sent.' } } } });
 
+  /* Buildings and floors (S01.13): the Admin's list of the pilot buildings and the floor editor. Not a prototype screen. */
+  m(en, { hub: { nav: { buildings: 'Buildings' } } });
+  m(en, { staff: { buildings: {
+    title: 'Buildings and floors',
+    lead: 'The pilot buildings come from the City of Toronto register. For each one, check the floors, correct any label that is wrong, then mark the building confirmed.',
+    empty: 'No buildings have been imported yet. Ask IT to run the buildings seed.',
+    listTitle: 'All buildings',
+    storeysRegister: '{n} storeys in the register', storeysUnknown: 'Storeys not known', floorsCount: '{n} floors',
+    confirmed: 'Floors confirmed', confirmedOn: 'Floors confirmed on {date}', unconfirmed: 'Floors not confirmed yet',
+    notInRegister: 'Not in latest register', registerLabel: 'Register status:',
+    notInRegisterLine: 'The latest import did not find this building in the City register. It is kept as it is. Check whether it still belongs in the pilot.',
+    edit: 'Edit floors', editOf: 'Edit floors of {address}', back: 'All buildings',
+    factsTitle: 'From the City register', factsUpdated: 'Last updated {date}',
+    facts: { storeys: 'Storeys', elevators: 'Elevators', emergencyPower: 'Emergency power', coolingRoom: 'Cooling room', airConditioning: 'Air conditioning', barrierFree: 'Barrier-free entrance' },
+    yes: 'Yes', no: 'No', unknown: 'Not known',
+    floorsTitle: 'Floors', floorsLead: 'From the lowest floor up. Rename a floor to correct its label: its assignments stay with it. Remove a floor that does not exist, like a missing 13.',
+    noFloors: 'This building has no floors yet.', floorUnconfirmed: 'not confirmed',
+    floorLabel: 'Label of the floor now called {label}', rename: 'Rename', remove: 'Remove',
+    renameOf: 'Rename floor {label}', removeOf: 'Remove floor {label}',
+    removeConfirm: 'Remove floor {label}? This cannot be undone.', removeYes: 'Yes, remove floor {label}', removeKeep: 'Keep floor {label}',
+    add: { title: 'Add a floor', label: 'Label', hint: 'Up to 8 letters, digits, spaces or hyphens, like G, L, P1 or 14.', place: 'Where it goes',
+      top: 'Above the top floor', bottom: 'Below the lowest floor', submit: 'Add floor' },
+    confirm: { title: 'Confirm this building', lead: 'Confirm when the floors above are exactly the floors people can be on.', submit: 'Mark building confirmed' },
+    saved: { added: 'Floor {label} added.', renamed: 'Floor {from} is now called {to}.', removed: 'Floor {label} removed.', confirmed: 'Building confirmed with {n} floors.' },
+    errors: { labelEmpty: 'Enter a label for the floor.', labelTooLong: 'A label can have at most 8 characters.',
+      labelCharacters: 'Use only letters, digits, spaces and hyphens in a label, with at least one letter or digit.',
+      labelDuplicate: 'This building already has a floor with that label. Labels count as the same when they differ only by capital letters or spaces.',
+      floorHasAssignments: 'Reassign or remove the ambassadors on this floor first', ambassadors: 'Ambassadors on this floor: {names}',
+      noChange: 'Nothing to change: the floor already has that label.', alreadyConfirmed: 'This building is already confirmed.',
+      noFloors: 'Add at least one floor before confirming the building.', buildingNotFound: 'That building does not exist.',
+      floorNotFound: 'That floor does not exist any more. Reload the page.', forbidden: 'Only an Admin can change buildings and floors.' } } } });
   /* An Admin's "Reset authenticator" (S01.11). Not a prototype screen. */
   m(en, { staff: { resetAuthenticator: { title: 'Reset an authenticator', lead: 'For a Coordinator or Admin who lost their phone. Their authenticator is removed and they are signed out on every device. They set up a new one the next time they sign in.',
     username: 'Their username', submit: 'Reset authenticator', done: 'Authenticator reset for {username}.',
