@@ -5,6 +5,8 @@ import { LANGUAGES, openResident } from "./helpers";
 // text of a heading or paragraph, those attributes sit on that element itself, so a right-to-left page does not reorder
 // it ("Nothing is happening [EN] / .right now"), its lines start at the left and wrap normally, and a screen reader
 // switches voice. (Inside otherwise-translated text the run is an inline <bdi>: see ResidentText.)
+// The first two tests use the page that does not exist, whose heading and paragraph are one fallback sentence each in
+// these languages; the last test walks home, whose strings are mostly fallbacks too (S02.11).
 
 type Glyph = { char: string; left: number; right: number; top: number };
 
@@ -39,7 +41,7 @@ function readsLeftToRight(list: Glyph[]) {
 for (const code of ["ur", "ps", "prs"]) {
   test.describe(`${code}: English fallback text`, () => {
     test("is a left-to-right English block, and its full stop is at the visual end", async ({ page }) => {
-      await openResident(page, `/${code}`, 390);
+      await openResident(page, `/${code}/does-not-exist`, 390);
 
       for (const selector of ["main h1", "main p"]) {
         const run = page.locator(`${selector}[lang=en][dir=ltr]`);
@@ -70,7 +72,7 @@ for (const code of ["ur", "ps", "prs"]) {
 }
 
 test("the English heading of a right-to-left page is a left-to-right block: its text starts at the left gutter", async ({ page }) => {
-  await openResident(page, "/ur", 390);
+  await openResident(page, "/ur/does-not-exist", 390);
   const { heading, main } = await page.evaluate(() => {
     const range = document.createRange();
     range.selectNodeContents(document.querySelector("main h1[lang=en][dir=ltr]")!);
@@ -85,6 +87,8 @@ test("the English heading of a right-to-left page is a left-to-right block: its 
 for (const language of LANGUAGES) {
   test(`${language.code}: every string that fell back to English is in an element with lang="en" dir="ltr"`, async ({ page }) => {
     await openResident(page, `/${language.code}`, 390);
+    // Home's feed has answered, so every string home draws is on the page.
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
 
     const strays = await page.evaluate(() => {
       const bad: string[] = [];

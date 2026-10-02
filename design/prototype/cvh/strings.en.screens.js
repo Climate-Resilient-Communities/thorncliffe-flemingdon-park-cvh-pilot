@@ -752,7 +752,11 @@
   R02: { continueIn: 'Continue in {lang}', chooseOther: 'Choose another language' } });
   /* R03_Home.html */
   m(en, { R03: { ongoingDay: 'Ongoing: day {n} of {total}', yourBuildingIs: '{building}', readAlert: 'Read the alert', neighbourhoods: 'Thorncliffe Park and Flemingdon Park',
-  headsUpAction: 'One thing to do now', ambassadorHome: 'Ambassador: my building', ambassadorLine: 'Post an update or work your round for {building}', noBuildingLine: 'Alerts for your neighbourhood show here. Add your building to see its alerts first.' } });
+  headsUpAction: 'One thing to do now', ambassadorHome: 'Ambassador: my building', ambassadorLine: 'Post an update or work your round for {building}', noBuildingLine: 'Alerts for your neighbourhood show here. Add your building to see its alerts first.',
+  currentAlerts: 'Current alerts', noCurrentAlerts: 'No current alerts', myBuildings: 'Your buildings', checking: 'Checking for alerts',
+  feedFailed: 'We could not check for alerts just now. A place that says "Not known" may still have an alert. We will try again.',
+  feedFailedOld: 'We could not check for new alerts. Showing what was last loaded {t}.' },
+  status: { none: 'Nothing active' } });
   /* R04_TextMessage.html */
   m(en, { R04: { tapOpen: 'Tap the message to open it', back: 'Back to the app', annotOn: 'Which lines are translated', annotOff: 'Hide translation notes', bigOn: 'Largest text', bigOff: 'Normal text',
   tagTemplate: 'Checked template', tagAlert: 'Written for this alert',

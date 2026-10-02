@@ -1,7 +1,13 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Page } from "@playwright/test";
 import { HEIGHTS, LANGUAGES, WIDTHS, expectBaseline, openResident, shellBoxes } from "./helpers";
 
 // S02.02: the resident shell in every launch language at 320, 390 and 768 px.
+
+/** Opens home and waits until its feed has answered, so the screen inside the shell is the settled one (S02.11). */
+async function openSettledHome(page: Page, path: string, width: number) {
+  await openResident(page, path, width);
+  await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+}
 
 for (const language of LANGUAGES) {
   test.describe(`${language.code}`, () => {
@@ -48,7 +54,7 @@ for (const language of LANGUAGES) {
 
     for (const width of WIDTHS) {
       test(`has no horizontal scrolling at ${width}px and matches its baseline screenshot`, async ({ page }) => {
-        await openResident(page, `/${language.code}`, width);
+        await openSettledHome(page, `/${language.code}`, width);
 
         const overflow = await page.evaluate(() => {
           const main = document.querySelector("main")!;
@@ -81,9 +87,9 @@ test("every right-to-left page sets dir=rtl, and no other does", async ({ page }
 for (const rtl of ["ur", "ps", "prs"]) {
   for (const width of WIDTHS) {
     test(`${rtl} is the mirror image of en at ${width}px (±1px)`, async ({ page }) => {
-      await openResident(page, "/en", width);
+      await openSettledHome(page, "/en", width);
       const english = await shellBoxes(page);
-      await openResident(page, `/${rtl}`, width);
+      await openSettledHome(page, `/${rtl}`, width);
       const mirrored = await shellBoxes(page);
 
       expect(Object.keys(mirrored)).toEqual(Object.keys(english));
@@ -102,7 +108,7 @@ for (const rtl of ["ur", "ps", "prs"]) {
 // navy theme is applied here by the attribute its tokens are declared under.
 for (const code of ["en", "ur"]) {
   test(`${code} at 390px: every element's box is the same in the light and navy themes`, async ({ page }) => {
-    await openResident(page, `/${code}`, 390);
+    await openSettledHome(page, `/${code}`, 390);
     const boxes = () =>
       page.evaluate(() =>
         [...document.querySelectorAll("body *:not(next-route-announcer)")].map((element) => {

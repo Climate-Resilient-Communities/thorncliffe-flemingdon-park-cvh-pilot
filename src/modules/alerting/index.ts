@@ -2,8 +2,9 @@
 // lifecycle they follow. Other modules and the app use only what is exported here.
 import type { Db } from "../../platform/db";
 import { readStaffStanding } from "../identity";
-import { floorsOfBuilding, neighbourhoodIds } from "../places";
+import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds } from "../places";
 import * as audit from "../audit";
+import { createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 
 export interface AlertingWiring {
@@ -29,6 +30,32 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
   });
 }
 
+export interface FeedWiring {
+  /** Required unless both `version` and `places` are given. */
+  db?: Db;
+  /** Test and local-development seam: the places the feed lists, instead of the places module's. */
+  places?: () => Promise<FeedPlaces>;
+  /** Test and local-development seam: the feed version, instead of the database's. */
+  version?: () => Promise<number>;
+  /** The alerts residents are told. Until S04.08 builds the web publish, none. */
+  alerts?: FeedAlerts;
+  now?: () => Date;
+}
+
+/** `GET /api/feed` (AD-17): FeedV1 from the feed version, the places module's buildings and neighbourhoods, and the alerts. */
+export function createFeed(wiring: FeedWiring): FeedReader {
+  return createFeedReader({
+    db: wiring.db,
+    places: wiring.places ?? (() => createResidentBuildings({ db: requireDb(wiring.db) }).placeIds()),
+    version: wiring.version,
+    alerts: wiring.alerts,
+    now: wiring.now,
+  });
+}
+
+export type { FeedAlerts, FeedPlaces, FeedReader } from "./application/feed";
+export { NO_ALERTS_YET } from "./application/feed";
+export { NO_STATUS, type PlaceState } from "./domain/feed";
 export type { AlertLifecycle, ApprovalBinding, EntryRef, EntryView, NewAlertInput, ThreadView } from "./application/lifecycle";
 export type { AudienceFloor, AudiencePlaces, BuildingChoice, PlaceChoice } from "./application/audience";
 export type { AlertActor, AlertAudit, AlertResult, EntryPreparer, FrozenContent, FrozenSmsBody, FrozenTranslation, StaffDirectory } from "./application/ports";
