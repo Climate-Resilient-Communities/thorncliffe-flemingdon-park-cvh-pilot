@@ -3,7 +3,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { CookieJar } from "../application/ports";
-import { SESSION_COOKIE, sessionKeyOf, supabaseAuthSessions, tokenLifetimeOf } from "./supabaseAuthSessions";
+import { SESSION_COOKIE, assuranceOf, sessionKeyOf, supabaseAuthSessions, tokenLifetimeOf } from "./supabaseAuthSessions";
 
 const URL_BASE = "https://example-project.supabase.co";
 const PUBLISHABLE = "sb_publishable_test_only";
@@ -13,18 +13,21 @@ const SESSION_ID = "7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f";
 const jwt = (claims: Record<string, unknown>) =>
   [Buffer.from('{"alg":"ES256","typ":"JWT"}').toString("base64url"), Buffer.from(JSON.stringify(claims)).toString("base64url"), "signature"].join(".");
 const ACCESS = jwt({ sub: USER_ID, session_id: SESSION_ID, iat: 1_790_000_000, exp: 1_790_000_000 + 43_200, aal: "aal1" });
+/** The same session's token after an authenticator code: Supabase keeps session_id and raises aal. */
+const RAISED = jwt({ sub: USER_ID, session_id: SESSION_ID, iat: 1_790_000_600, exp: 1_790_000_600 + 43_200, aal: "aal2" });
 const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 
 interface Call {
   url: string;
   method: string;
   headers: Headers;
+  body: unknown;
 }
 
 function fakeFetch(respond: (call: Call) => { status: number; body: unknown } | "network") {
   const calls: Call[] = [];
   const fetch = (async (input: RequestInfo | URL, init?: RequestInit) => {
-    const call = { url: String(input), method: init?.method ?? "GET", headers: new Headers(init?.headers) };
+    const call = { url: String(input), method: init?.method ?? "GET", headers: new Headers(init?.headers), body: typeof init?.body === "string" ? JSON.parse(init.body) : undefined };
     calls.push(call);
     const answer = respond(call);
     if (answer === "network") throw new TypeError("fetch failed");
@@ -78,7 +81,7 @@ describe("Supabase Auth sessions", () => {
 
     // The next request reads the cookie and asks Supabase who it is, with that access token only.
     const next = await supabaseAuthSessions(config(fetch), jar).currentUser();
-    expect(next).toEqual({ authUserId: USER_ID, authenticatorEnrolled: false, sessionKey: sha256(SESSION_ID) });
+    expect(next).toEqual({ authUserId: USER_ID, authenticatorEnrolled: false, sessionKey: sha256(SESSION_ID), aal: "aal1" });
     expect(calls.at(-1)).toMatchObject({ url: `${URL_BASE}/auth/v1/user`, method: "GET" });
     expect(calls.at(-1)?.headers.get("authorization")).toBe(`Bearer ${ACCESS}`);
   });
@@ -137,7 +140,130 @@ describe("Supabase Auth sessions", () => {
     const { jar } = await signedInJar();
     const { fetch } = fakeFetch(() => ({ status: 200, body: user([{ id: "f1", factor_type: "totp", status: "verified", created_at: "", updated_at: "" }]) }));
 
-    expect(await supabaseAuthSessions(config(fetch), jar).currentUser()).toEqual({ authUserId: USER_ID, authenticatorEnrolled: true, sessionKey: sha256(SESSION_ID) });
+    expect(await supabaseAuthSessions(config(fetch), jar).currentUser()).toEqual({ authUserId: USER_ID, authenticatorEnrolled: true, sessionKey: sha256(SESSION_ID), aal: "aal1" });
+  });
+
+  it("reads the level from the aal claim of the token Supabase verified, and nothing else", () => {
+    expect(assuranceOf(RAISED)).toBe("aal2");
+    expect(assuranceOf(ACCESS)).toBe("aal1");
+    expect(assuranceOf(jwt({ sub: USER_ID, aal: "AAL2" }))).toBe("aal1");
+    expect(assuranceOf(jwt({ sub: USER_ID }))).toBe("aal1");
+    expect(assuranceOf("not-a-jwt")).toBe("aal1");
+  });
+
+  it("reports an aal2 session only when Supabase verified its token", async () => {
+    const { fetch } = fakeFetch(() => ({ status: 200, body: { ...session(), access_token: RAISED } }));
+    const memory = memoryJar();
+    const check = await supabaseAuthSessions(config(fetch), memory.jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "x" });
+    if (!check.ok) throw new Error("expected a session");
+    await check.accept();
+
+    const verified = fakeFetch(() => ({ status: 200, body: user() }));
+    expect(await supabaseAuthSessions(config(verified.fetch), memory.jar).currentUser()).toMatchObject({ aal: "aal2", sessionKey: sha256(SESSION_ID) });
+    const refused = fakeFetch(() => ({ status: 403, body: { error_code: "bad_jwt", msg: "invalid JWT" } }));
+    expect(await supabaseAuthSessions(config(refused.fetch), memory.jar).currentUser()).toBeNull();
+  });
+
+  it("starts an enrolment with the session's own token, and writes no cookie", async () => {
+    const { jar, writes } = await signedInJar();
+    const before = writes.length;
+    const { fetch, calls } = fakeFetch(() => ({
+      status: 200,
+      body: { id: "f-new", type: "totp", friendly_name: "CVH Hub", totp: { qr_code: "<svg/>", secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/CVH%20Hub:jdoe?secret=JBSWY3DPEHPK3PXP&issuer=CVH%20Hub" } },
+    }));
+
+    const started = await supabaseAuthSessions(config(fetch), jar).enrolFactor({ issuer: "CVH Hub", accountName: "jdoe" });
+
+    expect(started).toEqual({
+      ok: true,
+      enrolment: { secret: "JBSWY3DPEHPK3PXP", uri: "otpauth://totp/CVH%20Hub:jdoe?secret=JBSWY3DPEHPK3PXP&issuer=CVH%20Hub", qrCode: "data:image/svg+xml;utf-8,<svg/>" },
+    });
+    expect(calls).toHaveLength(1);
+    expect(calls[0]).toMatchObject({ url: `${URL_BASE}/auth/v1/factors`, method: "POST", body: { factor_type: "totp", friendly_name: "CVH Hub", issuer: "CVH Hub" } });
+    expect(calls[0].headers.get("authorization")).toBe(`Bearer ${ACCESS}`);
+    expect(writes.length).toBe(before);
+  });
+
+  it.each([
+    [{ status: 422, body: { error_code: "mfa_totp_enroll_not_enabled", msg: "MFA enroll is disabled for TOTP" } }, "rejected"],
+    [{ status: 500, body: { msg: "boom" } }, "unavailable"],
+    ["network" as const, "unavailable"],
+  ])("reads a failed enrolment %j as %s", async (answer, error) => {
+    const { jar } = await signedInJar();
+    const { fetch } = fakeFetch(() => answer);
+
+    expect(await supabaseAuthSessions(config(fetch), jar).enrolFactor({ issuer: "CVH Hub", accountName: "jdoe" })).toEqual({ ok: false, error });
+  });
+
+  const factor = (id: string, status: "verified" | "unverified", created: string) => ({ id, factor_type: "totp", status, created_at: created, updated_at: created, friendly_name: "CVH Hub" });
+
+  function verifyFetch(factors: unknown[], verify: { status: number; body: unknown }) {
+    return fakeFetch((call) => {
+      if (call.url.endsWith("/auth/v1/user")) return { status: 200, body: user(factors) };
+      if (call.url.endsWith("/challenge")) return { status: 200, body: { id: "challenge-1", type: "totp", expires_at: Math.floor(Date.now() / 1000) + 300 } };
+      return verify;
+    });
+  }
+
+  it("checks a code against the newest unverified factor, and writes the raised session only when accepted", async () => {
+    const { jar, cookies, writes } = await signedInJar();
+    const before = writes.length;
+    const { fetch, calls } = verifyFetch([factor("f-old", "unverified", "2026-10-01T00:00:00Z"), factor("f-new", "unverified", "2026-10-02T00:00:00Z"), factor("f-v", "verified", "2026-09-01T00:00:00Z")], {
+      status: 200,
+      body: { ...session(), access_token: RAISED },
+    });
+
+    const checked = await supabaseAuthSessions(config(fetch), jar).verifyFactor({ code: "123456", factor: "unverified" });
+
+    expect(checked).toMatchObject({ ok: true, sessionKey: sha256(SESSION_ID), aal: "aal2" });
+    expect(calls.map((call) => `${call.method} ${call.url.replace(URL_BASE, "")}`)).toEqual([
+      "GET /auth/v1/user",
+      "POST /auth/v1/factors/f-new/challenge",
+      "POST /auth/v1/factors/f-new/verify",
+    ]);
+    expect(calls.at(-1)?.body).toEqual({ challenge_id: "challenge-1", code: "123456" });
+    expect(calls.every((call) => call.headers.get("authorization") === `Bearer ${ACCESS}`)).toBe(true);
+    expect(writes.length).toBe(before);
+    if (!checked.ok) throw new Error("expected a verification");
+    await checked.accept();
+    expect([...cookies.keys()]).toEqual([SESSION_COOKIE]);
+    expect(writes.at(-1)?.options).toMatchObject({ httpOnly: true, secure: true, sameSite: "lax", maxAge: 43_200 });
+    const stored = cookies.get(SESSION_COOKIE) ?? "";
+    const json = stored.startsWith("base64-") ? Buffer.from(stored.slice("base64-".length), "base64url").toString("utf8") : stored;
+    expect((JSON.parse(json) as { access_token: string }).access_token).toBe(RAISED);
+  });
+
+  it("checks a sign-in's code against the verified factor", async () => {
+    const { jar } = await signedInJar();
+    const { fetch, calls } = verifyFetch([factor("f-u", "unverified", "2026-10-02T00:00:00Z"), factor("f-v", "verified", "2026-09-01T00:00:00Z")], {
+      status: 200,
+      body: { ...session(), access_token: RAISED },
+    });
+
+    expect(await supabaseAuthSessions(config(fetch), jar).verifyFactor({ code: "123456", factor: "verified" })).toMatchObject({ ok: true, aal: "aal2" });
+    expect(calls[1].url).toBe(`${URL_BASE}/auth/v1/factors/f-v/challenge`);
+  });
+
+  it.each([
+    [{ status: 422, body: { error_code: "mfa_verification_failed", msg: "Invalid TOTP code entered" } }, "invalid_code"],
+    [{ status: 422, body: { error_code: "mfa_challenge_expired", msg: "Challenge expired" } }, "invalid_code"],
+    [{ status: 429, body: { error_code: "over_request_rate_limit", msg: "Too many requests" } }, "unavailable"],
+    [{ status: 500, body: { msg: "boom" } }, "unavailable"],
+  ])("reads a refused code %j as %s, and writes nothing", async (answer, error) => {
+    const { jar, writes } = await signedInJar();
+    const before = writes.length;
+    const { fetch } = verifyFetch([factor("f-v", "verified", "2026-09-01T00:00:00Z")], answer);
+
+    expect(await supabaseAuthSessions(config(fetch), jar).verifyFactor({ code: "000000", factor: "verified" })).toEqual({ ok: false, error });
+    expect(writes.length).toBe(before);
+  });
+
+  it("finds no factor to check when the user has none of that kind", async () => {
+    const { jar } = await signedInJar();
+    const { fetch, calls } = verifyFetch([factor("f-u", "unverified", "2026-10-02T00:00:00Z")], { status: 200, body: {} });
+
+    expect(await supabaseAuthSessions(config(fetch), jar).verifyFactor({ code: "123456", factor: "verified" })).toEqual({ ok: false, error: "no_factor" });
+    expect(calls).toHaveLength(1);
   });
 
   it("signs out at Supabase and clears the cookie, even when Supabase fails", async () => {

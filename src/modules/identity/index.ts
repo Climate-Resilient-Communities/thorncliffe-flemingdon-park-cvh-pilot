@@ -93,10 +93,11 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
 }
 
 /**
- * Sign-in, the session lookup, the setup gates' password change and the re-issue of starting
- * passwords (S01.07), wired like createIdentity. `accounts` is the IdentityService whose bootstrap
- * completion runs after a password change (created from the same wiring when not given); the
- * automatic locks go through the module's internal recovery exception (S01.06).
+ * Sign-in, the session lookup, the setup gates' password change, the authenticator enrolment and
+ * code check (S01.10) and the re-issue of starting passwords (S01.07), wired like createIdentity.
+ * `accounts` is the IdentityService whose bootstrap completion runs after a password change or an
+ * Admin's enrolment (created from the same wiring when not given); the automatic locks go through
+ * the module's internal recovery exception (S01.06).
  */
 export function createStaffAuth(wiring: IdentityWiring & { throttleKey: string; accounts?: IdentityService }): StaffAuthService {
   const accounts = wiring.accounts ?? createIdentity(wiring);
@@ -136,19 +137,34 @@ export type {
   AuthSessionsFactory,
   CookieJar,
   CreateLoginError,
+  EnrolFactorError,
+  FactorEnrolment,
+  FactorVerification,
   IdentityProvider,
   SessionCookieOptions,
   SessionUser,
   StaffSessionRecord,
   StaffSessionStore,
 } from "./application/ports";
-export { MIN_REFUSAL_MS, REQUIRED_TOKEN_LIFETIME_SECONDS } from "./application/staffAuth";
-export type { ChangePasswordError, CurrentSession, FirstAdminReissueError, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
+export { AUTHENTICATOR_ISSUER, MIN_REFUSAL_MS, REQUIRED_TOKEN_LIFETIME_SECONDS } from "./application/staffAuth";
+export type {
+  AuthenticatorCodeError,
+  ChangePasswordError,
+  CurrentSession,
+  FirstAdminReissueError,
+  ReissueError,
+  SignInOutcome,
+  StaffAuthService,
+  StaffSession,
+  StartEnrolmentError,
+} from "./application/staffAuth";
 export { type StaffChangeService } from "./application/staffChanges";
 export type { PasswordResetService, ResetPasswordError } from "./application/passwordReset";
 export { AMBASSADOR_IDLE_MS, SESSION_ABSOLUTE_MS, sessionLimits } from "./domain/sessionLimits";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
-export { setupGate } from "./domain/setupGate";
+export { AUTHENTICATOR_ROLES, needsAuthenticator, setupGate } from "./domain/setupGate";
+export { PRIVILEGED_ACTIONS, REQUIRED_ASSURANCE, isPrivilegedAction, meetsAssurance, type PrivilegedAction } from "./domain/assurance";
+export { AUTHENTICATOR_CODE_DIGITS, normaliseAuthenticatorCode } from "./domain/authenticatorCode";
 export { CLIENT_LIMIT, USERNAME_LIMIT } from "./domain/signInThrottle";
 export { STARTING_PASSWORD_VALID_MS } from "./domain/startingPasswordWindow";
 export { mayManageAccounts, type Actor } from "./domain/accountAuthority";

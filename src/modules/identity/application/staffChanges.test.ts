@@ -29,6 +29,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
       status: "active",
       mustChangePassword: false,
       startingPasswordIssuedAt: null,
+      factorEnrolledAt: new Date(0),
       ...partial,
     } as StaffAccount);
     idp.users.set(authUserId, { login: "x", password: "x", authenticatorEnrolled: true });
@@ -53,6 +54,7 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     permitAdminShortfall: permitted,
     setStatus: async (_tx, staffId, status) => void (rows.get(staffId)!.status = status),
     setRole: async (_tx, staffId, role) => void (rows.get(staffId)!.role = role),
+    clearFactorEnrolment: async (_tx, staffId) => void (rows.get(staffId)!.factorEnrolledAt = null),
   } as Partial<StaffStore> as StaffStore;
   const recorded: AuditEvent[] = [];
   const refused: AuditEvent[] = [];
@@ -118,6 +120,35 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
 
     expect(await service.changeRole(A, B, "director")).toEqual(RULE);
     expect(await service.removeAccount(A, C)).toEqual({ ok: true, value: undefined });
+  });
+
+  it("counts an Admin whose authenticator the app never enrolled as not usable, even with a factor at the provider (S01.10)", async () => {
+    const { service } = setup([{ id: A }, { id: B }, { id: C, factorEnrolledAt: null }]);
+
+    expect(await service.changeRole(A, B, "director")).toEqual(RULE);
+  });
+
+  it.each([
+    ["ambassador", "coordinator"],
+    ["director", "admin"],
+    ["ambassador", "admin"],
+  ] as const)("makes a %s given the %s role enrol an authenticator at next sign-in (S01.10)", async (from, to) => {
+    const { service, rows, recorded } = setup([{ id: A }, { id: B }, { id: D, role: from }]);
+
+    expect(await service.changeRole(A, D, to)).toEqual({ ok: true, value: undefined });
+    expect(rows.get(D)).toMatchObject({ role: to, factorEnrolledAt: null });
+    expect(recorded.at(-1)).toMatchObject({ action: "session.revoked", subjectId: D, meta: { cause: "role_changed" } });
+  });
+
+  it.each([
+    ["coordinator", "admin"],
+    ["admin", "coordinator"],
+    ["coordinator", "director"],
+  ] as const)("keeps the authenticator of a %s given the %s role: it was enrolled for an authenticator role", async (from, to) => {
+    const { service, rows } = setup([{ id: A }, { id: B }, { id: C }, { id: D, role: from }]);
+
+    expect(await service.changeRole(A, D, to)).toEqual({ ok: true, value: undefined });
+    expect(rows.get(D)!.factorEnrolledAt).toEqual(new Date(0));
   });
 
   it.each([

@@ -6,8 +6,9 @@ import type { StaffStatus } from "./staffAccount";
  * that owns it:
  *  - role, status and mustChangePassword: staff_account (S01.05; S01.07 clears the flag when the
  *    person replaces the starting password; `locked_pending_reissue` is set by S01.07);
- *  - authenticatorEnrolled: a verified TOTP factor in Supabase Auth (S01.10), read through the
- *    IdentityProvider port;
+ *  - authenticatorEnrolled: an authenticator enrolled through the app (S01.10): the account's
+ *    staff_account.factor_enrolled_at (which the two-Admin trigger also reads) and a verified TOTP
+ *    factor in Supabase Auth, read through the IdentityProvider port;
  *  - signInLockedUntil: the failed-sign-in lock (S01.07), null when there is none.
  */
 export interface AdminUsabilityFacts {

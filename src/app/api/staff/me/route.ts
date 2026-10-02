@@ -12,6 +12,7 @@ export const GET = staffRoute({ route: "/api/staff/me", access: "any_gate" }, as
     lastName: session.lastName,
     role: session.role,
     gate: session.gate,
+    aal: session.aal,
     next: GATE_PAGES[session.gate],
   };
   return staffJson(me);

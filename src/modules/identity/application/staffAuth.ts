@@ -1,23 +1,26 @@
 import { createHmac } from "node:crypto";
-import type { SetupGate } from "../../../contracts/staffAuth";
+import type { AssuranceLevel, SetupGate } from "../../../contracts/staffAuth";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { SYSTEM_ACTOR, type REFUSAL_REASONS } from "../../audit";
 import { mayManageAccounts } from "../domain/accountAuthority";
+import type { PrivilegedAction } from "../domain/assurance";
+import { normaliseAuthenticatorCode } from "../domain/authenticatorCode";
 import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import { isUsernameFormat, loginForUsername, normaliseUsername } from "../domain/newAccount";
 import { validateOwnPassword, type OwnPasswordError } from "../domain/ownPassword";
 import { err, ok, type Result } from "../domain/result";
 import { sessionStanding } from "../domain/sessionLimits";
-import { setupGate } from "../domain/setupGate";
+import { needsAuthenticator, setupGate } from "../domain/setupGate";
 import { CLIENT_LIMIT, THROTTLE_RETENTION_MS, USERNAME_LIMIT, isLocked, lockAfterFailure } from "../domain/signInThrottle";
 import type { StaffAccount } from "../domain/staffAccount";
 import { deriveStartingPassword } from "../domain/startingPassword";
 import { startingPasswordStanding } from "../domain/startingPasswordWindow";
 import type { AuditWriter } from "./accounts";
-import type { AuthSessions, IdentityProvider, OperationalLog, PasswordCheck, StaffSessionStore, StaffStore, ThrottleStore } from "./ports";
+import type { AuthSessions, FactorEnrolment, IdentityProvider, OperationalLog, PasswordCheck, StaffSessionStore, StaffStore, ThrottleStore } from "./ports";
 import { DEFAULT_LOCK_TIMEOUT_MS, adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
 import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
+import { hasEnrolledAuthenticator } from "./usability";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
 
@@ -79,6 +82,11 @@ export interface StaffSession {
   gate: SetupGate;
   /** The staff_session id of this request's session (S01.08 limits and revokes it). */
   sessionId: string;
+  /**
+   * The session's authenticator level (S01.10): `aal2` only when the provider's verified token says
+   * so AND the app recorded that this session reached it through its own code check (staff_session.aal2_at).
+   */
+  aal: AssuranceLevel;
 }
 
 export type SignInOutcome =
@@ -91,6 +99,23 @@ export type SignInOutcome =
   | { ok: false; error: "unavailable" };
 
 export type ChangePasswordError = OwnPasswordError | "password_rejected" | "provider_error" | "not_required";
+
+/** Why an authenticator code was not accepted (S01.10). */
+export type AuthenticatorCodeError =
+  /** Not six digits, or not the code of the authenticator (counted as a failed sign-in when checked). */
+  | "code_invalid"
+  /** Too many wrong codes or passwords: the username or the client is locked for now. */
+  | "code_locked"
+  /** The person is not at a gate that takes a code (or their account changed meanwhile). */
+  | "not_required"
+  /** The provider could not be reached or failed. */
+  | "provider_error";
+
+/** Why an enrolment could not start (S01.10). */
+export type StartEnrolmentError = "not_required" | "provider_error";
+
+/** The issuer an authenticator app shows next to the code. */
+export const AUTHENTICATOR_ISSUER = "CVH Hub";
 
 export type ReissueError = "forbidden" | "bootstrap_incomplete" | "not_found" | "not_reissuable" | "provider_error" | "passwords_not_configured";
 
@@ -107,7 +132,7 @@ export type FirstAdminReissueError =
   | "passwords_not_configured";
 
 /** Why a checked attempt failed, as the audit records it. */
-type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden">;
+type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden" | "wrong_code">;
 
 /** The throttle's keyed hash of a username or a client address (HMAC-SHA-256, hex). */
 export function throttleHash(throttleKey: string, purpose: "username" | "client", value: string): string {
@@ -164,6 +189,39 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     return { ok: false, error: "sign_in_failed" };
   }
 
+  const windowsStartAt = (now: Date) => ({ username: new Date(now.getTime() - USERNAME_LIMIT.windowMs), client: new Date(now.getTime() - CLIENT_LIMIT.windowMs) });
+
+  /**
+   * Starts the username lock and the client block a failure count reaches (inside the transaction
+   * holding the keys' locks). When `startsAccountLock` and the count reaches the username limit, a
+   * known account's lock is an automatic lock: S01.06's recovery exception, then the lock, with
+   * `auth.locked` audited.
+   */
+  async function applyLimits(
+    tx: DbTransaction,
+    account: StaffAccount | null,
+    usernameHash: string,
+    clientHash: string,
+    inWindow: { username: number; client: number },
+    now: Date,
+    startsAccountLock: boolean,
+  ) {
+    const usernameLock = lockAfterFailure(inWindow.username, USERNAME_LIMIT, now);
+    const clientLock = lockAfterFailure(inWindow.client, CLIENT_LIMIT, now);
+    const recovery = startsAccountLock && usernameLock !== null && account ? await deps.beginAdminRecovery(tx, account.id) : null;
+    if (usernameLock) await throttle.setLock(tx, "username", usernameHash, usernameLock);
+    if (clientLock) await throttle.setLock(tx, "client", clientHash, clientLock);
+    if (recovery && account) {
+      await audit.record(tx, {
+        action: "auth.locked",
+        actorStaffId: SYSTEM_ACTOR,
+        subjectType: "staff_account",
+        subjectId: account.id,
+        meta: { lock: "failed_sign_in", ...adminShortfallMeta(recovery) },
+      });
+    }
+  }
+
   /**
    * A checked attempt failed: stores it, starts the username lock or the client block when this
    * failure reaches a limit, and audits `auth.failed` (and `auth.locked` when a known account's
@@ -174,27 +232,8 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     const counts = await db.transaction(async (tx) => {
       await throttle.lockKeys(tx, [usernameHash, clientHash]);
       await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
-      const inWindow = await throttle.recordFailure(
-        tx,
-        { at: now, usernameHash, clientHash },
-        { username: new Date(now.getTime() - USERNAME_LIMIT.windowMs), client: new Date(now.getTime() - CLIENT_LIMIT.windowMs) },
-      );
-      const usernameLock = lockAfterFailure(inWindow.username, USERNAME_LIMIT, now);
-      const clientLock = lockAfterFailure(inWindow.client, CLIENT_LIMIT, now);
-      // A known account's username lock is an automatic lock: S01.06's recovery exception, then the lock.
-      const startsAccountLock = usernameLock !== null && account !== null && inWindow.username === USERNAME_LIMIT.failures;
-      const recovery = startsAccountLock && account ? await deps.beginAdminRecovery(tx, account.id) : null;
-      if (usernameLock) await throttle.setLock(tx, "username", usernameHash, usernameLock);
-      if (clientLock) await throttle.setLock(tx, "client", clientHash, clientLock);
-      if (recovery && account) {
-        await audit.record(tx, {
-          action: "auth.locked",
-          actorStaffId: SYSTEM_ACTOR,
-          subjectType: "staff_account",
-          subjectId: account.id,
-          meta: { lock: "failed_sign_in", ...adminShortfallMeta(recovery) },
-        });
-      }
+      const inWindow = await throttle.recordFailure(tx, { at: now, usernameHash, clientHash }, windowsStartAt(now));
+      await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, inWindow.username === USERNAME_LIMIT.failures);
       return inWindow;
     });
     await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason, attempts: counts.username } });
@@ -227,8 +266,13 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     return { ok: false, error: "starting_password_expired" };
   }
 
-  async function gateOf(account: StaffAccount, authenticatorEnrolled: boolean): Promise<SetupGate> {
-    return setupGate({ mustChangePassword: account.mustChangePassword, role: account.role, authenticatorEnrolled });
+  /**
+   * The gate of an account. `providerEnrolled`: the provider holds a verified factor for it; the
+   * authenticator counts only when the app enrolled it too (factor_enrolled_at, S01.10).
+   */
+  function gateOf(account: StaffAccount, providerEnrolled: boolean, aal: AssuranceLevel): SetupGate {
+    const authenticatorEnrolled = account.factorEnrolledAt !== null && providerEnrolled;
+    return setupGate({ mustChangePassword: account.mustChangePassword, role: account.role, authenticatorEnrolled, aal });
   }
 
   /** Logs once per process when the provider's access tokens last less than the 12-hour session. */
@@ -319,8 +363,9 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     }
     await check.accept();
     checkTokenLifetime(check.tokenLifetimeSeconds);
-    const enrolled = decision.account.mustChangePassword ? false : await idp.hasVerifiedAuthenticator(decision.account.authUserId);
-    return { ok: true, staffId: decision.account.id, gate: await gateOf(decision.account, enrolled) };
+    // A new session is aal1: Admins and Coordinators enter their code next (S01.10).
+    const enrolled = decision.account.mustChangePassword || !needsAuthenticator(decision.account.role) ? false : await hasEnrolledAuthenticator(idp, decision.account);
+    return { ok: true, staffId: decision.account.id, gate: gateOf(decision.account, enrolled, "aal1") };
   }
 
   /**
@@ -444,14 +489,18 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         return null;
       }
       await sessionStore.touch(db, opened.id, now);
+      // S01.10: aal2 needs both the provider's verified token and the app's record that this session
+      // reached it through the app's code check; a session raised at the provider directly stays aal1.
+      const aal: AssuranceLevel = user.aal === "aal2" && opened.aal2At !== null ? "aal2" : "aal1";
       return {
         staffId: account.id,
         username: account.username,
         firstName: account.firstName,
         lastName: account.lastName,
         role: account.role,
-        gate: await gateOf(account, user.authenticatorEnrolled),
+        gate: gateOf(account, user.authenticatorEnrolled, aal),
         sessionId: opened.id,
+        aal,
       };
     },
 
@@ -523,8 +572,8 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       if (!outcome.done) return refuse(outcome.error, outcome.error === "not_required" ? "conflict" : "provider_error");
       if (current) await reopenSession(account, current, providerPassword, now);
       if (account.role === "admin") await deps.completeBootstrapIfReady(staffId);
-      const enrolled = await idp.hasVerifiedAuthenticator(account.authUserId);
-      return ok({ gate: setupGate({ mustChangePassword: false, role: account.role, authenticatorEnrolled: enrolled }) });
+      const enrolled = needsAuthenticator(account.role) && (await hasEnrolledAuthenticator(idp, account));
+      return ok({ gate: gateOf({ ...account, mustChangePassword: false }, enrolled, "aal1") });
     },
 
     /**
@@ -598,6 +647,153 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
     /** The end of the failed-sign-in lock on this username, if one is in force (an input of isUsableAdmin). */
     signInLockedUntil: signInLockReader(deps),
+
+    /**
+     * Gate 2 (S01.10): starts enrolling an authenticator for an Admin or Coordinator who has none.
+     * Every factor the provider holds for them is removed first (an unfinished enrolment, or one
+     * made at the provider outside the app), so the new one is their only factor; the provider then
+     * makes an unverified TOTP factor whose secret is returned to show once. Nothing is recorded
+     * until the first code is accepted (verifyAuthenticatorCode).
+     */
+    async startEnrolment(session: Pick<StaffSession, "staffId" | "gate">, sessions: AuthSessions): Promise<Result<FactorEnrolment, StartEnrolmentError>> {
+      const account = await store.findById(db, session.staffId);
+      if (!account || account.status !== "active" || account.mustChangePassword || !needsAuthenticator(account.role) || session.gate !== "enrol_authenticator") {
+        return err("not_required");
+      }
+      try {
+        await idp.removeFactors(account.authUserId);
+      } catch (error) {
+        log.error("identity.factors_not_removed", { staff_id: account.id, error: error instanceof Error ? error.constructor.name : "unknown" });
+        return err("provider_error");
+      }
+      const started = await sessions.enrolFactor({ issuer: AUTHENTICATOR_ISSUER, accountName: account.username });
+      if (!started.ok) {
+        log.error("identity.factor_not_enrolled", { staff_id: account.id, error: started.error });
+        return err("provider_error");
+      }
+      return ok(started.enrolment);
+    },
+
+    /**
+     * An authenticator code (S01.10): the confirming code of an enrolment (gate 2) or the code of
+     * this sign-in (the code gate). Checked by the provider against the person's factor; a right
+     * code raises the session to `aal2` there, and the app then records, in one transaction with
+     * the account and the session row locked, that this session reached `aal2` (staff_session.aal2_at)
+     * and audits `auth.signed_in` with `aal2`, and for an enrolment `factor.enrolled` with the
+     * account's factor_enrolled_at set. The session stays `aal2` for the rest of its 12 hours.
+     *
+     * Wrong codes count as failed sign-ins of the username and the client (S01.07's throttle and
+     * locks): 5 within 15 minutes lock the username, so codes cannot be guessed. A code is refused
+     * without asking the provider while a lock is in force.
+     */
+    async verifyAuthenticatorCode(
+      session: Pick<StaffSession, "staffId" | "gate" | "sessionId">,
+      input: { code: string; client: string },
+      sessions: AuthSessions,
+    ): Promise<Result<{ gate: SetupGate }, AuthenticatorCodeError>> {
+      const account = await store.findById(db, session.staffId);
+      const refuse = async (code: AuthenticatorCodeError, reason: AuditReason) => {
+        await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason } });
+        return err(code);
+      };
+      const purpose = session.gate === "enrol_authenticator" ? "unverified" : session.gate === "authenticator_code" ? "verified" : null;
+      if (!account || purpose === null || account.status !== "active" || account.mustChangePassword || !needsAuthenticator(account.role)) {
+        return refuse("not_required", "conflict");
+      }
+      const code = normaliseAuthenticatorCode(input.code);
+      if (code === null) return refuse("code_invalid", "validation");
+      const now = deps.now();
+      const usernameHash = keyed("username", account.username);
+      const clientHash = keyed("client", input.client);
+      if (await throttled(db, usernameHash, clientHash, now)) return refuse("code_locked", "throttled");
+
+      // Each code attempt is stored as a pending failure before the provider is asked, under the
+      // keys' locks, so attempts fired in parallel are counted too: at most USERNAME_LIMIT.failures
+      // reach the provider per window. The row is deleted when the code turns out right (or could
+      // not be checked) and stays, as the failure, when it is wrong.
+      const reserved = await db.transaction(async (tx) => {
+        await throttle.lockKeys(tx, [usernameHash, clientHash]);
+        if (await throttled(tx, usernameHash, clientHash, now)) return null;
+        const windows = windowsStartAt(now);
+        const prior = await throttle.countFailures(tx, { usernameHash, clientHash }, windows);
+        if (prior.username >= USERNAME_LIMIT.failures || prior.client >= CLIENT_LIMIT.failures) return null;
+        return (await throttle.recordFailure(tx, { at: now, usernameHash, clientHash }, windows)).id;
+      });
+      if (reserved === null) return refuse("code_locked", "throttled");
+      const release = () => db.transaction((tx) => throttle.removeFailure(tx, reserved));
+
+      const checked = await sessions.verifyFactor({ code, factor: purpose });
+      if (!checked.ok) {
+        if (checked.error === "invalid_code") {
+          // The pending failure stays. The locks start here, once: with attempts in flight the count
+          // may already include the one that reaches the limit, so a lock in force is not started again.
+          const counts = await db.transaction(async (tx) => {
+            await throttle.lockKeys(tx, [usernameHash, clientHash]);
+            await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
+            const inWindow = await throttle.countFailures(tx, { usernameHash, clientHash }, windowsStartAt(now));
+            const usernameLocked = isLocked(await throttle.lockedUntil(tx, [{ kind: "username", keyHash: usernameHash }]), now);
+            await applyLimits(tx, account, usernameHash, clientHash, inWindow, now, !usernameLocked);
+            return inWindow;
+          });
+          await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "wrong_code", attempts: counts.username } });
+          return err("code_invalid");
+        }
+        await release();
+        if (checked.error === "no_factor") return refuse("not_required", "not_found");
+        log.error("identity.code_not_checked", { staff_id: account.id });
+        return refuse("provider_error", "provider_error");
+      }
+
+      const recorded = await db.transaction(async (tx) => {
+        // A lock that wrong codes started while this one was being checked still refuses it.
+        await throttle.lockKeys(tx, [usernameHash, clientHash]);
+        await throttle.removeFailure(tx, reserved);
+        if (await throttled(tx, usernameHash, clientHash, now)) return "locked" as const;
+        const current = await store.lockAccount(tx, account.id);
+        if (!current || current.status !== "active" || current.mustChangePassword || !needsAuthenticator(current.role)) return false;
+        // Supabase keeps the session's id when it raises it; if it ever did not, the raised session
+        // takes the old one's place (keeping its start for the 12-hour limit).
+        if (checked.sessionKey !== session.sessionId) {
+          const old = await sessionStore.find(tx, session.sessionId);
+          if (!old || old.revokedAt !== null || old.staffId !== current.id) return false;
+          await sessionStore.replace(tx, session.sessionId, { id: checked.sessionKey, staffId: current.id, at: now });
+        }
+        if (!(await sessionStore.markAal2(tx, checked.sessionKey, current.id, now))) return false;
+        if (purpose === "unverified") {
+          await store.setFactorEnrolled(tx, current.id, now);
+          await audit.record(tx, { action: "factor.enrolled", actorStaffId: current.id, subjectType: "staff_account", subjectId: current.id });
+        }
+        await audit.record(tx, { action: "auth.signed_in", actorStaffId: current.id, subjectType: "staff_account", subjectId: current.id, meta: { aal: "aal2" } });
+        return true;
+      });
+      if (recorded === "locked") {
+        await sessions.signOut();
+        return refuse("code_locked", "throttled");
+      }
+      if (!recorded) {
+        // Suspended, revoked or given another role while the code was checked: the raised session is not kept.
+        await sessions.signOut();
+        return refuse("not_required", "conflict");
+      }
+      await checked.accept();
+      // The second Admin's enrolment can be what makes them usable, which ends bootstrap (S01.05).
+      if (purpose === "unverified" && account.role === "admin") await deps.completeBootstrapIfReady(account.id);
+      return ok({ gate: "hub" });
+    },
+
+    /**
+     * Audits a privileged staff request refused because its session is below `aal2` (S01.10: 403
+     * `aal2_required`). `route` is the route pattern, `permission` the privileged action.
+     */
+    async refuseBelowAal2(staffId: string, route: string, permission: PrivilegedAction): Promise<void> {
+      await audit.recordRefusal(db, {
+        action: "permission.denied",
+        actorStaffId: staffId,
+        subjectType: "staff_account",
+        subjectId: staffId,
+        meta: { status: 403, route, permission, reason: "aal_required" },
+      });
+    },
 
     /**
      * Audits a staff request refused because the person is at an earlier setup gate (403
