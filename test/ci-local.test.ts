@@ -138,12 +138,12 @@ describe("scripts/ci/local.sh mirrors the Checks job", () => {
   });
 
   it("reports changed arguments", () => {
-    const script = scriptText.replace("--base origin/main", "--base origin/develop");
+    const script = scriptText.replace('--base "$base"', "--base origin/develop");
 
     const problems = compare(workflowText, script);
 
     expect(problems).toHaveLength(1);
-    expect(problems[0]).toMatch(/db:check-destructive -- --base origin\/main/);
+    expect(problems[0]).toMatch(/db:check-destructive -- --base "\$base"/);
     expect(problems[0]).toMatch(/differs in local\.sh/);
   });
 

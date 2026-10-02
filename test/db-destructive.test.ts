@@ -316,3 +316,55 @@ describe("reading the release in production", () => {
     );
   });
 });
+
+describe("CLI on a push to main", () => {
+  let repo: string;
+  const git = (args: string[]) => {
+    const result = spawnSync("git", args, { cwd: repo, encoding: "utf8" });
+    if (result.status !== 0) throw new Error(result.stderr);
+    return result.stdout.trim();
+  };
+  const run = (base: string) =>
+    spawnSync("node", [path.join(__dirname, "..", "scripts/db/check-destructive.mjs"), "--base", base, "--dir", "db/migrations"], {
+      cwd: repo,
+      encoding: "utf8",
+      env: { ...process.env, PRODUCTION_URL: "" },
+    });
+
+  beforeAll(() => {
+    repo = mkdtempSync(path.join(tmpdir(), "cvh-main-push-"));
+    git(["init", "-q", "-b", "main"]);
+    git(["config", "user.email", "test@example.com"]);
+    git(["config", "user.name", "Test"]);
+    mkdirSync(path.join(repo, "db", "migrations"), { recursive: true });
+    writeFileSync(path.join(repo, "db/migrations/20260101000001_first.sql"), "create table t (id int);\n");
+    git(["add", "."]);
+    git(["commit", "-q", "-m", "first"]);
+    // The merge of a branch that adds a destructive migration, as a push to main sees it.
+    git(["checkout", "-q", "-b", "feature"]);
+    writeFileSync(path.join(repo, "db/migrations/20260101000002_drop.sql"), "drop table t;\n");
+    git(["add", "."]);
+    git(["commit", "-q", "-m", "drop"]);
+    git(["checkout", "-q", "main"]);
+    git(["merge", "-q", "--no-ff", "-m", "merge feature", "feature"]);
+  });
+
+  afterAll(() => {
+    rmSync(repo, { recursive: true, force: true });
+  });
+
+  it("checks nothing when HEAD is compared with itself (origin/main on a push to main)", () => {
+    const result = run("HEAD");
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toMatch(/Checking 0 migration\(s\)/);
+  });
+
+  it("checks the merged migrations against the first parent, HEAD~1", () => {
+    const result = run("HEAD~1");
+
+    expect(result.status).toBe(1);
+    expect(result.stdout).toMatch(/Checking 1 migration\(s\)/);
+    expect(result.stderr).toMatch(/20260101000002_drop.sql drops table t/);
+  });
+});

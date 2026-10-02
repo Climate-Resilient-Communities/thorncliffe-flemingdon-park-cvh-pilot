@@ -198,7 +198,10 @@ step npm run lint:deps
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:check
 TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:db
-PRODUCTION_URL="" step npm run db:check-destructive -- --base origin/main --removals "$RUNNER_TEMP/migration-removals.json"
+# On main HEAD is origin/main, so the base is its first parent (as in the workflow).
+base=origin/main
+if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then base=HEAD~1; fi
+PRODUCTION_URL="" step npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
 always_step npm run check:strings
 replaced_step 'npx playwright install --with-deps chromium' verify_chromium
 step npm run test:layout
