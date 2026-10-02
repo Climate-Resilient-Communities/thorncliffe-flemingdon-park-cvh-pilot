@@ -300,9 +300,11 @@ export interface StaffSessionStore {
   touch(db: DbExecutor, id: string, at: Date): Promise<void>;
   /**
    * Replaces a session by another for the same account (the provider opened a new session for the
-   * same browser): the new one keeps the old one's `createdAt`, and the old one is revoked.
+   * same browser): the new one keeps the old one's `createdAt`, and the old one is revoked. Only an
+   * open session is replaced: false, and nothing inserted, when `from` is already revoked (or not
+   * this account's), so a revocation is never undone.
    */
-  replace(tx: DbTransaction, from: string, to: { id: string; staffId: string; at: Date }): Promise<void>;
+  replace(tx: DbTransaction, from: string, to: { id: string; staffId: string; at: Date }): Promise<boolean>;
   /** Revokes one session. True when it was open. */
   revoke(db: DbExecutor, id: string, at: Date): Promise<boolean>;
   /** Records that an open session of this account reached `aal2` at `at` (S01.10). False when there is no such open session. */

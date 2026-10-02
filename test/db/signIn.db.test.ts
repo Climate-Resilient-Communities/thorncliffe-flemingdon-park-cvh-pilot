@@ -1279,3 +1279,105 @@ describe("choosing a password and a re-issue of the same account are serialised"
     expect((await row(id)).must_change_password).toBe(true);
   });
 });
+
+describe("a password change does not bring back a session that a revocation ended (P3-1)", () => {
+  const NEW_PASSWORD = "a long new password";
+
+  it.each([
+    [
+      "every session is revoked",
+      async (id: string) => {
+        await owner`update staff_account set session_generation = session_generation + 1 where id = ${id}`;
+        await owner`update staff_session set revoked_at = now() where staff_account_id = ${id} and revoked_at is null`;
+      },
+    ],
+    [
+      "only the revocation count moves",
+      async (id: string) => {
+        await owner`update staff_account set session_generation = session_generation + 1 where id = ${id}`;
+      },
+    ],
+  ])("leaves no open session when, while the provider reopens it, %s", async (_, revokeMeanwhile) => {
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    const current = (await auth.currentSession(phone.sessions()))!;
+    const real = phone.sessions();
+    const revokedDuringCheck = {
+      ...real,
+      checkPassword: async (input: Parameters<typeof real.checkPassword>[0]) => {
+        await revokeMeanwhile(id);
+        return real.checkPassword(input);
+      },
+    };
+
+    await auth.changePassword(id, { password: NEW_PASSWORD, confirm: NEW_PASSWORD }, { sessions: revokedDuringCheck, sessionId: current.sessionId });
+
+    expect((await sessionRows(id)).filter((session) => session.revoked_at === null)).toEqual([]);
+    expect(await auth.currentSession(phone.sessions())).toBeNull();
+    expect(phone.cookies.size).toBe(0);
+    expect(idp.sessionTokens.size).toBe(0);
+  });
+});
+
+describe("a locked Admin username does not block Admin changes (P3-2)", () => {
+  async function threeAdmins() {
+    const ids: string[] = [];
+    for (const [username, firstName] of [
+      ["admin1", "Ada"],
+      ["admin2", "Bo"],
+      ["admin3", "Cy"],
+    ] as const) {
+      ids.push(await account({ username, firstName, lastName: "Admin", role: "admin", own: `${username} password`, enrolled: true }));
+    }
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${ids[0]}, ${ids[1]}, now())`;
+    return ids as [string, string, string];
+  }
+
+  it.each([
+    ["suspend", (a: string, c: string) => accounts.suspendAccount(a, c)],
+    ["remove", (a: string, c: string) => accounts.removeAccount(a, c)],
+    ["demote", (a: string, c: string) => accounts.changeRole(a, c, "coordinator")],
+  ])("lets an Admin %s a third Admin while another Admin's username is locked by failures", async (_, run) => {
+    const [a, b, c] = await threeAdmins();
+    for (let i = 0; i < 5; i++) await signIn(browser(), "admin2", "wrong");
+    expect(await auth.signInLockedUntil(app, "admin2")).not.toBeNull();
+
+    expect(await run(a, c)).toEqual({ ok: true, value: undefined });
+
+    // Two Admins are left, both counted as usable for this rule; losing either would leave one.
+    expect(await accounts.suspendAccount(a, b)).toEqual({ ok: false, error: "two_admin_rule" });
+  });
+});
+
+describe("expired or used starting-password sign-ins are throttled (P3-3)", () => {
+  const failures = async () => Number((await owner`select count(*)::int as n from sign_in_failure`)[0].n);
+
+  it("counts an expired starting password against the username, locks it, and moves an Admin to locked_pending_reissue once", async () => {
+    const admin = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", enrolled: true });
+    const other = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin}, ${other}, now())`;
+    advance(minutes(25 * 60));
+
+    const outcomes = [];
+    for (let i = 0; i < 7; i++) outcomes.push(await signIn(browser(), "admin1", "rvh-ada-admin"));
+
+    expect(outcomes.slice(0, 5)).toEqual(Array(5).fill({ ok: false, error: "starting_password_expired" }));
+    expect(outcomes.slice(5)).toEqual(Array(2).fill({ ok: false, error: "sign_in_failed" }));
+    expect(await failures()).toBe(5);
+    expect(await auth.signInLockedUntil(app, "admin1")).not.toBeNull();
+    expect((await row(admin)).status).toBe("locked_pending_reissue");
+    expect(await auditsOf("auth.locked")).toHaveLength(1);
+  });
+
+  it("counts a used starting password too", async () => {
+    await account(ann);
+    await signIn(browser(), "aokafor", ANN_START);
+
+    const outcomes = [];
+    for (let i = 0; i < 6; i++) outcomes.push(await signIn(browser(), "aokafor", ANN_START));
+
+    expect(outcomes.map((outcome) => (outcome as { error: string }).error)).toEqual([...Array(5).fill("starting_password_expired"), "sign_in_failed"]);
+    expect(await failures()).toBe(5);
+  });
+});
