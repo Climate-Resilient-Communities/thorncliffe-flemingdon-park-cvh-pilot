@@ -9,6 +9,16 @@ window.CVH_STRINGS.en = {
    hour: '1 hour', hours: '{n} hours', day: '1 day', days: '{n} days', today: 'Today', tomorrow: 'Tomorrow', until: 'until {t}', closed: 'Closed',
    days7: { mon: 'Monday', tue: 'Tuesday', wed: 'Wednesday', thu: 'Thursday', fri: 'Friday', sat: 'Saturday', sun: 'Sunday' } },
 
+ /* ------------------------------------------------ Terms and privacy page, /{lang}/terms (S07.01). The terms text itself is
+    not here: it comes from data/catalogue/terms.json and its reviewed translations. */
+ terms: {
+  version: 'Version', owner: 'Owner', updated: 'Last updated', privacyContact: 'Privacy contact',
+  draftTitle: 'Draft: not yet published',
+  draftBody: 'This text has not been approved yet. It is not the final terms. Do not sign up on the strength of it.',
+  draftWhy: 'Not published because:',
+  translationNote: 'Some of this page has not been translated into {lang} yet. Those parts show in English.'
+ },
+
  /* ------------------------------------------------ Shell (resident and ambassador app) */
  shell: {
   cvhName: 'Community Virtual Hub', hubName: 'Thorncliffe Park Community Hub', hubLogoAlt: 'Thorncliffe Park Community Hub',
