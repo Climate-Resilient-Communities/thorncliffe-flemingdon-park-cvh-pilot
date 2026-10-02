@@ -380,6 +380,27 @@ describe("the database trigger", () => {
     expect(await admins()).toBe(2);
   });
 
+  it("refuses an UPDATE that only clears an Admin's factor_enrolled_at when two usable Admins remain, unless recovery is flagged", async () => {
+    await account();
+    const second = await account();
+
+    await expect(asApp((tx) => tx`update staff_account set factor_enrolled_at = null where id = ${second}`)).rejects.toMatchObject({
+      message: RULE,
+      code: "23514",
+      constraint_name: "staff_account_two_usable_admins",
+    });
+    expect(await admins()).toBe(2);
+    const [{ usable }] = await owner`select count(*)::int as usable from staff_account where factor_enrolled_at is not null`;
+    expect(usable).toBe(2);
+
+    await asApp(async (tx) => {
+      await tx`select set_config('cvh.admin_recovery', 'on', true)`;
+      await tx`update staff_account set factor_enrolled_at = null where id = ${second}`;
+    });
+    const [row] = await owner`select factor_enrolled_at from staff_account where id = ${second}`;
+    expect(row.factor_enrolled_at).toBeNull();
+  });
+
   it("refuses the second of two concurrent demotions that bypass the app's lock", async () => {
     const [a, b, c] = [await account(), await account(), await account()];
     let release!: () => void;
