@@ -1,0 +1,416 @@
+/*
+ * The resident directory (S02.06; prototype R-10, R-11, R-12, R-13, R-27, X-11, X-14). Spacing from the semantic
+ * tokens, direction from logical properties only, so the screens mirror in Urdu, Pashto and Dari without a [dir] rule.
+ * "Not known" is told apart from a fact by a dashed ring and italics, never by colour alone.
+ */
+@layer components {
+  .dir-hint,
+  .dir-updated,
+  .dir-count,
+  .dir-card__address,
+  .dir-card__confirmed {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .dir-strong {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* A note that part of the page is English: a note, not an error. */
+  .dir-note {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .dir-note__title {
+    font-weight: 700;
+  }
+
+  /* Buttons and links. */
+  .dir-btn,
+  .dir-call,
+  .dir-link,
+  .dir-back {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-current);
+    min-inline-size: var(--tap-current);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-card);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .dir-btn--primary {
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .dir-btn--secondary,
+  .dir-call {
+    border-color: var(--control-border);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .dir-btn--quiet,
+  .dir-link,
+  .dir-back {
+    background-color: transparent;
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
+  .dir-call {
+    align-self: start;
+    gap: var(--gap-label);
+  }
+
+  .dir-link,
+  .dir-back {
+    justify-content: flex-start;
+    align-self: start;
+    padding-inline: 0;
+    text-align: start;
+    overflow-wrap: anywhere;
+  }
+
+  .dir-btn:focus-visible,
+  .dir-call:focus-visible,
+  .dir-link:focus-visible,
+  .dir-back:focus-visible,
+  .dir-chip__x:focus-visible,
+  .dir-card__link:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .dir-actions {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--gap-target);
+  }
+
+  .dir-actions > * {
+    inline-size: 100%;
+  }
+
+  /* R-27: the filters. */
+  .dir-filters {
+    min-inline-size: 0;
+  }
+
+  .dir-filters [hidden] {
+    display: none;
+  }
+
+  .dir-fieldset {
+    min-inline-size: 0;
+    margin: 0;
+    padding: 0;
+    border: 0;
+  }
+
+  .dir-legend {
+    margin-block-end: var(--gap-label);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .dir-option {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-stack);
+    padding: var(--inset-card-compact);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  .dir-option:has(input:checked) {
+    border-color: var(--accent-text);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+  }
+
+  .dir-option:has(input:focus-visible) {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .dir-option__input {
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    margin: 0;
+    accent-color: var(--accent-text);
+    cursor: pointer;
+  }
+
+  .dir-option__text {
+    min-inline-size: 0;
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  /* X-11: the applied filters. */
+  .dir-bar {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    padding: var(--inset-card-compact);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .dir-bar__title {
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .dir-bar__count {
+    font-size: var(--type-caption-size);
+  }
+
+  .dir-bar__chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-related) var(--gap-subline);
+    border: 1.5px solid var(--accent-text);
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .dir-chip__label {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .dir-chip__x {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-current);
+    min-inline-size: var(--tap-current);
+    border: 0;
+    border-radius: var(--radius-card);
+    background-color: transparent;
+    color: inherit;
+    font: inherit;
+    font-size: var(--type-lead-size);
+    cursor: pointer;
+  }
+
+  /* The list. */
+  .dir-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-stack);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+    min-inline-size: 0;
+    padding: var(--inset-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .dir-card--page {
+    border: 0;
+    padding: 0;
+    background-color: transparent;
+  }
+
+  .dir-card__head {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+  }
+
+  .dir-card__name {
+    overflow-wrap: anywhere;
+  }
+
+  .dir-card__link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--tap-current);
+    color: var(--ink);
+    text-decoration: underline;
+  }
+
+  .dir-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir-tag {
+    display: inline-flex;
+    align-items: center;
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--ink) 8%, var(--surface-raised));
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .dir-tag--quiet {
+    background-color: transparent;
+    border: 1px solid var(--border);
+    font-weight: 400;
+  }
+
+  .dir-tag--emergency {
+    border: 2px solid var(--ink);
+    background-color: var(--surface-raised);
+  }
+
+  /* Machine translation (x04): the label, and the way back to the English. */
+  .dir-mt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    column-gap: var(--gap-related);
+    row-gap: var(--gap-subline);
+    font-size: var(--type-caption-size);
+  }
+
+  .dir-mt__label {
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border: 1px dashed var(--text-muted);
+    border-radius: var(--radius-card);
+    font-weight: 700;
+    color: var(--text);
+  }
+
+  .dir-mt__shown {
+    color: var(--text-muted);
+  }
+
+  /* The facts of one provider. */
+  .dir-facts {
+    margin: 0;
+  }
+
+  .dir-fact {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding-block: var(--gap-tight);
+    border-block-start: 1px solid var(--border);
+  }
+
+  .dir-fact dt {
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    color: var(--text-muted);
+  }
+
+  .dir-fact dd {
+    min-inline-size: 0;
+    margin: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .dir-contacts {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir-unknown {
+    display: inline-flex;
+    align-items: baseline;
+    gap: var(--gap-label);
+    font-style: italic;
+    color: var(--text-muted);
+  }
+
+  .dir-unknown__mark {
+    flex: none;
+    box-sizing: border-box;
+    inline-size: 0.75em;
+    block-size: 0.75em;
+    border: 2px dashed var(--text-muted);
+    border-radius: var(--radius-disc);
+  }
+
+  /* X-14: how they can help. */
+  .dir-help {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding: var(--inset-card-compact);
+    border: 1.5px solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  .dir-help__label {
+    font-weight: 700;
+  }
+
+  .dir-help__911 {
+    font-weight: 700;
+  }
+
+  /* R-11 and "The directory could not load": a way to reach a person. */
+  .dir-empty {
+    padding: var(--inset-card);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+}

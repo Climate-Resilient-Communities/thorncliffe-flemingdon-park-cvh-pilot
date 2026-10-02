@@ -4,7 +4,7 @@ import { LANGUAGES } from "./helpers";
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
 // middleware matches only /staff/** and /api/staff/**). No response under /{lang}/** carries Set-Cookie.
 
-const PATHS = ["", "/map", "/search", "/ready", "/terms", "/buildings/123", "/does-not-exist"];
+const PATHS = ["", "/map", "/search", "/ready", "/terms", "/buildings/123", "/directory", "/directory/P101", "/does-not-exist"];
 
 test("no response to a /{lang}/** page request sets a cookie", async ({ request }) => {
   const checked: string[] = [];
