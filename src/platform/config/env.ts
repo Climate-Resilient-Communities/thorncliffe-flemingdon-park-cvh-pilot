@@ -54,6 +54,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
  *                                                        Supabase Auth (the end-to-end tests); never a real account
+ * CVH_FAKE_BUILDINGS_FILE
+ *                      server   optional; local development only (start-up fails on Vercel): the resident building
+ *                                                        page reads its buildings from this JSON file instead of the
+ *                                                        database (the resident page tests and their screenshots)
  * CVH_FAKE_DIRECTORY_DIR
  *                      server   optional; local development only (start-up fails on Vercel): the directory release files
  *                                                        are kept in this folder instead of the private Supabase Storage
@@ -98,6 +102,7 @@ const rawSchema = z.object({
   TWILIO_FROM_NUMBER: optionalText,
   SMS_TEST_ALLOWLIST: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
+  CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
 });
@@ -120,6 +125,8 @@ export interface Env {
   smsTestProblem?: string;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
+  /** Local development only: sample buildings for the resident page tests, read instead of the database. */
+  fakeBuildingsFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
   /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
@@ -376,6 +383,9 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
   }
 
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_BUILDINGS_FILE !== undefined) {
+    problems.push("CVH_FAKE_BUILDINGS_FILE: the buildings fake is only allowed in local development, never on Vercel");
+  }
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_DIRECTORY_DIR !== undefined) {
     problems.push("CVH_FAKE_DIRECTORY_DIR: the local directory store is only allowed in local development, never on Vercel");
   } else if (raw.CVH_FAKE_DIRECTORY_DIR !== undefined && !ABSOLUTE_PATH.test(raw.CVH_FAKE_DIRECTORY_DIR)) {
@@ -429,6 +439,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsTestAllowlist,
     smsTestProblem,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
+    fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };

@@ -1,7 +1,7 @@
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 
 /** The audit actions the places module writes (S01.13); the audit module validates each one's `meta` strictly. */
-export type PlacesAuditAction = "seed.run" | "building.floor_added" | "building.floor_renamed" | "building.floor_removed" | "building.confirmed";
+export type PlacesAuditAction = "seed.run" | "building.floor_added" | "building.floor_renamed" | "building.floor_removed" | "building.confirmed" | "building.contact_changed";
 
 export interface PlacesAuditEvent {
   action: PlacesAuditAction;

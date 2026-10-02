@@ -1112,6 +1112,30 @@
       alreadyPublished: 'This provider is already published.', notPublished: 'This provider is not published.',
       forbidden: 'Only an Admin can change providers.',
       aal2Required: 'An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.' } } } });
+  /* The building contact on the Admin's building screen (S02.08). Not a prototype screen. */
+  m(en, { staff: { buildings: {
+    contact: { title: 'Building contact', lead: 'A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.',
+      current: 'Provided by the Hub, last updated {date}', none: 'No contact entered yet. Residents see "Not known".',
+      role: 'Role', roleHint: 'Which office the number reaches.', roleChoose: 'Choose a role',
+      phone: 'Phone number', phoneHint: '10 digits, like 416 555 0123.',
+      workNumber: 'This is a work or office number the building agreed to publish.',
+      submit: 'Save contact', remove: 'Remove contact' },
+    saved: { contact: 'Building contact saved.', contactRemoved: 'Building contact removed.' },
+    errors: { roleInvalid: 'Choose one of the roles in the list.',
+      phoneInvalid: 'Enter a 10-digit phone number, like 416 555 0123.',
+      roleWithoutPhone: 'Enter a phone number for this role, or remove the contact.',
+      phoneWithoutRole: 'Choose a role for this number, or remove the contact.',
+      notWorkNumber: 'Confirm that this is a work or office number the building agreed to publish.',
+      contactNoChange: 'Nothing to change: the contact is already saved like this.' } } } });
+  /* The building page a resident opens at /{lang}/buildings/{rsn} (S02.08, FR-D4-P, NFR-N7). Not a prototype screen. */
+  m(en, { building: {
+    registerTitle: 'From the City register', updated: 'Last updated {date}',
+    registerLead: 'The City of Toronto keeps a register of apartment buildings. These facts come from it.',
+    checking: 'The Hub is checking this building\'s details. What you see here may change.',
+    facts: { storeys: 'Storeys', elevators: 'Elevators', emergencyPower: 'Emergency power', coolingRoom: 'Cooling room', airConditioning: 'Air conditioning', barrierFree: 'Barrier-free entrance' },
+    airNone: 'None', airIndividual: 'Individual units',
+    roles: { superintendent: 'Superintendent', buildingManagement: 'Building management', propertyOffice: 'Property office' },
+    contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}' } });
   /* Directory release (S02.05): the Admin publishes the directory as one numbered release. Not a prototype screen. */
   m(en, { hub: { nav: { directory: 'Directory' } }, staff: { directory: {
     title: 'Directory release',

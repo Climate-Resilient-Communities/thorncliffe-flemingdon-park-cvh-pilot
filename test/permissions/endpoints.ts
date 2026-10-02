@@ -76,7 +76,7 @@ const BUILDING_ACTIONS = "src/app/staff/buildings/actions.ts";
 /** A building that does not exist: an Admin's call passes the guard and is then refused by the use case, changing nothing. */
 const NO_SUCH_BUILDING = "7001";
 const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
-const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction"] as const;
+const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction", "setContactAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";

@@ -3,13 +3,13 @@ import { englishText } from "@/i18n/text";
 import { Screen } from "@/ui";
 import { staffPage } from "../guard";
 import { buildings } from "../places";
-import { addFloorAction, confirmBuildingAction, removeFloorAction, renameFloorAction } from "./actions";
+import { addFloorAction, confirmBuildingAction, removeFloorAction, renameFloorAction, setContactAction } from "./actions";
 import { BuildingsBody } from "./BuildingsBody";
 import { buildingView, listView, missingView, savedNotice, type SavedQuery } from "./view";
 
 export const metadata: Metadata = { title: englishText("staff.buildings.title") };
 
-const actions = { add: addFloorAction, rename: renameFloorAction, remove: removeFloorAction, confirm: confirmBuildingAction };
+const actions = { add: addFloorAction, rename: renameFloorAction, remove: removeFloorAction, confirm: confirmBuildingAction, contact: setContactAction };
 
 type Query = SavedQuery & { building?: string | string[] };
 

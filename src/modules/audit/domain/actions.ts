@@ -155,6 +155,8 @@ export const AUDIT_META = {
   "building.floor_renamed": meta({ floor_id: id.optional(), from: floorLabel.optional(), to: floorLabel.optional() }),
   "building.floor_removed": meta({ floor_id: id.optional(), label: floorLabel.optional(), assignments: count.optional() }),
   "building.confirmed": meta({ floors: count.optional() }),
+  // S02.08: an Admin entered, changed or removed the building contact. The role and number are never in meta.
+  "building.contact_changed": meta({ cleared: flag.optional() }),
 
   // Ambassador assignments (S01.14). `floor_ids: null` is the whole building. `previous_floor_ids` is what a replaced
   // assignment listed (absent on a first assignment). `assignment.removed` records the floors the assignment listed,

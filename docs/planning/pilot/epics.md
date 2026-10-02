@@ -1144,7 +1144,7 @@ So that I know what my building has in a heat wave or outage.
 **Given** the building contact
 **When** an Admin enters or changes it on the building's staff screen
 **Then** it is saved with its owner (the Hub) and last-updated date, and audited (`building.contact_changed`)
-**And** residents see it on the building page and on the essential-numbers page for their chosen buildings, labelled "Provided by the Hub, last updated {date}"; if none is entered they see "Not known"
+**And** residents see it on the building page, labelled "Provided by the Hub, last updated {date}"; if none is entered they see "Not known"; the essential-numbers page shows it for their chosen buildings (shown by S02.10)
 
 **Given** a building flagged "not in latest register" (S01.13)
 **When** a resident opens its page

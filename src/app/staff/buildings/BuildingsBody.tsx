@@ -1,6 +1,6 @@
 import { Stack } from "@/ui";
 import type { EditState } from "./editFloors";
-import { AddFloorForm, ConfirmForm, FloorRow, type FloorAction } from "./FloorForms";
+import { AddFloorForm, ConfirmForm, ContactForm, FloorRow, type FloorAction } from "./FloorForms";
 import type { BuildingView, BuildingsScreen, ListView, MissingView } from "./view";
 
 export interface BuildingActions {
@@ -8,6 +8,7 @@ export interface BuildingActions {
   rename: FloorAction;
   remove: FloorAction;
   confirm: FloorAction;
+  contact: FloorAction;
 }
 
 /** Test seam: forms already in the state they reach after a refusal (the screenshots show them). */
@@ -17,6 +18,7 @@ export interface BuildingsInitial {
   remove?: Record<string, EditState>;
   add?: EditState;
   confirm?: EditState;
+  contact?: EditState;
 }
 
 function Notice({ text }: { text?: string }) {
@@ -113,6 +115,8 @@ function Building({ view, actions, initial }: { view: BuildingView; actions: Bui
 
       <AddFloorForm rsn={view.rsn} labels={view.add} action={actions.add} initialState={initial?.add} />
       {view.confirm && <ConfirmForm rsn={view.rsn} labels={view.confirm} action={actions.confirm} initialState={initial?.confirm} />}
+
+      <ContactForm rsn={view.rsn} labels={view.contact} action={actions.contact} initialState={initial?.contact} />
 
       <section aria-labelledby="facts-title">
         <Stack gap="related">

@@ -4048,7 +4048,9 @@
         "added": "[EN] Floor {label} added.",
         "renamed": "[EN] Floor {from} is now called {to}.",
         "removed": "[EN] Floor {label} removed.",
-        "confirmed": "[EN] Building confirmed with {n} floors."
+        "confirmed": "[EN] Building confirmed with {n} floors.",
+        "contact": "[EN] Building contact saved.",
+        "contactRemoved": "[EN] Building contact removed."
       },
       "errors": {
         "labelEmpty": "[EN] Enter a label for the floor.",
@@ -4062,7 +4064,27 @@
         "noFloors": "[EN] Add at least one floor before confirming the building.",
         "buildingNotFound": "[EN] That building does not exist.",
         "floorNotFound": "[EN] That floor does not exist any more. Reload the page.",
-        "forbidden": "[EN] Only an Admin can change buildings and floors."
+        "forbidden": "[EN] Only an Admin can change buildings and floors.",
+        "roleInvalid": "[EN] Choose one of the roles in the list.",
+        "phoneInvalid": "[EN] Enter a 10-digit phone number, like 416 555 0123.",
+        "roleWithoutPhone": "[EN] Enter a phone number for this role, or remove the contact.",
+        "phoneWithoutRole": "[EN] Choose a role for this number, or remove the contact.",
+        "notWorkNumber": "[EN] Confirm that this is a work or office number the building agreed to publish.",
+        "contactNoChange": "[EN] Nothing to change: the contact is already saved like this."
+      },
+      "contact": {
+        "title": "[EN] Building contact",
+        "lead": "[EN] A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.",
+        "current": "[EN] Provided by the Hub, last updated {date}",
+        "none": "[EN] No contact entered yet. Residents see \"Not known\".",
+        "role": "[EN] Role",
+        "roleHint": "[EN] Which office the number reaches.",
+        "roleChoose": "[EN] Choose a role",
+        "phone": "[EN] Phone number",
+        "phoneHint": "[EN] 10 digits, like 416 555 0123.",
+        "workNumber": "[EN] This is a work or office number the building agreed to publish.",
+        "submit": "[EN] Save contact",
+        "remove": "[EN] Remove contact"
       }
     },
     "coverage": {
@@ -4247,5 +4269,28 @@
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
       }
     }
+  },
+  "building": {
+    "registerTitle": "[EN] From the City register",
+    "updated": "[EN] Last updated {date}",
+    "registerLead": "[EN] The City of Toronto keeps a register of apartment buildings. These facts come from it.",
+    "checking": "[EN] The Hub is checking this building's details. What you see here may change.",
+    "facts": {
+      "storeys": "[EN] Storeys",
+      "elevators": "[EN] Elevators",
+      "emergencyPower": "[EN] Emergency power",
+      "coolingRoom": "[EN] Cooling room",
+      "airConditioning": "[EN] Air conditioning",
+      "barrierFree": "[EN] Barrier-free entrance"
+    },
+    "airNone": "[EN] None",
+    "airIndividual": "[EN] Individual units",
+    "roles": {
+      "superintendent": "[EN] Superintendent",
+      "buildingManagement": "[EN] Building management",
+      "propertyOffice": "[EN] Property office"
+    },
+    "contactTitle": "[EN] Building contact",
+    "providedByHub": "[EN] Provided by the Hub, last updated {date}"
   }
 }
