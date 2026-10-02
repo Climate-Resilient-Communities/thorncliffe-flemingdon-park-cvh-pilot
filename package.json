@@ -20,6 +20,7 @@
     "db:migrate": "node scripts/db/migrate.mjs",
     "db:check": "node scripts/db/check-schema.mjs",
     "db:check-destructive": "node scripts/db/check-destructive.mjs",
+    "seed:guides": "node scripts/seed/guides.mjs",
     "gen:tokens": "node scripts/gen-tokens.mjs",
     "check:tokens": "node scripts/gen-tokens.mjs --check",
     "check:spacing": "node scripts/check-css.mjs spacing",
