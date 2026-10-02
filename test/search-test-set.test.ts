@@ -212,6 +212,21 @@ describe("the committed starter set", () => {
   });
 });
 
+describe("the evaluation subset", () => {
+  // Pinned on purpose: the official evaluation set comes from ambassadors (S03.08). Until then it holds only
+  // the S03.01 starter questions below, so any new evaluation question fails here until this list is
+  // deliberately updated.
+  const STARTER_EVALUATION_IDS = [
+    "en-02", "ur-02", "ur-04", "ps-01", "tl-02", "prs-02", "gu-02", "ta-02",
+    "el-02", "sk-02", "bn-02", "hi-02", "pa-02", "zh-02", "es-02", "fr-02",
+  ];
+
+  it("is exactly the starter evaluation questions", () => {
+    const { questions } = parseQuestions(REAL, IDS);
+    expect(questions.filter((q) => q.split === "evaluation").map((q) => q.id)).toEqual(STARTER_EVALUATION_IDS);
+  });
+});
+
 describe("the draft tuning questions", () => {
   const { questions } = parseQuestions(REAL, IDS);
   const drafts = questions.filter((q) => q.author === "claude-draft"); // ambassador questions (S03.08) are not drafts
