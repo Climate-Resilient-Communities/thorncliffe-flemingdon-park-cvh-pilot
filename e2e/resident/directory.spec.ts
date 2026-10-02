@@ -706,9 +706,9 @@ test.describe("the release on the phone", () => {
     await expect(page.getByTestId("hub-call")).toHaveText("Call (416) 421-8997");
     await expect(page.getByTestId("hub-call")).toHaveAttribute("href", "tel:+14164218997");
     await expect(page.getByTestId("directory-list")).toHaveCount(0);
-    // The numbers page is S02.10's and is not there yet: no link to it, and no sentence about it (numbers-route.ts).
-    await expect(page.getByTestId("numbers-link")).toHaveCount(0);
-    await expect(page.getByText("numbers page")).toHaveCount(0);
+    // The essential numbers page is S02.10's: the screen links to it (numbers-route.ts).
+    await expect(page.getByTestId("numbers-link")).toHaveAttribute("href", "/en/ready/numbers");
+    await expect(page.getByText("The numbers page lists the other numbers you may need.")).toBeVisible();
     // The lead that asks for a topic has nothing to narrow on this screen.
     await expect(page.getByText("Choose a topic or a neighbourhood")).toHaveCount(0);
 
