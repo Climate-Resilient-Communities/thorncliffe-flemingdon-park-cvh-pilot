@@ -30,6 +30,10 @@ export default defineConfig({
   reporter: process.env.CI ? [["list"], ["github"]] : "list",
   use: {
     baseURL: localUrl,
+    // Every test starts as a returning resident who has been through the first-run steps (S02.03), so a page that
+    // sends a first visit to R-01 does not redirect them. A test of the first visit starts empty:
+    // test.use({ storageState: { cookies: [], origins: [] } }).
+    storageState: { cookies: [], origins: [{ origin: localUrl, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
     browserName: "chromium",
     launchOptions: executablePath ? { executablePath } : undefined,
   },

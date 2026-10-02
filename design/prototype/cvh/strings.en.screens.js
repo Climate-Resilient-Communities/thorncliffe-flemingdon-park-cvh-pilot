@@ -1112,6 +1112,24 @@
       alreadyPublished: 'This provider is already published.', notPublished: 'This provider is not published.',
       forbidden: 'Only an Admin can change providers.',
       aal2Required: 'An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.' } } } });
+  /* First-run choices on the phone (S02.03): R-35 with many buildings and floors, R-34 with removal notes and "Clear everything". Not prototype screens. */
+  m(en, { R35: { manyLine: 'Choose your own building or a relative\'s. You can choose as many as you like.',
+    chosenNone: 'No buildings chosen yet', chosenOne: '1 building chosen', chosenMany: '{n} buildings chosen',
+    floorsIn: 'Floors in {building}. Optional.', noFloorsListed: 'No floors are listed for this building yet.',
+    loading: 'Loading the list of buildings...', loadFailed: 'The list of buildings could not be loaded. Check your connection and try again, or skip this step.',
+    retry: 'Try again' },
+  R34: { removedBuildingOne: '1 building you saved is no longer in the building list, so it was removed.',
+    removedBuildingMany: '{n} buildings you saved are no longer in the building list, so they were removed.',
+    removedFloorOne: '1 floor you saved no longer exists, so it was removed.',
+    removedFloorMany: '{n} floors you saved no longer exist, so they were removed.',
+    removedRest: 'Everything else you chose is unchanged.',
+    clearAll: 'Clear everything', clearTitle: 'Clear everything from this phone?',
+    clearBody: 'This removes your language, groups, buildings and floors from this phone. You will start again by choosing a language.',
+    clearYes: 'Yes, clear everything', loading: 'Loading your buildings...',
+    listFailed: 'The list of buildings could not be loaded just now. Your choices are still saved.',
+    buildingByRsn: 'Building {rsn}', floorsOne: '1 floor chosen', floorsMany: '{n} floors chosen',
+    buildingsNone: 'None chosen', removeItem: 'Remove: {item}' } });
+
   /* The building contact on the Admin's building screen (S02.08). Not a prototype screen. */
   m(en, { staff: { buildings: {
     contact: { title: 'Building contact', lead: 'A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.',
