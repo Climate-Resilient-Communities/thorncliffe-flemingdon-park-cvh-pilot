@@ -143,11 +143,14 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const { db, audit, staff } = deps;
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
+  /** The `is_drill` of the thread a transaction has read, for the record of a refusal that rolls it back. */
+  const drillOf = new WeakMap<DbTransaction, boolean>();
 
   /**
    * Runs one use case in a transaction. A refusal inside rolls it back and is audited as refused,
-   * under the action the use case would have recorded, on the entry (or the thread) it named; a
-   * change with no audited action (saving a draft) records nothing.
+   * under the action the use case would have recorded, on the entry (or the thread) it named, with
+   * the thread's `is_drill` once the use case has read it (`drillOf`); a change with no audited
+   * action (saving a draft) records nothing: the acceptance criteria audit the transitions only.
    */
   async function change<T>(
     action: AuditedAction | null,
@@ -156,8 +159,18 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     run: (tx: DbTransaction) => Promise<T>,
   ): Promise<AlertResult<T>> {
     let refusal: AlertRefusal;
+    let isDrill = false;
     try {
-      return { ok: true, value: await db.transaction(run) };
+      return {
+        ok: true,
+        value: await db.transaction(async (tx) => {
+          try {
+            return await run(tx);
+          } finally {
+            isDrill = drillOf.get(tx) ?? false;
+          }
+        }),
+      };
     } catch (error) {
       const known = error instanceof Refused ? error.refusal : refusalOfDatabaseError(error);
       if (!known) throw error;
@@ -169,6 +182,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
       subjectType: subject.type,
       subjectId: UUID.test(subject.id) ? subject.id : null,
+      isDrill,
       meta: { reason: AUDIT_REASON[refusal] },
     });
     return { ok: false, error: refusal };
@@ -180,6 +194,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     // AD-18: the first statement locks the thread.
     const [thread] = await tx.select().from(alert).where(eq(alert.id, ref.alertId)).for("update");
     if (!thread) throw new Refused("ALERT_NOT_FOUND");
+    drillOf.set(tx, thread.isDrill);
     await tx.execute(sql`select set_config('cvh.actor_id', ${actor.staffId}, true)`);
     const standing = await staff.standing(tx, actor.staffId);
     if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
@@ -301,6 +316,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       const alertId = newId();
       const entryId = newId();
       return change("alert.created", actor, { type: "alert", id: alertId }, async (tx) => {
+        drillOf.set(tx, input.isDrill);
         const createdAt = now();
         const standing = await staff.standing(tx, actor.staffId);
         if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
@@ -312,7 +328,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         await tx.execute(sql`select set_config('cvh.actor_id', ${actor.staffId}, true)`);
         const [thread] = await tx
           .insert(alert)
-          .values({ id: alertId, isDrill: input.isDrill, reportedAt: input.reportedAt, createdBy: actor.staffId, createdAt })
+          .values({ id: alertId, isDrill: input.isDrill, reportedAt: input.reportedAt, createdBy: actor.staffId })
           .returning();
         const [entry] = await tx
           .insert(alertEntry)
@@ -347,6 +363,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
      * they can no longer approve this entry. A draft only, in an open thread.
      */
     async saveDraft(actor: AlertActor, ref: EntryRef, content: EntryContent): Promise<AlertResult<EntryView>> {
+      // Not audited, refusals included: the acceptance criteria audit transitions only (create, submit,
+      // return, discard, approve), and a refused save changes nothing.
       return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { standing, entry } = await open(tx, actor, ref);
         if (entry!.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
@@ -505,6 +523,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           actorStaffId: actor.staffId,
           subjectType: "alert_entry",
           subjectId: ref.entryId,
+          isDrill: returned.value.isDrill,
           meta: { reason: AUDIT_REASON.PREPARATION_FAILED },
         });
         return { ok: false, error: "PREPARATION_FAILED" };

@@ -421,8 +421,18 @@ describe("alert lifecycle actions (S04.03)", () => {
     expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(AuditRecordError);
   });
 
-  it("passes a SHA-256 as a whole value even when it holds a long run of digits", () => {
-    expect(findSensitiveValue(HASH_WITH_LONG_DIGIT_RUN)).toBeNull();
-    expect(findSensitiveValue(`${HASH_WITH_LONG_DIGIT_RUN} `)).toBe("meta");
+  it("passes a SHA-256 at meta.content_hash even when it holds a long run of digits, and nowhere else", () => {
+    expect(findSensitiveValue({ content_hash: HASH_WITH_LONG_DIGIT_RUN })).toBeNull();
+    expect(findSensitiveValue({ content_hash: `${HASH_WITH_LONG_DIGIT_RUN} ` })).toBe("meta.content_hash");
+    expect(findSensitiveValue(HASH_WITH_LONG_DIGIT_RUN)).toBe("meta");
+  });
+
+  it("flags a phone number followed by 54 hex digits in any field other than content_hash", () => {
+    const hidden = `4165551234${"a".repeat(54)}`;
+    expect(hidden).toHaveLength(64);
+    expect(findSensitiveValue({ note: hidden })).toBe("meta.note");
+    expect(findSensitiveValue({ nested: { content_hash: hidden }, list: [hidden] })).toBe("meta.nested.content_hash");
+    expect(findSensitiveValue({ list: [hidden] })).toBe("meta.list[0]");
+    expect(findSensitiveValue({ entry_id: hidden })).toBe("meta.entry_id");
   });
 });

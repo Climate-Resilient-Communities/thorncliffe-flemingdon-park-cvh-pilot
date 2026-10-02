@@ -263,16 +263,20 @@ const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
 const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
 // A SHA-256 in hex (an entry's content hash): 64 hex digits, which can hold long digit runs.
 const SHA256_HEX = /^[0-9a-f]{64}$/;
+// The one place in an audit record's meta where a SHA-256 is expected, and so where the phone check is skipped.
+const CONTENT_HASH_PATH = "meta.content_hash";
 
 /**
  * Defensive check on values (the strict schemas are the main guard): the path
  * of the first string that looks like an email address or a phone number, or
- * of a number with ten or more digits. Whole values that are UUIDs, SHA-256 hashes or Twilio
- * message SIDs are skipped (their hex can hold long digit runs).
+ * of a number with ten or more digits. Whole values that are UUIDs or Twilio message SIDs are
+ * skipped (their hex can hold long digit runs), and so is a SHA-256 at `meta.content_hash` only: in
+ * any other field a 64-digit hex string is checked like any text, so a phone number cannot hide in
+ * one.
  */
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
-    if (UUID.test(value) || TWILIO_SID.test(value) || SHA256_HEX.test(value)) return null;
+    if (UUID.test(value) || TWILIO_SID.test(value) || (path === CONTENT_HASH_PATH && SHA256_HEX.test(value))) return null;
     return hasEmailAddress(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;

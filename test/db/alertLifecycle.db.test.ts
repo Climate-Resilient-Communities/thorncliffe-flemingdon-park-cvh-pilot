@@ -153,6 +153,14 @@ const auditRows = () =>
   owner<{ action: string; outcome: string; actor_staff_id: string | null; subject_type: string; subject_id: string | null; is_drill: boolean; meta: Record<string, unknown> }[]>`
     select action, outcome, actor_staff_id, subject_type, subject_id, is_drill, meta from audit_event where subject_type in ('alert', 'alert_entry') order by id`;
 
+/** A thread written directly by the owner, as the acting account (the insert trigger requires it). */
+async function insertRawAlert(alertId: string) {
+  await owner.begin(async (tx) => {
+    await tx`select set_config('cvh.actor_id', ${authorA.id}, true)`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by) values (${alertId}, false, ${new Date(NOW.getTime() - 60_000)}, ${authorA.id})`;
+  });
+}
+
 /** Direct SQL with the app's credentials: one transaction, the acting account set the way a use case sets it. */
 async function asApp<T>(actor: string | null, run: (tx: postgres.TransactionSql) => PromiseLike<T>): Promise<T> {
   return appSql.begin(async (tx) => {
@@ -248,7 +256,7 @@ async function seedRaw(status: EntryStatus): Promise<{ alertId: string; entryId:
   const entryId = randomUUID();
   const hash = sha(`raw-${status}`);
   const frozenCols = status !== "draft" && status !== "discarded";
-  await owner`insert into alert (id, is_drill, reported_at, created_by, created_at) values (${alertId}, false, ${NOW}, ${authorA.id}, ${NOW})`;
+  await insertRawAlert(alertId);
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
     await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
@@ -303,7 +311,7 @@ describe("the entry trigger and lifecycle.ts", () => {
   it("start an entry as a draft only: [*] -> any other status is refused", async () => {
     for (const status of ENTRY_STATUSES.filter((s) => s !== "draft")) {
       const alertId = randomUUID();
-      await owner`insert into alert (id, is_drill, reported_at, created_by, created_at) values (${alertId}, false, ${NOW}, ${authorA.id}, ${NOW})`;
+      await insertRawAlert(alertId);
       await expect(
         asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until)
               values (${randomUUID()}, ${alertId}, 'ack', ${status}, ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
@@ -319,7 +327,22 @@ describe("the entry trigger and lifecycle.ts", () => {
     await owner`update alert set status = 'closed', closed_reason = 'withdrawn', closed_at = now() where id = ${pending.alertId}`;
     await expect(asApp(adminC.id, (tx) => legalChange(tx, pending.entryId, "pending_approval", "approved"))).rejects.toThrow(/ALERT_CLOSED/);
     await expect(asApp(authorA.id, (tx) => tx`update alert_entry set status = 'draft', returned_for = 'edit', content_hash = null, sms_bodies = null, submitted_at = null where id = ${pending.entryId}`)).rejects.toThrow(/ALERT_CLOSED/);
-    await expect(asApp(authorA.id, (tx) => tx`update alert_entry set status = 'discarded' where id = ${pending.entryId}`)).resolves.toBeDefined();
+    // The closing flag allows a discard and nothing else.
+    await expect(
+      asApp(authorA.id, async (tx) => {
+        await tx`select set_config('cvh.closing', 'on', true)`;
+        return tx`update alert_entry set status = 'draft', returned_for = 'edit', content_hash = null, sms_bodies = null, submitted_at = null where id = ${pending.entryId}`;
+      }),
+    ).rejects.toThrow(/ALERT_CLOSED/);
+    // A discard is allowed in a closed thread only while it is closing (cvh.closing), the domain's `closing` flag.
+    await expect(asApp(authorA.id, (tx) => tx`update alert_entry set status = 'discarded' where id = ${pending.entryId}`)).rejects.toThrow(/ALERT_CLOSED/);
+    await expect(
+      asApp(authorA.id, async (tx) => {
+        await tx`select set_config('cvh.closing', 'on', true)`;
+        return tx`update alert_entry set status = 'discarded' where id = ${pending.entryId}`;
+      }),
+    ).resolves.toBeDefined();
+    expect((await entryRow(pending.entryId)).status).toBe("discarded");
   });
 
   it("refuse to return or discard a web-published entry", async () => {
@@ -768,5 +791,132 @@ describe("feed_version", () => {
     await expect(asApp(null, (tx) => tx`insert into feed_version (id, version) values (2, 0)`)).rejects.toThrow();
     await expect(asApp(null, (tx) => tx`delete from feed_version`)).rejects.toThrow(/permission denied/);
     await expect(asApp(null, (tx) => tx`update feed_version set version = version + 1`)).resolves.toBeDefined();
+  });
+});
+
+// --- review fixes (S04.03) ------------------------------------------------------------------------------
+
+const insertTranslation = (tx: postgres.TransactionSql, entryId: string) =>
+  tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${entryId}, 'ur', 'body', 'translated', ${sha("source")})`;
+const submitSql = (tx: postgres.TransactionSql, entryId: string, tag = "x") =>
+  tx`update alert_entry set status = 'pending_approval', version = version + 1, content_hash = ${sha(tag)}, sms_bodies = ${tx.json({ en: { body: "x" } })}, submitted_at = now() where id = ${entryId}`;
+
+describe("the two-person rule in the trigger, against direct SQL", () => {
+  it("refuses a submit by an account that is not an editor of the entry", async () => {
+    const ref = await newDraft(authorA);
+    // The editor supplies the translation a submit needs; the outsider only tries to submit.
+    await asApp(authorA.id, (tx) => insertTranslation(tx, ref.entryId));
+    await expect(asApp(coordB.id, (tx) => submitSql(tx, ref.entryId))).rejects.toThrow(/only an editor submits/);
+    await expect(asApp(null, (tx) => submitSql(tx, ref.entryId))).rejects.toThrow(/acting account/);
+    expect((await entryRow(ref.entryId)).status).toBe("draft");
+    await expect(asApp(authorA.id, (tx) => submitSql(tx, ref.entryId))).resolves.toBeDefined();
+  });
+
+  it("refuses a translation added by an account that is not an editor of the entry, and keeps the cascade delete of a return working", async () => {
+    const ref = await newDraft(authorA);
+    await expect(asApp(coordB.id, (tx) => insertTranslation(tx, ref.entryId))).rejects.toThrow(/only an editor of the entry adds a translation/);
+    await expect(asApp(null, (tx) => insertTranslation(tx, ref.entryId))).rejects.toThrow(/only an editor of the entry adds a translation/);
+    expect((await owner`select count(*)::int as n from alert_entry_translation where entry_id = ${ref.entryId}`)[0].n).toBe(0);
+    await expect(asApp(authorA.id, (tx) => insertTranslation(tx, ref.entryId))).resolves.toBeDefined();
+
+    // A return by an approver who is not an editor still deletes the translations.
+    const pending = await newPending(authorA, "v1");
+    expect(await alerting.returnEntry(actorOf(coordB), pending, "return")).toMatchObject({ ok: true });
+    expect((await owner`select count(*)::int as n from alert_entry_translation where entry_id = ${pending.entryId}`)[0].n).toBe(0);
+  });
+
+  it("refuses the whole reproduction: A submits, B returns, B adds a translation, B submits, B approves", async () => {
+    const ref = await newPending(authorA, "v1");
+    expect(await alerting.returnEntry(actorOf(coordB), ref, "return")).toMatchObject({ ok: true });
+    expect((await entryRow(ref.entryId)).editor_ids).toEqual([authorA.id]);
+
+    // B re-freezes the content in one go: the translation, the submit and the approval, each as B.
+    await expect(
+      asApp(coordB.id, async (tx) => {
+        await insertTranslation(tx, ref.entryId);
+        await submitSql(tx, ref.entryId, "b");
+        await tx`update alert_entry set status = 'approved', approved_by = ${coordB.id}, approved_at = now(), approved_version = 2, approved_hash = ${sha("b")}, web_published_at = now() where id = ${ref.entryId}`;
+      }),
+    ).rejects.toThrow(/only an editor/);
+    // Even with a translation in place, B's submit is the step that is refused.
+    await asApp(authorA.id, (tx) => insertTranslation(tx, ref.entryId));
+    await expect(asApp(coordB.id, (tx) => submitSql(tx, ref.entryId, "b"))).rejects.toThrow(/only an editor submits/);
+    const row = await entryRow(ref.entryId);
+    expect([row.status, row.version, row.approved_by]).toEqual(["draft", 1, null]);
+  });
+});
+
+describe("what the trigger allows, against direct SQL", () => {
+  it("creates only an ack or an update (E05 widens this)", async () => {
+    const ref = await newDraft(authorA);
+    const insert = (kind: string) =>
+      asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
+              values (${randomUUID()}, ${ref.alertId}, ${kind}, ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json({ scope: "neighbourhood" })}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
+    for (const kind of ["correction", "withdrawal", "final"]) await expect(insert(kind), kind).rejects.toThrow(/only an ack or an update/);
+    await expect(insert("update")).resolves.toBeDefined();
+  });
+
+  it("publishes at the moment of approval: web_published_at equals approved_at, and neither is in the future", async () => {
+    const approve = (ref: EntryRef, approvedAt: string, publishedAt: string) =>
+      asApp(coordB.id, (tx) =>
+        tx.unsafe(
+          `update alert_entry set status = 'approved', approved_by = '${coordB.id}', approved_at = ${approvedAt}, approved_version = 1, approved_hash = '${sha("v1")}', web_published_at = ${publishedAt} where id = '${ref.entryId}'`,
+        ),
+      );
+    const ref = await newPending(authorA, "v1");
+    await expect(approve(ref, "now()", "now() + interval '1 hour'")).rejects.toThrow(/at the moment of approval/);
+    await expect(approve(ref, "now()", "now() - interval '1 second'")).rejects.toThrow(/at the moment of approval/);
+    await expect(approve(ref, "now() + interval '1 hour'", "now() + interval '1 hour'")).rejects.toThrow(/at the moment of approval/);
+    expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
+    await expect(approve(ref, "now() - interval '1 minute'", "now() - interval '1 minute'")).resolves.toBeDefined();
+  });
+});
+
+describe("the thread insert trigger", () => {
+  const insertAlert = (actor: string | null, createdBy: string, createdAt?: string) =>
+    asApp(actor, (tx) =>
+      tx.unsafe(
+        `insert into alert (id, is_drill, reported_at, created_by${createdAt ? ", created_at" : ""}) values ('${randomUUID()}', false, now() - interval '1 minute', '${createdBy}'${createdAt ? `, '${createdAt}'` : ""}) returning created_at`,
+      ),
+    );
+
+  it("requires the acting account and that it is the creator", async () => {
+    await expect(insertAlert(null, authorA.id)).rejects.toThrow(/acting account/);
+    await expect(insertAlert("not-a-uuid", authorA.id)).rejects.toThrow(/acting account/);
+    await expect(insertAlert(coordB.id, authorA.id)).rejects.toThrow(/creator must be the acting account/);
+    await expect(insertAlert(authorA.id, authorA.id)).resolves.toBeDefined();
+  });
+
+  it("takes created_at from the database clock, whatever the caller writes", async () => {
+    const before = Date.now();
+    const [row] = await insertAlert(authorA.id, authorA.id, "2020-01-01T00:00:00Z");
+    expect(Math.abs(new Date(row.created_at).getTime() - before)).toBeLessThan(60_000);
+  });
+});
+
+describe("the nondrill_alert view", () => {
+  it("runs with the caller's rights (security_invoker)", async () => {
+    const [view] = await owner`select reloptions from pg_class where oid = 'public.nondrill_alert'::regclass`;
+    expect(view.reloptions).toContain("security_invoker=true");
+  });
+});
+
+describe("a refused change on a drill", () => {
+  it("is audited as a drill, once the thread has been read", async () => {
+    const ref = await newPending(authorA, "v1", true);
+    expect(await alerting.approveEntry(actorOf(authorA), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
+    const real = await newPending(authorA, "v1", false);
+    expect(await alerting.approveEntry(actorOf(authorA), real, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
+    const refusals = (await auditRows()).filter((row) => row.outcome === "refused");
+    expect(refusals.map((row) => [row.subject_id, row.is_drill])).toEqual([
+      [ref.entryId, true],
+      [real.entryId, false],
+    ]);
+  });
+
+  it("is audited as a drill when the preparation of a retry fails", async () => {
+    const ref = await newPending(authorA, "v1", true);
+    expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
+    expect((await auditRows()).filter((row) => row.outcome === "refused")).toMatchObject([{ subject_id: ref.entryId, is_drill: true }]);
   });
 });

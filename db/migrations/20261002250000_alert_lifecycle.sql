@@ -13,7 +13,9 @@
 --  - the acting account is the session variable `cvh.actor_id`, set (transaction-local) by every
 --    use case; an entry change without one is refused;
 --  - a draft's content can change only by an actor, who becomes an editor (`editor_ids` holds the
---    author and every account that edited the entry; the app cannot write the column);
+--    author and every account that edited the entry; the app cannot write the column); only an
+--    editor submits, and only an editor adds a translation, so a returner who is not an editor
+--    cannot re-freeze the content and then approve it;
 --  - a `pending_approval` entry is frozen: no change at all while it stays pending. Content can
 --    change only after it returns to `draft`, and that return clears the approval binding
 --    (`content_hash`, `sms_bodies`, `submitted_at`) and deletes its translations. `version` only
@@ -21,7 +23,12 @@
 --  - an approval names the version and hash it was shown (`approved_version`, `approved_hash`);
 --    they must equal the entry's, and the approver can be neither the author nor any editor;
 --  - a web-published entry never returns to `draft` and is never discarded here (E05 corrects it);
---  - nothing in a closed thread changes except an entry being discarded by the close.
+--  - nothing in a closed thread changes except an entry being discarded while the thread is
+--    closing (the session variable `cvh.closing` is 'on', set transaction-local by the close path,
+--    which E05 adds; the domain's `closing` flag in lifecycle.ts is the same rule);
+--  - an approval publishes the entry at that moment: `web_published_at = approved_at`, not in the
+--    future;
+--  - a thread is created by its acting account, at the database's clock.
 --
 -- Reads that lock follow AD-18: the use cases lock `alert`, then `alert_entry`, then
 -- `feed_version`. The app's role needs UPDATE on the locked tables for SELECT ... FOR UPDATE,
@@ -84,6 +91,32 @@ grant update (status, closed_reason, closed_at) on table alert to cvh_app;
 create policy alert_app_select on alert for select to cvh_app using (true);
 create policy alert_app_insert on alert for insert to cvh_app with check (true);
 create policy alert_app_update on alert for update to cvh_app using (true) with check (true);
+
+-- A new thread is created by the acting account (`cvh.actor_id`, set by the use case) and takes the
+-- database's clock as its creation time, so neither can be claimed by the caller.
+create function alert_insert_guard() returns trigger
+language plpgsql
+set search_path = ''
+as $$
+declare
+  actor_text text := nullif(current_setting('cvh.actor_id', true), '');
+  actor uuid;
+begin
+  if actor_text is not null and actor_text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    actor := actor_text::uuid;
+  end if;
+  if actor is null then
+    raise exception 'alert: the acting account (cvh.actor_id) is required to create a thread' using errcode = 'check_violation';
+  end if;
+  if new.created_by is distinct from actor then
+    raise exception 'alert: the creator must be the acting account' using errcode = 'check_violation';
+  end if;
+  new.created_at := now();
+  return new;
+end
+$$;
+revoke all on function alert_insert_guard() from public, anon, authenticated, service_role;
+create trigger alert_insert_guard before insert on alert for each row execute function alert_insert_guard();
 
 -- A thread only goes from open to closed, with a reason, and never reopens. `is_drill` and the
 -- facts of its creation never change (AD-6), whoever asks: the owner included.
@@ -279,6 +312,11 @@ begin
     if new.version <> 0 or new.web_published_at is not null then
       raise exception 'alert_entry: a new entry has no version and is not web-published' using errcode = 'check_violation';
     end if;
+    -- The table's check already allows the kinds E05 adds (correction, withdrawal, final), but only
+    -- ack and update are authored here; E05 widens this list together with its use cases.
+    if new.kind not in ('ack', 'update') then
+      raise exception 'alert_entry: only an ack or an update is created in this epic, not %', new.kind using errcode = 'check_violation';
+    end if;
     new.editor_ids := array[new.author_id];
     select t into bad_type from unnest(new.types) t where not exists (select 1 from public.disruption_type d where d.id = t) limit 1;
     if bad_type is not null then
@@ -343,8 +381,10 @@ begin
           or (old.status = 'pending_approval' and new.status in ('draft', 'discarded', 'approved'))) then
     raise exception 'alert_entry: % to % is not an allowed transition', old.status, new.status using errcode = 'check_violation';
   end if;
-  if thread_status is distinct from 'open' and new.status <> 'discarded' then
-    raise exception 'ALERT_CLOSED: a closed thread''s entry can only be discarded' using errcode = 'check_violation';
+  -- A closed thread's entry changes only by a discard made while the thread is closing (AD-18).
+  if thread_status is distinct from 'open'
+     and not (new.status = 'discarded' and coalesce(current_setting('cvh.closing', true), '') = 'on') then
+    raise exception 'ALERT_CLOSED: a closed thread''s entry can only be discarded by its close' using errcode = 'check_violation';
   end if;
   if actor is null then
     raise exception 'alert_entry: the acting account (cvh.actor_id) is required' using errcode = 'check_violation';
@@ -358,6 +398,11 @@ begin
   new.editor_ids := old.editor_ids;
 
   if old.status = 'draft' and new.status = 'pending_approval' then
+    -- Only an editor submits: someone who returned the entry without editing it (an approver) cannot
+    -- re-freeze its content and then approve it.
+    if not (actor = any (old.editor_ids)) then
+      raise exception 'alert_entry: only an editor submits' using errcode = 'check_violation';
+    end if;
     if new.version <> old.version + 1 then
       raise exception 'alert_entry: submit raises the version by one' using errcode = 'check_violation';
     end if;
@@ -418,6 +463,9 @@ begin
     if new.approved_at is null or new.web_published_at is null then
       raise exception 'alert_entry: approval is timed and publishes the entry' using errcode = 'check_violation';
     end if;
+    if new.web_published_at <> new.approved_at or new.approved_at > now() then
+      raise exception 'alert_entry: approval publishes the entry at the moment of approval, not later than now' using errcode = 'check_violation';
+    end if;
   end if;
   return new;
 end
@@ -450,13 +498,25 @@ set search_path = ''
 as $$
 declare
   parent_status text;
+  parent_editors uuid[];
+  actor_text text := nullif(current_setting('cvh.actor_id', true), '');
+  actor uuid;
 begin
-  select e.status into parent_status from public.alert_entry e where e.id = coalesce(new.entry_id, old.entry_id) for share;
+  select e.status, e.editor_ids into parent_status, parent_editors from public.alert_entry e where e.id = coalesce(new.entry_id, old.entry_id) for share;
   if parent_status is distinct from 'draft' then
     raise exception 'alert_entry_translation: the translations of a % entry are frozen', parent_status using errcode = 'check_violation';
   end if;
   if tg_op = 'DELETE' then
+    -- Not checked: the delete that a return to draft cascades must work for any returner.
     return old;
+  end if;
+  -- Only an editor of the entry adds a translation (so a returner who is not an editor cannot
+  -- supply the translations a submit needs).
+  if actor_text is not null and actor_text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    actor := actor_text::uuid;
+  end if;
+  if actor is null or not (actor = any (parent_editors)) then
+    raise exception 'alert_entry_translation: only an editor of the entry adds a translation' using errcode = 'check_violation';
   end if;
   return new;
 end
