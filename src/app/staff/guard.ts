@@ -8,9 +8,16 @@
 // another setup gate than the route's → that gate's page (pages) or 403 `setup_incomplete`
 // (route handlers and actions). Fail closed: a route must name its access, and only the sign-in
 // page and the sign-in and sign-out calls are public.
+//
+// requireAal2 (S01.10): a route handler or action that performs a privileged action names it
+// (`privileged`, one of identity's PRIVILEGED_ACTIONS); the guard then refuses it with 403
+// `aal2_required` unless the session is `aal2` (the level the server read from the verified token
+// and bound to the session, never anything the screen sent). S01.12's role policy runs at the same
+// point, on the same names.
 import { redirect } from "next/navigation";
 import type { ReactNode } from "react";
 import { GATE_PAGES, SIGN_IN_PAGE, type SetupGate, type StaffApiError } from "@/contracts/staffAuth";
+import { meetsAssurance, type PrivilegedAction } from "@/modules/identity";
 import { identity, staffAuth } from "./identity";
 import { currentStaffSession, type StaffSession } from "./session";
 
@@ -18,14 +25,21 @@ import { currentStaffSession, type StaffSession } from "./session";
  * Who may use a route:
  *  - `public`: anyone (the sign-in page, sign-in and sign-out); the session is passed when there is one;
  *  - `any_gate`: any signed-in staff member, at whatever setup gate (`GET /api/staff/me`);
- *  - a gate: signed-in staff at exactly that gate (each gate's page and calls; `hub` is everything else).
+ *  - a gate: signed-in staff at exactly that gate (each gate's page and calls; `hub` is everything else);
+ *  - a list of gates: signed-in staff at any of them (`POST /api/staff/factor/verify` takes the
+ *    enrolment's code and a sign-in's code).
  */
-export type RouteAccess = "public" | "any_gate" | SetupGate;
+export type RouteAccess = "public" | "any_gate" | SetupGate | readonly SetupGate[];
 
 export interface GuardSpec {
   /** The route pattern (`/api/staff/password`), audited on refusals; never a value from the request. */
   route: string;
   access: RouteAccess;
+  /**
+   * The privileged action this route handler or action performs (S01.10): it then runs only from
+   * an `aal2` session (requireAal2). Pages never carry one: they show, and their actions act.
+   */
+  privileged?: PrivilegedAction;
 }
 
 const GUARD = Symbol.for("cvh.staff.guard");
@@ -45,25 +59,51 @@ export function guardSpecOf(fn: unknown): GuardSpec | undefined {
 export type GuardDecision =
   | { kind: "allow"; session: StaffSession | null }
   | { kind: "unauthenticated" }
-  | { kind: "outside_gate"; session: StaffSession };
+  | { kind: "outside_gate"; session: StaffSession }
+  | { kind: "aal_required"; session: StaffSession; permission: PrivilegedAction };
 
-/** The guard's rule, without I/O. */
-export function decide(access: RouteAccess, session: StaffSession | null): GuardDecision {
-  if (access === "public") return { kind: "allow", session };
+/** True when a session at `gate` may use a route with this access. */
+function admits(access: Exclude<RouteAccess, "public">, gate: SetupGate): boolean {
+  if (access === "any_gate") return true;
+  return typeof access === "string" ? access === gate : access.includes(gate);
+}
+
+/**
+ * requireAal2: the privileged action's assurance rule (identity's meetsAssurance) on the
+ * session's server-side level. Null when the session may go ahead.
+ */
+export function requireAal2(session: StaffSession, privileged: PrivilegedAction | undefined): GuardDecision | null {
+  if (privileged === undefined || meetsAssurance(session.aal, privileged)) return null;
+  return { kind: "aal_required", session, permission: privileged };
+}
+
+/** The guard's rule, without I/O: the session, then the setup gate, then the authenticator level. */
+export function decide(spec: Pick<GuardSpec, "access" | "privileged">, session: StaffSession | null): GuardDecision {
+  if (spec.access === "public") return { kind: "allow", session };
   if (!session) return { kind: "unauthenticated" };
-  if (access === "any_gate" || access === session.gate) return { kind: "allow", session };
-  return { kind: "outside_gate", session };
+  if (!admits(spec.access, session.gate)) return { kind: "outside_gate", session };
+  return requireAal2(session, spec.privileged) ?? { kind: "allow", session };
 }
 
 /** Audits a refused staff request; a failure to audit never turns the refusal into a pass. */
 async function auditRefusal(spec: GuardSpec, decision: Exclude<GuardDecision, { kind: "allow" }>): Promise<void> {
   try {
     if (decision.kind === "unauthenticated") await identity().refuseUnauthenticated("staff.request", spec.route);
+    else if (decision.kind === "aal_required") await staffAuth().refuseBelowAal2(decision.session.staffId, spec.route, decision.permission);
     else await staffAuth().refuseOutsideGate(decision.session.staffId, spec.route);
   } catch {
     // Not configured in this environment, or the audit failed (logged by the audit module).
   }
 }
+
+/** The API answer of a refusal: 401 `unauthenticated`, or 403 `setup_incomplete` or `aal2_required`. */
+function refusalResponse(decision: Exclude<GuardDecision, { kind: "allow" }>): Response {
+  if (decision.kind === "unauthenticated") return staffError(401, "unauthenticated");
+  return staffError(403, decision.kind === "aal_required" ? "aal2_required" : "setup_incomplete");
+}
+
+/** Why a server action was refused, for its own answer. */
+export type ActionRefusal = "unauthenticated" | "setup_incomplete" | "aal2_required";
 
 const NO_STORE = { "Cache-Control": "no-store" };
 
@@ -78,10 +118,13 @@ export function staffError(status: number, error: StaffApiError, message?: strin
 
 // ---- Pages -------------------------------------------------------------------------------------
 
-/** A staff page at `access` (never `public`; see publicStaffPage). */
-export function staffPage<P>(spec: GuardSpec & { access: Exclude<RouteAccess, "public"> }, render: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode) {
+/** A staff page at `access` (never `public`; see publicStaffPage). Pages are never privileged: their actions are. */
+export function staffPage<P>(
+  spec: GuardSpec & { access: Exclude<RouteAccess, "public">; privileged?: never },
+  render: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode,
+) {
   const page = async (props: P) => {
-    const decision = decide(spec.access, await currentStaffSession());
+    const decision = decide(spec, await currentStaffSession());
     if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
     if (decision.kind === "outside_gate") redirect(GATE_PAGES[decision.session.gate]);
     return render(decision.session as StaffSession, props);
@@ -128,10 +171,10 @@ export function staffRoute(spec: GuardSpec & { access: Exclude<RouteAccess, "pub
   const handler = async (request: Request) => {
     const crossSite = refuseCrossSite(request);
     if (crossSite) return crossSite;
-    const decision = decide(spec.access, await currentStaffSession());
+    const decision = decide(spec, await currentStaffSession());
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
-      return decision.kind === "unauthenticated" ? staffError(401, "unauthenticated") : staffError(403, "setup_incomplete");
+      return refusalResponse(decision);
     }
     return handle(request, decision.session as StaffSession);
   };
@@ -160,18 +203,19 @@ export async function readJson<T>(request: Request, schema: { safeParse(value: u
 
 /**
  * A staff server action at `access`. `refused` turns a refusal into the action's own answer (for
- * example a form state with the message), given the action's arguments.
+ * example a form state with the message), given the action's arguments: a server action has no
+ * status of its own, so `aal2_required` is the 403 of an action, answered before its own code.
  */
 export function staffAction<A extends unknown[], R>(
   spec: GuardSpec & { access: Exclude<RouteAccess, "public"> },
   act: (session: StaffSession, ...args: A) => Promise<R>,
-  refused: (error: "unauthenticated" | "setup_incomplete", ...args: A) => R,
+  refused: (error: ActionRefusal, ...args: A) => R,
 ): (...args: A) => Promise<R> {
   const action = async (...args: A) => {
-    const decision = decide(spec.access, await currentStaffSession());
+    const decision = decide(spec, await currentStaffSession());
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
-      return refused(decision.kind === "unauthenticated" ? "unauthenticated" : "setup_incomplete", ...args);
+      return refused(decision.kind === "unauthenticated" ? "unauthenticated" : decision.kind === "aal_required" ? "aal2_required" : "setup_incomplete", ...args);
     }
     return act(decision.session as StaffSession, ...args);
   };

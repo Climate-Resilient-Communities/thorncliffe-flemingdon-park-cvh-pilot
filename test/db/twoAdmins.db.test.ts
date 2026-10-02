@@ -85,8 +85,8 @@ async function account(options: { role?: string; usable?: boolean; enrolled?: bo
   const authUserId = randomUUID();
   counter += 1;
   await owner`
-    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
-    values (${id}, ${authUserId}, ${`person${counter}`}, 'Pat', 'Lee', 'pat@example.org', ${role}, ${!usable}, ${usable ? null : new Date()})`;
+    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at, factor_enrolled_at)
+    values (${id}, ${authUserId}, ${`person${counter}`}, 'Pat', 'Lee', 'pat@example.org', ${role}, ${!usable}, ${usable ? null : new Date()}, ${enrolled ? new Date() : null})`;
   idp.users.set(authUserId, { login: `person${counter}@staff.cvh.invalid`, password: "x", authenticatorEnrolled: enrolled });
   return id;
 }
@@ -297,7 +297,7 @@ describe("the recovery exception", () => {
     expect((await auditRecords())[0].meta).toEqual({});
   });
 
-  it("lets an authenticator reset through, which the database cannot see, and flags it", async () => {
+  it("lets an authenticator removed at the provider through, which the database cannot see, and flags it", async () => {
     const first = await account();
     const second = await account();
     await bootstrapCompleted(first, second);

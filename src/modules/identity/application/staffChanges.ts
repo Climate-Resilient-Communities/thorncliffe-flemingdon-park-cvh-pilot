@@ -6,6 +6,7 @@ import { bootstrapPhase, decideUnderBootstrap } from "../domain/bootstrap";
 import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
 import { revocationCauseOf } from "../domain/sessionLimits";
+import { needsAuthenticator } from "../domain/setupGate";
 import { decideStaffChange, takesAwayAnAdmin, type StaffChange } from "../domain/staffChange";
 import { AUDIT_REASONS, type AuditWriter } from "./accounts";
 import { DEFAULT_LOCK_TIMEOUT_MS } from "./adminRecovery";
@@ -113,6 +114,10 @@ export function createStaffChangeService(deps: StaffChangeDeps) {
 
         if (change.kind === "change_role") {
           await store.setRole(tx, target.id, change.role);
+          // S01.10: given the Admin or Coordinator role from a role without an authenticator, the
+          // person enrols one at their next sign-in (any factor left from an earlier role is
+          // removed then) before using the new role. Their sessions end below, with the change.
+          if (needsAuthenticator(change.role) && !needsAuthenticator(target.role)) await store.clearFactorEnrolment(tx, target.id);
           await audit.record(tx, {
             action: "account.role_changed",
             actorStaffId: actor.id,

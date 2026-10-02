@@ -8,8 +8,9 @@ export type { StaffSession };
  * The server-side session lookup of every staff page, route handler and server action, always
  * through the guard (./guard.ts). Supabase Auth verifies the session in the request's cookies, the
  * staff_account of its user is loaded, and the request has a session only when that account's
- * status is `active` (AD-4); the result carries the setup gate the person is at. S01.08 adds the
- * session limits and S01.10 the authenticator level here.
+ * status is `active` (AD-4); the result carries the setup gate the person is at, the session limits
+ * of S01.08 are applied, and S01.10's authenticator level (`aal`) comes from the verified token and
+ * the app's own record that this session reached it.
  *
  * Fail closed: where sign-in is not configured (no Supabase settings, as in the smoke checks)
  * nobody is signed in; a provider or database failure throws, so the request fails rather than

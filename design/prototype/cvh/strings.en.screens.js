@@ -971,8 +971,7 @@
         containsUsername: 'Your password cannot contain your username.', isStartingPassword: 'Choose a password that is not your starting password.',
         mismatch: 'The two passwords are not the same. Type the same password twice.', rejected: 'That password was not accepted. Choose a different one.',
         unavailable: 'Your password could not be saved. Nothing changed. Try again.', notRequired: 'There is no starting password to replace. Sign in again.' } },
-    authenticator: { title: 'Set up your authenticator', lead: 'Admins and Coordinators confirm each sign-in with a code from an authenticator app on their phone.',
-      notYet: 'Setting up an authenticator is not available yet. Your password is saved. Sign out for now.' } },
+    authenticator: { title: 'Set up your authenticator', lead: 'Admins and Coordinators confirm each sign-in with a code from an authenticator app on their phone.' } },
   hub: { title: 'Hub', lead: 'You are signed in.', addPerson: 'Add a person' },
   reissue: { title: 'Re-issue a starting password', lead: 'For someone whose starting password expired before they used it, or who signed in once without choosing their own password.',
     username: 'Their username', submit: 'Re-issue', done: 'New starting password for {username}: {password}', doneLine: 'Give it to them in person. It works once, within 24 hours.',
@@ -992,4 +991,17 @@
       forbidden: 'Only an Admin can reset a password.', selfAction: 'You cannot reset your own password. Ask another Admin.',
       providerError: 'The new password could not be set. The account is locked and signed out; reset it again.',
       passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was reset. Ask IT to set it.' } } } });
+  /* Authenticator enrolment and the sign-in code (S01.10). Not a prototype screen. */
+  m(en, { staff: { setup: { authenticator: {
+    install: 'First install an authenticator app on your phone, if you do not have one yet.',
+    start: 'Show my setup code', scan: 'Scan this QR code with the authenticator app, or type the key into it.',
+    qrAlt: 'QR code for the authenticator app', key: 'Key: {key}', keyHint: 'This key is shown only now. If you leave this page, start again to get a new one.',
+    code: 'The 6-digit code the app shows', submit: 'Confirm' } },
+  authenticator: { required: 'This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.',
+    code: { title: 'Enter your authenticator code', lead: 'Open your authenticator app and type the 6-digit code it shows for CVH Hub.',
+      code: '6-digit code', submit: 'Continue', lost: 'Lost your phone? Ask an Admin to reset your authenticator.' },
+    errors: { codeInvalid: 'That code is not right. Type the newest code the app shows, and check that the time on your phone is set automatically.',
+      locked: 'Too many wrong codes or passwords. Wait 15 minutes, then try again.',
+      notRequired: 'Your authenticator setup has changed. Reload the page.',
+      unavailable: 'The authenticator is not working right now. Try again in a few minutes.' } } } });
 })();

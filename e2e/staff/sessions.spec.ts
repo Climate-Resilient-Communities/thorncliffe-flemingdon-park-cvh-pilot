@@ -5,6 +5,7 @@ import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Browser, type Page } from "@playwright/test";
 import postgres from "postgres";
 import { memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { memoryTotpSecret, totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { pepperPassword } from "../../src/modules/identity/application/passwordPepper";
 
 const ownerUrl = process.env.STAFF_TEST_DATABASE_URL;
@@ -35,9 +36,9 @@ async function newAccount(role: "ambassador" | "admin") {
   if (role === "admin") fake.enrol(authUserId);
   const id = randomUUID();
   await sql`
-    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password)
-    values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', ${role}, false)`;
-  return { id, username, password };
+    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, factor_enrolled_at)
+    values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', ${role}, false, ${role === "admin" ? new Date() : null})`;
+  return { id, username, password, authUserId };
 }
 
 /** Two usable Admins with bootstrap completed (the database holds one bootstrap row for every test). */
@@ -53,11 +54,17 @@ async function adminAfterBootstrap() {
   return first;
 }
 
-async function signIn(page: Page, username: string, password: string) {
+/** Signs in; an Admin (`authUserId` given) then enters the authenticator code (S01.10). */
+async function signIn(page: Page, username: string, password: string, authUserId?: string) {
   await page.goto("/staff/sign-in");
   await page.getByLabel("Username").fill(username);
   await page.getByLabel("Password", { exact: true }).fill(password);
   await page.getByRole("button", { name: "Sign in" }).click();
+  if (authUserId) {
+    await expect(page).toHaveURL(/\/staff\/sign-in\/code$/);
+    await page.getByLabel("6-digit code").fill(totpCode(memoryTotpSecret(authUserId)));
+    await page.getByRole("button", { name: "Continue" }).click();
+  }
   await expect(page).toHaveURL(/\/staff$/);
 }
 
@@ -95,7 +102,7 @@ test("an Admin's Reset password shows the new starting password once and signs t
   expect((await phone.page.request.get("/api/staff/me")).status()).toBe(200);
 
   const desk = await newPage(browser);
-  await signIn(desk.page, admin.username, admin.password);
+  await signIn(desk.page, admin.username, admin.password, admin.authUserId);
   await desk.page.goto("/staff/people");
   const reset = desk.page.getByRole("region", { name: "Reset a password" });
   await reset.getByLabel("Their username").fill(target.username);

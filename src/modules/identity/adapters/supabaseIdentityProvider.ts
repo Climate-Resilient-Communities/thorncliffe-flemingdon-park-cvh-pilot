@@ -93,6 +93,17 @@ export function supabaseIdentityProvider(config: SupabaseAdminConfig): IdentityP
       return data.factors.some((factor) => factor.factor_type === "totp" && factor.status === "verified");
     },
 
+    async removeFactors(authUserId) {
+      const { data, error } = await admin.mfa.listFactors({ userId: authUserId });
+      if (error) throw new Error(`Supabase Auth refused to list factors (status ${error.status ?? "unknown"}, code ${error.code ?? "none"})`);
+      for (const factor of data.factors) {
+        const removed = await admin.mfa.deleteFactor({ id: factor.id, userId: authUserId });
+        if (removed.error) {
+          throw new Error(`Supabase Auth refused to delete a factor (status ${removed.error.status ?? "unknown"}, code ${removed.error.code ?? "none"})`);
+        }
+      }
+    },
+
     async setPassword(authUserId, password) {
       try {
         const { error } = await admin.updateUserById(authUserId, { password });

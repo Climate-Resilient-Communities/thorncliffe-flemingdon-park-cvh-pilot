@@ -1,11 +1,22 @@
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import type { AuthSessions, CookieJar, CreateLoginError, IdentityProvider, SetPasswordError } from "../application/ports";
+import { memoryTotpSecret, totpMatches } from "./memoryTotp";
+
+/** A TOTP factor of the fake: its secret is memoryTotpSecret(auth user id), so tests can type its codes. */
+export interface MemoryFactor {
+  id: string;
+  status: "unverified" | "verified";
+  secret: string;
+}
 
 export interface MemoryLogin {
   login: string;
   password: string;
+  /** True when the user has a verified TOTP factor (kept in step with `factors`). */
   authenticatorEnrolled: boolean;
+  /** The user's TOTP factors (S01.10); missing means none beyond what authenticatorEnrolled says. */
+  factors?: MemoryFactor[];
 }
 
 /** The fake's session cookie. Real sessions are Supabase's (supabaseAuthSessions.ts). */
@@ -22,12 +33,15 @@ interface State {
   details: Map<string, LoginDetails>;
   /** Session token → auth user id. */
   sessions: Map<string, string>;
+  /** Session tokens raised to aal2 (a code was accepted for that session). */
+  aal2: Set<string>;
 }
 
 interface StoredState {
   users?: Record<string, MemoryLogin>;
   details?: Record<string, { createdAt: string; staffMarker: boolean }>;
   sessions?: Record<string, string>;
+  aal2?: string[];
 }
 
 const sameText = (a: string, b: string) => {
@@ -44,8 +58,13 @@ const keyOf = (token: string) => createHash("sha256").update(token).digest("hex"
 /**
  * An in-memory IdentityProvider and AuthSessions for tests (AD-24: external services only through
  * fakes). Logins are unique like Supabase Auth's; `failNext` makes the next createLogin fail,
- * `failNextPassword` the next setPassword, `setUnavailable` every session call, and `enrol` stands
- * in for S01.10's authenticator enrolment. Sessions are random tokens in one httpOnly cookie.
+ * `failNextPassword` the next setPassword, `setUnavailable` every session call. Sessions are
+ * random tokens in one httpOnly cookie.
+ *
+ * Authenticators (S01.10) are TOTP factors checked with RFC 6238 (memoryTotp.ts); each user's
+ * secret is memoryTotpSecret(auth user id), so a test types the right code with totpCode(secret).
+ * `enrol` gives a user a verified factor directly (a finished enrolment); `raiseOutsideApp` raises
+ * a session to aal2 the way a code checked at the provider directly, outside the app, would.
  *
  * Like Supabase Auth it stores whatever password the adapter is given (the app sends the peppered
  * form), `setPassword` ends every session of the user, and `grant` is a password grant made
@@ -57,7 +76,7 @@ const keyOf = (token: string) => createHash("sha256").update(token).digest("hex"
  * development: the environment check refuses CVH_FAKE_IDENTITY_FILE anywhere else.
  */
 export function memoryIdentityProvider(options: { file?: string } = {}) {
-  const memory: State = { users: new Map(), details: new Map(), sessions: new Map() };
+  const memory: State = { users: new Map(), details: new Map(), sessions: new Map(), aal2: new Set() };
   let nextFailure: CreateLoginError | null = null;
   let nextPasswordFailure: SetPasswordError | null = null;
   let failDeletes = false;
@@ -83,6 +102,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
       users: new Map(Object.entries(raw.users ?? {})),
       details: new Map(Object.entries(raw.details ?? {}).map(([id, d]) => [id, { createdAt: new Date(d.createdAt), staffMarker: d.staffMarker }])),
       sessions: new Map(Object.entries(raw.sessions ?? {})),
+      aal2: new Set(raw.aal2 ?? []),
     };
   };
   const save = (state: State) => {
@@ -91,6 +111,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
       users: Object.fromEntries(state.users),
       details: Object.fromEntries([...state.details].map(([id, d]) => [id, { createdAt: d.createdAt.toISOString(), staffMarker: d.staffMarker }])),
       sessions: Object.fromEntries(state.sessions),
+      aal2: [...state.aal2],
     };
     const temporary = `${options.file}.${process.pid}.tmp`;
     writeFileSync(temporary, JSON.stringify(stored));
@@ -134,14 +155,60 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
         const authUserId = state.sessions.get(value);
         const user = authUserId ? state.users.get(authUserId) : undefined;
         if (!authUserId || !user) return null;
-        return { authUserId, authenticatorEnrolled: user.authenticatorEnrolled, sessionKey: keyOf(value) };
+        return { authUserId, authenticatorEnrolled: user.authenticatorEnrolled, sessionKey: keyOf(value), aal: state.aal2.has(value) ? "aal2" : "aal1" };
       },
       async signOut() {
         const value = token();
-        if (value) change((state) => state.sessions.delete(value));
+        if (value)
+          change((state) => {
+            state.sessions.delete(value);
+            state.aal2.delete(value);
+          });
         jar.setAll([{ name: MEMORY_SESSION_COOKIE, value: "", options: { ...SESSION_OPTIONS, maxAge: 0 } }]);
       },
+      async enrolFactor({ issuer, accountName }) {
+        if (unavailable) return { ok: false, error: "unavailable" };
+        const value = token();
+        return change((state) => {
+          const authUserId = value ? state.sessions.get(value) : undefined;
+          const user = authUserId ? state.users.get(authUserId) : undefined;
+          if (!value || !authUserId || !user) return { ok: false as const, error: "rejected" as const };
+          // Like Supabase Auth: with a verified factor, a new one needs an aal2 session.
+          if (user.authenticatorEnrolled && !state.aal2.has(value)) return { ok: false as const, error: "rejected" as const };
+          const secret = memoryTotpSecret(authUserId);
+          user.factors = [...factorsOf(user, authUserId), { id: randomUUID(), status: "unverified", secret }];
+          const label = encodeURIComponent(`${issuer}:${accountName}`);
+          const uri = `otpauth://totp/${label}?secret=${secret}&issuer=${encodeURIComponent(issuer)}`;
+          return { ok: true as const, enrolment: { secret, uri, qrCode: null } };
+        });
+      },
+      async verifyFactor({ code, factor }) {
+        if (unavailable) return { ok: false, error: "unavailable" };
+        const value = token();
+        return change((state) => {
+          const authUserId = value ? state.sessions.get(value) : undefined;
+          const user = authUserId ? state.users.get(authUserId) : undefined;
+          if (!value || !authUserId || !user) return { ok: false as const, error: "no_factor" as const };
+          const target = factorsOf(user, authUserId)
+            .filter((candidate) => candidate.status === factor)
+            .at(-1);
+          if (!target) return { ok: false as const, error: "no_factor" as const };
+          if (!totpMatches(target.secret, code)) return { ok: false as const, error: "invalid_code" as const };
+          target.status = "verified";
+          // A verified factor replaces the enrolment's leftovers, as Supabase removes unverified factors.
+          user.factors = factorsOf(user, authUserId).filter((candidate) => candidate === target || candidate.status === "verified");
+          user.authenticatorEnrolled = true;
+          state.aal2.add(value);
+          return { ok: true as const, sessionKey: keyOf(value), aal: "aal2" as const, accept: async () => undefined };
+        });
+      },
     };
+  }
+
+  /** A user's factors, with the one `authenticatorEnrolled` stands for when a test set only the flag. */
+  function factorsOf(user: MemoryLogin, authUserId: string): MemoryFactor[] {
+    if (!user.factors) user.factors = user.authenticatorEnrolled ? [{ id: randomUUID(), status: "verified", secret: memoryTotpSecret(authUserId) }] : [];
+    return user.factors;
   }
 
   const provider: IdentityProvider & {
@@ -154,7 +221,12 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     setUnavailable(down: boolean): void;
     /** Simulates a slow or hanging provider: each call waits `ms`, then times out (`fails`, the default) or answers. `null` ends it. */
     delay(ms: number | null, options?: { fails?: boolean }): void;
+    /** Gives the user a verified TOTP factor (secret: memoryTotpSecret(authUserId)), as a finished enrolment would. */
     enrol(authUserId: string): void;
+    /** The secret of the user's TOTP factors (deterministic: memoryTotpSecret). */
+    totpSecret(authUserId: string): string;
+    /** Raises a session to aal2 at the provider directly, as a code checked outside the app would. */
+    raiseOutsideApp(sessionToken: string): void;
     /** The access token's lifetime (`exp - iat`) of the sessions opened from now on; null for a token without one. */
     setTokenLifetime(seconds: number | null): void;
     /** A password grant made directly at the provider: the new session's cookie value, or null when the password is wrong. */
@@ -199,7 +271,17 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
       change((state) => {
         const user = state.users.get(authUserId);
         if (!user) throw new Error("No such auth user");
+        user.factors = [{ id: randomUUID(), status: "verified", secret: memoryTotpSecret(authUserId) }];
         user.authenticatorEnrolled = true;
+      });
+    },
+    totpSecret(authUserId) {
+      return memoryTotpSecret(authUserId);
+    },
+    raiseOutsideApp(sessionToken) {
+      change((state) => {
+        if (!state.sessions.has(sessionToken)) throw new Error("No such session");
+        state.aal2.add(sessionToken);
       });
     },
     findByLogin(login) {
@@ -257,6 +339,19 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     async hasVerifiedAuthenticator(authUserId) {
       await slow();
       return load().users.get(authUserId)?.authenticatorEnrolled ?? false;
+    },
+
+    async removeFactors(authUserId) {
+      await slow();
+      if (unavailable) throw new Error("identity provider unavailable");
+      change((state) => {
+        const user = state.users.get(authUserId);
+        if (!user) return;
+        user.factors = [];
+        user.authenticatorEnrolled = false;
+        // The user's sessions lose the level the factor gave them.
+        for (const [token, owner] of state.sessions) if (owner === authUserId) state.aal2.delete(token);
+      });
     },
 
     async setPassword(authUserId, password) {

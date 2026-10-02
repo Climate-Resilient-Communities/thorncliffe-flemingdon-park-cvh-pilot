@@ -107,8 +107,8 @@ async function account(username: string, role: "ambassador" | "coordinator" | "d
   idp.enrol(authUserId);
   const id = `01900000-0000-7000-8000-${String(nextId++).padStart(12, "0")}`;
   await owner`
-    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password)
-    values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', ${role}, false)`;
+    insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, factor_enrolled_at)
+    values (${id}, ${authUserId}, ${username}, 'Ann', 'Okafor', 'someone@example.org', ${role}, false, now())`;
   return id;
 }
 

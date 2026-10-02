@@ -13,8 +13,8 @@ export interface Actor {
  *
  * Seam for S01.12: this is the one place the account screens and actions ask, and it becomes
  * `can(actor.role, "accounts.manage", context)` from `identity/domain/policy.ts` there. It does not
- * check the session's authenticator level (`aal2`, S01.10) or the setup gates (S01.07); those
- * stories add them where the session is resolved.
+ * check the session's authenticator level or the setup gates: the staff guard does, where the
+ * session is resolved (S01.07's gates; S01.10's requireAal2 on routes marked `accounts.manage`).
  */
 export function mayManageAccounts(actor: Actor): boolean {
   return actor.status === "active" && actor.role === "admin";

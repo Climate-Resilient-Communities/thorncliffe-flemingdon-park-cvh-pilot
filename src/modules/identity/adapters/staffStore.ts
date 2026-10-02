@@ -19,6 +19,7 @@ function toAccount(row: StaffAccountRow): StaffAccount {
     mustChangePassword: row.mustChangePassword,
     startingPasswordIssuedAt: row.startingPasswordIssuedAt,
     startingPasswordUsedAt: row.startingPasswordUsedAt,
+    factorEnrolledAt: row.factorEnrolledAt,
   };
 }
 
@@ -186,6 +187,19 @@ export const drizzleStaffStore: StaffStore = {
       .where(eq(staffAccount.id, staffId))
       .limit(1);
     return row ? row.generation : null;
+  },
+
+  async setFactorEnrolled(tx, staffId, at) {
+    const rows = await tx
+      .update(staffAccount)
+      .set({ factorEnrolledAt: at })
+      .where(and(eq(staffAccount.id, staffId), isNull(staffAccount.factorEnrolledAt)))
+      .returning({ id: staffAccount.id });
+    return rows.length > 0;
+  },
+
+  async clearFactorEnrolment(tx, staffId) {
+    await tx.update(staffAccount).set({ factorEnrolledAt: null }).where(eq(staffAccount.id, staffId));
   },
 
   async bumpSessionGeneration(tx, staffId) {
