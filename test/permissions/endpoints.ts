@@ -186,6 +186,18 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     form: { username: TARGET_USERNAME },
     expected: ADMIN_ONLY,
   },
+  {
+    id: `action ${PEOPLE_ACTIONS}#resetAuthenticatorAction`,
+    kind: "action",
+    file: PEOPLE_ACTIONS,
+    export: "resetAuthenticatorAction",
+    route: "/staff/people",
+    action: "accounts.manage",
+    writes: "business",
+    gate: "hub",
+    form: { username: TARGET_USERNAME },
+    expected: ADMIN_ONLY,
+  },
   // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({
