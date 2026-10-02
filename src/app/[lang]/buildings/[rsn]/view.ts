@@ -2,7 +2,7 @@
 // text already taken from the language's catalog, so the page that draws it only lays it out. A plain module with no
 // framework import, so a unit test can build it from a building and a translator.
 import { isEnglishFallback } from "@/ui/text/resident-text";
-import { telHref, type PublicBuilding } from "@/modules/places";
+import { CONTACT_ROLE_LABEL_KEYS, displayPhone, telHref, type PublicBuilding } from "@/modules/places";
 
 /** The catalog of one language as next-intl hands it: a message with its placeholders filled, or the message as written. */
 export interface Translate {
@@ -29,7 +29,9 @@ export interface FactRow {
 export interface ContactView {
   /** "Provided by the Hub, last updated October 1, 2026"; null when no contact was entered. */
   provided: string | null;
+  /** The role's translated label: "Superintendent", "Building management" or "Property office". */
   role: string | null;
+  /** The number as people read it: (416) 555-0123. */
   phone: string | null;
   /** The number to put after `tel:`. */
   telHref: string | null;
@@ -37,6 +39,8 @@ export interface ContactView {
   none: string;
   /** "Call" */
   call: string;
+  /** True when `call` is English standing in for a missing translation: the button then reads as English, left to right. */
+  callIsEnglish: boolean;
 }
 
 export interface BuildingPageView {
@@ -54,9 +58,13 @@ export interface BuildingPageView {
   contact: ContactView;
 }
 
-/** A day as a resident reads it: the day in Toronto, in the language's own way of writing dates. */
+/**
+ * A day as a resident reads it: the day in Toronto, in the language's own way of writing dates, always on the
+ * Gregorian calendar. Without `calendar`, Pashto (ps) and Dari (fa-AF) write the day on the Persian one, so
+ * October 1, 2026 would read as 9 Mizan 1405, a date nobody here would recognise.
+ */
 export const formatDay = (date: Date, locale: string): string =>
-  new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "America/Toronto" }).format(date);
+  new Intl.DateTimeFormat(locale, { dateStyle: "long", timeZone: "America/Toronto", calendar: "gregory" }).format(date);
 
 /**
  * A message with a date in it. A message that fell back to English reads as English, so its date is written the
@@ -100,11 +108,12 @@ export function buildingPageView(building: PublicBuilding, t: Translate, locale:
     contactTitle: t("building.contactTitle"),
     contact: {
       provided: contact ? withDate(t, "building.providedByHub", contact.updatedAt, locale) : null,
-      role: contact?.role ?? null,
-      phone: contact?.phone ?? null,
+      role: contact ? t(`building.roles.${CONTACT_ROLE_LABEL_KEYS[contact.role]}`) : null,
+      phone: contact ? displayPhone(contact.phone) : null,
       telHref: contact ? telHref(contact.phone) : null,
       none: t("x09.unknown"),
       call: t("R31.call"),
+      callIsEnglish: isEnglishFallback(t("R31.call")),
     },
   };
 }

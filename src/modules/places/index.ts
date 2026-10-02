@@ -7,7 +7,7 @@ export type { BuildingContact, BuildingDetail, BuildingFacts, BuildingService, B
 export { readPublicBuilding, type PublicBuilding } from "./application/publicBuilding";
 export { BUILDINGS_SEED_CODE, BuildingImportRefusedError, importBuildings, type ImportCounts, type ImportDeps, type ImportResult } from "./application/importBuildings";
 export { NO_ASSIGNMENTS, type AssignedAmbassador, type FloorAssignments, type PlacesAudit, type PlacesAuditAction, type PlacesAuditEvent } from "./application/ports";
-export { CONTACT_OWNER, CONTACT_ROLE_MAX_LENGTH, checkContact, normalizePhone, telHref, trimContactRole, type ContactCheck, type ContactError } from "./domain/buildingContact";
+export { CONTACT_OWNER, CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, checkContact, displayPhone, isContactRole, normalizePhone, telHref, type ContactCheck, type ContactError, type ContactRole } from "./domain/buildingContact";
 export { FLOOR_LABEL_MAX_LENGTH, checkFloorLabel, floorLabelKey, trimFloorLabel, type FloorLabelCheck, type FloorLabelError } from "./domain/floorLabel";
 export { formatImportReport } from "./domain/importReport";
 export {

@@ -204,41 +204,71 @@ test("an Admin enters, changes and removes the building contact: owned by the Hu
   await expect(page.getByRole("heading", { level: 2, name: "Building contact" })).toBeVisible();
   await expect(page.getByTestId("contact-current")).toHaveText('No contact entered yet. Residents see "Not known".');
 
+  const role = page.getByLabel("Role", { exact: true });
+  const phone = page.getByLabel("Phone number");
+  const workNumber = page.getByLabel("This is a work or office number the building agreed to publish.");
+  const save = page.getByRole("button", { name: "Save contact" });
+
+  // The role is a fixed list of three, and the confirmation is a required checkbox.
+  expect(await role.locator("option").evaluateAll((options) => options.map((option) => [(option as HTMLOptionElement).value, option.textContent]))).toEqual([
+    ["", "Choose a role"],
+    ["superintendent", "Superintendent"],
+    ["building_management", "Building management"],
+    ["property_office", "Property office"],
+  ]);
+  await expect(workNumber).toHaveAttribute("required", "");
+  await expect(workNumber).not.toBeChecked();
+  await expect(page.getByRole("button", { name: "Remove contact" })).toHaveCount(0);
+
   // Half a contact, and a number that is not one, are refused with the reason, and nothing is saved.
-  await page.getByLabel("Role", { exact: true }).fill("Superintendent");
-  await page.getByRole("button", { name: "Save contact" }).click();
-  await expect(page.locator("#contact-error")).toHaveText("Enter a phone number for this role, or empty both fields to remove the contact.");
-  await expect(page.getByLabel("Role", { exact: true })).toHaveValue("Superintendent");
-  await page.getByLabel("Phone number").fill("555-0123");
-  await page.getByRole("button", { name: "Save contact" }).click();
+  await role.selectOption("superintendent");
+  await workNumber.check();
+  await save.click();
+  await expect(page.locator("#contact-error")).toHaveText("Enter a phone number for this role, or remove the contact.");
+  await expect(role).toHaveValue("superintendent");
+  await expect(workNumber).toBeChecked();
+  await phone.fill("555-0123");
+  await save.click();
   await expect(page.locator("#contact-error")).toHaveText("Enter a 10-digit phone number, like 416 555 0123.");
   expect(await saved()).toEqual([{ contact_role: null, contact_phone: null, contact_owner: null, dated: false }]);
 
-  // A good one is saved with the Hub as its owner and a date, and the page says so.
-  await page.getByLabel("Phone number").fill("(416) 555-0123");
-  await page.getByRole("button", { name: "Save contact" }).click();
+  // Without the confirmation the browser does not send the form; and if it were sent anyway, the server refuses it.
+  await phone.fill("(416) 555-0123");
+  await workNumber.uncheck();
+  expect(await workNumber.evaluate((box) => (box as HTMLInputElement).checkValidity())).toBe(false);
+  await workNumber.evaluate((box) => box.removeAttribute("required"));
+  await save.click();
+  await expect(page.locator("#contact-error")).toHaveText("Confirm that this is a work or office number the building agreed to publish.");
+  expect(await saved()).toEqual([{ contact_role: null, contact_phone: null, contact_owner: null, dated: false }]);
+
+  // A good one is saved with the Hub as its owner and a date, the number in E.164, and the page says so.
+  await workNumber.check();
+  await save.click();
   await expect(page.getByRole("status")).toHaveText("Building contact saved.");
-  expect(await saved()).toEqual([{ contact_role: "Superintendent", contact_phone: "416-555-0123", contact_owner: "hub", dated: true }]);
+  expect(await saved()).toEqual([{ contact_role: "superintendent", contact_phone: "+14165550123", contact_owner: "hub", dated: true }]);
   await expect(page.getByTestId("contact-current")).toContainText("Provided by the Hub, last updated ");
-  await expect(page.getByLabel("Phone number")).toHaveValue("416-555-0123");
+  await expect(phone).toHaveValue("(416) 555-0123");
+  await expect(role).toHaveValue("superintendent");
+  // Each save is confirmed again.
+  await expect(workNumber).not.toBeChecked();
 
   // Saving it again unchanged is refused; changing the number is saved.
-  await page.getByRole("button", { name: "Save contact" }).click();
+  await workNumber.check();
+  await save.click();
   await expect(page.locator("#contact-error")).toHaveText("Nothing to change: the contact is already saved like this.");
-  await page.getByLabel("Phone number").fill("416 555 0199");
-  await page.getByRole("button", { name: "Save contact" }).click();
+  await phone.fill("416 555 0199");
+  await save.click();
   await expect(page.getByRole("status")).toHaveText("Building contact saved.");
   // The notice is the same as after the first save, so wait for the row, not the notice.
-  await expect.poll(async () => (await saved())[0].contact_phone).toBe("416-555-0199");
+  await expect.poll(async () => (await saved())[0].contact_phone).toBe("+14165550199");
 
-  // Emptying both fields removes it.
-  await page.getByLabel("Role", { exact: true }).fill("");
-  await page.getByLabel("Phone number").fill("");
-  await page.getByRole("button", { name: "Save contact" }).click();
+  // "Remove contact" removes it, with no confirmation needed.
+  await page.getByRole("button", { name: "Remove contact" }).click();
   await expect(page.getByRole("status")).toHaveText("Building contact removed.");
   expect(await saved()).toEqual([{ contact_role: null, contact_phone: null, contact_owner: null, dated: false }]);
 
   expect(await sql`select action, outcome, subject_id, meta from audit_event where id > ${since} and actor_staff_id = ${admin.id} order by id`).toEqual([
+    { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "validation" } },
     { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "validation" } },
     { action: "building.contact_changed", outcome: "refused", subject_id: rsn, meta: { reason: "validation" } },
     { action: "building.contact_changed", outcome: "ok", subject_id: rsn, meta: {} },

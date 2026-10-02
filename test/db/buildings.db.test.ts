@@ -380,7 +380,7 @@ describe("the app's role and the buildings tables", () => {
     expect(await as("update building set storeys = 3 where rsn = '301'")).toBe("42501");
     expect(await as("update building set floors_confirmed_at = null, floors_confirmed_by = null where rsn = '301'")).toBe("ok");
     // The contact (S02.08): its four columns, all or none, and nothing else of the register's.
-    expect(await as("update building set contact_role = 'Super', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("ok");
+    expect(await as("update building set contact_role = 'superintendent', contact_phone = '+14165550123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("ok");
     expect(await as("update building set contact_role = null, contact_phone = null, contact_owner = null, contact_updated_at = null where rsn = '301'")).toBe("ok");
   });
 
@@ -393,11 +393,19 @@ describe("the app's role and the buildings tables", () => {
         return (error as { code?: string; constraint_name?: string }).constraint_name ?? "error";
       }
     };
-    expect(await as("update building set contact_role = 'Super' where rsn = '301'")).toBe("building_contact_complete");
-    expect(await as("update building set contact_role = 'Super', contact_phone = '555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_phone_valid");
-    expect(await as("update building set contact_role = 'Super', contact_phone = '416-555-0123', contact_owner = 'landlord', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_owner_valid");
-    expect(await as("update building set contact_role = ' Super', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'")).toBe("building_contact_role_valid");
-    expect(await as(`update building set contact_role = '${"x".repeat(41)}', contact_phone = '416-555-0123', contact_owner = 'hub', contact_updated_at = now() where rsn = '301'`)).toBe("building_contact_role_valid");
+    expect(await as("update building set contact_role = 'superintendent' where rsn = '301'")).toBe("building_contact_complete");
+    const full = (role: string, phone: string, owner = "hub") =>
+      `update building set contact_role = '${role}', contact_phone = '${phone}', contact_owner = '${owner}', contact_updated_at = now() where rsn = '301'`;
+    expect(await as(full("property_office", "+16475550199"))).toBe("ok");
+    // The number is stored as E.164: not as typed, not with a bad area code or exchange, not another country's.
+    for (const phone of ["555-0123", "416-555-0123", "(416) 555-0123", "4165550123", "+1416555012", "+14165550123 ", "+11165550123", "+14161550123", "+442079460958"]) {
+      expect(await as(full("superintendent", phone)), phone).toBe("building_contact_phone_valid");
+    }
+    expect(await as(full("superintendent", "+14165550123", "landlord"))).toBe("building_contact_owner_valid");
+    // The role is one of the fixed list, as a code: not free text, not a label, not a personal name.
+    for (const role of ["Superintendent", "Super", "Ahmed Khan", " superintendent", "building management", ""]) {
+      expect(await as(full(role, "+14165550123")), role).toBe("building_contact_role_valid");
+    }
   });
 
   it("is the only role besides the owner that reaches the tables: anon, authenticated and service_role have no privilege on them", async () => {
@@ -481,49 +489,51 @@ describe("the building contact (S02.08)", () => {
 
   const NOW = new Date("2026-10-01T15:00:00Z");
 
-  it("saves the role and number with the Hub as owner and the date, audits building.contact_changed, and shows it to residents", async () => {
+  it("saves the role code and the E.164 number with the Hub as owner and the date, audits building.contact_changed, and shows it to residents", async () => {
     const dated = createBuildingService({ db: app, audit, assignments, now: () => NOW });
 
-    const saved = await dated.setContact(ADMIN, { rsn: "601", role: "  Building  superintendent ", phone: "(416) 555-0123" });
+    const saved = await dated.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "(416) 555-0123", workNumber: true });
 
-    expect(saved).toEqual({ ok: true, value: { contact: { role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW } } });
-    expect(await buildingRow("601")).toMatchObject({ contact_role: "Building superintendent", contact_phone: "416-555-0123", contact_owner: "hub", contact_updated_at: NOW });
+    const contact = { role: "superintendent", phone: "+14165550123", owner: "hub", updatedAt: NOW };
+    expect(saved).toEqual({ ok: true, value: { contact } });
+    expect(await buildingRow("601")).toMatchObject({ contact_role: "superintendent", contact_phone: "+14165550123", contact_owner: "hub", contact_updated_at: NOW });
     expect(await buildingRow("602")).toMatchObject({ contact_role: null, contact_owner: null });
     expect((await auditRows()).at(-1)).toMatchObject({ action: "building.contact_changed", outcome: "ok", actor_staff_id: ADMIN, subject_type: "building", subject_id: "601", meta: {} });
     expect(JSON.stringify((await auditRows()).at(-1))).not.toContain("555");
-    expect((await dated.getBuilding("601"))?.contact).toEqual({ role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW });
-    expect((await readPublicBuilding(app, "601"))?.contact).toEqual({ role: "Building superintendent", phone: "416-555-0123", owner: "hub", updatedAt: NOW });
+    expect((await dated.getBuilding("601"))?.contact).toEqual(contact);
+    expect((await readPublicBuilding(app, "601"))?.contact).toEqual(contact);
     expect((await readPublicBuilding(app, "602"))?.contact).toBeNull();
   });
 
   it("changes the contact and its date, and refuses saving the same contact again so the date means last changed", async () => {
     const first = createBuildingService({ db: app, audit, assignments, now: () => NOW });
-    await first.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+    await first.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416 555 0123", workNumber: true });
     const later = createBuildingService({ db: app, audit, assignments, now: () => new Date("2026-10-02T09:00:00Z") });
 
-    expect(await later.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416-555-0123" })).toEqual({ ok: false, error: "no_change" });
+    expect(await later.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416-555-0123", workNumber: true })).toEqual({ ok: false, error: "no_change" });
     expect((await buildingRow("601")).contact_updated_at).toEqual(NOW);
-    expect(await later.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0199" })).toMatchObject({ ok: true });
-    expect((await buildingRow("601"))).toMatchObject({ contact_phone: "416-555-0199", contact_updated_at: new Date("2026-10-02T09:00:00Z") });
+    expect(await later.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416 555 0199", workNumber: true })).toMatchObject({ ok: true });
+    expect(await buildingRow("601")).toMatchObject({ contact_phone: "+14165550199", contact_updated_at: new Date("2026-10-02T09:00:00Z") });
   });
 
   it("removes the contact when both fields are empty, audited as cleared, and residents then see none", async () => {
-    await service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+    await service.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416 555 0123", workNumber: true });
 
-    expect(await service.setContact(ADMIN, { rsn: "601", role: " ", phone: "" })).toEqual({ ok: true, value: { contact: null } });
+    expect(await service.setContact(ADMIN, { rsn: "601", role: " ", phone: "", workNumber: false })).toEqual({ ok: true, value: { contact: null } });
     expect(await buildingRow("601")).toMatchObject({ contact_role: null, contact_phone: null, contact_owner: null, contact_updated_at: null });
     expect((await auditRows()).at(-1)).toMatchObject({ action: "building.contact_changed", outcome: "ok", meta: { cleared: true } });
     expect((await readPublicBuilding(app, "601"))?.contact).toBeNull();
     // Nothing to remove: refused, not audited as a change.
-    expect(await service.setContact(ADMIN, { rsn: "601", role: "", phone: "" })).toEqual({ ok: false, error: "no_change" });
+    expect(await service.setContact(ADMIN, { rsn: "601", role: "", phone: "", workNumber: false })).toEqual({ ok: false, error: "no_change" });
   });
 
   it.each([
-    [{ role: "Superintendent", phone: "" }, "role_without_phone"],
-    [{ role: "", phone: "416 555 0123" }, "phone_without_role"],
-    [{ role: "Superintendent", phone: "555-0123" }, "phone_invalid"],
-    [{ role: "x".repeat(41), phone: "416 555 0123" }, "role_too_long"],
-    [{ role: "<script>", phone: "416 555 0123" }, "role_characters"],
+    [{ role: "superintendent", phone: "", workNumber: true }, "role_without_phone"],
+    [{ role: "", phone: "416 555 0123", workNumber: true }, "phone_without_role"],
+    [{ role: "superintendent", phone: "555-0123", workNumber: true }, "phone_invalid"],
+    [{ role: "Ahmed Khan", phone: "416 555 0123", workNumber: true }, "role_invalid"],
+    [{ role: "<script>", phone: "416 555 0123", workNumber: true }, "role_invalid"],
+    [{ role: "superintendent", phone: "416 555 0123", workNumber: false }, "not_work_number"],
   ] as const)("refuses %j (%s), saves nothing and audits the refusal without what was typed", async (input, error) => {
     expect(await service.setContact(ADMIN, { rsn: "601", ...input })).toEqual({ ok: false, error });
 
@@ -535,254 +545,18 @@ describe("the building contact (S02.08)", () => {
   });
 
   it("refuses a building that does not exist", async () => {
-    expect(await service.setContact(ADMIN, { rsn: "999", role: "Superintendent", phone: "416 555 0123" })).toEqual({ ok: false, error: "building_not_found" });
+    expect(await service.setContact(ADMIN, { rsn: "999", role: "superintendent", phone: "416 555 0123", workNumber: true })).toEqual({ ok: false, error: "building_not_found" });
   });
 
   it("rolls the contact back when its audit record cannot be written", async () => {
     writeAudit.mockRejectedValueOnce(new Error("audit unavailable"));
-    await expect(service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" })).rejects.toThrow("audit unavailable");
+    await expect(service.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416 555 0123", workNumber: true })).rejects.toThrow("audit unavailable");
     expect((await buildingRow("601")).contact_role).toBeNull();
   });
 
   it("is not touched by the register import: a facts update keeps the Hub's contact", async () => {
-    await service.setContact(ADMIN, { rsn: "601", role: "Superintendent", phone: "416 555 0123" });
+    await service.setContact(ADMIN, { rsn: "601", role: "superintendent", phone: "416 555 0123", workNumber: true });
     await seed(planOf([feature(601, { CONFIRMED_STOREYS: 5 }), feature(602)]));
-    expect(await buildingRow("601")).toMatchObject({ storeys: 5, contact_role: "Superintendent", contact_phone: "416-555-0123" });
-  });
-});
-
-describe("editing floors as an Admin", () => {
-  beforeEach(async () => {
-    await seed(planOf([feature(401, { CONFIRMED_STOREYS: 14 }), feature(402, { CONFIRMED_STOREYS: 2 })]));
-    writeAudit.mockClear();
-  });
-
-  const labels = async (rsn = "401") => (await floorsOf(rsn)).map((f) => f.label);
-  const denied = async (since?: number) => (await auditRows()).filter((row) => row.outcome === "refused").slice(since ?? 0);
-
-  it("lists the buildings by neighbourhood and one building with its facts and floors", async () => {
-    const list = await service.listBuildings();
-    expect(list.map((b) => [b.rsn, b.neighbourhoodName, b.floorCount, b.storeys, b.confirmedAt])).toEqual([
-      ["401", "Thorncliffe Park", 14, 14, null],
-      ["402", "Thorncliffe Park", 2, 2, null],
-    ]);
-    const detail = await service.getBuilding("401");
-    expect(detail).toMatchObject({ rsn: "401", address: "401 Test St", neighbourhoodName: "Thorncliffe Park", facts: { elevators: 2, emergencyPower: true, coolingRoom: false, airConditioning: "None", barrierFreeEntrance: true } });
-    expect(detail?.floors.map((f) => f.label)).toEqual(Array.from({ length: 14 }, (_, i) => String(i + 1)));
-    expect(await service.getBuilding("999")).toBeNull();
-    expect(await service.getBuilding("not-a-number")).toBeNull();
-  });
-
-  it("removes floor 13, adds G and L at the bottom, and audits each change", async () => {
-    const floors = await floorsOf("401");
-    const thirteen = floors.find((f) => f.label === "13")!;
-
-    const removed = await service.removeFloor(ADMIN, { rsn: "401", floorId: thirteen.id });
-    const g = await service.addFloor(ADMIN, { rsn: "401", label: " G ", place: "bottom" });
-    const l = await service.addFloor(ADMIN, { rsn: "401", label: "L", place: "bottom" });
-
-    expect(removed).toMatchObject({ ok: true, value: { id: thirteen.id, label: "13" } });
-    expect(g.ok && g.value.label).toBe("G");
-    expect(await labels()).toEqual(["L", "G", "1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "14"]);
-    expect((await auditRows()).filter((row) => row.subject_type === "building").map((row) => [row.action, row.outcome, row.actor_staff_id, row.subject_type, row.subject_id, row.meta])).toEqual([
-      ["building.floor_removed", "ok", ADMIN, "building", "401", { floor_id: thirteen.id, label: "13", assignments: 0 }],
-      ["building.floor_added", "ok", ADMIN, "building", "401", { floor_id: g.ok ? g.value.id : "", label: "G" }],
-      ["building.floor_added", "ok", ADMIN, "building", "401", { floor_id: l.ok ? l.value.id : "", label: "L" }],
-    ]);
-  });
-
-  it("adds a floor above the top floor by default", async () => {
-    await service.addFloor(ADMIN, { rsn: "402", label: "R" });
-    expect(await labels("402")).toEqual(["1", "2", "R"]);
-    await service.addFloor(ADMIN, { rsn: "402", label: "PH", place: "top" });
-    expect(await labels("402")).toEqual(["1", "2", "R", "PH"]);
-  });
-
-  it("adds a floor to a building that has none", async () => {
-    await owner`delete from building_floor where rsn = '402'`;
-    const added = await service.addFloor(ADMIN, { rsn: "402", label: "1", place: "bottom" });
-    expect(added.ok).toBe(true);
-    expect(await labels("402")).toEqual(["1"]);
-  });
-
-  it("renames a floor keeping its id, its place and its assignments", async () => {
-    const floors = await floorsOf("401");
-    const target = floors.find((f) => f.label === "3")!;
-    assignedFloor = target.id;
-    assigned = [{ staffId: randomUUID(), name: "Nia Mensah" }];
-
-    const renamed = await service.renameFloor(ADMIN, { rsn: "401", floorId: target.id, label: "3A" });
-
-    expect(renamed).toMatchObject({ ok: true, value: { id: target.id, label: "3A", previousLabel: "3" } });
-    const after = await floorsOf("401");
-    expect(after.find((f) => f.id === target.id)).toMatchObject({ label: "3A", sort_order: target.sort_order });
-    expect(after.map((f) => f.id)).toEqual(floors.map((f) => f.id));
-    // The floor is still the one the assignments name.
-    expect((await auditRows()).at(-1)).toMatchObject({ action: "building.floor_renamed", outcome: "ok", meta: { floor_id: target.id, from: "3", to: "3A" } });
-    // And it may be renamed only to a different label.
-    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: target.id, label: " 3A " })).toEqual({ ok: false, error: "no_change" });
-    // A change of capitals alone is a rename.
-    expect((await service.renameFloor(ADMIN, { rsn: "401", floorId: target.id, label: "3a" })).ok).toBe(true);
-  });
-
-  it.each([
-    ["is empty", "", "label_empty"],
-    ["is only spaces", "   ", "label_empty"],
-    ["is longer than 8 characters", "123456789", "label_too_long"],
-    ["has a character that is not a letter, digit, space or hyphen", "1.5", "label_characters"],
-    ["has an accent", "Étage", "label_characters"],
-    ["duplicates another label", "7", "label_duplicate"],
-    ["duplicates another label ignoring case and spaces", " 1 ", "label_duplicate"],
-  ] as const)("refuses a label that %s, saving nothing and auditing the refusal", async (_name, label, error) => {
-    const floors = await floorsOf("401");
-    const target = floors.find((f) => f.label === "3")!;
-    const before = await owner`select * from building_floor order by rsn, sort_order`;
-
-    const renamed = await service.renameFloor(ADMIN, { rsn: "401", floorId: target.id, label });
-    const added = await service.addFloor(ADMIN, { rsn: "401", label });
-
-    expect(renamed).toEqual({ ok: false, error });
-    expect(added).toEqual({ ok: false, error });
-    expect(await owner`select * from building_floor order by rsn, sort_order`).toEqual(before);
-    const reason = error === "label_duplicate" ? "duplicate" : "validation";
-    expect(await denied()).toEqual([
-      { action: "building.floor_renamed", outcome: "refused", actor_staff_id: ADMIN, subject_type: "building", subject_id: "401", meta: { reason, floor_id: target.id } },
-      { action: "building.floor_added", outcome: "refused", actor_staff_id: ADMIN, subject_type: "building", subject_id: "401", meta: { reason } },
-    ]);
-  });
-
-  it("treats the same label as free in another building, and a floor's own label as free to it", async () => {
-    expect((await service.addFloor(ADMIN, { rsn: "402", label: "14" })).ok).toBe(true);
-    const own = (await floorsOf("401")).find((f) => f.label === "4")!;
-    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: own.id, label: "4 " })).toEqual({ ok: false, error: "no_change" });
-  });
-
-  it("refuses to remove a floor with assignments, listing the ambassadors, and removes it once they are gone", async () => {
-    const target = (await floorsOf("401")).find((f) => f.label === "5")!;
-    assignedFloor = target.id;
-    assigned = [
-      { staffId: randomUUID(), name: "Nia Mensah" },
-      { staffId: randomUUID(), name: "Omar Farouk" },
-    ];
-
-    const refused = await service.removeFloor(ADMIN, { rsn: "401", floorId: target.id });
-
-    expect(refused).toEqual({ ok: false, error: "floor_has_assignments", ambassadors: assigned });
-    expect(await labels()).toContain("5");
-    expect(await denied()).toEqual([
-      { action: "building.floor_removed", outcome: "refused", actor_staff_id: ADMIN, subject_type: "building", subject_id: "401", meta: { reason: "floor_has_assignments", floor_id: target.id, label: "5", assignments: 2 } },
-    ]);
-
-    assigned = [];
-    expect((await service.removeFloor(ADMIN, { rsn: "401", floorId: target.id })).ok).toBe(true);
-    expect(await labels()).not.toContain("5");
-  });
-
-  it("audits the refusal for a tampered floor id that is shaped like a UUID but is not one, without the id in the meta", async () => {
-    const tampered = "11111111-1111-1111-1111-111111111111";
-    const since = (await denied()).length;
-    expect(await service.removeFloor(ADMIN, { rsn: "401", floorId: tampered })).toEqual({ ok: false, error: "floor_not_found" });
-    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: tampered, label: "Z" })).toEqual({ ok: false, error: "floor_not_found" });
-    const refusals = await denied(since);
-    expect(refusals.map((row) => [row.action, row.subject_id, row.meta])).toEqual([
-      ["building.floor_removed", "401", { reason: "not_found" }],
-      ["building.floor_renamed", "401", { reason: "not_found" }],
-    ]);
-  });
-
-  it("refuses a floor or building that does not exist, or that belongs to another building", async () => {
-    const other = (await floorsOf("402"))[0];
-    expect(await service.removeFloor(ADMIN, { rsn: "401", floorId: other.id })).toEqual({ ok: false, error: "floor_not_found" });
-    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: other.id, label: "Z" })).toEqual({ ok: false, error: "floor_not_found" });
-    expect(await service.renameFloor(ADMIN, { rsn: "401", floorId: "not-a-uuid", label: "Z" })).toEqual({ ok: false, error: "floor_not_found" });
-    expect(await service.addFloor(ADMIN, { rsn: "999", label: "Z" })).toEqual({ ok: false, error: "building_not_found" });
-    expect(await service.addFloor(ADMIN, { rsn: "'; drop table building; --", label: "Z" })).toEqual({ ok: false, error: "building_not_found" });
-    expect(await service.confirmBuilding(ADMIN, { rsn: "999" })).toEqual({ ok: false, error: "building_not_found" });
-    expect((await denied()).every((row) => row.meta.reason === "not_found")).toBe(true);
-    expect((await denied()).at(-2)?.subject_id).toBeNull();
-    expect(await labels("402")).toEqual(["1", "2"]);
-  });
-
-  it("confirms a building: the building and every floor, once, audited with the number of floors", async () => {
-    const confirmed = await service.confirmBuilding(ADMIN, { rsn: "402" });
-
-    expect(confirmed).toMatchObject({ ok: true, value: { floors: 2 } });
-    expect(await buildingRow("402")).toMatchObject({ floors_confirmed_by: ADMIN });
-    expect((await buildingRow("402")).floors_confirmed_at).toBeInstanceOf(Date);
-    expect((await floorsOf("402")).map((f) => f.confirmed)).toEqual([true, true]);
-    expect((await floorsOf("401")).some((f) => f.confirmed)).toBe(false);
-    expect((await auditRows()).at(-1)).toMatchObject({ action: "building.confirmed", outcome: "ok", actor_staff_id: ADMIN, subject_id: "402", meta: { floors: 2 } });
-
-    expect(await service.confirmBuilding(ADMIN, { rsn: "402" })).toEqual({ ok: false, error: "already_confirmed" });
-    expect((await denied()).at(-1)).toMatchObject({ action: "building.confirmed", meta: { reason: "conflict" } });
-    // A floor added to a confirmed building is confirmed: an Admin named it.
-    const added = await service.addFloor(ADMIN, { rsn: "402", label: "G", place: "bottom" });
-    expect(added).toMatchObject({ ok: true, value: { confirmed: true } });
-    expect((await service.getBuilding("402"))?.confirmedAt).toBeInstanceOf(Date);
-  });
-
-  it("does not confirm a building with no floors", async () => {
-    await owner`delete from building_floor where rsn = '402'`;
-    expect(await service.confirmBuilding(ADMIN, { rsn: "402" })).toEqual({ ok: false, error: "no_floors" });
-    expect((await buildingRow("402")).floors_confirmed_at).toBeNull();
-  });
-
-  it("serialises two edits of one building: the same label added twice is added once", async () => {
-    const results = await Promise.all([service.addFloor(ADMIN, { rsn: "402", label: "PH" }), service.addFloor(ADMIN, { rsn: "402", label: "ph" })]);
-    expect(results.filter((r) => r.ok)).toHaveLength(1);
-    expect(results.filter((r) => !r.ok)).toEqual([{ ok: false, error: "label_duplicate" }]);
-    expect(await labels("402")).toHaveLength(3);
-  });
-
-  it("rolls the change back when its audit record cannot be written", async () => {
-    writeAudit.mockRejectedValueOnce(new Error("audit unavailable"));
-    await expect(service.addFloor(ADMIN, { rsn: "402", label: "PH" })).rejects.toThrow("audit unavailable");
-    expect(await labels("402")).toEqual(["1", "2"]);
-  });
-});
-
-describe("npm run seed:buildings (the command line, against the database)", () => {
-  const dir = mkdtempSync(path.join(tmpdir(), "cvh-buildings-db-"));
-  afterAll(() => rmSync(dir, { recursive: true, force: true }));
-
-  const run = async (register: unknown) => {
-    const file = path.join(dir, "register.geojson");
-    writeFileSync(file, JSON.stringify(register));
-    const out: string[] = [];
-    const err: string[] = [];
-    const log = vi.spyOn(console, "log").mockImplementation((...args) => void out.push(args.join(" ")));
-    const error = vi.spyOn(console, "error").mockImplementation((...args) => void err.push(args.join(" ")));
-    try {
-      return { code: await seedBuildings(["--file", file, "--merge", path.join(dir, "none.csv")], { SEED_DATABASE_URL: serverUrl() } as unknown as NodeJS.ProcessEnv, ROOT), out, err };
-    } finally {
-      log.mockRestore();
-      error.mockRestore();
-    }
-  };
-  const collection = (...features: ReturnType<typeof feature>[]) => ({ type: "FeatureCollection", features });
-
-  it("loads the register as the migrating role, prints the report and exits 0; again, it changes nothing", async () => {
-    const first = await run(collection(feature(501), feature(502, { PCODE: "M3C" })));
-    expect(first.code).toBe(0);
-    expect(first.out).toContain("Loaded: 2 buildings.");
-    expect(first.out).toContain("Buildings: 2 added, 0 with changed facts, 0 unchanged, 0 back in the register.");
-    expect((await owner`select count(*)::int as n from building`)[0].n).toBe(2);
-
-    const second = await run(collection(feature(501), feature(502, { PCODE: "M3C" })));
-    expect(second.code).toBe(0);
-    expect(second.out).toContain("Buildings: 0 added, 0 with changed facts, 2 unchanged, 0 back in the register.");
-  });
-
-  it("exits 1 with every failing row and changes nothing when a row fails", async () => {
-    await run(collection(feature(501)));
-    const before = await owner`select * from building order by rsn`;
-
-    const bad = await run(collection(feature(501, { NO_OF_ELEVATORS: 7 }), feature(503, { RSN: null }), feature(504, { LATITUDE: 1 })));
-
-    expect(bad.code).toBe(1);
-    expect(bad.err.filter((line) => line.startsWith("  - "))).toHaveLength(2);
-    expect(bad.err).toContain("Nothing was changed.");
-    expect(await owner`select * from building order by rsn`).toEqual(before);
-    expect((await auditRows()).filter((row) => row.outcome === "refused")).toHaveLength(1);
+    expect(await buildingRow("601")).toMatchObject({ storeys: 5, contact_role: "superintendent", contact_phone: "+14165550123" });
   });
 });

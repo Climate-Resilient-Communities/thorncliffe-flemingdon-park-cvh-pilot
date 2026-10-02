@@ -9,11 +9,13 @@ import "./building.css";
 
 // A building page is public and the same for every visitor (NFR-N7: the facts, their date and the Hub's contact).
 // Its one database read is kept in Next's data cache for 5 minutes (source.ts), shared by every visitor and every
-// language, and dropped at once when the Hub saves the building's contact (the Admin's building screen), so the
-// database is asked about a building rarely, not once per visit. The register's own facts change only when the
-// buildings seed runs, so a few minutes of delay costs nothing. Nothing is built ahead: the buildings come from
-// the database, which a build does not reach. The language layout fixes the languages (dynamicParams = false);
-// this page takes any building number, like the other pages under a language.
+// language, and dropped when the Hub saves the building's contact (the Admin's building screen), so the database is
+// asked about a building rarely, not once per visit. A shared cache in front of the app keeps the page for 5 minutes
+// and may serve it for 1 minute more (next.config.ts), so a saved change can take up to about 6 minutes to reach every
+// resident. The register's own facts change only when the buildings seed runs, so a few minutes of delay costs
+// nothing. Nothing is built ahead: the buildings come from the database, which a build does not reach. The language
+// layout fixes the languages (dynamicParams = false); this page takes any building number, like the other pages
+// under a language.
 export const dynamicParams = true;
 export const revalidate = 300;
 
@@ -83,7 +85,12 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
               {view.address}
             </bdi>
           </h1>
-          <p className="building-neighbourhood">{view.neighbourhood}</p>
+          <p className="building-neighbourhood">
+            {/* A neighbourhood's name is English too: isolated, so it cannot reorder the text around it in a right-to-left page. */}
+            <bdi lang="en" dir="ltr">
+              {view.neighbourhood}
+            </bdi>
+          </p>
           {view.checking && (
             <div className="building-note" role="note" data-testid="building-checking">
               <ResidentText as="p">{view.checking}</ResidentText>
@@ -116,12 +123,16 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
             <ResidentText as="h2">{view.contactTitle}</ResidentText>
             {contact.phone && contact.telHref && contact.role ? (
               <Stack gap="label">
-                <p>
-                  <bdi lang="en" dir="ltr" className="building-contact__role">
-                    {contact.role}
-                  </bdi>
-                </p>
-                <a className="tap building-contact__call" href={contact.telHref} data-testid="building-call">
+                <ResidentText as="p" className="building-contact__role" testId="building-contact-role">
+                  {contact.role}
+                </ResidentText>
+                {/* A "Call" that fell back to English makes the whole button English, left to right, so its words and the number read as one line. */}
+                <a
+                  className="tap building-contact__call"
+                  href={contact.telHref}
+                  data-testid="building-call"
+                  {...(contact.callIsEnglish ? { dir: "ltr", lang: "en" } : {})}
+                >
                   <ResidentText>{contact.call}</ResidentText>{" "}
                   <bdi dir="ltr" lang="en">
                     {contact.phone}

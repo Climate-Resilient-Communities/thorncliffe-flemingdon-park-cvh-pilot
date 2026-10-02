@@ -4064,23 +4064,26 @@
         "buildingNotFound": "[EN] That building does not exist.",
         "floorNotFound": "[EN] That floor does not exist any more. Reload the page.",
         "forbidden": "[EN] Only an Admin can change buildings and floors.",
-        "roleTooLong": "[EN] A role can have at most 40 characters.",
-        "roleCharacters": "[EN] Use letters, digits and spaces in a role, with at least one letter. A few marks are allowed: . , ' & / -",
+        "roleInvalid": "[EN] Choose one of the roles in the list.",
         "phoneInvalid": "[EN] Enter a 10-digit phone number, like 416 555 0123.",
-        "roleWithoutPhone": "[EN] Enter a phone number for this role, or empty both fields to remove the contact.",
-        "phoneWithoutRole": "[EN] Enter a role for this number, or empty both fields to remove the contact.",
+        "roleWithoutPhone": "[EN] Enter a phone number for this role, or remove the contact.",
+        "phoneWithoutRole": "[EN] Choose a role for this number, or remove the contact.",
+        "notWorkNumber": "[EN] Confirm that this is a work or office number the building agreed to publish.",
         "contactNoChange": "[EN] Nothing to change: the contact is already saved like this."
       },
       "contact": {
         "title": "[EN] Building contact",
-        "lead": "[EN] Who residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it. Leave both fields empty to remove it.",
+        "lead": "[EN] A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.",
         "current": "[EN] Provided by the Hub, last updated {date}",
         "none": "[EN] No contact entered yet. Residents see \"Not known\".",
         "role": "[EN] Role",
-        "roleHint": "[EN] What residents call the person, like Superintendent. Up to 40 characters. Do not enter a personal name.",
+        "roleHint": "[EN] Which office the number reaches.",
+        "roleChoose": "[EN] Choose a role",
         "phone": "[EN] Phone number",
         "phoneHint": "[EN] 10 digits, like 416 555 0123.",
-        "submit": "[EN] Save contact"
+        "workNumber": "[EN] This is a work or office number the building agreed to publish.",
+        "submit": "[EN] Save contact",
+        "remove": "[EN] Remove contact"
       }
     },
     "resetAuthenticator": {
@@ -4149,8 +4152,12 @@
     },
     "airNone": "[EN] None",
     "airIndividual": "[EN] Individual units",
+    "roles": {
+      "superintendent": "[EN] Superintendent",
+      "buildingManagement": "[EN] Building management",
+      "propertyOffice": "[EN] Property office"
+    },
     "contactTitle": "[EN] Building contact",
-    "providedByHub": "[EN] Provided by the Hub, last updated {date}",
-    "call": "[EN] Call {role}"
+    "providedByHub": "[EN] Provided by the Hub, last updated {date}"
   }
 }

@@ -16,7 +16,7 @@ export type EditState =
       label?: string;
       place?: FloorPlace;
       /** The contact as it was typed, to show again. */
-      contact?: { role: string; phone: string };
+      contact?: { role: string; phone: string; workNumber: boolean };
     }
   | { status: "saved"; location: string }
   /** Removing is destructive: the first submit only asks, and the form then posts `confirm=1`. */
@@ -33,10 +33,8 @@ export const MESSAGE_KEYS: Record<FloorRefusal, string> = {
   label_too_long: "staff.buildings.errors.labelTooLong",
   label_characters: "staff.buildings.errors.labelCharacters",
   label_duplicate: "staff.buildings.errors.labelDuplicate",
-  role_empty: "staff.buildings.errors.phoneWithoutRole",
-  role_too_long: "staff.buildings.errors.roleTooLong",
-  role_characters: "staff.buildings.errors.roleCharacters",
-  phone_empty: "staff.buildings.errors.roleWithoutPhone",
+  role_invalid: "staff.buildings.errors.roleInvalid",
+  not_work_number: "staff.buildings.errors.notWorkNumber",
   phone_invalid: "staff.buildings.errors.phoneInvalid",
   role_without_phone: "staff.buildings.errors.roleWithoutPhone",
   phone_without_role: "staff.buildings.errors.phoneWithoutRole",
@@ -103,17 +101,21 @@ export async function removeFloorFromForm(deps: EditDeps, session: Session, form
 }
 
 /**
- * "Save contact" (S02.08): the role and phone number as typed. Both empty removes the contact. The places
- * module checks them, saves them with the Hub as owner and today's date, and audits the change.
+ * "Save contact" (S02.08): the role chosen and the phone number as typed, with the Admin's confirmation that it is a
+ * work or office number the building agreed to publish. "Remove contact" (`remove=1`) removes it, with no
+ * confirmation needed. The places module checks them, saves them with the Hub as owner and today's date, and audits
+ * the change.
  */
 export async function setContactFromForm(deps: EditDeps, session: Session, form: FormData): Promise<EditState> {
   const rsn = text(form, "rsn");
-  const role = text(form, "role");
-  const phone = text(form, "phone");
-  const result = await deps.buildings().setContact(session.staffId, { rsn, role, phone });
+  const removing = text(form, "remove") === "1";
+  const role = removing ? "" : text(form, "role");
+  const phone = removing ? "" : text(form, "phone");
+  const workNumber = !removing && text(form, "workNumber") === "yes";
+  const result = await deps.buildings().setContact(session.staffId, { rsn, role, phone, workNumber });
   if (result.ok) return { status: "saved", location: savedLocation(rsn, { done: result.value.contact ? "contact" : "contactRemoved" }) };
   const message = englishText(result.error === "no_change" ? "staff.buildings.errors.contactNoChange" : MESSAGE_KEYS[result.error]);
-  return { status: "refused", message, contact: { role, phone } };
+  return { status: "refused", message, contact: { role, phone, workNumber } };
 }
 
 /** "Mark building confirmed". */

@@ -37,7 +37,7 @@ const FLOOR_IDS = Array.from({ length: 8 }, (_, index) => `01900000-0000-7000-80
 const DETAIL: BuildingDetail = {
   ...summary({ storeys: 7, floorCount: 8 }),
   facts: { elevators: 2, emergencyPower: true, coolingRoom: false, airConditioning: null, barrierFreeEntrance: true, updatedAt: new Date("2026-09-28T12:00:00Z") },
-  contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub", updatedAt: new Date("2026-09-30T15:00:00Z") },
+  contact: { role: "superintendent", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-09-30T15:00:00Z") },
   floors: ["G", "1", "2", "3", "4", "5", "6", "7"].map((label, index) => ({ id: FLOOR_IDS[index], label, confirmed: false })),
 };
 
@@ -55,7 +55,7 @@ for (const width of [390, 1280]) {
   test(`a building's floors at ${width}px, after a saved change`, async ({ page }) => {
     // The notice says floor 3 is now called 3A, so the list shows 3A (the fixture matches the notice).
     const renamed: BuildingDetail = { ...DETAIL, floors: DETAIL.floors.map((floor, index) => (index === 3 ? { ...floor, label: "3A" } : floor)) };
-    await open(page, width, { screen: buildingView(renamed, savedNotice({ done: "renamed", from: "3", to: "3A" })) }, width === 390 ? 2500 : 1900);
+    await open(page, width, { screen: buildingView(renamed, savedNotice({ done: "renamed", from: "3", to: "3A" })) }, width === 390 ? 2800 : 2100);
     await expectBaseline(page, `buildings-floors-${width}.png`);
   });
 }
@@ -83,17 +83,37 @@ test("a building after refusals at 390px: a label too long, a floor with ambassa
         },
       },
     },
-    2900,
+    3200,
   );
   await expectBaseline(page, "buildings-refused-390.png");
 });
 
 test("a building asking before a floor is removed, at 390px", async ({ page }) => {
-  await open(page, 390, { screen: buildingView(DETAIL), initial: { remove: { [FLOOR_IDS[3]]: { status: "confirm", message: "Remove floor 3? This cannot be undone." } } } }, 2500);
+  await open(page, 390, { screen: buildingView(DETAIL), initial: { remove: { [FLOOR_IDS[3]]: { status: "confirm", message: "Remove floor 3? This cannot be undone." } } } }, 2800);
   await expectBaseline(page, "buildings-remove-confirm-390.png");
 });
 
 test("a confirmed building at 1280px", async ({ page }) => {
-  await open(page, 1280, { screen: buildingView({ ...DETAIL, confirmedAt: new Date("2026-09-30T15:00:00Z"), floors: DETAIL.floors.map((floor) => ({ ...floor, confirmed: true })) }) }, 1800);
+  await open(page, 1280, { screen: buildingView({ ...DETAIL, confirmedAt: new Date("2026-09-30T15:00:00Z"), floors: DETAIL.floors.map((floor) => ({ ...floor, confirmed: true })) }) }, 2000);
   await expectBaseline(page, "buildings-confirmed-1280.png");
+});
+
+test("the building contact form at 390px: a role list, a work-number confirmation, and a refusal that keeps what was typed", async ({ page }) => {
+  await open(
+    page,
+    390,
+    {
+      screen: buildingView(DETAIL),
+      initial: {
+        contact: {
+          status: "refused",
+          message: "Confirm that this is a work or office number the building agreed to publish.",
+          contact: { role: "property_office", phone: "416 555 0123", workNumber: false },
+        },
+      },
+    },
+    2800,
+  );
+  await page.getByRole("heading", { level: 2, name: "Building contact" }).scrollIntoViewIfNeeded();
+  await expectBaseline(page, "buildings-contact-390.png");
 });

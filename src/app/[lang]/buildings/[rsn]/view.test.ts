@@ -2,6 +2,7 @@ import { createTranslator, type AbstractIntlMessages } from "next-intl";
 import { describe, expect, it } from "vitest";
 import en from "@/i18n/messages/en.json";
 import ur from "@/i18n/messages/ur.json";
+import { LAUNCH_LANGUAGES } from "@/i18n/languages";
 import type { PublicBuilding } from "@/modules/places";
 import { buildingPageView, formatDay, type Translate } from "./view";
 
@@ -70,12 +71,51 @@ describe("the building page view", () => {
     const none = buildingPageView(building(), t, "en").contact;
     expect(none).toMatchObject({ provided: null, role: null, phone: null, telHref: null, none: "Not known" });
 
-    const some = buildingPageView(building({ contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), t, "en").contact;
-    expect(some).toMatchObject({ provided: "Provided by the Hub, last updated October 1, 2026", role: "Superintendent", phone: "416-555-0123", telHref: "tel:+14165550123" });
+    const some = buildingPageView(building({ contact: { role: "superintendent", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), t, "en").contact;
+    expect(some).toMatchObject({ provided: "Provided by the Hub, last updated October 1, 2026", role: "Superintendent", phone: "(416) 555-0123", telHref: "tel:+14165550123" });
+  });
+
+  it("shows each role as its translated label, never the stored code", () => {
+    const label = (role: "superintendent" | "building_management" | "property_office") =>
+      buildingPageView(building({ contact: { role, phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), t, "en").contact.role;
+
+    expect(["superintendent", "building_management", "property_office"].map((role) => label(role as "superintendent"))).toEqual(["Superintendent", "Building management", "Property office"]);
+  });
+
+  it("takes the role's label from the language's catalog, and leaves an untranslated one for the page to mark as English", () => {
+    const view = buildingPageView(building({ contact: { role: "property_office", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), translator(ur, "ur"), "ur");
+
+    expect(view.contact.role).toBe("[EN] Property office");
+  });
+
+  it("marks a Call that fell back to English, so the button can read as English", () => {
+    expect(buildingPageView(building(), t, "en").contact.callIsEnglish).toBe(false);
+    const stub = (call: string) => translator({ ...en, R31: { ...en.R31, call } }, "ur");
+    expect(buildingPageView(building(), stub("[EN] Call"), "ur").contact).toMatchObject({ call: "[EN] Call", callIsEnglish: true });
+    expect(buildingPageView(building(), stub("کال کریں"), "ur").contact).toMatchObject({ call: "کال کریں", callIsEnglish: false });
   });
 
   it("writes a day as it was in Toronto, whatever the server's time zone", () => {
     expect(formatDay(new Date("2026-10-02T02:30:00Z"), "en")).toBe("October 1, 2026");
+  });
+
+  // Pashto (ps) and Dari (fa-AF) write dates on the Persian calendar unless told otherwise: October 1, 2026 would be
+  // 9 Mizan 1405 (۹ میزان ۱۴۰۵). The stub catalog has "Last updated" translated, so the date is written in the language.
+  describe.each(["ur", "ps", "prs"] as const)("in %s, with Last updated translated", (code) => {
+    const bcp47 = LAUNCH_LANGUAGES.find((language) => language.code === code)!.bcp47;
+    const stub = translator({ ...en, building: { ...en.building, updated: "تازه کاری: {date}", providedByHub: "د مرکز لخوا: {date}" } }, code);
+
+    it("writes the day on the Gregorian calendar", () => {
+      const view = buildingPageView(building({ contact: { role: "superintendent", phone: "+14165550123", owner: "hub", updatedAt: new Date("2026-10-01T15:00:00Z") } }), stub, bcp47);
+      const gregorian = new Intl.DateTimeFormat(bcp47, { dateStyle: "long", timeZone: "America/Toronto", calendar: "gregory" });
+
+      expect(view.updated).toBe(`تازه کاری: ${gregorian.format(new Date("2026-09-28T12:00:00Z"))}`);
+      expect(view.contact.provided).toBe(`د مرکز لخوا: ${gregorian.format(new Date("2026-10-01T15:00:00Z"))}`);
+      // 2026 in Latin or Arabic-Indic digits, never the Persian year 1405 (۱۴۰۵).
+      expect(view.updated).toMatch(/2026|۲۰۲۶/);
+      expect(view.updated).not.toMatch(/1405|۱۴۰۵/);
+      expect(view.contact.provided).not.toMatch(/1405|۱۴۰۵/);
+    });
   });
 
   it("falls back to English for text a language lacks, with the date written the English way", () => {

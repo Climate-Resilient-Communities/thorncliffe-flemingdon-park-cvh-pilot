@@ -40,9 +40,13 @@ test("shows the six register facts, the day they last changed, and the Hub's con
     ["Air conditioning", "None"],
     ["Barrier-free entrance", "Yes"],
   ]);
-  await expect(page.getByTestId("building-contact")).toContainText("Superintendent");
+  await expect(page.getByTestId("building-contact-role")).toHaveText("Superintendent");
   await expect(page.getByTestId("building-contact-provided")).toHaveText("Provided by the Hub, last updated September 30, 2026");
   await expect(page.getByTestId("building-call")).toHaveAttribute("href", "tel:+14165550123");
+  await expect(page.getByTestId("building-call")).toContainText("(416) 555-0123");
+  // In English the button needs no override: it takes the page's language and direction.
+  await expect(page.getByTestId("building-call")).not.toHaveAttribute("lang");
+  await expect(page.getByTestId("building-call")).not.toHaveAttribute("dir");
   await expect(page.getByTestId("building-checking")).toHaveCount(0);
 });
 
@@ -106,9 +110,8 @@ test("is public and cacheable: no cookie, and a shared cache may keep it for a f
 
   expect(response.status()).toBe(200);
   expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
-  const cache = response.headers()["cache-control"] ?? "";
-  expect(cache).toMatch(/s-maxage=300/);
-  expect(cache).not.toMatch(/no-store|private/);
+  // Five minutes in a shared cache and one more served stale while it refreshes: a saved change reaches everyone in about 6 minutes.
+  expect(response.headers()["cache-control"]).toBe("public, s-maxage=300, stale-while-revalidate=60");
 });
 
 test("shows only the facts the story lists: no coordinates, no floors, nobody who confirmed anything", async ({ page }) => {
@@ -132,7 +135,17 @@ test("a right-to-left page keeps its direction, and English text in it stays a l
   await expect(factValue(page, "emergencyPower")).not.toContainText("[EN]");
   await expect(factValue(page, "emergencyPower")).not.toHaveText(await factValue(page, "coolingRoom").innerText());
   // The phone number is a left-to-right run.
-  await expect(page.getByTestId("building-call").locator("bdi").last()).toHaveText("416-555-0123");
+  await expect(page.getByTestId("building-call").locator("bdi").last()).toHaveText("(416) 555-0123");
+  // The role is a translated label; Urdu has none yet, so it is English behind [EN], as its own left-to-right block.
+  const role = page.getByTestId("building-contact-role");
+  await expect(role).toHaveText("[EN] Superintendent");
+  await expect(role).toHaveAttribute("lang", "en");
+  await expect(role).toHaveAttribute("dir", "ltr");
+  // "Call" fell back to English too, so the whole button is English and left to right: its words and the number read as one line.
+  await expect(page.getByTestId("building-call")).toHaveAttribute("lang", "en");
+  await expect(page.getByTestId("building-call")).toHaveAttribute("dir", "ltr");
+  // The neighbourhood's name is an isolated run.
+  await expect(page.locator(".building-neighbourhood bdi")).toHaveText("Thorncliffe Park");
 });
 
 for (const [code, path, name] of [

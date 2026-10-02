@@ -6,7 +6,7 @@ import { z } from "zod";
 import type { Db } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
-import { CONTACT_OWNER, checkContact, type ContactError } from "../domain/buildingContact";
+import { CONTACT_OWNER, checkContact, isContactRole, type ContactError, type ContactRole } from "../domain/buildingContact";
 import { checkFloorLabel, type FloorLabelError } from "../domain/floorLabel";
 import type { AssignedAmbassador, FloorAssignments, PlacesAudit, PlacesAuditEvent } from "./ports";
 
@@ -44,9 +44,9 @@ export interface BuildingFacts {
 
 /** The building contact an Admin entered (S02.08); the Hub owns it. */
 export interface BuildingContact {
-  /** What residents call the person: "Superintendent". */
-  role: string;
-  /** 416-555-0123 */
+  /** Which office the number reaches, as stored: a code, shown to residents as a translated label. */
+  role: ContactRole;
+  /** E.164: +14165550123 */
   phone: string;
   owner: typeof CONTACT_OWNER;
   updatedAt: Date;
@@ -100,13 +100,11 @@ const REASONS: Record<FloorRefusal, "validation" | "duplicate" | "not_found" | "
   label_too_long: "validation",
   label_characters: "validation",
   label_duplicate: "duplicate",
-  role_empty: "validation",
-  role_too_long: "validation",
-  role_characters: "validation",
-  phone_empty: "validation",
+  role_invalid: "validation",
   phone_invalid: "validation",
   role_without_phone: "validation",
   phone_without_role: "validation",
+  not_work_number: "validation",
   building_not_found: "not_found",
   floor_not_found: "not_found",
   floor_has_assignments: "floor_has_assignments",
@@ -127,7 +125,7 @@ function isLabelUniqueViolation(error: unknown): boolean {
 
 /** The contact of a building row; null unless all of it is there (the database checks it is all or nothing). */
 export function contactOf(row: Pick<typeof building.$inferSelect, "contactRole" | "contactPhone" | "contactUpdatedAt">): BuildingContact | null {
-  if (row.contactRole === null || row.contactPhone === null || row.contactUpdatedAt === null) return null;
+  if (row.contactRole === null || row.contactPhone === null || row.contactUpdatedAt === null || !isContactRole(row.contactRole)) return null;
   return { role: row.contactRole, phone: row.contactPhone, owner: CONTACT_OWNER, updatedAt: row.contactUpdatedAt };
 }
 
@@ -304,14 +302,15 @@ export function createBuildingService(deps: BuildingServiceDeps) {
 
     /**
      * Enters, changes or removes the building contact (S02.08). The Hub is its owner and now its last-updated
-     * date. Both fields empty removes it; one without the other, a role with characters it may not have or a
-     * number that is not a North American one is refused with the reason, and nothing is saved. Saving what is
-     * already there is refused as no change, so the date means "last changed".
+     * date. Both fields empty removes it; one without the other, a role that is not on the list, a number that is
+     * not a North American one, or a number the Admin did not confirm as a work or office number the building
+     * agreed to publish is refused with the reason, and nothing is saved. Saving what is already there is
+     * refused as no change, so the date means "last changed".
      */
-    setContact(actorStaffId: string, input: { rsn: string; role: string; phone: string }): Promise<FloorResult<{ contact: BuildingContact | null }>> {
+    setContact(actorStaffId: string, input: { rsn: string; role: string; phone: string; workNumber: boolean }): Promise<FloorResult<{ contact: BuildingContact | null }>> {
       return change(actorStaffId, "building.contact_changed", input.rsn, async (tx) => {
         const row = await lockBuilding(tx, input.rsn);
-        const checked = checkContact(input.role, input.phone);
+        const checked = checkContact(input.role, input.phone, input.workNumber);
         if (!checked.ok) throw new Refused(checked.error);
         const before = contactOf(row);
         if ((checked.contact === null && before === null) || (checked.contact && before && checked.contact.role === before.role && checked.contact.phone === before.phone)) {

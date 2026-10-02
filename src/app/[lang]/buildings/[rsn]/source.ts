@@ -14,19 +14,19 @@ import { BUILDING_REVALIDATE_SECONDS, buildingTag } from "../../../buildingCache
 let fixtures: { file: string; buildings: Map<string, PublicBuilding> } | undefined;
 
 /** A building as the data cache keeps it: JSON, so its dates are ISO strings. */
-type Stored = Omit<PublicBuilding, "factsUpdatedAt" | "contact"> & {
+export type Stored = Omit<PublicBuilding, "factsUpdatedAt" | "contact"> & {
   factsUpdatedAt: string;
-  contact: { role: string; phone: string; owner: "hub"; updatedAt: string } | null;
+  contact: (Omit<NonNullable<PublicBuilding["contact"]>, "updatedAt"> & { updatedAt: string }) | null;
 };
 
-const store = (building: PublicBuilding | null): Stored | null =>
+export const store = (building: PublicBuilding | null): Stored | null =>
   building && {
     ...building,
     factsUpdatedAt: building.factsUpdatedAt.toISOString(),
     contact: building.contact && { ...building.contact, updatedAt: building.contact.updatedAt.toISOString() },
   };
 
-const restore = (stored: Stored | null): PublicBuilding | null =>
+export const restore = (stored: Stored | null): PublicBuilding | null =>
   stored && {
     ...stored,
     factsUpdatedAt: new Date(stored.factsUpdatedAt),

@@ -8,6 +8,7 @@
  *   .hub-button--primary   the one main action of a form (--ink on --on-deep)
  *   .hub-button--secondary a quieter action: --surface-raised with a --control-border hairline, like the shell's sign-out
  *   .hub-input             a text, date or number input
+ *   .hub-check             a checkbox with its sentence beside it
  *   .hub-error             a refusal, shown as text (red and bold, never colour alone)
  */
 @layer components {
@@ -65,6 +66,24 @@
     background-color: var(--surface);
     color: var(--text-muted);
     cursor: not-allowed;
+  }
+
+  .hub-check {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-related);
+    min-block-size: var(--tap-current);
+  }
+
+  .hub-check input {
+    flex: none;
+    inline-size: var(--tap-current);
+    block-size: var(--tap-current);
+    margin: 0;
+  }
+
+  .hub-check span {
+    align-self: center;
   }
 
   .hub-error {

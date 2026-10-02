@@ -156,8 +156,9 @@ export function AddFloorForm({ rsn, labels, action, initialState = IDLE }: { rsn
 }
 
 /**
- * "Building contact" (S02.08): a role and a phone number, saved with the Hub as owner. Both empty removes it.
- * After a refusal the form shows what was typed, with the reason.
+ * "Building contact" (S02.08): a role from a fixed list and a work or office phone number, saved with the Hub as
+ * owner. The Admin must confirm the number is a work or office number the building agreed to publish. "Remove
+ * contact" needs no confirmation. After a refusal the form shows what was typed, with the reason.
  */
 export function ContactForm({ rsn, labels, action, initialState = IDLE }: { rsn: string; labels: BuildingView["contact"]; action: FloorAction; initialState?: EditState }) {
   const [state, formAction, pending] = useActionState(action, initialState);
@@ -177,17 +178,21 @@ export function ContactForm({ rsn, labels, action, initialState = IDLE }: { rsn:
             <Stack gap="label">
               <label htmlFor="contact-role">{labels.role}</label>
               <p id="contact-role-hint">{labels.roleHint}</p>
-              <input
+              <select
                 className="hub-input"
                 id="contact-role"
-                type="text"
                 name="role"
                 defaultValue={typed.role}
-                autoComplete="off"
-                maxLength={80}
                 aria-describedby={refused ? `contact-role-hint ${errorId}` : "contact-role-hint"}
                 aria-invalid={refused || undefined}
-              />
+              >
+                <option value="">{labels.roleChoose}</option>
+                {labels.roles.map((role) => (
+                  <option key={role.code} value={role.code}>
+                    {role.label}
+                  </option>
+                ))}
+              </select>
             </Stack>
             <Stack gap="label">
               <label htmlFor="contact-phone">{labels.phone}</label>
@@ -203,9 +208,20 @@ export function ContactForm({ rsn, labels, action, initialState = IDLE }: { rsn:
                 aria-invalid={refused || undefined}
               />
             </Stack>
-            <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
-              {labels.submit}
-            </button>
+            <label className="hub-check" htmlFor="contact-work-number">
+              <input id="contact-work-number" type="checkbox" name="workNumber" value="yes" required defaultChecked={typed.workNumber} />
+              <span>{labels.workNumber}</span>
+            </label>
+            <Inline gap="related" align="center">
+              <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
+                {labels.submit}
+              </button>
+              {labels.remove && (
+                <button className="hub-button hub-button--secondary" type="submit" name="remove" value="1" formNoValidate disabled={pending}>
+                  {labels.remove}
+                </button>
+              )}
+            </Inline>
           </Stack>
         </form>
       </Stack>

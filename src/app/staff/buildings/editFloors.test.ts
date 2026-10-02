@@ -128,32 +128,55 @@ describe("Mark building confirmed (server action)", () => {
 });
 
 describe("Save contact (server action)", () => {
-  it("passes the role and number as typed and goes back to the building", async () => {
-    const setContact = vi.fn(async () => ({ ok: true as const, value: { contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub" as const, updatedAt: new Date() } } }));
+  it("passes the role, the number as typed and the work-number confirmation, and goes back to the building", async () => {
+    const setContact = vi.fn(async () => ({ ok: true as const, value: { contact: { role: "superintendent" as const, phone: "+14165550123", owner: "hub" as const, updatedAt: new Date() } } }));
     const { deps: d } = deps({ setContact });
 
-    const state = await setContactFromForm(d, session, form({ rsn: "7", role: " Superintendent ", phone: "(416) 555-0123" }));
+    const state = await setContactFromForm(d, session, form({ rsn: "7", role: "superintendent", phone: "(416) 555-0123", workNumber: "yes" }));
 
-    expect(setContact).toHaveBeenCalledWith(ADMIN, { rsn: "7", role: " Superintendent ", phone: "(416) 555-0123" });
+    expect(setContact).toHaveBeenCalledWith(ADMIN, { rsn: "7", role: "superintendent", phone: "(416) 555-0123", workNumber: true });
     expect(state).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=contact" });
   });
 
-  it("says the contact was removed when both fields were emptied", async () => {
-    const { deps: d } = deps({ setContact: vi.fn(async () => ({ ok: true as const, value: { contact: null } })) });
-    expect(await setContactFromForm(d, session, form({ rsn: "7", role: "", phone: "" }))).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=contactRemoved" });
+  it("passes the confirmation as false when the box was not checked", async () => {
+    const setContact = vi.fn(async () => ({ ok: false as const, error: "not_work_number" as const }));
+    const { deps: d } = deps({ setContact });
+
+    const state = await setContactFromForm(d, session, form({ rsn: "7", role: "property_office", phone: "416 555 0123" }));
+
+    expect(setContact).toHaveBeenCalledWith(ADMIN, { rsn: "7", role: "property_office", phone: "416 555 0123", workNumber: false });
+    expect(state).toEqual({
+      status: "refused",
+      message: "Confirm that this is a work or office number the building agreed to publish.",
+      contact: { role: "property_office", phone: "416 555 0123", workNumber: false },
+    });
+  });
+
+  it("removes the contact on Remove contact, whatever the fields held, and says so", async () => {
+    const setContact = vi.fn(async () => ({ ok: true as const, value: { contact: null } }));
+    const { deps: d } = deps({ setContact });
+
+    const state = await setContactFromForm(d, session, form({ rsn: "7", remove: "1", role: "superintendent", phone: "416 555 0123", workNumber: "yes" }));
+
+    expect(setContact).toHaveBeenCalledWith(ADMIN, { rsn: "7", role: "", phone: "", workNumber: false });
+    expect(state).toEqual({ status: "saved", location: "/staff/buildings?building=7&done=contactRemoved" });
   });
 
   it.each([
-    ["role_too_long", "A role can have at most 40 characters."],
-    ["role_characters", "Use letters, digits and spaces in a role, with at least one letter. A few marks are allowed: . , ' & / -"],
+    ["role_invalid", "Choose one of the roles in the list."],
     ["phone_invalid", "Enter a 10-digit phone number, like 416 555 0123."],
-    ["role_without_phone", "Enter a phone number for this role, or empty both fields to remove the contact."],
-    ["phone_without_role", "Enter a role for this number, or empty both fields to remove the contact."],
+    ["role_without_phone", "Enter a phone number for this role, or remove the contact."],
+    ["phone_without_role", "Choose a role for this number, or remove the contact."],
+    ["not_work_number", "Confirm that this is a work or office number the building agreed to publish."],
     ["no_change", "Nothing to change: the contact is already saved like this."],
     ["building_not_found", "That building does not exist."],
   ] as const)("shows the reason (%s) and keeps what was typed", async (error, message) => {
     const { deps: d } = deps({ setContact: vi.fn(async () => ({ ok: false as const, error })) });
-    expect(await setContactFromForm(d, session, form({ rsn: "7", role: "Super", phone: "555" }))).toEqual({ status: "refused", message, contact: { role: "Super", phone: "555" } });
+    expect(await setContactFromForm(d, session, form({ rsn: "7", role: "superintendent", phone: "555", workNumber: "yes" }))).toEqual({
+      status: "refused",
+      message,
+      contact: { role: "superintendent", phone: "555", workNumber: true },
+    });
   });
 });
 

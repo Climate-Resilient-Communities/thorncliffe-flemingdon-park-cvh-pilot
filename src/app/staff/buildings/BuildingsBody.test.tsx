@@ -31,21 +31,46 @@ const detail = (change: Partial<BuildingDetail> = {}): BuildingDetail => ({
 const html = (screen: Parameters<typeof BuildingsBody>[0]["screen"]) => renderToStaticMarkup(<BuildingsBody screen={screen} actions={actions} />);
 
 describe("Buildings and floors: the building contact", () => {
-  it("shows the saved contact with its owner and date, in a form to change it", () => {
-    const out = html(buildingView(detail({ contact: { role: "Superintendent", phone: "416-555-0123", owner: "hub", updatedAt: new Date("2026-10-05T15:00:00Z") } })));
+  const saved = { role: "superintendent" as const, phone: "+14165550123", owner: "hub" as const, updatedAt: new Date("2026-10-05T15:00:00Z") };
+
+  it("shows the saved contact with its owner and date, in a form to change it, the number as (416) 555-0123", () => {
+    const out = html(buildingView(detail({ contact: saved })));
 
     expect(out).toContain("Building contact");
     expect(out).toContain("Provided by the Hub, last updated Oct 5, 2026");
-    expect(out).toContain('value="Superintendent"');
-    expect(out).toContain('value="416-555-0123"');
+    expect(out).toContain('value="(416) 555-0123"');
+    expect(out).not.toContain("+14165550123");
     expect(out).toContain("Save contact");
+    expect(out).toContain("Remove contact");
   });
 
-  it("says none was entered, with empty fields", () => {
+  it("offers only the three fixed roles in a list, the saved one selected, labelled in English", () => {
+    const out = html(buildingView(detail({ contact: { ...saved, role: "property_office" } })));
+    const select = out.match(/<select[^>]*id="contact-role"[^>]*>(.*?)<\/select>/)![1];
+
+    expect(select.match(/<option value="([^"]*)"/g)).toEqual(['<option value=""', '<option value="superintendent"', '<option value="building_management"', '<option value="property_office"']);
+    expect(select).toContain(">Superintendent</option>");
+    expect(select).toContain(">Building management</option>");
+    expect(select).toContain('value="property_office" selected=""');
+    expect(out).not.toMatch(/<input[^>]*name="role"/);
+  });
+
+  it("asks for a required confirmation that the number is a work or office number, unchecked by default", () => {
+    const out = html(buildingView(detail({ contact: saved })));
+    const box = out.match(/<input[^>]*name="workNumber"[^>]*>/)![0];
+
+    expect(box).toContain('type="checkbox"');
+    expect(box).toContain("required");
+    expect(box).not.toContain("checked");
+    expect(out).toContain("This is a work or office number the building agreed to publish.");
+  });
+
+  it("says none was entered, with an empty role, an empty number and no Remove button", () => {
     const out = html(buildingView(detail()));
     expect(out).toContain('Building contact');
     expect(out).toContain('No contact entered yet. Residents see &quot;Not known&quot;.');
     expect(out).toContain('name="role"');
+    expect(out).not.toContain("Remove contact");
   });
 
   it("tells the person when the contact was saved or removed", () => {

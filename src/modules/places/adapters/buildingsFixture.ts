@@ -3,10 +3,11 @@
 // The file is an array of buildings as readPublicBuilding returns them, with the dates written as ISO strings.
 import { readFileSync } from "node:fs";
 import type { PublicBuilding } from "../application/publicBuilding";
+import { isContactRole, type ContactRole } from "../domain/buildingContact";
 
 type Raw = Omit<PublicBuilding, "factsUpdatedAt" | "contact"> & {
   factsUpdatedAt: string;
-  contact: { role: string; phone: string; updatedAt: string } | null;
+  contact: { role: ContactRole; phone: string; updatedAt: string } | null;
 };
 
 /** The sample buildings in the file, by rsn. Throws, naming the file, when it is not an array of buildings. */
@@ -18,6 +19,9 @@ export function readBuildingsFixtureFile(file: string): Map<string, PublicBuildi
     throw new Error(`${file} could not be read as JSON: ${error instanceof Error ? error.message : String(error)}`);
   }
   if (!Array.isArray(parsed)) throw new Error(`${file} is not an array of buildings`);
+  for (const raw of parsed as Raw[]) {
+    if (raw.contact && !isContactRole(raw.contact.role)) throw new Error(`${file}: building ${raw.rsn} has a contact role that is not on the list: ${String(raw.contact.role)}`);
+  }
   return new Map(
     (parsed as Raw[]).map((raw) => [
       raw.rsn,

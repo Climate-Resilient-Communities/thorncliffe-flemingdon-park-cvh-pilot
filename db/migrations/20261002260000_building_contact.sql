@@ -1,12 +1,14 @@
 -- S02.08: the building contact an Admin enters on the building's staff screen, owned by the places
 -- module with the rest of `building` (spine table ownership).
 --
--- A contact is a role (what residents call the person: "Superintendent") and a phone number, with
--- its owner and the day it was last entered. The owner is always the Hub in the pilot (the Hub
+-- A contact is a published work or office line, not personal data: a role from a fixed list (the code
+-- is stored, residents see a translated label: superintendent, building_management, property_office)
+-- and a phone number in E.164 (+14165550123; the page shows it as (416) 555-0123), with its owner and
+-- the day it was last entered. The owner is always the Hub in the pilot (the Hub
 -- provides the contact, the building does not): it is stored so the resident page can say "Provided
 -- by the Hub", and so a later owner is a new value, not a new column. The four columns are all
 -- set or all empty: a building with no contact has none of them, and residents see "Not known".
--- No personal name is stored; the role is enough to find the person in the building.
+-- No personal name is stored; the role is enough to find the office in the building.
 --
 -- Grants. The app (cvh_app) already reads `building` and updates the two confirmation columns;
 -- it now also updates these four, and no others (the register's facts stay the seed's). Residents
@@ -22,8 +24,8 @@ alter table building
 -- NOT VALID: the columns are new, so every existing row has them null and already passes; the checks
 -- apply to every row written from now on, without a validation scan of the existing ones.
 alter table building
-  add constraint building_contact_role_valid check (contact_role is null or (contact_role = btrim(contact_role) and char_length(contact_role) between 1 and 40 and contact_role !~ '  ')) not valid,
-  add constraint building_contact_phone_valid check (contact_phone is null or contact_phone ~ '^[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}$') not valid,
+  add constraint building_contact_role_valid check (contact_role is null or contact_role in ('superintendent', 'building_management', 'property_office')) not valid,
+  add constraint building_contact_phone_valid check (contact_phone is null or contact_phone ~ '^\+1[2-9][0-9]{2}[2-9][0-9]{6}$') not valid,
   add constraint building_contact_owner_valid check (contact_owner is null or contact_owner = 'hub') not valid,
   add constraint building_contact_complete check (
     (contact_role is null and contact_phone is null and contact_owner is null and contact_updated_at is null)

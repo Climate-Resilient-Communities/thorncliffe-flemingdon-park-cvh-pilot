@@ -1084,16 +1084,18 @@
       aal2Required: 'An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.' } } } });
   /* The building contact on the Admin's building screen (S02.08). Not a prototype screen. */
   m(en, { staff: { buildings: {
-    contact: { title: 'Building contact', lead: 'Who residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it. Leave both fields empty to remove it.',
+    contact: { title: 'Building contact', lead: 'A work or office number residents can call about this building. The Hub provides it, and residents see it on the building page with the date you save it.',
       current: 'Provided by the Hub, last updated {date}', none: 'No contact entered yet. Residents see "Not known".',
-      role: 'Role', roleHint: 'What residents call the person, like Superintendent. Up to 40 characters. Do not enter a personal name.',
-      phone: 'Phone number', phoneHint: '10 digits, like 416 555 0123.', submit: 'Save contact' },
+      role: 'Role', roleHint: 'Which office the number reaches.', roleChoose: 'Choose a role',
+      phone: 'Phone number', phoneHint: '10 digits, like 416 555 0123.',
+      workNumber: 'This is a work or office number the building agreed to publish.',
+      submit: 'Save contact', remove: 'Remove contact' },
     saved: { contact: 'Building contact saved.', contactRemoved: 'Building contact removed.' },
-    errors: { roleTooLong: 'A role can have at most 40 characters.',
-      roleCharacters: 'Use letters, digits and spaces in a role, with at least one letter. A few marks are allowed: . , \' & / -',
+    errors: { roleInvalid: 'Choose one of the roles in the list.',
       phoneInvalid: 'Enter a 10-digit phone number, like 416 555 0123.',
-      roleWithoutPhone: 'Enter a phone number for this role, or empty both fields to remove the contact.',
-      phoneWithoutRole: 'Enter a role for this number, or empty both fields to remove the contact.',
+      roleWithoutPhone: 'Enter a phone number for this role, or remove the contact.',
+      phoneWithoutRole: 'Choose a role for this number, or remove the contact.',
+      notWorkNumber: 'Confirm that this is a work or office number the building agreed to publish.',
       contactNoChange: 'Nothing to change: the contact is already saved like this.' } } } });
   /* The building page a resident opens at /{lang}/buildings/{rsn} (S02.08, FR-D4-P, NFR-N7). Not a prototype screen. */
   m(en, { building: {
@@ -1102,5 +1104,6 @@
     checking: 'The Hub is checking this building\'s details. What you see here may change.',
     facts: { storeys: 'Storeys', elevators: 'Elevators', emergencyPower: 'Emergency power', coolingRoom: 'Cooling room', airConditioning: 'Air conditioning', barrierFree: 'Barrier-free entrance' },
     airNone: 'None', airIndividual: 'Individual units',
-    contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}', call: 'Call {role}' } });
+    roles: { superintendent: 'Superintendent', buildingManagement: 'Building management', propertyOffice: 'Property office' },
+    contactTitle: 'Building contact', providedByHub: 'Provided by the Hub, last updated {date}' } });
 })();

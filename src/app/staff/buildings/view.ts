@@ -1,7 +1,7 @@
 // What the buildings screen shows (S01.13): the view models for the list and for one building, with
 // every text already resolved from the English catalog, so the components that draw them know none of it.
 import { englishText } from "@/i18n/text";
-import type { BuildingDetail, BuildingSummary } from "@/modules/places";
+import { CONTACT_ROLES, CONTACT_ROLE_LABEL_KEYS, displayPhone, type BuildingDetail, type BuildingSummary } from "@/modules/places";
 import { BUILDINGS_PAGE } from "./editFloors";
 
 const t = (key: string, values?: Record<string, string | number>) => englishText(`staff.buildings.${key}`, values);
@@ -66,11 +66,19 @@ export interface BuildingView {
     current: string;
     role: string;
     roleHint: string;
+    /** The first, empty choice of the role list: "Choose a role". */
+    roleChoose: string;
+    /** The fixed list of roles: the code that is stored, and its label. */
+    roles: { code: string; label: string }[];
     phone: string;
     phoneHint: string;
+    /** "This is a work or office number the building agreed to publish." The form needs it checked to save. */
+    workNumber: string;
     submit: string;
-    /** What the form starts with: the saved contact. */
-    value: { role: string; phone: string };
+    /** Removes the saved contact; shown only when there is one. */
+    remove?: string;
+    /** What the form starts with: the saved contact (the number as (416) 555-0123), and the confirmation unchecked. */
+    value: { role: string; phone: string; workNumber: boolean };
   };
 }
 
@@ -214,10 +222,14 @@ export function buildingView(building: BuildingDetail, notice?: string): Buildin
       current: building.contact ? t("contact.current", { date: formatDay(building.contact.updatedAt) }) : t("contact.none"),
       role: t("contact.role"),
       roleHint: t("contact.roleHint"),
+      roleChoose: t("contact.roleChoose"),
+      roles: CONTACT_ROLES.map((code) => ({ code, label: englishText(`building.roles.${CONTACT_ROLE_LABEL_KEYS[code]}`) })),
       phone: t("contact.phone"),
       phoneHint: t("contact.phoneHint"),
+      workNumber: t("contact.workNumber"),
       submit: t("contact.submit"),
-      value: { role: building.contact?.role ?? "", phone: building.contact?.phone ?? "" },
+      ...(building.contact ? { remove: t("contact.remove") } : {}),
+      value: { role: building.contact?.role ?? "", phone: building.contact ? displayPhone(building.contact.phone) : "", workNumber: false },
     },
     ...(building.confirmedAt ? {} : { confirm: { title: t("confirm.title"), lead: t("confirm.lead"), submit: t("confirm.submit") } }),
   };

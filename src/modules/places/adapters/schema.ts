@@ -50,7 +50,7 @@ export const building = pgTable(
     notInRegisterSince: timestamp("not_in_register_since", { withTimezone: true }),
     floorsConfirmedAt: timestamp("floors_confirmed_at", { withTimezone: true }),
     floorsConfirmedBy: uuid("floors_confirmed_by"),
-    /** The building contact an Admin enters (S02.08): a role and a phone number, all four set or all null. */
+    /** The building contact an Admin enters (S02.08): a role code and an E.164 phone number, all four set or all null. */
     contactRole: text("contact_role"),
     contactPhone: text("contact_phone"),
     contactOwner: text("contact_owner"),
@@ -64,8 +64,8 @@ export const building = pgTable(
     check("building_storeys_valid", sql`${t.storeys} is null or ${t.storeys} between 1 and 150`),
     check("building_elevators_valid", sql`${t.elevators} is null or ${t.elevators} >= 0`),
     check("building_confirmation_complete", sql`(${t.floorsConfirmedAt} is null) = (${t.floorsConfirmedBy} is null)`),
-    check("building_contact_role_valid", sql`${t.contactRole} is null or (${t.contactRole} = btrim(${t.contactRole}) and char_length(${t.contactRole}) between 1 and 40 and ${t.contactRole} !~ '  ')`),
-    check("building_contact_phone_valid", sql`${t.contactPhone} is null or ${t.contactPhone} ~ '^[2-9][0-9]{2}-[2-9][0-9]{2}-[0-9]{4}$'`),
+    check("building_contact_role_valid", sql`${t.contactRole} is null or ${t.contactRole} in ('superintendent', 'building_management', 'property_office')`),
+    check("building_contact_phone_valid", sql`${t.contactPhone} is null or ${t.contactPhone} ~ '^\\+1[2-9][0-9]{2}[2-9][0-9]{6}$'`),
     check("building_contact_owner_valid", sql`${t.contactOwner} is null or ${t.contactOwner} = 'hub'`),
     check(
       "building_contact_complete",
