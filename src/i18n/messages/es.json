@@ -1334,7 +1334,8 @@
       "supplies": "[EN] Supplies",
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
-      "people": "[EN] People"
+      "people": "[EN] People",
+      "buildings": "[EN] Buildings"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -3942,6 +3943,77 @@
         "locked": "[EN] Too many wrong codes or passwords. Wait 15 minutes, then try again.",
         "notRequired": "[EN] Your authenticator setup has changed. Reload the page.",
         "unavailable": "[EN] The authenticator is not working right now. Try again in a few minutes."
+      }
+    },
+    "buildings": {
+      "title": "[EN] Buildings and floors",
+      "lead": "[EN] The pilot buildings come from the City of Toronto register. For each one, check the floors, correct any label that is wrong, then mark the building confirmed.",
+      "empty": "[EN] No buildings have been imported yet. Ask IT to run the buildings seed.",
+      "listTitle": "[EN] All buildings",
+      "storeysRegister": "[EN] {n} storeys in the register",
+      "storeysUnknown": "[EN] Storeys not known",
+      "floorsCount": "[EN] {n} floors",
+      "confirmed": "[EN] Floors confirmed",
+      "confirmedOn": "[EN] Floors confirmed on {date}",
+      "unconfirmed": "[EN] Floors not confirmed yet",
+      "notInRegister": "[EN] Not in latest register",
+      "notInRegisterLine": "[EN] The latest import did not find this building in the City register. It is kept as it is. Check whether it still belongs in the pilot.",
+      "edit": "[EN] Edit floors",
+      "editOf": "[EN] Edit floors of {address}",
+      "back": "[EN] All buildings",
+      "factsTitle": "[EN] From the City register",
+      "factsUpdated": "[EN] Last updated {date}",
+      "facts": {
+        "storeys": "[EN] Storeys",
+        "elevators": "[EN] Elevators",
+        "emergencyPower": "[EN] Emergency power",
+        "coolingRoom": "[EN] Cooling room",
+        "airConditioning": "[EN] Air conditioning",
+        "barrierFree": "[EN] Barrier-free entrance"
+      },
+      "yes": "[EN] Yes",
+      "no": "[EN] No",
+      "unknown": "[EN] Not known",
+      "floorsTitle": "[EN] Floors",
+      "floorsLead": "[EN] From the lowest floor up. Rename a floor to correct its label: its assignments stay with it. Remove a floor that does not exist, like a missing 13.",
+      "noFloors": "[EN] This building has no floors yet.",
+      "floorUnconfirmed": "[EN] not confirmed",
+      "floorLabel": "[EN] Label of the floor now called {label}",
+      "rename": "[EN] Rename",
+      "remove": "[EN] Remove",
+      "add": {
+        "title": "[EN] Add a floor",
+        "label": "[EN] Label",
+        "hint": "[EN] Up to 8 letters, digits, spaces or hyphens, like G, L, P1 or 14.",
+        "place": "[EN] Where it goes",
+        "top": "[EN] Above the top floor",
+        "bottom": "[EN] Below the lowest floor",
+        "submit": "[EN] Add floor"
+      },
+      "confirm": {
+        "title": "[EN] Confirm this building",
+        "lead": "[EN] Confirm when the floors above are exactly the floors people can be on.",
+        "submit": "[EN] Mark building confirmed"
+      },
+      "saved": {
+        "added": "[EN] Floor {label} added.",
+        "renamed": "[EN] Floor {from} is now called {to}.",
+        "removed": "[EN] Floor {label} removed.",
+        "confirmed": "[EN] Building confirmed with {n} floors."
+      },
+      "errors": {
+        "labelEmpty": "[EN] Enter a label for the floor.",
+        "labelTooLong": "[EN] A label can have at most 8 characters.",
+        "labelCharacters": "[EN] Use only letters, digits, spaces and hyphens in a label.",
+        "labelDuplicate": "[EN] This building already has a floor with that label. Labels count as the same when they differ only by capital letters or spaces.",
+        "floorHasAssignments": "[EN] Reassign or remove the ambassadors on this floor first",
+        "ambassadors": "[EN] Ambassadors on this floor: {names}",
+        "noChange": "[EN] Nothing to change: the floor already has that label.",
+        "alreadyConfirmed": "[EN] This building is already confirmed.",
+        "noFloors": "[EN] Add at least one floor before confirming the building.",
+        "buildingNotFound": "[EN] That building does not exist.",
+        "floorNotFound": "[EN] That floor does not exist any more. Reload the page.",
+        "forbidden": "[EN] Only an Admin can change buildings and floors."
       }
     }
   }

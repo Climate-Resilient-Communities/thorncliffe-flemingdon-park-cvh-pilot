@@ -2,9 +2,9 @@ import { describe, expect, it } from "vitest";
 import { PRIVILEGED_ACTIONS, REQUIRED_ASSURANCE, isPrivilegedAction, meetsAssurance } from "./assurance";
 
 describe("assurance of privileged actions", () => {
-  it("lists the spine's privileged actions: approve, send, correct, withdraw, drill, publish, cap, pause and account changes", () => {
+  it("lists the spine's privileged actions: approve, send, correct, withdraw, drill, publish, cap, pause, account changes and building edits", () => {
     expect([...PRIVILEGED_ACTIONS].sort()).toEqual(
-      ["accounts.manage", "alert.approve", "alert.correct", "alert.send", "alert.withdraw", "drill.run", "guide.publish", "sending.pause", "spend.cap"].sort(),
+      ["accounts.manage", "alert.approve", "alert.correct", "alert.send", "alert.withdraw", "buildings.manage", "drill.run", "guide.publish", "sending.pause", "spend.cap"].sort(),
     );
   });
 

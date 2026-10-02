@@ -37,14 +37,13 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       ],
     },
   ];
-  // The people page is the policy action `accounts.manage` (S01.12): shown to the roles that may open it.
-  if (can(role, "accounts.manage")) {
-    sections.push({
-      id: "admin",
-      label: englishText("hub.sections.admin"),
-      items: [{ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" }],
-    });
-  }
+  // Each item of "Administration" is shown to the roles that may open its page: People is the policy action
+  // `accounts.manage` (S01.12), Buildings is `buildings.manage` (S01.13). The prototype's navigation has no
+  // buildings item, so this one follows People's pattern.
+  const admin: HubNavSection["items"][number][] = [];
+  if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
+  if (can(role, "buildings.manage")) admin.push({ id: "buildings", label: englishText("hub.nav.buildings"), href: "/staff/buildings", icon: "pencil" });
+  if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }
 

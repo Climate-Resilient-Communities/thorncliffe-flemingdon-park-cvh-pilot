@@ -3,14 +3,15 @@ import type { PolicyAction } from "./policy";
 
 /**
  * The privileged actions (AD-4, spine "identity"): approve, send, correct, withdraw, drill,
- * publish, cap, pause and account changes. Each runs only from an `aal2` session (S01.10): an
- * Admin or Coordinator who entered an authenticator code at this sign-in. The pilot asks for the
- * code once per sign-in, never per action.
+ * publish, cap, pause and account changes, and the Admin's building and floor edits (S01.13).
+ * Each runs only from an `aal2` session (S01.10): an Admin or Coordinator who entered an
+ * authenticator code at this sign-in. The pilot asks for the code once per sign-in, never per action.
  *
  * The names are policy actions (./policy.ts, S01.12): a route or action names its policy action,
- * the guard asks `can(role, action, context)` first and then, for these, requires `aal2`. Only
- * `accounts.manage` has server actions today (Add a person, Re-issue, Reset password); each story
- * that adds one of the others names it on its route or action.
+ * the guard asks `can(role, action, context)` first and then, for these, requires `aal2`.
+ * `accounts.manage` has server actions (Add a person, Re-issue, Reset password) and so has
+ * `buildings.manage` (rename, add and remove floors, confirm a building); each story that adds
+ * one of the others names it on its route or action.
  */
 export const PRIVILEGED_ACTIONS = [
   "accounts.manage",
@@ -22,6 +23,7 @@ export const PRIVILEGED_ACTIONS = [
   "guide.publish",
   "spend.cap",
   "sending.pause",
+  "buildings.manage",
 ] as const satisfies readonly PolicyAction[];
 
 export type PrivilegedAction = (typeof PRIVILEGED_ACTIONS)[number];

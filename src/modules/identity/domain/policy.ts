@@ -58,7 +58,7 @@ export const AUTHORITY_MATRIX = [
   },
   {
     row: "Drills, publish directory, accounts, cap, pause",
-    actions: ["drill.run", "guide.publish", "accounts.manage", "spend.cap", "sending.pause"],
+    actions: ["drill.run", "guide.publish", "accounts.manage", "spend.cap", "sending.pause", "buildings.manage"],
     rules: { ambassador: "no", coordinator: "no", director: "no", admin: "yes" },
   },
   {
