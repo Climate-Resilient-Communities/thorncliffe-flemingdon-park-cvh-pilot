@@ -558,7 +558,7 @@ So that a lost phone or a departed volunteer cannot keep access.
 
 ### Story S01.16 — Developer generates the shared design tokens and layout primitives
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 1.5 h
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h
 - **Traces:** UX-DR1, UX-DR19 (spacing, targets), AR-27 (tokens), NFR-N2 · **Depends on:** S01.01 · **Branch:** `e01-s16-tokens-layout`
 - **Note:** placed before S01.09 in this document because S01.09 depends on it; story IDs are not renumbered, and execution order follows declared dependencies.
 
