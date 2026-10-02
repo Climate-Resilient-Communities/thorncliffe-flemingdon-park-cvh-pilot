@@ -285,7 +285,7 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
   });
 
-  test("shows the short 911 notice (the shared inline block) last, below everything else on home", async ({ page }) => {
+  test("shows the short 911 notice (the shared inline block) under Every day on home, with the find help and be ready links above it", async ({ page }) => {
     await stubFeed(page, [feedOf(1)]);
     await choose(page, MILEPOST);
 
@@ -298,9 +298,17 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await expect(notice).toContainText("911");
     const below = await page.evaluate(() => {
       const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().bottom;
-      return box('[data-component="not-911"]') >= box('[data-testid="home-alerts"]');
+      return box('[data-component="not-911"]') >= box('[data-testid="home-every-day"]');
     });
     expect(below).toBe(true);
+    await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
+    await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
+    await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
+    // The notice is the next thing after the "Every day" section: nothing sits between them.
+    const directlyUnder = await page.evaluate(
+      () => document.querySelector('[data-testid="home-every-day"]')!.nextElementSibling === document.querySelector('[data-component="not-911"]'),
+    );
+    expect(directlyUnder).toBe(true);
   });
 
   test("polls nothing while the page is hidden, and asks once, straight away, when it is visible again", async ({ page }) => {

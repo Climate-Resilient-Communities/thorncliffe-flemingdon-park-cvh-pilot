@@ -18,6 +18,13 @@ import { useFeed } from "./use-feed";
 import "../choices/choices.css";
 import "./home.css";
 
+// The Every day destinations the prototype's R-03 lists that have a route today. The map (R-14) is left out until it
+// has one.
+const DESTINATIONS = [
+  { key: "findHelp", icon: "search", path: "/directory" },
+  { key: "beReady", icon: "ready", path: "/ready" },
+] as const;
+
 type Translator = ReturnType<typeof useTranslations>;
 
 // How each thing a place can show looks: the catalog key of its words, and its icon. Every one has both, so a status is
@@ -257,7 +264,29 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </section>
           )}
 
-          {/* The short 911 notice (owner decision 36; prototype R-03's X01_Not911 inline), the shared component. */}
+          <section data-testid="home-every-day">
+            <Stack gap="related">
+              <ResidentText as="h2" testId="home-every-day-title">
+                {t("everyday")}
+              </ResidentText>
+              <ul className="home-list">
+                {DESTINATIONS.map((d) => (
+                  <li key={d.key}>
+                    <Link className="home-dest tap" href={`/${lang}${d.path}`} data-testid={`home-dest-${d.key}`}>
+                      <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
+                      <span className="home-place__text">
+                        <ResidentText className="home-place__name">{t(d.key)}</ResidentText>
+                        <ResidentText className="home-place__note">{t(`${d.key}Line`)}</ResidentText>
+                      </span>
+                      <span className="home-ico home-ico--chevron" aria-hidden="true" />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            </Stack>
+          </section>
+
+          {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), under "Every day". */}
           <Not911 variant="inline" t={x01} />
 
           {children}

@@ -1046,7 +1046,7 @@ So that every resident gets the same, complete set of listings in their language
 
 ### Story S02.06 — Resident browses and filters the directory
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 12 min (started 2026-10-02 20:08 UTC, merged 2026-10-02 23:20 UTC)
 - **Traces:** FR-D2, UX-DR10 (filters), UX-DR11, NFR-N7 · **Depends on:** S02.05, S02.03 · **Branch:** `e02-s06-directory-browse`
 
 As a resident,
@@ -1245,7 +1245,7 @@ So that I can see at a glance whether anything affects me.
 
 **Given** home (R-03)
 **When** it is shown, with or without chosen buildings
-**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is at the bottom, under "Everyday", and nowhere else on the screen
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is directly under the "Every day" destinations (find help, be ready), above the link to what the resident has told the CVH, and nowhere else on the screen (owner decision 37)
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
