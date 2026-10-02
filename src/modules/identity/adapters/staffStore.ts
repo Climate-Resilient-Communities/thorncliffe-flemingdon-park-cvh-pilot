@@ -1,6 +1,6 @@
-import { and, eq, inArray, isNull, sql } from "drizzle-orm";
-import type { StaffAccount } from "../domain/staffAccount";
+import { and, asc, eq, inArray, isNull, or, sql } from "drizzle-orm";
 import type { StaffStore } from "../application/ports";
+import type { StaffAccount } from "../domain/staffAccount";
 import { staffAccount, staffBootstrap, type StaffAccountRow } from "./schema";
 
 // Any fixed key: it only serialises the identity module's account writers.
@@ -135,5 +135,34 @@ export const drizzleStaffStore: StaffStore = {
 
   async completeBootstrap(tx) {
     await tx.update(staffBootstrap).set({ completedAt: sql`now()` }).where(eq(staffBootstrap.singleton, true));
+  },
+
+  async listAdmins(db) {
+    const rows = await db.select().from(staffAccount).where(eq(staffAccount.role, "admin")).orderBy(asc(staffAccount.id));
+    return rows.map(toAccount);
+  },
+
+  async lockAdminsAndAccount(tx, staffId) {
+    // In READ COMMITTED a row another transaction changed is read again once that transaction
+    // ends, and left out if it no longer matches: an Admin demoted meanwhile is not counted.
+    const rows = await tx
+      .select()
+      .from(staffAccount)
+      .where(or(eq(staffAccount.role, "admin"), eq(staffAccount.id, staffId)))
+      .orderBy(asc(staffAccount.id))
+      .for("update");
+    return rows.map(toAccount);
+  },
+
+  async permitAdminShortfall(tx) {
+    await tx.execute(sql`select set_config('cvh.admin_recovery', 'on', true)`);
+  },
+
+  async setStatus(tx, staffId, status) {
+    await tx.update(staffAccount).set({ status }).where(eq(staffAccount.id, staffId));
+  },
+
+  async setRole(tx, staffId, role) {
+    await tx.update(staffAccount).set({ role }).where(eq(staffAccount.id, staffId));
   },
 };

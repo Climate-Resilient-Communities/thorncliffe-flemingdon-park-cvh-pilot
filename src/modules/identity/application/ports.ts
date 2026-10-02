@@ -137,6 +137,23 @@ export interface StaffStore {
   startBootstrap(tx: DbTransaction, firstAdminId: string): Promise<void>;
   setSecondAdmin(tx: DbTransaction, secondAdminId: string): Promise<void>;
   completeBootstrap(tx: DbTransaction): Promise<void>;
+  /** Every Admin account, whatever its status (the shortfall banner's count). */
+  listAdmins(db: DbExecutor): Promise<StaffAccount[]>;
+  /**
+   * The two-Admin rule's lock (S01.06): locks every Admin row and the given account's row
+   * (`for update`, in id order) until the transaction ends, and returns them as they are once
+   * locked. Concurrent changes to Admins then run one after the other, each counting what the
+   * other committed.
+   */
+  lockAdminsAndAccount(tx: DbTransaction, staffId: string): Promise<StaffAccount[]>;
+  /**
+   * Lets this transaction leave fewer than two usable Admins: the recovery exception and the
+   * automatic locks only. The database trigger staff_account_keep_two_usable_admins refuses such an
+   * UPDATE otherwise. The setting ends with the transaction.
+   */
+  permitAdminShortfall(tx: DbTransaction): Promise<void>;
+  setStatus(tx: DbTransaction, staffId: string, status: StaffAccount["status"]): Promise<void>;
+  setRole(tx: DbTransaction, staffId: string, role: StaffAccount["role"]): Promise<void>;
 }
 
 /** A lock started by failed sign-ins: one username, or one client. */

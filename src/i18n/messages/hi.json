@@ -59,6 +59,8 @@
     "more": "और",
     "notInPrototype": "इस प्रोटोटाइप में नहीं",
     "notInPrototypeBody": "यह हिस्सा प्रोटोटाइप में नहीं बना है। कुछ नहीं बदला।",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "ठीक है",
     "about": "CVH के बारे में",
     "aboutBody": "कम्युनिटी वर्चुअल हब को Thorncliffe Park Community Hub, थॉर्नक्लिफ़ पार्क और फ़्लेमिंगडन पार्क के लिए चलाता है।",
@@ -3819,7 +3821,11 @@
         "forbidden": "[EN] Only an Admin can add people.",
         "unauthenticated": "[EN] Sign in to continue.",
         "providerError": "[EN] The account could not be created, and nothing was saved. Try again.",
-        "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy."
+        "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy.",
+        "selfAction": "[EN] You cannot change your own account. Ask another Admin.",
+        "accountRemoved": "[EN] This account was removed and cannot be changed.",
+        "noChange": "[EN] Nothing to change: the account is already like that.",
+        "notFound": "[EN] That account does not exist."
       }
     },
     "signIn": {
@@ -3878,6 +3884,11 @@
         "forbidden": "[EN] Only an Admin can re-issue a starting password.",
         "providerError": "[EN] The starting password could not be re-issued, and nothing changed. Try again."
       }
+    },
+    "admins": {
+      "twoAdminRule": "[EN] There must always be at least two usable Admins",
+      "shortfallBanner": "[EN] Fewer than two usable Admins",
+      "shortfallLine": "[EN] Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role."
     }
   }
 }

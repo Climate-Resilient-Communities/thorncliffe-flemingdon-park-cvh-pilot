@@ -52,6 +52,11 @@ const role = z.enum(STAFF_ROLES);
 const id = z.uuid();
 const count = z.number().int().nonnegative().max(1_000_000);
 const flag = z.boolean();
+/**
+ * S01.06: a recovery action or automatic lock that left fewer than two usable Admins. Present only
+ * then, and only as `true` (identity's adminShortfallMeta).
+ */
+const adminShortfall = z.literal(true);
 /** A lower_snake_case code (seed names, count keys, provider status). */
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 /** The City register's building number. */
@@ -85,13 +90,13 @@ export const AUDIT_META = {
 
   // Passwords (S01.07, S01.08). `reissued` restarts an expired starting password's 24 hours.
   "password.changed": meta({}),
-  "password.reset": meta({ admin_shortfall: flag.optional() }),
-  "password.reissued": meta({ admin_shortfall: flag.optional() }),
+  "password.reset": meta({ admin_shortfall: adminShortfall.optional() }),
+  "password.reissued": meta({ admin_shortfall: adminShortfall.optional() }),
 
   // Authenticators (S01.10, S01.11)
   "factor.enrolled": meta({}),
   "factor.reset": meta({
-    admin_shortfall: flag.optional(),
+    admin_shortfall: adminShortfall.optional(),
     recovery: z.enum(["lost_device", "all_admins_lost_access"]).optional(),
   }),
 
@@ -100,7 +105,7 @@ export const AUDIT_META = {
   "auth.failed": meta({ attempts: count.optional() }),
   "auth.locked": meta({
     lock: z.enum(["failed_sign_in", "expired_starting_password"]),
-    admin_shortfall: flag.optional(),
+    admin_shortfall: adminShortfall.optional(),
   }),
   "session.revoked": meta({
     cause: z.enum(["suspended", "removed", "password_reset", "factor_reset", "role_changed"]),

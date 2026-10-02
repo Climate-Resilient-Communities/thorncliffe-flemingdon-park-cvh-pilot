@@ -977,4 +977,9 @@
     username: 'Their username', submit: 'Re-issue', done: 'New starting password for {username}: {password}', doneLine: 'Give it to them in person. It works once, within 24 hours.',
     errors: { notFound: 'No account has that username.', notReissuable: 'This person already chose their own password, or their account is suspended or removed.',
       forbidden: 'Only an Admin can re-issue a starting password.', providerError: 'The starting password could not be re-issued, and nothing changed. Try again.' } } } });
+  /* The two-Admin rule (S01.06): refusals of account changes and the shortfall banner. Not a prototype screen. */
+  m(en, { staff: { admins: { twoAdminRule: 'There must always be at least two usable Admins', shortfallBanner: 'Fewer than two usable Admins',
+    shortfallLine: 'Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role.' },
+  people: { errors: { selfAction: 'You cannot change your own account. Ask another Admin.', accountRemoved: 'This account was removed and cannot be changed.',
+    noChange: 'Nothing to change: the account is already like that.', notFound: 'That account does not exist.' } } } });
 })();

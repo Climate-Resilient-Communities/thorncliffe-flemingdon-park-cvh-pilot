@@ -5,7 +5,7 @@
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { createIdentity, createStaffAuth, type AccountService, type CookieJar, type StaffAuthService } from "../../src/modules/identity";
+import { createIdentity, createStaffAuth, type CookieJar, type IdentityService, type StaffAuthService } from "../../src/modules/identity";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
@@ -15,7 +15,7 @@ let app: Db;
 let auditBaseline = 0;
 
 let idp: MemoryIdentityProvider;
-let accounts: AccountService;
+let accounts: IdentityService;
 let auth: StaffAuthService;
 let clock: Date;
 
@@ -442,6 +442,25 @@ describe("bootstrap completion", () => {
 
     advance(minutes(16));
     expect(await accounts.completeBootstrapIfReady(second)).toBe(true);
+  });
+});
+
+describe("the two-Admin rule (S01.06)", () => {
+  it("lets a failed-sign-in lock leave fewer than two usable Admins, marked admin_shortfall, and counts the locked Admin as unusable", async () => {
+    const first = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", own: "admin password one", enrolled: true });
+    const second = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${first}, ${second}, now())`;
+    expect(await accounts.adminShortfallBanner(second)).toBe(false);
+
+    for (let i = 0; i < 5; i++) await signIn(browser(), "admin1", "wrong");
+
+    expect(await auditsOf("auth.locked")).toEqual([
+      { actor_staff_id: null, action: "auth.locked", subject_id: first, outcome: "ok", meta: { lock: "failed_sign_in", admin_shortfall: true } },
+    ]);
+    expect(await accounts.adminShortfallBanner(second)).toBe(true);
+    expect(await accounts.suspendAccount(second, first)).toEqual({ ok: false, error: "two_admin_rule" });
+    advance(minutes(15));
+    expect(await accounts.adminShortfallBanner(second)).toBe(false);
   });
 });
 

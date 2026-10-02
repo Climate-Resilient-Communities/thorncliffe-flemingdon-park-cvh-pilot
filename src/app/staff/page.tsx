@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { englishText } from "@/i18n/text";
 import { Screen, Stack } from "@/ui";
 import { staffPage } from "./guard";
@@ -21,9 +22,9 @@ export default staffPage({ route: "/staff", access: "hub" }, (session) => (
           </p>
         </Stack>
         {session.role === "admin" && (
-          <a className="tap" href="/staff/people">
+          <Link className="tap" href="/staff/people">
             {englishText("staff.hub.addPerson")}
-          </a>
+          </Link>
         )}
         <SignOutButton label={englishText("staff.signOut")} />
       </Stack>

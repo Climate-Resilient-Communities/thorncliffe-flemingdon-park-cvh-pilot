@@ -1,7 +1,7 @@
 import { createHmac } from "node:crypto";
 import type { SetupGate } from "../../../contracts/staffAuth";
 import type { StaffRole } from "../../../contracts/staffRoles";
-import type { Db, DbExecutor } from "../../../platform/db";
+import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { SYSTEM_ACTOR, type REFUSAL_REASONS } from "../../audit";
 import { mayManageAccounts } from "../domain/accountAuthority";
 import { decideUnderBootstrap } from "../domain/bootstrap";
@@ -15,6 +15,7 @@ import { deriveStartingPassword } from "../domain/startingPassword";
 import { startingPasswordStanding } from "../domain/startingPasswordWindow";
 import type { AuditWriter } from "./accounts";
 import type { AuthSessions, IdentityProvider, OperationalLog, StaffStore, ThrottleStore } from "./ports";
+import { adminShortfallMeta, type AdminRecovery } from "./staffChanges";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
 
@@ -34,6 +35,12 @@ export interface StaffAuthDeps {
   throttleKey: string;
   /** Ends bootstrap when both pending Admins are usable (S01.05's AccountService). */
   completeBootstrapIfReady: (actorId: string) => Promise<boolean>;
+  /**
+   * S01.06's recovery exception, called in an automatic lock's transaction before the account
+   * changes: the lock always goes ahead, and the result says whether it leaves fewer than two
+   * usable Admins (`admin_shortfall` on its audit record).
+   */
+  beginAdminRecovery: (tx: DbTransaction, targetId: string) => Promise<AdminRecovery>;
 }
 
 /** The signed-in staff member of a request, with the gate of the setup sequence they are at. */
@@ -122,10 +129,19 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       );
       const usernameLock = lockAfterFailure(inWindow.username, USERNAME_LIMIT, now);
       const clientLock = lockAfterFailure(inWindow.client, CLIENT_LIMIT, now);
+      // A known account's username lock is an automatic lock: S01.06's recovery exception, then the lock.
+      const startsAccountLock = usernameLock !== null && account !== null && inWindow.username === USERNAME_LIMIT.failures;
+      const recovery = startsAccountLock && account ? await deps.beginAdminRecovery(tx, account.id) : null;
       if (usernameLock) await throttle.setLock(tx, "username", usernameHash, usernameLock);
       if (clientLock) await throttle.setLock(tx, "client", clientHash, clientLock);
-      if (usernameLock && account && inWindow.username === USERNAME_LIMIT.failures) {
-        await audit.record(tx, { action: "auth.locked", actorStaffId: SYSTEM_ACTOR, subjectType: "staff_account", subjectId: account.id, meta: { lock: "failed_sign_in" } });
+      if (recovery && account) {
+        await audit.record(tx, {
+          action: "auth.locked",
+          actorStaffId: SYSTEM_ACTOR,
+          subjectType: "staff_account",
+          subjectId: account.id,
+          meta: { lock: "failed_sign_in", ...adminShortfallMeta(recovery) },
+        });
       }
       return inWindow;
     });
@@ -142,13 +158,14 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     const locked =
       standing === "expired" &&
       (await db.transaction(async (tx) => {
+        const recovery = await deps.beginAdminRecovery(tx, account.id);
         if (!(await store.lockPendingReissue(tx, account.id))) return false;
         await audit.record(tx, {
           action: "auth.locked",
           actorStaffId: SYSTEM_ACTOR,
           subjectType: "staff_account",
           subjectId: account.id,
-          meta: { lock: "expired_starting_password", reason: "expired_starting_password" },
+          meta: { lock: "expired_starting_password", reason: "expired_starting_password", ...adminShortfallMeta(recovery) },
         });
         return true;
       }));

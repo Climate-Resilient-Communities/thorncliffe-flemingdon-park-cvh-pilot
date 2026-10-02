@@ -66,6 +66,8 @@ export function AddPersonForm({ labels, roles, note, initialState = { status: "i
           <p>{state.username}</p>
           <p>{state.password}</p>
           <p>{state.line}</p>
+          {/* A full page load on purpose: it discards the created-state (and its one-time password) from memory. */}
+          {/* eslint-disable-next-line @next/next/no-html-link-for-pages */}
           <a className="tap" href="/staff/people">
             {labels.addAnother}
           </a>

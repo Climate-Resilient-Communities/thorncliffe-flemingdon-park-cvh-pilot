@@ -13,7 +13,7 @@ import {
   memoryIdentityProvider,
   supabaseAuthSessions,
   supabaseIdentityProvider,
-  type AccountService,
+  type IdentityService,
   type AuthSessions,
   type AuthSessionsFactory,
   type CookieJar,
@@ -23,7 +23,7 @@ import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 
 interface Composition {
-  accounts: AccountService;
+  accounts: IdentityService;
   auth: StaffAuthService;
   sessions: AuthSessionsFactory;
 }
@@ -74,8 +74,8 @@ function compose(): Composition {
   return composition;
 }
 
-/** The account use cases (S01.05). */
-export function identity(): AccountService {
+/** The account use cases (S01.05) and changes under the two-Admin rule (S01.06). */
+export function identity(): IdentityService {
   return compose().accounts;
 }
 

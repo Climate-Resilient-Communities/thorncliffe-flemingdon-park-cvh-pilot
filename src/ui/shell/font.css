@@ -1,0 +1,16 @@
+/*
+ * The font of the page (AD-16). --font-script is the active language's list of faces (its Noto subset, then
+ * Public Sans); a resident page's <html> sets it inline from app/[lang]/fonts.ts. Everywhere else it is the
+ * tokens' stack. The selector is more specific than the base rule in theme.css that sets font-family on
+ * body, [data-surface] and div[lang], so those elements keep the language's face instead of resetting it.
+ */
+@layer base {
+  :root {
+    --font-script: var(--type-family-sans);
+  }
+
+  :root,
+  :root :where(body, [data-surface], div[lang]) {
+    font-family: var(--font-script);
+  }
+}
