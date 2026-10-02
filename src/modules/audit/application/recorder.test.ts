@@ -1,11 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
-import type { Db, DbExecutor } from "../../../platform/db";
+import type { Db, DbTransaction } from "../../../platform/db";
 import type { AuditRecord } from "../domain/actions";
 import { createAuditRecorder, type AuditStore } from "./recorder";
 
 const STAFF = "3f0b8f9e-6a51-4c1e-9d2a-0b6f1c2d3e4f";
-const TX = { tx: true } as unknown as DbExecutor;
-const DB = { transaction: async (fn: (tx: DbExecutor) => Promise<void>) => fn(TX) } as unknown as Db;
+const TX = { tx: true } as unknown as DbTransaction;
+const DB = { transaction: async (fn: (tx: DbTransaction) => Promise<void>) => fn(TX) } as unknown as Db;
 
 function setup(insert: AuditStore["insert"] = async () => {}) {
   const stored: AuditRecord[] = [];
@@ -52,6 +52,33 @@ describe("record", () => {
       }),
     ).rejects.toThrow(/fields outside the schema: email/);
     expect(store.insert).not.toHaveBeenCalled();
+  });
+});
+
+describe("record and recordRefusal never echo personal data", () => {
+  const PHONE = "+14165550123";
+  const EMAIL = "jane@example.com";
+  const BAD = [
+    ["a phone number as a seed count key", { seed: "buildings", counts: { [PHONE]: 1 } }],
+    ["an email address as a seed count key", { seed: "buildings", counts: { [EMAIL]: "x" } }],
+    ["a phone number as a seed count value", { seed: "buildings", counts: { [PHONE]: "x" } }],
+  ] as const;
+
+  it.each(BAD)("keeps %s out of the error and the log line", async (_, meta) => {
+    const { recorder, log } = setup();
+    const event = { action: "seed.run", actorStaffId: null, subjectType: "guides_and_numbers", subjectId: null, meta } as const;
+
+    const thrown = await recorder.record(TX, event as never).catch((error: Error) => error);
+    await recorder.recordRefusal(DB, event as never);
+
+    expect(thrown).toBeInstanceOf(Error);
+    expect((thrown as Error).message).toMatch(/^seed\.run: /);
+    expect(JSON.stringify(log.error.mock.calls)).toMatch(/audit\.refusal_not_recorded/);
+    for (const text of [(thrown as Error).message, JSON.stringify(log.error.mock.calls)]) {
+      expect(text).not.toContain("4165550123");
+      expect(text).not.toContain("jane");
+      expect(text).not.toContain("example.com");
+    }
   });
 });
 

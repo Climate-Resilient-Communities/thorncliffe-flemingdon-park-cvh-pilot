@@ -133,8 +133,81 @@ describe("toAuditRecord", () => {
     expect(() => toAuditRecord(event(overrides as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
   });
 
+  it.each([
+    ["a uuid", FLOOR],
+    ["a small integer id", "4155426"],
+    ["a lower_snake_case code", "guides_and_numbers"],
+    ["a Twilio message SID", "SM0123456789abcdef0123456789abcdef"],
+    ["a Twilio message SID with a long run of digits", "MM00000000000000000000000000000000"],
+  ])("accepts %s as subject id", (_, subjectId) => {
+    expect(() => toAuditRecord(event({ subjectId }), "ok")).not.toThrow();
+  });
+
+  it.each([
+    ["colons", "416:555:0199"],
+    ["underscores between digits", "416_555_0199"],
+    ["a username with a dot", "jane.doe"],
+    ["a kebab-case username", "rvh-jane-doe"],
+    ["a ten digit number", "4165550199"],
+    ["a SID of the wrong length", "SM0123"],
+    ["an upper case SID", "SM0123456789ABCDEF0123456789ABCDEF"],
+  ])("rejects %s as subject id", (_, subjectId) => {
+    expect(() => toAuditRecord(event({ subjectId }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it.each(["/api/staff/accounts/[id]", "/api/staff", "/staff/[staff_id]/sign-in"])(
+    "accepts the route %s",
+    (route) => {
+      expect(() => toAuditRecord(event({ action: "permission.denied", meta: { status: 403, route } }), "ok")).not.toThrow();
+    },
+  );
+
+  it.each([
+    ["/api/staff/416/555/0199"],
+    ["/api/x/416_555_0199"],
+    ["/api/staff/jane.doe"],
+    ["/staff/accounts/rvh-jane-doe-1"],
+    ["/staff/accounts/Jane"],
+    ["/staff/[id"],
+    ["api/staff"],
+    ["/"],
+    ["/staff//accounts"],
+  ])("rejects the route %s", (route) => {
+    expect(() => toAuditRecord(event({ action: "permission.denied", meta: { status: 403, route } }), "ok")).toThrow(AuditRecordError);
+  });
+
   it("keeps the drill flag", () => {
     expect(toAuditRecord(event({ isDrill: true }), "ok").isDrill).toBe(true);
+  });
+});
+
+describe("error messages never echo values", () => {
+  const messageOf = (meta: unknown) => {
+    try {
+      toAuditRecord(event({ action: "seed.run", meta } as Partial<AuditEvent>), "ok");
+    } catch (error) {
+      return (error as Error).message;
+    }
+    throw new Error("expected the record to be refused");
+  };
+
+  it.each([
+    ["+14165550123"],
+    ["jane@example.com"],
+    ["jane"],
+    ["Jane Doe"],
+  ])("masks the record key %s in the path", (key) => {
+    const message = messageOf({ seed: "buildings", counts: { [key]: "x" } });
+
+    expect(message).toBe("seed.run: meta.counts.(key) is invalid");
+    expect(message).not.toContain(key);
+  });
+
+  it("keeps schema keys and array indexes", () => {
+    expect(messageOf({ seed: 5 })).toBe("seed.run: meta.seed is invalid");
+    expect(() =>
+      toAuditRecord(event({ action: "assignment.saved", meta: { floor_ids: [FLOOR, "x"] } } as Partial<AuditEvent>), "ok"),
+    ).toThrow("assignment.saved: meta.floor_ids.1 is invalid");
   });
 });
 
@@ -146,8 +219,19 @@ describe("findSensitiveValue", () => {
     ["jane.doe@example.org", "meta"],
     [{ a: [1, "x", "jane@example.com"] }, "meta.a[2]"],
     [12345678901, "meta"],
+    ["416/555/0199", "meta"],
+    ["416_555_0199", "meta"],
+    ["416:555:0199", "meta"],
   ])("finds %j", (value, path) => {
     expect(findSensitiveValue(value)).toBe(path);
+  });
+
+  it.each([
+    ["SM00000000000000000000000000000000"],
+    ["MM12345678901234567890123456789012"],
+  ])("passes the Twilio message SID %s, as a whole value only", (sid) => {
+    expect(findSensitiveValue(sid)).toBeNull();
+    expect(findSensitiveValue(`${sid} `)).toBe("meta");
   });
 
   it.each([["4155426"], ["123e4567-e89b-12d3-a456-426614174000"], ["00000000-0000-4000-8000-000000000000"], [43], ["aal2"], [null]])(

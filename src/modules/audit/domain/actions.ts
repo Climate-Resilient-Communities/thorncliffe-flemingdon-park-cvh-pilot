@@ -38,6 +38,8 @@ export const REFUSAL_REASONS = [
   "provider_error",
 ] as const;
 
+const ROUTE_PATTERN = /^(\/([a-z][a-z-]*|\[[a-z_]+\]))+$/;
+
 const role = z.enum(STAFF_ROLES);
 const id = z.uuid();
 const count = z.number().int().nonnegative().max(1_000_000);
@@ -50,8 +52,12 @@ const rsn = z.string().regex(/^[0-9]{1,9}$/);
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
 /** A policy action name such as `alert.approve`. */
 const permission = z.string().regex(/^[a-z][a-z0-9_]*(?:\.[a-z][a-z0-9_]*){0,3}$/).max(64);
-/** A route pattern such as `/api/staff/accounts/[id]` (dynamic segments as patterns, never values). */
-const route = z.string().regex(/^\/[A-Za-z0-9_\-/[\].]*$/).max(120);
+/**
+ * A route pattern such as `/api/staff/accounts/[id]`: segments are lowercase
+ * words or `[param]` placeholders, so a phone number, a username or a token
+ * cannot be a segment (dynamic segments as patterns, never values).
+ */
+const route = z.string().regex(ROUTE_PATTERN).max(120);
 
 /** Fields every action may carry. */
 const common = {
@@ -125,7 +131,12 @@ export type AuditOutcome = "ok" | "refused";
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];
 
-export interface AuditEvent<A extends AuditAction = AuditAction> {
+/** `meta` is optional only when no field of the action's schema is required. */
+type MetaField<A extends AuditAction> = Record<string, never> extends AuditMeta<A>
+  ? { meta?: AuditMeta<A> }
+  : { meta: AuditMeta<A> };
+
+export type AuditEvent<A extends AuditAction = AuditAction> = {
   action: A;
   /** The staff member who acted; null for the system (scripts, jobs, unknown usernames). */
   actorStaffId: string | null;
@@ -134,8 +145,7 @@ export interface AuditEvent<A extends AuditAction = AuditAction> {
   /** The subject's id; never a phone number, email address or username. */
   subjectId: string | null;
   isDrill?: boolean;
-  meta?: AuditMeta<A>;
-}
+} & MetaField<A>;
 
 /** A validated record, ready to insert. */
 export interface AuditRecord {
@@ -156,17 +166,19 @@ export class AuditRecordError extends Error {
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const EMAIL = /[^\s@]+@[^\s@]+\.[^\s@]+/;
 // Ten or more digits, allowing the separators phone numbers are written with.
-const PHONE = /(?:\d[\s().+-]{0,3}){10,}/;
+const PHONE = /(?:\d[\s().+\-/_:]{0,3}){10,}/;
+// A Twilio message SID: SM or MM and 32 lowercase hex digits, which can hold long digit runs.
+const TWILIO_SID = /^(SM|MM)[0-9a-f]{32}$/;
 
 /**
  * Defensive check on values (the strict schemas are the main guard): the path
  * of the first string that looks like an email address or a phone number, or
- * of a number with ten or more digits. UUIDs are skipped (their hex can hold
- * long digit runs).
+ * of a number with ten or more digits. Whole values that are UUIDs or Twilio
+ * message SIDs are skipped (their hex can hold long digit runs).
  */
 export function findSensitiveValue(value: unknown, path = "meta"): string | null {
   if (typeof value === "string") {
-    if (UUID.test(value)) return null;
+    if (UUID.test(value) || TWILIO_SID.test(value)) return null;
     return EMAIL.test(value) || PHONE.test(value) ? path : null;
   }
   if (typeof value === "number") return Math.abs(value) >= 1e9 ? path : null;
@@ -187,7 +199,23 @@ export function findSensitiveValue(value: unknown, path = "meta"): string | null
 }
 
 const SUBJECT_TYPE = /^[a-z][a-z0-9_]{0,39}$/;
-const SUBJECT_ID = /^[A-Za-z0-9_.:-]{1,64}$/;
+/**
+ * A subject id is a uuid, a small integer id, a lower_snake_case code (no
+ * hyphens, dots or colons, a letter first) or a Twilio message SID: nothing a
+ * phone number, an email address, a username or a token can be written as.
+ */
+const SUBJECT_ID = /^(?:[0-9]{1,9}|[a-z][a-z0-9_]{0,39}|(?:SM|MM)[0-9a-f]{32})$/;
+
+/**
+ * A path segment safe to print: an array index, or a key of the action's own
+ * schema. Anything else is a key of a record (`seed.run` counts) or came from
+ * the caller, and may hold a phone number or an email address.
+ */
+function safeSegment(action: AuditAction, segment: PropertyKey, depth: number): string {
+  if (typeof segment === "number") return String(segment);
+  const known = depth === 0 && typeof segment === "string" && Object.hasOwn(AUDIT_META[action].shape, segment);
+  return known ? String(segment) : "(key)";
+}
 
 function isAuditAction(action: unknown): action is AuditAction {
   return typeof action === "string" && Object.hasOwn(AUDIT_META, action);
@@ -208,14 +236,14 @@ export function toAuditRecord(event: AuditEvent, outcome: AuditOutcome): AuditRe
   if (!SUBJECT_TYPE.test(event.subjectType)) {
     throw new AuditRecordError(`${action}: subjectType must be a lower_snake_case type`);
   }
-  if (event.subjectId !== null && (!SUBJECT_ID.test(event.subjectId) || findSensitiveValue(event.subjectId))) {
+  if (event.subjectId !== null && (!(UUID.test(event.subjectId) || SUBJECT_ID.test(event.subjectId)) || findSensitiveValue(event.subjectId))) {
     throw new AuditRecordError(`${action}: subjectId must be an id, never personal data`);
   }
 
   const parsed = AUDIT_META[action].safeParse(event.meta ?? {});
   if (!parsed.success) {
     const problems = parsed.error.issues.map((issue) => {
-      const where = ["meta", ...issue.path.map(String)].join(".");
+      const where = ["meta", ...issue.path.map((segment, depth) => safeSegment(action, segment, depth))].join(".");
       if (issue.code !== "unrecognized_keys") return `${where} is invalid`;
       // Name the extra fields only when the name itself cannot carry data.
       const keys = issue.keys.map((key) => (/^[A-Za-z_]{1,40}$/.test(key) ? key : "(unnamed)"));
