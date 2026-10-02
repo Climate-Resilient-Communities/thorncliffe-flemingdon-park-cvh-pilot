@@ -214,12 +214,12 @@ describe("the committed starter set", () => {
 
 describe("the draft tuning questions", () => {
   const { questions } = parseQuestions(REAL, IDS);
-  const drafts = questions.filter((q) => q.author !== "dev-agent");
+  const drafts = questions.filter((q) => q.author === "claude-draft"); // ambassador questions (S03.08) are not drafts
 
   it("are written by claude-draft, unchecked, and in the tuning subset only (the evaluation subset stays ambassador-written, S03.08)", () => {
     expect(drafts.length).toBeGreaterThan(0);
     for (const q of drafts) {
-      expect(q.author, q.id).toBe("claude-draft");
+      expect(q.lang, q.id).toBeTruthy();
       expect(q.split, q.id).toBe("tuning");
       expect([q.checked_by, q.checked_on], q.id).toEqual([null, null]);
     }
