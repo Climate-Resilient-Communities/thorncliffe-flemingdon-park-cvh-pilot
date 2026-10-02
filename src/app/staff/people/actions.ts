@@ -6,6 +6,7 @@ import { staffAction } from "../guard";
 import { identity, staffAuth } from "../identity";
 import { addPersonFromForm, addPersonValues, type AddPersonState } from "./addPerson";
 import { reissueFromForm, reissueUsername, type ReissueState } from "./reissue";
+import { resetPasswordFromForm, resetUsername, type ResetPasswordState } from "./resetPassword";
 
 const refusalMessage = (error: "unauthenticated" | "setup_incomplete") =>
   englishText(error === "unauthenticated" ? REFUSAL_MESSAGE_KEYS.unauthenticated : "staff.setup.incomplete");
@@ -22,4 +23,11 @@ export const reissueAction = staffAction(
   { route: "/staff/people", access: "hub" },
   async (session, _previous: ReissueState, form: FormData): Promise<ReissueState> => reissueFromForm({ staffAuth }, session, form),
   (error, _previous, form): ReissueState => ({ status: "refused", message: refusalMessage(error), username: reissueUsername(form) }),
+);
+
+/** "Reset password" (S01.08), on the same page. */
+export const resetPasswordAction = staffAction(
+  { route: "/staff/people", access: "hub" },
+  async (session, _previous: ResetPasswordState, form: FormData): Promise<ResetPasswordState> => resetPasswordFromForm({ identity }, session, form),
+  (error, _previous, form): ResetPasswordState => ({ status: "refused", message: refusalMessage(error), username: resetUsername(form) }),
 );
