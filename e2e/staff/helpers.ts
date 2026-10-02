@@ -16,16 +16,19 @@ export function openDatabase(): postgres.Sql {
   return postgres(ownerUrl, { max: 1, onnotice: () => {} });
 }
 
-/** A new Ambassador on a starting password (the one role that reaches the Hub before authenticators exist, S01.10). */
-export async function newAmbassador(sql: postgres.Sql, firstName: string, lastName: string) {
+/** A new account on its starting password; usernames are unique per run. */
+export async function newAccount(sql: postgres.Sql, role: "ambassador" | "coordinator", firstName: string, lastName: string) {
   const username = `${firstName.toLowerCase()}${randomBytes(3).toString("hex")}`;
   const startingPassword = `rvh-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
   const authUserId = memoryIdentityProvider({ file: fakeFile }).plant(`${username}@staff.cvh.invalid`, { password: startingPassword, createdAt: new Date() });
   await sql`
     insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
-    values (${randomUUID()}, ${authUserId}, ${username}, ${firstName}, ${lastName}, 'someone@example.org', 'ambassador', true, now())`;
+    values (${randomUUID()}, ${authUserId}, ${username}, ${firstName}, ${lastName}, 'someone@example.org', ${role}, true, now())`;
   return { username, startingPassword };
 }
+
+/** A new Ambassador (the one role that reaches the Hub before authenticators exist, S01.10). */
+export const newAmbassador = (sql: postgres.Sql, firstName: string, lastName: string) => newAccount(sql, "ambassador", firstName, lastName);
 
 /** Signs in with the starting password, chooses a new one and lands on the Hub. */
 export async function signInToTheHub(page: Page, sql: postgres.Sql, firstName: string, lastName: string) {
