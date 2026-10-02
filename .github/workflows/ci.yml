@@ -77,10 +77,19 @@ jobs:
         env:
           TEST_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       # Reads the release in production from PRODUCTION_URL only when a migration
-      # carries a contract note. On main this branch's changes are already in
-      # origin/main; the production job checks pending migrations again.
+      # carries a contract note. On main HEAD is origin/main, so comparing with it
+      # would check nothing: there the base is the commit before the push (all of a
+      # multi-commit push), or the first parent when that is unknown (a new branch,
+      # a forced push). The production job checks pending migrations again.
       - name: Check migrations for destructive changes
-        run: npm run db:check-destructive -- --base origin/main --removals "$RUNNER_TEMP/migration-removals.json"
+        run: |
+          base=origin/main
+          if [ "$GITHUB_REF" = refs/heads/main ]; then
+            base=HEAD~1
+            before=${{ github.event.before }}
+            if [[ "$before" =~ [1-9a-f] ]] && git merge-base --is-ancestor "$before" HEAD; then base=$before; fi
+          fi
+          npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
       # Fails if a catalog is stale or a required string is missing; the per-language report
@@ -135,6 +144,12 @@ jobs:
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    # Previews share the single Supabase project, so `vercel pull --environment=preview`
+    # brings its DATABASE_URL and SUPABASE_SECRET_KEY (change proposal 2026-10-02-single-supabase).
+    # This environment keeps PRODUCTION_DATABASE_URL (the migration secret) and production
+    # promotion to main. A Vercel token is team-scoped: a preview token is least-privilege
+    # only if the owner creates it with minimal scope.
+    environment: preview
     permissions:
       contents: read
       pull-requests: read
@@ -163,18 +178,28 @@ jobs:
           fi
       - if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
+      # The gates are the scripts that get a token before any branch code has
+      # run, so they come from main, not from the branch being previewed.
+      - name: Check out main's CI scripts
+        if: steps.settings.outputs.ok == 'true'
+        uses: actions/checkout@v7
+        with:
+          ref: main
+          path: trusted
+          sparse-checkout: scripts/ci
+          persist-credentials: false
       - name: Confirm the branch has an open pull request
         id: pr
         if: steps.settings.outputs.ok == 'true'
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: scripts/ci/open-pr-gate.sh
+        run: trusted/scripts/ci/open-pr-gate.sh
       - name: Confirm production already has a deployment
         id: vercel
         if: steps.pr.outputs.open == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
-        run: scripts/ci/preview-gate.sh
+        run: trusted/scripts/ci/preview-gate.sh
       - if: steps.vercel.outputs.deploy == 'true'
         uses: actions/setup-node@v7
         with:
@@ -218,6 +243,13 @@ jobs:
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    # The production environment holds VERCEL_TOKEN and PRODUCTION_DATABASE_URL and
+    # accepts deployments from main only (repository settings > Environments), so a
+    # push to any other branch cannot read them. The secrets checks below read
+    # `secrets.*` and work whether a secret is repository- or environment-scoped.
+    environment:
+      name: production
+      url: ${{ vars.PRODUCTION_URL }}
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}

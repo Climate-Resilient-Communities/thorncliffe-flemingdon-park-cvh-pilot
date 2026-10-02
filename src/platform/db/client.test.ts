@@ -2,7 +2,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetEnvCache } from "../config/env";
 import { createDb, getDb, resetDb } from "./client";
 
-const POOLER = "postgres://postgres.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres";
+const POOLER = "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres";
 
 describe("database client", () => {
   afterEach(() => {

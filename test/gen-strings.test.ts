@@ -323,6 +323,33 @@ describe("string report and checks", () => {
     expect(result.stderr).toContain(`"fr" is missing required keys: ${key}`);
   });
 
+  it.each([
+    ["a space", "' '"],
+    ["an empty string", "''"],
+    ["a tab and newline", "'\\t\\n'"],
+    ["a number", "5"],
+    ["a list", "['C']"],
+  ])("fail when a language's required x01.call is %s, which counts as missing", (name, value) => {
+    const fr = `{ x01: { text: 'T', call: ${value}, short: 'S', sms: 'M', print: 'P' }, ${REQUIRED.label}, ${REQUIRED.unknown} }`;
+    const dir = writePrototype(`blank-${name}`, { en: complete, fr }, ["fr"]);
+    const out = path.join(work, `blank-out-${name}`);
+    const result = generate("--source", dir, "--out", out);
+
+    expect(result.status).toBe(1);
+    expect(result.stderr).toContain('"fr" is missing required keys: x01.call');
+    expect(readFileSync(path.join(out, "fr.json"), "utf8")).toContain("[EN]");
+  });
+
+  it("keep a deliberately empty translation of a key that is not required", () => {
+    const en = `{ other: 'O', ...${complete} }`;
+    const fr = `{ other: '', ...${complete} }`;
+    const dir = writePrototype("blank-optional", { en, fr }, ["fr"]);
+    const result = generate("--source", dir, "--out", path.join(work, "blank-optional-out"));
+
+    expect(result.status).toBe(0);
+    expect(result.stdout).toContain("| fr | 0 | none |");
+  });
+
   it("do not fail for a missing key outside the required set", () => {
     const dir = writePrototype("optional", { en: `{ other: 'O', ...${complete} }`, fr: complete }, ["fr"]);
     const result = generate("--source", dir, "--out", path.join(work, "optional-out"));

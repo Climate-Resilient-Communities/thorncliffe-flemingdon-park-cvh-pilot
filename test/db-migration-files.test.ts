@@ -3,6 +3,7 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { checksum, readMigrations } from "../scripts/db/migrations.mjs";
+import { unacceptedChanges } from "../scripts/db/contracts.mjs";
 import { findDestructiveChanges, findTransactionProblems, lexSql } from "../scripts/db/sql.mjs";
 
 function withDir(files: Record<string, string>, test: (dir: string) => void) {
@@ -31,7 +32,7 @@ describe("db/migrations", () => {
     for (const migration of migrations) {
       expect(findTransactionProblems(migration.sql), migration.file).toEqual([]);
       if (!/^--\s*contract:/im.test(migration.sql)) {
-        expect(findDestructiveChanges(migration.sql), migration.file).toEqual([]);
+        expect(unacceptedChanges(migration.file, findDestructiveChanges(migration.sql)), migration.file).toEqual([]);
       }
     }
   });
