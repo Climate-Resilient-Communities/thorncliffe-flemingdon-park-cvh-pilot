@@ -15,7 +15,7 @@ const thread = {
   id: ID,
   slug: "power-4-milepost",
   types: ["power"],
-  audience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }] },
+  audience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }], groups: [], types: ["power"] },
   state: "open",
   valid_until: "2026-10-02T15:00:00.000Z",
   entries: [

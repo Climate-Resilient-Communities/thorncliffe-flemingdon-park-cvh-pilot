@@ -1,5 +1,6 @@
 import { z } from "zod";
-import { RsnSchema } from "./buildingList";
+import { AudienceSchema } from "./audience";
+import { RsnSchema } from "./places";
 import { LangCodeSchema } from "./lang";
 
 // FeedV1 (AD-17, AD-20): what `GET /api/feed?lang=` answers. The same for every visitor (AD-3): it names no resident,
@@ -37,8 +38,7 @@ export const FeedThreadSchema = z.strictObject({
   id: z.uuid(),
   slug: z.string().min(1),
   types: z.array(z.string()).min(1),
-  /** The audience as the thread's author set it; S04.04's audience schema narrows this. */
-  audience: z.looseObject({ scope: z.enum(["neighbourhood", "buildings"]) }),
+  audience: AudienceSchema,
   state: z.enum(["open", "closed"]),
   close_reason: z.string().optional(),
   valid_until: z.iso.datetime(),

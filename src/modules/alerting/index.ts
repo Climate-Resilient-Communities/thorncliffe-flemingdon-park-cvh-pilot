@@ -2,9 +2,8 @@
 // lifecycle they follow. Other modules and the app use only what is exported here.
 import type { Db } from "../../platform/db";
 import { readStaffStanding } from "../identity";
-import { floorsOfBuilding, neighbourhoodIds } from "../places";
+import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds } from "../places";
 import * as audit from "../audit";
-import { createResidentBuildings } from "../places";
 import { createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 
