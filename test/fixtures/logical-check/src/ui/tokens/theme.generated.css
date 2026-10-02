@@ -1,0 +1,5 @@
+@theme reference {
+  --spacing-icon: var(--gap-icon);
+  --spacing-card: var(--inset-card);
+  --spacing-gutter: var(--gutter-resident);
+}

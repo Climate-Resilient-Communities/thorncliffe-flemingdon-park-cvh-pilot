@@ -19,3 +19,15 @@
 [dir="rtl"] .card { margin-inline-start: 0; }
 :root[dir='rtl'] .card { padding-inline: 0; }
 .s { @apply pl-2 mr-4; }
+.t { inset: 0 var(--gap-icon) 0 var(--gap-target); }
+.u { border-width: 1px 2px 3px 4px; }
+.v { border-color: red blue red green; }
+.w { border-style: solid dashed solid dotted; }
+.x { border-radius: 4px 0 0 4px; }
+.y { border-radius: 4px 8px; }
+.z { border-radius: 4px / 2px 6px; }
+.aa { text-align: LEFT; }
+.ab { float: Right !IMPORTANT; }
+.ac:dir(rtl) { margin-inline-start: 0; }
+:dir(ltr) .card { padding-inline: 0; }
+.ad { border-radius: 4px 8px 4px 8px/2px; }

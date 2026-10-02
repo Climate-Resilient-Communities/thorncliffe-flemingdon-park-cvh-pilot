@@ -10,3 +10,8 @@
 [dir="rtl"] .shell-ico--mirror { transform: scaleX(-1); }
 [dir="rtl"] .shell-ico--back, [dir="rtl"] .shell-ico--chevron { transform: scaleX(-1); }
 [dir="rtl"] .cvh-no-mirror .cvh-ico { transform: none; }
+.i { inset: 0; inset: 1px 2px; inset: 1px 2px 3px 2px; inset: 0 var(--gap-icon) 0 var(--gap-icon); inset: auto; }
+.j { border-width: 1px 2px 3px 2px; border-color: red blue green blue; border-style: solid; border-style: solid dashed; }
+.k { border-radius: 4px; border-radius: 4px 4px 0 0; border-radius: 8px 8px; border-radius: 4px/4px; border-radius: 4px 4px 0 0 / 2px 2px 0 0; }
+.l { border-radius: calc(var(--radius-card) / 2); border-radius: var(--radius-card) var(--radius-card) 0 0; }
+:dir(rtl) .shell-ico--mirror { transform: scaleX(-1); }
