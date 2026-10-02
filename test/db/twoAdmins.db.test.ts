@@ -167,6 +167,8 @@ describe("three usable Admins", () => {
     expect(row).toEqual({ role: "coordinator", status: "active" });
     expect(await auditRecords()).toEqual([
       { actor_staff_id: a, action: "account.role_changed", subject_id: c, outcome: "ok", meta: { from: "admin", to: "coordinator" } },
+      // S01.08: every account change ends the account's sessions.
+      { actor_staff_id: a, action: "session.revoked", subject_id: c, outcome: "ok", meta: { cause: "role_changed", sessions: 0 } },
     ]);
   });
 
@@ -193,7 +195,7 @@ describe("three usable Admins", () => {
     expect(results.filter((result) => result.ok)).toHaveLength(1);
     expect(results.filter((result) => !result.ok)).toEqual([{ ok: false, error: "two_admin_rule" }]);
     expect(await admins()).toBe(2);
-    const records = await auditRecords();
+    const records = (await auditRecords()).filter((record) => record.action !== "session.revoked");
     expect(records.map((record) => record.outcome).sort()).toEqual(["ok", "refused"]);
     expect(records.find((record) => record.outcome === "refused")?.meta).toEqual({ reason: "two_admin_rule", from: "admin", to: "coordinator" });
   });

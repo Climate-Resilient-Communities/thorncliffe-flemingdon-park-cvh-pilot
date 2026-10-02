@@ -4,7 +4,8 @@
 // src/app/api/staff exports anything that is not.
 //
 // Each wrapper resolves the session (./session.ts) and applies the setup sequence before the
-// route's own code runs: no session → sign-in (pages) or 401 `unauthenticated`; a session at
+// route's own code runs: no session → sign-in (pages and actions) or 401 `unauthenticated` (route
+// handlers); a session at
 // another setup gate than the route's → that gate's page (pages) or 403 `setup_incomplete`
 // (route handlers and actions). Fail closed: a route must name its access, and only the sign-in
 // page and the sign-in and sign-out calls are public.
@@ -159,19 +160,23 @@ export async function readJson<T>(request: Request, schema: { safeParse(value: u
 // ---- Server actions ----------------------------------------------------------------------------
 
 /**
- * A staff server action at `access`. `refused` turns a refusal into the action's own answer (for
- * example a form state with the message), given the action's arguments.
+ * A staff server action at `access`. Without a session the person is sent to the sign-in page
+ * (Next's `redirect`, which works in a server action; the session ended: idle, 12 hours, or
+ * revoked); nothing of the action runs. `refused` turns the other refusal, another setup gate,
+ * into the action's own answer (for example a form state with the message), given the action's
+ * arguments.
  */
 export function staffAction<A extends unknown[], R>(
   spec: GuardSpec & { access: Exclude<RouteAccess, "public"> },
   act: (session: StaffSession, ...args: A) => Promise<R>,
-  refused: (error: "unauthenticated" | "setup_incomplete", ...args: A) => R,
+  refused: (error: "setup_incomplete", ...args: A) => R,
 ): (...args: A) => Promise<R> {
   const action = async (...args: A) => {
     const decision = decide(spec.access, await currentStaffSession());
     if (decision.kind !== "allow") {
       await auditRefusal(spec, decision);
-      return refused(decision.kind === "unauthenticated" ? "unauthenticated" : "setup_incomplete", ...args);
+      if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
+      return refused("setup_incomplete", ...args);
     }
     return act(decision.session as StaffSession, ...args);
   };

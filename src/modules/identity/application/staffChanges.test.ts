@@ -6,6 +6,7 @@ import type { BootstrapState } from "../domain/bootstrap";
 import type { StaffAccount } from "../domain/staffAccount";
 import type { StaffStore } from "./ports";
 import { adminShortfallMeta, createAdminRecovery } from "./adminRecovery";
+import { createSessionRevocation } from "./sessionRevocation";
 import { createStaffChangeService } from "./staffChanges";
 
 const id = (n: number) => `01900000-0000-7000-8000-${String(n).padStart(12, "0")}`;
@@ -60,10 +61,27 @@ function setup(accounts: Partial<StaffAccount>[], bootstrap: BootstrapState | nu
     recordRefusal: async (_db: Db, event: AuditEvent) => void refused.push(event),
   };
   const db = { transaction: async (fn: (tx: DbTransaction) => Promise<unknown>) => fn(TX) } as unknown as Db;
-  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: async () => null };
+  // Open sessions per account (staff_session) and each account's revocation count.
+  const openSessions = new Map<string, number>([...rows.keys()].map((key) => [key, 2]));
+  const generations = new Map<string, number>();
+  const revokedIn: unknown[] = [];
+  const revocation = createSessionRevocation({
+    store: { bumpSessionGeneration: async (_tx, staffId) => void generations.set(staffId, (generations.get(staffId) ?? 0) + 1) },
+    sessions: {
+      revokeAll: async (tx, staffId) => {
+        revokedIn.push(tx);
+        const open = openSessions.get(staffId) ?? 0;
+        openSessions.set(staffId, 0);
+        return open;
+      },
+    },
+    audit,
+    now: () => new Date(),
+  });
+  const deps = { db, store, idp, audit, now: () => new Date(), lockTimeoutMs: 4321, signInLockedUntil: async () => null, revocation };
   const service = createStaffChangeService(deps);
   const { beginAdminRecovery } = createAdminRecovery(deps);
-  return { service, beginAdminRecovery, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts };
+  return { service, beginAdminRecovery, rows, idp, recorded, refused, permitted, lockedAdmins, lockedAccount, lockTimeouts, openSessions, generations, revokedIn };
 }
 
 const RULE = { ok: false, error: "two_admin_rule" };
@@ -74,11 +92,12 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
     ["remove", (s: ReturnType<typeof setup>["service"]) => s.removeAccount(A, B), "account.removed", { reason: "two_admin_rule", role: "admin" }],
     ["demote", (s: ReturnType<typeof setup>["service"]) => s.changeRole(A, B, "coordinator"), "account.role_changed", { reason: "two_admin_rule", from: "admin", to: "coordinator" }],
   ])("refuses to %s either of exactly two usable Admins, audited as refused", async (_, run, action, meta) => {
-    const { service, rows, recorded, refused } = setup([{ id: A }, { id: B }]);
+    const { service, rows, recorded, refused, revokedIn } = setup([{ id: A }, { id: B }]);
 
     expect(await run(service)).toEqual(RULE);
     expect(rows.get(B)).toMatchObject({ role: "admin", status: "active" });
     expect(recorded).toEqual([]);
+    expect(revokedIn).toEqual([]);
     expect(refused).toEqual([{ action, actorStaffId: A, subjectType: "staff_account", subjectId: B, meta }]);
   });
 
@@ -87,7 +106,10 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
 
     expect(await service.suspendAccount(A, C)).toEqual({ ok: true, value: undefined });
     expect(rows.get(C)!.status).toBe("suspended");
-    expect(recorded).toEqual([{ action: "account.suspended", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { role: "admin" } }]);
+    expect(recorded).toEqual([
+      { action: "account.suspended", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { role: "admin" } },
+      { action: "session.revoked", actorStaffId: A, subjectType: "staff_account", subjectId: C, meta: { cause: "suspended", sessions: 2 } },
+    ]);
   });
 
   it("counts an Admin without an authenticator as not usable", async () => {
@@ -96,6 +118,21 @@ describe("suspend, remove and change role under the two-Admin rule", () => {
 
     expect(await service.changeRole(A, B, "director")).toEqual(RULE);
     expect(await service.removeAccount(A, C)).toEqual({ ok: true, value: undefined });
+  });
+
+  it.each([
+    ["suspension", (s: ReturnType<typeof setup>["service"]) => s.suspendAccount(A, D), "suspended"],
+    ["removal", (s: ReturnType<typeof setup>["service"]) => s.removeAccount(A, D), "removed"],
+    ["role change", (s: ReturnType<typeof setup>["service"]) => s.changeRole(A, D, "coordinator"), "role_changed"],
+  ])("ends every session of the account on a %s, in the change's transaction (S01.08)", async (_, run, cause) => {
+    const { service, recorded, openSessions, generations, revokedIn } = setup([{ id: A }, { id: B }, { id: D, role: "ambassador" }]);
+
+    expect(await run(service)).toEqual({ ok: true, value: undefined });
+
+    expect(openSessions.get(D)).toBe(0);
+    expect(generations.get(D)).toBe(1);
+    expect(revokedIn).toEqual([TX]);
+    expect(recorded.at(-1)).toEqual({ action: "session.revoked", actorStaffId: A, subjectType: "staff_account", subjectId: D, meta: { cause, sessions: 2 } });
   });
 
   it("refuses changes to any Admin during a shortfall, and lets everything else continue", async () => {

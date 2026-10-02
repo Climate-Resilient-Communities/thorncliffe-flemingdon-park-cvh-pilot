@@ -179,6 +179,16 @@ export interface StaffStore {
   permitAdminShortfall(tx: DbTransaction): Promise<void>;
   setStatus(tx: DbTransaction, staffId: string, status: StaffAccount["status"]): Promise<void>;
   setRole(tx: DbTransaction, staffId: string, role: StaffAccount["role"]): Promise<void>;
+  /**
+   * An Admin's "Reset password" begins (S01.08): the account is held at `locked_pending_reissue`
+   * with `must_change_password`, so neither its old password nor a half-finished reset signs in.
+   * Only an `active` or `locked_pending_reissue` account. True when it changed.
+   */
+  beginPasswordReset(tx: DbTransaction, staffId: string, at: Date): Promise<boolean>;
+  /** The account's revocation count (staff_account.session_generation, S01.08), or null when there is no such account. */
+  sessionGeneration(db: DbExecutor, staffId: string): Promise<number | null>;
+  /** Adds one to the account's revocation count. */
+  bumpSessionGeneration(tx: DbTransaction, staffId: string): Promise<void>;
 }
 
 /** A lock started by failed sign-ins: one username, or one client. */

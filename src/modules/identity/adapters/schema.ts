@@ -1,9 +1,10 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
-// db/migrations/20261002110000_staff_account.sql, 20261002130000_sign_in.sql and
-// 20261002131000_staff_session.sql; the drift test compares them.
+// db/migrations/20261002110000_staff_account.sql, 20261002130000_sign_in.sql,
+// 20261002131000_staff_session.sql and 20261002150000_session_revocation.sql; the drift test
+// compares them.
 // The bootstrap row's forward-only trigger and the grants live only in the migration.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, index, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, integer, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
 import { STAFF_ROLES } from "../../../contracts/staffRoles";
 import { STAFF_STATUSES } from "../domain/staffAccount";
 
@@ -29,6 +30,8 @@ export const staffAccount = pgTable(
     startingPasswordUsedAt: timestamp("starting_password_used_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     createdBy: uuid("created_by").references((): AnyPgColumn => staffAccount.id),
+    /** S01.08: how many times the account's sessions were revoked (sign-in compares it). */
+    sessionGeneration: integer("session_generation").notNull().default(0),
   },
   (t) => [
     check(
@@ -46,6 +49,7 @@ export const staffAccount = pgTable(
       sql`not ${t.mustChangePassword} or ${t.startingPasswordIssuedAt} is not null`,
     ),
     check("staff_account_starting_password_used", sql`${t.startingPasswordUsedAt} is null or ${t.mustChangePassword}`),
+    check("staff_account_session_generation_non_negative", sql`${t.sessionGeneration} >= 0`),
     pgPolicy("staff_account_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("staff_account_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("staff_account_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
