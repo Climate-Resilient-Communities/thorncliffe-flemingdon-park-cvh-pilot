@@ -142,7 +142,7 @@ test("an Admin whose session ended is sent to sign-in when they submit Reset pas
   const admin = await adminAfterBootstrap();
   const target = await newAccount("ambassador");
   const desk = await newPage(browser);
-  await signIn(desk.page, admin.username, admin.password);
+  await signIn(desk.page, admin.username, admin.password, admin.authUserId);
   await desk.page.goto("/staff/people");
   const reset = desk.page.getByRole("region", { name: "Reset a password" });
   await reset.getByLabel("Their username").fill(target.username);
