@@ -64,7 +64,7 @@ describe("the resident building list", () => {
       { rsn: "100", address: "1 Alpha Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", floors: [{ id: first, label: "1" }, { id: second, label: "2" }] },
       { rsn: "200", address: "9 Beta Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", floors: [] },
     ]);
-    expect(BuildingListSchema.safeParse({ v: 1, buildings: list }).success).toBe(true);
+    expect(BuildingListSchema.safeParse({ v: 1, generated_at: new Date().toISOString(), buildings: list }).success).toBe(true);
   });
 
   it("exposes nothing but what a resident needs: no facts, no confirmation, no register state", async () => {
