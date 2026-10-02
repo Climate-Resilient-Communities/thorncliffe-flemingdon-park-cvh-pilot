@@ -1,0 +1,64 @@
+/*
+ * The 911 block (prototype X01_Not911, .cvh-n911). Spacing from the semantic tokens, direction from logical
+ * properties only. The "911" mark is always left to right, whatever the page's language.
+ */
+@layer components {
+  .n911 {
+    display: grid;
+    grid-template-columns: auto minmax(0, 1fr);
+    column-gap: var(--gap-related);
+    row-gap: var(--gap-subline);
+    align-items: start;
+    padding-block: var(--gap-tight);
+    padding-inline: var(--gap-related);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .n911__num {
+    grid-row: span 2;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-inline-size: 58px;
+    block-size: 44px;
+    padding-inline: var(--gap-label);
+    border-radius: 12px;
+    background-color: var(--ink);
+    color: var(--surface);
+    font-size: var(--type-alert-size);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+    direction: ltr;
+  }
+
+  .n911__text {
+    font-weight: 700;
+    line-height: var(--type-tight-line-height);
+  }
+
+  .n911__sub {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  /* The short form: one line of text beside the mark. */
+  .n911[data-variant="inline"] {
+    grid-template-columns: auto minmax(0, 1fr);
+    align-items: center;
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-tight);
+    border-width: 1.5px;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .n911[data-variant="inline"] .n911__num {
+    grid-row: auto;
+    min-inline-size: 48px;
+    block-size: 34px;
+    font-size: 18px;
+  }
+}

@@ -168,7 +168,7 @@ describe("O-04, the group picker", () => {
 describe("a draft that is not there or is no longer a draft", () => {
   it("says it was not found, with the way back", () => {
     const out = html(missingScreen());
-    expect(out).toContain('<p role="alert">That alert draft was not found. Open it again from the list of alerts.</p>');
+    expect(out).toContain('<p role="alert" class="hub-error">That alert draft was not found. Open it again from the list of alerts.</p>');
     expect(out).toContain('href="/staff"');
     expect(out).not.toContain("<form");
   });

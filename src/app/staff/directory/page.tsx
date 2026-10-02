@@ -37,7 +37,7 @@ export default staffPage(
       <Screen surface="staff">
         <Stack gap="section-hub">
           <DirectoryHeading />
-          <p role="alert">{englishText("staff.directory.errors.forbidden")}</p>
+          <p role="alert" className="hub-error">{englishText("staff.directory.errors.forbidden")}</p>
         </Stack>
       </Screen>
     ),

@@ -24,7 +24,7 @@ export default staffPage(
     action: "alert.author_wide",
     refused: () => (
       <Screen surface="staff" width="review">
-        <p role="alert">{englishText("staff.audience.errors.forbidden")}</p>
+        <p role="alert" className="hub-error">{englishText("staff.audience.errors.forbidden")}</p>
       </Screen>
     ),
   },

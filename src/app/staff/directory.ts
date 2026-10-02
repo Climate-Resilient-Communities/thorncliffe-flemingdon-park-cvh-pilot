@@ -3,7 +3,7 @@
 // own, like ./identity.ts, so the tests that call the staff pages and actions directly can hand them
 // a database and a store.
 import path from "node:path";
-import { catalogueVersion, cohereEmbedder, openccZhHant, type PublishDeps } from "@/modules/directory";
+import { catalogueVersion, cohereEmbedder, openccZhHant, readProviderNeighbourhoods, type PublishDeps } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
@@ -37,6 +37,7 @@ export function directoryPublishDeps(): PublishDeps {
       : {}),
     storage: directoryStorage(),
     catalogue: () => catalogueVersion(path.join(process.cwd(), "data", "catalogue"), process.env.APP_VERSION),
+    neighbourhoods: async () => readProviderNeighbourhoods(path.join(process.cwd(), "data", "catalogue")),
     zhHant: openccZhHant,
     onFailure: async (failure) => {
       await recordOpsEvent(directoryDb(), {

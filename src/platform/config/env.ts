@@ -89,6 +89,11 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; local development only (start-up fails on Vercel): the resident building
  *                                                        page reads its buildings from this JSON file instead of the
  *                                                        database (the resident page tests and their screenshots)
+ * CVH_FAKE_GUIDES_FILE
+ *                      server   optional; local development only (start-up fails on Vercel): the resident guide and
+ *                                                        essential-numbers pages read their guides and numbers from this JSON
+ *                                                        file instead of the database (the resident page tests and their
+ *                                                        screenshots)
  * CVH_FAKE_DIRECTORY_DIR
  *                      server   optional; local development only (start-up fails on Vercel): the directory release files
  *                                                        are kept in this folder instead of the private Supabase Storage
@@ -134,6 +139,7 @@ const rawSchema = z.object({
   SMS_TEST_ALLOWLIST: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
+  CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
   COHERE_API_KEY: optionalText,
@@ -185,6 +191,7 @@ export interface Env {
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
   fakeBuildingsFile?: string;
+  fakeGuidesFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
   /** Cohere's API key: set only in production. The publish job embeds search data when it is set, and publishes without when not. */
@@ -500,6 +507,9 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_BUILDINGS_FILE !== undefined) {
     problems.push("CVH_FAKE_BUILDINGS_FILE: the buildings fake is only allowed in local development, never on Vercel");
   }
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_GUIDES_FILE !== undefined) {
+    problems.push("CVH_FAKE_GUIDES_FILE: the guides fake is only allowed in local development, never on Vercel");
+  }
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_DIRECTORY_DIR !== undefined) {
     problems.push("CVH_FAKE_DIRECTORY_DIR: the local directory store is only allowed in local development, never on Vercel");
   } else if (raw.CVH_FAKE_DIRECTORY_DIR !== undefined && !ABSOLUTE_PATH.test(raw.CVH_FAKE_DIRECTORY_DIR)) {
@@ -562,6 +572,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
     fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
+    fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };

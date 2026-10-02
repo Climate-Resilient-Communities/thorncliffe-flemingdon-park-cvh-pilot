@@ -42,6 +42,9 @@ vi.mock("@/modules/audit", async (importOriginal) => {
   return { ...actual, record: vi.fn(actual.record), recordRefusal: vi.fn(actual.recordRefusal) };
 });
 
+// The Hub's neighbourhood list (data/catalogue/provider-neighbourhoods.json) as the tests publish it: one of each kind.
+const NEIGHBOURHOODS: Record<string, readonly ("TP" | "FP")[]> = { M001: ["TP"], M002: ["FP"], M003: [], M004: [], M005: [], M010: ["TP", "FP"] };
+
 const ENGLISH = "Free legal help. Call 911 in an emergency.";
 const UR = "مفت قانونی مدد۔ 911 پر کال کریں۔";
 const ZH = "免费软务。紧急情况请拨打 911。";
@@ -151,6 +154,7 @@ describe("the directory release (S02.05)", () => {
     return {
       failures,
       catalogue: async () => ({ hash: "b".repeat(64), gitCommit: "abc1234def" }),
+      neighbourhoods: async () => ({ reviewed: true, byProvider: NEIGHBOURHOODS }),
       zhHant: async () => ({ convert: (text: string) => text.replaceAll("软", "軟").replaceAll("务", "務"), openccVersion: "1.4.2", config: "test s2twp" }),
       onFailure: async (failure) => void failures.push(failure),
       sleep: async () => {},
@@ -195,6 +199,32 @@ describe("the directory release (S02.05)", () => {
       expect(listing(d, 1, "ur").providers[0].services).toMatchObject({ status: "ok", body: UR, original: { body: ENGLISH } });
       // The unpublished, unconfirmed and removed providers appear nowhere.
       for (const body of d.storage.files.values()) for (const id of ["M003", "M004", "M005"]) expect(body).not.toContain(id);
+    });
+
+    it("writes each provider's neighbourhoods from the Hub's list into every language's file", async () => {
+      const d = deps();
+
+      await publish(d);
+
+      for (const lang of LANG_CODES) expect(listing(d, 1, lang).providers.map((p) => [p.id, p.neighbourhood_ids])).toEqual([["M001", ["TP"]], ["M002", ["FP"]]]);
+    });
+
+    it("stops with invalid_catalogue, writing nothing, when a published provider is not in the Hub's neighbourhood list", async () => {
+      const d = deps({ neighbourhoods: async () => ({ reviewed: false, byProvider: { M001: ["TP"] } }) });
+
+      const result = await publish(d);
+
+      expect(result).toEqual({ ok: false, reason: "invalid_catalogue", release: null, attempts: 1, detail: ["provider M002 is not in provider-neighbourhoods.json"] });
+      expect(await releases()).toEqual([]);
+      expect(d.storage.files.size).toBe(0);
+    });
+
+    it("a neighbourhood list that cannot be read is a catalogue_unreadable publish, not retried", async () => {
+      const d = deps({ neighbourhoods: async () => Promise.reject(new Error("ENOENT: provider-neighbourhoods.json")), sleep: vi.fn(async () => {}) });
+
+      expect(await publish(d)).toMatchObject({ ok: false, reason: "catalogue_unreadable", release: null, attempts: 1 });
+      expect(d.sleep).not.toHaveBeenCalled();
+      expect(await releases()).toEqual([]);
     });
 
     it("converts zh to zh-Hant with the conversion recorded, and withholds the stale zh with English and translation.unavailable", async () => {
@@ -1078,6 +1108,30 @@ describe("the directory release (S02.05)", () => {
       const emptied = await publish(empty);
       expect(emptied, JSON.stringify(emptied)).toMatchObject({ ok: true, search: { vectors: 0, embedded: 0 } });
       expect(vectorsOf(empty, 1)).toMatchObject({ dims: 0, providers: [] });
+    });
+
+    it("publishes a directory with no published provider when the emergency category is in the catalogue, instead of reporting an unknown emergency category", async () => {
+      await sql`update provider set published = false, published_at = null, last_confirmed = null`;
+      const model = fakeEmbedder();
+      const d = deps({ search: searchOf(model.embedder, { emergencyCategories: ["Health"] }) });
+
+      const result = await publish(d);
+
+      expect(result, JSON.stringify(result)).toMatchObject({ ok: true, release: 1, counts: { providers: 0, categories: 0 }, search: { vectors: 0, embedded: 0 } });
+      expect(listing(d, 1, "en").providers).toEqual([]);
+      expect(vectorsOf(d, 1)).toMatchObject({ dims: 0, providers: [] });
+    });
+
+    it("still refuses an emergency category the catalogue does not have, with providers published or not", async () => {
+      for (const published of [true, false]) {
+        if (!published) await sql`update provider set published = false, published_at = null, last_confirmed = null`;
+        const d = deps({ search: searchOf(fakeEmbedder().embedder, { emergencyCategories: ["Not A Category"] }) });
+
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["emergency_category_unknown"] });
+        expect(await sql`select 1 from directory_release where status = 'complete'`).toHaveLength(0);
+      }
     });
 
     // ---------------------------------------------------------- stopped, failing and slow embedding

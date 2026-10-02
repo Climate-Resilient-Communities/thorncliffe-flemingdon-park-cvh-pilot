@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { sha256Hex } from "@/platform/hash";
 import { LANG_CODES } from "./lang";
-import { DirectoryListingV1, DirectoryManifestV1, ListingTextSchema, TRANSLATION_UNAVAILABLE, listingPath } from "./directory";
+import { DirectoryListingV1, DirectoryManifestV1, ListingProviderSchema, ListingTextSchema, TRANSLATION_UNAVAILABLE, listingPath } from "./directory";
 
 const HASH = "a".repeat(64);
 const files = Object.fromEntries(LANG_CODES.map((lang) => [lang, listingPath(4, lang)]));
@@ -83,5 +83,34 @@ describe("DirectoryListingV1", () => {
     expect(DirectoryListingV1.safeParse(listing).success).toBe(true);
     expect(DirectoryListingV1.safeParse({ ...listing, release_v: undefined }).success).toBe(false);
     expect(DirectoryListingV1.safeParse({ ...listing, lang: "xx" }).success).toBe(false);
+  });
+});
+
+describe("ListingProviderSchema neighbourhood_ids", () => {
+  const provider = (change: Record<string, unknown> = {}) => ({
+    id: "M001",
+    name: "A provider",
+    category_ids: [],
+    neighbourhood_ids: ["TP"],
+    subcategories: [],
+    locations: [],
+    contact: { phone: [], email: [], social: [], web: [] },
+    services: text({ lang: "en", machine: false, model: null, status: "source", review_status: "source", reviewed_on: null }),
+    emergency_role: null,
+    last_confirmed: "2026-09-01",
+    ...change,
+  });
+
+  it.each([[["TP"]], [["FP"]], [["TP", "FP"]], [[]]])("accepts %j", (ids) => {
+    expect(ListingProviderSchema.parse(provider({ neighbourhood_ids: ids })).neighbourhood_ids).toEqual(ids);
+  });
+
+  it.each([
+    ["a neighbourhood that is not one of the pilot's", { neighbourhood_ids: ["XX"] }],
+    ["a lower-case id", { neighbourhood_ids: ["tp"] }],
+    ["a list that is missing (a file made before this field)", { neighbourhood_ids: undefined }],
+    ["a string instead of a list", { neighbourhood_ids: "TP" }],
+  ])("rejects %s", (_name, change) => {
+    expect(ListingProviderSchema.safeParse(provider(change)).success).toBe(false);
   });
 });

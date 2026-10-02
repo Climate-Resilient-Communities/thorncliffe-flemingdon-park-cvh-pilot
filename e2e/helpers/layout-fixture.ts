@@ -19,6 +19,7 @@ type Render = (name: string, props: unknown) => string;
 const STUBS: { importer: RegExp; stub: string }[] = [
   { importer: /providers[\\/]ProviderList\.tsx$/, stub: "provider-actions-stub.ts" },
   { importer: /directory[\\/]PublishDirectory\.tsx$/, stub: "directory-actions-stub.ts" },
+  { importer: /people[\\/](AddPersonForm|ReissueForm|ResetPasswordForm|ResetAuthenticatorForm)\.tsx$/, stub: "people-actions-stub.ts" },
 ];
 const providerActionsStub: Plugin = {
   name: "server-actions-stub",

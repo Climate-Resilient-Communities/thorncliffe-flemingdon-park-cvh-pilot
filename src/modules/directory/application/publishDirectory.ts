@@ -99,10 +99,11 @@ async function takeSnapshot(tx: DbTransaction): Promise<{ providers: SnapshotPro
     .orderBy(asc(provider.id))
     .for("share");
   const ids = rows.map((row) => row.id);
-  if (ids.length === 0) return { providers: [], categories: [] };
-  const locations = await tx.select().from(providerLocation).where(inArray(providerLocation.providerId, ids)).orderBy(asc(providerLocation.providerId), asc(providerLocation.seq));
-  const links = await tx.select().from(providerCategory).where(inArray(providerCategory.providerId, ids));
+  // The categories are the catalogue's, whether or not a provider is published: a release of no providers still names them,
+  // and the search settings (the emergency categories) are checked against them.
   const categoryRows = await tx.select().from(category).orderBy(asc(category.sortOrder));
+  const locations = ids.length === 0 ? [] : await tx.select().from(providerLocation).where(inArray(providerLocation.providerId, ids)).orderBy(asc(providerLocation.providerId), asc(providerLocation.seq));
+  const links = ids.length === 0 ? [] : await tx.select().from(providerCategory).where(inArray(providerCategory.providerId, ids));
   const providers: SnapshotProvider[] = rows.map((row) => ({
     id: row.id,
     name: row.name,
@@ -138,6 +139,9 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
   const token = (deps.newToken ?? randomUUID)();
   // The catalogue's version is read before the transaction: it is files on disk, not rows.
   const version = await deps.catalogue().catch(() => {
+    throw new PublishStepError("catalogue_unreadable", false);
+  });
+  const neighbourhoods = await deps.neighbourhoods().catch(() => {
     throw new PublishStepError("catalogue_unreadable", false);
   });
   const zhHant = await deps.zhHant();
@@ -190,7 +194,7 @@ async function claimRelease(db: Db, deps: PublishDeps, actorStaffId: string, now
     const [{ next }] = await tx.select({ next: sql<number>`coalesce(max(${directoryRelease.number}), 0) + 1` }).from(directoryRelease);
     let plan;
     try {
-      plan = planRelease({ number: next, catalogueHash: version.hash, providers, categories, hash: sha256Hex, zhHant });
+      plan = planRelease({ number: next, catalogueHash: version.hash, providers, categories, neighbourhoods: neighbourhoods.byProvider, hash: sha256Hex, zhHant });
     } catch (error) {
       if (error instanceof ReleaseDataError) throw new PublishStepError("invalid_catalogue", false, error.problems);
       throw error;

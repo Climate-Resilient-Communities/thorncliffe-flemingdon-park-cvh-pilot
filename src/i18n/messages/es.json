@@ -1027,7 +1027,8 @@
     "more": "[EN] More ways to be ready",
     "checkinLine": "[EN] Your floor ambassador checks on you. Not an emergency service.",
     "numbersLine": "[EN] 911, 211, 311, Toronto Hydro and the Hub",
-    "headsUpLine": "[EN] In the CVH only, never by text message"
+    "headsUpLine": "[EN] In the CVH only, never by text message",
+    "none": "[EN] The guides could not be loaded right now. If someone is in danger, call 911."
   },
   "R25": {
     "stagesNav": "[EN] Jump to",
@@ -1169,7 +1170,9 @@
     "calling": "[EN] Call {what}",
     "roles": {
       "superintendent": "[EN] superintendent"
-    }
+    },
+    "checked": "[EN] Checked by the Hub, last updated {date}",
+    "noOthers": "[EN] The other numbers could not be loaded right now. Try again in a few minutes."
   },
   "R32": {
     "title": "[EN] A heads-up before each season",
@@ -4408,5 +4411,26 @@
     },
     "contactTitle": "[EN] Building contact",
     "providedByHub": "[EN] Provided by the Hub, last updated {date}"
+  },
+  "directory": {
+    "title": "[EN] Services and organisations",
+    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
+    "count": "[EN] {n} services",
+    "countOne": "[EN] 1 service",
+    "topic": "[EN] Topic",
+    "emergency": "[EN] Helps in an emergency",
+    "emergencyRole": "[EN] Emergency role",
+    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
+    "lastUpdated": "[EN] Last updated {time}",
+    "loading": "[EN] Loading the directory",
+    "couldNotLoad": "[EN] The directory could not load",
+    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
+    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
+    "numbersLink": "[EN] See the essential numbers",
+    "backToList": "[EN] All services and organisations",
+    "suggestApply": "[EN] Show only {place}"
+  },
+  "guides": {
+    "reviewed": "[EN] Reviewed by the Hub, last updated {date}"
   }
 }

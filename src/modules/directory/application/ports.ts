@@ -2,6 +2,7 @@
 // version is, and who is told when a publish fails. Implementations are in adapters/ and in the app's
 // composition root; tests use the fakes beside them.
 import type { ZhHantConverter } from "../domain/directoryRelease";
+import type { ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
 import type { EmbeddingConfig } from "../domain/searchData";
 
 /** The private place the release files are kept (Supabase Storage; a folder in local runs; memory in tests). */
@@ -61,6 +62,8 @@ export interface PublishFailure {
 export interface PublishDeps {
   storage: DirectoryStorage;
   catalogue: () => Promise<CatalogueVersion>;
+  /** The Hub's list of each provider's neighbourhoods (data/catalogue/provider-neighbourhoods.json, deployed with the app); read when a release is planned. Rejects when the file cannot be read or is not in shape. */
+  neighbourhoods: () => Promise<ProviderNeighbourhoods>;
   /** OpenCC for zh-Hant; loaded when a release is planned, not when the module is imported. */
   zhHant: () => Promise<ZhHantConverter>;
   /** Told once when a publish gives up. A failure here never changes the outcome. */

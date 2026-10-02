@@ -1027,7 +1027,8 @@
     "more": "More ways to be ready",
     "checkinLine": "Your floor ambassador checks on you. Not an emergency service.",
     "numbersLine": "911, 211, 311, Toronto Hydro and the Hub",
-    "headsUpLine": "In the CVH only, never by text message"
+    "headsUpLine": "In the CVH only, never by text message",
+    "none": "The guides could not be loaded right now. If someone is in danger, call 911."
   },
   "R25": {
     "stagesNav": "Jump to",
@@ -1169,7 +1170,9 @@
     "calling": "Call {what}",
     "roles": {
       "superintendent": "superintendent"
-    }
+    },
+    "checked": "Checked by the Hub, last updated {date}",
+    "noOthers": "The other numbers could not be loaded right now. Try again in a few minutes."
   },
   "R32": {
     "title": "A heads-up before each season",
@@ -4408,5 +4411,26 @@
     },
     "contactTitle": "Building contact",
     "providedByHub": "Provided by the Hub, last updated {date}"
+  },
+  "directory": {
+    "title": "Services and organisations",
+    "lead": "What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
+    "count": "{n} services",
+    "countOne": "1 service",
+    "topic": "Topic",
+    "emergency": "Helps in an emergency",
+    "emergencyRole": "Emergency role",
+    "lastConfirmed": "Last confirmed by the Hub {date}",
+    "lastUpdated": "Last updated {time}",
+    "loading": "Loading the directory",
+    "couldNotLoad": "The directory could not load",
+    "couldNotLoadBody": "The Hub can help you find a service by phone.",
+    "couldNotLoadNumbers": "The numbers page lists the other numbers you may need.",
+    "numbersLink": "See the essential numbers",
+    "backToList": "All services and organisations",
+    "suggestApply": "Show only {place}"
+  },
+  "guides": {
+    "reviewed": "Reviewed by the Hub, last updated {date}"
   }
 }
