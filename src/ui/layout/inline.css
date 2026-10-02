@@ -1,0 +1,97 @@
+/*
+ * Inline (docs/design-framework/spacing-container/components/inline.md). flex-direction: row and
+ * flex-start/flex-end follow the writing direction, so nothing here depends on dir.
+ */
+@layer components {
+  .layout-inline {
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    align-items: center;
+    justify-content: flex-start;
+    gap: var(--gap-icon);
+  }
+
+  .layout-inline:is(ul) {
+    list-style: none;
+  }
+
+  .layout-inline[data-wrap="false"] {
+    flex-wrap: nowrap;
+  }
+
+  .layout-inline[data-gap="label"] {
+    gap: var(--gap-label);
+  }
+
+  .layout-inline[data-gap="tight"] {
+    gap: var(--gap-tight);
+  }
+
+  .layout-inline[data-gap="related"] {
+    gap: var(--gap-related);
+  }
+
+  .layout-inline[data-gap="target"] {
+    gap: var(--gap-target);
+  }
+
+  .layout-inline[data-gap="icon"] {
+    gap: var(--gap-icon);
+  }
+
+  .layout-inline[data-gap="grid"] {
+    gap: var(--gap-grid);
+  }
+
+  .layout-inline[data-gap="stack"] {
+    gap: var(--gap-stack);
+  }
+
+  .layout-inline[data-gap="panel"] {
+    gap: var(--gap-panel);
+  }
+
+  .layout-inline[data-gap="meta-inline"] {
+    column-gap: var(--gap-meta-inline);
+    row-gap: var(--gap-meta-block);
+  }
+
+  .layout-inline[data-gap="type-grid-inline"] {
+    column-gap: var(--gap-type-grid-inline);
+    row-gap: var(--gap-type-grid-block);
+  }
+
+  .layout-inline[data-align="start"] {
+    align-items: flex-start;
+  }
+
+  .layout-inline[data-align="end"] {
+    align-items: flex-end;
+  }
+
+  .layout-inline[data-align="baseline"] {
+    align-items: baseline;
+  }
+
+  .layout-inline[data-align="stretch"] {
+    align-items: stretch;
+  }
+
+  .layout-inline[data-justify="center"] {
+    justify-content: center;
+  }
+
+  .layout-inline[data-justify="end"] {
+    justify-content: flex-end;
+  }
+
+  .layout-inline[data-justify="between"] {
+    justify-content: space-between;
+  }
+
+  .layout-inline__grow {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+  }
+}

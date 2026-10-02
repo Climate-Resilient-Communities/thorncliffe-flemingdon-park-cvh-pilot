@@ -34,12 +34,19 @@ jobs:
       - run: npm ci
       - run: npm run lint
       - run: npm run typecheck
+      - run: npm run check:tokens
+      - run: npm run check:spacing
+      - run: npm run check:layout
+      - run: npm run check:layers
       - run: npm test
       - run: npm run lint:deps
       # Fails if a catalog is stale or a required string is missing; the per-language report
       # of missing keys goes to the job summary. Runs even if an earlier check failed.
       - if: ${{ !cancelled() }}
         run: npm run check:strings
+      - name: Install Chromium for the layout tests
+        run: npx playwright install --with-deps chromium
+      - run: npm run test:layout
       - run: npm run build
         env:
           APP_VERSION: ${{ github.sha }}

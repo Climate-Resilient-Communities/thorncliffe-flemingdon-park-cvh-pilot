@@ -1,0 +1,7 @@
+.literal {
+  padding: 13px;
+  gap: 1rem;
+  margin-block-start: 3px;
+  column-gap: var(--gap-unknown);
+  padding-inline: var(--app-space-5);
+}

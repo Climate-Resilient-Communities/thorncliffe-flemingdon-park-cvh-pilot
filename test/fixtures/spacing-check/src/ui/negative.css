@@ -1,0 +1,4 @@
+.negative {
+  margin-block-end: -24px;
+  margin-inline: calc(var(--gap-icon) * -1);
+}

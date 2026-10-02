@@ -1,0 +1,11 @@
+/*
+ * The tap rule's token (docs/design-framework/spacing-container/components/touch-target.md).
+ * Interactive content components put the `tap` utility (theme.css) on their root.
+ */
+:root {
+  --tap-current: var(--tap);
+}
+
+:root[data-basic="true"] {
+  --tap-current: var(--tap-basic);
+}

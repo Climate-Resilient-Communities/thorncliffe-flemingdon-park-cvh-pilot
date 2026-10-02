@@ -1,0 +1,40 @@
+@custom-variant wide (@media (min-width: 700px));
+
+.apply {
+  @apply [@media(min-width:700px)]:flex;
+}
+
+@media (min-width: 700.0px) {
+  .a {
+    display: grid;
+  }
+}
+
+@media (width >= 43.75rem) {
+  .b {
+    display: grid;
+  }
+}
+
+@container hub-page (min-width: 50em) {
+  .c {
+    display: grid;
+  }
+}
+
+@MEDIA (MIN-WIDTH: 800PX) {
+  .d {
+    display: grid;
+  }
+}
+
+/* @media (min-width: 700px) mentioned in a comment is not a layout literal. */
+@media (min-width: 44rem) {
+  .e {
+    display: grid;
+  }
+}
+
+.f {
+  inline-size: 43.75rem;
+}

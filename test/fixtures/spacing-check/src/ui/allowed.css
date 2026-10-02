@@ -1,0 +1,19 @@
+/* Spacing from tokens, 0 and auto pass; borders, sizes, positioning and line height are not checked. */
+.allowed {
+  --allowed-inset: var(--gap-icon);
+  padding: 0;
+  padding-inline: var(--allowed-inset);
+  margin-block: 0px;
+  margin-inline: auto;
+  gap: var(--gap-icon);
+  row-gap: var(--gap-icon);
+  column-gap: 0;
+  border-width: 1px;
+  border-inline-start: 3px solid;
+  inline-size: 24px;
+  block-size: 24px;
+  inset-inline-start: 13px;
+  top: -3px;
+  translate: 5px 0;
+  line-height: 22px;
+}

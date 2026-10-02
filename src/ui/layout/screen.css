@@ -1,0 +1,106 @@
+/*
+ * Screen (docs/design-framework/spacing-container/components/screen.md).
+ * Insets, the section gap and the maximum inline size are component tokens over semantic tokens.
+ * The staff inset switches at the Hub breakpoint (variant hub:); the staff body is the hub-page
+ * query container that two-column Grids measure.
+ */
+@layer components {
+  .layout-screen {
+    display: flex;
+    flex-direction: column;
+    --screen-actions-inset-block-start: var(--inset-card-snug);
+    --screen-actions-inset-block-end: var(--gutter-resident);
+  }
+
+  .layout-screen[data-surface="resident"] {
+    --screen-inset-inline: var(--gutter-resident);
+    --screen-inset-block-start: var(--gutter-resident);
+    --screen-inset-block-end: var(--inset-screen-end);
+    --screen-gap: var(--gap-section-resident);
+  }
+
+  .layout-screen[data-surface="staff"] {
+    --screen-inset-inline: var(--inset-page-staff-narrow);
+    --screen-inset-block-start: var(--inset-page-staff-narrow);
+    --screen-inset-block-end: var(--inset-page-staff-narrow);
+    --screen-gap: var(--gap-section-hub);
+    --screen-max-inline-size: var(--size-page-staff);
+
+    @variant hub {
+      --screen-inset-inline: var(--inset-page-staff);
+      --screen-inset-block-start: var(--inset-page-staff);
+      --screen-inset-block-end: var(--inset-page-staff);
+    }
+  }
+
+  .layout-screen[data-width="review"] {
+    --screen-max-inline-size: var(--size-page-staff-review);
+  }
+
+  .layout-screen[data-width="partner"] {
+    --screen-max-inline-size: var(--size-page-staff-partner);
+  }
+
+  .layout-screen[data-width="published"] {
+    --screen-max-inline-size: var(--size-page-staff-published);
+  }
+
+  .layout-screen[data-width="log"] {
+    --screen-max-inline-size: var(--size-page-staff-log);
+  }
+
+  .layout-screen[data-width="update"] {
+    --screen-max-inline-size: var(--size-page-staff-update);
+  }
+
+  .layout-screen[data-width="resolve"] {
+    --screen-max-inline-size: var(--size-page-staff-resolve);
+  }
+
+  .layout-screen__body {
+    display: flex;
+    flex-direction: column;
+    padding-inline: var(--screen-inset-inline);
+    padding-block-start: var(--screen-inset-block-start);
+    padding-block-end: var(--screen-inset-block-end);
+    row-gap: var(--screen-gap);
+  }
+
+  /* Centring is the one margin a primitive sets, on its own inner element. */
+  .layout-screen[data-surface="staff"] > .layout-screen__body {
+    inline-size: 100%;
+    max-inline-size: var(--screen-max-inline-size);
+    margin-inline: auto;
+    container-type: inline-size;
+    container-name: hub-page;
+  }
+
+  /* The prototype's .cvh-screen--flush: no inline gutter, block-start inset or section gap. */
+  .layout-screen[data-inset="none"] > .layout-screen__body {
+    padding-inline: 0;
+    padding-block-start: 0;
+    row-gap: 0;
+  }
+
+  /*
+   * The prototype's .cvh-pubbar: the page surface with a top border, above the page content so a
+   * scrolled field never shows through. The region is full width; its inner element takes the body's
+   * inline inset and maximum inline size, so the buttons line up with the page column.
+   */
+  .layout-screen__actions {
+    position: sticky;
+    inset-block-end: 0;
+    z-index: 2;
+    background-color: var(--surface);
+    border-block-start: var(--offset-align-hairline) solid var(--border);
+  }
+
+  .layout-screen__actions-inner {
+    inline-size: 100%;
+    max-inline-size: var(--screen-max-inline-size);
+    margin-inline: auto;
+    padding-inline: var(--screen-inset-inline);
+    padding-block-start: var(--screen-actions-inset-block-start);
+    padding-block-end: var(--screen-actions-inset-block-end);
+  }
+}

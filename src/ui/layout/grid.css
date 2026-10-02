@@ -1,0 +1,91 @@
+/*
+ * Grid (docs/design-framework/spacing-container/components/grid.md).
+ * A twoColumn grid switches on the width of the hub-page query container (the staff Screen's
+ * content box) through the variant generated from app-container-hub-two-column-min; it never
+ * reads the viewport, the Hub breakpoint or basic mode.
+ */
+@layer components {
+  .layout-grid {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--gap-grid);
+  }
+
+  /* A cell may be narrower than its content. A word wider than its cell is broken (ordinary words
+     included), which only happens in very narrow cells; long unbreakable tokens never overflow. */
+  .layout-grid > * {
+    min-inline-size: 0;
+    overflow-wrap: break-word;
+  }
+
+  .layout-grid:is(ul, ol) {
+    list-style: none;
+  }
+
+  .layout-grid[data-cols="2"] {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .layout-grid[data-cols="3"] {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .layout-grid[data-cols="4"] {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+
+  .layout-grid[data-gap="target"] {
+    gap: var(--gap-target);
+  }
+
+  .layout-grid[data-gap="stack"] {
+    gap: var(--gap-stack);
+  }
+
+  .layout-grid[data-gap="panel"] {
+    gap: var(--gap-panel);
+  }
+
+  :root[data-basic="true"] .layout-grid[data-collapse-in-basic="true"] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* One column below the container width: main first, the aside after it, full width, not sticky. */
+  .layout-grid[data-two-column] {
+    align-items: start;
+    gap: var(--gap-section-hub);
+  }
+
+  .layout-grid[data-two-column="aside"] {
+    @variant @hub-two-column/hub-page {
+      grid-template-columns: minmax(0, 1fr) var(--size-aside-staff);
+      gap: var(--gap-columns-hub);
+
+      & > :nth-child(2) {
+        position: sticky;
+        inset-block-start: 0;
+      }
+    }
+  }
+
+  .layout-grid[data-two-column="aside-compact"] {
+    @variant @hub-two-column/hub-page {
+      grid-template-columns: minmax(0, 1fr) var(--size-aside-staff-compact);
+      gap: var(--gap-panel);
+    }
+  }
+
+  .layout-grid[data-two-column="even"] {
+    @variant @hub-two-column/hub-page {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--gap-panel);
+    }
+  }
+
+  .layout-grid[data-two-column="even-inner"] {
+    @variant @hub-two-column/hub-page {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: var(--gap-columns-inner);
+    }
+  }
+}
