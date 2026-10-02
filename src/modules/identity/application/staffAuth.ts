@@ -16,7 +16,7 @@ import { deriveStartingPassword } from "../domain/startingPassword";
 import { startingPasswordStanding } from "../domain/startingPasswordWindow";
 import type { AuditWriter } from "./accounts";
 import type { AuthSessions, IdentityProvider, OperationalLog, PasswordCheck, StaffSessionStore, StaffStore, ThrottleStore } from "./ports";
-import { adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
+import { DEFAULT_LOCK_TIMEOUT_MS, adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
 import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
@@ -52,6 +52,8 @@ export interface StaffAuthDeps {
    * MIN_REFUSAL_MS), measured on `monotonicMs` (default performance.now) and waited with `sleep`.
    */
   minRefusalMs?: number;
+  /** How long a password change or re-issue waits for the account's row lock (default DEFAULT_LOCK_TIMEOUT_MS). */
+  lockTimeoutMs?: number;
   monotonicMs?: () => number;
   sleep?: (ms: number) => Promise<void>;
 }
@@ -347,31 +349,44 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
   }
 
   /**
-   * Re-issues a starting password at the provider, then in the database when `stillAllowed` holds
-   * under the transaction, with every session revoked and `password.reissued` audited (an Admin's
-   * re-issue, or IT's for the first Admin).
+   * Re-issues a starting password (an Admin's re-issue, or IT's for the first Admin), serialised
+   * with every other password change of the account. Inside one transaction: the lock timeout is
+   * set, `beforeLock` takes any wider lock the caller needs, the account row is locked (FOR UPDATE:
+   * "choose your password" takes the same lock), the account is checked again under the lock (still
+   * on a starting password, active or locked_pending_reissue) and so is `stillAllowed`, and only
+   * then is the password set at the provider (which ends every provider session of the account).
+   * The database changes follow and commit with it, so the other operation never sees a half-done
+   * one; if the provider fails, nothing is written. Every session is revoked and `password.reissued`
+   * audited.
+   *
+   * Lock order (no deadlock with S01.05/S01.06): accounts advisory lock 7315420052 (first-Admin
+   * re-issue only), then this one account row. S01.06 takes Admin rows in id order, all at once and
+   * never an account's row after the advisory lock; nothing here takes a second row.
    */
   async function reissue(
     target: StaffAccount,
     providerPassword: string,
     actorStaffId: string | null,
+    beforeLock: (tx: DbTransaction) => Promise<void>,
     stillAllowed: (tx: DbTransaction) => Promise<boolean>,
   ): Promise<"reissued" | "provider_error" | "conflict"> {
-    // The admin password update ends every session the account has at the provider.
-    const set = await idp.setPassword(target.authUserId, providerPassword);
-    if (!set.ok) {
-      log.error("identity.password_not_reissued", { staff_id: target.id, error: set.error });
-      return "provider_error";
-    }
-    const now = deps.now();
-    const reissued = await db.transaction(async (tx) => {
-      if (!(await stillAllowed(tx))) return false;
-      if (!(await store.reissueStartingPassword(tx, target.id, now))) return false;
+    return db.transaction(async (tx) => {
+      await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
+      await beforeLock(tx);
+      const locked = await store.lockAccount(tx, target.id);
+      if (!locked || !locked.mustChangePassword || (locked.status !== "active" && locked.status !== "locked_pending_reissue")) return "conflict" as const;
+      if (!(await stillAllowed(tx))) return "conflict" as const;
+      const set = await idp.setPassword(locked.authUserId, providerPassword);
+      if (!set.ok) {
+        log.error("identity.password_not_reissued", { staff_id: target.id, error: set.error });
+        return "provider_error" as const;
+      }
+      const now = deps.now();
+      if (!(await store.reissueStartingPassword(tx, target.id, now))) throw new Error("re-issue not recorded under the account lock");
       await sessionStore.revokeAll(tx, target.id, now);
       await audit.record(tx, { action: "password.reissued", actorStaffId, subjectType: "staff_account", subjectId: target.id });
-      return true;
+      return "reissued" as const;
     });
-    return reissued ? "reissued" : "conflict";
   }
 
   return {
@@ -473,23 +488,31 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       if (!pepper) return refuse("provider_error", "provider_error");
 
       const providerPassword = pepper(valid.value);
-      const set = await idp.setPassword(account.authUserId, providerPassword);
-      if (!set.ok) {
-        if (set.error === "unavailable") log.error("identity.password_not_set", { staff_id: staffId });
-        return refuse(set.error === "rejected" ? "password_rejected" : "provider_error", "provider_error");
-      }
       const now = deps.now();
-      const changed = await db.transaction(async (tx) => {
-        if (!(await store.completePasswordChange(tx, staffId))) return false;
+      // Serialised with a re-issue of the same account (see reissue for the lock order): lock the
+      // account row, check again under it, and only then set the password at the provider.
+      const outcome = await db.transaction(async (tx) => {
+        await store.setLockTimeout(tx, deps.lockTimeoutMs ?? DEFAULT_LOCK_TIMEOUT_MS);
+        const locked = await store.lockAccount(tx, staffId);
+        if (!locked || locked.status !== "active" || !locked.mustChangePassword) return { done: false as const, error: "not_required" as const };
+        // Still the starting password this request read: a re-issue or reset since then started a new one.
+        if (locked.startingPasswordIssuedAt?.getTime() !== account.startingPasswordIssuedAt?.getTime()) return { done: false as const, error: "not_required" as const };
+        if (current) {
+          // A re-issue (or a suspension) meanwhile revoked the session this request came from.
+          const opened = await sessionStore.find(tx, current.sessionId);
+          if (!opened || opened.revokedAt !== null || opened.staffId !== staffId) return { done: false as const, error: "not_required" as const };
+        }
+        const set = await idp.setPassword(locked.authUserId, providerPassword);
+        if (!set.ok) {
+          if (set.error === "unavailable") log.error("identity.password_not_set", { staff_id: staffId });
+          return { done: false as const, error: set.error === "rejected" ? ("password_rejected" as const) : ("provider_error" as const) };
+        }
+        if (!(await store.completePasswordChange(tx, staffId, locked.startingPasswordIssuedAt))) throw new Error("password change not recorded under the account lock");
         await sessionStore.revokeAll(tx, staffId, now, { keep: current?.sessionId });
         await audit.record(tx, { action: "password.changed", actorStaffId: staffId, subjectType: "staff_account", subjectId: staffId });
-        return true;
+        return { done: true as const };
       });
-      if (!changed) {
-        // Suspended or re-issued meanwhile: the provider has the new password, but the account stays as it is.
-        log.error("identity.password_change_not_recorded", { staff_id: staffId });
-        return refuse("not_required", "conflict");
-      }
+      if (!outcome.done) return refuse(outcome.error, outcome.error === "not_required" ? "conflict" : "provider_error");
       if (current) await reopenSession(account, current, providerPassword, now);
       if (account.role === "admin") await deps.completeBootstrapIfReady(staffId);
       const enrolled = await idp.hasVerifiedAuthenticator(account.authUserId);
@@ -523,7 +546,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const pepper = pepperFor("reissue_starting_password");
       if (!pepper) return refuse("passwords_not_configured", "provider_error", target.id);
 
-      const result = await reissue(target, pepper(starting.value), actor.id, async (tx) => {
+      const result = await reissue(target, pepper(starting.value), actor.id, async () => {}, async (tx) => {
         const current = await store.findById(tx, actor.id);
         return current !== null && mayManageAccounts(current);
       });
@@ -557,8 +580,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const pepper = pepperFor("reissue_first_admin_starting_password");
       if (!pepper) return refuse("passwords_not_configured", "provider_error", target.id);
 
-      const result = await reissue(target, pepper(starting.value), SYSTEM_ACTOR, async (tx) => {
-        await store.lockAccounts(tx);
+      const result = await reissue(target, pepper(starting.value), SYSTEM_ACTOR, (tx) => store.lockAccounts(tx), async (tx) => {
         const current = await store.readBootstrap(tx);
         return current !== null && bootstrapPhase(current) === "in_progress" && current.firstAdminId === target.id;
       });

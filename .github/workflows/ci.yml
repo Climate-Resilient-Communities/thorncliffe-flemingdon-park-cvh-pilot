@@ -124,12 +124,20 @@ jobs:
 
   # The Vercel CLI reads VERCEL_ORG_ID and VERCEL_PROJECT_ID from the environment. VERCEL_TOKEN
   # is given only to the steps that call the Vercel API, never to npm installs, builds or tests.
+  #
+  # Vercel's Hobby plan caps file uploads per day, so previews are limited to branches with an open
+  # pull request and deploys upload one tarball (--archive=tgz) instead of every built file. This
+  # workflow runs on push only, so a branch pushed before its pull request is opened gets no
+  # preview; the first push after opening the pull request gets one.
   preview:
     name: Vercel preview
     needs: checks
     if: github.ref != 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    permissions:
+      contents: read
+      pull-requests: read
     env:
       VERCEL_ORG_ID: ${{ vars.VERCEL_ORG_ID }}
       VERCEL_PROJECT_ID: ${{ vars.VERCEL_PROJECT_ID }}
@@ -155,9 +163,15 @@ jobs:
           fi
       - if: steps.settings.outputs.ok == 'true'
         uses: actions/checkout@v7
+      - name: Confirm the branch has an open pull request
+        id: pr
+        if: steps.settings.outputs.ok == 'true'
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: scripts/ci/open-pr-gate.sh
       - name: Confirm production already has a deployment
         id: vercel
-        if: steps.settings.outputs.ok == 'true'
+        if: steps.pr.outputs.open == 'true'
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: scripts/ci/preview-gate.sh
@@ -185,7 +199,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --json | jq -er .url)
           url="https://${url#https://}"
           echo "url=$url" >> "$GITHUB_OUTPUT"
           echo "Preview: $url" >> "$GITHUB_STEP_SUMMARY"
@@ -275,7 +289,7 @@ jobs:
         env:
           VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
         run: |
-          url=$(vercel deploy --prebuilt --prod --skip-domain --json | jq -er .url)
+          url=$(vercel deploy --prebuilt --archive=tgz --prod --skip-domain --json | jq -er .url)
           echo "url=$url" >> "$GITHUB_OUTPUT"
       # Checked again just before promoting: main may have moved during the build.
       - name: Check this commit is still the head of main before promoting
