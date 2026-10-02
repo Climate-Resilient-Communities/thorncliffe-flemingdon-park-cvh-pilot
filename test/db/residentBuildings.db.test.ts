@@ -80,4 +80,16 @@ describe("the resident building list", () => {
   it("is empty before the buildings are loaded", async () => {
     expect(await createResidentBuildings({ db: app }).list()).toEqual([]);
   });
+
+  it("lists only the ids of every building and neighbourhood for the public alert feed (S02.11), as the app's role", async () => {
+    await owner`insert into neighbourhood (id, name, fsa) values ('TP', 'Thorncliffe Park', 'M4H'), ('FP', 'Flemingdon Park', 'M3C')`;
+    await building("200", "TP", "9 Beta Rd");
+    await building("100", "TP", "1 Alpha Rd");
+
+    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: ["100", "200"], neighbourhoods: ["FP", "TP"] });
+  });
+
+  it("has no place ids before the buildings are loaded", async () => {
+    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: [], neighbourhoods: [] });
+  });
 });

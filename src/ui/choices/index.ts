@@ -7,3 +7,5 @@ export { LanguageStep, type StepLanguage } from "./language-step";
 export { MyChoices } from "./my-choices";
 export { PlaceStep } from "./place-step";
 export type { StepMode } from "./parts";
+export { useGateBuildingList } from "./building-list-context";
+export { useChoices, type BuildingListState } from "./use-choices";
