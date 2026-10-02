@@ -6,20 +6,30 @@
 //                                  fail on) questions not yet checked by a second team member;
 //                                  --require-checked fails on them.
 //   run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off
-//       [--split tuning|evaluation|all] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
-//                                  ask every question of the chosen subset(s) (default all) and write
-//                                  data/search-test-set/reports/{date}-{model}.json. <module> is an
-//                                  ES module whose default export (or `createEngine()`) is a SearchEngine,
-//                                  see lib.ts. The real one will wrap the /api/search use case.
+//       [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+//                                  ask every question of the chosen subset (default tuning) and write
+//                                  data/search-test-set/reports/{date}-{model}-leg-{on|off}-{split}.json.
+//                                  The date defaults to today in Toronto. The evaluation subset is
+//                                  acceptance evidence and never used for tuning, so running it
+//                                  (--split evaluation, or all) needs --final. <module> is an ES module
+//                                  whose default export (or `createEngine()`) is a SearchEngine, see lib.ts.
+//                                  The real engine calls the search use case directly, not /api/search
+//                                  over HTTP: that is limited to 30 requests per 10 minutes. Prints a
+//                                  warning when questions are not yet checked by a second team member.
 //   --compare <a> <b> [--fail-on-worse]
-//                                  per-language differences between two reports (paths, or file names in
-//                                  the reports folder); --fail-on-worse exits 1 when any language dropped.
+//                                  per-language and per-language/form differences between two reports
+//                                  (paths, or file names in the reports folder); a language or subset
+//                                  missing from b counts as worse; warns when a and b ran different
+//                                  questions. --fail-on-worse exits 1 when anything dropped.
 //
-// Exit code 0: done. Exit code 1: the set failed validation, a language got worse with
-// --fail-on-worse, or the run could not finish. Exit code 2: wrong usage.
+// Exit code 0: done. Exit code 1: the set failed validation, something got worse with
+// --fail-on-worse, or the run could not finish (the engine's answer is not a SearchV1 body, or its
+// release is not --release or changes during the run). Exit code 2: wrong usage.
+import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
+import type { QuestionSplit } from "@/contracts/searchTestSet";
 import {
   buildReport,
   compareReports,
@@ -32,13 +42,14 @@ import {
   QUESTIONS_FILE,
   reportFileName,
   runQuestions,
+  torontoDate,
   uncheckedQuestions,
   type LocatedQuestion,
   type SearchEngine,
 } from "./lib";
 
 const USAGE = `usage: search-test-set validate [--require-checked]
-       search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+       search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
        search-test-set --compare <report a> <report b> [--fail-on-worse]`;
 
 function option(argv: string[], name: string): string | undefined {
@@ -46,11 +57,18 @@ function option(argv: string[], name: string): string | undefined {
   return index >= 0 ? argv[index + 1] : undefined;
 }
 
-/** The questions of the real set, or the lines that explain why they are not valid. */
-export function loadQuestions(root: string): { questions: LocatedQuestion[]; errors: string[] } {
+/** The questions of the real set, or the lines that explain why they are not valid; `sha256` is of the file. */
+export function loadQuestions(root: string): { questions: LocatedQuestion[]; errors: string[]; sha256: string } {
   const ids = providerIdsOf(readFileSync(path.join(root, PROVIDERS_FILE), "utf8"));
-  const { questions, errors } = parseQuestions(readFileSync(path.join(root, QUESTIONS_FILE), "utf8"), ids);
-  return { questions, errors: formatLineErrors(errors) };
+  const bytes = readFileSync(path.join(root, QUESTIONS_FILE));
+  const { questions, errors } = parseQuestions(bytes.toString("utf8"), ids);
+  return { questions, errors: formatLineErrors(errors), sha256: createHash("sha256").update(bytes).digest("hex") };
+}
+
+function warnUnchecked(unchecked: readonly { id: string }[], out: (line: string) => void) {
+  if (unchecked.length > 0) {
+    out(`WARNING: ${unchecked.length} question(s) not yet checked by a second team member: ${unchecked.map((q) => q.id).join(", ")}`);
+  }
 }
 
 function validate(argv: string[], root: string): number {
@@ -73,7 +91,10 @@ function validate(argv: string[], root: string): number {
 async function loadEngine(modulePath: string): Promise<SearchEngine> {
   const loaded = (await import(pathToFileURL(path.resolve(modulePath)).href)) as { default?: unknown; createEngine?: () => unknown };
   const engine = typeof loaded.createEngine === "function" ? await loaded.createEngine() : loaded.default;
-  if (typeof engine !== "function") throw new Error(`${modulePath} must export a search engine function as default (or createEngine())`);
+  const isObject = typeof engine === "object" && engine !== null && typeof (engine as { search?: unknown }).search === "function";
+  if (typeof engine !== "function" && !isObject) {
+    throw new Error(`${modulePath} must export a search engine (a function, or an object with search()) as default, or createEngine()`);
+  }
   return engine as SearchEngine;
 }
 
@@ -83,10 +104,10 @@ async function run(argv: string[], root: string): Promise<number> {
   const model = option(argv, "--model");
   const thresholdText = option(argv, "--threshold");
   const leg = option(argv, "--translated-leg");
-  const split = option(argv, "--split") ?? "all";
-  const date = option(argv, "--date") ?? new Date().toISOString().slice(0, 10);
+  const split = option(argv, "--split") ?? "tuning";
+  const date = option(argv, "--date") ?? torontoDate();
   const threshold = Number(thresholdText);
-  if (!enginePath || !release || !model || !thresholdText || !Number.isFinite(threshold) || (leg !== "on" && leg !== "off")) {
+  if (!enginePath || !release || !/^\d+$/.test(release) || !model || !thresholdText || !Number.isFinite(threshold) || (leg !== "on" && leg !== "off")) {
     console.error(USAGE);
     return 2;
   }
@@ -94,27 +115,38 @@ async function run(argv: string[], root: string): Promise<number> {
     console.error(USAGE);
     return 2;
   }
+  if (split !== "tuning" && !argv.includes("--final")) {
+    console.error(`--split ${split} runs the evaluation subset, which is acceptance evidence and never used for tuning: pass --final to run it.`);
+    return 2;
+  }
 
-  const { questions, errors } = loadQuestions(root);
+  const { questions, errors, sha256 } = loadQuestions(root);
   if (errors.length > 0) {
     for (const line of errors) console.error(line);
     console.error("Not running: the questions file is not valid.");
     return 1;
   }
+  const subsets: QuestionSplit[] = split === "all" ? ["tuning", "evaluation"] : [split as QuestionSplit];
   const outDir = path.resolve(option(argv, "--out-dir") ?? path.join(root, "data", "search-test-set", "reports"));
-  const outFile = path.join(outDir, reportFileName(date, model));
+  const outFile = path.join(outDir, reportFileName(date, model, leg === "on", split as QuestionSplit | "all"));
   if (existsSync(outFile) && !argv.includes("--force")) {
     console.error(`${outFile} already exists; pass --force to replace it, or a different --date.`);
     return 1;
   }
 
-  const subsets = split === "all" ? (["tuning", "evaluation"] as const) : ([split] as ("tuning" | "evaluation")[]);
   const selected = questions.filter((q) => subsets.includes(q.split));
-  const results = await runQuestions(selected, await loadEngine(enginePath));
-  const report = buildReport(results, { date, release, model, threshold, translatedLeg: leg === "on" }, subsets);
+  let results;
+  try {
+    results = await runQuestions(selected, await loadEngine(enginePath), { release: Number(release) });
+  } catch (error) {
+    console.error(`The run failed: ${(error as Error).message}`);
+    return 1;
+  }
+  const report = buildReport(results, { date, release, model, threshold, translatedLeg: leg === "on", questionsSha256: sha256 }, subsets);
   mkdirSync(outDir, { recursive: true });
   writeFileSync(outFile, `${JSON.stringify(report, null, 2)}\n`);
   for (const line of formatReport(report)) console.log(line);
+  if (report.unchecked_count > 0) warnUnchecked(uncheckedQuestions(selected), (line) => console.warn(line));
   console.log(`\nReport written to ${outFile}`);
   return 0;
 }
