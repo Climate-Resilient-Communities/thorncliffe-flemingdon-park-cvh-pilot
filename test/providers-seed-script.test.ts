@@ -9,6 +9,8 @@ import { resolveSeedTarget } from "../scripts/seed/target";
 
 const ROOT = path.join(__dirname, "..");
 const SCRIPT = path.join(ROOT, "scripts", "seed", "providers.mjs");
+// Each run bundles the seed with esbuild in a child process: slow on a loaded machine or CI runner.
+const SPAWN_TIMEOUT = 60_000;
 const temp: string[] = [];
 
 function run(args: string[], env: Record<string, string> = {}) {
@@ -31,7 +33,7 @@ afterAll(() => {
   for (const dir of temp) rmSync(dir, { recursive: true, force: true });
 });
 
-describe("npm run seed:providers -- --dry-run", () => {
+describe("npm run seed:providers -- --dry-run", { timeout: SPAWN_TIMEOUT }, () => {
   it("reports the real catalogue: 99 providers in 8 categories, no translation loaded yet, exit 0", () => {
     const { code, out } = run(["--dry-run"]);
 
@@ -73,7 +75,7 @@ describe("npm run seed:providers -- --dry-run", () => {
 
 // Where the seeds write (S02.04 review): SEED_DATABASE_URL only, never the transaction pooler, the
 // target printed first, and --yes for any host but this machine. No test here reaches a database.
-describe("the seeds' target database", () => {
+describe("the seeds' target database", { timeout: SPAWN_TIMEOUT }, () => {
   /** The process environment with neither seed variable (unset, not empty), then `env`. */
   const cleanEnv = (env: Record<string, string>) => {
     const base = { ...process.env, ...env };
@@ -136,10 +138,10 @@ describe("the seeds' target database", () => {
     });
 
     it("never needs the database for a dry run", () => {
-      const { code } = run2(script, ["--dry-run"], {});
+      const { code, err } = run2(script, ["--dry-run"], {});
 
       expect(code === 0 || code === 1).toBe(true); // the dry run's own result; no URL asked for
-      expect(run2(script, ["--dry-run"], {}).err).not.toContain("SEED_DATABASE_URL");
+      expect(err).not.toContain("SEED_DATABASE_URL");
     });
   });
 
