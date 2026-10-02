@@ -1330,7 +1330,7 @@
     "chosenNone": "No buildings chosen yet",
     "chosenOne": "1 building chosen",
     "chosenMany": "{n} buildings chosen",
-    "floorsIn": "Floors in <building>{address}</building>. Optional.",
+    "floorsIn": "Floors in {building}. Optional.",
     "noFloorsListed": "No floors are listed for this building yet.",
     "loading": "Loading the list of buildings...",
     "loadFailed": "The list of buildings could not be loaded. Check your connection and try again, or skip this step.",

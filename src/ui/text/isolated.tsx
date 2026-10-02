@@ -38,8 +38,8 @@ const SLOT = "";
 /**
  * A catalog message with one value in it, the value isolated: `format` is the message with the value filled in (for
  * example `(q) => t("noMatch", { q })`). The message is formatted with a slot in place of the value and cut there, so
- * the catalog string stays as it is. `dir` is "ltr" for text that is always left to right (a floor label, an address) and
- * "auto" for what the resident typed, in any script. A message that fell back to English is one isolated English run, as ResidentText makes it.
+ * the catalog string stays as it is (no markup in the catalog: it is translated as plain text). `dir` is "ltr" for place
+ * text that is always left to right, in English (an address, a floor label), and "auto" for what the resident typed, in any script. A message that fell back to English is one isolated English run, as ResidentText makes it.
  */
 export function withIsolated(format: (value: string) => string, value: ReactNode, dir: "ltr" | "auto" = "ltr"): ReactNode {
   const text = format(SLOT);
@@ -47,7 +47,13 @@ export function withIsolated(format: (value: string) => string, value: ReactNode
   const parts = (
     <>
       {before}
-      <bdi dir={dir}>{value}</bdi>
+      {dir === "ltr" ? (
+        <bdi lang="en" dir="ltr">
+          {value}
+        </bdi>
+      ) : (
+        <bdi dir="auto">{value}</bdi>
+      )}
       {after}
     </>
   );
@@ -60,17 +66,3 @@ export function withIsolated(format: (value: string) => string, value: ReactNode
   );
 }
 
-/**
- * The result of `t.rich`: the same for a message that fell back to English as ResidentText makes of a plain string, one
- * isolated English run. (The "[EN] " marker is at the start of the first chunk.)
- */
-export function richResident(node: ReactNode): ReactNode {
-  const first = Array.isArray(node) ? node[0] : node;
-  return typeof first === "string" && isEnglishFallback(first) ? (
-    <bdi lang="en" dir="ltr">
-      {node}
-    </bdi>
-  ) : (
-    node
-  );
-}

@@ -1085,7 +1085,7 @@
   /* First-run choices on the phone (S02.03): R-35 with many buildings and floors, R-34 with removal notes and "Clear everything". Not prototype screens. */
   m(en, { R35: { manyLine: 'Choose your own building or a relative\'s. You can choose as many as you like.',
     chosenNone: 'No buildings chosen yet', chosenOne: '1 building chosen', chosenMany: '{n} buildings chosen',
-    floorsIn: 'Floors in <building>{address}</building>. Optional.', noFloorsListed: 'No floors are listed for this building yet.',
+    floorsIn: 'Floors in {building}. Optional.', noFloorsListed: 'No floors are listed for this building yet.',
     loading: 'Loading the list of buildings...', loadFailed: 'The list of buildings could not be loaded. Check your connection and try again, or skip this step.',
     retry: 'Try again' },
   R34: { removedBuildingOne: '1 building you saved is no longer in the building list, so it was removed.',

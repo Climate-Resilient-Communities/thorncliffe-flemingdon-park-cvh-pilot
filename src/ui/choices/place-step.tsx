@@ -7,7 +7,7 @@ import type { BuildingList } from "@/contracts/buildingList";
 import type { LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
-import { richResident, withIsolated } from "../text/isolated";
+import { withIsolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
 import { sortBuildings } from "./building-list";
 import { baseChoices, choicesStore } from "./choices-store";
@@ -142,7 +142,7 @@ export function PlaceStep({ lang, mode }: { lang: LaunchCode; mode: StepMode }) 
                       {chosen && (
                         <fieldset className="choice-fieldset choice-floors" data-testid={`floors-${building.rsn}`}>
                           <legend className="choice-legend">
-                            {richResident(t.rich("floorsIn", { address: building.address, building: (chunks) => <bdi lang="en" dir="ltr">{chunks}</bdi> }))}
+                            {withIsolated((address) => t("floorsIn", { building: address }), building.address)}
                           </legend>
                           {building.floors.length === 0 ? (
                             <p className="choice-hint">
