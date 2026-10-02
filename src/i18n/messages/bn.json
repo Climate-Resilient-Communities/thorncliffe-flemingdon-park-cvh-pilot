@@ -59,6 +59,8 @@
     "more": "আরও",
     "notInPrototype": "এই প্রোটোটাইপে নেই",
     "notInPrototypeBody": "এই অংশ প্রোটোটাইপে তৈরি হয়নি। কিছুই বদলায়নি।",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "ঠিক আছে",
     "about": "CVH সম্পর্কে",
     "aboutBody": "Thorncliffe Park Community Hub থর্নক্লিফ পার্ক ও ফ্লেমিংডন পার্কের জন্য কমিউনিটি ভার্চুয়াল হাব চালায়।",

@@ -59,6 +59,8 @@
     "more": "Más",
     "notInPrototype": "No está en este prototipo",
     "notInPrototypeBody": "Esta parte no está construida en el prototipo. No cambió nada.",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "De acuerdo",
     "about": "Acerca del CVH",
     "aboutBody": "El Centro Virtual Comunitario lo gestiona Thorncliffe Park Community Hub para Thorncliffe Park y Flemingdon Park.",

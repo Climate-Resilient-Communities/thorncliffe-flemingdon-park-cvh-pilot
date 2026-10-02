@@ -59,6 +59,8 @@
     "more": "Iba pa",
     "notInPrototype": "Wala sa prototype na ito",
     "notInPrototypeBody": "Hindi pa nagagawa ang bahaging ito sa prototype. Walang nagbago.",
+    "pageNotFound": "[EN] This page could not be found.",
+    "pageNotFoundBody": "[EN] The link may be old or mistyped. Use the menu below to go on.",
     "ok": "Sige",
     "about": "Tungkol sa CVH",
     "aboutBody": "Pinapatakbo ng Thorncliffe Park Community Hub ang Community Virtual Hub para sa Thorncliffe Park at Flemingdon Park.",
