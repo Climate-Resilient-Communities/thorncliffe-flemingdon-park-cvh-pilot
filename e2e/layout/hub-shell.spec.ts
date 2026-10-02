@@ -109,7 +109,7 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: three pages that exist and two that are listed but not built yet.
+      // The menu is the real one for an Admin: four pages that exist (Incidents, People, Providers, Buildings) and two that are listed but not built yet.
       await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(3);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(2);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
@@ -283,6 +283,7 @@ test.describe("what a screen reader reads", () => {
       ["/staff/people", "People"],
       ["/staff/people/", "People"],
       ["/staff/people/new", "People"],
+      ["/staff/providers", "Providers"],
     ] as const) {
       await open(page, { texts: REAL_TEXTS, current: path });
 

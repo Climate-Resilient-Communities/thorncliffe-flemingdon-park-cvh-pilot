@@ -1,7 +1,7 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { expect, type Page } from "@playwright/test";
-import { build } from "esbuild";
+import { build, type Plugin } from "esbuild";
 import type { ComponentProps } from "react";
 import type * as Fixtures from "../layout/fixtures";
 import { compileCss } from "../../test/helpers/compile-css";
@@ -12,6 +12,17 @@ const ROOT = path.join(__dirname, "..", "..");
 const RTL = new Set(["ur", "ps", "prs"]);
 
 type Render = (name: string, props: unknown) => string;
+
+// The providers list imports its server actions, which reach the database; the harness renders it without a server,
+// so those imports are answered by e2e/helpers/provider-actions-stub.ts (a refusal and a done message to photograph).
+const providerActionsStub: Plugin = {
+  name: "provider-actions-stub",
+  setup(build) {
+    build.onResolve({ filter: /^\.\/actions$/ }, (args) =>
+      /providers[\\/]ProviderList\.tsx$/.test(args.importer) ? { path: path.join(ROOT, "e2e", "helpers", "provider-actions-stub.ts") } : undefined,
+    );
+  },
+};
 
 let stylesheet: Promise<string> | undefined;
 let renderer: Promise<Render> | undefined;
@@ -64,6 +75,7 @@ async function loadRenderer(): Promise<Render> {
     format: "cjs",
     jsx: "automatic",
     tsconfig: path.join(ROOT, "tsconfig.json"),
+    plugins: [providerActionsStub],
     external: ["react", "react-dom"],
     write: false,
     logLevel: "silent",
@@ -100,6 +112,7 @@ async function loadClientBundle(): Promise<string> {
     format: "iife",
     jsx: "automatic",
     tsconfig: path.join(ROOT, "tsconfig.json"),
+    plugins: [providerActionsStub],
     define: { "process.env.NODE_ENV": '"production"' },
     minify: true,
     write: false,

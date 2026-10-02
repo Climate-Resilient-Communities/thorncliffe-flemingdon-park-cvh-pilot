@@ -15,7 +15,7 @@ function Refusal({ id, state }: { id: string; state: EditState }) {
   if (state.status !== "refused") return null;
   return (
     <Stack gap="subline">
-      <p id={id} role="alert">
+      <p id={id} role="alert" className="hub-error">
         {state.message}
       </p>
       {state.detail && <p>{state.detail}</p>}
@@ -61,7 +61,7 @@ export function FloorRow({
               <input type="hidden" name="rsn" value={rsn} />
               <input type="hidden" name="floorId" value={floor.id} />
               <input
-                className="tap"
+                className="hub-input"
                 type="text"
                 name="label"
                 defaultValue={shown}
@@ -71,7 +71,7 @@ export function FloorRow({
                 aria-describedby={renameState.status === "refused" ? renameError : undefined}
                 aria-invalid={renameState.status === "refused" || undefined}
               />
-              <button className="tap" type="submit" disabled={renaming} aria-label={floor.renameName}>
+              <button className="hub-button hub-button--secondary" type="submit" disabled={renaming} aria-label={floor.renameName}>
                 {labels.rename}
               </button>
             </Inline>
@@ -87,16 +87,16 @@ export function FloorRow({
                 </p>
                 <Inline gap="target" align="center">
                   <input type="hidden" name="confirm" value="1" />
-                  <button className="tap" type="submit" disabled={removing} aria-describedby={removeQuestion}>
+                  <button className="hub-button hub-button--primary" type="submit" disabled={removing} aria-describedby={removeQuestion}>
                     {floor.removeYes}
                   </button>
-                  <button className="tap" type="button" onClick={() => setDismissed(removeState)}>
+                  <button className="hub-button hub-button--secondary" type="button" onClick={() => setDismissed(removeState)}>
                     {floor.removeKeep}
                   </button>
                 </Inline>
               </Stack>
             ) : (
-              <button className="tap" type="submit" disabled={removing} aria-label={floor.removeName}>
+              <button className="hub-button hub-button--secondary" type="submit" disabled={removing} aria-label={floor.removeName}>
                 {labels.remove}
               </button>
             )}
@@ -127,7 +127,7 @@ export function AddFloorForm({ rsn, labels, action, initialState = IDLE }: { rsn
               <label htmlFor="add-floor-label">{labels.label}</label>
               <p id="add-floor-hint">{labels.hint}</p>
               <input
-                className="tap"
+                className="hub-input"
                 id="add-floor-label"
                 type="text"
                 name="label"
@@ -140,12 +140,12 @@ export function AddFloorForm({ rsn, labels, action, initialState = IDLE }: { rsn
             </Stack>
             <Stack gap="label">
               <label htmlFor="add-floor-place">{labels.place}</label>
-              <select className="tap" id="add-floor-place" name="place" defaultValue={refused ? (state.place ?? "top") : "top"}>
+              <select className="hub-input" id="add-floor-place" name="place" defaultValue={refused ? (state.place ?? "top") : "top"}>
                 <option value="top">{labels.top}</option>
                 <option value="bottom">{labels.bottom}</option>
               </select>
             </Stack>
-            <button className="tap" type="submit" disabled={pending}>
+            <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
               {labels.submit}
             </button>
           </Stack>
@@ -167,7 +167,7 @@ export function ConfirmForm({ rsn, labels, action, initialState = IDLE }: { rsn:
           <Stack gap="stack">
             <input type="hidden" name="rsn" value={rsn} />
             <Refusal id="confirm-error" state={state} />
-            <button className="tap" type="submit" disabled={pending}>
+            <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
               {labels.submit}
             </button>
           </Stack>

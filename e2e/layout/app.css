@@ -1,7 +1,8 @@
 /* The app's stylesheet, plus the tap and type utilities, which Tailwind emits only once a component uses it. */
 @import "../../src/app/globals.css";
-/* The staff layout imports these after globals.css; the harness has no layout, so it compiles them here. */
+/* The staff layout imports these three after globals.css; the harness has no layout, so it compiles them here. */
 @import "../../src/ui/hub/hub-icons.css";
 @import "../../src/ui/hub/hub-shell.css";
+@import "../../src/ui/hub/hub-forms.css";
 @import "../../src/ui/hub/hub-content.css";
 @source inline("tap text-{caption,body,alert,lead,h3,h2,h1}");

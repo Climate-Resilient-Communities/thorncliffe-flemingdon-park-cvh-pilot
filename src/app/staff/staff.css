@@ -1,9 +1,10 @@
 /*
  * The styles only the staff screens use: the Hub shell (S01.09). The staff layout imports this file after
  * globals.css, so a resident page's stylesheet carries no .hub- rule. @reference brings in the theme (the hub:
- * variant and the tokens) without emitting it again.
+ * variant and the tokens) without emitting it again. hub-forms.css holds the Hub's button, input and error styles.
  */
 @reference "../globals.css";
 @import "../../ui/hub/hub-icons.css";
 @import "../../ui/hub/hub-shell.css";
 @import "../../ui/hub/hub-content.css";
+@import "../../ui/hub/hub-forms.css";

@@ -1,7 +1,8 @@
-// The bounding box a pilot coordinate must fall in: the City of Toronto, which spans roughly 43.58 to
-// 43.86 degrees north and 79.64 to 79.11 degrees west. It catches the usual data mistakes: latitude and
-// longitude swapped, a missing sign, a point at 0,0 or in another city; it does not check that a point
-// is in the right neighbourhood. Shared by the buildings seed (S01.13) and the provider catalogue (S02.04).
+// The bounding box a pilot coordinate must fall in: the City of Toronto, with a little margin.
+// db/migrations/20261002200000_provider_catalogue.sql repeats these four numbers in the
+// provider_location check constraint, and a test keeps the two together.
+//
+// Shared by the provider catalogue (S02.04) and the buildings seed (S01.13), so it lives in src/contracts.
 export const TORONTO_BOUNDS = { minLat: 43.58, maxLat: 43.86, minLng: -79.64, maxLng: -79.11 } as const;
 
 /** True when the point is a finite coordinate inside the Toronto bounding box. */

@@ -1,7 +1,11 @@
 // Seed of the guides and essential numbers (S02.09). Run through scripts/seed/guides.mjs:
 //
-//   SEED_DATABASE_URL=postgres://... npm run seed:guides [-- --dir <catalogue folder>] [-- --dry-run]
+//   SEED_DATABASE_URL=postgres://... npm run seed:guides -- [--yes] [--dir <catalogue folder>] [--dry-run]
 //   npm run seed:guides -- --launch-check [--dir <catalogue folder>]
+//
+// SEED_DATABASE_URL is required, with no fallback to MIGRATE_DATABASE_URL, and must not be the transaction
+// pooler (port 6543). The target host and database are printed before writing; a host other than
+// localhost needs --yes, otherwise nothing is written and the exit code is 1.
 //
 // Exit code 0: everything in the files was loaded (translations that are stale or not reviewed
 // are listed in the report, and show in English with translation.unavailable).
@@ -11,6 +15,7 @@
 // was refused (a 911 rule), or the run failed.
 import path from "node:path";
 import { createDb } from "@/platform/db";
+import { announceSeedTarget } from "./target";
 import {
   checkGuidesLaunch,
   formatLaunchGaps,
@@ -40,11 +45,8 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
     return plan.refusals.length > 0 || plan.report.guides.some((g) => !g.loaded) || !plan.report.numbers.loaded ? 1 : 0;
   }
 
-  const url = env.SEED_DATABASE_URL ?? env.MIGRATE_DATABASE_URL;
-  if (!url) {
-    console.error("SEED_DATABASE_URL is not set (use the same session-mode connection as the migrations)");
-    return 1;
-  }
+  const url = announceSeedTarget(argv, env);
+  if (!url) return 1;
   const db = createDb(url);
   try {
     const result = await seedGuidesAndNumbers(db, input);

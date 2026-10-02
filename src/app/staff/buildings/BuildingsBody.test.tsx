@@ -136,7 +136,7 @@ describe("a form that was refused", () => {
         initialRename={{ status: "refused", message: "A label can have at most 8 characters.", label: "123456789" }}
       />,
     );
-    expect(out).toContain('<p id="rename-error-01900000-0000-7000-8000-000000000001" role="alert">A label can have at most 8 characters.</p>');
+    expect(out).toContain('<p id="rename-error-01900000-0000-7000-8000-000000000001" role="alert" class="hub-error">A label can have at most 8 characters.</p>');
     expect(out).toContain('value="123456789"');
     expect(out).toContain('aria-invalid="true"');
   });
@@ -152,7 +152,7 @@ describe("a form that was refused", () => {
         initialRemove={{ status: "refused", message: "Reassign or remove the ambassadors on this floor first", detail: "Ambassadors on this floor: Nia Mensah, Omar Farouk" }}
       />,
     );
-    expect(out).toContain('role="alert">Reassign or remove the ambassadors on this floor first</p>');
+    expect(out).toContain('role="alert" class="hub-error">Reassign or remove the ambassadors on this floor first</p>');
     expect(out).toContain("<p>Ambassadors on this floor: Nia Mensah, Omar Farouk</p>");
   });
 

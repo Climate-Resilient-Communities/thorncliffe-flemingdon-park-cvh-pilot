@@ -319,6 +319,12 @@ describe.each(handlers.map((file) => [routePath(file), file]))("route handler %s
   });
 });
 
+const GENERIC_AAL2_MESSAGE = "This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.";
+/** Actions only an Admin may take say so: an Admin at aal1 is not told that Coordinators can do it (S02.04 review). */
+const AAL2_MESSAGE: Record<string, string> = {
+  "src/app/staff/providers/actions.ts": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.",
+};
+
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {
   it("are all guarded and none is public", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
@@ -368,7 +374,7 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
           if (can(role, spec.privileged)) {
             expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({
               status: "refused",
-              message: "This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.",
+              message: AAL2_MESSAGE[relative(file)] ?? GENERIC_AAL2_MESSAGE,
             });
             expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
           } else {

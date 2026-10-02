@@ -71,11 +71,16 @@ const BUILDING_ACTIONS = "src/app/staff/buildings/actions.ts";
 const NO_SUCH_BUILDING = "7001";
 const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction"] as const;
+const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
+
+/** The provider the provider actions are aimed at (the DB test loads it). */
+export const PROVIDER_ID = "M001";
 
 export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   // ---- pages ----
   { id: "page /staff", kind: "page", file: "src/app/staff/page.tsx", export: "default", route: "/staff", action: "hub.open", writes: "none", gate: "hub", expected: EVERYONE },
   { id: "page /staff/people", kind: "page", file: "src/app/staff/people/page.tsx", export: "default", route: "/staff/people", action: "accounts.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/providers", kind: "page", file: "src/app/staff/providers/page.tsx", export: "default", route: "/staff/providers", action: "provider.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/buildings", kind: "page", file: "src/app/staff/buildings/page.tsx", export: "default", route: "/staff/buildings", action: "buildings.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
@@ -213,6 +218,21 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     form: { username: TARGET_USERNAME },
     expected: ADMIN_ONLY,
   },
+  // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
+  ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${PROVIDER_ACTIONS}#${name}`,
+      kind: "action",
+      file: PROVIDER_ACTIONS,
+      export: name,
+      route: "/staff/providers",
+      action: "provider.manage",
+      writes: "business",
+      gate: "hub",
+      form: { providerId: PROVIDER_ID, date: "2026-10-01" },
+      expected: ADMIN_ONLY,
+    }),
+  ),
 ];
 
 /** The endpoints anyone may call, without a session (S01.07): listed so the completeness check knows them. */

@@ -3,8 +3,9 @@
 //   SEED_DATABASE_URL=postgres://... npm run seed:buildings [-- --file <register.geojson>] [-- --merge <building-merge.csv>] [-- --dry-run] [-- --yes]
 //
 // SEED_DATABASE_URL is required, with no fallback to MIGRATE_DATABASE_URL: a seed must never reach a database by
-// accident. It must be a session-mode connection (not the transaction pooler, port 6543). A host other than
-// localhost, 127.0.0.1 or ::1 is refused unless --yes is passed. --dry-run never connects.
+// accident (scripts/seed/target.ts). It must be a session-mode connection (not the transaction pooler, port 6543).
+// The target host and database are printed before anything is written. A host other than localhost, 127.0.0.1 or
+// ::1 is refused unless --yes is passed. --dry-run never connects.
 //
 // Reads data/seed/apartment_building_reg.geojson, keeps the rows whose postal area is M4H (Thorncliffe
 // Park, 32 buildings) or M3C (Flemingdon Park, 11), and upserts them by rsn with their address,
@@ -29,10 +30,8 @@ import {
   type PlacesAuditEvent,
 } from "@/modules/places";
 import { createDb } from "@/platform/db";
-import { checkMigrationUrl } from "../db/migrate.mjs";
+import { announceSeedTarget } from "./target";
 import type { AuditEvent } from "@/modules/audit";
-
-const LOCAL_HOSTS = ["localhost", "127.0.0.1", "::1"];
 
 const option = (argv: string[], name: string) => {
   const at = argv.indexOf(name);
@@ -61,18 +60,8 @@ export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string)
     return plan.failures.length > 0 ? 1 : 0;
   }
 
-  const url = env.SEED_DATABASE_URL ?? "";
-  try {
-    checkMigrationUrl(url, "SEED_DATABASE_URL");
-  } catch (error) {
-    console.error(error instanceof Error ? error.message : String(error));
-    return 1;
-  }
-  const host = new URL(url).hostname.replace(/^\[|\]$/g, "");
-  if (!LOCAL_HOSTS.includes(host) && !argv.includes("--yes")) {
-    console.error(`SEED_DATABASE_URL points at ${host}, not at this machine: pass --yes to seed that database`);
-    return 1;
-  }
+  const url = announceSeedTarget(argv, env);
+  if (!url) return 1;
   const db = createDb(url);
   try {
     // The audit module validates each event's meta strictly (src/modules/audit/domain/actions.ts).

@@ -212,10 +212,7 @@ export async function migrate({ sql, dir = MIGRATIONS_DIR, checkPending, recordR
   return { applied: done, removals };
 }
 
-/**
- * Refuses Supabase's transaction pooler: the runner's transactions and SETs need a session.
- * `name` is the variable the URL came from, for the messages (the seeds reuse this check).
- */
+/** Refuses Supabase transaction pooler (the runner needs a session). `name` is the variable the URL came from, for messages; the seeds reuse this check. */
 export function checkMigrationUrl(url, name = "MIGRATE_DATABASE_URL") {
   if (!url) throw new MigrationError(`${name} is not set`, ["give the runner a database URL"]);
   let parsed;
