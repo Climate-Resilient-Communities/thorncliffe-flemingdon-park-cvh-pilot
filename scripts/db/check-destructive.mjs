@@ -17,7 +17,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkDestructiveMigrations, lookUpProductionRelease } from "./contracts.mjs";
-import { MIGRATIONS_DIR, readMigrations } from "./migrations.mjs";
+import { MIGRATIONS_DIR, MIGRATION_FILE, readMigrations } from "./migrations.mjs";
 
 function git(args, cwd) {
   const result = spawnSync("git", args, { cwd, encoding: "utf8" });
@@ -49,6 +49,39 @@ export function changedMigrations(base, dir, cwd) {
   return { added, modified };
 }
 
+/**
+ * A migration added on this branch must sort after every migration already on
+ * the base: migrate.mjs refuses a pending migration that sorts before the
+ * latest one applied in production, so an older timestamp would block deploys.
+ *
+ * @param {string[]} added file names added on this branch
+ * @param {string[]} baseFiles every file name in the migrations directory on the base
+ * @returns {string[]} one problem per misordered file
+ */
+export function findMisorderedMigrations(added, baseFiles) {
+  const versionOf = (file) => MIGRATION_FILE.exec(file)?.[1];
+  const onBase = new Set(baseFiles);
+  const newest = baseFiles.map(versionOf).filter(Boolean).sort().at(-1);
+  if (!newest) return [];
+  return added
+    .filter((file) => !onBase.has(file))
+    .filter((file) => {
+      const version = versionOf(file);
+      return version !== undefined && version <= newest;
+    })
+    .map(
+      (file) =>
+        `${file} sorts at or before the newest migration on the base (${newest}): rename it with a later timestamp than ${newest}, because production refuses a pending migration older than one it already applied.`,
+    );
+}
+
+/** File names in the migrations directory on `base`. */
+export function migrationsOnBase(base, dir, cwd) {
+  const relativeDir = path.relative(git(["rev-parse", "--show-toplevel"], cwd), dir) || ".";
+  const output = git(["ls-tree", "--name-only", base, `${relativeDir}/`], cwd);
+  return output.split("\n").filter(Boolean).map((f) => path.basename(f));
+}
+
 async function main() {
   const args = process.argv.slice(2);
   const option = (name) => {
@@ -67,6 +100,12 @@ async function main() {
       console.warn(message);
       if (annotate) console.log(`::warning title=Migration edited::${message}`);
     }
+    const misordered = findMisorderedMigrations(added, migrationsOnBase(base, dir, process.cwd()));
+    for (const problem of misordered) {
+      console.error(`- ${problem}`);
+      if (annotate) console.log(`::error title=Migration out of order::${problem}`);
+    }
+    if (misordered.length > 0) process.exitCode = 1;
     const selected = new Set([...added, ...modified]);
     migrations = migrations.filter((m) => selected.has(m.file));
   }
