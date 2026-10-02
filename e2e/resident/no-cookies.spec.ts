@@ -44,3 +44,10 @@ test("no redirect to /en/ sets a cookie either, and the browser ends up with non
   expect(cookies).toEqual([]);
   expect(await context.cookies()).toEqual([]);
 });
+
+// S02.03: the building list the phone keeps (public, the same for everyone) sets no cookie either, answered or not.
+test("the building list sets no cookie", async ({ request }) => {
+  const response = await request.get("/api/buildings", { maxRedirects: 0 });
+
+  expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});

@@ -1,7 +1,8 @@
 "use server";
 
-import { updateTag } from "next/cache";
+import { revalidateTag, updateTag } from "next/cache";
 import { redirect } from "next/navigation";
+import { RESIDENT_BUILDINGS_TAG } from "@/contracts/buildingList";
 import { englishText } from "@/i18n/text";
 import { BUILDING_CONTACTS_TAG, buildingTag } from "../../buildingCache";
 import { staffAction, type ActionRefusal } from "../guard";
@@ -23,9 +24,16 @@ const refused = (error: ActionRefusal): EditState => ({ status: "refused", messa
 
 const SPEC = { route: "/staff/buildings", access: "hub", action: "buildings.manage" } as const;
 
-/** A saved change goes back to the building's page, which shows what was done; a refusal stays in the form. */
+/**
+ * A saved change goes back to the building's page, which shows what was done; a refusal stays in the form. A saved
+ * change also expires the resident building list (S02.03), so the next request reads the new floors and buildings
+ * from the database instead of the cached copy.
+ */
 const finish = (state: EditState): EditState => {
-  if (state.status === "saved") redirect(state.location);
+  if (state.status === "saved") {
+    revalidateTag(RESIDENT_BUILDINGS_TAG, { expire: 0 });
+    redirect(state.location);
+  }
   return state;
 };
 
