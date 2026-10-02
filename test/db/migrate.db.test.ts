@@ -168,6 +168,120 @@ describe("migration runner", () => {
     expect(await exists(db, "a")).toBe(false);
   });
 
+  // Through Supabase's session pooler a server session can outlive the runner
+  // (a killed job): a session-level lock would then stay held and block every
+  // later run, so the lock lives only as long as each transaction.
+  it("holds no lock outside its transactions", async () => {
+    files.write("20260101000001_a.sql", CREATE_A);
+    files.write("20260101000002_b.sql", CREATE_B);
+    const [{ pid }] = await db.sql`select pg_backend_pid() as pid`;
+    const observer = connect(db.url);
+    const held: number[] = [];
+
+    try {
+      await migrate({
+        sql: db.sql,
+        dir: files.dir,
+        checkPending: async () => {
+          const [row] = await observer`select count(*)::int as n from pg_locks where locktype = 'advisory' and pid = ${pid}`;
+          held.push(row.n);
+          return [];
+        },
+        log: () => {},
+      });
+      const [after] = await observer`select count(*)::int as n from pg_locks where locktype = 'advisory' and pid = ${pid}`;
+      held.push(after.n);
+    } finally {
+      await observer.end({ timeout: 5 });
+    }
+
+    expect(held).toEqual([0, 0]);
+  });
+
+  it("bounds each migration with lock, statement and idle-in-transaction timeouts", async () => {
+    files.write(
+      "20260101000001_settings.sql",
+      `create table seen as select current_setting('lock_timeout') as lock_timeout,
+         current_setting('statement_timeout') as statement_timeout,
+         current_setting('idle_in_transaction_session_timeout') as idle_timeout;`,
+    );
+
+    await migrate({ sql: db.sql, dir: files.dir });
+
+    expect(await db.sql`select * from seen`).toEqual([{ lock_timeout: "15s", statement_timeout: "5min", idle_timeout: "1min" }]);
+  });
+
+  it("stops without applying twice when another run changes the history mid-run", async () => {
+    files.write("20260101000001_a.sql", CREATE_A);
+    files.write("20260101000002_b.sql", CREATE_B);
+    const other = connect(db.url);
+
+    try {
+      const error = await failure(
+        migrate({
+          sql: db.sql,
+          dir: files.dir,
+          // Another runner applies everything while this one is between its check and its first migration.
+          checkPending: async () => {
+            await migrate({ sql: other, dir: files.dir });
+            return [];
+          },
+        }),
+      );
+
+      expect(error.title).toMatch(/Another run changed the migration history/);
+    } finally {
+      await other.end({ timeout: 5 });
+    }
+    expect((await history(db)).map((r) => r.version)).toEqual(["20260101000001", "20260101000002"]);
+  });
+
+  it("does not carry session settings from one migration to the next", async () => {
+    // In production each run applies only the new migrations, so a SET left by
+    // one migration must not change where the next one's objects go.
+    files.write("20260101000001_a.sql", "create schema other;\nset search_path = other, public;\nset role authenticated;\n");
+    files.write("20260101000002_b.sql", CREATE_B);
+
+    await migrate({ sql: db.sql, dir: files.dir });
+
+    const [row] = await db.sql`select relnamespace::regnamespace::text as schema, relowner::regrole::text as owner from pg_class where relname = 'b'`;
+    expect(row).toEqual({ schema: "public", owner: "postgres" });
+  });
+
+  it("reads from the database what each migration removed, including what its text hides", async () => {
+    files.write(
+      "20260101000001_expand.sql",
+      `create type mood as enum ('ok', 'bad');
+       create table audit_event (id int primary key, detail text, action varchar(40), feeling mood, note text);
+       create table widget (id int primary key);
+       create table gadget (id int primary key);
+       alter table audit_event enable row level security;`,
+    );
+    files.write(
+      "20260101000002_contract.sql",
+      `do $$ begin execute 'alter table audit_event drop column detail'; end $$;
+       do $$ begin execute 'alter table widget rename to widget_v2'; end $$;
+       create function shrink() returns void language plpgsql as $f$ begin alter table audit_event alter column action type varchar(10); end $f$;
+       select shrink();
+       drop type mood cascade;
+       create schema if not exists extensions; alter table gadget set schema extensions;
+       alter table audit_event add column added text;`,
+    );
+
+    const { removals } = await migrate({ sql: db.sql, dir: files.dir, recordRemovals: true });
+
+    expect(removals).toEqual({
+      "20260101000001_expand.sql": [],
+      "20260101000002_contract.sql": [
+        "changes the type of column public.audit_event.action from character varying(40) to character varying(10) (may narrow it)",
+        "removes column public.audit_event.detail (dropped or renamed)",
+        "removes column public.audit_event.feeling (dropped or renamed)",
+        "removes table public.gadget (dropped, renamed or moved)",
+        "removes table public.widget (dropped, renamed or moved)",
+      ],
+    });
+  });
+
   it("keeps its history table locked down", async () => {
     files.write("20260101000001_a.sql", CREATE_A);
     await migrate({ sql: db.sql, dir: files.dir });

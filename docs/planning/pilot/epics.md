@@ -364,7 +364,7 @@ So that no environment other than production can text residents.
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
 - **Traces:** AR-5, AR-4 · **Depends on:** S01.02 · **Branch:** `e01-s03-migrations-rls`
-- **CI settings:** GitHub secret `PRODUCTION_DATABASE_URL`: a Supabase connection with a session, port 5432 (the session pooler, since GitHub's runners have no IPv6 for the direct connection; never the transaction pooler on 6543), used only by the production job's migrate step
+- **CI settings:** GitHub secret `PRODUCTION_DATABASE_URL`: the Supabase **session pooler** connection string, port 5432 (`postgres://postgres.<project-ref>:<database password>@<pooler host>.pooler.supabase.com:5432/postgres`; GitHub's runners have no IPv6 for the direct connection, and the transaction pooler on 6543 is refused), used only by the production job's migrate step
 
 As a developer,
 I want schema changes applied by CI with checks and a clear recovery path,

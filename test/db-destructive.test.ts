@@ -99,6 +99,21 @@ describe("transaction problems", () => {
 
     expect(findTransactionProblems(sql)).toEqual([]);
   });
+
+  it("keeps a SQL-standard function body (BEGIN ATOMIC ... END) in one statement", () => {
+    const sql =
+      "create function f(x int) returns text language sql begin atomic select case when x > 0 then 'a' else 'b' end; end;\n" +
+      "create procedure p() language sql BEGIN ATOMIC insert into t values (1); insert into t values (2); END;\n" +
+      "drop table t;\n";
+
+    expect(findTransactionProblems(sql)).toEqual([]);
+    expect(lexSql(sql).statements.map((s) => s.code.slice(0, 18))).toEqual([
+      "create function f(",
+      "create procedure p",
+      "drop table t",
+    ]);
+    expect(findDestructiveChanges(sql)).toEqual(["drops table t"]);
+  });
 });
 
 describe("expand/contract check against the release in production", () => {
@@ -178,6 +193,30 @@ describe("expand/contract check against the release in production", () => {
     ]);
   });
 
+  // The text check cannot see inside a DO block; CI reads what each migration
+  // removed from its disposable database (removals.mjs) and passes it in.
+  const HIDDEN = "do $$ begin execute 'alter table audit_event drop column detail'; end $$;\n";
+  const REMOVED = { "20260101000001_drop_detail.sql": ["removes column public.audit_event.detail (dropped or renamed)"] };
+
+  it("rejects a removal read from the database that the text check cannot see", async () => {
+    const problems = await checkDestructiveMigrations([{ file: "20260101000001_drop_detail.sql", sql: HIDDEN }], {
+      productionRelease: async () => commits["stop-using"],
+      cwd: repo,
+      databaseChanges: REMOVED,
+    });
+
+    expect(problems).toEqual([
+      expect.stringMatching(/^20260101000001_drop_detail.sql removes column public.audit_event.detail \(dropped or renamed\)\. The previous release/),
+    ]);
+  });
+
+  it("checks a contract note's release even when no change is detected (the production job has no database diff)", async () => {
+    expect(await check(`-- contract: ${commits["after-production"]}\n${HIDDEN}`)).toEqual([
+      expect.stringMatching(/carries a contract note, but the release named in its contract note .* is not in production yet/),
+    ]);
+    expect(await check(`-- contract: ${commits["stop-using"]}\n${HIDDEN}`)).toEqual([]);
+  });
+
   it("rejects when production runs a commit missing from the checkout", async () => {
     const unknown = async () => "f".repeat(40);
 
@@ -206,6 +245,22 @@ describe("expand/contract check against the release in production", () => {
       expect(result.stdout).toMatch(/Checking 1 migration\(s\)/);
       expect(result.stdout).toMatch(/::error title=Destructive migration::20260101000002_new.sql drops table audit_event/);
       expect(result.stdout).not.toMatch(/20260101000001_old.sql/);
+    });
+
+    it("uses the removals report of the migrated CI database", () => {
+      writeFileSync(path.join(repo, "db/migrations/20260101000002_new.sql"), HIDDEN);
+      const report = path.join(repo, "removals.json");
+      writeFileSync(report, JSON.stringify({ "20260101000002_new.sql": ["removes table public.audit_event (dropped, renamed or moved)"] }));
+
+      const result = spawnSync(
+        "node",
+        [path.join(__dirname, "..", "scripts/db/check-destructive.mjs"), "--base", "main", "--dir", "db/migrations", "--removals", report],
+        { cwd: repo, encoding: "utf8", env: { ...process.env, GITHUB_ACTIONS: "true", PRODUCTION_URL: "" } },
+      );
+      rmSync(report);
+
+      expect(result.status).toBe(1);
+      expect(result.stdout).toMatch(/::error title=Destructive migration::20260101000002_new.sql removes table public.audit_event/);
     });
 
     it("warns about an edit to a migration that is already on the base branch", () => {

@@ -5,11 +5,15 @@
 // production job checks the migrations still pending in production again,
 // against the release production serves at that moment (migrate.mjs).
 //
-// Usage: node scripts/db/check-destructive.mjs [--base <ref>] [--dir <dir>]
+// Usage: node scripts/db/check-destructive.mjs [--base <ref>] [--dir <dir>] [--removals <file>]
 //   Without --base every migration in the directory is checked.
+//   --removals: the report of `migrate.mjs --removals-report` on CI's disposable
+//   database; what each migration removed is then read from it rather than from
+//   the migration's text, which cannot see inside DO blocks, EXECUTE or CASCADE.
 //   PRODUCTION_URL (or PRODUCTION_RELEASE) is read only when a contract note needs it.
 
 import { spawnSync } from "node:child_process";
+import { readFileSync } from "node:fs";
 import path from "node:path";
 import { pathToFileURL } from "node:url";
 import { checkDestructiveMigrations, lookUpProductionRelease } from "./contracts.mjs";
@@ -68,9 +72,11 @@ async function main() {
   }
   console.log(`Checking ${migrations.length} migration(s) for destructive changes.`);
 
+  const removals = option("--removals");
   const problems = await checkDestructiveMigrations(migrations, {
     productionRelease: () => lookUpProductionRelease(),
     cwd: process.cwd(),
+    databaseChanges: removals ? JSON.parse(readFileSync(removals, "utf8")) : undefined,
   });
   for (const problem of problems) {
     console.error(`- ${problem}`);

@@ -53,21 +53,28 @@ function resolveCommit(ref, cwd) {
 }
 
 /**
+ * A migration's destructive changes come from its text (sql.mjs), or, when
+ * given, from what applying it removed from a database (removals.mjs), which
+ * also sees DO blocks, EXECUTE, called functions and CASCADE. The Checks job
+ * has that database; the production job does not, so there every migration
+ * that carries a contract note has its release checked, whether or not its
+ * text shows the change.
+ *
  * @param {{ file: string, sql: string }[]} migrations
- * @param {{ productionRelease: () => Promise<string>, cwd?: string }} options
+ * @param {{ productionRelease: () => Promise<string>, cwd?: string, databaseChanges?: Record<string, string[]> }} options
  * @returns {Promise<string[]>} problems; empty when every destructive change is covered
  */
-export async function checkDestructiveMigrations(migrations, { productionRelease, cwd = process.cwd() }) {
+export async function checkDestructiveMigrations(migrations, { productionRelease, cwd = process.cwd(), databaseChanges }) {
   const problems = [];
   let production;
 
   for (const { file, sql } of migrations) {
-    const changes = findDestructiveChanges(sql);
+    const changes = databaseChanges && file in databaseChanges ? databaseChanges[file] : findDestructiveChanges(sql);
     const notes = readContractNotes(sql);
     problems.push(...notes.problems.map((p) => `${file}: ${p}`));
-    if (changes.length === 0) continue;
+    if (changes.length === 0 && notes.releases.length === 0) continue;
 
-    const what = changes.join("; ");
+    const what = changes.length > 0 ? changes.join("; ") : "carries a contract note";
     if (notes.releases.length === 0) {
       problems.push(
         `${file} ${what}. The previous release may still use it: add the column or table first, ` +

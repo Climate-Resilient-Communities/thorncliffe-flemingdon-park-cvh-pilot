@@ -9,6 +9,22 @@
  *   collapsed. `text` is the original statement text, trimmed.
  */
 
+const ROUTINE_WITH_ATOMIC_BODY = /^\s*create\s+(?:or\s+replace\s+)?(?:function|procedure)\b[\s\S]*?\bbegin\s+atomic\b([\s\S]*)$/i;
+
+/**
+ * Whether code (comments and literals already removed) ends inside the body of
+ * a SQL-standard routine, `BEGIN ATOMIC ... END`, whose statements end in
+ * semicolons that do not end the CREATE statement. CASE ... END nests inside it.
+ */
+function insideAtomicBody(code) {
+  const match = ROUTINE_WITH_ATOMIC_BODY.exec(code);
+  if (!match) return false;
+  const words = match[1].replace(/"(?:[^"]|"")*"/g, " ").toLowerCase().match(/\b(?:case|end)\b/g) ?? [];
+  let depth = 1;
+  for (const word of words) depth += word === "case" ? 1 : -1;
+  return depth > 0;
+}
+
 /**
  * Splits SQL into statements and collects its line comments.
  *
@@ -107,6 +123,11 @@ export function lexSql(source) {
     }
 
     if (c === ";") {
+      if (insideAtomicBody(code)) {
+        code += c;
+        i += 1;
+        continue;
+      }
       finish(i);
       i += 1;
       continue;

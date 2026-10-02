@@ -57,8 +57,10 @@ jobs:
       - run: npm run typecheck
       - run: npm test
       - run: npm run lint:deps
+      # Also records what each migration removed, read from the database, for
+      # the destructive-change check below (DO blocks, EXECUTE, CASCADE).
       - name: Apply all migrations to a fresh database
-        run: npm run db:migrate
+        run: npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
         env:
           MIGRATE_DATABASE_URL: ${{ env.CI_DATABASE_URL }}
       - name: Check RLS and table ownership
@@ -73,7 +75,7 @@ jobs:
       # carries a contract note. On main this branch's changes are already in
       # origin/main; the production job checks pending migrations again.
       - name: Check migrations for destructive changes
-        run: npm run db:check-destructive -- --base origin/main
+        run: npm run db:check-destructive -- --base origin/main --removals "$RUNNER_TEMP/migration-removals.json"
         env:
           PRODUCTION_URL: ${{ vars.PRODUCTION_URL }}
       # Fails if a catalog is stale or a required string is missing; the per-language report

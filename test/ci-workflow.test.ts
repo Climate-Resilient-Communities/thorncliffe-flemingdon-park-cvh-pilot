@@ -71,4 +71,14 @@ describe("CI workflow (S01.03)", () => {
     }
     expect(stepIndex(all, /npm run db:migrate/)).toBeLessThan(stepIndex(all, /npm run db:check$/m));
   });
+
+  it("checks destructive changes against what each migration removed from the CI database", () => {
+    const all = steps(job("checks"));
+    const migrateStep = all[stepIndex(all, /npm run db:migrate/)];
+    const destructive = all[stepIndex(all, /npm run db:check-destructive/)];
+
+    expect(migrateStep).toMatch(/npm run db:migrate -- --removals-report "\$RUNNER_TEMP\/migration-removals\.json"/);
+    expect(destructive).toMatch(/--removals "\$RUNNER_TEMP\/migration-removals\.json"/);
+    expect(stepIndex(all, /npm run db:migrate/)).toBeLessThan(stepIndex(all, /npm run db:check-destructive/));
+  });
 });
