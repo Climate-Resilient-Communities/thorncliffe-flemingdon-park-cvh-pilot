@@ -1334,7 +1334,8 @@
       "supplies": "[EN] Supplies",
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
-      "people": "[EN] People"
+      "people": "[EN] People",
+      "providers": "[EN] Providers"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -3959,6 +3960,39 @@
         "selfAction": "[EN] You cannot reset your own authenticator. Ask another Admin.",
         "notResettable": "[EN] This account is suspended or removed, so its authenticator cannot be reset.",
         "noAuthenticator": "[EN] Only Admins and Coordinators have an authenticator."
+      }
+    },
+    "providers": {
+      "title": "[EN] Providers",
+      "lead": "[EN] The reviewed catalogue is loaded by the catalogue script. Here you confirm each provider and choose which ones residents see. Listing text is not edited here: it changes in the catalogue files.",
+      "summary": "[EN] {published} of {total} providers published. {unconfirmed} not confirmed yet.",
+      "empty": "[EN] No providers are loaded yet. Run the catalogue script (npm run seed:providers).",
+      "statusPublished": "[EN] Published",
+      "statusUnpublished": "[EN] Not published",
+      "statusRemoved": "[EN] Not in catalogue",
+      "removedNote": "[EN] No longer in the catalogue. It is unpublished and kept with its last-confirmed date, and cannot be published or confirmed.",
+      "neverConfirmed": "[EN] Not confirmed yet",
+      "confirmedOn": "[EN] Last confirmed {date}",
+      "confirmDate": "[EN] Date last confirmed",
+      "dateHint": "[EN] Today or earlier.",
+      "saveDate": "[EN] Save date",
+      "publish": "[EN] Publish",
+      "unpublish": "[EN] Unpublish",
+      "done": {
+        "published": "[EN] {name} is published.",
+        "unpublished": "[EN] {name} is no longer published.",
+        "confirmed": "[EN] {name} was confirmed on {date}."
+      },
+      "errors": {
+        "confirmFirst": "[EN] Confirm this provider first",
+        "dateInvalid": "[EN] Choose a date.",
+        "dateInFuture": "[EN] The date cannot be later than today.",
+        "notFound": "[EN] That provider is not in the list.",
+        "notInCatalogue": "[EN] This provider is no longer in the catalogue, so it cannot be published or confirmed.",
+        "alreadyPublished": "[EN] This provider is already published.",
+        "notPublished": "[EN] This provider is not published.",
+        "forbidden": "[EN] Only an Admin can change providers.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code."
       }
     }
   }

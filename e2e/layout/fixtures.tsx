@@ -4,6 +4,7 @@
 import { Grid, Inline, Screen, Stack, type GridTwoColumn, type InlineGap, type StackGap } from "@/ui";
 import { HubShell } from "@/ui/hub/hub-shell";
 import type { HubNavSection } from "@/ui/hub/hub-nav";
+import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
 
 export type Labels = { sentences: string[]; words: string[]; unbreakable: string };
 
@@ -432,6 +433,63 @@ export function HubShellFixture({
           {texts.paragraphs.map((text) => (
             <p key={text}>{text}</p>
           ))}
+        </Stack>
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Providers screen (S02.04), as an Admin sees it: the real ProviderList with the rows and
+ * words the page gives it. Its actions are the harness's stand-ins (e2e/helpers/provider-actions-stub.ts).
+ */
+export function ProvidersFixture({
+  texts,
+  brand,
+  rows,
+  labels,
+  today,
+  summary,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  rows: ProviderRowData[];
+  labels: ProviderListLabels;
+  today: string;
+  summary: string;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/providers"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="tap">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      <Screen surface="staff" testId="screen">
+        <Stack gap="section-hub">
+          <Stack gap="related">
+            <h1>{texts.heading}</h1>
+            {texts.paragraphs.map((text) => (
+              <p key={text}>{text}</p>
+            ))}
+          </Stack>
+          <p>{summary}</p>
+          <ProviderList rows={rows} today={today} labels={labels} />
         </Stack>
       </Screen>
     </HubShell>

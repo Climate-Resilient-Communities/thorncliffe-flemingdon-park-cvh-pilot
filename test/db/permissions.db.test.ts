@@ -28,7 +28,7 @@ import {
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
 import { createDb, type Db } from "../../src/platform/db";
-import { ROLE_CALLERS, STAFF_ENDPOINTS, TARGET_USERNAME, type RoleCaller, type StaffEndpoint } from "../permissions/endpoints";
+import { PROVIDER_ID, ROLE_CALLERS, STAFF_ENDPOINTS, TARGET_USERNAME, type RoleCaller, type StaffEndpoint } from "../permissions/endpoints";
 import { connect, serverUrl } from "./helpers";
 
 /** What the staff surface's composition root (src/app/staff/identity.ts) hands out, for this test. */
@@ -37,6 +37,7 @@ const wired = vi.hoisted(() => ({
   auth: null as unknown,
   sessions: null as null | (() => unknown),
   assignments: [] as unknown[],
+  db: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -48,6 +49,10 @@ vi.mock("../../src/app/staff/identity", () => ({
     return wired.sessions();
   },
 }));
+// A provider change asks Next to refresh the list, which only a request inside Next can do.
+vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
+// The providers screen (S02.04) reads and writes through the app's database connection.
+vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db }));
 // The S01.14 stub: the assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
@@ -80,6 +85,7 @@ beforeAll(async () => {
   url.username = "cvh_app_login";
   url.password = password;
   app = createDb(url.href);
+  wired.db = app;
   [{ max: auditBaseline }] = await owner`select coalesce(max(id), 0)::int as max from audit_event`;
   const tables = await owner<{ name: string; table_name: string }[]>`
     select format('%I.%I', table_schema, table_name) as name, table_name
@@ -98,6 +104,10 @@ async function reset() {
       alter table audit_event disable trigger audit_event_no_update_or_delete;
       alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
+    await tx`delete from provider_category`;
+    await tx`delete from provider_location`;
+    await tx`delete from provider`;
+    await tx`delete from category`;
     await tx`delete from staff_bootstrap`;
     await tx`delete from staff_session`;
     await tx`update staff_account set created_by = null`;
@@ -138,6 +148,10 @@ beforeEach(async () => {
   const second = await account("adminb", "admin", { enrolled: true });
   await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${first.id}, ${second.id}, ${T0})`;
   await account(TARGET_USERNAME, "ambassador", { starting: true, status: "locked_pending_reissue" });
+  // The provider the provider actions are aimed at: confirmed and published, so a call that got through would change it.
+  await owner`
+    insert into provider (id, name, texts, published, published_at, last_confirmed)
+    values (${PROVIDER_ID}, 'Test provider', ${owner.json({ services: { en: "Services" } })}, true, ${T0}, '2026-09-01')`;
 });
 
 afterAll(async () => {
