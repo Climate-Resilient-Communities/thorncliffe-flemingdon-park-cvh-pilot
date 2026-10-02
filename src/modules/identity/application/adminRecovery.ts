@@ -1,7 +1,7 @@
 import type { DbTransaction } from "../../../platform/db";
 import { leavesAdminShortfall } from "../domain/adminFloor";
 import type { IdentityProvider, StaffStore } from "./ports";
-import { adminStandings } from "./usability";
+import { adminStandings, type SignInLockReader } from "./usability";
 
 /** What a recovery action or an automatic lock learns before it changes an account (S01.06). */
 export interface AdminRecovery {
@@ -22,8 +22,8 @@ export interface AdminRecoveryDeps {
   idp: IdentityProvider;
   now: () => Date;
   lockTimeoutMs?: number;
-  /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin. */
-  signInLockedUntil: (username: string) => Promise<Date | null>;
+  /** The failed-sign-in lock of a username (S01.07), a fact of isUsableAdmin, read in the caller's transaction. */
+  signInLockedUntil: SignInLockReader;
 }
 
 /**
@@ -55,7 +55,9 @@ export function createAdminRecovery(deps: AdminRecoveryDeps) {
       }
       const locked = await store.lockAdminsAndAccount(tx, targetId);
       await store.permitAdminShortfall(tx);
-      const standings = await adminStandings(deps, locked, deps.now());
+      // Read in the caller's transaction: a second pool connection here deadlocks the pool when every
+      // other connection waits for a lock this transaction holds (the sign-in throttle's).
+      const standings = await adminStandings(deps, tx, locked, deps.now());
       return { adminShortfall: leavesAdminShortfall(standings, targetId) };
     },
   };
