@@ -6,6 +6,7 @@ import { bootstrapCompletes, bootstrapPhase, decideUnderBootstrap, type Bootstra
 import { loginForUsername, validateNewAccount, type NewAccount, type NewAccountInput } from "../domain/newAccount";
 import type { IdentityRefusal } from "../domain/refusals";
 import { err, ok, type Result } from "../domain/result";
+import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
 import type { IdentityProvider, OperationalLog, StaffStore } from "./ports";
 import { isAccountUsableAdmin } from "./usability";
 
@@ -25,6 +26,10 @@ export interface AccountDeps {
   log: OperationalLog;
   now: () => Date;
   newId: () => string;
+  /** What the provider stores for a password (passwordPepper.ts); null when STAFF_PASSWORD_PEPPER is not configured. */
+  pepper: PasswordPepper | null;
+  /** The failed-sign-in lock of a username (S01.07), an input of isUsableAdmin. */
+  signInLockedUntil: (username: string) => Promise<Date | null>;
 }
 
 export interface CreatedAccount {
@@ -63,6 +68,7 @@ export const AUDIT_REASONS: Record<IdentityRefusal, AuditReason> = {
   unauthenticated: "unauthenticated",
   provider_error: "provider_error",
   provider_rejected: "provider_error",
+  passwords_not_configured: "provider_error",
 };
 
 /** An unlinked login must be at least this old before it counts as left behind (see removeOrphanedLogin). */
@@ -134,7 +140,12 @@ export function createAccountService(deps: AccountDeps) {
   }
 
   async function createLogin(account: NewAccount): Promise<Result<string, IdentityRefusal>> {
-    const input = { login: loginForUsername(account.username), password: account.startingPassword };
+    if (!deps.pepper) {
+      log.error(PEPPER_NOT_CONFIGURED_EVENT, { operation: "create_account" });
+      return err("passwords_not_configured");
+    }
+    // The provider stores the peppered starting password, never the one handed over.
+    const input = { login: loginForUsername(account.username), password: deps.pepper(account.startingPassword) };
     let created = await idp.createLogin(input);
     if (!created.ok && created.error === "login_taken" && (await removeOrphanedLogin(input.login))) {
       created = await idp.createLogin(input);
@@ -289,7 +300,7 @@ export function createAccountService(deps: AccountDeps) {
       const now = deps.now();
       const usable = async (id: string) => {
         const account = await store.findById(db, id);
-        return account !== null && isAccountUsableAdmin(idp, account, now);
+        return account !== null && isAccountUsableAdmin(deps, account, now);
       };
       const ready = bootstrapCompletes(state, { firstAdmin: await usable(state.firstAdminId), secondAdmin: await usable(state.secondAdminId) });
       if (!ready) return false;
