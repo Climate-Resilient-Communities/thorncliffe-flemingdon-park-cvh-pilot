@@ -1,4 +1,5 @@
 import type { StaffRole } from "../../../contracts/staffRoles";
+import { can, type PolicyAction, type PolicyContext } from "./policy";
 import type { StaffStatus } from "./staffAccount";
 
 /** The staff member acting, as the rules need them. */
@@ -9,13 +10,12 @@ export interface Actor {
 }
 
 /**
- * Who may create and manage accounts: an active Admin (AD-4: "accounts" is Admin-only).
- *
- * Seam for S01.12: this is the one place the account screens and actions ask, and it becomes
- * `can(actor.role, "accounts.manage", context)` from `identity/domain/policy.ts` there. It does not
- * check the session's authenticator level or the setup gates: the staff guard does, where the
- * session is resolved (S01.07's gates; S01.10's requireAal2 on routes marked `accounts.manage`).
+ * Whether this staff member, as they are now, may do `action` (AD-4): an active account whose role
+ * the policy (`can`, ./policy.ts) allows, with the actor's id in the context. The use cases ask it
+ * with the account they just read, and again under their lock, so a role or status changed since
+ * the request's guard ran is caught. It does not check the session's authenticator level or the
+ * setup gates: the staff guard does, where the session is resolved.
  */
-export function mayManageAccounts(actor: Actor): boolean {
-  return actor.status === "active" && actor.role === "admin";
+export function actorCan(actor: Actor, action: PolicyAction, context: PolicyContext = {}): boolean {
+  return actor.status === "active" && can(actor.role, action, { ...context, actorId: actor.id });
 }

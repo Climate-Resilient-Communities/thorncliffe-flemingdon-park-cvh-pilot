@@ -8,11 +8,11 @@ import { tmpdir } from "node:os";
 import path from "node:path";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { GATE_PAGES, SETUP_GATES, type AssuranceLevel, type SetupGate } from "../src/contracts/staffAuth";
-import { PRIVILEGED_ACTIONS, type StaffSession } from "../src/modules/identity";
+import { POLICY_ACTIONS, PRIVILEGED_ACTIONS, type StaffSession } from "../src/modules/identity";
 import { findStaffSurface, routePathOf, staffSurfaceProblems } from "./helpers/staffSurface";
 
 const session = vi.hoisted(() => ({ current: null as StaffSession | null }));
-const audits = vi.hoisted(() => ({ unauthenticated: [] as unknown[][], outsideGate: [] as unknown[][], belowAal2: [] as unknown[][] }));
+const audits = vi.hoisted(() => ({ unauthenticated: [] as unknown[][], outsideGate: [] as unknown[][], belowAal2: [] as unknown[][], policy: [] as unknown[][] }));
 const unreachable = vi.hoisted(() => () => {
   throw new Error("the route's own code ran although the guard should have refused");
 });
@@ -27,6 +27,7 @@ vi.mock("../src/app/staff/identity", () => ({
   staffAuth: () => ({
     refuseOutsideGate: async (...args: unknown[]) => void audits.outsideGate.push(args),
     refuseBelowAal2: async (...args: unknown[]) => void audits.belowAal2.push(args),
+    refuseByPolicy: async (...args: unknown[]) => void audits.policy.push(args),
     changePassword: unreachable,
     startEnrolment: unreachable,
     verifyAuthenticatorCode: unreachable,
@@ -86,6 +87,7 @@ beforeEach(() => {
   audits.unauthenticated.length = 0;
   audits.outsideGate.length = 0;
   audits.belowAal2.length = 0;
+  audits.policy.length = 0;
 });
 
 describe("the staff routes on disk", () => {
@@ -241,6 +243,7 @@ describe.each(pages.map((file) => [relative(file), file]))("page %s", (_name, fi
     expect(spec, "default export is not a guarded page").toBeDefined();
     expect(spec?.route).toBe(routePath(file));
     expect(spec?.access === "public").toBe(PUBLIC.has(routePath(file)));
+    if (spec?.access !== "public") expect(POLICY_ACTIONS, "a guarded page names its policy action (S01.12)").toContain(spec?.action);
   });
 
   it("sends a visitor without a session to sign-in, and a session at another gate to that gate's page", async () => {
@@ -269,6 +272,7 @@ describe.each(handlers.map((file) => [routePath(file), file]))("route handler %s
       expect(spec, `${method} is not a guarded handler`).toBeDefined();
       expect(spec?.route).toBe(route);
       expect(spec?.access === "public").toBe(PUBLIC.has(route));
+      if (spec?.access !== "public") expect(POLICY_ACTIONS, `${method} names its policy action (S01.12)`).toContain(spec?.action);
     }
   });
 
@@ -284,7 +288,7 @@ describe.each(handlers.map((file) => [routePath(file), file]))("route handler %s
       expect(unauthenticated.status).toBe(401);
       expect(await unauthenticated.json()).toEqual({ error: "unauthenticated" });
       expect(unauthenticated.headers.get("cache-control")).toBe("no-store");
-      expect(audits.unauthenticated.at(-1)).toEqual(["staff.request", route]);
+      expect(audits.unauthenticated.at(-1)).toEqual([spec.action, route]);
       for (const gate of SETUP_GATES) {
         if (admits(spec.access, gate)) continue;
         session.current = atGate(gate);
@@ -325,6 +329,7 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       const spec = guardSpecOf(value);
       expect(spec, `${name} is not a guarded action`).toBeDefined();
       expect(spec?.access).not.toBe("public");
+      expect(POLICY_ACTIONS, `${name} names its policy action (S01.12)`).toContain(spec?.action);
     }
   });
 
@@ -336,7 +341,7 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       if (!spec || spec.access === "public") continue;
       session.current = null;
       expect(await redirectOf(() => action({ status: "idle" }, new FormData())), name).toBe("/staff/sign-in");
-      expect(audits.unauthenticated.at(-1), name).toEqual(["staff.request", spec.route]);
+      expect(audits.unauthenticated.at(-1), name).toEqual([spec.action, spec.route]);
       for (const gate of SETUP_GATES) {
         if (admits(spec.access, gate)) continue;
         session.current = atGate(gate);
@@ -348,8 +353,9 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
     }
   });
 
-  it("refuse a session below aal2 when privileged (403 aal2_required), before their own code, whatever the role", async () => {
+  it("refuse a session below aal2 when privileged (403 aal2_required) for a role the policy allows, and any other role as forbidden, before their own code", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
+    const { can } = await import("../src/modules/identity");
     const exportsOf: Record<string, (...args: unknown[]) => Promise<{ status: string; message?: string }>> = await import(file);
     for (const [name, action] of Object.entries(exportsOf)) {
       const spec = guardSpecOf(action);
@@ -358,11 +364,17 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
       for (const role of ["admin", "coordinator", "director", "ambassador"] as const) {
         for (const gate of SETUP_GATES.filter((candidate) => admits(spec.access, candidate))) {
           session.current = { ...atGate(gate, "aal1"), role };
-          expect(await action({ status: "idle" }, new FormData()), `${name} as ${role} at ${gate}`).toMatchObject({
-            status: "refused",
-            message: "This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.",
-          });
-          expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
+          const answer = await action({ status: "idle" }, new FormData());
+          if (can(role, spec.privileged)) {
+            expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({
+              status: "refused",
+              message: "This needs a sign-in confirmed with an authenticator code. Only Admins and Coordinators can do it, after entering their code.",
+            });
+            expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
+          } else {
+            expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({ status: "refused", message: expect.stringMatching(/^Only an Admin can /) });
+            expect(audits.policy.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged, "forbidden"]);
+          }
         }
       }
     }

@@ -2,6 +2,7 @@
 // session and the English catalog. The shell itself knows none of this; it takes the view model below.
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
+import { can } from "@/modules/identity";
 import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
 import type { StaffSession } from "./session";
 
@@ -36,7 +37,8 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       ],
     },
   ];
-  if (role === "admin") {
+  // The people page is the policy action `accounts.manage` (S01.12): shown to the roles that may open it.
+  if (can(role, "accounts.manage")) {
     sections.push({
       id: "admin",
       label: englishText("hub.sections.admin"),

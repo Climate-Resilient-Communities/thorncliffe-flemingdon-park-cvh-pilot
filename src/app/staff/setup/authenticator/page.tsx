@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: englishText("staff.setup.authenticato
  * sign-out are reachable until the first code is accepted; then the session is `aal2` and the
  * person enters the Hub.
  */
-export default staffPage({ route: "/staff/setup/authenticator", access: "enrol_authenticator" }, () => (
+export default staffPage({ route: "/staff/setup/authenticator", access: "enrol_authenticator", action: "account.own_setup" }, () => (
   <main>
     <Screen surface="staff">
       <Stack gap="section-hub">

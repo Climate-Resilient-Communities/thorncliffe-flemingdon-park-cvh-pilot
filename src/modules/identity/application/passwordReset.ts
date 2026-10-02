@@ -1,5 +1,5 @@
 import type { Db, DbTransaction } from "../../../platform/db";
-import { mayManageAccounts } from "../domain/accountAuthority";
+import { actorCan } from "../domain/accountAuthority";
 import { decideUnderBootstrap } from "../domain/bootstrap";
 import { isUsernameFormat, normaliseUsername } from "../domain/newAccount";
 import { err, ok, type Result } from "../domain/result";
@@ -72,7 +72,7 @@ export function createPasswordResetService(deps: PasswordResetDeps) {
         await audit.recordRefusal(db, { action: "password.reset", actorStaffId: actor ? actor.id : null, subjectType: "staff_account", subjectId, meta: { reason } });
         return err(code);
       };
-      if (!actor || !mayManageAccounts(actor)) return refuse("forbidden", "forbidden", null);
+      if (!actor || !actorCan(actor, "accounts.manage")) return refuse("forbidden", "forbidden", null);
       const username = normaliseUsername(usernameInput);
       const target = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
       if (!target) return refuse("not_found", "not_found", null);
@@ -97,7 +97,7 @@ export function createPasswordResetService(deps: PasswordResetDeps) {
           const recovery = await deps.beginAdminRecovery(tx, target.id);
           if (!(await store.lockAccount(tx, target.id))) throw new ResetRefusal("not_found");
           const current = await store.findById(tx, actor.id);
-          if (!current || !mayManageAccounts(current)) throw new ResetRefusal("forbidden");
+          if (!current || !actorCan(current, "accounts.manage")) throw new ResetRefusal("forbidden");
           if (!(await store.beginPasswordReset(tx, target.id, deps.now()))) throw new ResetRefusal("not_resettable");
           await audit.record(tx, {
             action: "password.reset",

@@ -13,7 +13,7 @@ export const metadata: Metadata = { title: englishText("staff.authenticator.code
  * asked. Until then only this page, `POST /api/staff/factor/verify`, `GET /api/staff/me` and
  * sign-out are reachable.
  */
-export default staffPage({ route: "/staff/sign-in/code", access: "authenticator_code" }, () => (
+export default staffPage({ route: "/staff/sign-in/code", access: "authenticator_code", action: "account.own_setup" }, () => (
   <main>
     <Screen surface="staff">
       <Stack gap="section-hub">

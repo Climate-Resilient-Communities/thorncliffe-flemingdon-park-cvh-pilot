@@ -8,7 +8,7 @@ import { ChoosePasswordForm } from "./ChoosePasswordForm";
 export const metadata: Metadata = { title: englishText("staff.setup.password.title") };
 
 /** "Choose your password": gate 1 of the setup sequence (S01.07). */
-export default staffPage({ route: "/staff/setup/password", access: "choose_password" }, () => (
+export default staffPage({ route: "/staff/setup/password", access: "choose_password", action: "account.own_setup" }, () => (
   <main>
     <Screen surface="staff">
       <Stack gap="section-hub">
