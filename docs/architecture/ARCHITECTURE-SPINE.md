@@ -209,7 +209,7 @@ stateDiagram-v2
 - **Prevents:** a preview build sending real SMS or running production jobs.
 - **Rule:**
   - **Regions:** production is Vercel `yul1` with Supabase `ca-central-1`. The pilot has one Supabase project (Free plan), shared by production and previews; a separate staging project is deferred to the MVP.
-  - **Separate accounts:** only production has a Twilio subaccount and a (verified) toll-free number; previews have none. Each environment has its own Cohere key with a spend limit. The pg_cron target URL and job secret in the project's Vault point at production only.
+  - **Separate accounts:** only production has a Twilio subaccount and a (verified) toll-free number; previews have none. There is one Cohere key, production only, with a spend limit; previews and local runs have none (the env schema rejects a `COHERE_` variable outside production). The pg_cron target URL and job secret in the project's Vault point at production only.
   - **SMS mode:** `SMS_MODE` is `live` only in production and `log` everywhere else (records each would-be send as `skipped_env`). Drills are rehearsed in production against the drill roster, relying on AD-6. The env schema (zod, checked at boot) rejects any other combination and requires `PUBLIC_BASE_URL`, which webhook signature checks use.
   - **Previews:** run no cron and apply no migrations; they use the shared Supabase project, including its live data (accepted pilot risk).
   - **Deploys:** `main` deploys to production through Vercel after CI passes (lint, dependency rules, tests, migrations applied to production first). Migrations stay backward-compatible for one release so app rollback is safe.
