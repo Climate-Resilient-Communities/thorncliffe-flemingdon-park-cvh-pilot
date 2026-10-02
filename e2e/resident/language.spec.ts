@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { savedAtOf, savedChoices } from "./choices-fixture";
 import { LANGUAGES, openResident } from "./helpers";
 
 // S02.02: the language control (R-02) and the language URL.
@@ -38,7 +39,8 @@ test.describe("language control", () => {
   ]) {
     test(`choosing ${to} on ${from} reloads the same page under /${to}/ and saves the choice in device choices`, async ({ page }) => {
       await openResident(page, `/${from}?topic=heat#top`, 390);
-      expect(await page.evaluate(() => localStorage.getItem("cvh.choices"))).toBeNull();
+      // Only the mark that the first-run steps were gone through (the config starts every test as a returning resident).
+      expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices")!))).toEqual({ v: 1, welcomed: true });
 
       await page.getByTestId("shell-lang-button").click();
       await Promise.all([page.waitForURL(`**/${to}?topic=heat#top`), page.getByTestId("shell-lang-sheet").locator(`a[data-lang="${to}"]`).click()]);
@@ -47,18 +49,20 @@ test.describe("language control", () => {
       const target = LANGUAGES.find(({ code }) => code === to)!;
       await expect(page.locator("html")).toHaveAttribute("lang", target.bcp47);
       await expect(page.locator("html")).toHaveAttribute("dir", target.dir);
-      expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices")!))).toEqual({ v: 1, lang: to });
+      expect(await savedChoices(page)).toEqual({ v: 1, welcomed: true, lang: to });
+      // It is a write like any other, so it is stamped.
+      expect(await savedAtOf(page)).toBeGreaterThan(Date.now() - 60_000);
     });
   }
 
   test("keeps the other device choices that are already saved", async ({ page }) => {
     await openResident(page, "/en", 390);
-    await page.evaluate(() => localStorage.setItem("cvh.choices", JSON.stringify({ v: 1, lang: "en", buildings: [7] })));
+    await page.evaluate(() => localStorage.setItem("cvh.choices", JSON.stringify({ v: 1, lang: "en", welcomed: true, buildings: ["7"] })));
 
     await page.getByTestId("shell-lang-button").click();
     await Promise.all([page.waitForURL("**/ta"), page.getByTestId("shell-lang-sheet").locator('a[data-lang="ta"]').click()]);
 
-    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices")!))).toEqual({ v: 1, lang: "ta", buildings: [7] });
+    expect(await savedChoices(page)).toEqual({ v: 1, lang: "ta", welcomed: true, buildings: ["7"] });
   });
 
   test("still works when the phone refuses to store anything", async ({ page }) => {

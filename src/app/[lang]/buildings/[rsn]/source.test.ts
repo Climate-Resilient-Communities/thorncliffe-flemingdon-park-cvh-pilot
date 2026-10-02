@@ -19,6 +19,8 @@ vi.mock("next/cache", () => ({
     }
     return JSON.parse(hit.json);
   }),
+  // The resident building list (S02.03) is expired by `finish`; this test is about the building's own entry.
+  revalidateTag: vi.fn(),
   updateTag: vi.fn((tag: string) => {
     for (const [key, entry] of state.entries) if (entry.tags.includes(tag)) state.entries.delete(key);
   }),
