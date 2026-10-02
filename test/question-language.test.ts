@@ -54,14 +54,28 @@ describe("directory/domain/questionLanguage#detect", () => {
     });
   });
 
-  it("treats mixed English and Urdu script as romanized_or_mixed", () => {
-    expect(detect("I need food for بچوں", "en")).toEqual({
-      lang: null, confidence: "romanized_or_mixed", query_lang: "en",
-    });
+  // Owner decision 2026-10-02 (1): native script mixed with Latin words is judged on the native part alone.
+  // "بچوں" carries the Urdu marker ں, so this question is now confident ur (was romanized_or_mixed).
+  it("is confident when the native part of a mixed question is confident on its own", () => {
+    expect(detect("I need food for بچوں", "en")).toEqual({ lang: "ur", confidence: "confident", query_lang: "ur" });
+    expect(detect("مجھے food bank چاہیے", "en")).toEqual({ lang: "ur", confidence: "confident", query_lang: "ur" });
+    expect(detect("TCHC维修电话", "en")).toEqual({ lang: "zh", confidence: "confident", query_lang: "zh" });
+    expect(detect("TCHC维修电话", "zh-Hant")).toEqual({ lang: "zh", confidence: "confident", query_lang: "zh-Hant" });
+    expect(detect("ਮੈਨੂੰ doctor ਚਾਹੀਦਾ", "en")).toEqual({ lang: "pa", confidence: "confident", query_lang: "pa" });
+  });
+
+  it("stays romanized_or_mixed when the native part of a mixed question is not confident", () => {
+    expect(detect("food كتاب", "en")).toEqual({ lang: null, confidence: "romanized_or_mixed", query_lang: "en" });
+    expect(detect("food كتاب", "fr")).toEqual({ lang: null, confidence: "romanized_or_mixed", query_lang: "fr" });
+  });
+
+  it("keeps two non-Latin scripts, or kana, mixed even with Latin words", () => {
+    expect(detect("food ਮੈਨੂੰ مجھے", "en").confidence).toBe("romanized_or_mixed");
+    expect(detect("TCHC医生です", "en").confidence).not.toBe("confident");
   });
 
   it("treats Arabic script without marker letters as ambiguous_arabic", () => {
-    expect(detect("مجھ کو کھانا درکار", "en")).toEqual({
+    expect(detect("مدد کی ضرورت", "en")).toEqual({
       lang: null, confidence: "ambiguous_arabic", query_lang: "en",
     });
     expect(detect("أحتاج إلى طعام لأطفالي", "fr")).toEqual({
@@ -71,6 +85,27 @@ describe("directory/domain/questionLanguage#detect", () => {
 
   it("returns a Dari question that eld reports as fa as prs", () => {
     expect(detect("کودکان غذا کمک میخواهم", "en").lang).toBe("prs");
+  });
+
+  // Owner decision 2026-10-02 (3): ھ and ہ are Urdu markers (Dari and Pashto do not use them).
+  // Was ambiguous_arabic for "مجھ کو کھانا درکار" before; it carries ھ and is now ur.
+  it.each(["کھانا", "مفت کھانا", "مکان کا کرایہ", "مجھ کو کھانا درکار"])("is confident ur from ھ or ہ: %s", (q) => {
+    expect(detect(q, "en")).toEqual({ lang: "ur", confidence: "confident", query_lang: "ur" });
+  });
+
+  it("keeps a Dari sentence without Urdu letters as prs when eld says fa", () => {
+    expect(detect("من برای کودکان غذا میخواهم", "en").lang).toBe("prs");
+  });
+
+  it("keeps Pashto precedence over the new Urdu markers", () => {
+    expect(detect("ښار کھانا", "en")).toMatchObject({ lang: null, confidence: "ambiguous_arabic" });
+    expect(detect("زه ټ ہ", "en")).toMatchObject({ confidence: "ambiguous_arabic" });
+  });
+
+  // Accepted pilot limitation (owner decision 2026-10-02 (2)): Pashto written without Pashto-only letters
+  // reads as Dari. "مرسته" (help) is Pashto, but without a Pashto letter eld says fa, so it is prs confident.
+  it("reads Pashto without Pashto-only letters as prs (accepted pilot limitation)", () => {
+    expect(detect("مرسته", "en")).toEqual({ lang: "prs", confidence: "confident", query_lang: "prs" });
   });
 
   it("never returns Pashto as Urdu or Dari when Pashto marker letters are present", () => {
@@ -85,7 +120,7 @@ describe("directory/domain/questionLanguage#detect", () => {
   });
 
   it("uses the page language for query_lang whenever the question is not confident", () => {
-    for (const q of ["mujhe khana chahiye", "مجھ کو کھانا درکار", "😀", "I need خوراک"]) {
+    for (const q of ["mujhe khana chahiye", "مدد کی ضرورت", "😀", "food كتاب"]) {
       const r = detect(q, "tl");
       expect(r.confidence).not.toBe("confident");
       expect(r.query_lang).toBe("tl");

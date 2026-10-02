@@ -18,7 +18,8 @@ export interface QuestionLanguage {
 
 // eld has no Pashto, so Pashto is told by its own letters (AD-10).
 const PASHTO_LETTERS = /[ټډړږښګڼېۍ]/u;
-const URDU_LETTERS = /[ٹڈڑںے]/u;
+// ھ and ہ are Urdu markers too: Dari and Pashto do not use them (owner decision 2026-10-02).
+const URDU_LETTERS = /[ٹڈڑںےھہ]/u;
 
 const LATIN_LANGS = ["en", "es", "fr", "tl", "sk"] as const satisfies readonly LangCode[];
 
@@ -85,6 +86,24 @@ function latinLanguage(detected: ReturnType<typeof eld.detect>, pageLang: LangCo
   return page && best.score - page.score < LATIN_LEAD_MARGIN ? page.lang : null;
 }
 
+type NativeScript = typeof DEVANAGARI | typeof ARABIC | (typeof SINGLE_LANGUAGE_SCRIPTS)[number]["test"];
+
+/** The launch language a text in one non-Latin script is written in, or null when it is not confident. */
+function nativeLanguage(text: string, script: NativeScript): LangCode | null {
+  if (script === DEVANAGARI) return eld.detect(text).language === "hi" ? "hi" : null;
+  const single = SINGLE_LANGUAGE_SCRIPTS.find((s) => s.test === script);
+  if (single) return single.lang;
+  // Arabic script.
+  const letters = text.match(/\p{L}/gu)?.join("") ?? "";
+  if (PASHTO_LETTERS.test(letters)) {
+    // AD-10: Urdu letters must be absent from Pashto, so both together cannot be told.
+    return URDU_LETTERS.test(letters) ? null : "ps";
+  }
+  if (URDU_LETTERS.test(letters)) return "ur";
+  const detected = eld.detect(text);
+  return detected.language === "fa" && detected.isReliable() ? "prs" : null;
+}
+
 /** Pure: the language a question was written in; results follow it only when confident. */
 export function detect(q: string, pageLang: LangCode): QuestionLanguage {
   const letters = q.match(/\p{L}/gu)?.join("") ?? "";
@@ -93,35 +112,32 @@ export function detect(q: string, pageLang: LangCode): QuestionLanguage {
   const scripts = [LATIN, ARABIC, DEVANAGARI, ...SINGLE_LANGUAGE_SCRIPTS.map((s) => s.test)].filter((t) => t.test(letters));
   const unlisted = letters.replace(/\p{Script=Latin}|\p{Script=Arabic}|\p{Script=Devanagari}|\p{Script=Bengali}|\p{Script=Gurmukhi}|\p{Script=Gujarati}|\p{Script=Tamil}|\p{Script=Greek}|\p{Script=Han}/gu, "");
   if (scripts.length === 0) return outcome(null, "unknown", pageLang);
-  if (scripts.length > 1 || unlisted) return outcome(null, "romanized_or_mixed", pageLang);
+  if (unlisted) return outcome(null, "romanized_or_mixed", pageLang);
 
-  if (scripts[0] === DEVANAGARI) {
-    const detected = eld.detect(q);
-    return detected.language === "hi" ? outcome("hi", "confident", pageLang) : outcome(null, "unknown", pageLang);
-  }
-
-  const single = SINGLE_LANGUAGE_SCRIPTS.find((s) => s.test === scripts[0]);
-  if (single) return outcome(single.lang, "confident", pageLang);
-
-  if (scripts[0] === LATIN) {
-    const detected = eld.detect(q);
-    const words = q.toLowerCase().match(/\p{L}+/gu) ?? [];
-    const strong = words.filter((w) => ROMANIZED_WORDS.has(w)).length;
-    const weak = words.filter((w) => AMBIGUOUS_ROMANIZED_WORDS.has(w)).length;
-    if (strong > 0 || weak >= 2 || (weak === 1 && !detected.isReliable())) {
-      return outcome(null, "romanized_or_mixed", pageLang);
-    }
-    const lang = latinLanguage(detected, pageLang);
+  // Native script mixed with Latin words: judge the native part alone (owner decision 2026-10-02).
+  // Two or more non-Latin scripts stay mixed.
+  const native = scripts.filter((t) => t !== LATIN);
+  if (scripts.includes(LATIN) && native.length > 0) {
+    if (native.length > 1) return outcome(null, "romanized_or_mixed", pageLang);
+    const lang = nativeLanguage(q.replace(/\p{Script=Latin}/gu, " "), native[0] as NativeScript);
     return lang ? outcome(lang, "confident", pageLang) : outcome(null, "romanized_or_mixed", pageLang);
   }
+  if (scripts.length > 1) return outcome(null, "romanized_or_mixed", pageLang);
 
-  // Arabic script.
-  if (PASHTO_LETTERS.test(letters)) {
-    // AD-10: Urdu letters must be absent from Pashto, so both together cannot be told.
-    return URDU_LETTERS.test(letters) ? outcome(null, "ambiguous_arabic", pageLang) : outcome("ps", "confident", pageLang);
+  if (scripts[0] !== LATIN) {
+    const lang = nativeLanguage(q, scripts[0] as NativeScript);
+    if (lang) return outcome(lang, "confident", pageLang);
+    return outcome(null, scripts[0] === DEVANAGARI ? "unknown" : "ambiguous_arabic", pageLang);
   }
-  if (URDU_LETTERS.test(letters)) return outcome("ur", "confident", pageLang);
+
+  // Latin script.
   const detected = eld.detect(q);
-  if (detected.language === "fa" && detected.isReliable()) return outcome("prs", "confident", pageLang);
-  return outcome(null, "ambiguous_arabic", pageLang);
+  const words = q.toLowerCase().match(/\p{L}+/gu) ?? [];
+  const strong = words.filter((w) => ROMANIZED_WORDS.has(w)).length;
+  const weak = words.filter((w) => AMBIGUOUS_ROMANIZED_WORDS.has(w)).length;
+  if (strong > 0 || weak >= 2 || (weak === 1 && !detected.isReliable())) {
+    return outcome(null, "romanized_or_mixed", pageLang);
+  }
+  const lang = latinLanguage(detected, pageLang);
+  return lang ? outcome(lang, "confident", pageLang) : outcome(null, "romanized_or_mixed", pageLang);
 }
