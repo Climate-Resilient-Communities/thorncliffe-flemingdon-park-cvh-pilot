@@ -19,12 +19,6 @@ import { longestLabels } from "../helpers/strings";
 const grid = (page: Page) => page.getByTestId("grid");
 const cells = (page: Page) => grid(page).locator(":scope > *");
 
-// A stand-in for the Hub shell (S01.09), test-only: the side navigation shows at the 700px breakpoint.
-const SHELL_CSS = `
-  .shell { display: grid; grid-template-columns: var(--size-side-nav) minmax(0, 1fr); }
-  @media (width < 700px) { .shell { grid-template-columns: minmax(0, 1fr); } .shell > nav { display: none; } }
-`;
-
 test.describe("equal-column Grid", () => {
   for (const width of [320, 390, 768]) {
     test(`two equal columns with --gap-grid at ${width}px`, async ({ page }) => {
@@ -276,7 +270,7 @@ test.describe("two-column Grid in the Hub shell", () => {
       test(`${variant} (${lang}): one column at 699, 700 and 1087px, two at 1088px`, async ({ page }) => {
         for (const width of [699, 700, 1087, 1088]) {
           await page.setViewportSize({ width, height: 800 });
-          await mount(page, "ShellPage", { variant, labels: longestLabels(lang) }, { lang, frameCss: SHELL_CSS });
+          await mount(page, "ShellPage", { variant, labels: longestLabels(lang) }, { lang });
           if (width < 1088) {
             expect(await contentWidth(hubPage(page))).toBeLessThan(800);
             await expectOneColumn(grid(page));
@@ -294,7 +288,7 @@ test.describe("two-column Grid in the Hub shell", () => {
 
   test("the shared boundary helper passes with the side navigation shown", async ({ page }) => {
     await checkHubTwoColumnBoundaries(page, {
-      open: (lang) => mount(page, "ShellPage", { variant: "aside-compact", labels: longestLabels(lang) }, { lang, frameCss: SHELL_CSS }),
+      open: (lang) => mount(page, "ShellPage", { variant: "aside-compact", labels: longestLabels(lang) }, { lang }),
     });
   });
 });

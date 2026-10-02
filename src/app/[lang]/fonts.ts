@@ -9,7 +9,8 @@ export const PUBLIC_SANS_LATIN: string = typeof publicSansLatin === "string" ? p
 // unicode-range slices, and Next serves the files from the app's own origin, so no font CDN is contacted at build
 // or run time. A browser fetches a font file only for text that uses it, and only the slices that text needs;
 // the stack below names the active language's face alone. This file and the stylesheet are imported by the
-// [lang] layout only, so the staff and site pages declare no font at all.
+// [lang] layout only; the staff layout has its own file and stylesheet (Public Sans alone), and the site pages declare
+// no font at all.
 const PUBLIC_SANS = "'Public Sans'";
 
 const SCRIPT_FONTS: Record<LaunchLanguage["font"], string | null> = {
