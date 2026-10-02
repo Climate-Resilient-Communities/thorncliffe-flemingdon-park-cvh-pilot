@@ -305,7 +305,7 @@ Admins create staff accounts; staff sign in safely; the 43 buildings and floors 
 
 ### Story S01.01 — Developer can run, test and deploy the CVH app skeleton
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h
 - **Traces:** AR-1, AR-2, AR-22 · **Depends on:** none · **Branch:** `e01-s01-app-skeleton`
 
 As a developer,

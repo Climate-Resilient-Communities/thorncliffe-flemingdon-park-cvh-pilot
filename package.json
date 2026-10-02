@@ -1,0 +1,52 @@
+{
+  "name": "cvh-pilot",
+  "version": "0.1.0",
+  "private": true,
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "eslint",
+    "typecheck": "next typegen && tsc --noEmit",
+    "test": "vitest run",
+    "lint:deps": "depcruise src --config .dependency-cruiser.cjs",
+    "test:smoke": "playwright test e2e/smoke.spec.ts"
+  },
+  "dependencies": {
+    "@serwist/turbopack": "9.5.12",
+    "@supabase/ssr": "0.12.7",
+    "@supabase/supabase-js": "2.117.2",
+    "canonicalize": "5.1.0",
+    "cohere-ai": "8.1.0",
+    "drizzle-orm": "0.45.3",
+    "eld": "2.1.0",
+    "leaflet": "1.9.4",
+    "leaflet.markercluster": "1.5.3",
+    "next": "16.3.8",
+    "next-intl": "4.14.8",
+    "opencc-js": "1.4.2",
+    "postgres": "3.4.9",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "twilio": "6.1.2",
+    "zod": "4.6.5"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.63.0",
+    "@tailwindcss/postcss": "4.3.3",
+    "@types/node": "22.20.5",
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0",
+    "dependency-cruiser": "18.5.0",
+    "drizzle-kit": "0.31.11",
+    "eslint": "9.39.5",
+    "eslint-config-next": "16.3.8",
+    "supabase": "2.119.0",
+    "tailwindcss": "4.3.3",
+    "typescript": "5.9.3",
+    "vitest": "5.0.3"
+  }
+}

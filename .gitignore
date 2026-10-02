@@ -2,3 +2,29 @@
 .env.*
 __pycache__/
 .DS_Store
+
+# dependencies
+/node_modules
+/.pnp
+.pnp.*
+
+# next.js
+/.next/
+/out/
+/build
+next-env.d.ts
+*.tsbuildinfo
+
+# testing
+/coverage
+/test-results/
+/playwright-report/
+/blob-report/
+/playwright/.cache/
+
+# misc
+*.pem
+npm-debug.log*
+
+# vercel
+.vercel
