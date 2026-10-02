@@ -1,10 +1,12 @@
-// Runs once when the server starts (not during `next build`). On Vercel (VERCEL_ENV is set) an
-// unsafe environment stops the server from starting. Without VERCEL_ENV (local `next dev`, the CI
-// smoke check of the production build) nothing is checked here; getEnv() checks on first use.
+// Runs once when each Node.js server instance starts (next start, next dev, and every Vercel
+// function cold start); not during `next build`, whose environment may differ from the runtime's,
+// and not in the edge runtime (no edge code reads the environment schema). An unsafe environment
+// is logged (getEnv names the failed rules, never secret values) and the process exits, so the
+// server does not keep running and answering 500. Local runs need SMS_MODE=log and
+// PUBLIC_BASE_URL=http://localhost:3000 (for example in .env.local); the smoke check sets them.
 export async function register() {
   if (process.env.NEXT_RUNTIME !== "nodejs") return;
   if (process.env.NEXT_PHASE === "phase-production-build") return;
-  if (!process.env.VERCEL_ENV) return;
-  const { getEnv } = await import("./platform/config/env");
-  getEnv();
+  const { checkEnvAtStartup } = await import("./platform/config/env");
+  checkEnvAtStartup();
 }
