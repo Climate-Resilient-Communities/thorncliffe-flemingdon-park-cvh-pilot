@@ -1,7 +1,18 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { hasContact, phoneEntries, socialEntries, webEntry } from "./contact";
+import { HUB_PHONE, HUB_TEL, hasContact, phoneEntries, socialEntries, webEntry } from "./contact";
+
+describe("the Hub's number", () => {
+  it("is the number with id hub in numbers.json, read with displayPhone and dialled from the E.164 value", () => {
+    const { numbers } = JSON.parse(readFileSync(path.join(__dirname, "..", "..", "..", "data", "catalogue", "numbers.json"), "utf8")) as { numbers: { id: string; number: string }[] };
+    const hub = numbers.find((n) => n.id === "hub")!;
+
+    expect(HUB_PHONE).toBe(hub.number);
+    expect(HUB_TEL).toBe(`tel:+1${hub.number.replace(/\D/g, "")}`);
+    expect(phoneEntries([HUB_PHONE])).toEqual([{ text: HUB_PHONE, tel: HUB_TEL.slice("tel:".length) }]);
+  });
+});
 
 describe("phoneEntries", () => {
   it("writes a ten-digit number the way the rest of the app does, and dials it with the country code", () => {

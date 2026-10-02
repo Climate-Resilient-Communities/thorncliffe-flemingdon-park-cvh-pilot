@@ -1206,10 +1206,11 @@
     lastUpdated: 'Last updated {time}',
     loading: 'Loading the directory',
     couldNotLoad: 'The directory could not load',
-    couldNotLoadBody: 'The Hub can help you find a service by phone. The numbers page lists the other numbers you may need.',
+    couldNotLoadBody: 'The Hub can help you find a service by phone.',
+    couldNotLoadNumbers: 'The numbers page lists the other numbers you may need.',
     numbersLink: 'See the essential numbers',
     backToList: 'All services and organisations',
-    address: 'Address', phone: 'Phone', social: 'Social media' } });
+    suggestApply: 'Show only {place}' } });
   /* Directory release (S02.05): the Admin publishes the directory as one numbered release. Not a prototype screen. */
   m(en, { hub: { nav: { directory: 'Directory' } }, staff: { directory: {
     title: 'Directory release',

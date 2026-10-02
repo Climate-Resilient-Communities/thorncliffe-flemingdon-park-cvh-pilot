@@ -55,9 +55,12 @@ export function UnavailableNote({ lang, testId = "directory-unavailable-note" }:
 
 /**
  * The machine-translation label (x04) and "Read it in English": a toggle that shows the English original in place of the
- * machine-translated texts of one listing, and back.
+ * machine-translated texts of one listing, and back. The toggle is described by the provider's name (`describedBy` is the
+ * id of the name), so a screen reader moving through a list of identical buttons says which listing each belongs to.
+ * "Original (English)" is a status: it is announced when the original is shown, and its element is always in the page so
+ * that the announcement happens (an empty status takes no room).
  */
-export function MachineLabel({ english, onToggle }: { english: boolean; onToggle: () => void }) {
+export function MachineLabel({ english, onToggle, describedBy }: { english: boolean; onToggle: () => void; describedBy: string }) {
   const t = useTranslations();
   const name = languageOf("en").native;
   return (
@@ -65,14 +68,28 @@ export function MachineLabel({ english, onToggle }: { english: boolean; onToggle
       <ResidentText as="span" className="dir-mt__label">
         {t("x04.label")}
       </ResidentText>
-      <button type="button" className="dir-link tap" aria-pressed={english} onClick={onToggle} data-testid="show-english">
+      <button type="button" className="dir-link tap" aria-pressed={english} aria-describedby={describedBy} onClick={onToggle} data-testid="show-english">
         <ResidentText>{t("x04.showSource", { lang: name })}</ResidentText>
       </button>
-      {english && (
-        <ResidentText as="span" className="dir-mt__shown" testId="original-shown">
-          {t("x04.original", { lang: name })}
-        </ResidentText>
-      )}
+      <span className="dir-mt__shown" role="status" data-testid="original-shown">
+        {english ? <ResidentText>{t("x04.original", { lang: name })}</ResidentText> : null}
+      </span>
+    </div>
+  );
+}
+
+/**
+ * The one-line 911 reminder (x01.short, "Not an emergency service. In danger? Call 911.") at the end of a screen that sends a
+ * resident to a person: a search that found nothing, a provider's own page. An inline note, not the full 911 block.
+ *
+ * TODO(S02.10): replace this with the single 911 component's inline variant when S02.10 is merged, and delete this one.
+ * The directory is not on S02.10's full-block list (the screens that carry the whole block), so it needs only the inline note.
+ */
+export function Inline911({ testId = "inline-911" }: { testId?: string }) {
+  const t = useTranslations();
+  return (
+    <div className="dir-911" role="note" data-testid={testId}>
+      <ResidentText as="p">{t("x01.short")}</ResidentText>
     </div>
   );
 }

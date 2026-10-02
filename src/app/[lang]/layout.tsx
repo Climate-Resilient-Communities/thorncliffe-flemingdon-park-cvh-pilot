@@ -41,10 +41,11 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
   const r02 = await getTranslations({ locale: lang, namespace: "R02" });
   // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24). Until E03 builds the search
-  // entry (R-09, /search), "Find help" opens the directory, the one place to browse providers (S02.06).
+  // entry (R-09, /search), "Find help" opens the directory, the one place to browse providers (S02.06). It is marked as the
+  // current item on the directory and on the search pages, whichever of the two it links to.
   const nav: NavItem[] = [
     { id: "now", icon: "now", label: shell("nav.now"), href: `/${lang}` },
-    { id: "help", icon: "search", label: shell("nav.help"), href: `/${lang}/directory` },
+    { id: "help", icon: "search", label: shell("nav.help"), href: `/${lang}/directory`, alsoCurrentOn: [`/${lang}/search`] },
     { id: "map", icon: "map", label: shell("nav.map"), href: `/${lang}/map` },
     { id: "ready", icon: "ready", label: shell("nav.ready"), href: `/${lang}/ready` },
   ];

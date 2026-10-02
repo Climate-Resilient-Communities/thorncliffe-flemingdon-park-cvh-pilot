@@ -7,9 +7,10 @@ import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { isEnglishFallback, ResidentText } from "../text/resident-text";
-import { HUB_PHONE } from "./contact";
+import { CallHub } from "./call-hub";
 import { formatMoment } from "./format";
-import { isFallbackText, UnavailableNote } from "./listing-text";
+import { Inline911, isFallbackText, UnavailableNote } from "./listing-text";
+import { NumbersLink } from "./numbers-link";
 import { ProviderView, type CategoryNames } from "./provider-view";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
@@ -46,12 +47,8 @@ export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
             <Stack gap="related">
               <ResidentText as="h1">{t("directory.couldNotLoad")}</ResidentText>
               <ResidentText as="p">{t("directory.couldNotLoadBody")}</ResidentText>
-              <a className="dir-call tap" href={`tel:+1${HUB_PHONE.replace(/\D/g, "")}`} data-testid="hub-call">
-                <ResidentText>{t("R11.call", { phone: HUB_PHONE })}</ResidentText>
-              </a>
-              <Link className="dir-link tap" href={`/${lang}/ready/numbers`} prefetch={false} data-testid="numbers-link">
-                <ResidentText>{t("directory.numbersLink")}</ResidentText>
-              </Link>
+              <CallHub testId="hub-call" />
+              <NumbersLink lang={lang} />
             </Stack>
           </section>
         )}
@@ -69,6 +66,7 @@ export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
           <>
             {lang !== "en" && [provider.services, ...(provider.emergency_role ? [provider.emergency_role] : []), ...provider.subcategories].some(isFallbackText) && <UnavailableNote lang={lang} />}
             <ProviderView provider={provider} categories={categories} lang={lang} variant="page" />
+            <Inline911 />
           </>
         )}
       </Stack>

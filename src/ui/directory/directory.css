@@ -76,9 +76,20 @@
     text-decoration: underline;
   }
 
+  /*
+   * A call button is one unit: its words and its number are laid out as two pieces that wrap between them, never inside
+   * the number (a number, its label and its note are one left-to-right run that does not break). It never grows wider than
+   * the screen.
+   */
   .dir-call {
+    flex-wrap: wrap;
     align-self: start;
-    gap: var(--gap-label);
+    column-gap: var(--gap-label);
+    max-inline-size: 100%;
+  }
+
+  .dir-call bdi {
+    white-space: nowrap;
   }
 
   .dir-link,
@@ -127,6 +138,7 @@
   }
 
   .dir-legend {
+    padding: 0;
     margin-block-end: var(--gap-label);
     font-weight: 700;
     color: var(--ink);
@@ -167,6 +179,44 @@
     min-inline-size: 0;
     font-weight: 700;
     overflow-wrap: anywhere;
+  }
+
+  /* The neighbourhood of the buildings the resident chose, offered as a chip to tap; nothing is filtered until they do. */
+  .dir-suggest {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+  }
+
+  .dir-suggest__list {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .dir-suggest__chip {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-related);
+    border: 1.5px solid var(--accent-text);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .dir-suggest__chip:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
   }
 
   /* X-11: the applied filters. */
@@ -267,6 +317,16 @@
     gap: var(--gap-label);
   }
 
+  /*
+   * A provider's name and address are English text in a page of any language, set as isolated runs. Aligned to the start
+   * edge of the block and isolated from the text around them, the same in a left-to-right and a right-to-left page.
+   */
+  .dir-card__name,
+  .dir-card__address {
+    text-align: start;
+    unicode-bidi: isolate;
+  }
+
   .dir-card__name {
     overflow-wrap: anywhere;
   }
@@ -321,17 +381,24 @@
     font-size: var(--type-caption-size);
   }
 
+  /* A solid, filled tag in upright bold: never the dashed ring and italics of "Not known". */
   .dir-mt__label {
     padding-block: var(--gap-subline);
     padding-inline: var(--gap-tight);
-    border: 1px dashed var(--text-muted);
+    border: 1.5px solid var(--accent-text);
     border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+    font-style: normal;
     font-weight: 700;
-    color: var(--text);
+    color: var(--ink);
   }
 
   .dir-mt__shown {
     color: var(--text-muted);
+  }
+
+  .dir-mt__shown:empty {
+    display: none;
   }
 
   /* The facts of one provider. */
@@ -403,6 +470,16 @@
   }
 
   .dir-help__911 {
+    font-weight: 700;
+  }
+
+  /* The one-line 911 reminder at the end of a screen that leads to a person (x01, short). */
+  .dir-911 {
+    padding: var(--inset-card-compact);
+    border-inline-start: 4px solid var(--accent-bar);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+    font-size: var(--type-caption-size);
     font-weight: 700;
   }
 

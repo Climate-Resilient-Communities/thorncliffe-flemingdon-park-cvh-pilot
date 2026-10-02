@@ -1,21 +1,22 @@
 "use client";
 
-import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
-import type { DirectoryListingV1, ListingText } from "@/contracts/directory";
+import type { DirectoryListingV1, ListingText, NeighbourhoodId } from "@/contracts/directory";
 import type { LaunchCode } from "@/i18n/languages";
 import { languageOf } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
-import { Isolated } from "../text/isolated";
+import { Isolated, withIsolated } from "../text/isolated";
 import { isEnglishFallback, ResidentText } from "../text/resident-text";
-import { HUB_PHONE } from "./contact";
+import { CallHub } from "./call-hub";
+import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
 import { activeKeys, filterKeyId, filterProviders, isActive, listProviders, NO_FILTERS, setFilter, type FilterKey, type FilterState } from "./filters";
 import { formatMoment } from "./format";
-import { isFallbackText, ListingBlock, UnavailableNote } from "./listing-text";
-import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName, type NeighbourhoodId } from "./neighbourhood";
+import { Inline911, isFallbackText, ListingBlock, UnavailableNote } from "./listing-text";
+import { isNeighbourhoodId, NEIGHBOURHOODS, neighbourhoodName } from "./neighbourhood-names";
+import { NumbersLink } from "./numbers-link";
 import { ProviderView, type CategoryNames } from "./provider-view";
 import { useDirectory } from "./use-directory";
 import "./directory.css";
@@ -27,18 +28,6 @@ export function hasFallbackText(listing: DirectoryListingV1): boolean {
     ...listing.providers.flatMap((p) => [p.services, ...(p.emergency_role ? [p.emergency_role] : []), ...p.subcategories]),
   ];
   return texts.some(isFallbackText);
-}
-
-const telOf = (display: string) => `tel:+1${display.replace(/\D/g, "")}`;
-
-/** A call to the Hub, the number every "nothing here" state leads to. */
-function CallHub({ testId }: { testId: string }) {
-  const t = useTranslations();
-  return (
-    <a className="dir-call tap" href={telOf(HUB_PHONE)} data-testid={testId}>
-      <ResidentText>{t("R11.call", { phone: HUB_PHONE })}</ResidentText>
-    </a>
-  );
 }
 
 /** The neighbourhoods of the buildings this resident chose, once the building list has told which they are; null while that is not known. */
@@ -64,53 +53,70 @@ function FilterOption({ id, checked, onChange, children }: { id: string; checked
   );
 }
 
+/** Where focus goes after a control that disappears is used: the next chip's remove button, "Clear all", or the filters button. */
+type FocusTarget = { chip: string } | "clear-all" | "toggle";
+
 /**
  * The directory (R-10 as the pilot has it, UX-DR10): every published provider of the current release in the page
  * language, each once, narrowed on the phone by topic, neighbourhood and "Helps in an emergency" (R-27), with the applied
  * filters above the list (X-11) and, when nothing matches, a way to reach a person at the Hub (R-11). The list comes from
- * the downloaded release file (use-directory.ts); the phone's choices only suggest a neighbourhood and are never sent.
+ * the downloaded release file (use-directory.ts). The filters are kept for the visit in sessionStorage, so opening a
+ * provider and going back keeps them (filter-store.ts); they are never in the address and never sent. The neighbourhood of
+ * the buildings the resident chose is only suggested, as a chip they tap to apply.
  */
 export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const t = useTranslations();
   const directory = useDirectory(lang);
-  const [filters, setFilters] = useState<FilterState>(NO_FILTERS);
-  const [fromChoices, setFromChoices] = useState<readonly string[]>([]);
+  const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
   const [panelOpen, setPanelOpen] = useState(false);
-  const touched = useRef(false);
-  const suggested = useRef(false);
   const chosen = useChosenNeighbourhoods();
-
-  // The neighbourhood of the buildings the resident chose is filtered once, as a suggestion they can remove (X-11 marks it "from your choices").
-  useEffect(() => {
-    if (chosen === null || suggested.current) return;
-    suggested.current = true;
-    if (touched.current || chosen.length === 0) return;
-    setFilters((current) => ({ ...current, neighbourhoods: chosen }));
-    setFromChoices(chosen.map((id) => filterKeyId({ kind: "neighbourhood", id })));
-  }, [chosen]);
+  const toggleButton = useRef<HTMLButtonElement>(null);
+  const clearAllButton = useRef<HTMLButtonElement>(null);
+  const removeButtons = useRef(new Map<string, HTMLButtonElement>());
+  const focusAfter = useRef<FocusTarget | null>(null);
 
   const listing = directory.status === "ready" ? directory.listing : null;
+  // A kept filter whose topic the release no longer has does not count.
+  const filters = useMemo(() => (listing ? withoutUnknownTopics(applied, listing.categories.map((c) => c.id)) : applied), [applied, listing]);
   const categories: CategoryNames = useMemo(() => new Map((listing?.categories ?? []).map((c) => [c.id, c.name])), [listing]);
   const ordered = useMemo(() => (listing ? listProviders(listing.providers, languageOf(lang).bcp47) : []), [listing, lang]);
   const visible = useMemo(() => filterProviders(ordered, filters), [ordered, filters]);
   const topics = useMemo(() => [...(listing?.categories ?? [])].sort((a, b) => a.sort_order - b.sort_order), [listing]);
 
-  const change = (update: (current: FilterState) => FilterState) => {
-    touched.current = true;
-    setFilters(update);
+  // The filters survive the next page of the visit.
+  useEffect(() => {
+    saveFilters(tabStorage(), filters);
+  }, [filters]);
+
+  // A control that was used and is gone leaves focus nowhere: it goes to the control that takes its place.
+  useEffect(() => {
+    const target = focusAfter.current;
+    if (!target) return;
+    focusAfter.current = null;
+    const element = target === "toggle" ? toggleButton.current : target === "clear-all" ? clearAllButton.current : removeButtons.current.get(target.chip);
+    (element ?? toggleButton.current)?.focus();
+  });
+
+  const toggle = (key: FilterKey, on: boolean) => setApplied((current) => setFilter(current, key, on));
+  const clearAll = (focus: boolean) => {
+    if (focus) focusAfter.current = "toggle";
+    setApplied(NO_FILTERS);
   };
-  const toggle = (key: FilterKey, on: boolean) => {
-    if (!on) setFromChoices((marks) => marks.filter((mark) => mark !== filterKeyId(key)));
-    change((current) => setFilter(current, key, on));
+  /** The chip's own remove control: focus moves to the next chip, or to "Clear all" when it was the last. */
+  const removeChip = (key: FilterKey, keys: readonly FilterKey[]) => {
+    const at = keys.findIndex((other) => filterKeyId(other) === filterKeyId(key));
+    const next = keys[at + 1];
+    focusAfter.current = next ? { chip: filterKeyId(next) } : keys.length > 1 ? "clear-all" : "toggle";
+    toggle(key, false);
   };
-  const clearAll = () => {
-    touched.current = true;
-    setFromChoices([]);
-    setFilters(NO_FILTERS);
+  const closePanel = () => {
+    setPanelOpen(false);
+    toggleButton.current?.focus();
   };
 
   const keys = activeKeys(filters);
   const hidden = ordered.length - visible.length;
+  const suggestions = (chosen ?? []).filter((id) => !filters.neighbourhoods.includes(id));
   const labelOf = (key: FilterKey): ReactNode => {
     switch (key.kind) {
       case "category": {
@@ -144,7 +150,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
       <Stack gap="section-resident">
         <Stack gap="related">
           <ResidentText as="h1">{t("directory.title")}</ResidentText>
-          <ResidentText as="p">{t("directory.lead")}</ResidentText>
+          {directory.status !== "unavailable" && <ResidentText as="p">{t("directory.lead")}</ResidentText>}
           {directory.status === "ready" && !directory.current && (
             <ResidentText as="p" className="dir-updated" testId="directory-last-updated">
               {t("directory.lastUpdated", { time: formatMoment(directory.publishedAt, isEnglishFallback(t("directory.lastUpdated")) ? "en-CA" : locale) })}
@@ -167,9 +173,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
               </ResidentText>
               <ResidentText as="p">{t("directory.couldNotLoadBody")}</ResidentText>
               <CallHub testId="hub-call" />
-              <Link className="dir-link tap" href={`/${lang}/ready/numbers`} prefetch={false} data-testid="numbers-link">
-                <ResidentText>{t("directory.numbersLink")}</ResidentText>
-              </Link>
+              <NumbersLink lang={lang} />
             </Stack>
           </section>
         )}
@@ -180,6 +184,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
               <section className="dir-filters" aria-label={t("R27.title")} data-testid="filters">
                 <Stack gap="related">
                   <button
+                    ref={toggleButton}
                     type="button"
                     className="dir-btn dir-btn--secondary tap"
                     aria-expanded={panelOpen}
@@ -189,13 +194,30 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                   >
                     <ResidentText>{keys.length > 0 ? t("R10.filtersCount", { n: keys.length }) : t("R10.filters")}</ResidentText>
                   </button>
+                  {suggestions.length > 0 && (
+                    <div className="dir-suggest" data-testid="filter-suggestions">
+                      <ResidentText as="p" className="dir-hint">
+                        {t("R27.fromChoices")}
+                      </ResidentText>
+                      <ul className="dir-suggest__list">
+                        {suggestions.map((id) => (
+                          <li key={id}>
+                            <button type="button" className="dir-suggest__chip tap" onClick={() => toggle({ kind: "neighbourhood", id }, true)} data-testid={`suggest-neighbourhood-${id}`}>
+                              <span aria-hidden="true">+</span>
+                              <span>{withIsolated((place) => t("directory.suggestApply", { place }), neighbourhoodName(id))}</span>
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <div id="dir-filter-panel" hidden={!panelOpen} data-testid="filter-panel">
                     <Stack gap="stack">
                       <ResidentText as="p" className="dir-hint">
                         {t("R27.private")}
                       </ResidentText>
                       <fieldset className="dir-fieldset">
-                        <ResidentText as="p" className="dir-legend" testId="legend-topic">
+                        <ResidentText as="legend" className="dir-legend" testId="legend-topic">
                           {t("directory.topic")}
                         </ResidentText>
                         <Stack gap="label">
@@ -212,7 +234,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                         </Stack>
                       </fieldset>
                       <fieldset className="dir-fieldset">
-                        <ResidentText as="p" className="dir-legend" testId="legend-neighbourhood">
+                        <ResidentText as="legend" className="dir-legend" testId="legend-neighbourhood">
                           {t("filters.nbhd")}
                         </ResidentText>
                         <Stack gap="label">
@@ -227,10 +249,10 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                         <ResidentText>{t("directory.emergency")}</ResidentText>
                       </FilterOption>
                       <div className="dir-actions">
-                        <button type="button" className="dir-btn dir-btn--primary tap" onClick={() => setPanelOpen(false)} data-testid="filters-apply">
+                        <button type="button" className="dir-btn dir-btn--primary tap" onClick={closePanel} data-testid="filters-apply">
                           <ResidentText>{applyLabel}</ResidentText>
                         </button>
-                        <button type="button" className="dir-btn dir-btn--secondary tap" onClick={clearAll} data-testid="filters-clear">
+                        <button type="button" className="dir-btn dir-btn--secondary tap" onClick={() => clearAll(false)} data-testid="filters-clear">
                           <ResidentText>{t("R27.clear")}</ResidentText>
                         </button>
                       </div>
@@ -248,7 +270,17 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                     {keys.map((key) => (
                       <li className="dir-chip" key={filterKeyId(key)} data-testid={`chip-${filterKeyId(key)}`}>
                         <span className="dir-chip__label">{labelOf(key)}</span>
-                        <button type="button" className="dir-chip__x tap" aria-label={t("x11.remove", { f: nameOf(key) })} onClick={() => toggle(key, false)} data-testid={`remove-${filterKeyId(key)}`}>
+                        <button
+                          ref={(element) => {
+                            if (element) removeButtons.current.set(filterKeyId(key), element);
+                            else removeButtons.current.delete(filterKeyId(key));
+                          }}
+                          type="button"
+                          className="dir-chip__x tap"
+                          aria-label={t("x11.remove", { f: nameOf(key) })}
+                          onClick={() => removeChip(key, keys)}
+                          data-testid={`remove-${filterKeyId(key)}`}
+                        >
                           <span aria-hidden="true">×</span>
                         </button>
                       </li>
@@ -259,12 +291,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                       {hidden === 1 ? t("x11.hidingOne") : t("x11.hiding", { n: hidden })}
                     </ResidentText>
                   )}
-                  {fromChoices.length > 0 && (
-                    <ResidentText as="p" className="dir-hint" testId="from-choices">
-                      {t("x11.fromChoices")}
-                    </ResidentText>
-                  )}
-                  <button type="button" className="dir-btn dir-btn--quiet tap" onClick={clearAll} data-testid="clear-all">
+                  <button ref={clearAllButton} type="button" className="dir-btn dir-btn--quiet tap" onClick={() => clearAll(true)} data-testid="clear-all">
                     <ResidentText>{t("R27.clear")}</ResidentText>
                   </button>
                 </div>
@@ -296,10 +323,11 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
                   </ResidentText>
                   <CallHub testId="hub-call" />
                   {keys.length > 0 && (
-                    <button type="button" className="dir-btn dir-btn--secondary tap" onClick={clearAll} data-testid="empty-clear">
+                    <button type="button" className="dir-btn dir-btn--secondary tap" onClick={() => clearAll(true)} data-testid="empty-clear">
                       <ResidentText>{t("R27.clear")}</ResidentText>
                     </button>
                   )}
+                  <Inline911 />
                 </Stack>
               </section>
             )}

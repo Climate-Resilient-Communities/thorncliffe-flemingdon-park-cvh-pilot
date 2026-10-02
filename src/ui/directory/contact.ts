@@ -1,3 +1,4 @@
+import { HUB_PHONE_E164 } from "@/contracts/hubNumber.generated";
 import { displayPhone, phone } from "@/contracts/phone";
 
 // A provider's contact lines are the Hub's own text, not a record: "(416)421-8997", "(416)363-6441 (Ext 211)",
@@ -60,5 +61,8 @@ type Contact = { phone: readonly string[]; email: readonly string[]; social: rea
 export const hasContact = (contact: Contact): boolean =>
   phoneEntries(contact.phone).length + contact.email.filter((e) => e.trim() !== "").length + socialEntries(contact.social).length + contact.web.filter((w) => webEntry(w) !== null).length > 0;
 
-/** The Hub's own number (the Hub's contact in design/prototype/cvh/data.js), shown where the directory cannot load or a filter finds nothing. */
-export const HUB_PHONE = "(416) 421-8997";
+/** The Hub's own number as a resident reads it, shown where the directory cannot load or a filter finds nothing. It comes from numbers.json (id "hub") through the generated E.164 value. */
+export const HUB_PHONE = displayPhone(HUB_PHONE_E164);
+
+/** The link that dials the Hub. */
+export const HUB_TEL = `tel:${HUB_PHONE_E164}`;

@@ -17,9 +17,31 @@ describe("filterProviders", () => {
     expect(ids(filterProviders(providers, setFilter(food, { kind: "category", id: "health" }, true)))).toEqual(["P101", "P102"]);
   });
 
-  it("filters by neighbourhood from the postal code", () => {
+  it("filters by the neighbourhoods the release lists for each provider", () => {
     expect(ids(filterProviders(providers, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true)))).toEqual(["P101", "P104"]);
     expect(ids(filterProviders(providers, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "FP" }, true)))).toEqual(["P102", "P105"]);
+  });
+
+  it("never reads the address: a provider at an M4H postal code that the list puts in neither neighbourhood is in neither", () => {
+    const moved = providers.map((p) => (p.id === "P101" ? { ...p, neighbourhood_ids: [] } : p));
+
+    expect(ids(filterProviders(moved, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true)))).toEqual(["P104"]);
+    expect(moved.find((p) => p.id === "P101")!.locations[0].postal).toBe("M4H 1K2");
+  });
+
+  it("finds a provider the list puts in both neighbourhoods under either, and neighbourhoods chosen together are alternatives", () => {
+    const both = providers.map((p) => (p.id === "P103" ? { ...p, neighbourhood_ids: ["TP", "FP"] as ("TP" | "FP")[] } : p));
+
+    expect(ids(filterProviders(both, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true)))).toEqual(["P101", "P103", "P104"]);
+    expect(ids(filterProviders(both, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "FP" }, true)))).toEqual(["P102", "P103", "P105"]);
+    let both2 = setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true);
+    both2 = setFilter(both2, { kind: "neighbourhood", id: "FP" }, true);
+    expect(ids(filterProviders(providers, both2))).toEqual(["P101", "P102", "P104", "P105"]);
+  });
+
+  it("leaves a provider with no neighbourhood out when a neighbourhood is chosen, and in when none is", () => {
+    expect(ids(filterProviders(providers, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true)))).not.toContain("P103");
+    expect(ids(filterProviders(providers, NO_FILTERS))).toContain("P103");
   });
 
   it("keeps only providers with an emergency role for Helps in an emergency", () => {

@@ -14,7 +14,7 @@ function phoneStorage(): KeptStorage | null {
 
 /**
  * The directory in `lang`, read from the published release files (load-directory.ts). A listing kept from an earlier visit
- * shows at once while the server is asked which release is current.
+ * shows at once, as not current, while the server is asked which release is current.
  */
 export function useDirectory(lang: string): DirectoryState {
   const [state, setState] = useState<DirectoryState>({ status: "loading" });
@@ -23,8 +23,9 @@ export function useDirectory(lang: string): DirectoryState {
     let live = true;
     void loadDirectory(lang, {
       storage: phoneStorage(),
+      // The kept listing shows at once, but not as current: only the manifest says that.
       onKept: (kept) => {
-        if (live) setState({ status: "ready", ...kept, current: true });
+        if (live) setState(kept);
       },
     }).then((result) => {
       if (live) setState(result);

@@ -1,9 +1,8 @@
-import type { ListingProvider } from "@/contracts/directory";
-import { neighbourhoodsOf, type NeighbourhoodId } from "./neighbourhood";
+import type { ListingProvider, NeighbourhoodId } from "@/contracts/directory";
 
 // The directory's filters (R-27 as the pilot has it): category, neighbourhood and "Helps in an emergency". Within one
 // filter the chosen values are alternatives (food or housing); between filters they all have to hold. Everything here
-// runs on the phone, over the listing file it downloaded.
+// runs on the phone, over the listing file it downloaded. A provider's neighbourhoods are the ones the release file lists for it.
 
 export type FilterState = {
   /** Category ids of the listing. */
@@ -57,7 +56,7 @@ export const removeFilter = (state: FilterState, key: FilterKey): FilterState =>
 export function filterProviders(providers: readonly ListingProvider[], state: FilterState): ListingProvider[] {
   return providers.filter((provider) => {
     if (state.categories.length > 0 && !provider.category_ids.some((id) => state.categories.includes(id))) return false;
-    if (state.neighbourhoods.length > 0 && !neighbourhoodsOf(provider).some((id) => state.neighbourhoods.includes(id))) return false;
+    if (state.neighbourhoods.length > 0 && !provider.neighbourhood_ids.some((id) => state.neighbourhoods.includes(id))) return false;
     if (state.emergency && provider.emergency_role === null) return false;
     return true;
   });

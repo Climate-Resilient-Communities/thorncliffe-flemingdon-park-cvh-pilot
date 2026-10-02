@@ -34,6 +34,8 @@ type Sample = {
   name: string;
   categories: string[];
   postal: string | null;
+  /** The neighbourhoods the Hub's reviewed list gives this provider (the listing file carries them; the phone never works them out). */
+  neighbourhoods: ("TP" | "FP")[];
   street: string;
   city: string;
   phone: string[];
@@ -51,6 +53,7 @@ const SAMPLES: Sample[] = [
     name: "Thorncliffe Park Food Bank",
     categories: ["food"],
     postal: "M4H 1K2",
+    neighbourhoods: ["TP"],
     street: "45 Overlea Blvd",
     city: "Toronto",
     phone: ["(416)555-0101"],
@@ -66,6 +69,7 @@ const SAMPLES: Sample[] = [
     name: "Flemingdon Community Health Centre",
     categories: ["health"],
     postal: "M3C 1H9",
+    neighbourhoods: ["FP"],
     street: "10 Gateway Blvd",
     city: "North York",
     phone: ["(416)555-0102 | (416)555-0103 (Ext 211)", "(613)555-0104 & (647)555-0105 (Spanish)"],
@@ -81,6 +85,7 @@ const SAMPLES: Sample[] = [
     name: "East York Legal Clinic",
     categories: ["legal"],
     postal: "M4C 2L3",
+    neighbourhoods: [],
     street: "1 Main St",
     city: "East York",
     phone: [],
@@ -96,6 +101,7 @@ const SAMPLES: Sample[] = [
     name: "Overlea Cooling Room",
     categories: ["community"],
     postal: "M4H 1M5",
+    neighbourhoods: ["TP"],
     street: "7 Overlea Blvd",
     city: "Toronto",
     phone: ["(416)555-0106"],
@@ -111,6 +117,7 @@ const SAMPLES: Sample[] = [
     name: "Don Mills Settlement Services",
     categories: ["legal", "community"],
     postal: "M3C 3N2",
+    neighbourhoods: ["FP"],
     street: "20 Gateway Blvd",
     city: "North York",
     phone: ["Emergency: 911 | City: 311"],
@@ -125,12 +132,13 @@ const SAMPLES: Sample[] = [
 ];
 
 /** The listing file of one language, in the shape of DirectoryListingV1. */
-export function buildListing(lang: Lang, release: number, change: { drop?: string[] } = {}) {
+export function buildListing(lang: Lang, release: number, change: { drop?: string[]; hash?: string } = {}) {
   const providers = SAMPLES.filter((s) => !(change.drop ?? []).includes(s.id)).map((s) => ({
     id: s.id,
     name: s.name,
     category_ids: s.categories,
     subcategories: [],
+    neighbourhood_ids: s.neighbourhoods,
     locations: [{ street: s.street, city: s.city, postal: s.postal, lat: 43.705, lng: -79.34 }],
     contact: { phone: s.phone, email: s.email, social: s.social, web: s.web },
     services: text(lang, s.services[0], s.services[1]),
@@ -141,7 +149,7 @@ export function buildListing(lang: Lang, release: number, change: { drop?: strin
     v: 1,
     release_v: release,
     lang,
-    catalogue_hash: CATALOGUE_HASH,
+    catalogue_hash: change.hash ?? CATALOGUE_HASH,
     categories: CATEGORIES.map((c) => ({ id: c.id, sort_order: c.order, name: text(lang, c.en, c.ur) })),
     providers,
   };
@@ -149,12 +157,12 @@ export function buildListing(lang: Lang, release: number, change: { drop?: strin
 
 export const listingUrl = (release: number, lang: string) => `/api/directory/${release}/${lang}.json`;
 
-export function buildManifest(release: number) {
+export function buildManifest(release: number, hash: string = CATALOGUE_HASH) {
   return {
     v: 1,
     release_v: release,
     published_at: "2026-10-01T15:00:00.000Z",
-    catalogue_hash: CATALOGUE_HASH,
+    catalogue_hash: hash,
     search: { status: "unavailable" },
     files: Object.fromEntries(LANG_CODES.map((lang) => [lang, listingUrl(release, lang)])),
   };
@@ -170,24 +178,30 @@ export type DirectoryServer = {
   file?: "ok" | "fail" | "truncated" | "invalid";
   /** Providers left out of the listing files. */
   drop?: string[];
+  /** The catalogue hash the manifest and the listing files carry (the default is CATALOGUE_HASH). */
+  hash?: string;
   /** Every request made to the release routes: "GET /path". */
   requests: string[];
 };
 
 export const newServer = (release: number): DirectoryServer => ({ release, requests: [] });
 
-/** Answers the release routes from `server`. */
+/**
+ * Answers the release routes from `server`, for every page of the browser context (a second tab, a popup, a page opened by a
+ * link), not only the one that was passed.
+ */
 export async function stubDirectory(page: Page, server: DirectoryServer) {
-  await page.route("**/api/directory/manifest", (route: Route) => {
+  const context = page.context();
+  await context.route("**/api/directory/manifest", (route: Route) => {
     server.requests.push("GET /api/directory/manifest");
-    return server.manifestDown ? route.abort("internetdisconnected") : route.fulfill({ json: buildManifest(server.release), headers: { "Cache-Control": "no-store" } });
+    return server.manifestDown ? route.abort("internetdisconnected") : route.fulfill({ json: buildManifest(server.release, server.hash), headers: { "Cache-Control": "no-store" } });
   });
-  await page.route(/\/api\/directory\/\d+\/[A-Za-z-]+\.json$/, (route: Route) => {
+  await context.route(/\/api\/directory\/\d+\/[A-Za-z-]+\.json$/, (route: Route) => {
     const url = new URL(route.request().url());
     server.requests.push(`GET ${url.pathname}`);
     const [, , , release, file] = url.pathname.split("/");
     const lang = file.replace(".json", "") as Lang;
-    const listing = buildListing(lang === "ur" ? "ur" : "en", Number(release), { drop: server.drop });
+    const listing = buildListing(lang === "ur" ? "ur" : "en", Number(release), { drop: server.drop, hash: server.hash });
     switch (server.file ?? "ok") {
       case "fail":
         return route.fulfill({ status: 503, json: { v: 1, error: { code: "unavailable", message_key: "directory.unavailable" } } });

@@ -11,15 +11,20 @@ import { Isolated } from "../text/isolated";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
 import { HowTheyHelp, ListingBlock, MachineLabel, isMachineText } from "./listing-text";
-import { neighbourhoodName, neighbourhoodsOf } from "./neighbourhood";
+import { neighbourhoodName } from "./neighbourhood-names";
 import "./directory.css";
 
 export type CategoryNames = ReadonlyMap<string, ListingText>;
 
+const NBSP = "\u00a0";
+
+/** A postal code ("M4H 1K2") with a non-breaking space inside, so a line never ends between its two halves. */
+export const postalText = (postal: string): string => postal.trim().replace(/\s+/g, NBSP);
+
 /** Each address of a provider on one line, in English and left to right (an address is written the same way in every language). */
-function addressLines(provider: ListingProvider): string[] {
+export function addressLines(provider: Pick<ListingProvider, "locations">): string[] {
   return provider.locations
-    .map(({ street, city, postal }) => [street, city, postal].filter((part) => part && part.trim() !== "").join(", "))
+    .map(({ street, city, postal }) => [street, city, postal && postalText(postal)].filter((part) => part && part.trim() !== "").join(", "))
     .filter((line) => line !== "");
 }
 
@@ -108,7 +113,8 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
   const [english, setEnglish] = useState(false);
   const locale = languageOf(lang).bcp47;
   const addresses = addressLines(provider);
-  const nbhds = neighbourhoodsOf(provider);
+  const nbhds = provider.neighbourhood_ids;
+  const nameId = `provider-name-${provider.id}`;
   const names = provider.category_ids.map((id) => categories.get(id)).filter((text): text is ListingText => text !== undefined);
   const machine = machineTexts(provider, categories).length > 0;
   const confirmed = t("directory.lastConfirmed", { date: formatDayText(provider.last_confirmed, isEnglishFallback(t("directory.lastConfirmed")) ? "en-CA" : locale) });
@@ -117,7 +123,7 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
   return (
     <article className={`dir-card dir-card--${variant}`} data-testid={`provider-${provider.id}`} data-provider-id={provider.id}>
       <header className="dir-card__head">
-        <Heading className="dir-card__name">
+        <Heading className="dir-card__name" id={nameId}>
           {variant === "card" ? (
             <Link href={`/${lang}/directory/${provider.id}`} prefetch={false} className="dir-card__link" data-testid="provider-link">
               <Isolated>{provider.name}</Isolated>
@@ -126,11 +132,17 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
             <Isolated>{provider.name}</Isolated>
           )}
         </Heading>
-        {addresses.map((line) => (
-          <p className="dir-card__address" key={line}>
-            <Isolated>{line}</Isolated>
+        {addresses.length > 0 ? (
+          addresses.map((line) => (
+            <p className="dir-card__address" key={line}>
+              <Isolated>{line}</Isolated>
+            </p>
+          ))
+        ) : (
+          <p className="dir-card__address">
+            <Unknown>{t("status.unknown")}</Unknown>
           </p>
-        ))}
+        )}
         <ul className="dir-tags" aria-label={t("directory.topic")}>
           {names.map((name, at) => (
             <li key={`${provider.category_ids[at]}`} className="dir-tag">
@@ -155,7 +167,7 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
             </li>
           )}
         </ul>
-        {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} />}
+        {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} describedBy={nameId} />}
       </header>
 
       <dl className="dir-facts">

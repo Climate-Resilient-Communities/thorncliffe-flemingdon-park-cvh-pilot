@@ -4415,11 +4415,10 @@
     "lastUpdated": "[EN] Last updated {time}",
     "loading": "[EN] Loading the directory",
     "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone. The numbers page lists the other numbers you may need.",
+    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
+    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
     "numbersLink": "[EN] See the essential numbers",
     "backToList": "[EN] All services and organisations",
-    "address": "[EN] Address",
-    "phone": "[EN] Phone",
-    "social": "[EN] Social media"
+    "suggestApply": "[EN] Show only {place}"
   }
 }

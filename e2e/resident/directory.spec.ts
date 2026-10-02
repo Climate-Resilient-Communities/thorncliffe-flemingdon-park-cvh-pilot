@@ -5,7 +5,8 @@ import { expectBaseline, openResident, waitForFonts } from "./helpers";
 
 // S02.06: a resident browses and filters the directory (/{lang}/directory, /{lang}/directory/{id}). The release routes
 // are answered by directory-fixture.ts (the resident server has no database in these tests): release 7 has five sample
-// providers; P101 and P104 have an emergency role, P101 and P104 are in Thorncliffe Park, P102 and P105 in Flemingdon Park.
+// providers; P101 and P104 have an emergency role. The listing file says which neighbourhoods each provider is in (the
+// Hub's reviewed list): P101 and P104 are in Thorncliffe Park, P102 and P105 in Flemingdon Park, P103 in neither.
 // The Urdu listing is machine translated, except P105's services, which are English with translation.unavailable.
 // Every fixture date is on or before 2026-10-01.
 
@@ -81,11 +82,13 @@ test("a detail the file does not give reads Not known, never a blank", async ({ 
   expect(look).toEqual({ font: "italic", ring: "dashed" });
 });
 
-test("reads only the published release files, and filtering and browsing make no request at all", async ({ page }) => {
+test("reads only the published release files, and filtering makes no request at all", async ({ page }) => {
   const server = await setUp(page);
   const others: string[] = [];
+  const all: string[] = [];
   page.on("request", (request) => {
     const url = new URL(request.url());
+    all.push(`${request.method()} ${url.pathname}`);
     if (url.pathname.startsWith("/api/") && !url.pathname.startsWith("/api/directory/")) others.push(`${request.method()} ${url.pathname}`);
   });
   await openResident(page, "/en/directory", 390);
@@ -93,16 +96,25 @@ test("reads only the published release files, and filtering and browsing make no
   await page.waitForLoadState("networkidle");
   expect(server.requests).toEqual(["GET /api/directory/manifest", "GET /api/directory/7/en.json"]);
 
+  // Filtering, narrowing, removing and clearing, and showing the English, happen on the phone: not one new request of any kind.
+  const before = all.length;
   await openFilters(page);
   await page.getByTestId("filter-category-food").check();
   await page.getByTestId("filter-emergency").check();
   await page.getByTestId("filter-neighbourhood-FP").check();
+  await page.getByTestId("filter-category-food").uncheck();
+  await page.getByTestId("filters-apply").click();
+  await page.getByTestId("remove-emergency").click();
   await page.getByTestId("clear-all").click();
+  await expect(page.getByTestId("filter-bar")).toHaveCount(0);
+  await page.waitForLoadState("networkidle");
+  expect(all.slice(before)).toEqual([]);
+  expect(server.requests).toHaveLength(2);
+
+  // Opening a provider's page and coming back asks the server which release is current, and nothing more: the file is kept.
   await page.getByTestId("provider-link").first().click();
   await page.getByTestId("back-to-directory").click();
   await page.waitForLoadState("networkidle");
-
-  // Opening the provider's page and coming back asked the server which release is current, and nothing more: the file is kept.
   expect(server.requests.filter((r) => r.includes(".json"))).toEqual(["GET /api/directory/7/en.json"]);
   expect(others).toEqual([]);
 });
@@ -168,6 +180,12 @@ test("a combination with no results shows the Hub's number, and Clear all brings
   await expect(page.getByTestId("hub-call")).toHaveAttribute("href", "tel:+14164218997");
   await expect(page.getByTestId("filters-apply")).toHaveText("Apply (nothing matches yet)");
 
+  // The inline 911 note is the last thing on the screen.
+  const note = empty.getByRole("note");
+  await expect(note).toHaveText("Not an emergency service. In danger? Call 911.");
+  await expect(note).toHaveAttribute("data-testid", "inline-911");
+  expect(await note.evaluate((element) => element.nextElementSibling === null && element.parentElement!.lastElementChild === element)).toBe(true);
+
   await page.getByTestId("empty-clear").click();
   await expect(empty).toHaveCount(0);
   expect(await listed(page)).toHaveLength(5);
@@ -190,6 +208,10 @@ test("How they can help shows the emergency role and names 911, on the list and 
   await expect(page.getByTestId("emergency-role")).toHaveText("Open as a cooling room during heat warnings. Not a medical service.");
   await expect(page.getByTestId("help-911")).toHaveText("If someone is in danger, call 911.");
   await expect(page.getByTestId("last-confirmed")).toHaveText("Last confirmed by the Hub September 28, 2026");
+  // The provider page ends with the inline 911 note, after the provider.
+  await expect(page.getByTestId("inline-911")).toHaveText("Not an emergency service. In danger? Call 911.");
+  await expect(page.getByTestId("inline-911")).toHaveAttribute("role", "note");
+  expect(await page.getByTestId("inline-911").evaluate((element) => element.previousElementSibling?.getAttribute("data-testid"))).toBe("provider-P104");
 });
 
 test("a provider page lists every number, link and address of the provider, and opens from its own address", async ({ page }) => {
@@ -204,6 +226,8 @@ test("a provider page lists every number, link and address of the provider, and 
   await expect(page.getByTestId("provider-web")).toHaveAttribute("href", "https://www.example.org/health");
   await expect(page.getByTestId("provider-web")).toHaveAttribute("rel", "noopener noreferrer");
   await expect(page.locator(".dir-card__address")).toHaveText("10 Gateway Blvd, North York, M3C 1H9");
+  // The postal code is one piece: its space is a non-breaking space.
+  expect(await page.locator(".dir-card__address").textContent()).toBe("10 Gateway Blvd, North York, M3C\u00a01H9");
   await expect(page.locator(".dir-tag--quiet")).toHaveText("Flemingdon Park");
   await expect(page.getByTestId("provider-emergency")).toHaveText("Not known");
 
@@ -228,6 +252,220 @@ test("Find help in the navigation opens the directory", async ({ page }) => {
   await expect(page).toHaveURL(/\/en\/directory$/);
   await expect(page.getByTestId("shell-nav-help")).toHaveAttribute("aria-current", "page");
   await waitForList(page);
+});
+
+test("the filters survive opening a provider and going back, are kept in the tab's session storage and never in the address", async ({ page }) => {
+  await setUp(page);
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  await openFilters(page);
+  await page.getByTestId("filter-category-food").check();
+  await page.getByTestId("filter-category-health").check();
+  await page.getByTestId("filter-emergency").check();
+  await page.getByTestId("filters-apply").click();
+  expect(await listed(page)).toEqual(["P101"]);
+
+  // Open the provider and come back by the page's own link.
+  await page.getByTestId("provider-link").click();
+  await expect(page).toHaveURL(/\/en\/directory\/P101$/);
+  await page.getByTestId("back-to-directory").click();
+  await expect(page).toHaveURL(/\/en\/directory$/);
+  await waitForList(page);
+  expect(await listed(page)).toEqual(["P101"]);
+  await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Food×", "Health and wellness×", "Helps in an emergency×"]);
+  await expect(page.getByTestId("filters-toggle")).toHaveText("Filters (3)");
+
+  // And by the browser's Back button.
+  await page.getByTestId("provider-link").click();
+  await expect(page).toHaveURL(/\/en\/directory\/P101$/);
+  await page.goBack();
+  await waitForList(page);
+  expect(await listed(page)).toEqual(["P101"]);
+
+  // Kept for the tab only: in sessionStorage, not in localStorage, not in the address.
+  expect(page.url()).not.toContain("?");
+  expect(await page.evaluate(() => JSON.parse(sessionStorage.getItem("cvh.directory-filters")!))).toEqual({ v: 1, categories: ["food", "health"], neighbourhoods: [], emergency: true });
+  expect(await page.evaluate(() => Object.keys(localStorage).filter((key) => key.includes("filters")))).toEqual([]);
+
+  // Another tab of the same phone starts with no filters.
+  const other = await page.context().newPage();
+  await other.goto("/en/directory");
+  await expect(other.getByTestId("directory-list")).toBeVisible();
+  await expect(other.getByTestId("filter-bar")).toHaveCount(0);
+  await other.close();
+
+  // Clear all forgets them.
+  await page.getByTestId("clear-all").click();
+  expect(await page.evaluate(() => sessionStorage.getItem("cvh.directory-filters"))).toBeNull();
+  await page.reload();
+  await waitForList(page);
+  await expect(page.getByTestId("filter-bar")).toHaveCount(0);
+});
+
+test("a kept filter whose topic the next release no longer has is dropped, and the rest stays", async ({ page }) => {
+  await setUp(page);
+  await page.addInitScript(() => {
+    if (!sessionStorage.getItem("cvh.directory-filters")) sessionStorage.setItem("cvh.directory-filters", JSON.stringify({ v: 1, categories: ["food", "gone-topic"], neighbourhoods: ["XX"], emergency: false }));
+  });
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Food×"]);
+  expect(await listed(page)).toEqual(["P101"]);
+});
+
+test.describe("the filter panel and the applied filters, by keyboard and screen reader", () => {
+  test("the filter groups are fieldsets with a legend, so a screen reader announces the group", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+    await openFilters(page);
+
+    await expect(page.locator("[data-testid=filter-panel] fieldset > legend")).toHaveText(["Topic", "Which neighbourhood?"]);
+    await expect(page.getByRole("group", { name: "Topic" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Which neighbourhood?" })).toBeVisible();
+    await expect(page.getByRole("group", { name: "Topic" }).getByRole("checkbox")).toHaveCount(4);
+    await expect(page.getByRole("group", { name: "Which neighbourhood?" }).getByRole("checkbox")).toHaveCount(2);
+  });
+
+  test("focus returns to the Filters button when the panel closes, from Show results or from the button itself", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+
+    await openFilters(page);
+    await page.getByTestId("filter-category-food").check();
+    await page.getByTestId("filters-apply").focus();
+    await page.keyboard.press("Enter");
+    await expect(page.getByTestId("filter-panel")).toBeHidden();
+    await expect(page.getByTestId("filters-toggle")).toBeFocused();
+
+    await page.getByTestId("filters-toggle").press("Enter");
+    await expect(page.getByTestId("filter-panel")).toBeVisible();
+    await page.getByTestId("filters-toggle").press("Enter");
+    await expect(page.getByTestId("filter-panel")).toBeHidden();
+    await expect(page.getByTestId("filters-toggle")).toBeFocused();
+  });
+
+  test("removing an applied filter moves focus to the next one, then to Clear all, then to the Filters button when none is left", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+    await openFilters(page);
+    await page.getByTestId("filter-category-community").check();
+    await page.getByTestId("filter-neighbourhood-TP").check();
+    await page.getByTestId("filter-emergency").check();
+    await page.getByTestId("filters-apply").click();
+    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Public spaces×", "Thorncliffe Park×", "Helps in an emergency×"]);
+
+    await page.getByTestId("remove-category:community").click();
+    await expect(page.getByTestId("remove-neighbourhood:TP")).toBeFocused();
+
+    await page.getByTestId("remove-neighbourhood:TP").click();
+    await expect(page.getByTestId("remove-emergency")).toBeFocused();
+
+    // Put one back so that the one removed is the last of two: Clear all takes the focus.
+    await page.getByTestId("filters-toggle").click();
+    await page.getByTestId("filter-neighbourhood-FP").check();
+    await page.getByTestId("filters-apply").click();
+    await expect(page.getByTestId("filter-bar").locator("li")).toHaveText(["Flemingdon Park×", "Helps in an emergency×"]);
+    await page.getByTestId("remove-emergency").click();
+    await expect(page.getByTestId("clear-all")).toBeFocused();
+
+    // The last one: the bar goes, and focus goes to the Filters button, not to the top of the page.
+    await page.getByTestId("remove-neighbourhood:FP").click();
+    await expect(page.getByTestId("filter-bar")).toHaveCount(0);
+    await expect(page.getByTestId("filters-toggle")).toBeFocused();
+  });
+
+  test("Clear all, in the bar and in the no-results screen, leaves focus on the Filters button", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+    await openFilters(page);
+    await page.getByTestId("filter-emergency").check();
+    await page.getByTestId("filters-apply").click();
+    await page.getByTestId("clear-all").click();
+    await expect(page.getByTestId("filters-toggle")).toBeFocused();
+
+    await openFilters(page);
+    await page.getByTestId("filter-category-health").check();
+    await page.getByTestId("filter-neighbourhood-TP").check();
+    await page.getByTestId("filters-apply").click();
+    await page.getByTestId("empty-clear").click();
+    await expect(page.getByTestId("filters-toggle")).toBeFocused();
+  });
+});
+
+test("the buildings the resident chose suggest their neighbourhood as a chip to tap, and nothing is filtered until they do", async ({ page }) => {
+  await setUp(page);
+  await stubBuildingList(page);
+  // 10 Overlea Blvd (rsn 700000010) is in Flemingdon Park in the sample building list.
+  await page.addInitScript(() => localStorage.setItem("cvh.choices", JSON.stringify({ v: 1, welcomed: true, buildings: ["700000010"] })));
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  const chip = page.getByTestId("suggest-neighbourhood-FP");
+  await expect(chip).toBeVisible();
+  await expect(chip).toContainText("Show only Flemingdon Park");
+  await expect(page.getByTestId("filter-suggestions")).toContainText("From your choices");
+  // Not applied: the whole list shows, with no applied filter and no chip in the bar.
+  expect(await listed(page)).toHaveLength(5);
+  await expect(page.getByTestId("filter-bar")).toHaveCount(0);
+  await expect(page.getByTestId("filters-toggle")).toHaveText("Filters");
+  await expect(page.getByTestId("suggest-neighbourhood-TP")).toHaveCount(0);
+
+  await chip.click();
+
+  await expect(page.getByTestId("chip-neighbourhood:FP")).toBeVisible();
+  expect((await listed(page)).sort()).toEqual(["P102", "P105"]);
+  await expect(page.getByTestId("filter-suggestions")).toHaveCount(0);
+  await expect(page.getByTestId("from-choices")).toHaveCount(0);
+
+  // Removing it brings the whole list back and the suggestion with it; it did not change what the phone saved.
+  await page.getByTestId("remove-neighbourhood:FP").click();
+  expect(await listed(page)).toHaveLength(5);
+  await expect(page.getByTestId("suggest-neighbourhood-FP")).toBeVisible();
+  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices")!).buildings)).toEqual(["700000010"]);
+});
+
+test("a resident with no saved buildings is offered no suggestion", async ({ page }) => {
+  await setUp(page);
+  await stubBuildingList(page);
+  await openResident(page, "/en/directory", 390);
+  await waitForList(page);
+
+  await expect(page.getByTestId("filter-suggestions")).toHaveCount(0);
+});
+
+test("a call button is one unit: its number never breaks, and it stays inside a 320 px screen", async ({ page }) => {
+  await setUp(page);
+  await openResident(page, "/en/directory/P102", 320);
+  const calls = page.getByTestId("provider-call");
+  await expect(calls).toHaveCount(4);
+
+  for (const call of await calls.all()) {
+    const look = await call.evaluate((element) => {
+      const number = element.querySelector("bdi")!;
+      const box = element.getBoundingClientRect();
+      const lineHeight = parseFloat(getComputedStyle(number).lineHeight) || parseFloat(getComputedStyle(number).fontSize) * 1.5;
+      return {
+        wrap: getComputedStyle(element).flexWrap,
+        nowrap: getComputedStyle(number).whiteSpace,
+        numberLines: Math.round(number.getBoundingClientRect().height / lineHeight),
+        inside: box.left >= 0 && box.right <= document.documentElement.clientWidth,
+      };
+    });
+    expect(look, await call.innerText()).toEqual({ wrap: "wrap", nowrap: "nowrap", numberLines: 1, inside: true });
+  }
+  await openResident(page, "/en/directory", 320);
+  await page.getByTestId("filters-toggle").click();
+  await page.getByTestId("filter-category-health").check();
+  await page.getByTestId("filter-neighbourhood-TP").check();
+  const hub = page.getByTestId("hub-call");
+  await expect(hub).toBeVisible();
+  expect(await hub.evaluate((element) => ({ nowrap: getComputedStyle(element.querySelector("bdi")!).whiteSpace, inside: element.getBoundingClientRect().right <= document.documentElement.clientWidth }))).toEqual({ nowrap: "nowrap", inside: true });
 });
 
 test.describe("in Urdu", () => {
@@ -287,6 +525,47 @@ test.describe("in Urdu", () => {
       await expect(run, text).toHaveAttribute("lang", "en");
     }
     await expect(card.getByTestId("last-confirmed")).toHaveText("[EN] Last confirmed by the Hub September 30, 2026");
+  });
+
+  test("the machine-translation label is a solid upright tag, told apart from the dashed italic Not known; Read it in English names its listing; the original is a status", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/ur/directory", 390);
+    await waitForList(page);
+
+    const food = page.getByTestId("provider-P101");
+    const label = await food.locator(".dir-mt__label").evaluate((element) => ({ border: getComputedStyle(element).borderTopStyle, font: getComputedStyle(element).fontStyle, ring: element.querySelector(".dir-unknown__mark") }));
+    const unknown = await page.getByTestId("provider-P103").getByTestId("provider-contact").locator(".dir-unknown").evaluate((element) => ({ font: getComputedStyle(element).fontStyle, ring: getComputedStyle(element.querySelector(".dir-unknown__mark")!).borderTopStyle }));
+    expect(label).toEqual({ border: "solid", font: "normal", ring: null });
+    expect(unknown).toEqual({ font: "italic", ring: "dashed" });
+
+    const toggle = food.getByTestId("show-english");
+    await expect(toggle).toHaveAttribute("aria-describedby", "provider-name-P101");
+    await expect(food.locator("#provider-name-P101")).toHaveText("Thorncliffe Park Food Bank");
+    await expect(toggle).toHaveAccessibleDescription("Thorncliffe Park Food Bank");
+    const shown = food.getByTestId("original-shown");
+    await expect(shown).toHaveAttribute("role", "status");
+    await expect(shown).toHaveText("");
+    await toggle.click();
+    await expect(shown).toHaveAttribute("role", "status");
+    await expect(shown).toHaveText(/English/);
+  });
+
+  test("a provider's name and address are aligned to the start edge and isolated in a right-to-left page, the same for both", async ({ page }) => {
+    await setUp(page);
+    await openResident(page, "/ur/directory", 390);
+    await waitForList(page);
+
+    const food = page.getByTestId("provider-P101");
+    for (const selector of [".dir-card__name", ".dir-card__address"]) {
+      const look = await food.locator(selector).evaluate((element) => ({ align: getComputedStyle(element).textAlign, bidi: getComputedStyle(element).unicodeBidi, dir: getComputedStyle(element).direction }));
+      expect(look, selector).toEqual({ align: "start", bidi: "isolate", dir: "rtl" });
+    }
+    // Both begin at the same edge of the card.
+    const edges = await food.evaluate((card) => {
+      const right = (selector: string) => card.querySelector(selector)!.getBoundingClientRect().right;
+      return { name: Math.round(right(".dir-card__name")), address: Math.round(right(".dir-card__address")) };
+    });
+    expect(edges.name).toBe(edges.address);
   });
 
   test("filters work on the Urdu listing and the category names are the Urdu ones", async ({ page }) => {
@@ -355,6 +634,55 @@ test.describe("the release on the phone", () => {
     });
   }
 
+  test("a kept release shows Last updated until the manifest confirms it is the current one, and then does not", async ({ page }) => {
+    const server = await setUp(page, 7);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+
+    // The manifest takes a while: the kept list shows at once, but nothing has said it is current.
+    await page.route("**/api/directory/manifest", async (route) => {
+      await new Promise((resolve) => setTimeout(resolve, 800));
+      await route.fallback();
+    });
+    await page.goto("/en/directory");
+    await expect(page.getByTestId("directory-list")).toBeVisible();
+    await expect(page.getByTestId("directory-last-updated")).toBeVisible();
+
+    await expect(page.getByTestId("directory-last-updated")).toHaveCount(0);
+    expect(server.requests.filter((r) => r.includes(".json"))).toEqual(["GET /api/directory/7/en.json"]);
+  });
+
+  test("when the manifest names an older release than the one the phone kept, the manifest's release is downloaded and shown as current", async ({ page }) => {
+    const server = await setUp(page, 7);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+
+    server.release = 6;
+    server.drop = ["P105"];
+    await page.goto("/en/directory");
+
+    await expect.poll(async () => (await listed(page)).length).toBe(4);
+    await expect(page.getByTestId("directory-last-updated")).toHaveCount(0);
+    expect(server.requests).toContain("GET /api/directory/6/en.json");
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.directory.en")!).listing.release_v)).toBe(6);
+  });
+
+  test("when the manifest names the same release number made from another catalogue, the file is downloaded again", async ({ page }) => {
+    const server = await setUp(page, 7);
+    await openResident(page, "/en/directory", 390);
+    await waitForList(page);
+    server.requests.length = 0;
+
+    server.hash = "d".repeat(64);
+    server.drop = ["P105"];
+    await page.goto("/en/directory");
+
+    await expect.poll(async () => (await listed(page)).length).toBe(4);
+    expect(server.requests).toEqual(["GET /api/directory/manifest", "GET /api/directory/7/en.json"]);
+    expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.directory.en")!).listing.catalogue_hash)).toBe("d".repeat(64));
+    await expect(page.getByTestId("directory-last-updated")).toHaveCount(0);
+  });
+
   test("with no signal at all the list the phone has still opens, with Last updated", async ({ page }) => {
     const server = await setUp(page, 7);
     await openResident(page, "/en/directory", 390);
@@ -377,8 +705,12 @@ test.describe("the release on the phone", () => {
     await expect(box.locator("h2")).toHaveText("The directory could not load");
     await expect(page.getByTestId("hub-call")).toHaveText("Call (416) 421-8997");
     await expect(page.getByTestId("hub-call")).toHaveAttribute("href", "tel:+14164218997");
-    await expect(page.getByTestId("numbers-link")).toHaveAttribute("href", "/en/ready/numbers");
     await expect(page.getByTestId("directory-list")).toHaveCount(0);
+    // The numbers page is S02.10's and is not there yet: no link to it, and no sentence about it (numbers-route.ts).
+    await expect(page.getByTestId("numbers-link")).toHaveCount(0);
+    await expect(page.getByText("numbers page")).toHaveCount(0);
+    // The lead that asks for a topic has nothing to narrow on this screen.
+    await expect(page.getByText("Choose a topic or a neighbourhood")).toHaveCount(0);
 
     // And it recovers on the next visit with signal.
     server.file = "ok";
@@ -397,25 +729,6 @@ test.describe("the release on the phone", () => {
     expect(await page.evaluate(() => Object.keys(localStorage).filter((k) => k.startsWith("cvh.directory.")))).toEqual(["cvh.directory.ur"]);
     expect(await page.evaluate(() => localStorage.getItem("cvh.choices"))).toContain("welcomed");
   });
-});
-
-test("the buildings the resident chose suggest a neighbourhood, marked as from their choices and removable", async ({ page }) => {
-  await setUp(page);
-  await stubBuildingList(page);
-  // 10 Overlea Blvd (rsn 700000010) is in Flemingdon Park in the sample building list.
-  await page.addInitScript(() => localStorage.setItem("cvh.choices", JSON.stringify({ v: 1, welcomed: true, buildings: ["700000010"] })));
-  await openResident(page, "/en/directory", 390);
-  await waitForList(page);
-
-  await expect(page.getByTestId("chip-neighbourhood:FP")).toBeVisible();
-  await expect(page.getByTestId("from-choices")).toHaveText("Some filters come from your choices");
-  expect((await listed(page)).sort()).toEqual(["P102", "P105"]);
-
-  await page.getByTestId("remove-neighbourhood:FP").click();
-  await expect(page.getByTestId("filter-bar")).toHaveCount(0);
-  expect(await listed(page)).toHaveLength(5);
-  // Removing it did not change what the phone saved.
-  expect(await page.evaluate(() => JSON.parse(localStorage.getItem("cvh.choices")!).buildings)).toEqual(["700000010"]);
 });
 
 test("every control is at least the tap size, and the page does not scroll sideways, at 320 and 390", async ({ page }) => {

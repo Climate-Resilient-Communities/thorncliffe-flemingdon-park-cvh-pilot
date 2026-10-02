@@ -5,8 +5,10 @@ import { openResident } from "./helpers";
 
 // S02.06, AD-3: the saved choices stay on the phone. A resident with saved choices browses and filters the directory,
 // and no request carries what was saved: not the buildings or floors, the groups, the muted topics or basic mode, nor the
-// filters they applied or the provider they looked at, in the URL, the headers or the body. The only requests for data
-// are the ones every visitor makes: the manifest, the listing file of the page language, and the building list.
+// filters they applied or the provider they looked at, in the query, the headers or the body. The one place a provider's id
+// appears is the path of the page itself (/en/directory/P101 is the address of that provider's page, as any page's address
+// names the page): no API request, and no request for data, names a provider or a filter. The only requests for data are
+// the ones every visitor makes: the manifest, the listing file of the page language, and the building list.
 
 const BUILDING = BUILDINGS[3].rsn;
 const SAVED = {
@@ -56,7 +58,8 @@ test("no request carries the saved selection, the filters applied or the provide
   for (const request of seen) {
     const text = `${request.url}\n${request.headers}\n${request.body}`;
     for (const secret of SECRETS) expect(text, `${request.method} ${request.url} carries ${secret}`).not.toContain(secret);
-    // The URL of an API request never names a provider or a filter; only the page's own address (the document) names the provider opened.
+    // The URL of an API request never names a provider or a filter. A provider's id is in the path of its page (the document
+    // request for /en/directory/P101), which is the page's own address and is not an API request.
     if (new URL(request.url).pathname.startsWith("/api/")) for (const term of filterTerms) expect(request.url, request.url).not.toContain(term);
   }
 
