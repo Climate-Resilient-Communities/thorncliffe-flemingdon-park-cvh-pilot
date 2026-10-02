@@ -1,4 +1,4 @@
-import { randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
 import { readFileSync, renameSync, writeFileSync } from "node:fs";
 import type { AuthSessions, CookieJar, CreateLoginError, IdentityProvider, SetPasswordError } from "../application/ports";
 
@@ -38,11 +38,19 @@ const sameText = (a: string, b: string) => {
 
 const SESSION_OPTIONS = { path: "/", httpOnly: true, sameSite: "lax" as const };
 
+/** The fake's session key: the SHA-256 of its token, as the real adapter hashes a session_id. */
+const keyOf = (token: string) => createHash("sha256").update(token).digest("hex");
+
 /**
  * An in-memory IdentityProvider and AuthSessions for tests (AD-24: external services only through
  * fakes). Logins are unique like Supabase Auth's; `failNext` makes the next createLogin fail,
  * `failNextPassword` the next setPassword, `setUnavailable` every session call, and `enrol` stands
  * in for S01.10's authenticator enrolment. Sessions are random tokens in one httpOnly cookie.
+ *
+ * Like Supabase Auth it stores whatever password the adapter is given (the app sends the peppered
+ * form), `setPassword` ends every session of the user, and `grant` is a password grant made
+ * directly at the provider, as anyone with the public key can: it opens a session the app never
+ * saw, to put in a cookie by hand.
  *
  * With `file`, the state lives in that JSON file instead of this process's memory, so a test runner
  * and a local server share it (the end-to-end tests). Never used outside tests and local
@@ -61,6 +69,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     if (latency.fails) throw new Error("identity provider timed out");
   };
   let unavailable = false;
+  let tokenLifetimeSeconds: number | null = 12 * 60 * 60;
 
   const load = (): State => {
     if (!options.file) return memory;
@@ -107,6 +116,8 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
         return {
           ok: true,
           authUserId,
+          sessionKey: keyOf(opened),
+          tokenLifetimeSeconds,
           async accept() {
             jar.setAll([{ name: MEMORY_SESSION_COOKIE, value: opened, options: { ...SESSION_OPTIONS, maxAge: 12 * 60 * 60 } }]);
           },
@@ -123,7 +134,7 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
         const authUserId = state.sessions.get(value);
         const user = authUserId ? state.users.get(authUserId) : undefined;
         if (!authUserId || !user) return null;
-        return { authUserId, authenticatorEnrolled: user.authenticatorEnrolled };
+        return { authUserId, authenticatorEnrolled: user.authenticatorEnrolled, sessionKey: keyOf(value) };
       },
       async signOut() {
         const value = token();
@@ -144,6 +155,10 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     /** Simulates a slow or hanging provider: each call waits `ms`, then times out (`fails`, the default) or answers. `null` ends it. */
     delay(ms: number | null, options?: { fails?: boolean }): void;
     enrol(authUserId: string): void;
+    /** The access token's lifetime (`exp - iat`) of the sessions opened from now on; null for a token without one. */
+    setTokenLifetime(seconds: number | null): void;
+    /** A password grant made directly at the provider: the new session's cookie value, or null when the password is wrong. */
+    grant(login: string, password: string): string | null;
     findByLogin(login: string): [string, MemoryLogin] | undefined;
     /** Adds a login as if left behind earlier (or made by someone else, with `staffMarker: false`). */
     plant(login: string, options?: { createdAt?: Date; staffMarker?: boolean; password?: string }): string;
@@ -169,6 +184,16 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
     },
     delay(ms, options = {}) {
       latency = ms === null ? null : { ms, fails: options.fails ?? true };
+    },
+    setTokenLifetime(seconds) {
+      tokenLifetimeSeconds = seconds;
+    },
+    grant(login, password) {
+      const found = [...load().users.entries()].find(([, user]) => user.login === login);
+      if (!found || !sameText(found[1].password, password)) return null;
+      const opened = randomBytes(24).toString("hex");
+      change((state) => state.sessions.set(opened, found[0]));
+      return opened;
     },
     enrol(authUserId) {
       change((state) => {
@@ -249,6 +274,8 @@ export function memoryIdentityProvider(options: { file?: string } = {}) {
         const user = state.users.get(authUserId);
         if (!user) return { ok: false as const, error: "rejected" as const };
         user.password = password;
+        // Supabase's admin password update signs the user out everywhere.
+        for (const [token, owner] of state.sessions) if (owner === authUserId) state.sessions.delete(token);
         return { ok: true as const };
       });
     },

@@ -15,7 +15,9 @@ export type IdentityRefusal =
   | "forbidden"
   | "unauthenticated"
   | "provider_error"
-  | "provider_rejected";
+  | "provider_rejected"
+  /** STAFF_PASSWORD_PEPPER is not configured: no password can be given to the provider. */
+  | "passwords_not_configured";
 
 /** The catalog key of each refusal's message (src/i18n, from design/prototype/cvh/strings.en.screens.js). */
 export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
@@ -40,6 +42,7 @@ export const REFUSAL_MESSAGE_KEYS: Record<IdentityRefusal, string> = {
   unauthenticated: "staff.people.errors.unauthenticated",
   provider_error: "staff.people.errors.providerError",
   provider_rejected: "staff.people.errors.providerRejected",
+  passwords_not_configured: "staff.people.errors.passwordsNotConfigured",
 };
 
 /** The form field a refusal is about, so the screen can show the message next to it. */

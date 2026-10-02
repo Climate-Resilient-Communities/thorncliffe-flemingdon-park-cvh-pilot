@@ -18,6 +18,7 @@ const MESSAGE_KEYS: Record<ReissueError, string> = {
   not_found: "staff.reissue.errors.notFound",
   not_reissuable: "staff.reissue.errors.notReissuable",
   provider_error: "staff.reissue.errors.providerError",
+  passwords_not_configured: "staff.reissue.errors.passwordsNotConfigured",
 };
 
 export const reissueUsername = (form: FormData) => {

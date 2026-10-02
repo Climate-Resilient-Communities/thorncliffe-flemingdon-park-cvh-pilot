@@ -1,13 +1,19 @@
 // The Supabase Auth session adapter against a fake fetch: what it asks Supabase, which cookies it
 // writes and when. No test reaches a real Supabase project.
+import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import type { CookieJar } from "../application/ports";
-import { SESSION_COOKIE, supabaseAuthSessions } from "./supabaseAuthSessions";
+import { SESSION_COOKIE, sessionKeyOf, supabaseAuthSessions, tokenLifetimeOf } from "./supabaseAuthSessions";
 
 const URL_BASE = "https://example-project.supabase.co";
 const PUBLISHABLE = "sb_publishable_test_only";
 const USER_ID = "4f8a3a3e-5b7c-4d2e-9f10-1a2b3c4d5e6f";
-const ACCESS = "access-token-for-tests";
+const SESSION_ID = "7c1d2e3f-4a5b-4c6d-8e9f-0a1b2c3d4e5f";
+/** An access token shaped like Supabase's (its signature is never checked here: Supabase checks it). */
+const jwt = (claims: Record<string, unknown>) =>
+  [Buffer.from('{"alg":"ES256","typ":"JWT"}').toString("base64url"), Buffer.from(JSON.stringify(claims)).toString("base64url"), "signature"].join(".");
+const ACCESS = jwt({ sub: USER_ID, session_id: SESSION_ID, iat: 1_790_000_000, exp: 1_790_000_000 + 43_200, aal: "aal1" });
+const sha256 = (text: string) => createHash("sha256").update(text).digest("hex");
 
 interface Call {
   url: string;
@@ -62,7 +68,7 @@ describe("Supabase Auth sessions", () => {
 
     const check = await supabaseAuthSessions(config(fetch), jar).checkPassword({ login: "jdoe@staff.cvh.invalid", password: "rvh-jane-doe" });
 
-    expect(check).toMatchObject({ ok: true, authUserId: USER_ID });
+    expect(check).toMatchObject({ ok: true, authUserId: USER_ID, sessionKey: sha256(SESSION_ID), tokenLifetimeSeconds: 43_200 });
     expect(calls[0]).toMatchObject({ url: `${URL_BASE}/auth/v1/token?grant_type=password`, method: "POST" });
     expect(cookies.size).toBe(0);
     if (!check.ok) throw new Error("expected a session");
@@ -72,7 +78,7 @@ describe("Supabase Auth sessions", () => {
 
     // The next request reads the cookie and asks Supabase who it is, with that access token only.
     const next = await supabaseAuthSessions(config(fetch), jar).currentUser();
-    expect(next).toEqual({ authUserId: USER_ID, authenticatorEnrolled: false });
+    expect(next).toEqual({ authUserId: USER_ID, authenticatorEnrolled: false, sessionKey: sha256(SESSION_ID) });
     expect(calls.at(-1)).toMatchObject({ url: `${URL_BASE}/auth/v1/user`, method: "GET" });
     expect(calls.at(-1)?.headers.get("authorization")).toBe(`Bearer ${ACCESS}`);
   });
@@ -131,7 +137,7 @@ describe("Supabase Auth sessions", () => {
     const { jar } = await signedInJar();
     const { fetch } = fakeFetch(() => ({ status: 200, body: user([{ id: "f1", factor_type: "totp", status: "verified", created_at: "", updated_at: "" }]) }));
 
-    expect(await supabaseAuthSessions(config(fetch), jar).currentUser()).toEqual({ authUserId: USER_ID, authenticatorEnrolled: true });
+    expect(await supabaseAuthSessions(config(fetch), jar).currentUser()).toEqual({ authUserId: USER_ID, authenticatorEnrolled: true, sessionKey: sha256(SESSION_ID) });
   });
 
   it("signs out at Supabase and clears the cookie, even when Supabase fails", async () => {
@@ -142,5 +148,23 @@ describe("Supabase Auth sessions", () => {
 
     expect(calls.at(-1)).toMatchObject({ url: `${URL_BASE}/auth/v1/logout?scope=local`, method: "POST" });
     expect(cookies.size).toBe(0);
+  });
+
+  it("keys a session by the SHA-256 of its session_id claim, the same for every token of the session, and a token without one by the token itself", () => {
+    const refreshed = jwt({ sub: USER_ID, session_id: SESSION_ID, iat: 1_790_000_600, exp: 1_790_043_800 });
+    expect(sessionKeyOf(ACCESS)).toBe(sha256(SESSION_ID));
+    expect(sessionKeyOf(refreshed)).toBe(sha256(SESSION_ID));
+
+    const noSessionId = jwt({ sub: USER_ID, iat: 1, exp: 2 });
+    expect(sessionKeyOf(noSessionId)).toBe(sha256(`access-token:${noSessionId}`));
+    expect(sessionKeyOf("not-a-jwt")).toBe(sha256("access-token:not-a-jwt"));
+    expect(sessionKeyOf(noSessionId)).not.toBe(sessionKeyOf(jwt({ sub: USER_ID, iat: 1, exp: 3 })));
+  });
+
+  it("reads the access token's lifetime as exp - iat, or null when the token does not carry both", () => {
+    expect(tokenLifetimeOf(ACCESS)).toBe(43_200);
+    expect(tokenLifetimeOf(jwt({ iat: 100, exp: 3_700 }))).toBe(3_600);
+    expect(tokenLifetimeOf(jwt({ exp: 3_700 }))).toBeNull();
+    expect(tokenLifetimeOf("not-a-jwt")).toBeNull();
   });
 });

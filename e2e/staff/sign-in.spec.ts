@@ -3,7 +3,8 @@
 // disposable database and the fake's state file, as S01.05 would have made them.
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
-import { newAccount, openDatabase } from "./helpers";
+import { MEMORY_SESSION_COOKIE } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { identityFake, newAccount, openDatabase, pepperedPassword } from "./helpers";
 
 let sql: postgres.Sql;
 
@@ -92,6 +93,25 @@ test("a Coordinator goes on to authenticator enrolment after choosing a password
   await expect(page).toHaveURL(/\/staff\/setup\/authenticator$/);
   await page.goto("/staff");
   await expect(page).toHaveURL(/\/staff\/setup\/authenticator$/);
+});
+
+test("a session opened at the provider directly, outside the app's sign-in, is not let in", async ({ page, context, baseURL }) => {
+  const { username, startingPassword } = await newAccount(sql, "ambassador", "Ida", "Grant");
+  const provider = identityFake();
+  // With the typed starting password the provider refuses: it holds the peppered one.
+  expect(provider.grant(`${username}@staff.cvh.invalid`, startingPassword)).toBeNull();
+  // Even with the provider's password, a session the app did not open is rejected.
+  const token = provider.grant(`${username}@staff.cvh.invalid`, pepperedPassword(startingPassword));
+  expect(token).not.toBeNull();
+  await context.addCookies([{ name: MEMORY_SESSION_COOKIE, value: token as string, url: baseURL as string, httpOnly: true, sameSite: "Lax" }]);
+
+  expect((await page.request.get("/api/staff/me")).status()).toBe(401);
+  await page.goto("/staff/setup/password");
+  await expect(page).toHaveURL(/\/staff\/sign-in$/);
+
+  // The starting password still works once, for its owner, through the app.
+  await signIn(page, username, startingPassword);
+  await expect(page).toHaveURL(/\/staff\/setup\/password$/);
 });
 
 test("staff pages and calls are never stored", async ({ request }) => {

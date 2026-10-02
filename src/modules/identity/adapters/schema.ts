@@ -1,6 +1,6 @@
 // Drizzle tables of the identity module (AD-2), written by hand to match
-// db/migrations/20261002110000_staff_account.sql and 20261002130000_sign_in.sql; the drift test
-// compares them.
+// db/migrations/20261002110000_staff_account.sql, 20261002130000_sign_in.sql and
+// 20261002131000_staff_session.sql; the drift test compares them.
 // The bootstrap row's forward-only trigger and the grants live only in the migration.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, index, pgEnum, pgPolicy, pgRole, pgTable, primaryKey, text, timestamp, uuid, type AnyPgColumn } from "drizzle-orm/pg-core";
@@ -109,6 +109,29 @@ export const signInLock = pgTable(
     pgPolicy("sign_in_lock_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("sign_in_lock_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
     pgPolicy("sign_in_lock_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/** A staff session the app opened (S01.07); S01.08 adds its idle and absolute limits. */
+export const staffSession = pgTable(
+  "staff_session",
+  {
+    id: text().primaryKey(),
+    staffAccountId: uuid("staff_account_id")
+      .notNull()
+      .references(() => staffAccount.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
+    lastSeenAt: timestamp("last_seen_at", { withTimezone: true }).notNull(),
+    revokedAt: timestamp("revoked_at", { withTimezone: true }),
+  },
+  (t) => [
+    index("staff_session_account_idx").on(t.staffAccountId).where(sql`${t.revokedAt} is null`),
+    index("staff_session_created_at_idx").on(t.createdAt),
+    check("staff_session_id_format", sql`${t.id} ~ '^[0-9a-f]{64}$'`),
+    check("staff_session_seen_after_created", sql`${t.lastSeenAt} >= ${t.createdAt}`),
+    pgPolicy("staff_session_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("staff_session_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("staff_session_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();
 

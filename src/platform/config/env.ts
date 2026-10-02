@@ -20,7 +20,21 @@ import { PRODUCTION_HOST } from "./hosts";
  * SUPABASE_SECRET_KEY  server   production, preview      secret; Supabase Auth's Admin API (identity's adapter, built only in
  *                                                        server code and scripts/create-first-admin), never in a NEXT_PUBLIC_ variable
  * NEXT_PUBLIC_SUPABASE_URL, NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
- *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key
+ *                      browser  production, preview      public; no NEXT_PUBLIC_ variable may hold a Supabase secret key.
+ *                                                        The Supabase project's JWT expiry (Auth > Settings > "JWT expiry
+ *                                                        limit", jwt_exp) must be 43200 seconds: staff sessions are never
+ *                                                        refreshed, so the access token is the whole 12-hour session (sign-in
+ *                                                        logs identity.jwt_expiry_short once per process when it is shorter)
+ * STAFF_PASSWORD_PEPPER
+ *                      server   optional at start-up     secret; at least 32 random bytes as hex (64+ characters, `openssl rand
+ *                                                        -hex 32`) or base64 (44+ characters). Supabase Auth stores
+ *                                                        hex(HMAC-SHA-256(pepper, password)), never the typed password. Not
+ *                                                        required to start, so the site runs before it is set; until it is,
+ *                                                        every staff sign-in, account creation, password change and re-issue
+ *                                                        refuses (logged as identity.staff_passwords_not_configured). Never a
+ *                                                        NEXT_PUBLIC_ variable, never printed. The same value wherever the same
+ *                                                        Supabase project is used; changing it makes every password unusable
+ *                                                        until each is re-issued
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret
  * CVH_FAKE_IDENTITY_FILE
@@ -57,6 +71,7 @@ const rawSchema = z.object({
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
+  STAFF_PASSWORD_PEPPER: optionalText,
 });
 
 type Raw = z.infer<typeof rawSchema>;
@@ -73,6 +88,10 @@ export interface Env {
   twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
+  /** The password pepper, only when it is set and strong enough; otherwise staffPasswordPepperProblem says why not. */
+  staffPasswordPepper?: string;
+  /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
+  staffPasswordPepperProblem?: string;
 }
 
 export class EnvError extends Error {
@@ -214,6 +233,26 @@ function isSupabaseSecretKey(value: string): boolean {
   }
 }
 
+export const STAFF_PASSWORD_PEPPER_MIN_BYTES = 32;
+
+/**
+ * The password pepper's rule: at least 32 bytes of key material written as hex or base64, and not
+ * an obviously repeated pattern. Returns the problem, or undefined when the value is usable. Never
+ * fails start-up (see the table above): the identity operations refuse instead.
+ */
+export function staffPasswordPepperProblem(value: string | undefined): string | undefined {
+  if (value === undefined) return "STAFF_PASSWORD_PEPPER: not set";
+  const trimmed = value.trim();
+  let bytes = 0;
+  if (/^[0-9a-fA-F]+$/.test(trimmed)) bytes = Math.floor(trimmed.length / 2);
+  else if (/^[A-Za-z0-9+/_-]+={0,2}$/.test(trimmed)) bytes = Math.floor((trimmed.replace(/=+$/, "").length * 3) / 4);
+  else return "STAFF_PASSWORD_PEPPER: must be hex or base64 (for example `openssl rand -hex 32`)";
+  if (bytes < STAFF_PASSWORD_PEPPER_MIN_BYTES || new Set(trimmed).size < 10) {
+    return `STAFF_PASSWORD_PEPPER: must be at least ${STAFF_PASSWORD_PEPPER_MIN_BYTES} random bytes (for example \`openssl rand -hex 32\`)`;
+  }
+  return undefined;
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
@@ -237,10 +276,16 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
   }
 
+  const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
   for (const name of Object.keys(source).sort()) {
     const value = source[name];
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && isSupabaseSecretKey(value)) {
       problems.push(`${name}: holds a Supabase secret key; NEXT_PUBLIC_ variables are sent to browsers`);
+    }
+    if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && value.trim() !== "") {
+      if (name.includes("PEPPER") || (pepper !== undefined && value.trim() === pepper)) {
+        problems.push(`${name}: holds the staff password pepper; NEXT_PUBLIC_ variables are sent to browsers`);
+      }
     }
   }
 
@@ -274,7 +319,13 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
           }
         : undefined,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
+    ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };
+}
+
+function pepperSettings(value: string | undefined): Pick<Env, "staffPasswordPepper" | "staffPasswordPepperProblem"> {
+  const problem = staffPasswordPepperProblem(value);
+  return problem === undefined ? { staffPasswordPepper: (value as string).trim() } : { staffPasswordPepperProblem: problem };
 }
 
 let cached: Env | undefined;

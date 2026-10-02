@@ -14,6 +14,9 @@ import { adminShortfallMeta, createAdminRecovery } from "../../src/modules/ident
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
+/** STAFF_PASSWORD_PEPPER of these tests: random per run. */
+const PEPPER = randomBytes(32).toString("hex");
+
 const RULE = "There must always be at least two usable Admins";
 
 let owner: ReturnType<typeof connect>;
@@ -47,6 +50,7 @@ async function resetIdentity() {
       alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
     await tx`delete from staff_bootstrap`;
+    await tx`delete from staff_session`;
     await tx`update staff_account set created_by = null`;
     await tx`delete from staff_account`;
     await tx.unsafe(`
@@ -58,7 +62,7 @@ async function resetIdentity() {
 beforeEach(async () => {
   await resetIdentity();
   idp = memoryIdentityProvider();
-  identity = createIdentity({ db: app, idp });
+  identity = createIdentity({ db: app, idp, passwordPepper: PEPPER });
   ({ beginAdminRecovery } = createAdminRecovery({ store: drizzleStaffStore, idp, now: () => new Date(), signInLockedUntil: async () => null }));
 });
 
@@ -182,7 +186,7 @@ describe("three usable Admins", () => {
         return idp.hasVerifiedAuthenticator(authUserId);
       },
     };
-    const racing = createIdentity({ db: app, idp: slow });
+    const racing = createIdentity({ db: app, idp: slow, passwordPepper: PEPPER });
 
     const results = await Promise.all([racing.changeRole(a, b, "coordinator"), racing.changeRole(a, c, "coordinator")]);
 
@@ -233,7 +237,7 @@ describe("a slow or hanging identity provider, and a lock that is never freed", 
   it("gives up on a row lock held by someone else after the lock timeout, and leaves the account alone", async () => {
     const [a, b, c] = [await account(), await account(), await account()];
     await bootstrapCompleted(a, b);
-    const patient = createIdentity({ db: app, idp, lockTimeoutMs: 300 });
+    const patient = createIdentity({ db: app, idp, lockTimeoutMs: 300, passwordPepper: PEPPER });
     let release!: () => void;
     const holding = new Promise<void>((resolve) => (release = resolve));
     const held = asApp(async (tx) => {

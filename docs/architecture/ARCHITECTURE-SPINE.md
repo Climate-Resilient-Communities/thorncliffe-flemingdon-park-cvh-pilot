@@ -363,7 +363,7 @@ scripts/                   # seed loaders, string and token generators, search t
 
 | Module | Owns |
 | --- | --- |
-| identity | `staff_account`, `staff_bootstrap`, `sign_in_failure`, `sign_in_lock`, `ambassador_assignment` |
+| identity | `staff_account`, `staff_bootstrap`, `staff_session`, `sign_in_failure`, `sign_in_lock`, `ambassador_assignment` |
 | places | `neighbourhood`, `building`, `building_floor`, `disruption_type` |
 | alerting | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` |
 | subscriptions | `subscriber`, `subscriber_place`, `subscriber_topic_optout`, `pending_signup`, `sms_prompt`, `subscription_edit_token`, `inbound_keyword_count`, `inbound_seen`, `inbound_reply`, `drill_roster`, `rate_limit`, `campaign` |

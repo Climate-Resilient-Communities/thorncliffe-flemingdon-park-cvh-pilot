@@ -4,23 +4,33 @@ import path from "node:path";
 import { expect, type Page } from "@playwright/test";
 import postgres from "postgres";
 import { memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { pepperPassword } from "../../src/modules/identity/application/passwordPepper";
 
 // Helpers of the staff end-to-end tests that need a person at the Hub gate (playwright.staff.config.ts, the production
 // build, the identity fake and a disposable database). Accounts are written straight into the database and the
 // fake's state file, as S01.05 would have made them.
 const ownerUrl = process.env.STAFF_TEST_DATABASE_URL;
 const fakeFile = process.env.CVH_FAKE_IDENTITY_FILE;
+const pepper = process.env.STAFF_PASSWORD_PEPPER;
 
 export function openDatabase(): postgres.Sql {
-  if (!ownerUrl || !fakeFile) throw new Error("STAFF_TEST_DATABASE_URL and CVH_FAKE_IDENTITY_FILE are required (playwright.staff.config.ts)");
+  if (!ownerUrl || !fakeFile || !pepper) {
+    throw new Error("STAFF_TEST_DATABASE_URL, CVH_FAKE_IDENTITY_FILE and STAFF_PASSWORD_PEPPER are required (playwright.staff.config.ts)");
+  }
   return postgres(ownerUrl, { max: 1, onnotice: () => {} });
 }
+
+/** The identity fake the server runs against (its state file is shared with the tests). */
+export const identityFake = () => memoryIdentityProvider({ file: fakeFile });
+
+/** What the fake holds for a password: Supabase Auth would hold the peppered one, as the adapter sends it. */
+export const pepperedPassword = (password: string) => pepperPassword(pepper as string, password);
 
 /** A new account on its starting password; usernames are unique per run. */
 export async function newAccount(sql: postgres.Sql, role: "ambassador" | "coordinator", firstName: string, lastName: string) {
   const username = `${firstName.toLowerCase()}${randomBytes(3).toString("hex")}`;
   const startingPassword = `rvh-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
-  const authUserId = memoryIdentityProvider({ file: fakeFile }).plant(`${username}@staff.cvh.invalid`, { password: startingPassword, createdAt: new Date() });
+  const authUserId = identityFake().plant(`${username}@staff.cvh.invalid`, { password: pepperedPassword(startingPassword), createdAt: new Date() });
   await sql`
     insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
     values (${randomUUID()}, ${authUserId}, ${username}, ${firstName}, ${lastName}, 'someone@example.org', ${role}, true, now())`;

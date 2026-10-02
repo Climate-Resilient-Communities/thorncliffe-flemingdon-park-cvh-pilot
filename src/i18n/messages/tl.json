@@ -3835,6 +3835,7 @@
         "unauthenticated": "[EN] Sign in to continue.",
         "providerError": "[EN] The account could not be created, and nothing was saved. Try again.",
         "providerRejected": "[EN] Supabase rejected the starting password; check the project's password policy.",
+        "passwordsNotConfigured": "[EN] Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.",
         "selfAction": "[EN] You cannot change your own account. Ask another Admin.",
         "accountRemoved": "[EN] This account was removed and cannot be changed.",
         "noChange": "[EN] Nothing to change: the account is already like that.",
@@ -3895,7 +3896,8 @@
         "notFound": "[EN] No account has that username.",
         "notReissuable": "[EN] This person already chose their own password, or their account is suspended or removed.",
         "forbidden": "[EN] Only an Admin can re-issue a starting password.",
-        "providerError": "[EN] The starting password could not be re-issued, and nothing changed. Try again."
+        "providerError": "[EN] The starting password could not be re-issued, and nothing changed. Try again.",
+        "passwordsNotConfigured": "[EN] Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was re-issued. Ask IT to set it."
       }
     },
     "admins": {

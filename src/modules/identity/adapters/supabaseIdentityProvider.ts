@@ -28,12 +28,12 @@ const TAKEN = new Set(["email_exists", "user_already_exists", "identity_already_
 const REJECTED = new Set(["weak_password", "validation_failed", "email_address_invalid", "email_address_not_authorized", "bad_json"]);
 
 /**
- * Starting passwords are `rvh-<first>-<last>` and can be as short as `rvh-a-b` (7 characters), so
- * the Supabase project's minimum password length (Auth > Providers > Email) must stay at 7 or
- * less, and its password-strength rules must not require digits or symbols. A project that asks
- * for more rejects every short starting password (weak_password) and createLogin reports
- * "rejected", which is not retryable: the Admin is told to check the project's password policy.
- * Longer than 72 bytes is refused earlier, in the domain (bcrypt reads only the first 72).
+ * Supabase Auth is only ever given the peppered form of a password (application/passwordPepper.ts):
+ * 64 lower-case hex characters, whatever the person typed. The Supabase project's minimum password
+ * length (Auth > Providers > Email) must therefore stay at 64 or less, and its password-strength
+ * rules must not require upper-case letters or symbols. A project that asks for more rejects them
+ * (weak_password) and createLogin reports "rejected", which is not retryable: the Admin is told to
+ * check the project's password policy. The domain still refuses passwords over 72 bytes.
  *
  * IdentityProvider on Supabase Auth's Admin API, with the secret key. Server-only: it is built
  * in the composition root (src/app, scripts/) from the validated environment and never reaches a
