@@ -38,7 +38,10 @@ export interface IdentityProvider {
   hasVerifiedAuthenticator(authUserId: string): Promise<boolean>;
   /**
    * Replaces the auth user's password (S01.07: the person's own password, or an Admin's re-issue of
-   * the starting password). The old password stops working at once.
+   * the starting password). The old password stops working at once, and every session the user has
+   * at the provider ends: this is the provider's global sign-out (Supabase's admin password update
+   * signs the user out everywhere; it has no other admin call that does). `password` is what the
+   * provider stores, the peppered form (passwordPepper.ts), never the person's own text.
    */
   setPassword(authUserId: string, password: string): Promise<{ ok: true } | { ok: false; error: SetPasswordError }>;
 }
@@ -71,10 +74,26 @@ export interface CookieJar {
  * A checked password: the provider accepted it and opened a session, which is held back until the
  * app decides. `accept` writes the session's cookies; `discard` ends the session at the provider
  * and writes nothing, so a refused sign-in (lock, expiry) never leaves a usable session behind.
+ * `sessionKey` names the new session as staff_session does (see SessionIdentity), and
+ * `tokenLifetimeSeconds` is its access token's `exp - iat` (null when the token does not say).
  */
 export type PasswordCheck =
-  | { ok: true; authUserId: string; accept(): Promise<void>; discard(): Promise<void> }
+  | { ok: true; authUserId: string; sessionKey: string; tokenLifetimeSeconds: number | null; accept(): Promise<void>; discard(): Promise<void> }
   | { ok: false; error: "invalid_credentials" | "unavailable" };
+
+/**
+ * The verified user of a request's session. `sessionKey` is the staff_session id of the session:
+ * SHA-256 (hex) of the access token's `session_id` claim, read only after the provider verified the
+ * token. Supabase Auth puts `session_id` in every access token it issues and keeps it across
+ * refreshes, so it names the session itself; it issues no `jti`. A token without `session_id` is
+ * keyed by the SHA-256 of `access-token:` and the whole token instead: unique to that token, and
+ * still the whole session here because sessions are never refreshed (supabaseAuthSessions.ts).
+ */
+export interface SessionUser {
+  authUserId: string;
+  authenticatorEnrolled: boolean;
+  sessionKey: string;
+}
 
 /**
  * Port: the signed-in session of one request, kept in its cookies (Supabase Auth through
@@ -88,7 +107,7 @@ export interface AuthSessions {
    * from the cookie), or null when there is none or it is not valid. Throws when the provider
    * cannot be reached, so a failure is never mistaken for a session.
    */
-  currentUser(): Promise<{ authUserId: string; authenticatorEnrolled: boolean } | null>;
+  currentUser(): Promise<SessionUser | null>;
   /** Ends this session at the provider and clears its cookies. Never throws. */
   signOut(): Promise<void>;
 }
@@ -179,7 +198,42 @@ export interface ThrottleStore {
   purge(tx: DbTransaction, before: Date): Promise<void>;
 }
 
-/** Port: the operational error log (structured, no personal data). */
+/** A staff session the app opened (staff_session). */
+export interface StaffSessionRecord {
+  /** The session's key (SessionUser.sessionKey). */
+  id: string;
+  staffId: string;
+  createdAt: Date;
+  lastSeenAt: Date;
+  revokedAt: Date | null;
+}
+
+/**
+ * Port: the staff sessions the app opened (staff_session, S01.07). A request is signed in only
+ * when its verified session has an unrevoked row here, and only sign-in adds rows. S01.08 builds
+ * the idle and absolute limits on `createdAt` and `lastSeenAt`, and revokes with `revokeAll`.
+ */
+export interface StaffSessionStore {
+  /** Records a session sign-in just opened (created and last seen at `at`). */
+  insert(tx: DbTransaction, session: { id: string; staffId: string; at: Date }): Promise<void>;
+  /** The session with this key, revoked or not; null when the app never opened it. */
+  find(db: DbExecutor, id: string): Promise<StaffSessionRecord | null>;
+  /** Records a request on the session (at most one write a minute; a revoked session is left as it is). */
+  touch(db: DbExecutor, id: string, at: Date): Promise<void>;
+  /**
+   * Replaces a session by another for the same account (the provider opened a new session for the
+   * same browser): the new one keeps the old one's `createdAt`, and the old one is revoked.
+   */
+  replace(tx: DbTransaction, from: string, to: { id: string; staffId: string; at: Date }): Promise<void>;
+  /** Revokes one session. True when it was open. */
+  revoke(db: DbExecutor, id: string, at: Date): Promise<boolean>;
+  /** Revokes every open session of the account, except `keep` when given. Returns how many it revoked. */
+  revokeAll(db: DbExecutor, staffId: string, at: Date, options?: { keep?: string }): Promise<number>;
+}
+
+/** Port: the operational log (structured, no personal data). */
 export interface OperationalLog {
   error(evt: string, fields: Record<string, string | number | boolean | null>): void;
+  /** Something the owner should fix that does not stop the request (for example a setting). */
+  warn(evt: string, fields: Record<string, string | number | boolean | null>): void;
 }

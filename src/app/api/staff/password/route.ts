@@ -2,7 +2,7 @@ import { GATE_PAGES, PasswordRequest } from "@/contracts/staffAuth";
 import { englishText } from "@/i18n/text";
 import type { ChangePasswordError } from "@/modules/identity";
 import { readJson, staffError, staffJson, staffRoute } from "@/app/staff/guard";
-import { staffAuth } from "@/app/staff/identity";
+import { requestAuthSessions, staffAuth } from "@/app/staff/identity";
 
 export const dynamic = "force-dynamic";
 
@@ -25,7 +25,9 @@ const REFUSALS: Record<ChangePasswordError, { status: number; key: string }> = {
 export const POST = staffRoute({ route: "/api/staff/password", access: "choose_password" }, async (request, session) => {
   const body = await readJson(request, PasswordRequest);
   if (!body.ok) return body.response;
-  const result = await staffAuth().changePassword(session.staffId, body.value);
+  // The provider ends every session on a password change; this request's session is reopened.
+  const current = { sessions: await requestAuthSessions(), sessionId: session.sessionId };
+  const result = await staffAuth().changePassword(session.staffId, body.value, current);
   if (result.ok) return staffJson({ next: GATE_PAGES[result.value.gate] });
   const refusal = REFUSALS[result.error];
   const code = result.error === "provider_error" ? "unavailable" : result.error === "not_required" ? "bad_request" : result.error;

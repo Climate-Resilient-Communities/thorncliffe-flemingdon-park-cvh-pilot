@@ -70,6 +70,7 @@ const atGate = (gate: SetupGate): StaffSession => ({
   lastName: "Doe",
   role: "admin",
   gate,
+  sessionId: "a".repeat(64),
 });
 
 /** Runs a page and returns where it redirected to (it must redirect). */

@@ -1,3 +1,4 @@
+import { randomBytes } from "node:crypto";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { defineConfig } from "@playwright/test";
@@ -12,6 +13,8 @@ const executablePath = process.env.PLAYWRIGHT_CHROMIUM_EXECUTABLE;
 
 // The fake's state file, shared by the server and the tests (which seed logins into it).
 process.env.CVH_FAKE_IDENTITY_FILE ??= path.join(tmpdir(), `cvh-staff-e2e-identity-${port}.json`);
+// The password pepper the server and the tests share: random per run, never a real one.
+process.env.STAFF_PASSWORD_PEPPER ??= randomBytes(32).toString("hex");
 
 export default defineConfig({
   testDir: "./e2e/staff",
@@ -27,7 +30,7 @@ export default defineConfig({
   webServer: {
     command: "node scripts/e2e/staff-server.mjs",
     url: `${localUrl}/api/health`,
-    env: { E2E_STAFF_PORT: port, CVH_FAKE_IDENTITY_FILE: process.env.CVH_FAKE_IDENTITY_FILE },
+    env: { E2E_STAFF_PORT: port, CVH_FAKE_IDENTITY_FILE: process.env.CVH_FAKE_IDENTITY_FILE, STAFF_PASSWORD_PEPPER: process.env.STAFF_PASSWORD_PEPPER },
     reuseExistingServer: false,
     timeout: 120_000,
   },

@@ -956,7 +956,8 @@
       emailInvalid: 'Enter an email address, like name@example.org.', roleInvalid: 'Choose a role.',
       adminExists: 'An Admin already exists. The first Admin can be created only once.', forbidden: 'Only an Admin can add people.',
       unauthenticated: 'Sign in to continue.', providerError: 'The account could not be created, and nothing was saved. Try again.',
-      providerRejected: "Supabase rejected the starting password; check the project's password policy." } } } });
+      providerRejected: "Supabase rejected the starting password; check the project's password policy.",
+      passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so no account can be created. Nothing was saved. Ask IT to set it.' } } } });
   /* Staff sign-in and the setup sequence's first gate (S01.07). Not a prototype screen. */
   m(en, { staff: { signIn: { title: 'Staff sign-in', lead: 'Sign in with the username and password you were given.', username: 'Username', password: 'Password', submit: 'Sign in',
     failed: 'Username or password is incorrect', expired: 'Your starting password has expired. Ask an Admin to re-issue it.',
@@ -976,7 +977,8 @@
   reissue: { title: 'Re-issue a starting password', lead: 'For someone whose starting password expired before they used it, or who signed in once without choosing their own password.',
     username: 'Their username', submit: 'Re-issue', done: 'New starting password for {username}: {password}', doneLine: 'Give it to them in person. It works once, within 24 hours.',
     errors: { notFound: 'No account has that username.', notReissuable: 'This person already chose their own password, or their account is suspended or removed.',
-      forbidden: 'Only an Admin can re-issue a starting password.', providerError: 'The starting password could not be re-issued, and nothing changed. Try again.' } } } });
+      forbidden: 'Only an Admin can re-issue a starting password.', providerError: 'The starting password could not be re-issued, and nothing changed. Try again.',
+      passwordsNotConfigured: 'Staff passwords are not configured on this site (STAFF_PASSWORD_PEPPER), so nothing was re-issued. Ask IT to set it.' } } } });
   /* The two-Admin rule (S01.06): refusals of account changes and the shortfall banner. Not a prototype screen. */
   m(en, { staff: { admins: { twoAdminRule: 'There must always be at least two usable Admins', shortfallBanner: 'Fewer than two usable Admins',
     shortfallLine: 'Restore a second usable Admin: reset the password or authenticator of an Admin who cannot sign in, or give another person the Admin role. Until then, Admins cannot be suspended, removed or given another role.' },

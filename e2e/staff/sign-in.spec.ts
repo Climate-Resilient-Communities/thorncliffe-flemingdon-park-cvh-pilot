@@ -4,15 +4,19 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
-import { memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { MEMORY_SESSION_COOKIE, memoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
+import { pepperPassword } from "../../src/modules/identity/application/passwordPepper";
 
 const ownerUrl = process.env.STAFF_TEST_DATABASE_URL;
 const fakeFile = process.env.CVH_FAKE_IDENTITY_FILE;
+const pepper = process.env.STAFF_PASSWORD_PEPPER;
 
 let sql: postgres.Sql;
 
 test.beforeAll(async () => {
-  if (!ownerUrl || !fakeFile) throw new Error("STAFF_TEST_DATABASE_URL and CVH_FAKE_IDENTITY_FILE are required (playwright.staff.config.ts)");
+  if (!ownerUrl || !fakeFile || !pepper) {
+    throw new Error("STAFF_TEST_DATABASE_URL, CVH_FAKE_IDENTITY_FILE and STAFF_PASSWORD_PEPPER are required (playwright.staff.config.ts)");
+  }
   sql = postgres(ownerUrl, { max: 1, onnotice: () => {} });
   // Every local run is one client to the throttle: start each run without earlier runs' failures.
   await sql`delete from sign_in_failure`;
@@ -27,7 +31,11 @@ test.afterAll(async () => {
 async function newAccount(role: "ambassador" | "coordinator", firstName: string, lastName: string) {
   const username = `${firstName.toLowerCase()}${randomBytes(3).toString("hex")}`;
   const startingPassword = `rvh-${firstName.toLowerCase()}-${lastName.toLowerCase()}`;
-  const authUserId = memoryIdentityProvider({ file: fakeFile }).plant(`${username}@staff.cvh.invalid`, { password: startingPassword, createdAt: new Date() });
+  // The fake holds what Supabase Auth would: the peppered starting password.
+  const authUserId = memoryIdentityProvider({ file: fakeFile }).plant(`${username}@staff.cvh.invalid`, {
+    password: pepperPassword(pepper as string, startingPassword),
+    createdAt: new Date(),
+  });
   await sql`
     insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password, starting_password_issued_at)
     values (${randomUUID()}, ${authUserId}, ${username}, ${firstName}, ${lastName}, 'someone@example.org', ${role}, true, now())`;
@@ -108,6 +116,25 @@ test("a Coordinator goes on to authenticator enrolment after choosing a password
   await expect(page).toHaveURL(/\/staff\/setup\/authenticator$/);
   await page.goto("/staff");
   await expect(page).toHaveURL(/\/staff\/setup\/authenticator$/);
+});
+
+test("a session opened at the provider directly, outside the app's sign-in, is not let in", async ({ page, context, baseURL }) => {
+  const { username, startingPassword } = await newAccount("ambassador", "Ida", "Grant");
+  const provider = memoryIdentityProvider({ file: fakeFile });
+  // With the typed starting password the provider refuses: it holds the peppered one.
+  expect(provider.grant(`${username}@staff.cvh.invalid`, startingPassword)).toBeNull();
+  // Even with the provider's password, a session the app did not open is rejected.
+  const token = provider.grant(`${username}@staff.cvh.invalid`, pepperPassword(pepper as string, startingPassword));
+  expect(token).not.toBeNull();
+  await context.addCookies([{ name: MEMORY_SESSION_COOKIE, value: token as string, url: baseURL as string, httpOnly: true, sameSite: "Lax" }]);
+
+  expect((await page.request.get("/api/staff/me")).status()).toBe(401);
+  await page.goto("/staff/setup/password");
+  await expect(page).toHaveURL(/\/staff\/sign-in$/);
+
+  // The starting password still works once, for its owner, through the app.
+  await signIn(page, username, startingPassword);
+  await expect(page).toHaveURL(/\/staff\/setup\/password$/);
 });
 
 test("staff pages and calls are never stored", async ({ request }) => {

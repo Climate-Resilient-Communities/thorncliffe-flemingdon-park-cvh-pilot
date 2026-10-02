@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { combineChunks, createServerClient, stringFromBase64URL } from "@supabase/ssr";
 import { createClient, isAuthApiError, isAuthSessionMissingError, type SupabaseClient } from "@supabase/supabase-js";
 import type { AuthSessions, CookieJar, SessionCookieOptions } from "../application/ports";
@@ -25,6 +26,39 @@ export function sessionCookieOptions(secure: boolean): SessionCookieOptions {
 }
 
 const BASE64_PREFIX = "base64-";
+
+/**
+ * The claims of an access token, decoded without checking its signature: only ever read from a
+ * token Supabase Auth just issued (a sign-in's answer) or just verified (`getUser`). Null when the
+ * token is not a JWT.
+ */
+export function accessTokenClaims(token: string): Record<string, unknown> | null {
+  const parts = token.split(".");
+  if (parts.length !== 3) return null;
+  try {
+    const claims: unknown = JSON.parse(Buffer.from(parts[1], "base64url").toString("utf8"));
+    return typeof claims === "object" && claims !== null && !Array.isArray(claims) ? (claims as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * The staff_session key of an access token (SessionUser in ports.ts): SHA-256 of its `session_id`
+ * claim, which Supabase Auth keeps for the whole session, or of the token itself when it has none.
+ */
+export function sessionKeyOf(token: string): string {
+  const sessionId = accessTokenClaims(token)?.session_id;
+  const named = typeof sessionId === "string" && sessionId !== "" ? sessionId : `access-token:${token}`;
+  return createHash("sha256").update(named).digest("hex");
+}
+
+/** `exp - iat` of an access token, in seconds; null when it does not carry both. */
+export function tokenLifetimeOf(token: string): number | null {
+  const claims = accessTokenClaims(token);
+  const { exp, iat } = claims ?? {};
+  return typeof exp === "number" && typeof iat === "number" ? exp - iat : null;
+}
 // Answers that mean "this token is not a valid session" rather than "the provider failed".
 const NO_SESSION_STATUSES = new Set([400, 401, 403, 404]);
 
@@ -93,6 +127,8 @@ export function supabaseAuthSessions(config: SupabaseSessionConfig, jar: CookieJ
       return {
         ok: true,
         authUserId: data.user.id,
+        sessionKey: sessionKeyOf(opened),
+        tokenLifetimeSeconds: tokenLifetimeOf(opened),
         async accept() {
           clearCookies();
           // @supabase/ssr always writes its own 400-day lifetime; the staff session cookie lasts 12 hours at most.
@@ -119,6 +155,8 @@ export function supabaseAuthSessions(config: SupabaseSessionConfig, jar: CookieJ
       return {
         authUserId: data.user.id,
         authenticatorEnrolled: factors.some((factor) => factor.factor_type === "totp" && factor.status === "verified"),
+        // Read only now that Supabase Auth has verified the token.
+        sessionKey: sessionKeyOf(token),
       };
     },
 

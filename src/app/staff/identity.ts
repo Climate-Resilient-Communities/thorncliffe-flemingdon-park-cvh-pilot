@@ -5,7 +5,6 @@
 //
 // Locally (never on Vercel: the environment check refuses it there), CVH_FAKE_IDENTITY_FILE swaps
 // Supabase Auth for the in-memory fake kept in that file, for the end-to-end tests.
-import { createHmac } from "node:crypto";
 import { cookies } from "next/headers";
 import {
   createIdentity,
@@ -13,6 +12,7 @@ import {
   memoryIdentityProvider,
   supabaseAuthSessions,
   supabaseIdentityProvider,
+  throttleKeyFromSecret,
   type IdentityService,
   type AuthSessions,
   type AuthSessionsFactory,
@@ -31,15 +31,10 @@ interface Composition {
 let composition: Composition | undefined;
 
 /**
- * The throttle's hash key, derived from the server-only Supabase secret key (HMAC with a fixed
- * label), so no new secret is needed and the key never leaves the server. Rotating the secret key
- * only forgets current sign-in failures and locks.
+ * True when this environment can sign staff in. Without it nobody is signed in (fail closed).
+ * STAFF_PASSWORD_PEPPER is not part of it: without the pepper the routes still answer, and every
+ * sign-in, account creation, password change and re-issue refuses (and is logged) in the module.
  */
-function throttleKeyFrom(secret: string): string {
-  return createHmac("sha256", secret).update("cvh:sign-in-throttle:v1").digest("hex");
-}
-
-/** True when this environment can sign staff in. Without it nobody is signed in (fail closed). */
 export function identityConfigured(): boolean {
   const env = getEnv();
   return env.fakeIdentityFile !== undefined || (env.supabaseUrl !== undefined && env.supabaseSecretKey !== undefined && env.supabasePublishableKey !== undefined);
@@ -51,9 +46,10 @@ function compose(): Composition {
   const db = getDb();
   if (env.fakeIdentityFile) {
     const fake = memoryIdentityProvider({ file: env.fakeIdentityFile });
-    const throttleKey = throttleKeyFrom(`local-fake:${env.fakeIdentityFile}`);
-    const accounts = createIdentity({ db, idp: fake, throttleKey });
-    composition = { accounts, auth: createStaffAuth({ db, idp: fake, throttleKey, accounts }), sessions: (jar) => fake.sessions(jar) };
+    const throttleKey = throttleKeyFromSecret(`local-fake:${env.fakeIdentityFile}`);
+    const wiring = { db, idp: fake, throttleKey, passwordPepper: env.staffPasswordPepper };
+    const accounts = createIdentity(wiring);
+    composition = { accounts, auth: createStaffAuth({ ...wiring, accounts }), sessions: (jar) => fake.sessions(jar) };
     return composition;
   }
   const { supabaseUrl, supabaseSecretKey, supabasePublishableKey } = env;
@@ -63,12 +59,12 @@ function compose(): Composition {
     );
   }
   const idp = supabaseIdentityProvider({ url: supabaseUrl, secretKey: supabaseSecretKey });
-  const throttleKey = throttleKeyFrom(supabaseSecretKey);
-  const accounts = createIdentity({ db, idp, throttleKey });
+  const wiring = { db, idp, throttleKey: throttleKeyFromSecret(supabaseSecretKey), passwordPepper: env.staffPasswordPepper };
+  const accounts = createIdentity(wiring);
   const secureCookies = env.publicBaseUrl.startsWith("https:");
   composition = {
     accounts,
-    auth: createStaffAuth({ db, idp, throttleKey, accounts }),
+    auth: createStaffAuth({ ...wiring, accounts }),
     sessions: (jar) => supabaseAuthSessions({ url: supabaseUrl, publishableKey: supabasePublishableKey, secureCookies }, jar),
   };
   return composition;
@@ -85,8 +81,11 @@ export function staffAuth(): StaffAuthService {
 }
 
 /**
- * The session of the current request, on its cookies. In a page render cookies cannot be written,
- * so writes are dropped there; the proxy (src/proxy.ts) has already refreshed the session.
+ * The session of the current request, on its cookies. Route handlers and server actions can write
+ * cookies (a sign-in sets the session cookie, a rejected session clears it); a page render cannot,
+ * so writes are dropped there. Nothing refreshes the session: the proxy (src/proxy.ts) skips
+ * /staff and /api, and the access token lasts the whole 12-hour session
+ * (src/modules/identity/adapters/supabaseAuthSessions.ts).
  */
 export async function requestAuthSessions(): Promise<AuthSessions> {
   const store = await cookies();

@@ -2,7 +2,10 @@ import { err, ok, type Result } from "./result";
 
 /** The shortest own password (epic E01 definitions: "Own password"). Enforced by the app, never by Supabase's settings. */
 export const OWN_PASSWORD_MIN_LENGTH = 10;
-/** Supabase Auth hashes with bcrypt, which reads at most 72 bytes; it refuses longer passwords. */
+/**
+ * The longest own password, in UTF-8 bytes: bcrypt's limit. Supabase Auth is given the password's
+ * 64-character peppered form, but the rule is kept on what the person types.
+ */
 export const OWN_PASSWORD_MAX_BYTES = 72;
 
 export type OwnPasswordError =

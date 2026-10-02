@@ -1,11 +1,22 @@
 // Staff sign-in against a real database (S01.07): the starting password's one use and 24-hour
 // window, the password change, re-issue, the failed-sign-in throttle (with concurrent failures),
-// the session lookup and the throttle tables' lockdown. The app writes with its own credentials
+// the session lookup and its binding to sessions the app opened, the password pepper, the timing
+// of refusals, the purge job and the tables' lockdown. The app writes with its own credentials
 // (cvh_app_login); Supabase Auth is the in-memory fake.
 import { randomBytes } from "node:crypto";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { createIdentity, createStaffAuth, type CookieJar, type IdentityService, type StaffAuthService } from "../../src/modules/identity";
+import {
+  MIN_REFUSAL_MS,
+  MEMORY_SESSION_COOKIE,
+  createIdentity,
+  createStaffAuth,
+  pepperPassword,
+  type CookieJar,
+  type IdentityService,
+  type IdentityWiring,
+  type StaffAuthService,
+} from "../../src/modules/identity";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
@@ -20,6 +31,13 @@ let auth: StaffAuthService;
 let clock: Date;
 
 const THROTTLE_KEY = randomBytes(32).toString("hex");
+/** STAFF_PASSWORD_PEPPER of these tests: random per run. */
+const PEPPER = randomBytes(32).toString("hex");
+/** What the provider stores for a password. */
+const peppered = (password: string) => pepperPassword(PEPPER, password);
+/** The timing pad's waits: the fake monotonic clock stands still unless a test moves it. */
+let sleeps: number[] = [];
+let monotonic = 0;
 const T0 = new Date("2026-10-05T14:00:00Z");
 const minutes = (n: number) => n * 60_000;
 const advance = (ms: number) => {
@@ -45,6 +63,7 @@ async function reset() {
       alter table staff_bootstrap disable trigger staff_bootstrap_forward_only;`);
     await tx`delete from audit_event where id > ${auditBaseline}`;
     await tx`delete from staff_bootstrap`;
+    await tx`delete from staff_session`;
     await tx`update staff_account set created_by = null`;
     await tx`delete from staff_account`;
     await tx`delete from sign_in_failure`;
@@ -55,14 +74,42 @@ async function reset() {
   });
 }
 
+/** The wiring of these tests; `overrides` changes it for one test. */
+function wire(overrides: Partial<IdentityWiring> = {}) {
+  const wiring: IdentityWiring & { throttleKey: string } = {
+    db: app,
+    idp,
+    throttleKey: THROTTLE_KEY,
+    passwordPepper: PEPPER,
+    now: () => clock,
+    sleep: async (ms) => void sleeps.push(ms),
+    monotonicMs: () => monotonic,
+    ...overrides,
+  };
+  const identity = createIdentity(wiring);
+  return { accounts: identity, auth: createStaffAuth({ ...wiring, accounts: identity }) };
+}
+
 beforeEach(async () => {
   await reset();
   clock = T0;
+  sleeps = [];
+  monotonic = 0;
   idp = memoryIdentityProvider();
-  const now = () => clock;
-  accounts = createIdentity({ db: app, idp, throttleKey: THROTTLE_KEY, now });
-  auth = createStaffAuth({ db: app, idp, throttleKey: THROTTLE_KEY, now, accounts });
+  ({ accounts, auth } = wire());
 });
+
+/** The operational log lines (JSON on stdout) written while `run` runs. */
+async function logged(run: () => Promise<unknown>): Promise<Record<string, unknown>[]> {
+  const lines: string[] = [];
+  const spy = vi.spyOn(console, "log").mockImplementation((line: string) => void lines.push(line));
+  try {
+    await run();
+  } finally {
+    spy.mockRestore();
+  }
+  return lines.map((line) => JSON.parse(line) as Record<string, unknown>);
+}
 
 afterAll(async () => {
   await reset();
@@ -83,7 +130,7 @@ function browser() {
       }
     },
   };
-  return { cookies, sessions: () => idp.sessions(jar) };
+  return { cookies, jar, sessions: () => idp.sessions(jar) };
 }
 
 interface Person {
@@ -101,7 +148,8 @@ let nextId = 1;
 /** As the owner: an account and its login, like S01.05 makes them. Returns the staff id. */
 async function account(person: Person): Promise<string> {
   const starting = `rvh-${person.firstName.toLowerCase()}-${person.lastName.toLowerCase()}`;
-  const authUserId = idp.plant(`${person.username}@staff.cvh.invalid`, { password: person.own ?? starting });
+  // As S01.05 makes them: Supabase Auth holds the peppered password.
+  const authUserId = idp.plant(`${person.username}@staff.cvh.invalid`, { password: peppered(person.own ?? starting) });
   if (person.enrolled) idp.enrol(authUserId);
   const id = `01900000-0000-7000-8000-${String(nextId++).padStart(12, "0")}`;
   await owner`
@@ -120,6 +168,8 @@ const signIn = (who: ReturnType<typeof browser>, username: string, password: str
 
 const row = async (id: string) =>
   (await owner`select status, must_change_password, starting_password_issued_at, starting_password_used_at from staff_account where id = ${id}`)[0];
+const sessionRows = (staffId: string) =>
+  owner`select id, created_at, revoked_at from staff_session where staff_account_id = ${staffId} order by revoked_at nulls last, created_at, id`;
 const audits = () => owner`select actor_staff_id, action, subject_id, outcome, meta from audit_event where id > ${auditBaseline} order by id`;
 const auditsOf = async (action: string) => (await audits()).filter((record) => record.action === action);
 
@@ -206,12 +256,26 @@ describe("choosing an own password", () => {
     const id = await account(ann);
     const phone = browser();
     await signIn(phone, "aokafor", ANN_START);
+    const before = await auth.currentSession(phone.sessions());
+    advance(minutes(5));
 
-    expect(await auth.changePassword(id, { password: "a long new password", confirm: "a long new password" })).toEqual({ ok: true, value: { gate: "hub" } });
+    expect(await auth.changePassword(id, { password: "a long new password", confirm: "a long new password" }, { sessions: phone.sessions(), sessionId: before!.sessionId })).toEqual({
+      ok: true,
+      value: { gate: "hub" },
+    });
 
     expect(await row(id)).toMatchObject({ must_change_password: false, starting_password_issued_at: null, starting_password_used_at: null });
     expect((await auditsOf("password.changed")).at(-1)).toEqual({ actor_staff_id: id, action: "password.changed", subject_id: id, outcome: "ok", meta: {} });
-    expect(await auth.currentSession(phone.sessions())).toMatchObject({ gate: "hub" });
+    // The provider ended every session on the change; this browser's was reopened, keeping its start.
+    const after = await auth.currentSession(phone.sessions());
+    expect(after).toMatchObject({ gate: "hub" });
+    expect(after!.sessionId).not.toBe(before!.sessionId);
+    expect(await sessionRows(id)).toEqual([
+      { id: before!.sessionId, created_at: T0, revoked_at: clock },
+      { id: after!.sessionId, created_at: T0, revoked_at: null },
+    ]);
+    // The provider holds the peppered password, never the typed one.
+    expect(idp.findByLogin("aokafor@staff.cvh.invalid")?.[1].password).toBe(peppered("a long new password"));
     expect(await signIn(browser(), "aokafor", ANN_START)).toEqual({ ok: false, error: "sign_in_failed" });
     expect(await signIn(browser(), "aokafor", "a long new password")).toMatchObject({ ok: true, gate: "hub" });
   });
@@ -473,5 +537,375 @@ describe("the throttle tables", () => {
              has_table_privilege('cvh_app_login', 'sign_in_failure', 'update') as app_update`;
     expect(privileges).toEqual({ anon_failure: false, authenticated_lock: false, anon_sequence: false, app_update: false });
     await expect(app.$client`update sign_in_failure set at = now()`).rejects.toThrow(/permission denied/);
+  });
+});
+
+describe("the password pepper", () => {
+  it("makes a password grant at the provider with the typed password fail, while the app's sign-in works", async () => {
+    await account({ ...ann, own: "the right password" });
+
+    // Anyone with the public key can ask the provider directly: the typed password is not what it holds.
+    expect(idp.grant("aokafor@staff.cvh.invalid", "the right password")).toBeNull();
+    expect(idp.findByLogin("aokafor@staff.cvh.invalid")?.[1].password).toBe(peppered("the right password"));
+    expect(await signIn(browser(), "aokafor", "the right password")).toMatchObject({ ok: true, gate: "hub" });
+  });
+
+  it("is applied to a starting password too: the derivable rvh-first-last does not open a provider session", async () => {
+    await account(ann);
+
+    expect(idp.grant("aokafor@staff.cvh.invalid", ANN_START)).toBeNull();
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
+  });
+
+  it("is required: without it sign-in refuses with the generic message (padded) and a password change refuses, each logged", async () => {
+    const id = await account(ann);
+    const unpeppered = wire({ passwordPepper: undefined }).auth;
+
+    const lines = await logged(async () => {
+      expect(await unpeppered.signIn(browser().sessions(), { username: "aokafor", password: ANN_START, client: CLIENT })).toEqual({ ok: false, error: "sign_in_failed" });
+      expect(await unpeppered.changePassword(id, { password: "a long new password", confirm: "a long new password" })).toEqual({ ok: false, error: "provider_error" });
+    });
+
+    expect(lines.filter((line) => line.evt === "identity.staff_passwords_not_configured").map((line) => line.operation)).toEqual(["sign_in", "change_password"]);
+    expect(sleeps).toEqual([MIN_REFUSAL_MS]);
+    expect(idp.sessionTokens.size).toBe(0);
+    expect(await row(id)).toMatchObject({ must_change_password: true, starting_password_used_at: null });
+    expect(await owner`select count(*)::int as n from sign_in_failure`).toEqual([{ n: 0 }]);
+  });
+
+  it("is required for a re-issue too", async () => {
+    const admin = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", own: "admin password one", enrolled: true });
+    const second = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin}, ${second}, now())`;
+    const id = await account(ann);
+    const unpeppered = wire({ passwordPepper: undefined }).auth;
+
+    const lines = await logged(async () => expect(await unpeppered.reissueStartingPassword(admin, "aokafor")).toEqual({ ok: false, error: "passwords_not_configured" }));
+
+    expect(lines).toContainEqual({ level: "error", evt: "identity.staff_passwords_not_configured", module: "identity", operation: "reissue_starting_password" });
+    expect(await row(id)).toMatchObject({ starting_password_issued_at: T0 });
+  });
+});
+
+describe("sessions the app did not open", () => {
+  /** A browser holding a session opened at the provider directly, never through signIn. */
+  function grantedBrowser(login: string, providerPassword: string) {
+    const token = idp.grant(login, providerPassword);
+    if (!token) throw new Error("the provider refused the grant");
+    const who = browser();
+    who.cookies.set(MEMORY_SESSION_COOKIE, token);
+    return who;
+  }
+
+  it("are rejected even though the provider verifies them: signed out, cookie cleared, nothing audited as signed in", async () => {
+    const id = await account(ann);
+    // The reviewer's repro, even with the pepper known: a password grant made outside signIn.
+    const attacker = grantedBrowser("aokafor@staff.cvh.invalid", peppered(ANN_START));
+    expect(await idp.sessions(attacker.jar).currentUser()).toMatchObject({ authUserId: expect.any(String) });
+
+    expect(await auth.currentSession(attacker.sessions())).toBeNull();
+
+    expect(attacker.cookies.size).toBe(0);
+    expect(idp.sessionTokens.size).toBe(0);
+    expect(await auditsOf("auth.signed_in")).toEqual([]);
+    expect((await row(id)).starting_password_used_at).toBeNull();
+    // The starting password is still valid once, for its owner.
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
+  });
+
+  it("are rejected once revoked, and a session recorded for another account is not this account's", async () => {
+    const id = await account({ ...ann, own: "the right password" });
+    await account({ username: "bobee", firstName: "Bo", lastName: "Bee", own: "another password" });
+    const phone = browser();
+    await signIn(phone, "aokafor", "the right password");
+    const session = await auth.currentSession(phone.sessions());
+    expect(session).toMatchObject({ staffId: id });
+
+    // Bo's own provider session, recorded as if the app had opened it for Ann.
+    const borrowed = grantedBrowser("bobee@staff.cvh.invalid", peppered("another password"));
+    const borrowedKey = (await idp.sessions(borrowed.jar).currentUser())!.sessionKey;
+    await owner`insert into staff_session (id, staff_account_id, created_at, last_seen_at) values (${borrowedKey}, ${id}, ${clock}, ${clock})`;
+    expect(await auth.currentSession(borrowed.sessions())).toBeNull();
+
+    await owner`update staff_session set revoked_at = ${clock} where id = ${session!.sessionId}`;
+    expect(await auth.currentSession(phone.sessions())).toBeNull();
+    expect(phone.cookies.size).toBe(0);
+  });
+
+  it("rejects a session on a starting password that has expired", async () => {
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    expect(await auth.currentSession(phone.sessions())).toMatchObject({ gate: "choose_password" });
+
+    // Its one use not recorded (as for a session opened outside this rule), 24 hours after issue.
+    await owner`update staff_account set starting_password_used_at = null where id = ${id}`;
+    advance(minutes(24 * 60));
+    expect(await auth.currentSession(phone.sessions())).toBeNull();
+    expect(phone.cookies.size).toBe(0);
+  });
+
+  it("records each request's time on the session at most once a minute (S01.08's idle limit reads it)", async () => {
+    const id = await account({ ...ann, own: "the right password" });
+    const phone = browser();
+    await signIn(phone, "aokafor", "the right password");
+    const seen = async () => (await owner`select last_seen_at from staff_session where staff_account_id = ${id}`)[0].last_seen_at;
+
+    advance(30_000);
+    await auth.currentSession(phone.sessions());
+    expect(await seen()).toEqual(T0);
+    advance(31_000);
+    await auth.currentSession(phone.sessions());
+    expect(await seen()).toEqual(clock);
+  });
+
+  it("signing out revokes the app's record of the session", async () => {
+    const id = await account({ ...ann, own: "the right password" });
+    const phone = browser();
+    await signIn(phone, "aokafor", "the right password");
+    const { sessionId } = (await auth.currentSession(phone.sessions()))!;
+
+    await auth.signOut(phone.sessions());
+
+    expect(await sessionRows(id)).toEqual([{ id: sessionId, created_at: T0, revoked_at: T0 }]);
+  });
+});
+
+describe("ending sessions on password changes", () => {
+  async function hubAdmin() {
+    const admin = await account({ username: "admin1", firstName: "Ada", lastName: "Admin", role: "admin", own: "admin password one", enrolled: true });
+    const second = await account({ username: "admin2", firstName: "Bo", lastName: "Admin", role: "admin", own: "admin password two", enrolled: true });
+    await owner`insert into staff_bootstrap (first_admin_id, second_admin_id, completed_at) values (${admin}, ${second}, now())`;
+    return admin;
+  }
+
+  it("a re-issue revokes every session of the account: the old gate-1 session is rejected", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    const old = browser();
+    await signIn(old, "aokafor", ANN_START);
+    expect(await auth.currentSession(old.sessions())).toMatchObject({ gate: "choose_password" });
+    const authUserId = idp.findByLogin("aokafor@staff.cvh.invalid")![0];
+
+    expect(await auth.reissueStartingPassword(admin, "aokafor")).toMatchObject({ ok: true });
+
+    expect(await auth.currentSession(old.sessions())).toBeNull();
+    expect((await sessionRows(id)).map((session) => session.revoked_at)).toEqual([clock]);
+    // Ended at the provider too (its admin password update signs the user out everywhere).
+    expect([...idp.sessionTokens.values()]).not.toContain(authUserId);
+    expect(await signIn(browser(), "aokafor", ANN_START)).toMatchObject({ ok: true, gate: "choose_password" });
+  });
+
+  it("a re-issue revokes the app's records even when the provider would have kept its sessions", async () => {
+    const admin = await hubAdmin();
+    await account(ann);
+    const old = browser();
+    await signIn(old, "aokafor", ANN_START);
+    // A provider whose password update leaves sessions open: only the app's revocation stands.
+    const keepsSessions = {
+      ...idp,
+      async setPassword(authUserId: string, password: string) {
+        idp.users.get(authUserId)!.password = password;
+        return { ok: true as const };
+      },
+    };
+    const { auth: lenient } = wire({ idp: keepsSessions });
+
+    expect(await lenient.reissueStartingPassword(admin, "aokafor")).toMatchObject({ ok: true });
+
+    expect(idp.sessionTokens.size).toBe(1);
+    expect(await lenient.currentSession(old.sessions())).toBeNull();
+  });
+
+  it("a re-issue whose provider call fails changes nothing and is logged", async () => {
+    const admin = await hubAdmin();
+    const id = await account(ann);
+    advance(minutes(25 * 60));
+    await signIn(browser(), "aokafor", ANN_START);
+    idp.failNextPassword("unavailable");
+
+    const lines = await logged(async () => expect(await auth.reissueStartingPassword(admin, "aokafor")).toEqual({ ok: false, error: "provider_error" }));
+
+    expect(lines).toContainEqual(expect.objectContaining({ evt: "identity.password_not_reissued", staff_id: id }));
+    expect((await row(id)).status).toBe("locked_pending_reissue");
+  });
+
+  it("choosing a password revokes the account's other sessions and keeps this one", async () => {
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    const current = (await auth.currentSession(phone.sessions()))!;
+    // Another session of the account (another device), recorded as the app records them.
+    const laptop = browser();
+    laptop.cookies.set(MEMORY_SESSION_COOKIE, idp.grant("aokafor@staff.cvh.invalid", peppered(ANN_START))!);
+    const laptopKey = (await idp.sessions(laptop.jar).currentUser())!.sessionKey;
+    await owner`insert into staff_session (id, staff_account_id, created_at, last_seen_at) values (${laptopKey}, ${id}, ${clock}, ${clock})`;
+    expect(await auth.currentSession(laptop.sessions())).toMatchObject({ staffId: id });
+
+    expect(await auth.changePassword(id, { password: "a long new password", confirm: "a long new password" }, { sessions: phone.sessions(), sessionId: current.sessionId })).toMatchObject({
+      ok: true,
+    });
+
+    expect(await auth.currentSession(phone.sessions())).toMatchObject({ staffId: id, gate: "hub" });
+    expect(await auth.currentSession(laptop.sessions())).toBeNull();
+    expect((await sessionRows(id)).filter((session) => session.revoked_at === null)).toHaveLength(1);
+  });
+
+  it("revokes the app's record of the other sessions even when the provider would have kept them", async () => {
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    const current = (await auth.currentSession(phone.sessions()))!;
+    const laptop = browser();
+    laptop.cookies.set(MEMORY_SESSION_COOKIE, idp.grant("aokafor@staff.cvh.invalid", peppered(ANN_START))!);
+    const laptopKey = (await idp.sessions(laptop.jar).currentUser())!.sessionKey;
+    await owner`insert into staff_session (id, staff_account_id, created_at, last_seen_at) values (${laptopKey}, ${id}, ${clock}, ${clock})`;
+    const keepsSessions = {
+      ...idp,
+      async setPassword(authUserId: string, password: string) {
+        idp.users.get(authUserId)!.password = password;
+        return { ok: true as const };
+      },
+    };
+    const { auth: lenient } = wire({ idp: keepsSessions });
+
+    await lenient.changePassword(id, { password: "a long new password", confirm: "a long new password" }, { sessions: phone.sessions(), sessionId: current.sessionId });
+
+    expect(await lenient.currentSession(laptop.sessions())).toBeNull();
+    expect(await lenient.currentSession(phone.sessions())).toMatchObject({ staffId: id, gate: "hub" });
+  });
+
+  it("signs this browser out when its session cannot be reopened, and logs it", async () => {
+    const id = await account(ann);
+    const phone = browser();
+    await signIn(phone, "aokafor", ANN_START);
+    const current = (await auth.currentSession(phone.sessions()))!;
+    const sessions = phone.sessions();
+    const failing = { ...sessions, checkPassword: async () => ({ ok: false as const, error: "unavailable" as const }) };
+
+    const lines = await logged(async () =>
+      expect(await auth.changePassword(id, { password: "a long new password", confirm: "a long new password" }, { sessions: failing, sessionId: current.sessionId })).toMatchObject({
+        ok: true,
+      }),
+    );
+
+    expect(lines).toContainEqual(expect.objectContaining({ evt: "identity.session_not_reopened", staff_id: id }));
+    expect(phone.cookies.size).toBe(0);
+    expect((await sessionRows(id)).every((session) => session.revoked_at !== null)).toBe(true);
+    expect(await signIn(browser(), "aokafor", "a long new password")).toMatchObject({ ok: true, gate: "hub" });
+  });
+});
+
+describe("the access token's lifetime", () => {
+  it("is checked on sign-in: shorter than 12 hours logs one warning per process, without any token", async () => {
+    await account({ ...ann, own: "the right password" });
+    await account({ username: "bobee", firstName: "Bo", lastName: "Bee", own: "another password" });
+    idp.setTokenLifetime(3600);
+
+    const lines = await logged(async () => {
+      await signIn(browser(), "aokafor", "the right password");
+      await signIn(browser(), "bobee", "another password");
+    });
+
+    expect(lines).toEqual([{ level: "warn", evt: "identity.jwt_expiry_short", module: "identity", lifetime_seconds: 3600, required_seconds: 43_200 }]);
+    for (const token of idp.sessionTokens.keys()) expect(JSON.stringify(lines)).not.toContain(token);
+  });
+
+  it("says nothing when the tokens last 12 hours", async () => {
+    await account({ ...ann, own: "the right password" });
+
+    expect(await logged(() => signIn(browser(), "aokafor", "the right password"))).toEqual([]);
+  });
+});
+
+describe("the timing of refusals", () => {
+  it("pads every refused sign-in to MIN_REFUSAL_MS, and not a successful one", async () => {
+    await account({ ...ann, own: "the right password" });
+    await account({ username: "gone", firstName: "Go", lastName: "Ne", own: "a password", status: "suspended" });
+
+    await signIn(browser(), "ghost", "whatever"); // unknown username
+    await signIn(browser(), "aokafor", "wrong"); // wrong password
+    await signIn(browser(), "gone", "a password"); // an account that may not sign in
+    await signIn(browser(), "", ""); // not even a username
+    expect(sleeps).toEqual([MIN_REFUSAL_MS, MIN_REFUSAL_MS, MIN_REFUSAL_MS, MIN_REFUSAL_MS]);
+
+    expect(await signIn(browser(), "aokafor", "the right password")).toMatchObject({ ok: true });
+    expect(sleeps).toHaveLength(4);
+  });
+
+  it("waits only for what is left of it", async () => {
+    await account({ ...ann, own: "the right password" });
+    const sessions = browser().sessions();
+    const taking = (ms: number) => ({
+      ...sessions,
+      async checkPassword(input: { login: string; password: string }) {
+        monotonic += ms;
+        return sessions.checkPassword(input);
+      },
+    });
+
+    await auth.signIn(taking(250), { username: "aokafor", password: "wrong", client: CLIENT });
+    expect(sleeps).toEqual([MIN_REFUSAL_MS - 250]);
+    // A refusal that already took longer waits no more.
+    await auth.signIn(taking(MIN_REFUSAL_MS + 1), { username: "aokafor", password: "wrong", client: CLIENT });
+    expect(sleeps).toEqual([MIN_REFUSAL_MS - 250]);
+  });
+
+  it("uses the real clock and sleep by default", async () => {
+    const { auth: real } = wire({ sleep: undefined, monotonicMs: undefined });
+
+    const started = performance.now();
+    await real.signIn(browser().sessions(), { username: "ghost", password: "whatever", client: CLIENT });
+    expect(performance.now() - started).toBeGreaterThanOrEqual(MIN_REFUSAL_MS - 5);
+  });
+});
+
+describe("the purge of the sign-in tables", () => {
+  it("is an hourly pg_cron job that deletes throttle rows older than 24 hours and staff sessions ended over 30 days ago", async () => {
+    const [job] = await owner`select schedule, command, username from cron.job where jobname = 'identity-purge-sign-in'`;
+    expect(job).toMatchObject({ schedule: "23 * * * *", username: "postgres" });
+
+    const id = await account(ann);
+    const hash = (n: number) => String(n).repeat(64);
+    await owner`insert into sign_in_failure (at, username_hash, client_hash) values
+      (now() - interval '25 hours', ${hash(1)}, ${hash(1)}), (now() - interval '23 hours', ${hash(2)}, ${hash(2)})`;
+    await owner`insert into sign_in_lock (kind, key_hash, locked_until) values
+      ('username', ${hash(3)}, now() - interval '25 hours'), ('client', ${hash(4)}, now() - interval '1 hour')`;
+    await owner`insert into staff_session (id, staff_account_id, created_at, last_seen_at, revoked_at) values
+      (${hash(5)}, ${id}, now() - interval '40 days', now() - interval '40 days', now() - interval '31 days'),
+      (${hash(6)}, ${id}, now() - interval '31 days', now() - interval '31 days', null),
+      (${hash(7)}, ${id}, now() - interval '3 days', now() - interval '3 days', now() - interval '2 days'),
+      (${hash(8)}, ${id}, now(), now(), null)`;
+
+    await owner.unsafe(job.command);
+
+    expect((await owner`select username_hash from sign_in_failure`).map((r) => r.username_hash)).toEqual([hash(2)]);
+    expect((await owner`select key_hash from sign_in_lock`).map((r) => r.key_hash)).toEqual([hash(4)]);
+    expect((await owner`select id from staff_session order by id`).map((r) => r.id)).toEqual([hash(7), hash(8)]);
+  });
+
+  it("also happens on a successful sign-in, not only on a failure", async () => {
+    await account({ ...ann, own: "the right password" });
+    await signIn(browser(), "someone", "wrong", "198.51.100.9");
+    advance(minutes(24 * 60 + 1));
+
+    expect(await signIn(browser(), "aokafor", "the right password")).toMatchObject({ ok: true });
+    expect(await owner`select count(*)::int as n from sign_in_failure`).toEqual([{ n: 0 }]);
+  });
+});
+
+describe("the staff session table", () => {
+  it("is out of reach of Supabase's client roles, and the app cannot delete a row or write one that is not a hash", async () => {
+    const [privileges] = await owner`
+      select has_table_privilege('anon', 'staff_session', 'select') as anon_select,
+             has_table_privilege('authenticated', 'staff_session', 'insert') as authenticated_insert,
+             has_table_privilege('service_role', 'staff_session', 'select') as service_select,
+             has_table_privilege('cvh_app_login', 'staff_session', 'update') as app_update,
+             has_table_privilege('cvh_app_login', 'staff_session', 'delete') as app_delete,
+             (select relrowsecurity from pg_class where relname = 'staff_session') as rls`;
+    expect(privileges).toEqual({ anon_select: false, authenticated_insert: false, service_select: false, app_update: true, app_delete: false, rls: true });
+    await expect(app.$client`delete from staff_session`).rejects.toThrow(/permission denied/);
+    const id = await account(ann);
+    await expect(app.$client`insert into staff_session (id, staff_account_id, created_at, last_seen_at) values ('not a hash', ${id}, now(), now())`).rejects.toThrow(/staff_session_id_format/);
   });
 });

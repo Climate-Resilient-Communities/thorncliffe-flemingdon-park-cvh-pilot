@@ -8,11 +8,11 @@
 // src/platform/config/env.ts requires there, for example from
 // `vercel env pull --environment=production .env.production.local`). It writes with the app's own
 // database connection (DATABASE_URL, cvh_app_login) and creates the sign-in in Supabase Auth with
-// the secret key (SUPABASE_SECRET_KEY). Nothing is sent to the new Admin: the script prints the
-// username and starting password for IT to hand over in person.
+// the secret key (SUPABASE_SECRET_KEY), peppered with STAFF_PASSWORD_PEPPER. Nothing is sent to the
+// new Admin: the script prints the username and starting password for IT to hand over in person.
 import { parseArgs } from "node:util";
 import { englishText } from "../../src/i18n/text";
-import { REFUSAL_MESSAGE_KEYS, createIdentity, supabaseIdentityProvider, type AccountService } from "../../src/modules/identity";
+import { PEPPER_NOT_CONFIGURED_MESSAGE, REFUSAL_MESSAGE_KEYS, createIdentity, supabaseIdentityProvider, type AccountService } from "../../src/modules/identity";
 import { EnvError, parseEnv, type Env } from "../../src/platform/config/env";
 import { createDb } from "../../src/platform/db";
 
@@ -38,7 +38,11 @@ const USAGE =
   "If a run failed part-way and the username is reported as taken although no account exists,\n" +
   "run the same command again: a sign-in left behind in Supabase Auth with no staff account, made\n" +
   "by this app, is removed automatically (when it is over 5 minutes old) and the account is created.\n" +
-  "Nothing needs deleting by hand in the Supabase dashboard.";
+  "Nothing needs deleting by hand in the Supabase dashboard.\n\n" +
+  "Passwords: Supabase Auth stores hex(HMAC-SHA-256(STAFF_PASSWORD_PEPPER, password)), never the\n" +
+  "password itself, so the script refuses to run without STAFF_PASSWORD_PEPPER (at least 32 random\n" +
+  "bytes, for example `openssl rand -hex 32`). Rotating the pepper makes every staff password stop\n" +
+  "working: after a rotation every password must be re-issued.";
 
 /**
  * The environment rules of S01.02 (src/platform/config/env.ts), and production only: the first
@@ -63,10 +67,10 @@ export function productionEnvironment(source: Record<string, string | undefined>
 }
 
 function connectToProduction(env: Env): Connection {
-  // parseEnv requires all three in production.
+  // parseEnv requires all three in production; the caller checked the pepper.
   const db = createDb(env.databaseUrl as string);
   const idp = supabaseIdentityProvider({ url: env.supabaseUrl as string, secretKey: env.supabaseSecretKey as string });
-  return { identity: createIdentity({ db, idp }), close: () => db.$client.end({ timeout: 5 }) };
+  return { identity: createIdentity({ db, idp, passwordPepper: env.staffPasswordPepper }), close: () => db.$client.end({ timeout: 5 }) };
 }
 
 export async function runCreateFirstAdmin(argv: string[], deps: CliDeps): Promise<number> {
@@ -96,6 +100,10 @@ export async function runCreateFirstAdmin(argv: string[], deps: CliDeps): Promis
   const environment = productionEnvironment(deps.env);
   if (!environment.ok) {
     deps.error(`Refusing to run: unsafe or incomplete environment settings:\n${environment.problems.map((p) => `  - ${p}`).join("\n")}`);
+    return 1;
+  }
+  if (environment.env.staffPasswordPepper === undefined) {
+    deps.error(`Refusing to run: ${PEPPER_NOT_CONFIGURED_MESSAGE} (${environment.env.staffPasswordPepperProblem ?? "STAFF_PASSWORD_PEPPER"}).`);
     return 1;
   }
 

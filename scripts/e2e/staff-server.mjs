@@ -14,8 +14,8 @@ import { migrate } from "../db/migrate.mjs";
 const ownerUrl = process.env.STAFF_TEST_DATABASE_URL;
 const port = process.env.E2E_STAFF_PORT ?? "3107";
 const fakeFile = process.env.CVH_FAKE_IDENTITY_FILE;
-if (!ownerUrl || !fakeFile) {
-  console.error("staff-server: STAFF_TEST_DATABASE_URL (a disposable database, as its owner) and CVH_FAKE_IDENTITY_FILE are required");
+if (!ownerUrl || !fakeFile || !process.env.STAFF_PASSWORD_PEPPER) {
+  console.error("staff-server: STAFF_TEST_DATABASE_URL (a disposable database, as its owner), CVH_FAKE_IDENTITY_FILE and STAFF_PASSWORD_PEPPER are required");
   process.exit(2);
 }
 

@@ -14,8 +14,9 @@ import type { StaffAccount } from "../domain/staffAccount";
 import { deriveStartingPassword } from "../domain/startingPassword";
 import { startingPasswordStanding } from "../domain/startingPasswordWindow";
 import type { AuditWriter } from "./accounts";
-import type { AuthSessions, IdentityProvider, OperationalLog, StaffStore, ThrottleStore } from "./ports";
+import type { AuthSessions, IdentityProvider, OperationalLog, PasswordCheck, StaffSessionStore, StaffStore, ThrottleStore } from "./ports";
 import { adminShortfallMeta, type AdminRecovery } from "./adminRecovery";
+import { PEPPER_NOT_CONFIGURED_EVENT, type PasswordPepper } from "./passwordPepper";
 
 type AuditReason = (typeof REFUSAL_REASONS)[number];
 
@@ -23,6 +24,10 @@ export interface StaffAuthDeps {
   db: Db;
   store: StaffStore;
   throttle: ThrottleStore;
+  /** The staff sessions the app opened (staff_session). */
+  sessionStore: StaffSessionStore;
+  /** What the provider stores for a password (passwordPepper.ts); null when STAFF_PASSWORD_PEPPER is not configured. */
+  pepper: PasswordPepper | null;
   idp: IdentityProvider;
   audit: AuditWriter;
   log: OperationalLog;
@@ -41,7 +46,25 @@ export interface StaffAuthDeps {
    * usable Admins (`admin_shortfall` on its audit record).
    */
   beginAdminRecovery: (tx: DbTransaction, targetId: string) => Promise<AdminRecovery>;
+  /**
+   * Timing of refused sign-ins (test seams): every refusal takes at least `minRefusalMs` (default
+   * MIN_REFUSAL_MS), measured on `monotonicMs` (default performance.now) and waited with `sleep`.
+   */
+  minRefusalMs?: number;
+  monotonicMs?: () => number;
+  sleep?: (ms: number) => Promise<void>;
 }
+
+/**
+ * The least time a refused sign-in takes. Refusals take different paths (no account to look up,
+ * a lock read, a failure recorded in a transaction, an audit, the S01.06 recovery check), so their
+ * own durations would tell an unknown username from a known one; every refusal is padded to this,
+ * which is above what any of those paths takes.
+ */
+export const MIN_REFUSAL_MS = 700;
+
+/** Supabase's JWT expiry the staff session relies on: the access token is the whole 12-hour session. */
+export const REQUIRED_TOKEN_LIFETIME_SECONDS = 12 * 60 * 60;
 
 /** The signed-in staff member of a request, with the gate of the setup sequence they are at. */
 export interface StaffSession {
@@ -51,6 +74,8 @@ export interface StaffSession {
   lastName: string;
   role: StaffRole;
   gate: SetupGate;
+  /** The staff_session id of this request's session (S01.08 limits and revokes it). */
+  sessionId: string;
 }
 
 export type SignInOutcome =
@@ -64,7 +89,8 @@ export type SignInOutcome =
 
 export type ChangePasswordError = OwnPasswordError | "password_rejected" | "provider_error" | "not_required";
 
-export type ReissueError = "forbidden" | "bootstrap_incomplete" | "not_found" | "not_reissuable" | "provider_error";
+export type ReissueError = "forbidden" | "bootstrap_incomplete" | "not_found" | "not_reissuable" | "provider_error" | "passwords_not_configured";
+
 
 /** Why a checked attempt failed, as the audit records it. */
 type FailureReason = Extract<AuditReason, "wrong_password" | "unknown_username" | "forbidden">;
@@ -87,7 +113,12 @@ export function signInLockReader(deps: { throttle: ThrottleStore; throttleKey: s
 }
 
 export function createStaffAuthService(deps: StaffAuthDeps) {
-  const { db, store, throttle, idp, audit, log } = deps;
+  const { db, store, throttle, idp, audit, log, sessionStore } = deps;
+  const minRefusalMs = deps.minRefusalMs ?? MIN_REFUSAL_MS;
+  const monotonicMs = deps.monotonicMs ?? (() => performance.now());
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms)));
+  // The JWT expiry warning is logged once per process: the composition root builds this service once.
+  let tokenLifetimeWarned = false;
 
   const keyed = (purpose: "username" | "client", value: string) => throttleHash(deps.throttleKey, purpose, value);
 
@@ -98,6 +129,13 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
   async function throttled(executor: DbExecutor, usernameHash: string, clientHash: string, now: Date) {
     return isLocked(await throttle.lockedUntil(executor, throttleKeys(usernameHash, clientHash)), now);
+  }
+
+  /** The pepper, or null after logging that staff passwords are not configured (the caller refuses). */
+  function pepperFor(operation: string): PasswordPepper | null {
+    if (deps.pepper) return deps.pepper;
+    log.error(PEPPER_NOT_CONFIGURED_EVENT, { operation });
+    return null;
   }
 
   const subject = (account: StaffAccount | null) => ({
@@ -179,88 +217,182 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
     return setupGate({ mustChangePassword: account.mustChangePassword, role: account.role, authenticatorEnrolled });
   }
 
+  /** Logs once per process when the provider's access tokens last less than the 12-hour session. */
+  function checkTokenLifetime(seconds: number | null) {
+    if (tokenLifetimeWarned || (seconds !== null && seconds >= REQUIRED_TOKEN_LIFETIME_SECONDS)) return;
+    tokenLifetimeWarned = true;
+    log.warn("identity.jwt_expiry_short", { lifetime_seconds: seconds, required_seconds: REQUIRED_TOKEN_LIFETIME_SECONDS });
+  }
+
+  /** Sign-in without the timing pad (see signIn). */
+  async function attemptSignIn(sessions: AuthSessions, input: { username: string; password: string; client: string }): Promise<SignInOutcome> {
+    const pepper = pepperFor("sign_in");
+    if (!pepper) return { ok: false, error: "sign_in_failed" };
+    const now = deps.now();
+    const username = normaliseUsername(input.username);
+    const usernameHash = keyed("username", username);
+    const clientHash = keyed("client", input.client);
+    const plausible = isUsernameFormat(username) && input.password !== "";
+    const account = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
+
+    if (await throttled(db, usernameHash, clientHash, now)) return refuseThrottled(account);
+
+    // The provider is asked for an unknown username too, but that alone does not make the answers
+    // take as long: the paths after it differ (an account or none, a recovery check, a lock). The
+    // timing is evened out by signIn, which pads every refusal to MIN_REFUSAL_MS.
+    const check = plausible ? await sessions.checkPassword({ login: loginForUsername(username), password: pepper(input.password) }) : null;
+    if (check && !check.ok && check.error === "unavailable") {
+      log.error("identity.sign_in_unavailable", { has_account: account !== null });
+      await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "provider_error" } });
+      return { ok: false, error: "unavailable" };
+    }
+    if (!check || !check.ok) return recordFailure(account, usernameHash, clientHash, account ? "wrong_password" : "unknown_username", now);
+
+    // The password is right. Refuse anything but an active account that may use it.
+    if (!account || account.authUserId !== check.authUserId || account.status === "suspended" || account.status === "removed") {
+      await check.discard();
+      return recordFailure(account, usernameHash, clientHash, "forbidden", now);
+    }
+    const standing = startingPasswordStanding(account, now);
+    if (standing === "expired" || standing === "used") {
+      await check.discard();
+      return refuseStartingPassword(account, standing);
+    }
+    if (account.status !== "active") {
+      await check.discard();
+      return recordFailure(account, usernameHash, clientHash, "forbidden", now);
+    }
+
+    // Accept under the same serialisation as failures: a lock that a concurrent failure started
+    // while the password was being checked still refuses this attempt. The session is recorded in
+    // the same transaction: only a session recorded here is ever accepted (currentSession).
+    const decision = await db.transaction(async (tx) => {
+      await throttle.lockKeys(tx, [usernameHash, clientHash]);
+      if (await throttled(tx, usernameHash, clientHash, now)) return "throttled" as const;
+      const current = await store.lockAccount(tx, account.id);
+      if (!current || current.status !== "active") return "forbidden" as const;
+      const currentStanding = startingPasswordStanding(current, now);
+      if (currentStanding === "expired" || currentStanding === "used") return currentStanding;
+      if (currentStanding === "valid") await store.markStartingPasswordUsed(tx, current.id, now);
+      await sessionStore.insert(tx, { id: check.sessionKey, staffId: current.id, at: now });
+      await audit.record(tx, { action: "auth.signed_in", actorStaffId: current.id, subjectType: "staff_account", subjectId: current.id, meta: { aal: "aal1" } });
+      // The throttle's old rows go on a success too (and hourly, by the purge job).
+      await throttle.purge(tx, new Date(now.getTime() - THROTTLE_RETENTION_MS));
+      return { account: current };
+    });
+    if (decision === "throttled") {
+      await check.discard();
+      return refuseThrottled(account);
+    }
+    if (decision === "forbidden") {
+      await check.discard();
+      return recordFailure(account, usernameHash, clientHash, "forbidden", now);
+    }
+    if (decision === "expired" || decision === "used") {
+      await check.discard();
+      return refuseStartingPassword(account, decision);
+    }
+    await check.accept();
+    checkTokenLifetime(check.tokenLifetimeSeconds);
+    const enrolled = decision.account.mustChangePassword ? false : await idp.hasVerifiedAuthenticator(decision.account.authUserId);
+    return { ok: true, staffId: decision.account.id, gate: await gateOf(decision.account, enrolled) };
+  }
+
+  /**
+   * After a password change the provider has ended every session of the user (setPassword), this
+   * browser's too: a new session is opened for it with the new password and takes the old one's
+   * place in staff_session (keeping its start, for S01.08's absolute limit). If that fails, the
+   * person is signed out and signs in again with the new password.
+   */
+  async function reopenSession(account: StaffAccount, current: CurrentSession, providerPassword: string, now: Date) {
+    let check: PasswordCheck;
+    try {
+      check = await current.sessions.checkPassword({ login: loginForUsername(account.username), password: providerPassword });
+    } catch {
+      check = { ok: false, error: "unavailable" };
+    }
+    if (check.ok && check.authUserId === account.authUserId) {
+      const opened = check;
+      await db.transaction((tx) => sessionStore.replace(tx, current.sessionId, { id: opened.sessionKey, staffId: account.id, at: now }));
+      await opened.accept();
+      return;
+    }
+    if (check.ok) await check.discard();
+    log.error("identity.session_not_reopened", { staff_id: account.id });
+    await sessionStore.revoke(db, current.sessionId, now);
+    await current.sessions.signOut();
+  }
+
+  /**
+   * Re-issues a starting password at the provider, then in the database when `stillAllowed` holds
+   * under the transaction, with every session revoked and `password.reissued` audited.
+   */
+  async function reissue(
+    target: StaffAccount,
+    providerPassword: string,
+    actorStaffId: string | null,
+    stillAllowed: (tx: DbTransaction) => Promise<boolean>,
+  ): Promise<"reissued" | "provider_error" | "conflict"> {
+    // The admin password update ends every session the account has at the provider.
+    const set = await idp.setPassword(target.authUserId, providerPassword);
+    if (!set.ok) {
+      log.error("identity.password_not_reissued", { staff_id: target.id, error: set.error });
+      return "provider_error";
+    }
+    const now = deps.now();
+    const reissued = await db.transaction(async (tx) => {
+      if (!(await stillAllowed(tx))) return false;
+      if (!(await store.reissueStartingPassword(tx, target.id, now))) return false;
+      await sessionStore.revokeAll(tx, target.id, now);
+      await audit.record(tx, { action: "password.reissued", actorStaffId, subjectType: "staff_account", subjectId: target.id });
+      return true;
+    });
+    return reissued ? "reissued" : "conflict";
+  }
+
   return {
     /**
      * Sign-in by username and password (S01.07). Locked usernames and clients are refused before the
-     * password is checked. The provider's session is kept only when the sign-in is accepted; every
-     * refusal discards it. Failures are counted and audited; the person sees one generic message,
-     * except for the right starting password after it expired.
+     * password is checked. The provider is given the peppered password, never the typed one. The
+     * provider's session is kept only when the sign-in is accepted, and recorded in staff_session;
+     * every refusal discards it. Failures are counted and audited; the person sees one generic
+     * message, except for the right starting password after it expired. Every refusal takes at
+     * least MIN_REFUSAL_MS, so its duration does not tell whether the username exists.
      */
     async signIn(sessions: AuthSessions, input: { username: string; password: string; client: string }): Promise<SignInOutcome> {
-      const now = deps.now();
-      const username = normaliseUsername(input.username);
-      const usernameHash = keyed("username", username);
-      const clientHash = keyed("client", input.client);
-      const plausible = isUsernameFormat(username) && input.password !== "";
-      const account = isUsernameFormat(username) ? await store.findByUsername(db, username) : null;
-
-      if (await throttled(db, usernameHash, clientHash, now)) return refuseThrottled(account);
-
-      // The provider is asked even for an unknown username, so the answer takes as long either way.
-      const check = plausible ? await sessions.checkPassword({ login: loginForUsername(username), password: input.password }) : null;
-      if (check && !check.ok && check.error === "unavailable") {
-        log.error("identity.sign_in_unavailable", { has_account: account !== null });
-        await audit.recordRefusal(db, { action: "auth.failed", ...subject(account), meta: { reason: "provider_error" } });
-        return { ok: false, error: "unavailable" };
+      const started = monotonicMs();
+      const outcome = await attemptSignIn(sessions, input);
+      if (!outcome.ok) {
+        const remaining = minRefusalMs - (monotonicMs() - started);
+        if (remaining > 0) await sleep(remaining);
       }
-      if (!check || !check.ok) return recordFailure(account, usernameHash, clientHash, account ? "wrong_password" : "unknown_username", now);
-
-      // The password is right. Refuse anything but an active account that may use it.
-      if (!account || account.authUserId !== check.authUserId || account.status === "suspended" || account.status === "removed") {
-        await check.discard();
-        return recordFailure(account, usernameHash, clientHash, "forbidden", now);
-      }
-      const standing = startingPasswordStanding(account, now);
-      if (standing === "expired" || standing === "used") {
-        await check.discard();
-        return refuseStartingPassword(account, standing);
-      }
-      if (account.status !== "active") {
-        await check.discard();
-        return recordFailure(account, usernameHash, clientHash, "forbidden", now);
-      }
-
-      // Accept under the same serialisation as failures: a lock that a concurrent failure started
-      // while the password was being checked still refuses this attempt.
-      const decision = await db.transaction(async (tx) => {
-        await throttle.lockKeys(tx, [usernameHash, clientHash]);
-        if (await throttled(tx, usernameHash, clientHash, now)) return "throttled" as const;
-        const current = await store.lockAccount(tx, account.id);
-        if (!current || current.status !== "active") return "forbidden" as const;
-        const currentStanding = startingPasswordStanding(current, now);
-        if (currentStanding === "expired" || currentStanding === "used") return currentStanding;
-        if (currentStanding === "valid") await store.markStartingPasswordUsed(tx, current.id, now);
-        await audit.record(tx, { action: "auth.signed_in", actorStaffId: current.id, subjectType: "staff_account", subjectId: current.id, meta: { aal: "aal1" } });
-        return { account: current };
-      });
-      if (decision === "throttled") {
-        await check.discard();
-        return refuseThrottled(account);
-      }
-      if (decision === "forbidden") {
-        await check.discard();
-        return recordFailure(account, usernameHash, clientHash, "forbidden", now);
-      }
-      if (decision === "expired" || decision === "used") {
-        await check.discard();
-        return refuseStartingPassword(account, decision);
-      }
-      await check.accept();
-      const enrolled = decision.account.mustChangePassword ? false : await idp.hasVerifiedAuthenticator(decision.account.authUserId);
-      return { ok: true, staffId: decision.account.id, gate: await gateOf(decision.account, enrolled) };
+      return outcome;
     },
 
     /**
      * The server-side session lookup of every staff request (AD-4): the provider verifies the
-     * session, then the staff_account is loaded and the request is rejected unless its status is
-     * `active` (a starting password still in use is an `active` account at gate 1). Returns null
-     * for no session, an unknown auth user and every other status.
+     * session, the app checks that it opened that session itself (an unrevoked staff_session row
+     * for this account), then the staff_account is loaded and the request is rejected unless its
+     * status is `active` (a starting password still in use is an `active` account at gate 1) and,
+     * on a starting password, that password has not expired. A rejected session is signed out
+     * (ended at the provider, its cookie cleared where the response can still set cookies).
+     * Returns null for no session and every rejection.
      */
     async currentSession(sessions: AuthSessions): Promise<StaffSession | null> {
       const user = await sessions.currentUser();
       if (!user) return null;
+      const now = deps.now();
       const account = await store.findByAuthUserId(db, user.authUserId);
-      if (!account || account.status !== "active") return null;
+      const opened = await sessionStore.find(db, user.sessionKey);
+      // A session opened at the provider directly (a password grant outside signIn) has no row.
+      const bound = opened !== null && opened.revokedAt === null && account !== null && opened.staffId === account.id;
+      const usable =
+        bound && account.status === "active" && !(account.mustChangePassword && startingPasswordStanding(account, now) === "expired");
+      if (!usable || !opened || !account) {
+        await sessions.signOut();
+        return null;
+      }
+      await sessionStore.touch(db, opened.id, now);
       return {
         staffId: account.id,
         username: account.username,
@@ -268,20 +400,33 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         lastName: account.lastName,
         role: account.role,
         gate: await gateOf(account, user.authenticatorEnrolled),
+        sessionId: opened.id,
       };
     },
 
-    /** Ends the request's session at the provider and clears its cookies. */
+    /** Revokes the request's session, ends it at the provider and clears its cookies. Never throws. */
     async signOut(sessions: AuthSessions): Promise<void> {
+      try {
+        const user = await sessions.currentUser();
+        if (user) await sessionStore.revoke(db, user.sessionKey, deps.now());
+      } catch (error) {
+        log.error("identity.sign_out_not_recorded", { error: error instanceof Error ? error.constructor.name : "unknown" });
+      }
       await sessions.signOut();
     },
 
     /**
      * "Choose your password" (gate 1): checks the own-password rules, replaces the password at the
-     * provider (the starting password stops working at once), clears `must_change_password` and
-     * audits `password.changed` in the same transaction, then returns the next gate.
+     * provider (the starting password stops working at once, and every provider session ends),
+     * clears `must_change_password`, revokes the account's other staff sessions and audits
+     * `password.changed` in the same transaction, then reopens the session of the request it came
+     * from (`current`) and returns the next gate. Without `current` every session is revoked.
      */
-    async changePassword(staffId: string, input: { password: string; confirm: string }): Promise<Result<{ gate: SetupGate }, ChangePasswordError>> {
+    async changePassword(
+      staffId: string,
+      input: { password: string; confirm: string },
+      current?: CurrentSession,
+    ): Promise<Result<{ gate: SetupGate }, ChangePasswordError>> {
       const account = await store.findById(db, staffId);
       const refuse = async (code: ChangePasswordError, reason: AuditReason) => {
         await audit.recordRefusal(db, { action: "password.changed", actorStaffId: staffId, subjectType: "staff_account", subjectId: staffId, meta: { reason } });
@@ -291,14 +436,19 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       const starting = deriveStartingPassword(account.firstName, account.lastName);
       const valid = validateOwnPassword(input, { username: account.username, startingPassword: starting.ok ? starting.value : null });
       if (!valid.ok) return refuse(valid.error, "validation");
+      const pepper = pepperFor("change_password");
+      if (!pepper) return refuse("provider_error", "provider_error");
 
-      const set = await idp.setPassword(account.authUserId, valid.value);
+      const providerPassword = pepper(valid.value);
+      const set = await idp.setPassword(account.authUserId, providerPassword);
       if (!set.ok) {
         if (set.error === "unavailable") log.error("identity.password_not_set", { staff_id: staffId });
         return refuse(set.error === "rejected" ? "password_rejected" : "provider_error", "provider_error");
       }
+      const now = deps.now();
       const changed = await db.transaction(async (tx) => {
         if (!(await store.completePasswordChange(tx, staffId))) return false;
+        await sessionStore.revokeAll(tx, staffId, now, { keep: current?.sessionId });
         await audit.record(tx, { action: "password.changed", actorStaffId: staffId, subjectType: "staff_account", subjectId: staffId });
         return true;
       });
@@ -307,6 +457,7 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
         log.error("identity.password_change_not_recorded", { staff_id: staffId });
         return refuse("not_required", "conflict");
       }
+      if (current) await reopenSession(account, current, providerPassword, now);
       if (account.role === "admin") await deps.completeBootstrapIfReady(staffId);
       const enrolled = await idp.hasVerifiedAuthenticator(account.authUserId);
       return ok({ gate: setupGate({ mustChangePassword: false, role: account.role, authenticatorEnrolled: enrolled }) });
@@ -314,9 +465,10 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
 
     /**
      * An Admin re-issues a starting password that expired or was used without being replaced: the
-     * provider's password is set to the starting password again, the account is active again and a
-     * new 24-hour window starts. Audited as `password.reissued`. Not for someone who already chose
-     * their own password (that is S01.08's "Reset password").
+     * provider's password is set to the starting password again (which ends every provider session
+     * of the account), every staff session of the account is revoked, the account is active again
+     * and a new 24-hour window starts. Audited as `password.reissued`. Not for someone who already
+     * chose their own password (that is S01.08's "Reset password").
      */
     async reissueStartingPassword(actorId: string, usernameInput: string): Promise<Result<{ username: string; startingPassword: string }, ReissueError>> {
       const actor = await store.findById(db, actorId);
@@ -335,17 +487,14 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       if (!decision.ok) return refuse("bootstrap_incomplete", "bootstrap_incomplete", target.id);
       const starting = deriveStartingPassword(target.firstName, target.lastName);
       if (!starting.ok) return refuse("not_reissuable", "validation", target.id);
+      const pepper = pepperFor("reissue_starting_password");
+      if (!pepper) return refuse("passwords_not_configured", "provider_error", target.id);
 
-      const set = await idp.setPassword(target.authUserId, starting.value);
-      if (!set.ok) return refuse("provider_error", "provider_error", target.id);
-      const reissued = await db.transaction(async (tx) => {
+      const result = await reissue(target, pepper(starting.value), actor.id, async (tx) => {
         const current = await store.findById(tx, actor.id);
-        if (!current || !mayManageAccounts(current)) return false;
-        if (!(await store.reissueStartingPassword(tx, target.id, deps.now()))) return false;
-        await audit.record(tx, { action: "password.reissued", actorStaffId: actor.id, subjectType: "staff_account", subjectId: target.id });
-        return true;
+        return current !== null && mayManageAccounts(current);
       });
-      if (!reissued) return refuse("not_reissuable", "conflict", target.id);
+      if (result !== "reissued") return refuse(result === "provider_error" ? "provider_error" : "not_reissuable", result, target.id);
       return ok({ username: target.username, startingPassword: starting.value });
     },
 
@@ -366,6 +515,12 @@ export function createStaffAuthService(deps: StaffAuthDeps) {
       });
     },
   };
+}
+
+/** The request a password change comes from: its sessions and its staff_session id. */
+export interface CurrentSession {
+  sessions: AuthSessions;
+  sessionId: string;
 }
 
 export type StaffAuthService = ReturnType<typeof createStaffAuthService>;

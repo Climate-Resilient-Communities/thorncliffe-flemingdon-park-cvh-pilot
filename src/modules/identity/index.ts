@@ -1,15 +1,17 @@
 // The identity module's public interface (AD-2, AD-4): staff accounts, the one-time bootstrap of
 // the first two Admins and, in later stories, sign-in, sessions, authenticators and the role policy.
-import { randomBytes } from "node:crypto";
+import { createHmac, randomBytes } from "node:crypto";
 import type { Db } from "../../platform/db";
 import { uuidv7 } from "../../platform/ids";
 import * as audit from "../audit";
 import { stdoutOperationalLog } from "./adapters/operationalLog";
+import { drizzleStaffSessionStore } from "./adapters/sessionStore";
 import { drizzleStaffStore } from "./adapters/staffStore";
 import { drizzleThrottleStore } from "./adapters/throttleStore";
 import { createAccountService, type AccountService, type AuditWriter } from "./application/accounts";
 import type { IdentityProvider } from "./application/ports";
 import { createAdminRecovery } from "./application/adminRecovery";
+import { passwordPepper } from "./application/passwordPepper";
 import { createStaffAuthService, signInLockReader, type StaffAuthService } from "./application/staffAuth";
 import { createStaffChangeService, type StaffChangeService } from "./application/staffChanges";
 
@@ -26,12 +28,30 @@ export interface IdentityWiring {
    * it). Scripts and tests that never read the app's locks may leave it out.
    */
   throttleKey?: string;
+  /**
+   * STAFF_PASSWORD_PEPPER (src/platform/config/env.ts): the provider stores passwords peppered with
+   * it. Without it every operation that gives the provider a password refuses (fail closed).
+   */
+  passwordPepper?: string;
   /** Test seams. */
   now?: () => Date;
   newId?: () => string;
   audit?: AuditWriter;
   /** How long a change waits for a row lock before failing; default 5 s. */
   lockTimeoutMs?: number;
+  /** Test seams of the sign-in's timing pad (staffAuth.ts, MIN_REFUSAL_MS). */
+  sleep?: (ms: number) => Promise<void>;
+  monotonicMs?: () => number;
+  minRefusalMs?: number;
+}
+
+/**
+ * The throttle's hash key derived from a server-only secret (the Supabase secret key): an HMAC with
+ * a fixed label, so no new secret is needed and the key never leaves the server. Rotating the
+ * secret only forgets current sign-in failures and locks.
+ */
+export function throttleKeyFromSecret(secret: string): string {
+  return createHmac("sha256", secret).update("cvh:sign-in-throttle:v1").digest("hex");
 }
 
 /** The failed-sign-in lock of a username, read with the wiring's throttle key. */
@@ -55,6 +75,7 @@ export function createIdentity(wiring: IdentityWiring): IdentityService {
     newId: wiring.newId ?? (() => uuidv7()),
     signInLockedUntil: lockReader(wiring),
     lockTimeoutMs: wiring.lockTimeoutMs,
+    pepper: passwordPepper(wiring.passwordPepper),
   };
   return { ...createAccountService(deps), ...createStaffChangeService(deps) };
 }
@@ -72,6 +93,11 @@ export function createStaffAuth(wiring: IdentityWiring & { throttleKey: string; 
     idp: wiring.idp,
     store: drizzleStaffStore,
     throttle: drizzleThrottleStore,
+    sessionStore: drizzleStaffSessionStore,
+    pepper: passwordPepper(wiring.passwordPepper),
+    sleep: wiring.sleep,
+    monotonicMs: wiring.monotonicMs,
+    minRefusalMs: wiring.minRefusalMs,
     audit: wiring.audit ?? audit,
     log: stdoutOperationalLog,
     now: wiring.now ?? (() => new Date()),
@@ -91,8 +117,20 @@ export { MEMORY_SESSION_COOKIE, memoryIdentityProvider, type MemoryIdentityProvi
 export { sessionCookieOptions, supabaseAuthSessions, type SupabaseSessionConfig } from "./adapters/supabaseAuthSessions";
 export { supabaseIdentityProvider, type SupabaseAdminConfig } from "./adapters/supabaseIdentityProvider";
 export type { AccountService, AddPersonView, CreatedAccount } from "./application/accounts";
-export type { AuthSessions, AuthSessionsFactory, CookieJar, CreateLoginError, IdentityProvider, SessionCookieOptions } from "./application/ports";
-export type { ChangePasswordError, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
+export { PEPPER_NOT_CONFIGURED_MESSAGE, pepperPassword } from "./application/passwordPepper";
+export type {
+  AuthSessions,
+  AuthSessionsFactory,
+  CookieJar,
+  CreateLoginError,
+  IdentityProvider,
+  SessionCookieOptions,
+  SessionUser,
+  StaffSessionRecord,
+  StaffSessionStore,
+} from "./application/ports";
+export { MIN_REFUSAL_MS, REQUIRED_TOKEN_LIFETIME_SECONDS } from "./application/staffAuth";
+export type { ChangePasswordError, CurrentSession, ReissueError, SignInOutcome, StaffAuthService, StaffSession } from "./application/staffAuth";
 export { type StaffChangeService } from "./application/staffChanges";
 export { OWN_PASSWORD_MAX_BYTES, OWN_PASSWORD_MIN_LENGTH, type OwnPasswordError } from "./domain/ownPassword";
 export { setupGate } from "./domain/setupGate";
