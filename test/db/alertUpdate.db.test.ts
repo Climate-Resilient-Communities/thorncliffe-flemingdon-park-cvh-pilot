@@ -11,12 +11,14 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
-import { FeedThreadSchema, entriesNewestFirst } from "../../src/contracts/feed";
+import { FeedThreadSchema, FeedV1, entriesNewestFirst } from "../../src/contracts/feed";
 import type { Translated } from "../../src/contracts/translated";
 import {
   FROZEN_LANGS,
   createAlerting,
   createEntryPreparer,
+  createFeed,
+  createResidentAlerts,
   createSubmitter,
   freezeContent,
   freezeTranslations,
@@ -649,6 +651,38 @@ describe("the thread as residents read it", () => {
     expect(entriesNewestFirst(oldestFirst.entries).map((entry) => entry.id)).toEqual(summary.entries.map((entry) => entry.id));
     // The rule the Hub's read model applies is the module's: newest first, whatever order the rows come in.
     expect(newestFirst([...summary.entries].reverse()).map((entry) => entry.id)).toEqual(summary.entries.map((entry) => entry.id));
+  });
+
+  it("is what residents read once an acknowledgement and an update are approved: the resident read path (createResidentAlerts and the feed's own FeedV1) lists both, oldest first, with each one's published_at, phase and the thread's valid_until", async () => {
+    const { ref, slug } = await approvedThread();
+    const update = await pendingUpdate(ref.alertId, authorA, { text: "Toronto Hydro is on site.", phase: "in_progress", validUntil: new Date("2026-10-02T09:00:00Z") });
+    expect(await alerting.approveEntry(actorOf(coordB), update, await shownOfRow(update))).toMatchObject({ ok: true });
+    const ack = await entryRow(ref.entryId);
+    const upd = await entryRow(update.entryId);
+    const wantedValidUntil = new Date("2026-10-02T09:00:00Z").toISOString();
+
+    // What the module hands the page (createResidentAlerts, as the feed route's source wires it), read as the app's own role.
+    const read = await createResidentAlerts(app).read("en");
+    expect(read.threads).toHaveLength(1);
+    // And what /api/feed answers (the route validates with FeedV1 and sends it as it is).
+    const answer = await createFeed({ db: app, alertsEnabled: true, now: () => NOW }).read("en");
+    const parsed = FeedV1.parse(answer);
+    expect(parsed.threads).toEqual(read.threads);
+
+    const thread = parsed.threads[0];
+    expect(thread).toMatchObject({ id: ref.alertId, slug, state: "open", valid_until: wantedValidUntil });
+    // The feed carries the entries oldest first (S04.08); nothing about the order is refused by the contract.
+    expect(thread.entries.map((entry) => [entry.id, entry.kind, entry.phase])).toEqual([
+      [ref.entryId, "ack", "problem"],
+      [update.entryId, "update", "in_progress"],
+    ]);
+    // Each entry's time is the one the database stamped at its approval, to the millisecond, and the later approval is later.
+    expect(thread.entries.map((entry) => entry.published_at)).toEqual([new Date(ack.web_published_at).toISOString(), new Date(upd.web_published_at).toISOString()]);
+    expect(Date.parse(thread.entries[1].published_at)).toBeGreaterThan(Date.parse(thread.entries[0].published_at));
+    expect(thread.entries[1].original.body).toBe("Toronto Hydro is on site.");
+    // R-07 turns the same list newest first, and the thread's valid_until is the update's, not the acknowledgement's.
+    expect(entriesNewestFirst(thread.entries).map((entry) => entry.id)).toEqual([update.entryId, ref.entryId]);
+    expect(thread.valid_until).not.toBe(new Date(ack.valid_until).toISOString());
   });
 
   it("does not list an entry that waits for approval, a draft or a discarded one: residents read only what was approved", async () => {

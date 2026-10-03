@@ -6,7 +6,7 @@
 //  - a text that is English standing in for a translation that failed (`fallback_en`) is set left to right in English and says so, in the
 //    resident's language ("Not yet available in this language"); a machine translation carries its label and "Read it in English";
 //  - the attribution is the Hub's whole sentence (R04.fromHub): "the Hub" is never joined to a preposition word by word (spine AD-21).
-import type { FeedThread } from "@/contracts/feed";
+import { entriesNewestFirst, type FeedThread } from "@/contracts/feed";
 import { isLaunchCode, languageOf, type LaunchCode } from "@/i18n/languages";
 import { agoText } from "../home/feed-poll";
 import { guideDuringHref, guidesFor } from "./guides";
@@ -135,12 +135,13 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   const { lang, serverNow, t } = input;
   const timeT: Translate = (key, values) => t(`time.${key}`, values);
   const language = languageOf(lang);
-  const oldestFirst = thread.entries;
-  const latest = oldestFirst[oldestFirst.length - 1];
-  const first = oldestFirst[0];
+  // The feed carries the entries oldest first and does not refuse an order; R-07 reads them newest first, by their own times (S05.01).
+  const newestFirst = entriesNewestFirst(thread.entries);
+  const latest = newestFirst[0];
+  const first = newestFirst[newestFirst.length - 1];
   const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
   const times =
-    oldestFirst.length > 1 ? t("R07.timeLine", { posted: ago(first.published_at), updated: ago(latest.published_at) }) : t("R07.timeLineOne", { posted: ago(first.published_at) });
+    newestFirst.length > 1 ? t("R07.timeLine", { posted: ago(first.published_at), updated: ago(latest.published_at) }) : t("R07.timeLineOne", { posted: ago(first.published_at) });
   const valid = validUntilLine(new Date(thread.valid_until), serverNow, language.bcp47, t);
   const lowerHazard = (guide: string) => t(`hazards.${guide}`).toLocaleLowerCase(language.bcp47);
   return {
@@ -158,6 +159,6 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     machineLabel: t("x04.label"),
     machineFrom: t("x04.from", { lang: ENGLISH.native }),
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
-    entries: [...oldestFirst].reverse().map((entry) => entryOf(entry, serverNow, t)),
+    entries: newestFirst.map((entry) => entryOf(entry, serverNow, t)),
   };
 }
