@@ -73,6 +73,16 @@ describe("what is running, on the Hub home", () => {
     expect(incidentsView(none, "coordinator").running).toMatchObject({ title: "Running alerts", none: "No alert is running.", items: [] });
   });
 
+  it("opens a correction and a withdrawal in their own composers from Your alerts (S05.02)", () => {
+    const mine = (over: Record<string, unknown>) => ({ alertId: ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "correction" as const, status: "draft" as const, types: ["elevator"], isDrill: false, version: 0, submittedAt: null, returnedNote: null, followUp: true, ...over });
+    const view = incidentsView({ waiting: [], mine: [mine({}), mine({ kind: "withdrawal", entryId: "01900000-0000-7000-8000-00000000e17b" })] }, "coordinator");
+    expect(view.mine.items.map((item) => item.link.href)).toEqual([
+      `/staff/alerts/correct?alert=${ALERT}&entry=01900000-0000-7000-8000-00000000e179`,
+      `/staff/alerts/withdraw?alert=${ALERT}&entry=01900000-0000-7000-8000-00000000e17b`,
+    ]);
+    expect(view.mine.items.map((item) => item.title)).toEqual(["Elevator · Correction", "Elevator · Withdrawal"]);
+  });
+
   it("opens a follow-up update in its own composer from Your alerts, and a first entry in the one it was written on", () => {
     const mine = (over: Record<string, unknown>) => ({ alertId: ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "update" as const, status: "draft" as const, types: ["elevator"], isDrill: false, version: 0, submittedAt: null, returnedNote: null, ...over });
     const view = incidentsView({ waiting: [], mine: [mine({ followUp: true }), mine({ followUp: false, entryId: "01900000-0000-7000-8000-00000000e17a" })] }, "coordinator");

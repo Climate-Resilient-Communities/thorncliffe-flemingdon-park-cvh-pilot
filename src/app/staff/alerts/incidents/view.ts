@@ -56,8 +56,9 @@ const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text): IncidentIt
     link:
       kind === "waiting"
         ? { href: approveHref(ref), label: t("review") }
-        : // An update that follows other entries is written on the update composer, which sends it to "Promote" or "Add an update" as it belongs.
-          { href: composerHref(row.kind === "ack" ? "ack" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
+        : // An update that follows other entries is written on the update composer, which sends it to "Promote" or "Add an update" as it belongs; a correction and a
+          // withdrawal (S05.02) are written on their own.
+          { href: composerHref(row.kind === "ack" ? "ack" : row.kind === "correction" ? "correct" : row.kind === "withdrawal" ? "withdraw" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
   };
 };
 
