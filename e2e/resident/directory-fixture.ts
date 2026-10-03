@@ -1,22 +1,23 @@
 import { createHash } from "node:crypto";
 import type { Page, Route } from "@playwright/test";
-import { LANG_CODES } from "../../src/contracts/lang";
+import { LANG_CODES, type LangCode } from "../../src/contracts/lang";
 
 // A small directory release for the directory tests (S02.06): a manifest and listing files in the shape of
 // DirectoryManifestV1 and DirectoryListingV1 (src/contracts/directory.ts). The resident server has no database in these
 // tests, so the release routes are answered here. Every date is on or before 2026-10-01. The Urdu listing is machine
-// translated, except one provider whose text is English with translation.unavailable.
+// translated, except one provider whose text is English with translation.unavailable; every other language's listing is
+// English with translation.unavailable throughout.
 
 const sha = (text: string) => createHash("sha256").update(text).digest("hex");
 export const CATALOGUE_HASH = sha("sample catalogue");
 
-type Lang = "en" | "ur";
+type Lang = LangCode;
 
 /** One text of a listing: the English source, a machine translation (ur), or English standing in for a missing translation. */
 function text(lang: Lang, en: string, ur: string | null, kind: "ok" | "fallback" = "ok") {
   const original = { lang: "en" as const, body: en };
   if (lang === "en") return { lang: "en", body: en, machine: false, model: null, status: "source", source_hash: sha(en), original, review_status: "source", reviewed_on: null };
-  if (kind === "fallback" || ur === null) {
+  if (kind === "fallback" || ur === null || lang !== "ur") {
     return { lang, body: en, machine: false, model: null, status: "fallback_en", source_hash: sha(en), original, review_status: "none", reviewed_on: null, notice: "translation.unavailable" };
   }
   return { lang, body: ur, machine: true, model: "north-small-translate-09-2026", status: "ok", source_hash: sha(en), original, review_status: "reviewed", reviewed_on: "2026-09-20" };
@@ -201,7 +202,7 @@ export async function stubDirectory(page: Page, server: DirectoryServer) {
     server.requests.push(`GET ${url.pathname}`);
     const [, , , release, file] = url.pathname.split("/");
     const lang = file.replace(".json", "") as Lang;
-    const listing = buildListing(lang === "ur" ? "ur" : "en", Number(release), { drop: server.drop, hash: server.hash });
+    const listing = buildListing(lang, Number(release), { drop: server.drop, hash: server.hash });
     switch (server.file ?? "ok") {
       case "fail":
         return route.fulfill({ status: 503, json: { v: 1, error: { code: "unavailable", message_key: "directory.unavailable" } } });

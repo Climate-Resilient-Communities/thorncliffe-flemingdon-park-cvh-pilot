@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectBaseline, openResident } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident } from "./helpers";
 
 // S02.08: the building page (/{lang}/buildings/{rsn}) in the resident shell. The server runs with
 // CVH_FAKE_BUILDINGS_FILE (playwright.resident.config.ts), so these three sample buildings stand in for the database:
@@ -101,7 +101,7 @@ test("a building that does not exist is a 404 inside the shell, and a number tha
 
     expect(response!.status(), path).toBe(404);
     await expect(page.getByTestId("shell-nav"), path).toBeVisible();
-    await expect(page.locator("main h1"), path).toContainText("This page could not be found.");
+    await expect(page.locator("main h1"), path).toHaveText(catalogText(path.split("/")[1], "shell.pageNotFound"));
   }
 });
 
@@ -126,24 +126,29 @@ test("a right-to-left page keeps its direction, and English text in it stays a l
 
   await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
   await expect(page.locator("html")).toHaveAttribute("lang", "ur");
-  // Strings Urdu does not have yet are English behind [EN], as an isolated left-to-right block; the date is English too.
+  // Urdu has the page's wording, so the date line is Urdu with the date in Urdu's format, in the page's direction. (A
+  // string a language lacks, English behind [EN] as an isolated left-to-right block with an English date, is in
+  // fallback.spec.ts, on a page that still has one.)
+  const updatedTemplate = catalogText("ur", "building.updated");
+  expect(isFallback(updatedTemplate), "Urdu has building.updated").toBe(false);
   const updated = page.getByTestId("building-updated");
-  await expect(updated).toHaveText("[EN] Last updated September 28, 2026");
-  await expect(updated).toHaveAttribute("lang", "en");
-  await expect(updated).toHaveAttribute("dir", "ltr");
-  // Yes, No and Not known are translated already, so they are not marked.
+  await expect(updated).toHaveText(filledPattern(updatedTemplate, "date"));
+  await expect(updated).toContainText("28");
+  await expect(updated).toContainText("2026");
+  await expect(updated).not.toContainText("September");
+  await expect(updated).not.toHaveAttribute("lang", "en");
+  // Yes, No and Not known are translated, so they are not marked.
   await expect(factValue(page, "emergencyPower")).not.toContainText("[EN]");
   await expect(factValue(page, "emergencyPower")).not.toHaveText(await factValue(page, "coolingRoom").innerText());
   // The phone number is a left-to-right run.
   await expect(page.getByTestId("building-call").locator("bdi").last()).toHaveText("(416) 555-0123");
-  // The role is a translated label; Urdu has none yet, so it is English behind [EN], as its own left-to-right block.
+  await expect(page.getByTestId("building-call").locator("bdi").last()).toHaveAttribute("dir", "ltr");
+  // The role is a translated label, in the page's language and direction; so is "Call", and the number beside it stays left to right.
   const role = page.getByTestId("building-contact-role");
-  await expect(role).toHaveText("[EN] Superintendent");
-  await expect(role).toHaveAttribute("lang", "en");
-  await expect(role).toHaveAttribute("dir", "ltr");
-  // "Call" fell back to English too, so the whole button is English and left to right: its words and the number read as one line.
-  await expect(page.getByTestId("building-call")).toHaveAttribute("lang", "en");
-  await expect(page.getByTestId("building-call")).toHaveAttribute("dir", "ltr");
+  await expect(role).toHaveText(catalogText("ur", "building.roles.superintendent"));
+  await expect(role).not.toHaveAttribute("lang", "en");
+  await expect(page.getByTestId("building-call")).toContainText(catalogText("ur", "R31.call"));
+  await expect(page.getByTestId("building-call")).not.toHaveAttribute("lang", "en");
   // The neighbourhood's name is an isolated run.
   await expect(page.locator(".building-neighbourhood bdi")).toHaveText("Thorncliffe Park");
 });
