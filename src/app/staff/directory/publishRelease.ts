@@ -18,6 +18,8 @@ export interface PublishActionDeps {
 function done(result: Extract<PublishResult, { ok: true }>): PublishState {
   const notes: string[] = [];
   if (result.resumedFiles > 0) notes.push(englishText("staff.directory.resumed", { files: result.resumedFiles }));
+  // AD-11 pilot change: how many unreviewed machine translations this publish sent out (absent before that change).
+  if ((result.counts.machine ?? 0) > 0) notes.push(englishText("staff.directory.machine", { count: result.counts.machine ?? 0 }));
   if (result.counts.fallbacks - result.counts.stale > 0) notes.push(englishText("staff.directory.fallbacks", { count: result.counts.fallbacks - result.counts.stale }));
   notes.push(
     result.search === null

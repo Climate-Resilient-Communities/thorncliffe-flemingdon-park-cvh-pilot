@@ -279,7 +279,7 @@ describe("planProviderCatalogue: unreviewed machine translations of descriptions
     });
 
   it("loads a current machine translation of a description, in Pashto too, as `machine` with no reviewer, and the report counts it apart", () => {
-    const result = one({ ps: machine(SERVICES, PS), fr: machine(SERVICES, "Accueil gratuit au 1 Overlea Blvd, M4H 1C6 : lun-ven 9:30-4:30, appelez le 416-555-0100 ou voyez example.org.") });
+    const result = one({ ps: machine(SERVICES, PS), fr: machine(SERVICES, "Accueil gratuit au 1 Overlea Blvd, M4H 1C6 : du lundi au vendredi 9:30-4:30, appelez le 416-555-0100 ou voyez example.org.") });
 
     expect(result.providers[0].texts.services).toMatchObject({ en: SERVICES, ps: PS });
     expect(result.providers[0].translations.services.ps).toEqual({ model: "north-small-translate-09-2026", status: "machine", sourceHash: sourceHash(SERVICES) });
@@ -376,7 +376,32 @@ describe("planProviderCatalogue: unreviewed machine translations of descriptions
     expect(result.providers[0].withheld).toEqual({ services: { ps: "safety_critical" } });
     expect(result.report.translations.machine).toEqual([]);
     expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
-    expect(formatProviderReport(result.report).join("\n")).toMatch(/naming a crisis or emergency line .*\(ps 1\)/);
+    expect(formatProviderReport(result.report).join("\n")).toMatch(/safety-critical description .*\(ps 1\)/);
+    expect(result.report.safetyCritical).toEqual({ emergency_role: 0, emergency_category: 0, crisis_text: 1, providers: 1 });
+  });
+
+  it.each([
+    ["has an emergency role", { emergencyRole: { id: "y", en: "Warm room in cold alerts." } }, { emergency_role: 1, emergency_category: 0, crisis_text: 0, providers: 1 }],
+    ["is in Support & Emergency Services", { categories: ["Support & Emergency Services"] }, { emergency_role: 0, emergency_category: 1, crisis_text: 0, providers: 1 }],
+  ])("keeps the description of a provider that %s in English until reviewed (decision 42), counted by criterion", (_, change, counts) => {
+    const labels = { ...LABELS, categories: { ...LABELS.categories, "Support & Emergency Services": label("Support & Emergency Services") } };
+    const result = planProviderCatalogue(
+      { catalogue: catalogue([provider("M001", { services: { id: "x", en: SERVICES }, ...change })], labels), translations: { ps: translation(SERVICES, machine(SERVICES, PS)) } },
+      options,
+    );
+
+    expect(result.failures).toEqual([]);
+    expect(result.providers[0].texts.services).toEqual({ en: SERVICES });
+    expect(result.providers[0].withheld.services).toEqual({ ps: "safety_critical" });
+    expect(result.report.safetyCritical).toEqual(counts);
+    expect(formatProviderReport(result.report)).toContain(
+      `Safety-critical providers, descriptions kept in English until reviewed: 1 (an emergency role ${counts.emergency_role}, in "Support & Emergency Services" ${counts.emergency_category}, naming a crisis or emergency line ${counts.crisis_text}; a provider may meet several)`,
+    );
+  });
+
+  it("loads a reviewed description of a safety-critical provider as before", () => {
+    const result = one({ ps: reviewed(SERVICES, PS) }, { emergencyRole: { id: "y", en: "Warm room in cold alerts." } });
+    expect(result.providers[0].texts.services).toMatchObject({ ps: PS });
   });
 
   it("keeps a description that mentions 911 in English even when the machine text keeps 911 (safety_critical before lost_required)", () => {

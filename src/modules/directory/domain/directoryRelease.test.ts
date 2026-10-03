@@ -395,7 +395,8 @@ describe("planRelease: unreviewed machine translations of descriptions (AD-11 pi
 
     expect(files.ps.providers[0].emergency_role).toMatchObject({ status: "fallback_en", body: role, notice: TRANSLATION_UNAVAILABLE });
     expect(files.ps.categories[0].name).toMatchObject({ status: "fallback_en", body: "Legal" });
-    expect(files.ps.providers[0].services).toMatchObject({ status: "ok", review_status: "none" });
+    // A provider with an emergency role is safety-critical (decision 42): its description stays English too.
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES, notice: TRANSLATION_UNAVAILABLE });
   });
 
   it("keeps a description naming a crisis or emergency line in English (safety_critical), counted apart, even if the seed loaded it", () => {
@@ -407,6 +408,14 @@ describe("planRelease: unreviewed machine translations of descriptions (AD-11 pi
     expect(report.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
     expect(counts.safetyCritical).toBe(1);
     expect(counts.machine).toBe(0);
+  });
+
+  it("keeps the description of a provider in Support & Emergency Services in English (decision 42), whatever the seed loaded", () => {
+    const categories: SnapshotCategory[] = [{ id: "c-sos", sortOrder: 1, labels: { en: "Support & Emergency Services" }, translations: {} }];
+    const { files, counts } = plan([seeded(PS, { categoryIds: ["c-sos"] })], categories);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES });
+    expect(counts.safetyCritical).toBe(1);
   });
 
   it("reports a description the seed withheld as safety_critical under that reason", () => {

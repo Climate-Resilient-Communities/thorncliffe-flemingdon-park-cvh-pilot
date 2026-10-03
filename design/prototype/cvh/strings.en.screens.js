@@ -1235,6 +1235,8 @@
     searchData: 'Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.',
     searchNone: 'This release has no search data, so search is not available to residents until a release has it.',
     fallbacks: 'Texts with no reviewed translation yet, shown in English: {count}.',
+    machine: 'Descriptions sent out as machine translations no person has reviewed, labelled "Machine-translated; not reviewed by a person" for residents: {count}.',
+    currentMachine: 'Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.',
     staleHeading: 'Translations not published because the English changed after they were made: {count}. Residents see the English for these.',
     staleItem: '{name}: {field}, {language}',
     fields: { services: 'Services', emergencyRole: 'Emergency role', name: 'Name' },

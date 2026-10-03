@@ -239,6 +239,7 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput, versi
           category_links_removed: linksRemoved,
           translations_loaded: translations.loaded,
           translations_machine: machineLoaded(plan.report),
+          providers_safety_critical: plan.report.safetyCritical.providers,
           translations_safety_critical: translations.unavailable.filter((u) => u.reason === "safety_critical").reduce((sum, u) => sum + u.count, 0),
           translations_not_yet: notYet,
         },

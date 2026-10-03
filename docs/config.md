@@ -41,6 +41,23 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
 
+### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
+
+A change to which translations a release carries reaches residents only through a new release. Do it in this order:
+
+1. **Deploy** the change (merge to `main`; production deploys from it). Check that `GET /api/health` returns the
+   merged commit as `version`.
+2. **Let phones pick up the new app.** No service worker is registered yet, and the app's scripts are content-hashed
+   files, so a phone runs the new code from its next page load; only a tab left open keeps the old code until it is
+   reloaded. Wait at least 24 hours after the deploy before step 3. An old app version still reads the new release
+   (`DirectoryListingV1` did not change), but it shows an unreviewed machine translation with the older "Translated by
+   machine" label instead of "Machine-translated; not reviewed by a person", which is why the publish waits. Once a
+   service worker is shipped (AD-1), wait until its new version has taken over phones instead (how soon depends on its
+   update settings: check them then).
+3. **Seed, then publish.** Run "Seed production" with `seed:providers` as a dry run, compare its report with the one
+   in the pull request, then run it to apply. Then an Admin presses **Publish directory**. Nothing changes for
+   residents until that publish: they keep the current release, built from the earlier seed.
+
 ## Supabase (Auth settings)
 
 - JWT expiry: `43200` seconds (12 hours).

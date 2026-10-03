@@ -58,11 +58,11 @@ describe("the real data/catalogue files (S02.04)", () => {
       const changed = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "facts_changed")?.count ?? 0;
       const critical = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "safety_critical")?.count ?? 0;
       expect(count + changed + critical, lang).toBe(99);
-      expect(critical, lang).toBe(6);
-      expect(count, lang).toBeGreaterThan(70);
+      expect(critical, lang).toBe(40);
+      expect(count, lang).toBeGreaterThan(35);
     }
     const loaded = real.providers.filter((p) => p.texts.services.ps !== undefined);
-    expect(loaded.length).toBeGreaterThan(70);
+    expect(loaded.length).toBeGreaterThan(35);
     for (const p of loaded) {
       expect(p.translations.services.ps).toMatchObject({ status: "machine" });
       expect(p.translations.services.ps).not.toHaveProperty("reviewer");
@@ -70,10 +70,14 @@ describe("the real data/catalogue files (S02.04)", () => {
     }
   });
 
-  it("keeps in English the descriptions that name a crisis or emergency line: the police division and the five fire station listings", () => {
+  it("keeps in English the descriptions of the 40 safety-critical providers (decision 42), and says why", () => {
     const caught = real.providers.filter((p) => Object.values(p.withheld.services ?? {}).includes("safety_critical")).map((p) => p.id);
-    expect(caught).toEqual(["M001", "M002", "M003", "M004", "M005", "M006"]);
+    expect(caught).toHaveLength(40);
     for (const id of caught) expect(Object.keys(real.providers.find((p) => p.id === id)!.texts.services)).toEqual(["en"]);
+    // Every provider with an emergency role (40), all 8 in Support & Emergency Services and the 6 whose English names a
+    // non-emergency line (the police division and the five fire station listings) are among them.
+    expect(real.report.safetyCritical).toEqual({ emergency_role: 40, emergency_category: 8, crisis_text: 6, providers: 40 });
+    expect(caught).toEqual(expect.arrayContaining(["M001", "M002", "M003", "M004", "M005", "M006"]));
   });
 
   it("keeps the emergency roles and the category and subcategory names reviewed-only: none is loaded", () => {

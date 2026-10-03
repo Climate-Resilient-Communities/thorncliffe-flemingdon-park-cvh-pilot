@@ -17,8 +17,9 @@
 //  - pilot change to AD-11 (product owner, 2026-10-03): a provider's ordinary description (`services`) also
 //    ships when the seed loaded it as a current machine translation no person has reviewed, and its facts
 //    (phone numbers, postal codes, emails, web addresses, times, numbers) still match the English (lostFacts).
-//    A description whose English names a crisis or emergency line (safetyCriticalTerms) is not: it stays English
-//    (`safety_critical`) until a person reviews its translation (product owner, 2026-10-03).
+//    A safety-critical provider's description is not (safetyCritical.ts, decision 42: an emergency role, the
+//    "Support & Emergency Services" category, or English naming a crisis or emergency line): it stays English
+//    (`safety_critical`) until a person reviews its translation.
 //    It is published with `machine: true`, `status: "ok"` (or `script_converted` for zh-Hant), `review_status:
 //    "none"` and `reviewed_on: null`: the listing contract is unchanged, and the client labels any translated
 //    text whose review_status is not `reviewed` "Machine-translated; not reviewed by a person", the English
@@ -42,6 +43,7 @@ import {
   type UnavailableReason,
 } from "@/contracts/contentReview";
 import { LANG_CODES, type LangCode } from "@/contracts/lang";
+import { safetyCriteria } from "./safetyCritical";
 
 /** The listing files of a release, in the order they are written. */
 export const RELEASE_LANGS: readonly LangCode[] = LANG_CODES;
@@ -192,6 +194,8 @@ interface TextSources {
   withheld?: Record<string, string> | null;
   /** True for a provider's description: an unreviewed machine translation may ship, labelled (AD-11 pilot change). */
   allowMachine?: boolean;
+  /** True when the provider is safety-critical (safetyCritical.ts, decision 42): its description ships reviewed only. */
+  safetyCritical?: boolean;
 }
 
 /**
@@ -243,7 +247,7 @@ function listingText(
     };
   };
   const lost = (result: ReturnType<typeof evaluateTranslation>): UnavailableReason => ("unavailable" in result ? result.unavailable : "incomplete_record");
-  const options = { allowMachine: sources.allowMachine === true };
+  const options = { allowMachine: sources.allowMachine === true, safetyCritical: sources.safetyCritical === true };
   /** An unreviewed machine translation: published, but with no review claimed (review_status `none`). */
   const isMachine = (result: { loaded: { provenance: Record<string, unknown> } }) => result.loaded.provenance.status === "machine";
 
@@ -362,8 +366,19 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
       continue;
     }
     const role = p.texts.emergency_role?.en;
+    const categoryNames = p.categoryIds.map((id) => input.categories.find((c) => c.id === id)?.labels.en).filter((name): name is string => present(name));
+    const safetyCritical = safetyCriteria({ services, emergencyRole: role, categoryNames }).length > 0;
     const text = (key: string, english: string) =>
-      listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null, allowMachine: key === "services" }, p.id, p.name, key, input, tally);
+      listingText(
+        lang,
+        english,
+        { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null, allowMachine: key === "services", safetyCritical },
+        p.id,
+        p.name,
+        key,
+        input,
+        tally,
+      );
     providers.push({
       id: p.id,
       name: p.name,

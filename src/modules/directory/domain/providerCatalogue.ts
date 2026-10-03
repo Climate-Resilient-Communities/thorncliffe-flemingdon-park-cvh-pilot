@@ -18,8 +18,9 @@
 //    also loads when it is a current machine translation no person has reviewed, in every language
 //    (Pashto included), as long as every phone number, postal code, email, web address, time and number
 //    of the English is in it unchanged (lostFacts; else `facts_changed`, shown in English), and the English
-//    names no crisis or emergency line (safetyCriticalTerms; else `safety_critical`, shown in English until a
-//    person reviews it: product owner, 2026-10-03). Its provenance
+//    names no crisis or emergency line, and the provider has no emergency role and is not in "Support & Emergency
+//    Services" (safetyCritical.ts, decision 42; else `safety_critical`, shown in English until a person reviews
+//    it). Its provenance
 //    says `status: "machine"` and never names a reviewer; the release ships it labelled "Machine-translated;
 //    not reviewed by a person". `machineChecks` on a record is carried along but is not a review and
 //    decides nothing. The emergency role, category and subcategory names stay reviewed-only;
@@ -40,6 +41,9 @@ import {
   type UnavailableReason,
 } from "@/contracts/contentReview";
 import { TORONTO_BOUNDS } from "@/contracts/torontoBounds";
+import { SAFETY_CRITICAL_CATEGORIES, safetyCriteria, type SafetyCriterion } from "./safetyCritical";
+
+const SAFETY_CATEGORY_NAME = SAFETY_CRITICAL_CATEGORIES.map((name) => `"${name}"`).join(" or ");
 
 /** The languages the provider translation files cover: every launch language but English and zh-Hant. */
 export const PROVIDER_LANGS = TRANSLATED_LANGS.filter((lang) => lang !== "zh-Hant") as Exclude<LangCode, "en" | "zh-Hant">[];
@@ -192,6 +196,11 @@ export interface ProviderSeedReport {
     machine: LoadedCount[];
     unavailable: UnavailableCount[];
   };
+  /**
+   * Providers whose description keeps human review (decision 42), by criterion (a provider may meet several) and in all:
+   * their descriptions show in English until reviewed (`safety_critical`).
+   */
+  safetyCritical: Record<SafetyCriterion, number> & { providers: number };
 }
 
 export interface ProviderSeedPlan {
@@ -208,7 +217,13 @@ export interface PlanOptions {
   textId: (english: string) => string;
 }
 
-const emptyReport = (): ProviderSeedReport => ({ providers: 0, categories: 0, perCategory: [], translations: { loaded: 0, machine: [], unavailable: [] } });
+const emptyReport = (): ProviderSeedReport => ({
+  providers: 0,
+  categories: 0,
+  perCategory: [],
+  translations: { loaded: 0, machine: [], unavailable: [] },
+  safetyCritical: { emergency_role: 0, emergency_category: 0, crisis_text: 0, providers: 0 },
+});
 
 /** The machine translations a report loaded, all languages together. */
 export const machineLoaded = (report: ProviderSeedReport): number => report.translations.machine.reduce((sum, item) => sum + item.count, 0);
@@ -264,12 +279,13 @@ function translate(
   report: ProviderSeedReport,
   tallies: Tallies,
   allowMachine = false,
+  safetyCritical = false,
 ): LoadedTexts {
   const out: LoadedTexts = { labels: { en: english }, provenance: {}, withheld: {} };
   const key = options.textId(english);
   const { unavailable } = tallies;
   for (const lang of PROVIDER_LANGS) {
-    const result = evaluateTranslation(lang, key, english, translations, options.hash, ["911"], { allowMachine });
+    const result = evaluateTranslation(lang, key, english, translations, options.hash, ["911"], { allowMachine, safetyCritical });
     if ("loaded" in result) {
       out.labels[lang] = result.loaded.text;
       out.provenance[lang] = result.loaded.provenance;
@@ -366,7 +382,8 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
     if (adapted) translations[lang] = adapted;
   }
   const tallies: Tallies = { unavailable: new Map(), machine: new Map() };
-  const translated = (english: string, allowMachine = false) => translate(english, translations, options, report, tallies, allowMachine);
+  const translated = (english: string, allowMachine = false, safetyCritical = false) =>
+    translate(english, translations, options, report, tallies, allowMachine, safetyCritical);
 
   const categories: PlannedCategory[] = Object.entries(categoryLabels).map(([name, label], sortOrder) => {
     const loaded = translated(label.en);
@@ -387,7 +404,11 @@ export function planProviderCatalogue(input: ProviderCatalogueInput, options: Pl
     const provenance: PlannedProvider["translations"] = {};
     const withheld: PlannedProvider["withheld"] = {};
     // The ordinary description may be an unreviewed machine translation (AD-11 pilot change); the emergency role may not.
-    const services = translated(entry.services.en, true);
+    // ... unless the provider is safety-critical (decision 42): an emergency role, the emergency category, a crisis line.
+    const criteria = safetyCriteria({ services: entry.services.en, emergencyRole: entry.emergencyRole?.en, categoryNames: entry.categories });
+    for (const criterion of criteria) report.safetyCritical[criterion] += 1;
+    if (criteria.length > 0) report.safetyCritical.providers += 1;
+    const services = translated(entry.services.en, true, criteria.length > 0);
     texts.services = services.labels;
     if (Object.keys(services.provenance).length > 0) provenance.services = services.provenance;
     if (Object.keys(services.withheld).length > 0) withheld.services = services.withheld;
@@ -434,12 +455,13 @@ export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   incomplete_record: "translation record is missing its text, model or source",
   zh_changed_or_not_reviewed: "converted from a zh text that has changed or is not reviewed",
   lost_required: "does not contain 911, which the English has",
-  facts_changed: "machine translation that lost or changed a phone number, postal code, email, web address, time or number of the English",
-  safety_critical: "machine translation of a text naming a crisis or emergency line (needs a person's review)",
+  facts_changed: "machine translation that lost, changed, reordered or added a number, phone number, time, weekday, postal code, email or web address of the English",
+  safety_critical: "machine translation of a safety-critical description (emergency role, emergency category or crisis line: needs a person's review)",
 };
 
 /** The report as lines for the terminal and the CI log. */
 export function formatProviderReport(report: ProviderSeedReport): string[] {
+  const safety = report.safetyCritical;
   const lines = [`Providers: ${report.providers} in ${report.categories} categories`];
   for (const category of report.perCategory) lines.push(`  ${category.name}: ${category.providers}`);
   lines.push(`Translations loaded (reviewed and current): ${report.translations.loaded}`);
@@ -447,6 +469,10 @@ export function formatProviderReport(report: ProviderSeedReport): string[] {
   lines.push(
     `Machine translations of descriptions loaded, not reviewed, shown labelled: ${machineLoaded(report)}` +
       (machine.length > 0 ? ` (${machine.map((item) => `${item.lang} ${item.count}`).join(", ")})` : ""),
+  );
+  lines.push(
+    `Safety-critical providers, descriptions kept in English until reviewed: ${safety.providers} ` +
+      `(an emergency role ${safety.emergency_role}, in ${SAFETY_CATEGORY_NAME} ${safety.emergency_category}, naming a crisis or emergency line ${safety.crisis_text}; a provider may meet several)`,
   );
   const byReason = new Map<UnavailableReason, { total: number; langs: Map<string, number> }>();
   for (const item of report.translations.unavailable) {

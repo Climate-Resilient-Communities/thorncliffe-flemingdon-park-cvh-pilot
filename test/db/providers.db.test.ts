@@ -272,13 +272,14 @@ describe("provider catalogue (S02.04)", () => {
             category_links_added: 121,
             category_links_removed: 0,
             translations_loaded: 0,
-            translations_machine: 1199,
-            translations_safety_critical: 84,
+            translations_machine: 656,
+            providers_safety_critical: 40,
+            translations_safety_critical: 560,
             translations_not_yet: 0,
           },
-          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 84 descriptions naming a crisis or
-          // emergency line (6 providers in 14 languages), 103 descriptions whose facts changed.
-          warnings: 1237,
+          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 560 descriptions of the 40
+          // safety-critical providers (14 languages), 170 descriptions whose facts changed.
+          warnings: 1780,
           failures: 0,
         },
       });
@@ -432,14 +433,22 @@ describe("provider catalogue (S02.04)", () => {
       expect((await row("M001")).texts.services).toEqual({ en: english, ps: text });
     });
 
-    it("loads no unreviewed machine translation of an emergency role (AD-11 pilot change: descriptions only)", async () => {
+    it("loads no unreviewed machine translation of an emergency role, nor of the description of a provider that has one (decision 42)", async () => {
       const role = "Warm room in cold alerts. Call 911 in danger.";
+      const services = "Services of M001";
       const machine = { source: role, text: "سرد انتباہ میں گرم کمرہ۔ خطرے میں 911 پر کال کریں۔", model: "command-a-translate-08-2025" };
-      await seed(input([entry("M001", { emergencyRole: { id: catalogueTextId(role), en: role } })], { ur: { texts: { [catalogueTextId(role)]: machine } } }));
+      const description = { source: services, text: "M001 کی خدمات", model: "command-a-translate-08-2025" };
+      const result = await seed(
+        input([entry("M001", { emergencyRole: { id: catalogueTextId(role), en: role } })], {
+          ur: { texts: { [catalogueTextId(role)]: machine, [catalogueTextId(services)]: description } },
+        }),
+      );
 
       expect((await row("M001")).texts.emergency_role).toEqual({ en: role });
-      expect((await row("M001")).translations.emergency_role).toBeUndefined();
-      expect((await row("M001")).withheld).toEqual({ emergency_role: { ur: "machine" } });
+      expect((await row("M001")).texts.services).toEqual({ en: services });
+      expect((await row("M001")).translations).toEqual({});
+      expect((await row("M001")).withheld).toEqual({ emergency_role: { ur: "machine" }, services: { ur: "safety_critical" } });
+      expect(result.report.safetyCritical).toEqual({ emergency_role: 1, emergency_category: 0, crisis_text: 0, providers: 1 });
     });
   });
 

@@ -1,35 +1,10 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { evaluateTranslation, lostFacts, safetyCriticalTerms, toWesternDigits, type TranslationRecord } from "./contentReview";
+import { evaluateTranslation, safetyCriticalTerms, type TranslationRecord } from "./contentReview";
 
 const hash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const ENGLISH = "Open Mon-Fri 9:30 a.m.-4:30 p.m. at 30 Thorncliffe Park Dr, M4H 1L1. Call 416-421-0792 or email info@example.org; see https://example.org/help.";
 const URDU = "پیر تا جمعہ 9:30 a.m.-4:30 p.m. کھلا، 30 Thorncliffe Park Dr, M4H 1L1۔ 416-421-0792 پر کال کریں یا info@example.org پر ای میل کریں؛ https://example.org/help دیکھیں۔";
-
-describe("lostFacts (AD-11 pilot change: what an unreviewed machine translation must keep)", () => {
-  it("finds nothing when every phone number, postal code, email, web address, time and number survives", () => {
-    expect(lostFacts(ENGLISH, URDU)).toEqual([]);
-  });
-
-  it("accepts the same facts written in another script's digits, spacing or case", () => {
-    expect(toWesternDigits("۴۱۶-۴۲۱-۰۷۹۲ ٣٠ १२")).toBe("416-421-0792 30 12");
-    const easternDigits = URDU.replace("416-421-0792", "۴۱۶ ۴۲۱ ۰۷۹۲").replace("M4H 1L1", "m4h1l1").replace(/30 Thorncliffe/, "۳۰ Thorncliffe");
-    expect(lostFacts(ENGLISH, easternDigits)).toEqual([]);
-  });
-
-  it.each([
-    ["a changed phone number", URDU.replace("416-421-0792", "416-421-0793"), "phone number 416-421-0792"],
-    ["a changed postal code", URDU.replace("M4H 1L1", "M4H 1L2"), "postal code M4H 1L1"],
-    ["a changed email", URDU.replace("info@example.org", "info@example.com"), "email info@example.org"],
-    ["a dropped web address", URDU.replace("https://example.org/help", ""), "web address https://example.org/help"],
-    ["a changed time", URDU.replace("9:30", "9:00"), "time 9:30"],
-    ["a changed street number", URDU.replace("30 Thorncliffe", "3 Thorncliffe"), "number 3 that the English does not have"],
-    ["a dropped number", URDU.replace("M4H 1L1", "").replace("30 Thorncliffe", "Thorncliffe").replace("9:30", "9").replace("4:30", "4"), "number 30"],
-    ["a number the English does not have", `${URDU} 24/7`, "number 24 that the English does not have"],
-  ])("names %s", (_, translation, lost) => {
-    expect(lostFacts(ENGLISH, translation)).toContain(lost);
-  });
-});
 
 describe("evaluateTranslation with allowMachine", () => {
   const files = (record: TranslationRecord, zh?: TranslationRecord) => ({

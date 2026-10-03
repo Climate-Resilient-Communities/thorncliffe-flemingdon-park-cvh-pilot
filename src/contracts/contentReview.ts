@@ -3,6 +3,7 @@
 // Pure and browser-safe: the SHA-256 hasher is passed in. The guides keep their own 911 rules in
 // src/modules/directory/domain/guideContent.ts; the terms keep theirs in subscriptions/domain/terms.ts.
 import { LANG_CODES, type LangCode } from "./lang";
+import { lostFacts } from "./translationFacts";
 
 /** Languages with a translation file: every code except English, the source. */
 export const TRANSLATED_LANGS = LANG_CODES.filter((lang) => lang !== "en") as Exclude<LangCode, "en">[];
@@ -155,63 +156,16 @@ export interface EvaluateOptions {
    * labelled with its English original one tap away. Only the directory's ordinary descriptions (`services`) ask for it.
    */
   allowMachine?: boolean;
+  /**
+   * The caller found the text safety-critical (decision 42: a provider with an emergency role or in "Support & Emergency
+   * Services"): a machine translation of it is refused (`safety_critical`) even with allowMachine. A text whose English
+   * names a crisis or emergency line (safetyCriticalTerms) is refused that way whatever the caller says.
+   */
+  safetyCritical?: boolean;
 }
 
-// ---------------------------------------------------------------- facts a machine translation must keep
-// The things a resident needs letter for letter, as scripts/review_translations.py (CRITICAL, missing_critical) and
-// scripts/translate_catalogue.py (missing_numbers) check them offline.
-const PHONE = /(?:\+?1[-\s])?\(?\d{3}\)?[-\s.]?\d{3}[-\s.]\d{4}(?:\s*(?:ext\.?|x)\s*\d+)?/gi;
-const POSTAL = /\b[A-Z]\d[A-Z]\s?\d[A-Z]\d\b/gi;
-const EMAIL = /[\w.+-]+@[\w-]+\.[\w.]+/g;
-const WEB = /\b(?:https?:\/\/|www\.)[^\s,;)]+|\b[\w-]+\.(?:ca|com|org|net)\b(?:\/[^\s,;)]*)?/gi;
-const TIME = /\b\d{1,2}[:.]\d{2}\b/g;
-const DIGITS = /\d+/g;
-
-/** Any script's digits as 0-9 (the catalogue keeps Western digits, D-13, but a model may still write others). */
-export function toWesternDigits(text: string): string {
-  return text.replace(/\p{Nd}/gu, (digit) => {
-    const code = digit.codePointAt(0) as number;
-    if (code >= 0x30 && code <= 0x39) return digit;
-    // A run of decimal digits is made of blocks of ten, each starting at its zero: find the run's start.
-    let start = code;
-    while (/\p{Nd}/u.test(String.fromCodePoint(start - 1))) start -= 1;
-    return String((code - start) % 10);
-  });
-}
-
-const all = (pattern: RegExp, text: string) => [...text.matchAll(pattern)].map((match) => match[0]);
-const digitsOnly = (text: string) => text.replace(/\D/g, "");
-const squash = (text: string) => text.toLowerCase().replace(/\s+/g, "");
-
-/**
- * The facts of the English a machine translation lost or changed: a phone number, postal code, email, web address or
- * time that is not in it as written, a group of digits (a number, a price, an address) it does not have, and a group
- * of digits it has that the English does not. An empty list means every fact survived. Contact details and addresses
- * are always shown from the catalogue's own fields; this keeps the description from contradicting them.
- */
-export function lostFacts(english: string, translation: string): string[] {
-  const text = toWesternDigits(translation);
-  const flat = squash(text.replace(/[\u200e\u200f]/g, ""));
-  const lost: string[] = [];
-  const textDigits = digitsOnly(text);
-  for (const phone of all(PHONE, english)) if (!textDigits.includes(digitsOnly(phone))) lost.push(`phone number ${phone}`);
-  for (const postal of all(POSTAL, english)) if (!flat.includes(squash(postal))) lost.push(`postal code ${postal}`);
-  for (const email of all(EMAIL, english)) {
-    const item = email.replace(/\.$/, "");
-    if (!flat.includes(squash(item))) lost.push(`email ${item}`);
-  }
-  for (const web of all(WEB, english)) {
-    const item = web.replace(/\.$/, "");
-    if (!flat.includes(squash(item))) lost.push(`web address ${item}`);
-  }
-  const times = new Set(all(TIME, text).map((time) => time.replace(".", ":")));
-  for (const time of all(TIME, english)) if (!times.has(time.replace(".", ":"))) lost.push(`time ${time}`);
-  const englishGroups = new Set(all(DIGITS, english));
-  const textGroups = new Set(all(DIGITS, text));
-  for (const group of englishGroups) if (!textGroups.has(group)) lost.push(`number ${group}`);
-  for (const group of textGroups) if (!englishGroups.has(group)) lost.push(`number ${group} that the English does not have`);
-  return [...new Set(lost)].sort();
-}
+// The facts an unreviewed machine translation must keep: translationFacts.ts.
+export { lostFacts, toWesternDigits, weekdays } from "./translationFacts";
 
 // ---------------------------------------------------------------- safety-critical English (crisis and emergency lines)
 /**
@@ -279,7 +233,7 @@ export function evaluateTranslation(
   if (machine && !options.allowMachine) return { unavailable: "machine" };
   if (!machine && (isPlaceholder(record.reviewer) || !isIsoDate(record.reviewedOn))) return { unavailable: "review_incomplete" };
   // Crisis and emergency lines keep human review, whatever the translation says (decided on the English).
-  if (machine && safetyCriticalTerms(english).length > 0) return { unavailable: "safety_critical" };
+  if (machine && (options.safetyCritical || safetyCriticalTerms(english).length > 0)) return { unavailable: "safety_critical" };
 
   const provenance: Record<string, unknown> = machine
     ? { model: record.model, status: "machine", sourceHash: record.sourceHash }
@@ -313,6 +267,6 @@ export function evaluateTranslation(
   if (required.some((token) => english.includes(token) && !record.text!.includes(token))) {
     return { unavailable: "lost_required" };
   }
-  if (machine && lostFacts(english, record.text).length > 0) return { unavailable: "facts_changed" };
+  if (machine && lostFacts(english, record.text, lang).length > 0) return { unavailable: "facts_changed" };
   return { loaded: { text: record.text, provenance } };
 }
