@@ -1550,6 +1550,10 @@ So that a question in any language finds an English-sourced listing.
 **When** returned
 **Then** `emergency_first` is true
 
+**Given** a provider in an emergency category is among the top 3 (k = 3) of either completed leg, with a similarity of at least `SEARCH_EMERGENCY_THRESHOLD` (default 0.25, from 0 to 1, no greater than `SEARCH_THRESHOLD`; owner decision 41, 2026-10-03)
+**When** the server answers, including when the status is `no_clear_match`
+**Then** `emergency_first` is true; in the `no_clear_match` case `results` stays empty (the list is not padded, only the flag is set), and the rule only ever turns `emergency_first` on, never off (unit tests: an emergency provider at 0.27 with a threshold of 0.3 gives `no_clear_match` with `emergency_first: true`; a non-emergency provider at 0.27 gives `false`; an emergency provider fourth in its leg gives `false`; the translated leg alone qualifies; the direct leg alone qualifies)
+
 **Given** the direct leg fails or is still running at 2.2 s and no translated leg completed
 **When** the server answers
 **Then** it returns `{error:{code: "search_unavailable"}}` within 2.5 s of request start, the leg's call is cancelled, and the failure is counted in `ops_event` without the question
@@ -1574,12 +1578,12 @@ So that a question in any language finds an English-sourced listing.
 **When** the no-cookie test and the contract test run
 **Then** no cookie is set and every response matches `SearchV1` or the error schema
 
-### Story S03.05 — Questions in Pashto, Dari and romanized text also search through English
+### Story S03.05 — Questions in Pashto, Dari, Urdu and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** — (started 2026-10-03 00:37 UTC)
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
-As a resident who writes in Pashto, Dari or romanized Urdu,
+As a resident who writes in Pashto, Dari, Urdu or romanized Urdu,
 I want my question understood as well as anyone else's,
 So that I am not disadvantaged by the language or script I use.
 
@@ -1587,7 +1591,10 @@ So that I am not disadvantaged by the language or script I use.
 
 **Given** the `translation` module's `Translator` port and Cohere adapter (created here; E04 adds alert routes, caching and checks for alerts)
 **When** a question needs the translated-question leg
-**Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
+**Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps`, `prs` and `ur`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
+**And** native-script Urdu (a question the detector is confident is `ur`) gets the translated-question leg too, on by default, because the embedding model reads Urdu worse than English (owner decision 40, 2026-10-03); `ur=off` in `SEARCH_QUESTION_ROUTE` switches it off
+**And** the translation starts when the request has been validated, in parallel with the snapshot read (only the embedding of the translation waits for the snapshot), so a 1 s snapshot and a 1 s translation still complete the leg within 2.2 s (fake-clock test); the translation's `spend_event` row carries the release number when it is written
+**And** a `romanized_or_mixed` question of one or two Latin-letter words with no romanized marker word that the language detector does not reliably read as another language ("lawyer", "rent", "car repair") skips the leg: no translation call is made and `translated_leg` is `not_needed`
 
 **Given** the translation and its embedding complete before 2.2 s from request start and `eld` confirms the translation is English
 **When** results are ranked
@@ -1596,6 +1603,11 @@ So that I am not disadvantaged by the language or script I use.
 **Given** the translation fails, is not English, or the translated leg is still running at 2.2 s
 **When** the server answers
 **Then** the leg is cancelled, results come from the direct leg alone, the whole response still arrives within 2.5 s, and `translated_leg` is `failed` or `timed_out`
+**And** a translation that comes back identical to the question and already passes the English check is not a failure: `translated_leg` is `not_needed`
+
+**Given** a vendor call of one leg fails while the other leg answers (the translation call fails at the vendor, or the direct embedding fails and the translated leg rescued the answer)
+**When** the server answers
+**Then** an `ops_event` of kind `search.leg_failed` (reason `translate_failed` or `embed_failed`, counts and codes only) is written, at most once a minute per reason; a translation rejected by a check (not English, an answer, identical) is not a vendor failure and writes none
 
 **Given** the direct leg fails or is still running at 2.2 s but the translated leg completed
 **When** the server answers

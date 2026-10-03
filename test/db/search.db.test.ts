@@ -24,11 +24,37 @@ import {
 import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { recordOpsEvent } from "@/modules/ops";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
+import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
 
 const MODEL = "embed-v4.0";
 const MARKER = "zq7-marker-unique-question-text";
+/** A marker in the English translation of a question (S03.05): it must be kept nowhere either. */
+const TRANSLATED_MARKER = "zqtranslatedmarker";
+const ROUTE: QuestionRoute = {
+  ps: "north-small-translate-09-2026",
+  prs: "north-small-translate-09-2026",
+  ur: "north-small-translate-09-2026",
+  romanized_or_mixed: "command-a-translate-08-2025",
+  ambiguous_arabic: "command-a-translate-08-2025",
+};
+/** A Pashto question (Pashto letters): the embedding model makes nothing of it, its English translation finds the legal clinic. */
+const PASHTO = "زه وړیا حقوقي مشوره غواړم";
+
+/** A fake of the translation model: answers with `answer`, fails echoing its request, or stalls until cancelled. */
+function fakeTranslator(options: { answer?: string; echoError?: boolean; stall?: boolean } = {}) {
+  let aborted = false;
+  const translator: Translator = {
+    async translate({ text, signal }) {
+      signal.addEventListener("abort", () => (aborted = true));
+      if (options.echoError) throw Object.assign(new Error(`400 bad request: ${JSON.stringify({ messages: [{ content: text }] })}`), { body: { text }, cause: new Error(text) });
+      if (options.stall) await new Promise((_, reject) => signal.addEventListener("abort", () => reject(new Error(`aborted: ${text}`))));
+      return { text: options.answer ?? "I need a lawyer", inputTokens: 30, outputTokens: 6 };
+    },
+  };
+  return { translator, wasAborted: () => aborted, questions: createQuestionTranslator({ translator, route: ROUTE }) };
+}
 
 /** Dimensions: legal, health, food, other. A document's vector is its subject; a question's is the subjects it names. */
 const SUBJECTS: [RegExp, number[]][] = [
@@ -173,7 +199,7 @@ describe("search", () => {
     }
   });
 
-  const service = (embedder: QueryEmbedder | null, extra: Partial<Pick<SearchDeps, "onFailure" | "legTimeoutMs" | "spendPurpose" | "log" | "defer" | "totalBudgetMs" | "snapshotFailureTtlMs" | "storage">> = {}) =>
+  const service = (embedder: QueryEmbedder | null, extra: Partial<Pick<SearchDeps, "translator" | "onFailure" | "legTimeoutMs" | "spendPurpose" | "log" | "defer" | "totalBudgetMs" | "snapshotFailureTtlMs" | "storage">> = {}) =>
     createSearch({ db: () => app, storage: () => storage, embedder, ...extra });
   const rows = (table: string) => sql.unsafe(`select * from ${table} order by id`).then((r) => r.map((row) => ({ ...row })));
   const routeDeps = (embedder: QueryEmbedder | null, now?: () => Date): SearchRouteDeps => ({
@@ -596,6 +622,42 @@ describe("search", () => {
       expect(await rows("search_log")).toMatchObject([{ status: "ok" }]);
     });
 
+    it("records what the translated-question leg did in search_log.translated_leg (S03.05), and the translation's usage in spend_event as kind translate", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const model = fakeQueryEmbedder();
+
+      // used: the direct leg finds nothing in Pashto, the translation finds the legal clinic.
+      const used = await service(model.embedder, { translator: fakeTranslator().questions }).search({ q: PASHTO, lang: "ps" });
+      // failed: the translation model fails, and the direct leg answers alone.
+      const failed = await service(model.embedder, { translator: fakeTranslator({ echoError: true }).questions }).search({ q: PASHTO, lang: "ps" });
+      // timed_out: the translation is still running when the leg's time is up.
+      const stalled = fakeTranslator({ stall: true });
+      const timedOut = await service(model.embedder, { translator: stalled.questions, legTimeoutMs: 1000 }).search({ q: PASHTO, lang: "ps" });
+      // not_needed: a question confidently in English. (A lone word such as "lawyer" is not confidently English, S03.03, so it
+      // gets the leg too.)
+      await service(model.embedder, { translator: fakeTranslator().questions }).search({ q: "I need a lawyer", lang: "en" });
+
+      expect(used).toMatchObject({ status: "ok", query_lang: "ps", results: [{ provider_id: "M001" }] });
+      expect(failed.status).toBe("no_clear_match");
+      expect(timedOut.status).toBe("no_clear_match");
+      expect(stalled.wasAborted()).toBe(true);
+      expect(await rows("search_log")).toMatchObject([
+        { lang: "ps", query_lang: "ps", status: "ok", result_count: 1, translated_leg: "used" },
+        { status: "no_clear_match", translated_leg: "failed" },
+        { status: "no_clear_match", translated_leg: "timed_out" },
+        { status: "ok", translated_leg: "not_needed" },
+      ]);
+      const spend = await rows("spend_event");
+      expect(spend.filter((r) => r.kind === "translate")).toMatchObject([
+        { purpose: "search", model: "north-small-translate-09-2026", release_v: 1, calls: 1, tokens: "36", tokens_estimated: false },
+        // The cancelled translation may have been billed: an estimate.
+        { purpose: "search", model: "north-small-translate-09-2026", tokens_estimated: true },
+      ]);
+      // Four questions embedded as typed, plus the one translation that was used.
+      expect(spend.filter((r) => r.kind === "embed")).toHaveLength(5);
+    });
+
     it("stores in search_log only at, lang, query_lang, release_v, ms, result_count, status, top_score and translated_leg", async () => {
       await publish();
 
@@ -666,6 +728,41 @@ describe("search", () => {
       expect(out.lines.join("\n")).not.toContain(MARKER);
       expect(await everythingStored()).not.toContain(MARKER);
       expect(await rows("ops_event")).toMatchObject([{ kind: "search.unavailable" }, { kind: "search.unavailable" }]);
+    });
+
+    it("leaves neither the question nor its English translation anywhere, through the translated-question leg too, even when the translation model throws an error that echoes its request (S03.05)", async () => {
+      await publish();
+      const out = captureOutput();
+      const responses: string[] = [];
+      const errors: unknown[] = [];
+      const question = `${MARKER} mujhe lawyer chahiye`; // romanized: the leg runs
+      const deps = (translator: Translator): SearchRouteDeps => {
+        const s = service(fakeQueryEmbedder().embedder, { translator: createQuestionTranslator({ translator, route: ROUTE }) });
+        return { search: () => s, limiter: () => createRateLimiter({ db: app, key: "k" }), client: () => "203.0.113.10" };
+      };
+      const ask = async (d: SearchRouteDeps) => {
+        const response = await searchResponse(d, new Request("https://x.test/api/search", { method: "POST", body: JSON.stringify({ q: question, lang: "en" }) }));
+        responses.push(`${response.status} ${[...response.headers].join(";")} ${await response.text()}`);
+      };
+
+      // A translation that is used, one that fails echoing its request, and the real adapter over a client that does the same.
+      await ask(deps(fakeTranslator({ answer: `I need a lawyer ${TRANSLATED_MARKER}` }).translator));
+      await ask(deps(fakeTranslator({ echoError: true }).translator));
+      const echoing = { v2: { chat: async (request: unknown) => { throw Object.assign(new Error(`bad request ${JSON.stringify(request)}`), { body: request, cause: request }); } } };
+      const wrapped = cohereTranslator({ apiKey: "k", client: echoing as never });
+      await ask(deps(wrapped));
+      await wrapped.translate({ text: question, from: null, to: "en", model: "m", signal: new AbortController().signal }).catch((e: unknown) => errors.push(e));
+      out.restore();
+
+      const everything = [responses.join("\n"), out.lines.join("\n"), await everythingStored()].join("\n");
+      expect(everything).not.toContain(MARKER);
+      expect(everything).not.toContain(TRANSLATED_MARKER);
+      expect(responses.every((r) => r.startsWith("200 "))).toBe(true);
+      expect(errors).toHaveLength(1);
+      const error = errors[0] as Error;
+      expect([error.message, String(error.stack), JSON.stringify(error), inspect(error, { depth: 10, showHidden: true })].join("\n")).not.toContain(MARKER);
+      expect(error).toMatchObject({ name: "TranslateError", code: "failed" });
+      expect((await rows("search_log")).map((r) => r.translated_leg)).toEqual(["used", "failed", "failed"]);
     });
 
     it("keeps the question out of the error a failed search throws", async () => {

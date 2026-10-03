@@ -22,6 +22,8 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_THRESHOLD` | no | default `0.3` (provisional until S03.07) | default |
 | `SEARCH_EMBED_MODEL` | no | default `embed-v4.0` | default |
 | `SEARCH_EMERGENCY_CATEGORIES` | no | default `Support & Emergency Services` | default |
+| `SEARCH_EMERGENCY_THRESHOLD` | no | the similarity (0 to 1, no greater than `SEARCH_THRESHOLD`) at which an emergency-category provider among the top 3 of either leg sets `emergency_first` even with no clear match (owner decision 41). Default `0.25`. Read at search time, not recorded on a release | default |
+| `SEARCH_QUESTION_ROUTE` | no | `search_question_route` (S03.05): `kind=model` pairs for `ps`, `prs`, `ur`, `romanized_or_mixed`, `ambiguous_arabic` (`kind=off`, or `off` alone, switches the translated-question leg off). Default (provisional): `north-small-translate-09-2026` for `ps`, `prs` and `ur` (native-script Urdu, owner decision 40), `command-a-translate-08-2025` for the other two | default |
 
 | `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
 | `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
@@ -33,7 +35,7 @@ The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the 
 Positron are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change
 takes effect with the next deploy, and the same values may be set in Preview. A set value that is not valid fails the
 build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_PUBLISH_ALLOWANCE_*` variables and the `SEARCH_*` variables take effect once S03.02
-(release search data) is deployed. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
+(release search data) is deployed; `SEARCH_QUESTION_ROUTE` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
 in Preview or Development: start-up fails there.
 
 ## GitHub: environments

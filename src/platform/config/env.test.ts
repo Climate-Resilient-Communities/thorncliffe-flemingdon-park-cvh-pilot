@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_ROUTE, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -623,8 +623,16 @@ describe("Cohere and the search settings (S03.02)", () => {
     expect(parseEnv(local).search).toEqual({
       embedModel: "embed-v4.0",
       threshold: 0.3,
+      emergencyThreshold: 0.25,
       emergencyCategories: ["Support & Emergency Services"],
       allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
+      questionRoute: {
+        ps: "north-small-translate-09-2026",
+        prs: "north-small-translate-09-2026",
+        ur: "north-small-translate-09-2026",
+        romanized_or_mixed: "command-a-translate-08-2025",
+        ambiguous_arabic: "command-a-translate-08-2025",
+      },
     });
   });
 
@@ -634,6 +642,7 @@ describe("Cohere and the search settings (S03.02)", () => {
         ...production,
         SEARCH_EMBED_MODEL: " embed-multilingual-v3.0 ",
         SEARCH_THRESHOLD: "0.42",
+        SEARCH_EMERGENCY_THRESHOLD: "0.2",
         SEARCH_EMERGENCY_CATEGORIES: " Support & Emergency Services , Crisis Lines,, Crisis Lines",
         EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: "40",
         EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: "100000",
@@ -641,9 +650,37 @@ describe("Cohere and the search settings (S03.02)", () => {
     ).toEqual({
       embedModel: "embed-multilingual-v3.0",
       threshold: 0.42,
+      emergencyThreshold: 0.2,
       emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
       allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
+      questionRoute: DEFAULT_QUESTION_ROUTE,
     });
+  });
+
+  it("reads search_question_route: a kind left out keeps its default, kind=off switches the leg off for it, off alone for all", () => {
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: " ps = command-a-translate-08-2025 , ambiguous_arabic=off" }).search.questionRoute).toEqual({
+      ps: "command-a-translate-08-2025",
+      prs: "north-small-translate-09-2026",
+      ur: "north-small-translate-09-2026",
+      romanized_or_mixed: "command-a-translate-08-2025",
+      ambiguous_arabic: null,
+    });
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionRoute).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+  });
+
+  it("routes native-script Urdu to the translated-question leg by default (owner decision 40), and lets config change or switch it off", () => {
+    expect(parseEnv(production).search.questionRoute.ur).toBe("north-small-translate-09-2026");
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "ur=command-a-translate-08-2025" }).search.questionRoute.ur).toBe("command-a-translate-08-2025");
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "ur=off" }).search.questionRoute.ur).toBeNull();
+  });
+
+  it("reads the emergency-only threshold (owner decision 41): 0 to 1, and no greater than SEARCH_THRESHOLD", () => {
+    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: " 0.3 " }).search.emergencyThreshold).toBe(0.3); // equal to the default threshold
+    expect(parseEnv({ ...production, SEARCH_EMERGENCY_THRESHOLD: "0" }).search.emergencyThreshold).toBe(0);
+    expect(parseEnv({ ...production, SEARCH_THRESHOLD: "0.5", SEARCH_EMERGENCY_THRESHOLD: "0.4" }).search.emergencyThreshold).toBe(0.4);
+    // A lower SEARCH_THRESHOLD alone leaves the default 0.25 above it.
+    expect(problemsOf({ ...production, SEARCH_THRESHOLD: "0.2" }).join("\n")).toMatch(/SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/);
+    expect(parseEnv({ ...production, SEARCH_THRESHOLD: "0.2", SEARCH_EMERGENCY_THRESHOLD: "0.1" }).search.emergencyThreshold).toBe(0.1);
   });
 
   it.each([
@@ -651,8 +688,17 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_THRESHOLD", "1.5", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_THRESHOLD", "high", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
     ["SEARCH_THRESHOLD", "-0.2", /SEARCH_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "1.5", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "low", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "-0.1", /SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1/],
+    ["SEARCH_EMERGENCY_THRESHOLD", "0.31", /SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/],
     ["SEARCH_EMERGENCY_CATEGORIES", " , ", /SEARCH_EMERGENCY_CATEGORIES: must list at least one category name/],
     ["EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", "0", /EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: must be a whole number of at least 1/],
+    ["SEARCH_QUESTION_ROUTE", "xx=north-small-translate-09-2026", /SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs/],
+    ["SEARCH_QUESTION_ROUTE", "ps=north small", /SEARCH_QUESTION_ROUTE: must be/],
+    ["SEARCH_QUESTION_ROUTE", "ps=a,ps=b", /SEARCH_QUESTION_ROUTE: must be/],
+    ["SEARCH_QUESTION_ROUTE", "north-small-translate-09-2026", /SEARCH_QUESTION_ROUTE: must be/],
+    ["SEARCH_QUESTION_ROUTE", " , ", /SEARCH_QUESTION_ROUTE: must be/],
     ["EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
   ])("refuses a bad %s (%s) and names the variable", (name, value, message) => {
     expect(problemsOf({ ...production, [name]: value }).join("\n")).toMatch(message);
