@@ -68,7 +68,8 @@ function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
     : "";
   return L.divIcon({
     className: `map-pin map-pin--${pin.marker}`,
-    html: `<span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span>`,
+    // Leaflet's own stylesheet (not in a layer) makes the icon element a block, so the layout is on an inner body.
+    html: `<span class="map-pin__body"><span class="map-pin__mark" aria-hidden="true"><span class="map-ico map-ico--${pin.marker}"></span></span>${wordHtml}<span class="map-sr">${escape(words.name(pin))}</span></span>`,
     iconSize: [44, 44],
     iconAnchor: [22, 22],
   });
@@ -178,7 +179,7 @@ export async function createMap(element: HTMLElement, tiles: TileSettings, words
       const n = cluster.getChildCount();
       return L.divIcon({
         className: "map-cluster",
-        html: `<span class="map-cluster__count" aria-hidden="true">${n}</span><span class="map-sr">${escape(words.cluster(n))}</span>`,
+        html: `<span class="map-cluster__body"><span aria-hidden="true">${n}</span><span class="map-sr">${escape(words.cluster(n))}</span></span>`,
         iconSize: [48, 48],
       });
     },

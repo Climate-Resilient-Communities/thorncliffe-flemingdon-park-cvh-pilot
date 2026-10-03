@@ -137,9 +137,9 @@
     display: none;
   }
 
+  /* Short enough that the whole map, its credit included, fits on a phone screen under the heading and the switch. */
   .map-canvas {
-    block-size: min(65dvh, 34rem);
-    min-block-size: 18rem;
+    block-size: clamp(16rem, calc(100dvh - 24rem), 34rem);
   }
 
   .map-credit {
@@ -218,17 +218,23 @@
     cursor: pointer;
   }
 
-  /* The pins: Leaflet places the element and sizes it (44 by 44); the mark is centred in it. */
+  /* The pins: Leaflet places the element and sizes it (44 by 44); the mark is centred in its body. */
   .map-pin {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     font-family: var(--type-family-sans);
     color: var(--ink);
   }
 
+  .map-pin__body,
   .map-pin--inline {
     position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .map-pin--inline {
     flex: none;
     inline-size: var(--tap);
     block-size: var(--tap);
@@ -284,9 +290,9 @@
     inset-block-start: calc(100% - 6px);
     inset-inline-start: 50%;
     transform: translateX(-50%);
-    max-inline-size: 9rem;
+    inline-size: max-content;
+    max-inline-size: 8rem;
     padding-inline: var(--gap-subline);
-    overflow: hidden;
     border: 1px solid var(--ink);
     border-radius: var(--radius-card);
     background-color: var(--surface-raised);
@@ -294,8 +300,7 @@
     font-size: var(--type-caption-size);
     font-weight: 700;
     line-height: 1.3;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+    text-align: center;
   }
 
   .map-pin:focus-visible,
@@ -305,15 +310,21 @@
   }
 
   .map-cluster {
-    display: flex;
-    align-items: center;
-    justify-content: center;
     border: 2px solid var(--ink);
     border-radius: var(--radius-disc);
     background-color: var(--surface-raised);
     color: var(--ink);
     font-family: var(--type-family-sans);
     font-weight: 700;
+  }
+
+  .map-cluster__body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
   }
 
   /* A tile that is neither kept nor reachable: nothing, over the map's plain background. */
