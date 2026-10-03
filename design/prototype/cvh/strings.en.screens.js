@@ -1227,8 +1227,7 @@
     wholeArea: 'Show the whole area',
     buildings: 'Apartment buildings',
     buildingsCount: '{n} buildings', buildingsCountOne: '1 building',
-    filtered: 'Showing only the places that match the filters you chose in the directory.',
-    credit: 'Map data' } });
+    filtered: 'Showing only the places that match the filters you chose in the directory.' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },

@@ -4446,8 +4446,7 @@
     "buildings": "[EN] Apartment buildings",
     "buildingsCount": "[EN] {n} buildings",
     "buildingsCountOne": "[EN] 1 building",
-    "filtered": "[EN] Showing only the places that match the filters you chose in the directory.",
-    "credit": "[EN] Map data"
+    "filtered": "[EN] Showing only the places that match the filters you chose in the directory."
   },
   "guides": {
     "reviewed": "[EN] Reviewed by the Hub, last updated {date}"

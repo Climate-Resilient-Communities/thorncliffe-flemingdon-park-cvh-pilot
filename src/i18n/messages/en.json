@@ -4446,8 +4446,7 @@
     "buildings": "Apartment buildings",
     "buildingsCount": "{n} buildings",
     "buildingsCountOne": "1 building",
-    "filtered": "Showing only the places that match the filters you chose in the directory.",
-    "credit": "Map data"
+    "filtered": "Showing only the places that match the filters you chose in the directory."
   },
   "guides": {
     "reviewed": "Reviewed by the Hub, last updated {date}"
