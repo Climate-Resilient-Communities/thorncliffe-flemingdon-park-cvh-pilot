@@ -159,6 +159,41 @@ function neighbourhoodName(n: Translator): (id: string) => string {
 }
 
 /**
+ * "Every day" (the prototype's R-03): large links to find help (the directory), the map and be ready. They are the same
+ * for every resident and need nothing from the phone, so the server render has them too, and the 911 notice sits directly
+ * under them in every state of the screen.
+ */
+function EveryDay({ lang }: { lang: LaunchCode }) {
+  const t = useTranslations("R03");
+  return (
+    <section data-testid="home-every-day">
+      <Stack gap="stack">
+        <ResidentText as="h2" testId="home-every-day-title">
+          {t("everyday")}
+        </ResidentText>
+        <ul className="home-list home-list--dest">
+          {DESTINATIONS.map((d) => (
+            <li key={d.key}>
+              {/* prefetch off, as the shell's navigation links to the same pages: Next would otherwise fetch each page as soon as its link is on screen. */}
+              <Link className="home-dest tap" href={`/${lang}${d.path}`} prefetch={false} data-testid={`home-dest-${d.key}`}>
+                <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
+                <span className="home-dest__text">
+                  <ResidentText as="span">{t(d.key)}</ResidentText>
+                  <ResidentText as="span" className="home-dest__line">
+                    {t(`${d.key}Line`)}
+                  </ResidentText>
+                </span>
+                <span className="home-ico home-ico--chevron" aria-hidden="true" />
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </Stack>
+    </section>
+  );
+}
+
+/**
  * Home (R-03, S02.11): the resident's chosen buildings first, each with its status in words, icon and colour and a link
  * to its page, then the neighbourhood, then the current alerts. With no chosen building it shows the neighbourhood view
  * and invites the resident to choose where they live (R-35).
@@ -183,10 +218,12 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
   const heading = <ResidentText as="h1">{t("alertsNow")}</ResidentText>;
   if (choices === undefined) {
     // The phone has not been read yet (the server render and the first render): nothing is claimed about any place.
+    // "Every day" is the same for everyone, so it is here, with the notice directly under it and the link last.
     return (
       <Screen surface="resident" testId="home">
         <Stack gap="section-resident">
           {heading}
+          <EveryDay lang={lang} />
           <Not911 variant="inline" t={x01} />
           {children}
         </Stack>
@@ -270,29 +307,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </section>
           )}
 
-          <section data-testid="home-every-day">
-            <Stack gap="stack">
-              <ResidentText as="h2" testId="home-every-day-title">
-                {t("everyday")}
-              </ResidentText>
-              <ul className="home-list home-list--dest">
-                {DESTINATIONS.map((d) => (
-                  <li key={d.key}>
-                    <Link className="home-dest" href={`/${lang}${d.path}`} data-testid={`home-dest-${d.key}`}>
-                      <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
-                      <span className="home-dest__text">
-                        <ResidentText as="span">{t(d.key)}</ResidentText>
-                        <ResidentText as="span" className="home-dest__line">
-                          {t(`${d.key}Line`)}
-                        </ResidentText>
-                      </span>
-                      <span className="home-ico home-ico--chevron" aria-hidden="true" />
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-            </Stack>
-          </section>
+          <EveryDay lang={lang} />
 
           {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), the shared component:
               directly under "Every day", above `children` (the link to "What I have told the CVH"). */}

@@ -186,15 +186,17 @@
 
   /*
    * The Every day destinations (find help, map, be ready): a port of the prototype's .cvh-dest, large labelled buttons of
-   * equal weight (cvh.css:153): the label in the lead size, bold, at least 68 px tall, the icons 1.25 times the size of
-   * the others, and a line under the label in the caption size.
+   * equal weight (cvh.css:153): the label in the lead size, bold, at least 68 px tall (the floor is on the list item, below),
+   * the icons 1.25 times the size of the others, and a line under the label in the caption size.
    */
   .home-dest {
+    /* The prototype's 14 px between a destination's icon, its text and its chevron: the snug card inset's value, named for this use. */
+    --home-dest-gap: var(--inset-card-snug);
     display: flex;
     align-items: center;
-    gap: var(--inset-card-snug);
+    gap: var(--home-dest-gap);
+    flex: 1;
     box-sizing: border-box;
-    min-block-size: 68px;
     padding-block: var(--inset-card-compact);
     padding-inline: var(--inset-button-large-inline);
     border: 1.5px solid var(--control-border);
@@ -209,6 +211,15 @@
   /* The prototype's .cvh-section puts 12 px between the title and each destination, and so between the destinations. */
   .home-list--dest {
     gap: var(--gap-stack);
+  }
+
+  /*
+   * The prototype's 68 px floor is on the list item, and the link fills it. The link itself carries the `tap` utility, which
+   * sits in a later cascade layer than this file and so sets the link's own minimum (44 px, 56 px in basic mode).
+   */
+  .home-list--dest > li {
+    display: flex;
+    min-block-size: 68px;
   }
 
   .home-dest .home-ico {
@@ -228,6 +239,11 @@
   .home-dest__line {
     font-size: var(--type-caption-size);
     font-weight: 400;
+  }
+
+  /* Basic mode keeps only the label: the prototype's `cvh-hide-basic` on the line under each destination. */
+  :root[data-basic="true"] .home-dest__line {
+    display: none;
   }
 
   .home-dest:focus-visible {

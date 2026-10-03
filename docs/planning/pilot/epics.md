@@ -1061,7 +1061,7 @@ So that every resident gets the same, complete set of listings in their language
 
 ### Story S02.06 — Resident browses and filters the directory
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 12 min (started 2026-10-02 20:08 UTC, merged 2026-10-02 23:20 UTC)
+- **Size:** M · **Estimate:** 7 h · **Actual:** —
 - **Traces:** FR-D2, UX-DR10 (filters), UX-DR11, NFR-N7 · **Depends on:** S02.05, S02.03 · **Branch:** `e02-s06-directory-browse`
 
 As a resident,

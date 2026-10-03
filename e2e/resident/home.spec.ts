@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { feedOf, stubFeed } from "./home-fixture";
-import { expectBaseline, openResident } from "./helpers";
+import { catalogText, expectBaseline, openResident } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
 // to its page; the neighbourhood; and the current alerts. The feed is fetched again every 60 seconds and an answer older
@@ -521,6 +521,71 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     await ready(page);
     await page.getByTestId("home-dest-beReady").click();
     await page.waitForURL("**/en/ready");
+  });
+
+  test("do not make the browser fetch their pages before the resident taps one", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+    const asked: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (["/en/directory", "/en/map", "/en/ready"].includes(pathname)) asked.push(`${request.method()} ${request.url()}`);
+    });
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByTestId("home-dest-map")).toBeVisible();
+    expect(asked).toEqual([]);
+  });
+
+  // The destinations are the same for every resident and need nothing from the phone, so the page as the server sent it
+  // (no script has run) already has them, with the notice directly under them and the link to the choices last.
+  test.describe("as the server sent the page, before any script has run", () => {
+    test.use({ javaScriptEnabled: false });
+
+    for (const language of ["en", "ur"] as const) {
+      test(`${language}: Every day with its three links, then the notice, then the link to what the resident has told the CVH`, async ({ page }) => {
+        await openResident(page, `/${language}`, 390);
+
+        await expect(page.getByTestId("home-every-day").locator("a")).toHaveCount(3);
+        for (const [key, path] of [["findHelp", "directory"], ["map", "map"], ["beReady", "ready"]] as const) {
+          await expect(page.getByTestId(`home-dest-${key}`)).toHaveAttribute("href", `/${language}/${path}`);
+        }
+        await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+        const order = await page.evaluate(() => {
+          const content = document.querySelector('[data-testid="home"] .layout-screen__body')!.firstElementChild!;
+          const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
+          return [...content.children].map(describe);
+        });
+        expect(order.slice(-3)).toEqual(["home-every-day", "not-911", "choices-link"]);
+      });
+    }
+  });
+
+  // The prototype's .cvh-dest is a large button of at least 68 px with a line under its label, and that line is
+  // `cvh-hide-basic`: basic mode keeps only the label.
+  test("are large tap targets with a line under each label, and basic mode keeps only the label", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+    await openResident(page, "/en", 390);
+    await ready(page);
+
+    const heights = () => page.getByTestId("home-every-day").locator("a").evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().height)));
+    const lines = page.getByTestId("home-every-day").locator(".home-dest__line");
+    await expect(lines).toHaveCount(3);
+    for (const line of await lines.all()) await expect(line).toBeVisible();
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText(catalogText("en", "R03.findHelpLine"));
+    for (const height of await heights()) expect(height).toBeGreaterThanOrEqual(68);
+
+    await page.evaluate(() => document.documentElement.setAttribute("data-basic", "true"));
+    for (const line of await lines.all()) await expect(line).toBeHidden();
+    // Only the label is left, and each link still fills a row of the prototype's 68 px (more than the basic-mode tap target of 56).
+    for (const key of ["findHelp", "map", "beReady"]) await expect(page.getByTestId(`home-dest-${key}`)).toBeVisible();
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
+    await expect(page.getByTestId("home-dest-findHelp")).not.toContainText(catalogText("en", "R03.findHelpLine"));
+    for (const height of await heights()) expect(height).toBeGreaterThanOrEqual(68);
   });
 });
 
