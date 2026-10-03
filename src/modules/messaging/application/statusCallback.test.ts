@@ -5,7 +5,7 @@
 import { getExpectedTwilioSignature } from "twilio/lib/webhooks/webhooks";
 import { describe, expect, it } from "vitest";
 import type { Db, DbTransaction } from "../../../platform/db";
-import { statusCallbackUrl } from "../domain/dispatchRules";
+import { providerStatusCallbackUrl, statusCallbackUrl } from "../domain/dispatchRules";
 import { TERMINAL_STATES } from "../domain/deliveryState";
 import type { DeliveryView, MessagingLog } from "./deliveryPorts";
 import type { MessagingOpsEvent } from "./dispatcherPorts";
@@ -205,6 +205,22 @@ describe("the signature, before any work", () => {
     expect(w.lines.find((line) => line.evt === "callback.ops_event_failed")?.fields).toEqual({ evt_kind: "webhook.signature_invalid", error: "Error" });
   });
 
+  it("accepts the callback Twilio makes to the URL the provider was given with its connection overrides: the fragment is not sent and not signed, so the signed URL is the one without it", async () => {
+    const w = world();
+    const given = providerStatusCallbackUrl(BASE, REF);
+    expect(given).toContain("#rc=3");
+    const fields = callbackForm();
+    const called = given.split("#")[0];
+    // What reaches the route: the URL without its fragment, signed by Twilio (the official helper) for that URL.
+    const request = { signature: getExpectedTwilioSignature(TOKEN, called, fields), search: new URL(given).search, body: new URLSearchParams(fields).toString() };
+    expect(request.search).toBe(`?ref=${REF}`);
+    await expect(w.service.handle(request)).resolves.toMatchObject({ kind: "applied", to: "delivered" });
+    // A signature made over the URL including the fragment is not what Twilio sends, and is refused.
+    const w2 = world();
+    await expect(w2.service.handle({ ...request, signature: getExpectedTwilioSignature(TOKEN, given, fields) })).resolves.toMatchObject({ kind: "rejected" });
+    expect(w2.calls).toEqual([]);
+  });
+
   it("accepts the signature the official library computes for the URL the dispatcher gives Twilio, and tolerates a base URL with a trailing slash", async () => {
     const w = world();
     await expect(w.service.handle(signed())).resolves.toMatchObject({ kind: "applied", to: "delivered" });
@@ -281,6 +297,22 @@ describe("a signed callback for a delivery", () => {
       expect(w.row()).toMatchObject({ state: to, providerMessageId: SID });
       expect(w.events).toEqual([{ kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: to } }]);
     }
+  });
+
+  it("leaves an unknown row that aged out of submitted exactly as it is for a non-terminal status, however often it comes, and resolves it on a final one", async () => {
+    const agedOut = row({ state: "unknown", providerMessageId: SID, submittedAt: new Date(Date.now() - 25 * 60 * 60_000) });
+    const w = world(agedOut);
+    for (const status of ["sent", "queued", "sending", "accepted", "scheduled", "sent"]) {
+      await expect(w.service.handle(signed(callbackForm({ MessageStatus: status }))), status).resolves.toEqual({ kind: "ignored", reason: "no_change" });
+    }
+    // Nothing was written or counted: the row was only read under its lock.
+    expect(w.row()).toEqual(agedOut);
+    expect(w.events).toEqual([]);
+    expect(w.calls.filter((call) => call.startsWith("apply:"))).toEqual([]);
+    // A final status still resolves it, once.
+    await expect(w.service.handle(signed(callbackForm({ MessageStatus: "delivered" })))).resolves.toEqual({ kind: "applied", from: "unknown", to: "delivered" });
+    expect(w.row()).toMatchObject({ state: "delivered", providerMessageId: SID });
+    expect(w.events).toEqual([{ kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: "delivered" } }]);
   });
 
   it("rolls the change back with its event if the event cannot be written, so a resolved unknown is never unrecorded", async () => {

@@ -108,7 +108,7 @@ describe("what a status callback says", () => {
 
 describe("what a callback does to a delivery", () => {
   const payload = (target: CallbackTarget, over: Partial<CallbackPayload> = {}): CallbackPayload => ({ messageSid: SID, target, errorCode: null, ...over });
-  const row = (state: DeliveryState, over: Partial<CallbackRow> = {}): CallbackRow => ({ state, handedOff: true, providerMessageId: null, ...over });
+  const row = (state: DeliveryState, over: Partial<CallbackRow> = {}): CallbackRow => ({ state, handedOff: true, submitted: false, providerMessageId: null, ...over });
 
   it("moves a handed-off claimed row to the status of the callback, and stores the message id the row lacks", () => {
     for (const target of CALLBACK_TARGETS) {
@@ -121,6 +121,21 @@ describe("what a callback does to a delivery", () => {
       expect(decideCallback(row("unknown"), payload(target)), target).toMatchObject({ kind: "apply", from: "unknown", to: target, resolvesUnknown: true, storeProviderId: true });
     }
     expect(decideCallback(row("unknown", { providerMessageId: SID }), payload("delivered"))).toMatchObject({ kind: "apply", storeProviderId: false, resolvesUnknown: true });
+  });
+
+  it("moves an unknown row that was once submitted (it aged out after 24 hours) only on a final status: a non-terminal one changes nothing, however often it is repeated", () => {
+    const agedOut = row("unknown", { submitted: true, providerMessageId: SID });
+    expect(decideCallback(agedOut, payload("submitted"))).toEqual({ kind: "ignore", reason: "no_change" });
+    for (const target of ["delivered", "undelivered", "failed"] as const) {
+      expect(decideCallback(agedOut, payload(target)), target).toMatchObject({ kind: "apply", from: "unknown", to: target, storeProviderId: false, resolvesUnknown: true });
+    }
+    // The rule is about the row having been submitted, not about its id: the same row without one (never given by the database, but the rule does not lean on it).
+    expect(decideCallback(row("unknown", { submitted: true }), payload("submitted"))).toEqual({ kind: "ignore", reason: "no_change" });
+    // An unknown that never reached `submitted` (made by the sweep after a hand-off with no answer, or by a timeout) still moves to it.
+    expect(decideCallback(row("unknown", { submitted: false }), payload("submitted"))).toMatchObject({ kind: "apply", from: "unknown", to: "submitted", resolvesUnknown: true, storeProviderId: true });
+    // A mismatch is still a mismatch, and a claimed or submitted row is not affected by the flag.
+    expect(decideCallback(row("unknown", { submitted: true, providerMessageId: OTHER_SID }), payload("submitted"))).toEqual({ kind: "mismatch" });
+    expect(decideCallback(row("claimed", { submitted: true }), payload("submitted"))).toMatchObject({ kind: "apply", from: "claimed", to: "submitted" });
   });
 
   it("moves a submitted row only to a terminal state; a non-terminal status after it adds nothing", () => {
@@ -198,6 +213,18 @@ describe("what a callback does to a delivery", () => {
         "submitted>undelivered",
         "submitted>failed",
       ].sort(),
+    );
+  });
+
+  it("applies the same rows for a row that was once submitted, except that an unknown one no longer goes back to submitted", () => {
+    const applied: string[] = [];
+    for (const state of DELIVERY_STATES) {
+      for (const target of CALLBACK_TARGETS) {
+        if (decideCallback(row(state, { submitted: true, providerMessageId: SID }), payload(target)).kind === "apply") applied.push(`${state}>${target}`);
+      }
+    }
+    expect(applied.sort()).toEqual(
+      ["claimed>submitted", "claimed>delivered", "claimed>undelivered", "claimed>failed", "unknown>delivered", "unknown>undelivered", "unknown>failed", "submitted>delivered", "submitted>undelivered", "submitted>failed"].sort(),
     );
   });
 });

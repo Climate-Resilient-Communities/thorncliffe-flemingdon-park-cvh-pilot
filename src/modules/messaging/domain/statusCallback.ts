@@ -9,7 +9,10 @@
  *  - a terminal state never changes, so a repeat, a late non-terminal status and any status after a final one change nothing;
  *  - a callback moves a row only where the table has the move: `claimed` (after its hand-off), `submitted` or `unknown` to
  *    `delivered`, `undelivered` or `failed` for a terminal status, and `claimed` or `unknown` to `submitted` for a non-terminal one;
- *  - a row the provider cannot have a text for (`queued`, claimed with no hand-off, or finished without ever having an id) is not moved.
+ *  - a row the provider cannot have a text for (`queued`, claimed with no hand-off, or finished without ever having an id) is not moved;
+ *  - an `unknown` row that was once `submitted` (the sweep gave up on it after 24 hours with no final status) is moved only by a final
+ *    status: a non-terminal one would put it back in `submitted` with its old `submitted_at`, which the next sweep turns `unknown` again,
+ *    so every replay of one would change the row and write a false recovery.
  */
 import { canTransition, isTerminal, type DeliveryState } from "./deliveryState";
 
@@ -94,10 +97,12 @@ export interface CallbackRow {
   state: DeliveryState;
   /** Whether `handed_off_at` is set: only a text handed to the provider can have a callback. */
   handedOff: boolean;
+  /** Whether `submitted_at` is set: the row was `submitted` once (the database keeps the first time, so it stays set when the sweep makes the row `unknown`). */
+  submitted: boolean;
   providerMessageId: string | null;
 }
 
-/** Why a callback changes nothing. `final`: the row is finished and has this id. `no_change`: the status adds nothing (a repeat, or a non-terminal status after `submitted`). `not_in_flight`: the row was never handed to the provider, or finished without an id. */
+/** Why a callback changes nothing. `final`: the row is finished and has this id. `no_change`: the status adds nothing (a repeat, a non-terminal status after `submitted`, or one for an `unknown` row that was already `submitted`). `not_in_flight`: the row was never handed to the provider, or finished without an id. */
 export const CALLBACK_IGNORE_REASONS = ["final", "no_change", "not_in_flight"] as const;
 export type CallbackIgnoreReason = (typeof CALLBACK_IGNORE_REASONS)[number];
 
@@ -125,6 +130,9 @@ export function decideCallback(row: CallbackRow, payload: CallbackPayload): Call
   // The provider calls back only about a text it was handed.
   if (row.state === "queued" || (row.state === "claimed" && !row.handedOff)) return { kind: "ignore", reason: "not_in_flight" };
   if (!canTransition(row.state, payload.target)) return { kind: "ignore", reason: "no_change" };
+  // An unknown row that was submitted aged out of it: it is waiting for a final status, and `submitted_at` (kept by the database) is
+  // already past the sweep's 24-hour limit, so moving it back to `submitted` would only make the next sweep flip it again.
+  if (row.state === "unknown" && row.submitted && payload.target === "submitted") return { kind: "ignore", reason: "no_change" };
   return {
     kind: "apply",
     from: row.state,

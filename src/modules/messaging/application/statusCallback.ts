@@ -12,7 +12,8 @@
 //     (domain/statusCallback.ts) and applies the status by the transition table: a provider id the row lacks is stored with it, one it
 //     has is never replaced (a different one is a mismatch: nothing changes, `delivery.provider_id_mismatch`), a terminal state never
 //     changes, a repeat or a late non-terminal status changes nothing, and an `unknown` row that moves on is marked resolved
-//     (`delivery.unknown_resolved`) in the same transaction.
+//     (`delivery.unknown_resolved`) in the same transaction. An `unknown` row that was once `submitted` (aged out after 24 hours) moves
+//     only on a final status: a non-terminal one would only be undone by the next sweep, again and again.
 // The callback is the only place a delivery reaches `delivered`, `undelivered` or a late `failed`. It never reads or logs a number or a
 // text: the body's To, From and Body are not looked at, and the log lines hold the delivery's id, states and reasons only.
 import type { Db, DbTransaction } from "../../../platform/db";
@@ -138,7 +139,7 @@ export function createStatusCallbacks(deps: StatusCallbackDeps): StatusCallbacks
         await ops.record(tx, { kind: "delivery.callback_ignored", detail: { reason: "unknown_ref" } });
         return { kind: "ignored", reason: "unknown_ref" };
       }
-      const decision = decideCallback({ state: row.state, handedOff: row.handedOffAt !== null, providerMessageId: row.providerMessageId }, payload);
+      const decision = decideCallback({ state: row.state, handedOff: row.handedOffAt !== null, submitted: row.submittedAt !== null, providerMessageId: row.providerMessageId }, payload);
       if (decision.kind === "mismatch") {
         await ops.record(tx, { kind: "delivery.provider_id_mismatch", deliveryId: row.id, detail: {} });
         return { kind: "mismatch", deliveryId: row.id };

@@ -105,7 +105,7 @@ starts is shorter (20 seconds, so about 10 seconds of sending): it lives inside 
 that route must export `maxDuration = 60`; pg_cron's next run sends whatever the kick did not. Where the settings are: `SMS_MODE=log` (every environment except production) sends nothing, reads no Twilio
 credential and makes each sendable row `skipped_env`; `live` needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID`
 (all production only). Every request goes through the Messaging Service with `SmartEncoded=false` and the status callback
-`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`.
+`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}` (and Twilio's retry fragment, see "Delivery status callbacks").
 
 **Scheduling (the owner runs this, once, in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it, and it is
 never run in a preview).** pg_cron runs in UTC. The job secret is kept in the project's Vault and read when each job runs, so rotating it
@@ -154,7 +154,8 @@ cannot read is recorded as `messaging.service_check_failed` (warning), never tak
 
 A text's delivery status (`delivered`, `undelivered`, a late `failed`) comes only from Twilio's status callbacks, `POST /api/twilio/status?ref={callback_ref}`.
 Nothing needs to be set in Twilio's console for them: the dispatcher gives every request its own `StatusCallback` URL
-(`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`), and Twilio calls exactly that URL. **Do not set a status callback URL on the Messaging Service
+(`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`, followed by a `#rc=3&rp=ct,5xx` fragment that asks Twilio to retry a 5xx, see "Retries" below), and Twilio calls that URL
+without the fragment. **Do not set a status callback URL on the Messaging Service
 itself** that points at this route: its calls carry no `ref`, so each is counted in `ops_event` as `delivery.callback_ignored` (`no_ref`) and none
 changes a delivery.
 
@@ -172,9 +173,16 @@ changes a delivery.
   token and set `TWILIO_AUTH_TOKEN` in Vercel to the same value in the same minute, with texts paused (S06.06): a callback signed with the old token that arrives after the
   deploy is refused (403, counted) and Twilio does not resend it, so its text stays `submitted` and becomes `unknown` after 24 hours (visible, never lost, never resent).
   The app accepts one token only; accepting the previous one for a short window, as the job secrets do, is an owner decision (not built).
+- **Retries.** Twilio retries a webhook once, and only on a connection failure, unless the URL says otherwise. So the `StatusCallback` the dispatcher gives every request
+  ends in Twilio's connection overrides, `#rc=3&rp=ct,5xx` (nothing to set in the console): up to three retries on a connection failure or any 5xx, never on a 4xx. The route
+  answers 500 when its database fails (nothing was changed), so Twilio sends the same callback again; the fragment is not sent and not signed, so nothing else changes, and a
+  repeat is harmless. The retries share Twilio's 15 seconds in total: a database that stays down longer loses the callback, and the sweep makes that text `unknown` (after 5 minutes
+  if it was never answered, after 24 hours if `submitted`), which the Hub follows up. A 4xx (a refused signature, a body over 64 KiB) is never retried. A 503 (no
+  `TWILIO_AUTH_TOKEN` set) is retried too and still does nothing, so a production deployment without the token is a fault to fix, not a state to leave.
 - **What the statuses do.** `queued`, `sending`, `sent`, `accepted` and `scheduled` mean `submitted`; `delivered`, `undelivered` and `failed` are final (with Twilio's
   error code kept for the last two). A final status never changes, a repeat or a late non-terminal status changes nothing and is not counted, and a text that was `unknown`
-  moves to the callback's status and is marked resolved (`delivery.unknown_resolved`). Anything else the route is sent (a status it does not know, no `MessageSid`) is
+  moves to the callback's status and is marked resolved (`delivery.unknown_resolved`). One exception: a text that was `submitted` and became `unknown` after 24 hours with no
+  final status moves only on a final one (a late `sent` changes nothing and is not counted, since the next sweep would only make it `unknown` again). Anything else the route is sent (a status it does not know, no `MessageSid`) is
   counted as `delivery.callback_ignored` and changes nothing.
 - **What it never keeps or logs.** The route sets no cookie and is never cached. Nothing from the request is stored or logged: not the number, the message text, the
   signature, the reference or Twilio's message id (a log line holds the delivery's own id and the states). `ops_event` holds codes only.

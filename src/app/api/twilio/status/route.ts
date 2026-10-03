@@ -30,7 +30,9 @@ export async function POST(request: Request) {
         return Response.json({ ok: true }, { headers: NO_STORE });
     }
   } catch (error) {
-    // Twilio may retry a 5xx; the callback was not applied (its transaction rolled back). Only the error's name is logged.
+    // The callback was not applied (its transaction rolled back). Twilio does not retry a 5xx unless the URL it was given says so: the
+    // dispatcher's StatusCallback carries `#rc=3&rp=ct,5xx` (STATUS_CALLBACK_CONNECTION_OVERRIDES), so it tries up to three more times
+    // within its 15 seconds; a database that stays down longer leaves the text to the sweep (`unknown`). Only the error's name is logged.
     stdoutMessagingLog.error("callback.failed", { error: error instanceof Error ? error.name : "NonError" });
     return Response.json({ error: { code: "callback_failed" } }, { status: 500, headers: NO_STORE });
   }

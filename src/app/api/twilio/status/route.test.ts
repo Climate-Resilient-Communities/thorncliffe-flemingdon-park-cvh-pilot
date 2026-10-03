@@ -154,7 +154,7 @@ describe("POST /api/twilio/status", () => {
     expect(state.events).toEqual([]);
   });
 
-  it("answers 500 with no detail when the database fails, so Twilio may retry, and logs only the error's name", async () => {
+  it("answers 500 with no detail when the database fails (the URL the dispatcher gave Twilio asks it to retry a 5xx), and logs only the error's name", async () => {
     state.failTransaction = true;
     const response = await POST(request());
     expect(response.status).toBe(500);

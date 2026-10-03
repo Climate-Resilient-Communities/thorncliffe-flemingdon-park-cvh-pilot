@@ -12,6 +12,7 @@ import { migrate } from "../../scripts/db/migrate.mjs";
 import {
   CALLBACK_TARGETS,
   DELIVERY_STATES,
+  STATUS_CALLBACK_CONNECTION_OVERRIDES,
   TERMINAL_STATES,
   canTransition,
   createStatusCallbacks,
@@ -88,9 +89,13 @@ const form = (sid: string, status: string, extra: Record<string, string> = {}): 
   ...extra,
 });
 
-/** A request as Twilio makes it to `url`, signed with the official library's helper. */
+/**
+ * A request as Twilio makes it to `url`, signed with the official library's helper. Twilio never sends the URL's fragment (the
+ * connection overrides the dispatcher adds) and leaves it out of the signature, so the request is made, and signed, without it.
+ */
 function signed(url: string, fields: Record<string, string>, token = TOKEN): CallbackRequest {
-  return { signature: getExpectedTwilioSignature(token, url, fields), search: new URL(url).search, body: new URLSearchParams(fields).toString() };
+  const called = url.split("#")[0];
+  return { signature: getExpectedTwilioSignature(token, called, fields), search: new URL(called).search, body: new URLSearchParams(fields).toString() };
 }
 
 const refOf = async (id: string) => (await world.rowOf(id)).callback_ref as string;
@@ -173,8 +178,12 @@ describe("the signature is checked first, against the full URL from PUBLIC_BASE_
     const [id] = await world.seedTransactional(1);
     await world.dispatcher().run();
     const call = world.provider.calls[0];
-    expect(call.statusCallback).toBe(`${BASE_URL}/api/twilio/status?ref=${await refOf(id)}`);
+    // The provider is given the URL it will call plus Twilio's connection overrides in the fragment (so that a 5xx is retried); the
+    // request it makes, and signs, is for the URL without the fragment.
+    expect(call.statusCallback).toBe(`${BASE_URL}/api/twilio/status?ref=${await refOf(id)}${STATUS_CALLBACK_CONNECTION_OVERRIDES}`);
+    expect(call.statusCallback.split("#")[0]).toBe(statusCallbackUrl(BASE_URL, await refOf(id)));
     const request = signed(call.statusCallback, form(sidOf(1), "delivered"));
+    expect(request.search).toBe(`?ref=${await refOf(id)}`);
     await expect(callbacks().handle(request)).resolves.toEqual({ kind: "applied", from: "submitted", to: "delivered" });
     expect(await world.stateOf(id)).toBe("delivered");
   });
@@ -583,6 +592,49 @@ describe("an ambiguous send that never recorded a response", () => {
     expect(await eventsOf("delivery.unknown_resolved")).toHaveLength(1);
   });
 
+  it("stays unknown, unchanged and unannounced, when a non-terminal status arrives for a text that aged out of `submitted`: no false recovery, no second `delivery.unknown`, however often it is replayed", async () => {
+    const id = await seedIn("submitted", { providerId: FAKE_SID });
+    world.clock.advance(25 * 60 * 60_000);
+    await world.dispatcher().run();
+    expect(await world.stateOf(id)).toBe("unknown");
+    expect(await eventsOf("delivery.unknown")).toHaveLength(1);
+    const agedOut = await world.rowOf(id);
+
+    // A late `sent` (and the other non-terminal words, and a replay of the same signed request) with the sweep running in between.
+    const replayed = await callbackFor(id, "sent");
+    for (const request of [replayed, await callbackFor(id, "queued"), await callbackFor(id, "sending"), await callbackFor(id, "accepted"), replayed, replayed]) {
+      await expect(callbacks().handle(request)).resolves.toEqual({ kind: "ignored", reason: "no_change" });
+      world.clock.advance(60_000);
+      await world.dispatcher().run();
+      expect(await world.rowOf(id)).toEqual(agedOut);
+    }
+    expect(await eventsOf("delivery.unknown_resolved")).toEqual([]);
+    expect(await eventsOf("delivery.unknown")).toHaveLength(1);
+
+    // A final status still resolves it, once; a repeat of it changes nothing.
+    await expect(callbacks().handle(await callbackFor(id, "delivered"))).resolves.toEqual({ kind: "applied", from: "unknown", to: "delivered" });
+    await expect(callbacks().handle(await callbackFor(id, "delivered"))).resolves.toEqual({ kind: "ignored", reason: "final" });
+    await world.dispatcher().run();
+    expect(await world.stateOf(id)).toBe("delivered");
+    expect(await eventsOf("delivery.unknown_resolved")).toHaveLength(1);
+    expect(await eventsOf("delivery.unknown")).toHaveLength(1);
+  });
+
+  it("still moves an unknown that never reached `submitted` to it on a non-terminal status, and the sweep leaves it submitted for 24 hours", async () => {
+    const id = await handedOff();
+    world.clock.advance(6 * 60_000);
+    await world.dispatcher().run();
+    expect(await world.stateOf(id)).toBe("unknown");
+    expect((await world.rowOf(id)).submitted_at).toBeNull();
+    await expect(callbacks().handle(await callbackFor(id, "sent"))).resolves.toEqual({ kind: "applied", from: "unknown", to: "submitted" });
+    expect((await world.rowOf(id)).submitted_at).not.toBeNull();
+    world.clock.advance(60 * 60_000);
+    await world.dispatcher().run();
+    expect(await world.stateOf(id)).toBe("submitted");
+    expect(await eventsOf("delivery.unknown_resolved")).toHaveLength(1);
+    expect(await eventsOf("delivery.unknown")).toHaveLength(1);
+  });
+
   it("is resolved by a callback that arrives just after a slow response was written onto the unknown row (the provider id was filled first)", async () => {
     const [id] = await world.seedTransactional(1);
     world.provider.answer(async (_submission, callNumber) => {
@@ -611,7 +663,7 @@ describe("an ambiguous send that never recorded a response", () => {
     await expect(failing.handle(await callbackFor(id, "delivered"))).rejects.toThrow("unavailable");
     const row = await world.rowOf(id);
     expect([row.state, row.provider_message_id]).toEqual(["unknown", null]);
-    // Twilio's retry, or the next callback, then resolves it.
+    // Twilio's retry of the 5xx the route answers (the URL it was given asks for one: `rc=3&rp=ct,5xx`), or the next callback, then resolves it.
     await callbacks().handle(await callbackFor(id, "delivered"));
     expect(await world.stateOf(id)).toBe("delivered");
     expect(await eventsOf("delivery.unknown_resolved")).toHaveLength(1);
