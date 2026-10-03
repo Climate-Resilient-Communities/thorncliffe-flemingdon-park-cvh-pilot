@@ -1,8 +1,8 @@
 // A resident's question in English, for the translated-question leg of search (S03.05, AD-10, AD-11, AD-3).
 //
-// The model comes from `search_question_route` (config), and the caller may name the fallback (`fallbackFor`) to retry with when
-// that model is past a vendor limit; the translation is checked (English, not an answer) before it
-// is used. Nothing is cached: a question and its translation exist only for the length of the request, in variables,
+// The model comes from `search_question_route` (config), and the caller may name the fallback (`fallbackFor`, per kind of
+// question like the route: `search_question_fallback`) to retry with when that model is past a vendor limit; the
+// translation is checked (English, not an answer) before it is used. Nothing is cached: a question and its translation exist only for the length of the request, in variables,
 // and every error that leaves here is a QuestionTranslationError holding a code. The caller (directory's search) records
 // the call's usage in spend_event with `questionTranslationSpend`, because it alone knows when a call it cancelled at its
 // deadline may still have been billed.
@@ -37,17 +37,20 @@ export class QuestionTranslationError extends Error {
 export interface QuestionTranslator {
   /** The model that translates this kind of question, or null when the route switches the leg off for it. */
   modelFor(source: QuestionSource): string | null;
-  /** The model to retry with when `model` hit a limit (`SEARCH_QUESTION_FALLBACK_MODEL`), or null: switched off, or `model` already is it. */
-  fallbackFor(model: string): string | null;
+  /** The model to retry a question of this kind with when `model` hit a limit (`SEARCH_QUESTION_FALLBACK`), or null: switched off for the kind, or `model` already is it. */
+  fallbackFor(source: QuestionSource, model: string): string | null;
   /** The question in English, with the routed model or `model` (the fallback). Throws QuestionTranslationError; `signal` cancels the call. */
   toEnglish(input: { text: string; source: QuestionSource; signal: AbortSignal; model?: string }): Promise<{ english: string; model: string; tokens: number | null }>;
 }
 
 const total = (a: number | null, b: number | null) => (a === null && b === null ? null : (a ?? 0) + (b ?? 0));
 
-export function createQuestionTranslator(deps: { translator: Translator; route: QuestionRoute; fallbackModel?: string | null }): QuestionTranslator {
+export function createQuestionTranslator(deps: { translator: Translator; route: QuestionRoute; fallback?: QuestionRoute | null }): QuestionTranslator {
   const modelFor = (source: QuestionSource) => deps.route[source] ?? null;
-  const fallbackFor = (model: string) => (deps.fallbackModel && deps.fallbackModel !== model ? deps.fallbackModel : null);
+  const fallbackFor = (source: QuestionSource, model: string) => {
+    const fallback = deps.fallback?.[source] ?? null;
+    return fallback !== null && fallback !== model ? fallback : null;
+  };
   return {
     modelFor,
     fallbackFor,

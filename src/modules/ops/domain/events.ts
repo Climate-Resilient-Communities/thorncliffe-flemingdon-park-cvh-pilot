@@ -29,9 +29,11 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 /**
  * Which vendor call of a search leg failed while the search still answered (S03.05): the embedding, or the question's
  * translation. `translate_quota`: the translation model is past the vendor's limit (someone must act on the key or the
- * route); `translate_fallback_used`: the fallback model rescued a translation the routed model could not make.
+ * route); `translate_fallback_used`: the fallback model rescued a translation the routed model could not make;
+ * `translate_quota_near`: the month's translate calls of a model have reached 80% of the limit configured for it
+ * (`SEARCH_TRANSLATE_MONTHLY_CALLS`), a warning before the 429s begin (no search failed: `ms` is 0).
  */
-export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used"] as const;
+export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used", "translate_quota_near"] as const;
 
 /** A vendor model id (not personal data): the shape the config accepts for SEARCH_QUESTION_ROUTE and the fallback. */
 const modelId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
@@ -57,13 +59,13 @@ export const OPS_EVENT_KINDS = {
       ms: count,
     }),
   },
-  /** A vendor call of one search leg failed (an embedding, or the translation of a question) although the other leg answered, so the search did not fail and nothing else would show it. At most one per reason a minute. Counts and codes only. */
+  /** A vendor call of one search leg failed (an embedding, or the translation of a question) although the other leg answered, so the search did not fail and nothing else would show it (or, `translate_quota_near`, a translation model is near its configured monthly limit). At most one per reason and model a minute (the near-limit warning once a month per model and instance). Counts and codes only. */
   "search.leg_failed": {
     severity: "warning",
     detail: z.strictObject({
       reason: z.enum(SEARCH_LEG_FAILURE_REASONS),
       ms: count,
-      /** The model whose call failed (or, for `translate_fallback_used`, the fallback that answered). */
+      /** The model whose call failed (or, for `translate_fallback_used`, the fallback that answered; for `translate_quota_near`, the model near its limit). */
       model: modelId.optional(),
     }),
   },

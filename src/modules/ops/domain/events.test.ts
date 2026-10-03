@@ -64,14 +64,19 @@ describe("ops events", () => {
     for (const detail of [{ reason: "timed_out", ms: 1 }, { reason: "embed_failed", ms: 1, q: "x" }, { reason: "embed_failed" }]) {
       expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
     }
-    // A translation model past its limit, and the fallback that rescued it, with the model id (a vendor name, not personal data).
-    for (const reason of ["translate_quota", "translate_fallback_used"] as const) {
+    // A translation model past its limit, the fallback that rescued it, and a model near its monthly limit (a warning, no request: ms 0),
+    // with the model id (a vendor name, not personal data).
+    for (const reason of ["translate_quota", "translate_fallback_used", "translate_quota_near"] as const) {
       expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300, model: "north-small-translate-09-2026" } })).toMatchObject({
         severity: "warning",
         detail: { reason, ms: 300, model: "north-small-translate-09-2026" },
       });
       expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300 } })).toMatchObject({ detail: { reason, ms: 300 } });
     }
+    expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" } })).toMatchObject({
+      severity: "warning",
+      detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" },
+    });
     for (const detail of [
       { reason: "translate_quota", ms: 1, model: "You are past the per-month request limit" },
       { reason: "translate_quota", ms: 1, model: "x".repeat(65) },

@@ -6,11 +6,12 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { TranslateError, createQuestionTranslator, type QuestionRoute, type TranslateErrorCode, type Translator } from "@/modules/translation";
+import { QuestionTranslationError, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
 import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
 import type { QueryEmbedder } from "./ports";
-import { SearchFailure, createSearch, questionSourceOf, type SearchDeps, type SearchFailureNote, type SearchLogRow, type SearchSnapshot } from "./search";
+import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
+import { DEFAULT_FALLBACK_MIN_BUDGET_MS, SearchFailure, createSearch, questionSourceOf, type SearchDeps, type SearchFailureNote, type SearchLogRow, type SearchSnapshot } from "./search";
 
 const MODEL = "embed-v4.0";
 const ROUTE: QuestionRoute = {
@@ -47,6 +48,7 @@ const ROMANIZED = "mujhe madad chahiye"; // romanized_or_mixed
 const ROMANIZED_EN = "I need help";
 const URDU = "مجھے وکیل چاہیے"; // confident ur (Urdu letters)
 const URDU_EN = "I need a lawyer";
+const DARI = "کلینیک صحی رایگان بدون کارت صحی کجا است؟"; // confident prs (Dari)
 
 /** A unit vector whose similarity with provider P1..P4 is the given number (the fifth axis is "nothing in particular"). */
 const unit = (similarities: [number, number, number, number]) => [...similarities, Math.sqrt(1 - similarities.reduce((sum, x) => sum + x * x, 0))];
@@ -138,7 +140,12 @@ describe("the translated-question leg", () => {
     embedder: QueryEmbedder;
     translator?: Translator | null;
     route?: QuestionRoute;
-    fallbackModel?: string | null;
+    /** The fallback model per kind of question (none: the routed model alone). */
+    fallback?: QuestionRoute | null;
+    /** A question translator of its own instead of the one made from `translator`, `route` and `fallback`. */
+    questions?: QuestionTranslator;
+    fallbackMinBudgetMs?: number;
+    onSpendWritten?: SearchDeps["onSpendWritten"];
     onFailure?: SearchDeps["onFailure"];
     snapshotMs?: number;
     emergencyThreshold?: number;
@@ -151,7 +158,9 @@ describe("the translated-question leg", () => {
         throw new Error("no store in this test");
       },
       embedder: parts.embedder,
-      translator: parts.translator ? createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE, fallbackModel: parts.fallbackModel }) : null,
+      translator: parts.questions ?? (parts.translator ? createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE, fallback: parts.fallback }) : null),
+      fallbackMinBudgetMs: parts.fallbackMinBudgetMs,
+      onSpendWritten: parts.onSpendWritten,
       snapshot: async () => {
         if (parts.snapshotMs) await new Promise<void>((resolve) => setTimeout(resolve, parts.snapshotMs));
         return SNAPSHOT;
@@ -614,7 +623,9 @@ describe("the translated-question leg", () => {
     const COMMAND = "command-a-translate-08-2025";
     const translateSpends = () => spends.filter((s) => s.kind === "translate");
     const reasons = (notes: SearchFailureNote[]) => notes.map((n) => n.reason);
-    const withFallback = (parts: Parameters<typeof service>[0], fallbackModel: string | null = COMMAND) => service({ ...parts, fallbackModel });
+    /** The same fallback model for every kind of question. */
+    const everyKind = (model: string): QuestionRoute => ({ ps: model, prs: model, ur: model, romanized_or_mixed: model, ambiguous_arabic: model });
+    const withFallback = (parts: Parameters<typeof service>[0], fallback: QuestionRoute | null = everyKind(COMMAND)) => service({ ...parts, fallback });
 
     it("retries once with the fallback when the routed model is past its quota, uses its translation, logs used, and bills only the call that answered", async () => {
       const notes: SearchFailureNote[] = [];
@@ -691,20 +702,50 @@ describe("the translated-question leg", () => {
       expect(reasons(notes)).toEqual(["translate_quota"]);
     });
 
-    it("tries the fallback when there is time for it (1.8 s: 400 ms left) and ends the leg timed_out if even that is too slow, counting the cancelled call as an estimate of the fallback's model", async () => {
-      const words = byModel({ [NORTH]: { ms: 1800, fail: "quota" }, [COMMAND]: { ms: 1000 } });
+    it("tries the fallback when there is time for it (1.3 s: 900 ms left) and ends the leg timed_out if even that is too slow, counting the cancelled call as an estimate of the fallback's model, and still tells ops the routed model's quota (P2-1)", async () => {
+      const notes: SearchFailureNote[] = [];
+      // The fallback ignores the abort and answers at 2.3 s, after the leg was given up on: whatever the rejection chain adds after the
+      // deadline comes too late, so the quota must have been told before the retry.
+      const words = byModel({ [NORTH]: { ms: 1300, fail: "quota" }, [COMMAND]: { ms: 1000, stubborn: true } });
 
-      const { took } = await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator }), PASHTO, "ps");
+      const { took } = await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
 
       expect(words.calls).toMatchObject([{ model: NORTH, aborted: false }, { model: COMMAND, aborted: true }]); // the same deadline and signal
       expect(took()).toBe(2200);
       expect(logs).toMatchObject([{ translatedLeg: "timed_out" }]);
       expect(translateSpends()).toEqual([expect.objectContaining({ model: COMMAND, tokensEstimated: true })]);
+      expect(notes).toEqual([{ reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH }]);
+    });
+
+    it("tells ops the routed model's quota when neither leg completes either: the fallback is cut at the deadline, the direct leg is too slow, and the search fails with the quota told first", async () => {
+      const notes: SearchFailureNote[] = [];
+      const words = byModel({ [NORTH]: { ms: 1300, fail: "quota" }, [COMMAND]: { ms: 1000 } });
+
+      const { result, took } = await ask(withFallback({ embedder: fakeEmbedder({ ms: () => 3000 }).embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(took()).toBe(2200);
+      expect(logs).toMatchObject([{ status: "error", translatedLeg: "timed_out" }]);
+      expect(notes).toEqual([
+        { reason: "translate_quota", releaseV: 3, ms: 2200, answered: true, model: NORTH },
+        { reason: "timed_out", releaseV: 3, ms: 2200 },
+      ]);
+    });
+
+    it("does not tell ops of a transient rate limit when the fallback is cut at the deadline and never answers: it is told only if the fallback fails too (a quota is told first, above)", async () => {
+      const notes: SearchFailureNote[] = [];
+      // A transient limit is told only if the fallback fails too: a fallback cut at the deadline that never answers tells nothing of it.
+      const words = byModel({ [NORTH]: { ms: 1300, fail: "rate_limited" }, [COMMAND]: { ms: 1000, stubborn: true } });
+
+      await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(logs).toMatchObject([{ translatedLeg: "timed_out" }]);
+      expect(notes).toEqual([]);
     });
 
     it("does not retry when the routed model already is the fallback, or the fallback is off", async () => {
       for (const [fallback, route] of [
-        [COMMAND, { ...ROUTE, ps: COMMAND }],
+        [everyKind(COMMAND), { ...ROUTE, ps: COMMAND }],
         [null, ROUTE],
       ] as const) {
         const notes: SearchFailureNote[] = [];
@@ -750,6 +791,244 @@ describe("the translated-question leg", () => {
       const everything = JSON.stringify([notes, spends, logs]);
       expect(everything).not.toContain(PASHTO);
       expect(everything).not.toContain(PASHTO_EN);
+    });
+
+    it("tells ops of each model's failure on its own: both models at quota give two translate_quota events, one per model (P2-2)", async () => {
+      const notes: SearchFailureNote[] = [];
+      const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, [COMMAND]: { ms: 200, fail: "quota" } });
+      const search = withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) });
+
+      await ask(search, PASHTO, "ps");
+
+      expect(words.calls.map((c) => c.model)).toEqual([NORTH, COMMAND]);
+      expect(notes).toEqual([
+        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH },
+        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND },
+      ]);
+      // Each is still told once a minute, not on every search.
+      await ask(search, PASHTO, "ps");
+      expect(notes).toHaveLength(2);
+      await vi.advanceTimersByTimeAsync(61_000);
+      await ask(search, PASHTO, "ps");
+      expect(notes).toHaveLength(4);
+    });
+
+    it("tells ops of a fallback that is unavailable after a rate limit, although a translate_failed was just reported for the routed model (P2-2)", async () => {
+      const notes: SearchFailureNote[] = [];
+      const words = byModel({ [NORTH]: { ms: 100, fail: "rate_limited" }, [COMMAND]: { ms: 200, fail: "unavailable" } });
+
+      await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(notes).toEqual([
+        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH },
+        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND },
+      ]);
+    });
+
+    it("tells ops the fallback was used only once its translation was embedded: not when the embedding of it fails (P3-4)", async () => {
+      const notes: SearchFailureNote[] = [];
+      const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, [COMMAND]: { ms: 200 } });
+      const model = fakeEmbedder({ fail: (text) => text === PASHTO_EN });
+
+      const { result } = await ask(withFallback({ embedder: model.embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(result).toMatchObject({ status: "no_clear_match" }); // the direct leg answers alone
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+      expect(reasons(notes)).toEqual(["translate_quota", "embed_failed"]);
+    });
+
+    it("tells ops the fallback was used only once its translation was embedded: not when the embedding is cut at the deadline (P3-4)", async () => {
+      const notes: SearchFailureNote[] = [];
+      const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, [COMMAND]: { ms: 200 } });
+      const model = fakeEmbedder({ ms: (text) => (text === PASHTO_EN ? 3000 : 100), stubborn: true });
+
+      await ask(withFallback({ embedder: model.embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(logs).toMatchObject([{ translatedLeg: "timed_out" }]);
+      expect(reasons(notes)).toEqual(["translate_quota"]);
+    });
+
+    describe("per kind of question (P2-3, owner decision 45)", () => {
+      /** The defaults' shape: Dari and Urdu fall back to Command A, Pashto does not. */
+      const DEFAULTS: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+
+      it("retries a Dari question and an Urdu question with Command A when the routed model is past its quota", async () => {
+        for (const [q, lang] of [
+          [DARI, "en"],
+          [URDU, "ur"],
+        ] as const) {
+          const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, [COMMAND]: { ms: 200 } });
+          logs = [];
+
+          await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator }, DEFAULTS), q, lang);
+
+          expect(words.calls.map((c) => c.model), q).toEqual([NORTH, COMMAND]);
+          expect(logs, q).toMatchObject([{ translatedLeg: "used" }]);
+        }
+      });
+
+      it("does not retry a Pashto question: the fallback is off for it, so one call, failed, the quota told", async () => {
+        const notes: SearchFailureNote[] = [];
+        const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, [COMMAND]: { ms: 200 } });
+
+        const { result } = await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }, DEFAULTS), PASHTO, "ps");
+
+        expect(words.calls.map((c) => c.model)).toEqual([NORTH]);
+        expect(result).toMatchObject({ status: "no_clear_match" });
+        expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+        expect(reasons(notes)).toEqual(["translate_quota"]);
+      });
+
+      it("takes the model of the kind it is: a Pashto fallback set by config is tried for Pashto and not for Dari", async () => {
+        const words = byModel({ [NORTH]: { ms: 100, fail: "quota" }, "pashto-model-1": { ms: 200 }, [COMMAND]: { ms: 200 } });
+        const fallback: QuestionRoute = { ...DEFAULTS, ps: "pashto-model-1" };
+
+        await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator }, fallback), PASHTO, "ps");
+        expect(words.calls.map((c) => c.model)).toEqual([NORTH, "pashto-model-1"]);
+
+        words.calls.length = 0;
+        await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator }, fallback), DARI);
+        expect(words.calls.map((c) => c.model)).toEqual([NORTH, COMMAND]);
+      });
+
+      it("does not retry a romanized question routed to Command A with Command A as its fallback: there is no other model", async () => {
+        const words = byModel({ [COMMAND]: { ms: 100, fail: "quota" } });
+
+        await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator }, DEFAULTS), ROMANIZED);
+
+        expect(words.calls.map((c) => c.model)).toEqual([COMMAND]);
+        expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+      });
+    });
+
+    describe("the least time left for the fallback (P3-2)", () => {
+      it("is 800 ms by default: the same as SEARCH_FALLBACK_MIN_BUDGET_MS's default", () => {
+        expect(DEFAULT_FALLBACK_MIN_BUDGET_MS).toBe(800);
+        expect(DEFAULT_SEARCH_SETTINGS.fallbackMinBudgetMs).toBe(DEFAULT_FALLBACK_MIN_BUDGET_MS);
+      });
+
+      it("keeps the fallback for a quota at 1.4 s (800 ms left) and not for one at 1.5 s (700 ms left)", async () => {
+        const at14 = byModel({ [NORTH]: { ms: 1400, fail: "quota" }, [COMMAND]: { ms: 100 } });
+        await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: at14.translator }), PASHTO, "ps");
+        expect(at14.calls.map((c) => c.model)).toEqual([NORTH, COMMAND]);
+
+        const at15 = byModel({ [NORTH]: { ms: 1500, fail: "quota" }, [COMMAND]: { ms: 100 } });
+        await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: at15.translator }), PASHTO, "ps");
+        expect(at15.calls.map((c) => c.model)).toEqual([NORTH]);
+      });
+
+      it("follows the setting: 300 ms retries at 1.8 s, 2200 ms never retries, and 0 always does", async () => {
+        const run = async (fallbackMinBudgetMs: number, quotaAt: number) => {
+          const words = byModel({ [NORTH]: { ms: quotaAt, fail: "quota" }, [COMMAND]: { ms: 100 } });
+          await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, fallbackMinBudgetMs }), PASHTO, "ps");
+          return words.calls.map((c) => c.model);
+        };
+
+        expect(await run(300, 1800)).toEqual([NORTH, COMMAND]);
+        expect(await run(800, 1800)).toEqual([NORTH]);
+        expect(await run(2200, 1)).toEqual([NORTH]); // 2199 ms left of 2200: not at least 2200
+        expect(await run(0, 2000)).toEqual([NORTH, COMMAND]);
+      });
+    });
+  });
+
+  describe("a translation that failed in a way of our own (P3-3)", () => {
+    const notesOf = async (parts: Parameters<typeof service>[0]) => {
+      const notes: SearchFailureNote[] = [];
+      const { result } = await ask(service({ ...parts, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+      return { notes, result };
+    };
+
+    it("is told to ops as translate_failed when the adapter says it was cancelled but the signal was not aborted", async () => {
+      const translator: Translator = { translate: () => Promise.reject(new TranslateError("aborted")) };
+
+      const { notes, result } = await notesOf({ embedder: fakeEmbedder().embedder, translator });
+
+      expect(result).toMatchObject({ status: "no_clear_match" }); // the direct leg answers
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026" }]);
+    });
+
+    it("is told to ops as translate_failed when something unexpected is thrown that is not a QuestionTranslationError", async () => {
+      const questions: QuestionTranslator = {
+        modelFor: () => "north-small-translate-09-2026",
+        fallbackFor: () => null,
+        toEnglish: () => Promise.reject(new TypeError("a bug of ours")),
+      };
+
+      const { notes } = await notesOf({ embedder: fakeEmbedder().embedder, questions });
+
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026" }]);
+      expect(JSON.stringify(notes)).not.toContain("a bug of ours");
+    });
+
+    it("is not told when the translation was only refused by a check (it is not a vendor failure)", async () => {
+      const questions: QuestionTranslator = {
+        modelFor: () => "north-small-translate-09-2026",
+        fallbackFor: () => null,
+        toEnglish: () => Promise.reject(new QuestionTranslationError("not_english", 5)),
+      };
+
+      const { notes } = await notesOf({ embedder: fakeEmbedder().embedder, questions });
+
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+      expect(notes).toEqual([]);
+    });
+  });
+
+  describe("each spend row is handed to the app once written", () => {
+    it("tells the hook of the translation's row and of the embeddings', after each was written, and a hook that throws changes nothing", async () => {
+      const heard: { event: SpendEventInput; written: boolean }[] = [];
+      const words = fakeTranslator({ ms: 100 });
+
+      const { result } = await ask(
+        service({
+          embedder: fakeEmbedder().embedder,
+          translator: words.translator,
+          onSpendWritten: (event) => {
+            heard.push({ event, written: spends.includes(event) });
+            throw new Error("the app's hook failed");
+          },
+        }),
+        PASHTO,
+        "ps",
+      );
+
+      expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
+      expect(heard.map((h) => h.event.kind).sort()).toEqual(["embed", "embed", "translate"]);
+      expect(heard.every((h) => h.written)).toBe(true);
+      expect(heard.find((h) => h.event.kind === "translate")?.event).toMatchObject({ model: "north-small-translate-09-2026", purpose: "search" });
+    });
+
+    it("is not told of a row that could not be written", async () => {
+      const heard: SpendEventInput[] = [];
+      const words = fakeTranslator({ ms: 100 });
+      const search = createSearch({
+        db: () => {
+          throw new Error("no database in this test");
+        },
+        storage: () => {
+          throw new Error("no store in this test");
+        },
+        embedder: fakeEmbedder().embedder,
+        translator: createQuestionTranslator({ translator: words.translator, route: ROUTE }),
+        snapshot: async () => SNAPSHOT,
+        writer: {
+          log: async (row) => void logs.push(row),
+          spend: async () => {
+            throw new Error("the insert failed");
+          },
+        },
+        onSpendWritten: (event) => void heard.push(event),
+        defer: (work) => void deferred.push(work),
+        clock: () => Date.now(),
+      });
+
+      const { result } = await ask(search, PASHTO, "ps");
+
+      expect(result).toMatchObject({ status: "ok" });
+      expect(heard).toEqual([]);
     });
   });
 

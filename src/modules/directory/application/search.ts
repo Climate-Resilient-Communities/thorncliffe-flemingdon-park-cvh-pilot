@@ -11,10 +11,13 @@
 //    English words), and ambiguous Arabic-script questions, the `translation` module translates the question to English
 //    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
 //    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
-//    its embedding waits for the snapshot). The leg covers the translation and its embedding. `search_log.translated_leg`
+//    its embedding waits for the snapshot). When the routed model is past a vendor limit (HTTP 429), the kind of question has a
+//    fallback model (`SEARCH_QUESTION_FALLBACK`) and enough of the budget is left, the translation is retried once with it,
+//    under the same signal and deadline. The leg covers the translation and its embedding. `search_log.translated_leg`
 //    says what it did: `used`, `failed` (the call failed, or the answer was not English or was an answer rather than a
 //    translation), `timed_out`, or `not_needed` (no leg was run, or the answer was the question itself, already English).
-//    A vendor call that failed while the other leg answered is still told to ops (`answered: true`), once a minute per reason.
+//    A vendor call that failed while the other leg answered is still told to ops (`answered: true`), once a minute per reason
+//    and model.
 //  - Ranking (domain/searchRanking.ts) over the legs that completed: threshold first, then RRF (k = 60) when both did,
 //    top 5. When the direct leg fails but the translated one completed, the results come from the translated leg alone.
 //  - Emergency fail-safe (owner decision 41): `emergency_first` is also set when an emergency-category provider is in the
@@ -65,10 +68,11 @@ export const SEARCH_SPEND_PURPOSE = "search";
 export const SNAPSHOT_FAILURE_TTL_MS = 60_000;
 
 /**
- * The least time left in the leg's budget that a fallback translation is still tried with: a call that cannot finish
- * would only be billed, and it would end the leg as `timed_out` instead of the failure that was already known.
+ * The least time left in the leg's budget that a fallback translation is still tried with (SEARCH_FALLBACK_MIN_BUDGET_MS): a
+ * call that cannot finish would only be billed, and it would end the leg as `timed_out` instead of the failure that was
+ * already known. A translation takes about 0.5 s, so the default leaves room for one.
  */
-export const FALLBACK_MIN_BUDGET_MS = 300;
+export const DEFAULT_FALLBACK_MIN_BUDGET_MS = 800;
 
 /** A leg still running this long after the request started is cancelled (the E03 definitions' search time limit). */
 export const DEFAULT_LEG_TIMEOUT_MS = 2200;
@@ -158,6 +162,13 @@ export interface SearchDeps {
   log?: boolean;
   /** Handed the writes still pending when the response is ready, so the app can finish them after the response (`after()`). */
   defer?: (work: Promise<unknown>) => void;
+  /**
+   * Told of each spend row once it is written (after the write, which the response waits for only within its budget). It must
+   * return at once: what it starts (the app counts a model's month against its limit) runs after the response, never in it.
+   */
+  onSpendWritten?: (event: SpendEventInput) => void;
+  /** The least time (ms) left of the leg's budget for the fallback translation to be tried (SEARCH_FALLBACK_MIN_BUDGET_MS); default 800. */
+  fallbackMinBudgetMs?: number;
   /**
    * The emergency-only threshold (SEARCH_EMERGENCY_THRESHOLD, owner decision 41); default 0.25. Never used above the
    * release's own threshold.
@@ -304,6 +315,7 @@ export function createSearch(deps: SearchDeps): SearchService {
   const spendPurpose = deps.spendPurpose ?? SEARCH_SPEND_PURPOSE;
   const writeLog = deps.log ?? true;
   const failureTtlMs = deps.snapshotFailureTtlMs ?? SNAPSHOT_FAILURE_TTL_MS;
+  const fallbackMinBudgetMs = deps.fallbackMinBudgetMs ?? DEFAULT_FALLBACK_MIN_BUDGET_MS;
   const writer: SearchWriter = deps.writer ?? {
     log: async (row) => {
       await deps.db().insert(searchLog).values(row);
@@ -312,8 +324,9 @@ export function createSearch(deps: SearchDeps): SearchService {
   };
   // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
   const failedUntil = new Map<number, number>();
-  // Vendor failures already told to ops (by reason), until when: the same failure is not reported again for the same TTL.
-  const reportedUntil = new Map<SearchLegFailureReason, number>();
+  // Vendor failures already told to ops (by reason and model), until when: the same failure of the same model is not reported
+  // again for the same TTL, while another model's failure (the fallback's, say) is its own.
+  const reportedUntil = new Map<string, number>();
   // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it).
   const cache = new Map<number, Promise<SnapshotData>>();
 
@@ -423,9 +436,10 @@ export function createSearch(deps: SearchDeps): SearchService {
      */
     const reportVendorFailure = (reason: SearchLegFailureReason, model?: string) => {
       const now = clock();
-      const until = reportedUntil.get(reason);
+      const key = `${reason}:${model ?? ""}`;
+      const until = reportedUntil.get(key);
       if (until !== undefined && now < until) return;
-      reportedUntil.set(reason, now + failureTtlMs);
+      reportedUntil.set(key, now + failureTtlMs);
       if (!deps.onFailure) return;
       const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }) };
       track(() => deps.onFailure!(at));
@@ -447,6 +461,7 @@ export function createSearch(deps: SearchDeps): SearchService {
             ? { kind: SEARCH_SPEND_KIND, purpose: spendPurpose, model: call.model, releaseV, tokens: count, tokensEstimated: estimated, ms }
             : questionTranslationSpend({ purpose: spendPurpose, model: call.model, releaseV, tokens: count, tokensEstimated: estimated, ms });
         await writer.spend(event);
+        deps.onSpendWritten?.(event);
       });
     };
 
@@ -520,7 +535,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     // for any other vendor failure, `translate_fallback_used` when the fallback made the translation.
     const translateNotes: { reason: SearchLegFailureReason; model: string }[] = [];
     const noteFailure = (error: unknown, model: string) => {
-      if (error instanceof QuestionTranslationError && error.code === "translate_failed") translateNotes.push({ reason: error.vendor === "quota" ? "translate_quota" : "translate_failed", model });
+      translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model });
     };
 
     const translatedRun = translating
@@ -540,45 +555,52 @@ export function createSearch(deps: SearchDeps): SearchService {
               throw error;
             }
           };
-          /** The stage error of a call that did not give an English text. */
-          const stageError = (error: unknown): Error => {
+          /**
+           * The stage error of a call that did not give an English text. When that is `translate_failed` (the vendor failed, or
+           * something unexpected did: an adapter that says `aborted` while the signal did not, an exception of our own) ops is
+           * told, with the model, as it always was.
+           */
+          const stageError = (error: unknown, model: string): Error => {
             if (leg.signal.aborted) return new StageError("timed_out");
             if (error instanceof QuestionTranslationError && error.code === "identical") return new TranslateStageError("translate_identical");
             // The vendor failed (or answered nothing we can tell apart from that), as opposed to answering with something unusable.
             const rejected = error instanceof QuestionTranslationError && error.code !== "translate_failed" && error.code !== "aborted";
+            if (!rejected) noteFailure(error, model);
             return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed");
           };
 
           let english: string;
+          let rescuedBy: string | null = null;
           try {
             english = await translateWith(translateModel);
           } catch (error) {
             if (leg.signal.aborted) throw new StageError("timed_out");
-            const limited = error instanceof QuestionTranslationError && error.code === "translate_failed" && error.vendor !== undefined && isLimitFailure(error.vendor);
-            const fallback = limited ? translator.fallbackFor(translateModel) : null;
-            // Past its limit (or limited for a moment): one retry with the fallback model, with the same signal and deadline,
-            // when it is a different model and there is time for it to answer.
-            if (!limited || fallback === null || deadline - clock() < FALLBACK_MIN_BUDGET_MS) {
-              noteFailure(error, translateModel);
-              throw stageError(error);
-            }
+            const vendor = error instanceof QuestionTranslationError && error.code === "translate_failed" ? error.vendor : undefined;
+            const fallback = vendor !== undefined && isLimitFailure(vendor) ? translator.fallbackFor(source, translateModel) : null;
+            // Past its limit (or limited for a moment): one retry with the fallback model for this kind of question, with the same
+            // signal and deadline, when there is one, it is a different model and there is time for it to answer.
+            if (fallback === null || deadline - clock() < fallbackMinBudgetMs) throw stageError(error, translateModel);
+            // A quota is told before the retry, not after it: the retry may be cut at the deadline, and the leg is then not waited for
+            // (what a rejection chain adds after that comes too late). The routed model needs someone's attention whatever the fallback does.
+            if (vendor === "quota") noteFailure(error, translateModel);
             try {
               english = await translateWith(fallback);
+              rescuedBy = fallback;
             } catch (second) {
-              noteFailure(error, translateModel);
+              // A transient limit is told only if the fallback failed too (when it answered, the rescue is all ops hears).
+              if (vendor !== "quota") noteFailure(error, translateModel);
               if (leg.signal.aborted) throw new StageError("timed_out");
-              noteFailure(second, fallback);
-              throw stageError(second);
+              throw stageError(second, fallback);
             }
-            // A quota is told even though the fallback answered: the routed model needs someone's attention.
-            if (error instanceof QuestionTranslationError && error.vendor === "quota") noteFailure(error, translateModel);
-            translateNotes.push({ reason: "translate_fallback_used", model: fallback });
           }
           // Only the embedding of the translation needs the snapshot.
           await snapshotKnown;
           const known = state.snapshot;
           if (!known?.data || !deps.embedder) throw new StageError("snapshot_failed");
-          return embedAndCompare(leg, known.data, deps.embedder, english);
+          const similarities = await embedAndCompare(leg, known.data, deps.embedder, english);
+          // The fallback rescued the question only if the leg completed with its translation: not when the embedding failed or was cut at the deadline.
+          if (rescuedBy !== null && !leg.signal.aborted) translateNotes.push({ reason: "translate_fallback_used", model: rescuedBy });
+          return similarities;
         })
       : null;
 

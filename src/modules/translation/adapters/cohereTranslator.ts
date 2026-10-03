@@ -72,7 +72,9 @@ function loadSdk(): Promise<typeof import("cohere-ai")> {
 }
 
 /** Wording of a limit that is the month's (Cohere: "You are past the per-month request limit for this model"). */
-const MONTHLY_LIMIT = /per[\s-]*month|monthly|past the .{0,40}limit|trial.{0,20}limit|out of (calls|quota)|quota/i;
+const MONTHLY_LIMIT = /per[\s-]*month|monthly|past the .{0,40}limit|out of (calls|quota)|quota/i;
+/** Wording that says the limit is the month's, for an error that came with no status to say it is a limit at all. */
+const SAYS_MONTHLY = /per[\s-]*month|monthly/i;
 /** Wording of a transient limit. */
 const TRANSIENT_LIMIT = /per[\s-]*(minute|second)|too many requests|slow down|rate[\s-]*limit/i;
 
@@ -84,28 +86,32 @@ function statusOf(error: unknown): number | null {
   return null;
 }
 
-/** The vendor's words (message and body), only to be matched against keywords here: never stored, logged or thrown. */
+/**
+ * The vendor's own message: the `message` of the response body, only to be matched against keywords here (never stored,
+ * logged or thrown). Nothing else is read: the SDK's `Error.message` repeats the whole body, and a body may echo the request.
+ */
 function wordsOf(error: unknown): string {
   try {
-    const e = error as { message?: unknown; body?: unknown };
-    const body = typeof e.body === "string" ? e.body : e.body === undefined ? "" : JSON.stringify(e.body);
-    return `${typeof e.message === "string" ? e.message : ""} ${body}`;
+    const body = (error as { body?: unknown } | null)?.body;
+    const message = typeof body === "object" && body !== null ? (body as { message?: unknown }).message : undefined;
+    return typeof message === "string" ? message : "";
   } catch {
     return "";
   }
 }
 
 /**
- * Sorts a vendor error into a class. The status decides first; the words only choose between the classes of a 429, or
- * name a limit when the SDK gave no status. A 429 that does not say it is transient counts as `quota`: both fall back,
- * and quota is the one that is shown to ops as needing someone.
+ * Sorts a vendor error into a class. The status decides first; the words (the body's `message`) only choose between the
+ * classes of a 429, or name the monthly limit when the SDK gave no status. A 429 that does not say it is transient counts
+ * as `quota`: both fall back, and quota is the one that is shown to ops as needing someone. Without a status, only an
+ * error that clearly says the monthly limit is `quota`; one that does not is `other` (or `unavailable`, for the network).
  */
 export function classifyCohereError(error: unknown): Exclude<TranslateErrorCode, "aborted"> {
   const status = statusOf(error);
   const words = wordsOf(error);
   if (status === 429) return TRANSIENT_LIMIT.test(words) && !MONTHLY_LIMIT.test(words) ? "rate_limited" : "quota";
   if (status !== null) return status >= 500 ? "unavailable" : "other";
-  if (MONTHLY_LIMIT.test(words) && /limit/i.test(words)) return "quota";
+  if (SAYS_MONTHLY.test(words) && /limit/i.test(words)) return "quota";
   const e = error as { name?: unknown; code?: unknown } | null;
   // No status: a timeout or a network failure (fetch's TypeError, a socket code) is the vendor being unreachable.
   if (error instanceof TypeError || e?.name === "CohereTimeoutError" || e?.name === "FetchError" || typeof e?.code === "string") return "unavailable";
