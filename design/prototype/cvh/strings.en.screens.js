@@ -1132,7 +1132,7 @@
       neighbourhoodOnlyType: 'Heat, smoke and winter storm alerts go to a whole neighbourhood, not to buildings. Choose a neighbourhood.',
       notAllowed: 'Only a Coordinator or an Admin can choose a neighbourhood, or send a heat, smoke or winter storm alert.',
       outOfScope: 'You are not assigned to one of those buildings.', notFound: 'That alert draft was not found.', notDraft: 'This alert was already submitted, so who it is for cannot change.',
-      closed: 'This alert is closed.', invalid: 'That audience cannot be used. Reload the page and choose again.' } } } });
+      closed: 'This alert is already closed.', invalid: 'That audience cannot be used. Reload the page and choose again.' } } } });
   /* Logging a disruption and writing an acknowledgement or an alert (S04.05, O-11, O-12, O-02), the pilot's staff version. The prototype's
      screens publish at once from a checked template; here the author logs the disruption, edits a suggested text, and submits it for a
      second person to approve. The suggested wording is the prototype's own (O12.acks). */
@@ -1244,9 +1244,12 @@
       WEB_PUBLISHED: 'This alert is already published, so it cannot be changed. Correct it instead.',
       ENTRY_NOT_PENDING: 'This alert is not waiting for approval.',
       ENTRY_CHANGED: 'This alert changed. Reload the page to see it.',
-      ALERT_CLOSED: 'This alert is closed.',
+      ALERT_CLOSED: 'This alert is already closed.',
       ALERT_NOT_FOUND: 'That alert draft was not found.',
       ENTRY_NOT_FOUND: 'That alert draft was not found.',
+      NO_PUBLISHED_ENTRY: 'Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.',
+      ENTRY_ID_INVALID: 'That update could not be started. Reload the page and try again.',
+      TYPES_CHANGED: 'An update keeps the types of the alert. To report something else, log a new disruption.',
       AUDIENCE_INVALID: 'Who this alert is for is not valid. Change the place and the groups, then try again.',
       BUILDING_NOT_FOUND: 'One of the buildings no longer exists. Change the place.',
       FLOOR_NOT_IN_BUILDING: 'One of the floors no longer exists. Change the place.',
@@ -1326,7 +1329,7 @@
       NOT_ALLOWED: 'Only a Coordinator or an Admin can approve an alert.',
       AUTHOR_NOT_ALLOWED: 'Its author can no longer write this alert, because their role or buildings changed, so it cannot be approved. Return it or discard it.',
       ENTRY_NOT_PENDING: 'This alert is no longer waiting for approval. Reload the page to see what happened.',
-      ALERT_CLOSED: 'This alert is closed.',
+      ALERT_CLOSED: 'This alert is already closed.',
       ALERT_NOT_FOUND: 'That alert was not found.',
       ENTRY_NOT_FOUND: 'That alert was not found.',
       NOTE_REQUIRED: 'Write a note for the author.',
@@ -1521,4 +1524,37 @@
     errors: {
       forbidden: 'Only an Admin can publish the directory.',
       aal2Required: 'An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.' } } } });
+  /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
+     is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
+     submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's
+     own words are kept where they fit (O13, O14). */
+  m(en, { staff: { compose: {
+    updateTitle: 'Add an update', promoteTitle: 'Promote to full alert',
+    updateLead: 'Add what we know now to this alert. Residents see it above the earlier entries, which stay as they are. A second person approves it before anyone sees it.',
+    promoteLead: 'This is the first update to the acknowledgement. The same alert is updated for everyone who has it: nothing is sent as a new alert. A second person approves it before anyone sees it.',
+    startNote: 'Saving makes the draft. Then you can change who it is for, read the text message and submit it for approval.',
+    thread: {
+      title: 'The running alert',
+      lead: 'What residents read now, newest first. Your update is added at the top: nothing here is replaced.',
+      validUntil: 'Valid until {time} (Toronto time)',
+      entry: '{kind}, {time}',
+      kind: { ack: 'Acknowledgement', update: 'Update', correction: 'Correction', withdrawal: 'Withdrawal', final: 'Final' } },
+    carried: 'Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.',
+    carriedStart: 'Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.',
+    sameAudience: 'Who it is for is the same as the alert now.',
+    phaseRequired: 'Required: choose where things stand now.',
+    updateClosed: 'This alert is already closed. Nothing more can be added to it.',
+    updateUnpublished: 'Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.' } } });
+  m(en, { staff: { audience: {
+    changeAlso: 'Now also for: {list}', changeNoLonger: 'No longer for: {list}',
+    changeRestOf: 'the rest of {place}', changeOutsideGroups: 'residents who chose none of the groups' } } });
+  m(en, { staff: { approve: {
+    updateNote: 'This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are.' } } });
+  m(en, { staff: { incidents: {
+    runningTitle: 'Running alerts',
+    runningLead: 'Alerts residents are reading now. Add what you know to the same alert instead of starting a new one.',
+    runningNone: 'No alert is running.',
+    runningLine: '{kind}, {phase}. Valid until {time}',
+    runningPublished: 'Last published {time}',
+    addUpdate: 'Add an update', promote: 'Promote to full alert' } } });
 })();

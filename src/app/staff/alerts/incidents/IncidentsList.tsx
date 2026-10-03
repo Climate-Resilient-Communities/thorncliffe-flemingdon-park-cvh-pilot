@@ -41,6 +41,15 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
           </Stack>
         </section>
       )}
+      {view.running && (
+        <section aria-labelledby="incidents-running-title" data-testid="incidents-running">
+          <Stack gap="related">
+            <h2 id="incidents-running-title">{view.running.title}</h2>
+            <p>{view.running.items.length > 0 ? view.running.lead : view.running.none}</p>
+            {view.running.items.length > 0 && <Items items={view.running.items} id="running" />}
+          </Stack>
+        </section>
+      )}
       {(view.mine.items.length > 0 || view.waiting) && (
         <section aria-labelledby="incidents-mine-title" data-testid="incidents-mine">
           <Stack gap="related">

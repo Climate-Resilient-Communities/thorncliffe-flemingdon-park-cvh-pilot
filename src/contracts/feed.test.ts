@@ -56,6 +56,41 @@ describe("FeedV1", () => {
   });
 });
 
+describe("a thread with several entries (S05.01)", () => {
+  const entryAt = (n: number, minute: number, kind = "update", phase: string | undefined = "in_progress") => ({
+    ...thread.entries[0],
+    id: `0198a000-0000-7000-8000-00000000010${n}`,
+    kind,
+    ...(phase === undefined ? { phase: undefined } : { phase }),
+    published_at: `2026-10-01T14:${String(minute).padStart(2, "0")}:00.000Z`,
+    text: { ...thread.entries[0].text, body: `entry ${n}` },
+  });
+  const ack = entryAt(1, 0, "ack", "problem");
+  const first = entryAt(2, 20);
+  const second = entryAt(3, 45);
+
+  it("accepts entries newest first, each with its time and its phase, and keeps the earlier ones", () => {
+    const parsed = FeedV1.parse(feed({ threads: [{ ...thread, entries: [second, first, ack] }] }));
+    expect(parsed.threads[0].entries.map((entry) => [entry.kind, entry.phase, entry.published_at])).toEqual([
+      ["update", "in_progress", "2026-10-01T14:45:00.000Z"],
+      ["update", "in_progress", "2026-10-01T14:20:00.000Z"],
+      ["ack", "problem", "2026-10-01T14:00:00.000Z"],
+    ]);
+  });
+
+  it("accepts entries published at the same instant", () => {
+    expect(FeedV1.safeParse(feed({ threads: [{ ...thread, entries: [{ ...first, published_at: ack.published_at }, ack] }] })).success).toBe(true);
+  });
+
+  it("refuses entries that are not newest first, however the list is out of order: oldest first, or a newer entry below an older one", () => {
+    for (const entries of [[ack, first, second], [second, ack, first], [first, second, ack]]) {
+      const result = FeedV1.safeParse(feed({ threads: [{ ...thread, entries }] }));
+      expect(result.success, entries.map((entry) => entry.kind).join()).toBe(false);
+      expect(JSON.stringify(result.error?.issues)).toContain("newest first");
+    }
+  });
+});
+
 describe("feedPath", () => {
   it("asks for one language and nothing else", () => {
     expect(feedPath("zh-Hant")).toBe("/api/feed?lang=zh-Hant");

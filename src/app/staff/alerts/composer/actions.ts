@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import { alerting } from "../../alerts";
 import { staffAction, type ActionRefusal } from "../../guard";
 import { pullBackFromForm, saveDraftFromForm, type ComposeState } from "./editDraft";
+import { startUpdateFromForm } from "./startUpdate";
 
 // Writing an alert is the policy action `alert.author_wide` (S01.12, AD-4), like the audience pickers and "Log a disruption": a composer
 // can aim at a whole neighbourhood and use the neighbourhood-wide types, which only a Coordinator or an Admin author, so the guard
@@ -27,7 +28,7 @@ const deps = { alerting, now: () => new Date() };
  * form. A draft saved as the first half of a submit (the location has no `saved=1`) stays where it is: the submit follows it from the browser.
  */
 const finish = (state: ComposeState): ComposeState => {
-  if (state.status === "pulled_back") redirect(state.location);
+  if (state.status === "pulled_back" || state.status === "started") redirect(state.location);
   if (state.status === "saved" && state.location.includes("saved=1")) redirect(state.location);
   return state;
 };
@@ -43,5 +44,15 @@ export const saveDraftAction = staffAction(
 export const pullBackAction = staffAction(
   { route: "/staff/alerts/compose", access: "hub", action: "alert.author_wide" },
   async (session, _previous: ComposeState, form: FormData) => finish(await pullBackFromForm(deps, session, form)),
+  (error) => refused(error),
+);
+
+/**
+ * "Save draft" on a new update (O-14 "Add an update", O-13 "Promote to full alert", S05.01): makes the update's draft from the text, the phase and the
+ * valid-until, with the thread's audience and types carried over, and goes on to its composer. The policy action is the composers' (`alert.author_wide`).
+ */
+export const startUpdateAction = staffAction(
+  { route: "/staff/alerts/update", access: "hub", action: "alert.author_wide" },
+  async (session, _previous: ComposeState, form: FormData) => finish(await startUpdateFromForm(deps, session, form)),
   (error) => refused(error),
 );

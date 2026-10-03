@@ -34,16 +34,27 @@ export const FeedEntrySchema = z.strictObject({
   original: z.strictObject({ lang: z.literal("en"), body: z.string() }),
 });
 
-export const FeedThreadSchema = z.strictObject({
-  id: z.uuid(),
-  slug: z.string().min(1),
-  types: z.array(z.string()).min(1),
-  audience: AudienceSchema,
-  state: z.enum(["open", "closed"]),
-  close_reason: z.string().optional(),
-  valid_until: z.iso.datetime(),
-  entries: z.array(FeedEntrySchema).min(1),
-});
+/**
+ * A thread. `entries` is newest first by `published_at`, each with its time and phase, and every earlier entry stays in the list (an update adds an entry
+ * and removes none; S05.01), so a resident reads the running story from the latest word back. `valid_until` is the valid-until of the entry that covers the
+ * thread, the latest published, non-superseded substantive one (S05.01: a later update's choice replaces an earlier one's). The schema refuses a thread whose
+ * entries are in another order, so a reader that forgets `newestFirst` (alerting's domain/thread.ts) fails the feed's own parse instead of showing it.
+ */
+export const FeedThreadSchema = z
+  .strictObject({
+    id: z.uuid(),
+    slug: z.string().min(1),
+    types: z.array(z.string()).min(1),
+    audience: AudienceSchema,
+    state: z.enum(["open", "closed"]),
+    close_reason: z.string().optional(),
+    valid_until: z.iso.datetime(),
+    entries: z.array(FeedEntrySchema).min(1),
+  })
+  .refine((thread) => thread.entries.every((entry, index) => index === 0 || Date.parse(entry.published_at) <= Date.parse(thread.entries[index - 1].published_at)), {
+    message: "entries are newest first, by published_at",
+    path: ["entries"],
+  });
 
 const PlaceState = { status: PlaceStatusSchema, verified: z.boolean() };
 

@@ -56,4 +56,12 @@ export type AlertRefusal =
    */
   | "RECIPIENT_COUNT_CHANGED"
   | "NOTE_REQUIRED"
-  | "NOTE_TOO_LONG";
+  | "NOTE_TOO_LONG"
+  /**
+   * S05.01, an update: the thread has nothing residents can read yet (its acknowledgement or alert still waits for approval), so there is no audience, no
+   * types and no valid-until to carry over; and the id the page made for the new entry is not an id, or is another entry's.
+   */
+  | "NO_PUBLISHED_ENTRY"
+  | "ENTRY_ID_INVALID"
+  /** An update that follows other entries keeps the thread's types: a different type is a different disruption. */
+  | "TYPES_CHANGED";

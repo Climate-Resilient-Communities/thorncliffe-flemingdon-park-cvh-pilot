@@ -15,6 +15,8 @@ export type ComposeAction = (previous: ComposeState, form: FormData) => Promise<
 export interface ComposerActions {
   save: ComposeAction;
   pullBack: ComposeAction;
+  /** Makes the draft of a new update (S05.01); the form of a screen whose status is `new` sends it. Absent: Save is used. */
+  start?: ComposeAction;
 }
 
 const IDLE: ComposeState = { status: "idle" };
@@ -105,12 +107,13 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
         </p>
       )}
       {form.phase && (
-        <fieldset aria-labelledby="composer-phase-legend">
+        <fieldset aria-labelledby="composer-phase-legend" aria-describedby={form.phase.hint ? "composer-phase-hint" : undefined}>
           <Stack gap="target">
             <legend id="composer-phase-legend">{form.phase.legend}</legend>
+            {form.phase.hint && <p id="composer-phase-hint">{form.phase.hint}</p>}
             {form.phase.items.map((item) => (
               <label key={item.id} className="hub-choice">
-                <input type="radio" name="phase" value={item.id} checked={phase === item.id} onChange={() => setPhase(item.id)} />
+                <input type="radio" name="phase" value={item.id} checked={phase === item.id} required={form.phase!.required} onChange={() => setPhase(item.id)} />
                 <span>{item.label}</span>
               </label>
             ))}
@@ -253,7 +256,8 @@ export function ComposerBody({
   /** Loads the composer again from the server (the attempt ended). */
   reload?: () => void;
 }) {
-  const [saveState, saveAction, savePending] = useActionState(actions.save, initial?.save ?? IDLE);
+  // A new update has no draft to save yet: its Save makes the draft (S05.01).
+  const [saveState, saveAction, savePending] = useActionState(screen.status === "new" ? (actions.start ?? actions.save) : actions.save, initial?.save ?? IDLE);
   // What the direct call of Save (the first half of a submit) answered, when it did not save.
   const [direct, setDirect] = useState<ComposeState>(IDLE);
   const [pullState, pullAction] = useActionState(actions.pullBack, IDLE);
@@ -340,6 +344,14 @@ export function ComposerBody({
       </button>
     </Inline>
   );
+  // A new update has one action: Save draft, which makes the draft and goes on to its composer, where it is submitted.
+  const newActions = (
+    <Inline gap="target" wrap>
+      <button className="hub-button hub-button--primary" type="submit" form={FORM_ID} disabled={savePending} data-testid="save-draft">
+        {screen.actions.save}
+      </button>
+    </Inline>
+  );
   const pendingActions = screen.pending && (
     <Inline gap="target" wrap>
       <button className="hub-button hub-button--secondary" type="submit" form={PULL_BACK_ID} disabled={busy} data-testid="pull-back">
@@ -352,20 +364,46 @@ export function ComposerBody({
       )}
     </Inline>
   );
-  const bar = screen.status === "draft" ? draftActions : screen.status === "pending" ? pendingActions : undefined;
+  const bar = screen.status === "new" ? newActions : screen.status === "draft" ? draftActions : screen.status === "pending" ? pendingActions : undefined;
 
   const header = (
     <Stack gap="related">
       <h1>{screen.title}</h1>
       <p>{screen.lead}</p>
       <p data-testid="first-report">{screen.firstReport}</p>
-      <p>{screen.benchmark}</p>
+      {screen.benchmark && <p>{screen.benchmark}</p>}
     </Stack>
+  );
+
+  // The running alert an update adds to: what residents read now, newest first, each entry with its time and where things stood (S05.01).
+  const thread = screen.thread && (
+    <section aria-labelledby="thread-title" data-testid="thread-digest">
+      <Stack gap="related">
+        <h2 id="thread-title">{screen.thread.title}</h2>
+        <p>{screen.thread.lead}</p>
+        {screen.thread.validUntil && <p data-testid="thread-valid-until">{screen.thread.validUntil}</p>}
+        <Stack as="ol" gap="related">
+          {screen.thread.entries.map((entry) => (
+            <li key={entry.key} className="hub-list-item" data-testid="thread-entry">
+              <Stack gap="subline">
+                <p className="hub-wrap">
+                  <strong>{entry.heading}</strong>
+                </p>
+                <p className="hub-wrap">{entry.phase}</p>
+                <p className="hub-wrap hub-preline">{entry.text}</p>
+              </Stack>
+            </li>
+          ))}
+        </Stack>
+      </Stack>
+    </section>
   );
 
   const body = (
     <Stack gap={screen.mode === "ack" ? "section-hub-review" : "section-hub"}>
       {header}
+      {thread}
+      {screen.startNote && <p data-testid="start-note">{screen.startNote}</p>}
       {screen.notice && saveState.status === "idle" && <p role="status">{screen.notice}</p>}
       {screen.returned && (
         <section aria-labelledby="returned-title" data-testid="returned-note">
@@ -394,11 +432,12 @@ export function ComposerBody({
           </Stack>
         </section>
       )}
-      {screen.status === "draft" && screen.draft && (
+      {(screen.status === "draft" || screen.status === "new") && screen.draft && (
         <form ref={formRef} id={FORM_ID} action={saveAction}>
           <Stack gap="stack">
             <input type="hidden" name="alert" value={alertId} />
             <input type="hidden" name="entry" value={entryId} />
+            <input type="hidden" name="from" value={screen.from} />
             <DraftFields form={screen.draft} state={shown} errorId={errorId} />
           </Stack>
         </form>
@@ -409,6 +448,7 @@ export function ComposerBody({
           <form id={PULL_BACK_ID} action={pullAction}>
             <input type="hidden" name="alert" value={alertId} />
             <input type="hidden" name="entry" value={entryId} />
+            <input type="hidden" name="from" value={screen.from} />
           </form>
         </>
       )}
@@ -450,6 +490,22 @@ export function ComposerBody({
         <p data-testid="audience-sentence">{screen.aside.sentence}</p>
         {screen.aside.floorNote && <p>{screen.aside.floorNote}</p>}
         <p data-testid="audience-groups">{screen.aside.groups}</p>
+        {screen.aside.carried && <p data-testid="audience-carried">{screen.aside.carried}</p>}
+        {screen.aside.change && (screen.aside.change.alsoFor || screen.aside.change.noLongerFor || screen.aside.change.same) && (
+          <Stack gap="subline" testId="audience-change">
+            {screen.aside.change.alsoFor && (
+              <p role="note" className="hub-flag hub-wrap" data-testid="audience-also-for">
+                {screen.aside.change.alsoFor}
+              </p>
+            )}
+            {screen.aside.change.noLongerFor && (
+              <p role="note" className="hub-flag hub-wrap" data-testid="audience-no-longer-for">
+                {screen.aside.change.noLongerFor}
+              </p>
+            )}
+            {screen.aside.change.same && <p data-testid="audience-same">{screen.aside.change.same}</p>}
+          </Stack>
+        )}
         {screen.status === "draft" && (
           <>
             <a className="tap hub-link" href={screen.aside.link.href}>

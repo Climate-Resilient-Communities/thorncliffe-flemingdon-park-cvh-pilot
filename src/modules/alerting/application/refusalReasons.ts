@@ -48,6 +48,9 @@ export const AUDIT_REASON: Record<AlertRefusal, AuditReason> = {
   RECIPIENT_COUNT_CHANGED: "conflict",
   NOTE_REQUIRED: "validation",
   NOTE_TOO_LONG: "validation",
+  NO_PUBLISHED_ENTRY: "conflict",
+  ENTRY_ID_INVALID: "validation",
+  TYPES_CHANGED: "validation",
 };
 
 /** The forms of the approval view (S04.07), and the audited action each stands for. */

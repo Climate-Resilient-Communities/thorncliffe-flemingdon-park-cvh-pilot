@@ -8,10 +8,12 @@ import type { LangCode } from "@/contracts/lang";
 import { englishText } from "@/i18n/text";
 import { LAUNCH_LANGUAGES } from "@/i18n/languages";
 import { ALERT_TEXT_MAX, BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES as NEIGHBOURHOOD_TYPES, TRANSLATED_LANGS as FROZEN_LANGS } from "@/contracts/alertContent";
-import type { EntryState } from "@/modules/alerting";
+import type { EntryState, ThreadSummary, UpdateStart } from "@/modules/alerting";
 import type { RenderedSms } from "@/modules/messaging";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { asideOf, type AsideView } from "../audience/view";
+import { changeView, type ChangeView } from "../audience/change";
+import { composerPage, type ComposerFrom } from "../pages";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "../audience/editAudience";
 import { fieldsOfStoredInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
@@ -22,7 +24,20 @@ export type Text = (key: string, values?: Record<string, string | number>) => st
 /** The words of this screen: `staff.compose.<key>` of the catalog. */
 export const catalogText: Text = (key, values) => englishText(`staff.compose.${key}`, values);
 
-export type ComposerMode = "ack" | "alert";
+/**
+ * The composers: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14) and the promotion of an acknowledgement to a full alert (O-13,
+ * which is the first update; S05.01). The last two are one composer with its own words, and start from the alert they add to.
+ */
+export type ComposerMode = "ack" | "alert" | "update" | "promote";
+
+/** An update added to a running alert: the thread's types, audience and languages are carried over, and the phase is required (S05.01). */
+export const isFollowUpMode = (mode: ComposerMode): mode is "update" | "promote" => mode === "update" || mode === "promote";
+
+/** The page a mode is written on, the way the audience pages and the forms name it. */
+export const fromOfMode = (mode: ComposerMode): ComposerFrom => (mode === "alert" ? "compose" : mode);
+
+/** The mode of a page. */
+export const modeOfFrom = (from: ComposerFrom): ComposerMode => (from === "compose" ? "alert" : from);
 
 export interface LanguageRowView {
   lang: LangCode;
@@ -48,7 +63,8 @@ export interface DraftFormView {
   /** The full alert composer lets the author change the types; the acknowledgement shows them. */
   types: { legend: string; building: ChoiceView[]; neighbourhood: ChoiceView[] } | null;
   typesSummary: string;
-  phase: { legend: string; items: ChoiceView[] } | null;
+  /** `required`: an update's author chooses where things stand, so the radios start unchecked on a new update and the form needs one (S05.01). */
+  phase: { legend: string; items: ChoiceView[]; required: boolean; hint: string | null } | null;
   valid: {
     title: string;
     hint: string;
@@ -84,6 +100,14 @@ export interface PreviewView {
   segments: number;
 }
 
+/** The running alert as residents read it (S05.01): the entries newest first, each with its time and where things stood, and the valid-until the thread has. */
+export interface ThreadDigestView {
+  title: string;
+  lead: string;
+  validUntil: string;
+  entries: { key: string; heading: string; phase: string; text: string }[];
+}
+
 export interface ComposerMessages {
   /** By refusal or failure code, plus NOT_REACHED. */
   errors: Record<string, string>;
@@ -101,12 +125,15 @@ export interface ResumeView {
 
 export interface ComposerScreen {
   mode: ComposerMode;
+  /** The page this composer is: the forms send it back as `from`, so a saved draft and the audience pages lead back to the right composer. */
+  from: ComposerFrom;
   ref: DraftRef;
   title: string;
   lead: string;
   firstReport: string;
   benchmark: string;
-  status: "draft" | "pending" | "locked";
+  /** `new`: an update whose draft is not made yet (S05.01): saving makes it. */
+  status: "new" | "draft" | "pending" | "locked";
   notice?: string;
   /** Why the last attempt failed, shown on the draft it left. */
   failure?: string;
@@ -116,8 +143,19 @@ export interface ComposerScreen {
   draft?: DraftFormView;
   pending?: PendingView;
   preview: PreviewView | null;
+  /** The running alert an update adds to, as residents read it now (S05.01); only on the update composers. */
+  thread?: ThreadDigestView;
+  /** What saving does, on a new update. */
+  startNote?: string;
   languages: { title: string; lead: string; rows: LanguageRowView[] };
-  aside: AsideView & { groupsLink: { href: string; label: string }; channelsTitle: string; channels: string[] };
+  aside: AsideView & {
+    groupsLink: { href: string; label: string };
+    channelsTitle: string;
+    channels: string[];
+    /** On the update composers: what is carried over from the alert, and what this update changes about who it is for (what the approver reads as "Now also for"). */
+    carried?: string;
+    change?: ChangeView & { same: string | null };
+  };
   actions: { label: string; save: string; submit: string };
   resume: ResumeView | null;
   /** The key of the entry's latest attempt, whatever became of it: a key the browser kept that equals it is confirmed (its outcome is on this screen). */
@@ -135,6 +173,8 @@ export interface ComposerInput {
   preview: { sms: RenderedSms; nineOneOneFirst: boolean } | null;
   saved: boolean;
   now: Date;
+  /** The thread an update adds to (S05.01): what residents read now, and the audience it has now, which the update's own is compared with. */
+  thread?: ThreadSummary | null;
   /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
 }
@@ -173,6 +213,9 @@ export const MESSAGE_CODES = [
   "BUILDING_NOT_FOUND",
   "FLOOR_NOT_IN_BUILDING",
   "NEIGHBOURHOOD_NOT_FOUND",
+  "NO_PUBLISHED_ENTRY",
+  "ENTRY_ID_INVALID",
+  "TYPES_CHANGED",
 ] as const;
 
 const WAITING = "waiting" as const;
@@ -197,32 +240,9 @@ function languageRows(results: ReadonlyMap<string, LanguageResult>, t: Text): La
   });
 }
 
-/** "Urdu, Pashto and Dari": the English names of the languages that fell back. */
-function joinWords(items: readonly string[]): string {
-  if (items.length <= 1) return items.join("");
-  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
-}
-
-/** The composer for an entry as the server stores it. */
-export function composerScreen(input: ComposerInput): ComposerScreen {
-  const t = input.text ?? catalogText;
-  const { state, mode } = input;
-  const { entry, thread, attempt } = state;
-  const ref: DraftRef = { alertId: thread.id, entryId: entry.id };
-  const content = entry.content;
-  const from = mode === "ack" ? "ack" : "compose";
-  const refQuery = new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, from }).toString();
-  const here = `${mode === "ack" ? "/staff/alerts/ack" : "/staff/alerts/compose"}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
-  const results = new Map<string, LanguageResult>();
-  for (const translation of state.translations) results.set(translation.lang, translation.status as LanguageResult);
-  // A running attempt shows each language as it settled; the frozen translations show once they exist.
-  if (attempt?.state === "running" && entry.status === "draft") for (const [lang, result] of Object.entries(attempt.progress)) results.set(lang, result as LanguageResult);
-
-  const status = entry.status === "draft" ? "draft" : entry.status === "pending_approval" ? "pending" : "locked";
-  const ticked = new Set(content.types);
-  const fallbackLangs = state.translations.filter((translation) => translation.status === "fallback_en").map((translation) => t(`languageNames.${translation.lang}`));
-
-  const messages: ComposerMessages = {
+/** The words the browser needs while it submits and when a press is refused (the composer's client part draws them). */
+function messagesOf(t: Text): ComposerMessages {
+  return {
     errors: {
       ...Object.fromEntries(MESSAGE_CODES.map((code) => [code, t(`errors.${code}`, { max: ALERT_TEXT_MAX })])),
       NOT_REACHED: t("running.notReached"),
@@ -238,6 +258,82 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     },
     result: { translated: t("result.translated"), script_converted: t("result.script_converted"), fallback_en: t("result.fallback_en") },
   };
+}
+
+/** The running alert as residents read it: newest entry first, each with its time and where things stood, and the thread's valid-until (S05.01). */
+function threadDigest(summary: ThreadSummary, t: Text): ThreadDigestView {
+  return {
+    title: t("thread.title"),
+    lead: t("thread.lead"),
+    validUntil: summary.validUntil === null ? "" : t("thread.validUntil", { time: formatTorontoDateTime(summary.validUntil) }),
+    entries: summary.entries.map((entry) => ({
+      key: entry.id,
+      heading: t("thread.entry", { kind: t(`thread.kind.${entry.kind}`), time: formatTorontoDateTime(entry.webPublishedAt) }),
+      phase: t(`phase.${entry.phase}`),
+      text: entry.text,
+    })),
+  };
+}
+
+/** What an update changes about who the thread is for, against the audience of the entry that covers it now; both lines null when it changes nothing. */
+function changeOfUpdate(
+  thread: ThreadSummary | null | undefined,
+  entryId: string,
+  audience: Audience,
+  plans: readonly BuildingFloorPlan[],
+  audienceText: Text,
+  t: Text,
+): ChangeView & { same: string | null } {
+  const covering = thread?.covering ?? null;
+  if (covering === null || covering.id === entryId) return { alsoFor: null, noLongerFor: null, same: null };
+  const lines = changeView(covering.audience, audience, plans, audienceText);
+  return { ...lines, same: lines.alsoFor === null && lines.noLongerFor === null ? t("sameAudience") : null };
+}
+
+/** "Urdu, Pashto and Dari": the English names of the languages that fell back. */
+function joinWords(items: readonly string[]): string {
+  if (items.length <= 1) return items.join("");
+  return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
+}
+
+const TITLES: Record<ComposerMode, { title: (t: Text) => string; lead: (t: Text) => string }> = {
+  ack: { title: (t) => t("ackTitle"), lead: (t) => t("ackLead") },
+  alert: { title: (t) => t("alertTitle"), lead: (t) => t("alertLead") },
+  update: { title: (t) => t("updateTitle"), lead: (t) => t("updateLead") },
+  promote: { title: (t) => t("promoteTitle"), lead: (t) => t("promoteLead") },
+};
+
+/** Where things stand: two choices, required. On an update none is carried over: a new update has none ticked (`checked` null), a saved one the author's. */
+function phaseOf(t: Text, followUp: boolean, checked: string | null): NonNullable<DraftFormView["phase"]> {
+  return {
+    legend: t("phaseLegend"),
+    items: (["problem", "in_progress"] as const).map((id) => ({ id, label: t(`phase.${id}`), checked: checked === id })),
+    required: true,
+    hint: followUp ? t("phaseRequired") : null,
+  };
+}
+
+/** The composer for an entry as the server stores it. */
+export function composerScreen(input: ComposerInput): ComposerScreen {
+  const t = input.text ?? catalogText;
+  const { state, mode } = input;
+  const { entry, thread, attempt } = state;
+  const ref: DraftRef = { alertId: thread.id, entryId: entry.id };
+  const content = entry.content;
+  const from = fromOfMode(mode);
+  const followUp = isFollowUpMode(mode);
+  const refQuery = new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, from }).toString();
+  const here = `${composerPage(from)}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
+  const results = new Map<string, LanguageResult>();
+  for (const translation of state.translations) results.set(translation.lang, translation.status as LanguageResult);
+  // A running attempt shows each language as it settled; the frozen translations show once they exist.
+  if (attempt?.state === "running" && entry.status === "draft") for (const [lang, result] of Object.entries(attempt.progress)) results.set(lang, result as LanguageResult);
+
+  const status = entry.status === "draft" ? "draft" : entry.status === "pending_approval" ? "pending" : "locked";
+  const ticked = new Set(content.types);
+  const fallbackLangs = state.translations.filter((translation) => translation.status === "fallback_en").map((translation) => t(`languageNames.${translation.lang}`));
+
+  const messages = messagesOf(t);
 
   const lastFailed = attempt?.state === "failed" && entry.status === "draft" && !input.saved ? attempt.outcome : null;
   const placeHref = `${PLACE_PAGE}?${refQuery}`;
@@ -248,9 +344,10 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
 
   const screen: ComposerScreen = {
     mode,
+    from,
     ref,
-    title: mode === "ack" ? t("ackTitle") : t("alertTitle"),
-    lead: mode === "ack" ? t("ackLead") : t("alertLead"),
+    title: TITLES[mode].title(t),
+    lead: TITLES[mode].lead(t),
     firstReport: t("firstReport", { time: formatTorontoDateTime(thread.reportedAt) }),
     benchmark: t("benchmark"),
     status,
@@ -267,6 +364,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
             note: input.preview.nineOneOneFirst ? t("preview911First") : t("preview911Last"),
             segments: input.preview.sms.segments,
           },
+    ...(followUp && input.thread ? { thread: threadDigest(input.thread, t) } : {}),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(results, t) },
     aside: {
       ...aside,
@@ -274,6 +372,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
       groupsLink: { href: `${GROUPS_PAGE}?${refQuery}`, label: t("asideLink.groups") },
       channelsTitle: t("channelsTitle"),
       channels: [t("channelWeb"), t("channelSms")],
+      ...(followUp ? { carried: t("carried"), change: changeOfUpdate(input.thread, entry.id, audience, input.plans, audienceText, t) } : {}),
     },
     actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
     // A running attempt always leaves the entry a draft (a "Try translation again" returns it to draft first).
@@ -292,10 +391,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
           ? { legend: t("typesLegend"), building: typeChoices(BUILDING_TYPES, ticked), neighbourhood: typeChoices(NEIGHBOURHOOD_TYPES, ticked) }
           : null,
       typesSummary: content.types.map(typeName).join(", "),
-      phase:
-        mode === "alert"
-          ? { legend: t("phaseLegend"), items: (["problem", "in_progress"] as const).map((id) => ({ id, label: t(`phase.${id}`), checked: content.phase === id })) }
-          : null,
+      phase: mode === "alert" || followUp ? phaseOf(t, followUp, content.phase) : null,
       valid: {
         title: t("validTitle"),
         hint: t("validHint"),
@@ -329,13 +425,101 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   return screen;
 }
 
-/** The screen for an entry that is not there. */
+export interface StartInput {
+  mode: "update" | "promote";
+  alertId: string;
+  /** The id the new entry will take: made when the page is drawn, so that pressing Save twice makes one draft (`addUpdate`). */
+  entryId: string;
+  /** The thread the update adds to: the running alert shown above the form. */
+  thread: ThreadSummary;
+  /**
+   * What the update starts from, taken from the entry that covers the thread (alerting's `updateStart(covering, now)`, which the page asks: this module is
+   * drawn by the layout tests too and imports nothing of alerting but its types): the audience and types carried over, and the valid-until that defaults to the
+   * previous entry's choice.
+   */
+  start: UpdateStart;
+  plans: readonly BuildingFloorPlan[];
+  /** The words of the screen; the layout tests give the longest labels of a language here. */
+  text?: Text;
+}
+
+/**
+ * An update whose draft is not made yet (S05.01, O-14 and O-13): the form of a draft with what the thread gives it carried over (who it is for, the types,
+ * the languages, and a valid-until that defaults to the previous entry's choice: "until resolved" renews to 24 hours from now), a phase nobody has chosen
+ * (it is required, so none is ticked) and no text; and, above it, the running alert as residents read it. Saving makes the draft and opens it on the same
+ * composer (`composerScreen`), where who it is for can be changed and the update submitted. Nothing is made, and nothing is audited, until then.
+ */
+export function startScreen(input: StartInput): ComposerScreen {
+  const t = input.text ?? catalogText;
+  const { mode, start } = input;
+  const ref: DraftRef = { alertId: input.alertId, entryId: input.entryId };
+  const audienceText: Text = input.text ?? ((key, values) => englishText(`staff.audience.${key}`, values));
+  const aside = asideOf(start.audience, input.plans, { href: "", label: "" }, audienceText);
+  return {
+    mode,
+    from: fromOfMode(mode),
+    ref,
+    title: TITLES[mode].title(t),
+    lead: TITLES[mode].lead(t),
+    firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
+    benchmark: "",
+    status: "new",
+    startNote: t("startNote"),
+    thread: threadDigest(input.thread, t),
+    preview: null,
+    languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(new Map(), t) },
+    aside: {
+      ...aside,
+      // Nothing to link to until the draft exists: the pickers are opened from the saved draft.
+      groupsLink: { href: "", label: "" },
+      channelsTitle: t("channelsTitle"),
+      channels: [t("channelWeb"), t("channelSms")],
+      carried: t("carriedStart"),
+      change: { alsoFor: null, noLongerFor: null, same: null },
+    },
+    actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
+    resume: null,
+    lastAttemptKey: null,
+    messages: messagesOf(t),
+    here: `${composerPage(fromOfMode(mode))}?${new URLSearchParams({ alert: input.alertId }).toString()}`,
+    draft: {
+      text: { label: t("textLabel"), hint: t("textHint", { max: ALERT_TEXT_MAX }), value: "", max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
+      types: null,
+      typesSummary: start.types.map(typeName).join(", "),
+      phase: phaseOf(t, true, null),
+      valid: {
+        title: t("validTitle"),
+        hint: t("validHint"),
+        resolvedLabel: t("validResolved"),
+        atLabel: t("validAt"),
+        dateLabel: englishText("staff.time.dateLabel"),
+        timeLabel: englishText("staff.time.timeLabel"),
+        foldLegend: englishText("staff.time.foldLegend"),
+        mode: start.validUntilMode,
+        fields: fieldsOfStoredInstant(start.validUntil),
+      },
+    },
+  };
+}
+
+/**
+ * The screen for an entry that is not there, and the two a thread can give an update's start: it is closed ("This alert is already closed": nothing more can
+ * be added, so no form and no "Add an update"), or it has nothing residents can read yet (its first entry waits for approval).
+ */
 export interface MissingComposer {
-  kind: "missing";
+  kind: "missing" | "closed" | "unpublished";
   message: string;
   back: { href: string; label: string };
 }
 
 export function missingComposer(t: Text = catalogText): MissingComposer {
   return { kind: "missing", message: t("missing"), back: { href: "/staff", label: t("back") } };
+}
+
+export function closedUpdate(t: Text = catalogText): MissingComposer {
+  return { kind: "closed", message: t("updateClosed"), back: { href: "/staff", label: t("back") } };
+}
+
+export function unpublishedUpdate(t: Text = catalogText): MissingComposer {
+  return { kind: "unpublished", message: t("updateUnpublished"), back: { href: "/staff", label: t("back") } };
 }
