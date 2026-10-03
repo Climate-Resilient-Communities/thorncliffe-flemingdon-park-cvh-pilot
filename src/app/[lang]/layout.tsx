@@ -45,12 +45,11 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   // be able to draw itself in the page's language when a render fails. Nothing else is sent to the browser.
   const { x01 } = (await getMessages({ locale: lang })) as { x01: Record<"text" | "call" | "short", string> };
   const clientMessages = { x01: { text: x01.text, call: x01.call, short: x01.short } };
-  // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24). Until E03 builds the search
-  // entry (R-09, /search), "Find help" opens the directory, the one place to browse providers (S02.06). It is marked as the
-  // current item on the directory and on the search pages, whichever of the two it links to.
+  // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24). "Find help" opens the ask screen
+  // (R-09, /search, S03.06), which links to the directory (S02.06). It is marked as the current item on both.
   const nav: NavItem[] = [
     { id: "now", icon: "now", label: shell("nav.now"), href: `/${lang}` },
-    { id: "help", icon: "search", label: shell("nav.help"), href: `/${lang}/directory`, alsoCurrentOn: [`/${lang}/search`] },
+    { id: "help", icon: "search", label: shell("nav.help"), href: `/${lang}/search`, alsoCurrentOn: [`/${lang}/directory`] },
     { id: "map", icon: "map", label: shell("nav.map"), href: `/${lang}/map` },
     { id: "ready", icon: "ready", label: shell("nav.ready"), href: `/${lang}/ready` },
   ];

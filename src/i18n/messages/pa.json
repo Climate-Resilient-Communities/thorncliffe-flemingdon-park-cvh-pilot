@@ -645,7 +645,16 @@
     "clear": "ਜੋ ਮੈਂ ਲਿਖਿਆ ਉਹ ਮਿਟਾਓ",
     "testTitle": "ਟੈਸਟ ਖੋਜਾਂ",
     "testNote": "ਸਹਾਇਕਾਂ ਲਈ: ਬ੍ਰੀਫ਼ ਵਿੱਚੋਂ ਲਿਖੀ ਹੋਈ ਖੋਜ ਚਲਾਉਣ ਲਈ ਕਿਸੇ ਇੱਕ ਨੂੰ ਦਬਾਓ। ਵਸਨੀਕਾਂ ਨੂੰ ਇਹ ਨਹੀਂ ਦਿਸਦਾ।",
-    "testGloss": "(ਦਰੀ: {gloss})"
+    "testGloss": "(ਦਰੀ: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "ਨਤੀਜੇ",
@@ -680,7 +689,8 @@
     "hoursUnknown": "ਸਮਾਂ ਪਤਾ ਨਹੀਂ",
     "communityOffer": "ਭਾਈਚਾਰੇ ਵੱਲੋਂ ਪੇਸ਼ਕਸ਼",
     "inCat": "ਵਿਸ਼ਾ: {cat}",
-    "helpEmpty": "ਇਸ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਣ ਵਾਲੀ ਕੋਈ ਵੀ ਸੇਵਾ ਇਨ੍ਹਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।"
+    "helpEmpty": "ਇਸ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਣ ਵਾਲੀ ਕੋਈ ਵੀ ਸੇਵਾ ਇਨ੍ਹਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "ਅਸੀਂ ਇਹ ਅਜੇ ਨਹੀਂ ਲੱਭ ਸਕੇ",
