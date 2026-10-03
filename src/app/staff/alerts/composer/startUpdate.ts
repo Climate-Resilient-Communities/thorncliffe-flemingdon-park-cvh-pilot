@@ -42,5 +42,5 @@ export async function startUpdateFromForm(deps: StartDeps, session: Pick<StaffSe
     },
   );
   if (!result.ok) return { status: "refused", message: composeRefusalMessage(result.error) };
-  return { status: "started", location: composerLocation("update", { alertId, entryId: result.value.entry.id }, {}, from === "promote" ? "promote" : "update") };
+  return { status: "started", location: composerLocation("update", { alertId, entryId: result.value.entry.id }, { saved: "1" }, from === "promote" ? "promote" : "update") };
 }

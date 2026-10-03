@@ -37,15 +37,15 @@ describe("starting an update from the form", () => {
       validUntil: new Date(NOW.getTime() + UNTIL_RESOLVED_MS),
       validUntilMode: "resolved",
     });
-    expect(state).toEqual({ status: "started", location: `/staff/alerts/promote?alert=${ALERT}&entry=${ENTRY}` });
+    expect(state).toEqual({ status: "started", location: `/staff/alerts/promote?alert=${ALERT}&entry=${ENTRY}&saved=1` });
   });
 
   it("goes on to the update composer when the form came from it, and to it too when the form names no composer", async () => {
     const { wired } = deps();
-    expect(await startUpdateFromForm(wired, session, form([...base, ["from", "update"]]))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}` });
-    expect(await startUpdateFromForm(wired, session, form(base))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}` });
+    expect(await startUpdateFromForm(wired, session, form([...base, ["from", "update"]]))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}&saved=1` });
+    expect(await startUpdateFromForm(wired, session, form(base))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}&saved=1` });
     // A form that names some other page is not trusted to say where to go.
-    expect(await startUpdateFromForm(wired, session, form([...base, ["from", "https://elsewhere.example/"]]))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}` });
+    expect(await startUpdateFromForm(wired, session, form([...base, ["from", "https://elsewhere.example/"]]))).toEqual({ status: "started", location: `/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}&saved=1` });
   });
 
   it("reads a date and a time as Toronto time", async () => {
