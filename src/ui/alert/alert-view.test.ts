@@ -124,6 +124,23 @@ describe("the times of an alert", () => {
     expect(v.times).toBe("Posted 2 hours ago · Updated 5 minutes ago");
   });
 
+  it("give the home card the prototype's R-03 line: Posted for one entry, Updated once there is an update", () => {
+    expect(view({ entries: [entry({ published_at: "2026-10-01T14:40:00.000Z" })] }).cardTime).toBe("Posted 20 minutes ago");
+    const v = view({ entries: [entry({ n: 1, published_at: "2026-10-01T13:00:00.000Z" }), entry({ n: 2, kind: "update", published_at: "2026-10-01T14:55:00.000Z" })] });
+    expect(v.cardTime).toBe("Updated 5 minutes ago");
+  });
+
+  it("carry each entry's phase in the catalog's status words, and none for an entry without one", () => {
+    const v = view({
+      entries: [
+        entry({ n: 1, published_at: "2026-10-01T13:00:00.000Z", phase: "problem" }),
+        entry({ n: 2, kind: "update", published_at: "2026-10-01T14:00:00.000Z", phase: "in_progress" }),
+        entry({ n: 3, kind: "update", published_at: "2026-10-01T14:30:00.000Z", phase: undefined }),
+      ],
+    });
+    expect(v.entries.map((e) => e.phase)).toEqual([null, "Work in progress", "Active problem"]);
+  });
+
   it("say the alert has ended, and no valid line, once its time has passed and nothing closed it yet", () => {
     const v = view({ valid_until: "2026-10-01T14:00:00.000Z" });
 

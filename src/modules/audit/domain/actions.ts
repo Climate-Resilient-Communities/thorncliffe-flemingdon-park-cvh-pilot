@@ -194,6 +194,8 @@ export const AUDIT_META = {
   // people its recipient snapshot captured (AD-7, AR-11); a return records that it carried a note (the note itself is free text:
   // it stays on the entry and never goes into the audit trail).
   "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional(), refusal: refusalCode.optional() }),
+  // S05.01: an update added to a running thread (`[*] -> draft` of a follow-up entry: its kind and the thread's types, no text).
+  "entry.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional(), refusal: refusalCode.optional() }),
   "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), refusal: refusalCode.optional() }),
   "entry.returned": meta({
     entry_id: id.optional(),
@@ -265,6 +267,7 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "provider.confirmed": ["confirmed_on"],
   "provider.published": ["last_confirmed"],
   "alert.created": ["entry_id"],
+  "entry.created": ["entry_id", "kind"],
   "entry.submitted": ["entry_id", "version", "content_hash"],
   "entry.returned": ["entry_id", "version", "returned_for"],
   "entry.discarded": ["entry_id", "from"],

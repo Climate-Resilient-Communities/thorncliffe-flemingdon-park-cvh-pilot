@@ -2,7 +2,7 @@ import { expect, test, type Page } from "@playwright/test";
 import { approvalScreen, countChangedView, type ApprovalScreen, type Text } from "../../src/app/staff/alerts/approval/view";
 import type { ApprovalInitial } from "../../src/app/staff/alerts/approval/ApprovalBody";
 import type { BuildingFloorPlan } from "../../src/modules/places";
-import { APPROVER, PLANS, reviewOf, type ReviewOptions } from "../../test/helpers/approvalReview";
+import { APPROVER, PLANS, floorId, reviewOf, type ReviewOptions } from "../../test/helpers/approvalReview";
 import { box, checkHubShellBoundaries, checkHubTwoColumnBoundaries, computed, expectNoHorizontalOverflow, hubPage, tokenPx, type HubLanguage } from "../helpers/hub-layout-boundaries";
 import { REAL_TEXTS, hubBrand, longestTexts } from "../helpers/hub-shell";
 import { mount } from "../helpers/layout-fixture";
@@ -54,6 +54,21 @@ const PAGES: Page_[] = [
   { name: "O-05 an alert waiting for approval", review: {}, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 with texting open, languages that fell back and a possible duplicate", review: { recipients: OPEN, fallback: ["ur", "ps", "prs"], duplicate: { alertId: "01900000-0000-7000-8000-00000000a1e8", entryId: "01900000-0000-7000-8000-00000000e178" } }, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-07 an ambassador's post", review: { authorRole: "ambassador" }, actions: ["approve-button", "return-button", "discard-button"] },
+  {
+    // S05.01: an update to a running alert that widens who it is for (a floor and a building added, the people outside the groups reached) and narrows it (a floor dropped):
+    // "Now also for: ..." and "No longer for: ..." sit right under who it is for, above the fold, in every language with the longest labels.
+    name: "O-05 an update that widens and narrows who it is for",
+    review: {
+      entry: { kind: "update" },
+      threadAudience: {
+        scope: "buildings",
+        buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3)] }],
+        groups: [],
+        types: ["elevator", "power"],
+      },
+    },
+    actions: ["approve-button", "return-button", "discard-button"],
+  },
   { name: "O-05 returning it to its author with a note", review: {}, initial: () => ({ mode: "return" }), actions: ["send-back-button", "cancel-button"] },
   { name: "O-05 while all texts are paused (S06.06)", review: {}, paused: true, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 confirming a discard", review: {}, initial: () => ({ mode: "discard" }), actions: ["discard-confirm-button", "cancel-button"] },
@@ -254,6 +269,24 @@ test.describe("the phone, at 390 px, with the app's own English words", () => {
     await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight));
     const scrolled = await box(page.getByTestId("approve-button"));
     expect(scrolled.top).toBeCloseTo(approve.top, 0);
+  });
+
+  test("shows what an update changes about who it is for, 'Now also for: ...' and 'No longer for: ...', above the fold with the audience (S05.01)", async ({ page }) => {
+    await page.setViewportSize(VIEWPORT);
+    const update = PAGES.find((candidate) => candidate.name.startsWith("O-05 an update"))!;
+    await open(page, update, "en", "real");
+    const barTop = (await box(region(page))).top;
+    for (const id of ["update-note", "audience-sentence", "audience-also-for", "audience-no-longer-for", "fact-channels"]) {
+      const where = await box(page.getByTestId(id));
+      expect(where.top, `${id} starts inside the screen`).toBeGreaterThanOrEqual(0);
+      expect(where.bottom, `${id} ends above the actions, with no scrolling`).toBeLessThanOrEqual(barTop + 0.5);
+    }
+    await expect(page.getByTestId("audience-also-for")).toContainText("Now also for: ");
+    await expect(page.getByTestId("audience-no-longer-for")).toContainText("No longer for: ");
+    // They sit under who it is for and above where it goes.
+    const at = async (id: string) => (await box(page.getByTestId(id))).top;
+    expect(await at("fact-audience")).toBeLessThan(await at("audience-also-for"));
+    expect(await at("audience-no-longer-for")).toBeLessThan(await at("fact-channels"));
   });
 
   test("has Approve, Return to author and Discard in the sticky region and no way to edit", async ({ page }) => {

@@ -29,36 +29,53 @@ function typesOf(form: FormData, current: readonly string[]): string[] {
   return sent.length === 0 && !form.has("types-sent") ? [...current] : [...new Set(sent)];
 }
 
-/** The draft's content with what the form changed: the text, the types, where things stand and the valid-until. */
-export function contentFromForm(form: FormData, current: EntryContent, now: Date): ContentFromForm {
-  const text = form.get("text");
-  const phase = form.get("phase");
-  const types = typesOf(form, current.types).sort();
-  const audience: Audience = { ...current.audience, types };
+/** The valid-until the form chose and how it chose it, or what to tell the person about the time they entered. */
+export type ValidUntilFromForm = { ok: true; validUntil: Date; mode: ValidMode } | { ok: false; problem: TimeProblem };
+
+/**
+ * The valid-until a composer form describes (the radio `valid-mode`, and for a time `valid-date`, `valid-time` and, once asked, `valid-fold`): "until
+ * resolved" is 24 elapsed hours from `now`, a time is read as Toronto time. Shared by the composers' Save and by starting an update (S05.01), so both mean
+ * the same thing by it.
+ */
+export function validUntilFromForm(form: FormData, now: Date): ValidUntilFromForm {
   const mode: ValidMode = form.get("valid-mode") === "at" ? "at" : "resolved";
-  let validUntil: Date;
-  if (mode === "resolved") {
-    validUntil = new Date(now.getTime() + UNTIL_RESOLVED_MS);
-  } else {
-    const parsed = parseTimeFields(timeFieldsOf(form, "valid"));
-    if (!parsed.ok) {
-      if (parsed.problem === "ambiguous") {
-        const values = foldQuestionValues(parsed);
-        return { ok: false, problem: { kind: "ask", question: t("foldQuestion", { time: values.time, date: values.date }), before: t("foldBefore", { time: values.before }), after: t("foldAfter", { time: values.after }) } };
-      }
-      return { ok: false, problem: { kind: "message", message: parsed.problem === "nonexistent" ? t("nonexistent") : t("invalid") } };
+  if (mode === "resolved") return { ok: true, validUntil: new Date(now.getTime() + UNTIL_RESOLVED_MS), mode };
+  const parsed = parseTimeFields(timeFieldsOf(form, "valid"));
+  if (!parsed.ok) {
+    if (parsed.problem === "ambiguous") {
+      const values = foldQuestionValues(parsed);
+      return { ok: false, problem: { kind: "ask", question: t("foldQuestion", { time: values.time, date: values.date }), before: t("foldBefore", { time: values.before }), after: t("foldAfter", { time: values.after }) } };
     }
-    validUntil = parsed.instant;
+    return { ok: false, problem: { kind: "message", message: parsed.problem === "nonexistent" ? t("nonexistent") : t("invalid") } };
   }
+  return { ok: true, validUntil: parsed.instant, mode };
+}
+
+/** The phase a form chose, or null when it chose none (or something that is not one of the two). */
+export const phaseFromForm = (form: FormData): Phase | null => {
+  const phase = form.get("phase");
+  return (PHASES as readonly string[]).includes(String(phase)) ? (phase as Phase) : null;
+};
+
+/**
+ * The draft's content with what the form changed: the text, the types, where things stand and the valid-until. An update to a running alert keeps the
+ * thread's types whatever the form says (`keepTypes`, S05.01: they are carried over, and the use case refuses a change of them too).
+ */
+export function contentFromForm(form: FormData, current: EntryContent, now: Date, options: { keepTypes?: boolean } = {}): ContentFromForm {
+  const text = form.get("text");
+  const types = (options.keepTypes ? [...current.types] : typesOf(form, current.types)).sort();
+  const audience: Audience = { ...current.audience, types };
+  const valid = validUntilFromForm(form, now);
+  if (!valid.ok) return valid;
   return {
     ok: true,
     content: {
       text: typeof text === "string" ? normaliseText(text) : current.text,
       types,
       audience,
-      phase: (PHASES as readonly string[]).includes(String(phase)) ? (phase as Phase) : current.phase,
-      validUntil,
-      validUntilMode: mode,
+      phase: phaseFromForm(form) ?? current.phase,
+      validUntil: valid.validUntil,
+      validUntilMode: valid.mode,
     },
   };
 }

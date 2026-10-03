@@ -154,6 +154,66 @@ describe("alert detail (R-07)", () => {
     expect(html).toContain("alert-entry--latest");
   });
 
+  it("reads a thread newest first by the entries' own times, whatever order the feed lists them in (entriesNewestFirst), with the catalog's words for the thread, the kinds, the times and the valid-until", () => {
+    const body = (text: string) => ({ lang: "en" as const, body: text, machine: false, model: null, status: "source" as const, source_hash: "b".repeat(64) });
+    const entries = [
+      englishEntry({ n: 2, kind: "update", published_at: "2026-10-01T14:00:00.000Z", text: body("Update one.") }),
+      englishEntry({ n: 4, kind: "final", published_at: "2026-10-01T14:50:00.000Z", text: body("Final word.") }),
+      englishEntry({ n: 1, kind: "ack", published_at: "2026-10-01T13:00:00.000Z", text: body("First word.") }),
+      englishEntry({ n: 3, kind: "correction", published_at: "2026-10-01T14:30:00.000Z", text: body("Corrected word.") }),
+    ];
+    const en = translatorFor("en");
+    const html = render({ entries, valid_until: "2026-10-01T19:00:00.000Z" });
+
+    // Newest first, from the entries' times and not from the order they arrive in; the alert above is the newest.
+    const positions = [4, 3, 2, 1].map((n) => html.indexOf(`data-testid="alert-entry-${ID(n)}"`));
+    expect(positions[3]).toBeGreaterThan(-1);
+    expect(positions).toEqual([...positions].sort((a, b) => a - b));
+    expect(html).toContain(`data-testid="alert-text">Final word.</p>`);
+    // The catalog's words: the thread's heading, one label per kind, the one "Latest" tag, the times and the valid-until line.
+    expect(html).toContain(en("R07.thread"));
+    for (const kind of ["ack", "update", "correction", "final"]) expect(html).toContain(`>${en(`R07.kinds.${kind}`)}<`);
+    expect(count(html, new RegExp(`>${en("R07.latestTag")}<`, "g"))).toBe(1);
+    expect(html).toContain(en("R07.timeLine", { posted: "2 hours ago", updated: "10 minutes ago" }));
+    expect(html.replace(/[  ]/g, " ")).toMatch(/data-testid="alert-valid">Valid until today at 3:00 PM</);
+    expect(count(html, /alert-entry--latest/g)).toBe(1);
+  });
+
+  it("draws each entry's phase in the catalog's status words (status.active, status.progress), on the entry that reported it, in English and Urdu", () => {
+    const entries = [
+      englishEntry({ n: 1, kind: "ack", phase: "problem", published_at: "2026-10-01T13:00:00.000Z" }),
+      englishEntry({ n: 2, kind: "update", phase: "in_progress", published_at: "2026-10-01T14:30:00.000Z" }),
+      englishEntry({ n: 3, kind: "update", phase: undefined, published_at: "2026-10-01T14:45:00.000Z" }),
+    ];
+    for (const lang of ["en", "ur"] as const) {
+      const t = translatorFor(lang);
+      const html = render({ entries }, lang);
+      const phaseOf = (n: number) => html.match(new RegExp(`data-testid="alert-entry-phase-${ID(n)}"[^>]*>(?:<[^>]*>)*([^<]*)`))?.[1];
+      expect(phaseOf(1), lang).toBe(t("status.active"));
+      expect(phaseOf(2), lang).toBe(t("status.progress"));
+      expect(html, lang).not.toContain(`alert-entry-phase-${ID(3)}`);
+    }
+    expect(translatorFor("en")("status.active")).toBe("Active problem");
+    expect(translatorFor("en")("status.progress")).toBe("Work in progress");
+  });
+
+  it("has every word the thread uses in the catalog of each language: R07.thread, the kinds, the end-time note and the valid-until line (R07.earlier is not drawn by R-07)", () => {
+    for (const lang of ["en", "ur", "fr"] as const) {
+      const t = translatorFor(lang);
+      for (const key of ["R07.thread", "R07.earlier", "R07.latestTag", "R07.expiredNote", "R07.timeLine", "R07.timeLineOne", "R07.kinds.ack", "R07.kinds.update", "R07.kinds.correction", "R07.kinds.final"]) {
+        expect(t(key, { posted: "x", updated: "y" }), `${lang} ${key}`).not.toBe("");
+      }
+      expect(t("R07.validLine", { until: "z" })).toContain("z");
+    }
+    expect(translatorFor("en")("R07.earlier")).toBe("Earlier updates");
+  });
+
+  it("reads the same page from a thread listed newest first as from one listed oldest first", () => {
+    const first = englishEntry({ n: 1, published_at: "2026-10-01T13:00:00.000Z" });
+    const second = englishEntry({ n: 2, kind: "update", published_at: "2026-10-01T14:30:00.000Z" });
+    expect(render({ entries: [second, first] })).toBe(render({ entries: [first, second] }));
+  });
+
   it("has no thread list for an alert with one entry: it is the alert above", () => {
     expect(render({ entries: [englishEntry()] })).not.toContain('data-testid="alert-thread"');
   });

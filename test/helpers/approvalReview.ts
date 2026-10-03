@@ -45,6 +45,10 @@ export interface ReviewOptions {
   /** Texting open (E07): the count and its languages. Left out: texting is not open, nobody is counted. */
   recipients?: { open: boolean } & RecipientCounts;
   duplicate?: EntryReview["duplicate"];
+  /** The audience the thread has now, for an update (S05.01): what the view compares the entry's own audience with. */
+  threadAudience?: EntryReview["threadAudience"];
+  /** The entry that covers the thread (S05.01); given with `threadAudience`, it is what the approval is bound to. */
+  threadCoveringId?: string;
 }
 
 /** A pending acknowledgement, version 2, with every text frozen. */
@@ -101,5 +105,7 @@ export function reviewOf(options: ReviewOptions = {}): EntryReview {
     sms: entry.status === "draft" || entry.status === "discarded" ? {} : sms,
     recipients: options.recipients ?? { open: false, total: 0, byLanguage: {} },
     duplicate: options.duplicate ?? null,
+    threadAudience: options.threadAudience ?? null,
+    threadCoveringId: options.threadAudience ? (options.threadCoveringId ?? "01900000-0000-7000-8000-00000000c0e1") : null,
   };
 }

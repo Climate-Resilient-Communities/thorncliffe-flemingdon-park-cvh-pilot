@@ -130,7 +130,7 @@ describe("saving", () => {
     ["OUT_OF_SCOPE", "You are not assigned to one of those buildings."],
     ["ENTRY_NOT_FOUND", "That alert draft was not found."],
     ["ILLEGAL_TRANSITION", "This alert was already submitted, so who it is for cannot change."],
-    ["ALERT_CLOSED", "This alert is closed."],
+    ["ALERT_CLOSED", "This alert is already closed."],
     ["TEXT_EMPTY", "That audience cannot be used. Reload the page and choose again."],
   ] as const)("tells the person why: %s", async (error, expected) => {
     expect(refusalMessage(error)).toBe(expected);

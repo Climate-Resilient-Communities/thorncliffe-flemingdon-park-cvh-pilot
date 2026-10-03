@@ -126,7 +126,7 @@ export function savedNotice(query: SavedQuery, t: Text = catalogText): string | 
 }
 
 /** "A", "A and B", "A, B and C". */
-function joinWords(items: readonly string[]): string {
+export function joinWords(items: readonly string[]): string {
   if (items.length <= 1) return items.join("");
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
@@ -147,9 +147,9 @@ function stepsOf(ref: DraftRef, current: "place" | "groups", t: Text, from: Comp
 const backOf = (ref: DraftRef, from: ComposerFrom | null, t: Text): { back: BackLink } | Record<string, never> => (from ? { back: { from, href: composerHref(from, ref), label: t("backToAlert") } } : {});
 
 /** The floors of a building by their labels, in the building's own order (lowest first), for the ids given. */
-const floorLabels = (plan: BuildingFloorPlan, ids: readonly string[]) => plan.floors.filter((floor) => ids.includes(floor.id)).map((floor) => floor.label);
+export const floorLabels = (plan: BuildingFloorPlan, ids: readonly string[]) => plan.floors.filter((floor) => ids.includes(floor.id)).map((floor) => floor.label);
 
-const groupName = (group: string, t: Text) => ((GROUPS as readonly string[]).includes(group) ? t(`groupNames.${group}`) : group);
+export const groupName = (group: string, t: Text) => ((GROUPS as readonly string[]).includes(group) ? t(`groupNames.${group}`) : group);
 
 /** The audience in words (the aside of both pages, and what the approver will read in S04.07). */
 export function asideOf(audience: Audience, plans: readonly BuildingFloorPlan[], link: AsideView["link"], t: Text = catalogText): AsideView {

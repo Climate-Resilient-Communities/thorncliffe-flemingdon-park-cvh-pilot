@@ -15,6 +15,7 @@ import type { EntryReview } from "@/modules/alerting";
 import { estimateSmsCost } from "@/modules/messaging";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { formatTorontoDateTime } from "@/platform/clock";
+import { changeView } from "../audience/change";
 import { asideOf } from "../audience/view";
 import { approveHref } from "../pages";
 import { typeName } from "../typeNames";
@@ -95,11 +96,16 @@ export interface ApprovalScreen {
    * the confirmation of an approval (the screen of an approved entry); null otherwise. It informs and never changes or refuses the approval.
    */
   pauseNotice: string | null;
-  header: { types: string; submitted: string; drill: string | null; by: string | null };
+  /** `update`: this is an update to an alert residents already read (S05.01); null for a thread's first entry. */
+  header: { types: string; submitted: string; drill: string | null; by: string | null; update: string | null };
   english: { title: string; body: string };
   facts: {
     title: string;
-    audience: { label: string; sentence: string; floorNote?: string; groups: string };
+    /**
+     * `change`: what an update changes about who the thread is for, against the audience it has now (S05.01): "Now also for: ..." for what it newly
+     * reaches and "No longer for: ..." for what it stops reaching, each null when it adds or drops nothing; absent when nothing changes.
+     */
+    audience: { label: string; sentence: string; floorNote?: string; groups: string; change?: { alsoFor: string | null; noLongerFor: string | null } };
     channels: { label: string; items: string[] };
     recipients: { label: string; count: string; notOpen: string | null; byLanguage: { label: string; items: string[] } | null };
     cost: { label: string; value: string; note: string };
@@ -111,7 +117,7 @@ export interface ApprovalScreen {
   cannotEdit: string;
   languages: { title: string; lead: string; webLabel: string; rows: LanguageReviewView[] };
   /** What the approver was shown: the version and hash an approval, a return and a discard name, and the reviewed count Approve names. */
-  binding: { version: number; contentHash: string; reviewed: string };
+  binding: { version: number; contentHash: string; reviewed: string; /** The entry the "Now also for" line was read against (S05.01); absent when none was shown. */ covering?: string };
   actions: { label: string; approve: string; approveConfirmed: string; returnToAuthor: string; discard: string };
   returnForm: { title: string; hint: string; noteLabel: string; max: number; counter: string; send: string; cancel: string };
   discardForm: { title: string; lead: string; confirm: string; cancel: string };
@@ -188,6 +194,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
   const variant = review.authorRole === "ambassador" ? "ambassador" : "alert";
   const open = review.recipients.open;
   const aside = asideOf(entry.content.audience, input.plans, { href: "", label: "" }, audienceText);
+  // An update says what it changes about who the thread is for, in the audience catalog's words (S05.01); nothing is said when it changes nothing.
+  const changed = review.threadAudience === null ? null : changeView(review.threadAudience, entry.content.audience, input.plans, audienceText);
+  const change = changed !== null && (changed.alsoFor !== null || changed.noLongerFor !== null) ? changed : null;
 
   const fallbackLangs = review.texts.filter((text) => text.status === "fallback_en").map((text) => text.lang as LangCode);
   const fallbackRecipients = open ? fallbackLangs.reduce((sum, lang) => sum + (review.recipients.byLanguage[lang] ?? 0), 0) : 0;
@@ -264,11 +273,12 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       submitted: entry.submittedAt ? t("submitted", { time: formatTorontoDateTime(entry.submittedAt), version: entry.version }) : "",
       drill: thread.isDrill ? t("drill") : null,
       by: variant === "ambassador" ? t("ambassadorBy") : null,
+      update: entry.kind === "update" && review.threadAudience !== null ? t("updateNote") : null,
     },
     english: { title: t("textTitle"), body: entry.content.text },
     facts: {
       title: t("factsTitle"),
-      audience: { label: t("audience"), sentence: aside.sentence, ...(aside.floorNote ? { floorNote: aside.floorNote } : {}), groups: aside.groups },
+      audience: { label: t("audience"), sentence: aside.sentence, ...(aside.floorNote ? { floorNote: aside.floorNote } : {}), groups: aside.groups, ...(change ? { change } : {}) },
       // Texting is a channel once it is open; until then the web is the only one the approval can promise. A drill reaches no resident on either (AD-6).
       channels: { label: t("channels"), items: thread.isDrill ? [t("channelDrill")] : open ? [t("channelWeb"), t("channelSms")] : [t("channelWeb")] },
       recipients: {
@@ -293,7 +303,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       : null,
     cannotEdit: t("cannotEdit"),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), webLabel: t("webText"), rows: languageRows },
-    binding: { version: entry.version, contentHash: entry.contentHash ?? "", reviewed: encodeCounts(review.recipients) },
+    binding: { version: entry.version, contentHash: entry.contentHash ?? "", reviewed: encodeCounts(review.recipients), ...(review.threadCoveringId === null ? {} : { covering: review.threadCoveringId }) },
     actions: { label: t("actionsLabel"), approve: t("approve"), approveConfirmed: t("approveConfirmed"), returnToAuthor: t("returnToAuthor"), discard: t("discard") },
     returnForm: { title: t("returnTitle"), hint: t("returnHint"), noteLabel: t("noteLabel"), max: RETURN_NOTE_MAX, counter: t("noteCounter", { n: "{n}", max: RETURN_NOTE_MAX }), send: t("sendBack"), cancel: t("cancel") },
     discardForm: { title: t("discardTitle"), lead: t("discardLead"), confirm: t("discardConfirm"), cancel: t("cancel") },

@@ -81,6 +81,11 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
                     <span className="alert-entry__time">
                       <ResidentText>{entry.time}</ResidentText>
                     </span>
+                    {entry.phase !== null && (
+                      <span className="alert-entry__phase" data-testid={`alert-entry-phase-${entry.id}`}>
+                        <ResidentText>{entry.phase}</ResidentText>
+                      </span>
+                    )}
                   </span>
                   <ThreadEntryText view={view} entry={entry} latest={index === 0} />
                 </li>

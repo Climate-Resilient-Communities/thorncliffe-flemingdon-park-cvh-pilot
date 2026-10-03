@@ -27,8 +27,10 @@ import { AUTHORED_KINDS, checkApproval, checkShownBinding, requestTransition, ty
 import type { AlertRefusal } from "../domain/refusals";
 import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
 import { FROZEN_LANGS } from "../domain/translations";
+import { coveringEntry, isPublished, updateStart } from "../domain/thread";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
+import { publishedSummaries, readRunningThreads, readThreadSummary, type RunningThread, type ThreadSummary } from "./threads";
 import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
 
@@ -125,6 +127,11 @@ export interface ApprovalBinding {
 export interface ApprovalRequest extends ApprovalBinding {
   /** Left out, the approver reviewed nobody (the count before E07 opens text sign-up): a snapshot that counts anyone is then refused. */
   recipients?: RecipientCounts;
+  /**
+   * The entry that covered the thread when the approver read an update's "Now also for" line (S05.01). If another entry covers it by the time of the
+   * approval, the line no longer describes the thread and nothing is approved (ENTRY_CHANGED). Left out for an entry that was shown none.
+   */
+  covering?: string;
 }
 
 /** What an approval did, once it committed: the entry as approved, the recipient snapshot it captured, and the feed version it raised (null for a drill, which changes nothing the web shows). */
@@ -161,6 +168,14 @@ export interface EntryReview {
   recipients: RecipientCount;
   /** The other open thread this entry may duplicate, and its newest pending or approved entry to link to (null when it holds none). */
   duplicate: { alertId: string; entryId: string | null } | null;
+  /**
+   * The audience the thread has now: that of the entry that covers it, which is what residents are told today (S05.01). Set for a draft or a pending
+   * entry that follows another in its thread (an update), so the approver is shown what the entry changes ("Now also for: ..."); null for a thread's
+   * first entry and for an entry that is not waiting.
+   */
+  threadAudience: Audience | null;
+  /** The id of the entry that covers the thread now, whose audience `threadAudience` is: what the "Now also for" line was read against; null with it. */
+  threadCoveringId: string | null;
 }
 
 /** One entry on someone's incidents list (S04.07's share of O-01, which S04.10 builds out). */
@@ -176,6 +191,11 @@ export interface IncidentRow {
   submittedAt: Date | null;
   /** The note an approver wrote when they sent it back to its author: shown to the author until they submit again. */
   returnedNote: string | null;
+  /**
+   * The entry follows another in its thread (an update added to a running thread, S05.01): it is written on the update composer. Absent is false: the
+   * thread's first entry, written on the acknowledgement or alert composer.
+   */
+  followUp?: boolean;
 }
 
 /** What waits for a person, and what they have in hand. */
@@ -228,6 +248,29 @@ export interface EntryState {
   attempt: AttemptView | null;
   /** The frozen translations (a pending or approved entry): each language and how its text came to be. */
   translations: readonly { lang: string; status: string; machine: boolean }[];
+  /**
+   * The kinds of the entries made before this one in its thread, oldest first (S05.01). Absent or empty: this is the thread's first entry (written on the
+   * acknowledgement or alert composer); otherwise it follows them (an update, written on the update composer, which is "Promote to full alert" while
+   * every earlier entry is an acknowledgement).
+   */
+  priorKinds?: readonly EntryKind[];
+}
+
+/**
+ * What an update starts from and is made of (S05.01): the English text, where things stand (required: the author chooses it, it is never carried over), and
+ * the valid-until the author chose ("until resolved", renewed to 24 hours from now, or a time). The types and the audience are not here: they are the
+ * thread's, carried over from the entry that covers it, and an update changes the audience only through the pickers afterwards.
+ */
+export interface AddUpdateInput {
+  /**
+   * The id the new entry takes. The page makes it when it draws the form, so that pressing the button twice, or a browser that sends the request again,
+   * makes one entry: a request whose id is already this person's update in this thread returns that update and changes nothing.
+   */
+  entryId: string;
+  text: string;
+  phase: Phase;
+  validUntil: Date;
+  validUntilMode: ValidUntilMode;
 }
 
 /**
@@ -359,7 +402,7 @@ const threadOf = (row: ThreadRow): ThreadView => {
   return { id: row.id, slug: row.slug, isDrill: row.isDrill, reportedAt: row.reportedAt, status: row.status as "open" | "closed" };
 };
 
-type AuditedAction = "alert.created" | "entry.submitted" | "entry.returned" | "entry.discarded" | "entry.approved";
+type AuditedAction = "alert.created" | "entry.created" | "entry.submitted" | "entry.returned" | "entry.discarded" | "entry.approved";
 
 export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const { db, audit, staff, places } = deps;
@@ -490,6 +533,11 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     // at one they are), and what it will hold.
     mustAuthor(standing, actor.staffId, contentOf(entry));
     mustAuthor(standing, actor.staffId, content);
+    // An update that follows other entries keeps the thread's types (S05.01): they are carried over, and a different type is a different disruption.
+    if (entry.kind === "update") {
+      const covering = (await readThreadSummary(tx, entry.alertId))?.covering ?? null;
+      if (covering !== null && covering.id !== entry.id && [...covering.types].sort().join("\n") !== [...content.types].sort().join("\n")) throw new Refused("TYPES_CHANGED");
+    }
     await mustExist(tx, content.audience);
     const [saved] = await tx
       .update(alertEntry)
@@ -653,6 +701,28 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     return countsOfTexts(await queueAlertTexts(tx, entry.entryId, texts));
   }
 
+  /** Inserts a draft (the author its first editor): the one place an entry row is made, for a thread's first entry and for an update. The caller has judged everything. */
+  async function insertEntry(tx: DbTransaction, actor: AlertActor, ids: { alertId: string; entryId: string; createdAt: Date }, kind: (typeof AUTHORED_KINDS)[number], content: EntryContent): Promise<EntryRow> {
+    const [entry] = await tx
+      .insert(alertEntry)
+      .values({
+        id: ids.entryId,
+        alertId: ids.alertId,
+        kind,
+        authorId: actor.staffId,
+        editorIds: [actor.staffId],
+        originalText: content.text,
+        types: [...content.types],
+        audience: content.audience,
+        phase: content.phase,
+        validUntil: content.validUntil,
+        validUntilMode: content.validUntilMode ?? "at",
+        createdAt: ids.createdAt,
+      })
+      .returning();
+    return entry;
+  }
+
   /** Inserts the thread and its first draft (the author its first editor), audited as `alert.created`. The caller has judged everything. */
   async function insertThread(
     tx: DbTransaction,
@@ -665,23 +735,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       .insert(alert)
       .values({ id: ids.alertId, isDrill: input.isDrill, reportedAt: input.reportedAt, createdBy: actor.staffId, slug: newSlug() })
       .returning();
-    const [entry] = await tx
-      .insert(alertEntry)
-      .values({
-        id: ids.entryId,
-        alertId: ids.alertId,
-        kind: input.kind,
-        authorId: actor.staffId,
-        editorIds: [actor.staffId],
-        originalText: input.content.text,
-        types: [...input.content.types],
-        audience: input.content.audience,
-        phase: input.content.phase,
-        validUntil: input.content.validUntil,
-        validUntilMode: input.content.validUntilMode ?? "at",
-        createdAt: ids.createdAt,
-      })
-      .returning();
+    const entry = await insertEntry(tx, actor, ids, input.kind, input.content);
     await audit.record(tx, {
       action: "alert.created",
       actorStaffId: actor.staffId,
@@ -945,6 +999,52 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /**
+     * Adds an update to a running thread (S05.01, "Add an update" O-14 and "Promote to full alert" O-13, which is the first update): a new draft of kind
+     * `update` that starts from the thread, in one transaction under its lock, and then goes through submit, approval, translation and freezing exactly like
+     * any entry (nothing here forks them: `beginSubmit` and `approveEntry` do not know it is an update). The thread's types and audience are carried over
+     * from the entry that covers it (the latest published, non-superseded substantive entry); the phase and the valid-until are the author's, the text is
+     * what they wrote. The audience changes only through the pickers afterwards (a widening or narrowing is stored on the update and shown to the approver).
+     * An update supersedes nothing: no earlier entry changes, and nothing queued is cancelled.
+     *
+     * Refused: a thread that is closed (`ALERT_CLOSED`, "This alert is already closed"), one with nothing residents can read yet (`NO_PUBLISHED_ENTRY`: its
+     * first entry waits for approval), a role or buildings the author may not write for (the policy, as for any draft), and everything a draft's content
+     * must satisfy: the text, the phase (`PHASE_INVALID`: it is required), the valid-until. Audited as `entry.created`. A request that names an entry id this
+     * person already made in this thread returns that entry and changes nothing (the same press, sent twice).
+     */
+    async addUpdate(actor: AlertActor, ref: { alertId: string }, input: AddUpdateInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      return change("entry.created", actor, { type: "alert_entry", id: input.entryId }, async (tx) => {
+        // AD-18: the thread is locked first, and a closed one refuses here whatever follows.
+        const { thread, standing } = await open(tx, actor, { alertId: ref.alertId });
+        if (!UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
+        const [existing] = await tx.select().from(alertEntry).where(eq(alertEntry.id, input.entryId)).for("update");
+        if (existing) {
+          if (existing.alertId === thread.id && existing.authorId === actor.staffId && existing.kind === "update") return { thread: threadOf(thread), entry: entryOf(existing) };
+          throw new Refused("ENTRY_ID_INVALID");
+        }
+        const at = now();
+        const covering = coveringEntry(publishedSummaries(await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id))));
+        if (covering === null) throw new Refused("NO_PUBLISHED_ENTRY");
+        const start = updateStart(covering, at);
+        const content: EntryContent = { text: input.text, types: start.types, audience: start.audience, phase: input.phase, validUntil: input.validUntil, validUntilMode: input.validUntilMode };
+        mustAuthor(standing, actor.staffId, content);
+        const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
+        if (invalid) throw new Refused(invalid);
+        // The places the carried-over audience names are not checked here: a floor removed since the covering entry was approved must not stop the author from
+        // starting an update, whose pickers are the way to choose another place. Submit and approval check the places, as they do for every entry.
+        const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "update", content);
+        await audit.record(tx, {
+          action: "entry.created",
+          actorStaffId: actor.staffId,
+          subjectType: "alert_entry",
+          subjectId: row.id,
+          isDrill: thread.isDrill,
+          meta: { entry_id: row.id, kind: "update", types: [...content.types] },
+        });
+        return { thread: threadOf(thread), entry: entryOf(row) };
+      });
+    },
+
+    /**
      * Saves a draft's content. Whoever saves a change becomes an editor (the trigger adds them), so
      * they can no longer approve this entry. A draft only, in an open thread.
      */
@@ -1077,6 +1177,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           now: now(),
         });
         if (refusal) throw new Refused(refusal);
+        // The "Now also for" line was read against an entry that covers the thread; if another one covers it now, the line is out of date (S05.01).
+        if (shown.covering !== undefined && ((await readThreadSummary(tx, ref.alertId))?.covering?.id ?? null) !== shown.covering) throw new Refused("ENTRY_CHANGED");
         mustTransition(thread, row, "approved");
         // AD-5: approval re-checks the author against their current status and assignments.
         const author = await staff.standing(tx, row.authorId);
@@ -1158,6 +1260,19 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running")));
     },
 
+    /**
+     * One thread as residents have read it so far (S05.01): the entries they can read newest first, with each one's time and phase, the entry that covers
+     * the thread and the valid-until it gives it, and whether the thread is still only an acknowledgement. Null when there is no such thread.
+     */
+    async threadSummary(alertId: string): Promise<ThreadSummary | null> {
+      return readThreadSummary(db, alertId);
+    },
+
+    /** The open threads residents have something substantive to read in, newest news first: what the Hub can add an update to (a closed thread is not here). */
+    async runningThreads(): Promise<RunningThread[]> {
+      return readRunningThreads(db);
+    },
+
     /** One thread, as stored; null when there is none. */
     async getThread(alertId: string): Promise<ThreadView | null> {
       if (!UUID.test(alertId)) return null;
@@ -1185,7 +1300,26 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
                   .select({ lang: alertEntryTranslation.lang, status: alertEntryTranslation.status, machine: alertEntryTranslation.machine })
                   .from(alertEntryTranslation)
                   .where(eq(alertEntryTranslation.entryId, ref.entryId));
-          return { thread: threadOf(threadRow), entry: entryOf(entryRow), attempt: latest ? attemptOf(latest, now()) : null, translations };
+          // The entries made before this one that residents can read, oldest first: an entry that has some follows them (an update, S05.01). A draft or a
+          // discarded update is not among them, so the composer an update is written on is the one `isAckOnly` (the Hub home, the start page) would choose.
+          const earlier = await tx
+            .select({ kind: alertEntry.kind, status: alertEntry.status, webPublishedAt: alertEntry.webPublishedAt })
+            .from(alertEntry)
+            .where(
+              and(
+                eq(alertEntry.alertId, ref.alertId),
+                ne(alertEntry.id, entryRow.id),
+                or(lt(alertEntry.createdAt, entryRow.createdAt), and(eq(alertEntry.createdAt, entryRow.createdAt), lt(alertEntry.id, entryRow.id))),
+              ),
+            )
+            .orderBy(alertEntry.createdAt, alertEntry.id);
+          return {
+            thread: threadOf(threadRow),
+            entry: entryOf(entryRow),
+            attempt: latest ? attemptOf(latest, now()) : null,
+            translations,
+            priorKinds: earlier.filter(isPublished).map((row) => row.kind as EntryKind),
+          };
         },
         { isolationLevel: "repeatable read" },
       );
@@ -1235,6 +1369,16 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
               .limit(1);
             duplicate = { alertId: entryRow.possibleDuplicateOf, entryId: other?.id ?? null };
           }
+          // An update that waits shows what it changes about who the thread is for: the audience of the entry that covers the thread now (S05.01).
+          let threadAudience: Audience | null = null;
+          let threadCoveringId: string | null = null;
+          if (entryRow.status === "draft" || entryRow.status === "pending_approval") {
+            const covering = (await readThreadSummary(tx, ref.alertId))?.covering ?? null;
+            if (covering !== null && covering.id !== entryRow.id) {
+              threadAudience = covering.audience;
+              threadCoveringId = covering.id;
+            }
+          }
           return {
             thread,
             entry: entryOf(entryRow),
@@ -1243,6 +1387,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             sms: (entryRow.smsBodies ?? {}) as Record<string, FrozenSmsBody>,
             recipients: reached,
             duplicate,
+            threadAudience,
+            threadCoveringId,
           };
         },
         { isolationLevel: "repeatable read" },
@@ -1268,8 +1414,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         version: alertEntry.version,
         submittedAt: alertEntry.submittedAt,
         returnedNote: alertEntry.returnedNote,
+        // Another entry was made before this one in its thread: an update (S05.01), written on the update composer.
+        followUp: sql<boolean>`exists (select 1 from alert_entry earlier where earlier.alert_id = ${alertEntry.alertId} and earlier.id <> ${alertEntry.id} and earlier.web_published_at is not null and earlier.status not in ('draft', 'discarded') and (earlier.created_at, earlier.id) < (${alertEntry.createdAt}, ${alertEntry.id}))`,
       };
-      const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null }): IncidentRow => ({
+      const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null; followUp: boolean }): IncidentRow => ({
         alertId: row.alertId,
         entryId: row.entryId,
         kind: row.kind as EntryKind,
@@ -1279,6 +1427,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         version: row.version,
         submittedAt: row.submittedAt,
         returnedNote: row.returnedNote,
+        followUp: row.followUp === true,
       });
       const open = and(eq(alert.status, "open"), inArray(alertEntry.status, ["draft", "pending_approval"]));
       const mine = await db

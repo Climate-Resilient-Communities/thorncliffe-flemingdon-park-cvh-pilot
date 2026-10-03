@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { FeedV1, feedPath } from "./feed";
+import { FeedV1, entriesNewestFirst, feedPath } from "./feed";
 
 const feed = (change: Record<string, unknown> = {}) => ({
   v: 1,
@@ -53,6 +53,45 @@ describe("FeedV1", () => {
     ["a field it does not know", { resident: "x" }],
   ])("rejects %s", (_name, change) => {
     expect(FeedV1.safeParse(feed(change)).success).toBe(false);
+  });
+});
+
+describe("a thread with several entries (S05.01)", () => {
+  const entryAt = (n: number, minute: number, kind = "update", phase: string | undefined = "in_progress") => ({
+    ...thread.entries[0],
+    id: `0198a000-0000-7000-8000-00000000010${n}`,
+    kind,
+    ...(phase === undefined ? { phase: undefined } : { phase }),
+    published_at: `2026-10-01T14:${String(minute).padStart(2, "0")}:00.000Z`,
+    text: { ...thread.entries[0].text, body: `entry ${n}` },
+  });
+  const ack = entryAt(1, 0, "ack", "problem");
+  const first = entryAt(2, 20);
+  const second = entryAt(3, 45);
+
+  it("accepts entries in either order, each with its time and its phase, and keeps the earlier ones", () => {
+    for (const entries of [[second, first, ack], [ack, first, second]]) {
+      const parsed = FeedV1.parse(feed({ threads: [{ ...thread, entries }] }));
+      expect(parsed.threads[0].entries).toHaveLength(3);
+      expect(entriesNewestFirst(parsed.threads[0].entries).map((entry) => [entry.kind, entry.phase, entry.published_at])).toEqual([
+        ["update", "in_progress", "2026-10-01T14:45:00.000Z"],
+        ["update", "in_progress", "2026-10-01T14:20:00.000Z"],
+        ["ack", "problem", "2026-10-01T14:00:00.000Z"],
+      ]);
+    }
+  });
+
+  it("does not fail the feed over the order: a list out of order still parses, so residents keep the whole feed", () => {
+    for (const entries of [[ack, second, first], [first, second, ack]]) {
+      expect(FeedV1.safeParse(feed({ threads: [{ ...thread, entries }] })).success).toBe(true);
+    }
+  });
+
+  it("turns any order newest first, entries at the same instant by id, without changing the input", () => {
+    const tied = { ...first, id: "0198a000-0000-7000-8000-0000000001ff", published_at: ack.published_at };
+    const input = [ack, tied, second];
+    expect(entriesNewestFirst(input).map((entry) => entry.id)).toEqual([second.id, tied.id, ack.id]);
+    expect(input.map((entry) => entry.id)).toEqual([ack.id, tied.id, second.id]);
   });
 });
 

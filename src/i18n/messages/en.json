@@ -4287,9 +4287,14 @@
         "outOfScope": "You are not assigned to one of those buildings.",
         "notFound": "That alert draft was not found.",
         "notDraft": "This alert was already submitted, so who it is for cannot change.",
-        "closed": "This alert is closed.",
+        "closed": "This alert is already closed.",
         "invalid": "That audience cannot be used. Reload the page and choose again."
-      }
+      },
+      "changeAlso": "Now also for: {list}",
+      "changeNoLonger": "No longer for: {list}",
+      "changeRestOf": "the rest of {place}",
+      "changeUnlistedBuilding": "a building that is not in the list",
+      "changeOutsideGroups": "residents who chose none of the groups"
     },
     "time": {
       "dateLabel": "Date",
@@ -4460,16 +4465,43 @@
         "WEB_PUBLISHED": "This alert is already published, so it cannot be changed. Correct it instead.",
         "ENTRY_NOT_PENDING": "This alert is not waiting for approval.",
         "ENTRY_CHANGED": "This alert changed. Reload the page to see it.",
-        "ALERT_CLOSED": "This alert is closed.",
+        "ALERT_CLOSED": "This alert is already closed.",
         "ALERT_NOT_FOUND": "That alert draft was not found.",
         "ENTRY_NOT_FOUND": "That alert draft was not found.",
+        "NO_PUBLISHED_ENTRY": "Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.",
+        "ENTRY_ID_INVALID": "That update could not be started. Reload the page and try again.",
+        "TYPES_CHANGED": "An update keeps the types of the alert. To report something else, log a new disruption.",
         "AUDIENCE_INVALID": "Who this alert is for is not valid. Change the place and the groups, then try again.",
         "BUILDING_NOT_FOUND": "One of the buildings no longer exists. Change the place.",
         "FLOOR_NOT_IN_BUILDING": "One of the floors no longer exists. Change the place.",
         "NEIGHBOURHOOD_NOT_FOUND": "That neighbourhood does not exist. Change the place.",
         "forbidden": "Only a Coordinator or an Admin can write an alert.",
         "invalid": "That could not be done. Reload the page and try again."
-      }
+      },
+      "updateTitle": "Add an update",
+      "promoteTitle": "Promote to full alert",
+      "updateLead": "Add what we know now to this alert. Residents see it above the earlier entries, which stay as they are. A second person approves it before anyone sees it.",
+      "promoteLead": "This is the first update to the acknowledgement. The same alert is updated for everyone who has it: nothing is sent as a new alert. A second person approves it before anyone sees it.",
+      "startNote": "Saving makes the draft. Then you can change who it is for, read the text message and submit it for approval.",
+      "thread": {
+        "title": "The running alert",
+        "lead": "What residents read now, newest first. Your update is added at the top: nothing here is replaced.",
+        "validUntil": "Valid until {time} (Toronto time)",
+        "entry": "{kind}, {time}",
+        "kind": {
+          "ack": "Acknowledgement",
+          "update": "Update",
+          "correction": "Correction",
+          "withdrawal": "Withdrawal",
+          "final": "Final"
+        }
+      },
+      "carried": "Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.",
+      "carriedStart": "Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.",
+      "sameAudience": "Who it is for is the same as the alert now.",
+      "phaseRequired": "Required: choose where things stand now.",
+      "updateClosed": "This alert is already closed. Nothing more can be added to it.",
+      "updateUnpublished": "Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first."
     },
     "approve": {
       "title": "Approve an alert",
@@ -4558,7 +4590,7 @@
         "NOT_ALLOWED": "Only a Coordinator or an Admin can approve an alert.",
         "AUTHOR_NOT_ALLOWED": "Its author can no longer write this alert, because their role or buildings changed, so it cannot be approved. Return it or discard it.",
         "ENTRY_NOT_PENDING": "This alert is no longer waiting for approval. Reload the page to see what happened.",
-        "ALERT_CLOSED": "This alert is closed.",
+        "ALERT_CLOSED": "This alert is already closed.",
         "ALERT_NOT_FOUND": "That alert was not found.",
         "ENTRY_NOT_FOUND": "That alert was not found.",
         "NOTE_REQUIRED": "Write a note for the author.",
@@ -4573,7 +4605,8 @@
         "AUDIENCE_INVALID": "Who this alert is for is not valid, so it cannot be approved. Return it to its author.",
         "forbidden": "Only a Coordinator or an Admin who did not write or change this alert can approve it.",
         "invalid": "That could not be done. Reload the page and try again."
-      }
+      },
+      "updateNote": "This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are."
     },
     "incidents": {
       "waitingTitle": "Waiting for your approval",
@@ -4598,7 +4631,14 @@
       "waitingSince": "Submitted {time}",
       "noteLabel": "Note from the approver: {note}",
       "review": "Review",
-      "open": "Open"
+      "open": "Open",
+      "runningTitle": "Running alerts",
+      "runningLead": "Alerts residents are reading now. Add what you know to the same alert instead of starting a new one.",
+      "runningNone": "No alert is running.",
+      "runningLine": "{kind}, {phase}. Valid until {time}",
+      "runningPublished": "Last published {time}",
+      "addUpdate": "Add an update",
+      "promote": "Promote to full alert"
     },
     "resetAuthenticator": {
       "title": "Reset an authenticator",

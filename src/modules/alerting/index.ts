@@ -101,6 +101,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
 }
 
 export type {
+  AddUpdateInput,
   AlertLifecycle,
   ApprovalBinding,
   ApprovalOutcome,
@@ -120,11 +121,28 @@ export type {
   SubmitStart,
   ThreadView,
 } from "./application/lifecycle";
+export type { RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 export { createEntryPreparer, type EntryPreparerDeps, type EntryTranslator } from "./application/prepareEntry";
 export { createSubmitter, refusalOfPreparationError, type AlertSubmitter, type SubmitReport, type SubmitterDeps } from "./application/submit";
 export { ATTEMPT_KINDS, ATTEMPT_STALE_MS, ATTEMPT_STATES, ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "./domain/submitAttempt";
 export { audiencesOverlap, possibleDuplicateOf, type DuplicateCandidate, type NeighbourhoodOf } from "./domain/duplicates";
+// S05.01: the running thread's rules (the covering entry, the order residents read in, the valid-until a thread has, what an update starts from). The resident
+// reader (S04.08's feed and R-07) builds `FeedThread` with `newestFirst` and `threadValidUntil`. What an update changes about who the thread is for is
+// `src/contracts/audienceChange.ts`, beside the matcher, because the Hub's screens read it too.
+export {
+  SUBSTANTIVE_KINDS,
+  coveringEntry,
+  isAckOnly,
+  isPublished,
+  isSubstantive,
+  newestFirst,
+  readableEntries,
+  threadValidUntil,
+  updateStart,
+  type ThreadEntryFacts,
+  type UpdateStart,
+} from "./domain/thread";
 
 export interface FeedWiring {
   /** Required unless both `version` and `places` are given. */

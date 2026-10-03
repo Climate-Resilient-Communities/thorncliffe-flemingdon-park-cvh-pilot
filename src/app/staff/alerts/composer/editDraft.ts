@@ -5,7 +5,7 @@ import { ALERT_TEXT_MAX, draftFingerprint, type AlertLifecycle, type AlertRefusa
 import { englishText } from "@/i18n/text";
 import type { StaffSession } from "../../session";
 import { draftRefOf, type DraftRef } from "../audience/editAudience";
-import { ACK_PAGE, COMPOSE_PAGE } from "../pages";
+import { composerOf, composerPage, isComposerFrom, type ComposerFrom } from "../pages";
 import { contentFromForm } from "./contentFromForm";
 
 /** What a composer form shows after a submission. A draft saved from the Save button reloads the page (`location`); one saved by a submit does not. */
@@ -16,7 +16,9 @@ export type ComposeState =
   | { status: "ask"; question: string; before: string; after: string }
   /** `fingerprint` is the saved draft's (`draftFingerprint`): a submit names it, so a draft someone else changed in between is refused. */
   | { status: "saved"; location: string; fingerprint: string }
-  | { status: "pulled_back"; location: string };
+  | { status: "pulled_back"; location: string }
+  /** An update's draft was made from the start form (S05.01): the page goes on to the composer of the new draft. */
+  | { status: "started"; location: string };
 
 export interface EditDeps {
   alerting: () => Pick<AlertLifecycle, "getEntry" | "saveDraft" | "returnEntry">;
@@ -37,9 +39,19 @@ export function composeRefusalMessage(error: AlertRefusal | string): string {
 
 const refused = (error: AlertRefusal | string): ComposeState => ({ status: "refused", message: composeRefusalMessage(error) });
 
-/** The page an entry is composed on: the acknowledgement composer for an `ack`, the alert composer for an `update`. */
-export const composerLocation = (kind: string, ref: DraftRef, extra: Record<string, string> = {}): string =>
-  `${kind === "ack" ? ACK_PAGE : COMPOSE_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, ...extra }).toString()}`;
+/**
+ * The page an entry is composed on: the one the form says it was written on (`from`, a hidden field of every composer form, S05.01), else the
+ * acknowledgement composer for an `ack` and the alert composer for an `update`. An update that follows other entries has its own composers; the page
+ * the form came from is right for it, and the page itself sends the person to the other one if the entry belongs there.
+ */
+export const composerLocation = (kind: string, ref: DraftRef, extra: Record<string, string> = {}, from?: ComposerFrom | null): string =>
+  `${composerPage(from ?? composerOf(kind))}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, ...extra }).toString()}`;
+
+/** The composer a form was written on, from its hidden field `from`; null when it names none of them. */
+export function composerFromForm(form: FormData): ComposerFrom | null {
+  const value = form.get("from");
+  return isComposerFrom(value) ? value : null;
+}
 
 /**
  * Saves the draft the form describes. A form from the Save button goes back to the composer (so the preview is made again from what was
@@ -50,13 +62,15 @@ export async function saveDraftFromForm(deps: EditDeps, session: Pick<StaffSessi
   const ref = draftRefOf(form);
   const entry = await deps.alerting().getEntry(ref);
   if (!entry) return refused("ENTRY_NOT_FOUND");
-  const read = contentFromForm(form, entry.content, deps.now());
+  const from = composerFromForm(form);
+  // An update to a running alert keeps the thread's types whatever the form says; the use case refuses a change of them as well.
+  const read = contentFromForm(form, entry.content, deps.now(), { keepTypes: from === "update" || from === "promote" });
   if (!read.ok) return read.problem.kind === "ask" ? { status: "ask", ...read.problem } : { status: "refused", message: read.problem.message };
   const result = await deps.alerting().saveDraft({ staffId: session.staffId, aal: session.aal }, ref, read.content);
   if (!result.ok) return refused(result.error);
   return {
     status: "saved",
-    location: composerLocation(entry.kind, ref, form.get("then") === "submit" ? {} : { saved: "1" }),
+    location: composerLocation(entry.kind, ref, form.get("then") === "submit" ? {} : { saved: "1" }, from),
     fingerprint: draftFingerprint(result.value.content),
   };
 }
@@ -66,5 +80,5 @@ export async function pullBackFromForm(deps: EditDeps, session: Pick<StaffSessio
   const ref = draftRefOf(form);
   const result = await deps.alerting().returnEntry({ staffId: session.staffId, aal: session.aal }, ref, "edit");
   if (!result.ok) return refused(result.error);
-  return { status: "pulled_back", location: composerLocation(result.value.kind, ref) };
+  return { status: "pulled_back", location: composerLocation(result.value.kind, ref, {}, composerFromForm(form)) };
 }

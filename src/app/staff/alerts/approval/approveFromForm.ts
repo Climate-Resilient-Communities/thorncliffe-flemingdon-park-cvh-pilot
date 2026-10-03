@@ -10,6 +10,8 @@ import { draftRefOf } from "../audience/editAudience";
 import { approveHref } from "../pages";
 import { countChangedView, type CountChangedView } from "./view";
 
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
+
 /** What an approval form shows after a submission. A success goes back to the page (`location`), which shows what became of the entry. */
 export type ApprovalState =
   | { status: "idle" }
@@ -68,7 +70,10 @@ export async function approveFromForm(deps: ApprovalDeps, session: Pick<StaffSes
   const shown = shownOf(form);
   const reviewed = decodeCounts(text(form, "reviewed"));
   if (!shown || !reviewed) return invalidForm(deps, session, "approve", ref);
-  const result = await deps.alerting().approveEntry({ staffId: session.staffId, aal: session.aal }, ref, { ...shown, recipients: reviewed });
+  // The entry the "Now also for" line was read against (S05.01): absent for an entry that was shown none, otherwise an id and nothing else.
+  const covering = form.get("covering");
+  if (covering !== null && (typeof covering !== "string" || !UUID.test(covering))) return invalidForm(deps, session, "approve", ref);
+  const result = await deps.alerting().approveEntry({ staffId: session.staffId, aal: session.aal }, ref, { ...shown, recipients: reviewed, ...(covering === null ? {} : { covering }) });
   if (result.ok) {
     // After the commit, and never able to turn an approval that is done into a failure: the effects are the feed's tag and the dispatcher (S06.02's kick).
     await deps.afterApproval(result.value);
