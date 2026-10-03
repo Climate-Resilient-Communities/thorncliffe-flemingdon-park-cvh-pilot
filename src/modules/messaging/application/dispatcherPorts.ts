@@ -3,6 +3,7 @@
 // reached only through a port fake), and so the real adapters are the only code that calls a provider or reads a credential.
 import type { Db, DbTransaction } from "../../../platform/db";
 import type { AlertStanding, NotSendable, SubmitAnswer, SubmitOutcome, UnknownCause } from "../domain/dispatchRules";
+import type { CallbackIgnoredReason, CallbackTarget, SignatureFailureReason } from "../domain/statusCallback";
 import type { DeliveryView, MessagingLog } from "./deliveryPorts";
 import type { ContactResolver } from "./deliveryPorts";
 
@@ -168,14 +169,29 @@ export class CampaignReaderNotWired extends Error {
 }
 
 /** The operational events messaging records (no personal data: codes and counts only). `ops` owns their schema (its OPS_EVENT_KINDS). */
-export const MESSAGING_OPS_EVENT_KINDS = ["delivery.unknown", "dispatch.provider_auth_failed", "messaging.smart_encoding_on", "messaging.service_check_failed"] as const;
+export const MESSAGING_OPS_EVENT_KINDS = [
+  "delivery.unknown",
+  "dispatch.provider_auth_failed",
+  "messaging.smart_encoding_on",
+  "messaging.service_check_failed",
+  // The status callbacks (S06.04).
+  "delivery.unknown_resolved",
+  "delivery.callback_ignored",
+  "delivery.provider_id_mismatch",
+  "webhook.signature_invalid",
+] as const;
 export type MessagingOpsEventKind = (typeof MESSAGING_OPS_EVENT_KINDS)[number];
 
 export type MessagingOpsEvent =
   | { kind: "delivery.unknown"; deliveryId: string; detail: { cause: UnknownCause; http_status?: number } }
   | { kind: "dispatch.provider_auth_failed"; detail: { http_status: number } }
   | { kind: "messaging.smart_encoding_on"; detail: Record<string, never> }
-  | { kind: "messaging.service_check_failed"; detail: { reason: string } };
+  | { kind: "messaging.service_check_failed"; detail: { reason: string } }
+  | { kind: "delivery.unknown_resolved"; deliveryId: string; detail: { status: CallbackTarget } }
+  /** `deliveryId` when the callback named a delivery that exists. */
+  | { kind: "delivery.callback_ignored"; deliveryId?: string; detail: { reason: CallbackIgnoredReason } }
+  | { kind: "delivery.provider_id_mismatch"; deliveryId: string; detail: Record<string, never> }
+  | { kind: "webhook.signature_invalid"; detail: { route: "twilio_status"; reason: SignatureFailureReason } };
 
 /**
  * Port: where messaging records operational events, in the caller's transaction when it has one. `messaging` may not import

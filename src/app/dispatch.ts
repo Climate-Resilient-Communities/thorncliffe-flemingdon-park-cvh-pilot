@@ -27,10 +27,23 @@ import {
   type OpsRecorder,
   type ServiceCheckResult,
 } from "@/modules/messaging";
-import { recordOpsEvent } from "@/modules/ops";
+import { recordOpsEvent, recordOpsEventUnlessBusy } from "@/modules/ops";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { contactResolver } from "./messaging";
+
+/**
+ * How many `webhook.signature_invalid` events are kept in any 10 minutes. Anyone can send a request with a wrong signature, so the
+ * events are capped (S06.04): the health job alerts above 5 in 10 minutes (S06.07), and a count that has reached this many is far past it,
+ * so a flood cannot make `ops_event` grow without limit and nothing the alert needs is lost.
+ *
+ * Known limit: the cap bounds the table's growth, not the work a flood causes. Every unsigned request still costs one indexed `count(*)`
+ * on the shared pool (and an insert while under the cap), the same database the dispatcher uses; the pool's size is what bounds it, as
+ * for the other public routes that touch the database per request. If it ever matters, a per-instance flag set when the count first
+ * reaches `max` (skip the database until a short window passes) removes the round trips; it was left out because it makes the cap depend on
+ * instance memory and on a clock the tests would have to control.
+ */
+export const SIGNATURE_FAILURE_EVENT_LIMIT = { max: 50, withinMs: 10 * 60_000 } as const;
 
 /** Messaging's operational events, written to `ops_event` (messaging may not import ops; the graph has ops depend on messaging). */
 export const opsRecorder: OpsRecorder = {
@@ -44,6 +57,19 @@ export const opsRecorder: OpsRecorder = {
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "messaging.service_check_failed":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
+      case "delivery.unknown_resolved":
+      case "delivery.provider_id_mismatch":
+        return recordOpsEvent(executor, { kind: event.kind, subjectType: "delivery", subjectId: event.deliveryId, detail: event.detail });
+      case "delivery.callback_ignored":
+        return recordOpsEvent(executor, {
+          kind: event.kind,
+          ...(event.deliveryId === undefined ? {} : { subjectType: "delivery", subjectId: event.deliveryId }),
+          detail: event.detail,
+        });
+      case "webhook.signature_invalid":
+        // Capped: anyone can send a request with a wrong signature (see SIGNATURE_FAILURE_EVENT_LIMIT).
+        await recordOpsEventUnlessBusy(executor, { kind: event.kind, detail: event.detail }, SIGNATURE_FAILURE_EVENT_LIMIT);
+        return;
     }
   },
 };

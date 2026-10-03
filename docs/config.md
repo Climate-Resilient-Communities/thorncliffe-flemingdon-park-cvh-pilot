@@ -14,7 +14,7 @@ are in `src/platform/config/env.ts`.
 | `PUBLIC_BASE_URL` | no | `https://project-6qcs4.vercel.app` | yes |
 | `STAFF_PASSWORD_PEPPER` | yes | 32+ random bytes (`openssl rand -hex 32`); never change it once staff exist | 2026-10-02 |
 | `SMS_MODE` | no | `live` (production only) | in progress |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 | in progress |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
 | `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
@@ -105,7 +105,7 @@ starts is shorter (20 seconds, so about 10 seconds of sending): it lives inside 
 that route must export `maxDuration = 60`; pg_cron's next run sends whatever the kick did not. Where the settings are: `SMS_MODE=log` (every environment except production) sends nothing, reads no Twilio
 credential and makes each sendable row `skipped_env`; `live` needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID`
 (all production only). Every request goes through the Messaging Service with `SmartEncoded=false` and the status callback
-`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`.
+`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}` (and Twilio's retry fragment, see "Delivery status callbacks").
 
 **Scheduling (the owner runs this, once, in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it, and it is
 never run in a preview).** pg_cron runs in UTC. The job secret is kept in the project's Vault and read when each job runs, so rotating it
@@ -149,6 +149,43 @@ records `messaging.smart_encoding_on` in `ops_event` (severity error) when it is
 cannot read is recorded as `messaging.service_check_failed` (warning), never taken for off. The configuration-control assumption the procedures
 (S09.03) repeat: only named Admins change the Messaging Service, texts are paused while they do, and the check is run again before texts resume
 (`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
+
+## Delivery status callbacks (S06.04)
+
+A text's delivery status (`delivered`, `undelivered`, a late `failed`) comes only from Twilio's status callbacks, `POST /api/twilio/status?ref={callback_ref}`.
+Nothing needs to be set in Twilio's console for them: the dispatcher gives every request its own `StatusCallback` URL
+(`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`, followed by a `#rc=3&rp=ct,5xx` fragment that asks Twilio to retry a 5xx, see "Retries" below), and Twilio calls that URL
+without the fragment. **Do not set a status callback URL on the Messaging Service
+itself** that points at this route: its calls carry no `ref`, so each is counted in `ops_event` as `delivery.callback_ignored` (`no_ref`) and none
+changes a delivery.
+
+- **What validates a callback.** `X-Twilio-Signature` is checked before anything else, with the account's `TWILIO_AUTH_TOKEN`, against `PUBLIC_BASE_URL` (an
+  https origin with no port or path, `https://project-6qcs4.vercel.app` in production) plus the path and query string of the request and the form
+  body. The request's own host header is never used. So **changing `PUBLIC_BASE_URL` (a custom domain, for example) changes the URL the app expects Twilio to have signed**:
+  a text handed to Twilio before the change calls back to the old URL, whose signature then no longer matches and is refused. Set it once, before the first live send.
+  A missing or wrong signature answers 403 and does nothing, and each is recorded as `webhook.signature_invalid` in `ops_event` (at most 50 in any 10 minutes
+  are kept, since anyone can send the request; the health job alerts the on-call Admin above 5 in 10 minutes, S06.07). Where no Twilio account is configured
+  (every environment but production) the route answers 503 and does nothing.
+- **Vercel deployment protection must not cover this route.** Twilio cannot send Vercel's protection-bypass header, so a protected URL answers Twilio with a
+  Vercel sign-in page and no callback ever reaches the app: every text would stay `submitted` and become `unknown` after 24 hours. Before the first live send, check from outside:
+  `curl -i -X POST https://<production URL>/api/twilio/status` must answer `403` with `{"error":{"code":"invalid_signature"}}` (the app's own answer), not a `401`, a redirect or an HTML page.
+- **Rotating the Twilio Auth Token** (at pilot start, on a departure, at pilot end). Twilio signs with the account's primary Auth Token. Promote the secondary
+  token and set `TWILIO_AUTH_TOKEN` in Vercel to the same value in the same minute, with texts paused (S06.06): a callback signed with the old token that arrives after the
+  deploy is refused (403, counted) and Twilio does not resend it, so its text stays `submitted` and becomes `unknown` after 24 hours (visible, never lost, never resent).
+  The app accepts one token only; accepting the previous one for a short window, as the job secrets do, is an owner decision (not built).
+- **Retries.** Twilio retries a webhook once, and only on a connection failure, unless the URL says otherwise. So the `StatusCallback` the dispatcher gives every request
+  ends in Twilio's connection overrides, `#rc=3&rp=ct,5xx` (nothing to set in the console): up to three retries on a connection failure or any 5xx, never on a 4xx. The route
+  answers 500 when its database fails (nothing was changed), so Twilio sends the same callback again; the fragment is not sent and not signed, so nothing else changes, and a
+  repeat is harmless. The retries share Twilio's 15 seconds in total: a database that stays down longer loses the callback, and the sweep makes that text `unknown` (after 5 minutes
+  if it was never answered, after 24 hours if `submitted`), which the Hub follows up. A 4xx (a refused signature, a body over 64 KiB) is never retried. A 503 (no
+  `TWILIO_AUTH_TOKEN` set) is retried too and still does nothing, so a production deployment without the token is a fault to fix, not a state to leave.
+- **What the statuses do.** `queued`, `sending`, `sent`, `accepted` and `scheduled` mean `submitted`; `delivered`, `undelivered` and `failed` are final (with Twilio's
+  error code kept for the last two). A final status never changes, a repeat or a late non-terminal status changes nothing and is not counted, and a text that was `unknown`
+  moves to the callback's status and is marked resolved (`delivery.unknown_resolved`). One exception: a text that was `submitted` and became `unknown` after 24 hours with no
+  final status moves only on a final one (a late `sent` changes nothing and is not counted, since the next sweep would only make it `unknown` again). Anything else the route is sent (a status it does not know, no `MessageSid`) is
+  counted as `delivery.callback_ignored` and changes nothing.
+- **What it never keeps or logs.** The route sets no cookie and is never cached. Nothing from the request is stored or logged: not the number, the message text, the
+  signature, the reference or Twilio's message id (a log line holds the delivery's own id and the states). `ops_event` holds codes only.
 
 ## GitHub: environments
 
