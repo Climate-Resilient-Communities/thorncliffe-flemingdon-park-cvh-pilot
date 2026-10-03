@@ -29,6 +29,12 @@
 //    the rate limiter count against the budget. A search with no completed leg fails with `search_unavailable`; a release without search data,
 //    or a deployment without an embedding key, answers `status: "unavailable"` (an expected outcome) and calls no model (a
 //    translation already started for a release found to have no search data is cancelled).
+//    Every wait observes the same absolute moments, counted from that start: the snapshot read (the database read of the
+//    current release, which also has a statement timeout of the time left, and the release's data, whether this request
+//    loads it or joins a load another request started) and both legs end at 2.2 s; the writes are waited for until 2.4 s
+//    (ANSWER_MARGIN_MS before the end), so that a ready answer always beats the route's own hard deadline at 2.5 s. A load of
+//    a release's data is shared: a request that joins one stops waiting at its own deadline while the load runs on for the
+//    searches after it, and a load still running SNAPSHOT_LOAD_TIMEOUT_MS after it started is given up as failed.
 //  - No transaction and no spend lock are held across a vendor call: each call's usage is one plain insert in
 //    `spend_event` (purpose `search`; `test_set` for the test-set runner, which also writes no `search_log` row) after the call (or, for a call cancelled at the deadline, an estimate), outside the publish allowance (the lock and the allowance are the
 //    publish job's).
@@ -36,7 +42,7 @@
 //    the request. Neither is ever stored, cached, logged, audited or put into an error; the translation's usage goes to
 //    `spend_event` (kind `translate`) as counts only. `search_log` takes counts and codes, ops events take a reason and a
 //    duration, and every failure that leaves this function is a SearchFailure holding a code.
-import { and, eq } from "drizzle-orm";
+import { and, eq, sql } from "drizzle-orm";
 import { DirectoryListingV1 } from "@/contracts/directory";
 import type { LangCode } from "@/contracts/lang";
 import { parseSearchRequest } from "@/contracts/search";
@@ -52,7 +58,7 @@ import {
   type QuestionSource,
   type QuestionTranslator,
 } from "@/modules/translation";
-import type { Db } from "@/platform/db";
+import type { Db, DbExecutor } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
@@ -66,6 +72,20 @@ export const SEARCH_SPEND_PURPOSE = "search";
 
 /** A release whose search data failed to load is not loaded again (nor alerted again) for this long. */
 export const SNAPSHOT_FAILURE_TTL_MS = 60_000;
+
+/**
+ * A load of a release's search data still running this long after it started is given up and counted as a failed load
+ * (SNAPSHOT_FAILURE_TTL_MS then applies). Requests never wait for it this long (each stops at its own deadline); the cap only
+ * keeps a load that never settles (a store that never answers) from being joined by every search after it. It is above
+ * the store's own worst case (four calls of DEFAULT_STORAGE_TIMEOUT_MS), so a slow store is waited for, not abandoned.
+ */
+export const SNAPSHOT_LOAD_TIMEOUT_MS = 40_000;
+
+/**
+ * The writes of a search are waited for until this long before the end of the budget (2.4 s of 2.5 s): the answer is then
+ * ready before the route's hard deadline at 2.5 s, which would otherwise race it and could turn a good answer into a 503.
+ */
+export const ANSWER_MARGIN_MS = 100;
 
 /**
  * The least time left in the leg's budget that a fallback translation is still tried with (SEARCH_FALLBACK_MIN_BUDGET_MS): a
@@ -176,6 +196,7 @@ export interface SearchDeps {
   emergencyThreshold?: number;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
+  snapshotLoadTimeoutMs?: number;
   /** Takes the request snapshot instead of the database and the store (a unit test of the legs and their timing). */
   snapshot?: () => Promise<SearchSnapshot>;
   /** Keeps the rows instead of writing them to the database. */
@@ -227,11 +248,27 @@ interface CurrentRelease {
   files: Record<string, { path: string; sha256: string }>;
 }
 
-async function readCurrent(db: Db): Promise<CurrentRelease | null> {
-  const [row] = await db
-    .select({ number: directoryRelease.number, search: directoryRelease.search, files: directoryRelease.files })
-    .from(directoryRelease)
-    .where(and(eq(directoryRelease.isCurrent, true), eq(directoryRelease.status, "complete")));
+/**
+ * The current release. With `timeoutMs` (a search: the time left to its deadline) the read is one short transaction whose
+ * statement timeout is that time, so a read the database cannot answer (a lock held on the table, a stuck backend) is
+ * stopped by the database at the request's deadline and gives its connection back, instead of holding it after the request
+ * stopped waiting. (The pooler hands each transaction to any server connection, so the setting is `set local`.)
+ */
+async function readCurrent(db: Db, timeoutMs?: number): Promise<CurrentRelease | null> {
+  const select = (executor: DbExecutor) =>
+    executor
+      .select({ number: directoryRelease.number, search: directoryRelease.search, files: directoryRelease.files })
+      .from(directoryRelease)
+      .where(and(eq(directoryRelease.isCurrent, true), eq(directoryRelease.status, "complete")));
+  const rows =
+    timeoutMs === undefined
+      ? await select(db)
+      : await db.transaction(async (tx) => {
+          // An integer computed here, not input.
+          await tx.execute(sql.raw(`set local statement_timeout = ${Math.max(1, Math.ceil(timeoutMs))}`));
+          return select(tx);
+        });
+  const [row] = rows;
   if (!row) return null;
   const record = ReleaseSearchRecordSchema.safeParse(row.search);
   return { number: row.number, search: record.success ? record.data : null, files: row.files as CurrentRelease["files"] };
@@ -284,6 +321,16 @@ async function raceTimeout<T>(work: Promise<T>, ms: number, onTimeout: () => voi
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)));
 
+/** `work`, or a rejection when it has not settled after `ms` (what it does after that is ignored). */
+function capped<T>(work: Promise<T>, ms: number): Promise<T> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<never>((_, reject) => {
+    timer = setTimeout(() => reject(new Error("the release's search data took too long to load")), Math.max(0, ms));
+  });
+  work.catch(() => undefined);
+  return Promise.race([work, expired]).finally(() => clearTimeout(timer));
+}
+
 /** Which questions also search through English (the E03 definitions): Pashto, Dari, native-script Urdu, romanized or mixed (unless plainly English), ambiguous Arabic script. */
 export function questionSourceOf(detected: QuestionLanguage, q?: string): QuestionSource | null {
   // A short English word eld cannot tell from a Latin launch language ("lawyer", "rent") needs no translation to English.
@@ -315,6 +362,7 @@ export function createSearch(deps: SearchDeps): SearchService {
   const spendPurpose = deps.spendPurpose ?? SEARCH_SPEND_PURPOSE;
   const writeLog = deps.log ?? true;
   const failureTtlMs = deps.snapshotFailureTtlMs ?? SNAPSHOT_FAILURE_TTL_MS;
+  const loadTimeoutMs = deps.snapshotLoadTimeoutMs ?? SNAPSHOT_LOAD_TIMEOUT_MS;
   const fallbackMinBudgetMs = deps.fallbackMinBudgetMs ?? DEFAULT_FALLBACK_MIN_BUDGET_MS;
   const writer: SearchWriter = deps.writer ?? {
     log: async (row) => {
@@ -327,7 +375,8 @@ export function createSearch(deps: SearchDeps): SearchService {
   // Vendor failures already told to ops (by reason and model), until when: the same failure of the same model is not reported
   // again for the same TTL, while another model's failure (the fallback's, say) is its own.
   const reportedUntil = new Map<string, number>();
-  // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it).
+  // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it). The entry of a
+  // release is its load while it runs: the searches that come meanwhile join it rather than download the files again.
   const cache = new Map<number, Promise<SnapshotData>>();
 
   function dataOf(release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
@@ -336,7 +385,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       const until = failedUntil.get(release.number);
       if (until !== undefined && clock() < until) return Promise.reject(new RecentSnapshotFailure());
       failedUntil.delete(release.number);
-      loaded = loadReleaseData(deps.storage(), release, record);
+      loaded = capped(loadReleaseData(deps.storage(), release, record), loadTimeoutMs);
       cache.set(release.number, loaded);
       const number = release.number;
       loaded.catch(() => {
@@ -348,11 +397,18 @@ export function createSearch(deps: SearchDeps): SearchService {
     return loaded;
   }
 
-  /** The request snapshot: the current release, and its search data where it has some and a key is configured. */
-  async function readSnapshot(onRelease: (releaseV: number) => void): Promise<SearchSnapshot> {
+  /**
+   * The request snapshot: the current release, and its search data where it has some and a key is configured. `deadline`
+   * is the request's own (absolute, on this service's clock): the database read is stopped by the database then, and the
+   * caller stops waiting for the whole read then, whether this request started the load of the release's data or joined
+   * one; a joined load runs on for the searches after it.
+   */
+  async function readSnapshot(deadline: number, onRelease: (releaseV: number) => void): Promise<SearchSnapshot> {
     if (deps.snapshot) return deps.snapshot();
+    const left = deadline - clock();
+    if (left <= 0) throw new StageError("timed_out");
     try {
-      const current = await readCurrent(deps.db());
+      const current = await readCurrent(deps.db(), left);
       if (!current) return { releaseV: null, data: null };
       onRelease(current.number);
       if (!current.search || !deps.embedder) return { releaseV: current.number, data: null };
@@ -370,8 +426,12 @@ export function createSearch(deps: SearchDeps): SearchService {
     const { q, lang } = parsed.value;
     const detected = detect(q, lang);
     const queryLang = detected.query_lang;
-    // Every leg is cancelled, and its result ignored, at this moment (2.2 s after the request started).
+    // The request's deadline, absolute on this service's clock: every leg is cancelled, and its result ignored, at this
+    // moment (2.2 s after the request started), and the snapshot read (the database read and the release's data, loaded or
+    // joined) is given up then too.
     const deadline = started + legMs;
+    // The writes are waited for until this moment at the latest (2.4 s): the answer then still beats the route's hard deadline.
+    const answerBy = started + totalMs - ANSWER_MARGIN_MS;
     let releaseV: number | null = null;
 
     // The writes of this request (spend_event, search_log, the failure note). One that only becomes known after the
@@ -383,11 +443,11 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (closed) deps.defer?.(write);
       else writes.push(write);
     };
-    // Waits for the writes for what is left of the budget; those still pending then are handed to the app to finish after the response.
+    // Waits for the writes until `answerBy`; those still pending then are handed to the app to finish after the response.
     const finish = async () => {
       closed = true;
       const all = Promise.allSettled(writes);
-      await Promise.race([all, sleep(totalMs - elapsed())]);
+      await Promise.race([all, sleep(answerBy - clock())]);
       deps.defer?.(all);
     };
     const log = (row: { status: "ok" | "no_clear_match" | "unavailable" | "error"; resultCount: number; topScore: number | null; translatedLeg: TranslatedLeg }) => {
@@ -406,7 +466,7 @@ export function createSearch(deps: SearchDeps): SearchService {
 
     // ---- the request snapshot (read in parallel with the translation)
     const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean } = { snapshot: null, failure: null, repeat: false };
-    const reading = readSnapshot((v) => (releaseV = v));
+    const reading = readSnapshot(deadline, (v) => (releaseV = v));
     // An abandoned read may still reject after the deadline: that is not unhandled.
     reading.catch(() => undefined);
     // Settles (never rejects) when the snapshot is known, failed, or out of time: what a write that needs the release number waits for.
