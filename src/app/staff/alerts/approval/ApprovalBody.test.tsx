@@ -213,6 +213,48 @@ describe("an entry that is not waiting for this person", () => {
   });
 });
 
+describe("the published confirmation (O-06), once the entry is approved", () => {
+  const published = (options: Parameters<typeof reviewOf>[0] = {}) => html(screenOf({ ...options, entry: { status: "approved", ...options.entry } }));
+
+  it("is the screen of an approved entry: 'The acknowledgement is out', what went where, then the English text and what happens next, with the aside after them", () => {
+    const out = published({ fallback: ["ur", "ps"] });
+    expect(out).toContain('<h1 class="hub-wrap" data-testid="published-title">The acknowledgement is out</h1>');
+    for (const id of ["where-web", "where-fallback", "where-texts", "where-valid"]) expect(out, id).toContain(`data-testid="${id}"`);
+    const order = ["locked-note", "where-web", "where-fallback", "where-texts", "english-body", "next", "approval-aside"].map((id) => out.indexOf(`data-testid="${id}"`));
+    expect(order.every((at) => at >= 0)).toBe(true);
+    expect([...order].sort((a, b) => a - b)).toEqual(order);
+    // It is the 960 px page, and there is no approval to make: no actions, no forms.
+    expect(out).toContain('data-width="published"');
+    expect(out).not.toContain("layout-screen__actions");
+    expect(out).not.toContain("approve-form");
+    expect(out).not.toContain('data-testid="facts"');
+  });
+
+  it("names the web languages in their own script and direction, and the languages that fell back", () => {
+    const out = published({ fallback: ["ur"] });
+    expect(out).toMatch(/<span lang="ps" dir="rtl" data-testid="where-web-languages-ps">/);
+    expect(out).not.toContain('data-testid="where-web-languages-ur"');
+    expect(out).toMatch(/<span lang="ur" dir="rtl" data-testid="where-fallback-languages-ur">/);
+    expect(out).toContain("see the English text with &quot;Translation not available&quot; in their language.");
+  });
+
+  it("says the texts wait for texting to open, and lists the languages that have one ready", () => {
+    const out = published();
+    expect(out).toContain("Text sign-up is not open, so no text goes out now.");
+    expect(out).toContain('data-testid="where-texts-languages-fr"');
+    expect(out).not.toContain('data-testid="where-texts-languages-zh-Hant"');
+  });
+
+  it("links back to the incidents, and to the next update, and tells a drill apart", () => {
+    const out = published();
+    expect(out).toContain('<a class="tap hub-link hub-wrap" href="/staff" data-testid="next-home">Back to incidents</a>');
+    expect(out).toContain('data-testid="next-promote"');
+    const drill = published({ thread: { isDrill: true } });
+    expect(drill).toContain('data-testid="published-drill"');
+    expect(drill).toContain("Practice publish: nothing was sent to residents");
+  });
+});
+
 describe("the notice that all texts are paused (S06.06)", () => {
   const NOTICE = "Texts are paused; this will send when resumed";
   const withNotice = (options: Parameters<typeof reviewOf>[0] = {}) => approvalScreen({ review: reviewOf(options), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER, pauseNotice: NOTICE });

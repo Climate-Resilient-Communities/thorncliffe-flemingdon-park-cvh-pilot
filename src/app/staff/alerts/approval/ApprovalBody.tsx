@@ -4,6 +4,7 @@ import { useActionState, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import type { ApprovalState } from "./approveFromForm";
 import { confirmedCount } from "./countConfirmation";
+import { PublishedMain } from "./PublishedMain";
 import type { ApprovalScreen, LanguageReviewView } from "./view";
 
 /** An approval form's server action (actions.ts): the form's last state and its data in, the new state out. */
@@ -160,7 +161,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
     );
 
   const facts = screen.facts;
-  const main = (
+  const reviewMain = (
     <Stack gap="section-hub-review">
       {/* Above the fold on a phone: what it is, the English text, what goes out and which languages fell back; the rest follows. */}
       <Stack gap="related">
@@ -356,6 +357,9 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
     </Stack>
   );
 
+  // An approved entry shows what went where (O-06) in the main column; the aside is the same.
+  const main = screen.published ? <PublishedMain screen={{ ...screen, published: screen.published }} /> : reviewMain;
+
   const aside = (
     <aside aria-labelledby="languages-title" data-testid="approval-aside">
       <Stack gap="related">
@@ -381,7 +385,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
       {columns}
     </Screen>
   ) : (
-    <Screen surface="staff" width="review">
+    <Screen surface="staff" width={screen.published ? "published" : "review"}>
       {columns}
     </Screen>
   );

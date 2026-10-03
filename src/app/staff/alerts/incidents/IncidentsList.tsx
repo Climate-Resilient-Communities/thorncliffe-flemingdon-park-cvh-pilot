@@ -1,6 +1,11 @@
-// The incidents list as it is drawn (S04.07's share of the Hub home): what waits for the person and what they have in hand. Pure: the layout tests and the
-// screenshots render it on a view they built, and the Hub home renders it on the person's own (IncidentsPanel.tsx).
-import { Stack } from "@/ui";
+// The Hub home as it is drawn (O-01; S04.07's list of what waits, S04.10's screen): what waits for the person with how long it has waited, the open
+// threads, the person's own alerts, and the drills in their own labelled section. Pure: the layout tests and the screenshots render it on a view they built,
+// and the Hub home renders it on the person's own (IncidentsPanel.tsx).
+//
+// Below 800 px of content width it is one column, the main content first (what waits, the open threads, the person's alerts) and the aside (the drills)
+// after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
+// changes something.
+import { Grid, Stack } from "@/ui";
 import type { IncidentItemView, IncidentsView } from "./view";
 
 function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
@@ -13,14 +18,21 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
               <strong>{item.title}</strong>
             </p>
             <p className="hub-wrap">{[item.state, item.since].filter(Boolean).join(" · ")}</p>
+            {item.waited && (
+              <p className="hub-wrap" data-testid="waited">
+                <strong>{item.waited}</strong>
+              </p>
+            )}
             {item.note && (
               <p role="note" className="hub-flag hub-wrap hub-preline" data-testid="returned-note">
                 {item.note}
               </p>
             )}
-            <a className="tap hub-link" href={item.link.href}>
-              {item.link.label}
-            </a>
+            {item.link && (
+              <a className="tap hub-link" href={item.link.href}>
+                {item.link.label}
+              </a>
+            )}
           </Stack>
         </li>
       ))}
@@ -28,14 +40,36 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
   );
 }
 
-/** The panel for a view that was already loaded (the tests and the page both render this). */
+/** The screen for a view that was already loaded (the tests and the page both render this). */
 export function IncidentsList({ view }: { view: IncidentsView }) {
-  return (
-    <Stack gap="stack">
+  const main = (
+    <Stack gap="section-hub-main">
+      <Stack gap="related">
+        <h1 className="hub-wrap">{view.title}</h1>
+        <p>{view.lead}</p>
+        {view.readOnly && (
+          <p role="note" className="hub-flag hub-wrap" data-testid="read-only">
+            {view.readOnly}
+          </p>
+        )}
+      </Stack>
+      {view.start && (
+        <nav aria-label={view.start.title} data-testid="incidents-start">
+          <Stack as="ul" gap="subline">
+            {view.start.links.map((link) => (
+              <li key={link.id}>
+                <a className="tap hub-link" href={link.href} data-testid={`start-${link.id}`}>
+                  {link.label}
+                </a>
+              </li>
+            ))}
+          </Stack>
+        </nav>
+      )}
       {view.waiting && (
         <section aria-labelledby="incidents-waiting-title" data-testid="incidents-waiting">
           <Stack gap="related">
-            <h2 id="incidents-waiting-title">{view.waiting.title}</h2>
+            <h2 id="incidents-waiting-title" className="hub-wrap">{view.waiting.title}</h2>
             <p>{view.waiting.items.length > 0 ? view.waiting.lead : view.waiting.none}</p>
             {view.waiting.items.length > 0 && <Items items={view.waiting.items} id="waiting" />}
           </Stack>
@@ -44,7 +78,7 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
       {view.running && (
         <section aria-labelledby="incidents-running-title" data-testid="incidents-running">
           <Stack gap="related">
-            <h2 id="incidents-running-title">{view.running.title}</h2>
+            <h2 id="incidents-running-title" className="hub-wrap">{view.running.title}</h2>
             <p>{view.running.items.length > 0 ? view.running.lead : view.running.none}</p>
             {view.running.items.length > 0 && <Items items={view.running.items} id="running" />}
           </Stack>
@@ -53,19 +87,26 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
       {(view.mine.items.length > 0 || view.waiting) && (
         <section aria-labelledby="incidents-mine-title" data-testid="incidents-mine">
           <Stack gap="related">
-            <h2 id="incidents-mine-title">{view.mine.title}</h2>
+            <h2 id="incidents-mine-title" className="hub-wrap">{view.mine.title}</h2>
             {view.mine.items.length > 0 ? <Items items={view.mine.items} id="mine" /> : <p>{view.mine.none}</p>}
           </Stack>
         </section>
       )}
-      {view.drills && (
-        <section aria-labelledby="incidents-drills-title" data-testid="incidents-drills">
-          <Stack gap="related">
-            <h2 id="incidents-drills-title">{view.drills.title}</h2>
-            <Items items={view.drills.items} id="drill" />
-          </Stack>
-        </section>
-      )}
     </Stack>
+  );
+  const aside = (
+    <aside aria-labelledby="incidents-drills-title" data-testid="incidents-drills">
+      <Stack gap="related">
+        <h2 id="incidents-drills-title" className="hub-wrap">{view.drills.title}</h2>
+        <p>{view.drills.items.length > 0 ? view.drills.lead : view.drills.none}</p>
+        {view.drills.items.length > 0 && <Items items={view.drills.items} id="drill" />}
+      </Stack>
+    </aside>
+  );
+  return (
+    <Grid twoColumn="aside">
+      {main}
+      {aside}
+    </Grid>
   );
 }

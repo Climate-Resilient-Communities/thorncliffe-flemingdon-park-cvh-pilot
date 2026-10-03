@@ -1599,9 +1599,42 @@
     updateNote: 'This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are.' } } });
   m(en, { staff: { incidents: {
     runningTitle: 'Running alerts',
-    runningLead: 'Alerts residents are reading now. Add what you know to the same alert instead of starting a new one.',
+    runningLead: 'Alerts residents are reading now, the most recently published first. Add what you know to the same alert instead of starting a new one.',
     runningNone: 'No alert is running.',
     runningLine: '{kind}, {phase}. Valid until {time}',
     runningPublished: 'Last published {time}',
     addUpdate: 'Add an update', promote: 'Promote to full alert' } } });
+  /* The Hub home (O-01, S04.10): what waits for the person with how long it has waited, the open threads, drills apart; a Director reads it and changes nothing.
+     Wording from O01_OperatorHome.html (title, lead, the actions, the incidents) and the staff catalog's own. */
+  m(en, { staff: { incidents: {
+    title: 'Right now',
+    lead: 'Open incidents, most recent first. Anything waiting for you is at the top.',
+    startNew: 'Start something', logDisruption: 'Log a disruption', compose: 'Compose an alert',
+    waitedFor: 'Waiting {time}',
+    duration: { justNow: 'less than a minute', minute: '1 minute', minutes: '{n} minutes', hour: '1 hour', hours: '{n} hours', day: '1 day', days: '{n} days' },
+    readOnly: 'Read-only: you can see what is open here and change nothing.',
+    readOnlyRunningLead: 'Alerts residents are reading now, the most recently published first.',
+    drillsLead: 'Practice only. Nothing here reaches residents.',
+    drillsNone: 'No drill is running.' } } });
+  /* The published confirmation (O-06, S04.10): what went where, once an entry is approved. Wording from O06_Published.html. */
+  m(en, { staff: { approve: { published: {
+    titleAck: 'The acknowledgement is out', titleAlert: 'The alert is out', titleDrill: 'Practice publish: nothing was sent to residents',
+    leadDrill: 'This is a drill. The rows below show what would have gone where.',
+    whereTitle: 'What went where',
+    webLabel: 'App and web',
+    webValue: 'Live now for residents who follow this place, in {n} languages, each in their own words.',
+    webLanguages: 'Languages in their own words',
+    webDrill: 'Not shown to residents: a drill stays in the Hub.',
+    fallbackLabel: 'English only',
+    fallbackValue: 'Residents reading in {languages} see the English text with "Translation not available" in their language.',
+    textsLabel: 'Text messages',
+    textsNotOpen: 'Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in {n} languages and go out once texting is live.',
+    textsNone: 'No text message was written for this entry.',
+    textsDrill: 'Not sent: practice only.',
+    textsLanguages: 'Languages with a text ready',
+    validLabel: 'Valid until',
+    nextTitle: 'What happens next',
+    nextUpdate: 'Residents keep reading the same alert. Add what you learn to it as an update.',
+    nextPromote: 'When you know more, promote this to a full alert. Residents keep the same alert; nothing is re-entered.',
+    toHome: 'Back to incidents', toUpdate: 'Post an update', toPromote: 'Promote to a full alert' } } } });
 })();

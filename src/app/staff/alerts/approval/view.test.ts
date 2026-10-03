@@ -270,3 +270,81 @@ describe("the words and the helpers", () => {
     expect(screen.facts.audience.sentence).toBe("LONG(buildingsSentence)");
   });
 });
+
+describe("the published confirmation of an approved entry (O-06)", () => {
+  const approved = (options: Parameters<typeof reviewOf>[0] = {}) => screenOf({ ...options, entry: { status: "approved", ...options.entry } }).published;
+  const rowIds = (published: NonNullable<ReturnType<typeof approved>>) => published.rows.map((row) => row.id);
+
+  it("is there only once the entry is approved", () => {
+    expect(screenOf().published).toBeUndefined();
+    for (const status of ["discarded", "draft", "superseded"] as const) expect(screenOf({ entry: { status, contentHash: null } }).published).toBeUndefined();
+    expect(approved()).toBeDefined();
+  });
+
+  it("says what went where: the web in all sixteen languages in their own words, and the texts that are ready but wait for texting to open", () => {
+    const published = approved()!;
+    expect(published.title).toBe("The acknowledgement is out");
+    expect(published.whereTitle).toBe("What went where");
+    expect(rowIds(published)).toEqual(["web", "texts", "valid"]);
+    const [web, texts, valid] = published.rows;
+    expect(web).toMatchObject({ label: "App and web", value: "Live now for residents who follow this place, in 16 languages, each in their own words." });
+    expect(web.languages?.items.map((language) => language.lang)).toEqual(["en", "ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr", "zh-Hant"]);
+    // Every language is named in its own script and direction.
+    expect(web.languages?.items.find((language) => language.lang === "ur")).toMatchObject({ bcp47: "ur", dir: "rtl" });
+    // Fifteen languages have a text message (zh-Hant has none of its own).
+    expect(texts.value).toBe("Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in 15 languages and go out once texting is live.");
+    expect(texts.languages?.items).toHaveLength(15);
+    expect(texts.languages?.items.map((language) => language.lang)).not.toContain("zh-Hant");
+    // Toronto time.
+    expect(valid.value).toContain("10:00");
+  });
+
+  it("names the languages that fell back to English, apart from the ones in their own words, and does not count them in the web's languages", () => {
+    const published = approved({ fallback: ["ur", "ps", "prs"] })!;
+    expect(rowIds(published)).toEqual(["web", "fallback", "texts", "valid"]);
+    const [web, fallback] = published.rows;
+    expect(web.value).toBe("Live now for residents who follow this place, in 13 languages, each in their own words.");
+    expect(web.languages?.items.map((language) => language.lang)).not.toContain("ur");
+    expect(fallback.value).toBe('Residents reading in Urdu, Pashto and Dari see the English text with "Translation not available" in their language.');
+    expect(fallback.languages?.items.map((language) => language.lang)).toEqual(["ur", "ps", "prs"]);
+  });
+
+  it("says a drill reached no resident: nothing on the web, no text sent, in the drill's own words", () => {
+    const published = approved({ thread: { isDrill: true } })!;
+    expect(published.title).toBe("Practice publish: nothing was sent to residents");
+    expect(published.drill).toBe("This is a drill. The rows below show what would have gone where.");
+    expect(published.rows.map((row) => [row.id, row.value])).toEqual([
+      ["web", "Not shown to residents: a drill stays in the Hub."],
+      ["texts", "Not sent: practice only."],
+      ["valid", expect.any(String)],
+    ]);
+    expect(approved()!.drill).toBeNull();
+  });
+
+  it("calls an update or a full alert 'The alert is out' and offers to post an update, and offers the acknowledgement to be promoted", () => {
+    const ack = approved()!;
+    expect(ack.next.links).toEqual([
+      { id: "home", href: "/staff", label: "Back to incidents" },
+      { id: "promote", href: `/staff/alerts/promote?alert=${ALERT}`, label: "Promote to a full alert" },
+    ]);
+    const update = approved({ entry: { kind: "update" } })!;
+    expect(update.title).toBe("The alert is out");
+    expect(update.next.links.map((link) => [link.id, link.href])).toEqual([
+      ["home", "/staff"],
+      ["update", `/staff/alerts/update?alert=${ALERT}`],
+    ]);
+  });
+
+  it("offers only the way back once the thread is closed", () => {
+    const closed = approved({ thread: { status: "closed" } })!;
+    expect(closed.next.links.map((link) => link.id)).toEqual(["home"]);
+    expect(closed.next.lines).toEqual([]);
+  });
+
+  it("says no text message was written when the entry has none", () => {
+    const review = reviewOf({ entry: { status: "approved" } });
+    const published = approvalScreen({ review: { ...review, sms: {} }, plans: PLANS, pricePerSegmentCents: PRICE, viewerId: APPROVER }).published!;
+    expect(published.rows.find((row) => row.id === "texts")).toMatchObject({ value: "No text message was written for this entry." });
+    expect(published.rows.find((row) => row.id === "texts")?.languages).toBeUndefined();
+  });
+});

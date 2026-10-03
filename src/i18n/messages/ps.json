@@ -4606,7 +4606,32 @@
         "forbidden": "[EN] Only a Coordinator or an Admin who did not write or change this alert can approve it.",
         "invalid": "[EN] That could not be done. Reload the page and try again."
       },
-      "updateNote": "[EN] This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are."
+      "updateNote": "[EN] This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are.",
+      "published": {
+        "titleAck": "[EN] The acknowledgement is out",
+        "titleAlert": "[EN] The alert is out",
+        "titleDrill": "[EN] Practice publish: nothing was sent to residents",
+        "leadDrill": "[EN] This is a drill. The rows below show what would have gone where.",
+        "whereTitle": "[EN] What went where",
+        "webLabel": "[EN] App and web",
+        "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
+        "webLanguages": "[EN] Languages in their own words",
+        "webDrill": "[EN] Not shown to residents: a drill stays in the Hub.",
+        "fallbackLabel": "[EN] English only",
+        "fallbackValue": "[EN] Residents reading in {languages} see the English text with \"Translation not available\" in their language.",
+        "textsLabel": "[EN] Text messages",
+        "textsNotOpen": "[EN] Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in {n} languages and go out once texting is live.",
+        "textsNone": "[EN] No text message was written for this entry.",
+        "textsDrill": "[EN] Not sent: practice only.",
+        "textsLanguages": "[EN] Languages with a text ready",
+        "validLabel": "[EN] Valid until",
+        "nextTitle": "[EN] What happens next",
+        "nextUpdate": "[EN] Residents keep reading the same alert. Add what you learn to it as an update.",
+        "nextPromote": "[EN] When you know more, promote this to a full alert. Residents keep the same alert; nothing is re-entered.",
+        "toHome": "[EN] Back to incidents",
+        "toUpdate": "[EN] Post an update",
+        "toPromote": "[EN] Promote to a full alert"
+      }
     },
     "incidents": {
       "waitingTitle": "[EN] Waiting for your approval",
@@ -4633,12 +4658,31 @@
       "review": "[EN] Review",
       "open": "[EN] Open",
       "runningTitle": "[EN] Running alerts",
-      "runningLead": "[EN] Alerts residents are reading now. Add what you know to the same alert instead of starting a new one.",
+      "runningLead": "[EN] Alerts residents are reading now, the most recently published first. Add what you know to the same alert instead of starting a new one.",
       "runningNone": "[EN] No alert is running.",
       "runningLine": "[EN] {kind}, {phase}. Valid until {time}",
       "runningPublished": "[EN] Last published {time}",
       "addUpdate": "[EN] Add an update",
-      "promote": "[EN] Promote to full alert"
+      "promote": "[EN] Promote to full alert",
+      "title": "[EN] Right now",
+      "lead": "[EN] Open incidents, most recent first. Anything waiting for you is at the top.",
+      "startNew": "[EN] Start something",
+      "logDisruption": "[EN] Log a disruption",
+      "compose": "[EN] Compose an alert",
+      "waitedFor": "[EN] Waiting {time}",
+      "duration": {
+        "justNow": "[EN] less than a minute",
+        "minute": "[EN] 1 minute",
+        "minutes": "[EN] {n} minutes",
+        "hour": "[EN] 1 hour",
+        "hours": "[EN] {n} hours",
+        "day": "[EN] 1 day",
+        "days": "[EN] {n} days"
+      },
+      "readOnly": "[EN] Read-only: you can see what is open here and change nothing.",
+      "readOnlyRunningLead": "[EN] Alerts residents are reading now, the most recently published first.",
+      "drillsLead": "[EN] Practice only. Nothing here reaches residents.",
+      "drillsNone": "[EN] No drill is running."
     },
     "resetAuthenticator": {
       "title": "[EN] Reset an authenticator",

@@ -17,7 +17,7 @@ import type { BuildingFloorPlan } from "@/modules/places";
 import { formatTorontoDateTime } from "@/platform/clock";
 import { changeView } from "../audience/change";
 import { asideOf } from "../audience/view";
-import { approveHref } from "../pages";
+import { approveHref, updateHref } from "../pages";
 import { typeName } from "../typeNames";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -80,6 +80,33 @@ export interface CountChangedView {
   reviewed: string;
 }
 
+/** A language drawn as a pill: its own name, in its own script and direction. */
+export interface PublishedLanguageView {
+  lang: LangCode | "en";
+  native: string;
+  bcp47: string;
+  dir: "ltr" | "rtl";
+}
+
+/** One row of "What went where" (O-06). */
+export interface PublishedRowView {
+  id: "web" | "fallback" | "texts" | "valid";
+  label: string;
+  value: string;
+  /** The languages the row is about, with the label that names them for a screen reader; absent when the row names none. */
+  languages?: { label: string; items: PublishedLanguageView[] };
+}
+
+/** The published confirmation (O-06): what an approved entry did, once it is approved. */
+export interface PublishedView {
+  title: string;
+  /** A drill: what "Practice publish: nothing was sent to residents" means. */
+  drill: string | null;
+  whereTitle: string;
+  rows: PublishedRowView[];
+  next: { title: string; lines: string[]; links: { id: "home" | "update" | "promote"; href: string; label: string }[] };
+}
+
 export interface ApprovalScreen {
   /** O-05 for an alert; O-07 for a post by a building ambassador. */
   variant: "alert" | "ambassador";
@@ -111,6 +138,8 @@ export interface ApprovalScreen {
     cost: { label: string; value: string; note: string };
     validUntil: { label: string; value: string };
   };
+  /** Set once the entry is approved (O-06): what went where. Absent for every other state. */
+  published?: PublishedView;
   fallback: { summary: string; recipients: string | null } | null;
   allTranslated: string | null;
   duplicate: { text: string; link: { href: string; label: string } | null } | null;
@@ -257,6 +286,60 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
         .map(([lang, n]) => `${languageNames(lang, compose, t).english}: ${n}`)
     : [];
 
+  // The published confirmation (O-06): the web in which languages, the languages that fell back to English, and the texts that go out once texting is live.
+  const languageView = (lang: LangCode): PublishedLanguageView => {
+    const { native, bcp47, dir } = languageNames(lang, compose, t);
+    return { lang, native, bcp47, dir };
+  };
+  const published = entry.status === "approved" ? publishedOf() : undefined;
+  function publishedOf(): PublishedView {
+    const drill = thread.isDrill;
+    const ownWords = review.texts.filter((text) => text.status !== "fallback_en").map((text) => text.lang as LangCode);
+    const webLanguages: LangCode[] = ["en", ...TRANSLATED_LANGS.filter((lang) => ownWords.includes(lang))];
+    const textLanguages = (["en", ...TRANSLATED_LANGS] as LangCode[]).filter((lang) => review.sms[lang] !== undefined);
+    const rows: PublishedRowView[] = [
+      drill
+        ? { id: "web", label: t("published.webLabel"), value: t("published.webDrill") }
+        : {
+            id: "web",
+            label: t("published.webLabel"),
+            value: t("published.webValue", { n: webLanguages.length }),
+            languages: { label: t("published.webLanguages"), items: webLanguages.map(languageView) },
+          },
+    ];
+    if (!drill && fallbackLangs.length > 0) {
+      rows.push({
+        id: "fallback",
+        label: t("published.fallbackLabel"),
+        value: t("published.fallbackValue", { languages: WORDS(fallbackLangs.map((lang) => languageNames(lang, compose, t).english)) }),
+        languages: { label: t("published.fallbackLabel"), items: fallbackLangs.map(languageView) },
+      });
+    }
+    rows.push({
+      id: "texts",
+      label: t("published.textsLabel"),
+      value: drill ? t("published.textsDrill") : textLanguages.length === 0 ? t("published.textsNone") : t("published.textsNotOpen", { n: textLanguages.length }),
+      ...(!drill && textLanguages.length > 0 ? { languages: { label: t("published.textsLanguages"), items: textLanguages.map(languageView) } } : {}),
+    });
+    rows.push({ id: "valid", label: t("published.validLabel"), value: formatTorontoDateTime(entry.content.validUntil) });
+    const open = thread.status === "open";
+    const ack = entry.kind === "ack";
+    return {
+      title: drill ? t("published.titleDrill") : ack ? t("published.titleAck") : t("published.titleAlert"),
+      drill: drill ? t("published.leadDrill") : null,
+      whereTitle: t("published.whereTitle"),
+      rows,
+      next: {
+        title: t("published.nextTitle"),
+        lines: open ? [ack ? t("published.nextPromote") : t("published.nextUpdate")] : [],
+        links: [
+          { id: "home", href: "/staff", label: t("published.toHome") },
+          ...(open ? [{ id: ack ? ("promote" as const) : ("update" as const), href: updateHref(thread.id, ack), label: ack ? t("published.toPromote") : t("published.toUpdate") }] : []),
+        ],
+      },
+    };
+  }
+
   return {
     variant,
     ref,
@@ -297,6 +380,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
             recipients: open && fallbackRecipients > 0 ? t("fallbackRecipients", { n: fallbackRecipients }) : null,
           }
         : null,
+    ...(published ? { published } : {}),
     allTranslated: hasTexts && fallbackLangs.length === 0 ? t("allTranslated") : null,
     duplicate: entry.possibleDuplicateOf
       ? { text: t("duplicate"), link: review.duplicate?.entryId ? { href: approveHref({ alertId: review.duplicate.alertId, entryId: review.duplicate.entryId }), label: t("duplicateLink") } : null }
