@@ -271,18 +271,20 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
           )}
 
           <section data-testid="home-every-day">
-            <Stack gap="related">
+            <Stack gap="stack">
               <ResidentText as="h2" testId="home-every-day-title">
                 {t("everyday")}
               </ResidentText>
-              <ul className="home-list">
+              <ul className="home-list home-list--dest">
                 {DESTINATIONS.map((d) => (
                   <li key={d.key}>
-                    <Link className="home-dest tap" href={`/${lang}${d.path}`} data-testid={`home-dest-${d.key}`}>
+                    <Link className="home-dest" href={`/${lang}${d.path}`} data-testid={`home-dest-${d.key}`}>
                       <span className={`home-ico home-ico--${d.icon}`} aria-hidden="true" />
-                      <span className="home-place__text">
-                        <ResidentText className="home-place__name">{t(d.key)}</ResidentText>
-                        <ResidentText className="home-place__note">{t(`${d.key}Line`)}</ResidentText>
+                      <span className="home-dest__text">
+                        <ResidentText as="span">{t(d.key)}</ResidentText>
+                        <ResidentText as="span" className="home-dest__line">
+                          {t(`${d.key}Line`)}
+                        </ResidentText>
                       </span>
                       <span className="home-ico home-ico--chevron" aria-hidden="true" />
                     </Link>

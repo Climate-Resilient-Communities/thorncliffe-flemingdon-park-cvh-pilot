@@ -631,3 +631,34 @@ for (const language of ["en", "ur"] as const) {
     }
   }
 }
+
+// Baseline screenshots of the whole home page (owner decisions 36 and 37): the ones above show the first screen, which
+// leaves "Every day" and the 911 notice below the fold. With chosen buildings, in English and Urdu (right to left), at the
+// three phone widths. The viewport grows to the page, so the baseline shows everything, as the Be ready ones do.
+for (const language of ["en", "ur"] as const) {
+  for (const width of [320, 390, 768] as const) {
+    test(`${language} whole home page at ${width}px has no horizontal scrolling and matches its baseline screenshot`, async ({ page }) => {
+      await stubFeed(page, [STATES.buildings.feed]);
+      await choose(page, ...STATES.buildings.choose);
+
+      await openResident(page, `/${language}`, width);
+      await ready(page);
+      await expect(page.getByTestId("first-run-gate")).toHaveAttribute("data-state", "ready");
+      await page.waitForLoadState("networkidle");
+      await expect(page.getByTestId("home-every-day")).toBeVisible();
+
+      const needed = await page.evaluate(() => {
+        const main = document.querySelector("main")!;
+        return Math.ceil(main.scrollHeight + (document.documentElement.clientHeight - main.clientHeight));
+      });
+      await page.setViewportSize({ width, height: needed });
+
+      const overflow = await page.evaluate(() => ({
+        page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        main: document.querySelector("main")!.scrollWidth - document.querySelector("main")!.clientWidth,
+      }));
+      expect(overflow).toEqual({ page: 0, main: 0 });
+      await expectBaseline(page, `home-whole-${language}-${width}.png`);
+    });
+  }
+}
