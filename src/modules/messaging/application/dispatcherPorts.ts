@@ -99,8 +99,8 @@ export interface DispatchStore {
    * While the pause is on only the rows it does not apply to are claimed. A claim whose lease is not this token's claims nothing.
    */
   claim(db: Db, input: { token: string; workerId: string; skewMs: number; maxRows: number; maxSegments: number }): Promise<ClaimResult>;
-  /** The expiry rules, in one transaction: unhanded claims past 5 minutes return to `queued`; handed-off rows with no outcome for 5 minutes and `submitted` rows with no terminal status for 24 hours become `unknown`, each recorded by `recordUnknown` in the same transaction. */
-  sweep(db: Db, input: { skewMs: number; recordUnknown(tx: DbTransaction, id: string, cause: UnknownCause): Promise<void> }): Promise<SweepResult>;
+  /** The expiry rules, in one transaction: unhanded claims past 5 minutes return to `queued`; handed-off rows with no outcome for 5 minutes and `submitted` rows with no terminal status for 24 hours become `unknown`, each given to `recordUnknown` (with the row as it is now) in the same transaction. */
+  sweep(db: Db, input: { skewMs: number; recordUnknown(tx: DbTransaction, row: DeliveryView, cause: UnknownCause): Promise<void> }): Promise<SweepResult>;
   /** Puts back the rows this token claimed and never handed off (a pause, the end of the run's time, a lost lease); no attempt counted. */
   releaseClaims(db: Db, input: { token: string }): Promise<number>;
   /** Locks the delivery row `FOR UPDATE` (the hand-off's first step); null when it does not exist. */

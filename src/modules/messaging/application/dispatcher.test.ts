@@ -4,7 +4,7 @@
 // reach yet (a campaign text, which no row can be before S09.07) and for the order of calls.
 import { describe, expect, it } from "vitest";
 import type { Db, DbTransaction } from "../../../platform/db";
-import type { AlertStanding } from "../domain/dispatchRules";
+import type { AlertStanding, UnknownCause } from "../domain/dispatchRules";
 import type { DeliveryView, MessagingLog } from "./deliveryPorts";
 import { createDispatcher } from "./dispatcher";
 import {
@@ -59,7 +59,10 @@ function view(over: Partial<DeliveryView> = {}): DeliveryView {
 }
 
 /** An in-memory outbox that behaves as the real store does for one run: it claims in the order given and records every change. */
-function memoryStore(queued: DeliveryView[], flags: { leaseFree?: boolean; paused?: boolean; renewalKept?: boolean; leaseHeldAtHandOff?: boolean; claimLeaseLost?: boolean } = {}) {
+function memoryStore(
+  queued: DeliveryView[],
+  flags: { leaseFree?: boolean; paused?: boolean; renewalKept?: boolean; leaseHeldAtHandOff?: boolean; claimLeaseLost?: boolean; sweepUnknown?: { row: DeliveryView; cause: UnknownCause }[] } = {},
+) {
   const rows = new Map(queued.map((row) => [row.id, { ...row }]));
   const calls: string[] = [];
   const outcomes: { id: string; kind: string }[] = [];
@@ -91,9 +94,11 @@ function memoryStore(queued: DeliveryView[], flags: { leaseFree?: boolean; pause
       for (const row of taken) Object.assign(row, { state: "claimed", claimToken: input.token, claimedBy: input.workerId });
       return { kind: "claimed", rows: taken.map((row) => ({ ...row })) };
     },
-    async sweep() {
+    async sweep(_db, input) {
       calls.push("sweep");
-      return { requeued: 0, unknown: [] };
+      const found = flags.sweepUnknown ?? [];
+      for (const { row, cause } of found) await input.recordUnknown(tx, row, cause);
+      return { requeued: 0, unknown: found.map(({ row, cause }) => ({ id: row.id, cause })) };
     },
     async releaseClaims() {
       calls.push("releaseClaims");
@@ -328,6 +333,20 @@ describe("the spend seam (S06.08)", () => {
       await dispatcher.run();
       expect(seen.map((entry) => entry.split(":")[0]), JSON.stringify(answer)).toEqual(expected);
     }
+  });
+
+  it("counts a text the sweep makes unknown after a hand-off with no outcome, and not one that was already counted when it was submitted", async () => {
+    const handedOff = view({ id: "01900000-0000-7000-8000-0000000d0101", state: "claimed", handedOffAt: new Date(NOW) });
+    const submitted = view({ id: "01900000-0000-7000-8000-0000000d0102", state: "submitted" });
+    const seen: string[] = [];
+    const { dispatcher, events } = setup([], { sweepUnknown: [{ row: handedOff, cause: "no_outcome_after_hand_off" }, { row: submitted, cause: "no_terminal_status" }] }, {
+      afterOutcome: async (_tx, delivery, outcome) => void seen.push(`${outcome}:${delivery.id}`),
+    });
+    const report = await dispatcher.run();
+    expect(report.sweep).toEqual({ requeued: 0, unknown: 2 });
+    // Both are recorded in ops_event; only the first is counted (the second was counted when it was submitted).
+    expect(events.map((event) => event.kind === "delivery.unknown" && event.deliveryId)).toEqual([handedOff.id, submitted.id]);
+    expect(seen).toEqual([`unknown:${handedOff.id}`]);
   });
 
   it("records an unknown in ops_event in the same transaction as the outcome", async () => {

@@ -766,7 +766,7 @@ describe("the sweep", () => {
     const unknown: { id: string; cause: string }[] = [];
     const result = await store.sweep(app, {
       skewMs: world.clock.skewMs(),
-      recordUnknown: async (_tx, id, cause) => void unknown.push({ id, cause }),
+      recordUnknown: async (_tx, row, cause) => void unknown.push({ id: row.id, cause }),
     });
     return { result, unknown, states: await world.statesOf(ids) };
   }
@@ -824,9 +824,12 @@ describe("the sweep", () => {
     await appSql`update delivery set state = 'submitted', provider_message_id = ${sidOf(9)} where id = ${submitted}`;
     world.clock.advance(25 * 3_600_000);
 
-    const report = await world.dispatcher().run();
+    const counted: string[] = [];
+    const report = await world.dispatcher({ afterOutcome: async (_tx, delivery, outcome) => void counted.push(`${outcome}:${delivery.id}`) }).run();
 
     expect(report.sweep).toEqual({ requeued: 0, unknown: 2 });
+    // The spend estimate (S06.08) is counted for the text handed off with no outcome, and not again for the one counted when it was submitted.
+    expect(counted).toEqual([`unknown:${handedOff}`]);
     expect(world.provider.calls).toHaveLength(0);
     expect(await world.statesOf([handedOff, submitted])).toEqual({ [handedOff]: "unknown", [submitted]: "unknown" });
     const events = await world.opsEvents("delivery.unknown");

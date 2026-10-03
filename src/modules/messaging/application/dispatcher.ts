@@ -248,7 +248,12 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
       await store.requeueOrphans(db, { token });
       const swept = await store.sweep(db, {
         skewMs: clock.skewMs(),
-        recordUnknown: (tx, id, cause) => ops.record(tx, { kind: "delivery.unknown", deliveryId: id, detail: { cause } }),
+        recordUnknown: async (tx, unknownRow, cause) => {
+          await ops.record(tx, { kind: "delivery.unknown", deliveryId: unknownRow.id, detail: { cause } });
+          // A text handed off with no outcome may have been charged, so the spend estimate is counted now, with the outcome; one
+          // that was already `submitted` was counted when the provider accepted it (never twice).
+          if (cause === "no_outcome_after_hand_off") await deps.afterOutcome?.(tx, unknownRow, "unknown");
+        },
       });
       report.sweep = { requeued: swept.requeued, unknown: swept.unknown.length };
 

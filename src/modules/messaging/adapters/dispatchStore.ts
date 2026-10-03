@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, lte, ne, sql, type SQL } from "drizzle-orm";
+import type { DeliveryView } from "../application/deliveryPorts";
 import type { DispatchStore, LockedDelivery, SweepResult } from "../application/dispatcherPorts";
 import type { UnknownCause } from "../domain/dispatchRules";
 import { CLAIM_EXPIRY_MS, MAX_ATTEMPTS, SUBMITTED_EXPIRY_MS, takeWithinSegments } from "../domain/dispatchRules";
@@ -126,19 +127,19 @@ export const drizzleDispatchStore: DispatchStore = {
         .update(delivery)
         .set({ state: "unknown" })
         .where(and(eq(delivery.state, "claimed"), isNotNull(delivery.handedOffAt), lt(delivery.handedOffAt, behind(skewMs, CLAIM_EXPIRY_MS))))
-        .returning({ id: delivery.id });
+        .returning();
       const noStatus = await tx
         .update(delivery)
         .set({ state: "unknown" })
         .where(and(eq(delivery.state, "submitted"), lt(delivery.submittedAt, behind(skewMs, SUBMITTED_EXPIRY_MS))))
-        .returning({ id: delivery.id });
-      const unknown: { id: string; cause: UnknownCause }[] = [
-        ...noOutcome.map((row) => ({ id: row.id, cause: "no_outcome_after_hand_off" as const })),
-        ...noStatus.map((row) => ({ id: row.id, cause: "no_terminal_status" as const })),
+        .returning();
+      const unknown: { row: DeliveryView; cause: UnknownCause }[] = [
+        ...noOutcome.map((row) => ({ row: viewOf(row), cause: "no_outcome_after_hand_off" as const })),
+        ...noStatus.map((row) => ({ row: viewOf(row), cause: "no_terminal_status" as const })),
       ];
       // Each `unknown` is recorded in the transaction that made it, so none goes unseen.
-      for (const row of unknown) await recordUnknown(tx, row.id, row.cause);
-      return { requeued: requeued.length, unknown };
+      for (const { row, cause } of unknown) await recordUnknown(tx, row, cause);
+      return { requeued: requeued.length, unknown: unknown.map(({ row, cause }) => ({ id: row.id, cause })) };
     });
   },
 
