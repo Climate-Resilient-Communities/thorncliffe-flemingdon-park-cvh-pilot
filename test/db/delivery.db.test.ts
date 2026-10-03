@@ -18,6 +18,7 @@ import {
   canTransition,
   createContactResolver,
   createDeliveryQueue,
+  looksLikePhoneNumber,
   maskForLog,
   purposeRule,
   type DeliveryState,
@@ -26,7 +27,7 @@ import {
 } from "../../src/modules/messaging";
 import { createDb, type Db } from "../../src/platform/db";
 import { sql as drizzleSql } from "drizzle-orm";
-import { deliveryFixtures, FAKE_NUMBER, FAKE_SID, transitionStatement, DEFAULT_BODIES, type SeededEntry, type Tx } from "./deliveryFixtures";
+import { deliveryFixtures, FAKE_NUMBER, FAKE_SID, OUTCOME_AFTER_HAND_OFF, transitionStatement, DEFAULT_BODIES, type SeededEntry, type Tx } from "./deliveryFixtures";
 import { connect, serverUrl } from "./helpers";
 
 let owner: ReturnType<typeof connect>;
@@ -161,15 +162,23 @@ const PATH: Record<DeliveryState, DeliveryState[]> = {
   skipped_env: ["claimed", "skipped_env"],
 };
 
-/** A transactional row in `state`, reached only by legal transitions; `handedOff` records the hand-off while it is claimed. */
+/**
+ * A transactional row in `state`, reached only by legal transitions; `handedOff` records the hand-off while it is claimed (and a
+ * row that goes on to an outcome of the provider is always handed off first: the database allows no outcome without it).
+ */
 async function rowIn(state: DeliveryState, options: { handedOff?: boolean; over?: Row } = {}): Promise<string> {
   const row = await asApp((tx) => insertRow(tx, transactionalRow(options.over)));
-  for (const step of PATH[state]) {
+  const path = PATH[state];
+  for (const [index, step] of path.entries()) {
     await asApp((tx) => transitionStatement(tx, row.id, step));
-    if (step === "claimed" && options.handedOff) await asApp((tx) => tx`update delivery set handed_off_at = now() where id = ${row.id}`);
+    const next = path[index + 1];
+    if (step === "claimed" && (options.handedOff || (next !== undefined && OUTCOME_AFTER_HAND_OFF.includes(next)))) await handOff(row.id);
   }
   return row.id;
 }
+
+/** The hand-off, recorded while the row is claimed (the database times it). */
+const handOff = (id: string) => asApp((tx) => tx`update delivery set handed_off_at = now() where id = ${id}`);
 
 /** The error's message and those of its causes: Drizzle wraps the database's own error, which holds the trigger's words. */
 function messageOf(error: unknown): string {
@@ -307,7 +316,8 @@ describe("the state transitions", () => {
     for (const from of DELIVERY_STATES) {
       for (const to of DELIVERY_STATES) {
         if (from === to) continue;
-        const id = await rowIn(from);
+        // A claimed row that goes on to the provider's answer was handed to the provider first (cancelling or skipping it needs it not to be).
+        const id = await rowIn(from, { handedOff: from === "claimed" && OUTCOME_AFTER_HAND_OFF.includes(to) });
         const attempt = asApp((tx) => transitionStatement(tx, id, to));
         if (canTransition(from, to)) {
           await expect(attempt, `${from} -> ${to}`).resolves.toBeDefined();
@@ -441,10 +451,75 @@ describe("the state transitions", () => {
     }
   });
 
+  it("send a handed-off text back to the queue only if it was not accepted, and that counts an attempt: no automatic second submission", async () => {
+    const requeue = (id: string, attempts?: number) =>
+      asApp((tx) => tx.unsafe(`update delivery set state = 'queued'${attempts === undefined ? "" : `, attempts = ${attempts}`}, due_at = now() + interval '30 seconds' where id = '${id}'`));
+    const claimAndHandOff = async (id: string) => {
+      await asApp((tx) => transitionStatement(tx, id, "claimed"));
+      await handOff(id);
+    };
+    const id = await rowIn("claimed", { handedOff: true });
+    // A dispatcher or sweep bug that requeues a text the provider was handed, with no attempt counted, is refused and the row is untouched.
+    expect(await refusal(() => requeue(id))).toMatch(/goes back to the queue only if it was not accepted, and that counts an attempt/);
+    expect(await refusal(() => requeue(id, 0))).toMatch(/not accepted/);
+    const held = await rowOf(id);
+    expect([held.state, held.attempts]).toEqual(["claimed", 0]);
+    expect(held.handed_off_at).toBeInstanceOf(Date);
+    // Not accepted (429, or no request sent) is counted: the claim, the lease and the hand-off are cleared.
+    await requeue(id, 1);
+    const first = await rowOf(id);
+    expect([first.state, first.attempts, first.claimed_by, first.claim_token, first.handed_off_at]).toEqual(["queued", 1, null, null, null]);
+    // Three attempts in all; the backoffs of the definitions are the dispatcher's, the database counts.
+    for (const attempts of [2, 3]) {
+      await claimAndHandOff(id);
+      await requeue(id, attempts);
+      expect((await rowOf(id)).attempts).toBe(attempts);
+    }
+    // At 3 attempts there is no fourth: a handed-off row can only fail (or become unknown, or be answered), never be queued again.
+    await claimAndHandOff(id);
+    expect(await refusal(() => requeue(id, 4))).toMatch(/delivery_attempts_valid/);
+    expect(await refusal(() => requeue(id, 3))).toMatch(/not accepted/);
+    expect(await refusal(() => requeue(id))).toMatch(/not accepted/);
+    await asApp((tx) => transitionStatement(tx, id, "failed"));
+    expect(await stateOf(id)).toBe("failed");
+    // A claim that was not handed off (a pause before the hand-off, a claim that expired) returns to the queue with no attempt counted.
+    const unhanded = await rowIn("claimed");
+    await requeue(unhanded);
+    expect([(await rowOf(unhanded)).state, (await rowOf(unhanded)).attempts]).toEqual(["queued", 0]);
+  });
+
+  it("give an outcome (submitted, unknown, delivered, undelivered) only to a text that was handed to the provider", async () => {
+    for (const to of OUTCOME_AFTER_HAND_OFF) {
+      const id = await rowIn("claimed");
+      expect(await refusal(() => asApp((tx) => transitionStatement(tx, id, to))), to).toMatch(/a text not handed to the provider has no outcome/);
+      expect(await stateOf(id), to).toBe("claimed");
+      await handOff(id);
+      await asApp((tx) => transitionStatement(tx, id, to));
+      expect(await stateOf(id), to).toBe(to);
+    }
+    // A permanent error found before the call (no usable number) and a log-mode skip have no provider answer to wait for.
+    for (const to of ["failed", "skipped_env"] as const) {
+      const id = await rowIn("claimed");
+      await asApp((tx) => transitionStatement(tx, id, to));
+      expect(await stateOf(id), to).toBe(to);
+    }
+  });
+
+  it("never queue a text the provider gave an id, so it cannot be sent again", async () => {
+    const id = await rowIn("claimed", { handedOff: true });
+    await asApp((tx) => tx`update delivery set provider_message_id = ${FAKE_SID}, attempts = 1 where id = ${id}`);
+    expect(await refusal(() => asApp((tx) => tx`update delivery set state = 'queued', attempts = 2 where id = ${id}`))).toMatch(/delivery_claim_coherent/);
+    expect(await stateOf(id)).toBe("claimed");
+    const queued = await rowIn("queued");
+    expect(await refusal(() => asApp((tx) => tx`update delivery set provider_message_id = ${FAKE_SID} where id = ${queued}`))).toMatch(/delivery_claim_coherent/);
+    expect((await rowOf(queued)).provider_message_id).toBeNull();
+  });
+
   it("time what happens: submitted_at at the first submission, completed_at at a terminal state and never before", async () => {
     const id = await rowIn("queued");
     expect((await rowOf(id)).completed_at).toBeNull();
     await asApp((tx) => transitionStatement(tx, id, "claimed"));
+    await handOff(id);
     await asApp((tx) => transitionStatement(tx, id, "submitted"));
     const submitted = await rowOf(id);
     expect(submitted.submitted_at).toBeInstanceOf(Date);
@@ -460,7 +535,7 @@ describe("the state transitions", () => {
 
   it("need the provider's id for a submitted, delivered or undelivered text", async () => {
     for (const to of ["submitted", "delivered", "undelivered"] as const) {
-      const id = await rowIn("claimed");
+      const id = await rowIn("claimed", { handedOff: true });
       expect(await refusal(() => asApp((tx) => tx.unsafe(`update delivery set state = '${to}' where id = '${id}'`))), to).toMatch(/delivery_in_flight_has_provider_id/);
     }
     // A permanent failure or a log-mode skip has none to give.
@@ -613,8 +688,8 @@ describe("alert deliveries", () => {
     expect(await count()).toBe(1);
   });
 
-  it("belong only to an entry that is being approved or is approved", async () => {
-    for (const [status, ok] of [["pending_approval", true], ["approved", true], ["draft", false], ["discarded", false]] as const) {
+  it("belong only to an entry that is being approved: pending approval, never a draft or a discarded entry", async () => {
+    for (const [status, ok] of [["pending_approval", true], ["draft", false], ["discarded", false]] as const) {
       const entry = await fx.entry(status);
       const attempt = () => asApp((tx) => insertRow(tx, alertRow(entry)), entry.entryId);
       if (ok) await expect(attempt(), status).resolves.toBeDefined();
@@ -625,6 +700,45 @@ describe("alert deliveries", () => {
     const recipient = randomUUID();
     const orphan = alertRow(entry, { entry_id: missing, recipient_id: recipient, idempotency_key: `${missing}:${recipient}:sms` });
     expect(await refusal(() => asApp((tx) => insertRow(tx, orphan), missing))).toMatch(/being approved or is approved, not missing/);
+  });
+
+  it("are accepted for an approved entry only in the transaction that approved it, written before or after the approval", async () => {
+    // The approval, then the deliveries, in one transaction: the entry is `approved` with approved_at = now().
+    const approvedFirst = await fx.entry("pending_approval");
+    await asApp(async (tx) => {
+      await fx.approve(tx, approvedFirst);
+      await insertRow(tx, alertRow(approvedFirst));
+    }, approvedFirst.entryId);
+    // The deliveries, then the approval, in one transaction.
+    const writtenFirst = await fx.entry("pending_approval");
+    await asApp(async (tx) => {
+      await insertRow(tx, alertRow(writtenFirst));
+      await fx.approve(tx, writtenFirst);
+    }, writtenFirst.entryId);
+    expect(await owner`select status from alert_entry where id in (${approvedFirst.entryId}, ${writtenFirst.entryId})`).toEqual([{ status: "approved" }, { status: "approved" }]);
+    expect(await count()).toBe(2);
+  });
+
+  it("are refused for an entry approved by an earlier transaction, even with the marker set (a later transaction can set it too)", async () => {
+    const later = /an alert delivery of an approved entry is created in the transaction that approved it/;
+    // Approved a moment ago by its own transaction, which wrote no delivery.
+    const justApproved = await fx.entry("pending_approval");
+    await asApp((tx) => fx.approve(tx, justApproved));
+    expect(await refusal(() => asApp((tx) => insertRow(tx, alertRow(justApproved)), justApproved.entryId))).toMatch(later);
+    // Approved long ago (a seeded entry), and the same for the owner's connection.
+    const longAgo = await fx.entry("approved");
+    expect(await refusal(() => asApp((tx) => insertRow(tx, alertRow(longAgo)), longAgo.entryId))).toMatch(later);
+    expect(await refusal(() => owner.begin(async (tx) => {
+      await tx`select set_config('cvh.approval_entry_id', ${longAgo.entryId}, true)`;
+      return insertRow(tx, alertRow(longAgo));
+    }))).toMatch(later);
+    // Approving another entry in the same transaction does not make this one's deliveries acceptable.
+    const other = await fx.entry("pending_approval");
+    expect(await refusal(() => asApp(async (tx) => {
+      await fx.approve(tx, other);
+      await insertRow(tx, alertRow(longAgo));
+    }, longAgo.entryId))).toMatch(later);
+    expect(await count()).toBe(0);
   });
 
   it("carry the entry's frozen SMS body and segments for their language, byte for byte", async () => {
@@ -735,9 +849,28 @@ describe("transactional deliveries", () => {
     expect(await refused("transactional:subject:menu_reply:")).toMatch(/kind:subject:purpose:nonce/);
     expect(await refused("campaign:subject:menu_reply:n")).toMatch(/kind:subject:purpose:nonce/);
     expect(await refused("transactional:subject:welcome:n")).toMatch(/kind:subject:purpose:nonce/);
-    expect(await refused("transactional:+14165550123:menu_reply:n")).toMatch(/delivery_key_format/);
+    // The trigger speaks before the table's format check, so a number with a plus sign is refused as a number.
+    expect(await refused("transactional:+14165550123:menu_reply:n")).toMatch(/no part of a key is a phone number/);
+    expect(await refused("transactional:a b:menu_reply:n")).toMatch(/delivery_key_format/);
     expect(await refused(`transactional:${"a".repeat(200)}:menu_reply:n`)).toMatch(/delivery_key_format/);
     await expect(asApp((tx) => insertRow(tx, transactionalRow({ idempotency_key: "transactional:S1:menu_reply:n1" })))).resolves.toBeDefined();
+  });
+
+  it("refuse a key whose subject or nonce is a phone number, by the same rule as the app's looksLikePhoneNumber", async () => {
+    const message = /no part of a key is a phone number/;
+    const keyWith = (subject: string, nonce: string) => `transactional:${subject}:menu_reply:${nonce}`;
+    // The numbers as a person writes them (the key's alphabet allows digits, dots and dashes; the plus sign is refused as a number too).
+    for (const number of ["+14165550123", "14165550123", "4165550123", "416-555-0123", "416.555.0123", "1234567", "123456789012345"]) {
+      expect(await refusal(() => asApp((tx) => insertRow(tx, transactionalRow({ idempotency_key: keyWith(number, "n1") })))), `subject ${number}`).toMatch(message);
+      expect(await refusal(() => asApp((tx) => insertRow(tx, transactionalRow({ idempotency_key: keyWith("S1", number) })))), `nonce ${number}`).toMatch(message);
+    }
+    // Everything else is judged exactly as the app judges it: the two lists must agree on every sample.
+    const samples = ["S1", "123456", "1234567890123456", "12-34-56", "1.2.3.4.5.6.7", "a1234567", "1234567a", randomUUID(), FAKE_SID, "n1"];
+    for (const [index, sample] of samples.entries()) {
+      const attempt = () => asApp((tx) => insertRow(tx, transactionalRow({ idempotency_key: keyWith(sample, `k${index}`) })));
+      if (looksLikePhoneNumber(sample)) expect(await refusal(attempt), sample).toMatch(message);
+      else await expect(attempt(), sample).resolves.toBeDefined();
+    }
   });
 
   it("name no entry and no campaign", async () => {
@@ -792,79 +925,82 @@ describe("campaign deliveries", () => {
       ...over,
     };
   };
-  /** Marks the transaction as the start of `campaignId` by `startedBy` at `aal`, the way messaging's markCampaignTransaction does. */
-  const startedBy = (campaignId: string, who: string | null, aal: string | null, run: (tx: Tx) => PromiseLike<unknown>, markedId: string = campaignId) =>
-    appSql.begin(async (tx) => {
-      await tx`select set_config('cvh.campaign_id', ${markedId}, true)`;
-      if (who) await tx`select set_config('cvh.campaign_started_by', ${who}, true)`;
-      if (aal) await tx`select set_config('cvh.campaign_aal', ${aal}, true)`;
-      return await run(tx);
-    });
   const message = /needs a campaign started by an Admin at aal2/;
 
-  it("are refused unless their campaign was started by an Admin at aal2", async () => {
-    const admin = await fx.staff("admin");
-    const campaignId = randomUUID();
-    // No start stated at all.
-    expect(await refusal(() => asApp((tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
-    // The right Admin at aal1, or no assurance level stated.
-    expect(await refusal(() => startedBy(campaignId, admin.id, "aal1", (tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
-    expect(await refusal(() => startedBy(campaignId, admin.id, null, (tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
-    // Nobody named.
-    expect(await refusal(() => startedBy(campaignId, null, "aal2", (tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
-    // Another campaign's start.
-    expect(await refusal(() => startedBy(campaignId, admin.id, "aal2", (tx) => insertRow(tx, campaignRow(campaignId)), randomUUID()))).toMatch(message);
-    expect(await count()).toBe(0);
-    const row = await startedBy(campaignId, admin.id, "aal2", (tx) => insertRow(tx, campaignRow(campaignId)));
-    expect((row as Row).kind).toBe("campaign");
-    expect(await count()).toBe(1);
-  });
-
-  it("are refused when the account that started the campaign is not an active Admin", async () => {
-    const campaignId = randomUUID();
-    for (const [who, label] of [
-      [await fx.staff("coordinator"), "a Coordinator"],
-      [await fx.staff("director"), "a Director"],
-      [await fx.staff("ambassador"), "an Ambassador"],
-      [await fx.staff("admin", "suspended"), "a suspended Admin"],
-      [await fx.staff("admin", "removed"), "a removed Admin"],
-    ] as const) {
-      expect(await refusal(() => startedBy(campaignId, who.id, "aal2", (tx) => insertRow(tx, campaignRow(campaignId)))), label).toMatch(message);
+  /**
+   * Stands in for S09.07, which replaces delivery_campaign_started_by_admin() with a read of the campaign row: in one owner
+   * transaction that is always rolled back, the function answers true, so the rest of the campaign rules can be tried.
+   */
+  async function asIfCampaignStarted<T>(run: (tx: Tx) => PromiseLike<T>): Promise<T> {
+    const rolledBack = "rolled back on purpose";
+    let result: T | undefined;
+    try {
+      await owner.begin(async (tx) => {
+        await tx.unsafe(
+          "create or replace function public.delivery_campaign_started_by_admin(p_campaign_id uuid) returns boolean language sql stable set search_path = '' as $$ select true $$",
+        );
+        result = await run(tx);
+        throw new Error(rolledBack);
+      });
+    } catch (error) {
+      if (!(error instanceof Error) || error.message !== rolledBack) throw error;
     }
-    expect(await refusal(() => startedBy(campaignId, randomUUID(), "aal2", (tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
-    expect(await refusal(() => startedBy(campaignId, "not-a-uuid", "aal2", (tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
+    return result as T;
+  }
+
+  it("are all refused until S09.07 creates campaigns: nothing the caller states makes a campaign started", async () => {
+    const admin = await fx.staff("admin");
+    const campaignId = randomUUID();
+    expect(await refusal(() => asApp((tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
+    // What an earlier version of this rule read: the campaign's id, an active Admin and aal2, all said by the caller. Nobody is believed.
+    expect(
+      await refusal(() =>
+        appSql.begin(async (tx) => {
+          await tx`select set_config('cvh.campaign_id', ${campaignId}, true)`;
+          await tx`select set_config('cvh.campaign_started_by', ${admin.id}, true)`;
+          await tx`select set_config('cvh.campaign_aal', 'aal2', true)`;
+          return insertRow(tx, campaignRow(campaignId));
+        }),
+      ),
+    ).toMatch(message);
+    // Nor the owner.
+    expect(await refusal(() => owner.begin((tx) => insertRow(tx, campaignRow(campaignId))))).toMatch(message);
+    expect(await count()).toBe(0);
   });
 
-  it("are created through the queue after markCampaignTransaction, idempotently", async () => {
-    const admin = await fx.staff("admin");
+  it("are refused by a function that answers false for any campaign: the one S09.07 replaces with a read of the campaign row", async () => {
+    const [answers] = await appSql`select public.delivery_campaign_started_by_admin(${randomUUID()}::uuid) as started, public.delivery_campaign_started_by_admin(null) as nothing`;
+    expect(answers).toEqual({ started: false, nothing: false });
+  });
+
+  it("are refused through the queue's use case too, and nothing is written", async () => {
     const queue = createDeliveryQueue();
     const campaignId = randomUUID();
-    const recipient = { kind: "subscriber" as const, id: randomUUID() };
-    const input = { campaignId, purpose: "reconsent", recipient, lang: "en" as const, body: "Reply YES to keep your alerts.", segments: 1, costEstimateCents: 2 };
+    const input = { campaignId, purpose: "reconsent", recipient: { kind: "subscriber" as const, id: randomUUID() }, lang: "en" as const, body: "Reply YES to keep your alerts.", segments: 1, costEstimateCents: 2 };
     expect(await refusal(() => app.transaction((tx) => queue.enqueueCampaignDelivery(tx, input)))).toMatch(message);
-    const start = (aal: "aal1" | "aal2") =>
-      app.transaction(async (tx) => {
-        await queue.markCampaignTransaction(tx, { campaignId, startedBy: admin.id, aal });
-        return queue.enqueueCampaignDelivery(tx, input);
-      });
-    expect(await refusal(() => start("aal1"))).toMatch(message);
-    const first = await start("aal2");
-    const again = await start("aal2");
-    if (!first.ok || !again.ok) throw new Error("refused");
-    expect([first.value.created, again.value.created]).toEqual([true, false]);
-    expect(again.value.delivery.id).toBe(first.value.delivery.id);
-    expect(first.value.delivery.idempotencyKey).toBe(`campaign:${campaignId}:reconsent:${recipient.id}`);
-    expect(await count()).toBe(1);
+    expect(await count()).toBe(0);
   });
 
-  it("have the shape of their kind: a campaign, a purpose, the subscriptions module, no entry", async () => {
-    const admin = await fx.staff("admin");
+  it("go to a subscriber and to no other kind of recipient, once a campaign is started", async () => {
     const campaignId = randomUUID();
-    const refused = (over: Row) => refusal(() => startedBy(campaignId, admin.id, "aal2", (tx) => insertRow(tx, campaignRow(campaignId, over))));
-    expect(await refused({ campaign_id: null })).toMatch(/kind:subject:purpose:nonce|delivery_kind_shape|needs a campaign/);
+    for (const kind of RECIPIENT_KINDS) {
+      const attempt = () => asIfCampaignStarted((tx) => insertRow(tx, campaignRow(campaignId, { recipient_kind: kind })));
+      if (kind === "subscriber") await expect(attempt(), kind).resolves.toMatchObject({ kind: "campaign", state: "queued", recipient_kind: "subscriber" });
+      else expect(await refusal(attempt), kind).toMatch(/delivery_kind_shape/);
+    }
+    expect(await count()).toBe(0);
+  });
+
+  it("keep the shape and the key of their kind once a campaign is started: a campaign, a purpose, the subscriptions module, no entry, no phone number", async () => {
+    const campaignId = randomUUID();
+    const refused = (over: Row) => refusal(() => asIfCampaignStarted((tx) => insertRow(tx, campaignRow(campaignId, over))));
+    expect(await refused({ campaign_id: null })).toMatch(/delivery_kind_shape/);
     expect(await refused({ purpose: null, idempotency_key: `campaign:${campaignId}:x:y` })).toMatch(/delivery_kind_shape|kind:subject:purpose:nonce/);
     expect(await refused({ created_by_module: "ops" })).toMatch(/delivery_kind_shape/);
     expect(await refused({ idempotency_key: `${campaignId}:${randomUUID()}:sms` })).toMatch(/kind:subject:purpose:nonce/);
+    expect(await refused({ idempotency_key: `campaign:${campaignId}:reconsent:4165550123` })).toMatch(/no part of a key is a phone number/);
+    expect(await refused({ entry_id: (await fx.entry("pending_approval")).entryId })).toMatch(/delivery_kind_shape/);
+    expect(await count()).toBe(0);
   });
 });
 
@@ -992,12 +1128,17 @@ describe("a deleted recipient", () => {
 // --- the ContactResolver --------------------------------------------------------------------------------
 
 describe("the ContactResolver at the hand-off point", () => {
-  /** `inbound_reply`'s row, as subscriptions will hold it (S07.04): a number with no subscription, awaiting one reply. */
+  /**
+   * `inbound_reply`'s row, as subscriptions will hold it (S07.04): a number with no subscription, awaiting one reply. It carries
+   * the trigger every recipient table carries, so deleting the row in the hand-off transaction forgets the recipient on the
+   * delivery row that is being handed off (S07.04 attaches it in the migration that creates the table).
+   */
   async function inboundReplyTable() {
     const name = `scratch_inbound_reply_${randomBytes(4).toString("hex")}`;
     await owner.unsafe(`create table ${name} (id uuid primary key, number text not null, expires_at timestamptz not null)`);
     await owner.unsafe(`grant select, insert, delete on ${name} to cvh_app`);
     await owner.unsafe(`grant update on ${name} to cvh_app`);
+    await owner.unsafe(`create trigger ${name}_forget_deliveries after delete on ${name} for each row execute function delivery_forget_recipient('inbound_reply')`);
     scratchTables.push(name);
     return name;
   }
@@ -1058,6 +1199,44 @@ describe("the ContactResolver at the hand-off point", () => {
     // A second hand-off finds the recipient gone.
     const again = await app.transaction((tx) => resolver.resolve(tx, { deliveryId, kind: "inbound_reply", id: replyId }));
     expect(again).toEqual({ found: false, reason: "recipient_gone" });
+  });
+
+  it("commits the hand-off even though taking the number forgets the recipient on the row being handed off, and that text is never retried", async () => {
+    const table = await inboundReplyTable();
+    const replyId = randomUUID();
+    await owner.unsafe(`insert into ${table} (id, number, expires_at) values ('${replyId}', '${FAKE_NUMBER}', now() + interval '30 minutes')`);
+    const deliveryId = await inboundReplyDelivery(replyId);
+    const originalKey = (await rowOf(deliveryId)).idempotency_key as string;
+    const resolver = createContactResolver({ sources: { inbound_reply: sourceOver(table) }, log });
+
+    // The hand-off reads the delivery row's recipient BEFORE it takes the number: taking it (deleting the `inbound_reply` row)
+    // runs the recipient table's trigger, which clears `recipient_id` on this very row inside this transaction.
+    const resolved = await app.transaction(async (tx) => {
+      const [locked] = await tx.execute<{ recipient_kind: string; recipient_id: string }>(
+        drizzleSql`select recipient_kind, recipient_id from delivery where id = ${deliveryId} for update`,
+      );
+      expect(locked.recipient_id).toBe(replyId);
+      const result = await resolver.resolve(tx, { deliveryId, kind: "inbound_reply", id: locked.recipient_id });
+      await tx.execute(drizzleSql`update delivery set handed_off_at = now() where id = ${deliveryId}`);
+      return result;
+    });
+    expect(resolved).toEqual({ found: true, number: FAKE_NUMBER });
+
+    // The hand-off committed, and the row no longer names its recipient: its key is `detached:<id>`.
+    const handedOff = await rowOf(deliveryId);
+    expect(handedOff.state).toBe("claimed");
+    expect(handedOff.handed_off_at).toBeInstanceOf(Date);
+    expect(handedOff.recipient_id).toBeNull();
+    expect(handedOff.idempotency_key).toBe(`detached:${deliveryId}`);
+    // So the key it was created with is free while the text is in flight. A duplicate reply to one inbound message is stopped by
+    // `inbound_seen` (S07.04), not by this key.
+    await expect(asApp((tx) => insertRow(tx, transactionalRow({ purpose: "signup_info", recipient_kind: "inbound_reply", idempotency_key: originalKey })))).resolves.toBeDefined();
+    // And if the provider then answers 429 and the row goes back to the queue, the next hand-off has no recipient to read a number
+    // for: the text is skipped, never resent (the number was taken once, and is gone).
+    await asApp((tx) => transitionStatement(tx, deliveryId, "queued"));
+    const requeued = await rowOf(deliveryId);
+    expect([requeued.state, requeued.attempts, requeued.recipient_id]).toEqual(["queued", 1, null]);
+    expect(await app.transaction((tx) => resolver.resolve(tx, { deliveryId, kind: "inbound_reply", id: requeued.recipient_id }))).toEqual({ found: false, reason: "recipient_gone" });
   });
 
   it("keeps the row when the hand-off transaction does not commit: nothing was handed off and nothing is lost", async () => {

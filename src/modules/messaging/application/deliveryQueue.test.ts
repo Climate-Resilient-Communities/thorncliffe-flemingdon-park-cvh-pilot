@@ -7,12 +7,11 @@ const NOW = new Date("2026-10-03T15:00:00Z");
 const ID = "01900000-0000-7000-8000-0000000a0001";
 const ENTRY = "01900000-0000-7000-8000-0000000e0001";
 const CAMPAIGN = "01900000-0000-7000-8000-0000000c0001";
-const ADMIN = "01900000-0000-7000-8000-0000000d0001";
 const tx = {} as DbTransaction;
 
 /** A store that remembers what it was asked and answers as the real one would for a new row. */
 function fakeStore() {
-  const calls = { inserted: [] as NewDelivery[][], approvals: [] as string[], campaigns: [] as unknown[], skips: [] as unknown[] };
+  const calls = { inserted: [] as NewDelivery[][], approvals: [] as string[], skips: [] as unknown[] };
   const store: DeliveryStore = {
     async insert(_tx, rows) {
       calls.inserted.push([...rows]);
@@ -20,9 +19,6 @@ function fakeStore() {
     },
     async markApproval(_tx, entryId) {
       calls.approvals.push(entryId);
-    },
-    async markCampaign(_tx, start) {
-      calls.campaigns.push(start);
     },
     async skipForRecipient(_tx, recipient) {
       calls.skips.push(recipient);
@@ -87,6 +83,15 @@ describe("the approval's mark", () => {
     expect(calls.approvals).toEqual([ENTRY]);
     expect(await queue.markApprovalTransaction(tx, "not-an-id")).toEqual({ ok: false, error: "ID_INVALID" });
     expect(calls.approvals).toEqual([ENTRY]);
+  });
+
+  it("refuses an uppercase id: the database compares ids as lowercase text, so it would fail there as an error, not here as a refusal", async () => {
+    const { queue, calls } = queueOf();
+    expect(await queue.markApprovalTransaction(tx, ENTRY.toUpperCase())).toEqual({ ok: false, error: "ID_INVALID" });
+    expect(await queue.enqueueAlertDeliveries(tx, ENTRY.toUpperCase(), [alertText()])).toEqual({ ok: false, error: "ID_INVALID" });
+    expect(await queue.enqueueAlertDeliveries(tx, ENTRY, [alertText({ recipient: { kind: "subscriber", id: ID.toUpperCase() } })])).toEqual({ ok: false, error: "ID_INVALID" });
+    expect(calls.approvals).toEqual([]);
+    expect(calls.inserted).toEqual([]);
   });
 });
 
@@ -190,14 +195,15 @@ describe("campaign deliveries", () => {
     ]);
   });
 
-  it("are refused for a bad purpose or id, and the campaign's start is passed to the store with the assurance level it was made at", async () => {
+  it("are refused for a bad purpose, an id that is not a lowercase UUID, or a recipient who is not a subscriber", async () => {
     const { queue, calls } = queueOf();
     expect(await queue.enqueueCampaignDelivery(tx, campaignText({ purpose: "Re Consent" }))).toEqual({ ok: false, error: "CAMPAIGN_PURPOSE_INVALID" });
     expect(await queue.enqueueCampaignDelivery(tx, campaignText({ campaignId: "x" }))).toEqual({ ok: false, error: "ID_INVALID" });
+    expect(await queue.enqueueCampaignDelivery(tx, campaignText({ campaignId: CAMPAIGN.toUpperCase() }))).toEqual({ ok: false, error: "ID_INVALID" });
+    for (const kind of ["pending_signup", "roster", "staff", "oncall", "inbound_reply"] as const) {
+      expect(await queue.enqueueCampaignDelivery(tx, campaignText({ recipient: { kind, id: ID } })), kind).toEqual({ ok: false, error: "RECIPIENT_NOT_ALLOWED" });
+    }
     expect(calls.inserted).toEqual([]);
-    expect(await queue.markCampaignTransaction(tx, { campaignId: CAMPAIGN, startedBy: ADMIN, aal: "aal2" })).toEqual({ ok: true, value: undefined });
-    expect(await queue.markCampaignTransaction(tx, { campaignId: CAMPAIGN, startedBy: "x", aal: "aal2" })).toEqual({ ok: false, error: "ID_INVALID" });
-    expect(calls.campaigns).toEqual([{ campaignId: CAMPAIGN, startedBy: ADMIN, aal: "aal2" }]);
   });
 });
 

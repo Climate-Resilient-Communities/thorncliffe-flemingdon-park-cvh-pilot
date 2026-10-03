@@ -3,13 +3,14 @@
 //  - `alert`: only inside the approval transaction of its entry (`markApprovalTransaction`, then `enqueueAlertDeliveries`);
 //  - `transactional`: by `alerting`, `subscriptions`, `checkins` or `ops`, for a purpose on that module's allow-list,
 //    with a `send_by` (`enqueueTransactional`);
-//  - `campaign`: only for a campaign started by an Admin at aal2 (`markCampaignTransaction`, then `enqueueCampaignDelivery`).
+//  - `campaign`: only for a campaign started by an Admin at aal2, to a subscriber (`enqueueCampaignDelivery`). No campaign exists
+//    until S09.07, so the database refuses every campaign row until then; S09.07 makes the trigger read the campaign row, and the
+//    use case needs no marker (a caller's own word about who started a campaign, or at which assurance level, is never trusted).
 // Every insert is idempotent on its key: a second insert of the same key returns the first row, with no error.
 //
 // Everything runs in the caller's transaction (the approval's, the sign-up's), so a delivery is written exactly when the
 // change that needs it commits. Locks follow AD-18: the approval locks `alert`, `alert_entry` and `feed_version` before it
 // writes deliveries here.
-import type { AssuranceLevel } from "../../../contracts/staffAuth";
 import type { DbTransaction } from "../../../platform/db";
 import { uuidv7 } from "../../../platform/ids";
 import {
@@ -73,8 +74,10 @@ export interface DeliveryQueue {
    */
   enqueueAlertDeliveries(tx: DbTransaction, entryId: string, texts: readonly AlertTextInput[]): Promise<DeliveryResult<Enqueued[]>>;
   enqueueTransactional(tx: DbTransaction, input: TransactionalInput): Promise<DeliveryResult<Enqueued>>;
-  /** Called first by the campaign's start (S09.07) with the account that started it and the assurance level of its session. */
-  markCampaignTransaction(tx: DbTransaction, start: { campaignId: string; startedBy: string; aal: AssuranceLevel }): Promise<DeliveryResult<void>>;
+  /**
+   * One campaign text to a subscriber (S09.07, in the transaction that starts the campaign). The database accepts it only for a
+   * campaign started by an Admin at aal2; until S09.07 creates campaigns it refuses every one, as an error from the insert.
+   */
   enqueueCampaignDelivery(tx: DbTransaction, input: CampaignTextInput): Promise<DeliveryResult<Enqueued>>;
   /**
    * A recipient's deletion (S07.04 for subscribers, S06.05 and S06.07 for roster and on-call numbers) calls this in its own
@@ -149,12 +152,6 @@ export function createDeliveryQueueService(deps: DeliveryQueueDeps): DeliveryQue
         },
       ]);
       return { ok: true, value: row };
-    },
-
-    async markCampaignTransaction(tx, start) {
-      if (!isUuid(start.campaignId) || !isUuid(start.startedBy)) return { ok: false, error: "ID_INVALID" };
-      await store.markCampaign(tx, start);
-      return { ok: true, value: undefined };
     },
 
     async enqueueCampaignDelivery(tx, input) {

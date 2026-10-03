@@ -121,13 +121,14 @@ export const delivery = pgTable(
       sql`(${t.kind} = 'alert' and ${t.entryId} is not null and ${t.campaignId} is null and ${t.purpose} is null
         and ${t.createdByModule} = 'alerting' and ${t.recipientKind} in ('subscriber', 'roster'))
         or (${t.kind} = 'transactional' and ${t.entryId} is null and ${t.campaignId} is null and ${t.purpose} is not null and ${t.sendBy} is not null)
-        or (${t.kind} = 'campaign' and ${t.entryId} is null and ${t.campaignId} is not null and ${t.purpose} is not null and ${t.createdByModule} = 'subscriptions')`,
+        or (${t.kind} = 'campaign' and ${t.entryId} is null and ${t.campaignId} is not null and ${t.purpose} is not null and ${t.createdByModule} = 'subscriptions'
+        and ${t.recipientKind} = 'subscriber')`,
     ),
     check("delivery_send_by_after_creation", sql`${t.sendBy} is null or ${t.sendBy} > ${t.createdAt}`),
     check(
       "delivery_claim_coherent",
       sql`(${t.state} = 'claimed' and ${t.claimedAt} is not null and ${t.claimedBy} is not null and ${t.claimToken} is not null)
-        or (${t.state} = 'queued' and ${t.claimedAt} is null and ${t.claimedBy} is null and ${t.claimToken} is null and ${t.handedOffAt} is null)
+        or (${t.state} = 'queued' and ${t.claimedAt} is null and ${t.claimedBy} is null and ${t.claimToken} is null and ${t.handedOffAt} is null and ${t.providerMessageId} is null)
         or ${t.state} not in ('claimed', 'queued')`,
     ),
     check("delivery_handed_off_was_claimed", sql`${t.handedOffAt} is null or ${t.claimedAt} is not null`),

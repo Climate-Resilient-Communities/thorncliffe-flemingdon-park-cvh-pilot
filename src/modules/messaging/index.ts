@@ -110,6 +110,7 @@ export { stdoutMessagingLog } from "./adapters/messagingLog";
 export {
   ALERT_RECIPIENT_KINDS,
   BODY_MAX_CHARS,
+  CAMPAIGN_RECIPIENT_KINDS,
   CHANNELS,
   CREATING_MODULES,
   DELIVERY_KINDS,

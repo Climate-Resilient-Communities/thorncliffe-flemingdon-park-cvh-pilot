@@ -10,23 +10,29 @@
 --  - a change to what was frozen at creation (the body, the segments, the cost estimate, the language,
 --    the recipient's kind, the key and the callback reference);
 --  - a cancellation or skip of a row that was already handed to the provider (`handed_off_at` is set);
+--  - a second automatic submission: a row handed to the provider goes back to `queued` only when the provider did
+--    not accept it, and that counts an attempt (at most 3, then the row can only fail or become unknown); a row
+--    never handed off has no outcome (submitted, unknown, delivered or undelivered); a queued row holds no
+--    provider id (a text the provider gave an id to is never sent again);
 --  - an `alert` row that is not created inside its entry's approval transaction: the approval use case
 --    sets the transaction-local setting `cvh.approval_entry_id` to the entry's id (messaging's
---    markApprovalTransaction); the entry must be `pending_approval` or `approved`, and the row's body and
---    segments must be the entry's frozen SMS body for the row's language (byte for byte, AD-21);
+--    markApprovalTransaction); the entry must be `pending_approval`, or `approved` by this very transaction
+--    (`approved_at = now()`), and the row's body and segments must be the entry's frozen SMS body for the
+--    row's language (byte for byte, AD-21);
 --  - a `transactional` row whose purpose is not on the allow-list of the module that creates it, whose
 --    recipient is of a kind that purpose never texts, or that has no `send_by` (or one further ahead than
 --    the purpose's window); delivery_purpose_rule() is the allow-list and messaging's
 --    domain/deliveryRules.ts is the same list;
---  - a `campaign` row unless its campaign was started by an Admin at aal2 (delivery_campaign_started_by_admin;
---    until S09.07 creates the `campaign` table the use case states the start in the transaction-local
---    settings cvh.campaign_id, cvh.campaign_started_by and cvh.campaign_aal, and the function checks the
---    account in `staff_account`; S09.07 replaces the function's body with a read of the campaign row).
+--  - a `campaign` row unless its campaign was started by an Admin at aal2 (delivery_campaign_started_by_admin).
+--    No campaign exists until S09.07 creates the `campaign` table, so until then the function answers false and
+--    every campaign row is refused; S09.07 replaces the function's body with a read of the campaign row. A
+--    campaign text goes to a subscriber and to no other kind of recipient (the table's check).
 --
 -- `idempotency_key` is unique: `entry_id:recipient:channel` for an alert, `kind:subject:purpose:nonce`
--- for anything else (the trigger checks the shape). `callback_ref` is an opaque random UUID the database
--- makes; the app cannot choose it. Times are the database's: created_at, claimed_at, submitted_at,
--- completed_at and updated_at are set by the trigger, and handed_off_at is the instant the app writes it.
+-- for anything else (the trigger checks the shape, and that no part of it is a phone number).
+-- `callback_ref` is an opaque random UUID the database makes; the app cannot choose it. Times are the
+-- database's: created_at, claimed_at, submitted_at, completed_at and updated_at are set by the trigger, and
+-- handed_off_at is the instant the app writes it.
 --
 -- `recipient_id` belongs to the table `recipient_kind` names (subscriptions, identity, ops), so it is not
 -- a foreign key. It becomes null when the recipient is deleted: each recipient table carries the trigger
@@ -95,13 +101,15 @@ create table delivery (
     (kind = 'alert' and entry_id is not null and campaign_id is null and purpose is null
       and created_by_module = 'alerting' and recipient_kind in ('subscriber', 'roster'))
     or (kind = 'transactional' and entry_id is null and campaign_id is null and purpose is not null and send_by is not null)
-    or (kind = 'campaign' and entry_id is null and campaign_id is not null and purpose is not null and created_by_module = 'subscriptions')
+    or (kind = 'campaign' and entry_id is null and campaign_id is not null and purpose is not null and created_by_module = 'subscriptions'
+      and recipient_kind = 'subscriber')
   ),
   constraint delivery_send_by_after_creation check (send_by is null or send_by > created_at),
-  -- A claimed row says who claimed it, when and under which lease; a queued row holds no claim and no hand-off.
+  -- A claimed row says who claimed it, when and under which lease; a queued row holds no claim, no hand-off and no
+  -- provider id.
   constraint delivery_claim_coherent check (
     (state = 'claimed' and claimed_at is not null and claimed_by is not null and claim_token is not null)
-    or (state = 'queued' and claimed_at is null and claimed_by is null and claim_token is null and handed_off_at is null)
+    or (state = 'queued' and claimed_at is null and claimed_by is null and claim_token is null and handed_off_at is null and provider_message_id is null)
     or state not in ('claimed', 'queued')
   ),
   constraint delivery_handed_off_was_claimed check (handed_off_at is null or claimed_at is not null),
@@ -156,34 +164,18 @@ revoke all on function delivery_purpose_rule(text, text) from public, anon, auth
 grant execute on function delivery_purpose_rule(text, text) to cvh_app;
 
 -- ---------------------------------------------------------------------------------------------
--- Whether a campaign was started by an Admin at aal2. Until S09.07 creates `campaign`, the campaign's
--- start is stated by the use case in transaction-local settings (messaging's markCampaignTransaction):
--- the campaign's id, the account that started it and the session's assurance level; the account must
--- be an active Admin in `staff_account`. S09.07 replaces this body with a read of the campaign row
--- (started by an active Admin at aal2, not cancelled); the trigger below keeps calling it.
+-- Whether a campaign was started by an Admin at aal2. No campaign exists until S09.07 creates the
+-- `campaign` table, so nothing can have been started and the answer is false: every campaign row is
+-- refused, and nothing the caller says (a setting, an id, an account) changes that. S09.07 replaces this
+-- body with a read of the campaign row (started by an active Admin at aal2, not cancelled) and adds
+-- delivery.campaign_id's foreign key NOT VALID; the trigger below keeps calling the function.
 -- ---------------------------------------------------------------------------------------------
 create function delivery_campaign_started_by_admin(p_campaign_id uuid) returns boolean
-language plpgsql
+language sql
 stable
 set search_path = ''
 as $$
-declare
-  marked_campaign text := nullif(current_setting('cvh.campaign_id', true), '');
-  started_by text := nullif(current_setting('cvh.campaign_started_by', true), '');
-begin
-  if p_campaign_id is null or marked_campaign is distinct from p_campaign_id::text then
-    return false;
-  end if;
-  if coalesce(current_setting('cvh.campaign_aal', true), '') <> 'aal2' then
-    return false;
-  end if;
-  if started_by is null or started_by !~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
-    return false;
-  end if;
-  return exists (
-    select 1 from public.staff_account s where s.id = started_by::uuid and s.role = 'admin' and s.status = 'active'
-  );
-end
+  select false
 $$;
 revoke all on function delivery_campaign_started_by_admin(uuid) from public, anon, authenticated, service_role;
 grant execute on function delivery_campaign_started_by_admin(uuid) to cvh_app;
@@ -200,8 +192,10 @@ declare
   approving text := nullif(current_setting('cvh.approval_entry_id', true), '');
   entry_status text;
   entry_bodies jsonb;
+  entry_approved_at timestamptz;
   frozen jsonb;
   rule record;
+  key_part text;
 begin
   if new.state <> 'queued' or new.attempts <> 0 then
     raise exception 'delivery: a new delivery is queued, with no attempts' using errcode = 'check_violation';
@@ -227,10 +221,15 @@ begin
       raise exception 'delivery: an alert delivery is created only inside the approval transaction of its entry (cvh.approval_entry_id)'
         using errcode = 'check_violation';
     end if;
-    select e.status, e.sms_bodies into entry_status, entry_bodies from public.alert_entry e where e.id = new.entry_id;
+    select e.status, e.sms_bodies, e.approved_at into entry_status, entry_bodies, entry_approved_at from public.alert_entry e where e.id = new.entry_id;
     if entry_status is null or entry_status not in ('pending_approval', 'approved') then
       raise exception 'delivery: an alert delivery belongs to an entry that is being approved or is approved, not %', coalesce(entry_status, 'missing')
         using errcode = 'check_violation';
+    end if;
+    -- The approval stamps the entry with now(): only the transaction that approved it may add its deliveries. The marker
+    -- alone is not enough for an entry approved long ago, since any transaction can set it.
+    if entry_status = 'approved' and entry_approved_at is distinct from now() then
+      raise exception 'delivery: an alert delivery of an approved entry is created in the transaction that approved it' using errcode = 'check_violation';
     end if;
     -- What the approver was shown is what goes out: the entry's frozen SMS body in the row's language.
     frozen := entry_bodies -> new.lang;
@@ -243,6 +242,13 @@ begin
        or key_parts[3] is distinct from new.purpose then
       raise exception 'delivery: the key of a % delivery is kind:subject:purpose:nonce', new.kind using errcode = 'check_violation';
     end if;
+    -- The key outlives the text and is logged: neither the subject nor the nonce may be a phone number (messaging's
+    -- looksLikePhoneNumber: only digits and phone punctuation, 7 to 15 digits).
+    foreach key_part in array array[key_parts[2], key_parts[4]] loop
+      if key_part ~ '^\+?[0-9 ().-]+$' and length(regexp_replace(key_part, '[^0-9]', '', 'g')) between 7 and 15 then
+        raise exception 'delivery: no part of a key is a phone number' using errcode = 'check_violation';
+      end if;
+    end loop;
     if new.kind = 'transactional' then
       select r.recipient_kinds, r.max_window into rule from public.delivery_purpose_rule(new.created_by_module, new.purpose) r;
       if not found then
@@ -332,6 +338,18 @@ begin
     -- A text already handed to the provider cannot be cancelled or skipped: it is in flight.
     if new.state in ('cancelled', 'skipped') and old.handed_off_at is not null then
       raise exception 'delivery: a text already handed to the provider is not % (it is in flight)', new.state using errcode = 'check_violation';
+    end if;
+    -- No automatic second submission: a handed-off row goes back to the queue only when the provider did not accept
+    -- the text (HTTP 429, or a connection that failed before it was sent), and that counts an attempt; at 3 attempts
+    -- it can only fail. Any other outcome of a hand-off is `unknown`, and the lease expiry of a handed-off row is
+    -- never a return to the queue.
+    if new.state = 'queued' and old.state = 'claimed' and old.handed_off_at is not null and new.attempts <= old.attempts then
+      raise exception 'delivery: a text already handed to the provider goes back to the queue only if it was not accepted, and that counts an attempt'
+        using errcode = 'check_violation';
+    end if;
+    -- The provider answers, or calls back, only about a text it was handed.
+    if old.state = 'claimed' and old.handed_off_at is null and new.state in ('submitted', 'unknown', 'delivered', 'undelivered') then
+      raise exception 'delivery: a text not handed to the provider has no outcome (the hand-off is recorded first)' using errcode = 'check_violation';
     end if;
     if new.state = 'claimed' then
       -- The claim names its worker and lease (the table's check requires both); the claim time is the database's.

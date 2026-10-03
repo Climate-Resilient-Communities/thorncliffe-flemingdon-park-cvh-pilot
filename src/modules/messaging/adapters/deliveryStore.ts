@@ -108,12 +108,6 @@ export const drizzleDeliveryStore: DeliveryStore = {
     await tx.execute(sql`select set_config('cvh.approval_entry_id', ${entryId}, true)`);
   },
 
-  async markCampaign(tx: DbTransaction, start) {
-    await tx.execute(sql`select set_config('cvh.campaign_id', ${start.campaignId}, true)`);
-    await tx.execute(sql`select set_config('cvh.campaign_started_by', ${start.startedBy}, true)`);
-    await tx.execute(sql`select set_config('cvh.campaign_aal', ${start.aal}, true)`);
-  },
-
   async skipForRecipient(tx: DbTransaction, recipient) {
     const mine = and(eq(delivery.recipientKind, recipient.kind), eq(delivery.recipientId, recipient.id));
     // One statement: it waits for a row another transaction holds and then re-checks that the row is still unhanded, so a

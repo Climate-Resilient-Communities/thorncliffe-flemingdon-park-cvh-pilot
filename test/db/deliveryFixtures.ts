@@ -25,6 +25,8 @@ export interface SeededEntry {
   alertId: string;
   entryId: string;
   authorId: string;
+  /** An admin account that is not an editor of the entry: the one that may approve it (and the approver of an `approved` seed). */
+  approverId: string;
   bodies: FrozenBodies;
 }
 
@@ -67,7 +69,17 @@ export function deliveryFixtures(owner: Sql) {
     });
     alertIds.push(alertId);
     entryIds.push(entryId);
-    return { alertId, entryId, authorId: author, bodies };
+    return { alertId, entryId, authorId: author, approverId: approver, bodies };
+  }
+
+  /**
+   * The approval of a `pending_approval` entry, as the app's role does it inside the approving transaction (S04.07): the acting
+   * account approves what it did not edit, and the database stamps `approved_at = now()`.
+   */
+  async function approve(tx: Tx, seeded: SeededEntry) {
+    await tx`select set_config('cvh.actor_id', ${seeded.approverId}, true)`;
+    await tx`update alert_entry set status = 'approved', approved_by = ${seeded.approverId}, approved_version = version, approved_hash = content_hash
+             where id = ${seeded.entryId}`;
   }
 
   async function cleanup() {
@@ -85,7 +97,7 @@ export function deliveryFixtures(owner: Sql) {
     entryIds.length = 0;
   }
 
-  return { staff, entry, cleanup };
+  return { staff, entry, approve, cleanup };
 }
 
 /** A fake E.164 number the tests look for in places it must never be (obviously not a real one). */
@@ -93,14 +105,23 @@ export const FAKE_NUMBER = "+14165550123";
 export const FAKE_SID = `SM${"0123456789abcdef".repeat(2)}`;
 
 /**
+ * The states a claimed row reaches only after the provider was handed the text: the provider answers (or calls back) about a
+ * text it has, so the hand-off is recorded first.
+ */
+export const OUTCOME_AFTER_HAND_OFF: readonly DeliveryState[] = ["submitted", "unknown", "delivered", "undelivered"];
+
+/**
  * The statement (as the app's role) that moves a row from `from` to `to` with whatever the target state needs alongside, so
  * that the transition table is the only reason it can be refused: a claim names its worker and lease, a submission, a
- * delivery and an undelivery name the provider's id.
+ * delivery and an undelivery name the provider's id, and a handed-off row that goes back to the queue was not accepted, which
+ * counts an attempt.
  */
 export function transitionStatement(tx: Tx, id: string, to: DeliveryState) {
   switch (to) {
     case "claimed":
       return tx`update delivery set state = 'claimed', claimed_by = 'worker-1', claim_token = ${randomUUID()} where id = ${id}`;
+    case "queued":
+      return tx`update delivery set state = 'queued', attempts = attempts + (handed_off_at is not null)::int where id = ${id}`;
     case "submitted":
     case "delivered":
     case "undelivered":

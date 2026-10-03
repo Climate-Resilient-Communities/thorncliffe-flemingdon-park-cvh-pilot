@@ -28,6 +28,9 @@ export type Channel = (typeof CHANNELS)[number];
 /** An alert goes to a subscriber, or, for a drill, to a member of the drill roster (S06.05 adds the drill rule). */
 export const ALERT_RECIPIENT_KINDS = ["subscriber", "roster"] as const satisfies readonly RecipientKind[];
 
+/** A campaign text goes to a subscriber (still in the campaign's target state, D-7) and to no other kind of recipient. */
+export const CAMPAIGN_RECIPIENT_KINDS = ["subscriber"] as const satisfies readonly RecipientKind[];
+
 /** Twilio refuses a body of more than 1600 characters. */
 export const BODY_MAX_CHARS = 1600;
 /** 1600 characters in UCS-2 (67 per segment of a long message) is 24 segments. */
@@ -108,7 +111,11 @@ export type DeliveryRefusal =
   | "ID_INVALID"
   | "CAMPAIGN_PURPOSE_INVALID";
 
-const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+/**
+ * Lowercase only: the database compares an entry's or a recipient's id with a key or a marker as `uuid::text`, which is
+ * lowercase, so an uppercase id would pass here and then fail there as an error instead of a refusal.
+ */
+const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/;
 /** A part of a key that is not an id: letters, digits, dots, underscores and dashes, so never a colon or a plus sign. */
 const KEY_PART = /^[A-Za-z0-9._-]{1,64}$/;
 const PURPOSE_CODE = /^[a-z][a-z0-9_]{0,39}$/;
@@ -180,9 +187,12 @@ export function transactionalRefusal(input: { module: string; purpose: string; r
   return null;
 }
 
-/** The refusal for a campaign delivery's purpose (a code, as for `spend_event`); the start by an Admin at aal2 is the trigger's. */
+/**
+ * The refusal for a campaign delivery's purpose (a code, as for `spend_event`) and recipient (a subscriber). That its campaign
+ * was started by an Admin at aal2 is the trigger's to say: until S09.07 creates campaigns it refuses every campaign row.
+ */
 export function campaignRefusal(input: { purpose: string; recipient: { kind: string; id: string }; campaignId: string }): DeliveryRefusal | null {
   if (!PURPOSE_CODE.test(input.purpose)) return "CAMPAIGN_PURPOSE_INVALID";
   if (!isUuid(input.recipient.id) || !isUuid(input.campaignId)) return "ID_INVALID";
-  return (RECIPIENT_KINDS as readonly string[]).includes(input.recipient.kind) ? null : "RECIPIENT_NOT_ALLOWED";
+  return (CAMPAIGN_RECIPIENT_KINDS as readonly string[]).includes(input.recipient.kind) ? null : "RECIPIENT_NOT_ALLOWED";
 }

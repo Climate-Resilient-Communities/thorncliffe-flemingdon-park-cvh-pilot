@@ -1,4 +1,3 @@
-import type { AssuranceLevel } from "../../../contracts/staffAuth";
 import type { DbTransaction } from "../../../platform/db";
 import type { CreatingModule, DeliveryKind, DeliveryRefusal, RecipientKind } from "../domain/deliveryRules";
 import type { DeliveryState } from "../domain/deliveryState";
@@ -86,8 +85,6 @@ export interface DeliveryStore {
   insert(tx: DbTransaction, rows: readonly NewDelivery[]): Promise<Enqueued[]>;
   /** Sets the transaction-local marker the database requires of an alert delivery (cvh.approval_entry_id). */
   markApproval(tx: DbTransaction, entryId: string): Promise<void>;
-  /** States, in the transaction-local settings, that a campaign was started by this account at this assurance level. */
-  markCampaign(tx: DbTransaction, start: { campaignId: string; startedBy: string; aal: AssuranceLevel }): Promise<void>;
   /** Sets the recipient's `queued` and claimed-but-not-handed-off rows to `skipped`; rows already handed off are left. */
   skipForRecipient(tx: DbTransaction, recipient: { kind: RecipientKind; id: string }): Promise<SkippedForRecipient>;
 }

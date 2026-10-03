@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   ALERT_RECIPIENT_KINDS,
   BODY_MAX_CHARS,
+  CAMPAIGN_RECIPIENT_KINDS,
   CREATING_MODULES,
   RECIPIENT_KINDS,
   RECIPIENT_OWNER,
@@ -12,6 +13,7 @@ import {
   campaignRefusal,
   contentRefusal,
   isConsumedAtHandOff,
+  isUuid,
   outboundKey,
   purposeRule,
   transactionalRefusal,
@@ -148,5 +150,24 @@ describe("a campaign delivery", () => {
     expect(campaignRefusal({ ...ok, campaignId: "x" })).toBe("ID_INVALID");
     expect(campaignRefusal({ ...ok, recipient: { kind: "subscriber", id: "x" } })).toBe("ID_INVALID");
     expect(campaignRefusal({ ...ok, recipient: { kind: "stranger", id: ID } })).toBe("RECIPIENT_NOT_ALLOWED");
+  });
+
+  it("goes to a subscriber and to no other kind of recipient (the definitions' sendable rule, and the table's check)", () => {
+    expect(CAMPAIGN_RECIPIENT_KINDS).toEqual(["subscriber"]);
+    const ok = { purpose: "reconsent", recipient: { kind: "subscriber", id: ID }, campaignId: OTHER };
+    for (const kind of RECIPIENT_KINDS) expect(campaignRefusal({ ...ok, recipient: { kind, id: ID } }), kind).toBe(kind === "subscriber" ? null : "RECIPIENT_NOT_ALLOWED");
+  });
+});
+
+describe("ids", () => {
+  it("are lowercase UUIDs: the database compares them as lowercase text, so an uppercase one is a refusal here, not an error there", () => {
+    expect(isUuid(ID)).toBe(true);
+    expect(isUuid(ID.toUpperCase())).toBe(false);
+    expect(isUuid(`${ID} `)).toBe(false);
+    expect(isUuid("x")).toBe(false);
+    expect(isUuid(null)).toBe(false);
+    expect(alertRecipientRefusal({ kind: "subscriber", id: ID.toUpperCase() })).toBe("ID_INVALID");
+    expect(transactionalRefusal({ module: "subscriptions", purpose: "welcome", recipient: { kind: "subscriber", id: ID.toUpperCase() }, now: NOW })).toBe("ID_INVALID");
+    expect(campaignRefusal({ purpose: "reconsent", recipient: { kind: "subscriber", id: ID }, campaignId: OTHER.toUpperCase() })).toBe("ID_INVALID");
   });
 });
