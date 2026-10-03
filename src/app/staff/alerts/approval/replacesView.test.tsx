@@ -91,3 +91,24 @@ describe("an entry that replaces nothing", () => {
     }
   });
 });
+
+describe("the confirmation of an approved correction or withdrawal (O-06)", () => {
+  const approved = (entry: Record<string, unknown>, extra: Parameters<typeof reviewOf>[0] = {}) => screenOf({ status: "approved", ...entry }, extra).published!;
+
+  it("says a correction is out, and keeps the rows of an entry residents read", () => {
+    const published = approved({ kind: "correction", supersedesId: TARGET.id });
+    expect(published.title).toBe("The correction is out");
+    expect(published.rows.map((row) => row.id)).toContain("valid");
+  });
+
+  it("says a withdrawal is out, with no validity row, no update to add and no promise of a live alert", () => {
+    for (const closesThread of [false, true]) {
+      const published = approved({ kind: "withdrawal", supersedesId: TARGET.id, withdrawalReason: "duplicate" }, closesThread ? { thread: { status: "closed" } as never } : {});
+      expect(published.title).toBe("The withdrawal is out");
+      expect(published.rows.map((row) => row.id)).not.toContain("valid");
+      expect(published.rows[0].value).toBe('Residents now read "Withdrawn" and the reason in the place of the entry.');
+      expect(published.next.lines).toEqual([]);
+      expect(published.next.links.map((link) => link.id)).toEqual(["home"]);
+    }
+  });
+});
