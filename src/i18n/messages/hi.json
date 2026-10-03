@@ -137,7 +137,8 @@
     "unavailable": "इस भाषा में अभी उपलब्ध नहीं",
     "unavailableBody": "इसका अभी {lang} में अनुवाद नहीं हुआ है।",
     "showSource": "{lang} में पढ़ें",
-    "original": "मूल ({lang})"
+    "original": "मूल ({lang})",
+    "unreviewed": "मशीन से अनुवाद; किसी व्यक्ति ने इसकी समीक्षा नहीं की है"
   },
   "x05": {
     "title": "अपनी भाषा में अलर्ट और मदद पाएँ",
@@ -454,6 +455,7 @@
     "now": "अभी",
     "levelOfficial": "{source} से आधिकारिक अलर्ट।",
     "levelCommunity": "हब से सामुदायिक अलर्ट। हब द्वारा सत्यापित।",
+    "fromHub": "हब से सामुदायिक अलर्ट",
     "levelAmbassador": "बिल्डिंग एम्बेसडर से सामुदायिक अलर्ट। अभी सत्यापित नहीं।",
     "stop": "हब के सभी मैसेज बंद करने के लिए STOP लिखकर जवाब दें।",
     "verifiedKeyword": "सत्यापित का मतलब जानने के लिए INFO लिखकर जवाब दें।",
@@ -644,7 +646,16 @@
     "clear": "मैंने जो लिखा उसे मिटाएँ",
     "testTitle": "टेस्ट खोजें",
     "testNote": "सहायकों के लिए: ब्रीफ़ से पहले से लिखी खोज चलाने के लिए किसी एक को दबाएँ। निवासियों को यह नहीं दिखता।",
-    "testGloss": "(दरी: {gloss})"
+    "testGloss": "(दरी: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "नतीजे",
@@ -679,7 +690,8 @@
     "hoursUnknown": "समय पता नहीं",
     "communityOffer": "समुदाय की पेशकश",
     "inCat": "विषय: {cat}",
-    "helpEmpty": "इसमें मदद करने वाली कोई भी सेवा इन फ़िल्टर से मेल नहीं खाती।"
+    "helpEmpty": "इसमें मदद करने वाली कोई भी सेवा इन फ़िल्टर से मेल नहीं खाती।",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "हमें यह अभी नहीं मिला",
@@ -4334,6 +4346,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {

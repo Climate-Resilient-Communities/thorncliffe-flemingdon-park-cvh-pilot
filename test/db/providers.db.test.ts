@@ -20,7 +20,7 @@ import {
   unpublishProvider,
   type ProviderCatalogueInput,
 } from "@/modules/directory";
-import { catalogueTextId } from "@/modules/directory/adapters/hash";
+import { catalogueTextId, sourceHash as sha256Hex } from "@/modules/directory/adapters/hash";
 import { createDb, type Db } from "@/platform/db";
 import { ROOT, connect, serverUrl } from "./helpers";
 
@@ -272,9 +272,14 @@ describe("provider catalogue (S02.04)", () => {
             category_links_added: 121,
             category_links_removed: 0,
             translations_loaded: 0,
+            translations_machine: 656,
+            providers_safety_critical: 40,
+            translations_safety_critical: 560,
             translations_not_yet: 0,
           },
-          warnings: 2436,
+          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 560 descriptions of the 40
+          // safety-critical providers (14 languages), 170 descriptions whose facts changed.
+          warnings: 1780,
           failures: 0,
         },
       });
@@ -392,14 +397,58 @@ describe("provider catalogue (S02.04)", () => {
       expect((await row("M001")).texts.services).toEqual({ en: english, ur: "خدمات" });
       expect((await row("M001")).translations.services.ur).toMatchObject({ status: "reviewed", reviewer: "Wei Chen" });
 
-      // Review withdrawn (machine again): the next run takes the translation out.
+      // Review withdrawn (machine again): the description stays, as an unreviewed machine translation (AD-11 pilot change),
+      // with no reviewer, as long as it keeps the English's facts ("M001" here).
+      const machine = await seed(withRecord(reviewedRecord({ text: "د M001 خدمات", status: "machine", reviewer: null, reviewedOn: null })));
+      expect(machine.changed.providers).toBe(1);
+      expect(machine.report.translations.machine).toEqual([{ lang: "ur", count: 1 }]);
+      expect((await row("M001")).texts.services).toEqual({ en: english, ur: "د M001 خدمات" });
+      expect((await row("M001")).translations.services.ur).toEqual({ model: "command-a-translate-08-2025", status: "machine", sourceHash: sha256Hex(english) });
+
+      // A machine text that lost the English's number is taken out.
       const result = await seed(withRecord(reviewedRecord({ status: "machine", reviewer: null, reviewedOn: null })));
       expect(result.changed.providers).toBe(1);
       expect((await row("M001")).texts.services).toEqual({ en: english });
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "facts_changed" } });
 
       // The English changed since it was translated: stale, not loaded.
       await seed(withRecord(reviewedRecord({ source: "Older services text" })));
       expect((await row("M001")).texts.services).toEqual({ en: english });
+    });
+
+    it("keeps a description naming a crisis or emergency line in English until a person reviews it", async () => {
+      const english = "Fire rescue for the area. Non-emergency line: 416-338-9050.";
+      const text = "د سیمې لپاره د اور ژغورنه. غیر بیړنۍ کرښه: 416-338-9050.";
+      const withRecord = (change: Record<string, unknown> = {}) =>
+        input([entry("M001", { services: { id: catalogueTextId(english), en: english } })], { ps: { texts: { [catalogueTextId(english)]: { source: english, text, model: "m", ...change } } } });
+
+      const result = await seed(withRecord());
+      expect((await row("M001")).texts.services).toEqual({ en: english });
+      expect((await row("M001")).withheld).toEqual({ services: { ps: "safety_critical" } });
+      expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+      expect((await seedRuns()).at(-1)?.meta).toMatchObject({ counts: { translations_machine: 0, translations_safety_critical: 1 } });
+
+      // Reviewed by a person: it loads.
+      await seed(withRecord({ status: "reviewed", reviewer: "Wei Chen", reviewedOn: "2026-11-02" }));
+      expect((await row("M001")).texts.services).toEqual({ en: english, ps: text });
+    });
+
+    it("loads no unreviewed machine translation of an emergency role, nor of the description of a provider that has one (decision 42)", async () => {
+      const role = "Warm room in cold alerts. Call 911 in danger.";
+      const services = "Services of M001";
+      const machine = { source: role, text: "سرد انتباہ میں گرم کمرہ۔ خطرے میں 911 پر کال کریں۔", model: "command-a-translate-08-2025" };
+      const description = { source: services, text: "M001 کی خدمات", model: "command-a-translate-08-2025" };
+      const result = await seed(
+        input([entry("M001", { emergencyRole: { id: catalogueTextId(role), en: role } })], {
+          ur: { texts: { [catalogueTextId(role)]: machine, [catalogueTextId(services)]: description } },
+        }),
+      );
+
+      expect((await row("M001")).texts.emergency_role).toEqual({ en: role });
+      expect((await row("M001")).texts.services).toEqual({ en: services });
+      expect((await row("M001")).translations).toEqual({});
+      expect((await row("M001")).withheld).toEqual({ emergency_role: { ur: "machine" }, services: { ur: "safety_critical" } });
+      expect(result.report.safetyCritical).toEqual({ emergency_role: 1, emergency_category: 0, crisis_text: 0, providers: 1 });
     });
   });
 
@@ -459,8 +508,9 @@ describe("provider catalogue (S02.04)", () => {
       await seed(withRecord(record({ source: "Older services text" })));
       expect((await row("M001")).withheld).toEqual({ services: { ur: "stale" } });
 
+      // A machine text of the description that dropped the "001" of "M001" (AD-11 pilot change: its facts must match).
       await seed(withRecord(record({ status: "machine", reviewer: null, reviewedOn: null })));
-      expect((await row("M001")).withheld).toEqual({ services: { ur: "machine" } });
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "facts_changed" } });
 
       // Loaded, so nothing is withheld; a language with no translation at all is not "withheld" either.
       await seed(withRecord(record()));
@@ -476,7 +526,7 @@ describe("provider catalogue (S02.04)", () => {
       // The same loaded texts (English only), a different reason: the provider row is written again.
       const other = await seed(withRecord(record({ status: "machine", reviewer: null, reviewedOn: null })));
       expect(other.changed.providers).toBe(1);
-      expect((await row("M001")).withheld).toEqual({ services: { ur: "machine" } });
+      expect((await row("M001")).withheld).toEqual({ services: { ur: "facts_changed" } });
     });
 
     it("is not writable by the app's role (the Admins' columns only)", async () => {

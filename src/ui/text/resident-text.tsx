@@ -23,6 +23,8 @@ interface BlockProps {
   testId?: string;
   /** True: the text is English standing in for a missing translation although it has no "[EN]" marker (a page that says so once). */
   fallback?: boolean;
+  /** -1: a script can give the element focus (a heading a screen moves focus to) but it is not a tab stop. */
+  tabIndex?: -1;
 }
 
 /**
@@ -52,11 +54,11 @@ export function ResidentText(props: InlineProps | BlockProps): ReactNode {
   const Tag = props.as;
   const fallback = props.fallback === true || isEnglishFallback(children);
   return fallback ? (
-    <Tag className={props.className} data-testid={props.testId} lang="en" dir="ltr">
+    <Tag className={props.className} data-testid={props.testId} tabIndex={props.tabIndex} lang="en" dir="ltr">
       {children}
     </Tag>
   ) : (
-    <Tag className={props.className} data-testid={props.testId}>
+    <Tag className={props.className} data-testid={props.testId} tabIndex={props.tabIndex}>
       {children}
     </Tag>
   );

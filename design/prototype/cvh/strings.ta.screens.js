@@ -231,6 +231,7 @@
    "now": "இப்போது",
    "levelOfficial": "{source} வழங்கிய அதிகாரப்பூர்வ எச்சரிக்கை.",
    "levelCommunity": "மையம் வழங்கிய சமூக எச்சரிக்கை. மையம் சரிபார்த்தது.",
+   "fromHub": "மையம் வழங்கிய சமூக எச்சரிக்கை",
    "levelAmbassador": "கட்டடத் தூதர் வழங்கிய சமூக எச்சரிக்கை. இன்னும் சரிபார்க்கப்படவில்லை.",
    "stop": "மையத்திலிருந்து வரும் எல்லாச் செய்திகளையும் நிறுத்த, STOP என்று பதில் அனுப்புங்கள்.",
    "verifiedKeyword": "சரிபார்க்கப்பட்டது என்பதன் பொருளை அறிய, INFO என்று பதில் அனுப்புங்கள்.",
@@ -1360,6 +1361,8 @@
    "reviewed": "மையம் சரிபார்த்தது, கடைசியாகப் புதுப்பித்தது {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "இயந்திர மொழிபெயர்ப்பு; எந்த நபரும் இதைச் சரிபார்க்கவில்லை" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

@@ -220,6 +220,7 @@
    "now": "اکنون",
    "levelOfficial": "هشدار رسمی از {source}.",
    "levelCommunity": "هشدار اجتماعی از مرکز. تأیید شده توسط مرکز.",
+   "fromHub": "هشدار اجتماعی از مرکز",
    "levelAmbassador": "هشدار اجتماعی از یک سفیر ساختمان. هنوز تأیید نشده است.",
    "stop": "برای قطع همه پیام‌های مرکز، STOP را جواب بفرستید.",
    "verifiedKeyword": "برای دانستن معنی «تأیید شده»، INFO را جواب بفرستید.",
@@ -1349,6 +1350,8 @@
    "reviewed": "مرکز بررسی کرده است، آخرین تغییر {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "ترجمه ماشینی؛ توسط کدام شخص بررسی نشده است" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

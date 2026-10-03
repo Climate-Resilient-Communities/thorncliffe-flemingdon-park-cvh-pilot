@@ -95,3 +95,50 @@ describe("questionTranslationSpend", () => {
     });
   });
 });
+
+describe("the fallback model", () => {
+  const COMMAND = "command-a-translate-08-2025";
+  const NORTH = "north-small-translate-09-2026";
+  /** The shape of the defaults (owner decision 45): Dari and Urdu fall back to Command A, Pashto does not, and the kinds routed to Command A have it only to skip. */
+  const FALLBACK: QuestionRoute = { ps: null, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+
+  it("offers the fallback the kind of question names, none when it is off for the kind, and none for the routed model itself", () => {
+    const { translator } = fake("x");
+    const on = createQuestionTranslator({ translator, route: ROUTE, fallback: FALLBACK });
+    expect(on.fallbackFor("prs", NORTH)).toBe(COMMAND);
+    expect(on.fallbackFor("ur", NORTH)).toBe(COMMAND);
+    expect(on.fallbackFor("ps", NORTH)).toBeNull(); // off for Pashto: Command A Translate turned it into Dari
+    expect(on.fallbackFor("romanized_or_mixed", COMMAND)).toBeNull(); // the routed model already is the fallback
+    expect(on.fallbackFor("romanized_or_mixed", NORTH)).toBe(COMMAND); // unless the route was changed
+    expect(createQuestionTranslator({ translator, route: ROUTE, fallback: null }).fallbackFor("prs", NORTH)).toBeNull();
+    expect(createQuestionTranslator({ translator, route: ROUTE }).fallbackFor("prs", NORTH)).toBeNull();
+  });
+
+  it("keeps the kinds apart: a fallback for one is not the fallback of another", () => {
+    const { translator } = fake("x");
+    const questions = createQuestionTranslator({ translator, route: ROUTE, fallback: { ...FALLBACK, ps: "other-model-1", ur: null } });
+
+    expect(questions.fallbackFor("ps", NORTH)).toBe("other-model-1");
+    expect(questions.fallbackFor("prs", NORTH)).toBe(COMMAND);
+    expect(questions.fallbackFor("ur", NORTH)).toBeNull();
+  });
+
+  it("translates with the model it is given instead of the route's, and returns that model", async () => {
+    const { translator, translate } = fake("I want free legal advice");
+    const questions = createQuestionTranslator({ translator, route: ROUTE, fallback: FALLBACK });
+
+    const result = await questions.toEnglish({ text: "زه وړیا حقوقي مشوره غواړم", source: "ps", signal: new AbortController().signal, model: "command-a-translate-08-2025" });
+
+    expect(result.model).toBe("command-a-translate-08-2025");
+    expect(translate).toHaveBeenCalledWith(expect.objectContaining({ model: "command-a-translate-08-2025" }));
+  });
+
+  it.each(["quota", "rate_limited", "unavailable", "other"] as const)("tells the caller how the vendor failed (%s), as a code and nothing else", async (code) => {
+    const failure = await createQuestionTranslator({ translator: fake(new TranslateError(code)).translator, route: ROUTE })
+      .toEnglish({ text: MARKER, source: "ps", signal: new AbortController().signal })
+      .catch((e: unknown) => e);
+
+    expect(failure).toMatchObject({ code: "translate_failed", vendor: code, billedTokens: undefined });
+    expect([String(failure), JSON.stringify(failure), inspect(failure, { depth: 10, showHidden: true })].join("\n")).not.toContain(MARKER);
+  });
+});

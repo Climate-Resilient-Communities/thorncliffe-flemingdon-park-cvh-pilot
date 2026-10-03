@@ -220,6 +220,7 @@
    "now": "اوس",
    "levelOfficial": "له {source} څخه رسمي خبرتیا.",
    "levelCommunity": "له مرکز څخه ټولنیزه خبرتیا. مرکز تایید کړې.",
+   "fromHub": "له مرکز څخه ټولنیزه خبرتیا",
    "levelAmbassador": "د ودانۍ له سفیر څخه ټولنیزه خبرتیا. لا تایید شوې نه ده.",
    "stop": "د مرکز د ټولو پیغامونو د بندولو لپاره، STOP ولیکئ او ځواب یې ولېږئ.",
    "verifiedKeyword": "د دې لپاره چې پوه شئ تایید شوې څه مانا لري، INFO ولیکئ او ځواب یې ولېږئ.",
@@ -1349,6 +1350,8 @@
    "reviewed": "مرکز کتلی، وروستی بدلون {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "د ماشین ژباړه؛ د کوم انسان له خوا نه ده کتل شوې" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

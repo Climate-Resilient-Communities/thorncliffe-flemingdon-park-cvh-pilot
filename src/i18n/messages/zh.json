@@ -137,7 +137,8 @@
     "unavailable": "暂无此语言版本",
     "unavailableBody": "此内容尚未翻译成{lang}。",
     "showSource": "用{lang}阅读",
-    "original": "原文（{lang}）"
+    "original": "原文（{lang}）",
+    "unreviewed": "机器翻译，未经人工审核"
   },
   "x05": {
     "title": "用您的语言接收警报和获得帮助",
@@ -454,6 +455,7 @@
     "now": "现在",
     "levelOfficial": "来自{source}的官方警报。",
     "levelCommunity": "来自中心的社区警报。已由中心核实。",
+    "fromHub": "来自中心的社区警报",
     "levelAmbassador": "来自楼宇联络员的社区警报。尚未核实。",
     "stop": "如要停止接收中心的所有短信，请回复 STOP。",
     "verifiedKeyword": "如想了解“已核实”的意思，请回复 INFO。",
@@ -644,7 +646,16 @@
     "clear": "清除我写的内容",
     "testTitle": "测试查询",
     "testNote": "供主持人使用：点击一项，运行简报中预设的搜索。居民看不到这部分。",
-    "testGloss": "（达里语：{gloss}）"
+    "testGloss": "（达里语：{gloss}）",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "结果",
@@ -679,7 +690,8 @@
     "hoursUnknown": "开放时间不详",
     "communityOffer": "社区提供",
     "inCat": "主题：{cat}",
-    "helpEmpty": "没有能帮助处理此情况、又符合这些筛选条件的服务。"
+    "helpEmpty": "没有能帮助处理此情况、又符合这些筛选条件的服务。",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "我们暂时没有找到",
@@ -4334,6 +4346,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {

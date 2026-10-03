@@ -231,6 +231,7 @@
    "now": "teraz",
    "levelOfficial": "Oficiálne upozornenie od {source}.",
    "levelCommunity": "Komunitné upozornenie od Hubu. Overil ho Hub.",
+   "fromHub": "Komunitné upozornenie od Hubu",
    "levelAmbassador": "Komunitné upozornenie od ambasádora budovy. Zatiaľ neoverené.",
    "stop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP.",
    "verifiedKeyword": "Ak chcete vedieť, čo znamená „overené“, odpovedzte INFO.",
@@ -1360,6 +1361,8 @@
    "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Strojový preklad; nekontroloval ho človek" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

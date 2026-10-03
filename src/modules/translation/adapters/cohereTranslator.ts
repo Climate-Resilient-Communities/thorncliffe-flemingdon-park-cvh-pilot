@@ -7,7 +7,7 @@
 // in the user message; and unprompted it may answer a question instead of translating it, so the prompt forbids that and
 // the caller rejects an answer far longer than the question.
 import type { LangCode } from "@/contracts/lang";
-import { TranslateError, type Translation, type Translator } from "../application/ports";
+import { TranslateError, type TranslateErrorCode, type Translation, type Translator } from "../application/ports";
 
 /** The part of Cohere's v2 client the adapter calls: tests pass a fake. */
 export interface CohereChatClient {
@@ -57,6 +57,14 @@ export function systemPrompt(from: LangCode | null, to: LangCode): string {
 /** The longest answer asked for: a question is at most 200 characters, and a longer answer is not a translation. */
 export const MAX_OUTPUT_TOKENS = 200;
 
+/**
+ * The version of the prompt and of the language names in it, which is part of the cache key for alert translations
+ * (S04.02, AD-10): a different prompt may give a different translation, so a result made with another is never reused.
+ * Bump it with any change to `systemPrompt` or LANGUAGE_NAMES; src/modules/translation/adapters/cohereTranslator.alert.test.ts
+ * pins a fingerprint of both and fails until the two are changed together.
+ */
+export const PROMPT_VERSION = "1";
+
 let sdk: Promise<typeof import("cohere-ai")> | undefined;
 /** Loads the vendor's SDK once and keeps it; the composition root calls it at module load (like warmCohere) so the first translation pays no import. */
 export function warmCohereTranslator(): Promise<typeof import("cohere-ai")> {
@@ -69,6 +77,53 @@ function loadSdk(): Promise<typeof import("cohere-ai")> {
     sdk.catch(() => (sdk = undefined));
   }
   return sdk;
+}
+
+/** Wording of a limit that is the month's (Cohere: "You are past the per-month request limit for this model"). */
+const MONTHLY_LIMIT = /per[\s-]*month|monthly|past the .{0,40}limit|out of (calls|quota)|quota/i;
+/** Wording that says the limit is the month's, for an error that came with no status to say it is a limit at all. */
+const SAYS_MONTHLY = /per[\s-]*month|monthly/i;
+/** Wording of a transient limit. */
+const TRANSIENT_LIMIT = /per[\s-]*(minute|second)|too many requests|slow down|rate[\s-]*limit/i;
+
+/** The vendor's status code, wherever the SDK or a wrapper put it. */
+function statusOf(error: unknown): number | null {
+  if (typeof error !== "object" || error === null) return null;
+  const e = error as { statusCode?: unknown; status?: unknown; response?: { status?: unknown } };
+  for (const value of [e.statusCode, e.status, e.response?.status]) if (typeof value === "number" && Number.isFinite(value)) return value;
+  return null;
+}
+
+/**
+ * The vendor's own message: the `message` of the response body, only to be matched against keywords here (never stored,
+ * logged or thrown). Nothing else is read: the SDK's `Error.message` repeats the whole body, and a body may echo the request.
+ */
+function wordsOf(error: unknown): string {
+  try {
+    const body = (error as { body?: unknown } | null)?.body;
+    const message = typeof body === "object" && body !== null ? (body as { message?: unknown }).message : undefined;
+    return typeof message === "string" ? message : "";
+  } catch {
+    return "";
+  }
+}
+
+/**
+ * Sorts a vendor error into a class. The status decides first; the words (the body's `message`) only choose between the
+ * classes of a 429, or name the monthly limit when the SDK gave no status. A 429 that does not say it is transient counts
+ * as `quota`: both fall back, and quota is the one that is shown to ops as needing someone. Without a status, only an
+ * error that clearly says the monthly limit is `quota`; one that does not is `other` (or `unavailable`, for the network).
+ */
+export function classifyCohereError(error: unknown): Exclude<TranslateErrorCode, "aborted"> {
+  const status = statusOf(error);
+  const words = wordsOf(error);
+  if (status === 429) return TRANSIENT_LIMIT.test(words) && !MONTHLY_LIMIT.test(words) ? "rate_limited" : "quota";
+  if (status !== null) return status >= 500 ? "unavailable" : "other";
+  if (SAYS_MONTHLY.test(words) && /limit/i.test(words)) return "quota";
+  const e = error as { name?: unknown; code?: unknown } | null;
+  // No status: a timeout or a network failure (fetch's TypeError, a socket code) is the vendor being unreachable.
+  if (error instanceof TypeError || e?.name === "CohereTimeoutError" || e?.name === "FetchError" || typeof e?.code === "string") return "unavailable";
+  return "other";
 }
 
 export interface CohereTranslatorOptions {
@@ -84,7 +139,7 @@ export interface CohereTranslatorOptions {
 export function cohereTranslator(options: CohereTranslatorOptions): Translator {
   let client: CohereChatClient | undefined = options.client;
   return {
-    async translate({ text, from, to, model, signal }): Promise<Translation> {
+    async translate({ text, from, to, model, signal, maxOutputTokens }): Promise<Translation> {
       let response;
       try {
         if (!client) {
@@ -100,12 +155,12 @@ export function cohereTranslator(options: CohereTranslatorOptions): Translator {
               { role: "user", content: text },
             ],
             temperature: 0,
-            maxTokens: MAX_OUTPUT_TOKENS,
+            maxTokens: maxOutputTokens ?? MAX_OUTPUT_TOKENS,
           },
           { abortSignal: signal, maxRetries: 0 },
         );
-      } catch {
-        throw new TranslateError(signal.aborted ? "aborted" : "failed");
+      } catch (error) {
+        throw new TranslateError(signal.aborted ? "aborted" : classifyCohereError(error));
       }
       const content = Array.isArray(response?.message?.content) ? response.message.content : [];
       const out = content

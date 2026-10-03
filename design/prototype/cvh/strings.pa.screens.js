@@ -231,6 +231,7 @@
    "now": "ਹੁਣੇ",
    "levelOfficial": "{source} ਵੱਲੋਂ ਅਧਿਕਾਰਤ ਚੇਤਾਵਨੀ।",
    "levelCommunity": "ਹੱਬ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ। ਹੱਬ ਨੇ ਪੁਸ਼ਟੀ ਕੀਤੀ।",
+   "fromHub": "ਹੱਬ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ",
    "levelAmbassador": "ਬਿਲਡਿੰਗ ਐਂਬੈਸਡਰ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ। ਅਜੇ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੋਈ।",
    "stop": "ਹੱਬ ਦੇ ਸਾਰੇ ਮੈਸੇਜ ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।",
    "verifiedKeyword": "ਪੁਸ਼ਟੀ ਦਾ ਮਤਲਬ ਜਾਣਨ ਲਈ INFO ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।",
@@ -1360,6 +1361,8 @@
    "reviewed": "ਹੱਬ ਨੇ ਜਾਂਚਿਆ, ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "ਮਸ਼ੀਨ ਅਨੁਵਾਦ; ਕਿਸੇ ਵਿਅਕਤੀ ਨੇ ਇਸ ਦੀ ਸਮੀਖਿਆ ਨਹੀਂ ਕੀਤੀ" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

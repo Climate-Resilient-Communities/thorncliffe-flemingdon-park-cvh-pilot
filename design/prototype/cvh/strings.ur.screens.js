@@ -207,6 +207,7 @@
    "now": "ابھی",
    "levelOfficial": "{source} کی طرف سے سرکاری الرٹ۔",
    "levelCommunity": "ہب کی طرف سے کمیونٹی الرٹ۔ ہب نے تصدیق کی۔",
+   "fromHub": "ہب کی طرف سے کمیونٹی الرٹ",
    "levelAmbassador": "بلڈنگ ایمبیسڈر کی طرف سے کمیونٹی الرٹ۔ ابھی تصدیق نہیں ہوئی۔",
    "stop": "ہب کے تمام پیغامات روکنے کے لیے STOP جواب دیں۔",
    "verifiedKeyword": "تصدیق شدہ کا مطلب جاننے کے لیے INFO جواب دیں۔",
@@ -1336,6 +1337,8 @@
    "reviewed": "ہب نے جانچا، آخری اپ ڈیٹ {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "مشین سے ترجمہ؛ کسی شخص نے اس کا جائزہ نہیں لیا" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

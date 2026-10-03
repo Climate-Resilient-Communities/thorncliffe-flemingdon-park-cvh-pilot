@@ -110,13 +110,13 @@ function readReleaseOf(storage: KeptStorage, key: string): number | null {
   }
 }
 
-type Fetcher = typeof fetch;
+export type Fetcher = typeof fetch;
 
 /**
  * Reads one JSON body completely. Null for any failure: no signal, no answer within `timeoutMs`, a refusal, a response a
  * service worker made up (FALLBACK_HEADER), a body that stops short or is not JSON.
  */
-async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promise<unknown> {
+export async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promise<unknown> {
   try {
     // The signal covers the body too: a download that stalls after the headers is cut off as well.
     const signal = AbortSignal.timeout(timeoutMs);
@@ -134,6 +134,12 @@ async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promi
   }
 }
 
+/** The manifest as the server names it now (never cached), or null when it cannot be read or fails its schema. */
+export async function fetchManifest(fetcher: Fetcher, timeoutMs: number = FETCH_TIMEOUT_MS): Promise<DirectoryManifestV1 | null> {
+  const manifest = DirectoryManifestV1.safeParse(await readJson(fetcher, MANIFEST_URL, timeoutMs));
+  return manifest.success ? manifest.data : null;
+}
+
 /**
  * The directory in `lang`. Asks the server which release is current, and:
  * - the kept listing is the manifest's release (same `release_v` and same `catalogue_hash`): it is shown as current;
@@ -148,7 +154,14 @@ async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promi
  */
 export async function loadDirectory(
   lang: string,
-  deps: { fetcher?: Fetcher; storage?: KeptStorage | null; onKept?: (state: DirectoryState) => void; timeoutMs?: number } = {},
+  deps: {
+    fetcher?: Fetcher;
+    storage?: KeptStorage | null;
+    onKept?: (state: DirectoryState) => void;
+    /** Told what the manifest said, once: the manifest, or null when it could not be read (the ask screen needs its `search` part). */
+    onManifest?: (manifest: DirectoryManifestV1 | null) => void;
+    timeoutMs?: number;
+  } = {},
 ): Promise<DirectoryState> {
   const fetcher = deps.fetcher ?? fetch;
   const storage = deps.storage ?? null;
@@ -156,12 +169,12 @@ export async function loadDirectory(
   const kept = readKept(storage, lang);
   if (kept) deps.onKept?.(keptState(kept));
 
-  const manifestBody = await readJson(fetcher, MANIFEST_URL, timeoutMs);
-  const manifest = DirectoryManifestV1.safeParse(manifestBody);
+  const manifest = await fetchManifest(fetcher, timeoutMs);
+  deps.onManifest?.(manifest);
   const previous = (): DirectoryState => (kept ? keptState(kept) : { status: "unavailable" });
-  if (!manifest.success) return previous();
+  if (!manifest) return previous();
 
-  const release = manifest.data;
+  const release = manifest;
   // A kept release is the current one only if it is the manifest's own: a number the manifest does not name (a release that
   // was withdrawn, so the manifest is older) or the same number made from another catalogue is not.
   if (kept && kept.listing.release_v === release.release_v && kept.listing.catalogue_hash === release.catalogue_hash) {
