@@ -15,6 +15,10 @@ are in `src/platform/config/env.ts`.
 | `STAFF_PASSWORD_PEPPER` | yes | 32+ random bytes (`openssl rand -hex 32`); never change it once staff exist | 2026-10-02 |
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 | in progress |
+| `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
+| `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
 | `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
@@ -69,7 +73,7 @@ app made them; the vendor's own count is the one that decides, so set the limit 
 
 ## Messaging outbox (S06.01)
 
-The outbox (`delivery`) adds no environment variable, and nothing in it reads Twilio's credentials or calls a provider: sending is S06.02.
+The outbox (`delivery`) adds no environment variable, and nothing in it reads Twilio's credentials or calls a provider: sending is the dispatcher's (next section).
 What it fixes in code and in the migration, so changing one is a change to both (`src/modules/messaging/domain/deliveryRules.ts`,
 `delivery_purpose_rule()` in `db/migrations/20261003400000_delivery_outbox.sql`, compared by `test/db/delivery.db.test.ts`):
 
@@ -89,6 +93,62 @@ The windows marked "proposed" are engineering proposals for the owner to confirm
 queued after its `send_by` is skipped at the hand-off point, not sent late. Logs show a phone number only as its last two digits
 (`+*********23`), whichever field it reaches. The sources that give the dispatcher a recipient's number are wired in
 `src/app/messaging.ts`; none exists until the stories that create the recipients' tables (S06.05, S06.07, S07.02, S07.04).
+
+## Messaging sender (S06.02)
+
+One dispatcher sends every text, and nothing else calls the SMS provider. It runs two ways: `POST /api/jobs/dispatch`, which pg_cron calls
+every minute, and `kickDispatcher()` (`src/app/dispatch.ts`), which the approval calls right after its transaction commits. Both take the
+sender lease (one row, 60 seconds, renewed every 20) or exit without claiming, so they can overlap safely. A run sends for 50 seconds at most
+(its limit is 60 and it keeps a 10-second margin, which covers the 8 seconds the adapter waits for Twilio's answer and the write of the
+outcome), at the shared pace of `SMS_SEGMENTS_PER_SECOND` (default 3), and the next run continues from where it stopped. The run an approval
+starts is shorter (20 seconds, so about 10 seconds of sending): it lives inside the approving request's function, after the response, so
+that route must export `maxDuration = 60`; pg_cron's next run sends whatever the kick did not. Where the settings are: `SMS_MODE=log` (every environment except production) sends nothing, reads no Twilio
+credential and makes each sendable row `skipped_env`; `live` needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID`
+(all production only). Every request goes through the Messaging Service with `SmartEncoded=false` and the status callback
+`PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`.
+
+**Scheduling (the owner runs this, once, in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it, and it is
+never run in a preview).** pg_cron runs in UTC. The job secret is kept in the project's Vault and read when each job runs, so rotating it
+does not need the schedule changed:
+
+```sql
+-- 1. The production base URL and the job secret, in the Vault (the secret is the same value as Vercel's JOB_SECRET).
+select vault.create_secret('https://project-6qcs4.vercel.app', 'cvh_job_base_url');
+select vault.create_secret('<the JOB_SECRET value>', 'cvh_job_secret');
+
+-- 2. The dispatcher, every minute.
+select cron.schedule('cvh-dispatch', '* * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/dispatch',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+
+-- 3. The Messaging Service check, daily at 11:00 UTC (7:00 in Toronto while daylight time lasts).
+select cron.schedule('cvh-messaging-config', '0 11 * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/messaging-config',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 30000
+  );
+$$);
+```
+
+The routes refuse a request without `Authorization: Bearer <secret>` (401), and answer 503 while no `JOB_SECRET` is set, so a missing secret never leaves a
+job open. If Vercel's deployment protection covers the production URL, `net.http_post` needs the protection bypass header too
+(`x-vercel-protection-bypass` with the bypass secret kept in the Vault). To rotate: set `JOB_SECRET_PREVIOUS` to the old value and `JOB_SECRET` to a new one in
+Vercel and deploy; `select vault.update_secret((select id from vault.secrets where name = 'cvh_job_secret'), '<new value>')`; then remove
+`JOB_SECRET_PREVIOUS`. To stop sending without a deploy, pause the texts (S06.06); to stop the schedule, `select cron.unschedule('cvh-dispatch')`.
+The health job (S06.07, `/api/jobs/health`) is scheduled the same way when it exists; it reads `ops_event` and the sender lease's `renewed_at`.
+
+**Messaging Service: Smart Encoding off, and who may change the service.** Smart Encoding replaces characters it thinks are the same (a typographic
+quote, an accented letter), which would break the rule that the frozen body goes out byte for byte (AD-21). So it must be off, and every request sets
+`SmartEncoded=false` besides. `/api/jobs/messaging-config` reads the service's setting daily and after every recorded change to the service, and
+records `messaging.smart_encoding_on` in `ops_event` (severity error) when it is on, which the health job turns into the on-call alert (S06.07); a setting it
+cannot read is recorded as `messaging.service_check_failed` (warning), never taken for off. The configuration-control assumption the procedures
+(S09.03) repeat: only named Admins change the Messaging Service, texts are paused while they do, and the check is run again before texts resume
+(`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
 
 ## GitHub: environments
 
@@ -155,8 +215,10 @@ ever served under the key of a real model.
 
 - Toll-free verification and its compliance profile are required before texts from the toll-free
   number are delivered; until then sends fail with error 30032.
+- The sender (S06.02) sends through one Messaging Service whose sender pool is the verified toll-free number
+  (`TWILIO_MESSAGING_SERVICE_SID`).
 - Smart Encoding must be **off** on the Messaging Service. The approver sees the frozen body and the
   provider must send exactly those bytes; Smart Encoding would rewrite characters after approval and
-  change the segment count the estimate was made from (AD-21). E06 reads the setting before sending
-  and raises an on-call alert if it is on, and every request also sets `SmartEncoded=false` (the S01.15
-  Twilio adapter does; E06's sender keeps it).
+  change the segment count the estimate was made from (AD-21). The sender checks the setting daily (see
+  "Messaging sender") and `ops` raises an on-call alert if it is on, and every request also sets
+  `SmartEncoded=false` (the S01.15 Twilio adapter does; the sender keeps it).

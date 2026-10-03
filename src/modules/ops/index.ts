@@ -3,6 +3,7 @@
 export { recordOpsEvent } from "./application/recordOpsEvent";
 export {
   ALERT_SUBMIT_FAILURE_REASONS,
+  DELIVERY_UNKNOWN_CAUSES,
   OPS_EVENT_KINDS,
   OpsEventError,
   PUBLISH_FAILURE_REASONS,

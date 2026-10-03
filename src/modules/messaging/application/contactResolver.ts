@@ -39,7 +39,7 @@ export function createContactResolver(deps: { sources: RecipientNumberSources; l
       const source = sources[recipient.kind];
       if (!source) throw new ContactSourceNotWired(recipient.kind);
       const consume = isConsumedAtHandOff(recipient.kind);
-      const number = await source.numberOf(tx, recipient.id, { consume });
+      const number = await source.numberOf(tx, recipient.id, { consume, deliveryKind: recipient.deliveryKind, purpose: recipient.purpose ?? null });
       if (number === null) {
         log.info("contact.recipient_gone", { module: "messaging", delivery_id: recipient.deliveryId, recipient_kind: recipient.kind });
         return { found: false, reason: "recipient_gone" };

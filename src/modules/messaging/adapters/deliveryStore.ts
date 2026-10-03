@@ -10,7 +10,7 @@ const INSERT_CHUNK = 500;
 
 type DeliveryRow = typeof delivery.$inferSelect;
 
-const viewOf = (row: DeliveryRow): DeliveryView => ({
+export const viewOf = (row: DeliveryRow): DeliveryView => ({
   id: row.id,
   kind: row.kind as DeliveryKind,
   recipientKind: row.recipientKind as RecipientKind,
