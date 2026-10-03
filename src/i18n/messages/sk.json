@@ -454,6 +454,7 @@
     "now": "teraz",
     "levelOfficial": "Oficiálne upozornenie od {source}.",
     "levelCommunity": "Komunitné upozornenie od Hubu. Overil ho Hub.",
+    "fromHub": "Komunitné upozornenie od Hubu",
     "levelAmbassador": "Komunitné upozornenie od ambasádora budovy. Zatiaľ neoverené.",
     "stop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP.",
     "verifiedKeyword": "Ak chcete vedieť, čo znamená „overené“, odpovedzte INFO.",

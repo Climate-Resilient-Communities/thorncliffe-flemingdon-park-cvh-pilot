@@ -231,6 +231,7 @@
    "now": "ahora",
    "levelOfficial": "Alerta oficial de {source}.",
    "levelCommunity": "Alerta comunitaria del Hub. Verificada por el Hub.",
+   "fromHub": "Alerta comunitaria del Hub",
    "levelAmbassador": "Alerta comunitaria de un embajador del edificio. Aún no verificada.",
    "stop": "Para dejar de recibir todos los mensajes del Hub, responda STOP.",
    "verifiedKeyword": "Para saber qué significa verificado, responda INFO.",

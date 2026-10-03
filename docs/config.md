@@ -16,6 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164 | in progress |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
+| `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
 | `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
@@ -84,3 +85,8 @@ translation and nothing older is reused.
 
 - Toll-free verification and its compliance profile are required before texts from the toll-free
   number are delivered; until then sends fail with error 30032.
+- Smart Encoding must be **off** on the Messaging Service. The approver sees the frozen body and the
+  provider must send exactly those bytes; Smart Encoding would rewrite characters after approval and
+  change the segment count the estimate was made from (AD-21). E06 reads the setting before sending
+  and raises an on-call alert if it is on, and every request also sets `SmartEncoded=false` (the S01.15
+  Twilio adapter does; E06's sender keeps it).
