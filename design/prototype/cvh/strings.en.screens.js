@@ -1211,6 +1211,8 @@
     numbersLink: 'See the essential numbers',
     backToList: 'All services and organisations',
     suggestApply: 'Show only {place}' } });
+  /* AD-11 pilot change (product owner, 2026-10-03): an ordinary directory description a model translated and no person has reviewed yet is shown with this label, its English original one tap away (x04.showSource). */
+  m(en, { x04: { unreviewed: 'Machine-translated; not reviewed by a person' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },

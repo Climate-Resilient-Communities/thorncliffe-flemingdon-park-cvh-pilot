@@ -137,7 +137,8 @@
     "unavailable": "Pas encore offert dans cette langue",
     "unavailableBody": "Ceci n'a pas encore été traduit en {lang}.",
     "showSource": "Lire en {lang}",
-    "original": "Original ({lang})"
+    "original": "Original ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Recevez des alertes et de l'aide dans votre langue",

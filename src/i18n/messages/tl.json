@@ -137,7 +137,8 @@
     "unavailable": "Wala pa sa wikang ito",
     "unavailableBody": "Hindi pa ito naisasalin sa {lang}.",
     "showSource": "Basahin sa {lang}",
-    "original": "Orihinal ({lang})"
+    "original": "Orihinal ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Kumuha ng mga alerto at tulong sa iyong wika",

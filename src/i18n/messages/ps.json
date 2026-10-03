@@ -137,7 +137,8 @@
     "unavailable": "په دې ژبه لا نشته",
     "unavailableBody": "دا لا {lang} ته نه ده ژباړل شوې.",
     "showSource": "په {lang} یې ولولئ",
-    "original": "اصلي ({lang})"
+    "original": "اصلي ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "خبرتیاوې او مرسته په خپله ژبه ترلاسه کړئ",

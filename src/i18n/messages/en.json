@@ -137,7 +137,8 @@
     "unavailable": "Not yet available in this language",
     "unavailableBody": "This has not been translated into {lang} yet.",
     "showSource": "Read it in {lang}",
-    "original": "Original ({lang})"
+    "original": "Original ({lang})",
+    "unreviewed": "Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Get alerts and help in your language",

@@ -137,7 +137,8 @@
     "unavailable": "暂无此语言版本",
     "unavailableBody": "此内容尚未翻译成{lang}。",
     "showSource": "用{lang}阅读",
-    "original": "原文（{lang}）"
+    "original": "原文（{lang}）",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "用您的语言接收警报和获得帮助",

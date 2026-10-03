@@ -137,7 +137,8 @@
     "unavailable": "এই ভাষায় এখনও নেই",
     "unavailableBody": "এটি এখনও {lang}-এ অনুবাদ হয়নি।",
     "showSource": "{lang}-এ পড়ুন",
-    "original": "মূল ({lang})"
+    "original": "মূল ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "আপনার ভাষায় সতর্কতা ও সাহায্য পান",

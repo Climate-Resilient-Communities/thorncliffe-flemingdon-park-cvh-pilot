@@ -137,7 +137,8 @@
     "unavailable": "ابھی اس زبان میں دستیاب نہیں",
     "unavailableBody": "اس کا ابھی {lang} میں ترجمہ نہیں ہوا۔",
     "showSource": "{lang} میں پڑھیں",
-    "original": "اصل ({lang})"
+    "original": "اصل ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "اپنی زبان میں الرٹ اور مدد حاصل کریں",

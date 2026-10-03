@@ -137,7 +137,8 @@
     "unavailable": "هنوز به این زبان موجود نیست",
     "unavailableBody": "این هنوز به {lang} ترجمه نشده است.",
     "showSource": "به {lang} بخوانید",
-    "original": "اصلی ({lang})"
+    "original": "اصلی ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "هشدارها و کمک را به زبان خود بگیرید",

@@ -137,7 +137,8 @@
     "unavailable": "V tomto jazyku zatiaľ nie je",
     "unavailableBody": "Toto ešte nie je preložené do jazyka {lang}.",
     "showSource": "Čítať v jazyku {lang}",
-    "original": "Originál ({lang})"
+    "original": "Originál ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Dostávajte upozornenia a pomoc vo svojom jazyku",

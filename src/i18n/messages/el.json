@@ -137,7 +137,8 @@
     "unavailable": "Δεν είναι ακόμη διαθέσιμο σε αυτή τη γλώσσα",
     "unavailableBody": "Αυτό δεν έχει μεταφραστεί ακόμη στα {lang}.",
     "showSource": "Διαβάστε το στα {lang}",
-    "original": "Πρωτότυπο ({lang})"
+    "original": "Πρωτότυπο ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Ειδοποιήσεις και βοήθεια στη γλώσσα σας",

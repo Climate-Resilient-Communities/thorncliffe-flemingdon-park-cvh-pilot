@@ -137,7 +137,8 @@
     "unavailable": "ਇਸ ਭਾਸ਼ਾ ਵਿੱਚ ਅਜੇ ਉਪਲਬਧ ਨਹੀਂ",
     "unavailableBody": "ਇਸਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ।",
     "showSource": "{lang} ਵਿੱਚ ਪੜ੍ਹੋ",
-    "original": "ਮੂਲ ({lang})"
+    "original": "ਮੂਲ ({lang})",
+    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "ਆਪਣੀ ਭਾਸ਼ਾ ਵਿੱਚ ਚੇਤਾਵਨੀਆਂ ਅਤੇ ਮਦਦ ਲਓ",
