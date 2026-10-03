@@ -110,17 +110,39 @@ export interface ApprovalFacts {
 
 export type ApprovalRefusal = "ENTRY_NOT_PENDING" | "EDITOR_CANNOT_APPROVE" | "ENTRY_CHANGED" | "VALID_UNTIL_PAST";
 
+/** What an approver's action on an entry they were shown (approve, return, discard) is judged on: the entry now, and the version and hash they saw. */
+export interface ShownBindingFacts {
+  status: EntryStatus;
+  version: number;
+  /** The entry's content hash now; null when it holds none (a draft). */
+  contentHash: string | null;
+  shownVersion: number;
+  shownHash: string;
+}
+
 /**
- * The approval rules that need no other lookup (AD-5): the entry is pending; the approver is not
- * the author and never edited it (two-person rule); the approval binds to the version and hash the
- * approver saw, so an edit, return or re-translation since refuses it ("This alert changed.
- * Review it again."); and the valid-until is still in the future. The role, the assurance level and
- * the author's current standing are checked by the use case (the policy, S01.12).
+ * Whether the entry is still the one the approver was shown. An entry that went back to a draft since the view (its author pulled it back, or
+ * an approver returned it) is a changed entry ("This alert changed. Review it again."), as is one with another version or hash (it was pulled
+ * back, edited and submitted again, or re-translated). One that was approved or discarded since is not waiting any more (`ENTRY_NOT_PENDING`:
+ * another approver was first). Null when it is still the pending entry that was shown.
+ */
+export function checkShownBinding(facts: ShownBindingFacts): "ENTRY_NOT_PENDING" | "ENTRY_CHANGED" | null {
+  if (facts.status !== "pending_approval" && facts.status !== "draft") return "ENTRY_NOT_PENDING";
+  if (facts.status === "draft" || facts.contentHash === null) return "ENTRY_CHANGED";
+  return facts.shownVersion !== facts.version || facts.shownHash !== facts.contentHash ? "ENTRY_CHANGED" : null;
+}
+
+/**
+ * The approval rules that need no other lookup (AD-5): the entry was not approved or discarded since (`ENTRY_NOT_PENDING`); the approver
+ * is not the author and never edited it (two-person rule); the approval binds to the version and hash the approver saw, so an edit,
+ * return or re-translation since refuses it ("This alert changed. Review it again.", `checkShownBinding`); and the valid-until is still
+ * in the future. The role, the assurance level and the author's current standing are checked by the use case (the policy, S01.12).
  */
 export function checkApproval(facts: ApprovalFacts): ApprovalRefusal | null {
-  if (facts.status !== "pending_approval") return "ENTRY_NOT_PENDING";
+  const shown = checkShownBinding(facts);
+  if (shown === "ENTRY_NOT_PENDING") return shown;
   if (facts.approverId === facts.authorId || facts.editorIds.includes(facts.approverId)) return "EDITOR_CANNOT_APPROVE";
-  if (facts.contentHash === null || facts.shownVersion !== facts.version || facts.shownHash !== facts.contentHash) return "ENTRY_CHANGED";
+  if (shown) return shown;
   if (facts.validUntil.getTime() <= facts.now.getTime()) return "VALID_UNTIL_PAST";
   return null;
 }

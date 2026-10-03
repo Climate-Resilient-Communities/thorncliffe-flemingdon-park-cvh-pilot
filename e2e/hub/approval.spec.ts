@@ -1,0 +1,149 @@
+import { expect, test, type Page } from "@playwright/test";
+import { approvalScreen, countChangedView, type ApprovalScreen } from "../../src/app/staff/alerts/approval/view";
+import { incidentsView } from "../../src/app/staff/alerts/incidents/view";
+import { APPROVER, OTHER_ALERT, OTHER_ENTRY, PLANS, reviewOf, type ReviewOptions } from "../../test/helpers/approvalReview";
+import { REAL_TEXTS, hubBrand } from "../helpers/hub-shell";
+import { mount } from "../helpers/layout-fixture";
+import { expectBaseline } from "./helpers";
+
+// S04.07: the approval view of an alert (O-05) and of an ambassador's post (O-07) inside the Hub shell, at 390 and 1280 px: an alert before texting is
+// open (the web as the only channel, a count of 0, "Text sign-up is not open yet"), one with texting open and languages that fell back and a possible
+// duplicate, an ambassador's post, the return form and the discard confirmation, a count that changed with the new number to confirm, an entry that
+// is no longer waiting, and the Hub home's list of what waits for a person with the note an approver sent back. The views are built by the app's own
+// view functions; the screens are the app's own ApprovalBody and IncidentsList with actions that do nothing. The behaviour is asserted in
+// src/app/staff/alerts/approval/*.test.ts, test/db/alertApproval.db.test.ts and e2e/staff/approval.spec.ts; the boundaries of the layout are in
+// e2e/layout/approval.spec.ts; these pictures show what it looks like. The staff screens are English in the pilot.
+const brand = hubBrand();
+
+const OPEN: ReviewOptions["recipients"] = { open: true, total: 12, byLanguage: { en: 5, ur: 4, fr: 3 } };
+
+const screenOf = (options: ReviewOptions = {}): ApprovalScreen => approvalScreen({ review: reviewOf(options), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER });
+
+/** The viewport is as tall as the page, so the picture shows all of it, with the sticky actions at its end. */
+async function fitToPage(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 800 });
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
+  await page.setViewportSize({ width, height });
+}
+
+async function openApproval(page: Page, width: number, props: Omit<Parameters<typeof mount<"ApprovalFixture">>[2], "texts" | "brand">) {
+  await page.setViewportSize({ width, height: 800 });
+  await mount(page, "ApprovalFixture", { texts: REAL_TEXTS, brand, ...props });
+  await fitToPage(page, width);
+}
+
+for (const width of [390, 1280]) {
+  test(`the approval view of an alert before texting is open, at ${width}px`, async ({ page }) => {
+    await openApproval(page, width, { screen: screenOf() });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Approve an alert");
+    await expect(page.getByTestId("sms-not-open")).toHaveText("Text sign-up is not open yet.");
+    await expect(page.getByTestId("recipient-count")).toHaveText("0");
+    await expectBaseline(page, `approval-before-texting-${width}.png`);
+  });
+
+  test(`the approval view of an alert with texting open, languages that fell back and a possible duplicate, at ${width}px`, async ({ page }) => {
+    await openApproval(page, width, {
+      screen: screenOf({ recipients: OPEN, fallback: ["ur", "ps"], duplicate: { alertId: OTHER_ALERT, entryId: OTHER_ENTRY }, thread: { isDrill: false } }),
+    });
+    await expect(page.getByTestId("fallback-summary")).toContainText("2 of 15 languages could not be translated");
+    await expect(page.getByTestId("duplicate-link")).toBeVisible();
+    await expect(page.getByTestId("estimated-cost")).toHaveText("$0.57 CAD");
+    await expectBaseline(page, `approval-texting-fallback-${width}.png`);
+  });
+
+  test(`the review of an ambassador's post, at ${width}px`, async ({ page }) => {
+    await openApproval(page, width, { screen: screenOf({ authorRole: "ambassador" }) });
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Review an ambassador post");
+    await expect(page.getByTestId("ambassador-note")).toBeVisible();
+    await expectBaseline(page, `approval-ambassador-${width}.png`);
+  });
+}
+
+test("every language opened, at 390px", async ({ page }) => {
+  await openApproval(page, 390, { screen: screenOf({ recipients: OPEN, fallback: ["ur"] }) });
+  await page.getByTestId("language-ur").locator("summary").click();
+  await page.getByTestId("language-fr").locator("summary").click();
+  await expect(page.getByTestId("web-ur")).toBeVisible();
+  await expect(page.getByTestId("sms-fr")).toBeVisible();
+  await fitToPage(page, 390);
+  await expectBaseline(page, "approval-languages-open-390.png");
+});
+
+test("Return to author with a note, and Discard, at 390px", async ({ page }) => {
+  await openApproval(page, 390, { screen: screenOf(), initial: { mode: "return" } });
+  await expect(page.getByTestId("return-note")).toBeVisible();
+  await expect(page.getByTestId("send-back-button")).toBeVisible();
+  await expectBaseline(page, "approval-return-390.png");
+
+  await openApproval(page, 390, { screen: screenOf(), initial: { mode: "return", returnToAuthor: { status: "refused", message: "Write a note for the author." } } });
+  await expect(page.locator("p.hub-error")).toHaveText("Write a note for the author.");
+  await expectBaseline(page, "approval-return-refused-390.png");
+
+  await openApproval(page, 390, { screen: screenOf(), initial: { mode: "discard" } });
+  await expect(page.getByTestId("discard-confirm-button")).toBeVisible();
+  await expectBaseline(page, "approval-discard-390.png");
+});
+
+test("a refusal, and a count that changed with the new number to confirm, at 390px", async ({ page }) => {
+  await openApproval(page, 390, { screen: screenOf(), initial: { approve: { status: "refused", message: "This alert changed. Review it again." } } });
+  await expect(page.locator("p.hub-error")).toHaveText("This alert changed. Review it again.");
+  await expectBaseline(page, "approval-refused-390.png");
+
+  const review = reviewOf({ recipients: OPEN });
+  const view = countChangedView({ review, snapshot: { total: 14, byLanguage: { en: 5, ur: 4, fr: 5 } }, reviewed: OPEN, pricePerSegmentCents: 1.5 });
+  await openApproval(page, 390, { screen: screenOf({ recipients: OPEN }), initial: { approve: { status: "count_changed", view } } });
+  await expect(page.getByTestId("count-changed")).toContainText("The number of people who will get this text changed from 12 to 14");
+  await expect(page.getByTestId("count-cost")).toHaveText("Estimated cost now: $0.69 CAD (an estimate)");
+  // Approve waits for the confirmation. The page is static here (no hydration), so ticking is not exercised in this picture: the markup (a required
+  // checkbox bound to the approve form) is asserted in ApprovalBody.test.tsx, the answer with the new number in approveFromForm.test.ts and the use case's
+  // refusal in test/db/alertApproval.db.test.ts. A real browser cannot reach a changed count before E07 opens text sign-up.
+  await expect(page.getByTestId("approve-button")).toBeDisabled();
+  await expect(page.getByTestId("confirm-count")).not.toBeChecked();
+  await expectBaseline(page, "approval-count-changed-390.png");
+});
+
+test("an entry that is no longer waiting, at 390px", async ({ page }) => {
+  await openApproval(page, 390, { screen: screenOf({ entry: { status: "approved" } }) });
+  await expect(page.getByTestId("locked-note")).toContainText("approved and is published");
+  await expect(page.locator(".layout-screen__actions")).toHaveCount(0);
+  await expectBaseline(page, "approval-locked-390.png");
+
+  await openApproval(page, 390, { screen: screenOf({ entry: { status: "draft", contentHash: null, submittedAt: null, returnedFor: "return", returnedNote: "Say which floors." } }) });
+  await expect(page.getByTestId("locked")).toContainText("The note sent: Say which floors.");
+  await expectBaseline(page, "approval-returned-390.png");
+});
+
+test("fits the phone without scrolling sideways in every state", async ({ page }) => {
+  const states: Array<[ApprovalScreen, Parameters<typeof mount<"ApprovalFixture">>[2]["initial"]?]> = [
+    [screenOf()],
+    [screenOf({ recipients: OPEN, fallback: ["ur"], duplicate: { alertId: OTHER_ALERT, entryId: OTHER_ENTRY } })],
+    [screenOf({ authorRole: "ambassador" })],
+    [screenOf(), { mode: "return" }],
+    [screenOf({ entry: { status: "approved" } })],
+  ];
+  for (const [screen, initial] of states) {
+    await openApproval(page, 390, { screen, initial });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), screen.title).toBe(true);
+  }
+});
+
+test("the Hub home lists what waits for a person and the note an approver sent back, at 390px", async ({ page }) => {
+  const view = incidentsView(
+    {
+      waiting: [
+        { alertId: OTHER_ALERT, entryId: OTHER_ENTRY, kind: "ack", status: "pending_approval", types: ["elevator"], isDrill: false, version: 1, submittedAt: new Date("2026-10-04T14:00:00.000Z"), returnedNote: null },
+        { alertId: OTHER_ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "update", status: "pending_approval", types: ["power", "water"], isDrill: true, version: 2, submittedAt: new Date("2026-10-04T14:20:00.000Z"), returnedNote: null },
+      ],
+      mine: [
+        { alertId: OTHER_ALERT, entryId: "01900000-0000-7000-8000-00000000e17a", kind: "ack", status: "draft", types: ["water"], isDrill: false, version: 1, submittedAt: null, returnedNote: "Say which floors, and when the water will be back." },
+      ],
+    },
+    "coordinator",
+  );
+  await page.setViewportSize({ width: 390, height: 800 });
+  await mount(page, "IncidentsFixture", { texts: REAL_TEXTS, brand, view });
+  await fitToPage(page, 390);
+  await expect(page.getByTestId("returned-note")).toContainText("Note from the approver: Say which floors");
+  await expect(page.getByTestId("incidents-drills")).toBeVisible();
+  await expectBaseline(page, "incidents-390.png");
+});

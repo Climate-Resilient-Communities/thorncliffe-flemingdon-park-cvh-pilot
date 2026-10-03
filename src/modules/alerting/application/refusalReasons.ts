@@ -45,4 +45,18 @@ export const AUDIT_REASON: Record<AlertRefusal, AuditReason> = {
   FLOOR_RANGE_REVERSED: "validation",
   FLOOR_RANGE_INCOMPLETE: "validation",
   GROUP_UNKNOWN: "validation",
+  RECIPIENT_COUNT_CHANGED: "conflict",
+  NOTE_REQUIRED: "validation",
+  NOTE_TOO_LONG: "validation",
 };
+
+/** The forms of the approval view (S04.07), and the audited action each stands for. */
+export type InvalidFormAction = "approve" | "return" | "discard";
+export const INVALID_FORM_AUDIT_ACTION = { approve: "entry.approved", return: "entry.returned", discard: "entry.discarded" } as const satisfies Record<InvalidFormAction, string>;
+
+/**
+ * A form that does not carry what its action needs (the version and hash shown, the count reviewed) is refused before any use case runs; its record
+ * says `validation` and this code. It is not a refusal a use case returns, so it is not an `AlertRefusal`.
+ */
+export const INVALID_FORM_REASON: AuditReason = "validation";
+export const INVALID_FORM_CODE = "INVALID_FORM";

@@ -9,7 +9,7 @@
 // role can be there (gate 1 for everyone; gate 2 and the code gate only for Admins and
 // Coordinators), at the Hub otherwise.
 import type { SetupGate } from "../../src/contracts/staffAuth";
-import type { PolicyAction } from "../../src/modules/identity";
+import type { PolicyAction, PolicyContext } from "../../src/modules/identity";
 
 export const ROLE_CALLERS = ["ambassador", "coordinator", "director", "admin", "ambassador_out_of_scope"] as const;
 export type RoleCaller = (typeof ROLE_CALLERS)[number];
@@ -50,6 +50,11 @@ export interface StaffEndpoint extends EndpointBase {
   form?: Record<string, string>;
   /** What a refused action's message starts with, when it is not the Admin-only default ("Only an Admin can ..."). */
   forbiddenMessage?: RegExp;
+  /**
+   * The facts the guard judges the call on when the role's rule depends on them, as the test's requests give them (test/permission-list.test.ts asks `can` with
+   * them): the approval is for someone who is not an editor of the entry, and the entry these calls name is not there, so nobody is excluded from it.
+   */
+  policyContext?: PolicyContext;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -75,6 +80,9 @@ const AUTHENTICATOR_GATE = {
   ambassador_out_of_scope: "setup_incomplete",
 } as const;
 
+/** An entry that is not there, as the approval's guard reads it: no editors, so no one is excluded from approving it (src/app/staff/alerts/approval/entryFacts.ts). */
+const NO_ENTRY: PolicyContext = { actorId: "01900000-0000-7000-8000-0000000000aa", entry: { authorId: "00000000-0000-0000-0000-000000000000", editorIds: [], status: "pending_approval" } };
+
 /** The username of the account the account actions are aimed at (the test creates it). */
 export const TARGET_USERNAME = "target";
 
@@ -89,6 +97,7 @@ const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
 const ALERT_LOG_ACTIONS = "src/app/staff/alerts/log/actions.ts";
 const ALERT_COMPOSER_ACTIONS = "src/app/staff/alerts/composer/actions.ts";
+const ALERT_APPROVAL_ACTIONS = "src/app/staff/alerts/approval/actions.ts";
 /** The key of one press of Submit: what a browser makes with `crypto.randomUUID()`. */
 const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
@@ -123,6 +132,20 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/alerts/log", kind: "page", file: "src/app/staff/alerts/log/page.tsx", export: "default", route: "/staff/alerts/log", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/ack", kind: "page", file: "src/app/staff/alerts/ack/page.tsx", export: "default", route: "/staff/alerts/ack", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/compose", kind: "page", file: "src/app/staff/alerts/compose/page.tsx", export: "default", route: "/staff/alerts/compose", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  // S04.07: the approval view (O-05, O-07): policy action `alert.approve`, a Coordinator or an Admin who is not an editor of the entry (the guard reads who
+  // edited it from the database). The page names no entry here, so a Coordinator or an Admin is let through to the page's own "not found".
+  {
+    id: "page /staff/alerts/approve",
+    kind: "page",
+    file: "src/app/staff/alerts/approve/page.tsx",
+    export: "default",
+    route: "/staff/alerts/approve",
+    action: "alert.approve",
+    writes: "none",
+    gate: "hub",
+    policyContext: NO_ENTRY,
+    expected: WIDE_AUTHORS,
+  },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
@@ -385,6 +408,25 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       gate: "hub",
       form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT },
       forbiddenMessage: /^Only a Coordinator or an Admin can /,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
+  // S04.07: Approve, Return to author and Discard on the approval view (policy action `alert.approve`, a privileged action: aal2, and never an editor of the
+  // entry). The entry does not exist, so a Coordinator's or an Admin's call passes the guard and is refused by the form or the use case, changing nothing. An
+  // Ambassador and a Director are refused on their role alone.
+  ...(["approveAction", "returnAction", "discardAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${ALERT_APPROVAL_ACTIONS}#${name}`,
+      kind: "action",
+      file: ALERT_APPROVAL_ACTIONS,
+      export: name,
+      route: "/staff/alerts/approve",
+      action: "alert.approve",
+      writes: "business",
+      gate: "hub",
+      form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, version: "1", hash: "0".repeat(64), reviewed: '{"v":1,"total":0,"by_lang":{}}', note: "Add the floors." },
+      forbiddenMessage: /^Only a Coordinator or an Admin who did not write or change this alert can approve it\./,
+      policyContext: NO_ENTRY,
       expected: WIDE_AUTHORS,
     }),
   ),

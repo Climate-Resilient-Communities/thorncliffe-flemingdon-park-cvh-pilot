@@ -71,6 +71,7 @@ function stateOf(options: { kind?: "ack" | "update"; entry?: Record<string, unkn
       contentHash: null,
       submittedAt: null,
       returnedFor: null,
+      returnedNote: null,
       approvedBy: null,
       approvedAt: null,
       webPublishedAt: null,
