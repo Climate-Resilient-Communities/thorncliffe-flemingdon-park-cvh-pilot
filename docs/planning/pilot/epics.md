@@ -1502,7 +1502,7 @@ So that I can read them even when my phone is set to another language.
 
 ### Story S03.04 — Search finds published providers by meaning
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 3 h 15 min (started 2026-10-02 20:43 UTC, merged 2026-10-02 23:58 UTC)
 - **Traces:** FR-D2-Q, FR-M3 (search data), AR-15, AR-20 (`SearchV1`), AR-22, AR-26 · **Depends on:** S03.02, S03.03 · **Branch:** `e03-s04-search-endpoint`
 
 As a resident,
@@ -1580,7 +1580,7 @@ So that a question in any language finds an English-sourced listing.
 
 ### Story S03.05 — Questions in Pashto, Dari, Urdu and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** — (started 2026-10-03 00:37 UTC)
+- **Size:** M · **Estimate:** 5 h · **Actual:** 1 h 22 min (started 2026-10-03 00:37 UTC, merged 2026-10-03 01:59 UTC)
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
 As a resident who writes in Pashto, Dari, Urdu or romanized Urdu,
