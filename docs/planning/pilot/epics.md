@@ -2691,7 +2691,7 @@ So that nobody receives something we already took back, while the final word sti
 
 ### Story S06.04 — Delivery status comes only from signed provider callbacks
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** — (started 2026-10-03 06:15 UTC)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 46 min (started 2026-10-03 06:13 UTC, built 07:59 UTC)
 - **Traces:** AR-12 (status webhooks), FR-M2, Consistency Conventions (webhook signatures) · **Depends on:** S06.02 · **Branch:** `e06-s04-status-webhooks`
 
 As a Hub Admin,
