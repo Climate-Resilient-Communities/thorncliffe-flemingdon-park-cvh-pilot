@@ -19,6 +19,22 @@ describe("classifyError", () => {
     expect(classifyError(Object.create(null))).toBe("unknown");
   });
 
+  it("finds the SQLSTATE of the error drizzle wraps a failed query in, and never uses the wrapper's message (the query and its parameters)", () => {
+    const stopped = Object.assign(new Error("canceling statement due to statement timeout"), { code: "57014" });
+    class DrizzleQueryError extends Error {}
+    const wrapped = Object.assign(new DrizzleQueryError("Failed query: insert into rate_limit values ($1)\nparams: 203.0.113.9"), { cause: stopped });
+
+    expect(classifyError(wrapped)).toBe("57014");
+    expect(classifyError(Object.assign(new DrizzleQueryError("Failed query: x"), { cause: new TypeError("no code") }))).toBe("DrizzleQueryError");
+    expect(classifyError(Object.assign(new DrizzleQueryError("Failed query: x"), { cause: undefined }))).toBe("DrizzleQueryError");
+    // A cause that points back at its error does not loop, and one buried deeper than a wrapper or two is not searched for.
+    const loop: { cause?: unknown } = new Error("loop");
+    loop.cause = loop;
+    expect(classifyError(loop)).toBe("Error");
+    const deep = Object.assign(new Error("a"), { cause: Object.assign(new Error("b"), { cause: Object.assign(new Error("c"), { cause: stopped }) }) });
+    expect(classifyError(deep)).toBe("Error");
+  });
+
   it("ignores an unsafe safeDetail", () => {
     expect(classifyError(Object.assign(new Error("m"), { safeDetail: "has a space" }))).toBe("Error");
   });

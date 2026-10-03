@@ -71,6 +71,11 @@ export interface FrozenContent {
  * Port: translate, render and hash an entry's draft content. Slow (it calls the translation
  * models), so it runs outside any database lock and transaction; "Try translation again" calls it
  * between its two short transactions. S04.02 and S04.06 provide the real one.
+ *
+ * TODO(S04.05): the real one is `freezeContent` (freezeContent.ts) after S04.02's translation, and it needs more than
+ * this context carries (kind, supersedesId, channels, slug, `verified`, attribution; `verified: true` for texts the
+ * Hub approves) and can refuse (SMS_BODY_TOO_LONG, TRANSLATION_STALE). When S04.05 wires it, widen the context and
+ * return its FreezeResult instead of FrozenContent, so a refusal reaches the author as a refusal to submit.
  */
 export interface EntryPreparer {
   prepare(content: EntryContent, context: { alertId: string; entryId: string; isDrill: boolean }): Promise<FrozenContent>;

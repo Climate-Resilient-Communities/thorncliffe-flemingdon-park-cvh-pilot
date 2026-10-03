@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildListing, buildManifest } from "../../../e2e/resident/directory-fixture";
-import { CACHE_PREFIX, FALLBACK_HEADER, FETCH_TIMEOUT_MS, keep, keptState, loadDirectory, MANIFEST_URL, readKept, type DirectoryState, type KeptStorage } from "./load-directory";
+import { CACHE_PREFIX, fetchManifest, FALLBACK_HEADER, FETCH_TIMEOUT_MS, keep, keptState, loadDirectory, MANIFEST_URL, readKept, type DirectoryState, type KeptStorage } from "./load-directory";
 
 /** A phone's storage in memory. */
 function memory(limit = Infinity): KeptStorage & { data: Map<string, string> } {
@@ -71,6 +71,19 @@ describe("loadDirectory", () => {
     expect(state).toMatchObject({ status: "ready", current: true });
     expect(state.status === "ready" && state.listing.providers.every((p) => p.neighbourhood_ids.length === 0)).toBe(true);
     expect(readKept(storage, "en")?.listing.release_v).toBe(3);
+  });
+
+  it("reads a listing kept on the phone from before providers carried neighbourhood_ids, and shows it while the server cannot be reached", async () => {
+    const older = buildListing("en", 3) as { providers: Record<string, unknown>[] };
+    older.providers.forEach((p) => delete p.neighbourhood_ids);
+    const storage = memory();
+    storage.setItem(`${CACHE_PREFIX}en`, JSON.stringify({ v: 1, publishedAt: "2026-09-01T10:00:00.000Z", listing: older }));
+
+    expect(readKept(storage, "en")?.listing.providers.every((p) => p.neighbourhood_ids.length === 0)).toBe(true);
+    const state = await loadDirectory("en", { fetcher: server({ manifest: "down" }).fetcher, storage });
+
+    expect(state).toMatchObject({ status: "ready", current: false, publishedAt: "2026-09-01T10:00:00.000Z" });
+    expect(state.status === "ready" && state.listing.release_v).toBe(3);
   });
 
   it("sends nothing about the resident: no credentials, no query, no body", async () => {
@@ -375,5 +388,42 @@ describe("loadDirectory", () => {
     keep(storage, { listing: buildListing("en", 7) as never, publishedAt: "2026-10-01T00:00:00.000Z" });
 
     expect([...storage.data.keys()].sort()).toEqual(["cvh.choices", `${CACHE_PREFIX}en`]);
+  });
+});
+
+describe("fetchManifest", () => {
+  it("is the manifest as the server names it, asked for without credentials", async () => {
+    const { fetcher, asked } = server({ manifest: buildManifest(7, undefined, "available") });
+    const manifest = await fetchManifest(fetcher);
+    expect(manifest).toMatchObject({ release_v: 7, search: { status: "available" } });
+    expect(asked.map((a) => a.url)).toEqual([MANIFEST_URL]);
+    expect(asked[0].init?.credentials).toBe("omit");
+  });
+
+  it("is null when the server cannot be reached, answers with something that is not a manifest, or the answer is a made-up one", async () => {
+    expect(await fetchManifest(server({ manifest: "down" }).fetcher)).toBeNull();
+    expect(await fetchManifest(server({ manifest: { v: 1, release_v: "seven" } }).fetcher)).toBeNull();
+    expect(await fetchManifest(server({ manifest: buildManifest(7), marked: [MANIFEST_URL] }).fetcher)).toBeNull();
+  });
+
+  it("is null when the answer does not come in time", async () => {
+    expect(await fetchManifest(server({ files: {}, manifest: "hang" as never }).fetcher, 20)).toBeNull();
+  });
+});
+
+describe("loadDirectory: onManifest", () => {
+  it("tells what the manifest said, once, even when the kept listing is current", async () => {
+    const storage = memory();
+    await loadDirectory("en", { fetcher: server(release(7)).fetcher, storage });
+    const told: unknown[] = [];
+    await loadDirectory("en", { fetcher: server(release(7)).fetcher, storage, onManifest: (manifest) => told.push(manifest) });
+    expect(told).toHaveLength(1);
+    expect(told[0]).toMatchObject({ release_v: 7 });
+  });
+
+  it("tells null when the manifest cannot be read, so the ask screen still shows its box", async () => {
+    const told: unknown[] = [];
+    await loadDirectory("en", { fetcher: server({ manifest: "down" }).fetcher, storage: memory(), onManifest: (manifest) => told.push(manifest) });
+    expect(told).toEqual([null]);
   });
 });

@@ -108,7 +108,8 @@ describe("ListingProviderSchema neighbourhood_ids", () => {
   });
 
   it("reads a provider of a file made before this field as in no neighbourhood", () => {
-    const { neighbourhood_ids: _omitted, ...older } = provider();
+    const older: Record<string, unknown> = { ...provider() };
+    delete older.neighbourhood_ids;
     expect(ListingProviderSchema.parse(older).neighbourhood_ids).toEqual([]);
   });
 
@@ -140,5 +141,22 @@ describe("DirectoryListingV1 reads the listings of earlier versions", () => {
   it("reads the providers of the listing before neighbourhoods as in no neighbourhood", () => {
     const listing = DirectoryListingV1.parse(JSON.parse(readFileSync(path.join(dir, "listing-before-neighbourhoods.json"), "utf8")));
     expect(listing.providers.map((p) => p.neighbourhood_ids)).toEqual([[]]);
+  });
+});
+
+describe("frozen release files (backward compatibility across the AD-11 pilot change)", () => {
+  // Listing files in the release format before the pilot change, frozen in test/fixtures/directory: never regenerate them.
+  const frozen = (lang: string) =>
+    JSON.parse(readFileSync(path.join(__dirname, "..", "..", "test", "fixtures", "directory", `release-7-${lang}.before-ad11-pilot.json`), "utf8")) as unknown;
+
+  it.each(["en", "ur"])("parses the frozen %s file with today's contract", (lang) => {
+    const parsed = DirectoryListingV1.safeParse(frozen(lang));
+    expect(parsed.success, JSON.stringify(parsed.error?.issues)).toBe(true);
+  });
+
+  it("finds no unreviewed machine text in a release from before the change: every translated text there is reviewed", () => {
+    const listing = DirectoryListingV1.parse(frozen("ur"));
+    const texts = listing.providers.flatMap((p) => [p.services, ...(p.emergency_role ? [p.emergency_role] : []), ...p.subcategories]);
+    expect(texts.filter((t) => t.machine && t.status !== "fallback_en" && t.review_status !== "reviewed")).toEqual([]);
   });
 });

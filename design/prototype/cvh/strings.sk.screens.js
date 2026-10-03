@@ -231,6 +231,7 @@
    "now": "teraz",
    "levelOfficial": "Oficiálne upozornenie od {source}.",
    "levelCommunity": "Komunitné upozornenie od Hubu. Overil ho Hub.",
+   "fromHub": "Komunitné upozornenie od Hubu",
    "levelAmbassador": "Komunitné upozornenie od ambasádora budovy. Zatiaľ neoverené.",
    "stop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP.",
    "verifiedKeyword": "Ak chcete vedieť, čo znamená „overené“, odpovedzte INFO.",
@@ -1360,4 +1361,27 @@
    "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Strojový preklad; nekontroloval ho človek" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "Služby, organizácie a bytové domy v Thorncliffe Parku a Flemingdon Parku. Ťuknite na špendlík a uvidíte, čo to je.",
+    "service": "Služba alebo organizácia",
+    "building": "Bytový dom",
+    "pinName": "{name}: {kind}",
+    "noSignal": "Mapa nie je dostupná bez signálu",
+    "noSignalBody": "V zozname sú všetky miesta, ktoré má mapa.",
+    "notSaved": "Táto časť mapy nie je uložená vo vašom telefóne",
+    "notSavedBody": "Časti mapy, ktoré ste si pozreli so signálom, zostávajú vo vašom telefóne. Špendlíky a zoznam stále fungujú.",
+    "listTitle": "Miesta v tejto časti mapy",
+    "listLead": "Tie isté miesta, ktoré ukazuje mapa. Ak chcete zmeniť tento zoznam, posuňte alebo priblížte mapu.",
+    "listEmpty": "V tejto časti mapy nič nie je. Posuňte alebo priblížte mapu, alebo zobrazte celú oblasť.",
+    "wholeArea": "Zobraziť celú oblasť",
+    "buildings": "Bytové domy",
+    "buildingsCount": "Počet domov: {n}",
+    "buildingsCountOne": "1 dom",
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
+   }
+  });
 })();

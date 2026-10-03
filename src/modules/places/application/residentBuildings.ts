@@ -15,6 +15,9 @@ export interface ResidentBuilding {
   address: string;
   neighbourhoodId: string;
   neighbourhood: string;
+  /** The register's point, for the building's pin on the map (S02.07). */
+  lat: number;
+  lng: number;
   /** Lowest first. */
   floors: ResidentFloor[];
 }
@@ -23,12 +26,24 @@ export function createResidentBuildings(deps: { db: Db }) {
   const { db } = deps;
   return {
     /**
+     * Only the ids: every building's register number and every neighbourhood's id, for the public alert feed, which lists
+     * the status of each place (AD-19) without anything else about it.
+     */
+    async placeIds(): Promise<{ buildings: string[]; neighbourhoods: string[] }> {
+      const [buildings, neighbourhoods] = await Promise.all([
+        db.select({ rsn: building.rsn }).from(building).orderBy(asc(building.rsn)),
+        db.select({ id: neighbourhood.id }).from(neighbourhood).orderBy(asc(neighbourhood.id)),
+      ]);
+      return { buildings: buildings.map((row) => row.rsn), neighbourhoods: neighbourhoods.map((row) => row.id) };
+    },
+
+    /**
      * Every building by neighbourhood and address, each with its floors. A building flagged `not_in_register_since` is
      * still listed: S02.08 still opens its page, so a resident's saved choice for it stays valid.
      */
     async list(): Promise<ResidentBuilding[]> {
       const rows = await db
-        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name })
+        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name, lat: building.latitude, lng: building.longitude })
         .from(building)
         .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
         .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));

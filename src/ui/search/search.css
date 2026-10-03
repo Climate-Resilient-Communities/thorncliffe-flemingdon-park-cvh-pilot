@@ -1,0 +1,122 @@
+/*
+ * The ask screen (S03.06; prototype R-09, R-10, R-11). Spacing from the semantic tokens, direction from logical properties
+ * only, so the screen mirrors in Urdu, Pashto and Dari without a [dir] rule. Buttons, cards, notes and the call button are
+ * the directory's (directory.css); this holds only what the question box and the topic buttons add.
+ */
+@layer components {
+  .ask-form {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+  }
+
+  .ask-label {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* The box and the clear button side by side: the button is outside the text area, so a question typed in the other
+     direction (dir="auto") never runs under it. */
+  .ask-field {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
+  }
+
+  .ask-input {
+    box-sizing: border-box;
+    display: block;
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-block-size: calc(var(--tap-current) * 2);
+    padding-block: var(--gap-tight);
+    padding-inline: var(--gap-related);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    resize: none;
+  }
+
+  .ask-input:focus-visible,
+  .ask-clear:focus-visible,
+  .ask-topic:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .ask-clear {
+    flex: none;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    min-block-size: var(--tap-current);
+    min-inline-size: var(--tap-current);
+    border: 0;
+    border-radius: var(--radius-card);
+    background-color: transparent;
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--type-lead-size);
+    cursor: pointer;
+  }
+
+  .dir-btn[disabled],
+  .dir-btn[aria-disabled="true"] {
+    border-color: var(--border);
+    background-color: var(--surface-raised);
+    color: var(--text-muted);
+    cursor: not-allowed;
+  }
+
+  /* The live region holds the heading of what happened. It stays rendered (an announcement needs the region to be in the
+     page before its text arrives), so empty it only has no size: not display: none. */
+  .ask-status:empty {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .ask-status__title {
+    font-size: var(--type-h2-size);
+  }
+
+  /* R-09: the topics, one tile each. */
+  .ask-topics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 10rem), 1fr));
+    gap: var(--gap-target);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .ask-topic {
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    inline-size: 100%;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-tight);
+    padding-inline: var(--gap-related);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    text-align: start;
+    overflow-wrap: anywhere;
+    cursor: pointer;
+  }
+
+  /* "In an emergency, call 911": a link of the screen's own, always at its end. */
+  .ask-911 {
+    margin: 0;
+  }
+}

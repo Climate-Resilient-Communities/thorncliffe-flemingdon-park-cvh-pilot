@@ -29,7 +29,11 @@ export const ConversionSchema = z.strictObject({
 export const ListingTextSchema = z.strictObject({
   lang: LangCodeSchema,
   body: z.string().min(1),
-  /** True for text a model translated (reviewed by a person afterwards), and for text converted from it. */
+  /**
+   * True for text a model translated, and for text converted from it. Reviewed by a person afterwards when `review_status`
+   * is `reviewed`; when it is `none` (AD-11 pilot change, directory descriptions only) no person has reviewed it, and the
+   * client labels it "Machine-translated; not reviewed by a person" with the English original one tap away.
+   */
   machine: z.boolean(),
   /** The translation model, or the conversion's name for zh-Hant; null for English and for the English fallback. */
   model: z.string().min(1).nullable(),
@@ -37,7 +41,11 @@ export const ListingTextSchema = z.strictObject({
   /** sha256 of the English text this one stands for. */
   source_hash: z.string().regex(/^[0-9a-f]{64}$/),
   original: z.strictObject({ lang: z.literal("en"), body: z.string().min(1) }),
-  /** `reviewed` for a translation or conversion a person reviewed; `source` for the English; `none` for a fallback. */
+  /**
+   * `reviewed` for a translation or conversion a person reviewed; `source` for the English; `none` for a fallback and,
+   * since the AD-11 pilot change, for an unreviewed machine translation (`status` `ok` or `script_converted`). No new
+   * value or field was added for it, so every release before and after the change parses with this one contract.
+   */
   review_status: z.enum(["reviewed", "source", "none"]),
   reviewed_on: z.string().regex(/^\d{4}-\d{2}-\d{2}$/).nullable(),
   conversion: ConversionSchema.optional(),

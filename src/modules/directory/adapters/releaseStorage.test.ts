@@ -110,6 +110,27 @@ describe("the Supabase Storage store", () => {
     await expect(store.put("releases/1/en.json", "{}")).rejects.toThrow("the directory file could not be stored");
   });
 
+  it("gives up a download the store never answers after its own timeout (a search's shared load of a release cannot hang on it)", async () => {
+    const fake = fakeStorage({ bucket: "private" });
+    let aborted = false;
+    const hanging = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (!String(input).includes("/storage/v1/object/")) return fake.fetch(input, init);
+      return new Promise<Response>((_, reject) =>
+        init?.signal?.addEventListener("abort", () => {
+          aborted = true;
+          reject(init.signal!.reason);
+        }),
+      );
+    }) as typeof fetch;
+    const store = supabaseDirectoryStorage({ url: "https://project.supabase.test", secretKey: "sb_secret_test", fetch: hanging, timeoutMs: 50 });
+
+    const started = performance.now();
+    await expect(store.get("releases/1/vectors.json")).rejects.toThrow("the directory file could not be read");
+
+    expect(aborted).toBe(true);
+    expect(performance.now() - started).toBeLessThan(2000);
+  });
+
   it("refuses a path that is not a release file before it reaches the store", async () => {
     const fake = fakeStorage({ bucket: "private" });
     const store = make(fake);

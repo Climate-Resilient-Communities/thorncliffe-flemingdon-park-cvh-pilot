@@ -137,7 +137,8 @@
     "unavailable": "આ ભાષામાં હજી ઉપલબ્ધ નથી",
     "unavailableBody": "આનો હજી {lang} માં અનુવાદ થયો નથી.",
     "showSource": "{lang} માં વાંચો",
-    "original": "મૂળ ({lang})"
+    "original": "મૂળ ({lang})",
+    "unreviewed": "મશીન અનુવાદ; કોઈ વ્યક્તિએ તેની સમીક્ષા કરી નથી"
   },
   "x05": {
     "title": "તમારી ભાષામાં ચેતવણીઓ અને મદદ મેળવો",
@@ -262,7 +263,8 @@
     "active": "સક્રિય સમસ્યા",
     "progress": "કામ ચાલુ છે",
     "resolved": "ઉકેલાયું",
-    "unknown": "ખબર નથી"
+    "unknown": "ખબર નથી",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -444,7 +446,13 @@
     "headsUpAction": "હમણાં કરવાની એક વાત",
     "ambassadorHome": "એમ્બેસેડર: મારું બિલ્ડિંગ",
     "ambassadorLine": "{building} માટે અપડેટ પોસ્ટ કરો અથવા તમારો રાઉન્ડ કરો",
-    "noBuildingLine": "તમારા વિસ્તારની ચેતવણીઓ અહીં દેખાય છે. તમારા બિલ્ડિંગની ચેતવણીઓ પહેલાં જોવા તમારું બિલ્ડિંગ ઉમેરો."
+    "noBuildingLine": "તમારા વિસ્તારની ચેતવણીઓ અહીં દેખાય છે. તમારા બિલ્ડિંગની ચેતવણીઓ પહેલાં જોવા તમારું બિલ્ડિંગ ઉમેરો.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "સાદા ફોન પર ટેક્સ્ટ મેસેજ",
@@ -454,6 +462,7 @@
     "now": "હમણાં",
     "levelOfficial": "{source} તરફથી સત્તાવાર ચેતવણી.",
     "levelCommunity": "હબ તરફથી સમુદાય ચેતવણી. હબે ચકાસી છે.",
+    "fromHub": "હબ તરફથી સમુદાય ચેતવણી",
     "levelAmbassador": "બિલ્ડિંગ એમ્બેસેડર તરફથી સમુદાય ચેતવણી. હજી ચકાસાઈ નથી.",
     "stop": "હબના બધા મેસેજ બંધ કરવા STOP લખીને જવાબ આપો.",
     "verifiedKeyword": "ચકાસાયેલું એટલે શું તે જાણવા INFO લખીને જવાબ આપો.",
@@ -644,7 +653,16 @@
     "clear": "મેં લખેલું ભૂંસી નાખો",
     "testTitle": "પરીક્ષણ માટેની શોધ",
     "testNote": "સંચાલકો માટે: બ્રીફમાંથી તૈયાર શોધ ચલાવવા કોઈ એક પર ટેપ કરો. રહેવાસીઓ આ જોતા નથી.",
-    "testGloss": "(દરી: {gloss})"
+    "testGloss": "(દરી: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "પરિણામો",
@@ -679,7 +697,8 @@
     "hoursUnknown": "સમય ખબર નથી",
     "communityOffer": "સમુદાય તરફથી ઓફર",
     "inCat": "વિષય: {cat}",
-    "helpEmpty": "આમાં મદદ કરી શકે તેવી કોઈ સેવા આ ફિલ્ટર સાથે મેળ ખાતી નથી."
+    "helpEmpty": "આમાં મદદ કરી શકે તેવી કોઈ સેવા આ ફિલ્ટર સાથે મેળ ખાતી નથી.",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "અમને હજી તે મળ્યું નથી",
@@ -4334,6 +4353,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {
@@ -4429,6 +4450,24 @@
     "numbersLink": "[EN] See the essential numbers",
     "backToList": "[EN] All services and organisations",
     "suggestApply": "[EN] Show only {place}"
+  },
+  "map": {
+    "lead": "થોર્નક્લિફ પાર્ક અને ફ્લેમિંગ્ડન પાર્કમાં સેવાઓ, સંસ્થાઓ અને એપાર્ટમેન્ટ ઇમારતો. તે શું છે તે જોવા માટે પિન પર ટૅપ કરો.",
+    "service": "સેવા અથવા સંસ્થા",
+    "building": "એપાર્ટમેન્ટ ઇમારત",
+    "pinName": "{name}: {kind}",
+    "noSignal": "સિગ્નલ વિના નકશો ઉપલબ્ધ નથી",
+    "noSignalBody": "નકશા પરની બધી જગ્યાઓ યાદીમાં છે.",
+    "notSaved": "નકશાનો આ ભાગ તમારા ફોન પર સાચવેલો નથી",
+    "notSavedBody": "સિગ્નલ હોય ત્યારે તમે જોયેલા નકશાના ભાગ તમારા ફોન પર રહે છે. પિન અને યાદી હજી પણ કામ કરે છે.",
+    "listTitle": "નકશાના આ ભાગની જગ્યાઓ",
+    "listLead": "નકશો બતાવે છે તે જ જગ્યાઓ. આ યાદી બદલવા માટે નકશો ખસેડો અથવા ઝૂમ કરો.",
+    "listEmpty": "નકશાના આ ભાગમાં કંઈ નથી. નકશો ખસેડો અથવા ઝૂમ કરો, અથવા આખો વિસ્તાર બતાવો.",
+    "wholeArea": "આખો વિસ્તાર બતાવો",
+    "buildings": "એપાર્ટમેન્ટ ઇમારતો",
+    "buildingsCount": "{n} ઇમારતો",
+    "buildingsCountOne": "1 ઇમારત",
+    "filtered": "ડિરેક્ટરીમાં તમે પસંદ કરેલા ફિલ્ટર સાથે મેળ ખાતી જગ્યાઓ જ બતાવવામાં આવી રહી છે."
   },
   "guides": {
     "reviewed": "હબે તપાસ્યું, છેલ્લે {date} ના રોજ અપડેટ કર્યું"

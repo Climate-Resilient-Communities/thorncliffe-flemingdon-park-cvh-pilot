@@ -2,7 +2,12 @@
 // database, a fake embedder and a store of its own. Public: no session and no cookie, and no response is cacheable, because a
 // question is personal.
 //
-// The 2.5 s budget counts from the first line of searchResponse: the time is taken there and handed to the search.
+// The 2.5 s budget counts from the first line of searchResponse: the time is taken there and handed to the search. It is
+// also a hard deadline of the handler's own, over everything after that line: whatever is still pending then (a body still
+// arriving, a wait no stage bounded, an instance that stalled and is catching up), the answer is 503 `search_unavailable`
+// at that moment, and the app is told after the response so that it can write an ops event (`search.unavailable`, reason
+// `deadline`, no question). What was pending is left to run unwatched: its result is ignored, and the writes it still makes
+// go to `defer` like any other.
 //
 //  1. the body is checked (400 `{error:{code, message_key}}`, no model called);
 //  2. the client (a keyed hash of its address, kept 24 hours) is counted: more than 30 questions in 10 minutes is 429
@@ -13,9 +18,9 @@
 // Nothing here keeps, logs or echoes the question.
 import { SEARCH_ERROR_STATUS, parseSearchRequest, searchErrorBody, type SearchErrorCode } from "@/contracts/search";
 import { SearchV1Schema } from "@/contracts/searchTestSet";
-import { classifyError } from "@/platform/safeError";
-import { SearchFailure, type SearchService } from "@/modules/directory";
+import { DEFAULT_TOTAL_BUDGET_MS, SearchFailure, type SearchService } from "@/modules/directory";
 import { SEARCH_RATE_LIMIT, type RateLimiter } from "@/modules/subscriptions";
+import { classifyError } from "@/platform/safeError";
 
 export interface SearchRouteDeps {
   search: () => SearchService;
@@ -27,11 +32,18 @@ export interface SearchRouteDeps {
    * with a safe classification of why (see classifyLimiterError): never the error's message, the address or the question.
    */
   onLimiterFailure?: (ms: number, error: string) => Promise<void>;
+  /**
+   * Told, after the response, that the request was cut at the hard deadline, with how long it had run and its classification
+   * (always `timed_out`; the app writes the ops event).
+   */
+  onDeadline?: (ms: number, error: string) => Promise<void>;
   /** Runs work still pending after the response (`after()` in the app). Without it such work simply runs on. */
   defer?: (work: Promise<unknown>) => void;
   /** Test seams. The clock must be the search service's clock (both default to `performance.now`). */
   clock?: () => number;
   limiterBudgetMs?: number;
+  /** The hard deadline, counted from the start of the request; default the search's whole budget (2.5 s). */
+  deadlineMs?: number;
 }
 
 /** The limiter gets at most this long, counted from the start of the request; the model leg has the rest of the 2.2 s. */
@@ -46,6 +58,9 @@ function failure(code: SearchErrorCode, headers: Record<string, string> = {}): R
   return Response.json(searchErrorBody(code), { status: SEARCH_ERROR_STATUS[code], headers: { ...NO_STORE, ...headers } });
 }
 
+/** What the hard deadline is classified as: it is a timeout whatever was pending. */
+const DEADLINE_CLASSIFICATION = "timed_out";
+
 /** The handler's own budget for the limiter ran out (the limiter had not answered). */
 class LimiterTimedOut extends Error {
   override name = "LimiterTimedOut";
@@ -58,6 +73,11 @@ class LimiterTimedOut extends Error {
 export function classifyLimiterError(error: unknown): string {
   if (error instanceof LimiterTimedOut) return "timed_out";
   return classifyError(error);
+}
+
+/** Something the handler did not expect failed (an answer that is not SearchV1, a bug): one line, the safe classification only. */
+function logUnexpected(error: unknown, ms: number): void {
+  console.error(`search.failed reason=unexpected code=${classifyError(error)} ms=${ms}`);
 }
 
 /** The result of `work`, or a rejection when it has not settled after `ms`. */
@@ -75,9 +95,40 @@ async function within<T>(work: Promise<T>, ms: number): Promise<T> {
   }
 }
 
+/** Runs `report` after the response (through `defer`, or simply on); it never fails or delays the request. */
+function tell(deps: SearchRouteDeps, report: () => Promise<void>): void {
+  const note = Promise.resolve().then(report).catch(() => undefined);
+  deps.defer?.(note);
+}
+
 export async function searchResponse(deps: SearchRouteDeps, request: Request): Promise<Response> {
   const clock = deps.clock ?? (() => performance.now());
   const started = clock();
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const expired = new Promise<"deadline">((resolve) => {
+    timer = setTimeout(() => resolve("deadline"), Math.max(0, started + (deps.deadlineMs ?? DEFAULT_TOTAL_BUDGET_MS) - clock()));
+  });
+  const answering = answer(deps, request, clock, started);
+  // Cut at the deadline, it may still reject later: that is not unhandled.
+  answering.catch(() => undefined);
+  try {
+    const outcome = await Promise.race([answering, expired]);
+    if (outcome !== "deadline") return outcome;
+  } catch (error) {
+    logUnexpected(error, Math.round(clock() - started));
+    return failure("search_unavailable");
+  } finally {
+    clearTimeout(timer);
+  }
+  const ms = Math.round(clock() - started);
+  // One line for the platform's function logs: the safe fields only.
+  console.error(`search.failed reason=deadline code=${DEADLINE_CLASSIFICATION} ms=${ms}`);
+  if (deps.onDeadline) tell(deps, () => deps.onDeadline!(ms, DEADLINE_CLASSIFICATION));
+  return failure("search_unavailable");
+}
+
+/** The answer itself: the body, the count, the search. Each stage has a limit of its own; the hard deadline is over all of them. */
+async function answer(deps: SearchRouteDeps, request: Request, clock: () => number, started: number): Promise<Response> {
   let raw: unknown;
   try {
     const text = await request.text();
@@ -102,10 +153,7 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
     // One line for the platform's function logs: the safe fields only.
     console.error(`search.rate_limit_failed code=${why} ms=${ms}`);
     if (deps.onLimiterFailure) {
-      const note = Promise.resolve()
-        .then(() => deps.onLimiterFailure!(ms, why))
-        .catch(() => undefined);
-      deps.defer?.(note);
+      tell(deps, () => deps.onLimiterFailure!(ms, why));
     }
     return failure("search_unavailable");
   }
@@ -115,6 +163,8 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
     return Response.json(body, { headers: NO_STORE });
   } catch (error) {
     if (error instanceof SearchFailure && error.code !== "search_unavailable") return failure(error.code);
+    // A `search_unavailable` of the search was told by the search itself (an ops event and one line); anything else is unexpected.
+    if (!(error instanceof SearchFailure)) logUnexpected(error, Math.round(clock() - started));
     return failure("search_unavailable");
   }
 }

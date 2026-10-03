@@ -27,8 +27,20 @@ export class SafeDetailError extends Error {
 }
 
 /**
+ * The Postgres SQLSTATE of `error`: its `code` when that is five characters of `0-9A-Z`, else that of its `cause` (the database
+ * client's error wrapped by drizzle's DrizzleQueryError, whose own message holds the query and its parameters and is never used).
+ */
+function sqlState(error: unknown, depth = 0): string | null {
+  if (typeof error !== "object" || error === null || depth > 2) return null;
+  const { code, cause } = error as { code?: unknown; cause?: unknown };
+  if (typeof code === "string" && /^[0-9A-Z]{5}$/.test(code)) return code;
+  return sqlState(cause, depth + 1);
+}
+
+/**
  * The safe classification of `error`: its own `safeDetail`, else the first issue path of a zod error (`schema:providers.0.x`),
- * else the Postgres SQLSTATE (`code`, five characters), else the constructor name (letters, at most 40), else `unknown`.
+ * else the Postgres SQLSTATE (five characters; of the error or, through drizzle's wrapper, of its cause), else the constructor
+ * name (letters, at most 40), else `unknown`.
  */
 export function classifyError(error: unknown): string {
   if (typeof error !== "object" || error === null) return "unknown";
@@ -37,7 +49,8 @@ export function classifyError(error: unknown): string {
   if (Array.isArray(e.issues) && e.issues.every((i) => Array.isArray((i as { path?: unknown })?.path))) {
     return schemaFailure("schema", e.issues as ReadonlyArray<{ path: PropertyKey[] }>);
   }
-  if (typeof e.code === "string" && /^[0-9A-Z]{5}$/.test(e.code)) return e.code;
+  const state = sqlState(error);
+  if (state !== null) return state;
   const name = e.constructor?.name;
   return typeof name === "string" && /^[A-Za-z]{1,40}$/.test(name) ? name : "unknown";
 }

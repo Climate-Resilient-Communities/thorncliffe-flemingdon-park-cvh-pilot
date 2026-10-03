@@ -39,15 +39,19 @@ const SLOT = "";
  * A catalog message with one value in it, the value isolated: `format` is the message with the value filled in (for
  * example `(q) => t("noMatch", { q })`). The message is formatted with a slot in place of the value and cut there, so
  * the catalog string stays as it is (no markup in the catalog: it is translated as plain text). `dir` is "ltr" for place
- * text that is always left to right, in English (an address, a floor label), and "auto" for what the resident typed, in any script. A message that fell back to English is one isolated English run, as ResidentText makes it.
+ * text that is always left to right, in English (an address, a floor label), "auto" for what the resident typed, in any script, and `{ lang, dir }` for a name in a known language (a language's own name inside a sentence of another language). A message that fell back to English is one isolated English run, as ResidentText makes it.
  */
-export function withIsolated(format: (value: string) => string, value: ReactNode, dir: "ltr" | "auto" = "ltr"): ReactNode {
+export function withIsolated(format: (value: string) => string, value: ReactNode, dir: "ltr" | "auto" | { lang: string; dir: "ltr" | "rtl" } = "ltr"): ReactNode {
   const text = format(SLOT);
   const [before, after = ""] = text.split(SLOT);
   const parts = (
     <>
       {before}
-      {dir === "ltr" ? (
+      {typeof dir === "object" ? (
+        <bdi lang={dir.lang} dir={dir.dir}>
+          {value}
+        </bdi>
+      ) : dir === "ltr" ? (
         <bdi lang="en" dir="ltr">
           {value}
         </bdi>
