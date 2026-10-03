@@ -1,3 +1,5 @@
+import { readFileSync, readdirSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { sha256Hex } from "@/platform/hash";
 import { LANG_CODES } from "./lang";
@@ -105,12 +107,38 @@ describe("ListingProviderSchema neighbourhood_ids", () => {
     expect(ListingProviderSchema.parse(provider({ neighbourhood_ids: ids })).neighbourhood_ids).toEqual(ids);
   });
 
+  it("reads a provider of a file made before this field as in no neighbourhood", () => {
+    const { neighbourhood_ids: _omitted, ...older } = provider();
+    expect(ListingProviderSchema.parse(older).neighbourhood_ids).toEqual([]);
+  });
+
   it.each([
     ["a neighbourhood that is not one of the pilot's", { neighbourhood_ids: ["XX"] }],
     ["a lower-case id", { neighbourhood_ids: ["tp"] }],
-    ["a list that is missing (a file made before this field)", { neighbourhood_ids: undefined }],
     ["a string instead of a list", { neighbourhood_ids: "TP" }],
   ])("rejects %s", (_name, change) => {
     expect(ListingProviderSchema.safeParse(provider(change)).success).toBe(false);
+  });
+});
+
+// A release file is kept as it was published, so every release still current must parse with today's schema. Each file here
+// is shaped like a listing of an earlier version; adding a required field to DirectoryListingV1 fails this (make it optional on
+// read, or bump `v`).
+describe("DirectoryListingV1 reads the listings of earlier versions", () => {
+  const dir = path.join(process.cwd(), "test/fixtures/directory");
+  const fixtures = readdirSync(dir).filter((f) => f.endsWith(".json"));
+
+  it("has fixtures", () => {
+    expect(fixtures.length).toBeGreaterThan(0);
+  });
+
+  it.each(fixtures)("parses %s", (file) => {
+    const parsed = DirectoryListingV1.safeParse(JSON.parse(readFileSync(path.join(dir, file), "utf8")));
+    expect(parsed.error?.issues).toBeUndefined();
+  });
+
+  it("reads the providers of the listing before neighbourhoods as in no neighbourhood", () => {
+    const listing = DirectoryListingV1.parse(JSON.parse(readFileSync(path.join(dir, "listing-before-neighbourhoods.json"), "utf8")));
+    expect(listing.providers.map((p) => p.neighbourhood_ids)).toEqual([[]]);
   });
 });

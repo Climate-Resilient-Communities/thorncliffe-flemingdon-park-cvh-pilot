@@ -43,11 +43,11 @@ export function searchService(): SearchService {
     storage: directoryStorage,
     embedder: questionEmbedder(),
     defer: deferAfterResponse,
-    onFailure: async ({ reason, releaseV, ms }) => {
+    onFailure: async ({ reason, releaseV, ms, error }) => {
       await recordOpsEvent(getDb(), {
         kind: "search.unavailable",
         ...(releaseV === null ? {} : { subjectType: "directory_release", subjectId: String(releaseV) }),
-        detail: { reason, ms },
+        detail: { reason, ms, ...(error ? { error } : {}) },
       });
     },
   });
@@ -60,8 +60,8 @@ export function searchTestSetEngine(): SearchService {
 }
 
 /** Writes the ops event of a rate limiter that could not count (the search then answered 503 `search_unavailable`). */
-export async function recordLimiterFailure(ms: number): Promise<void> {
-  await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms } });
+export async function recordLimiterFailure(ms: number, error: string): Promise<void> {
+  await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms, error } });
 }
 
 /** The per-client limiter, salted with a key derived from the Supabase secret key (a fixed local key where there is none). */

@@ -13,6 +13,7 @@
 // Nothing here keeps, logs or echoes the question.
 import { SEARCH_ERROR_STATUS, parseSearchRequest, searchErrorBody, type SearchErrorCode } from "@/contracts/search";
 import { SearchV1Schema } from "@/contracts/searchTestSet";
+import { classifyError } from "@/platform/safeError";
 import { SearchFailure, type SearchService } from "@/modules/directory";
 import { SEARCH_RATE_LIMIT, type RateLimiter } from "@/modules/subscriptions";
 
@@ -21,8 +22,11 @@ export interface SearchRouteDeps {
   limiter: () => RateLimiter;
   /** The client's address, from the platform's headers; it is hashed by the limiter and never stored. */
   client: (headers: Headers) => string;
-  /** Told, after the response, that the count could not be kept (the app writes the ops event; the handler may not import ops). */
-  onLimiterFailure?: (ms: number) => Promise<void>;
+  /**
+   * Told, after the response, that the count could not be kept (the app writes the ops event; the handler may not import ops),
+   * with a safe classification of why (see classifyLimiterError): never the error's message, the address or the question.
+   */
+  onLimiterFailure?: (ms: number, error: string) => Promise<void>;
   /** Runs work still pending after the response (`after()` in the app). Without it such work simply runs on. */
   defer?: (work: Promise<unknown>) => void;
   /** Test seams. The clock must be the search service's clock (both default to `performance.now`). */
@@ -42,6 +46,20 @@ function failure(code: SearchErrorCode, headers: Record<string, string> = {}): R
   return Response.json(searchErrorBody(code), { status: SEARCH_ERROR_STATUS[code], headers: { ...NO_STORE, ...headers } });
 }
 
+/** The handler's own budget for the limiter ran out (the limiter had not answered). */
+class LimiterTimedOut extends Error {
+  override name = "LimiterTimedOut";
+}
+
+/**
+ * A classification of a limiter failure that is safe to store and log: `timed_out` when the handler's budget expired, else the
+ * Postgres SQLSTATE (five characters), else the error's class name (letters only, at most 40), else `unknown`. Never a message.
+ */
+export function classifyLimiterError(error: unknown): string {
+  if (error instanceof LimiterTimedOut) return "timed_out";
+  return classifyError(error);
+}
+
 /** The result of `work`, or a rejection when it has not settled after `ms`. */
 async function within<T>(work: Promise<T>, ms: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -49,7 +67,7 @@ async function within<T>(work: Promise<T>, ms: number): Promise<T> {
     return await Promise.race([
       work,
       new Promise<never>((_, reject) => {
-        timer = setTimeout(() => reject(new Error("limiter_timed_out")), Math.max(0, ms));
+        timer = setTimeout(() => reject(new LimiterTimedOut("limiter_timed_out")), Math.max(0, ms));
       }),
     ]);
   } finally {
@@ -77,11 +95,15 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
       started + (deps.limiterBudgetMs ?? DEFAULT_LIMITER_BUDGET_MS) - clock(),
     );
     if (!counted.allowed) return failure("rate_limited", { "Retry-After": String(counted.retryAfterSeconds ?? Math.ceil(SEARCH_RATE_LIMIT.windowMs / 1000)) });
-  } catch {
+  } catch (error) {
     // The count cannot be kept, so the model is not called.
+    const ms = Math.round(clock() - started);
+    const why = classifyLimiterError(error);
+    // One line for the platform's function logs: the safe fields only.
+    console.error(`search.rate_limit_failed code=${why} ms=${ms}`);
     if (deps.onLimiterFailure) {
       const note = Promise.resolve()
-        .then(() => deps.onLimiterFailure!(Math.round(clock() - started)))
+        .then(() => deps.onLimiterFailure!(ms, why))
         .catch(() => undefined);
       deps.defer?.(note);
     }

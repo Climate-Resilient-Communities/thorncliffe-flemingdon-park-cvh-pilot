@@ -40,7 +40,7 @@ describe("ops events", () => {
   it("has no free-text field in any kind, and a lower_snake_case kind name the table accepts", () => {
     for (const [kind, spec] of Object.entries(OPS_EVENT_KINDS)) {
       expect(kind).toMatch(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){0,3}$/);
-      for (const key of Object.keys(spec.detail.shape)) expect(key, `${kind}.${key}`).not.toMatch(/message|text|body|phone|email|name|error/i);
+      for (const key of Object.keys(spec.detail.shape)) expect(key, `${kind}.${key}`).not.toMatch(/message|text|body|phone|email|name/i);
     }
   });
 
@@ -53,6 +53,12 @@ describe("ops events", () => {
       detail: { reason: "timed_out", ms: 2203 },
     });
     expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 1003 } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 1003 } });
+    for (const error of ["42501", "timed_out", "PostgresError", "unknown", "listing_schema:providers.0.neighbourhood_ids"]) {
+      expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 5, error } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 5, error } });
+    }
+    for (const error of ["connection refused at 10.0.0.1", "203.0.113.5", "42501 ", "a".repeat(81), "", "a".repeat(64).replace(/a/g, "f"), "listing_schema: providers", 42]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 5, error } } as never)).toThrow(OpsEventError);
+    }
     for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
       expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
     }

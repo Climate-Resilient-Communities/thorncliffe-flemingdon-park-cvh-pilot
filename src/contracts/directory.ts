@@ -67,9 +67,10 @@ export const ListingProviderSchema = z.strictObject({
   category_ids: z.array(z.string().min(1)),
   /**
    * The neighbourhoods this provider is in, from the Hub's reviewed list (data/catalogue/provider-neighbourhoods.json);
-   * empty for a provider in neither. The directory's neighbourhood filter reads this and nothing else.
+   * empty for a provider in neither. The directory's neighbourhood filter reads this and nothing else. Release files written
+   * before this field existed lack it: they are read with `[]` (the publish job always writes it).
    */
-  neighbourhood_ids: z.array(NeighbourhoodIdSchema),
+  neighbourhood_ids: z.array(NeighbourhoodIdSchema).default([]),
   subcategories: z.array(ListingTextSchema),
   locations: z.array(
     z.strictObject({
@@ -94,7 +95,13 @@ export const ListingCategorySchema = z.strictObject({
   name: ListingTextSchema,
 });
 
-/** `/api/directory/{release}/{lang}.json`: every published provider of one release, in one language. */
+/**
+ * `/api/directory/{release}/{lang}.json`: every published provider of one release, in one language.
+ *
+ * A release file is kept as published, so every release still current must parse. A field added to the listing MUST be
+ * optional (with a default) when read, or `v` must be bumped: a required field breaks every older release (it made every
+ * search answer 503 while release 3 was current). test/fixtures/directory/listing-before-neighbourhoods.json guards this.
+ */
 export const DirectoryListingV1 = z.strictObject({
   v: z.literal(1),
   release_v: z.number().int().positive(),

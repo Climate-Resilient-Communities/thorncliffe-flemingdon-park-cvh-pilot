@@ -26,6 +26,7 @@ import type { SearchV1 } from "@/contracts/searchTestSet";
 import { recordSpendEvent, type SpendPurpose } from "@/modules/spend";
 import type { Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
+import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect } from "../domain/questionLanguage";
 import { cosine, emergencyFirst, rankLegs } from "../domain/searchRanking";
@@ -64,6 +65,8 @@ export interface SearchFailureNote {
   reason: SearchStageReason;
   releaseV: number | null;
   ms: number;
+  /** A safe classification of the failure (a schema path, a SQLSTATE, a class name): never a message, an address or the question. */
+  error?: string;
 }
 
 export interface SearchDeps {
@@ -115,6 +118,8 @@ class StageError extends Error {
   constructor(
     readonly reason: SearchStageReason,
     readonly repeat = false,
+    /** Safe classification of what failed (see classifyError). */
+    readonly detail?: string,
   ) {
     super(reason);
   }
@@ -142,14 +147,18 @@ async function readCurrent(db: Db): Promise<CurrentRelease | null> {
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<ReleaseData> {
   const vectorsBody = await storage.get(record.vectors_path);
   if (vectorsBody === null || sha256Hex(vectorsBody) !== record.sha256) throw new Error("vectors file is missing or changed");
-  const vectors = VectorsFileSchema.parse(JSON.parse(vectorsBody));
+  const vectorsParsed = VectorsFileSchema.safeParse(JSON.parse(vectorsBody));
+  if (!vectorsParsed.success) throw new SafeDetailError(schemaFailure("vectors_schema", vectorsParsed.error.issues));
+  const vectors = vectorsParsed.data;
   if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new Error("vectors file is not this release's");
 
   // Which providers are emergency results: the English listing of the same release names each provider's categories.
   const entry = release.files.en;
   const listingBody = entry ? await storage.get(entry.path) : null;
   if (!entry || listingBody === null || sha256Hex(listingBody) !== entry.sha256) throw new Error("listing file is missing or changed");
-  const listing = DirectoryListingV1.parse(JSON.parse(listingBody));
+  const listingParsed = DirectoryListingV1.safeParse(JSON.parse(listingBody));
+  if (!listingParsed.success) throw new SafeDetailError(schemaFailure("listing_schema", listingParsed.error.issues));
+  const listing = listingParsed.data;
   const emergencyNames = new Set(record.emergency_categories);
   const emergencyCategoryIds = new Set(listing.categories.filter((c) => emergencyNames.has(c.name.body)).map((c) => c.id));
   const emergency = new Set(listing.providers.filter((p) => p.category_ids.some((id) => emergencyCategoryIds.has(id))).map((p) => p.id));
@@ -241,7 +250,7 @@ export function createSearch(deps: SearchDeps): SearchService {
         if (current) releaseV = current.number;
         if (current?.search && deps.embedder) data = await dataOf(current, current.search);
       } catch (error) {
-        throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure);
+        throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure, classifyError(error));
       }
       // No release, a release without search data, or no key: an expected outcome, and no model is called.
       if (!current || !data || !deps.embedder) return { kind: "none", releaseV: current?.number ?? null };
@@ -255,8 +264,8 @@ export function createSearch(deps: SearchDeps): SearchService {
       let embedded;
       try {
         embedded = await deps.embedder.embedQuery({ text: q, model: data.model, dims: data.dims, signal: controller.signal });
-      } catch {
-        throw new StageError(controller.signal.aborted ? "timed_out" : "embed_failed");
+      } catch (error) {
+        throw new StageError(controller.signal.aborted ? "timed_out" : "embed_failed", false, controller.signal.aborted ? undefined : classifyError(error));
       }
       const embedMs = Math.round(clock() - callStarted);
       pending.answered = true;
@@ -272,6 +281,7 @@ export function createSearch(deps: SearchDeps): SearchService {
 
     let failure: SearchStageReason | null = null;
     let repeat = false;
+    let failureDetail: string | undefined;
     let outcome: LegOutcome | null = null;
     const work = leg();
     // The abandoned leg may still reject after the timeout: that is not unhandled.
@@ -283,6 +293,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     } catch (error) {
       failure = error instanceof StageError ? error.reason : "embed_failed";
       repeat = error instanceof StageError && error.repeat;
+      failureDetail = error instanceof StageError ? error.detail : classifyError(error);
     }
 
     const writes: Promise<unknown>[] = [];
@@ -325,7 +336,18 @@ export function createSearch(deps: SearchDeps): SearchService {
         );
       }
       log({ status: "error", resultCount: 0, topScore: null });
-      if (deps.onFailure && !repeat) writes.push(Promise.resolve().then(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms: elapsed() })).catch(() => undefined));
+      if (!repeat) {
+        const ms = elapsed();
+        // One line for the platform's function logs: the safe fields only.
+        console.error(`search.failed reason=${reason} code=${failureDetail ?? "none"} ms=${ms}`);
+        if (deps.onFailure) {
+          writes.push(
+            Promise.resolve()
+              .then(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms, ...(failureDetail ? { error: failureDetail } : {}) }))
+              .catch(() => undefined),
+          );
+        }
+      }
       await finish(writes);
       throw new SearchFailure("search_unavailable");
     }

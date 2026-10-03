@@ -25,6 +25,7 @@ import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { recordOpsEvent } from "@/modules/ops";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
 import { createDb, type Db } from "@/platform/db";
+import { sha256Hex } from "@/platform/hash";
 import { connect, serverUrl } from "./helpers";
 
 const MODEL = "embed-v4.0";
@@ -308,6 +309,43 @@ describe("search", () => {
       expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1 }]);
     });
 
+    /** Replaces the English listing of release 1 as a release made at another time would have it, and records its hash on the release. */
+    async function replaceListing(change: (listing: { providers: Record<string, unknown>[] }) => void) {
+      const listing = JSON.parse(storage.files.get("releases/1/en.json")!) as { providers: Record<string, unknown>[] };
+      change(listing);
+      const body = JSON.stringify(listing);
+      storage.files.set("releases/1/en.json", body);
+      await sql.unsafe("alter table directory_release disable trigger directory_release_guard");
+      await sql`update directory_release set files = jsonb_set(files, '{en,sha256}', to_jsonb(${sha256Hex(body)}::text)) where number = 1`;
+      await sql.unsafe("alter table directory_release enable trigger directory_release_guard");
+    }
+
+    it("still answers from a release whose listing was published before providers carried neighbourhood_ids", async () => {
+      await publish();
+      await replaceListing((listing) => listing.providers.forEach((p) => delete p.neighbourhood_ids));
+
+      const body = await service(fakeQueryEmbedder().embedder).search({ q: "doctor", lang: "en" });
+
+      expect(body.emergency_first).toBe(true);
+      expect(body.status).not.toBe("unavailable");
+    });
+
+    it("names the schema path, not the content, when the listing is not what the schema accepts (snapshot_failed)", async () => {
+      await publish();
+      await replaceListing((listing) => delete listing.providers[0]!.name);
+      const notes: SearchFailureNote[] = [];
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        await expect(service(fakeQueryEmbedder().embedder, { onFailure: async (n) => void notes.push(n) }).search({ q: "my private question", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+
+        expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1, error: "listing_schema:providers.0.name" }]);
+        expect(logged.mock.calls.map((c) => c.join(" ")).join("\n")).toMatch(/^search\.failed reason=snapshot_failed code=listing_schema:providers\.0\.name ms=\d+$/);
+        expect(JSON.stringify(logged.mock.calls)).not.toContain("private");
+      } finally {
+        logged.mockRestore();
+      }
+    });
+
     it("does not download a bad release again, nor alert again, for 60 s: the next search fails at once, and the release is tried again after that", async () => {
       await publish();
       storage.files.set("releases/1/vectors.json", "{}");
@@ -445,12 +483,12 @@ describe("search", () => {
     it("answers 503 search_unavailable within 2.5 s, and calls no model, when the limiter never answers, and reports it", async () => {
       await publish();
       const model = fakeQueryEmbedder();
-      const reported: number[] = [];
+      const reported: (number | string)[] = [];
       const deferred: Promise<unknown>[] = [];
       const hung: SearchRouteDeps = {
         ...routeDeps(model.embedder),
         limiter: () => ({ check: () => new Promise(() => undefined) }),
-        onLimiterFailure: async (ms) => void reported.push(ms),
+        onLimiterFailure: async (ms, error) => void reported.push(ms, error),
         defer: (work) => void deferred.push(work),
       };
 
@@ -463,8 +501,9 @@ describe("search", () => {
       expect(SearchErrorSchema.parse(await response.json()).error.code).toBe("search_unavailable");
       expect(took).toBeLessThan(2500);
       expect(model.calls).toEqual([]);
-      expect(reported).toHaveLength(1);
-      expect(reported[0]!).toBeGreaterThanOrEqual(950);
+      expect(reported).toHaveLength(2);
+      expect(reported[0] as number).toBeGreaterThanOrEqual(950);
+      expect(reported[1]).toBe("timed_out");
     });
 
     it("answers 503 within 2.5 s of the request start when the rate_limit table is locked, through the limiter's own lock and statement timeouts", async () => {
@@ -765,7 +804,7 @@ describe("search", () => {
         ...routeDeps(model.embedder),
         limiter: () => ({ check: async () => { throw new Error("db down"); } }),
         // What the composition root does: the ops event, written after the response.
-        onLimiterFailure: (ms) => recordOpsEvent(app, { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms } }),
+        onLimiterFailure: (ms, error) => recordOpsEvent(app, { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms, error } }),
         defer: (work) => void deferred.push(work),
       };
 
@@ -773,7 +812,39 @@ describe("search", () => {
       await Promise.all(deferred);
 
       expect(model.calls).toEqual([]);
-      expect(await rows("ops_event")).toMatchObject([{ kind: "search.unavailable", detail: { reason: "rate_limit_failed" } }]);
+      expect(await rows("ops_event")).toMatchObject([{ kind: "search.unavailable", detail: { reason: "rate_limit_failed", error: "Error" } }]);
+    });
+
+    it("classifies a limiter failure without its message: the SQLSTATE, else the class name, else unknown, and logs one safe line", async () => {
+      await publish();
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        const classify = async (thrown: unknown) => {
+          const told: [number, string][] = [];
+          const deferred: Promise<unknown>[] = [];
+          const deps: SearchRouteDeps = {
+            ...routeDeps(fakeQueryEmbedder().embedder),
+            limiter: () => ({ check: async () => { throw thrown; } }),
+            onLimiterFailure: async (ms, error) => void told.push([ms, error]),
+            defer: (work) => void deferred.push(work),
+          };
+          expect((await post(deps, { q: "my secret question", lang: "en" })).status).toBe(503);
+          await Promise.all(deferred);
+          return told.map(([, error]) => error);
+        };
+        const denied = Object.assign(new Error("permission denied for table rate_limit 203.0.113.9"), { code: "42501" });
+        class PostgresLikeError extends Error {}
+        expect(await classify(denied)).toEqual(["42501"]);
+        expect(await classify(new PostgresLikeError("secret message"))).toEqual(["PostgresLikeError"]);
+        expect(await classify(Object.assign(new Error("x"), { code: "ECONNREFUSED" }))).toEqual(["Error"]);
+        expect(await classify("a string")).toEqual(["unknown"]);
+        expect(await classify(Object.create(null))).toEqual(["unknown"]);
+        const lines = logged.mock.calls.map((c) => c.join(" "));
+        expect(lines[0]).toMatch(/^search\.rate_limit_failed code=42501 ms=\d+$/);
+        expect(lines.join("\n")).not.toMatch(/secret|203\.0\.113|permission denied/);
+      } finally {
+        logged.mockRestore();
+      }
     });
 
     it("counts the IPv6 addresses of one /64 as one client, and a mapped IPv4 address as that IPv4 client", async () => {

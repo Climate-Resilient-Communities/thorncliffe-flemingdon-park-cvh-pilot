@@ -1,0 +1,46 @@
+{
+  "v": 1,
+  "release_v": 3,
+  "lang": "en",
+  "catalogue_hash": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "categories": [
+    {
+      "id": "health",
+      "sort_order": 1,
+      "name": {
+        "lang": "en",
+        "body": "Health",
+        "machine": false,
+        "model": null,
+        "status": "source",
+        "source_hash": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+        "original": { "lang": "en", "body": "Health" },
+        "review_status": "source",
+        "reviewed_on": null
+      }
+    }
+  ],
+  "providers": [
+    {
+      "id": "M001",
+      "name": "A clinic",
+      "category_ids": ["health"],
+      "subcategories": [],
+      "locations": [{ "street": "1 Main St", "city": "Toronto", "postal": "M4H 1K2", "lat": 43.705, "lng": -79.34 }],
+      "contact": { "phone": ["416-555-0100"], "email": [], "social": [], "web": [] },
+      "services": {
+        "lang": "en",
+        "body": "Walk-in care",
+        "machine": false,
+        "model": null,
+        "status": "source",
+        "source_hash": "cccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccccc",
+        "original": { "lang": "en", "body": "Walk-in care" },
+        "review_status": "source",
+        "reviewed_on": null
+      },
+      "emergency_role": null,
+      "last_confirmed": "2026-09-01"
+    }
+  ]
+}

@@ -4,6 +4,12 @@
 import { z } from "zod";
 
 const count = z.number().int().nonnegative().max(1_000_000);
+// A classification of a failure: a SQLSTATE, a class name, `timed_out` or `listing_schema:providers.0.field`. Characters
+// `A-Za-z0-9_.:` only (no message, no space), and not an address or a hash.
+const safeError = z
+  .string()
+  .regex(/^[A-Za-z0-9_.:]{1,80}$/)
+  .refine((v) => !/^\d{1,3}(\.\d{1,3}){3}$/.test(v) && !/^[0-9a-f]{32,}$/.test(v));
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 
 /** Why a directory publish failed (S02.05): the Admin's "Publish failed" names it. */
@@ -45,6 +51,8 @@ export const OPS_EVENT_KINDS = {
       reason: z.enum(SEARCH_FAILURE_REASONS),
       /** How long the request had run when it gave up. */
       ms: count,
+      /** What failed: `timed_out`, a Postgres SQLSTATE, an error class name or a schema path (`listing_schema:providers.0.neighbourhood_ids`). Never a message. */
+      error: safeError.optional(),
     }),
   },
 } as const;

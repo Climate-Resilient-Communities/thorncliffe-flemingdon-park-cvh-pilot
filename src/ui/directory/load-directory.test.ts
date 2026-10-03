@@ -60,6 +60,19 @@ describe("loadDirectory", () => {
     expect(readKept(storage, "en")?.listing.release_v).toBe(7);
   });
 
+  it("shows a release whose listing was published before providers had neighbourhood_ids, with no neighbourhood for them", async () => {
+    const older = buildListing("en", 3) as { providers: Record<string, unknown>[] };
+    older.providers.forEach((p) => delete p.neighbourhood_ids);
+    const storage = memory();
+    const { fetcher } = server({ manifest: buildManifest(3), files: { "/api/directory/3/en.json": older } });
+
+    const state = await loadDirectory("en", { fetcher, storage });
+
+    expect(state).toMatchObject({ status: "ready", current: true });
+    expect(state.status === "ready" && state.listing.providers.every((p) => p.neighbourhood_ids.length === 0)).toBe(true);
+    expect(readKept(storage, "en")?.listing.release_v).toBe(3);
+  });
+
   it("sends nothing about the resident: no credentials, no query, no body", async () => {
     const { fetcher, asked } = server(release(7));
 
