@@ -11,7 +11,7 @@ const buildings = (...rsns: string[]): Audience => ({ scope: "buildings", buildi
 const neighbourhood = (...ids: string[]): Audience => ({ scope: "neighbourhood", neighbourhood_ids: ids, groups: [], types: ["power"] });
 
 let n = 0;
-const entry = (over: Partial<StatusEntry> & { audience: Audience }): StatusEntry => ({
+const entry = (over: Partial<StatusEntry> & { audience: Audience | null }): StatusEntry => ({
   id: `e${String(++n).padStart(4, "0")}`,
   kind: "ack",
   phase: "problem",
@@ -170,6 +170,14 @@ describe("statusOf", () => {
   it("names the threads that give the winning status, and only those", () => {
     const result = statusOf(A, [open("b", buildings("100")), open("a", buildings("100")), open("p", buildings("100"), { phase: "in_progress" }), open("z", buildings("999"))], NOW);
     expect(result.threads).toEqual(["a", "b"]);
+  });
+
+  it("lets a latest entry with an unparseable audience cover nothing, without promoting an older entry", () => {
+    const older = entry({ audience: buildings("100", "200"), publishedAt: hoursAgo(5) });
+    const latest = entry({ audience: null, kind: "update", publishedAt: hoursAgo(1) });
+    const t = thread("m", [older, latest]);
+    expect(status(A, [t]).status).toBe("none");
+    expect(status({ kind: "building", rsn: "200", neighbourhoodId: null }, [t]).status).toBe("none");
   });
 
   it("reads an open thread whose covering entry has no phase as `none`", () => {

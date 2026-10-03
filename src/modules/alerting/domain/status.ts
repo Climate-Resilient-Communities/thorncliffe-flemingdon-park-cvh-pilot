@@ -29,7 +29,8 @@ export interface StatusEntry {
   /** A later correction or withdrawal replaced it. */
   superseded: boolean;
   publishedAt: Date;
-  audience: Audience;
+  /** Null when the stored audience does not parse: the entry still takes part in choosing the covering entry, but covers nothing. */
+  audience: Audience | null;
 }
 
 /** A non-drill thread with its published entries, as the status reads it. */
@@ -73,14 +74,14 @@ function statusOfThread(thread: StatusThread, covering: StatusEntry, now: Date):
   return now.getTime() - thread.closedAt.getTime() < RESOLVED_WINDOW_MS ? "resolved" : "none";
 }
 
-/** The status of `place` over the status threads; `now` is the feed's `server_now`. A drill is never among the threads: the caller reads the resident views only (AD-6). */
+/** The status of `place` over the status threads; `now` is the feed's `server_now`, a third argument to the epic's `statusOf(place, threads)` because the domain has no clock. A drill is never among the threads: the caller reads the resident views only (AD-6). */
 export function statusOf(place: StatusPlace, threads: readonly StatusThread[], now: Date): PlaceStatusResult {
   let best: PlaceStatus = "none";
   let given: { slug: string; verified: boolean }[] = [];
   for (const thread of threads) {
     const covering = statusCoveringEntry(thread);
     if (covering === null) continue;
-    const covers = place.kind === "building" ? audienceCoversBuilding(covering.audience, place) : audienceCoversNeighbourhood(covering.audience, place.id);
+    const covers = covering.audience !== null && (place.kind === "building" ? audienceCoversBuilding(covering.audience, place) : audienceCoversNeighbourhood(covering.audience, place.id));
     if (!covers) continue;
     const status = statusOfThread(thread, covering, now);
     if (RANK[status] === 0 || RANK[status] < RANK[best]) continue;

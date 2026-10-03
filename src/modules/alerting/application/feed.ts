@@ -78,6 +78,8 @@ export function createFeedReader(deps: FeedReaderDeps) {
       const version = await (deps.version ?? (() => readFeedVersion(requireDb(deps.db))))();
       const at = now();
       const [places, current, statusThreads] = await Promise.all([deps.places(), alerts.read(lang), alerts.readStatusThreads?.(at)]);
+      // The threads and the status threads are separate reads, not one snapshot: a thread closing between them can show once as open and as resolved. Every part is
+      // at least as new as `version`, and the next poll corrects it.
       // Derived here, at request time, from the status threads (AD-19); never stored.
       const statuses = statusThreads ? statusesOf(places, statusThreads, at) : (current.statuses ?? { buildings: new Map(), neighbourhoods: new Map() });
       return buildFeed({ feedVersion: version, now: at, threads: current.threads, places, statuses });

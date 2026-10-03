@@ -99,7 +99,7 @@ export async function readClosedThread(db: Db, lang: LangCode, slug: string) {
 /**
  * The status threads (S05.06, AD-19): the non-drill threads that are open, and those closed `resolved` in the 12 hours before `now`, with every published entry (no
  * text: status needs the kind, phase, verification, audience and whether it was replaced). Read from the same resident views as the feed, so a drill never appears;
- * the closed ones are not in the feed's thread list, which is why this is its own statement. An entry whose audience does not parse is left out (it covers nothing).
+ * the closed ones are not in the feed's thread list, which is why this is its own statement. An entry whose audience does not parse is kept with a null audience: it covers nothing but still counts when the covering entry is chosen.
  */
 export async function readStatusThreads(db: Db, now: Date): Promise<StatusThread[]> {
   const since = new Date(now.getTime() - RESOLVED_WINDOW_MS);
@@ -125,7 +125,6 @@ export async function readStatusThreads(db: Db, now: Date): Promise<StatusThread
   const threads = new Map<string, StatusThread & { entries: StatusEntry[] }>();
   for (const row of rows) {
     const audience = AudienceSchema.safeParse(row.audience);
-    if (!audience.success) continue;
     let thread = threads.get(row.threadId);
     if (!thread) {
       thread = { id: row.threadId, slug: row.slug, state: row.status === "open" ? "open" : "closed", closeReason: row.closedReason, closedAt: row.closedAt, entries: [] };
@@ -138,7 +137,7 @@ export async function readStatusThreads(db: Db, now: Date): Promise<StatusThread
       verified: row.verified,
       superseded: row.superseded,
       publishedAt: row.publishedAt,
-      audience: audience.data,
+      audience: audience.success ? audience.data : null,
     });
   }
   return [...threads.values()];

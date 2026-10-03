@@ -22,7 +22,7 @@ const LOOK = {
 
 const modifierOf = (shown: Shown): keyof typeof LOOK => (shown.kind === "status" ? shown.status : shown.kind);
 
-/** A place's status: its words, its icon and its colour. A place with nothing affecting it shows nothing. */
+/** A place's status: its words, its icon and its colour. A place with nothing affecting it shows "Nothing active" with its own icon, never a blank. */
 export function StatusMark({ shown }: { shown: Shown }) {
   const r03 = useTranslations("R03");
   const status = useTranslations("status");

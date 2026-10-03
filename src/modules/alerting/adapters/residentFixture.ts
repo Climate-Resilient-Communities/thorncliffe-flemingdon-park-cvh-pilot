@@ -105,9 +105,7 @@ export function fixtureStatusThreads(text: string, now: Date): StatusThread[] {
         closedAt,
         entries: thread.entries.flatMap((entry) => {
           const audience = AudienceSchema.safeParse(entry.audience);
-          return audience.success
-            ? [{ id: entry.id, kind: entry.kind as EntryKind, phase: entry.phase, verified: entry.verified, superseded: entry.superseded, publishedAt: new Date(entry.published_at), audience: audience.data }]
-            : [];
+          return [{ id: entry.id, kind: entry.kind as EntryKind, phase: entry.phase, verified: entry.verified, superseded: entry.superseded, publishedAt: new Date(entry.published_at), audience: audience.success ? audience.data : null }];
         }),
       },
     ];

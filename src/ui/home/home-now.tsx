@@ -39,11 +39,11 @@ function BuildingRowView({ row, lang }: { row: BuildingRow; lang: LaunchCode }) 
     <li data-testid={`home-building-item-${row.rsn}`}>
       {/* prefetch off: Next would otherwise fetch the building's page as soon as its link is on screen, which tells the server which buildings this resident chose (AD-3). Opening the page is the resident's own tap. */}
       <Link className="home-place tap" href={`/${lang}/buildings/${row.rsn}`} prefetch={false} data-testid={`home-building-${row.rsn}`}>
-        <span className="home-place__text">
+        <div className="home-place__text">
           <span className="home-place__name">{row.address ? <Isolated>{row.address}</Isolated> : <ResidentText>{r34("buildingByRsn", { rsn: row.rsn })}</ResidentText>}</span>
           <StatusMark shown={row.shown} />
           <Unverified shown={row.shown} />
-        </span>
+        </div>
         <span className="home-ico home-ico--chevron" aria-hidden="true" />
       </Link>
       {/* The threads behind the status, beside the row's link and not inside it: a link holds no other link (S05.06). */}
@@ -55,14 +55,14 @@ function BuildingRowView({ row, lang }: { row: BuildingRow; lang: LaunchCode }) 
 function NeighbourhoodRowView({ row, name, lang }: { row: NeighbourhoodRow; name: (id: string) => string; lang: LaunchCode }) {
   return (
     <li className="home-place" data-testid={`home-neighbourhood-${row.id}`}>
-      <span className="home-place__text">
+      <div className="home-place__text">
         <span className="home-place__name">
           <ResidentText>{name(row.id)}</ResidentText>
         </span>
         <StatusMark shown={row.shown} />
         <Unverified shown={row.shown} />
         <ThreadLinks behind={row.behind} lang={lang} testId={`home-neighbourhood-threads-${row.id}`} />
-      </span>
+      </div>
     </li>
   );
 }
