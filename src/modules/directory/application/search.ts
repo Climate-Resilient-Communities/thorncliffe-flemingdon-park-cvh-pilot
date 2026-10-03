@@ -66,6 +66,7 @@ import {
 import type { Db, DbExecutor } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
+import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
@@ -263,7 +264,14 @@ export interface SearchService {
    * Answers one question with `SearchV1`; throws SearchFailure (`invalid_*` before any model is called, `search_unavailable` when no leg completed).
    * `startedAt` is when the request started on this service's clock (the route takes it first thing); left out, now.
    */
-  search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number): Promise<SearchV1>;
+  search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number, timings?: PhaseTimings): Promise<SearchV1>;
+  /**
+   * Starts, ahead of `search` and for the same `startedAt`, the read of the current release and (on an instance that has not
+   * loaded a release yet) the load of its data, so that the caller's own waits (the rate limiter) run beside it instead of in
+   * front of it. It calls no model, never throws, and does nothing on an instance that already holds a release's data.
+   * `search` joins what it started; a `search` with another `startedAt` reads for itself.
+   */
+  warm?(startedAt: number): void;
   /** Whether the current release holds the provider (the test-set runner reports expected providers a release lacks). Throws when the release has no search data. */
   has(providerId: string): Promise<boolean>;
 }
@@ -300,6 +308,14 @@ class TranslateStageError extends Error {
 
 /** A release's search data failed to load a moment ago. */
 class RecentSnapshotFailure extends Error {}
+
+/** What a snapshot read noticed on the way, for the request that waits for it: the release it found, and whether its data was being loaded from the store. */
+interface SnapshotProbe {
+  release: number | null;
+  cold: boolean;
+  /** When the read settled (on the service's clock), whichever way; null while it runs. A request that comes to wait for it later still reports how long it took. */
+  settledAt: number | null;
+}
 
 interface CurrentRelease {
   number: number;
@@ -344,7 +360,14 @@ export async function currentSearchFacts(db: Db, timeoutMs = 5_000): Promise<{ r
 }
 
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
-  const vectorsBody = await storage.get(record.vectors_path);
+  // The English listing is downloaded beside the vectors (and while they are hashed and parsed); what is checked, and the order
+  // the faults are told in, are as if it were read after them.
+  const vectorsRead = storage.get(record.vectors_path);
+  vectorsRead.catch(() => undefined);
+  const entry = release.files.en;
+  const listingRead = entry ? storage.get(entry.path) : Promise.resolve(null);
+  listingRead.catch(() => undefined);
+  const vectorsBody = await vectorsRead;
   if (vectorsBody === null) throw new SafeDetailError("vectors_missing");
   if (sha256Hex(vectorsBody) !== record.sha256) throw new SafeDetailError("vectors_hash");
   const vectorsParsed = VectorsFileSchema.safeParse(JSON.parse(vectorsBody));
@@ -353,8 +376,7 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
   if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new SafeDetailError("vectors_release");
 
   // Which providers are emergency results: the English listing of the same release names each provider's categories.
-  const entry = release.files.en;
-  const listingBody = entry ? await storage.get(entry.path) : null;
+  const listingBody = await listingRead;
   if (!entry || listingBody === null) throw new SafeDetailError("listing_missing");
   if (sha256Hex(listingBody) !== entry.sha256) throw new SafeDetailError("listing_hash");
   const listingParsed = DirectoryListingV1.safeParse(JSON.parse(listingBody));
@@ -462,6 +484,11 @@ export function createSearch(deps: SearchDeps): SearchService {
   // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it). The entry of a
   // release is its load while it runs: the searches that come meanwhile join it rather than download the files again.
   const cache = new Map<number, Promise<SnapshotData>>();
+  // The loads from the store that are still running: a request that finds its release's data here (it started the load, or
+  // joined it) waited for the store, which the `snapshot` timing says as `cold`.
+  const loading = new WeakSet<Promise<SnapshotData>>();
+  // What `warm` started for a request: that request's `search` takes it (once) instead of reading again.
+  let warmed: { startedAt: number; at: number; reading: Promise<SearchSnapshot>; probe: SnapshotProbe } | undefined;
 
   function dataOf(release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
     let loaded = cache.get(release.number);
@@ -471,6 +498,10 @@ export function createSearch(deps: SearchDeps): SearchService {
       failedUntil.delete(release.number);
       loaded = capped(loadReleaseData(deps.storage(), release, record), loadTimeoutMs);
       cache.set(release.number, loaded);
+      const load = loaded;
+      loading.add(load);
+      const settled = () => loading.delete(load);
+      load.then(settled, settled);
       const number = release.number;
       loaded.catch(() => {
         cache.delete(number);
@@ -487,22 +518,40 @@ export function createSearch(deps: SearchDeps): SearchService {
    * caller stops waiting for the whole read then, whether this request started the load of the release's data or joined
    * one; a joined load runs on for the searches after it.
    */
-  async function readSnapshot(deadline: number, onRelease: (releaseV: number) => void): Promise<SearchSnapshot> {
+  async function readSnapshot(deadline: number, probe: SnapshotProbe): Promise<SearchSnapshot> {
     if (deps.snapshot) return deps.snapshot();
     const left = deadline - clock();
     if (left <= 0) throw new StageError("timed_out");
     try {
       const current = await readCurrent(deps.db(), left);
       if (!current) return { releaseV: null, data: null };
-      onRelease(current.number);
+      probe.release = current.number;
       if (!current.search || !deps.embedder) return { releaseV: current.number, data: null };
-      return { releaseV: current.number, data: await dataOf(current, current.search) };
+      const data = dataOf(current, current.search);
+      if (loading.has(data)) probe.cold = true;
+      return { releaseV: current.number, data: await data };
     } catch (error) {
       throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure, classifyError(error));
+    } finally {
+      probe.settledAt = clock();
     }
   }
 
-  async function search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number): Promise<SearchV1> {
+  function warm(startedAt: number): void {
+    // A test's snapshot, no key (every search answers `unavailable`), or a release's data already held or loading: nothing to start.
+    if (deps.snapshot || !deps.embedder || cache.size > 0) return;
+    try {
+      const probe: SnapshotProbe = { release: null, cold: false, settledAt: null };
+      const reading = readSnapshot(startedAt + legMs, probe);
+      // Nobody may be waiting for it (the count refused): that is not unhandled.
+      reading.catch(() => undefined);
+      warmed = { startedAt, at: clock(), reading, probe };
+    } catch {
+      // The search reads for itself and meets the same failure.
+    }
+  }
+
+  async function search(input: { q: string; lang: LangCode; v?: number }, startedAt?: number, timings?: PhaseTimings): Promise<SearchV1> {
     const started = startedAt ?? clock();
     const elapsed = () => Math.round(clock() - started);
     const parsed = parseSearchRequest(input);
@@ -550,7 +599,11 @@ export function createSearch(deps: SearchDeps): SearchService {
 
     // ---- the request snapshot (read in parallel with the translation)
     const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean; detail: string | undefined } = { snapshot: null, failure: null, repeat: false, detail: undefined };
-    const reading = readSnapshot(deadline, (v) => (releaseV = v));
+    const early = warmed !== undefined && warmed.startedAt === started ? warmed : undefined;
+    if (early) warmed = undefined;
+    const probe: SnapshotProbe = early?.probe ?? { release: null, cold: false, settledAt: null };
+    const snapshotFrom = early?.at ?? clock();
+    const reading = early?.reading ?? readSnapshot(deadline, probe);
     // An abandoned read may still reject after the deadline: that is not unhandled.
     reading.catch(() => undefined);
     // Settles (never rejects) when the snapshot is known, failed, or out of time: what a write that needs the release number waits for.
@@ -566,7 +619,9 @@ export function createSearch(deps: SearchDeps): SearchService {
         state.repeat = error instanceof StageError && error.repeat;
         state.detail = error instanceof StageError ? error.detail : classifyError(error);
       }
+      if (probe.release !== null) releaseV = probe.release;
       if (state.snapshot) releaseV = state.snapshot.releaseV;
+      timings?.record("snapshot", (probe.settledAt ?? clock()) - snapshotFrom, probe.cold ? "cold" : undefined);
     })();
 
     const fail = async (reason: SearchStageReason, translatedLeg: TranslatedLeg, quiet = false, detail?: string): Promise<never> => {
@@ -626,7 +681,8 @@ export function createSearch(deps: SearchDeps): SearchService {
      * Runs a leg until it completes or the deadline; at the deadline its calls are cancelled (and counted) and its result is
      * never used. `cancel` stops it early (the snapshot failed, or the release has no search data) and counts what it started.
      */
-    const startLeg = (work: (leg: Leg) => Promise<Map<string, number>>): { done: Promise<LegOutcome>; cancel: () => void } => {
+    const startLeg = (phase: TimingPhase, work: (leg: Leg) => Promise<Map<string, number>>): { done: Promise<LegOutcome>; cancel: () => void } => {
+      const legStarted = clock();
       const controller = new AbortController();
       const calls: PaidCall[] = [];
       const leg: Leg = {
@@ -652,6 +708,8 @@ export function createSearch(deps: SearchDeps): SearchService {
           if (error instanceof StageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
           if (error instanceof TranslateStageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
           return { ok: false, reason: "embed_failed", detail: classifyEmbedding(error) };
+        } finally {
+          timings?.record(phase, clock() - legStarted);
         }
       })();
       return { done, cancel };
@@ -691,7 +749,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     };
 
     const translatedRun = translating
-      ? startLeg(async (leg) => {
+      ? startLeg("translate", async (leg) => {
           checkTime(leg);
           /** One translation call with `model`: its usage is recorded as the vendor reported it (a call that failed at the vendor wrote none). */
           const translateWith = async (model: string): Promise<string> => {
@@ -776,7 +834,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     }
     const data = ready.data;
 
-    const directRun = startLeg((leg) => embedAndCompare(leg, data, embedder, q));
+    const directRun = startLeg("embed", (leg) => embedAndCompare(leg, data, embedder, q));
     const [direct, translated] = await Promise.all([directRun.done, translatedRun ? translatedRun.done : Promise.resolve(null)]);
 
     const translatedOutcome: TranslatedLeg =
@@ -795,12 +853,14 @@ export function createSearch(deps: SearchDeps): SearchService {
     for (const note of vendor) reportVendorFailure(note.reason, note.model, note.error);
 
     // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
+    const rankStarted = clock();
     const results = rankLegs(completed, data.threshold);
     const status = results.length === 0 ? "no_clear_match" : "ok";
     // The emergency fail-safe (owner decision 41) can only turn the flag on: an emergency provider among the top 3 of either
     // leg at the emergency-only threshold sets it, even with no clear match (the results then stay empty).
     const emergencyThreshold = Math.min(deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, data.threshold);
     const emergency = emergencyFirst(results, data.emergency) || emergencyInTop(completed, data.emergency, emergencyThreshold);
+    timings?.record("rank", clock() - rankStarted);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     if (deps.observe) {
       const legs: SearchObservation["legs"] = [];
@@ -822,5 +882,5 @@ export function createSearch(deps: SearchDeps): SearchService {
     return (await dataOf(current, current.search)).known.has(providerId);
   }
 
-  return { search, has };
+  return { search, has, warm };
 }

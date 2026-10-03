@@ -112,7 +112,7 @@ describe("POST /api/search within 2.5 s of the request start", () => {
       expect(request.response().status).toBe(503);
       expect(await errorCode(request.response())).toBe("search_unavailable");
       expect(request.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
-      expect(store.gets).toEqual([VECTORS_PATH]);
+      expect(store.gets).toEqual([VECTORS_PATH, LISTING_PATH]);
       expect(deadlines).toEqual([]); // the search ended itself, before the hard deadline
     });
 
@@ -141,7 +141,7 @@ describe("POST /api/search within 2.5 s of the request start", () => {
         expect(request.response().status).toBe(503);
         expect(request.took()).toBeLessThanOrEqual(DEFAULT_TOTAL_BUDGET_MS);
       }
-      expect(store.gets).toEqual([VECTORS_PATH]);
+      expect(store.gets).toEqual([VECTORS_PATH, LISTING_PATH]);
     });
 
     it("the Cohere embedding, never answering even once cancelled: both legs are cut at 2.2 s, 503", async () => {
@@ -185,8 +185,8 @@ describe("POST /api/search within 2.5 s of the request start", () => {
     });
 
     it("a slow (not hung) load of the release's data still completes for a later request, which joins it", async () => {
-      // Each file takes 1.5 s: the load the first request starts ends at about 3 s, after that request gave up.
-      const store = releaseStore({ ms: 1500 });
+      // Each file takes 3 s (the two are downloaded together): the load the first request starts ends at about 3 s, after that request gave up.
+      const store = releaseStore({ ms: 3000 });
       const service = search({ store });
 
       const first = post(route(service));
