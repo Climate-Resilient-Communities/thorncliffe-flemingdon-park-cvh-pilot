@@ -2529,7 +2529,7 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 ### Story S06.01 — Every outbound text is one queued record, never a phone number
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** — (started 2026-10-03 02:58 UTC)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 32 min (started 2026-10-03 02:51 UTC, built 04:23 UTC)
 - **Traces:** AR-12, AR-17 (no phone in delivery), FR-A17 · **Depends on:** S04.03, S04.06 (built before S04.07, which depends on this story's approval seam below) · **Branch:** `e06-s01-outbox`
 
 As a Hub Admin,

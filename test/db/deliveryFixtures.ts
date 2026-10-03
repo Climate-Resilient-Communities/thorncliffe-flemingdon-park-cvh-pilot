@@ -56,7 +56,7 @@ export function deliveryFixtures(owner: Sql) {
     const hash = randomBytes(32).toString("hex");
     await owner.begin(async (tx) => {
       await tx`select set_config('cvh.actor_id', ${author}, true)`;
-      await tx`insert into alert (id, is_drill, reported_at, created_by) values (${alertId}, ${options.isDrill ?? false}, ${new Date(Date.now() - 60_000)}, ${author})`;
+      await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${options.isDrill ?? false}, ${new Date(Date.now() - 60_000)}, ${author}, ${alertId.slice(-10)})`;
       await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)

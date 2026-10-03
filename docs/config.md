@@ -71,7 +71,7 @@ app made them; the vendor's own count is the one that decides, so set the limit 
 
 The outbox (`delivery`) adds no environment variable, and nothing in it reads Twilio's credentials or calls a provider: sending is S06.02.
 What it fixes in code and in the migration, so changing one is a change to both (`src/modules/messaging/domain/deliveryRules.ts`,
-`delivery_purpose_rule()` in `db/migrations/20261003100000_delivery_outbox.sql`, compared by `test/db/delivery.db.test.ts`):
+`delivery_purpose_rule()` in `db/migrations/20261003400000_delivery_outbox.sql`, compared by `test/db/delivery.db.test.ts`):
 
 | Module | Purpose of a `transactional` text | Goes to | `send_by` at most |
 |---|---|---|---|

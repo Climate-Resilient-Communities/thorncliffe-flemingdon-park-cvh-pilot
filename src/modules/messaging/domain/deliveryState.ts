@@ -1,6 +1,6 @@
 /**
  * The delivery state machine (AD-8, E06 "State transitions"): the only place that says which state changes of a
- * `delivery` row exist. The `delivery_guard` trigger (db/migrations/20261003100000_delivery_outbox.sql) mirrors it and
+ * `delivery` row exist. The `delivery_guard` trigger (db/migrations/20261003400000_delivery_outbox.sql) mirrors it and
  * refuses any other change, whoever asks; test/db/delivery.db.test.ts checks every pair of states against both.
  *
  * Pure: no I/O, no clock. The dispatcher, the callbacks and the cancellations (S06.02 to S06.04) ask here before they

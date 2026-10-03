@@ -1,6 +1,6 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
 // db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger) and
-// db/migrations/20261003100000_delivery_outbox.sql (the outbox); the drift test compares them.
+// db/migrations/20261003400000_delivery_outbox.sql (the outbox); the drift test compares them.
 // The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
 import { bigint, check, index, integer, pgPolicy, pgRole, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";

@@ -1,6 +1,6 @@
 /**
  * What a `delivery` row is, and the rules for creating one (AD-8, E06 definitions). The `delivery_insert_guard`
- * trigger (db/migrations/20261003100000_delivery_outbox.sql) and `delivery_purpose_rule()` mirror these rules and
+ * trigger (db/migrations/20261003400000_delivery_outbox.sql) and `delivery_purpose_rule()` mirror these rules and
  * refuse anything else, whoever asks; test/db/delivery.db.test.ts checks the two against each other for every module
  * and purpose.
  *
