@@ -3352,7 +3352,7 @@ Ambassadors see their buildings' alerts and post updates and incidents for their
 
 ### Story S08.01 — Ambassadors see their buildings' alerts and their own posts
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 54 min (started 2026-10-03 19:48 UTC, built 20:42 UTC)
 - **Traces:** FR-E1, UX-DR17 (A-01) · **Depends on:** S04.08, S01.14 · **Branch:** `e08-s01-ambassador-home`
 
 As a building ambassador,
