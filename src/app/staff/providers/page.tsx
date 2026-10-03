@@ -36,7 +36,7 @@ export default staffPage(
       <Screen surface="staff">
         <Stack gap="section-hub">
           <ProvidersHeading />
-          <p role="alert">{englishText("staff.providers.errors.forbidden")}</p>
+          <p role="alert" className="hub-error">{englishText("staff.providers.errors.forbidden")}</p>
         </Stack>
       </Screen>
     ),

@@ -1,4 +1,5 @@
-export { readContentCatalogue, readProviderCatalogue } from "./adapters/catalogueFiles";
+export { readContentCatalogue, readProviderCatalogue, readProviderNeighbourhoods } from "./adapters/catalogueFiles";
+export { parseProviderNeighbourhoods, type ProviderNeighbourhoods } from "./domain/providerNeighbourhoods";
 export {
   checkGuidesLaunch,
   formatLaunchGaps,
@@ -84,3 +85,19 @@ export {
 } from "./application/publishDirectory";
 export { currentManifest, langOfFile, readListing, type ListingRead } from "./application/serveRelease";
 export { RELEASE_LANGS, type ReleaseCounts, type ReleaseReport, type ReleaseSearch, type StaleText, type ZhHantConverter } from "./domain/directoryRelease";
+export {
+  DEFAULT_LEG_TIMEOUT_MS,
+  DEFAULT_TOTAL_BUDGET_MS,
+  SEARCH_SPEND_KIND,
+  SEARCH_SPEND_PURPOSE,
+  SearchFailure,
+  createSearch,
+  type SearchDeps,
+  type SearchFailureCode,
+  type SearchFailureNote,
+  type SearchService,
+  type SearchStageReason,
+} from "./application/search";
+export { QueryEmbedError, type QueryEmbedder } from "./application/ports";
+export { cohereQueryEmbedder, warmCohere, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
+export { MAX_RESULTS, RRF_K, cosine, rankLegs, type SearchHit } from "./domain/searchRanking";

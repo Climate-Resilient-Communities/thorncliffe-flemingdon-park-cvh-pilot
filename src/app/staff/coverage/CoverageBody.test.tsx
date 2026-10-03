@@ -240,7 +240,7 @@ describe("Coverage: one building", () => {
 
   it("answers a building that is not there with a message and the way back", () => {
     const out = html(coverageMissingView());
-    expect(out).toContain('<p role="alert">That building does not exist.</p>');
+    expect(out).toContain('<p role="alert" class="hub-error">That building does not exist.</p>');
     expect(out).toContain('href="/staff/coverage"');
   });
 });

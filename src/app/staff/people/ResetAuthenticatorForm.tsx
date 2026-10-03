@@ -33,17 +33,17 @@ export function ResetAuthenticatorForm({ labels, initialState = { status: "idle"
             </Stack>
           </div>
         ) : (
-          <form action={formAction} key={state.status === "refused" ? JSON.stringify(state) : "new"}>
+          <form className="hub-form" action={formAction} key={state.status === "refused" ? JSON.stringify(state) : "new"}>
             <Stack gap="stack">
               {state.status === "refused" && (
-                <p id={ERROR_ID} role="alert">
+                <p id={ERROR_ID} role="alert" className="hub-error">
                   {state.message}
                 </p>
               )}
               <Stack gap="label">
                 <label htmlFor="reset-authenticator-username">{labels.username}</label>
                 <input
-                  className="tap"
+                  className="hub-input"
                   id="reset-authenticator-username"
                   name="username"
                   type="text"
@@ -56,7 +56,7 @@ export function ResetAuthenticatorForm({ labels, initialState = { status: "idle"
                   aria-invalid={state.status === "refused" || undefined}
                 />
               </Stack>
-              <button className="tap" type="submit" disabled={pending}>
+              <button className="hub-button hub-button--secondary" type="submit" disabled={pending}>
                 {labels.submit}
               </button>
             </Stack>

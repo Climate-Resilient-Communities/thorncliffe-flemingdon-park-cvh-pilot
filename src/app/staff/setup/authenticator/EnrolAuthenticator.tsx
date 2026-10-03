@@ -52,7 +52,7 @@ export function EnrolAuthenticator({ labels }: { labels: EnrolLabels }) {
   return (
     <Stack gap="section-hub">
       {message && (
-        <p id={ERROR_ID} role="alert">
+        <p id={ERROR_ID} role="alert" className="hub-error">
           {message}
         </p>
       )}
@@ -71,7 +71,7 @@ export function EnrolAuthenticator({ labels }: { labels: EnrolLabels }) {
           <AuthenticatorCodeForm labels={labels.code} />
         </Stack>
       ) : (
-        <button className="tap" type="button" disabled={pending} onClick={start} aria-describedby={message ? ERROR_ID : undefined}>
+        <button className="hub-button hub-button--primary" type="button" disabled={pending} onClick={start} aria-describedby={message ? ERROR_ID : undefined}>
           {labels.start}
         </button>
       )}

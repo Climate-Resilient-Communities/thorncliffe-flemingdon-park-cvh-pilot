@@ -195,9 +195,18 @@ def main():
         })
 
     providers.sort(key=lambda p: p['id'])
+    # Keep the order of the committed catalogue: the providers seed stores each category's
+    # display order from it, so moving a row in the spreadsheet must not reorder the directory.
+    previous = json.loads(OUT_PATH.read_text(encoding='utf-8'))['labels'] if OUT_PATH.exists() else {}
+
+    def ordered(kind, names):
+        names = unique(names)
+        kept = [n for n in previous.get(kind, {}) if n in names]
+        return kept + [n for n in names if n not in kept]
+
     labels = {
-        'categories': {c: localized(c, translations) for c in unique(r['Category'] for r in rows)},
-        'subcategories': {c: localized(c, translations) for c in unique(r['Subcategory'] for r in rows)},
+        'categories': {c: localized(c, translations) for c in ordered('categories', (r['Category'] for r in rows))},
+        'subcategories': {c: localized(c, translations) for c in ordered('subcategories', (r['Subcategory'] for r in rows))},
     }
     models = {lang: t.get('models', {}) for lang, t in translations.items()}
 

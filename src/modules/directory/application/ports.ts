@@ -2,6 +2,7 @@
 // version is, and who is told when a publish fails. Implementations are in adapters/ and in the app's
 // composition root; tests use the fakes beside them.
 import type { ZhHantConverter } from "../domain/directoryRelease";
+import type { ProviderNeighbourhoods } from "../domain/providerNeighbourhoods";
 import type { EmbeddingConfig } from "../domain/searchData";
 
 /** The private place the release files are kept (Supabase Storage; a folder in local runs; memory in tests). */
@@ -61,6 +62,8 @@ export interface PublishFailure {
 export interface PublishDeps {
   storage: DirectoryStorage;
   catalogue: () => Promise<CatalogueVersion>;
+  /** The Hub's list of each provider's neighbourhoods (data/catalogue/provider-neighbourhoods.json, deployed with the app); read when a release is planned. Rejects when the file cannot be read or is not in shape. */
+  neighbourhoods: () => Promise<ProviderNeighbourhoods>;
   /** OpenCC for zh-Hant; loaded when a release is planned, not when the module is imported. */
   zhHant: () => Promise<ZhHantConverter>;
   /** Told once when a publish gives up. A failure here never changes the outcome. */
@@ -130,4 +133,24 @@ export interface SearchBuild {
   vectorsPutTimeoutMs?: number;
   /** The longest the store may take to read a vectors file back (default 10 s). */
   vectorsGetTimeoutMs?: number;
+}
+
+/**
+ * The question side of the embedding model (S03.04): a question is embedded as a query (`input_type: search_query`) with the
+ * model and vector size the release recorded, which the caller passes, so a question never meets vectors made by another
+ * model. Throws QueryEmbedError, never an error that holds the request: adapters wrap the vendor's failures and drop their
+ * bodies (AD-3).
+ */
+export interface QueryEmbedder {
+  embedQuery(input: { text: string; model: string; dims: number | null; signal: AbortSignal }): Promise<{ vector: number[]; tokens: number | null }>;
+}
+
+/** Why one question's embedding failed: a code only. The vendor's error, which may echo the request, is dropped. */
+export class QueryEmbedError extends Error {
+  override name = "QueryEmbedError";
+  readonly code: "embed_failed" | "aborted";
+  constructor(code: "embed_failed" | "aborted") {
+    super(code === "aborted" ? "The question's embedding was cancelled" : "The question's embedding failed");
+    this.code = code;
+  }
 }

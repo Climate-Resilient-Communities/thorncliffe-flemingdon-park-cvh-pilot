@@ -8,7 +8,7 @@ export function SignOutButton({ label }: { label: string }) {
   const [pending, setPending] = useState(false);
   return (
     <button
-      className="tap"
+      className="hub-button hub-button--secondary"
       type="button"
       disabled={pending}
       onClick={async () => {

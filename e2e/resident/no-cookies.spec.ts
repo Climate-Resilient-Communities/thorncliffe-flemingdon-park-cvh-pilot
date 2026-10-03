@@ -5,7 +5,7 @@ import { LANGUAGES } from "./helpers";
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
 // middleware matches only /staff/** and /api/staff/**). No response under /{lang}/** carries Set-Cookie.
 
-const PATHS = ["", "/map", "/search", "/ready", "/ready/power", "/ready/numbers", "/ready/no-such-guide", "/terms", "/buildings/123", "/does-not-exist"];
+const PATHS = ["", "/map", "/search", "/ready", "/ready/power", "/ready/numbers", "/ready/no-such-guide", "/terms", "/buildings/123", "/directory", "/directory/P101", "/does-not-exist"];
 
 test("no response to a /{lang}/** page request sets a cookie", async ({ request }) => {
   const checked: string[] = [];
@@ -77,4 +77,14 @@ test("the building list sets no cookie", async ({ request }) => {
   const response = await request.get("/api/buildings", { maxRedirects: 0 });
 
   expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});
+
+// S03.04: a question is personal. /api/search sets no cookie, whether it answers or refuses, and is never cacheable.
+test("the search endpoint sets no cookie and is not cacheable, for a question and for a refused one", async ({ request }) => {
+  for (const data of [{ q: "", lang: "en" }, { q: "a question", lang: "xx" }, { q: "a question", lang: "en" }]) {
+    const response = await request.post("/api/search", { data, maxRedirects: 0 });
+
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(data)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
 });
