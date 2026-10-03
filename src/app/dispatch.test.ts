@@ -39,7 +39,7 @@ vi.mock("@/modules/messaging", async (importOriginal) => {
 vi.mock("@/platform/db", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/platform/db")>()), getDb: () => ({}) }));
 vi.mock("@/platform/config/env", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/platform/config/env")>()),
-  getEnv: () => ({ smsMode: "log", publicBaseUrl: "https://cvh.example", smsSegmentsPerSecond: 3 }),
+  getEnv: () => ({ smsMode: "log", publicBaseUrl: "https://cvh.example", smsSegmentsPerSecond: 3, smsPricePerSegmentCents: 1.5 }),
 }));
 
 const ACCOUNT = `AC${"0".repeat(32)}`;
@@ -48,13 +48,13 @@ const DELIVERY = "01900000-0000-7000-8000-0000000d0001";
 
 /** An environment whose Twilio settings throw when read: proof that code which must not read credentials does not. */
 function envThatMustNotReadTwilio(smsMode: "log" | "live" = "log") {
-  const env = { smsMode, publicBaseUrl: "https://cvh.example", smsSegmentsPerSecond: 3 } as Record<string, unknown>;
+  const env = { smsMode, publicBaseUrl: "https://cvh.example", smsSegmentsPerSecond: 3, smsPricePerSegmentCents: 1.5 } as Record<string, unknown>;
   Object.defineProperty(env, "twilio", {
     get() {
       throw new Error("the Twilio credentials were read");
     },
   });
-  return env as unknown as Parameters<typeof dispatcherConfig>[0] & { smsSegmentsPerSecond: number };
+  return env as unknown as Parameters<typeof dispatcherConfig>[0] & { smsSegmentsPerSecond: number; smsPricePerSegmentCents: number };
 }
 
 afterEach(() => {

@@ -8,15 +8,15 @@ import { createStatusCallbacks, stdoutMessagingLog, type MessagingLog, type OpsR
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { opsRecorder } from "./dispatch";
+import { appSmsSpend } from "./smsSpend";
 
 export interface StatusCallbackParts {
-  env?: Pick<Env, "twilio" | "publicBaseUrl">;
+  env?: Pick<Env, "twilio" | "publicBaseUrl" | "smsPricePerSegmentCents">;
   db?: Db;
   ops?: OpsRecorder;
   log?: MessagingLog;
-  /** S06.08 passes the same function it gives `appDispatcher`'s `afterOutcome` (see StatusCallbackDeps). */
+  /** S06.08's spend seams (see StatusCallbackDeps): by default the app's own hooks, the same ones `appDispatcher` is given. */
   afterOutcome?: StatusCallbackDeps["afterOutcome"];
-  /** S06.08's matching rule: called when a callback stores the provider id a delivery lacked (see StatusCallbackDeps). */
   afterProviderId?: StatusCallbackDeps["afterProviderId"];
 }
 
@@ -26,13 +26,14 @@ export function appStatusCallbacks(parts: StatusCallbackParts = {}): StatusCallb
   const authToken = env.twilio?.authToken;
   // No Twilio account: nothing can be validated, so nothing is touched, the database included (an environment with no database still answers).
   if (!authToken) return { handle: async () => ({ kind: "not_configured" }) };
+  const spend = appSmsSpend(env);
   return createStatusCallbacks({
     db: parts.db ?? getDb(),
     ops: parts.ops ?? opsRecorder,
     log: parts.log ?? stdoutMessagingLog,
     authToken,
     publicBaseUrl: env.publicBaseUrl,
-    afterOutcome: parts.afterOutcome,
-    afterProviderId: parts.afterProviderId,
+    afterOutcome: parts.afterOutcome ?? spend.afterOutcome,
+    afterProviderId: parts.afterProviderId ?? spend.afterProviderId,
   });
 }

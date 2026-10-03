@@ -20,7 +20,8 @@ are in `src/platform/config/env.ts`.
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
-| `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it | default |
+| `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it. Each text's own estimate in `spend_event` (S06.08) is its segments × this price, rounded up to whole cents | default |
+| `SMS_USD_TO_CAD_RATE` | no | the exchange rate, Canadian dollars per US dollar, that a reconciliation (S06.08) converts the prices Twilio reports (billed in US dollars) at: a positive number with at most four decimals, between 0.5 and 5. PROVISIONAL default `1.4`: the owner confirms it and sets it here. Each actual price keeps the rate it was converted at and is shown labelled with it. Any environment may set it (not a `TWILIO_` variable: it is no credential) | default |
 | `EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH` | no | `500` | 2026-10-02 |
 | `EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH` | no | `1000000` | 2026-10-02 |
 | `COHERE_API_KEY` | yes | production only, with a spend limit set on the key in Cohere | not yet |
@@ -186,6 +187,44 @@ changes a delivery.
   counted as `delivery.callback_ignored` and changes nothing.
 - **What it never keeps or logs.** The route sets no cookie and is never cached. Nothing from the request is stored or logged: not the number, the message text, the
   signature, the reference or Twilio's message id (a log line holds the delivery's own id and the states). `ops_event` holds codes only.
+
+## What each text costs, and the reconciliation (S06.08)
+
+Each text is counted once, when the provider accepts it or its outcome becomes `unknown` (it may have been charged): its estimate, segments × `SMS_PRICE_PER_SEGMENT_CENTS`
+rounded up to whole cents CAD, is written to `spend_event` (kind `sms`, with the language, the alert entry and `is_drill`) in the same transaction as the outcome. A text that
+goes back to the queue (HTTP 429, a connection that failed before sending) writes nothing, so a retried text is counted when it is finally accepted.
+
+**The reconciliation** sets what Twilio actually billed against those estimates, month by month. `POST /api/jobs/reconcile-spend` (the job secret, like the dispatcher's) lists the Twilio
+Messages API for a Toronto calendar month, `[first instant of the month, first instant of the next)` converted to UTC, with the stable id `month:{YYYY-MM}`, and records each message's
+price once, by its `MessageSid`. With no body it reconciles the month before this one and every month still pending; `{"month":"2026-10"}` reconciles that month. It only reconciles a month that has ended, and it
+is idempotent: a complete month is not listed again, and nothing is recorded from a listing that failed, was cut short (200 pages or 45 seconds) or has a message with no price yet: that
+month shows as "pending reconciliation", with its estimates still counted, and the next run tries again. A pending month is visible in `sms_reconciliation` (`state`, `pending_reason`, `attempts`,
+`last_attempt_at`) and in the log (`reconcile.pending`, with the reason). Outside production there is no Twilio account (no credentials exist elsewhere), so the route answers `{"status":"not_live"}`
+and reads nothing; the real Twilio adapter is built only for production and every test uses a fake.
+
+**Scheduling (the owner runs this once, in production's Supabase SQL editor as `postgres`; nothing in the repository or CI runs it).** Daily is enough (a complete month costs one query), and the
+manual operation "Twilio usage reconciliation, monthly, twice" is the same call by hand a few days after the month ends and again once Twilio has priced the last messages:
+
+```sql
+select cron.schedule('cvh-reconcile-spend', '30 11 * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/reconcile-spend',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
+
+By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"2026-10"}' <production URL>/api/jobs/reconcile-spend` answers each month's result (counts and codes, no message and no number).
+
+**Owner decisions recorded here (S06.08).**
+
+- *The exchange rate.* `SMS_USD_TO_CAD_RATE`, default `1.4` (provisional). Twilio bills in US dollars; the CAD amount is the price × this rate, to the thousandth of a cent, and each actual keeps the rate it used.
+- *Where the reconciliation is triggered.* A job endpoint, not a script: the Twilio credentials exist only in production's environment, so a script run anywhere else would have none, and copying them out is what the secrets rules forbid.
+- *Only a month that has ended is reconciled.* A complete reconciliation never changes, so one run while the month still ran would be missing every message sent after it.
+- *Rounding.* An estimate is rounded up to whole cents per text, so a one-segment text at 1.5 cents is estimated at 2: an estimate may overstate by up to half a cent a text and never understates, until its actual replaces it.
+- *A message Twilio never prices.* A month with an outbound message that has no price keeps the whole month pending (its estimates stay counted). If Twilio leaves a failed or cancelled message unpriced for good, the owner decides whether that counts as zero.
+- *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<`, `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
 
 ## GitHub: environments
 

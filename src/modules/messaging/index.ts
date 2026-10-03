@@ -28,6 +28,11 @@ import type { DispatchStore, Dispatcher, DispatcherDeps } from "./application/di
 import { drizzleCallbackStore } from "./adapters/callbackStore";
 import { createStatusCallbacks as createStatusCallbacksService, type CallbackStore, type StatusCallbackDeps, type StatusCallbacks } from "./application/statusCallback";
 import { createMessagingServiceCheck, type MessagingServiceCheck, type MessagingServiceCheckDeps } from "./application/serviceCheck";
+import { drizzleProviderIds } from "./adapters/providerIdStore";
+import { createSmsSpendHooks, type SmsSpendDeps, type SmsSpendHooks } from "./application/smsSpend";
+import { drizzleMeasureStore } from "./adapters/measureStore";
+import { createDeliveryMeasures as createDeliveryMeasuresService, type DeliveryMeasures } from "./application/deliveryMeasures";
+import type { DeliveryProviderIds } from "../spend";
 
 export interface DeliveryQueueWiring {
   /** Test seams. */
@@ -69,6 +74,28 @@ export type StatusCallbackWiring = Omit<StatusCallbackDeps, "store"> & {
  */
 export function createStatusCallbacks(wiring: StatusCallbackWiring): StatusCallbacks {
   return createStatusCallbacksService({ ...wiring, store: wiring.store ?? drizzleCallbackStore });
+}
+
+export type SmsSpendWiring = Omit<SmsSpendDeps, "store">;
+
+/**
+ * The spend seams of the sender and the status callbacks (S06.08): `afterOutcome` writes a text's estimate to `spend_event` in the
+ * transaction that records its outcome, `afterProviderId` runs the matching rule when a provider id is recorded later. The composition
+ * root passes the same hooks to `createDispatcher` and `createStatusCallbacks`. Throws for a price per segment that is not valid.
+ */
+export function createSmsSpend(wiring: SmsSpendWiring): SmsSpendHooks {
+  return createSmsSpendHooks({ ...wiring, store: drizzleProviderIds });
+}
+
+/**
+ * The provider ids of deliveries, as the spend module's reconciliation asks for them (its `DeliveryProviderIds` port: spend may not import
+ * messaging, so the composition root wires this in).
+ */
+export const deliveryProviderIds: DeliveryProviderIds = drizzleProviderIds;
+
+/** The pilot's delivery measures (S06.08): time to deliver per entry and language, and a correction's reach, drills apart. */
+export function createDeliveryMeasures(): DeliveryMeasures {
+  return createDeliveryMeasuresService({ store: drizzleMeasureStore });
 }
 
 export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
@@ -305,3 +332,24 @@ export {
 } from "./domain/smsBody";
 export { NORMALISATION_TABLE, SMS_MAX_BODY_LENGTH, countSms, normaliseSms, type SmsCount, type SmsEncoding } from "./domain/smsEncoding";
 export { estimateSmsCost, priceInThousandthsOfCent, type CostBasis, type SmsCostEstimate, type SmsCostInput } from "./domain/smsCost";
+
+// The cost of each text, and the reconciliation's listing of the provider's prices (S06.08).
+export { createSmsSpendHooks, smsEstimateCents } from "./application/smsSpend";
+export type { ProviderIdReader, SmsSpendDeps, SmsSpendHooks } from "./application/smsSpend";
+export { MessageListError, twilioMessageLister } from "./adapters/twilioMessageList";
+export type { TwilioListConfig } from "./adapters/twilioMessageList";
+export type { DeliveryMeasures, MeasureStore } from "./application/deliveryMeasures";
+export {
+  DELIVERED_SHARE_PERCENT,
+  NEVER_SENT_STATES,
+  correctionReach,
+  entryTimings,
+  splitDrills,
+  wasHandedOff,
+  type CorrectionReach,
+  type DeliveredShareReading,
+  type EntryTimings,
+  type LanguageTiming,
+  type MeasuredRow,
+  type ReachRow,
+} from "./domain/deliveryMeasures";
