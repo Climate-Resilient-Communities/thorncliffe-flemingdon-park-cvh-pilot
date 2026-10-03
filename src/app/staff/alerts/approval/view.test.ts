@@ -272,13 +272,24 @@ describe("the words and the helpers", () => {
 });
 
 describe("the published confirmation of an approved entry (O-06)", () => {
-  const approved = (options: Parameters<typeof reviewOf>[0] = {}) => screenOf({ ...options, entry: { status: "approved", ...options.entry } }).published;
+  const approved = (options: Parameters<typeof reviewOf>[0] = {}, extra: Parameters<typeof screenOf>[1] = {}) => screenOf({ ...options, entry: { status: "approved", ...options.entry } }, extra).published;
   const rowIds = (published: NonNullable<ReturnType<typeof approved>>) => published.rows.map((row) => row.id);
 
   it("is there only once the entry is approved", () => {
     expect(screenOf().published).toBeUndefined();
     for (const status of ["discarded", "draft", "superseded"] as const) expect(screenOf({ entry: { status, contentHash: null } }).published).toBeUndefined();
     expect(approved()).toBeDefined();
+  });
+
+  it("does not say residents can read the alert while resident alerts are switched off", () => {
+    const off = approved({}, { residentAlertsEnabled: false })!;
+    expect(off.rows[0].value).toBe("Published in the Hub. Residents do not see alerts until alerts are switched on.");
+    expect(approved({}, { residentAlertsEnabled: true })!.rows[0].value).toContain("Live now");
+  });
+
+  it("says the alert is no longer live once its thread is closed", () => {
+    const closed = approved({ thread: { status: "closed" } })!;
+    expect(closed.rows[0].value).toBe("This alert is no longer live. It was published in 16 languages, each in their own words.");
   });
 
   it("says what went where: the web in all sixteen languages in their own words, and the texts that are ready but wait for texting to open", () => {

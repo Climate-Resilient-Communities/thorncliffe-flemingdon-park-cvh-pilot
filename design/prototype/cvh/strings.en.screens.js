@@ -1624,6 +1624,8 @@
     webLabel: 'App and web',
     webValue: 'Live now for residents who follow this place, in {n} languages, each in their own words.',
     webLanguages: 'Languages in their own words',
+    webOff: 'Published in the Hub. Residents do not see alerts until alerts are switched on.',
+    webEnded: 'This alert is no longer live. It was published in {n} languages, each in their own words.',
     webDrill: 'Not shown to residents: a drill stays in the Hub.',
     fallbackLabel: 'English only',
     fallbackValue: 'Residents reading in {languages} see the English text with "Translation not available" in their language.',

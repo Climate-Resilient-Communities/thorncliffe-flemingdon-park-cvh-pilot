@@ -162,6 +162,8 @@ export interface ApprovalInput {
   viewerId: string;
   /** What `pauseNoticeForApprover()` answered: the sentence while texts are paused, null otherwise (or when the switch could not be read). */
   pauseNotice?: string | null;
+  /** Whether residents are shown alerts at all (`residentAlertsEnabled()`): the launch switch. Left out, it is on. */
+  residentAlertsEnabled?: boolean;
   /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
 }
@@ -303,7 +305,12 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
         : {
             id: "web",
             label: t("published.webLabel"),
-            value: t("published.webValue", { n: webLanguages.length }),
+            value:
+              input.residentAlertsEnabled === false
+                ? t("published.webOff")
+                : thread.status === "open"
+                  ? t("published.webValue", { n: webLanguages.length })
+                  : t("published.webEnded", { n: webLanguages.length }),
             languages: { label: t("published.webLanguages"), items: webLanguages.map(languageView) },
           },
     ];
