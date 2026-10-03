@@ -22,6 +22,7 @@ import {
   type DispatchReport,
   type Dispatcher,
   type DispatcherClock,
+  type DispatcherDeps,
   type DispatcherConfig,
   type MessagingLog,
   type OpsRecorder,
@@ -31,6 +32,7 @@ import { recordOpsEvent, recordOpsEventUnlessBusy } from "@/modules/ops";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { contactResolver } from "./messaging";
+import { appSmsSpend } from "./smsSpend";
 
 /**
  * How many `webhook.signature_invalid` events are kept in any 10 minutes. Anyone can send a request with a wrong signature, so the
@@ -110,7 +112,7 @@ export function dispatcherConfig(env: SenderEnv): DispatcherConfig {
 }
 
 export interface DispatcherParts {
-  env?: SenderEnv & Pick<Env, "smsSegmentsPerSecond">;
+  env?: SenderEnv & Pick<Env, "smsSegmentsPerSecond" | "smsPricePerSegmentCents">;
   db?: Db;
   resolver?: ContactResolver;
   alerts?: AlertStandingReader;
@@ -119,11 +121,16 @@ export interface DispatcherParts {
   ops?: OpsRecorder;
   /** The run's time limit (default 60 s, the job route's `maxDuration`); the kick passes KICK_RUN_LIMIT_MS. */
   runLimitMs?: number;
+  /** S06.08's spend seams (see DispatcherDeps): by default the app's own hooks, which write a text's estimate with its outcome (the status callbacks are given the same ones). */
+  afterOutcome?: DispatcherDeps["afterOutcome"];
+  afterProviderId?: DispatcherDeps["afterProviderId"];
 }
 
 /** The dispatcher on the real environment and database (every part can be replaced in a test). Throws SenderNotConfigured where live sending is not set up. */
 export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
   const env = parts.env ?? getEnv();
+  // The estimate of each text is written with its outcome (S06.08), by the hooks the status callbacks are given too.
+  const spend = appSmsSpend(env);
   return createDispatcher({
     db: parts.db ?? getDb(),
     resolver: parts.resolver ?? contactResolver(),
@@ -134,6 +141,8 @@ export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
     config: dispatcherConfig(env),
     segmentsPerSecond: env.smsSegmentsPerSecond,
     runLimitMs: parts.runLimitMs,
+    afterOutcome: parts.afterOutcome ?? spend.afterOutcome,
+    afterProviderId: parts.afterProviderId ?? spend.afterProviderId,
   });
 }
 

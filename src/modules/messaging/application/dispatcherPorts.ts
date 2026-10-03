@@ -230,6 +230,13 @@ export interface DispatcherDeps {
    * queue and never hides an unknown text (the spend is then counted by the reconciliation, as an unmatched actual).
    */
   afterOutcome?: (tx: DbTransaction, delivery: DeliveryView, outcome: "submitted" | "unknown") => Promise<void>;
+  /**
+   * S06.08's seam for its matching rule: called, in a savepoint of the outcome's transaction, when a slow provider response is written onto a
+   * row the sweep had already made `unknown` and so fills the provider id that row never got (`fillProviderId`), with the row and the id it
+   * now has. A hook that throws loses only its own writes: the id stays, and `dispatch.spend_hook_failed` is logged (the next
+   * reconciliation re-runs the matching over every unretired estimate). Not called when the row already had the id.
+   */
+  afterProviderId?: (tx: DbTransaction, delivery: DeliveryView) => Promise<void>;
 }
 
 /** What a run did, with no personal data: counts and a status the job route returns. */

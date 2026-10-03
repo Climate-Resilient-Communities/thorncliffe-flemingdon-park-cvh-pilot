@@ -55,7 +55,7 @@ import { PRODUCTION_HOST } from "./hosts";
  * JOB_SECRET, JOB_SECRET_PREVIOUS
  *                      server   optional at start-up     secret; at least 32 random bytes as hex or base64, like the pepper
  *                                                        (`openssl rand -hex 32`). The bearer secret of the job routes that
- *                                                        pg_cron calls (/api/jobs/dispatch, /api/jobs/messaging-config; AD-15): a
+ *                                                        pg_cron calls (/api/jobs/dispatch, /api/jobs/messaging-config, /api/jobs/reconcile-spend; AD-15): a
  *                                                        request without `Authorization: Bearer <secret>` is refused with 401. During
  *                                                        a rotation both are accepted (JOB_SECRET_PREVIOUS is the old one); a missing
  *                                                        or weak JOB_SECRET never stops the site, the job routes answer 503
@@ -73,6 +73,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        1.5. PROVISIONAL: IT confirms it from Twilio's price for Canadian toll-free
  *                                                        numbers. The renderer's cost estimate (S04.06) is segments x recipients x this
  *                                                        price, rounded up to whole cents, and always shown as an estimate
+ * SMS_USD_TO_CAD_RATE server   optional                 the exchange rate (Canadian dollars per US dollar) a reconciliation (S06.08)
+ *                                                        converts the prices Twilio reports (in US dollars) at: a positive number with
+ *                                                        at most four decimals, between 0.5 and 5 (1.4 is CAD 1.40 per USD 1); default
+ *                                                        1.4. PROVISIONAL: the owner confirms it. Each actual price keeps the rate it
+ *                                                        was converted at and is shown labelled with it. Not a TWILIO_ variable: it is
+ *                                                        not a credential and is allowed everywhere
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -209,6 +215,7 @@ const rawSchema = z.object({
   TWILIO_FROM_NUMBER: optionalText,
   SMS_TEST_ALLOWLIST: optionalText,
   SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
+  SMS_USD_TO_CAD_RATE: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
@@ -306,6 +313,9 @@ const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 /** PROVISIONAL (S04.06): cents CAD per text message segment until IT records Twilio's price for Canadian toll-free numbers. */
 export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 
+/** PROVISIONAL (S06.08): Canadian dollars per US dollar, the rate Twilio's prices (billed in US dollars) are converted at until the owner sets one. */
+export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
+
 export interface Env {
   environment: AppEnvironment;
   smsMode: "live" | "log";
@@ -322,6 +332,8 @@ export interface Env {
   smsTestProblem?: string;
   /** Cents CAD per text message segment (at most three decimals): the price an alert's cost estimate uses (S04.06). */
   smsPricePerSegmentCents: number;
+  /** Canadian dollars per US dollar (at most four decimals): the rate a reconciliation converts Twilio's prices at (S06.08). */
+  smsUsdToCadRate: number;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -622,6 +634,20 @@ function parseSmsPrice(value: string | undefined, problems: string[]): number {
   return price;
 }
 
+const SMS_RATE_PROBLEM = "SMS_USD_TO_CAD_RATE: must be a positive number with at most four decimals, between 0.5 and 5, such as 1.4";
+
+/** The exchange rate (CAD per USD) a reconciliation converts at: positive, at most four decimals, between 0.5 and 5; the default when unset. */
+function parseSmsRate(value: string | undefined, problems: string[]): number {
+  if (value === undefined) return DEFAULT_SMS_USD_TO_CAD_RATE;
+  const text = value.trim();
+  const rate = Number(text);
+  if (!/^[0-9]{1,2}(\.[0-9]{1,4})?$/.test(text) || !(rate >= 0.5 && rate <= 5)) {
+    problems.push(SMS_RATE_PROBLEM);
+    return DEFAULT_SMS_USD_TO_CAD_RATE;
+  }
+  return rate;
+}
+
 /** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
 function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
   if (value === undefined) return fallback;
@@ -787,6 +813,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     else smsSegmentsPerSecond = Number(text);
   }
   const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
+  const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -872,6 +899,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     smsTestAllowlist,
     smsTestProblem,
     smsPricePerSegmentCents,
+    smsUsdToCadRate,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

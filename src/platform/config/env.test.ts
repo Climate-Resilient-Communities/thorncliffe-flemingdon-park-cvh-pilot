@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, DEFAULT_SMS_USD_TO_CAD_RATE, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -856,5 +856,32 @@ describe("parseSearchEnv (the search settings alone, for the test-set runner)", 
       expect.arrayContaining([expect.stringMatching(/^SEARCH_QUESTION_ROUTE:/), expect.stringMatching(/^SEARCH_FALLBACK_MIN_BUDGET_MS:/), expect.stringMatching(/^SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/)]),
     );
     expect(JSON.stringify((error as EnvError).problems)).not.toContain("a model with spaces");
+  });
+});
+
+describe("SMS_USD_TO_CAD_RATE (S06.08)", () => {
+  it("defaults to 1.4 Canadian dollars per US dollar in every environment, and docs/config.md documents it", () => {
+    for (const base of [production, preview, local]) expect(parseEnv(base).smsUsdToCadRate).toBe(DEFAULT_SMS_USD_TO_CAD_RATE);
+    expect(DEFAULT_SMS_USD_TO_CAD_RATE).toBe(1.4);
+    expect(readFileSync("docs/config.md", "utf8")).toMatch(/`SMS_USD_TO_CAD_RATE`[^\n]*default `1\.4`/);
+  });
+
+  it.each([
+    ["1.4", 1.4],
+    [" 1.3721 ", 1.3721],
+    ["1", 1],
+    ["0.5", 0.5],
+    ["5", 5],
+    ["5.0000", 5],
+  ])("reads %j as %s, in any environment (it is no credential)", (value, rate) => {
+    for (const base of [production, preview, local]) expect(parseEnv({ ...base, SMS_USD_TO_CAD_RATE: value }).smsUsdToCadRate).toBe(rate);
+  });
+
+  it("treats a blank value as unset", () => {
+    expect(parseEnv({ ...production, SMS_USD_TO_CAD_RATE: "  " }).smsUsdToCadRate).toBe(DEFAULT_SMS_USD_TO_CAD_RATE);
+  });
+
+  it.each(["0", "0.4999", "5.0001", "6", "-1.4", "1.23456", "1e0", "cad", "1,4", "$1.4", "NaN", "Infinity", ".5", "1.", "100"])("refuses %j and names the variable", (value) => {
+    expect(problemsOf({ ...production, SMS_USD_TO_CAD_RATE: value })).toEqual([expect.stringMatching(/^SMS_USD_TO_CAD_RATE: must be a positive number with at most four decimals, between 0\.5 and 5/)]);
   });
 });

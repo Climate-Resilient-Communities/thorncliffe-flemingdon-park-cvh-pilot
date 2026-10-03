@@ -206,6 +206,16 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
           if (outcome.kind === "submitted") {
             const filled = await store.fillProviderId(tx, { id: row.id, token, providerMessageId: outcome.providerMessageId });
             if (filled === "different") log.error("dispatch.provider_id_differs", { delivery_id: row.id });
+            if (filled === "filled" && deps.afterProviderId) {
+              // S06.08's matching rule: the id is recorded later than the outcome, so an actual already imported for it may now retire the
+              // row's estimate. In a savepoint: a failing hook never undoes the id (the reconciliation runs the matching over every estimate).
+              const updated = { ...row, providerMessageId: outcome.providerMessageId };
+              try {
+                await tx.transaction((savepoint) => deps.afterProviderId!(savepoint, updated));
+              } catch (error) {
+                log.error("dispatch.spend_hook_failed", { hook: "provider_id", delivery_id: row.id, error: nameOf(error) });
+              }
+            }
           }
           log.info("dispatch.outcome_not_applied", { delivery_id: row.id, outcome: outcome.kind });
           return false;
