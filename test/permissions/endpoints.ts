@@ -55,6 +55,11 @@ export interface StaffEndpoint extends EndpointBase {
    * them): the approval is for someone who is not an editor of the entry, and the entry these calls name is not there, so nobody is excluded from it.
    */
   policyContext?: PolicyContext;
+  /**
+   * The reason the refusal is audited with for a role whose rule depends on the context (the policy's `out_of_scope`), when it is not `forbidden`: the answer is
+   * the same 403 `forbidden`. A correction or a withdrawal: an Ambassador's rule is their own pending entry (E08), which these calls never name.
+   */
+  auditedReason?: Partial<Record<RoleCaller, "out_of_scope">>;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -457,6 +462,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, target: NO_SUCH_ALERT, from: action === "alert.correct" ? "correct" : "withdraw", text: "Power is out on floors 1 to 8.", phase: "problem", reason: "wrong_place", "valid-mode": "resolved" },
       forbiddenMessage: /^Only a Coordinator or an Admin can correct or withdraw an alert\./,
       policyContext: NO_ENTRY,
+      auditedReason: { ambassador: "out_of_scope", ambassador_out_of_scope: "out_of_scope" },
       expected: WIDE_AUTHORS,
     }),
   ),
