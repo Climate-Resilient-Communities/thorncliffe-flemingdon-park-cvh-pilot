@@ -365,15 +365,29 @@ describe("planProviderCatalogue: unreviewed machine translations of descriptions
     expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "review_incomplete", count: 1 });
   });
 
-  it("still requires 911 where the English has it", () => {
-    const english = "Call 911 in an emergency; otherwise 416-555-0100.";
+  it("keeps a description naming a crisis or emergency line in English until a person reviews it (safety_critical), counted apart", () => {
+    const english = "Toronto Fire Services, 24/7 rescue. Non-emergency line: 416-338-9050.";
     const result = plan({
       catalogue: catalogue([provider("M001", { services: { id: "x", en: english } })]),
-      translations: { es: translation(english, machine(english, "Llame al 416-555-0100.")) },
+      translations: { ps: translation(english, machine(english, "د ټورنټو اور وژنې خدمتونه، 24/7. غیر بیړنۍ کرښه: 416-338-9050.")) },
     });
 
     expect(result.providers[0].texts.services).toEqual({ en: english });
-    expect(result.report.translations.unavailable).toContainEqual({ lang: "es", reason: "lost_required", count: 1 });
+    expect(result.providers[0].withheld).toEqual({ services: { ps: "safety_critical" } });
+    expect(result.report.translations.machine).toEqual([]);
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(formatProviderReport(result.report).join("\n")).toMatch(/naming a crisis or emergency line .*\(ps 1\)/);
+  });
+
+  it("keeps a description that mentions 911 in English even when the machine text keeps 911 (safety_critical before lost_required)", () => {
+    const english = "Call 911 in an emergency; otherwise 416-555-0100.";
+    const result = plan({
+      catalogue: catalogue([provider("M001", { services: { id: "x", en: english } })]),
+      translations: { es: translation(english, machine(english, "Llame al 911 en una emergencia; si no, al 416-555-0100.")) },
+    });
+
+    expect(result.providers[0].texts.services).toEqual({ en: english });
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "es", reason: "safety_critical", count: 1 });
   });
 });
 

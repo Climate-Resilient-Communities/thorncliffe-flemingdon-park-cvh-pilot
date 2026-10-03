@@ -46,7 +46,7 @@ describe("the real data/catalogue files (S02.04)", () => {
 
   it("loads no reviewed translation yet: the catalogue's translations are machine output with no review recorded", () => {
     expect(real.report.translations.loaded).toBe(0);
-    expect(real.report.translations.unavailable.every((u) => u.reason === "machine" || u.reason === "facts_changed")).toBe(true);
+    expect(real.report.translations.unavailable.every((u) => ["machine", "facts_changed", "safety_critical"].includes(u.reason))).toBe(true);
     expect(new Set(real.report.translations.unavailable.map((u) => u.lang))).toEqual(new Set(["ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"]));
   });
 
@@ -56,7 +56,9 @@ describe("the real data/catalogue files (S02.04)", () => {
     for (const { lang, count } of real.report.translations.machine) {
       // Every description is either loaded unreviewed or withheld because a fact changed; nothing else.
       const changed = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "facts_changed")?.count ?? 0;
-      expect(count + changed, lang).toBe(99);
+      const critical = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "safety_critical")?.count ?? 0;
+      expect(count + changed + critical, lang).toBe(99);
+      expect(critical, lang).toBe(6);
       expect(count, lang).toBeGreaterThan(70);
     }
     const loaded = real.providers.filter((p) => p.texts.services.ps !== undefined);
@@ -66,6 +68,12 @@ describe("the real data/catalogue files (S02.04)", () => {
       expect(p.translations.services.ps).not.toHaveProperty("reviewer");
       expect(p.translations.services.ps).not.toHaveProperty("reviewedOn");
     }
+  });
+
+  it("keeps in English the descriptions that name a crisis or emergency line: the police division and the five fire station listings", () => {
+    const caught = real.providers.filter((p) => Object.values(p.withheld.services ?? {}).includes("safety_critical")).map((p) => p.id);
+    expect(caught).toEqual(["M001", "M002", "M003", "M004", "M005", "M006"]);
+    for (const id of caught) expect(Object.keys(real.providers.find((p) => p.id === id)!.texts.services)).toEqual(["en"]);
   });
 
   it("keeps the emergency roles and the category and subcategory names reviewed-only: none is loaded", () => {

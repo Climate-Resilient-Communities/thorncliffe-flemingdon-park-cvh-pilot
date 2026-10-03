@@ -141,8 +141,8 @@ export function is911Key(key: string): boolean {
 
 // ---------------------------------------------------------------- checks
 // ---------------------------------------------------------------- translations
-// The guides never load an unreviewed machine translation (no allowMachine), so `facts_changed` never comes up.
-export type UnavailableReason = Exclude<SharedUnavailableReason, "lost_required" | "facts_changed"> | "lost_911";
+// The guides never load an unreviewed machine translation (no allowMachine), so `facts_changed` and `safety_critical` never come up.
+export type UnavailableReason = Exclude<SharedUnavailableReason, "lost_required" | "facts_changed" | "safety_critical"> | "lost_911";
 
 export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   not_translated: "not translated yet",

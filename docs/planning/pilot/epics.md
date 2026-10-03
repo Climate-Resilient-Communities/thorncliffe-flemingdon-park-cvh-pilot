@@ -975,6 +975,7 @@ So that residents only see listings the Hub has checked.
 **When** the catalogue seed script runs
 **Then** it is loaded with provenance `status: "machine"` and no reviewer or review date, unless any phone number, postal code, email, web address, time or number of the English is missing or changed in it (then it is not loaded, reason `facts_changed`); a stale one (its `source` is not the current English) is still not loaded
 **And** emergency roles and category and subcategory names still load only when `reviewed`; `machineChecks` on a record is never taken as a review
+**And** a description whose English names a crisis or emergency line (911, 988, crisis, helpline, hotline, non-emergency line, emergency department, ...) is not loaded unreviewed (reason `safety_critical`, product owner 2026-10-03) and shows in English until reviewed
 **And** the report and the `seed.run` audit count reviewed, machine-labelled (`translations_machine`) and not-loaded translations (with why) separately
 
 **Given** the catalogue file fails its zod schema (missing `id`, duplicate `id`, coordinates outside Toronto, a category not in `labels`)
@@ -1022,6 +1023,7 @@ So that every resident gets the same, complete set of listings in their language
 **When** the release is written
 **Then** it is published with `machine: true`, `review_status: "none"` and `reviewed_on: null` (zh-Hant converted from an unreviewed zh likewise), its facts still matching the English, and the resident sees it labelled "Machine-translated; not reviewed by a person" with the English original one tap away
 **And** an emergency role, a category or subcategory name is still published only when reviewed; a reviewed translation is published as before, without that label
+**And** a description whose English names a crisis or emergency line is published in English with `translation.unavailable` until its translation is reviewed (`safety_critical`, counted in the release)
 **And** `DirectoryListingV1` gains no field or value, so releases written before the change still parse; the release counts the labelled texts (`machine`)
 
 **Given** the job is stopped part way (function time limit or failure)

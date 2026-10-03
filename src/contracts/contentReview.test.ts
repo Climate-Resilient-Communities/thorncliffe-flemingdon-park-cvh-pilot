@@ -1,6 +1,6 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { evaluateTranslation, lostFacts, toWesternDigits, type TranslationRecord } from "./contentReview";
+import { evaluateTranslation, lostFacts, safetyCriticalTerms, toWesternDigits, type TranslationRecord } from "./contentReview";
 
 const hash = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const ENGLISH = "Open Mon-Fri 9:30 a.m.-4:30 p.m. at 30 Thorncliffe Park Dr, M4H 1L1. Call 416-421-0792 or email info@example.org; see https://example.org/help.";
@@ -66,5 +66,46 @@ describe("evaluateTranslation with allowMachine", () => {
     expect(evaluateTranslation("zh-Hant", "k", ENGLISH, both, hash)).toEqual({ unavailable: "machine" });
     const claimsReviewed = { zh: { texts: { k: zh } }, "zh-Hant": { texts: { k: { ...hant, status: "reviewed" as const, reviewer: "Wei", reviewedOn: "2026-11-02" } } } };
     expect(evaluateTranslation("zh-Hant", "k", ENGLISH, claimsReviewed, hash, [], { allowMachine: true })).toEqual({ unavailable: "zh_changed_or_not_reviewed" });
+  });
+});
+
+describe("safetyCriticalTerms (product owner, 2026-10-03: crisis and emergency lines keep human review)", () => {
+  it.each([
+    ["Call 911 in an emergency.", "911"],
+    ["Call or text 988, the suicide crisis helpline.", "988"],
+    ["Kids Help Phone 1-800-668-6868 for young people.", "Kids Help Phone"],
+    ["Talk Suicide Canada 1-833-456-4566.", "suicide"],
+    ["Distress Centres of Greater Toronto 416-408-4357.", "distress"],
+    ["Assaulted Women's Helpline 416-863-0511.", "helpline"],
+    ["Toronto Rape Crisis Centre 416-597-8808.", "rape"],
+    ["A 24-hour mental health crisis line.", "crisis"],
+    ["Naseeha Mental Health Hotline.", "hotline"],
+    ["The hospital's emergency department at 825 Coxwell Ave.", "emergency line or department"],
+    ["Non-emergency line: 416-338-9050.", "non-emergency"],
+    ["Free naloxone kits and overdose prevention.", "overdose"],
+    ["Ontario Poison Centre 1-800-268-9017.", "poison"],
+  ])("catches %s", (english, term) => {
+    expect(safetyCriticalTerms(english)).toContain(term);
+  });
+
+  it.each([
+    "Emergency Energy Fund applications for overdue utility bills.",
+    "Emergency food hampers every Tuesday.",
+    "An emergency shelter referral desk.",
+    "Midwives are on call 24/7 for urgent concerns.",
+    "Individual and family counselling and mental health services.",
+    "Violence-against-women counselling and youth violence prevention.",
+    "Advocacy on the housing crisis and the affordability crisis.",
+    "Free groceries every Tuesday and Friday.",
+  ])("does not sweep up ordinary text: %s", (english) => {
+    expect(safetyCriticalTerms(english)).toEqual([]);
+  });
+
+  it("refuses an unreviewed machine translation of safety-critical English, however faithful, and still loads a reviewed one", () => {
+    const english = "Kids Help Phone 1-800-668-6868, 24 hours.";
+    const record = { text: "Kids Help Phone 1-800-668-6868، 24 گھنٹے۔", model: "m", sourceHash: hash(english) };
+    expect(evaluateTranslation("ur", "k", english, { ur: { texts: { k: record } } }, hash, ["911"], { allowMachine: true })).toEqual({ unavailable: "safety_critical" });
+    const reviewed = { ...record, status: "reviewed" as const, reviewer: "Ayesha", reviewedOn: "2026-11-02" };
+    expect(evaluateTranslation("ur", "k", english, { ur: { texts: { k: reviewed } } }, hash, ["911"], { allowMachine: true })).toMatchObject({ loaded: { provenance: { status: "reviewed" } } });
   });
 });

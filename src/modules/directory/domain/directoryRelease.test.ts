@@ -316,11 +316,13 @@ describe("planRelease: zh-Hant", () => {
   });
 
   it("converts a description's unreviewed machine zh as unreviewed too (AD-11 pilot change)", () => {
-    const p = provider("M001", { translations: { services: { zh: provenance(ENGLISH, { status: "machine", reviewer: undefined, reviewedOn: undefined }) } } });
+    // Not the fixture's English: it names 911, so it would stay English (safety_critical).
+    const english = "Free legal help.";
+    const p = provider("M001", { texts: { services: { en: english, zh: "免费软务。" } }, translations: { services: { zh: provenance(english, { status: "machine", reviewer: undefined, reviewedOn: undefined }) } } });
     const { files } = plan([p]);
 
     expect(files.zh.providers[0].services).toMatchObject({ status: "ok", machine: true, review_status: "none", reviewed_on: null });
-    expect(files["zh-Hant"].providers[0].services).toMatchObject({ status: "script_converted", body: "免费軟務。紧急情况请拨打 911。", machine: true, review_status: "none", reviewed_on: null, conversion: { from: "zh" } });
+    expect(files["zh-Hant"].providers[0].services).toMatchObject({ status: "script_converted", body: "免费軟務。", machine: true, review_status: "none", reviewed_on: null, conversion: { from: "zh" } });
   });
 
   it("converts category and subcategory names from zh too", () => {
@@ -394,6 +396,25 @@ describe("planRelease: unreviewed machine translations of descriptions (AD-11 pi
     expect(files.ps.providers[0].emergency_role).toMatchObject({ status: "fallback_en", body: role, notice: TRANSLATION_UNAVAILABLE });
     expect(files.ps.categories[0].name).toMatchObject({ status: "fallback_en", body: "Legal" });
     expect(files.ps.providers[0].services).toMatchObject({ status: "ok", review_status: "none" });
+  });
+
+  it("keeps a description naming a crisis or emergency line in English (safety_critical), counted apart, even if the seed loaded it", () => {
+    const crisis = "Kids Help Phone 1-800-668-6868, any time.";
+    const p = provider("M001", { texts: { services: { en: crisis, ps: "Kids Help Phone 1-800-668-6868، هر وخت." } }, translations: { services: { ps: machine(crisis) } } });
+    const { files, report, counts } = plan([p]);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: crisis, notice: TRANSLATION_UNAVAILABLE });
+    expect(report.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(counts.safetyCritical).toBe(1);
+    expect(counts.machine).toBe(0);
+  });
+
+  it("reports a description the seed withheld as safety_critical under that reason", () => {
+    const p = provider("M001", { texts: { services: { en: SERVICES } }, translations: {}, withheld: { services: { ps: "safety_critical" } } });
+    const { report, counts } = plan([p]);
+
+    expect(report.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(counts.safetyCritical).toBe(1);
   });
 
   it("keeps a reviewed description reviewed: review_status reviewed, with its date", () => {

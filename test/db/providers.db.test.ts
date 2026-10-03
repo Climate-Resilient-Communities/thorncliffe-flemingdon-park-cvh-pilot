@@ -272,11 +272,13 @@ describe("provider catalogue (S02.04)", () => {
             category_links_added: 121,
             category_links_removed: 0,
             translations_loaded: 0,
-            translations_machine: 1238,
+            translations_machine: 1199,
+            translations_safety_critical: 84,
             translations_not_yet: 0,
           },
-          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 148 descriptions whose facts changed.
-          warnings: 1198,
+          // Not loaded although they exist: 1050 unreviewed emergency roles and names, 84 descriptions naming a crisis or
+          // emergency line (6 providers in 14 languages), 103 descriptions whose facts changed.
+          warnings: 1237,
           failures: 0,
         },
       });
@@ -411,6 +413,23 @@ describe("provider catalogue (S02.04)", () => {
       // The English changed since it was translated: stale, not loaded.
       await seed(withRecord(reviewedRecord({ source: "Older services text" })));
       expect((await row("M001")).texts.services).toEqual({ en: english });
+    });
+
+    it("keeps a description naming a crisis or emergency line in English until a person reviews it", async () => {
+      const english = "Fire rescue for the area. Non-emergency line: 416-338-9050.";
+      const text = "د سیمې لپاره د اور ژغورنه. غیر بیړنۍ کرښه: 416-338-9050.";
+      const withRecord = (change: Record<string, unknown> = {}) =>
+        input([entry("M001", { services: { id: catalogueTextId(english), en: english } })], { ps: { texts: { [catalogueTextId(english)]: { source: english, text, model: "m", ...change } } } });
+
+      const result = await seed(withRecord());
+      expect((await row("M001")).texts.services).toEqual({ en: english });
+      expect((await row("M001")).withheld).toEqual({ services: { ps: "safety_critical" } });
+      expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+      expect((await seedRuns()).at(-1)?.meta).toMatchObject({ counts: { translations_machine: 0, translations_safety_critical: 1 } });
+
+      // Reviewed by a person: it loads.
+      await seed(withRecord({ status: "reviewed", reviewer: "Wei Chen", reviewedOn: "2026-11-02" }));
+      expect((await row("M001")).texts.services).toEqual({ en: english, ps: text });
     });
 
     it("loads no unreviewed machine translation of an emergency role (AD-11 pilot change: descriptions only)", async () => {

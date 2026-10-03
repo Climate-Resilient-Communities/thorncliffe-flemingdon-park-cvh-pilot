@@ -17,7 +17,9 @@
 //  - pilot change to AD-11 (product owner, 2026-10-03): a provider's ordinary description (`services`)
 //    also loads when it is a current machine translation no person has reviewed, in every language
 //    (Pashto included), as long as every phone number, postal code, email, web address, time and number
-//    of the English is in it unchanged (lostFacts; else `facts_changed`, shown in English). Its provenance
+//    of the English is in it unchanged (lostFacts; else `facts_changed`, shown in English), and the English
+//    names no crisis or emergency line (safetyCriticalTerms; else `safety_critical`, shown in English until a
+//    person reviews it: product owner, 2026-10-03). Its provenance
 //    says `status: "machine"` and never names a reviewer; the release ships it labelled "Machine-translated;
 //    not reviewed by a person". `machineChecks` on a record is carried along but is not a review and
 //    decides nothing. The emergency role, category and subcategory names stay reviewed-only;
@@ -433,6 +435,7 @@ export const UNAVAILABLE_TEXT: Record<UnavailableReason, string> = {
   zh_changed_or_not_reviewed: "converted from a zh text that has changed or is not reviewed",
   lost_required: "does not contain 911, which the English has",
   facts_changed: "machine translation that lost or changed a phone number, postal code, email, web address, time or number of the English",
+  safety_critical: "machine translation of a text naming a crisis or emergency line (needs a person's review)",
 };
 
 /** The report as lines for the terminal and the CI log. */

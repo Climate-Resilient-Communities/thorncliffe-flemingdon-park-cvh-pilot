@@ -138,7 +138,8 @@ export type UnavailableReason =
   | "incomplete_record"
   | "zh_changed_or_not_reviewed"
   | "lost_required"
-  | "facts_changed";
+  | "facts_changed"
+  | "safety_critical";
 
 export interface LoadedTranslation {
   text: string;
@@ -212,6 +213,36 @@ export function lostFacts(english: string, translation: string): string[] {
   return [...new Set(lost)].sort();
 }
 
+// ---------------------------------------------------------------- safety-critical English (crisis and emergency lines)
+/**
+ * Wording that marks an English text as safety-critical: it names a crisis or emergency line, or tells an emergency line
+ * from a non-emergency one. Such a text never ships as an unreviewed machine translation (product owner, 2026-10-03): it
+ * shows in English until a person has reviewed its translation. Read on the English source only, so no translation can
+ * evade it. Deliberately not matched: "emergency" on its own ("Emergency Energy Fund", "emergency food", "emergency
+ * shelter"), "urgent", "mental health" and "violence" (counselling programmes, not lines), and a "housing",
+ * "affordability" or "climate" crisis.
+ */
+const SAFETY_CRITICAL: readonly [string, RegExp][] = [
+  ["911", /\b911\b/],
+  ["988", /\b988\b/],
+  ["crisis", /\b(?<!(?:housing|affordability|climate|cost-of-living)\s)crisis\b/i],
+  ["distress", /\bdistress\b/i],
+  ["suicide", /\bsuicid\w*/i],
+  ["helpline", /\bhelp[\s-]?lines?\b/i],
+  ["hotline", /\bhot[\s-]?lines?\b/i],
+  ["Kids Help Phone", /\bkids help phone\b/i],
+  ["rape", /\brape\b/i],
+  ["overdose", /\boverdos\w*/i],
+  ["poison", /\bpoison (?:control|centre|center|information)\b/i],
+  ["emergency line or department", /\bemergency (?:department|room|line|number)s?\b/i],
+  ["non-emergency", /\bnon[\s-]?emergency\b/i],
+];
+
+/** Why an English text is safety-critical (the terms SAFETY_CRITICAL finds in it); empty when it is not. */
+export function safetyCriticalTerms(english: string): string[] {
+  return SAFETY_CRITICAL.filter(([, pattern]) => pattern.test(english)).map(([name]) => name);
+}
+
 /** The machine checks a record lists that are known (MACHINE_CHECKS), in that order; undefined when it lists none. */
 function machineChecksOf(record: TranslationRecord): MachineCheck[] | undefined {
   if (!Array.isArray(record.machineChecks)) return undefined;
@@ -225,7 +256,8 @@ function machineChecksOf(record: TranslationRecord): MachineCheck[] | undefined 
  * English has them, the translation must keep (for the guides "911", for the terms STOP, 16 and the processors).
  *
  * With `allowMachine` (AD-11 pilot change) a current, complete machine translation no person has reviewed loads too,
- * with `status: "machine"` and no reviewer, as long as lostFacts finds nothing (else `facts_changed`); for zh-Hant
+ * with `status: "machine"` and no reviewer, unless its English is safety-critical (safetyCriticalTerms: a crisis or
+ * emergency line; `safety_critical`) or lostFacts finds something (`facts_changed`); for zh-Hant
  * the zh it was converted from may then be a machine translation as well. A record marked reviewed is held to the
  * review rules either way: a machine translation never passes as reviewed, whatever `machineChecks` it lists.
  */
@@ -246,6 +278,8 @@ export function evaluateTranslation(
   const machine = record.status !== "reviewed";
   if (machine && !options.allowMachine) return { unavailable: "machine" };
   if (!machine && (isPlaceholder(record.reviewer) || !isIsoDate(record.reviewedOn))) return { unavailable: "review_incomplete" };
+  // Crisis and emergency lines keep human review, whatever the translation says (decided on the English).
+  if (machine && safetyCriticalTerms(english).length > 0) return { unavailable: "safety_critical" };
 
   const provenance: Record<string, unknown> = machine
     ? { model: record.model, status: "machine", sourceHash: record.sourceHash }

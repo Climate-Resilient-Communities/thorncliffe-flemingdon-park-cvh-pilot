@@ -17,6 +17,8 @@
 //  - pilot change to AD-11 (product owner, 2026-10-03): a provider's ordinary description (`services`) also
 //    ships when the seed loaded it as a current machine translation no person has reviewed, and its facts
 //    (phone numbers, postal codes, emails, web addresses, times, numbers) still match the English (lostFacts).
+//    A description whose English names a crisis or emergency line (safetyCriticalTerms) is not: it stays English
+//    (`safety_critical`) until a person reviews its translation (product owner, 2026-10-03).
 //    It is published with `machine: true`, `status: "ok"` (or `script_converted` for zh-Hant), `review_status:
 //    "none"` and `reviewed_on: null`: the listing contract is unchanged, and the client labels any translated
 //    text whose review_status is not `reviewed` "Machine-translated; not reviewed by a person", the English
@@ -124,6 +126,11 @@ export interface ReleaseCounts {
    * from releases made before that change.
    */
   machine?: number;
+  /**
+   * Of `fallbacks`, the descriptions shown in English because they name a crisis or emergency line and no person has
+   * reviewed their translation (`safety_critical`). Absent from releases made before that rule.
+   */
+  safetyCritical?: number;
   /** Texts published as English with translation.unavailable, the stale ones included. */
   fallbacks: number;
   stale: number;
@@ -409,6 +416,7 @@ export function planRelease(input: ReleaseInput): ReleasePlan {
   }
   if (problems.length > 0) throw new ReleaseDataError([...new Set(problems)].slice(0, 20));
   counts.stale = report.stale.length;
+  counts.safetyCritical = [...unavailable.values()].filter((item) => item.reason === "safety_critical").reduce((sum, item) => sum + item.count, 0);
   report.unavailable = [...unavailable.values()].sort((a, b) => a.lang.localeCompare(b.lang) || a.reason.localeCompare(b.reason));
   report.stale.sort((a, b) => a.subject.localeCompare(b.subject) || a.lang.localeCompare(b.lang) || a.text.localeCompare(b.text));
   return { files, counts, report };
