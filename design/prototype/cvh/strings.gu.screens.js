@@ -231,6 +231,7 @@
    "now": "હમણાં",
    "levelOfficial": "{source} તરફથી સત્તાવાર ચેતવણી.",
    "levelCommunity": "હબ તરફથી સમુદાય ચેતવણી. હબે ચકાસી છે.",
+   "fromHub": "હબ તરફથી સમુદાય ચેતવણી",
    "levelAmbassador": "બિલ્ડિંગ એમ્બેસેડર તરફથી સમુદાય ચેતવણી. હજી ચકાસાઈ નથી.",
    "stop": "હબના બધા મેસેજ બંધ કરવા STOP લખીને જવાબ આપો.",
    "verifiedKeyword": "ચકાસાયેલું એટલે શું તે જાણવા INFO લખીને જવાબ આપો.",
@@ -1360,4 +1361,27 @@
    "reviewed": "હબે તપાસ્યું, છેલ્લે {date} ના રોજ અપડેટ કર્યું"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "મશીન અનુવાદ; કોઈ વ્યક્તિએ તેની સમીક્ષા કરી નથી" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "થોર્નક્લિફ પાર્ક અને ફ્લેમિંગ્ડન પાર્કમાં સેવાઓ, સંસ્થાઓ અને એપાર્ટમેન્ટ ઇમારતો. તે શું છે તે જોવા માટે પિન પર ટૅપ કરો.",
+    "service": "સેવા અથવા સંસ્થા",
+    "building": "એપાર્ટમેન્ટ ઇમારત",
+    "pinName": "{name}: {kind}",
+    "noSignal": "સિગ્નલ વિના નકશો ઉપલબ્ધ નથી",
+    "noSignalBody": "નકશા પરની બધી જગ્યાઓ યાદીમાં છે.",
+    "notSaved": "નકશાનો આ ભાગ તમારા ફોન પર સાચવેલો નથી",
+    "notSavedBody": "સિગ્નલ હોય ત્યારે તમે જોયેલા નકશાના ભાગ તમારા ફોન પર રહે છે. પિન અને યાદી હજી પણ કામ કરે છે.",
+    "listTitle": "નકશાના આ ભાગની જગ્યાઓ",
+    "listLead": "નકશો બતાવે છે તે જ જગ્યાઓ. આ યાદી બદલવા માટે નકશો ખસેડો અથવા ઝૂમ કરો.",
+    "listEmpty": "નકશાના આ ભાગમાં કંઈ નથી. નકશો ખસેડો અથવા ઝૂમ કરો, અથવા આખો વિસ્તાર બતાવો.",
+    "wholeArea": "આખો વિસ્તાર બતાવો",
+    "buildings": "એપાર્ટમેન્ટ ઇમારતો",
+    "buildingsCount": "{n} ઇમારતો",
+    "buildingsCountOne": "1 ઇમારત",
+    "filtered": "ડિરેક્ટરીમાં તમે પસંદ કરેલા ફિલ્ટર સાથે મેળ ખાતી જગ્યાઓ જ બતાવવામાં આવી રહી છે."
+   }
+  });
 })();

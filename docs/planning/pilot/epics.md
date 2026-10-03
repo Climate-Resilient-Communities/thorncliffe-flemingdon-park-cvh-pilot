@@ -115,7 +115,7 @@ NFR-N9: Total build and running cost within about CAD 1,000 for two months (curr
 - AR-24: derived building/neighbourhood status in `status.ts` with phase and precedence (AD-19).
 - AR-25: versioned public feed with feed_version, edge cache, polling, service-worker highest-version rule, archive endpoint, share URL `?l=` (AD-17).
 - AR-26: device-only personalisation, no cookies on resident routes (asserted), aggregate usage beacon (AD-3).
-- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers and check-in screens (AD-16).
+- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers, home (inline) and check-in screens (AD-16).
 
 ### UX Design Requirements
 
@@ -266,8 +266,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `usage_count` (directory) | S02.15 | `campaign` (subscriptions) | S09.07 |
 | `spend_event` (spend) | S03.02 | | |
 | `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | | |
-| `translation_route` (translation) | S04.01 | | |
-| `translation_cache` (translation) | S04.02 | | |
+| `translation_route`, `translation_cache` (translation) | S04.02 (S04.01 later replaces the provisional timeouts in `translation_route` by a migration) | | |
 | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` (alerting), `disruption_type` (places) | S04.03 | | |
 | `delivery` (messaging) | S06.01 | | |
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
@@ -969,6 +968,15 @@ So that residents only see listings the Hub has checked.
 **When** the catalogue seed script runs
 **Then** `provider`, `provider_location`, `category` and `provider_category` are upserted keyed by provider `id`; running it twice changes nothing; a provider in several categories is stored once; `seed.run` is audited with counts
 
+> **Pilot change (product owner, 2026-10-03, decisions 39 and 42), AD-11:** the "reviewed catalogue" of this story no longer means reviewed-only for one kind of text. The original rule (only `reviewed`, current translations load; anything else shows English with `translation.unavailable`) still holds for everything except the following criterion, added by the change.
+
+**Given** a provider's ordinary description (`services`) whose translation in a language (any of the 14, Pashto included) is a current machine translation no person has reviewed *(added by the pilot change)*
+**When** the catalogue seed script runs
+**Then** it is loaded with provenance `status: "machine"` and no reviewer or review date, unless any phone number, postal code, email, web address, time or number of the English is missing or changed in it (then it is not loaded, reason `facts_changed`); a stale one (its `source` is not the current English) is still not loaded
+**And** emergency roles and category and subcategory names still load only when `reviewed`; `machineChecks` on a record is never taken as a review
+**And** the description of a safety-critical provider (it has an emergency role, is in "Support & Emergency Services", or its English names a crisis or emergency line: 911, 988, crisis, helpline, hotline, non-emergency line, emergency department, ...) is not loaded unreviewed (reason `safety_critical`, decision 42) and shows in English until reviewed; the report counts the providers by criterion
+**And** the report and the `seed.run` audit count reviewed, machine-labelled (`translations_machine`) and not-loaded translations (with why) separately
+
 **Given** the catalogue file fails its zod schema (missing `id`, duplicate `id`, coordinates outside Toronto, a category not in `labels`)
 **When** the script runs
 **Then** nothing is loaded and the report lists every failing entry
@@ -1009,6 +1017,13 @@ So that every resident gets the same, complete set of listings in their language
 **Given** a provider translation whose recorded source hash no longer matches the current English text
 **When** the release is written
 **Then** that stale translation is not published; the listing carries the English text with `translation.unavailable`, and the publish report lists every stale text by provider and language
+
+**Given** a provider description the seed loaded as an unreviewed machine translation *(added by the pilot change to AD-11, product owner, 2026-10-03; until then only reviewed translations were published)*
+**When** the release is written
+**Then** it is published with `machine: true`, `review_status: "none"` and `reviewed_on: null` (zh-Hant converted from an unreviewed zh likewise), its facts still matching the English, and the resident sees it labelled "Machine-translated; not reviewed by a person" with the English original one tap away
+**And** an emergency role, a category or subcategory name is still published only when reviewed; a reviewed translation is published as before, without that label
+**And** a safety-critical provider's description (decision 42) is published in English with `translation.unavailable` until its translation is reviewed (`safety_critical`, counted in the release), and the facts of a machine description must match the English in order and count, times with their a.m./p.m. and weekdays included
+**And** `DirectoryListingV1` gains no field or value, so releases written before the change still parse; the release counts the labelled texts (`machine`)
 
 **Given** the job is stopped part way (function time limit or failure)
 **When** it runs again
@@ -1083,7 +1098,7 @@ So that I can find help near me in my language.
 
 ### Story S02.07 — Resident finds providers and buildings on a map
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** — (started 2026-10-02 23:23 UTC, merge pending)
 - **Traces:** FR-D3, UX-DR12, AR-3 (tile cache) · **Depends on:** S02.06, S01.13 · **Branch:** `e02-s07-map`
 
 As a resident,
@@ -1218,7 +1233,7 @@ So that I know what to do before, during and after a disruption.
 ### Story S02.11 — Resident home shows their buildings and the current alerts
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** UX-DR5, AR-20 (`FeedV1`), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
+- **Traces:** UX-DR5, AR-20 (`FeedV1`), AR-27 (911 block), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
 
 As a resident,
 I want a home screen that starts with my buildings,
@@ -1242,6 +1257,12 @@ So that I can see at a glance whether anything affects me.
 **Given** home is visible
 **When** 60 seconds pass
 **Then** the feed is fetched again; a response with a lower `feed_version` than the highest seen is discarded
+
+**Given** home (R-03)
+**When** it is shown, with or without chosen buildings
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is on home once and nowhere else on the screen (owner decision 36); the inline notice is the last item on home; when the "Every day" section is added (owner decision 37) it moves directly under it
+
+**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
@@ -1502,7 +1523,7 @@ So that I can read them even when my phone is set to another language.
 
 ### Story S03.04 — Search finds published providers by meaning
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 3 h 15 min (started 2026-10-02 20:43 UTC, merged 2026-10-02 23:58 UTC)
 - **Traces:** FR-D2-Q, FR-M3 (search data), AR-15, AR-20 (`SearchV1`), AR-22, AR-26 · **Depends on:** S03.02, S03.03 · **Branch:** `e03-s04-search-endpoint`
 
 As a resident,
@@ -1550,6 +1571,10 @@ So that a question in any language finds an English-sourced listing.
 **When** returned
 **Then** `emergency_first` is true
 
+**Given** a provider in an emergency category is among the top 3 (k = 3) of either completed leg, with a similarity of at least `SEARCH_EMERGENCY_THRESHOLD` (default 0.25, from 0 to 1, no greater than `SEARCH_THRESHOLD`; owner decision 41, 2026-10-03)
+**When** the server answers, including when the status is `no_clear_match`
+**Then** `emergency_first` is true; in the `no_clear_match` case `results` stays empty (the list is not padded, only the flag is set), and the rule only ever turns `emergency_first` on, never off (unit tests: an emergency provider at 0.27 with a threshold of 0.3 gives `no_clear_match` with `emergency_first: true`; a non-emergency provider at 0.27 gives `false`; an emergency provider fourth in its leg gives `false`; the translated leg alone qualifies; the direct leg alone qualifies)
+
 **Given** the direct leg fails or is still running at 2.2 s and no translated leg completed
 **When** the server answers
 **Then** it returns `{error:{code: "search_unavailable"}}` within 2.5 s of request start, the leg's call is cancelled, and the failure is counted in `ops_event` without the question
@@ -1574,12 +1599,12 @@ So that a question in any language finds an English-sourced listing.
 **When** the no-cookie test and the contract test run
 **Then** no cookie is set and every response matches `SearchV1` or the error schema
 
-### Story S03.05 — Questions in Pashto, Dari and romanized text also search through English
+### Story S03.05 — Questions in Pashto, Dari, Urdu and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** 1 h 22 min (started 2026-10-03 00:37 UTC, merged 2026-10-03 01:59 UTC)
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
-As a resident who writes in Pashto, Dari or romanized Urdu,
+As a resident who writes in Pashto, Dari, Urdu or romanized Urdu,
 I want my question understood as well as anyone else's,
 So that I am not disadvantaged by the language or script I use.
 
@@ -1587,7 +1612,10 @@ So that I am not disadvantaged by the language or script I use.
 
 **Given** the `translation` module's `Translator` port and Cohere adapter (created here; E04 adds alert routes, caching and checks for alerts)
 **When** a question needs the translated-question leg
-**Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps` and `prs`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
+**Then** it is translated to English with the model set in config `search_question_route` (provisionally North Small Translate for `ps`, `prs` and `ur`, and Command A Translate for romanized, mixed and ambiguous Arabic script), then embedded, in parallel with the direct leg, using the same request snapshot
+**And** native-script Urdu (a question the detector is confident is `ur`) gets the translated-question leg too, on by default, because the embedding model reads Urdu worse than English (owner decision 40, 2026-10-03); `ur=off` in `SEARCH_QUESTION_ROUTE` switches it off
+**And** the translation starts when the request has been validated, in parallel with the snapshot read (only the embedding of the translation waits for the snapshot), so a 1 s snapshot and a 1 s translation still complete the leg within 2.2 s (fake-clock test); the translation's `spend_event` row carries the release number when it is written
+**And** a `romanized_or_mixed` question of one or two Latin-letter words with no romanized marker word that the language detector does not reliably read as another language ("lawyer", "rent", "car repair") skips the leg: no translation call is made and `translated_leg` is `not_needed`
 
 **Given** the translation and its embedding complete before 2.2 s from request start and `eld` confirms the translation is English
 **When** results are ranked
@@ -1596,6 +1624,13 @@ So that I am not disadvantaged by the language or script I use.
 **Given** the translation fails, is not English, or the translated leg is still running at 2.2 s
 **When** the server answers
 **Then** the leg is cancelled, results come from the direct leg alone, the whole response still arrives within 2.5 s, and `translated_leg` is `failed` or `timed_out`
+**And** a translation that comes back identical to the question and already passes the English check is not a failure: `translated_leg` is `not_needed`
+
+**Given** a vendor call of one leg fails while the other leg answers (the translation call fails at the vendor, or the direct embedding fails and the translated leg rescued the answer)
+**When** the server answers
+**Then** an `ops_event` of kind `search.leg_failed` (reason `translate_failed` or `embed_failed`, counts and codes only) is written, at most once a minute per reason; a translation rejected by a check (not English, an answer, identical) is not a vendor failure and writes none
+**And** when the routed model is past a vendor limit (HTTP 429, quota or rate limit) and at least `SEARCH_FALLBACK_MIN_BUDGET_MS` (default 800) of the 2.2 s remain, the leg retries once with the model `SEARCH_QUESTION_FALLBACK` names for that kind of question (per kind, like `SEARCH_QUESTION_ROUTE`: `kind=model` or `kind=off`; provisional defaults, owner decision 45, 2026-10-03: `command-a-translate-08-2025` for `prs` (the addendum's second choice for Dari) and for `ur` (the addendum says Command A Translate does not write Urdu, but the leg only reads a question into English, which the owner tested), off for `ps` until S03.07 shows Command A Translate reads Pashto well, and the same model for `romanized_or_mixed` and `ambiguous_arabic`, skipped while their routed model is that model), logs `translated_leg = used` when it answers (`timed_out` when it is cut at the deadline), bills only the model that answered, and writes `translate_quota` (and `translate_fallback_used`) `search.leg_failed` events, each at most once a minute per reason and model; the test-set runner never falls back
+**And** when `SEARCH_TRANSLATE_MONTHLY_CALLS` gives a model a monthly limit (`model=limit`, no default: unset means no warning) and that model's translation `spend_event` rows in the current calendar month (America/Toronto) reach 80% of it, one `search.leg_failed` event with reason `translate_quota_near` and the model is written, once per model per month per instance, counted after the response so that no search waits for it
 
 **Given** the direct leg fails or is still running at 2.2 s but the translated leg completed
 **When** the server answers
@@ -1615,7 +1650,7 @@ So that I am not disadvantaged by the language or script I use.
 
 ### Story S03.06 — Resident asks a question and sees the right listings
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 7 h 41 min (started 2026-10-02 23:21 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-D2-Q, UX-DR10, AR-27 (911 block), NFR-N2 · **Depends on:** S03.04, S02.06, S02.10 · **Branch:** `e03-s06-ask-screens`
 
 As a resident,
@@ -1645,12 +1680,12 @@ So that I find help without knowing the provider's name.
 **And** if the refresh fails, it shows "Search results are being updated, try again" and the category list
 
 **Given** `emergency_first` is true
-**When** results are shown
-**Then** the one catalog 911 block appears above the results
+**When** results are shown, or there are none (including `status: no_clear_match`; the server sets `emergency_first` there too, decision 41)
+**Then** the one catalog 911 block appears above the results, or above the no-match state when there are none
 
 **Given** `status: no_clear_match`
 **When** shown (R-11)
-**Then** the resident sees "We couldn't find a clear match", the category list, the Hub's number as a `tel:` link and the general 911 line
+**Then** the resident sees "We could not find that yet" (the prototype's R-11 wording, which wins over any other wording under AD-16), the category list, the Hub's number as a `tel:` link and the general 911 line
 
 **Given** the phone is offline, the server is rate-limiting, or the server returns `search_unavailable`
 **When** the resident asks
@@ -1809,7 +1844,7 @@ So that timeouts are set from evidence before alerts depend on them.
 
 ### Story S04.02 — Alerts are translated by route, checked and never sent in the wrong language
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S04.01 · **Branch:** `e04-s02-translation-routes`
 
 As a resident who reads Pashto,
@@ -1975,7 +2010,7 @@ So that residents know we are on it before we have the details.
 
 ### Story S04.06 — Each text is rendered once and frozen at submit
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** AR-19 (renderer), FR-A5, FR-A3 · **Depends on:** S04.02 · **Branch:** `e04-s06-sms-renderer`
 
 As a Hub Coordinator approving an alert,
@@ -2040,7 +2075,7 @@ So that a mistake is caught by a second person before residents see it.
 
 **Given** the approver presses Approve
 **When** the session is `aal2`, the approver is not an editor, the policy allows it at approval time, the version and hash match what was shown, and the valid-until is still in the future
-**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag('feed')` runs after commit, and `entry.approved` is audited with the version, hash and recipient count
+**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag(FEED_TAG, { expire: 0 })` runs after commit (a bare `revalidateTag` only marks the entry stale), and `entry.approved` is audited with the version, hash and recipient count
 **And** if any condition fails, nothing changes and the refusal is recorded with the reason shown
 
 **Given** the snapshot count differs from the reviewed count

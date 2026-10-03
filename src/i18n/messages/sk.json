@@ -137,7 +137,8 @@
     "unavailable": "V tomto jazyku zatiaľ nie je",
     "unavailableBody": "Toto ešte nie je preložené do jazyka {lang}.",
     "showSource": "Čítať v jazyku {lang}",
-    "original": "Originál ({lang})"
+    "original": "Originál ({lang})",
+    "unreviewed": "Strojový preklad; nekontroloval ho človek"
   },
   "x05": {
     "title": "Dostávajte upozornenia a pomoc vo svojom jazyku",
@@ -262,7 +263,8 @@
     "active": "Aktívny problém",
     "progress": "Prebieha práca",
     "resolved": "Vyriešené",
-    "unknown": "Neznáme"
+    "unknown": "Neznáme",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -444,7 +446,13 @@
     "headsUpAction": "Jedna vec, ktorú treba urobiť teraz",
     "ambassadorHome": "Ambasádor: moja budova",
     "ambassadorLine": "Zverejnite aktualizáciu alebo urobte svoje kolo v budove {building}",
-    "noBuildingLine": "Tu sa zobrazujú upozornenia pre vašu štvrť. Pridajte svoju budovu a jej upozornenia uvidíte ako prvé."
+    "noBuildingLine": "Tu sa zobrazujú upozornenia pre vašu štvrť. Pridajte svoju budovu a jej upozornenia uvidíte ako prvé.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "SMS na obyčajnom telefóne",
@@ -454,6 +462,7 @@
     "now": "teraz",
     "levelOfficial": "Oficiálne upozornenie od {source}.",
     "levelCommunity": "Komunitné upozornenie od Hubu. Overil ho Hub.",
+    "fromHub": "Komunitné upozornenie od Hubu",
     "levelAmbassador": "Komunitné upozornenie od ambasádora budovy. Zatiaľ neoverené.",
     "stop": "Ak už nechcete dostávať žiadne správy od Hubu, odpovedzte STOP.",
     "verifiedKeyword": "Ak chcete vedieť, čo znamená „overené“, odpovedzte INFO.",
@@ -644,7 +653,16 @@
     "clear": "Vymazať napísaný text",
     "testTitle": "Testovacie otázky",
     "testNote": "Pre moderátorov: ťuknite na jednu a spustí sa pripravené vyhľadávanie zo zadania. Obyvatelia to nevidia.",
-    "testGloss": "(dárí: {gloss})"
+    "testGloss": "(dárí: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "Výsledky",
@@ -679,7 +697,8 @@
     "hoursUnknown": "Otváracie hodiny nie sú známe",
     "communityOffer": "Ponuka od susedov",
     "inCat": "Téma: {cat}",
-    "helpEmpty": "Týmto filtrom nezodpovedá žiadna služba, ktorá s tým môže pomôcť."
+    "helpEmpty": "Týmto filtrom nezodpovedá žiadna služba, ktorá s tým môže pomôcť.",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "Zatiaľ sme to nenašli",
@@ -4334,6 +4353,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {
@@ -4429,6 +4450,24 @@
     "numbersLink": "[EN] See the essential numbers",
     "backToList": "[EN] All services and organisations",
     "suggestApply": "[EN] Show only {place}"
+  },
+  "map": {
+    "lead": "Služby, organizácie a bytové domy v Thorncliffe Parku a Flemingdon Parku. Ťuknite na špendlík a uvidíte, čo to je.",
+    "service": "Služba alebo organizácia",
+    "building": "Bytový dom",
+    "pinName": "{name}: {kind}",
+    "noSignal": "Mapa nie je dostupná bez signálu",
+    "noSignalBody": "V zozname sú všetky miesta, ktoré má mapa.",
+    "notSaved": "Táto časť mapy nie je uložená vo vašom telefóne",
+    "notSavedBody": "Časti mapy, ktoré ste si pozreli so signálom, zostávajú vo vašom telefóne. Špendlíky a zoznam stále fungujú.",
+    "listTitle": "Miesta v tejto časti mapy",
+    "listLead": "Tie isté miesta, ktoré ukazuje mapa. Ak chcete zmeniť tento zoznam, posuňte alebo priblížte mapu.",
+    "listEmpty": "V tejto časti mapy nič nie je. Posuňte alebo priblížte mapu, alebo zobrazte celú oblasť.",
+    "wholeArea": "Zobraziť celú oblasť",
+    "buildings": "Bytové domy",
+    "buildingsCount": "Počet domov: {n}",
+    "buildingsCountOne": "1 dom",
+    "filtered": "Zobrazujú sa len miesta, ktoré zodpovedajú filtrom, ktoré ste si vybrali v adresári."
   },
   "guides": {
     "reviewed": "Skontroloval Hub, naposledy aktualizované {date}"

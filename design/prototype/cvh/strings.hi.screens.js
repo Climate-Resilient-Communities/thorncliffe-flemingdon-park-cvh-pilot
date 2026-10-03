@@ -231,6 +231,7 @@
    "now": "अभी",
    "levelOfficial": "{source} से आधिकारिक अलर्ट।",
    "levelCommunity": "हब से सामुदायिक अलर्ट। हब द्वारा सत्यापित।",
+   "fromHub": "हब से सामुदायिक अलर्ट",
    "levelAmbassador": "बिल्डिंग एम्बेसडर से सामुदायिक अलर्ट। अभी सत्यापित नहीं।",
    "stop": "हब के सभी मैसेज बंद करने के लिए STOP लिखकर जवाब दें।",
    "verifiedKeyword": "सत्यापित का मतलब जानने के लिए INFO लिखकर जवाब दें।",
@@ -1360,4 +1361,27 @@
    "reviewed": "हब ने जाँचा, आखिरी बार {date} को अपडेट किया गया"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "मशीन से अनुवाद; किसी व्यक्ति ने इसकी समीक्षा नहीं की है" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "Thorncliffe Park और Flemingdon Park में सेवाएँ, संगठन और अपार्टमेंट इमारतें। कोई पिन क्या है, यह देखने के लिए उस पर टैप करें।",
+    "service": "सेवा या संगठन",
+    "building": "अपार्टमेंट इमारत",
+    "pinName": "{name}: {kind}",
+    "noSignal": "सिग्नल के बिना नक्शा उपलब्ध नहीं है",
+    "noSignalBody": "नक्शे की सभी जगहें सूची में हैं।",
+    "notSaved": "नक्शे का यह हिस्सा आपके फ़ोन पर सहेजा नहीं गया है",
+    "notSavedBody": "सिग्नल होने पर आपने नक्शे के जो हिस्से देखे, वे आपके फ़ोन पर रहते हैं। पिन और सूची अब भी काम करते हैं।",
+    "listTitle": "नक्शे के इस हिस्से की जगहें",
+    "listLead": "वही जगहें जो नक्शा दिखाता है। यह सूची बदलने के लिए नक्शे को खिसकाएँ या ज़ूम करें।",
+    "listEmpty": "नक्शे के इस हिस्से में कुछ नहीं है। नक्शे को खिसकाएँ या ज़ूम करें, या पूरा इलाका दिखाएँ।",
+    "wholeArea": "पूरा इलाका दिखाएँ",
+    "buildings": "अपार्टमेंट इमारतें",
+    "buildingsCount": "{n} इमारतें",
+    "buildingsCountOne": "1 इमारत",
+    "filtered": "केवल वही जगहें दिखाई जा रही हैं जो डायरेक्टरी में आपके चुने हुए फ़िल्टर से मेल खाती हैं।"
+   }
+  });
 })();
