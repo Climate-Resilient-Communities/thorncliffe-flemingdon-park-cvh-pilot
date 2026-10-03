@@ -113,7 +113,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate alert_submit_attempt, alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   });
   await owner`update staff_account set role = ${authorA.role}::staff_role, status = 'active' where id = ${authorA.id}`;
 }
