@@ -8,6 +8,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { createAlertExpiry, createResidentAlerts } from "../../src/modules/alerting";
+import { recordOpsEvent } from "../../src/modules/ops";
 import { createDb, type Db } from "../../src/platform/db";
 import { deliveryFixtures, type SeededEntry } from "./deliveryFixtures";
 import { connect, serverUrl } from "./helpers";
@@ -242,10 +243,51 @@ describe("running twice, at once, or again after a failure", () => {
 
   it("is a no-op for a thread another run closed after this one listed it (skipped, not failed)", async () => {
     const seeded = await overdue();
-    const [first, second] = await Promise.all([expirer().run(), expirer().run()]);
-    expect(first.closed + second.closed).toBe(1);
-    expect(first.failed + second.failed).toBe(0);
-    expect(await finalsOf(seeded.alertId)).toHaveLength(1);
+    // A blocker holds the thread's lock and closes it; the run lists the thread (still open to it), waits on the lock, and finds it closed.
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const lockTaken = new Promise<void>((resolve) => (locked = resolve));
+    const blockerSql = connect(serverUrl());
+    const blocker = blockerSql.begin(async (tx) => {
+      await tx`select id from alert where id = ${seeded.alertId} for update`;
+      locked();
+      await held;
+      // Triggers off for this transaction only (no table lock, so the waiting run is not in its way): the thread is closed as another run's close would leave it.
+      await tx`set local session_replication_role = replica`;
+      await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${seeded.alertId}`;
+    });
+    await lockTaken;
+    const running = expirer().run();
+    for (let tries = 0; tries < 200; tries++) {
+      const waiting = await owner`select 1 from pg_stat_activity where usename = 'cvh_app_login' and wait_event_type = 'Lock'`;
+      if (waiting.length > 0) break;
+      await new Promise((resolve) => setTimeout(resolve, 25));
+      if (tries === 199) throw new Error("the run never waited on the thread's lock");
+    }
+    release();
+    await blocker;
+    await blockerSql.end({ timeout: 5 });
+    expect(await running).toEqual({ due: 1, closed: 0, skipped: 1, failed: 0 });
+    expect(await finalsOf(seeded.alertId)).toHaveLength(0);
+    expect(await threadRow(seeded.alertId)).toMatchObject({ status: "closed", closed_reason: "resolved" });
+  });
+
+  it("records an ops event with no thread when the run as a whole fails, and throws so the route answers 500", async () => {
+    const broken = createAlertExpiry({
+      db: Object.assign(Object.create(app) as Db, {
+        execute: async () => {
+          throw Object.assign(new Error("relation missing for +14165550123"), { code: "42P01" });
+        },
+      }),
+      finalText: () => FINAL_TEXT,
+      ops: { record: (event) => recordOpsEvent(app, event) },
+    });
+    await expect(broken.run()).rejects.toThrow();
+    const events = await opsEvents();
+    expect(events).toHaveLength(1);
+    expect(events[0]).toMatchObject({ kind: "alert.expire_failed", subject_id: null });
+    expect(JSON.stringify(events)).not.toContain("4165550123");
   });
 
   it("rolls back a thread whose close fails (no final, still open), records an ops event, goes on to the others, and closes it on the next run", async () => {
@@ -342,6 +384,25 @@ describe("the database and the system final", () => {
     await expect(asJob(expiring.alertId, expiring.authorId)).rejects.toThrow(/alert_entry_one_final/);
   });
 
+  it("refuses a system final that carries approval fields, or that names an author other than the thread's own", async () => {
+    const seeded = await overdue();
+    const others = await owner<{ id: string }[]>`select id from staff_account where id <> ${seeded.authorId} limit 1`;
+    const asJob = (column: string | null, value: string | null, author = seeded.authorId) =>
+      appSql.begin(async (tx) => {
+        await tx`select set_config('cvh.system_actor', 'expire', true)`;
+        await tx.unsafe(
+          `insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until${column ? `, ${column}` : ""})
+           select '${randomUUID()}', alert_id, 'final', 'published_system', '${author}', array['${author}']::uuid[], 'System words', types, audience, phase, valid_until${value ? `, ${value}` : ""}
+           from alert_entry where alert_id = '${seeded.alertId}' limit 1`,
+        );
+      });
+    await expect(asJob("approved_at", "now()")).rejects.toThrow(/no version, return/);
+    await expect(asJob("approved_version", "1")).rejects.toThrow(/no version, return/);
+    await expect(asJob("approved_hash", `'${"c".repeat(64)}'`)).rejects.toThrow(/no version, return/);
+    if (others[0]) await expect(asJob(null, null, others[0].id)).rejects.toThrow(/thread's own author/);
+    expect(await finalsOf(seeded.alertId)).toHaveLength(0);
+  });
+
   it("refuses to make a system final in a closed thread", async () => {
     const seeded = await overdue();
     await expirer().run();
@@ -391,8 +452,19 @@ describe("the database and the system final", () => {
         await tx`update alert_entry set original_text = 'changed' where id = ${draft}`;
       }),
     ).rejects.toThrow(/acting account/);
+    // The session variable alone discards nothing: it needs the system final made in the same transaction.
+    await expect(
+      appSql.begin(async (tx) => {
+        await tx`select set_config('cvh.system_actor', 'expire', true)`;
+        await tx`update alert_entry set status = 'discarded' where id = ${draft}`;
+      }),
+    ).rejects.toThrow(/acting account/);
+    expect((await owner`select status from alert_entry where id = ${draft}`)[0].status).toBe("draft");
     await appSql.begin(async (tx) => {
       await tx`select set_config('cvh.system_actor', 'expire', true)`;
+      await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until)
+               select ${randomUUID()}, alert_id, 'final', 'published_system', author_id, editor_ids, 'System words', types, audience, phase, valid_until
+               from alert_entry where id = ${seeded.entryId}`;
       await tx`update alert_entry set status = 'discarded' where id = ${draft}`;
     });
     expect((await owner`select status from alert_entry where id = ${draft}`)[0].status).toBe("discarded");

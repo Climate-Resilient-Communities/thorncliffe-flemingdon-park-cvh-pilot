@@ -174,6 +174,8 @@ same `JOB_SECRET` as the other job routes and no other variable, sends no text a
 A thread closed more than 5 minutes after its valid-until is recorded too (`alert.expire_late`): it means earlier runs were missed (pg_cron stopped, the app was
 down or the route answered an error), which is how a failed pg_cron run shows up in `ops_event` for E09's health job, together with `cron.job_run_details` and
 `net._http_response` (pg_net's record of the HTTP answers, which the route's 500 for a run that closed nothing and failed everything it tried also reaches).
+A run that fails as a whole (the overdue listing cannot be read) records an `alert.expire_failed` with no thread. A pg_cron run that never reaches the route records
+nothing in `ops_event`: finding it from `cron.job_run_details` and `net._http_response` is E09's health job's, and `alert.expire_late` is the later trace.
 **The owner schedules it, once, in production's Supabase SQL editor as `postgres`, after the Vault secrets of step 1 above exist; this repository does not apply it,
 and it is never run in a preview:**
 

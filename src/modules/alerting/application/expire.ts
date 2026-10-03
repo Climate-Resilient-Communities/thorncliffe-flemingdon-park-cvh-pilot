@@ -120,7 +120,14 @@ export function createExpirer(deps: ExpireDeps): Expirer {
   return {
     async run(): Promise<ExpireReport> {
       const report: ExpireReport = { due: 0, closed: 0, skipped: 0, failed: 0 };
-      const ids = await overdueThreadIds();
+      let ids: string[];
+      try {
+        ids = await overdueThreadIds();
+      } catch (error) {
+        // The run as a whole failed (the listing could not be read): an event with no subject, best-effort, then the route answers 500.
+        await record({ kind: "alert.expire_failed", detail: { error: classifyError(error) } });
+        throw error;
+      }
       report.due = ids.length;
       for (const alertId of ids) {
         try {

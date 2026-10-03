@@ -7,7 +7,7 @@
 --     `cvh.system_actor` is `expire` (set by the job, transaction-local), only as a `final`, only in an open thread whose covering entry is past its valid-until by
 --     the database's clock, published at the database's `now()`, with nothing frozen, approved or replaced. A human's `cvh.actor_id` does not allow it.
 --  2. With `cvh.system_actor = 'expire'` and no acting account, an entry may be discarded (draft or pending to discarded: the close discards what residents have
---     not read). Nothing else changes without an account, and a `published_system` entry never changes again (no transition leaves it).
+--     not read), only once the system final of this thread has been made in the same transaction. Nothing else changes without an account, and a `published_system` entry never changes again (no transition leaves it).
 -- The close itself is already guarded (20261004050000: `expired` only beside a `published_system` final made in the same transaction), and
 -- `alert_entry_one_final` lets one final per thread be approved or published, so two runs cannot both close a thread.
 
@@ -57,8 +57,13 @@ begin
       end if;
       if new.version <> 0 or new.returned_note is not null or new.supersedes_id is not null or new.withdrawal_reason is not null
          or new.content_hash is not null or new.sms_bodies is not null or new.submitted_at is not null or new.returned_for is not null
-         or new.approved_by is not null or new.possible_duplicate_of is not null then
+         or new.approved_by is not null or new.approved_at is not null or new.approved_version is not null or new.approved_hash is not null
+         or new.possible_duplicate_of is not null then
         raise exception 'alert_entry: a system final has no version, return, replacement, frozen content or approval' using errcode = 'check_violation';
+      end if;
+      -- Attribution: the thread's own author stands in (the column is required and names an account); no other account can be named as the author of a system final.
+      if new.author_id is distinct from (select a.created_by from public.alert a where a.id = new.alert_id) then
+        raise exception 'alert_entry: a system final is attributed to the thread''s own author' using errcode = 'check_violation';
       end if;
       new.web_published_at := now();
       new.editor_ids := array[new.author_id];
@@ -189,7 +194,13 @@ begin
     raise exception 'ALERT_CLOSED: a closed thread''s entry can only be discarded by its close' using errcode = 'check_violation';
   end if;
   -- The expire job has no account: the only change it makes besides its own final is the discard of what residents have not read, when it closes the thread.
-  if actor is null and not (system_actor is not distinct from 'expire' and new.status = 'discarded') then
+  -- It is allowed only with proof that the thread is being closed by the job: the system final made in this transaction (the same proof the thread's close
+  -- trigger asks for), which the job makes before it discards. A bare session variable discards nothing.
+  if actor is null and not (
+       system_actor is not distinct from 'expire' and new.status = 'discarded'
+       and exists (select 1 from public.alert_entry f
+                   where f.alert_id = new.alert_id and f.kind = 'final' and f.status = 'published_system' and f.web_published_at = now())
+     ) then
     raise exception 'alert_entry: the acting account (cvh.actor_id) is required' using errcode = 'check_violation';
   end if;
   if content_changed then
