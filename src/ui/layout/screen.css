@@ -10,6 +10,7 @@
     flex-direction: column;
     --screen-actions-inset-block-start: var(--inset-card-snug);
     --screen-actions-inset-block-end: var(--gutter-resident);
+    --screen-actions-max-block-size: var(--size-actions-max);
   }
 
   .layout-screen[data-surface="resident"] {
@@ -94,7 +95,7 @@
     position: sticky;
     inset-block-end: 0;
     z-index: 2;
-    max-block-size: 50dvh;
+    max-block-size: var(--screen-actions-max-block-size);
     overflow-y: auto;
     overscroll-behavior: contain;
     background-color: var(--surface);

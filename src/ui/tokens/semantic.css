@@ -47,6 +47,7 @@
   --size-symbol-hub: var(--app-symbol-hub);
   --size-header-resident-min: var(--app-min-header-resident);
   --size-topbar-hub-min: var(--app-min-topbar-hub);
+  --size-actions-max: var(--app-max-actions);
   --size-nav-item-resident-min: var(--app-min-nav-item-resident);
   --size-nav-item-resident-min-basic: var(--app-min-nav-item-resident-basic);
   --size-page-staff: var(--app-page-staff);
