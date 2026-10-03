@@ -162,6 +162,23 @@ test.describe("Screen actions", () => {
     await expect.poll(() => page.evaluate(() => document.documentElement.style.scrollPaddingBlockEnd)).toBe(`${before + 40}px`);
   });
 
+  test("never grow taller than half the viewport: a region of very long labels stays at the block end and scrolls inside itself", async ({ page }) => {
+    await page.setViewportSize({ width: 390, height: 600 });
+    await mount(page, "ActionsScreen", {});
+    const actions = page.getByRole("region", { name: "Approval actions" });
+    await actions.evaluate((region) => {
+      const extra = document.createElement("div");
+      extra.style.blockSize = "900px";
+      region.append(extra);
+    });
+
+    const { top, bottom, height } = await box(actions);
+    expect(height).toBeLessThanOrEqual(300.5);
+    expect(bottom).toBeCloseTo(600, 0);
+    expect(top).toBeGreaterThanOrEqual(299);
+    expect(await actions.evaluate((region) => region.scrollHeight > region.clientHeight)).toBe(true);
+  });
+
   test("keep the focused field above them: tabbing to the last field scrolls it clear", async ({ page }) => {
     await page.setViewportSize({ width: 390, height: 600 });
     // The hydrated fixture: ScreenActions' own effect reserves the space, nothing in the test does.

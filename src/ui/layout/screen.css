@@ -86,11 +86,17 @@
    * The prototype's .cvh-pubbar: the page surface with a top border, above the page content so a
    * scrolled field never shows through. The region is full width; its inner element takes the body's
    * inline inset and maximum inline size, so the buttons line up with the page column.
+   * It is never taller than half the viewport: a region of long labels that wrapped to more than that
+   * would otherwise stop being pinned at the block end (a sticky box cannot rise above its container's
+   * top) and would cover the page it sits over, so it scrolls inside itself instead.
    */
   .layout-screen__actions {
     position: sticky;
     inset-block-end: 0;
     z-index: 2;
+    max-block-size: 50dvh;
+    overflow-y: auto;
+    overscroll-behavior: contain;
     background-color: var(--surface);
     border-block-start: var(--offset-align-hairline) solid var(--border);
   }
