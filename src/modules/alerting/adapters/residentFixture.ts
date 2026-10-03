@@ -6,7 +6,10 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { FeedAlerts } from "../application/feed";
+import { AudienceSchema } from "../../../contracts/audience";
 import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../domain/residentThreads";
+import { RESOLVED_WINDOW_MS, type StatusThread } from "../domain/status";
+import type { EntryKind } from "../domain/lifecycle";
 
 const TranslationSchema = z.strictObject({
   body: z.string().min(1),
@@ -41,6 +44,8 @@ const FixtureSchema = z.strictObject({
       slug: z.string().min(1),
       /** A thread that closed (S05.03): it is not in the feed, and R-07 shows it by its address with how it closed. */
       closed: z.enum(["resolved", "expired", "withdrawn"]).optional(),
+      /** When it closed (S05.06: a resolved status lasts 12 hours from it). Not given: the time of its last entry. */
+      closed_at: z.iso.datetime().optional(),
       entries: z.array(EntrySchema).min(1),
     }),
   ),
@@ -84,6 +89,31 @@ export function fixtureRows(text: string, lang: string, closed = false): { versi
   return { version: fixture.feed_version, now: fixture.server_now === undefined ? undefined : new Date(fixture.server_now), rows, reasons };
 }
 
+/** The status threads of a fixture file (S05.06): its open threads, and those closed `resolved` within 12 hours of `now`. */
+export function fixtureStatusThreads(text: string, now: Date): StatusThread[] {
+  const fixture = FixtureSchema.parse(JSON.parse(text));
+  return fixture.threads.flatMap((thread): StatusThread[] => {
+    const lastEntry = Math.max(...thread.entries.map((entry) => Date.parse(entry.published_at)));
+    const closedAt = thread.closed === undefined ? null : new Date(thread.closed_at ?? lastEntry);
+    if (thread.closed !== undefined && !(thread.closed === "resolved" && closedAt !== null && now.getTime() - closedAt.getTime() < RESOLVED_WINDOW_MS)) return [];
+    return [
+      {
+        id: thread.id,
+        slug: thread.slug,
+        state: thread.closed === undefined ? "open" : "closed",
+        closeReason: thread.closed ?? null,
+        closedAt,
+        entries: thread.entries.flatMap((entry) => {
+          const audience = AudienceSchema.safeParse(entry.audience);
+          return audience.success
+            ? [{ id: entry.id, kind: entry.kind as EntryKind, phase: entry.phase, verified: entry.verified, superseded: entry.superseded, publishedAt: new Date(entry.published_at), audience: audience.data }]
+            : [];
+        }),
+      },
+    ];
+  });
+}
+
 export function readFeedFixtureFile(file: string): FeedFixture {
   return {
     version: () => fixtureRows(readFileSync(file, "utf8"), "en").version,
@@ -91,8 +121,8 @@ export function readFeedFixtureFile(file: string): FeedFixture {
     alerts: {
       read: async (lang) => ({
         threads: assembleThreads(fixtureRows(readFileSync(file, "utf8"), lang).rows, lang),
-        statuses: { buildings: new Map(), neighbourhoods: new Map() },
       }),
+      readStatusThreads: async (now) => fixtureStatusThreads(readFileSync(file, "utf8"), now),
       readClosedSlugs: async () => [...new Set(fixtureRows(readFileSync(file, "utf8"), "en", true).rows.map((row) => row.slug))],
       readClosed: async (lang, slug) => {
         const { rows, reasons } = fixtureRows(readFileSync(file, "utf8"), lang, true);

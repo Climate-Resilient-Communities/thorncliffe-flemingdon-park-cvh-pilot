@@ -29,12 +29,17 @@ export function createResidentBuildings(deps: { db: Db }) {
      * Only the ids: every building's register number and every neighbourhood's id, for the public alert feed, which lists
      * the status of each place (AD-19) without anything else about it.
      */
-    async placeIds(): Promise<{ buildings: string[]; neighbourhoods: string[] }> {
+    async placeIds(): Promise<{ buildings: string[]; neighbourhoods: string[]; neighbourhoodOf: Record<string, string> }> {
       const [buildings, neighbourhoods] = await Promise.all([
-        db.select({ rsn: building.rsn }).from(building).orderBy(asc(building.rsn)),
+        db.select({ rsn: building.rsn, neighbourhoodId: building.neighbourhoodId }).from(building).orderBy(asc(building.rsn)),
         db.select({ id: neighbourhood.id }).from(neighbourhood).orderBy(asc(neighbourhood.id)),
       ]);
-      return { buildings: buildings.map((row) => row.rsn), neighbourhoods: neighbourhoods.map((row) => row.id) };
+      return {
+        buildings: buildings.map((row) => row.rsn),
+        neighbourhoods: neighbourhoods.map((row) => row.id),
+        // Each building's neighbourhood, so a neighbourhood audience covers the buildings in it when the feed derives status (AD-19, S05.06).
+        neighbourhoodOf: Object.fromEntries(buildings.map((row) => [row.rsn, row.neighbourhoodId])),
+      };
     },
 
     /**

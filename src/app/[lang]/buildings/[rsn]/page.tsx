@@ -1,7 +1,9 @@
 import type { Metadata } from "next";
-import { getTranslations, setRequestLocale } from "next-intl/server";
+import { NextIntlClientProvider } from "next-intl";
+import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ResidentText, Screen, Stack } from "@/ui";
+import { BuildingStatus } from "@/ui/home";
 import { isLaunchCode, languageOf } from "@/i18n/languages";
 import { loadBuilding } from "./source";
 import { buildingPageView, type FactValue, type Translate } from "./view";
@@ -72,6 +74,9 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
   if (!building) notFound();
 
   const t = (await getTranslations({ locale: lang })) as unknown as Translate;
+  // The part of the catalog the status island reads on the phone, and nothing else: the status words, "Checking", "Not yet verified" and the types' words.
+  const all = (await getMessages({ locale: lang })) as Record<string, Record<string, unknown>>;
+  const statusMessages = { R03: { checking: all.R03.checking }, status: all.status, x02: { notYetVerified: all.x02.notYetVerified }, x13: all.x13 };
   const view = buildingPageView(building, t, languageOf(lang).bcp47);
   const { contact } = view;
 
@@ -97,6 +102,11 @@ export default async function BuildingPage({ params }: PageProps<"/[lang]/buildi
             </div>
           )}
         </Stack>
+
+        {/* The building's status now (S05.06): read on the phone from the public feed, because this page is cached for minutes. */}
+        <NextIntlClientProvider locale={lang} messages={statusMessages}>
+          <BuildingStatus lang={lang} rsn={building.rsn} neighbourhoodId={building.neighbourhoodId ?? null} />
+        </NextIntlClientProvider>
 
         <section data-testid="building-register">
           <Stack gap="related">

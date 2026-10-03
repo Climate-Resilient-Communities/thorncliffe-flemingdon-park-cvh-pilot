@@ -16,7 +16,8 @@ import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
 import { ResidentText, isEnglishFallback } from "../text/resident-text";
 import { agoText } from "./feed-poll";
-import { homeRows, type BuildingRow, type NeighbourhoodRow, type Shown } from "./home-view";
+import { homeRows, type BuildingRow, type NeighbourhoodRow } from "./home-view";
+import { StatusMark, ThreadLinks, Unverified } from "./place-status";
 import { adviceFor, deviceProfile, tailorThreads } from "./tailoring";
 import { useFeed } from "./use-feed";
 import "../choices/choices.css";
@@ -32,51 +33,10 @@ const DESTINATIONS = [
 
 type Translator = ReturnType<typeof useTranslations>;
 
-// How each thing a place can show looks: the catalog key of its words, and its icon. Every one has both, so a status is
-// never colour alone.
-const LOOK = {
-  checking: { key: "checking", icon: "statusUnknown" },
-  unknown: { key: "unknown", icon: "statusUnknown" },
-  none: { key: "none", icon: "none" },
-  active: { key: "active", icon: "statusActive" },
-  in_progress: { key: "progress", icon: "statusProgress" },
-  resolved: { key: "resolved", icon: "statusResolved" },
-} as const;
-
-const modifierOf = (shown: Shown): keyof typeof LOOK => (shown.kind === "status" ? shown.status : shown.kind);
-
-/** A place's status: its words, its icon and its colour. */
-function StatusMark({ shown }: { shown: Shown }) {
-  const r03 = useTranslations("R03");
-  const status = useTranslations("status");
-  const modifier = modifierOf(shown);
-  const look = LOOK[modifier];
-  const words = shown.kind === "checking" ? r03("checking") : status(look.key);
-  return (
-    <span className={`home-status home-status--${modifier}`} data-testid="home-status" data-status={modifier}>
-      <span className={`home-ico home-ico--${look.icon}`} aria-hidden="true" />
-      <span className="home-status__words">
-        <ResidentText>{words}</ResidentText>
-      </span>
-    </span>
-  );
-}
-
-/** "Not yet verified" under an alert status that rests only on unverified reports (AD-19). */
-function Unverified({ shown }: { shown: Shown }) {
-  const x02 = useTranslations("x02");
-  if (shown.kind !== "status" || shown.status === "none" || shown.verified) return null;
-  return (
-    <ResidentText as="p" className="home-place__note" testId="home-unverified">
-      {x02("notYetVerified")}
-    </ResidentText>
-  );
-}
-
 function BuildingRowView({ row, lang }: { row: BuildingRow; lang: LaunchCode }) {
   const r34 = useTranslations("R34");
   return (
-    <li>
+    <li data-testid={`home-building-item-${row.rsn}`}>
       {/* prefetch off: Next would otherwise fetch the building's page as soon as its link is on screen, which tells the server which buildings this resident chose (AD-3). Opening the page is the resident's own tap. */}
       <Link className="home-place tap" href={`/${lang}/buildings/${row.rsn}`} prefetch={false} data-testid={`home-building-${row.rsn}`}>
         <span className="home-place__text">
@@ -86,11 +46,13 @@ function BuildingRowView({ row, lang }: { row: BuildingRow; lang: LaunchCode }) 
         </span>
         <span className="home-ico home-ico--chevron" aria-hidden="true" />
       </Link>
+      {/* The threads behind the status, beside the row's link and not inside it: a link holds no other link (S05.06). */}
+      <ThreadLinks behind={row.behind} lang={lang} testId={`home-building-threads-${row.rsn}`} />
     </li>
   );
 }
 
-function NeighbourhoodRowView({ row, name }: { row: NeighbourhoodRow; name: (id: string) => string }) {
+function NeighbourhoodRowView({ row, name, lang }: { row: NeighbourhoodRow; name: (id: string) => string; lang: LaunchCode }) {
   return (
     <li className="home-place" data-testid={`home-neighbourhood-${row.id}`}>
       <span className="home-place__text">
@@ -99,6 +61,7 @@ function NeighbourhoodRowView({ row, name }: { row: NeighbourhoodRow; name: (id:
         </span>
         <StatusMark shown={row.shown} />
         <Unverified shown={row.shown} />
+        <ThreadLinks behind={row.behind} lang={lang} testId={`home-neighbourhood-threads-${row.id}`} />
       </span>
     </li>
   );
@@ -318,7 +281,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
               <ResidentText as="h2">{neighbourhoodTitle}</ResidentText>
               <ul className="home-list">
                 {rows.neighbourhoods.map((row) => (
-                  <NeighbourhoodRowView key={row.id} row={row} name={name} />
+                  <NeighbourhoodRowView key={row.id} row={row} name={name} lang={lang} />
                 ))}
               </ul>
             </Stack>

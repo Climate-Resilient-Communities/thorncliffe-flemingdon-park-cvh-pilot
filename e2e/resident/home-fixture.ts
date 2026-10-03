@@ -17,7 +17,7 @@ export function feedOf(version: number, places: { buildings?: Record<string, Pla
     v: 1,
     feed_version: version,
     server_now: NOW,
-    threads: [],
+    threads: [] as unknown[],
     places: {
       buildings: BUILDINGS.map(({ rsn }) => ({ rsn, ...state(places.buildings?.[rsn]) })),
       neighbourhoods: ["TP", "FP"].map((id) => ({ id, ...state(places.neighbourhoods?.[id]) })),

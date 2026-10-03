@@ -1,5 +1,6 @@
 import type { BuildingList } from "@/contracts/buildingList";
-import type { FeedV1, PlaceStatus } from "@/contracts/feed";
+import { audienceCoversBuilding, audienceCoversNeighbourhood } from "@/contracts/audience";
+import type { FeedThread, FeedV1, PlaceStatus } from "@/contracts/feed";
 
 // What home shows for each place, worked out from the phone's choices, the building list and the feed. Pure: the
 // component only draws it. The server's feed lists every place and knows nobody's choices (AD-3); the phone picks its
@@ -19,17 +20,25 @@ export interface FeedView {
   failed: boolean;
 }
 
+/** A thread behind a place's status (S05.06): the link to it, and its types, whose words are its name. */
+export interface ThreadBehind {
+  slug: string;
+  types: readonly string[];
+}
+
 export interface BuildingRow {
   rsn: string;
   /** From the building list; absent while it loads or when the list could not be read. */
   address?: string;
   neighbourhoodId?: string;
   shown: Shown;
+  behind: ThreadBehind[];
 }
 
 export interface NeighbourhoodRow {
   id: string;
   shown: Shown;
+  behind: ThreadBehind[];
 }
 
 export interface HomeRows {
@@ -37,9 +46,36 @@ export interface HomeRows {
   neighbourhoods: NeighbourhoodRow[];
 }
 
-function shownOf(place: { status: PlaceStatus; verified: boolean } | undefined, view: FeedView): Shown {
+export function shownOf(place: { status: PlaceStatus; verified: boolean } | undefined, view: FeedView): Shown {
   if (view.feed) return place ? { kind: "status", status: place.status, verified: place.verified } : { kind: "unknown" };
   return view.failed ? { kind: "unknown" } : { kind: "checking" };
+}
+
+/** The phase of a thread's covering entry (AD-19): the latest entry that is substantive, not replaced by a correction or withdrawal, and has a phase. */
+function coveringPhase(thread: FeedThread): string | null {
+  const replaced = new Set(thread.entries.flatMap((entry) => (entry.supersedes_id ? [entry.supersedes_id] : [])));
+  const live = thread.entries.filter((entry) => entry.kind !== "withdrawal" && !replaced.has(entry.id));
+  const latest = [...live].sort((a, b) => Date.parse(a.published_at) - Date.parse(b.published_at) || (a.id < b.id ? -1 : 1)).at(-1);
+  return latest?.phase ?? null;
+}
+
+export type BehindPlace = { kind: "building"; rsn: string; neighbourhoodId: string | null } | { kind: "neighbourhood"; id: string };
+
+/**
+ * The threads behind a place's status, from the feed's open threads: those whose audience covers the place and whose covering entry's phase gives the status
+ * (`problem` for active, `in_progress` for in progress). `resolved` has none here: a thread closed `resolved` is not in the feed's list (the status is derived from
+ * threads the list does not hold), so the feed names no address for it. Uses the same coverage rules as the server's `statusOf` (contracts/audience.ts).
+ */
+export function threadsBehind(place: BehindPlace, status: PlaceStatus, threads: readonly FeedThread[]): ThreadBehind[] {
+  const phase = status === "active" ? "problem" : status === "in_progress" ? "in_progress" : null;
+  if (phase === null) return [];
+  return threads
+    .filter((thread) => thread.state === "open" && (place.kind === "building" ? audienceCoversBuilding(thread.audience, place) : audienceCoversNeighbourhood(thread.audience, place.id)) && coveringPhase(thread) === phase)
+    .map((thread) => ({ slug: thread.slug, types: thread.types }));
+}
+
+export function behindOf(shown: Shown, feed: FeedV1 | null, place: BehindPlace): ThreadBehind[] {
+  return feed && shown.kind === "status" ? threadsBehind(place, shown.status, feed.threads) : [];
 }
 
 /**
@@ -50,11 +86,13 @@ export function homeRows(input: { chosen: readonly string[]; list: BuildingList 
   const { chosen, list, view } = input;
   const buildings = chosen.map((rsn): BuildingRow => {
     const listed = list?.buildings.find((building) => building.rsn === rsn);
+    const shown = shownOf(view.feed?.places.buildings.find((place) => place.rsn === rsn), view);
     return {
       rsn,
       address: listed?.address,
       neighbourhoodId: listed?.neighbourhoodId,
-      shown: shownOf(view.feed?.places.buildings.find((place) => place.rsn === rsn), view),
+      shown,
+      behind: behindOf(shown, view.feed, { kind: "building", rsn, neighbourhoodId: listed?.neighbourhoodId ?? null }),
     };
   });
 
@@ -63,6 +101,9 @@ export function homeRows(input: { chosen: readonly string[]; list: BuildingList 
   const ids = chosen.length > 0 && own.length > 0 ? own : everyone;
   return {
     buildings,
-    neighbourhoods: ids.map((id) => ({ id, shown: shownOf(view.feed?.places.neighbourhoods.find((place) => place.id === id), view) })),
+    neighbourhoods: ids.map((id) => {
+      const shown = shownOf(view.feed?.places.neighbourhoods.find((place) => place.id === id), view);
+      return { id, shown, behind: behindOf(shown, view.feed, { kind: "neighbourhood", id }) };
+    }),
   };
 }

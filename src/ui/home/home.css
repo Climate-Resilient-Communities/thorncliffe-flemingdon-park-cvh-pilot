@@ -58,6 +58,33 @@
     color: var(--text-muted);
   }
 
+  /* The threads behind a place's status (S05.06): one link each, named by its types, at least a finger tall. */
+  .home-threads {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .home-thread {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--gap-related);
+    box-sizing: border-box;
+    min-block-size: var(--tap-current);
+    color: var(--ink);
+    font-weight: 700;
+    text-decoration: underline;
+  }
+
+  .home-thread:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
   .home-ico {
     display: inline-block;
     flex: none;

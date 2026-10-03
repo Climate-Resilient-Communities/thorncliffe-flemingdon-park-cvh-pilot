@@ -7,11 +7,14 @@ import type { LangCode } from "../../../contracts/lang";
 import type { Db } from "../../../platform/db";
 import { feedVersion } from "../adapters/schema";
 import { buildFeed, type PlaceState } from "../domain/feed";
+import { statusesOf, type StatusThread } from "../domain/status";
 
 /** The buildings (register numbers) and neighbourhoods (ids) the feed lists. Wired to the places module by `createFeedReader`. */
 export interface FeedPlaces {
   buildings: readonly string[];
   neighbourhoods: readonly string[];
+  /** Each building's neighbourhood (rsn to id), so a neighbourhood audience covers the buildings in it when status is derived (AD-19). Left out: buildings audiences only. */
+  neighbourhoodOf?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -21,8 +24,14 @@ export interface FeedPlaces {
 export interface FeedAlerts {
   read(lang: LangCode): Promise<{
     threads: readonly FeedThread[];
-    statuses: { buildings: ReadonlyMap<string, PlaceState>; neighbourhoods: ReadonlyMap<string, PlaceState> };
+    /** Fixed statuses, for a source that has no status threads; ignored when `readStatusThreads` is given (the feed derives them, S05.06). */
+    statuses?: { buildings: ReadonlyMap<string, PlaceState>; neighbourhoods: ReadonlyMap<string, PlaceState> };
   }>;
+  /**
+   * The status threads (S05.06, AD-19): the non-drill threads that are open, and those closed `resolved` in the 12 hours before `now`, with their published entries.
+   * Read apart from `read`, whose list holds open threads only. The feed derives every place's status from them with `statusOf`, at request time.
+   */
+  readStatusThreads?(now: Date): Promise<readonly StatusThread[]>;
   /**
    * The closed thread with this slug (S05.03): R-07 shows a thread that closed (its close reason, the final message, every earlier entry) when a resident opens its
    * address. It is not in `read`: the feed lists open threads only. Null when no closed thread has the slug. A source that has no closed threads leaves it out.
@@ -34,7 +43,7 @@ export interface FeedAlerts {
 
 /** Before S04.08: no threads, so every place is `none`. */
 export const NO_ALERTS_YET: FeedAlerts = {
-  read: async () => ({ threads: [], statuses: { buildings: new Map(), neighbourhoods: new Map() } }),
+  read: async () => ({ threads: [] }),
 };
 
 export interface FeedReaderDeps {
@@ -67,8 +76,11 @@ export function createFeedReader(deps: FeedReaderDeps) {
       // The version is read first: a change committed while the rest is read makes the answer look older than it is,
       // never newer, and a phone discards only an answer older than one it has seen.
       const version = await (deps.version ?? (() => readFeedVersion(requireDb(deps.db))))();
-      const [places, current] = await Promise.all([deps.places(), alerts.read(lang)]);
-      return buildFeed({ feedVersion: version, now: now(), threads: current.threads, places, statuses: current.statuses });
+      const at = now();
+      const [places, current, statusThreads] = await Promise.all([deps.places(), alerts.read(lang), alerts.readStatusThreads?.(at)]);
+      // Derived here, at request time, from the status threads (AD-19); never stored.
+      const statuses = statusThreads ? statusesOf(places, statusThreads, at) : (current.statuses ?? { buildings: new Map(), neighbourhoods: new Map() });
+      return buildFeed({ feedVersion: version, now: at, threads: current.threads, places, statuses });
     },
   };
 }

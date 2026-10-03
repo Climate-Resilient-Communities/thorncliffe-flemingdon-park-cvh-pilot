@@ -163,6 +163,8 @@ for (const [code, path, name] of [
   for (const width of [390, 1280] as const) {
     test(`${code} ${name} building page at ${width}px has no horizontal scrolling and matches its baseline screenshot`, async ({ page }) => {
       await openResident(page, path, width, 900);
+      // The status (S05.06) is read on the phone from the feed: the baseline is taken once it has answered, never while it says "Checking".
+      await expect(page.getByTestId("building-status").getByTestId("home-status")).not.toHaveAttribute("data-status", "checking");
       await showWholePage(page, width);
 
       const overflow = await page.evaluate(() => {

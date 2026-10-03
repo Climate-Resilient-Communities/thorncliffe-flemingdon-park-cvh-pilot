@@ -446,6 +446,7 @@ describe("the building page's reader (S02.08)", () => {
       rsn: "501",
       address: "501 Test St",
       neighbourhoodName: "Thorncliffe Park",
+      neighbourhoodId: "TP",
       storeys: 9,
       elevators: 0,
       emergencyPower: false,
@@ -458,7 +459,7 @@ describe("the building page's reader (S02.08)", () => {
     });
     // The confirmation's author, the coordinates and the floors never leave the module for a resident.
     expect(Object.keys(building!).sort()).toEqual(
-      ["address", "airConditioning", "barrierFreeEntrance", "checkingDetails", "contact", "coolingRoom", "elevators", "emergencyPower", "factsUpdatedAt", "neighbourhoodName", "rsn", "storeys"].sort(),
+      ["address", "airConditioning", "barrierFreeEntrance", "checkingDetails", "contact", "coolingRoom", "elevators", "emergencyPower", "factsUpdatedAt", "neighbourhoodId", "neighbourhoodName", "rsn", "storeys"].sort(),
     );
     expect(JSON.stringify(building)).not.toContain(ADMIN);
   });
