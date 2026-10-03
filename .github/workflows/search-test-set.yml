@@ -1,31 +1,39 @@
 name: Search test set
 
-# Run by the owner or the team from the Actions tab: asks the questions of the search test set to production's real
-# search use case (the current release, Cohere's question embedding, the private bucket of the release files) and
-# reports the hit rate per language, no-match and emergency accuracy, p50 and p95 per question, the embedding usage and
-# the threshold the tuning scores suggest (S03.07). Manual only; it runs from main, never from a branch.
+# Run by the owner or the team from the Actions tab: asks the tuning questions of the search test set to production's real
+# search use case (the current release, Cohere's embed-v4.0 for the questions, the private bucket of the release files, the
+# translated-question leg with the route and fallback production resolves) and reports the hit rate per language, no-match and
+# emergency accuracy, p50 and p95 per question, the vendor usage and the threshold the tuning scores suggest (S03.07). Manual
+# only; it runs from main, never from a branch.
 #
-# What it costs: one embedding call per question (counted in spend_event as purpose test_set). It writes no search_log
-# row and changes no release. Only the tuning subset runs: the evaluation subset is S03.08's acceptance evidence.
+# What it costs: Cohere calls on the free trial key that live search shares (about 1,000 calls a month in all). The run prints
+# the calls it plans, paces them, never makes more than max_calls (default 500) and reports partial results if it has to stop. The
+# use case counts them in spend_event as purpose test_set. It writes no search_log row and changes no release. Only the tuning
+# subset runs: the evaluation subset is S03.08's acceptance evidence, and the command line refuses it as well.
 on:
   workflow_dispatch:
     inputs:
       split:
-        description: "Which questions to ask (tuning only; the evaluation subset is S03.08's)"
+        description: "Which questions to ask (tuning only; the evaluation subset is S03.08's and is refused)"
         type: choice
         required: true
         default: tuning
         options:
           - tuning
       leg:
-        description: "The translated-question leg: on, off, or both (off first, then on). on needs S03.05 in the build"
+        description: "The translated-question leg: off, on, or both (off first, then on)"
         type: choice
         required: true
-        default: off
+        default: both
         options:
           - "off"
           - "on"
           - both
+      max_calls:
+        description: "The most Cohere calls (embedding and translation together) this run may make; empty is 500. A run of both legs plans about 440"
+        type: string
+        required: false
+        default: ""
 
 permissions:
   contents: read
@@ -47,9 +55,11 @@ jobs:
     timeout-minutes: 30
     # The production environment holds the secrets and accepts runs from main only (repository settings > Environments).
     environment: production
+    # Inputs reach the shell only as environment variables, never interpolated into a script.
     env:
       SPLIT: ${{ inputs.split }}
       LEG: ${{ inputs.leg }}
+      MAX_CALLS: ${{ inputs.max_calls }}
     steps:
       - name: Check the inputs
         run: |
@@ -57,8 +67,12 @@ jobs:
             echo "::error title=Search test set not run::It runs from main only."
             exit 1
           fi
-          [ "$SPLIT" = tuning ] || { echo "::error title=Search test set not run::Only the tuning subset can be run here; the evaluation subset is S03.08's."; exit 1; }
+          [ "$SPLIT" = tuning ] || { echo "::error title=Search test set not run::Only the tuning subset can be run here; the evaluation subset is S03.08's and is refused."; exit 1; }
           case "$LEG" in off | on | both) ;; *) echo "::error title=Search test set not run::Unknown leg."; exit 1 ;; esac
+          if [ -n "$MAX_CALLS" ] && ! [[ "$MAX_CALLS" =~ ^[1-9][0-9]{0,5}$ ]]; then
+            echo "::error title=Search test set not run::max_calls must be a whole number of at least 1, or empty."
+            exit 1
+          fi
       # The exact commit this run was started on, which is main's head.
       - uses: actions/checkout@v7
         with:
@@ -70,50 +84,57 @@ jobs:
             echo "::error title=Search test set not run::$GITHUB_SHA is no longer the head of main ($head); run the workflow again."
             exit 1
           fi
-      # Names the missing setting before anything is installed or called; values are never printed.
+      # Names the missing setting before anything is installed or called. Only whether each is set reaches this step, as true or
+      # false: the values never do, and are never printed.
       - name: Check the production environment has what the run needs
         env:
-          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
-          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
-          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
-          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          HAVE_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL != '' || secrets.PRODUCTION_DATABASE_URL != '' }}
+          HAVE_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY != '' }}
+          HAVE_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' }}
+          HAVE_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
         run: |
           missing=0
-          for name in PRODUCTION_DATABASE_URL COHERE_API_KEY SUPABASE_SECRET_KEY NEXT_PUBLIC_SUPABASE_URL; do
-            if [ -z "${!name}" ]; then
-              kind=secret
-              [ "$name" = NEXT_PUBLIC_SUPABASE_URL ] && kind=variable
+          check() {
+            local have=$1 kind=$2 name=$3
+            if [ "${!have}" != true ]; then
               echo "::error title=Missing $kind $name::$name is not set in the production environment (repository settings > Environments > production). Add it, see docs/config.md."
               missing=1
             fi
-          done
+          }
+          check HAVE_DATABASE_URL secret PRODUCTION_DATABASE_URL
+          check HAVE_COHERE_API_KEY secret COHERE_API_KEY
+          check HAVE_SUPABASE_SECRET_KEY secret SUPABASE_SECRET_KEY
+          check HAVE_SUPABASE_URL variable NEXT_PUBLIC_SUPABASE_URL
           exit $missing
       - uses: actions/setup-node@v7
         with:
           node-version: 22
           cache: npm
+      # No secret is in the environment while the dependencies install.
       - run: npm ci
+      # The secrets are in this step's environment and no other step's. The database is the optional SEARCH_TEST_DATABASE_URL
+      # (the app's own login, which can do all this run does) or else PRODUCTION_DATABASE_URL. The optional SEARCH_* variables are
+      # production's own values (Vercel's), copied to the same names so the run resolves the route, the fallback and the
+      # emergency threshold as production does; unset, they are blank and mean the defaults, as in production.
       - name: Run the search test set
         env:
-          SEARCH_TEST_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          SEARCH_TEST_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL || secrets.PRODUCTION_DATABASE_URL }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+          SEARCH_THRESHOLD: ${{ vars.SEARCH_THRESHOLD }}
+          SEARCH_EMERGENCY_THRESHOLD: ${{ vars.SEARCH_EMERGENCY_THRESHOLD }}
+          SEARCH_QUESTION_ROUTE: ${{ vars.SEARCH_QUESTION_ROUTE }}
+          SEARCH_QUESTION_FALLBACK: ${{ vars.SEARCH_QUESTION_FALLBACK }}
+          SEARCH_FALLBACK_MIN_BUDGET_MS: ${{ vars.SEARCH_FALLBACK_MIN_BUDGET_MS }}
         run: |
           set -o pipefail
-          mkdir -p "$RUNNER_TEMP/search-test-set"
-          legs=("$LEG")
-          [ "$LEG" = both ] && legs=(off on)
-          status=0
-          for leg in "${legs[@]}"; do
-            echo "::group::Translated-question leg $leg"
-            npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg "$leg" --split "$SPLIT" \
-              --scores --yes --out-dir "$RUNNER_TEMP/search-test-set" \
-              --summary-file "$RUNNER_TEMP/search-test-set/summary-$leg.md" 2>&1 | tee "$RUNNER_TEMP/search-test-set/log-$leg.txt" || status=1
-            echo "::endgroup::"
-          done
-          exit $status
-      # Reports and logs hold question ids, scores and counts, never a question's text.
+          out="$RUNNER_TEMP/search-test-set"
+          mkdir -p "$out"
+          args=(run --engine production --model embed-v4.0 --translated-leg "$LEG" --split "$SPLIT" --scores --yes --out-dir "$out" --summary-file "$out/summary.md")
+          if [ -n "$MAX_CALLS" ]; then args+=(--max-calls "$MAX_CALLS"); fi
+          npm run search-test-set -- "${args[@]}" 2>&1 | tee "$out/log.txt"
+      # The reports and the log hold question ids, provider ids, scores and counts, never a question's text.
       - name: Upload the reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
@@ -122,19 +143,18 @@ jobs:
           path: ${{ runner.temp }}/search-test-set
           if-no-files-found: ignore
           retention-days: 30
-      # Aggregates only: per language hit rates, no-match and emergency accuracy, timings, embedding usage, the suggested threshold.
+      # Aggregates only: per language hit rates, no-match and emergency accuracy, timings, vendor usage, the suggested threshold.
       - name: Write the summary
         if: ${{ !cancelled() }}
         run: |
           {
             echo "## Search test set ($SPLIT, leg $LEG) at $GITHUB_SHA"
             echo
-            shopt -s nullglob
-            files=("$RUNNER_TEMP"/search-test-set/summary-*.md)
-            if [ ${#files[@]} -eq 0 ]; then
-              echo "The run produced no summary; see the job log."
+            if [ -f "$RUNNER_TEMP/search-test-set/summary.md" ]; then
+              cat "$RUNNER_TEMP/search-test-set/summary.md"
+              echo
+              echo "The per-question report is in the uploaded artifact."
             else
-              for file in "${files[@]}"; do cat "$file"; echo; done
-              echo "The per-question scores are in the uploaded report."
+              echo "The run produced no summary; see the job log."
             fi
           } >> "$GITHUB_STEP_SUMMARY"

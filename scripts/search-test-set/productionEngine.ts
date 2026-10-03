@@ -1,109 +1,137 @@
-// The production engine of the search test-set runner (S03.07 infrastructure): the search use case, `createSearch`, built
-// from the environment of the run. A script has no Next request and cannot import src/app/search.ts (it is server-only and
-// reads the app's validated environment, which wants the app's database role and the production host), so this is the
-// same composition from the settings the run was given (production.ts lists them). The app's environment check
-// (src/platform/config/env.ts) is not touched or called: nothing here reads COHERE_API_KEY through it.
+// The production engine of the search test-set runner (S03.07): the search use case, `createSearch`, built from the settings of
+// the run. A script has no Next request and cannot import src/app/search.ts (it is server-only and reads the app's validated
+// environment, which wants the app's database role and the production host), so this is the same composition, made of the same
+// parts, from the settings the run was given (production.ts lists them). The app's environment check (src/platform/config/env.ts)
+// is not touched: nothing here reads COHERE_API_KEY through it, and the SEARCH_* settings are resolved by its own parser.
 //
-// What matches src/app/search.ts `searchTestSetEngine`: the same use case, the Cohere question embedder, the private
-// bucket, spend purpose `test_set` and no `search_log` row. Nothing is deferred: each question's usage is written before
-// its answer returns, so the timing a run reports is the use case's own.
-//
-// Besides answering, it keeps the question's embedding vector to rank every provider before the threshold (the use case
-// returns only providers at or above it), so the run can show the scores a threshold would cut.
-import { sql } from "drizzle-orm";
+// What matches src/app/search.ts `searchService()`:
+//  - the use case (`createSearch`), the Cohere question embedder (`cohereQueryEmbedder`), the translated-question leg's translator
+//    (`createQuestionTranslator` over `cohereTranslator`) with the route (`SEARCH_QUESTION_ROUTE`) and the fallback
+//    (`SEARCH_QUESTION_FALLBACK`) as production resolves them, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, the
+//    release's own threshold and emergency categories (they are in the release), the private bucket of the release files;
+//  - the spend of each call written by the use case, as purpose `test_set`, and no `search_log` row.
+// Nothing here ranks, embeds or translates: it only asks the use case and watches it. The use case's `observe` hands over the
+// similarities its ranking was made from (the threshold's suggestion needs the scores below the threshold, which no answer
+// holds), and the Cohere clients are wrapped to count every vendor call and tell a 429 from another failure (vendorMeter.ts).
+// What differs from the app: no `after()` (the writes still pending when an answer is ready are waited for when the run ends),
+// no ops events, and no monthly-limit warning (those are the app's).
 import {
-  ReleaseSearchRecordSchema,
-  VectorsFileSchema,
+  SearchFailure,
   cohereQueryEmbedder,
-  cosine,
   createSearch,
+  currentSearchFacts,
   supabaseDirectoryStorage,
+  warmCohere,
+  type CohereEmbedClient,
   type DirectoryStorage,
-  type QueryEmbedder,
-  type SearchService,
+  type SearchDeps,
+  type SearchObservation,
 } from "@/modules/directory";
+import { cohereTranslator, createQuestionTranslator, type CohereChatClient } from "@/modules/translation";
+import { SearchV1Schema } from "@/contracts/searchTestSet";
+import type { SearchSettings } from "@/platform/config/env";
 import { createDb, type Db } from "@/platform/db";
-import { sha256Hex } from "@/platform/hash";
-import { meterEmbedder, type MakeEngine, type Probe, type ProductionEngine, type ReleaseFacts } from "./production";
+import { errorCode } from "./lib";
+import { planQuestion } from "./callPlan";
+import type { ProductionEnv } from "./production";
+import { meterVendor } from "./vendorMeter";
+import type { Asked, ReleaseFacts, TuningEngine } from "./tuningRun";
 
 /** What the engine is made from; every part can be swapped by a test. */
 export type EngineParts = {
   db: Db;
   storage: DirectoryStorage;
-  embedder: QueryEmbedder;
-  /** Whether the translated-question leg's translator is wired (S03.05 has not landed here, so a run with the leg on is refused). */
-  translatorAvailable?: boolean;
+  /** The vendor's clients (one SDK client in production). Wrapped, so that every call is counted. */
+  clients: { embed: CohereEmbedClient; chat: CohereChatClient };
+  /** The search settings, resolved from the variables production resolves them from. */
+  settings: SearchSettings;
+  /** Test seams: where the use case's rows go (a test keeps them in memory), and its clock. */
+  writer?: SearchDeps["writer"];
+  clock?: () => number;
 };
 
-const TOP = 5;
+export async function engineFrom(parts: EngineParts, options: { translatedLeg: boolean }): Promise<TuningEngine> {
+  const found = await currentSearchFacts(parts.db);
+  if (!found) throw new Error("there is no current release with search data");
+  const facts: ReleaseFacts = found;
 
-async function currentRelease(db: Db): Promise<{ number: number; search: unknown } | null> {
-  const rows = (await db.execute(sql`select number, search from directory_release where is_current and status = 'complete'`)) as unknown as { number: number; search: unknown }[];
-  return rows[0] ?? null;
-}
+  const meter = meterVendor(parts.clients);
+  // The adapters take the client they are given and need no key of their own.
+  const embedder = cohereQueryEmbedder({ apiKey: "", client: meter.embed });
+  const translator = options.translatedLeg
+    ? createQuestionTranslator({
+        translator: cohereTranslator({ apiKey: "", client: meter.chat }),
+        route: parts.settings.questionRoute,
+        fallback: parts.settings.questionFallback,
+      })
+    : null;
 
-export async function engineFrom(parts: EngineParts, options: { translatedLeg: boolean }): Promise<ProductionEngine> {
-  if (options.translatedLeg && !parts.translatorAvailable) {
-    throw new Error("the translated-question leg is not in this build yet (S03.05): run with --translated-leg off");
-  }
-  const current = await currentRelease(parts.db);
-  if (!current) throw new Error("there is no current release");
-  const record = ReleaseSearchRecordSchema.safeParse(current.search);
-  if (!record.success) throw new Error(`release ${current.number} has no search data`);
-  const facts: ReleaseFacts = { release: current.number, model: record.data.embed_model, threshold: record.data.threshold };
-
-  const body = await parts.storage.get(record.data.vectors_path);
-  if (body === null || sha256Hex(body) !== record.data.sha256) throw new Error("the release's vectors file is missing or changed");
-  const vectors = VectorsFileSchema.parse(JSON.parse(body));
-
-  let captured: number[][] = [];
-  const metered = meterEmbedder(parts.embedder, (vector) => captured.push(vector));
-  const service: SearchService = createSearch({ db: () => parts.db, storage: () => parts.storage, embedder: metered.embedder, spendPurpose: "test_set", log: false });
-  const probes: (Probe | null)[] = [];
+  let seen: SearchObservation | null = null;
+  const pending: Promise<unknown>[] = [];
+  const service = createSearch({
+    db: () => parts.db,
+    storage: () => parts.storage,
+    embedder,
+    translator,
+    fallbackMinBudgetMs: parts.settings.fallbackMinBudgetMs,
+    emergencyThreshold: parts.settings.emergencyThreshold,
+    spendPurpose: "test_set",
+    log: false,
+    defer: (work) => void pending.push(work),
+    observe: (observation) => {
+      seen = observation;
+    },
+    ...(parts.writer ? { writer: parts.writer } : {}),
+    ...(parts.clock ? { clock: parts.clock } : {}),
+  });
+  const now = parts.clock ?? (() => performance.now());
 
   return {
-    async search(input) {
-      captured = [];
-      let answer;
-      try {
-        answer = await service.search(input);
-      } catch (error) {
-        probes.push(null);
-        throw error;
-      }
-      if (answer.release_v !== facts.release) {
-        probes.push(null);
-        throw new Error(`the current release changed during the run (${facts.release} to ${answer.release_v})`);
-      }
-      // The best similarity of each provider over the vectors this question was embedded as (one per leg).
-      const best = new Map<string, number>();
-      for (const vector of captured) {
-        for (const provider of vectors.providers) best.set(provider.id, Math.max(best.get(provider.id) ?? -Infinity, cosine(vector, provider.vector)));
-      }
-      const top = [...best]
-        .map(([provider_id, score]) => ({ provider_id, score }))
-        .sort((a, b) => b.score - a.score || a.provider_id.localeCompare(b.provider_id))
-        .slice(0, TOP);
-      probes.push({ top });
-      return answer;
-    },
+    facts,
     has: (id) => service.has(id),
-    describe: () => facts,
-    probes,
-    usage: metered.usage,
-    close: async () => {
+    plan: (question) => planQuestion(question, translator),
+    async ask(question): Promise<Asked> {
+      meter.take();
+      seen = null;
+      const started = now();
+      let raw: unknown = null;
+      let failure: string | null = null;
+      try {
+        raw = await service.search({ q: question.q, lang: question.page_lang ?? question.lang, v: facts.release });
+      } catch (error) {
+        failure = error instanceof SearchFailure ? error.code : errorCode(error);
+      }
+      const ms = now() - started;
+      const trace = meter.take();
+      let answer = null;
+      if (failure === null) {
+        const parsed = SearchV1Schema.safeParse(raw);
+        if (!parsed.success) throw new Error(`question ${question.id}: the use case's answer is not a SearchV1 body`);
+        answer = parsed.data;
+        if (answer.release_v !== facts.release) throw new Error(`question ${question.id}: the current release changed during the run (${facts.release} to ${answer.release_v})`);
+      }
+      return { answer, failure, observation: seen, trace, ms };
+    },
+    usage: meter.usage,
+    async close() {
+      // The use case finishes some writes (the spend of a call that settled late) after its answer: wait for them before the connection goes.
+      await Promise.allSettled(pending);
       await parts.db.$client.end({ timeout: 5 });
     },
   };
 }
 
 /** The real engine: the production database, Cohere and the private bucket, from the run's settings. */
-export const makeProductionEngine: MakeEngine = async (env, options) =>
-  engineFrom(
+export async function makeProductionEngine(env: ProductionEnv, options: { translatedLeg: boolean }): Promise<TuningEngine> {
+  const { CohereClient } = await warmCohere();
+  const cohere = new CohereClient({ token: env.cohereApiKey });
+  return engineFrom(
     {
       db: createDb(env.databaseUrl, { max: 2 }),
       storage: supabaseDirectoryStorage({ url: env.supabaseUrl, secretKey: env.supabaseSecretKey }),
-      embedder: cohereQueryEmbedder({ apiKey: env.cohereApiKey }),
+      clients: { embed: cohere as unknown as CohereEmbedClient, chat: cohere as unknown as CohereChatClient },
+      settings: env.search,
     },
     options,
   );
+}

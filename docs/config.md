@@ -56,8 +56,9 @@ this needs a person, and it is told before the retry, so it is told even when th
 `translate_failed` is any other vendor failure, including the fallback's and a failure of our own (an adapter that says it was
 cancelled when nothing cancelled it, an unexpected exception); a translation refused by a check is not a vendor failure and
 writes none. If the fallback fails too, or there is no time or no fallback for that kind of question, the leg is `failed` and
-the direct leg answers alone; a fallback that is cut at the 2.2 s deadline gives `timed_out`. The search test-set runner never
-falls back, so S03.07 measures the routed models and not whichever answered.
+the direct leg answers alone; a fallback that is cut at the 2.2 s deadline gives `timed_out`. The production test-set run
+(S03.07, below) builds the leg as the app does, so it falls back too; its report lists the model of each translation call and
+counts the questions a fallback model translated, and `SEARCH_QUESTION_FALLBACK=off` for the run measures the routed models alone.
 
 With `SEARCH_TRANSLATE_MONTHLY_CALLS` set, ops is warned before a limit is reached. Each time a translation `spend_event` row is
 written for a model that has a limit, the model's translate rows in the current calendar month (America/Toronto, whoever made
@@ -81,19 +82,28 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
 
-The "Search test set" workflow (Actions tab, S03.07) asks the tuning questions of
-`data/search-test-set/questions.jsonl` to production's real search use case (the current release, Cohere's
-`embed-v4.0` for the questions, the private bucket) and reports the hit rate per language, no-match and
-emergency accuracy, p50 and p95 per question, the embedding usage and a suggested threshold; the
-suggestion sets nothing. Inputs: `split` (tuning only; the evaluation subset is S03.08's) and `leg`
-(the translated-question leg `off`, `on` or `both`; `on` needs S03.05 in the build). It runs from `main`
-only, in the `production` environment, and stops naming any of `PRODUCTION_DATABASE_URL`,
-`COHERE_API_KEY`, `SUPABASE_SECRET_KEY` or `NEXT_PUBLIC_SUPABASE_URL` that is missing there. The key
-stays out of Vercel's Preview and Development and out of the repository; the run does not use the app's
-environment check, so that check is unchanged. Each question is one embedding call counted as
-`test_set` spend; it writes no `search_log` row. The same run from a shell, with those four values
-exported (the database one as `SEARCH_TEST_DATABASE_URL`):
-`npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg off --scores --yes`.
+The "Search test set" workflow (Actions tab, S03.07) asks the tuning questions of `data/search-test-set/questions.jsonl` to
+production's real search use case (the current release, Cohere's `embed-v4.0`, the private bucket, and with the leg on the
+translated-question leg) and reports the hit rate per language, no-match and emergency accuracy, p50 and p95 per question, the
+vendor usage and a suggested no-match threshold; the suggestion sets nothing. It runs from `main` only, in the `production`
+environment, and the evaluation subset is refused (S03.08's).
+
+Add to the GitHub `production` environment (repository settings > Environments > production), once:
+
+- secrets `COHERE_API_KEY` (production's key) and `SUPABASE_SECRET_KEY` (reads the private release bucket); `PRODUCTION_DATABASE_URL` is already there and is what the run uses, as `postgres`, unless you also add `SEARCH_TEST_DATABASE_URL` set to production's app `DATABASE_URL` (the app's own login, which can do all this run does, so it is the narrower choice);
+- variable `NEXT_PUBLIC_SUPABASE_URL`;
+- only if production sets them in Vercel, variables of the same names and values: `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, and `SEARCH_THRESHOLD` (checked only: the run measures the threshold the current release recorded). Unset means the defaults, as in production.
+
+The workflow names any missing one and stops before it calls anything. The key stays out of Vercel's Preview and Development and out of
+the repository; the run does not use the app's environment check, which is unchanged.
+
+To run it: Actions > Search test set > Run workflow, on `main`: `split` tuning, `leg` `both` (off, then on), `max_calls` empty (500).
+The trial key is shared with live search (about 1,000 calls a month in all): a run of both legs plans about 440 calls, which the
+log prints first; calls are paced, never pass `max_calls`, and a run that has to stop reports partial results and fails. A 429 or
+another vendor failure is its own outcome in the report, never a miss. The use case records each call as `test_set` spend and no
+`search_log` row is written. The job summary holds aggregates only; the per-question report (ids, scores and counts, never a question's
+text) is in the run's artifact, and the report and the chosen threshold are committed afterwards (provisional until S03.08). From a
+shell, with the same values exported (the database as `SEARCH_TEST_DATABASE_URL`): `npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg both --yes`; without `--yes` it only prints the plan.
 
 ### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
 

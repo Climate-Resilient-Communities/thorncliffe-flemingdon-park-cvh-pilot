@@ -18,6 +18,13 @@
 //                                  The real engine calls the search use case directly, not /api/search
 //                                  over HTTP: that is limited to 30 requests per 10 minutes. Prints a
 //                                  warning when questions are not yet checked by a second team member.
+//   run --engine production --model <name> --translated-leg off|on|both --yes [--release <n>] [--max-calls <n>]
+//       [--scores] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+//                                S03.07: the tuning subset asked through production's real search use case, with the
+//                                database, Cohere and the private bucket named by environment variables (scripts/search-test-set/production.ts
+//                                has the list and the rules): prints the calls it plans and needs --yes, never makes more than
+//                                --max-calls, reports the hit rate per language, no-match and emergency accuracy, p50/p95, the
+//                                vendor usage and a suggested threshold (it sets nothing). The evaluation subset is refused.
 //   --compare <a> <b> [--fail-on-worse]
 //                                  per-language and per-language/form differences between two reports
 //                                  (paths, or file names in the reports folder); a language or subset
@@ -49,11 +56,10 @@ import {
   type LocatedQuestion,
   type SearchEngine,
 } from "./lib";
-import { runProduction, wantsProductionEngine } from "./production";
 
 const USAGE = `usage: search-test-set validate [--require-checked]
        search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
-       search-test-set run --engine production --model <name> --translated-leg on|off [--release <n>] [--split tuning] [--scores] [--summary-file <path>] [--yes]
+       search-test-set run --engine production --model <name> --translated-leg off|on|both --yes [--release <n>] [--max-calls <n>] [--scores] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
        search-test-set --compare <report a> <report b> [--fail-on-worse]`;
 
 function option(argv: string[], name: string): string | undefined {
@@ -186,8 +192,9 @@ function compare(argv: string[], root: string): number {
 export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string): Promise<number> {
   if (argv.includes("--compare")) return compare(argv, root);
   if (argv[0] === "validate") return validate(argv, root);
-  if (wantsProductionEngine(argv)) {
-    // The real search use case, built from the environment (production.ts); loaded only when asked for.
+  if (argv[0] === "run" && option(argv, "--engine") === "production") {
+    // The real search use case, built from the environment: loaded only when asked for (it pulls in the whole directory module).
+    const { runProduction } = await import("./production");
     const { makeProductionEngine } = await import("./productionEngine");
     return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, usage: USAGE });
   }

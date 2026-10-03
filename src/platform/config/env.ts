@@ -661,6 +661,18 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   };
 }
 
+/**
+ * The search settings alone, from a variable map, by the same rules as `parseEnv` (the same defaults, the same checks, the same
+ * messages): what a script that is not the app, the search test-set runner, resolves SEARCH_* with, so that it measures the
+ * settings production resolves from the same values. Throws EnvError listing every rule that failed. It looks at no other variable.
+ */
+export function parseSearchEnv(source: Record<string, string | undefined>): SearchSettings {
+  const problems: string[] = [];
+  const search = parseSearchSettings(rawSchema.parse(source), problems);
+  if (problems.length > 0) throw new EnvError(problems);
+  return search;
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);

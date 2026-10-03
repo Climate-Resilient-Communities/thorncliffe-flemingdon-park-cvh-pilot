@@ -7,6 +7,8 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { searchResponse, type SearchRouteDeps } from "../../src/app/api/search/handler";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { runQuestions } from "../../scripts/search-test-set/lib";
+import { engineFrom } from "../../scripts/search-test-set/productionEngine";
+import { CallBudget, legReport, runLeg } from "../../scripts/search-test-set/tuningRun";
 import { SearchErrorSchema } from "@/contracts/search";
 import { SearchV1Schema, TestQuestionSchema } from "@/contracts/searchTestSet";
 import {
@@ -15,6 +17,7 @@ import {
   memoryDirectoryStorage,
   publishDirectory,
   SearchFailure,
+  type CohereEmbedClient,
   type Embedder,
   type PublishDeps,
   type QueryEmbedder,
@@ -26,7 +29,8 @@ import { recordOpsEvent } from "@/modules/ops";
 import { recordSearchNote } from "../../src/app/searchOps";
 import { translateQuotaWatch } from "../../src/app/translateQuota";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
-import { TranslateError, cohereTranslator, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
+import { TranslateError, cohereTranslator, createQuestionTranslator, type CohereChatClient, type QuestionRoute, type Translator } from "@/modules/translation";
+import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -112,6 +116,8 @@ describe("search", () => {
   let sql: ReturnType<typeof connect>;
   let appSql: ReturnType<typeof connect>;
   let app: Db;
+  /** The app role's URL, for an engine of the test-set runner, which closes the connection it is given when it is done. */
+  let appUrl: string;
   let storage: ReturnType<typeof memoryDirectoryStorage>;
   const staffId = randomUUID();
   let auditBaseline = 0;
@@ -165,6 +171,7 @@ describe("search", () => {
     url.username = "cvh_app_login";
     url.password = password;
     app = createDb(url.href);
+    appUrl = url.href;
     appSql = connect(url.href);
     await sql`
       insert into staff_account (id, auth_user_id, username, first_name, last_name, email, role, must_change_password)
@@ -1080,6 +1087,107 @@ describe("search", () => {
 
       expect(failed[0]!.status).toBe("error:search_unavailable");
       expect(unavailable[0]!.status).toBe("unavailable");
+    });
+  });
+
+  describe("the production engine of the search test-set runner (S03.07)", () => {
+    const question = (id: string, q: string, intent: "normal" | "emergency" | "no_match", expected: string[], lang: "en" | "ps" = "en") =>
+      TestQuestionSchema.parse({ id, lang, q, form: "native", intent, expected, split: "tuning", author: "ab", added: "2026-10-01", checked_by: null, checked_on: null });
+
+    /** Fakes of Cohere's two endpoints, under the real adapters: the embedding of a question, and its translation. */
+    const vendors = (options: { refuseEmbedding?: boolean } = {}) => {
+      const embedRequests: { model: string; texts: string[]; inputType: string }[] = [];
+      const chatModels: string[] = [];
+      const embed: CohereEmbedClient = {
+        v2: {
+          async embed(request) {
+            embedRequests.push({ model: request.model, texts: request.texts, inputType: request.inputType });
+            if (options.refuseEmbedding) throw Object.assign(new Error("Status code: 429"), { statusCode: 429, body: { message: "Rate limit exceeded: 100 requests per minute" } });
+            return { embeddings: { float: [vectorOfQuestion(request.texts[0]!)] }, meta: { billedUnits: { inputTokens: 9 } } };
+          },
+        },
+      };
+      const chat: CohereChatClient = {
+        v2: {
+          async chat(request) {
+            chatModels.push(request.model);
+            return { message: { content: [{ type: "text", text: "I need a lawyer" }] }, usage: { billedUnits: { inputTokens: 30, outputTokens: 4 } } };
+          },
+        },
+      };
+      return { clients: { embed, chat }, embedRequests, chatModels };
+    };
+    const engineOf = (clients: ReturnType<typeof vendors>["clients"], translatedLeg: boolean) => engineFrom({ db: createDb(appUrl, { max: 2 }), storage, clients, settings: DEFAULT_SEARCH_SETTINGS }, { translatedLeg });
+    const noSleep = async () => undefined;
+
+    it("asks the use case over the real database and the release the publish wrote: its release, model and threshold, its answers, and the emergency flag", async () => {
+      await publish();
+      const { clients, embedRequests } = vendors();
+      const engine = await engineOf(clients, false);
+      const questions = [question("lawyer", "a lawyer", "normal", ["M001"]), question("doctor", "see a doctor", "emergency", ["M002"]), question("nothing", "xyzzy", "no_match", [])];
+
+      const run = await runLeg(questions, engine, { budget: new CallBudget(100), translatedLeg: false, sleep: noSleep });
+      await engine.close();
+      const report = legReport(run, engine.facts.threshold);
+
+      expect(engine.facts).toEqual({ release: 1, model: MODEL, threshold: 0.3 });
+      expect(run.rows.map((r) => [r.id, r.outcome, r.emergency_first, r.top.map((x) => x.provider_id)])).toEqual([
+        ["lawyer", "hit", false, ["M001"]],
+        ["doctor", "hit", true, ["M002"]],
+        ["nothing", "no_clear_match", false, []],
+      ]);
+      expect(embedRequests.map((r) => [r.model, r.inputType])).toEqual([[MODEL, "search_query"], [MODEL, "search_query"], [MODEL, "search_query"]]);
+      // The scores below the threshold, which the answer never holds, and the rule's suggestion over them.
+      expect(report.threshold_suggestion).toMatchObject({ no_match_questions: 1, replay_mismatches: 0, at_suggested: { hits_kept: 2, hits_lost: 0, no_match_clear: 1, emergency_on: 1 } });
+      expect(report.threshold_suggestion.highest_no_match).toBeCloseTo(0.0995, 3);
+      expect(report.threshold_suggestion.threshold).toBeGreaterThan(report.threshold_suggestion.highest_no_match!);
+      expect(report.usage.embedding).toMatchObject({ calls: 3, tokens: 27, by_model: { [MODEL]: { calls: 3 } } });
+    });
+
+    it("records the usage as purpose test_set in spend_event and writes no search_log row", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const { clients } = vendors();
+      const engine = await engineOf(clients, false);
+
+      await runLeg([question("lawyer", "a lawyer", "normal", ["M001"]), question("doctor", "see a doctor", "normal", ["M002"])], engine, { budget: new CallBudget(100), translatedLeg: false, sleep: noSleep });
+      await engine.close();
+
+      expect(await rows("search_log")).toEqual([]);
+      expect(await rows("spend_event")).toMatchObject([
+        { kind: "embed", purpose: "test_set", model: MODEL, release_v: 1, tokens: "9" },
+        { kind: "embed", purpose: "test_set", model: MODEL, release_v: 1, tokens: "9" },
+      ]);
+    });
+
+    it("runs the translated-question leg through the real use case: the routed model translates, both calls are counted as test_set, and the leg is used", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const { clients, chatModels } = vendors();
+      const engine = await engineOf(clients, true);
+
+      const run = await runLeg([question("ps-01", PASHTO, "normal", ["M001"], "ps")], engine, { budget: new CallBudget(100), translatedLeg: true, sleep: noSleep });
+      await engine.close();
+
+      expect(chatModels).toEqual([DEFAULT_SEARCH_SETTINGS.questionRoute.ps]);
+      expect(run.rows[0]).toMatchObject({ outcome: "hit", translated_leg: "used", legs_used: ["direct", "translated"], calls: { embedding: 2, translation: 1 } });
+      expect((await rows("spend_event")).map((r) => [r.kind, r.purpose]).sort()).toEqual([["embed", "test_set"], ["embed", "test_set"], ["translate", "test_set"]]);
+      expect(await rows("search_log")).toEqual([]);
+    });
+
+    it("tells a 429 from a miss: the question is rate_limited, left out of the rates, and nothing is billed for the refused call", async () => {
+      await publish();
+      await sql.unsafe("delete from spend_event; delete from search_log");
+      const { clients } = vendors({ refuseEmbedding: true });
+      const engine = await engineOf(clients, false);
+
+      const run = await runLeg([question("lawyer", "a lawyer", "normal", ["M001"])], engine, { budget: new CallBudget(100), translatedLeg: false, sleep: noSleep });
+      await engine.close();
+
+      expect(run.rows[0]).toMatchObject({ outcome: "rate_limited", failures: [{ kind: "embedding", model: MODEL, class: "limit" }] });
+      expect(legReport(run, 0.3).counts).toMatchObject({ scored: 0, miss: 0, rate_limited: 1 });
+      expect(await rows("spend_event")).toEqual([]);
+      expect(await rows("search_log")).toEqual([]);
     });
   });
 });
