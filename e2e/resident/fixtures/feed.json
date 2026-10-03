@@ -346,6 +346,185 @@
           "translations": {}
         }
       ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0005",
+      "slug": "rslvdabc",
+      "closed": "resolved",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0051",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Power is out on floors 1 to 6 at 40 Gateway Blvd. We are finding out why.",
+          "published_at": "2026-10-01T11:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0052",
+          "kind": "update",
+          "phase": "in_progress",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Toronto Hydro is on site. Power should be back by 1 pm.",
+          "published_at": "2026-10-01T11:40:00.000Z",
+          "verified": true,
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0053",
+          "kind": "final",
+          "phase": "in_progress",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-02T13:00:00.000Z",
+          "original_text": "Power is back on all floors. If your power is still out, call Toronto Hydro at 416-542-8000.",
+          "published_at": "2026-10-01T13:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0006",
+      "slug": "expdabcd",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0061",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T09:00:00.000Z",
+          "original_text": "A water main near 5 Gamma Ave is being repaired. Water pressure may be low until noon.",
+          "published_at": "2026-10-01T08:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0007",
+      "slug": "wthdrabc",
+      "closed": "withdrawn",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0071",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Power is out on floors 1 to 6 at 40 Gateway Blvd. We are finding out why.",
+          "published_at": "2026-10-01T13:30:00.000Z",
+          "verified": true,
+          "superseded": true,
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0072",
+          "kind": "withdrawal",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "This alert had wrong information. It has been withdrawn.",
+          "published_at": "2026-10-01T14:00:00.000Z",
+          "verified": true,
+          "supersedes_id": "0198a000-0000-7000-8000-0000000e0071",
+          "translations": {}
+        }
+      ]
     }
   ]
 }

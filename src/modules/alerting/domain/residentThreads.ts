@@ -100,6 +100,28 @@ function coveringOf(entries: readonly ResidentEntryRow[]): ResidentEntryRow {
   return (live.length > 0 ? live : entries).at(-1)!;
 }
 
+/** How a thread closed (the alert's `closed_reason`): the three the resident sees (R-07). */
+export type ResidentCloseReason = "resolved" | "expired" | "withdrawn";
+
+const CLOSE_REASONS: readonly string[] = ["resolved", "expired", "withdrawn"];
+
+/** One thread's entries as the feed's thread: its fields follow the covering entry. `closed` says the thread closed and how (S05.03: R-07 reads a closed thread by its address). */
+function threadOf(unsorted: readonly ResidentEntryRow[], lang: LangCode, closed?: ResidentCloseReason): { thread: FeedThread; latest: number } {
+  const entries = [...unsorted].sort(byPublication);
+  const covering = coveringOf(entries);
+  const thread: FeedThread = {
+    id: covering.threadId,
+    slug: covering.slug,
+    types: [...covering.types],
+    audience: covering.audience as FeedThread["audience"],
+    state: closed ? "closed" : "open",
+    ...(closed ? { close_reason: closed } : {}),
+    valid_until: covering.validUntil.toISOString(),
+    entries: entries.map((entry) => entryOf(entry, lang)),
+  };
+  return { thread, latest: entries.at(-1)!.publishedAt.getTime() };
+}
+
 /**
  * The feed's threads for one language: every thread that has a published entry, newest activity first, each with its
  * entries in the order they were published (oldest first; a screen that wants newest first turns them around). The rows
@@ -112,19 +134,16 @@ export function assembleThreads(rows: readonly ResidentEntryRow[], lang: LangCod
     if (entries) entries.push(row);
     else byThread.set(row.threadId, [row]);
   }
-  const threads = [...byThread.values()].map((unsorted) => {
-    const entries = [...unsorted].sort(byPublication);
-    const covering = coveringOf(entries);
-    const thread: FeedThread = {
-      id: covering.threadId,
-      slug: covering.slug,
-      types: [...covering.types],
-      audience: covering.audience as FeedThread["audience"],
-      state: "open",
-      valid_until: covering.validUntil.toISOString(),
-      entries: entries.map((entry) => entryOf(entry, lang)),
-    };
-    return { thread, latest: entries.at(-1)!.publishedAt.getTime() };
-  });
+  const threads = [...byThread.values()].map((unsorted) => threadOf(unsorted, lang));
   return threads.sort((a, b) => b.latest - a.latest || (a.thread.id < b.thread.id ? -1 : 1)).map(({ thread }) => thread);
+}
+
+/**
+ * One closed thread, for R-07 (S05.03): the entries of a thread that closed, the final message among them, as a `FeedThread` with `state: "closed"` and its
+ * `close_reason`. Null when the rows are none, or the reason is not one of the three. It is not in the feed (the feed lists open threads only): a resident reaches it by its
+ * address, and the archive (S05.07) lists such threads.
+ */
+export function assembleClosedThread(rows: readonly ResidentEntryRow[], lang: LangCode, reason: string | null): FeedThread | null {
+  if (rows.length === 0 || reason === null || !CLOSE_REASONS.includes(reason)) return null;
+  return threadOf(rows, lang, reason as ResidentCloseReason).thread;
 }

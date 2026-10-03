@@ -64,7 +64,7 @@ export async function saveDraftFromForm(deps: EditDeps, session: Pick<StaffSessi
   if (!entry) return refused("ENTRY_NOT_FOUND");
   const from = composerFromForm(form);
   // An update to a running alert keeps the thread's types whatever the form says; the use case refuses a change of them as well.
-  const read = contentFromForm(form, entry.content, deps.now(), { keepTypes: from === "update" || from === "promote" || from === "correct" || from === "withdraw" });
+  const read = contentFromForm(form, entry.content, deps.now(), { keepTypes: from === "update" || from === "promote" || from === "correct" || from === "withdraw" || from === "resolve" });
   if (!read.ok) return read.problem.kind === "ask" ? { status: "ask", ...read.problem } : { status: "refused", message: read.problem.message };
   const result = await deps.alerting().saveDraft({ staffId: session.staffId, aal: session.aal }, ref, read.content);
   if (!result.ok) return refused(result.error);

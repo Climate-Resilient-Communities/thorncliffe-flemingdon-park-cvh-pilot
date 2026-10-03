@@ -1748,4 +1748,34 @@
       TARGET_SUPERSEDED: 'The entry this replaces was corrected or withdrawn first. Discard this and read the alert as it is now.',
       TARGET_NOT_PUBLISHED: 'Residents have not read the entry this replaces, so there is nothing to replace. Discard this.' } } } });
   m(en, { staff: { incidents: { correct: 'Correct an entry', withdraw: 'Withdraw an entry' } } });
+  /* Closing an alert with a final word (S05.03, O-16 "Mark resolved"), the pilot's staff version. In the prototype resolving closes the alert at once (O16); here the
+     author writes the final message on the same composer as every entry and a second person approves it, which closes the alert. The prototype's own words are kept
+     where they fit (O16, O01, R07). The check-in records the prototype deletes at this step belong to the check-in rounds, which are not built yet. */
+  m(en, { staff: { compose: {
+    resolveTitle: 'Mark resolved',
+    thread: { leadResolve: 'What residents read now, newest first. Your final entry is added at the top and closes the alert: nothing here is deleted.' },
+    resolveLead: 'Resolving closes the alert with a final word. Nothing is deleted from residents\' view: the alert moves to alerts that have ended with its whole thread. A second person approves the final message before anyone sees it.',
+    resolveTextLabel: 'Final entry',
+    resolveTextHint: 'One or two short sentences: what is fixed, and what to do if it is not fixed for you. At most {max} characters.',
+    resolveStartNote: 'Saving makes the draft. Then you can read the text message and submit it for approval. Approving it closes the alert.',
+    resolveCarried: 'Who it is for is who the alert is for now. Everyone who got any entry of this alert also gets the final entry, on the channels they got it on.',
+    after: {
+      title: 'What happens when you resolve',
+      closes: 'The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.',
+      reach: 'Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.',
+      stops: 'Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded.' } } } });
+  m(en, { staff: { approve: {
+    finalTitle: 'Approve a final message',
+    finalLead: 'Read exactly what residents will read as the last word of this alert. You approve this version only. If it changes while you read, you review it again.',
+    closingTitle: 'What approving does',
+    closingReach: 'This goes to everyone who got any entry of this alert, on the channels they got it on, and to everyone in the audience above.',
+    closingCloses: 'Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top.',
+    published: { titleFinal: 'The alert is resolved', nextFinal: 'The alert is closed. Nothing more can be added to it.' } } } });
+  m(en, { staff: { incidents: {
+    resolve: 'Mark resolved',
+    closedTitle: 'Recently closed',
+    closedLead: 'Alerts that closed in the last 7 days, the most recent first. A closed alert cannot be added to.',
+    closedLine: '{reason} {time}',
+    closedReason: { resolved: 'Resolved', expired: 'Expired', withdrawn: 'Withdrawn' },
+    closedFinal: 'Final entry: {text}' } } });
 })();

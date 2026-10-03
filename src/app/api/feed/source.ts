@@ -7,11 +7,11 @@
 // the resident page tests (the feed then lists those buildings and the two neighbourhoods, at version 0, all at status none), and
 // CVH_FAKE_FEED_FILE swaps the database's alerts for the threads in a JSON file (and says the feed version), so a page test can show
 // an alert with no database.
-import { createFeed, readFeedFixtureFile, type FeedPlaces } from "@/modules/alerting";
+import { createFeed, createResidentAlerts, readFeedFixtureFile, type FeedPlaces } from "@/modules/alerting";
 import { readBuildingsFixtureFile } from "@/modules/places";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
-import type { FeedV1 } from "@/contracts/feed";
+import type { FeedThread, FeedV1 } from "@/contracts/feed";
 import type { LangCode } from "@/contracts/lang";
 
 const NEIGHBOURHOOD_IDS: Record<string, string> = { "Thorncliffe Park": "TP", "Flemingdon Park": "FP" };
@@ -33,4 +33,29 @@ export async function readFeed(lang: LangCode): Promise<FeedV1> {
   }
   // Without the buildings fake the database answers; a feed fake still replaces the alerts (and, with no database, nothing else).
   return createFeed({ db: getDb(), alerts: alerts?.alerts, version: alerts ? async () => alerts.version() : undefined, alertsEnabled, now: () => alerts?.now() ?? new Date() }).read(lang);
+}
+
+/** The slugs of the threads that closed, read now (the gate in front of `readClosedAlert`; cached in src/app/feedCache.ts). */
+export async function readClosedSlugs(): Promise<string[]> {
+  const { fakeBuildingsFile, fakeFeedFile } = getEnv();
+  if (fakeFeedFile) return (await readFeedFixtureFile(fakeFeedFile).alerts.readClosedSlugs?.()) ?? [];
+  if (fakeBuildingsFile) return [];
+  return (await createResidentAlerts(getDb()).readClosedSlugs?.()) ?? [];
+}
+
+/**
+ * The closed thread with this slug, read now (S05.03): R-07 opens a thread that closed from its address, with how it closed, its final message and every earlier entry.
+ * It is read from the resident views, as the feed is, and is never in the feed (the feed lists open threads only); the cache in front of the feed does not hold it. A feed
+ * fake file answers for it from its closed threads; a buildings fake (no database) has none.
+ */
+export async function readClosedAlert(lang: LangCode, slug: string): Promise<{ thread: FeedThread; serverNow: Date } | null> {
+  const { fakeBuildingsFile, fakeFeedFile } = getEnv();
+  if (fakeFeedFile) {
+    const fixture = readFeedFixtureFile(fakeFeedFile);
+    const thread = (await fixture.alerts.readClosed?.(lang, slug)) ?? null;
+    return thread ? { thread, serverNow: fixture.now() ?? new Date() } : null;
+  }
+  if (fakeBuildingsFile) return null;
+  const thread = (await createResidentAlerts(getDb()).readClosed?.(lang, slug)) ?? null;
+  return thread ? { thread, serverNow: new Date() } : null;
 }

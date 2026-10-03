@@ -792,7 +792,9 @@ describe("the entry trigger", () => {
     await expect(insert({ kind: "correction", supersedes: ref.entryId, reason: "other" })).rejects.toThrow();
     await expect(insert({ kind: "update", supersedes: ref.entryId })).rejects.toThrow();
     await expect(insert({ kind: "update", reason: "other" })).rejects.toThrow();
-    await expect(insert({ kind: "final" })).rejects.toThrow();
+    // A final names no entry (S05.03): one that does is refused, and one that names none is a draft like any other.
+    await expect(insert({ kind: "final", supersedes: ref.entryId })).rejects.toThrow();
+    await expect(insert({ kind: "final", reason: "other" })).rejects.toThrow();
     await expect(insert({ kind: "correction", supersedes: ref.entryId })).resolves.toBeDefined();
   });
 

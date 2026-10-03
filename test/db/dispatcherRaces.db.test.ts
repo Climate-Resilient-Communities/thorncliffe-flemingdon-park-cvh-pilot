@@ -261,13 +261,17 @@ const scenarios: Scenario[] = [
     name: "a close",
     async prepare() {
       const { entry, ids } = await world.seedAlert({ kind: "update", recipients: 1 });
-      // The close calls cancelQueued for every entry but the closing one, and closes the thread, in one transaction.
+      // The final that closes the thread, waiting for its approval in the same thread (S05.03: the app closes a thread only beside the entry that closes it).
+      const final = await world.fx.finalIn(entry);
+      // The close approves the final, calls cancelQueued for every entry but the closing one, and closes the thread, in one transaction.
       return {
         id: ids[0],
         change: (beforeCommit) =>
           app.transaction(async (tx) => {
+            await tx.execute(drizzleSql`select set_config('cvh.actor_id', ${final.approverId}, true)`);
+            await tx.execute(drizzleSql`update alert_entry set status = 'approved', approved_by = ${final.approverId}, approved_version = version, approved_hash = content_hash where id = ${final.entryId}`);
             const result = await createDeliveryQueue().cancelQueued([entry.entryId], tx);
-            await tx.execute(drizzleSql`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${entry.alertId}`);
+            await tx.execute(drizzleSql`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now(), closing_entry_id = ${final.entryId} where id = ${entry.alertId}`);
             await beforeCommit();
             return { stopped: result.cancelled, inFlight: result.inFlight };
           }),

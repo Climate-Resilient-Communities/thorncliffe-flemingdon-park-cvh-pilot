@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { FeedThreadSchema } from "../../../contracts/feed";
 import type { LangCode } from "../../../contracts/lang";
-import { HUB_ATTRIBUTION, assembleThreads, textOf, type ResidentEntryRow } from "./residentThreads";
+import { HUB_ATTRIBUTION, assembleClosedThread, assembleThreads, textOf, type ResidentEntryRow } from "./residentThreads";
 
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
@@ -223,5 +223,41 @@ describe("the threads of the feed", () => {
     expect(assembleThreads(rows, "ur")).toEqual(assembleThreads(rows, "ur"));
     expect(assembleThreads(rows, "ur")[0].entries[0].text.body).toBe("بجلی بند ہے۔");
     expect(assembleThreads(rows, "en")[0].entries[0].text.body).toBe("Power is out in 88 Test Dr. We are on it.");
+  });
+});
+
+describe("a closed thread (S05.03, R-07)", () => {
+  const ack = row({ entryId: E(1), publishedAt: new Date("2026-10-01T14:00:00Z") });
+  const update = row({ entryId: E(2), kind: "update", phase: "in_progress", publishedAt: new Date("2026-10-01T15:00:00Z"), originalText: "Work is under way." });
+  const final = row({ entryId: E(3), kind: "final", phase: "in_progress", publishedAt: new Date("2026-10-01T16:00:00Z"), originalText: "Power is back on all floors.", validUntil: new Date("2026-10-02T16:00:00Z") });
+
+  it("is a thread of state closed with its close reason, every entry in order and the final last, which has no phase of its own", () => {
+    const thread = assembleClosedThread([update, final, ack], "en", "resolved")!;
+
+    expect(FeedThreadSchema.safeParse(thread).success).toBe(true);
+    expect(thread).toMatchObject({ id: T1, slug: "kbcdfghj", state: "closed", close_reason: "resolved" });
+    expect(thread.entries.map((entry) => [entry.kind, entry.phase])).toEqual([["ack", "problem"], ["update", "in_progress"], ["final", undefined]]);
+    expect(thread.entries.at(-1)!.text.body).toBe("Power is back on all floors.");
+    // The thread's own fields follow the covering entry, which is the final.
+    expect(thread.valid_until).toBe("2026-10-02T16:00:00.000Z");
+  });
+
+  it("takes each of the three reasons, and none that is not one of them, and nothing for no rows", () => {
+    for (const reason of ["resolved", "expired", "withdrawn"]) expect(assembleClosedThread([ack], "en", reason)?.close_reason, reason).toBe(reason);
+    expect(assembleClosedThread([ack], "en", "archived")).toBeNull();
+    expect(assembleClosedThread([ack], "en", null)).toBeNull();
+    expect(assembleClosedThread([], "en", "resolved")).toBeNull();
+  });
+
+  it("is not made by the feed: assembleThreads makes open threads only", () => {
+    expect(assembleThreads([ack, final], "en")[0]).toMatchObject({ state: "open" });
+    expect(assembleThreads([ack, final], "en")[0]).not.toHaveProperty("close_reason");
+  });
+
+  it("keeps a thread withdrawn whole: the withdrawal notice is among its entries and names the entry it replaced", () => {
+    const withdrawal = row({ entryId: E(4), kind: "withdrawal", supersedesId: E(1), publishedAt: new Date("2026-10-01T14:30:00Z"), originalText: "This alert has been withdrawn." });
+    const thread = assembleClosedThread([row({ entryId: E(1), superseded: true }), withdrawal], "en", "withdrawn")!;
+    expect(thread).toMatchObject({ state: "closed", close_reason: "withdrawn" });
+    expect(thread.entries.map((entry) => [entry.kind, entry.supersedes_id])).toEqual([["ack", undefined], ["withdrawal", E(1)]]);
   });
 });

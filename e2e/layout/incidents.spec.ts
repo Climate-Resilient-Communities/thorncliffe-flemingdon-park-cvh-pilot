@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import type { IncidentRow, Incidents, RunningThread } from "../../src/modules/alerting";
+import type { ClosedThread, IncidentRow, Incidents, RunningThread } from "../../src/modules/alerting";
 import { incidentsView, type IncidentsView, type Text } from "../../src/app/staff/alerts/incidents/view";
 import { ALERT, ENTRY, OTHER_ALERT, OTHER_ENTRY } from "../../test/helpers/approvalReview";
 import { checkHubShellBoundaries, checkHubTwoColumnBoundaries, expectNoHorizontalOverflow, hubPage, type HubLanguage } from "../helpers/hub-layout-boundaries";
@@ -10,7 +10,8 @@ import { longestLabels } from "../helpers/strings";
 // S04.10: the Hub home (O-01) at content widths of 799 and 800 px (viewports of 1087 and 1088 px with the side navigation) and at viewports of 699 and
 // 700 px, in `en` and `ur` with the longest translated labels of the language in every place the screen shows text. Below 800 px of content width it
 // is one column, the main content first (what waits for the person, the open threads, their own alerts) and the aside (the drills) after it, filling the
-// width; from 800 px two columns with the page's approved gap; and nothing overflows horizontally. The checks are the shared boundary helpers of S01.16
+// width; from 800 px two columns with the page's approved gap; and nothing overflows horizontally. S05.03 adds what closed lately (resolved, expired, withdrawn, each with
+// the words it ended with) between the open threads and the person's own alerts. The checks are the shared boundary helpers of S01.16
 // (e2e/helpers/hub-layout-boundaries.ts), run on the app's own IncidentsList inside the real Hub shell.
 const brand = hubBrand();
 const NOW = new Date("2026-10-04T14:12:00.000Z");
@@ -42,9 +43,26 @@ const thread = (over: Partial<RunningThread> = {}): RunningThread => ({
   ...over,
 });
 
-/** Enough of everything: entries waiting (one a drill), open threads (one an acknowledgement, one a drill), the person's own (one returned with a note), a drill of their own. */
-function fullHome(note: string): { incidents: Incidents; running: RunningThread[] } {
+const closedThread = (over: Partial<ClosedThread> = {}): ClosedThread => ({
+  alertId: "01900000-0000-7000-8000-00000000a1f0",
+  slug: "closedaa",
+  isDrill: false,
+  types: ["elevator", "power"],
+  reason: "resolved",
+  closedAt: new Date("2026-10-04T14:00:00.000Z"),
+  closingText: "Power is back on all floors.",
+  ...over,
+});
+
+/** Enough of everything: entries waiting (one a drill), open threads (one an acknowledgement, one a drill), the person's own (one returned with a note), a drill of their own, and the three ways an alert closes. */
+function fullHome(note: string): { incidents: Incidents; running: RunningThread[]; closed: ClosedThread[] } {
   return {
+    closed: [
+      closedThread({ closingText: note }),
+      closedThread({ alertId: "01900000-0000-7000-8000-00000000a1f1", types: ["water", "flood", "fire"], reason: "expired", closingText: null, closedAt: new Date("2026-10-04T12:00:00.000Z") }),
+      closedThread({ alertId: "01900000-0000-7000-8000-00000000a1f2", reason: "withdrawn", closingText: "Sent for the wrong building.", closedAt: new Date("2026-10-03T12:00:00.000Z") }),
+      closedThread({ alertId: "01900000-0000-7000-8000-00000000a1f3", isDrill: true }),
+    ],
     incidents: {
       waiting: [
         row(),
@@ -87,8 +105,8 @@ const HOMES: Home[] = [
 
 function viewOf(home: Home, lang: string, longest: boolean): IncidentsView {
   const { unbreakable } = longestLabels(lang);
-  const { incidents, running } = home.empty ? { incidents: { waiting: [], mine: [] }, running: [] } : fullHome(longest ? unbreakable : "Say which floors, and when the water will be back.");
-  return incidentsView(incidents, home.role, longest ? longestText(lang) : undefined, running, NOW);
+  const { incidents, running, closed } = home.empty ? { incidents: { waiting: [], mine: [] }, running: [], closed: [] } : fullHome(longest ? unbreakable : "Say which floors, and when the water will be back.");
+  return incidentsView(incidents, home.role, longest ? longestText(lang) : undefined, running, NOW, closed);
 }
 
 type Words = "longest" | "real";
@@ -150,7 +168,8 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await open(page, HOMES[0], "en", "real");
     const top = async (id: string) => (await page.getByTestId(id).boundingBox())!.y;
     expect(await top("incidents-waiting")).toBeLessThan(await top("incidents-running"));
-    expect(await top("incidents-running")).toBeLessThan(await top("incidents-mine"));
+    expect(await top("incidents-running")).toBeLessThan(await top("incidents-closed"));
+    expect(await top("incidents-closed")).toBeLessThan(await top("incidents-mine"));
     expect(await top("incidents-mine")).toBeLessThan(await top("incidents-drills"));
     await expect(page.getByTestId("waiting-item")).toHaveCount(2);
     await expect(page.getByTestId("incidents-waiting").getByTestId("waited")).toHaveText(["Waiting 52 minutes", "Waiting 12 minutes"]);
@@ -159,10 +178,18 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(running).toHaveCount(2);
     await expect(running.nth(0)).toContainText("Water");
     await expect(running.nth(1)).toContainText("Elevator, Power");
+    // What closed lately: how each closed, most recently closed first, with the words it ended with and nothing to do with it.
+    const closed = page.getByTestId("closed-item");
+    await expect(closed).toHaveCount(3);
+    await expect(closed.nth(0)).toContainText("Resolved ");
+    await expect(closed.nth(1)).toContainText("Expired ");
+    await expect(closed.nth(2)).toContainText("Withdrawn ");
+    await expect(closed.nth(2).getByTestId("closed-final")).toHaveText("Final entry: Sent for the wrong building.");
+    await expect(page.getByTestId("incidents-closed").locator("a[href]")).toHaveCount(0);
     // Drills are in a labelled section of their own and nowhere else.
     await expect(page.getByRole("complementary", { name: "Drills" })).toBeVisible();
-    await expect(page.getByTestId("incidents-drills").getByTestId("drill-item")).toHaveCount(3);
-    for (const id of ["incidents-waiting", "incidents-running", "incidents-mine"]) await expect(page.getByTestId(id).locator('[data-drill="true"]')).toHaveCount(0);
+    await expect(page.getByTestId("incidents-drills").getByTestId("drill-item")).toHaveCount(4);
+    for (const id of ["incidents-waiting", "incidents-running", "incidents-closed", "incidents-mine"]) await expect(page.getByTestId(id).locator('[data-drill="true"]')).toHaveCount(0);
   });
 
   test("gives a Director every open thread to read, and not one link to anything that changes it", async ({ page }) => {
@@ -182,5 +209,6 @@ test.describe("what the home says, with the app's own English words at 390 px", 
     await expect(page.getByTestId("start-compose")).toHaveAttribute("href", "/staff/alerts/compose");
     await expect(page.getByTestId("incidents-running").getByRole("link", { name: "Add an update" })).toHaveCount(1);
     await expect(page.getByTestId("incidents-running").getByRole("link", { name: "Promote to full alert" })).toHaveCount(1);
+    await expect(page.getByTestId("incidents-running").getByRole("link", { name: "Mark resolved" })).toHaveCount(2);
   });
 });
