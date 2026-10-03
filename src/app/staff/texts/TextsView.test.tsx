@@ -33,7 +33,7 @@ describe("the Pause texts page while texts are going out", () => {
   it("says texts are going out as normal and what pausing does", () => {
     expect(html).toContain("Pause or resume texts");
     expect(html).toContain("Texts are going out as normal.");
-    expect(html).toContain("Pausing stops every alert and every text to residents that has not yet been handed to the provider.");
+    expect(html).toContain("Pausing stops every text that has not yet been handed to the provider, alerts and texts to residents and to staff alike, except texts to on-call Admins.");
   });
 
   it("says that texts to on-call Admins continue during a pause", () => {

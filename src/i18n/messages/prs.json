@@ -4393,7 +4393,7 @@
       "title": "[EN] Pause or resume texts",
       "lead": "[EN] One switch for every text that has not yet been handed to the provider. Use it to stop a mistake or a provider problem at once.",
       "running": "[EN] Texts are going out as normal.",
-      "whatPauseDoes": "[EN] Pausing stops every alert and every text to residents that has not yet been handed to the provider. They wait in the queue and go out, in order, when you resume. A text that was already handed over cannot be called back.",
+      "whatPauseDoes": "[EN] Pausing stops every text that has not yet been handed to the provider, alerts and texts to residents and to staff alike, except texts to on-call Admins. They wait in the queue and go out, in order, when you resume. A text that was already handed over cannot be called back.",
       "oncall": "[EN] Texts to on-call Admins still go out during a pause, so a problem with sending is still reported.",
       "reason": "[EN] Why are you pausing texts?",
       "reasonHint": "[EN] Everyone at the Hub sees this on every screen, with your name and the time. Up to 500 characters.",
