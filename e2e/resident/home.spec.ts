@@ -583,8 +583,9 @@ test.describe("the Every day destinations and the short 911 notice on home", () 
     for (const line of await lines.all()) await expect(line).toBeHidden();
     // Only the label is left, and each link still fills a row of the prototype's 68 px (more than the basic-mode tap target of 56).
     for (const key of ["findHelp", "map", "beReady"]) await expect(page.getByTestId(`home-dest-${key}`)).toBeVisible();
-    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
-    await expect(page.getByTestId("home-dest-findHelp")).not.toContainText(catalogText("en", "R03.findHelpLine"));
+    // What is shown, not the text in the markup: the line is still in the page, hidden.
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help", { useInnerText: true });
+    await expect(page.getByTestId("home-dest-findHelp")).not.toContainText(catalogText("en", "R03.findHelpLine"), { useInnerText: true });
     for (const height of await heights()) expect(height).toBeGreaterThanOrEqual(68);
   });
 });
