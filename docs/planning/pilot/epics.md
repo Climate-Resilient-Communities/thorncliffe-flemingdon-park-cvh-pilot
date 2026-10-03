@@ -1261,7 +1261,11 @@ So that I can see at a glance whether anything affects me.
 
 **Given** home (R-03)
 **When** it is shown, with or without chosen buildings
-**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is on home once and nowhere else on the screen (owner decision 36); the inline notice is the last item on home; when the "Every day" section is added (owner decision 37) it moves directly under it
+**Then** under the buildings, the neighbourhood and the current alerts it shows "Every day" with links to find help (the directory), the map and be ready, the destinations of the prototype's `R03_Home` (owner decision 37)
+
+**Given** home (R-03)
+**When** it is shown, with or without chosen buildings
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is directly under the "Every day" destinations, above the link to what the resident has told the CVH, and nowhere else on the screen (owner decisions 36 and 37)
 
 **Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
 
