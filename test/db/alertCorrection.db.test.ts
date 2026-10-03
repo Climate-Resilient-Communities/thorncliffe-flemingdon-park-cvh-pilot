@@ -965,11 +965,14 @@ const bodyOfEntry = async (entryId: string) => (await owner<{ body: string }[]>`
 
 describe("a correction and the sender (S06.03)", () => {
   beforeEach(() => {
-    liveUntil = new Date(Date.now() + 2 * 86_400_000);
+    // The alerting clock follows the real one here, so the valid-until the sender's standing check needs (after the database's now()) stays within the 7-day limit.
+    clock = new Date();
+    liveUntil = new Date(clock.getTime() + 2 * 86_400_000);
   });
 
   afterEach(async () => {
     liveUntil = undefined;
+    clock = NOW;
     await world.reset();
   });
 
@@ -1046,5 +1049,6 @@ describe("a correction and the sender (S06.03)", () => {
     expect(await stateCounts(ref.entryId)).toEqual({ submitted: 1 });
     await world.dispatcher().run();
     expect(await stateCounts(correction.entryId)).toEqual({ submitted: 1 });
+    expect(world.provider.calls.map((call) => call.body)).toEqual([await bodyOfEntry(ref.entryId), await bodyOfEntry(correction.entryId)]);
   });
 });

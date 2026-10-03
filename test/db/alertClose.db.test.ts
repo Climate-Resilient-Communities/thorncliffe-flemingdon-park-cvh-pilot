@@ -907,11 +907,14 @@ const bodyOfEntry = async (entryId: string) => (await owner<{ body: string }[]>`
 
 describe("a close and the sender (S06.03)", () => {
   beforeEach(() => {
-    liveUntil = new Date(Date.now() + 2 * 86_400_000);
+    // The alerting clock follows the real one here, so the valid-until the sender's standing check needs (after the database's now()) stays within the 7-day limit.
+    clock = new Date();
+    liveUntil = new Date(clock.getTime() + 2 * 86_400_000);
   });
 
   afterEach(async () => {
     liveUntil = undefined;
+    clock = NOW;
     await world.reset();
   });
 
