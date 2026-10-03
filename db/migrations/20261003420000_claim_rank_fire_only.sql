@@ -1,6 +1,6 @@
 -- S06.02 (review fix): the first rank of the claim order is the `fire` entry type alone.
 --
--- `delivery_claim_rank()` (20261003200000_dispatcher.sql) put an alert whose types include `fire` or `evacuation` first. There is no
+-- `delivery_claim_rank()` (20261003410000_dispatcher.sql) put an alert whose types include `fire` or `evacuation` first. There is no
 -- `evacuation` disruption type: the catalogue's `fire` is "Fire alarm or evacuation", and `alert_entry_guard` refuses a type that is not
 -- in the catalogue, so the second name never matched anything. The list is now `fire`, the same as `SAFETY_OVERRIDE_TYPES`
 -- (src/contracts/audience.ts), which messaging/domain/dispatchRules.ts#FIRST_ALERT_TYPES takes from there; a test compares the function
