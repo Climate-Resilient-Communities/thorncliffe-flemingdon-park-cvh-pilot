@@ -95,3 +95,33 @@ describe("questionTranslationSpend", () => {
     });
   });
 });
+
+describe("the fallback model", () => {
+  it("offers the fallback for any other model, none when it is switched off, and none for the fallback itself", () => {
+    const { translator } = fake("x");
+    const on = createQuestionTranslator({ translator, route: ROUTE, fallbackModel: "command-a-translate-08-2025" });
+    expect(on.fallbackFor("north-small-translate-09-2026")).toBe("command-a-translate-08-2025");
+    expect(on.fallbackFor("command-a-translate-08-2025")).toBeNull();
+    expect(createQuestionTranslator({ translator, route: ROUTE, fallbackModel: null }).fallbackFor("north-small-translate-09-2026")).toBeNull();
+    expect(createQuestionTranslator({ translator, route: ROUTE }).fallbackFor("north-small-translate-09-2026")).toBeNull();
+  });
+
+  it("translates with the model it is given instead of the route's, and returns that model", async () => {
+    const { translator, translate } = fake("I want free legal advice");
+    const questions = createQuestionTranslator({ translator, route: ROUTE, fallbackModel: "command-a-translate-08-2025" });
+
+    const result = await questions.toEnglish({ text: "زه وړیا حقوقي مشوره غواړم", source: "ps", signal: new AbortController().signal, model: "command-a-translate-08-2025" });
+
+    expect(result.model).toBe("command-a-translate-08-2025");
+    expect(translate).toHaveBeenCalledWith(expect.objectContaining({ model: "command-a-translate-08-2025" }));
+  });
+
+  it.each(["quota", "rate_limited", "unavailable", "other"] as const)("tells the caller how the vendor failed (%s), as a code and nothing else", async (code) => {
+    const failure = await createQuestionTranslator({ translator: fake(new TranslateError(code)).translator, route: ROUTE })
+      .toEnglish({ text: MARKER, source: "ps", signal: new AbortController().signal })
+      .catch((e: unknown) => e);
+
+    expect(failure).toMatchObject({ code: "translate_failed", vendor: code, billedTokens: undefined });
+    expect([String(failure), JSON.stringify(failure), inspect(failure, { depth: 10, showHidden: true })].join("\n")).not.toContain(MARKER);
+  });
+});

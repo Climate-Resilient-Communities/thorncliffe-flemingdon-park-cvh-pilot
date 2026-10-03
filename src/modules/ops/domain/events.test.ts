@@ -64,6 +64,21 @@ describe("ops events", () => {
     for (const detail of [{ reason: "timed_out", ms: 1 }, { reason: "embed_failed", ms: 1, q: "x" }, { reason: "embed_failed" }]) {
       expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
     }
+    // A translation model past its limit, and the fallback that rescued it, with the model id (a vendor name, not personal data).
+    for (const reason of ["translate_quota", "translate_fallback_used"] as const) {
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300, model: "north-small-translate-09-2026" } })).toMatchObject({
+        severity: "warning",
+        detail: { reason, ms: 300, model: "north-small-translate-09-2026" },
+      });
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300 } })).toMatchObject({ detail: { reason, ms: 300 } });
+    }
+    for (const detail of [
+      { reason: "translate_quota", ms: 1, model: "You are past the per-month request limit" },
+      { reason: "translate_quota", ms: 1, model: "x".repeat(65) },
+      { reason: "translate_quota", ms: 1, model: "m", message: "429" },
+    ]) {
+      expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
+    }
   });
 
   it("names the publish failure reasons the directory job gives", () => {

@@ -92,6 +92,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        command-a-translate-08-2025 for romanized_or_mixed and
  *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
  *                                                        Readiness). It applies only where COHERE_API_KEY is set
+ * SEARCH_QUESTION_FALLBACK_MODEL
+ *                      server   optional                 the Cohere model the translated-question leg retries once with
+ *                                                        when the routed model is past its limit (quota or rate limit);
+ *                                                        a model id, or `off` for no fallback; default
+ *                                                        command-a-translate-08-2025. Skipped when the routed model already
+ *                                                        is it, or when too little of the leg's 2.2 s is left
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -169,6 +175,7 @@ const rawSchema = z.object({
   SEARCH_EMERGENCY_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
   SEARCH_QUESTION_ROUTE: optionalText,
+  SEARCH_QUESTION_FALLBACK_MODEL: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -189,6 +196,8 @@ export interface SearchSettings {
   allowance: { callsPerMonth: number; tokensPerMonth: number };
   /** `search_question_route` (S03.05): the translation model per kind of question; null switches the translated leg off for it. */
   questionRoute: QuestionRouteSettings;
+  /** The model the translated leg retries once with when the routed model is past a limit; null: no fallback. */
+  questionFallbackModel: string | null;
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
@@ -214,6 +223,7 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
   questionRoute: DEFAULT_QUESTION_ROUTE,
+  questionFallbackModel: "command-a-translate-08-2025",
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -505,6 +515,17 @@ function parseQuestionRoute(value: string | undefined, problems: string[]): Ques
   return route as QuestionRouteSettings;
 }
 
+function parseQuestionFallbackModel(value: string | undefined, problems: string[]): string | null {
+  if (value === undefined) return DEFAULT_SEARCH_SETTINGS.questionFallbackModel;
+  const text = value.trim();
+  if (text === "off") return null;
+  if (!EMBED_MODEL_ID.test(text)) {
+    problems.push("SEARCH_QUESTION_FALLBACK_MODEL: must be a model id such as command-a-translate-08-2025, or off");
+    return DEFAULT_SEARCH_SETTINGS.questionFallbackModel;
+  }
+  return text;
+}
+
 function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   const defaults = DEFAULT_SEARCH_SETTINGS;
   const embedModel = raw.SEARCH_EMBED_MODEL?.trim() ?? defaults.embedModel;
@@ -540,6 +561,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
       tokensPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
     },
     questionRoute: parseQuestionRoute(raw.SEARCH_QUESTION_ROUTE, problems),
+    questionFallbackModel: parseQuestionFallbackModel(raw.SEARCH_QUESTION_FALLBACK_MODEL, problems),
   };
 }
 

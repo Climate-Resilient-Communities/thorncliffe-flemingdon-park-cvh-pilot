@@ -24,6 +24,7 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_EMERGENCY_CATEGORIES` | no | default `Support & Emergency Services` | default |
 | `SEARCH_EMERGENCY_THRESHOLD` | no | the similarity (0 to 1, no greater than `SEARCH_THRESHOLD`) at which an emergency-category provider among the top 3 of either leg sets `emergency_first` even with no clear match (owner decision 41). Default `0.25`. Read at search time, not recorded on a release | default |
 | `SEARCH_QUESTION_ROUTE` | no | `search_question_route` (S03.05): `kind=model` pairs for `ps`, `prs`, `ur`, `romanized_or_mixed`, `ambiguous_arabic` (`kind=off`, or `off` alone, switches the translated-question leg off). Default (provisional): `north-small-translate-09-2026` for `ps`, `prs` and `ur` (native-script Urdu, owner decision 40), `command-a-translate-08-2025` for the other two | default |
+| `SEARCH_QUESTION_FALLBACK_MODEL` | no | The Cohere model the translated-question leg retries with, once, when the routed model answers HTTP 429 (past the vendor's per-month request limit, or a transient rate limit). A model id (same shape as in `SEARCH_QUESTION_ROUTE`), or `off` for no retry. Default `command-a-translate-08-2025`. Skipped when the routed model already is it, and when less than 300 ms of the leg's 2.2 s remain. See "When a translation model is past its limit" below | default |
 
 | `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
 | `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
@@ -37,6 +38,17 @@ takes effect with the next deploy, and the same values may be set in Preview. A 
 build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_PUBLISH_ALLOWANCE_*` variables and the `SEARCH_*` variables take effect once S03.02
 (release search data) is deployed; `SEARCH_QUESTION_ROUTE` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
 in Preview or Development: start-up fails there.
+
+**When a translation model is past its limit.** Cohere answers HTTP 429 ("You are past the per-month request limit for this
+model") when a key has used up a model's monthly requests; a transient rate limit is also a 429. The adapter turns the vendor's
+error into a class (`quota`, `rate_limited`, `unavailable`, `other`) and nothing of its text. On `quota` or `rate_limited` the
+leg retries once with `SEARCH_QUESTION_FALLBACK_MODEL` (same abort signal and 2.2 s deadline), so a resident's Pashto, Dari or
+Urdu question still searches through English; `search_log.translated_leg` is `used` and `spend_event` records the model that
+answered (a 429 is not billed and writes no row). Ops sees it as `ops_event` `search.leg_failed` (at most once a minute per
+reason, with the model id): `translate_quota` means a routed model is past its limit (change the key, the plan or
+`SEARCH_QUESTION_ROUTE`; this needs a person), `translate_fallback_used` means the fallback rescued a question, and
+`translate_failed` is any other vendor failure, including the fallback's. If the fallback fails too, or there is no time or no
+fallback, the leg is `failed` and the direct leg answers alone.
 
 ## GitHub: environments
 

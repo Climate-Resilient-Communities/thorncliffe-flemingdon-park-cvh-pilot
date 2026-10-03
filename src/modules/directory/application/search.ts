@@ -42,6 +42,7 @@ import { recordSpendEvent, type SpendEventInput, type SpendPurpose } from "@/mod
 import {
   QuestionTranslationError,
   estimateTranslationTokens,
+  isLimitFailure,
   questionTranslationSpend,
   sourceLanguage,
   systemPrompt,
@@ -63,6 +64,12 @@ export const SEARCH_SPEND_PURPOSE = "search";
 /** A release whose search data failed to load is not loaded again (nor alerted again) for this long. */
 export const SNAPSHOT_FAILURE_TTL_MS = 60_000;
 
+/**
+ * The least time left in the leg's budget that a fallback translation is still tried with: a call that cannot finish
+ * would only be billed, and it would end the leg as `timed_out` instead of the failure that was already known.
+ */
+export const FALLBACK_MIN_BUDGET_MS = 300;
+
 /** A leg still running this long after the request started is cancelled (the E03 definitions' search time limit). */
 export const DEFAULT_LEG_TIMEOUT_MS = 2200;
 /** The whole request answers within this long. */
@@ -83,8 +90,11 @@ export class SearchFailure extends Error {
 
 export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_invalid" | "timed_out";
 
-/** A vendor call of a leg failed while the search still answered (the other leg completed). */
-export type SearchLegFailureReason = "embed_failed" | "translate_failed";
+/**
+ * A vendor call of a leg failed while the search still answered (the other leg completed). `translate_quota`: the
+ * translation model is past the vendor's limit; `translate_fallback_used`: the fallback model made the translation instead.
+ */
+export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "translate_quota" | "translate_fallback_used";
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
@@ -92,7 +102,7 @@ export type SearchLegFailureReason = "embed_failed" | "translate_failed";
  */
 export type SearchFailureNote =
   | { reason: SearchStageReason; releaseV: number | null; ms: number; answered?: undefined }
-  | { reason: SearchLegFailureReason; releaseV: number | null; ms: number; answered: true };
+  | { reason: SearchLegFailureReason; releaseV: number | null; ms: number; answered: true; /** The translation model concerned (a vendor model id), when the reason is about one. */ model?: string };
 
 /** What the translated-question leg did, as `search_log.translated_leg` records it. */
 export type TranslatedLeg = "not_needed" | "used" | "failed" | "timed_out";
@@ -411,13 +421,13 @@ export function createSearch(deps: SearchDeps): SearchService {
      * A vendor failure that did not make the search fail (the other leg answered) is still told to ops, once a minute per
      * kind: a model that is down would otherwise be invisible behind the leg that works.
      */
-    const reportVendorFailure = (reason: SearchLegFailureReason) => {
+    const reportVendorFailure = (reason: SearchLegFailureReason, model?: string) => {
       const now = clock();
       const until = reportedUntil.get(reason);
       if (until !== undefined && now < until) return;
       reportedUntil.set(reason, now + failureTtlMs);
       if (!deps.onFailure) return;
-      const at = { reason, releaseV, ms: elapsed(), answered: true as const };
+      const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }) };
       track(() => deps.onFailure!(at));
     };
 
@@ -506,24 +516,63 @@ export function createSearch(deps: SearchDeps): SearchService {
       return similarities;
     };
 
+    // What the translation told ops, with the model it concerned: `translate_quota` for a model past its limit, `translate_failed`
+    // for any other vendor failure, `translate_fallback_used` when the fallback made the translation.
+    const translateNotes: { reason: SearchLegFailureReason; model: string }[] = [];
+    const noteFailure = (error: unknown, model: string) => {
+      if (error instanceof QuestionTranslationError && error.code === "translate_failed") translateNotes.push({ reason: error.vendor === "quota" ? "translate_quota" : "translate_failed", model });
+    };
+
     const translatedRun = translating
       ? startLeg(async (leg) => {
           checkTime(leg);
-          const call = leg.start("translate", translateModel, q, systemPrompt(sourceLanguage(source), "en"));
-          let english: string;
-          try {
-            const translated = await translator.toEnglish({ text: q, source, signal: leg.signal });
-            settle(call, translated.tokens);
-            english = translated.english;
-          } catch (error) {
-            // A model that answered was billed, whether or not its answer is used.
-            if (error instanceof QuestionTranslationError && error.billedTokens !== undefined) settle(call, error.billedTokens);
-            else settle(call, leg.signal.aborted ? "estimate" : "none");
-            if (leg.signal.aborted) throw new StageError("timed_out");
-            if (error instanceof QuestionTranslationError && error.code === "identical") throw new TranslateStageError("translate_identical");
+          /** One translation call with `model`: its usage is recorded as the vendor reported it (a call that failed at the vendor wrote none). */
+          const translateWith = async (model: string): Promise<string> => {
+            const call = leg.start("translate", model, q, systemPrompt(sourceLanguage(source), "en"));
+            try {
+              const translated = await translator.toEnglish({ text: q, source, signal: leg.signal, model });
+              settle(call, translated.tokens);
+              return translated.english;
+            } catch (error) {
+              // A model that answered was billed, whether or not its answer is used.
+              if (error instanceof QuestionTranslationError && error.billedTokens !== undefined) settle(call, error.billedTokens);
+              else settle(call, leg.signal.aborted ? "estimate" : "none");
+              throw error;
+            }
+          };
+          /** The stage error of a call that did not give an English text. */
+          const stageError = (error: unknown): Error => {
+            if (leg.signal.aborted) return new StageError("timed_out");
+            if (error instanceof QuestionTranslationError && error.code === "identical") return new TranslateStageError("translate_identical");
             // The vendor failed (or answered nothing we can tell apart from that), as opposed to answering with something unusable.
             const rejected = error instanceof QuestionTranslationError && error.code !== "translate_failed" && error.code !== "aborted";
-            throw new TranslateStageError(rejected ? "translate_rejected" : "translate_failed");
+            return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed");
+          };
+
+          let english: string;
+          try {
+            english = await translateWith(translateModel);
+          } catch (error) {
+            if (leg.signal.aborted) throw new StageError("timed_out");
+            const limited = error instanceof QuestionTranslationError && error.code === "translate_failed" && error.vendor !== undefined && isLimitFailure(error.vendor);
+            const fallback = limited ? translator.fallbackFor(translateModel) : null;
+            // Past its limit (or limited for a moment): one retry with the fallback model, with the same signal and deadline,
+            // when it is a different model and there is time for it to answer.
+            if (!limited || fallback === null || deadline - clock() < FALLBACK_MIN_BUDGET_MS) {
+              noteFailure(error, translateModel);
+              throw stageError(error);
+            }
+            try {
+              english = await translateWith(fallback);
+            } catch (second) {
+              noteFailure(error, translateModel);
+              if (leg.signal.aborted) throw new StageError("timed_out");
+              noteFailure(second, fallback);
+              throw stageError(second);
+            }
+            // A quota is told even though the fallback answered: the routed model needs someone's attention.
+            if (error instanceof QuestionTranslationError && error.vendor === "quota") noteFailure(error, translateModel);
+            translateNotes.push({ reason: "translate_fallback_used", model: fallback });
           }
           // Only the embedding of the translation needs the snapshot.
           await snapshotKnown;
@@ -561,16 +610,15 @@ export function createSearch(deps: SearchDeps): SearchService {
     const completed = [direct, translated].flatMap((leg) => (leg?.ok ? [leg.similarities] : []));
 
     // Vendor failures are told to ops even when the other leg answered (or, when none did, besides the reason below).
-    const vendor: SearchLegFailureReason[] = [];
-    if (translated && !translated.ok && translated.reason === "translate_failed") vendor.push("translate_failed");
-    for (const leg of [direct, translated]) if (leg && !leg.ok && leg.reason === "embed_failed") vendor.push("embed_failed");
+    const vendor: { reason: SearchLegFailureReason; model?: string }[] = translateNotes.map((n) => ({ ...n }));
+    for (const leg of [direct, translated]) if (leg && !leg.ok && leg.reason === "embed_failed") vendor.push({ reason: "embed_failed" });
 
     if (completed.length === 0) {
       const primary = (direct.ok ? "embed_failed" : direct.reason) as SearchStageReason;
-      for (const reason of new Set(vendor)) if (reason !== primary) reportVendorFailure(reason);
+      for (const note of vendor) if (note.reason !== primary) reportVendorFailure(note.reason, note.model);
       return fail(primary, translatedOutcome);
     }
-    for (const reason of new Set(vendor)) reportVendorFailure(reason);
+    for (const note of vendor) reportVendorFailure(note.reason, note.model);
 
     // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
     const results = rankLegs(completed, data.threshold);

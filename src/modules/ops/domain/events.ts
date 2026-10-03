@@ -26,8 +26,15 @@ export type PublishFailureReason = (typeof PUBLISH_FAILURE_REASONS)[number];
 export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out", "rate_limit_failed"] as const;
 export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 
-/** Which vendor call of a search leg failed while the search still answered (S03.05): the embedding, or the question's translation. */
-export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed"] as const;
+/**
+ * Which vendor call of a search leg failed while the search still answered (S03.05): the embedding, or the question's
+ * translation. `translate_quota`: the translation model is past the vendor's limit (someone must act on the key or the
+ * route); `translate_fallback_used`: the fallback model rescued a translation the routed model could not make.
+ */
+export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed", "translate_quota", "translate_fallback_used"] as const;
+
+/** A vendor model id (not personal data): the shape the config accepts for SEARCH_QUESTION_ROUTE and the fallback. */
+const modelId = z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/);
 
 export const OPS_EVENT_KINDS = {
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
@@ -56,6 +63,8 @@ export const OPS_EVENT_KINDS = {
     detail: z.strictObject({
       reason: z.enum(SEARCH_LEG_FAILURE_REASONS),
       ms: count,
+      /** The model whose call failed (or, for `translate_fallback_used`, the fallback that answered). */
+      model: modelId.optional(),
     }),
   },
 } as const;

@@ -761,7 +761,7 @@ describe("search", () => {
       expect(errors).toHaveLength(1);
       const error = errors[0] as Error;
       expect([error.message, String(error.stack), JSON.stringify(error), inspect(error, { depth: 10, showHidden: true })].join("\n")).not.toContain(MARKER);
-      expect(error).toMatchObject({ name: "TranslateError", code: "failed" });
+      expect(error).toMatchObject({ name: "TranslateError", code: "other" });
       expect((await rows("search_log")).map((r) => r.translated_leg)).toEqual(["used", "failed", "failed"]);
     });
 

@@ -633,6 +633,7 @@ describe("Cohere and the search settings (S03.02)", () => {
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
       },
+      questionFallbackModel: "command-a-translate-08-2025",
     });
   });
 
@@ -654,7 +655,17 @@ describe("Cohere and the search settings (S03.02)", () => {
       emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
       allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
       questionRoute: DEFAULT_QUESTION_ROUTE,
+      questionFallbackModel: "command-a-translate-08-2025",
     });
+  });
+
+  it("reads SEARCH_QUESTION_FALLBACK_MODEL: a model id (validated like the route's), off for none, and refuses anything else by name", () => {
+    expect(parseEnv(production).search.questionFallbackModel).toBe("command-a-translate-08-2025");
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK_MODEL: " command-r-translate-01-2027 " }).search.questionFallbackModel).toBe("command-r-translate-01-2027");
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK_MODEL: "off" }).search.questionFallbackModel).toBeNull();
+    for (const bad of ["has space", "-lead", "a".repeat(65), "x,y"]) {
+      expect(() => parseEnv({ ...production, SEARCH_QUESTION_FALLBACK_MODEL: bad }), bad).toThrow(/SEARCH_QUESTION_FALLBACK_MODEL/);
+    }
   });
 
   it("reads search_question_route: a kind left out keeps its default, kind=off switches the leg off for it, off alone for all", () => {

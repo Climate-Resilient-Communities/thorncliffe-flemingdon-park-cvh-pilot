@@ -43,7 +43,7 @@ function questionEmbedder() {
 /** The translated-question leg's translator, where a key is configured (S03.05). */
 function questionTranslator(): QuestionTranslator | null {
   const env = getEnv();
-  return env.cohereApiKey ? createQuestionTranslator({ translator: cohereTranslator({ apiKey: env.cohereApiKey }), route: env.search.questionRoute }) : null;
+  return env.cohereApiKey ? createQuestionTranslator({ translator: cohereTranslator({ apiKey: env.cohereApiKey }), route: env.search.questionRoute, fallbackModel: env.search.questionFallbackModel }) : null;
 }
 
 /** The search use case. Without a Cohere key (every environment but production) every search answers `status: "unavailable"`. */
@@ -59,7 +59,8 @@ export function searchService(): SearchService {
     onFailure: async (note) => {
       const subject = note.releaseV === null ? {} : { subjectType: "directory_release", subjectId: String(note.releaseV) };
       // A vendor call that failed while the other leg answered is its own event: the search itself did not fail.
-      if (note.answered) await recordOpsEvent(getDb(), { kind: "search.leg_failed", ...subject, detail: { reason: note.reason, ms: note.ms } });
+      // The model id (a vendor name, not personal data) says which translation model hit its limit or rescued the question.
+      if (note.answered) await recordOpsEvent(getDb(), { kind: "search.leg_failed", ...subject, detail: { reason: note.reason, ms: note.ms, ...(note.model === undefined ? {} : { model: note.model }) } });
       else await recordOpsEvent(getDb(), { kind: "search.unavailable", ...subject, detail: { reason: note.reason, ms: note.ms } });
     },
   });

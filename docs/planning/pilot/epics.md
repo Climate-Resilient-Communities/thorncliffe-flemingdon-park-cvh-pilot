@@ -1608,6 +1608,7 @@ So that I am not disadvantaged by the language or script I use.
 **Given** a vendor call of one leg fails while the other leg answers (the translation call fails at the vendor, or the direct embedding fails and the translated leg rescued the answer)
 **When** the server answers
 **Then** an `ops_event` of kind `search.leg_failed` (reason `translate_failed` or `embed_failed`, counts and codes only) is written, at most once a minute per reason; a translation rejected by a check (not English, an answer, identical) is not a vendor failure and writes none
+**And** when the routed model is past a vendor limit (HTTP 429, quota or rate limit) and at least 300 ms of the 2.2 s remain, the leg retries once with `SEARCH_QUESTION_FALLBACK_MODEL` (default `command-a-translate-08-2025`, `off` allowed, skipped when it is the routed model), logs `translated_leg = used` when it answers, bills only the model that answered, and writes `translate_quota` (and `translate_fallback_used`) `search.leg_failed` events, each at most once a minute
 
 **Given** the direct leg fails or is still running at 2.2 s but the translated leg completed
 **When** the server answers
