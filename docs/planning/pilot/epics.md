@@ -1650,7 +1650,7 @@ So that I am not disadvantaged by the language or script I use.
 
 ### Story S03.06 — Resident asks a question and sees the right listings
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 7 h 41 min (started 2026-10-02 23:21 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-D2-Q, UX-DR10, AR-27 (911 block), NFR-N2 · **Depends on:** S03.04, S02.06, S02.10 · **Branch:** `e03-s06-ask-screens`
 
 As a resident,
@@ -1844,7 +1844,7 @@ So that timeouts are set from evidence before alerts depend on them.
 
 ### Story S04.02 — Alerts are translated by route, checked and never sent in the wrong language
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S04.01 · **Branch:** `e04-s02-translation-routes`
 
 As a resident who reads Pashto,
@@ -2010,7 +2010,7 @@ So that residents know we are on it before we have the details.
 
 ### Story S04.06 — Each text is rendered once and frozen at submit
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** AR-19 (renderer), FR-A5, FR-A3 · **Depends on:** S04.02 · **Branch:** `e04-s06-sms-renderer`
 
 As a Hub Coordinator approving an alert,
