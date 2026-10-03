@@ -1310,7 +1310,10 @@
     "floorsOne": "1 floor chosen",
     "floorsMany": "{n} floors chosen",
     "buildingsNone": "None chosen",
-    "removeItem": "Remove: {item}"
+    "removeItem": "Remove: {item}",
+    "offlineTitle": "Reading without signal",
+    "offlineHelp": "Pages you open with signal are saved on this phone, so you can read them again without signal. The numbers are always saved. The first time, the CVH needs signal to open.",
+    "offlineNote": "This phone may not keep pages for offline use"
   },
   "R35": {
     "title": "Get alerts for your building",
@@ -4832,5 +4835,11 @@
   },
   "guides": {
     "reviewed": "Reviewed by the Hub, last updated {date}"
+  },
+  "offline": {
+    "title": "This page is not saved on your phone",
+    "body": "It has not been opened on this phone with signal yet, so it needs signal. The numbers are always saved on your phone.",
+    "available": "You can read these without signal",
+    "none": "Nothing else is saved on this phone yet. Pages you open with signal are saved for later."
   }
 }

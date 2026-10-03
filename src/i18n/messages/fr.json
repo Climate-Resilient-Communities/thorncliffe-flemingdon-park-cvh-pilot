@@ -1310,7 +1310,10 @@
     "floorsOne": "1 étage choisi",
     "floorsMany": "{n} étages choisis",
     "buildingsNone": "Aucun choisi",
-    "removeItem": "Retirer : {item}"
+    "removeItem": "Retirer : {item}",
+    "offlineTitle": "Lire sans réseau",
+    "offlineHelp": "Les pages que vous ouvrez avec du réseau sont enregistrées sur ce téléphone, pour que vous puissiez les relire sans réseau. Les numéros sont toujours enregistrés. La première fois, le CVH a besoin de réseau pour s'ouvrir.",
+    "offlineNote": "Ce téléphone ne gardera peut-être pas les pages pour une utilisation hors ligne"
   },
   "R35": {
     "title": "Recevoir les alertes pour votre immeuble",
@@ -4832,5 +4835,11 @@
   },
   "guides": {
     "reviewed": "Vérifié par le Hub, dernière mise à jour le {date}"
+  },
+  "offline": {
+    "title": "Cette page n'est pas enregistrée sur votre téléphone",
+    "body": "Elle n'a pas encore été ouverte sur ce téléphone avec du réseau, elle a donc besoin de réseau. Les numéros sont toujours enregistrés sur votre téléphone.",
+    "available": "Vous pouvez lire ceci sans réseau",
+    "none": "Rien d'autre n'est encore enregistré sur ce téléphone. Les pages que vous ouvrez avec du réseau sont enregistrées pour plus tard."
   }
 }

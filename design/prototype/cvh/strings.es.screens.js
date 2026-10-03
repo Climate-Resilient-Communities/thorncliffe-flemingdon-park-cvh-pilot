@@ -1384,4 +1384,18 @@
     "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
    }
   });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Esta página no está guardada en su teléfono",
+    "body": "Todavía no se ha abierto en este teléfono con señal, así que necesita señal. Los números siempre están guardados en su teléfono.",
+    "available": "Puede leer esto sin señal",
+    "none": "Todavía no hay nada más guardado en este teléfono. Las páginas que abre con señal se guardan para después."
+   },
+   "R34": {
+    "offlineTitle": "Leer sin señal",
+    "offlineHelp": "Las páginas que abre con señal se guardan en este teléfono, para que pueda volver a leerlas sin señal. Los números siempre están guardados. La primera vez, el CVH necesita señal para abrirse.",
+    "offlineNote": "Es posible que este teléfono no guarde páginas para usarlas sin conexión"
+   }
+  });
 })();

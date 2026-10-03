@@ -198,8 +198,17 @@ describe("loadDirectory", () => {
       expect(state).toMatchObject({ status: "ready", current: false });
     });
 
-    it("is unavailable, not current, when nothing was kept and the only manifest there is carries the fallback header", async () => {
-      expect(await loadDirectory("en", { fetcher: server({ ...release(7), marked: [MANIFEST_URL] }).fetcher, storage: memory() })).toEqual({ status: "unavailable" });
+    it("shows the release the service worker kept, never as current and without keeping it, when the phone kept nothing", async () => {
+      const storage = memory();
+      const state = await loadDirectory("en", { fetcher: server({ ...release(7), marked: [MANIFEST_URL] }).fetcher, storage });
+
+      expect(state).toMatchObject({ status: "ready", current: false, publishedAt: "2026-10-01T15:00:00.000Z" });
+      expect(state.status === "ready" && state.listing.release_v).toBe(7);
+      expect(readKept(storage, "en")).toBeNull();
+    });
+
+    it("is unavailable when nothing was kept, the only manifest carries the fallback header and its file is not there", async () => {
+      expect(await loadDirectory("en", { fetcher: server({ manifest: buildManifest(7), marked: [MANIFEST_URL] }).fetcher, storage: memory() })).toEqual({ status: "unavailable" });
     });
 
     it("does not keep or show a listing file that carries the fallback header", async () => {
