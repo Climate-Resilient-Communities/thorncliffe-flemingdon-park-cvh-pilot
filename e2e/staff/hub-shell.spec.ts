@@ -60,7 +60,7 @@ test.describe("signed in at the Hub gate", () => {
 
     await expect(page.getByTestId("hub-shell")).toBeVisible();
     await expect(page.locator("main")).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Hub");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Right now");
     await expect(page.getByTestId("hub-person")).toHaveText("Signed in as Ann Okafor, Ambassador");
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
     await expect(page.getByTestId("hub-side")).toBeHidden();

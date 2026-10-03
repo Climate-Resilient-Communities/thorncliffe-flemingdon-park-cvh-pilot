@@ -2181,7 +2181,7 @@ So that I see what affects me without missing anything else.
 
 ### Story S04.10 — Hub staff see what is waiting and what went where
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 38 min (started 2026-10-03 15:08 UTC, built 17:46 UTC)
 - **Traces:** UX-DR16 (O-01, O-06), FR-M2 · **Depends on:** S04.07 · **Branch:** `e04-s10-hub-home`
 
 As a Hub Coordinator,

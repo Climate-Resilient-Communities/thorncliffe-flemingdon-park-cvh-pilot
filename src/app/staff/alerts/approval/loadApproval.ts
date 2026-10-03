@@ -3,6 +3,7 @@
 // written in, the price of a segment, and the notice that all texts are paused when they are (S06.06). Server only.
 import type { EntryReview } from "@/modules/alerting";
 import type { BuildingFloorPlan } from "@/modules/places";
+import { residentAlertsEnabled } from "../../../feedCache";
 import { getEnv } from "@/platform/config/env";
 import { alerting } from "../../alerts";
 import { buildings } from "../../places";
@@ -24,6 +25,8 @@ export interface ApprovalLoadDeps {
   review: (ref: { alertId: string; entryId: string }) => Promise<EntryReview | null>;
   plans: () => Promise<readonly BuildingFloorPlan[]>;
   pricePerSegmentCents: () => number;
+  /** The launch switch for resident alerts (`residentAlertsEnabled()`). */
+  residentAlertsEnabled: () => boolean;
   /** `pauseNoticeForApprover()` (S06.06): the sentence while texts are paused, null otherwise. */
   pauseNotice: () => Promise<string | null>;
   /** Where a notice that could not be read is logged (the error's name only). */
@@ -34,6 +37,7 @@ const live: ApprovalLoadDeps = {
   review: (ref) => alerting().review(ref),
   plans: () => buildings().listFloorPlans(),
   pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents,
+  residentAlertsEnabled: () => residentAlertsEnabled(),
   pauseNotice: () => pauseNoticeForApprover(),
   logError: (event, fields) => console.error(JSON.stringify({ evt: event, module: "alerting", ...fields })),
 };
@@ -51,5 +55,5 @@ export async function loadApproval(query: ApprovalQuery, viewerId: string, deps:
   } catch (error) {
     deps.logError("approval.pause_notice_failed", { error: error instanceof Error ? error.name : "NonError" });
   }
-  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice });
+  return approvalScreen({ review, plans: await deps.plans(), pricePerSegmentCents: deps.pricePerSegmentCents(), viewerId, pauseNotice, residentAlertsEnabled: deps.residentAlertsEnabled() });
 }

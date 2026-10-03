@@ -164,12 +164,12 @@ test("the Hub home's running alerts, each with its next step, at 390px", async (
     { alertId: ALERT, slug: "abcd2345", isDrill: false, reportedAt: new Date("2026-10-04T13:30:00.000Z"), types: ["elevator"], phase: "in_progress", validUntil: new Date("2026-10-05T14:00:00.000Z"), publishedAt: new Date("2026-10-04T14:40:00.000Z"), coveringKind: "update", ackOnly: false, entries: 2 },
     { alertId: "01900000-0000-7000-8000-00000000a1e8", slug: "wxyz2345", isDrill: false, reportedAt: new Date("2026-10-04T15:10:00.000Z"), types: ["water", "power"], phase: "problem", validUntil: new Date("2026-10-05T15:20:00.000Z"), publishedAt: new Date("2026-10-04T15:20:00.000Z"), coveringKind: "ack", ackOnly: true, entries: 1 },
   ];
-  const view = incidentsView({ waiting: [], mine: [] }, "coordinator", undefined, running);
+  const view = incidentsView({ waiting: [], mine: [] }, "coordinator", undefined, running, new Date("2026-10-04T14:12:00.000Z"));
   await page.setViewportSize({ width: 390, height: 800 });
   await mount(page, "IncidentsFixture", { texts: REAL_TEXTS, brand, view });
   await fitToPage(page, 390);
   await expect(page.getByTestId("running-item")).toHaveCount(2);
-  await expect(page.getByRole("link", { name: "Promote to full alert" })).toHaveCount(1);
-  await expect(page.getByRole("link", { name: "Add an update" })).toHaveCount(1);
+  await expect(page.getByTestId("incidents-running").getByRole("link", { name: "Promote to full alert" })).toHaveCount(1);
+  await expect(page.getByTestId("incidents-running").getByRole("link", { name: "Add an update" })).toHaveCount(1);
   await expectBaseline(page, "update-running-390.png");
 });

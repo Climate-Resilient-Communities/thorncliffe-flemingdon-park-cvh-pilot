@@ -19,6 +19,7 @@ function deps(options: { review?: ReviewOptions | null; paused?: () => Promise<b
     review,
     plans: async () => PLANS,
     pricePerSegmentCents: () => 1.5,
+    residentAlertsEnabled: () => true,
     pauseNotice: options.pauseNotice ?? (() => pauseNoticeForApprover({ paused, logError: pauseLog })),
     logError,
   };
