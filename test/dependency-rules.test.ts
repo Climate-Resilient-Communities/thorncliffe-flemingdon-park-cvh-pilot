@@ -118,6 +118,37 @@ describe("dependency rules", () => {
     expect(violations).toHaveLength(2);
   });
 
+  it("reject importing an SMS adapter outside messaging, and allow messaging's own code to", async () => {
+    const { cruised, violations } = await check("deps-sms-adapter");
+    const smsAdapter = violations.filter((v) => v.rule === "sms-adapter-outside-messaging");
+
+    expect(cruised).toBe(7);
+    expect(smsAdapter).toHaveLength(2);
+    expect(smsAdapter).toEqual(
+      expect.arrayContaining([
+        {
+          rule: "sms-adapter-outside-messaging",
+          from: at("deps-sms-adapter", "modules/alerting/application/notify.ts"),
+          to: at("deps-sms-adapter", "modules/messaging/adapters/twilioSms.ts"),
+        },
+        {
+          rule: "sms-adapter-outside-messaging",
+          from: at("deps-sms-adapter", "app/page.ts"),
+          to: at("deps-sms-adapter", "modules/messaging/adapters/fakeSms.ts"),
+        },
+      ]),
+    );
+    // messaging's application code imports both adapters and breaks no rule.
+    expect(violations.filter((v) => v.from.includes("modules/messaging/"))).toEqual([]);
+  });
+
+  it("covers every SMS adapter the module has: each file named *Sms.ts in messaging/adapters is under the rule", () => {
+    const sending = readdirSync("src/modules/messaging/adapters").filter((name) => /Sms\.ts$/.test(name));
+
+    // The adapters that exist today; a new sender joins the rule by being named the same way.
+    expect(sending.sort()).toEqual(["fakeSms.ts", "twilioSms.ts"]);
+  });
+
   it("reject the audience matcher importing anything but zod and the contract files beside it", async () => {
     const { violations } = await check("deps-matcher-contract");
 

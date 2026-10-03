@@ -50,6 +50,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        smsTestProblem names the rule (never the value), no number is approved and
  *                                                        the page shows that texts are not set up. Set outside production it does
  *                                                        fail start-up: that is a secret-placement rule
+ * SMS_PRICE_PER_SEGMENT_CENTS
+ *                      server   optional                 the price of one text message segment in cents CAD: a positive number with at
+ *                                                        most three decimals and no more than 100 (1.5 is a cent and a half); default
+ *                                                        1.5. PROVISIONAL: IT confirms it from Twilio's price for Canadian toll-free
+ *                                                        numbers. The renderer's cost estimate (S04.06) is segments x recipients x this
+ *                                                        price, rounded up to whole cents, and always shown as an estimate
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -158,6 +164,7 @@ const rawSchema = z.object({
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
   TWILIO_FROM_NUMBER: optionalText,
   SMS_TEST_ALLOWLIST: optionalText,
+  SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
@@ -218,6 +225,9 @@ export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
 
+/** PROVISIONAL (S04.06): cents CAD per text message segment until IT records Twilio's price for Canadian toll-free numbers. */
+export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
+
 export interface Env {
   environment: AppEnvironment;
   smsMode: "live" | "log";
@@ -232,6 +242,8 @@ export interface Env {
   smsTestAllowlist: string[];
   /** Why the test text is not set up although it was configured (names the rule, never a value); undefined when nothing is wrong. */
   smsTestProblem?: string;
+  /** Cents CAD per text message segment (at most three decimals): the price an alert's cost estimate uses (S04.06). */
+  smsPricePerSegmentCents: number;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -468,6 +480,20 @@ function parseSmsTestAllowlist(value: string | undefined, environment: AppEnviro
   return { allowlist: [...new Set(entries)] };
 }
 
+const SMS_PRICE_PROBLEM = "SMS_PRICE_PER_SEGMENT_CENTS: must be a positive number of cents with at most three decimals, no more than 100, such as 1.5";
+
+/** The price of a text message segment in cents CAD: positive, at most three decimals, at most 100; the default when unset. */
+function parseSmsPrice(value: string | undefined, problems: string[]): number {
+  if (value === undefined) return DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS;
+  const text = value.trim();
+  const price = Number(text);
+  if (!/^[0-9]{1,3}(\.[0-9]{1,3})?$/.test(text) || !(price > 0 && price <= 100)) {
+    problems.push(SMS_PRICE_PROBLEM);
+    return DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS;
+  }
+  return price;
+}
+
 /** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
 function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
   if (value === undefined) return fallback;
@@ -574,6 +600,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("COHERE_API_KEY: set but blank; unset it or give it the key");
   }
   const search = parseSearchSettings(raw, problems);
+  const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -650,6 +677,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
         : undefined,
     smsTestAllowlist,
     smsTestProblem,
+    smsPricePerSegmentCents,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

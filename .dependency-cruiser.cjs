@@ -47,6 +47,14 @@ module.exports = {
       to: { path: MODULES, pathNot: MODULE_INDEX },
     },
     {
+      name: "sms-adapter-outside-messaging",
+      comment:
+        "An SMS-sending adapter (the Twilio adapter, the fake) is imported only inside src/modules/messaging: every outbound text is built by messaging's one renderer and handed to the provider by messaging's own code, so no other module or route can build or send a body of its own (AD-21, S04.06). Name a new sending adapter *Sms.ts in messaging/adapters and it is covered",
+      severity: "error",
+      from: { pathNot: `${MODULES}messaging/` },
+      to: { path: `${MODULES}messaging/adapters/[^/]*Sms\\.ts$` },
+    },
+    {
       name: "module-imports-outside-layers",
       comment: "Modules import only src/modules (per the diagram), src/platform, src/contracts and src/i18n (spine layer table)",
       severity: "error",
