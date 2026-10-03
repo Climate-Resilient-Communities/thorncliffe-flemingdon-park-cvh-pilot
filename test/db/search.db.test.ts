@@ -402,7 +402,8 @@ describe("search", () => {
 
       for (let i = 0; i < 3; i++) await expect(search.search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
 
-      expect(gets).toEqual(["releases/1/vectors.json"]);
+      // One load per failure: the two files are downloaded together, so the listing is read too, though the vectors are the bad one.
+      expect(gets).toEqual(["releases/1/vectors.json", "releases/1/en.json"]);
       expect(notes).toHaveLength(1);
       // Each failed search is still one search_log row.
       expect(await rows("search_log")).toMatchObject([{ status: "error" }, { status: "error" }, { status: "error" }]);
@@ -410,7 +411,7 @@ describe("search", () => {
       await new Promise((resolve) => setTimeout(resolve, 200));
       await expect(search.search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
 
-      expect(gets).toEqual(["releases/1/vectors.json", "releases/1/vectors.json"]);
+      expect(gets).toEqual(["releases/1/vectors.json", "releases/1/en.json", "releases/1/vectors.json", "releases/1/en.json"]);
       expect(notes).toHaveLength(2);
     });
   });

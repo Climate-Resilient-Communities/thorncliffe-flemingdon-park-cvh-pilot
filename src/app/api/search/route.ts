@@ -1,4 +1,5 @@
 import { clientAddress } from "@/app/clientAddress";
+import { bootMs } from "@/platform/serverTiming";
 import { deferAfterResponse, recordLimiterFailure, recordSearchDeadline, searchRateLimiter, searchService } from "../../search";
 import { searchResponse } from "./handler";
 
@@ -16,6 +17,7 @@ export function POST(request: Request) {
       onLimiterFailure: recordLimiterFailure,
       onDeadline: recordSearchDeadline,
       defer: deferAfterResponse,
+      boot: () => bootMs(),
     },
     request,
   );

@@ -1363,13 +1363,13 @@ describe("the request's deadline over the snapshot read and the writes", () => {
     expect(second.outcome()).toMatchObject(unavailable);
     expect(first.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
     expect(second.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
-    expect(store.gets).toEqual([VECTORS_PATH]);
+    expect(store.gets).toEqual([VECTORS_PATH, LISTING_PATH]);
     expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
   });
 
   it("stops waiting for a load it joined at its own deadline, though the load would finish later, and the load still completes for the searches after it", async () => {
-    // Each file takes 2 s: the load that starts with the first search ends at about 4 s.
-    const store = releaseStore({ ms: 2000 });
+    // Each file takes 4 s (the two are downloaded together): the load that starts with the first search ends at about 4 s.
+    const store = releaseStore({ ms: 4000 });
     const search = service({ store });
 
     const first = start(search); // its deadline: 2.2 s
@@ -1410,7 +1410,7 @@ describe("the request's deadline over the snapshot read and the writes", () => {
     expect(meanwhile.outcome()).toMatchObject(unavailable);
     expect(meanwhile.took()).toBeLessThan(100);
     expect(after.outcome()).toMatchObject(unavailable);
-    expect(store.gets).toEqual([VECTORS_PATH, VECTORS_PATH]);
+    expect(store.gets).toEqual([VECTORS_PATH, LISTING_PATH, VECTORS_PATH, LISTING_PATH]);
     // The search that failed at once is not told again.
     expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
   });

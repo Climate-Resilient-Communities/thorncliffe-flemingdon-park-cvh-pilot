@@ -16,11 +16,17 @@
 //     and the app is told so that it can write an ops event;
 //  3. the search runs (src/modules/directory/application/search.ts): SearchV1, or 503 `search_unavailable`.
 // Nothing here keeps, logs or echoes the question.
+//
+// Every answer carries a `Server-Timing` header: phase names and milliseconds only (src/platform/serverTiming.ts), so that a
+// slow request says where it spent its time: `boot` (first request of an instance only), `limiter`, `snapshot` (`desc=cold`
+// when the release's data came from the store), `embed`, `translate`, `rank`, `total`. Phases overlap (the limiter and the
+// snapshot run together on a cold instance), so they do not add up to `total`.
 import { SEARCH_ERROR_STATUS, parseSearchRequest, searchErrorBody, type SearchErrorCode } from "@/contracts/search";
 import { SearchV1Schema } from "@/contracts/searchTestSet";
 import { DEFAULT_TOTAL_BUDGET_MS, SearchFailure, type SearchService } from "@/modules/directory";
 import { SEARCH_RATE_LIMIT, type RateLimiter } from "@/modules/subscriptions";
 import { classifyError } from "@/platform/safeError";
+import { createTimings, type PhaseTimings } from "@/platform/serverTiming";
 
 export interface SearchRouteDeps {
   search: () => SearchService;
@@ -43,6 +49,8 @@ export interface SearchRouteDeps {
   /** Test seams. The clock must be the search service's clock (both default to `performance.now`). */
   clock?: () => number;
   limiterBudgetMs?: number;
+  /** For the first request an instance serves: how long the instance had been loaded before it (reported as `boot`); null for the others. */
+  boot?: () => number | null;
   /** The hard deadline, counted from the start of the request; default the search's whole budget (2.5 s). */
   deadlineMs?: number;
 }
@@ -116,15 +124,24 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
     timer = setTimeout(() => resolve("deadline"), Math.max(0, started + (deps.deadlineMs ?? DEFAULT_TOTAL_BUDGET_MS) - clock()));
   });
   const progress: { stage: Stage } = { stage: "body" };
-  const answering = answer(deps, request, clock, started, progress);
+  const timings = createTimings();
+  const boot = deps.boot?.();
+  if (typeof boot === "number") timings.record("boot", boot);
+  const timed = (response: Response): Response => {
+    timings.record("total", clock() - started);
+    const header = timings.header();
+    if (header) response.headers.set("Server-Timing", header);
+    return response;
+  };
+  const answering = answer(deps, request, clock, started, progress, timings);
   // Cut at the deadline, it may still reject later: that is not unhandled.
   answering.catch(() => undefined);
   try {
     const outcome = await Promise.race([answering, expired]);
-    if (outcome !== "deadline") return outcome;
+    if (outcome !== "deadline") return timed(outcome);
   } catch (error) {
     logUnexpected(error, Math.round(clock() - started));
-    return failure("search_unavailable");
+    return timed(failure("search_unavailable"));
   } finally {
     clearTimeout(timer);
   }
@@ -133,11 +150,11 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
   // One line for the platform's function logs: the safe fields only.
   console.error(`search.failed reason=deadline code=${why} ms=${ms}`);
   if (deps.onDeadline) tell(deps, () => deps.onDeadline!(ms, why));
-  return failure("search_unavailable");
+  return timed(failure("search_unavailable"));
 }
 
 /** The answer itself: the body, the count, the search. Each stage has a limit of its own; the hard deadline is over all of them. */
-async function answer(deps: SearchRouteDeps, request: Request, clock: () => number, started: number, progress: { stage: Stage }): Promise<Response> {
+async function answer(deps: SearchRouteDeps, request: Request, clock: () => number, started: number, progress: { stage: Stage }, timings: PhaseTimings): Promise<Response> {
   let raw: unknown;
   try {
     const text = await request.text();
@@ -150,13 +167,23 @@ async function answer(deps: SearchRouteDeps, request: Request, clock: () => numb
   if (!parsed.ok) return failure(parsed.code);
 
   progress.stage = "limiter";
+  // A cold instance has the release's data to load as well: it starts now, beside the count (loading calls no model, so a count
+  // that refuses still means no model is called), and the search below joins it. A warm instance has nothing to start.
+  try {
+    deps.search().warm?.(started);
+  } catch {
+    // A warm-up never changes an answer (the search below meets the same failure itself).
+  }
+  const limiterStart = clock();
   try {
     const counted = await within(
       Promise.resolve().then(() => deps.limiter().check(SEARCH_RATE_LIMIT, deps.client(request.headers))),
       started + (deps.limiterBudgetMs ?? DEFAULT_LIMITER_BUDGET_MS) - clock(),
     );
+    timings.record("limiter", clock() - limiterStart);
     if (!counted.allowed) return failure("rate_limited", { "Retry-After": String(counted.retryAfterSeconds ?? Math.ceil(SEARCH_RATE_LIMIT.windowMs / 1000)) });
   } catch (error) {
+    timings.record("limiter", clock() - limiterStart);
     // The count cannot be kept, so the model is not called.
     const ms = Math.round(clock() - started);
     const why = classifyLimiterError(error);
@@ -170,7 +197,7 @@ async function answer(deps: SearchRouteDeps, request: Request, clock: () => numb
 
   progress.stage = "search";
   try {
-    const body = SearchV1Schema.parse(await deps.search().search(parsed.value, started));
+    const body = SearchV1Schema.parse(await deps.search().search(parsed.value, started, timings));
     return Response.json(body, { headers: NO_STORE });
   } catch (error) {
     if (error instanceof SearchFailure && error.code !== "search_unavailable") return failure(error.code);
