@@ -2352,7 +2352,7 @@ So that residents know it is over and nothing more goes out for it.
 
 ### Story S05.04 — Alerts that run past their time close on their own
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 5 min (started 2026-10-03 22:33 UTC, built 23:38 UTC)
 - **Traces:** FR-A7, AR-8 (system entries) · **Depends on:** S05.03 · **Branch:** `e05-s04-expire-job`
 
 As a resident,
