@@ -13,11 +13,14 @@ export const CORRECT_PAGE = "/staff/alerts/correct";
 /** "Withdraw" (O-15, S05.02): a withdrawal of an entry residents read, with a reason from the catalog. */
 export const WITHDRAW_PAGE = "/staff/alerts/withdraw";
 
+/** "Mark resolved" (O-16, S05.03): the final message that closes a running alert once a second person approves it. */
+export const RESOLVE_PAGE = "/staff/alerts/resolve";
+
 /**
  * Which composer a person came from: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14), the promotion of an
- * acknowledgement (O-13), a correction (O-15) or a withdrawal (O-15).
+ * acknowledgement (O-13), a correction (O-15), a withdrawal (O-15) or the final message of "Mark resolved" (O-16).
  */
-export type ComposerFrom = "ack" | "compose" | "update" | "promote" | "correct" | "withdraw";
+export type ComposerFrom = "ack" | "compose" | "update" | "promote" | "correct" | "withdraw" | "resolve";
 
 const COMPOSER_PAGES: Record<ComposerFrom, string> = {
   ack: ACK_PAGE,
@@ -26,6 +29,7 @@ const COMPOSER_PAGES: Record<ComposerFrom, string> = {
   promote: PROMOTE_PAGE,
   correct: CORRECT_PAGE,
   withdraw: WITHDRAW_PAGE,
+  resolve: RESOLVE_PAGE,
 };
 
 export const isComposerFrom = (value: unknown): value is ComposerFrom => typeof value === "string" && Object.hasOwn(COMPOSER_PAGES, value);
@@ -43,6 +47,8 @@ export function composerOf(kind: string, priorKinds: readonly string[] = []): Co
   // A correction and a withdrawal (S05.02) are written on their own pages, whatever came before them.
   if (kind === "correction") return "correct";
   if (kind === "withdrawal") return "withdraw";
+  // A final (S05.03) is written on its own page.
+  if (kind === "final") return "resolve";
   if (priorKinds.length === 0) return "compose";
   return priorKinds.every((prior) => prior === "ack") ? "promote" : "update";
 }
@@ -59,6 +65,9 @@ export const correctHref = (alertId: string, target?: string): string => `${CORR
 
 /** The start of a withdrawal (O-15): the entries that can be withdrawn, and, with `target`, the form for that one. */
 export const withdrawHref = (alertId: string, target?: string): string => `${WITHDRAW_PAGE}?${new URLSearchParams({ alert: alertId, ...(target ? { target } : {}) }).toString()}`;
+
+/** The start of "Mark resolved" (O-16): the final message of a running alert; nothing is made until the author saves it. */
+export const resolveHref = (alertId: string): string => `${RESOLVE_PAGE}?${new URLSearchParams({ alert: alertId }).toString()}`;
 
 /** The approval view (O-05, O-07; S04.07): where a second person reads exactly what goes out and approves, returns or discards it. */
 export const APPROVE_PAGE = "/staff/alerts/approve";

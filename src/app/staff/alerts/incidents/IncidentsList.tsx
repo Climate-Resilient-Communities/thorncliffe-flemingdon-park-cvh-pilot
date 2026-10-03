@@ -28,6 +28,11 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
                 {item.note}
               </p>
             )}
+            {item.detail && (
+              <p className="hub-wrap hub-preline" lang="en" data-testid="closed-final">
+                {item.detail}
+              </p>
+            )}
             {item.link && (
               <a className="tap hub-link" href={item.link.href}>
                 {item.link.label}
@@ -86,6 +91,15 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
             <h2 id="incidents-running-title" className="hub-wrap">{view.running.title}</h2>
             <p>{view.running.items.length > 0 ? view.running.lead : view.running.none}</p>
             {view.running.items.length > 0 && <Items items={view.running.items} id="running" />}
+          </Stack>
+        </section>
+      )}
+      {view.closed && (
+        <section aria-labelledby="incidents-closed-title" data-testid="incidents-closed">
+          <Stack gap="related">
+            <h2 id="incidents-closed-title" className="hub-wrap">{view.closed.title}</h2>
+            <p>{view.closed.lead}</p>
+            <Items items={view.closed.items} id="closed" />
           </Stack>
         </section>
       )}

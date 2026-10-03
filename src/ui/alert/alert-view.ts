@@ -55,6 +55,20 @@ export interface EntryMark {
   label: string;
 }
 
+/**
+ * How a thread that closed ended (S05.03, R-07): the three reasons each have words and an icon of their own, so "Resolved", "Expired" and "Withdrawn" are never read as
+ * one another. The icon only sits beside the words, it never carries the meaning alone.
+ */
+export interface ClosedView {
+  reason: "resolved" | "expired" | "withdrawn";
+  /** The alert-icons.css mark: a check for resolved, a clock for expired, an information mark for withdrawn. */
+  icon: "check" | "clock" | "info";
+  /** "Resolved 5 minutes ago", "Expired 5 minutes ago", "Withdrawn". */
+  title: string;
+  /** The sentence: "This alert has ended. It was resolved 5 minutes ago.", the withdrawal with its reason. */
+  line: string;
+}
+
 export interface EntryView {
   id: string;
   /** The kind of entry as the feed has it. */
@@ -86,6 +100,8 @@ export interface AlertView {
   valid: string | null;
   /** Said when the alert's time has passed and the thread is not closed yet: "This alert reached its end time without a final update." */
   ended: string | null;
+  /** Set when the thread closed (S05.03): how, and when; the alert is then no longer valid or live, and its final message is the entry on top. Null for an open thread. */
+  closed: ClosedView | null;
   /** "Not yet available in this language". */
   unavailableTitle: string;
   /** "This has not been translated into اردو yet." */
@@ -166,6 +182,27 @@ export function originOf(entry: Pick<FeedEntry, "attribution" | "verified">, t: 
   };
 }
 
+/** How a closed thread ended, in words: the time is the closing entry's (the final, or the withdrawal notice), the newest entry of a thread nothing can be added to. */
+function closedOf(thread: FeedThread, serverNow: Date, t: Translate): ClosedView | null {
+  if (thread.state !== "closed") return null;
+  const timeT: Translate = (key, values) => t(`time.${key}`, values);
+  const newest = entriesNewestFirst(thread.entries)[0];
+  const when = agoText(serverNow.getTime() - new Date(newest.published_at).getTime(), timeT);
+  switch (thread.close_reason) {
+    case "resolved":
+      return { reason: "resolved", icon: "check", title: t("R07.resolvedTitle", { t: when }), line: t("R07.endedResolved", { t: when }) };
+    case "expired":
+      return { reason: "expired", icon: "clock", title: t("R07.expiredTitle", { t: when }), line: t("R07.endedExpired", { t: when }) };
+    case "withdrawn": {
+      // The reason is the withdrawal notice's own words, in the resident's language.
+      const notice = entriesNewestFirst(thread.entries).find((entry) => entry.kind === "withdrawal");
+      return { reason: "withdrawn", icon: "info", title: t("R07.withdrawn"), line: t("R07.endedWithdrawn", { reason: notice?.text.body ?? "" }) };
+    }
+    default:
+      return null;
+  }
+}
+
 /**
  * The view of a thread for a reader of `lang`. `serverNow` is the feed's `server_now`: every "ago" and the comparison with the valid-until
  * are measured against it, so a phone with a wrong clock reads the same words as everyone else.
@@ -186,17 +223,23 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
   const times =
     newestFirst.length > 1 ? t("R07.timeLine", { posted: ago(first.published_at), updated: ago(latest.published_at) }) : t("R07.timeLineOne", { posted: ago(first.published_at) });
-  const valid = validUntilLine(new Date(thread.valid_until), serverNow, language.bcp47, t);
+  const closed = closedOf(thread, serverNow, t);
+  // A thread closed withdrawn has nothing that stands any more: what residents read in the place of the entry is the withdrawal's reason, never the wording that was
+  // withdrawn (S05.03). Every other thread reads the entry that stands.
+  const withdrawnBy = closed?.reason === "withdrawn" ? replacers.get(standing.id) : undefined;
+  // A thread that closed is over: it has no valid-until to read, and no "reached its end time" note beside the one that says how it closed.
+  const valid = closed ? null : validUntilLine(new Date(thread.valid_until), serverNow, language.bcp47, t);
   const lowerHazard = (guide: string) => t(`hazards.${guide}`).toLocaleLowerCase(language.bcp47);
   return {
     slug: thread.slug,
     types: thread.types.map((type) => typeOf(type, t)),
-    current: entryOf(standing, serverNow, t),
+    current: entryOf(standing, serverNow, t, withdrawnBy),
     origin: originOf(standing, t),
     times,
     cardTime: standing.id !== first.id ? t("R03.updated", { t: ago(standing.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
-    ended: valid === null ? t("R07.expiredNote") : null,
+    ended: closed === null && valid === null ? t("R07.expiredNote") : null,
+    closed,
     unavailableTitle: t("x04.unavailable"),
     unavailableBody: t("x04.unavailableBody", { lang: language.native }),
     showEnglish: t("x04.showSource", { lang: ENGLISH.native }),
@@ -205,7 +248,7 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     machineFrom: t("x04.from", { lang: ENGLISH.native }),
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
     entries: newestFirst.map((entry) => entryOf(entry, serverNow, t, replacers.get(entry.id))),
-    preview: previewOf(thread, standing, t),
+    preview: previewOf(thread, withdrawnBy ?? standing, t),
   };
 }
 

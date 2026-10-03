@@ -33,7 +33,7 @@ import { createCloseAlert } from "./closeAlert";
 import { Refused } from "./refused";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, StaffDirectory } from "./ports";
-import { publishedSummaries, readRunningThreads, readThreadSummary, type RunningThread, type ThreadSummary } from "./threads";
+import { publishedSummaries, readClosedThreads, readRunningThreads, readThreadSummary, type ClosedThread, type RunningThread, type ThreadSummary } from "./threads";
 import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
 
@@ -201,7 +201,10 @@ export interface EntryReview {
    * as such, and the approval will refuse it).
    */
   target?: { id: string; kind: EntryKind; status: EntryStatus; text: string; phase: Phase; publishedAt: Date | null; valid: boolean; audience: Audience } | null;
-  /** A withdrawal that, once approved, leaves no published, non-superseded substantive entry: it closes the thread `withdrawn` (S05.02). False for everything else. */
+  /**
+   * An entry that closes the thread once approved: a withdrawal that leaves no published, non-superseded substantive entry (it closes `withdrawn`, S05.02),
+   * and a final (it closes `resolved`, S05.03). False for everything else.
+   */
   closesThread?: boolean;
 }
 
@@ -320,6 +323,17 @@ export interface CorrectInput {
 export interface WithdrawInput {
   entryId: string;
   reason: string;
+  text: string;
+}
+
+/**
+ * What a final is made of (S05.03, "Mark resolved" O-16): the English final message. Everything else is the thread's, carried over from the entry that covers
+ * it (who it is for, the types, where things stood), and its valid-until is "until resolved", 24 elapsed hours from each save and from the submit (a final
+ * is never read as the thread's valid-until: the thread is closed when it is approved).
+ */
+export interface StartFinalInput {
+  /** The id the new entry takes, made by the page (as for an update): a request whose id is already this person's final in this thread returns it. */
+  entryId: string;
   text: string;
 }
 
@@ -576,6 +590,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     // A withdrawal is the target's: who it is for, its types and where things stood are the target's, and only the notice's words are the author's (S05.02).
     // Its valid-until is "until resolved", 24 elapsed hours from each save (and from each submit), so a withdrawal left a day as a draft can still be completed.
     if (entry.kind === "withdrawal") content = { ...contentOf(entry), text: content.text, validUntil: new Date(now().getTime() + UNTIL_RESOLVED_MS), validUntilMode: "resolved" };
+    // A final's valid-until is not the author's either (S05.03): "until resolved", 24 elapsed hours from each save and from the submit. Who it is for can change
+    // through the pickers, as an update's can.
+    if (entry.kind === "final") content = { ...content, validUntil: new Date(now().getTime() + UNTIL_RESOLVED_MS), validUntilMode: "resolved" };
     // Saving the composer's draft judges the time the author entered (in the future, at most 7 days ahead); the audience
     // pickers change who it is for and not when it ends, so they leave a time that has since passed to the submit's own check.
     const invalid = contentRefusal(content) ?? (options.checkValidUntil ? validUntilProblem(content.validUntil, now()) : null);
@@ -586,8 +603,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     mustAuthor(standing, actor.staffId, contentOf(entry));
     mustAuthor(standing, actor.staffId, content);
     // An update that follows other entries keeps the thread's types (S05.01): they are carried over, and a different type is a different disruption.
-    // A correction keeps them too (S05.02).
-    if (entry.kind === "update" || entry.kind === "correction") {
+    // A correction keeps them too (S05.02), and so does a final (S05.03).
+    if (entry.kind === "update" || entry.kind === "correction" || entry.kind === "final") {
       const covering = (await readThreadSummary(tx, entry.alertId))?.covering ?? null;
       if (covering !== null && covering.id !== entry.id && [...covering.types].sort().join("\n") !== [...content.types].sort().join("\n")) throw new Refused("TYPES_CHANGED");
     }
@@ -797,7 +814,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     tx: DbTransaction,
     actor: AlertActor,
     ids: { alertId: string; entryId: string; createdAt: Date },
-    kind: (typeof AUTHORED_KINDS)[number] | "correction" | "withdrawal",
+    kind: (typeof AUTHORED_KINDS)[number] | "correction" | "withdrawal" | "final",
     content: EntryContent,
     replaces?: { supersedesId: string; withdrawalReason?: WithdrawalReason },
   ): Promise<EntryRow> {
@@ -941,8 +958,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         content = contentOf(row);
         // The draft the author saved and saw is the draft that is submitted: someone else saving in between is refused, nothing frozen.
         if (mode.draft !== undefined && mode.draft !== draftFingerprint(content)) throw new Refused("DRAFT_CHANGED");
-        // A withdrawal's "until resolved" runs 24 elapsed hours from this press (before the content is hashed), so one drafted long ago is not stuck.
-        if (row.kind === "withdrawal") {
+        // A withdrawal's (and a final's) "until resolved" runs 24 elapsed hours from this press (before the content is hashed), so one drafted long ago is not stuck.
+        if (row.kind === "withdrawal" || row.kind === "final") {
           const [renewed] = await tx.update(alertEntry).set({ validUntil: new Date(at.getTime() + UNTIL_RESOLVED_MS), validUntilMode: "resolved" }).where(eq(alertEntry.id, row.id)).returning();
           content = contentOf(renewed);
         }
@@ -1238,6 +1255,51 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /**
+     * "Mark resolved" (O-16, S05.03): makes a draft `final`, the last word of a running alert, in one transaction under the thread's lock. It starts from what
+     * covers the thread (who it is for, the types, where things stood) and is the author's words; its valid-until is "until resolved", renewed by each save and by
+     * the submit. It goes on through the composer, submit and a second person's approval like any entry; approving it closes the thread (`approveEntry`:
+     * `closeAlert(alertId, 'resolved', keepEntryId = the final)`). The role policy is an update's (`alert.author_wide`, or `alert.author` for the buildings an
+     * Ambassador is assigned to: the Ambassador's own screens are E08's). Refused: a thread that is closed (`ALERT_CLOSED`: a closed thread offers no
+     * "Mark resolved"), one with nothing residents can read yet (`NO_PUBLISHED_ENTRY`), and what a draft's text must satisfy. Audited as `entry.created`. A request
+     * that names an entry id this person already made as a final of this thread returns it and changes nothing (the same press, sent twice).
+     */
+    async startFinal(actor: AlertActor, ref: { alertId: string }, input: StartFinalInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      return change("entry.created", actor, { type: "alert_entry", id: input.entryId }, async (tx) => {
+        const { thread, standing } = await open(tx, actor, { alertId: ref.alertId });
+        if (!UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
+        const [existing] = await tx.select().from(alertEntry).where(eq(alertEntry.id, input.entryId)).for("update");
+        if (existing) {
+          if (existing.alertId === thread.id && existing.authorId === actor.staffId && existing.kind === "final") return { thread: threadOf(thread), entry: entryOf(existing) };
+          throw new Refused("ENTRY_ID_INVALID");
+        }
+        const at = now();
+        const covering = coveringEntry(publishedSummaries(await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id))));
+        if (covering === null) throw new Refused("NO_PUBLISHED_ENTRY");
+        const content: EntryContent = {
+          text: input.text,
+          types: covering.types,
+          audience: covering.audience,
+          phase: covering.phase,
+          validUntil: new Date(at.getTime() + UNTIL_RESOLVED_MS),
+          validUntilMode: "resolved",
+        };
+        mustAuthor(standing, actor.staffId, content);
+        const invalid = contentRefusal(content);
+        if (invalid) throw new Refused(invalid);
+        const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "final", content);
+        await audit.record(tx, {
+          action: "entry.created",
+          actorStaffId: actor.staffId,
+          subjectType: "alert_entry",
+          subjectId: row.id,
+          isDrill: thread.isDrill,
+          meta: { entry_id: row.id, kind: "final", types: [...content.types] },
+        });
+        return { thread: threadOf(thread), entry: entryOf(row) };
+      });
+    },
+
+    /**
      * Saves a draft's content. Whoever saves a change becomes an editor (the trigger adds them), so
      * they can no longer approve this entry. A draft only, in an open thread.
      */
@@ -1356,6 +1418,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       return change("entry.approved", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<ApprovalOutcome> => {
         const { thread, standing, entry } = await open(tx, actor, ref);
         const row = entry!;
+        // An entry that can close the thread (a final, or a withdrawal that may leave nothing) locks every entry of the thread now, before `feed_version` and the
+        // delivery rows, so the close that follows (`closeAlert` locks them again) is in the lock order of AD-18: alert, alert_entry, feed_version, delivery.
+        if (row.kind === "final" || row.kind === "withdrawal") await tx.select({ id: alertEntry.id }).from(alertEntry).where(eq(alertEntry.alertId, thread.id)).orderBy(alertEntry.id).for("update");
         mustMayApprove(standing, actor, row);
         const refusal = checkApproval({
           approverId: actor.staffId,
@@ -1431,6 +1496,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // The replaced entry's texts that are not yet handed to the provider stop in this same transaction (messaging's `cancelQueued`, after `feed_version`:
         // the lock order of AD-18 is alert, alert_entry, feed_version, then delivery rows). Texts already handed over are in flight and cannot be stopped.
         if (target !== null) await cancelQueued(tx, [target.id]);
+        // A final closes the thread `resolved` in this same transaction (S05.03), before its recipients are captured: `closeAlert` discards the drafts and the
+        // entries waiting for approval, stops the queued texts of every other entry (the final's own are kept), records the final as the entry that closed the
+        // thread and audits `alert.closed`. `feed_version` was raised above, so it is not raised twice.
+        if (row.kind === "final") await closeAlert(tx, actor, { alertId: thread.id, reason: "resolved", keepEntryId: row.id, feedRaised: true });
         // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
         // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
         await markApproval(tx, row.id);
@@ -1452,7 +1521,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         if (target !== null && row.kind === "withdrawal") {
           const after = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
           if (!substantiveRemains(after.map((entry) => ({ id: entry.id, kind: entry.kind as EntryKind, status: entry.status as EntryStatus, webPublishedAt: entry.webPublishedAt })), [target.id])) {
-            await closeAlert(tx, actor, { alertId: thread.id, reason: "withdrawn", keepEntryId: row.id });
+            await closeAlert(tx, actor, { alertId: thread.id, reason: "withdrawn", keepEntryId: row.id, feedRaised: true });
           }
         }
         return { entry: entryOf(approved), recipients: snapshot, feedVersion: feedVersionNow };
@@ -1511,6 +1580,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /** The open threads residents have something substantive to read in, newest news first: what the Hub can add an update to (a closed thread is not here). */
+    async closedThreads(since: Date): Promise<ClosedThread[]> {
+      return readClosedThreads(db, since);
+    },
+
     async runningThreads(): Promise<RunningThread[]> {
       return readRunningThreads(db);
     },
@@ -1623,7 +1696,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           }
           // A correction or a withdrawal shows the entry it replaces, as residents read it now (S05.02).
           let target: EntryReview["target"] = null;
-          let closesThread = false;
+          // A final closes the thread when approved (S05.03): the approver is told before they approve.
+          let closesThread = entryRow.kind === "final" && entryRow.status !== "approved" && entryRow.status !== "discarded";
           if (entryRow.supersedesId !== null) {
             const [replaced] = await tx.select().from(alertEntry).where(and(eq(alertEntry.id, entryRow.supersedesId), eq(alertEntry.alertId, ref.alertId)));
             if (replaced) {

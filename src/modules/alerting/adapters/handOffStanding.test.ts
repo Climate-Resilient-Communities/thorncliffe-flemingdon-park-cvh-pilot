@@ -30,3 +30,31 @@ describe("the closing entry, as the hand-off point tells it from the other entri
     expect(isClosingEntry({ ...base, closedAt: null })).toBe(false);
   });
 });
+
+describe("the closing entry, once the close records it (S05.03)", () => {
+  const OTHER = "0198a000-0000-7000-8000-0000000000e2";
+  const FINAL = "0198a000-0000-7000-8000-0000000000e1";
+  const recorded = { entryId: FINAL, entryStatus: "approved", entryKind: "final", approvedAt: new Date(T.getTime() - 60_000), threadStatus: "closed", closedAt: T, closingEntryId: FINAL };
+
+  it("is the recorded entry, whatever instant it was approved at", () => {
+    expect(isClosingEntry(recorded)).toBe(true);
+    expect(isClosingEntry({ ...recorded, entryKind: "withdrawal" })).toBe(true);
+    expect(isClosingEntry({ ...recorded, entryStatus: "published_system" })).toBe(true);
+  });
+
+  it("is no other entry of the closed thread, even one approved at the very instant of the close", () => {
+    expect(isClosingEntry({ ...recorded, entryId: OTHER, approvedAt: T })).toBe(false);
+    expect(isClosingEntry({ ...recorded, entryId: OTHER, entryKind: "withdrawal", approvedAt: T })).toBe(false);
+  });
+
+  it("is not the recorded entry once it is not approved, or is not a final or a withdrawal, or its thread is open", () => {
+    for (const entryStatus of ["superseded", "discarded", "pending_approval", "draft"]) expect(isClosingEntry({ ...recorded, entryStatus }), entryStatus).toBe(false);
+    for (const entryKind of ["ack", "update", "correction"]) expect(isClosingEntry({ ...recorded, entryKind }), entryKind).toBe(false);
+    expect(isClosingEntry({ ...recorded, threadStatus: "open", closedAt: null })).toBe(false);
+  });
+
+  it("keeps the equality rule for a thread closed before the close recorded anything (closingEntryId null)", () => {
+    expect(isClosingEntry({ ...base, entryId: OTHER, closingEntryId: null })).toBe(true);
+    expect(isClosingEntry({ ...base, entryId: OTHER, closingEntryId: null, approvedAt: new Date(T.getTime() - 1) })).toBe(false);
+  });
+});

@@ -471,6 +471,18 @@ export function ComposerBody({
       {replaces}
       {thread}
       {screen.startNote && <p data-testid="start-note">{screen.startNote}</p>}
+      {screen.after && (
+        <section aria-labelledby="after-title" data-testid="after-resolve">
+          <Stack gap="related">
+            <h2 id="after-title">{screen.after.title}</h2>
+            <Stack as="ul" gap="subline">
+              {screen.after.items.map((item) => (
+                <li key={item}>{item}</li>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
       {screen.notice && saveState.status === "idle" && <p role="status">{screen.notice}</p>}
       {screen.returned && (
         <section aria-labelledby="returned-title" data-testid="returned-note">

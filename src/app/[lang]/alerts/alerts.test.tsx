@@ -9,7 +9,15 @@ import en from "@/i18n/messages/en.json";
 import ur from "@/i18n/messages/ur.json";
 import { ENGLISH, SERVER_NOW, URDU, englishEntry, entry, thread } from "@/ui/alert/alert-test-helpers";
 
-const state = vi.hoisted(() => ({ enabled: true, feed: undefined as unknown as FeedV1, reads: [] as string[], failing: false }));
+const state = vi.hoisted(() => ({
+  enabled: true,
+  feed: undefined as unknown as FeedV1,
+  reads: [] as string[],
+  failing: false,
+  /** The threads that closed, by slug: what `readClosedAlert` (the resident views) answers; the feed does not carry them (S05.03). */
+  closed: new Map<string, unknown>(),
+  closedReads: [] as string[],
+}));
 
 vi.mock("@/app/feedCache", () => ({
   residentAlertsEnabled: () => state.enabled,
@@ -17,6 +25,13 @@ vi.mock("@/app/feedCache", () => ({
     state.reads.push(lang);
     if (state.failing) throw new Error("the feed could not be read");
     return state.feed;
+  },
+}));
+vi.mock("@/app/api/feed/source", () => ({
+  readClosedAlert: async (lang: string, slug: string) => {
+    state.closedReads.push(`${lang}:${slug}`);
+    const found = state.closed.get(slug);
+    return found ? { thread: found, serverNow: new Date("2026-10-01T15:00:00.000Z") } : null;
   },
 }));
 vi.mock("next-intl/server", () => ({
@@ -50,6 +65,8 @@ beforeEach(() => {
   state.enabled = true;
   state.failing = false;
   state.reads.length = 0;
+  state.closed.clear();
+  state.closedReads.length = 0;
   state.feed = feedOf(thread({ entries: [englishEntry()] }));
 });
 
@@ -129,6 +146,48 @@ describe("the alert page", () => {
 
     expect(await html(AlertPage, "en", "bbbbbbbb")).toContain('data-slug="bbbbbbbb"');
     expect(await html(AlertPage, "en", "aaaaaaaa")).toContain('data-slug="aaaaaaaa"');
+  });
+});
+
+describe("a thread that closed (S05.03)", () => {
+  const FINAL = "Power is back on all floors. If your power is still out, call Toronto Hydro.";
+  const closedThread = (reason: string, entries = [englishEntry({ n: 1 }), englishEntry({ n: 2, kind: "final", published_at: "2026-10-01T14:55:00.000Z", text: { lang: "en", body: FINAL, machine: false, model: null, status: "source", source_hash: "a".repeat(64) } })]) =>
+    thread({ slug: "closedaa", state: "closed", close_reason: reason, entries });
+
+  it("opens from its address although the feed does not carry it, with how it closed, its final message and the entry before it", async () => {
+    state.closed.set("closedaa", closedThread("resolved"));
+
+    const page = await html(AlertPage, "en", "closedaa");
+
+    expect(state.closedReads).toEqual(["en:closedaa"]);
+    expect(page).toContain('data-testid="alert-closed"');
+    expect(page).toContain('data-reason="resolved"');
+    expect(page).toContain(FINAL);
+    expect(page).toContain(ENGLISH);
+  });
+
+  it("is looked for only after the feed's open threads, and an open thread never reads the closed ones", async () => {
+    await html(AlertPage, "en", "kbcdfghj");
+    expect(state.closedReads).toEqual([]);
+    await expect(AlertPage(params("en", "nosuchslug"))).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(state.closedReads).toEqual(["en:nosuchslug"]);
+  });
+
+  it("is not read at all while the launch gate is off, or for an address that cannot be a slug", async () => {
+    state.closed.set("closedaa", closedThread("resolved"));
+    state.enabled = false;
+    await expect(AlertPage(params("en", "closedaa"))).rejects.toThrow("NEXT_NOT_FOUND");
+    state.enabled = true;
+    await expect(AlertPage(params("en", "../closedaa"))).rejects.toThrow("NEXT_NOT_FOUND");
+    expect(state.closedReads).toEqual([]);
+  });
+
+  it("describes the page with the final message, the words of the entry that stands", async () => {
+    state.closed.set("closedaa", closedThread("resolved"));
+
+    const metadata = await generateMetadata(params("en", "closedaa"));
+
+    expect(metadata.description).toBe(FINAL);
   });
 });
 

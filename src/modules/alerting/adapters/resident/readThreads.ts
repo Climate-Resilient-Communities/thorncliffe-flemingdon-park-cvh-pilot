@@ -5,14 +5,14 @@
 // view's `where not is_drill`), and an entry that is not web-published is not in the second, so neither can reach a
 // resident however this query is changed. The rule against naming another alert relation here is `eslint.config.mjs`'s
 // `resident-queries-read-nondrill-only`.
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, type SQL } from "drizzle-orm";
 import type { LangCode } from "../../../../contracts/lang";
 import type { Db } from "../../../../platform/db";
-import { assembleThreads, type ResidentEntryRow } from "../../domain/residentThreads";
+import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../../domain/residentThreads";
 import { nondrillAlert, nondrillAlertEntryV2, nondrillAlertEntryTranslation } from "./views";
 
-/** The published entries of the open threads, each with its text in `lang` (none for English: the entry's own text is English). */
-export async function readOpenEntries(db: Db, lang: LangCode): Promise<ResidentEntryRow[]> {
+/** The published entries of the threads `where` picks, each with its text in `lang` (none for English: the entry's own text is English), oldest first. */
+async function readEntries(db: Db, lang: LangCode, where: SQL | undefined): Promise<ResidentEntryRow[]> {
   const rows = await db
     .select({
       threadId: nondrillAlert.id,
@@ -37,7 +37,7 @@ export async function readOpenEntries(db: Db, lang: LangCode): Promise<ResidentE
     .from(nondrillAlertEntryV2)
     .innerJoin(nondrillAlert, eq(nondrillAlert.id, nondrillAlertEntryV2.alertId))
     .leftJoin(nondrillAlertEntryTranslation, and(eq(nondrillAlertEntryTranslation.entryId, nondrillAlertEntryV2.id), eq(nondrillAlertEntryTranslation.lang, lang)))
-    .where(eq(nondrillAlert.status, "open"))
+    .where(where)
     .orderBy(asc(nondrillAlertEntryV2.webPublishedAt), asc(nondrillAlertEntryV2.id));
 
   return rows.map(
@@ -63,7 +63,22 @@ export async function readOpenEntries(db: Db, lang: LangCode): Promise<ResidentE
   );
 }
 
+/** The published entries of the open threads, each with its text in `lang` (none for English: the entry's own text is English). */
+export const readOpenEntries = (db: Db, lang: LangCode): Promise<ResidentEntryRow[]> => readEntries(db, lang, eq(nondrillAlert.status, "open"));
+
 /** The feed's threads for one language, read now. */
 export async function readOpenThreads(db: Db, lang: LangCode) {
   return assembleThreads(await readOpenEntries(db, lang), lang);
+}
+
+/**
+ * The closed thread with this slug for one language, read now (S05.03): R-07 shows a thread that closed, with its close reason, the final message and every earlier
+ * entry. It is read from the same resident views as the feed (a drill's thread is not in them; an entry that is not web-published is not), and never is in the feed.
+ * Null when no closed thread has this address.
+ */
+export async function readClosedThread(db: Db, lang: LangCode, slug: string) {
+  const rows = await readEntries(db, lang, and(eq(nondrillAlert.status, "closed"), eq(nondrillAlertEntryV2.slug, slug)));
+  if (rows.length === 0) return null;
+  const [thread] = await db.select({ reason: nondrillAlert.closedReason }).from(nondrillAlert).where(eq(nondrillAlert.id, rows[0].threadId));
+  return assembleClosedThread(rows, lang, thread?.reason ?? null);
 }

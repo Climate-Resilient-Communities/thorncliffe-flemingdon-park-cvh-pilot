@@ -23,6 +23,11 @@ export interface FeedAlerts {
     threads: readonly FeedThread[];
     statuses: { buildings: ReadonlyMap<string, PlaceState>; neighbourhoods: ReadonlyMap<string, PlaceState> };
   }>;
+  /**
+   * The closed thread with this slug (S05.03): R-07 shows a thread that closed (its close reason, the final message, every earlier entry) when a resident opens its
+   * address. It is not in `read`: the feed lists open threads only. Null when no closed thread has the slug. A source that has no closed threads leaves it out.
+   */
+  readClosed?(lang: LangCode, slug: string): Promise<FeedThread | null>;
 }
 
 /** Before S04.08: no threads, so every place is `none`. */

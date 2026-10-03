@@ -7,14 +7,17 @@
 // reads the same list and changes nothing (S01.12: the policy refuses every action to a Director, and the list carries no link to one). "Your alerts" is
 // what the person is an editor of: a draft an approver sent back shows the approver's note until it is submitted again (the note's only other place is the
 // composer). Drills are listed apart from real alerts, in their own labelled section, and tagged, so a rehearsal is never mistaken for one.
-import type { IncidentRow, Incidents, RunningThread } from "@/modules/alerting";
+import type { ClosedThread, IncidentRow, Incidents, RunningThread } from "@/modules/alerting";
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
-import { approveHref, COMPOSE_PAGE, composerHref, correctHref, LOG_PAGE, updateHref, withdrawHref } from "../pages";
+import { approveHref, COMPOSE_PAGE, composerHref, correctHref, LOG_PAGE, resolveHref, updateHref, withdrawHref } from "../pages";
 import { typeName } from "../typeNames";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
+
+/** How long a closed alert stays on the Hub home, in days (the words of "Recently closed" say it too). */
+export const CLOSED_DAYS = 7;
 
 /** The words of this panel: `staff.incidents.<key>` of the catalog. */
 export const catalogText: Text = (key, values) => englishText(`staff.incidents.${key}`, values);
@@ -34,8 +37,10 @@ export interface IncidentItemView {
   drill: boolean;
   /** Where the person goes next; null for a person who may not act on it (a Director reads the list and changes nothing). */
   link: { href: string; label: string } | null;
-  /** The other things to do with a running alert (S05.02): correct an entry, withdraw an entry. */
+  /** The other things to do with a running alert (S05.02, S05.03): correct an entry, withdraw an entry, mark it resolved. */
   more?: { href: string; label: string }[];
+  /** What a closed alert ended with (S05.03): the words of its final message or its withdrawal notice. */
+  detail?: string;
 }
 
 interface Section {
@@ -57,6 +62,11 @@ export interface IncidentsView {
   /** The open threads: for a role that writes alerts (S05.01) and, read-only, for a Director; null for the others. Drills are in `drills`. */
   running: Section | null;
   mine: { title: string; none: string; items: IncidentItemView[] };
+  /**
+   * The alerts that closed lately, for the roles that read the open threads (S05.03): how each closed and when, with no action. Null when none closed lately,
+   * and for the roles that do not read the open threads (an empty list is no section at all, as it is for what waits for an Ambassador).
+   */
+  closed: { title: string; lead: string; items: IncidentItemView[] } | null;
   /** Always present: its own labelled section, apart from the real alerts. */
   drills: Section;
 }
@@ -89,7 +99,7 @@ const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text, now: Date):
         ? { href: approveHref(ref), label: t("review") }
         : // An update that follows other entries is written on the update composer, which sends it to "Promote" or "Add an update" as it belongs; a correction and a
           // withdrawal (S05.02) are written on their own.
-          { href: composerHref(row.kind === "ack" ? "ack" : row.kind === "correction" ? "correct" : row.kind === "withdrawal" ? "withdraw" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
+          { href: composerHref(row.kind === "ack" ? "ack" : row.kind === "correction" ? "correct" : row.kind === "withdrawal" ? "withdraw" : row.kind === "final" ? "resolve" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
   };
 };
 
@@ -109,11 +119,32 @@ const runningOf = (thread: RunningThread, t: Text, readOnly: boolean): IncidentI
     : [
         { href: correctHref(thread.alertId), label: t("correct") },
         { href: withdrawHref(thread.alertId), label: t("withdraw") },
+        { href: resolveHref(thread.alertId), label: t("resolve") },
       ],
 });
 
+/** A thread that closed lately: how it closed and when, and the last words residents read. It offers nothing to do: nothing can be added to a closed alert (S05.03). */
+const closedOf = (thread: ClosedThread, t: Text): IncidentItemView => ({
+  key: `closed-${thread.alertId}`,
+  title: thread.types.map(typeName).join(", "),
+  state: t("closedLine", { reason: t(`closedReason.${thread.reason}`), time: formatTorontoDateTime(thread.closedAt) }),
+  since: null,
+  waited: null,
+  note: null,
+  drill: thread.isDrill,
+  link: null,
+  ...(thread.closingText ? { detail: t("closedFinal", { text: thread.closingText }) } : {}),
+});
+
 /** The Hub home for a person. `now` is when it is read: how long an entry has waited is counted to it. */
-export function incidentsView(incidents: Incidents, role: StaffRole, t: Text = catalogText, running: readonly RunningThread[] = [], now: Date = new Date()): IncidentsView {
+export function incidentsView(
+  incidents: Incidents,
+  role: StaffRole,
+  t: Text = catalogText,
+  running: readonly RunningThread[] = [],
+  now: Date = new Date(),
+  closed: readonly ClosedThread[] = [],
+): IncidentsView {
   // The roles that approve are the ones that write to a running alert: Coordinators and Admins (the policy actions alert.approve and alert.author_wide).
   const approver = role === "coordinator" || role === "admin";
   const author = approver;
@@ -126,7 +157,9 @@ export function incidentsView(incidents: Incidents, role: StaffRole, t: Text = c
   const mine = (director ? [] : incidents.mine).map((row) => itemOf(row, "mine", t, now));
   // Open threads, the most recently published first.
   const runningItems = author || director ? [...running].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime()).map((thread) => runningOf(thread, t, director)) : [];
-  const drills = [...waiting.filter((item) => item.drill), ...runningItems.filter((item) => item.drill), ...mine.filter((item) => item.drill)];
+  // Closed threads, the most recently closed first.
+  const closedItems = author || director ? [...closed].sort((a, b) => b.closedAt.getTime() - a.closedAt.getTime()).map((thread) => closedOf(thread, t)) : [];
+  const drills = [...waiting.filter((item) => item.drill), ...runningItems.filter((item) => item.drill), ...closedItems.filter((item) => item.drill), ...mine.filter((item) => item.drill)];
   return {
     title: t("title"),
     lead: t("lead"),
@@ -145,6 +178,7 @@ export function incidentsView(incidents: Incidents, role: StaffRole, t: Text = c
       author || director
         ? { title: t("runningTitle"), lead: director ? t("readOnlyRunningLead") : t("runningLead"), none: t("runningNone"), items: runningItems.filter((item) => !item.drill) }
         : null,
+    closed: closedItems.some((item) => !item.drill) ? { title: t("closedTitle"), lead: t("closedLead"), items: closedItems.filter((item) => !item.drill) } : null,
     mine: { title: t("mineTitle"), none: t("mineNone"), items: mine.filter((item) => !item.drill) },
     drills: { title: t("drillsTitle"), lead: t("drillsLead"), none: t("drillsNone"), items: drills },
   };

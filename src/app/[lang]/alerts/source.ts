@@ -3,10 +3,11 @@
 // An alert page shows what the feed shows, because it reads the feed: the same cached answer for the language (src/app/feedCache.ts), so the
 // feed, the alert detail and (E05) the share preview are one state, and nothing the feed would not tell a resident can be read here. The
 // feed is built from the resident views only, so a drill is never found; with the launch gate off (RESIDENT_ALERTS_ENABLED, production until
-// E05) the feed has no thread and no alert page opens. An unknown address, a drill's, a closed thread's and a gate-off request are all the
-// same answer: not found, with no detail.
+// E05) the feed has no thread and no alert page opens. A thread that closed is not in the feed but opens from its address (S05.03: its close reason, the final
+// message and every earlier entry, read from the same views). An unknown address, a drill's and a gate-off request are all the same answer: not found, with no detail.
 import { cache } from "react";
 import { residentAlertsEnabled, readCachedFeed } from "@/app/feedCache";
+import { readClosedAlert } from "@/app/api/feed/source";
 import type { FeedThread } from "@/contracts/feed";
 import type { LaunchCode } from "@/i18n/languages";
 
@@ -20,12 +21,12 @@ export interface LoadedAlert {
 }
 
 /**
- * The open thread with this slug in this language, or null. Called by a page and by its metadata in one request: the answer is shared
+ * The thread with this slug in this language: an open one from the feed, else one that closed (`state: "closed"`, S05.03), or null. Called by a page and by its metadata in one request: the answer is shared
  * (`cache`), so a render reads once. A feed that cannot be read throws, and the language's error page answers.
  */
 export const loadAlert = cache(async (lang: LaunchCode, slug: string): Promise<LoadedAlert | null> => {
   if (!residentAlertsEnabled() || !SLUG.test(slug)) return null;
   const feed = await readCachedFeed(lang);
   const thread = feed.threads.find((candidate) => candidate.slug === slug);
-  return thread ? { thread, serverNow: new Date(feed.server_now) } : null;
+  return thread ? { thread, serverNow: new Date(feed.server_now) } : readClosedAlert(lang, slug);
 });

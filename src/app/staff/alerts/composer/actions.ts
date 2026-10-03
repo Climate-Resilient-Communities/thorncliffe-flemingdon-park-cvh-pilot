@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import { alerting } from "../../alerts";
 import { staffAction, type ActionRefusal } from "../../guard";
 import { pullBackFromForm, saveDraftFromForm, type ComposeState } from "./editDraft";
+import { startFinalFromForm } from "./startFinal";
 import { startUpdateFromForm } from "./startUpdate";
 
 // Writing an alert is the policy action `alert.author_wide` (S01.12, AD-4), like the audience pickers and "Log a disruption": a composer
@@ -54,5 +55,15 @@ export const pullBackAction = staffAction(
 export const startUpdateAction = staffAction(
   { route: "/staff/alerts/update", access: "hub", action: "alert.author_wide" },
   async (session, _previous: ComposeState, form: FormData) => finish(await startUpdateFromForm(deps, session, form)),
+  (error) => refused(error),
+);
+
+/**
+ * "Save draft" on a new final message (O-16 "Mark resolved", S05.03): makes the final's draft from the words, with the thread's audience and types carried over, and goes
+ * on to its composer, where it is submitted for a second person's approval. The policy action is the composers' (`alert.author_wide`).
+ */
+export const startFinalAction = staffAction(
+  { route: "/staff/alerts/resolve", access: "hub", action: "alert.author_wide" },
+  async (session, _previous: ComposeState, form: FormData) => finish(await startFinalFromForm(deps, session, form)),
   (error) => refused(error),
 );

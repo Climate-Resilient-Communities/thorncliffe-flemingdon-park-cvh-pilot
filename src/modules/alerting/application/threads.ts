@@ -3,7 +3,7 @@
 //
 // Staff-side: it reads `alert` and `alert_entry` with the entries' English originals, for the screens that write to a thread. The resident reader (the feed and
 // R-07, S04.08) reads only the non-drill view and applies the same rules to its own rows (`newestFirst`, `threadValidUntil`), which `FeedThreadSchema` checks.
-import { desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, gte, inArray } from "drizzle-orm";
 import type { Audience } from "../../../contracts/audience";
 import type { DbExecutor } from "../../../platform/db";
 import { alert, alertEntry } from "../adapters/schema";
@@ -59,6 +59,18 @@ export interface RunningThread {
   ackOnly: boolean;
   /** How many entries residents can read. */
   entries: number;
+}
+
+/** A thread that closed lately, as the Hub home lists it (S05.03): how it closed, when, and the final message residents read last (null when it has none). */
+export interface ClosedThread {
+  alertId: string;
+  slug: string;
+  isDrill: boolean;
+  types: readonly string[];
+  reason: "resolved" | "expired" | "withdrawn";
+  closedAt: Date;
+  /** The words of the entry that closed the thread: its final (`resolved`, `expired`) or its withdrawal notice (`withdrawn`). */
+  closingText: string | null;
 }
 
 type EntryRow = typeof alertEntry.$inferSelect;
@@ -131,4 +143,38 @@ export async function readRunningThreads(executor: DbExecutor, limit = 100): Pro
     });
   }
   return running.sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime());
+}
+
+/**
+ * The threads that closed at or after `since`, the most recently closed first (S05.03): what the Hub home shows as "Recently closed", so a closed alert is not
+ * simply gone from it. Nothing can be added to them, so none carries an action. The closing entry is the one recorded by the close (`closing_entry_id`); a thread closed
+ * before it was recorded names its latest final or withdrawal.
+ */
+export async function readClosedThreads(executor: DbExecutor, since: Date, limit = 50): Promise<ClosedThread[]> {
+  const threads = await executor
+    .select()
+    .from(alert)
+    .where(and(eq(alert.status, "closed"), gte(alert.closedAt, since)))
+    .orderBy(desc(alert.closedAt), desc(alert.id))
+    .limit(limit);
+  if (threads.length === 0) return [];
+  const rows = await executor
+    .select()
+    .from(alertEntry)
+    .where(inArray(alertEntry.alertId, threads.map((thread) => thread.id)));
+  return threads.map((thread): ClosedThread => {
+    const own = rows.filter((row) => row.alertId === thread.id);
+    const readable = publishedSummaries(own);
+    const closing =
+      own.find((row) => row.id === thread.closingEntryId) ?? readable.map((entry) => own.find((row) => row.id === entry.id)!).find((row) => row.kind === "final" || row.kind === "withdrawal") ?? null;
+    return {
+      alertId: thread.id,
+      slug: headOf(thread).slug,
+      isDrill: thread.isDrill,
+      types: (readable[0]?.types ?? own[0]?.types ?? []) as readonly string[],
+      reason: thread.closedReason as ClosedThread["reason"],
+      closedAt: thread.closedAt as Date,
+      closingText: closing?.originalText ?? null,
+    };
+  });
 }

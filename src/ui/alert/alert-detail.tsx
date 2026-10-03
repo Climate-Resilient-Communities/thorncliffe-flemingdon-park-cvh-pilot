@@ -27,6 +27,19 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
 
         <article className="alert-article" data-testid="alert-article" data-slug={view.slug}>
           <DisruptionTypes types={view.types} size="lg" heading />
+          {view.closed !== null && (
+            <div className="alert-note" role="note" data-testid="alert-closed" data-reason={view.closed.reason}>
+              <span className={`alert-ico alert-ico--${view.closed.icon}`} aria-hidden="true" />
+              <div className="alert-note__body">
+                <ResidentText as="p" className="alert-note__title" testId="alert-closed-title">
+                  {view.closed.title}
+                </ResidentText>
+                <ResidentText as="p" testId="alert-closed-line">
+                  {view.closed.line}
+                </ResidentText>
+              </div>
+            </div>
+          )}
           {view.ended !== null && (
             <div className="alert-note" role="note" data-testid="alert-ended">
               <ResidentText as="p">{view.ended}</ResidentText>

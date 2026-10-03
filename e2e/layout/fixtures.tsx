@@ -629,7 +629,7 @@ export function ComposerFixture({
 }) {
   const actions: ComposerActions = { save: noAction, pullBack: noAction, start: noAction };
   return (
-    <AroundTheScreen texts={texts} brand={brand} signedIn current={{ ack: "/staff/alerts/ack", compose: "/staff/alerts/compose", update: "/staff/alerts/update", promote: "/staff/alerts/promote", correct: "/staff/alerts/correct", withdraw: "/staff/alerts/withdraw" }[screen.from]}>
+    <AroundTheScreen texts={texts} brand={brand} signedIn current={{ ack: "/staff/alerts/ack", compose: "/staff/alerts/compose", update: "/staff/alerts/update", promote: "/staff/alerts/promote", correct: "/staff/alerts/correct", withdraw: "/staff/alerts/withdraw", resolve: "/staff/alerts/resolve" }[screen.from]}>
       <ComposerBody screen={screen} actions={actions} initial={initial} api={api} reload={() => {}} />
     </AroundTheScreen>
   );

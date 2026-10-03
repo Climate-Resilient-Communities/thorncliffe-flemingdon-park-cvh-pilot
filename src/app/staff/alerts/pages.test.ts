@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACK_PAGE, COMPOSE_PAGE, CORRECT_PAGE, PROMOTE_PAGE, UPDATE_PAGE, WITHDRAW_PAGE, composerHref, composerOf, composerPage, correctHref, isComposerFrom, updateHref, withdrawHref } from "./pages";
+import { ACK_PAGE, COMPOSE_PAGE, CORRECT_PAGE, PROMOTE_PAGE, RESOLVE_PAGE, UPDATE_PAGE, WITHDRAW_PAGE, composerHref, composerOf, composerPage, correctHref, isComposerFrom, resolveHref, updateHref, withdrawHref } from "./pages";
 
 const ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const ENTRY = "01900000-0000-7000-8000-00000000e177";
@@ -36,17 +36,29 @@ describe("which composer a correction or a withdrawal is written on (S05.02)", (
   });
 });
 
+describe("which composer a final is written on (S05.03)", () => {
+  it("is its own page, whatever came before it", () => {
+    expect(composerOf("final")).toBe("resolve");
+    expect(composerOf("final", ["ack", "update"])).toBe("resolve");
+    expect(RESOLVE_PAGE).toBe("/staff/alerts/resolve");
+    expect(isComposerFrom("resolve")).toBe(true);
+    expect(composerPage("resolve")).toBe(RESOLVE_PAGE);
+    expect(resolveHref(ALERT)).toBe(`/staff/alerts/resolve?alert=${ALERT}`);
+  });
+});
+
 describe("the addresses of the composers", () => {
-  it("are six pages, each its own, and only those six are composers", () => {
-    expect([ACK_PAGE, COMPOSE_PAGE, UPDATE_PAGE, PROMOTE_PAGE, CORRECT_PAGE, WITHDRAW_PAGE]).toEqual([
+  it("are seven pages, each its own, and only those seven are composers", () => {
+    expect([ACK_PAGE, COMPOSE_PAGE, UPDATE_PAGE, PROMOTE_PAGE, CORRECT_PAGE, WITHDRAW_PAGE, RESOLVE_PAGE]).toEqual([
       "/staff/alerts/ack",
       "/staff/alerts/compose",
       "/staff/alerts/update",
       "/staff/alerts/promote",
       "/staff/alerts/correct",
       "/staff/alerts/withdraw",
+      "/staff/alerts/resolve",
     ]);
-    for (const from of ["ack", "compose", "update", "promote", "correct", "withdraw"]) expect(isComposerFrom(from)).toBe(true);
+    for (const from of ["ack", "compose", "update", "promote", "correct", "withdraw", "resolve"]) expect(isComposerFrom(from)).toBe(true);
     for (const value of ["approve", "", null, undefined, 3, "toString", "__proto__", "constructor"]) expect(isComposerFrom(value), String(value)).toBe(false);
     expect(composerPage("promote")).toBe(PROMOTE_PAGE);
   });

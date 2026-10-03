@@ -157,6 +157,11 @@ export interface ApprovalScreen {
     closes: string | null;
     gone: string | null;
   } | null;
+  /**
+   * What approving a final message does (S05.03, O-16): it closes the alert as resolved, and goes to everyone who got any entry of the alert, on the channels they got it on,
+   * as well as to everyone in its audience. Null for every other entry.
+   */
+  closing: { title: string; reach: string; closes: string } | null;
   fallback: { summary: string; recipients: string | null } | null;
   allTranslated: string | null;
   duplicate: { text: string; link: { href: string; label: string } | null } | null;
@@ -248,6 +253,12 @@ function replacesOf(review: EntryReview, t: Text, compose: Text): ApprovalScreen
   };
 }
 
+/** What approving a final message does, in words (S05.03): null for every other entry, and for a final that is not waiting. */
+function closingOf(review: EntryReview, t: Text): ApprovalScreen["closing"] {
+  if (review.entry.kind !== "final" || review.closesThread !== true) return null;
+  return { title: t("closingTitle"), reach: t("closingReach"), closes: t("closingCloses") };
+}
+
 /** The approval view of an entry as the server stores it, for a person looking at it. */
 export function approvalScreen(input: ApprovalInput): ApprovalScreen {
   const t = input.text ?? catalogText;
@@ -332,6 +343,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     const drill = thread.isDrill;
     const withdrawal = entry.kind === "withdrawal";
     const correction = entry.kind === "correction";
+    const final = entry.kind === "final";
     const ownWords = review.texts.filter((text) => text.status !== "fallback_en").map((text) => text.lang as LangCode);
     const webLanguages: LangCode[] = ["en", ...TRANSLATED_LANGS.filter((lang) => ownWords.includes(lang))];
     const textLanguages = (["en", ...TRANSLATED_LANGS] as LangCode[]).filter((lang) => review.sms[lang] !== undefined);
@@ -366,8 +378,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       value: drill ? t("published.textsDrill") : textLanguages.length === 0 ? t("published.textsNone") : t("published.textsNotOpen", { n: textLanguages.length }),
       ...(!drill && textLanguages.length > 0 ? { languages: { label: t("published.textsLanguages"), items: textLanguages.map(languageView) } } : {}),
     });
-    // A withdrawal is read as a reason in the place of an entry, so it has no validity of its own and nothing to add an update to.
-    if (!withdrawal) rows.push({ id: "valid", label: t("published.validLabel"), value: formatTorontoDateTime(entry.content.validUntil) });
+    // A withdrawal is read as a reason in the place of an entry, so it has no validity of its own and nothing to add an update to; a final closes the alert, so its
+    // 24 hours of "until resolved" is not the alert's validity either.
+    if (!withdrawal && !final) rows.push({ id: "valid", label: t("published.validLabel"), value: formatTorontoDateTime(entry.content.validUntil) });
     const open = thread.status === "open" && !withdrawal;
     const ack = entry.kind === "ack";
     return {
@@ -375,7 +388,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
         ? t("published.titleDrill")
         : withdrawal
           ? t("published.titleWithdrawal")
-          : correction
+          : final
+            ? t("published.titleFinal")
+            : correction
             ? t("published.titleCorrection")
             : ack
               ? t("published.titleAck")
@@ -385,7 +400,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       rows,
       next: {
         title: t("published.nextTitle"),
-        lines: open ? [ack ? t("published.nextPromote") : t("published.nextUpdate")] : [],
+        lines: open ? [ack ? t("published.nextPromote") : t("published.nextUpdate")] : final && !drill ? [t("published.nextFinal")] : [],
         links: [
           { id: "home", href: "/staff", label: t("published.toHome") },
           ...(open ? [{ id: ack ? ("promote" as const) : ("update" as const), href: updateHref(thread.id, ack), label: ack ? t("published.toPromote") : t("published.toUpdate") }] : []),
@@ -398,8 +413,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     variant,
     ref,
     here: approveHref(ref),
-    title: entry.kind === "correction" ? t("correctionTitle") : entry.kind === "withdrawal" ? t("withdrawalTitle") : variant === "alert" ? t("title") : t("ambassadorTitle"),
-    lead: entry.kind === "correction" ? t("correctionLead") : entry.kind === "withdrawal" ? t("withdrawalLead") : variant === "alert" ? t("lead") : t("ambassadorLead"),
+    title: entry.kind === "correction" ? t("correctionTitle") : entry.kind === "withdrawal" ? t("withdrawalTitle") : entry.kind === "final" ? t("finalTitle") : variant === "alert" ? t("title") : t("ambassadorTitle"),
+    lead: entry.kind === "correction" ? t("correctionLead") : entry.kind === "withdrawal" ? t("withdrawalLead") : entry.kind === "final" ? t("finalLead") : variant === "alert" ? t("lead") : t("ambassadorLead"),
     status: locked ? "locked" : "review",
     ...(locked ? { locked } : {}),
     // Told where it matters: to the approver deciding (an entry waiting for them), and on the confirmation (an approved entry), not on an entry that
@@ -437,6 +452,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     ...(published ? { published } : {}),
     allTranslated: hasTexts && fallbackLangs.length === 0 ? t("allTranslated") : null,
     replaces: replacesOf(review, t, compose),
+    closing: closingOf(review, t),
     duplicate: entry.possibleDuplicateOf
       ? { text: t("duplicate"), link: review.duplicate?.entryId ? { href: approveHref({ alertId: review.duplicate.alertId, entryId: review.duplicate.entryId }), label: t("duplicateLink") } : null }
       : null,
