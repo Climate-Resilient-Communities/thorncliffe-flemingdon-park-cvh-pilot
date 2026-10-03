@@ -40,7 +40,7 @@ describe("hubNavigation", () => {
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Test text"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -85,6 +85,7 @@ describe("hubNavigation", () => {
       { id: "directory", label: "Directory", href: "/staff/directory", icon: "layers" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
       { id: "texts", label: "Pause texts", href: "/staff/texts", icon: "pause" },
+      { id: "oncall", label: "On-call numbers", href: "/staff/oncall", icon: "phone" },
       { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
   });
@@ -100,6 +101,13 @@ describe("hubNavigation", () => {
     expect(HUB_NAV_ICONS).toContain("pause");
     const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
     expect(stylesheet).toContain(".hub-ico--pause {");
+  });
+
+  it("adds On-call numbers for exactly the roles whose policy allows oncall.manage (Admins)", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/oncall"), role).toBe(can(role, "oncall.manage"));
+      expect(items(role).some((item) => item.href === "/staff/oncall"), role).toBe(role === "admin");
+    }
   });
 
   it("adds the first-text spike's Test text for Admins only", () => {

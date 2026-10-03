@@ -29,7 +29,8 @@ import {
 } from "../../src/modules/identity";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
 import { createAlertSubmitter, createAlerting } from "../../src/modules/alerting";
-import { createMessagingPause } from "../../src/modules/messaging";
+import { createDeliveryQueue, createMessagingPause } from "../../src/modules/messaging";
+import { createOncallRoster } from "../../src/modules/ops";
 import { noTranslation } from "../../src/modules/translation";
 import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
@@ -52,6 +53,7 @@ const wired = vi.hoisted(() => ({
   db: null as unknown,
   publish: null as unknown,
   pause: null as unknown,
+  oncall: null as unknown,
 }));
 
 vi.mock("../../src/app/staff/identity", () => ({
@@ -82,6 +84,8 @@ vi.mock("../../src/app/staff/messagingPause", () => ({
   startSending: async () => {},
   logPauseError: () => {},
 }));
+// The On-call numbers page and its actions (S06.07) run the roster on the app's own connection.
+vi.mock("../../src/app/oncall", () => ({ oncallRoster: () => wired.oncall }));
 // The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
@@ -137,6 +141,8 @@ beforeAll(async () => {
 async function reset() {
   // An Admin's allowed "Pause all texts" really pauses (S06.06), and the pause names the Admin who paused: clear it before the accounts go.
   await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
+  // An Admin's allowed "Add number" (S06.07) names the Admin who added it: clear the roster before the accounts go.
+  await owner`delete from oncall_roster`;
   await owner.begin(async (tx) => {
     await tx.unsafe(`
       alter table audit_event disable trigger audit_event_no_update_or_delete;
@@ -203,6 +209,11 @@ beforeEach(async () => {
     },
   });
   wired.pause = createMessagingPause({ db: app });
+  wired.oncall = createOncallRoster({
+    db: app,
+    audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },
+    skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+  });
   wired.places = createBuildingService({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },

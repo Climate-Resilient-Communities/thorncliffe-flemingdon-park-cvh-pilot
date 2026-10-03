@@ -66,6 +66,12 @@ export interface AlertLifecycleDeps {
   queueAlertTexts?: (tx: DbTransaction, entryId: string, texts: readonly AlertText[]) => Promise<readonly { lang: string }[]>;
   /** Cents CAD per text message segment (SMS_PRICE_PER_SEGMENT_CENTS), for each queued text's cost estimate; read only when someone is to be texted. */
   pricePerSegmentCents?: () => number;
+  /**
+   * The on-call rule of the approval (S06.07): while `required()` is true (texting is live, decided by the composition root), a non-drill alert is
+   * approved only if `hasNumber(tx)` finds at least one number on ops' on-call roster, read in the approval's transaction; otherwise it is refused
+   * with ONCALL_REQUIRED and nothing changes. Left out (the use case's own tests), the rule is off.
+   */
+  oncall?: { required: () => boolean; hasNumber: (tx: DbTransaction) => Promise<boolean> };
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -1185,6 +1191,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         if (!author || author.status !== "active" || authoringRefusal(author, row.authorId, contentOf(row)) !== null) throw new Refused("AUTHOR_NOT_ALLOWED");
         // ... and the places it names are still there: a floor removed since the submit is not a floor to text.
         await mustExist(tx, contentOf(row).audience);
+        // S06.07: once texting is live, a real alert is approved only if someone is on call to hear that sending is failing (a drill is not).
+        if (!thread.isDrill && deps.oncall?.required() && !(await deps.oncall.hasNumber(tx))) throw new Refused("ONCALL_REQUIRED");
         // `approved_at` and `web_published_at` are not sent: the entry trigger sets both to the database's now().
         const [approved] = await tx
           .update(alertEntry)

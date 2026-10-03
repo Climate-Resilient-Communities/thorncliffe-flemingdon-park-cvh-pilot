@@ -105,6 +105,7 @@ const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
 const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
+const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -152,6 +153,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/oncall", kind: "page", file: "src/app/staff/oncall/page.tsx", export: "default", route: "/staff/oncall", action: "oncall.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -503,6 +505,33 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: {},
+    expected: ADMIN_ONLY,
+  },
+  // S06.07: "Add number" and "Remove" (policy action `oncall.manage`, Admins at aal2). Called as an allowed Admin,
+  // the add really adds a (fictional) number to the roster (test/db/permissions.db.test.ts clears the roster before each call) and the remove
+  // is refused because no such entry exists; nothing is sent.
+  {
+    id: `action ${ONCALL_ACTIONS}#addOncallAction`,
+    kind: "action",
+    file: ONCALL_ACTIONS,
+    export: "addOncallAction",
+    route: "/staff/oncall",
+    action: "oncall.manage",
+    writes: "business",
+    gate: "hub",
+    form: { label: "IT lead", number: "416-555-0123" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${ONCALL_ACTIONS}#removeOncallAction`,
+    kind: "action",
+    file: ONCALL_ACTIONS,
+    export: "removeOncallAction",
+    route: "/staff/oncall",
+    action: "oncall.manage",
+    writes: "business",
+    gate: "hub",
+    form: { id: "01900000-0000-7000-8000-0000000000e9" },
     expected: ADMIN_ONLY,
   },
 ];

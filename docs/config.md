@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/reconcile-spend`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
@@ -143,7 +143,33 @@ job open. If Vercel's deployment protection covers the production URL, `net.http
 (`x-vercel-protection-bypass` with the bypass secret kept in the Vault). To rotate: set `JOB_SECRET_PREVIOUS` to the old value and `JOB_SECRET` to a new one in
 Vercel and deploy; `select vault.update_secret((select id from vault.secrets where name = 'cvh_job_secret'), '<new value>')`; then remove
 `JOB_SECRET_PREVIOUS`. To stop sending without a deploy, pause the texts (Hub, Administration, "Pause texts"; see "Pausing texts" below); to stop the schedule, `select cron.unschedule('cvh-dispatch')`.
-The health job (S06.07, `/api/jobs/health`) is scheduled the same way when it exists; it reads `ops_event` and the sender lease's `renewed_at`.
+
+**The health job (S06.07, `/api/jobs/health`).** Every minute it judges five conditions (texts queued and due for more than 5 minutes outside a pause; a
+delivery that became `unknown`, or a text handed off with no outcome for 10 minutes; no renewal of the sender lease for 3 minutes while texts are due;
+Smart Encoding found on; more than 5 webhook signature failures in 10 minutes), records an `ops_event` (no personal data) when it texts the on-call
+Admins and when a condition clears, and queues one text per number on the on-call roster, at most once per condition per 30 minutes. It needs the same
+`JOB_SECRET` as the other job routes and no other variable; it works in every environment (outside production its texts become `skipped_env` like all
+others). **The owner schedules it, once, in production's Supabase SQL editor as `postgres`, after the Vault secrets of step 1 above exist; this
+repository does not apply it, and it is never run in a preview:**
+
+```sql
+-- 4. The health job, every minute. The first run before any on-call number exists records its findings and texts nobody.
+select cron.schedule('cvh-health', '* * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/health',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
+
+To stop it, `select cron.unschedule('cvh-health')`. An independent outside check of the job itself (what looks if pg_cron or the app stops altogether) is E09's.
+
+**On-call numbers (S06.07).** No variable is involved. An Admin signed in with the authenticator opens Hub, Administration, "On-call numbers" (`/staff/oncall`) and
+adds each Admin's Canadian mobile number with a name or role (at most 10); only the last four digits are shown afterwards, and no audit record, event or log
+holds a number. **Once texts are live** (`SMS_MODE=live`, which is production only, and `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and
+`TWILIO_MESSAGING_SERVICE_SID` all set), no alert except a drill can be approved while the list is empty: the approver is told to ask an Admin to add a number.
+Until Twilio is set up that rule is off, so the Hub's first Admin can approve alerts with an empty list; **add a number before setting the Twilio variables.**
 
 **Messaging Service: Smart Encoding off, and who may change the service.** Smart Encoding replaces characters it thinks are the same (a typographic
 quote, an accented letter), which would break the rule that the frozen body goes out byte for byte (AD-21). So it must be off, and every request sets

@@ -57,6 +57,8 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   if (can(role, "guide.publish")) admin.push({ id: "directory", label: englishText("hub.nav.directory"), href: "/staff/directory", icon: "layers" });
   if (can(role, "buildings.manage")) admin.push({ id: "buildings", label: englishText("hub.nav.buildings"), href: "/staff/buildings", icon: "building" });
   if (can(role, "sending.pause")) admin.push({ id: "texts", label: englishText("hub.nav.texts"), href: "/staff/texts", icon: "pause" });
+  // The on-call numbers page (S06.07) is `oncall.manage`, Admin only.
+  if (can(role, "oncall.manage")) admin.push({ id: "oncall", label: englishText("hub.nav.oncall"), href: "/staff/oncall", icon: "phone" });
   if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;

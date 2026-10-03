@@ -252,6 +252,13 @@ export const AUDIT_META = {
   // already handed to the provider among those of the alerts and campaigns it holds. All are required on an ok record.
   "sending.paused": meta({ waiting: count.optional(), handed_off: count.optional() }),
   "sending.resumed": meta({ waiting: count.optional() }),
+
+  // The on-call roster (S06.07): an Admin at aal2 adds or removes a number. The subject is the roster row (type `oncall_roster`, its id); the
+  // number and the label are personal data and are in no audit record, which holds only how many numbers the roster has afterwards. A
+  // refusal holds only its reason (`validation`: not a Canadian number or no label; `duplicate`: the number is already on the roster;
+  // `conflict`: the roster is full; `not_found`: the entry was already removed).
+  "oncall.added": meta({ roster_size: count.optional() }),
+  "oncall.removed": meta({ roster_size: count.optional() }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
@@ -275,6 +282,8 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
   "sending.paused": ["waiting", "handed_off"],
   "sending.resumed": ["waiting"],
+  "oncall.added": ["roster_size"],
+  "oncall.removed": ["roster_size"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];

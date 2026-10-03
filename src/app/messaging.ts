@@ -18,6 +18,7 @@ import {
   type RecipientNumberSource,
   type RecipientNumberSources,
 } from "@/modules/messaging";
+import { oncallNumberSource } from "@/modules/ops";
 
 /** The recipient kinds whose numbers `subscriptions` holds. */
 export type SubscriptionsRecipientKind = { [K in RecipientKind]: (typeof RECIPIENT_OWNER)[K] extends "subscriptions" ? K : never }[RecipientKind];
@@ -47,9 +48,9 @@ export function wireContactResolver(owners: OwnerNumberSources, log: MessagingLo
   return createContactResolver({ sources: wireContactSources(owners), log });
 }
 
-/** The sources the owner modules provide today: none yet (see the header). */
+/** The sources the owner modules provide today: ops' on-call roster (S06.07); the others come with their stories (see the header). */
 function ownerSources(): OwnerNumberSources {
-  return {};
+  return { ops: oncallNumberSource };
 }
 
 let resolver: ContactResolver | undefined;

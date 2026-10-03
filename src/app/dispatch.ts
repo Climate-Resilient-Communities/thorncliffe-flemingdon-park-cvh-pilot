@@ -56,6 +56,7 @@ export const opsRecorder: OpsRecorder = {
       case "dispatch.provider_auth_failed":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "messaging.smart_encoding_on":
+      case "messaging.smart_encoding_off":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });
       case "messaging.service_check_failed":
         return recordOpsEvent(executor, { kind: event.kind, detail: event.detail });

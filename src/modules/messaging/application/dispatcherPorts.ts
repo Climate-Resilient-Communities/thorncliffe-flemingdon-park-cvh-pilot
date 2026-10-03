@@ -173,6 +173,7 @@ export const MESSAGING_OPS_EVENT_KINDS = [
   "delivery.unknown",
   "dispatch.provider_auth_failed",
   "messaging.smart_encoding_on",
+  "messaging.smart_encoding_off",
   "messaging.service_check_failed",
   // The status callbacks (S06.04).
   "delivery.unknown_resolved",
@@ -186,6 +187,7 @@ export type MessagingOpsEvent =
   | { kind: "delivery.unknown"; deliveryId: string; detail: { cause: UnknownCause; http_status?: number } }
   | { kind: "dispatch.provider_auth_failed"; detail: { http_status: number } }
   | { kind: "messaging.smart_encoding_on"; detail: Record<string, never> }
+  | { kind: "messaging.smart_encoding_off"; detail: Record<string, never> }
   | { kind: "messaging.service_check_failed"; detail: { reason: string } }
   | { kind: "delivery.unknown_resolved"; deliveryId: string; detail: { status: CallbackTarget } }
   /** `deliveryId` when the callback named a delivery that exists. */

@@ -1,11 +1,11 @@
 // The alerting module's public interface (AD-2, AD-5): alert threads and their entries, and the one
 // lifecycle they follow. Other modules and the app use only what is exported here.
-import type { Db } from "../../platform/db";
+import type { Db, DbTransaction } from "../../platform/db";
 import { readStaffStanding } from "../identity";
 import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
-import { recordOpsEvent, type OpsEvent } from "../ops";
+import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
 import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { readOpenThreads } from "./adapters/resident/readThreads";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
@@ -34,6 +34,11 @@ export interface AlertingWiring {
   queueAlertTexts?: AlertLifecycleDeps["queueAlertTexts"];
   /** Cents CAD per text message segment, for each queued text's cost estimate (src/app/staff/alerts.ts gives `getEnv().smsPricePerSegmentCents`). */
   pricePerSegmentCents?: AlertLifecycleDeps["pricePerSegmentCents"];
+  /**
+   * The on-call rule of the approval (S06.07): `required()` says whether a non-drill alert needs an on-call number to be approved (the app: texting
+   * is live, src/app/staff/alerts.ts); `hasNumber` defaults to ops' roster. Left out, the rule is off.
+   */
+  oncall?: { required: () => boolean; hasNumber?: (tx: DbTransaction) => Promise<boolean> };
 }
 
 export interface AlertSubmitterWiring {
@@ -97,6 +102,7 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
       wiring.queueAlertTexts ??
       (async (tx, entryId, texts) => settled(await queue.enqueueAlertDeliveries(tx, entryId, texts), "the alert texts").map((queued) => ({ lang: queued.delivery.lang }))),
     pricePerSegmentCents: wiring.pricePerSegmentCents,
+    oncall: wiring.oncall && { required: wiring.oncall.required, hasNumber: wiring.oncall.hasNumber ?? hasOncallNumber },
   });
 }
 

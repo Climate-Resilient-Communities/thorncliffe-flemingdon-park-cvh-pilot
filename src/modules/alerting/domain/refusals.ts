@@ -64,4 +64,9 @@ export type AlertRefusal =
   | "NO_PUBLISHED_ENTRY"
   | "ENTRY_ID_INVALID"
   /** An update that follows other entries keeps the thread's types: a different type is a different disruption. */
-  | "TYPES_CHANGED";
+  | "TYPES_CHANGED"
+  /**
+   * S06.07, the approval of a non-drill alert while texting is live: the on-call roster has no number, so a stuck queue or a failing sender would
+   * go unreported. Nothing was approved. Off where texting is not live (the app decides, `AlertLifecycleDeps.oncall`).
+   */
+  | "ONCALL_REQUIRED";

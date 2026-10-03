@@ -1386,7 +1386,8 @@
       "buildings": "[EN] Buildings",
       "providers": "[EN] Providers",
       "directory": "[EN] Directory",
-      "texts": "[EN] Pause texts"
+      "texts": "[EN] Pause texts",
+      "oncall": "[EN] On-call numbers"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4603,6 +4604,7 @@
         "FLOOR_NOT_IN_BUILDING": "[EN] A floor of this alert no longer exists, so it cannot be approved. Return it to its author.",
         "NEIGHBOURHOOD_NOT_FOUND": "[EN] A neighbourhood of this alert no longer exists, so it cannot be approved. Return it to its author.",
         "AUDIENCE_INVALID": "[EN] Who this alert is for is not valid, so it cannot be approved. Return it to its author.",
+        "ONCALL_REQUIRED": "[EN] No on-call number is set, so this alert cannot be approved yet. An Admin adds one on the On-call numbers page. Nothing was approved.",
         "forbidden": "[EN] Only a Coordinator or an Admin who did not write or change this alert can approve it.",
         "invalid": "[EN] That could not be done. Reload the page and try again."
       },
@@ -4809,6 +4811,55 @@
         "resumeFailed": "[EN] Texts were not resumed. Try again. If it fails again, tell IT.",
         "unreadable": "[EN] The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT."
       }
+    },
+    "oncall": {
+      "title": "[EN] On-call numbers",
+      "lead": "[EN] The Admins who get a text when sending is stuck or failing, so a problem is fixed before residents miss an alert. A text goes to every number on this list.",
+      "rule": "[EN] Once texts are going out, no alert except a drill can be approved while this list is empty.",
+      "listHeading": "[EN] Numbers that get the text",
+      "empty": "[EN] No on-call number is set.",
+      "emptyConsequence": "[EN] Add at least one before texts go live: until then no alert except a drill can be approved once texts are live.",
+      "count": "[EN] {n} on-call numbers",
+      "countOne": "[EN] 1 on-call number",
+      "hidden": "[EN] Only the last four digits of a number are shown.",
+      "addHeading": "[EN] Add a number",
+      "label": "[EN] Name or role",
+      "labelHint": "[EN] For example \"IT lead\". Up to 40 characters. Shown only here.",
+      "number": "[EN] Mobile number",
+      "numberHint": "[EN] A Canadian number, for example 416-555-0123. It is stored for sending texts and shown here only as its last four digits.",
+      "add": "[EN] Add number",
+      "adding": "[EN] Adding number",
+      "remove": "[EN] Remove",
+      "removing": "[EN] Removing",
+      "removeFor": "[EN] Remove {label}",
+      "done": {
+        "added": "[EN] {label} was added. The list now has {n} numbers.",
+        "addedOne": "[EN] {label} was added. The list now has 1 number.",
+        "removed": "[EN] {label} was removed. The list now has {n} numbers.",
+        "removedOne": "[EN] {label} was removed. The list now has 1 number.",
+        "removedNone": "[EN] {label} was removed. The list is now empty.",
+        "skipped": "[EN] {n} waiting texts to that number were cancelled.",
+        "skippedOne": "[EN] 1 waiting text to that number was cancelled."
+      },
+      "errors": {
+        "label_missing": "[EN] Give the number a name or role.",
+        "label_too_long": "[EN] The name or role can have at most 40 characters.",
+        "number_invalid": "[EN] That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.",
+        "number_duplicate": "[EN] That number is already on the list.",
+        "roster_full": "[EN] The list is full: at most 10 numbers. Remove one first.",
+        "not_found": "[EN] That number is no longer on the list. Reload the page.",
+        "forbidden": "[EN] Only an Admin can change the on-call numbers.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.",
+        "failed": "[EN] The list was not changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT."
+      }
+    },
+    "health": {
+      "banner": "[EN] Sending is failing",
+      "queue_stuck": "[EN] Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.",
+      "sender_stalled": "[EN] No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.",
+      "since": "[EN] Since {when}",
+      "tell": "[EN] Tell IT now."
     }
   },
   "building": {
@@ -4872,5 +4923,16 @@
   },
   "guides": {
     "reviewed": "மையம் சரிபார்த்தது, கடைசியாகப் புதுப்பித்தது {date}"
+  },
+  "ops": {
+    "oncall": {
+      "text": {
+        "queue_stuck": "[EN] CVH: texts are not being sent. Waiting more than 5 minutes: {count}. Check the Hub.",
+        "delivery_unknown": "[EN] CVH: texts with an unknown outcome: {count}. Check the Hub.",
+        "sender_stalled": "[EN] CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.",
+        "smart_encoding_on": "[EN] CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.",
+        "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
+      }
+    }
   }
 }
