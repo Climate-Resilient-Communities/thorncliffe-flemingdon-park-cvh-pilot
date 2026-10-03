@@ -12,7 +12,9 @@
 //                                  The date defaults to today in Toronto. The evaluation subset is
 //                                  acceptance evidence and never used for tuning, so running it
 //                                  (--split evaluation, or all) needs --final. <module> is an ES module
-//                                  whose default export (or `createEngine()`) is a SearchEngine, see lib.ts.
+//                                  whose default export (or `createEngine({translatedLeg})`) is a SearchEngine,
+//                                  see lib.ts; createEngine is told whether the translated-question leg is on,
+//                                  so the same engine module gives both reports (S03.05).
 //                                  The real engine calls the search use case directly, not /api/search
 //                                  over HTTP: that is limited to 30 requests per 10 minutes. Prints a
 //                                  warning when questions are not yet checked by a second team member.
@@ -88,9 +90,15 @@ function validate(argv: string[], root: string): number {
   return 0;
 }
 
-async function loadEngine(modulePath: string): Promise<SearchEngine> {
-  const loaded = (await import(pathToFileURL(path.resolve(modulePath)).href)) as { default?: unknown; createEngine?: () => unknown };
-  const engine = typeof loaded.createEngine === "function" ? await loaded.createEngine() : loaded.default;
+async function loadEngine(modulePath: string, options: { translatedLeg: boolean }): Promise<SearchEngine> {
+  const loaded = (await import(pathToFileURL(path.resolve(modulePath)).href)) as { default?: unknown; createEngine?: (options: { translatedLeg: boolean }) => unknown };
+  if (typeof loaded.createEngine !== "function") {
+    // The report says which leg setting it was run with: an engine that cannot be told is not made to follow it.
+    console.warn(
+      `WARNING: --translated-leg ${options.translatedLeg ? "on" : "off"} was given, but ${modulePath} has no createEngine(): its default export is used as it is, and the report's translated_leg is only as true as that engine is configured.`,
+    );
+  }
+  const engine = typeof loaded.createEngine === "function" ? await loaded.createEngine(options) : loaded.default;
   const isObject = typeof engine === "object" && engine !== null && typeof (engine as { search?: unknown }).search === "function";
   if (typeof engine !== "function" && !isObject) {
     throw new Error(`${modulePath} must export a search engine (a function, or an object with search()) as default, or createEngine()`);
@@ -137,7 +145,7 @@ async function run(argv: string[], root: string): Promise<number> {
   const selected = questions.filter((q) => subsets.includes(q.split));
   let results;
   try {
-    results = await runQuestions(selected, await loadEngine(enginePath), { release: Number(release) });
+    results = await runQuestions(selected, await loadEngine(enginePath, { translatedLeg: leg === "on" }), { release: Number(release) });
   } catch (error) {
     console.error(`The run failed: ${(error as Error).message}`);
     return 1;

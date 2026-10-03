@@ -674,6 +674,52 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
     expect(readdirSync(dir).sort()).toEqual(["2026-10-02-model-a-leg-off-tuning.json", "2026-10-02-model-a-leg-on-tuning.json", "engine.mjs"]);
   });
 
+  it("warns when --translated-leg is given but the engine module has no createEngine, and not when it has one", () => {
+    const dir = tempDir();
+    const common = ["run", "--release", "3", "--threshold", "0.4", "--out-dir", dir, "--date", "2026-10-02", "--model", "m"];
+    const made = `export function createEngine() { return async () => ({ v: 1, release_v: 3, query_lang: "en", status: "no_clear_match", emergency_first: false, results: [] }); }\n`;
+
+    const plain = cli([...common, "--engine", engineFile(dir, GOOD_ENGINE), "--translated-leg", "on"]);
+    expect(plain.code, plain.err).toBe(0);
+    expect(plain.err).toContain("--translated-leg on was given, but");
+    expect(plain.err).toContain("has no createEngine()");
+
+    const withFactory = cli([...common, "--engine", engineFile(dir, made, "made.mjs"), "--translated-leg", "off"]);
+    expect(withFactory.code, withFactory.err).toBe(0);
+    expect(withFactory.err).not.toContain("has no createEngine()");
+  });
+
+  it("tells createEngine whether the translated-question leg is on, so one engine module gives both reports and the leg's effect per language shows (S03.05)", () => {
+    const dir = tempDir();
+    // With the leg on, the romanized Urdu tuning question (ur-03) finds the food bank it expects; with it off, nothing.
+    const engine = engineFile(
+      dir,
+      `export function createEngine({ translatedLeg }) {
+        return async ({ q }) => {
+          const found = translatedLeg && q.includes("khana");
+          return { v: 1, release_v: 3, query_lang: "en", status: found ? "ok" : "no_clear_match", emergency_first: false, results: found ? [{ provider_id: "M008", score: 0.9 }] : [] };
+        };
+      }\n`,
+    );
+    const common = ["run", "--engine", engine, "--release", "3", "--threshold", "0.4", "--out-dir", dir, "--date", "2026-10-02", "--model", "m"];
+
+    const off = cli([...common, "--translated-leg", "off"]);
+    const on = cli([...common, "--translated-leg", "on"]);
+    expect(off.code, off.err).toBe(0);
+    expect(on.code, on.err).toBe(0);
+    const read = (leg: string) => TestSetReportSchema.parse(JSON.parse(readFileSync(path.join(dir, `2026-10-02-m-leg-${leg}-tuning.json`), "utf8")));
+    const [reportOff, reportOn] = [read("off"), read("on")];
+    expect(reportOff.translated_leg).toBe(false);
+    expect(reportOn.translated_leg).toBe(true);
+    expect(reportOff.subsets.tuning!.by_language_kind["ur/romanized"]!.top3.hits).toBe(0);
+    expect(reportOn.subsets.tuning!.by_language_kind["ur/romanized"]!.top3.hits).toBe(1);
+
+    const compared = cli(["--compare", path.join(dir, "2026-10-02-m-leg-on-tuning.json"), path.join(dir, "2026-10-02-m-leg-off-tuning.json")]);
+    expect(compared.out).toMatch(/ur/);
+    expect(compared.out).toContain("leg on");
+    expect(compared.out).toContain("leg off");
+  });
+
   it("run needs --final for the evaluation subset (evaluation, or all)", () => {
     const dir = tempDir();
     const engine = engineFile(dir, GOOD_ENGINE);

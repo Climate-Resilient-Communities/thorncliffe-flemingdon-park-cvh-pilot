@@ -26,6 +26,9 @@ export type PublishFailureReason = (typeof PUBLISH_FAILURE_REASONS)[number];
 export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out", "rate_limit_failed"] as const;
 export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 
+/** Which vendor call of a search leg failed while the search still answered (S03.05): the embedding, or the question's translation. */
+export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed"] as const;
+
 export const OPS_EVENT_KINDS = {
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
   "directory.publish_failed": {
@@ -44,6 +47,14 @@ export const OPS_EVENT_KINDS = {
     detail: z.strictObject({
       reason: z.enum(SEARCH_FAILURE_REASONS),
       /** How long the request had run when it gave up. */
+      ms: count,
+    }),
+  },
+  /** A vendor call of one search leg failed (an embedding, or the translation of a question) although the other leg answered, so the search did not fail and nothing else would show it. At most one per reason a minute. Counts and codes only. */
+  "search.leg_failed": {
+    severity: "warning",
+    detail: z.strictObject({
+      reason: z.enum(SEARCH_LEG_FAILURE_REASONS),
       ms: count,
     }),
   },
