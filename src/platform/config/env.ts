@@ -41,7 +41,9 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; production only (start-up fails if set elsewhere); secret.
  *                                                        TWILIO_FROM_NUMBER is the verified toll-free number (E.164) the S01.15
  *                                                        spike sends from; the page that sends the test text needs the account SID,
- *                                                        auth token and that number, and without them shows that Twilio is not set up
+ *                                                        auth token and that number, and without them shows that Twilio is not set up.
+ *                                                        TWILIO_AUTH_TOKEN also checks the signature of Twilio's status callbacks
+ *                                                        (/api/twilio/status, S06.04): without it that route answers 503 and does nothing
  * SMS_TEST_ALLOWLIST   server   optional; production only (start-up fails if set elsewhere)
  *                                                        the E.164 numbers (comma-separated) the S01.15 test text may go to, set in
  *                                                        production's Vercel variables, never in the repository. Empty or unset:

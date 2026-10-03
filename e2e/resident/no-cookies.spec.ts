@@ -63,3 +63,24 @@ test("the search endpoint sets no cookie and is not cacheable, for a question an
     expect(response.headers()["cache-control"]).toBe("no-store");
   }
 });
+
+// S06.04: Twilio's status callback is public (Twilio cannot sign in) and sets no cookie, whatever it answers: here the server has no Twilio
+// account (SMS_MODE=log), so it is not configured and refuses; with one it would answer 403 to a request that is not signed. Never cacheable.
+test("the Twilio status callback sets no cookie and is not cacheable, for a request with a signature and one without", async ({ request }) => {
+  const ref = "0190a1b2-c3d4-7e5f-8a9b-0c1d2e3f4a5b";
+  const attempts: Record<string, string>[] = [{}, { "x-twilio-signature": "AAAAAAAAAAAAAAAAAAAAAAAAAAA=" }];
+  for (const headers of attempts) {
+    const response = await request.post(`/api/twilio/status?ref=${ref}`, {
+      form: { MessageSid: `SM${"0".repeat(32)}`, MessageStatus: "delivered" },
+      headers,
+      maxRedirects: 0,
+    });
+
+    expect([403, 503], JSON.stringify(headers)).toContain(response.status());
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(headers)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
+  const get = await request.get(`/api/twilio/status?ref=${ref}`, { maxRedirects: 0 });
+  expect(get.status()).toBe(405);
+  expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});

@@ -9,6 +9,7 @@
  */
 import { SAFETY_OVERRIDE_TYPES } from "../../../contracts/audience";
 import type { DeliveryKind, RecipientKind } from "./deliveryRules";
+import { STATUS_CALLBACK_PATH } from "./statusCallback";
 
 /** The sender lease lasts 60 seconds from its last renewal (E06 "Sender lease"). */
 export const LEASE_TTL_MS = 60_000;
@@ -311,5 +312,5 @@ export function alertNotSendable(standing: AlertStanding | null, recipientKind: 
 
 /** The URL the provider calls back with a text's status: `PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}` (S06.04 checks the signature against it). */
 export function statusCallbackUrl(publicBaseUrl: string, callbackRef: string): string {
-  return `${publicBaseUrl.replace(/\/+$/, "")}/api/twilio/status?ref=${encodeURIComponent(callbackRef)}`;
+  return `${publicBaseUrl.replace(/\/+$/, "")}${STATUS_CALLBACK_PATH}?ref=${encodeURIComponent(callbackRef)}`;
 }

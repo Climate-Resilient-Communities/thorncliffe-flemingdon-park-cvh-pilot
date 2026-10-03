@@ -23,6 +23,8 @@ import { createDeliveryQueueService, type DeliveryQueue, type DeliveryQueueDeps 
 import { drizzleDispatchStore } from "./adapters/dispatchStore";
 import { createDispatcher as createDispatcherService } from "./application/dispatcher";
 import type { DispatchStore, Dispatcher, DispatcherDeps } from "./application/dispatcherPorts";
+import { drizzleCallbackStore } from "./adapters/callbackStore";
+import { createStatusCallbacks as createStatusCallbacksService, type CallbackStore, type StatusCallbackDeps, type StatusCallbacks } from "./application/statusCallback";
 import { createMessagingServiceCheck, type MessagingServiceCheck, type MessagingServiceCheckDeps } from "./application/serviceCheck";
 
 export interface DeliveryQueueWiring {
@@ -51,6 +53,20 @@ export type DispatcherWiring = Omit<DispatcherDeps, "store"> & {
  */
 export function createDispatcher(wiring: DispatcherWiring): Dispatcher {
   return createDispatcherService({ ...wiring, store: wiring.store ?? drizzleDispatchStore });
+}
+
+export type StatusCallbackWiring = Omit<StatusCallbackDeps, "store"> & {
+  /** Test seam: another store; the app's own table by default. */
+  store?: CallbackStore;
+};
+
+/**
+ * The provider's status callbacks (S06.04): the signature check and the application of a signed status to the delivery it names, by the
+ * transition table. The one way a delivery reaches `delivered` or `undelivered`. The caller (src/app/statusCallback.ts) gives it the
+ * Twilio account's Auth Token, PUBLIC_BASE_URL and ops' event log.
+ */
+export function createStatusCallbacks(wiring: StatusCallbackWiring): StatusCallbacks {
+  return createStatusCallbacksService({ ...wiring, store: wiring.store ?? drizzleCallbackStore });
 }
 
 export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
@@ -201,6 +217,32 @@ export type {
   SweepResult,
 } from "./application/dispatcherPorts";
 export type { MessagingServiceCheck, ServiceCheckResult } from "./application/serviceCheck";
+
+// The status callbacks (S06.04).
+export { drizzleCallbackStore } from "./adapters/callbackStore";
+export type { CallbackRequest, CallbackResult, CallbackStore, StatusCallbackDeps, StatusCallbacks } from "./application/statusCallback";
+export {
+  CALLBACK_IGNORED_REASONS,
+  CALLBACK_IGNORE_REASONS,
+  CALLBACK_TARGETS,
+  NON_TERMINAL_CALLBACK_STATUSES,
+  SIGNATURE_FAILURE_REASONS,
+  STATUS_CALLBACK_PATH,
+  TERMINAL_CALLBACK_STATUSES,
+  callbackTarget,
+  decideCallback,
+  parseCallbackPayload,
+  readCallbackRef,
+  type CallbackDecision,
+  type CallbackIgnoreReason,
+  type CallbackIgnoredReason,
+  type CallbackPayload,
+  type CallbackRefReading,
+  type CallbackRow,
+  type CallbackTarget,
+  type SignatureFailureReason,
+} from "./domain/statusCallback";
+export { expectedTwilioSignature, isValidTwilioSignature, type FormParameters } from "./domain/twilioSignature";
 export {
   AUTH_FAILURE_LIMIT,
   BACKOFF_MS,
