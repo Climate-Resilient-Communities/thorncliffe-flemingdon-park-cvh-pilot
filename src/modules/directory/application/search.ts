@@ -42,6 +42,11 @@
 //    the request. Neither is ever stored, cached, logged, audited or put into an error; the translation's usage goes to
 //    `spend_event` (kind `translate`) as counts only. `search_log` takes counts and codes, ops events take a reason and a
 //    duration, and every failure that leaves this function is a SearchFailure holding a code.
+//  - Why a search could not answer: each failure also carries a safe classification (`error` of the note the app turns into an
+//    ops event, and one `search.failed` log line): a schema path (`listing_schema:providers.0.name`), a fault of the release's
+//    files (`vectors_missing`, `vectors_hash`, `vectors_release`, `listing_missing`, `listing_hash`), a Postgres SQLSTATE,
+//    `timed_out`, a vendor failure's class (`translate_failed:quota`, `embed_failed:limited`) or an error's class name. Never an
+//    error's message, an address, a hash or the question (src/platform/safeError.ts, src/contracts/safeError.ts).
 import { and, eq, sql } from "drizzle-orm";
 import { DirectoryListingV1 } from "@/contracts/directory";
 import type { LangCode } from "@/contracts/lang";
@@ -60,11 +65,12 @@ import {
 } from "@/modules/translation";
 import type { Db, DbExecutor } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
+import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
-import type { DirectoryStorage, QueryEmbedder } from "./ports";
+import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder } from "./ports";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
@@ -99,6 +105,27 @@ export const DEFAULT_LEG_TIMEOUT_MS = 2200;
 /** The whole request answers within this long. */
 export const DEFAULT_TOTAL_BUDGET_MS = 2500;
 
+/** The classification of a failure that is a timeout. */
+const TIMED_OUT = "timed_out";
+
+/**
+ * The safe classification of a failed translation call: its code and, for a vendor failure, how the vendor's call failed
+ * (`translate_failed:quota`, `translate_failed:unavailable`); any other error as classifyError does. Never a message.
+ */
+function classifyTranslation(error: unknown): string {
+  if (error instanceof QuestionTranslationError) return error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`;
+  return classifyError(error);
+}
+
+/**
+ * The safe classification of a failed embedding: its code and, for a vendor failure, how the vendor's call failed from its
+ * status (`embed_failed:limited`, `embed_failed:auth`); any other error as classifyError does. Never a message.
+ */
+function classifyEmbedding(error: unknown): string {
+  if (error instanceof QueryEmbedError) return error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`;
+  return classifyError(error);
+}
+
 /** Why a search failed, as a code: what the route answers with and what the test-set runner records as `error:<code>`. */
 export type SearchFailureCode = "invalid_request" | "invalid_question" | "invalid_lang" | "search_unavailable";
 
@@ -122,11 +149,12 @@ export type SearchLegFailureReason = "embed_failed" | "translate_failed" | "tran
 
 /**
  * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
- * answered (`answered: true`): a reason and a duration, never the question.
+ * answered (`answered: true`): a reason, a duration and, where the failure has one, its safe classification (`error`: a schema
+ * path, a SQLSTATE, `timed_out`, a class name; see src/platform/safeError.ts), never a message or the question.
  */
 export type SearchFailureNote =
-  | { reason: SearchStageReason; releaseV: number | null; ms: number; answered?: undefined }
-  | { reason: SearchLegFailureReason; releaseV: number | null; ms: number; answered: true; /** The translation model concerned (a vendor model id), when the reason is about one. */ model?: string };
+  | { reason: SearchStageReason; releaseV: number | null; ms: number; answered?: undefined; error?: string }
+  | { reason: SearchLegFailureReason; releaseV: number | null; ms: number; answered: true; /** The translation model concerned (a vendor model id), when the reason is about one. */ model?: string; error?: string };
 
 /** What the translated-question leg did, as `search_log.translated_leg` records it. */
 export type TranslatedLeg = "not_needed" | "used" | "failed" | "timed_out";
@@ -242,12 +270,16 @@ export interface SearchService {
 
 /** A stage of the leg failed: carried to the failure note as a code. */
 class StageError extends Error {
+  /** Safe classification of what failed (see classifyError); `timed_out` for a stage that ran out of time. */
+  readonly detail: string | undefined;
   /** `repeat`: the same failure as one already reported a moment ago, so it is not reported again. */
   constructor(
     readonly reason: SearchStageReason,
     readonly repeat = false,
+    detail?: string,
   ) {
     super(reason);
+    this.detail = detail ?? (reason === "timed_out" ? TIMED_OUT : undefined);
   }
 }
 
@@ -257,7 +289,11 @@ class StageError extends Error {
  * itself, already English (`translate_identical`: the leg was not needed).
  */
 class TranslateStageError extends Error {
-  constructor(readonly reason: "translate_failed" | "translate_rejected" | "translate_identical") {
+  constructor(
+    readonly reason: "translate_failed" | "translate_rejected" | "translate_identical",
+    /** Safe classification of the translation call that failed (see classifyTranslation). */
+    readonly detail?: string,
+  ) {
     super(reason);
   }
 }
@@ -309,15 +345,21 @@ export async function currentSearchFacts(db: Db, timeoutMs = 5_000): Promise<{ r
 
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
   const vectorsBody = await storage.get(record.vectors_path);
-  if (vectorsBody === null || sha256Hex(vectorsBody) !== record.sha256) throw new Error("vectors file is missing or changed");
-  const vectors = VectorsFileSchema.parse(JSON.parse(vectorsBody));
-  if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new Error("vectors file is not this release's");
+  if (vectorsBody === null) throw new SafeDetailError("vectors_missing");
+  if (sha256Hex(vectorsBody) !== record.sha256) throw new SafeDetailError("vectors_hash");
+  const vectorsParsed = VectorsFileSchema.safeParse(JSON.parse(vectorsBody));
+  if (!vectorsParsed.success) throw new SafeDetailError(schemaFailure("vectors_schema", vectorsParsed.error.issues));
+  const vectors = vectorsParsed.data;
+  if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new SafeDetailError("vectors_release");
 
   // Which providers are emergency results: the English listing of the same release names each provider's categories.
   const entry = release.files.en;
   const listingBody = entry ? await storage.get(entry.path) : null;
-  if (!entry || listingBody === null || sha256Hex(listingBody) !== entry.sha256) throw new Error("listing file is missing or changed");
-  const listing = DirectoryListingV1.parse(JSON.parse(listingBody));
+  if (!entry || listingBody === null) throw new SafeDetailError("listing_missing");
+  if (sha256Hex(listingBody) !== entry.sha256) throw new SafeDetailError("listing_hash");
+  const listingParsed = DirectoryListingV1.safeParse(JSON.parse(listingBody));
+  if (!listingParsed.success) throw new SafeDetailError(schemaFailure("listing_schema", listingParsed.error.issues));
+  const listing = listingParsed.data;
   const emergencyNames = new Set(record.emergency_categories);
   const emergencyCategoryIds = new Set(listing.categories.filter((c) => emergencyNames.has(c.name.body)).map((c) => c.id));
   const emergency = new Set(listing.providers.filter((p) => p.category_ids.some((id) => emergencyCategoryIds.has(id))).map((p) => p.id));
@@ -358,7 +400,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 function capped<T>(work: Promise<T>, ms: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const expired = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error("the release's search data took too long to load")), Math.max(0, ms));
+    timer = setTimeout(() => reject(new SafeDetailError(TIMED_OUT)), Math.max(0, ms));
   });
   work.catch(() => undefined);
   return Promise.race([work, expired]).finally(() => clearTimeout(timer));
@@ -383,7 +425,7 @@ export function questionLegSource(input: { q: string; lang: LangCode }): Questio
 }
 
 /** How a leg ended: its similarities, or why it has none. */
-type LegOutcome = { ok: true; similarities: Map<string, number> } | { ok: false; reason: SearchStageReason | "translate_failed" | "translate_rejected" | "translate_identical" };
+type LegOutcome = { ok: true; similarities: Map<string, number> } | { ok: false; reason: SearchStageReason | "translate_failed" | "translate_rejected" | "translate_identical"; /** Safe classification of what failed. */ detail?: string };
 
 /** One paid call of a leg, until its usage is known (reported, estimated, or nothing when it failed before the vendor answered). */
 interface PaidCall {
@@ -456,7 +498,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (!current.search || !deps.embedder) return { releaseV: current.number, data: null };
       return { releaseV: current.number, data: await dataOf(current, current.search) };
     } catch (error) {
-      throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure);
+      throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure, classifyError(error));
     }
   }
 
@@ -507,7 +549,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     const translating = source !== null && translateModel !== null && translator !== null;
 
     // ---- the request snapshot (read in parallel with the translation)
-    const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean } = { snapshot: null, failure: null, repeat: false };
+    const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean; detail: string | undefined } = { snapshot: null, failure: null, repeat: false, detail: undefined };
     const reading = readSnapshot(deadline, (v) => (releaseV = v));
     // An abandoned read may still reject after the deadline: that is not unhandled.
     reading.catch(() => undefined);
@@ -515,19 +557,27 @@ export function createSearch(deps: SearchDeps): SearchService {
     const snapshotKnown: Promise<void> = (async () => {
       try {
         const raced = await raceTimeout(reading, deadline - clock(), () => undefined);
-        if (raced === "timeout") state.failure = "timed_out";
-        else state.snapshot = raced;
+        if (raced === "timeout") {
+          state.failure = "timed_out";
+          state.detail = TIMED_OUT;
+        } else state.snapshot = raced;
       } catch (error) {
         state.failure = error instanceof StageError ? error.reason : "snapshot_failed";
         state.repeat = error instanceof StageError && error.repeat;
+        state.detail = error instanceof StageError ? error.detail : classifyError(error);
       }
       if (state.snapshot) releaseV = state.snapshot.releaseV;
     })();
 
-    const fail = async (reason: SearchStageReason, translatedLeg: TranslatedLeg, quiet = false): Promise<never> => {
+    const fail = async (reason: SearchStageReason, translatedLeg: TranslatedLeg, quiet = false, detail?: string): Promise<never> => {
       log({ status: "error", resultCount: 0, topScore: null, translatedLeg });
       const releaseAtFailure = releaseV;
-      if (deps.onFailure && !quiet) track(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms: elapsed() }));
+      if (!quiet) {
+        const ms = elapsed();
+        // One line for the platform's function logs: the safe fields only.
+        console.error(`search.failed reason=${reason} code=${detail ?? "none"} ms=${ms}`);
+        if (deps.onFailure) track(() => deps.onFailure!({ reason, releaseV: releaseAtFailure, ms, ...(detail === undefined ? {} : { error: detail }) }));
+      }
       await finish();
       throw new SearchFailure("search_unavailable");
     };
@@ -536,14 +586,14 @@ export function createSearch(deps: SearchDeps): SearchService {
      * A vendor failure that did not make the search fail (the other leg answered) is still told to ops, once a minute per
      * kind: a model that is down would otherwise be invisible behind the leg that works.
      */
-    const reportVendorFailure = (reason: SearchLegFailureReason, model?: string) => {
+    const reportVendorFailure = (reason: SearchLegFailureReason, model?: string, error?: string) => {
       const now = clock();
       const key = `${reason}:${model ?? ""}`;
       const until = reportedUntil.get(key);
       if (until !== undefined && now < until) return;
       reportedUntil.set(key, now + failureTtlMs);
       if (!deps.onFailure) return;
-      const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }) };
+      const at = { reason, releaseV, ms: elapsed(), answered: true as const, ...(model === undefined ? {} : { model }), ...(error === undefined ? {} : { error }) };
       track(() => deps.onFailure!(at));
     };
 
@@ -597,11 +647,11 @@ export function createSearch(deps: SearchDeps): SearchService {
       const done = (async (): Promise<LegOutcome> => {
         try {
           const raced = await raceTimeout(running, deadline - clock(), cancel);
-          return raced === "timeout" ? { ok: false, reason: "timed_out" } : { ok: true, similarities: raced };
+          return raced === "timeout" ? { ok: false, reason: "timed_out", detail: TIMED_OUT } : { ok: true, similarities: raced };
         } catch (error) {
-          if (error instanceof StageError) return { ok: false, reason: error.reason };
-          if (error instanceof TranslateStageError) return { ok: false, reason: error.reason };
-          return { ok: false, reason: "embed_failed" };
+          if (error instanceof StageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
+          if (error instanceof TranslateStageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
+          return { ok: false, reason: "embed_failed", detail: classifyEmbedding(error) };
         }
       })();
       return { done, cancel };
@@ -619,9 +669,9 @@ export function createSearch(deps: SearchDeps): SearchService {
       let embedded;
       try {
         embedded = await embedder.embedQuery({ text, model: data.model, dims: data.dims, signal: leg.signal });
-      } catch {
+      } catch (error) {
         settle(call, leg.signal.aborted ? "estimate" : "none");
-        throw new StageError(leg.signal.aborted ? "timed_out" : "embed_failed");
+        throw leg.signal.aborted ? new StageError("timed_out") : new StageError("embed_failed", false, classifyEmbedding(error));
       }
       // An answer that is not a vector of the release's size was still billed.
       settle(call, typeof embedded?.tokens === "number" ? embedded.tokens : null);
@@ -635,9 +685,9 @@ export function createSearch(deps: SearchDeps): SearchService {
 
     // What the translation told ops, with the model it concerned: `translate_quota` for a model past its limit, `translate_failed`
     // for any other vendor failure, `translate_fallback_used` when the fallback made the translation.
-    const translateNotes: { reason: SearchLegFailureReason; model: string }[] = [];
+    const translateNotes: { reason: SearchLegFailureReason; model: string; error?: string }[] = [];
     const noteFailure = (error: unknown, model: string) => {
-      translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model });
+      translateNotes.push({ reason: error instanceof QuestionTranslationError && error.vendor === "quota" ? "translate_quota" : "translate_failed", model, error: classifyTranslation(error) });
     };
 
     const translatedRun = translating
@@ -668,7 +718,7 @@ export function createSearch(deps: SearchDeps): SearchService {
             // The vendor failed (or answered nothing we can tell apart from that), as opposed to answering with something unusable.
             const rejected = error instanceof QuestionTranslationError && error.code !== "translate_failed" && error.code !== "aborted";
             if (!rejected) noteFailure(error, model);
-            return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed");
+            return new TranslateStageError(rejected ? "translate_rejected" : "translate_failed", classifyTranslation(error));
           };
 
           let english: string;
@@ -713,7 +763,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       // No leg ran. A question that needed the translated leg did not get it.
       translatedRun?.cancel();
       const leg: TranslatedLeg = !translating ? "not_needed" : snapshotFailure === "timed_out" ? "timed_out" : "failed";
-      return fail(snapshotFailure ?? "snapshot_failed", leg, repeat);
+      return fail(snapshotFailure ?? "snapshot_failed", leg, repeat, state.detail);
     }
     const ready = snapshot;
     // No release, a release without search data, or no key: an expected outcome, and no model is called.
@@ -734,15 +784,15 @@ export function createSearch(deps: SearchDeps): SearchService {
     const completed = [direct, translated].flatMap((leg) => (leg?.ok ? [leg.similarities] : []));
 
     // Vendor failures are told to ops even when the other leg answered (or, when none did, besides the reason below).
-    const vendor: { reason: SearchLegFailureReason; model?: string }[] = translateNotes.map((n) => ({ ...n }));
-    for (const leg of [direct, translated]) if (leg && !leg.ok && leg.reason === "embed_failed") vendor.push({ reason: "embed_failed" });
+    const vendor: { reason: SearchLegFailureReason; model?: string; error?: string }[] = translateNotes.map((n) => ({ ...n }));
+    for (const leg of [direct, translated]) if (leg && !leg.ok && leg.reason === "embed_failed") vendor.push({ reason: "embed_failed", ...(leg.detail === undefined ? {} : { error: leg.detail }) });
 
     if (completed.length === 0) {
       const primary = (direct.ok ? "embed_failed" : direct.reason) as SearchStageReason;
-      for (const note of vendor) if (note.reason !== primary) reportVendorFailure(note.reason, note.model);
-      return fail(primary, translatedOutcome);
+      for (const note of vendor) if (note.reason !== primary) reportVendorFailure(note.reason, note.model, note.error);
+      return fail(primary, translatedOutcome, false, direct.ok ? undefined : direct.detail);
     }
-    for (const note of vendor) reportVendorFailure(note.reason, note.model);
+    for (const note of vendor) reportVendorFailure(note.reason, note.model, note.error);
 
     // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
     const results = rankLegs(completed, data.threshold);

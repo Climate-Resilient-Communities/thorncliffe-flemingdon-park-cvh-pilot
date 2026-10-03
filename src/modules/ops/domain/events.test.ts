@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { z } from "zod";
 import { OPS_EVENT_KINDS, OpsEventError, PUBLISH_FAILURE_REASONS, toOpsEventRecord } from "./events";
 
 describe("ops events", () => {
@@ -40,7 +41,25 @@ describe("ops events", () => {
   it("has no free-text field in any kind, and a lower_snake_case kind name the table accepts", () => {
     for (const [kind, spec] of Object.entries(OPS_EVENT_KINDS)) {
       expect(kind).toMatch(/^[a-z][a-z0-9_]*(\.[a-z][a-z0-9_]*){0,3}$/);
-      for (const key of Object.keys(spec.detail.shape)) expect(key, `${kind}.${key}`).not.toMatch(/message|text|body|phone|email|name|error/i);
+      for (const key of Object.keys(spec.detail.shape)) {
+        if (key === "error") continue; // the one key that may carry "error", and only as a classification: the next test
+        expect(key, `${kind}.${key}`).not.toMatch(/message|text|body|phone|email|name|error/i);
+      }
+    }
+  });
+
+  it("allows a key named error only where it is a safe classification, which refuses free text, a message and an address", () => {
+    const withError = Object.entries(OPS_EVENT_KINDS).filter(([, spec]) => "error" in spec.detail.shape);
+
+    expect(withError.map(([kind]) => kind).sort()).toEqual(["search.leg_failed", "search.unavailable"]);
+    for (const [kind, spec] of withError) {
+      const error = (spec.detail.shape as unknown as { error: z.ZodType }).error;
+      for (const free of ["connection refused at 10.0.0.1", "took too long", "You are past the per-month limit", "2001:db8::1", "203.0.113.5", "schema:203.0.113.9", "a".repeat(81), "mujhe madad chahiye"]) {
+        expect(error.safeParse(free).success, `${kind}.error accepts ${free}`).toBe(false);
+      }
+      for (const classification of ["42501", "timed_out", "timed_out:limiter", "ECONNREFUSED", "QueryEmbedError", "embed_failed:limited", "listing_schema:providers.0.name"]) {
+        expect(error.safeParse(classification).success, `${kind}.error refuses ${classification}`).toBe(true);
+      }
     }
   });
 
@@ -53,6 +72,12 @@ describe("ops events", () => {
       detail: { reason: "timed_out", ms: 2203 },
     });
     expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 1003 } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 1003 } });
+    for (const error of ["42501", "timed_out", "PostgresError", "unknown", "listing_schema:providers.0.neighbourhood_ids", "CONNECT_TIMEOUT", "vectors_hash"]) {
+      expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 5, error } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 5, error } });
+    }
+    for (const error of ["connection refused at 10.0.0.1", "203.0.113.5", "42501 ", "a".repeat(81), "", "a".repeat(64).replace(/a/g, "f"), "listing_schema: providers", "2001:db8::1", "schema:203.0.113.9", 42]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 5, error } } as never)).toThrow(OpsEventError);
+    }
     // The route's hard deadline: a reason and how long the request had run, and nothing else.
     expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "deadline", ms: 2500 } })).toEqual({
       kind: "search.unavailable",
@@ -64,6 +89,11 @@ describe("ops events", () => {
     for (const detail of [{ reason: "deadline" }, { reason: "deadline", ms: 2500, q: "میری عمارت میں آگ لگی ہے" }, { reason: "deadline", ms: -1 }]) {
       expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
     }
+    // ... with the classification the route gives it (a timeout), which is a code as well.
+    for (const error of ["timed_out", "timed_out:body", "timed_out:limiter", "timed_out:search"]) {
+      expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "deadline", ms: 2500, error } })).toMatchObject({ detail: { reason: "deadline", ms: 2500, error } });
+    }
+    expect(() => toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "deadline", ms: 2500, error: "took too long" } } as never)).toThrow(OpsEventError);
     for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
       expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
     }
@@ -88,6 +118,13 @@ describe("ops events", () => {
       severity: "warning",
       detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" },
     });
+    // The classification of the failed call is a code, like the one of a search that could not answer, and never a message.
+    for (const [reason, error] of [["translate_quota", "translate_failed:quota"], ["translate_failed", "translate_failed:unavailable"], ["embed_failed", "42501"], ["embed_failed", "timed_out"]] as const) {
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300, model: "north-small-translate-09-2026", error } })).toMatchObject({ detail: { reason, ms: 300, model: "north-small-translate-09-2026", error } });
+    }
+    for (const error of ["429 You are past the per-month limit", "203.0.113.5", "a".repeat(81), "", 7]) {
+      expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail: { reason: "translate_quota", ms: 1, error } } as never)).toThrow(OpsEventError);
+    }
     for (const detail of [
       { reason: "translate_quota", ms: 1, model: "You are past the per-month request limit" },
       { reason: "translate_quota", ms: 1, model: "x".repeat(65) },

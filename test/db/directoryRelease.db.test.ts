@@ -207,6 +207,11 @@ describe("the directory release (S02.05)", () => {
       await publish(d);
 
       for (const lang of LANG_CODES) expect(listing(d, 1, lang).providers.map((p) => [p.id, p.neighbourhood_ids])).toEqual([["M001", ["TP"]], ["M002", ["FP"]]]);
+      // The reader accepts a listing without the field, so the stored text itself is checked: the key is in every provider of every file.
+      for (const lang of LANG_CODES) {
+        const written = JSON.parse(d.storage.files.get(`releases/1/${lang}.json`) as string) as { providers: Record<string, unknown>[] };
+        expect(written.providers.map((p) => p.neighbourhood_ids), lang).toEqual([["TP"], ["FP"]]);
+      }
     });
 
     it("stops with invalid_catalogue, writing nothing, when a published provider is not in the Hub's neighbourhood list", async () => {

@@ -104,9 +104,15 @@ describe("planRelease: the files of a release", () => {
   it("gives each provider the neighbourhoods of the Hub's list in every language's file, whatever its address is", () => {
     // M001 is at an M4H address and M002 at an M3C one, but the list decides: the address is never read for it.
     const providers = [provider("M001"), provider("M002", { locations: [{ street: "5 Gateway Blvd", city: "North York", postal: "M3C 1H9", lat: 43.71, lng: -79.33 }] }), provider("M003"), provider("M004")];
-    const { files } = plan(providers, CATEGORIES, 7, { M001: [], M002: ["TP"], M003: ["TP", "FP"], M004: ["FP"] });
+    const { files, raw } = plan(providers, CATEGORIES, 7, { M001: [], M002: ["TP"], M003: ["TP", "FP"], M004: ["FP"] });
 
     for (const lang of LANG_CODES) expect(files[lang].providers.map((p) => [p.id, p.neighbourhood_ids])).toEqual([["M001", []], ["M002", ["TP"]], ["M003", ["TP", "FP"]], ["M004", ["FP"]]]);
+    // The reader accepts a listing without the field (an earlier release's), so the parsed file cannot tell a writer that dropped it
+    // from one that wrote `[]`: the written text can. Every provider of every file carries the key, an empty list included.
+    for (const file of raw) {
+      const written = JSON.parse(file.body) as { providers: Record<string, unknown>[] };
+      expect(written.providers.map((p) => p.neighbourhood_ids), file.lang).toEqual([[], ["TP"], ["TP", "FP"], ["FP"]]);
+    }
   });
 
   it("stops the release, naming the provider, when the Hub's list does not name a published provider", () => {

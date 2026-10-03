@@ -29,6 +29,15 @@ describe("filterProviders", () => {
     expect(moved.find((p) => p.id === "P101")!.locations[0].postal).toBe("M4H 1K2");
   });
 
+  it("treats a provider of a listing from before neighbourhood_ids as in no neighbourhood", () => {
+    const older = buildListing("en", 3) as { providers: Record<string, unknown>[] };
+    older.providers.forEach((p) => delete p.neighbourhood_ids);
+    const read = DirectoryListingV1.parse(older).providers;
+
+    expect(ids(filterProviders(read, NO_FILTERS))).toHaveLength(5);
+    expect(filterProviders(read, setFilter(NO_FILTERS, { kind: "neighbourhood", id: "TP" }, true))).toEqual([]);
+  });
+
   it("finds a provider the list puts in both neighbourhoods under either, and neighbourhoods chosen together are alternatives", () => {
     const both = providers.map((p) => (p.id === "P103" ? { ...p, neighbourhood_ids: ["TP", "FP"] as ("TP" | "FP")[] } : p));
 

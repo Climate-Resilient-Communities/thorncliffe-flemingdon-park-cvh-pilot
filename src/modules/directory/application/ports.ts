@@ -145,12 +145,24 @@ export interface QueryEmbedder {
   embedQuery(input: { text: string; model: string; dims: number | null; signal: AbortSignal }): Promise<{ vector: number[]; tokens: number | null }>;
 }
 
-/** Why one question's embedding failed: a code only. The vendor's error, which may echo the request, is dropped. */
+/**
+ * How the vendor's call of an embedding failed, from the HTTP status alone (never its words): `limited` (429: a monthly limit
+ * and a per-minute one look the same by status), `auth` (401, 403: the key), `unavailable` (5xx, or no answer at all: a timeout,
+ * a network failure), `other` (any other status).
+ */
+export type QueryEmbedVendorFailure = "limited" | "auth" | "unavailable" | "other";
+
+/**
+ * Why one question's embedding failed: a code, and for `embed_failed` how the vendor's call failed when it did (`vendor`). The
+ * vendor's error, which may echo the request, is dropped.
+ */
 export class QueryEmbedError extends Error {
   override name = "QueryEmbedError";
   readonly code: "embed_failed" | "aborted";
-  constructor(code: "embed_failed" | "aborted") {
+  readonly vendor?: QueryEmbedVendorFailure;
+  constructor(code: "embed_failed" | "aborted", vendor?: QueryEmbedVendorFailure) {
     super(code === "aborted" ? "The question's embedding was cancelled" : "The question's embedding failed");
     this.code = code;
+    if (vendor !== undefined) this.vendor = vendor;
   }
 }

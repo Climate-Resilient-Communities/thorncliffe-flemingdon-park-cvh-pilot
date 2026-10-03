@@ -48,6 +48,52 @@ describe("the Cohere query embedder", () => {
     expect((error as Error).cause).toBeUndefined();
   });
 
+  describe("tells how the vendor's call failed, from its HTTP status alone", () => {
+    const failure = async (thrown: unknown) => {
+      const client = { v2: { embed: vi.fn<Embed>(() => Promise.reject(thrown)) } } satisfies CohereEmbedClient;
+      return (await cohereQueryEmbedder({ apiKey: "k", client }).embedQuery({ text: QUESTION, model: "m", dims: null, signal: new AbortController().signal }).catch((e: unknown) => e)) as QueryEmbedError;
+    };
+    const status = (code: number, where: "statusCode" | "status" = "statusCode") => Object.assign(new Error(`${code} ${QUESTION}`), { [where]: code, body: { message: `You are past the per-month limit: ${QUESTION}` } });
+
+    it.each([
+      ["a 429 (a monthly limit and a per-minute one look the same by status)", status(429), "limited"],
+      ["a 401", status(401), "auth"],
+      ["a 403, whichever property the SDK puts it in", status(403, "status"), "auth"],
+      ["a 500", status(500), "unavailable"],
+      ["a 503", status(503, "status"), "unavailable"],
+      ["a 400", status(400), "other"],
+      ["a 404", status(404), "other"],
+      ["a network failure (fetch's TypeError)", new TypeError("fetch failed"), "unavailable"],
+      ["a timeout of the SDK", Object.assign(new Error("timed out"), { name: "CohereTimeoutError" }), "unavailable"],
+      ["a socket code", Object.assign(new Error("x"), { code: "ECONNRESET" }), "unavailable"],
+      ["an error with no status that is not a network failure", new Error("the SDK did not load"), "other"],
+      ["something that is not an error", "a string", "other"],
+    ])("says %s is %s", async (_name, thrown, vendor) => {
+      const error = await failure(thrown);
+
+      expect(error).toBeInstanceOf(QueryEmbedError);
+      expect(error).toMatchObject({ code: "embed_failed", vendor });
+      // Only the status was read: the vendor's words (a body that says "per-month") and the question stay out of what leaves.
+      expect([(error as Error).message, JSON.stringify(error), inspect(error, { depth: 10, showHidden: true })].join("\n")).not.toContain(QUESTION);
+    });
+
+    it("gives no vendor class to an aborted call, nor to an answer with no vector", async () => {
+      const controller = new AbortController();
+      controller.abort();
+      const aborted = await cohereQueryEmbedder({ apiKey: "k", client: fakeClient(status(500)).client })
+        .embedQuery({ text: "a", model: "m", dims: null, signal: controller.signal })
+        .catch((e: unknown) => e);
+      const empty = await cohereQueryEmbedder({ apiKey: "k", client: fakeClient({ embeddings: {} }).client })
+        .embedQuery({ text: "a", model: "m", dims: null, signal: new AbortController().signal })
+        .catch((e: unknown) => e);
+
+      expect(aborted).toMatchObject({ code: "aborted" });
+      expect((aborted as QueryEmbedError).vendor).toBeUndefined();
+      expect(empty).toMatchObject({ code: "embed_failed" });
+      expect((empty as QueryEmbedError).vendor).toBeUndefined();
+    });
+  });
+
   it("says aborted when the call was cancelled, and failed when the answer has no vector", async () => {
     const controller = new AbortController();
     const { client } = fakeClient(new Error("aborted"));

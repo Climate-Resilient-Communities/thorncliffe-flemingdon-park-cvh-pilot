@@ -2,8 +2,13 @@
 // `detail` schema (a field that is not listed rejects the event), none has a free-text field, and every value is
 // a code or a count, so personal data has nowhere to go. Later stories add their kinds here.
 import { z } from "zod";
+import { SafeErrorSchema } from "@/contracts/safeError";
 
 const count = z.number().int().nonnegative().max(1_000_000);
+// A classification of a failure: a SQLSTATE, a class name, `timed_out`, `translate_failed:quota` or
+// `listing_schema:providers.0.field`. A few shapes of one token (or a code and a detail), never a message, an address or a hash
+// (src/contracts/safeError.ts is the one definition of them).
+const safeError = SafeErrorSchema;
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 
 /** Why a directory publish failed (S02.05): the Admin's "Publish failed" names it. */
@@ -183,6 +188,8 @@ export const OPS_EVENT_KINDS = {
       reason: z.enum(SEARCH_FAILURE_REASONS),
       /** How long the request had run when it gave up. */
       ms: count,
+      /** What failed: `timed_out`, a Postgres SQLSTATE, an error class name or a schema path (`listing_schema:providers.0.neighbourhood_ids`). Never a message. */
+      error: safeError.optional(),
     }),
   },
   /** A vendor call of one search leg failed (an embedding, or the translation of a question) although the other leg answered, so the search did not fail and nothing else would show it (or, `translate_quota_near`, a translation model is near its configured monthly limit). At most one per reason and model a minute (the near-limit warning once a month per model and instance). Counts and codes only. */
@@ -193,6 +200,8 @@ export const OPS_EVENT_KINDS = {
       ms: count,
       /** The model whose call failed (or, for `translate_fallback_used`, the fallback that answered; for `translate_quota_near`, the model near its limit). */
       model: modelId.optional(),
+      /** What failed: a translation call's class (`translate_failed:quota`), a Postgres SQLSTATE or an error class name. Never a message. Absent for the fallback and the near-limit warning (nothing failed). */
+      error: safeError.optional(),
     }),
   },
 } as const;

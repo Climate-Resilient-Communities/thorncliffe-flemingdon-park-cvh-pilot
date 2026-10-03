@@ -5,13 +5,14 @@
 // side (search_log.translated_leg, spend_event, the privacy marker) is in test/db/search.db.test.ts.
 import { readFileSync } from "node:fs";
 import path from "node:path";
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi, type MockInstance } from "vitest";
 import { QuestionTranslationError, TranslateError, createQuestionTranslator, type QuestionRoute, type QuestionTranslator, type TranslateErrorCode, type Translator } from "@/modules/translation";
 import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
-import type { QueryEmbedder } from "./ports";
+import { QueryEmbedError, type QueryEmbedder } from "./ports";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
-import { LISTING_PATH, RELEASE_V, VECTORS_PATH, never, releaseDb, releaseStore } from "../../../../test/helpers/searchRelease";
+import { SafeDetailError } from "@/platform/safeError";
+import { LISTING_PATH, RELEASE_V, VECTORS_PATH, never, releaseDb, releaseFiles, releaseRow, releaseStore } from "../../../../test/helpers/searchRelease";
 import { DEFAULT_STORAGE_TIMEOUT_MS } from "../adapters/releaseStorage";
 import {
   ANSWER_MARGIN_MS,
@@ -165,6 +166,8 @@ describe("the translated-question leg", () => {
     onSpendWritten?: SearchDeps["onSpendWritten"];
     onFailure?: SearchDeps["onFailure"];
     snapshotMs?: number;
+    /** The request snapshot instead of SNAPSHOT (a read that fails). */
+    snapshot?: () => Promise<SearchSnapshot>;
     emergencyThreshold?: number;
   }) {
     return createSearch({
@@ -178,10 +181,12 @@ describe("the translated-question leg", () => {
       translator: parts.questions ?? (parts.translator ? createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE, fallback: parts.fallback }) : null),
       fallbackMinBudgetMs: parts.fallbackMinBudgetMs,
       onSpendWritten: parts.onSpendWritten,
-      snapshot: async () => {
-        if (parts.snapshotMs) await new Promise<void>((resolve) => setTimeout(resolve, parts.snapshotMs));
-        return SNAPSHOT;
-      },
+      snapshot:
+        parts.snapshot ??
+        (async () => {
+          if (parts.snapshotMs) await new Promise<void>((resolve) => setTimeout(resolve, parts.snapshotMs));
+          return SNAPSHOT;
+        }),
       emergencyThreshold: parts.emergencyThreshold,
       writer: {
         log: async (row) => void logs.push(row),
@@ -457,8 +462,8 @@ describe("the translated-question leg", () => {
       expect(logs).toMatchObject([{ status: "error", resultCount: 0, translatedLeg: "failed" }]);
       // The translation's vendor failure is told too (the search did not answer, and it is not the direct leg's reason).
       expect(notes).toEqual([
-        { reason: "translate_failed", releaseV: 3, ms: 2200, answered: true, model: "command-a-translate-08-2025" },
-        { reason: "timed_out", releaseV: 3, ms: 2200 },
+        { reason: "translate_failed", releaseV: 3, ms: 2200, answered: true, model: "command-a-translate-08-2025", error: "translate_failed:other" },
+        { reason: "timed_out", releaseV: 3, ms: 2200, error: "timed_out" },
       ]);
     });
 
@@ -556,7 +561,7 @@ describe("the translated-question leg", () => {
       );
 
       expect(result).toMatchObject({ status: "ok" });
-      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "command-a-translate-08-2025" }]);
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "command-a-translate-08-2025", error: "translate_failed:other" }]);
       expect(JSON.stringify(notes)).not.toContain(ROMANIZED);
     });
 
@@ -580,7 +585,7 @@ describe("the translated-question leg", () => {
       const { result } = await ask(service({ embedder: model.embedder, translator: fakeTranslator().translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
 
       expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
-      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), answered: true }]);
+      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), answered: true, error: "Error" }]);
     });
 
     it("does not tell ops about a direct leg that merely ran out of time", async () => {
@@ -615,6 +620,135 @@ describe("the translated-question leg", () => {
       await ask(search, ROMANIZED);
 
       expect(notes.map((n) => n.reason).sort()).toEqual(["embed_failed", "translate_failed"]);
+    });
+  });
+
+  describe("why a search could not answer: the safe classification in the note and in one log line", () => {
+    const QUESTION = "mujhe madad chahiye meri building 203.0.113.9";
+    let logged: MockInstance<typeof console.error>;
+    beforeEach(() => {
+      logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
+    afterEach(() => logged.mockRestore());
+    const lines = () => logged.mock.calls.map((c) => c.join(" "));
+
+    /** A search whose request snapshot fails with `thrown`, and the note it told. */
+    async function failedSnapshot(thrown: unknown) {
+      const notes: SearchFailureNote[] = [];
+      const { result } = await ask(
+        service({
+          embedder: fakeEmbedder().embedder,
+          snapshot: async () => {
+            throw thrown;
+          },
+          onFailure: async (n) => void notes.push(n),
+        }),
+        QUESTION,
+      );
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      return notes;
+    }
+
+    it("names the schema path of a listing that does not parse, not its content", async () => {
+      const notes = await failedSnapshot(new SafeDetailError("listing_schema:providers.0.name"));
+
+      expect(notes).toEqual([{ reason: "snapshot_failed", releaseV: null, ms: expect.any(Number), error: "listing_schema:providers.0.name" }]);
+      expect(lines()).toEqual([expect.stringMatching(/^search\.failed reason=snapshot_failed code=listing_schema:providers\.0\.name ms=\d+$/)]);
+    });
+
+    it("names the Postgres SQLSTATE, else a connection error's code, else the class name, else unknown, and never the error's message, an address or the question", async () => {
+      const stopped = Object.assign(new Error("canceling statement due to statement timeout for 203.0.113.9"), { code: "57014" });
+      class PostgresLikeError extends Error {}
+      const errors = [
+        ...(await failedSnapshot(stopped)).map((n) => n.error),
+        ...(await failedSnapshot(new PostgresLikeError(QUESTION))).map((n) => n.error),
+        ...(await failedSnapshot(Object.assign(new Error("x"), { code: "ECONNREFUSED" }))).map((n) => n.error),
+        ...(await failedSnapshot("a string")).map((n) => n.error),
+      ];
+
+      expect(errors).toEqual(["57014", "PostgresLikeError", "ECONNREFUSED", "unknown"]);
+      expect(lines().map((l) => l.replace(/ ms=\d+$/, ""))).toEqual([
+        "search.failed reason=snapshot_failed code=57014",
+        "search.failed reason=snapshot_failed code=PostgresLikeError",
+        "search.failed reason=snapshot_failed code=ECONNREFUSED",
+        "search.failed reason=snapshot_failed code=unknown",
+      ]);
+      expect(JSON.stringify([errors, lines()])).not.toMatch(/203\.0\.113|canceling|madad/);
+    });
+
+    it("names a timeout as timed_out (the legs cut at 2.2 s)", async () => {
+      const notes: SearchFailureNote[] = [];
+
+      const { result } = await ask(service({ embedder: fakeEmbedder({ ms: () => 3000 }).embedder, onFailure: async (n) => void notes.push(n) }), "I need a lawyer");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(notes).toEqual([{ reason: "timed_out", releaseV: 3, ms: 2200, error: "timed_out" }]);
+      expect(lines()).toEqual(["search.failed reason=timed_out code=timed_out ms=2200"]);
+    });
+
+    it("names the snapshot's own timeout as timed_out", async () => {
+      const notes: SearchFailureNote[] = [];
+
+      const { result } = await ask(service({ embedder: fakeEmbedder().embedder, snapshotMs: 3000, onFailure: async (n) => void notes.push(n) }), "I need a lawyer");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(notes).toMatchObject([{ reason: "timed_out", error: "timed_out" }]);
+    });
+
+    it("names the class of an embedding that failed at the vendor, not its message", async () => {
+      const notes: SearchFailureNote[] = [];
+      const embedder: QueryEmbedder = {
+        embedQuery: () => Promise.reject(Object.assign(new Error(`vendor said no to: ${QUESTION}`), { code: "429" })),
+      };
+
+      const { result } = await ask(service({ embedder, onFailure: async (n) => void notes.push(n) }), "I need a lawyer");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), error: "Error" }]);
+      expect(JSON.stringify([notes, lines()])).not.toMatch(/203\.0\.113|vendor said|madad/);
+    });
+
+    it.each([
+      ["a call the vendor limited", new QueryEmbedError("embed_failed", "limited"), "embed_failed:limited"],
+      ["a key the vendor refused", new QueryEmbedError("embed_failed", "auth"), "embed_failed:auth"],
+      ["a vendor that did not answer", new QueryEmbedError("embed_failed", "unavailable"), "embed_failed:unavailable"],
+      ["a failure of any other status", new QueryEmbedError("embed_failed", "other"), "embed_failed:other"],
+      ["an embedding failure that has no class (an answer without a vector)", new QueryEmbedError("embed_failed"), "embed_failed"],
+    ])("names the class of the vendor's failure of an embedding (%s), not the class name of the error: that is minified in a build", async (_name, thrown, error) => {
+      const notes: SearchFailureNote[] = [];
+      const embedder: QueryEmbedder = { embedQuery: () => Promise.reject(thrown) };
+
+      const { result } = await ask(service({ embedder, onFailure: async (n) => void notes.push(n) }), "I need a lawyer");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), error }]);
+      expect(lines()).toEqual([expect.stringMatching(new RegExp(`^search\\.failed reason=embed_failed code=${error} ms=\\d+$`))]);
+    });
+
+    it("tells the class of a direct leg's failed embedding too when the translated leg rescued the answer", async () => {
+      const notes: SearchFailureNote[] = [];
+      // The direct leg's question is limited by the vendor; the English translation of it is embedded.
+      const embedder: QueryEmbedder = {
+        embedQuery: async ({ text }) => {
+          if (text === PASHTO) throw new QueryEmbedError("embed_failed", "limited");
+          return { vector: VECTORS[text] ?? [0, 0, 0, 0, 1], tokens: 4 };
+        },
+      };
+
+      const { result } = await ask(service({ embedder, translator: fakeTranslator().translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
+      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), answered: true, error: "embed_failed:limited" }]);
+    });
+
+    it("gives no classification where the reason says it all (an embedding that is not a vector of the release's size)", async () => {
+      const notes: SearchFailureNote[] = [];
+      const embedder: QueryEmbedder = { embedQuery: async () => ({ vector: [1, 2], tokens: 3 }) };
+
+      await ask(service({ embedder, onFailure: async (n) => void notes.push(n) }), "I need a lawyer");
+
+      expect(notes).toEqual([{ reason: "embed_invalid", releaseV: 3, ms: expect.any(Number) }]);
+      expect(lines()).toEqual([expect.stringMatching(/^search\.failed reason=embed_invalid code=none ms=\d+$/)]);
     });
   });
 
@@ -659,7 +793,7 @@ describe("the translated-question leg", () => {
       expect(translateSpends()).toEqual([expect.objectContaining({ model: COMMAND, tokens: 35, tokensEstimated: false, releaseV: 3 })]);
       // Ops hears of the quota (it needs someone) and of the rescue, each with its model, and the search did not fail.
       expect(notes).toEqual([
-        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH },
+        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH, error: "translate_failed:quota" },
         { reason: "translate_fallback_used", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND },
       ]);
     });
@@ -731,7 +865,7 @@ describe("the translated-question leg", () => {
       expect(took()).toBe(2200);
       expect(logs).toMatchObject([{ translatedLeg: "timed_out" }]);
       expect(translateSpends()).toEqual([expect.objectContaining({ model: COMMAND, tokensEstimated: true })]);
-      expect(notes).toEqual([{ reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH }]);
+      expect(notes).toEqual([{ reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH, error: "translate_failed:quota" }]);
     });
 
     it("tells ops the routed model's quota when neither leg completes either: the fallback is cut at the deadline, the direct leg is too slow, and the search fails with the quota told first", async () => {
@@ -744,8 +878,8 @@ describe("the translated-question leg", () => {
       expect(took()).toBe(2200);
       expect(logs).toMatchObject([{ status: "error", translatedLeg: "timed_out" }]);
       expect(notes).toEqual([
-        { reason: "translate_quota", releaseV: 3, ms: 2200, answered: true, model: NORTH },
-        { reason: "timed_out", releaseV: 3, ms: 2200 },
+        { reason: "translate_quota", releaseV: 3, ms: 2200, answered: true, model: NORTH, error: "translate_failed:quota" },
+        { reason: "timed_out", releaseV: 3, ms: 2200, error: "timed_out" },
       ]);
     });
 
@@ -819,8 +953,8 @@ describe("the translated-question leg", () => {
 
       expect(words.calls.map((c) => c.model)).toEqual([NORTH, COMMAND]);
       expect(notes).toEqual([
-        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH },
-        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND },
+        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH, error: "translate_failed:quota" },
+        { reason: "translate_quota", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND, error: "translate_failed:quota" },
       ]);
       // Each is still told once a minute, not on every search.
       await ask(search, PASHTO, "ps");
@@ -837,8 +971,8 @@ describe("the translated-question leg", () => {
       await ask(withFallback({ embedder: fakeEmbedder().embedder, translator: words.translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
 
       expect(notes).toEqual([
-        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH },
-        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND },
+        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: NORTH, error: "translate_failed:rate_limited" },
+        { reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: COMMAND, error: "translate_failed:unavailable" },
       ]);
     });
 
@@ -963,7 +1097,7 @@ describe("the translated-question leg", () => {
 
       expect(result).toMatchObject({ status: "no_clear_match" }); // the direct leg answers
       expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
-      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026" }]);
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026", error: "aborted" }]);
     });
 
     it("is told to ops as translate_failed when something unexpected is thrown that is not a QuestionTranslationError", async () => {
@@ -976,7 +1110,7 @@ describe("the translated-question leg", () => {
       const { notes } = await notesOf({ embedder: fakeEmbedder().embedder, questions });
 
       expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
-      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026" }]);
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true, model: "north-small-translate-09-2026", error: "TypeError" }]);
       expect(JSON.stringify(notes)).not.toContain("a bug of ours");
     });
 
@@ -1279,6 +1413,75 @@ describe("the request's deadline over the snapshot read and the writes", () => {
     expect(store.gets).toEqual([VECTORS_PATH, VECTORS_PATH]);
     // The search that failed at once is not told again.
     expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
+  });
+
+  describe("why the release's search data could not be loaded, as the real load tells it", () => {
+    let logged: MockInstance<typeof console.error>;
+    beforeEach(() => {
+      logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+    });
+    afterEach(() => logged.mockRestore());
+
+    /** A search against a store that holds `files` while the database records `recorded` (by default the same files): the note it told. */
+    async function told(files: Map<string, string>, recorded = files) {
+      const search = start(service({ db: releaseDb({ row: releaseRow(recorded) }), store: releaseStore({ files }) }));
+      await vi.advanceTimersByTimeAsync(10_000);
+      expect(search.outcome()).toMatchObject(unavailable);
+      expect(embedCalls).toBe(0);
+      return { notes: [...notes], lines: logged.mock.calls.map((c) => c.join(" ")) };
+    }
+    const changed = (change: (files: Map<string, string>) => void) => {
+      const files = releaseFiles();
+      change(files);
+      return files;
+    };
+    const vectorsWith = (patch: Record<string, unknown>) => JSON.stringify({ ...JSON.parse(releaseFiles().get(VECTORS_PATH)!), ...patch });
+    const listingWith = (patch: Record<string, unknown>) => JSON.stringify({ ...JSON.parse(releaseFiles().get(LISTING_PATH)!), ...patch });
+
+    it.each([
+      ["a vectors file the store does not have", () => ({ files: changed((f) => void f.delete(VECTORS_PATH)), recorded: releaseFiles() }), "vectors_missing"],
+      ["a vectors file that is not the one recorded (its hash differs)", () => ({ files: changed((f) => void f.set(VECTORS_PATH, `${f.get(VECTORS_PATH)!} `)), recorded: releaseFiles() }), "vectors_hash"],
+      ["a listing file the store does not have", () => ({ files: changed((f) => void f.delete(LISTING_PATH)), recorded: releaseFiles() }), "listing_missing"],
+      ["a listing file that is not the one recorded (its hash differs)", () => ({ files: changed((f) => void f.set(LISTING_PATH, `${f.get(LISTING_PATH)!} `)), recorded: releaseFiles() }), "listing_hash"],
+      ["a vectors file made for another release (its hash is the recorded one)", () => ({ files: changed((f) => void f.set(VECTORS_PATH, vectorsWith({ release_v: RELEASE_V + 1 }))) }), "vectors_release"],
+      ["a vectors file that does not parse", () => ({ files: changed((f) => void f.set(VECTORS_PATH, vectorsWith({ dims: 3 }))) }), "vectors_schema:providers.0.vector"],
+      ["a listing file that does not parse", () => ({ files: changed((f) => void f.set(LISTING_PATH, listingWith({ lang: "xx" }))) }), "listing_schema:lang"],
+    ])("tells %s as %s", async (_name, make, error) => {
+      const { files, recorded } = make() as { files: Map<string, string>; recorded?: Map<string, string> };
+
+      const result = await told(files, recorded);
+
+      expect(result.notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error }]);
+      expect(result.lines).toEqual([expect.stringMatching(new RegExp(`^search\\.failed reason=snapshot_failed code=${error.replace(/[.]/g, "\\.")} ms=\\d+$`))]);
+    });
+
+    it("tells a file that is not valid JSON as the class of the error, never its text", async () => {
+      const files = changed((f) => void f.set(LISTING_PATH, "{ this is not json: my private words"));
+
+      const result = await told(files, releaseFiles().set(LISTING_PATH, files.get(LISTING_PATH)!));
+
+      expect(result.notes).toEqual([{ reason: "snapshot_failed", releaseV: RELEASE_V, ms: expect.any(Number), error: "SyntaxError" }]);
+      expect(JSON.stringify(result)).not.toContain("private words");
+    });
+
+    it("tells a load the store never finishes as timed_out to a search that joined it when it was given up", async () => {
+      const store = releaseStore({ never: true });
+      const search = service({ store, snapshotLoadTimeoutMs: 5000, snapshotFailureTtlMs: 10_000 });
+
+      start(search); // begins the load and stops waiting for it at 2.2 s
+      await vi.advanceTimersByTimeAsync(3000);
+      const joined = start(search); // its deadline is at 5.2 s: the load is given up at 5 s
+      await vi.advanceTimersByTimeAsync(10_000);
+
+      expect(joined.outcome()).toMatchObject(unavailable);
+      // It stopped when the load was given up (5 s after the load began, a moment after the first search's read), not at its own deadline.
+      expect(joined.took()).toBeGreaterThanOrEqual(2000);
+      expect(joined.took()).toBeLessThan(DEFAULT_LEG_TIMEOUT_MS);
+      expect(notes).toEqual([
+        { reason: "timed_out", releaseV: RELEASE_V, ms: DEFAULT_LEG_TIMEOUT_MS, error: "timed_out" },
+        { reason: "snapshot_failed", releaseV: RELEASE_V, ms: joined.took(), error: "timed_out" },
+      ]);
+    });
   });
 
   it("answers by 2.4 s when the writes never finish, ahead of the route's hard deadline, and hands them to defer", async () => {

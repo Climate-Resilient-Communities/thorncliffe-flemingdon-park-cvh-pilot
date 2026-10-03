@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { DirectoryListingV1 } from "@/contracts/directory";
 import type { SearchV1 } from "@/contracts/searchTestSet";
 import { buildListing, buildManifest } from "../../../e2e/resident/directory-fixture";
-import { keep, MANIFEST_URL, readKept, type KeptStorage } from "../directory/load-directory";
+import { CACHE_PREFIX, keep, MANIFEST_URL, readKept, type KeptStorage } from "../directory/load-directory";
 import { contentLangOf, resolveResults } from "./resolve-results";
 
 function memory(): KeptStorage & { data: Map<string, string> } {
@@ -67,6 +67,21 @@ describe("resolveResults", () => {
     // The phone's v (6) is older than the answer's release (7): the manifest is read again, then that release's file.
     expect(asked).toEqual([MANIFEST_URL, "/api/directory/7/en.json"]);
     expect(readKept(storage, "en")?.listing.release_v).toBe(7);
+  });
+
+  it("resolves the ids from a listing published before providers carried neighbourhood_ids, whether it is kept on the phone or downloaded", async () => {
+    const older = buildListing("en", 7) as { providers: Record<string, unknown>[] };
+    older.providers.forEach((p) => delete p.neighbourhood_ids);
+
+    const kept = memory();
+    kept.setItem(`${CACHE_PREFIX}en`, JSON.stringify({ v: 1, publishedAt, listing: older }));
+    const fromKept = await resolveResults(answer(), { lang: "en", heldRelease: 7, fetcher: server({}).fetcher, storage: kept });
+    expect(fromKept.kind === "results" && fromKept.providers.map((p) => p.id)).toEqual(["P104", "P101"]);
+    expect(fromKept.kind === "results" && fromKept.providers.every((p) => p.neighbourhood_ids.length === 0)).toBe(true);
+
+    const downloaded = await resolveResults(answer({ ids: ["P102"] }), { lang: "en", heldRelease: undefined, fetcher: server({ "/api/directory/7/en.json": older }, buildManifest(7)).fetcher, storage: memory() });
+    expect(downloaded.kind === "results" && downloaded.providers.map((p) => p.id)).toEqual(["P102"]);
+    expect(downloaded.kind === "results" && downloaded.providers[0]!.neighbourhood_ids).toEqual([]);
   });
 
   it("shows only 'updating' when the manifest cannot be refreshed or the file cannot be had; a kept older release is never used for the ids", async () => {
