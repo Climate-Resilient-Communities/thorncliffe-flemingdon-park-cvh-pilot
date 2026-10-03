@@ -12,6 +12,7 @@ import { createAssignments } from "../../src/modules/identity";
 import { floorsOfBuilding } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
+import { submitSeams } from "./alertSubmitSeams";
 
 const NOW = new Date("2026-10-01T15:00:00Z");
 const RSN = "700414601";
@@ -43,6 +44,7 @@ let owner: ReturnType<typeof connect>;
 let appSql: postgres.Sql;
 let app: Db;
 let alerting: AlertLifecycle;
+let seams: ReturnType<typeof submitSeams>;
 const madeNeighbourhoods: string[] = [];
 const accounts: Account[] = [];
 let coordinator: Account;
@@ -114,6 +116,7 @@ beforeAll(async () => {
   director = await account("director");
   ambassador = await account("ambassador");
   alerting = createAlerting({ db: app, now: () => NOW });
+  seams = submitSeams(owner, alerting);
 });
 
 afterAll(async () => {
@@ -139,7 +142,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   });
 }
 
@@ -235,7 +238,7 @@ describe("the place picker (O-03)", () => {
 
   it("only a draft can be aimed: a pending entry is refused", async () => {
     const ref = await newDraft();
-    expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
+    expect(await seams.freeze(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
     expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "neighbourhood", neighbourhoodIds: ["TP"] })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
     expect(await alerting.chooseAudienceGroups(actorOf(coordinator), ref, ["seniors"])).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
   });
@@ -290,11 +293,11 @@ describe("heat, smoke and winter storm, and who may author what (the policy chec
 
     // Submit, after the assignment is gone: refused with the building named by the draft.
     expect(await assignments.remove(admin.id, { staffId: ambassador.id, rsn: RSN })).toMatchObject({ ok: true });
-    expect(await alerting.submitEntry(actorOf(ambassador), ref, frozen("v1"))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(await seams.freeze(actorOf(ambassador), ref, frozen("v1"))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
 
     // Approval, against their current assignments: assigned at submit, removed before approval.
     expect(await assignments.assign(admin.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
-    expect(await alerting.submitEntry(actorOf(ambassador), ref, frozen("v2"))).toMatchObject({ ok: true });
+    expect(await seams.freeze(actorOf(ambassador), ref, frozen("v2"))).toMatchObject({ ok: true });
     expect(await assignments.remove(admin.id, { staffId: ambassador.id, rsn: RSN })).toMatchObject({ ok: true });
     expect(await alerting.approveEntry(actorOf(coordinator), ref, { version: 1, contentHash: sha("v2") })).toEqual({ ok: false, error: "AUTHOR_NOT_ALLOWED" });
   });
@@ -356,8 +359,8 @@ describe("re-aiming a draft is authoring it, for the draft as it is and as it wi
 describe("a draft that was approved", () => {
   it("is no draft any more: neither its place nor its groups can be chosen, and nothing changes", async () => {
     const ref = await newDraft(coordinator);
-    expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
-    expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { status: "approved" } });
+    expect(await seams.freeze(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
+    expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { entry: { status: "approved" } } });
     const approved = await storedAudience(ref.entryId);
 
     expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "neighbourhood", neighbourhoodIds: ["FP"] })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
@@ -374,7 +377,7 @@ describe("a floor removed after it was chosen", () => {
     expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "buildings", buildings: [{ rsn: RSN, floors: { ids: [FLOOR("7")], ranges: [] } }] })).toMatchObject({ ok: true });
     await owner`delete from building_floor where id = ${FLOOR("7")}`;
     try {
-      expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toEqual({ ok: false, error: "FLOOR_NOT_IN_BUILDING" });
+      expect(await seams.freeze(actorOf(coordinator), ref, frozen("v1"))).toEqual({ ok: false, error: "FLOOR_NOT_IN_BUILDING" });
       expect((await alerting.getEntry(ref))?.status).toBe("draft");
     } finally {
       await owner`insert into building_floor (id, rsn, label, sort_order, confirmed) values (${FLOOR("7")}, ${RSN}, '7', 7, true)`;
@@ -384,7 +387,7 @@ describe("a floor removed after it was chosen", () => {
   it("is caught at approval too: a floor removed while the entry waited is not a floor to text", async () => {
     const ref = await newDraft();
     expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "buildings", buildings: [{ rsn: RSN, floors: { ids: [FLOOR("7")], ranges: [] } }] })).toMatchObject({ ok: true });
-    expect(await alerting.submitEntry(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
+    expect(await seams.freeze(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
     await owner`delete from building_floor where id = ${FLOOR("7")}`;
     try {
       expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "FLOOR_NOT_IN_BUILDING" });

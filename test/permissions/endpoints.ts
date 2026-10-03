@@ -9,7 +9,7 @@
 // role can be there (gate 1 for everyone; gate 2 and the code gate only for Admins and
 // Coordinators), at the Hub otherwise.
 import type { SetupGate } from "../../src/contracts/staffAuth";
-import type { PolicyAction } from "../../src/modules/identity";
+import type { PolicyAction, PolicyContext } from "../../src/modules/identity";
 
 export const ROLE_CALLERS = ["ambassador", "coordinator", "director", "admin", "ambassador_out_of_scope"] as const;
 export type RoleCaller = (typeof ROLE_CALLERS)[number];
@@ -50,6 +50,11 @@ export interface StaffEndpoint extends EndpointBase {
   form?: Record<string, string>;
   /** What a refused action's message starts with, when it is not the Admin-only default ("Only an Admin can ..."). */
   forbiddenMessage?: RegExp;
+  /**
+   * The facts the guard judges the call on when the role's rule depends on them, as the test's requests give them (test/permission-list.test.ts asks `can` with
+   * them): the approval is for someone who is not an editor of the entry, and the entry these calls name is not there, so nobody is excluded from it.
+   */
+  policyContext?: PolicyContext;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -75,6 +80,9 @@ const AUTHENTICATOR_GATE = {
   ambassador_out_of_scope: "setup_incomplete",
 } as const;
 
+/** An entry that is not there, as the approval's guard reads it: no editors, so no one is excluded from approving it (src/app/staff/alerts/approval/entryFacts.ts). */
+const NO_ENTRY: PolicyContext = { actorId: "01900000-0000-7000-8000-0000000000aa", entry: { authorId: "00000000-0000-0000-0000-000000000000", editorIds: [], status: "pending_approval" } };
+
 /** The username of the account the account actions are aimed at (the test creates it). */
 export const TARGET_USERNAME = "target";
 
@@ -87,10 +95,16 @@ const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction", "setContactAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
+const ALERT_LOG_ACTIONS = "src/app/staff/alerts/log/actions.ts";
+const ALERT_COMPOSER_ACTIONS = "src/app/staff/alerts/composer/actions.ts";
+const ALERT_APPROVAL_ACTIONS = "src/app/staff/alerts/approval/actions.ts";
+/** The key of one press of Submit: what a browser makes with `crypto.randomUUID()`. */
+const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
 const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
+const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -115,7 +129,26 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     gate: "hub",
     expected: WIDE_AUTHORS,
   },
+  // S04.05: "Log a disruption" (O-11), the acknowledgement composer (O-12) and the alert composer (O-02): policy action `alert.author_wide`.
+  { id: "page /staff/alerts/log", kind: "page", file: "src/app/staff/alerts/log/page.tsx", export: "default", route: "/staff/alerts/log", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/ack", kind: "page", file: "src/app/staff/alerts/ack/page.tsx", export: "default", route: "/staff/alerts/ack", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/compose", kind: "page", file: "src/app/staff/alerts/compose/page.tsx", export: "default", route: "/staff/alerts/compose", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  // S04.07: the approval view (O-05, O-07): policy action `alert.approve`, a Coordinator or an Admin who is not an editor of the entry (the guard reads who
+  // edited it from the database). The page names no entry here, so a Coordinator or an Admin is let through to the page's own "not found".
+  {
+    id: "page /staff/alerts/approve",
+    kind: "page",
+    file: "src/app/staff/alerts/approve/page.tsx",
+    export: "default",
+    route: "/staff/alerts/approve",
+    action: "alert.approve",
+    writes: "none",
+    gate: "hub",
+    policyContext: NO_ENTRY,
+    expected: WIDE_AUTHORS,
+  },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -152,6 +185,43 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
 
   // ---- route handlers ----
   { id: "GET /api/staff/me", kind: "route", file: "src/app/api/staff/me/route.ts", export: "GET", route: "/api/staff/me", action: "session.read_own", writes: "none", gate: "hub", expected: EVERYONE },
+  // S04.05: Submit, "Try translation again" and the entry's state (policy action `alert.author_wide`). The entry does not exist, so a
+  // Coordinator's or an Admin's call passes the guard and is refused by the use case (or, for the state, by its lookup), changing nothing.
+  {
+    id: "POST /api/staff/alerts/entries/submit",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/submit/route.ts",
+    export: "POST",
+    route: "/api/staff/alerts/entries/submit",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, alert_id: NO_SUCH_ALERT, entry_id: NO_SUCH_ALERT, key: SUBMIT_KEY },
+    expected: WIDE_AUTHORS,
+  },
+  {
+    id: "POST /api/staff/alerts/entries/retranslate",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/retranslate/route.ts",
+    export: "POST",
+    route: "/api/staff/alerts/entries/retranslate",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, alert_id: NO_SUCH_ALERT, entry_id: NO_SUCH_ALERT, key: SUBMIT_KEY, seen_version: 1, seen_hash: "0".repeat(64) },
+    expected: WIDE_AUTHORS,
+  },
+  {
+    id: "GET /api/staff/alerts/entries/state",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/state/route.ts",
+    export: "GET",
+    route: "/api/staff/alerts/entries/state",
+    action: "alert.author_wide",
+    writes: "none",
+    gate: "hub",
+    expected: WIDE_AUTHORS,
+  },
   {
     id: "POST /api/staff/password",
     kind: "route",
@@ -312,6 +382,56 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     forbiddenMessage: /^Only a Coordinator or an Admin can /,
     expected: WIDE_AUTHORS,
   },
+  // S04.05: "Log a disruption" and the composers' Save draft and Pull back to edit (policy action `alert.author_wide`). "Log a disruption" is
+  // sent with no type ticked and the composers' actions name a draft that does not exist, so a Coordinator's or an Admin's call passes the guard
+  // and is refused by the form or the use case, changing nothing.
+  {
+    id: `action ${ALERT_LOG_ACTIONS}#logDisruptionAction`,
+    kind: "action",
+    file: ALERT_LOG_ACTIONS,
+    export: "logDisruptionAction",
+    route: "/staff/alerts/log",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { kind: "ack" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
+  ...(["saveDraftAction", "pullBackAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${ALERT_COMPOSER_ACTIONS}#${name}`,
+      kind: "action",
+      file: ALERT_COMPOSER_ACTIONS,
+      export: name,
+      route: "/staff/alerts/compose",
+      action: "alert.author_wide",
+      writes: "business",
+      gate: "hub",
+      form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT },
+      forbiddenMessage: /^Only a Coordinator or an Admin can /,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
+  // S04.07: Approve, Return to author and Discard on the approval view (policy action `alert.approve`, a privileged action: aal2, and never an editor of the
+  // entry). The entry does not exist, so a Coordinator's or an Admin's call passes the guard and is refused by the form or the use case, changing nothing. An
+  // Ambassador and a Director are refused on their role alone.
+  ...(["approveAction", "returnAction", "discardAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${ALERT_APPROVAL_ACTIONS}#${name}`,
+      kind: "action",
+      file: ALERT_APPROVAL_ACTIONS,
+      export: name,
+      route: "/staff/alerts/approve",
+      action: "alert.approve",
+      writes: "business",
+      gate: "hub",
+      form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, version: "1", hash: "0".repeat(64), reviewed: '{"v":1,"total":0,"by_lang":{}}', note: "Add the floors." },
+      forbiddenMessage: /^Only a Coordinator or an Admin who did not write or change this alert can approve it\./,
+      policyContext: NO_ENTRY,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
   // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({
@@ -335,6 +455,33 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     export: "publishDirectoryAction",
     route: "/staff/directory",
     action: "guide.publish",
+    writes: "business",
+    gate: "hub",
+    form: {},
+    expected: ADMIN_ONLY,
+  },
+  // S06.06: "Pause all texts" and "Resume texts" (policy action `sending.pause`, Admins at aal2). Called as an allowed Admin, the pause
+  // really pauses texts and the resume ends it (test/db/permissions.db.test.ts clears the switch before each call); no text can go out
+  // from here: the test wires no sender, and starting one after a resume is a no-op.
+  {
+    id: `action ${TEXTS_ACTIONS}#pauseTextsAction`,
+    kind: "action",
+    file: TEXTS_ACTIONS,
+    export: "pauseTextsAction",
+    route: "/staff/texts",
+    action: "sending.pause",
+    writes: "business",
+    gate: "hub",
+    form: { reason: "Wrong alert sent to a building" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${TEXTS_ACTIONS}#resumeTextsAction`,
+    kind: "action",
+    file: TEXTS_ACTIONS,
+    export: "resumeTextsAction",
+    route: "/staff/texts",
+    action: "sending.pause",
     writes: "business",
     gate: "hub",
     form: {},

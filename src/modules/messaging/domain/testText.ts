@@ -8,14 +8,10 @@ export const TEST_TEXT_BODY = "CVH test from production";
 /** A second text to the same number within this long is refused as a duplicate. */
 export const DUPLICATE_WINDOW_MS = 5 * 60_000;
 
-/** An E.164 number: "+", a non-zero country code digit, then up to 14 more digits. */
-const E164 = /^\+[1-9][0-9]{7,14}$/;
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function isE164(value: unknown): value is string {
-  return typeof value === "string" && E164.test(value);
-}
+// An E.164 number is checked in one place (the outbox, S06.01).
+export { isE164 } from "./phoneNumber";
 
 export function isRequestId(value: unknown): value is string {
   return typeof value === "string" && UUID.test(value);
@@ -53,16 +49,19 @@ export function maskedLabels(numbers: readonly string[]): string[] {
  *  - `invalid`: the request id or the number is not well formed;
  *  - `not_available`: this is not production with SMS_MODE live, or Twilio's account or number is not set;
  *  - `not_allowlisted`: the number is not one of SMS_TEST_ALLOWLIST;
+ *  - `paused`: all texts are paused (S06.06), or the pause switch cannot be found, which the sender reads as paused: the spike is a text
+ *    handed to the provider like any other, so the pause stops it too. Nothing is claimed, so a press after the resume is not a duplicate;
  *  - `duplicate_number`: a text to this number was claimed within the last 5 minutes;
  *  - `duplicate_request`: this request id was used before.
  */
-export type TestTextRefusal = "invalid" | "not_available" | "not_allowlisted" | "duplicate_number" | "duplicate_request";
+export type TestTextRefusal = "invalid" | "not_available" | "not_allowlisted" | "paused" | "duplicate_number" | "duplicate_request";
 
 /** The refusal reason the audit trail records for each refusal (the audit module's catalogue). */
-export const AUDIT_REASON_OF: Record<TestTextRefusal, "validation" | "not_available" | "not_allowlisted" | "duplicate"> = {
+export const AUDIT_REASON_OF: Record<TestTextRefusal, "validation" | "not_available" | "not_allowlisted" | "paused" | "duplicate"> = {
   invalid: "validation",
   not_available: "not_available",
   not_allowlisted: "not_allowlisted",
+  paused: "paused",
   duplicate_number: "duplicate",
   duplicate_request: "duplicate",
 };

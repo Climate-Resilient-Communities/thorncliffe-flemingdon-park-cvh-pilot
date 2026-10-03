@@ -1,12 +1,21 @@
+import type { RecipientCounts } from "../../../contracts/alertApproval";
 import type { AssuranceLevel } from "../../../contracts/staffAuth";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import type { AuditEvent } from "../../audit";
 import type { StaffStanding } from "../../identity";
+import type { SmsAttribution } from "../../messaging";
 import type { EntryContent } from "../domain/content";
+import type { EntryKind } from "../domain/lifecycle";
+import type { FrozenTranslation } from "../domain/translations";
 import type { AlertRefusal } from "../domain/refusals";
 
+/** What a refusal can carry besides its code: a refused approval whose recipient count changed carries the snapshot's count (S04.07). */
+export interface RefusalDetail {
+  recipients: RecipientCounts;
+}
+
 /** An expected outcome as a value (spine: Errors). */
-export type AlertResult<T> = { ok: true; value: T } | { ok: false; error: AlertRefusal };
+export type AlertResult<T> = { ok: true; value: T } | { ok: false; error: AlertRefusal; detail?: RefusalDetail };
 
 /**
  * Who acts: the staff member and the assurance level of their session, both read by the staff
@@ -34,20 +43,6 @@ export interface StaffDirectory {
   standing(executor: DbExecutor, staffId: string): Promise<StaffStanding | null>;
 }
 
-/** One language's web text, frozen with the entry (`alert_entry_translation`). */
-export interface FrozenTranslation {
-  lang: string;
-  body: string;
-  /** True for a machine translation; its label is shown with it. */
-  machine: boolean;
-  /** The model that produced it; null for a script conversion or a fallback. */
-  model: string | null;
-  /** `fallback_en`: every model in the route failed, so the text is English with `translation.unavailable`. */
-  status: "translated" | "fallback_en" | "script_converted";
-  /** SHA-256 of the English source text it was made from. */
-  sourceHash: string;
-}
-
 /** One language's SMS body, rendered once (S04.06) and counted. */
 export interface FrozenSmsBody {
   body: string;
@@ -67,16 +62,57 @@ export interface FrozenContent {
   translations: readonly FrozenTranslation[];
 }
 
+/** What a freeze refuses, naming the language and never the text (S04.06). */
+export type FreezeRefusal = "SMS_BODY_TOO_LONG" | "TRANSLATION_STALE";
+
+/** A frozen content, or why nothing was frozen. */
+export type FreezeResult = { ok: true; value: FrozenContent } | { ok: false; error: FreezeRefusal; lang: string };
+
 /**
- * Port: translate, render and hash an entry's draft content. Slow (it calls the translation
- * models), so it runs outside any database lock and transaction; "Try translation again" calls it
- * between its two short transactions. S04.02 and S04.06 provide the real one.
- *
- * TODO(S04.05): the real one is `freezeContent` (freezeContent.ts) after S04.02's translation, and it needs more than
- * this context carries (kind, supersedesId, channels, slug, `verified`, attribution; `verified: true` for texts the
- * Hub approves) and can refuse (SMS_BODY_TOO_LONG, TRANSLATION_STALE). When S04.05 wires it, widen the context and
- * return its FreezeResult instead of FrozenContent, so a refusal reaches the author as a refusal to submit.
+ * What the preparation of an entry needs to know besides its content (S04.05, AD-21): which entry it is, what kind, what it
+ * replaces (nothing yet: correction and withdrawal are E05's), where it goes, how the texts describe its origin and what
+ * public link they carry. Every one of these is read from the database by the use case, never taken from the request.
+ */
+export interface PrepareContext {
+  alertId: string;
+  entryId: string;
+  isDrill: boolean;
+  kind: EntryKind;
+  /** The entry a correction or withdrawal replaces; null for every other entry. */
+  supersedesId: string | null;
+  /** What the entry goes out on (the hash covers it). */
+  channels: readonly string[];
+  /** The thread's public slug: the texts link to `/a/{slug}`. */
+  slug: string;
+  /** "Verified by the Hub" in the texts when true: true for every entry the Hub's staff approve (epic E04, Verification marker). */
+  verified: boolean;
+  attribution: SmsAttribution;
+}
+
+/** What a submit watches of the preparation while it runs outside any lock. */
+export interface PrepareHooks {
+  /** Aborts what is still running (the languages still translating end as the English fallback at once). */
+  signal?: AbortSignal;
+  /** Called as each language settles, so a screen can show progress per language. */
+  onLanguage?: (translation: FrozenTranslation) => void;
+  /** Called once the submit budget is known (the longest route deadline plus 5 s), before any model is asked. */
+  onBudget?: (budgetMs: number) => void;
+  /**
+   * Milliseconds of the press already used when the preparation starts (the transaction that began the attempt). The budget is counted
+   * from the press, not from the models being asked, so the translation's stop comes that much sooner.
+   */
+  spentMs?: number;
+}
+
+/**
+ * Port: translate, render and hash an entry's draft content. Slow (it calls the translation models), so it runs outside any
+ * database lock and transaction. It returns the frozen content, or the refusal that stopped the freeze (a text message
+ * body over Twilio's limit in one language; a translation made from other English than the draft's: SMS_BODY_TOO_LONG and
+ * TRANSLATION_STALE reach the author as a refusal to submit). It rejects, with nothing frozen, when it cannot do its work:
+ * translation's AlertRoutesUnavailableError (`translation_route` could not be read in time) and RouteConfigError (a row that
+ * is not a route) are refused by name with their own message and an ops event, never turned into a half result; anything
+ * else is a failed preparation.
  */
 export interface EntryPreparer {
-  prepare(content: EntryContent, context: { alertId: string; entryId: string; isDrill: boolean }): Promise<FrozenContent>;
+  prepare(content: EntryContent, context: PrepareContext, hooks?: PrepareHooks): Promise<FreezeResult>;
 }

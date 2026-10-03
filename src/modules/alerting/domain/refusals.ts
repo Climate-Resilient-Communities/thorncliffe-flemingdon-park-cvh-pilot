@@ -28,6 +28,19 @@ export type AlertRefusal =
   | "REPORTED_AT_INVALID"
   /** Translating, rendering or hashing the draft failed: the entry stays a draft. */
   | "PREPARATION_FAILED"
+  /**
+   * S04.05, a submit that was refused before anything was frozen (the entry stays a draft):
+   *  - a text message body over Twilio's 1600 characters in one language, or a translation made from other English than the draft (S04.06);
+   *  - `translation_route` could not be read in time, or holds a row that is not a route (S04.02's AlertRoutesUnavailableError and RouteConfigError);
+   *  - another attempt is running on the entry, the key is not one a browser makes, or the attempt that held the key never finished.
+   */
+  | "SMS_BODY_TOO_LONG"
+  | "TRANSLATION_STALE"
+  | "ROUTES_UNAVAILABLE"
+  | "ROUTES_INVALID"
+  | "SUBMIT_IN_PROGRESS"
+  | "SUBMIT_KEY_INVALID"
+  | "SUBMIT_ABANDONED"
   /** The audience (S04.04): nothing chosen, a place that is not there, a floor not in its building, a bad range, a group nobody offers. */
   | "AUDIENCE_EMPTY"
   | "NEIGHBOURHOOD_NOT_FOUND"
@@ -35,4 +48,12 @@ export type AlertRefusal =
   | "FLOOR_NOT_IN_BUILDING"
   | "FLOOR_RANGE_REVERSED"
   | "FLOOR_RANGE_INCOMPLETE"
-  | "GROUP_UNKNOWN";
+  | "GROUP_UNKNOWN"
+  /**
+   * S04.07, the approval: the number of people who will get the text (the recipient snapshot taken inside the approval's transaction) is not the
+   * number the approver reviewed, so nothing was approved and they review the new number first; and the note an approver writes when they
+   * send an entry back to its author is missing or too long.
+   */
+  | "RECIPIENT_COUNT_CHANGED"
+  | "NOTE_REQUIRED"
+  | "NOTE_TOO_LONG";

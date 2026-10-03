@@ -7,6 +7,11 @@ import type { HubNavSection } from "@/ui/hub/hub-nav";
 import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
+import { PauseBanner } from "@/app/staff/PauseBanner";
+import type { PauseBannerView } from "@/app/staff/pauseBanner";
+import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
+import { TextsView } from "@/app/staff/texts/TextsView";
+import type { PausedView } from "@/app/staff/texts/view";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
@@ -26,6 +31,16 @@ import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/ap
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/staff/alerts/audience/AudienceBody";
 import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
+import { IncidentsList } from "@/app/staff/alerts/incidents/IncidentsList";
+import type { IncidentsView } from "@/app/staff/alerts/incidents/view";
+import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
+import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
+import { ComposerBody, type ComposerActions, type ComposerInitial } from "@/app/staff/alerts/composer/ComposerBody";
+import type { ComposerScreen } from "@/app/staff/alerts/composer/view";
+import type { SubmitApi } from "@/app/staff/alerts/composer/submitClient";
+import { LogBody } from "@/app/staff/alerts/log/LogBody";
+import type { LogState } from "@/app/staff/alerts/log/logDisruption";
+import type { LogScreen } from "@/app/staff/alerts/log/view";
 import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
 import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
@@ -566,6 +581,92 @@ export function AudienceFixture({
 }
 
 /**
+ * "Log a disruption" (S04.05, O-11) as a Coordinator sees it in the Hub shell: the app's own LogBody on a view built by the app's own
+ * view function, in the `log` Screen the page uses, with an action that does nothing and, where a picture needs it, a form already in
+ * its refused state (`initialState`).
+ */
+export function LogFixture({
+  texts,
+  brand,
+  screen,
+  initialState,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: LogScreen;
+  initialState?: LogState;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/alerts/log">
+      <Screen surface="staff" width="log" testId="screen">
+        <LogBody screen={screen} action={noAction} initialState={initialState} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The acknowledgement composer (O-12) and the alert composer (O-02, S04.05) as a Coordinator sees them in the Hub shell: the app's own
+ * ComposerBody on a view built by the app's own view function. The body draws its own Screen (with the sticky actions region), so
+ * the fixture adds only the shell. Its actions do nothing and its calls to the server are the `api` the test gives it.
+ */
+export function ComposerFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+  api,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: ComposerScreen;
+  initial?: ComposerInitial;
+  api?: SubmitApi;
+}) {
+  const actions: ComposerActions = { save: noAction, pullBack: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current={screen.mode === "ack" ? "/staff/alerts/ack" : "/staff/alerts/compose"}>
+      <ComposerBody screen={screen} actions={actions} initial={initial} api={api} reload={() => {}} />
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The approval view (S04.07; O-05 an alert, O-07 an ambassador's post) as a Coordinator sees it in the Hub shell: the app's own ApprovalBody on a view
+ * built by the app's own view function (e2e/layout/approval.spec.ts), with actions that do nothing, optionally already in the state a press reaches
+ * (`initial`: the return form, the discard confirmation, a count that changed).
+ */
+export function ApprovalFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: ApprovalScreen;
+  initial?: ApprovalInitial;
+}) {
+  const actions: ApprovalActions = { approve: noAction, returnToAuthor: noAction, discard: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/alerts/approve">
+      <ApprovalBody screen={screen} actions={actions} initial={initial} />
+    </AroundTheScreen>
+  );
+}
+
+/** The Hub home's list of what waits for a person (S04.07) inside the Hub shell, on the view the app's own function built. */
+export function IncidentsFixture({ texts, brand, view }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: IncidentsView }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <IncidentsList view={view} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
  * The Hub shell around the Providers screen (S02.04), as an Admin sees it: the real ProviderList with the rows and
  * words the page gives it. Its actions are the harness's stand-ins (e2e/helpers/provider-actions-stub.ts).
  */
@@ -664,6 +765,56 @@ export function SmsTestFixture({
     >
       <Screen surface="staff" testId="screen">
         <SmsTestView availability={availability} unknownAttempts={unknownAttempts} form={availability === "ready" ? <SendTestTextFormView {...form} /> : null} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Pause texts screen (S06.06), as an Admin sees it: the real body (TextsView) and the real, behaviour-free
+ * controls (PauseTextsFormView) with the state a press would leave, and, while texts are paused, the banner the Hub layout puts above
+ * every Hub screen (PauseBanner), here above this one. Nothing here is a phone number.
+ */
+export function TextsFixture({
+  texts,
+  brand,
+  paused,
+  unreadable,
+  form,
+  banner,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  paused: PausedView | null;
+  unreadable?: boolean;
+  form: ComponentProps<typeof PauseTextsFormView>;
+  banner?: PauseBannerView;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/texts"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      {banner ? <PauseBanner view={banner} /> : null}
+      <Screen surface="staff" testId="screen">
+        <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
       </Screen>
     </HubShell>
   );

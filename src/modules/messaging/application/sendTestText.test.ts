@@ -1,7 +1,7 @@
 // The first-text spike's use case (S01.15) with a fake provider and an in-memory ledger: nothing
 // here touches the network or a database (test/db/smsTestSend.db.test.ts runs the same rules against
 // Postgres, including two presses at once).
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { Db, DbTransaction } from "../../../platform/db";
 import type { AuditEvent } from "../../audit";
 import { FAKE_MESSAGE_SID, fakeSms } from "../adapters/fakeSms";
@@ -64,7 +64,7 @@ function memoryStore(databaseNow: () => Date) {
 
 type Audited = AuditEvent<"sms.test_sent"> | AuditEvent<"sms.test_attempted">;
 
-function setup(options: { config?: TestTextConfig; withProvider?: boolean } = {}) {
+function setup(options: { config?: TestTextConfig; withProvider?: boolean; paused?: boolean | (() => Promise<boolean>) } = {}) {
   let clock = new Date("2026-10-05T14:00:00Z");
   const { store, rows } = memoryStore(() => clock);
   const provider = fakeSms();
@@ -112,6 +112,7 @@ function setup(options: { config?: TestTextConfig; withProvider?: boolean } = {}
     config: options.config ?? LIVE,
     numberKey: () => KEY,
     log: { error: (evt, fields) => void logged.push({ evt, fields }) },
+    isPaused: typeof options.paused === "function" ? options.paused : async () => options.paused === true,
   });
   const sendWithProviderLog = provider.send.bind(provider);
   provider.send = async (text) => {
@@ -249,6 +250,63 @@ describe("where it cannot send", () => {
   });
 });
 
+describe("while all texts are paused (S06.06)", () => {
+  it("refuses an approved number as paused: no provider call, no claim, no attempt record, one refused record", async () => {
+    const t = setup({ paused: true });
+
+    await expect(t.send()).resolves.toEqual({ kind: "refused", reason: "paused" });
+
+    expect(t.provider.sent).toEqual([]);
+    expect(t.rows).toEqual([]);
+    expect(t.transactions).toEqual([]);
+    expect(t.records).toEqual([]);
+    expect(t.refusals).toEqual([{ action: "sms.test_sent", actorStaffId: STAFF, subjectType: "sms_test_send", subjectId: null, meta: { reason: "paused" } }]);
+  });
+
+  it("leaves nothing behind that blocks the same number after the resume: the same press is sent then", async () => {
+    let paused = true;
+    const t = setup({ paused: async () => paused });
+
+    await expect(t.send(ALLOWED, REQUEST_1)).resolves.toEqual({ kind: "refused", reason: "paused" });
+    paused = false;
+
+    await expect(t.send(ALLOWED, REQUEST_1)).resolves.toMatchObject({ kind: "sent" });
+    expect(t.provider.sent).toHaveLength(1);
+  });
+
+  it("is read after the checks that need no database, so a malformed, unavailable or unapproved press is refused for its own reason", async () => {
+    const asked = vi.fn(async () => true);
+    const t = setup({ paused: asked });
+
+    await expect(t.send(NOT_ALLOWED)).resolves.toEqual({ kind: "refused", reason: "not_allowlisted" });
+    await expect(t.send("not a number")).resolves.toEqual({ kind: "refused", reason: "invalid" });
+
+    expect(asked).not.toHaveBeenCalled();
+  });
+
+  it("is not guessed when the switch cannot be read: the error reaches the caller and nothing is sent", async () => {
+    const t = setup({
+      paused: async () => {
+        throw new Error("db down");
+      },
+    });
+
+    await expect(t.send()).rejects.toThrow("db down");
+
+    expect(t.provider.sent).toEqual([]);
+    expect(t.rows).toEqual([]);
+  });
+
+  it("is not asked for a text that is not live here: the press is refused as not available first", async () => {
+    const asked = vi.fn(async () => true);
+    const t = setup({ config: { ...LIVE, live: false }, paused: asked });
+
+    await expect(t.send()).resolves.toEqual({ kind: "refused", reason: "not_available" });
+
+    expect(asked).not.toHaveBeenCalled();
+  });
+});
+
 describe("duplicates", () => {
   it("refuses a second press for the same number within 5 minutes, with no second text", async () => {
     const t = setup();
@@ -360,7 +418,7 @@ describe("the number key", () => {
   it("has no fallback: without Twilio's credentials a send that gets as far as hashing throws instead of using a made-up key", async () => {
     const provider = fakeSms();
     const db = { transaction: async (run: (tx: DbTransaction) => Promise<unknown>) => run({} as DbTransaction) } as unknown as Db;
-    const service = createTestText({ db, config: LIVE, provider, audit: { record: async () => {}, recordRefusal: async () => {} }, log: { error: () => {} } });
+    const service = createTestText({ db, config: LIVE, provider, audit: { record: async () => {}, recordRefusal: async () => {} }, log: { error: () => {} }, isPaused: async () => false });
 
     await expect(service.sendTestText({ actorStaffId: STAFF, requestId: REQUEST_1, number: ALLOWED })).rejects.toThrow(/credentials/);
 

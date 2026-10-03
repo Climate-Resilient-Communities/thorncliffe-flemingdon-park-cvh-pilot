@@ -31,6 +31,8 @@ export interface AudiencePlaces {
   floorsOf(executor: DbExecutor, rsn: string, options?: { lock?: "share" }): Promise<readonly AudienceFloor[] | null>;
   /** The ids of the neighbourhoods an alert may be for. */
   neighbourhoodIds(executor: DbExecutor): Promise<readonly string[]>;
+  /** The neighbourhood of each building given, by rsn (a building that is not there is left out): the possible-duplicate check of S04.05 compares a neighbourhood audience with a building one by it. */
+  neighbourhoodsOf(executor: DbExecutor, rsns: readonly string[]): Promise<ReadonlyMap<string, string>>;
 }
 
 /** One building of the picker's choice: the whole building (`floors: null`), or the floors ticked and the ranges chosen. */

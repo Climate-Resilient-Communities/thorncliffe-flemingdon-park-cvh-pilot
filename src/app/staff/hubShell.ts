@@ -4,6 +4,7 @@ import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { can } from "@/modules/identity";
 import type { HubNavSection, HubShellLabels, HubShellUser } from "@/ui/hub";
+import { COMPOSE_PAGE, LOG_PAGE } from "./alerts/pages";
 import type { StaffSession } from "./session";
 
 /**
@@ -17,13 +18,14 @@ export function hubShellUser(session: StaffSession | null): HubShellUser | null 
 }
 
 /**
- * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the three
- * screens the pilot builds: incidents, composing an alert and check-in rounds. A screen whose story has not been
- * built has no page yet, so its item has no link (href null) and the story that builds the page sets it. Moderation,
- * the partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope, not in the
- * pilot. "Administration" is for Admins, as the pages in it are.
- * Which roles may open what is enforced by the server (S01.12). The menu is not filtered by role here yet: each
- * story that gives an item its href also filters that item by the roles that may open its page.
+ * The Hub's destinations for a role (HubApp's C_HubSide, the pilot's share of it). "In a disruption" lists the screens
+ * the pilot builds: incidents, logging a disruption and composing an alert (S04.05) and check-in rounds. A screen whose
+ * story has not been built has no page yet, so its item has no link (href null) and the story that builds the page sets
+ * it. Moderation, the partner space ("This disruption") and the readiness area ("Between disruptions") are MVP scope,
+ * not in the pilot. "Administration" is for Admins, as the pages in it are.
+ * Which roles may open what is enforced by the server (S01.12). Each story that gives an item its href also filters
+ * that item by the roles that may open its page: "Log a disruption" and "Compose an alert" are `alert.author_wide`, a
+ * Coordinator and an Admin (S04.05).
  */
 export function hubNavigation(role: StaffRole): HubNavSection[] {
   const sections: HubNavSection[] = [
@@ -32,7 +34,12 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       label: englishText("hub.sections.disruption"),
       items: [
         { id: "incidents", label: englishText("hub.nav.incidents"), href: "/staff", exact: true, icon: "now" },
-        { id: "compose", label: englishText("hub.nav.compose"), href: null, icon: "pencil" },
+        ...(can(role, "alert.author_wide")
+          ? [
+              { id: "log", label: englishText("hub.nav.log"), href: LOG_PAGE, icon: "flag" as const },
+              { id: "compose", label: englishText("hub.nav.compose"), href: COMPOSE_PAGE, icon: "pencil" as const },
+            ]
+          : []),
         { id: "rounds", label: englishText("hub.nav.rounds"), href: null, icon: "person" },
       ],
     },
@@ -42,13 +49,14 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   if (can(role, "coverage.view")) sections[0].items = [...sections[0].items, { id: "coverage", label: englishText("hub.nav.coverage"), href: "/staff/coverage", icon: "ready" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
   // `accounts.manage`, the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05),
-  // the buildings page `buildings.manage` (S01.13) and the first-text spike's page (S01.15, E06 removes it) `sms.test_send`,
-  // all Admin only.
+  // the buildings page `buildings.manage` (S01.13), the pause page `sending.pause` (S06.06) and the first-text spike's page
+  // (S01.15, E06 removes it) `sms.test_send`, all Admin only.
   const admin: HubNavSection["items"][number][] = [];
   if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
   if (can(role, "provider.manage")) admin.push({ id: "providers", label: englishText("hub.nav.providers"), href: "/staff/providers", icon: "inbox" });
   if (can(role, "guide.publish")) admin.push({ id: "directory", label: englishText("hub.nav.directory"), href: "/staff/directory", icon: "layers" });
   if (can(role, "buildings.manage")) admin.push({ id: "buildings", label: englishText("hub.nav.buildings"), href: "/staff/buildings", icon: "building" });
+  if (can(role, "sending.pause")) admin.push({ id: "texts", label: englishText("hub.nav.texts"), href: "/staff/texts", icon: "pause" });
   if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;

@@ -35,12 +35,22 @@ describe("hubShellUser", () => {
 describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
-  it("lists the pilot's three disruption screens in the prototype's order, with the home first, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
-    expect(items("ambassador").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
-    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
+  it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
+    expect(items("ambassador").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
+    expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "Test text"]);
+  });
+
+  it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/alerts/log"), role).toBe(can(role, "alert.author_wide"));
+      expect(items(role).some((item) => item.href === "/staff/alerts/compose"), role).toBe(can(role, "alert.author_wide"));
+    }
+    expect(items("admin").find((item) => item.id === "log")).toEqual({ id: "log", label: "Log a disruption", href: "/staff/alerts/log", icon: "flag" });
+    expect(items("admin").find((item) => item.id === "compose")).toEqual({ id: "compose", label: "Compose an alert", href: "/staff/alerts/compose", icon: "pencil" });
+    expect(items("admin").filter((item) => item.icon === "flag")).toHaveLength(1);
   });
 
   it("adds Coverage for exactly the roles whose policy allows coverage.view, with an icon no other item uses", () => {
@@ -74,8 +84,22 @@ describe("hubNavigation", () => {
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
       { id: "directory", label: "Directory", href: "/staff/directory", icon: "layers" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
+      { id: "texts", label: "Pause texts", href: "/staff/texts", icon: "pause" },
       { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
+  });
+
+  it("adds Pause texts for exactly the roles whose policy allows sending.pause, with a pause icon of its own that the shell's stylesheet draws", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/texts"), role).toBe(can(role, "sending.pause"));
+      expect(items(role).some((item) => item.href === "/staff/texts"), role).toBe(role === "admin");
+    }
+    const texts = items("admin").find((item) => item.href === "/staff/texts");
+    expect(texts?.icon).toBe("pause");
+    expect(items("admin").filter((item) => item.icon === "pause")).toHaveLength(1);
+    expect(HUB_NAV_ICONS).toContain("pause");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    expect(stylesheet).toContain(".hub-ico--pause {");
   });
 
   it("adds the first-text spike's Test text for Admins only", () => {
@@ -109,7 +133,7 @@ describe("hubNavigation", () => {
       if (item.href === null) continue;
       expect(existsSync(path.join(app, item.href, "page.tsx")), `${item.label}: ${item.href}`).toBe(true);
     }
-    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual(["compose", "rounds"]);
+    expect(items("admin").filter((item) => item.href === null).map((item) => item.id)).toEqual(["rounds"]);
   });
 
   it("uses each id once and the English catalog's labels", () => {

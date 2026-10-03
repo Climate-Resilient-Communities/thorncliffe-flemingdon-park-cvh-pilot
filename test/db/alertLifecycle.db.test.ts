@@ -26,6 +26,7 @@ import { createAssignments } from "../../src/modules/identity";
 import { floorsOfBuilding } from "../../src/modules/places";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
+import { submitSeams } from "./alertSubmitSeams";
 
 /** The buildings the tests name (S04.04: an audience may name only buildings that exist), with the floors of the first. */
 const RSN = "4154146";
@@ -57,11 +58,19 @@ const frozen = (tag: string): FrozenContent => ({
   smsBodies: { en: { body: `en ${tag}`, encoding: "gsm7", segments: 1 }, ur: { body: `ur ${tag}`, encoding: "ucs2", segments: 1 } },
   translations: [
     { lang: "ur", body: `ur ${tag}`, machine: true, model: "m1", status: "translated", sourceHash: sha("source") },
-    { lang: "zh-Hant", body: `zh-Hant ${tag}`, machine: true, model: null, status: "script_converted", sourceHash: sha("source") },
+    {
+      lang: "zh-Hant",
+      body: `zh-Hant ${tag}`,
+      machine: true,
+      model: "opencc-js 1.4.2",
+      status: "script_converted",
+      sourceHash: sha("source"),
+      conversion: { from: "zh", fromTextHash: sha("zh"), openccVersion: "1.4.2", config: "s2twp" },
+    },
   ],
 });
 
-const preparerOf = (tag: string): EntryPreparer => ({ prepare: async () => frozen(tag) });
+const preparerOf = (tag: string): EntryPreparer => ({ prepare: async () => ({ ok: true, value: frozen(tag) }) });
 const failingPreparer: EntryPreparer = {
   prepare: async () => {
     throw new Error("every model failed");
@@ -79,6 +88,7 @@ let appUrl: string;
 let appSql: postgres.Sql;
 let app: Db;
 let alerting: AlertLifecycle;
+let seams: ReturnType<typeof submitSeams>;
 const accounts: Account[] = [];
 
 async function account(role: Role): Promise<Account> {
@@ -103,7 +113,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
   });
   await owner`update staff_account set role = ${authorA.role}::staff_role, status = 'active' where id = ${authorA.id}`;
 }
@@ -138,6 +148,7 @@ beforeAll(async () => {
   director = await account("director");
   ambassador = await account("ambassador");
   alerting = createAlerting({ db: app, now: () => clock });
+  seams = submitSeams(owner, alerting);
 });
 
 afterAll(async () => {
@@ -172,8 +183,8 @@ async function newDraft(by: Account = authorA, over: Partial<EntryContent> = {},
 
 async function newPending(by: Account = authorA, tag = "v1", isDrill = false): Promise<EntryRef> {
   const ref = await newDraft(by, {}, isDrill);
-  const submitted = await alerting.submitEntry(actorOf(by), ref, frozen(tag));
-  if (!submitted.ok) throw new Error(`submitEntry refused: ${submitted.error}`);
+  const submitted = await seams.freeze(actorOf(by), ref, frozen(tag));
+  if (!submitted.ok) throw new Error(`freeze refused: ${submitted.error}`);
   return ref;
 }
 
@@ -187,7 +198,7 @@ const auditRows = () =>
 async function insertRawAlert(alertId: string) {
   await owner.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${authorA.id}, true)`;
-    await tx`insert into alert (id, is_drill, reported_at, created_by) values (${alertId}, false, ${new Date(NOW.getTime() - 60_000)}, ${authorA.id})`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, false, ${new Date(NOW.getTime() - 60_000)}, ${authorA.id}, ${alertId.slice(-12)})`;
   });
 }
 
@@ -303,10 +314,10 @@ async function seedRaw(status: EntryStatus): Promise<{ alertId: string; entryId:
 /** The statement that makes a legal transition from `from` to `to` by an actor who may. */
 async function legalChange(tx: postgres.TransactionSql, id: string, from: EntryStatus, to: EntryStatus) {
   if (from === "draft" && to === "pending_approval") {
-    await tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${id}, 'ur', 'body', 'translated', ${sha("source")})`;
+    await tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${id}, 'ur', 'body', 'm1', 'translated', ${sha("source")})`;
     return tx`update alert_entry set status = 'pending_approval', version = 1, content_hash = ${sha("h")}, sms_bodies = ${tx.json({ en: { body: "x" } })}, submitted_at = now() where id = ${id}`;
   }
-  if (from === "pending_approval" && to === "draft") return tx`update alert_entry set status = 'draft', returned_for = 'return', content_hash = null, sms_bodies = null, submitted_at = null where id = ${id}`;
+  if (from === "pending_approval" && to === "draft") return tx`update alert_entry set status = 'draft', returned_for = 'return', returned_note = 'Say more.', content_hash = null, sms_bodies = null, submitted_at = null where id = ${id}`;
   if (from === "pending_approval" && to === "approved") {
     return tx`update alert_entry set status = 'approved', approved_by = ${coordB.id}, approved_at = now(), approved_version = version, approved_hash = content_hash, web_published_at = now() where id = ${id}`;
   }
@@ -448,7 +459,7 @@ describe("create, save, submit and discard", () => {
 
   it("submits the next version with the frozen hash, bodies and translations, and audits entry.submitted", async () => {
     const ref = await newDraft();
-    const submitted = await alerting.submitEntry(actorOf(authorA), ref, frozen("v1"));
+    const submitted = await seams.freeze(actorOf(authorA), ref, frozen("v1"));
 
     expect(submitted).toMatchObject({ ok: true, value: { status: "pending_approval", version: 1, contentHash: sha("v1") } });
     expect((await owner`select lang from alert_entry_translation where entry_id = ${ref.entryId} order by lang`).map((row) => row.lang)).toEqual(["ur", "zh-Hant"]);
@@ -457,10 +468,10 @@ describe("create, save, submit and discard", () => {
 
   it("refuses a submit when the draft changed since it was prepared, a valid-until that passed, and someone who is not an editor", async () => {
     const ref = await newDraft();
-    expect(await alerting.submitEntry(actorOf(authorA), ref, frozen("v1"), content({ text: "An older text." }))).toEqual({ ok: false, error: "DRAFT_CHANGED" });
-    expect(await alerting.submitEntry(actorOf(coordB), ref, frozen("v1"))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(await seams.freeze(actorOf(authorA), ref, frozen("v1"), content({ text: "An older text." }))).toEqual({ ok: false, error: "DRAFT_CHANGED" });
+    expect(await seams.freeze(actorOf(coordB), ref, frozen("v1"))).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
     clock = new Date("2026-10-02T15:00:00Z");
-    expect(await alerting.submitEntry(actorOf(authorA), ref, frozen("v1"))).toEqual({ ok: false, error: "VALID_UNTIL_PAST" });
+    expect(await seams.freeze(actorOf(authorA), ref, frozen("v1"))).toEqual({ ok: false, error: "VALID_UNTIL_PAST" });
     expect((await entryRow(ref.entryId)).status).toBe("draft");
     expect((await owner`select count(*)::int as n from alert_entry_translation where entry_id = ${ref.entryId}`)[0].n).toBe(0);
     expect((await auditRows()).filter((row) => row.outcome === "refused").map((row) => [row.action, row.meta.reason])).toEqual([
@@ -488,17 +499,17 @@ describe("return to draft", () => {
   it("clears the approval binding, deletes the translations, keeps the text and the version, and adds an editing person but not an approver who returns it", async () => {
     const ref = await newPending(authorA, "v1");
 
-    const returned = await alerting.returnEntry(actorOf(coordB), ref, "return");
-    expect(returned).toMatchObject({ ok: true, value: { status: "draft", version: 1, contentHash: null, returnedFor: "return", editorIds: [authorA.id], content: { text: "Power is out on floors 3 to 5." } } });
+    const returned = await alerting.returnEntry(actorOf(coordB), ref, "return", { note: "Please add the floors." });
+    expect(returned).toMatchObject({ ok: true, value: { status: "draft", version: 1, contentHash: null, returnedFor: "return", returnedNote: "Please add the floors.", editorIds: [authorA.id], content: { text: "Power is out on floors 3 to 5." } } });
     const row = await entryRow(ref.entryId);
     expect([row.content_hash, row.sms_bodies, row.submitted_at]).toEqual([null, null, null]);
     expect((await owner`select count(*)::int as n from alert_entry_translation where entry_id = ${ref.entryId}`)[0].n).toBe(0);
 
     // The author re-submits as version 2 with a new hash; then the author pulls it back to edit it.
-    expect(await alerting.submitEntry(actorOf(authorA), ref, frozen("v2"))).toMatchObject({ ok: true, value: { version: 2, contentHash: sha("v2"), returnedFor: null } });
+    expect(await seams.freeze(actorOf(authorA), ref, frozen("v2"))).toMatchObject({ ok: true, value: { version: 2, contentHash: sha("v2"), returnedFor: null, returnedNote: null } });
     expect(await alerting.returnEntry(actorOf(adminC), ref, "edit")).toMatchObject({ ok: true, value: { status: "draft", editorIds: [authorA.id, adminC.id], version: 2 } });
     expect((await auditRows()).filter((r) => r.action === "entry.returned").map((r) => r.meta)).toEqual([
-      { entry_id: ref.entryId, version: 1, returned_for: "return" },
+      { entry_id: ref.entryId, version: 1, returned_for: "return", with_note: true },
       { entry_id: ref.entryId, version: 2, returned_for: "edit" },
     ]);
   });
@@ -521,9 +532,9 @@ describe("approval", () => {
 
     const approved = await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") });
 
-    expect(approved).toMatchObject({ ok: true, value: { status: "approved", approvedBy: coordB.id } });
+    expect(approved).toMatchObject({ ok: true, value: { entry: { status: "approved", approvedBy: coordB.id }, recipients: { total: 0, byLanguage: {} }, feedVersion: before + 1 } });
     // The database's clock times the approval, not the app's (`clock`).
-    const view = (approved as { value: { approvedAt: Date; webPublishedAt: Date } }).value;
+    const view = (approved as unknown as { value: { entry: { approvedAt: Date; webPublishedAt: Date } } }).value.entry;
     expect(view.webPublishedAt).toEqual(view.approvedAt);
     expect(Math.abs(view.approvedAt.getTime() - Date.now())).toBeLessThan(60_000);
     expect(await feedVersion()).toBe(before + 1);
@@ -536,7 +547,7 @@ describe("approval", () => {
       subject_type: "alert_entry",
       subject_id: ref.entryId,
       is_drill: false,
-      meta: { entry_id: ref.entryId, version: 1, content_hash: sha("v1") },
+      meta: { entry_id: ref.entryId, version: 1, content_hash: sha("v1"), recipient_count: 0 },
     });
   });
 
@@ -552,15 +563,15 @@ describe("approval", () => {
     const ref = await newPending(authorA);
     const edited = await alerting.returnEntry(actorOf(coordB), ref, "edit");
     expect(edited).toMatchObject({ ok: true });
-    await alerting.submitEntry(actorOf(coordB), ref, frozen("v2"));
+    await seams.freeze(actorOf(coordB), ref, frozen("v2"));
 
     // Use case: the author and the editor are both refused with their own record.
     expect(await alerting.approveEntry(actorOf(authorA), ref, { version: 2, contentHash: sha("v2") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
     expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 2, contentHash: sha("v2") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
     const refusals = (await auditRows()).filter((row) => row.action === "entry.approved");
     expect(refusals).toEqual([
-      { action: "entry.approved", outcome: "refused", actor_staff_id: authorA.id, subject_type: "alert_entry", subject_id: ref.entryId, is_drill: false, meta: { reason: "self_action" } },
-      { action: "entry.approved", outcome: "refused", actor_staff_id: coordB.id, subject_type: "alert_entry", subject_id: ref.entryId, is_drill: false, meta: { reason: "self_action" } },
+      { action: "entry.approved", outcome: "refused", actor_staff_id: authorA.id, subject_type: "alert_entry", subject_id: ref.entryId, is_drill: false, meta: { reason: "self_action", refusal: "EDITOR_CANNOT_APPROVE" } },
+      { action: "entry.approved", outcome: "refused", actor_staff_id: coordB.id, subject_type: "alert_entry", subject_id: ref.entryId, is_drill: false, meta: { reason: "self_action", refusal: "EDITOR_CANNOT_APPROVE" } },
     ]);
 
     // Trigger: the same, by direct SQL with the app's credentials, for each editor, and for naming someone else.
@@ -610,14 +621,14 @@ describe("approval", () => {
     // The approver opened v1. Meanwhile the author pulls it back, edits and re-submits.
     await alerting.returnEntry(actorOf(authorA), ref, "edit");
     await alerting.saveDraft(actorOf(authorA), ref, content({ text: "Power is out on floors 3 to 6." }));
-    await alerting.submitEntry(actorOf(authorA), ref, frozen("v2"));
+    await seams.freeze(actorOf(authorA), ref, frozen("v2"));
 
     expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
     expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 2, contentHash: sha("v1") })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
     await expect(
       asApp(coordB.id, (tx) => tx`update alert_entry set status = 'approved', approved_by = ${coordB.id}, approved_at = now(), approved_version = 1, approved_hash = ${sha("v1")}, web_published_at = now() where id = ${ref.entryId}`),
     ).rejects.toThrow(/must name the version and hash that are pending/);
-    expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 2, contentHash: sha("v2") })).toMatchObject({ ok: true, value: { version: 2 } });
+    expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 2, contentHash: sha("v2") })).toMatchObject({ ok: true, value: { entry: { version: 2 } } });
   });
 });
 
@@ -640,7 +651,7 @@ describe("an Ambassador author and their assignments (S01.14)", () => {
       expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
 
       const ref = await newDraft(ambassador);
-      const submitted = await alerting.submitEntry(actorOf(ambassador), ref, frozen("v1"));
+      const submitted = await seams.freeze(actorOf(ambassador), ref, frozen("v1"));
       expect(submitted).toMatchObject({ ok: true });
 
       expect(await assignments.remove(adminC.id, { staffId: ambassador.id, rsn: RSN })).toMatchObject({ ok: true });
@@ -654,7 +665,7 @@ describe("an Ambassador author and their assignments (S01.14)", () => {
       const assignments = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
       expect(await assignments.assign(adminC.id, { staffId: ambassador.id, rsn: RSN, floorIds: null })).toMatchObject({ ok: true });
       const ref = await newDraft(ambassador);
-      expect(await alerting.submitEntry(actorOf(ambassador), ref, frozen("v1"))).toMatchObject({ ok: true });
+      expect(await seams.freeze(actorOf(ambassador), ref, frozen("v1"))).toMatchObject({ ok: true });
       expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true });
     });
   });
@@ -681,7 +692,7 @@ describe("a pending_approval entry", () => {
       ["sms_bodies", (tx) => tx`update alert_entry set sms_bodies = ${tx.json({ en: { body: "other" } })} where id = ${ref.entryId}`],
       ["content_hash", (tx) => tx`update alert_entry set content_hash = ${sha("other")} where id = ${ref.entryId}`],
       ["version", (tx) => tx`update alert_entry set version = version + 1 where id = ${ref.entryId}`],
-      ["translation added", (tx) => tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${ref.entryId}, 'fr', 'b', 'translated', ${sha("s")})`],
+      ["translation added", (tx) => tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${ref.entryId}, 'fr', 'b', 'm1', 'translated', ${sha("s")})`],
       ["translation removed", (tx) => tx`delete from alert_entry_translation where entry_id = ${ref.entryId} and lang = 'ur'`],
     ];
     for (const actor of [authorA.id, coordB.id]) {
@@ -747,8 +758,8 @@ describe("a draft entry", () => {
               values (${randomUUID()}, ${ref.alertId}, 'update', ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`),
     ).rejects.toThrow(/ALERT_CLOSED/);
     expect(await alerting.saveDraft(actorOf(authorA), ref, content())).toEqual({ ok: false, error: "ALERT_CLOSED" });
-    expect(await alerting.submitEntry(actorOf(authorA), ref, frozen("v1"))).toEqual({ ok: false, error: "ALERT_CLOSED" });
-    expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.submitted", outcome: "refused", meta: { reason: "alert_closed" } });
+    expect(await seams.freeze(actorOf(authorA), ref, frozen("v1"))).toEqual({ ok: false, error: "ALERT_CLOSED" });
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.submitted", outcome: "refused", meta: { reason: "alert_closed", refusal: "ALERT_CLOSED" } });
   });
 });
 
@@ -758,7 +769,7 @@ describe("Try translation again", () => {
   it("returns the entry to draft, adds the person as an editor, re-translates and re-submits as a new version with a new hash; the person can no longer approve it", async () => {
     const ref = await newPending(authorA, "v1");
 
-    const retried = await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, preparerOf("v2"));
+    const retried = await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, preparerOf("v2"));
 
     expect(retried).toMatchObject({ ok: true, value: { status: "pending_approval", version: 2, contentHash: sha("v2"), editorIds: [authorA.id, coordB.id] } });
     expect((await owner`select body from alert_entry_translation where entry_id = ${ref.entryId} and lang = 'ur'`)[0].body).toBe("ur v2");
@@ -770,16 +781,16 @@ describe("Try translation again", () => {
 
   it("refuses what was not the pending version, and leaves a draft the person edited when preparing fails", async () => {
     const ref = await newPending(authorA, "v1");
-    expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("old") }, preparerOf("v2"))).toEqual({ ok: false, error: "ENTRY_CHANGED" });
+    expect(await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("old") }, preparerOf("v2"))).toEqual({ ok: false, error: "ENTRY_CHANGED" });
     expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
 
-    expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
+    expect(await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
     const row = await entryRow(ref.entryId);
     expect(row.status).toBe("draft");
     expect(row.editor_ids).toEqual([authorA.id, coordB.id]);
     expect(row.content_hash).toBeNull();
     // Submit is still there.
-    expect(await alerting.submitEntry(actorOf(coordB), ref, frozen("v2"))).toMatchObject({ ok: true, value: { version: 2 } });
+    expect(await seams.freeze(actorOf(coordB), ref, frozen("v2"))).toMatchObject({ ok: true, value: { version: 2 } });
   });
 
   it("refuses the re-submit when the draft was edited while it was being prepared", async () => {
@@ -787,10 +798,10 @@ describe("Try translation again", () => {
     const slow: EntryPreparer = {
       prepare: async () => {
         await alerting.saveDraft(actorOf(adminC), ref, content({ text: "Edited while preparing." }));
-        return frozen("v2");
+        return { ok: true, value: frozen("v2") };
       },
     };
-    expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, slow)).toEqual({ ok: false, error: "DRAFT_CHANGED" });
+    expect(await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, slow)).toEqual({ ok: false, error: "DRAFT_CHANGED" });
     expect((await entryRow(ref.entryId)).status).toBe("draft");
   });
 });
@@ -838,7 +849,7 @@ describe("the thread lock", () => {
     });
     expect(await approval).toEqual({ ok: false, error: "ALERT_CLOSED" });
     expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
-    expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.approved", outcome: "refused", meta: { reason: "alert_closed" } });
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.approved", outcome: "refused", meta: { reason: "alert_closed", refusal: "ALERT_CLOSED" } });
   });
 
   it("serializes two simultaneous direct approvals without the thread lock: the entry row lock and the trigger leave one winner", async () => {
@@ -877,7 +888,7 @@ describe("feed_version", () => {
 // --- review fixes (S04.03) ------------------------------------------------------------------------------
 
 const insertTranslation = (tx: postgres.TransactionSql, entryId: string) =>
-  tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${entryId}, 'ur', 'body', 'translated', ${sha("source")})`;
+  tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${entryId}, 'ur', 'body', 'm1', 'translated', ${sha("source")})`;
 const submitSql = (tx: postgres.TransactionSql, entryId: string, tag = "x") =>
   tx`update alert_entry set status = 'pending_approval', version = version + 1, content_hash = ${sha(tag)}, sms_bodies = ${tx.json({ en: { body: "x" } })}, submitted_at = now() where id = ${entryId}`;
 
@@ -901,13 +912,13 @@ describe("the two-person rule in the trigger, against direct SQL", () => {
 
     // A return by an approver who is not an editor still deletes the translations.
     const pending = await newPending(authorA, "v1");
-    expect(await alerting.returnEntry(actorOf(coordB), pending, "return")).toMatchObject({ ok: true });
+    expect(await alerting.returnEntry(actorOf(coordB), pending, "return", { note: "Say when." })).toMatchObject({ ok: true });
     expect((await owner`select count(*)::int as n from alert_entry_translation where entry_id = ${pending.entryId}`)[0].n).toBe(0);
   });
 
   it("refuses the whole reproduction: A submits, B returns, B adds a translation, B submits, B approves", async () => {
     const ref = await newPending(authorA, "v1");
-    expect(await alerting.returnEntry(actorOf(coordB), ref, "return")).toMatchObject({ ok: true });
+    expect(await alerting.returnEntry(actorOf(coordB), ref, "return", { note: "Say when." })).toMatchObject({ ok: true });
     expect((await entryRow(ref.entryId)).editor_ids).toEqual([authorA.id]);
 
     // B re-freezes the content in one go: the translation, the submit and the approval, each as B.
@@ -963,7 +974,7 @@ describe("the thread insert trigger", () => {
   const insertAlert = (actor: string | null, createdBy: string, createdAt?: string) =>
     asApp(actor, (tx) =>
       tx.unsafe(
-        `insert into alert (id, is_drill, reported_at, created_by${createdAt ? ", created_at" : ""}) values ('${randomUUID()}', false, now() - interval '1 minute', '${createdBy}'${createdAt ? `, '${createdAt}'` : ""}) returning created_at`,
+        `insert into alert (id, is_drill, reported_at, created_by, slug${createdAt ? ", created_at" : ""}) values ('${randomUUID()}', false, now() - interval '1 minute', '${createdBy}', '${randomBytes(4).toString("hex")}x2'${createdAt ? `, '${createdAt}'` : ""}) returning created_at`,
       ),
     );
 
@@ -1003,7 +1014,7 @@ describe("a refused change on a drill", () => {
 
   it("is audited as a drill when the preparation of a retry fails", async () => {
     const ref = await newPending(authorA, "v1", true);
-    expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
+    expect(await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
     expect((await auditRows()).filter((row) => row.outcome === "refused")).toMatchObject([{ subject_id: ref.entryId, is_drill: true }]);
   });
 });

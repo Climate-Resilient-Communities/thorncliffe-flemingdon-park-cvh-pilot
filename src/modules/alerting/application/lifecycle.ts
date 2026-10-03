@@ -9,18 +9,27 @@
 // must keep, so a use case that forgot one is still refused.
 //
 // A refusal rolls the transaction back and is audited as refused in its own transaction (S01.04).
-import { and, eq, sql } from "drizzle-orm";
+import { randomBytes } from "node:crypto";
+import { and, arrayOverlaps, desc, eq, inArray, lt, ne, or, sql } from "drizzle-orm";
 import { decidePolicy, meetsAssurance } from "../../identity";
+import { recipientsPort, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "../../subscriptions";
+import { alertTextsOf, countsOfTexts, type AlertText } from "./approvalTexts";
 import type { Db, DbTransaction } from "../../../platform/db";
+import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
-import { alert, alertEntry, alertEntryTranslation, feedVersion } from "../adapters/schema";
-import type { Audience } from "../../../contracts/audience";
-import { audienceBuildings, contentRefusal, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase } from "../domain/content";
-import { AUTHORED_KINDS, checkApproval, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
+import { alert, alertEntry, alertEntryTranslation, alertSubmitAttempt, feedVersion } from "../adapters/schema";
+import { NO_RECIPIENTS, RETURN_NOTE_MAX, sameRecipientCounts, type RecipientCounts } from "../../../contracts/alertApproval";
+import { audienceRsns, type Audience } from "../../../contracts/audience";
+import type { StaffRole } from "../../../contracts/staffRoles";
+import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
+import { possibleDuplicateOf } from "../domain/duplicates";
+import { AUTHORED_KINDS, checkApproval, checkShownBinding, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
 import type { AlertRefusal } from "../domain/refusals";
+import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
+import { FROZEN_LANGS } from "../domain/translations";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
-import type { AlertActor, AlertAudit, AlertResult, EntryPreparer, FrozenContent, StaffDirectory } from "./ports";
-import { AUDIT_REASON } from "./refusalReasons";
+import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
+import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
 
 export interface AlertLifecycleDeps {
@@ -31,6 +40,30 @@ export interface AlertLifecycleDeps {
   places: AudiencePlaces;
   now?: () => Date;
   newId?: () => string;
+  /** The short public slug of a new thread (S04.05). Defaults to eight random letters and numbers. */
+  newSlug?: () => string;
+  /** The latest valid-until allowed now: 7 Toronto calendar days ahead (platform/clock#addTorontoDays). A seam for tests. */
+  latestValidUntil?: (now: Date) => Date;
+  /**
+   * Who the text reaches (S04.07): the count the approval view shows (`count`) and the people the approval captures inside its transaction
+   * (`capture`, which is `captureRecipients(entry, tx)`: who gets a text and in which language; it writes nothing). Subscriptions' port, empty until E07.
+   */
+  recipients?: RecipientsPort;
+  /**
+   * The outbox's approval marker (S06.01): called in the approval's transaction after the entry is approved and `feed_version` is raised, with the
+   * entry being approved, and before `captureRecipients` is asked for anyone or anything is written. `createAlerting` wires messaging's
+   * `createDeliveryQueue().markApprovalTransaction` here; the default does nothing (the use case's own tests, which write no delivery).
+   */
+  markApproval?: (tx: DbTransaction, entryId: string) => Promise<void>;
+  /**
+   * The outbox's writer of alert texts (S06.01), called once in the approval's transaction after the marker, with the texts for the people
+   * captured and only when there are some. `createAlerting` wires messaging's `createDeliveryQueue().enqueueAlertDeliveries` here and gives
+   * back every text the outbox holds for the entry, the number of which is the count the approval audits and compares with the reviewed one.
+   * Without one, an approval that captured anyone fails and changes nothing.
+   */
+  queueAlertTexts?: (tx: DbTransaction, entryId: string, texts: readonly AlertText[]) => Promise<readonly { lang: string }[]>;
+  /** Cents CAD per text message segment (SMS_PRICE_PER_SEGMENT_CENTS), for each queued text's cost estimate; read only when someone is to be texted. */
+  pricePerSegmentCents?: () => number;
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -46,13 +79,19 @@ export interface EntryView {
   contentHash: string | null;
   submittedAt: Date | null;
   returnedFor: ReturnReason | null;
+  /** The note an approver wrote when they sent the entry back to its author: present exactly while `returnedFor` is `return` (S04.07). */
+  returnedNote: string | null;
   approvedBy: string | null;
   approvedAt: Date | null;
   webPublishedAt: Date | null;
+  /** The open, non-drill thread this entry may duplicate, worked out at submit (S04.05); the approver is shown a link to it. */
+  possibleDuplicateOf: string | null;
 }
 
 export interface ThreadView {
   id: string;
+  /** The short public slug: the texts link to `/a/{slug}`. */
+  slug: string;
   isDrill: boolean;
   reportedAt: Date;
   status: "open" | "closed";
@@ -78,6 +117,145 @@ export interface ApprovalBinding {
   contentHash: string;
 }
 
+/**
+ * What an approver presses Approve on (S04.07): the version and hash they were shown, and the number of people the text reaches, as the
+ * view counted them when it loaded (the reviewed count). The approval is refused if the entry changed, and if the snapshot taken inside
+ * the approval's transaction counts anyone else.
+ */
+export interface ApprovalRequest extends ApprovalBinding {
+  /** Left out, the approver reviewed nobody (the count before E07 opens text sign-up): a snapshot that counts anyone is then refused. */
+  recipients?: RecipientCounts;
+}
+
+/** What an approval did, once it committed: the entry as approved, the recipient snapshot it captured, and the feed version it raised (null for a drill, which changes nothing the web shows). */
+export interface ApprovalOutcome {
+  entry: EntryView;
+  recipients: RecipientCounts;
+  feedVersion: number | null;
+}
+
+/** What a Return or a Discard may name besides the entry: the version and hash the person was shown, so an entry that changed since is refused (ENTRY_CHANGED). */
+export interface ReviewAction {
+  shown?: ApprovalBinding;
+}
+
+/** One web text of the entry as frozen: how the language's text came to be, and the text. */
+export interface ReviewedText {
+  lang: string;
+  body: string;
+  status: string;
+  machine: boolean;
+  model: string | null;
+}
+
+/**
+ * Everything the approval view shows, read in one snapshot (S04.07): the entry as stored, its frozen web texts and text messages, the author's
+ * role now (O-07 is an ambassador's post), the possible duplicate, and the number of people the text reaches as it stands now: the reviewed count.
+ */
+export interface EntryReview {
+  thread: ThreadView;
+  entry: EntryView;
+  authorRole: StaffRole | null;
+  texts: readonly ReviewedText[];
+  sms: Readonly<Record<string, FrozenSmsBody>>;
+  recipients: RecipientCount;
+  /** The other open thread this entry may duplicate, and its newest pending or approved entry to link to (null when it holds none). */
+  duplicate: { alertId: string; entryId: string | null } | null;
+}
+
+/** One entry on someone's incidents list (S04.07's share of O-01, which S04.10 builds out). */
+export interface IncidentRow {
+  alertId: string;
+  entryId: string;
+  kind: EntryKind;
+  status: "draft" | "pending_approval";
+  types: readonly string[];
+  isDrill: boolean;
+  version: number;
+  /** When it was submitted (a pending entry), or null for a draft. */
+  submittedAt: Date | null;
+  /** The note an approver wrote when they sent it back to its author: shown to the author until they submit again. */
+  returnedNote: string | null;
+}
+
+/** What waits for a person, and what they have in hand. */
+export interface Incidents {
+  /** Pending entries in open threads that this person may approve (a Coordinator or an Admin who is not an editor), longest waiting first. */
+  waiting: readonly IncidentRow[];
+  /** The open drafts and pending entries this person is an editor of, newest first. */
+  mine: readonly IncidentRow[];
+}
+
+/**
+ * "Log a disruption" (O-11, S04.05): what the person chose, before any text exists. The place is the picker's choice; the
+ * audience is made from it inside the use case's transaction (as chooseAudiencePlace does), and `textFor` builds the first
+ * text, the suggested acknowledgement, from the audience as it was made. The author edits that text next.
+ */
+export interface LogDisruptionInput {
+  kind: (typeof AUTHORED_KINDS)[number];
+  isDrill: boolean;
+  /** When the first report reached the Hub; never later than now. */
+  reportedAt: Date;
+  types: readonly string[];
+  place: PlaceChoice;
+  /** `problem` unless the first entry says work is under way. */
+  phase?: Phase;
+  /** The valid-until the draft starts with; "until resolved" (24 elapsed hours from now) when not given. */
+  validUntil?: Date;
+  textFor: (audience: Audience) => string;
+}
+
+/** One press of Submit, as the browser and the Hub's screens read it (S04.05). */
+export interface AttemptView {
+  key: string;
+  kind: AttemptKind;
+  /** A `running` attempt older than the submit function's time limit reads as `failed` (SUBMIT_ABANDONED): its function is gone. */
+  state: AttemptState;
+  outcome: AlertRefusal | null;
+  startedAt: Date;
+  finishedAt: Date | null;
+  budgetMs: number | null;
+  /** Each language's result as it settled while the attempt ran: `translated`, `script_converted` or `fallback_en`. */
+  progress: Readonly<Record<string, string>>;
+  resultVersion: number | null;
+  resultHash: string | null;
+}
+
+/** The entry's authoritative state for a browser that returns to it: what is stored now, and the latest attempt. */
+export interface EntryState {
+  thread: ThreadView;
+  entry: EntryView;
+  attempt: AttemptView | null;
+  /** The frozen translations (a pending or approved entry): each language and how its text came to be. */
+  translations: readonly { lang: string; status: string; machine: boolean }[];
+}
+
+/**
+ * How a press starts: a submit, with the fingerprint (`draftFingerprint`) of the draft the author saved and saw just before pressing, or a
+ * "Try translation again" of the pending version and hash the person was looking at.
+ */
+export type SubmitMode = { kind: "submit"; draft?: string } | { kind: "retranslate"; seen: ApprovalBinding };
+
+/** What starting a submit settled: an attempt already made with this key (its first result), or the work to do. */
+export type SubmitStart =
+  | { kind: "replay"; attempt: AttemptView }
+  | {
+      kind: "started";
+      attempt: AttemptView;
+      /** The draft as it was when Submit was pressed: the transaction that freezes checks it is still this. */
+      expected: EntryContent;
+      context: PrepareContext;
+      /** The open, non-drill thread this entry may duplicate, or null. */
+      possibleDuplicateOf: string | null;
+    };
+
+const SLUG_ALPHABET = "23456789bcdfghjkmnpqrstvwxz";
+/** Eight letters and numbers with no vowels (so no word) and nothing easily mistaken for another: 27^8, about 2.8e11. */
+function randomSlug(): string {
+  const bytes = randomBytes(8);
+  return Array.from(bytes, (byte) => SLUG_ALPHABET[byte % SLUG_ALPHABET.length]).join("");
+}
+
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const SHA256 = /^[0-9a-f]{64}$/;
 
@@ -85,8 +263,8 @@ const SHA256 = /^[0-9a-f]{64}$/;
  * The audience a place choice asks for, with only what the role policy reads of it: the scope and the buildings by rsn.
  * Nothing is looked up, so the policy can be asked before any place is.
  */
-function askedFor(choice: PlaceChoice, current: EntryContent): Audience {
-  const { groups } = current.audience;
+function askedFor(choice: PlaceChoice, current: { groups: Audience["groups"]; types: readonly string[] }): Audience {
+  const { groups } = current;
   const types = [...current.types];
   return choice.scope === "neighbourhood"
     ? { scope: "neighbourhood", neighbourhood_ids: [...choice.neighbourhoodIds], groups, types }
@@ -95,7 +273,10 @@ function askedFor(choice: PlaceChoice, current: EntryContent): Audience {
 
 /** Found inside a transaction: nothing was written, and the refusal is audited after the rollback. */
 class Refused extends Error {
-  constructor(readonly refusal: AlertRefusal) {
+  constructor(
+    readonly refusal: AlertRefusal,
+    readonly detail?: RefusalDetail & { reviewed?: RecipientCounts },
+  ) {
     super(refusal);
   }
 }
@@ -138,9 +319,11 @@ const entryOf = (row: EntryRow): EntryView => ({
   contentHash: row.contentHash,
   submittedAt: row.submittedAt,
   returnedFor: row.returnedFor as ReturnReason | null,
+  returnedNote: row.returnedNote,
   approvedBy: row.approvedBy,
   approvedAt: row.approvedAt,
   webPublishedAt: row.webPublishedAt,
+  possibleDuplicateOf: row.possibleDuplicateOf,
 });
 
 const contentOf = (row: EntryRow): EntryContent => ({
@@ -149,16 +332,46 @@ const contentOf = (row: EntryRow): EntryContent => ({
   audience: row.audience as Audience,
   phase: row.phase as Phase,
   validUntil: row.validUntil,
+  validUntilMode: row.validUntilMode as ValidUntilMode,
 });
 
-const threadOf = (row: ThreadRow): ThreadView => ({ id: row.id, isDrill: row.isDrill, reportedAt: row.reportedAt, status: row.status as "open" | "closed" });
+type AttemptRow = typeof alertSubmitAttempt.$inferSelect;
+
+/** An attempt as the screens read it: a `running` one whose function must be gone (older than its time limit) reads as failed. */
+const attemptOf = (row: AttemptRow, at: Date): AttemptView => {
+  const abandoned = row.state === "running" && isStaleAttempt(row.startedAt, at);
+  return {
+    key: row.key,
+    kind: row.kind as AttemptKind,
+    state: abandoned ? "failed" : (row.state as AttemptState),
+    outcome: abandoned ? "SUBMIT_ABANDONED" : (row.outcome as AlertRefusal | null),
+    startedAt: row.startedAt,
+    finishedAt: row.finishedAt,
+    budgetMs: row.budgetMs,
+    progress: row.progress as Record<string, string>,
+    resultVersion: row.resultVersion,
+    resultHash: row.resultHash,
+  };
+};
+
+const threadOf = (row: ThreadRow): ThreadView => {
+  if (row.slug === null) throw new Error("alerting: a thread has no slug");
+  return { id: row.id, slug: row.slug, isDrill: row.isDrill, reportedAt: row.reportedAt, status: row.status as "open" | "closed" };
+};
 
 type AuditedAction = "alert.created" | "entry.submitted" | "entry.returned" | "entry.discarded" | "entry.approved";
 
 export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const { db, audit, staff, places } = deps;
+  const recipients = deps.recipients ?? recipientsPort;
+  const markApproval = deps.markApproval ?? (async () => undefined);
+  const queueAlertTexts = deps.queueAlertTexts;
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
+  const newSlug = deps.newSlug ?? randomSlug;
+  const latestValidUntil = deps.latestValidUntil ?? ((at: Date) => addTorontoDays(at, VALID_UNTIL_MAX_DAYS));
+  /** The valid-until rule at this moment: in the future, and no later than 7 Toronto days ahead. */
+  const validUntilProblem = (validUntil: Date, at: Date) => validUntilRefusal(validUntil, at, latestValidUntil(at));
   /** The `is_drill` of the thread a transaction has read, for the record of a refusal that rolls it back. */
   const drillOf = new WeakMap<DbTransaction, boolean>();
 
@@ -175,6 +388,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     run: (tx: DbTransaction) => Promise<T>,
   ): Promise<AlertResult<T>> {
     let refusal: AlertRefusal;
+    let detail: Refused["detail"];
     let isDrill = false;
     try {
       return {
@@ -191,17 +405,25 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       const known = error instanceof Refused ? error.refusal : refusalOfDatabaseError(error);
       if (!known) throw error;
       refusal = known;
+      detail = error instanceof Refused ? error.detail : undefined;
     }
-    if (action === null) return { ok: false, error: refusal };
+    const failure = (): AlertResult<T> => ({ ok: false, error: refusal, ...(detail ? { detail: { recipients: detail.recipients } } : {}) });
+    if (action === null) return failure();
     await audit.recordRefusal(db, {
       action,
       actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
       subjectType: subject.type,
       subjectId: UUID.test(subject.id) ? subject.id : null,
       isDrill,
-      meta: { reason: AUDIT_REASON[refusal] },
+      // The reason is the group the refusal belongs to; `refusal` is the rule that refused (S04.07). A refused approval whose count changed
+      // also records the two counts, so the record says from what to what.
+      meta: {
+        reason: AUDIT_REASON[refusal],
+        refusal,
+        ...(action === "entry.approved" && detail ? { recipient_count: detail.recipients.total, ...(detail.reviewed ? { reviewed_count: detail.reviewed.total } : {}) } : {}),
+      } as never,
     });
-    return { ok: false, error: refusal };
+    return failure();
   }
 
   /** The start of every use case on an existing thread: lock it, set the actor, read the actor's standing. */
@@ -250,9 +472,18 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
    * buildings, the places, then the write. Whoever saves a change becomes an editor (the trigger adds them). Shared by saving a draft and by
    * choosing its audience, so both are judged by the one rule.
    */
-  async function writeDraft(tx: DbTransaction, standing: StaffStanding, actor: AlertActor, entry: EntryRow, content: EntryContent): Promise<EntryView> {
+  async function writeDraft(
+    tx: DbTransaction,
+    standing: StaffStanding,
+    actor: AlertActor,
+    entry: EntryRow,
+    content: EntryContent,
+    options: { checkValidUntil: boolean } = { checkValidUntil: false },
+  ): Promise<EntryView> {
     if (entry.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
-    const invalid = contentRefusal(content);
+    // Saving the composer's draft judges the time the author entered (in the future, at most 7 days ahead); the audience
+    // pickers change who it is for and not when it ends, so they leave a time that has since passed to the submit's own check.
+    const invalid = contentRefusal(content) ?? (options.checkValidUntil ? validUntilProblem(content.validUntil, now()) : null);
     if (invalid) throw new Refused(invalid);
     // Changing a draft is authoring it: the actor must be allowed to author what it holds now (an Ambassador cannot take
     // over a Coordinator's neighbourhood draft, or a draft for a building they are not assigned to, by re-aiming it
@@ -262,7 +493,15 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     await mustExist(tx, content.audience);
     const [saved] = await tx
       .update(alertEntry)
-      .set({ originalText: content.text, types: [...content.types], audience: content.audience, phase: content.phase, validUntil: content.validUntil })
+      .set({
+        originalText: content.text,
+        types: [...content.types],
+        audience: content.audience,
+        phase: content.phase,
+        validUntil: content.validUntil,
+        // A save that names no mode (the audience pickers) leaves the author's choice as it was.
+        ...(content.validUntilMode ? { validUntilMode: content.validUntilMode } : {}),
+      })
       .where(eq(alertEntry.id, entry.id))
       .returning();
     return entryOf(saved);
@@ -279,11 +518,19 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (!entry.editorIds.includes(staffId)) throw new Refused("OUT_OF_SCOPE");
   };
 
-  async function submitIn(tx: DbTransaction, entry: EntryRow, thread: ThreadRow, actor: AlertActor, frozen: FrozenContent, expected?: EntryContent): Promise<EntryView> {
+  async function submitIn(
+    tx: DbTransaction,
+    entry: EntryRow,
+    thread: ThreadRow,
+    actor: AlertActor,
+    frozen: FrozenContent,
+    expected: EntryContent,
+    duplicateOf: string | null,
+  ): Promise<EntryView> {
     mustTransition(thread, entry, "pending_approval");
     const content = contentOf(entry);
-    if (expected && !sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
-    const invalid = contentRefusal(content) ?? validUntilRefusal(content.validUntil, now());
+    if (!sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
+    const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, now());
     if (invalid) throw new Refused(invalid);
     await mustExist(tx, content.audience);
     if (!SHA256.test(frozen.contentHash) || !("en" in frozen.smsBodies) || frozen.translations.length === 0) {
@@ -299,6 +546,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         model: translation.model,
         status: translation.status,
         sourceHash: translation.sourceHash,
+        conversion: translation.conversion
+          ? { from: translation.conversion.from, from_text_hash: translation.conversion.fromTextHash, opencc_version: translation.conversion.openccVersion, config: translation.conversion.config }
+          : null,
       })),
     );
     const [submitted] = await tx
@@ -310,6 +560,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         smsBodies: frozen.smsBodies,
         submittedAt: now(),
         returnedFor: null,
+        returnedNote: null,
+        possibleDuplicateOf: duplicateOf,
       })
       .where(eq(alertEntry.id, entry.id))
       .returning();
@@ -324,11 +576,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     return entryOf(submitted);
   }
 
-  async function returnIn(tx: DbTransaction, entry: EntryRow, thread: ThreadRow, actor: AlertActor, reason: ReturnReason): Promise<EntryView> {
+  /** Returns a pending entry to draft. An approver's `return` carries `note` (what the author reads); the other reasons carry none. */
+  async function returnIn(tx: DbTransaction, entry: EntryRow, thread: ThreadRow, actor: AlertActor, reason: ReturnReason, note: string | null = null): Promise<EntryView> {
     mustTransition(thread, entry, "draft");
     const [returned] = await tx
       .update(alertEntry)
-      .set({ status: "draft", returnedFor: reason, contentHash: null, smsBodies: null, submittedAt: null })
+      .set({ status: "draft", returnedFor: reason, returnedNote: note, contentHash: null, smsBodies: null, submittedAt: null, possibleDuplicateOf: null })
       .where(eq(alertEntry.id, entry.id))
       .returning();
     await audit.record(tx, {
@@ -337,7 +590,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       subjectType: "alert_entry",
       subjectId: entry.id,
       isDrill: thread.isDrill,
-      meta: { entry_id: entry.id, version: entry.version, returned_for: reason },
+      meta: { entry_id: entry.id, version: entry.version, returned_for: reason, ...(note !== null ? { with_note: true as const } : {}) },
     });
     return entryOf(returned);
   }
@@ -350,6 +603,280 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (!meetsAssurance(standing.role, actor.aal, "alert.approve")) throw new Refused("AAL2_REQUIRED");
     // "Not an editor" is the only context the rule holds on; the editor refusal comes with its own code.
     if (decision === "out_of_scope") throw new Refused("EDITOR_CANNOT_APPROVE");
+  }
+
+  /**
+   * The approver was shown a version and hash of a pending entry (S04.07): an entry that changed since (pulled back to a draft, or edited and
+   * submitted again while the approver read: ENTRY_CHANGED) or is not waiting any more (approved or discarded: ENTRY_NOT_PENDING) is refused.
+   * Only judged where a person names what they saw.
+   */
+  function mustMatchShown(row: EntryRow, shown: ApprovalBinding | undefined) {
+    if (shown === undefined) return;
+    const refusal = checkShownBinding({ status: row.status as EntryStatus, version: row.version, contentHash: row.contentHash, shownVersion: shown.version, shownHash: shown.contentHash });
+    if (refusal) throw new Refused(refusal);
+  }
+
+  /** The note of a return: control characters taken out, trimmed, present, and at most RETURN_NOTE_MAX characters (counted as the database counts them). */
+  function noteOf(raw: string | undefined): string {
+    // Control characters are taken out (the database cannot hold NUL); a person's own line breaks stay.
+    const text = (raw ?? "").replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
+    if (text === "") throw new Refused("NOTE_REQUIRED");
+    if ([...text].length > RETURN_NOTE_MAX) throw new Refused("NOTE_TOO_LONG");
+    return text;
+  }
+
+  /** The entry as the recipient port takes it (S04.07): the audience and the frozen texts as stored, never from a request. */
+  const recipientEntryOf = (row: EntryRow, thread: ThreadRow): RecipientEntry => ({
+    entryId: row.id,
+    alertId: row.alertId,
+    kind: row.kind,
+    isDrill: thread.isDrill,
+    // A correction or a withdrawal names the entry it replaces (E05); no entry here does.
+    supersedesId: null,
+    audience: row.audience as Audience,
+    types: row.types,
+    smsBodies: (row.smsBodies ?? {}) as Record<string, RecipientSmsBody>,
+  });
+
+  /**
+   * The snapshot of an approval (AD-7, S06.01): the people the recipient port captures in this transaction, queued as texts through the outbox
+   * (`queueAlertTexts`: messaging's `enqueueAlertDeliveries(tx, entryId, texts)`), each in the entry's frozen text message for the person's language,
+   * and the count of the texts the outbox returns, in all and by the language of the body: the count that is audited and compared with the reviewed
+   * one. The marker that lets the database accept an alert delivery has been set by now. Nobody captured (all of E04 to E06: texting is not open):
+   * nothing is written.
+   */
+  async function queueSnapshot(tx: DbTransaction, entry: RecipientEntry): Promise<RecipientCounts> {
+    const captured = await recipients.capture(entry, tx);
+    const texts = alertTextsOf({ recipients: captured, smsBodies: entry.smsBodies, pricePerSegmentCents: deps.pricePerSegmentCents });
+    if (texts.length === 0) return NO_RECIPIENTS;
+    if (!queueAlertTexts) throw new Error("alerting: people were captured for an approval but no outbox is wired to queue their texts");
+    return countsOfTexts(await queueAlertTexts(tx, entry.entryId, texts));
+  }
+
+  /** Inserts the thread and its first draft (the author its first editor), audited as `alert.created`. The caller has judged everything. */
+  async function insertThread(
+    tx: DbTransaction,
+    actor: AlertActor,
+    input: { kind: (typeof AUTHORED_KINDS)[number]; isDrill: boolean; reportedAt: Date; content: EntryContent },
+    ids: { alertId: string; entryId: string; createdAt: Date },
+  ): Promise<{ thread: ThreadView; entry: EntryView }> {
+    await tx.execute(sql`select set_config('cvh.actor_id', ${actor.staffId}, true)`);
+    const [thread] = await tx
+      .insert(alert)
+      .values({ id: ids.alertId, isDrill: input.isDrill, reportedAt: input.reportedAt, createdBy: actor.staffId, slug: newSlug() })
+      .returning();
+    const [entry] = await tx
+      .insert(alertEntry)
+      .values({
+        id: ids.entryId,
+        alertId: ids.alertId,
+        kind: input.kind,
+        authorId: actor.staffId,
+        editorIds: [actor.staffId],
+        originalText: input.content.text,
+        types: [...input.content.types],
+        audience: input.content.audience,
+        phase: input.content.phase,
+        validUntil: input.content.validUntil,
+        validUntilMode: input.content.validUntilMode ?? "at",
+        createdAt: ids.createdAt,
+      })
+      .returning();
+    await audit.record(tx, {
+      action: "alert.created",
+      actorStaffId: actor.staffId,
+      subjectType: "alert",
+      subjectId: ids.alertId,
+      isDrill: input.isDrill,
+      meta: { entry_id: ids.entryId, kind: input.kind, types: [...input.content.types] },
+    });
+    return { thread: threadOf(thread), entry: entryOf(entry) };
+  }
+
+  // ---- Submit attempts (S04.05) ---------------------------------------------------------------------------------------
+
+  /**
+   * The open, non-drill thread an entry of these types and this audience may duplicate (advisory: nothing is refused for it). Only a new
+   * thread's first entry has one, and only an older thread can be what it duplicates: "a new thread overlapping an open ... thread"
+   * (spine, Duplicates). An update on a thread that is already running is not a new thread, and must not send the approver to a newer
+   * thread that overlaps it, which would point at withdrawing the wrong one.
+   */
+  async function findPossibleDuplicate(tx: DbTransaction, thread: ThreadRow, entry: EntryRow, content: EntryContent): Promise<string | null> {
+    if (thread.isDrill) return null;
+    const [earlier] = await tx
+      .select({ id: alertEntry.id })
+      .from(alertEntry)
+      .where(
+        and(
+          eq(alertEntry.alertId, thread.id),
+          ne(alertEntry.id, entry.id),
+          or(lt(alertEntry.createdAt, entry.createdAt), and(eq(alertEntry.createdAt, entry.createdAt), lt(alertEntry.id, entry.id))),
+        ),
+      )
+      .limit(1);
+    if (earlier) return null;
+    const rows = await tx
+      .select({ alertId: alertEntry.alertId, audience: alertEntry.audience })
+      .from(alertEntry)
+      .innerJoin(alert, eq(alert.id, alertEntry.alertId))
+      .where(
+        and(
+          eq(alert.status, "open"),
+          eq(alert.isDrill, false),
+          ne(alert.id, thread.id),
+          lt(alert.createdAt, thread.createdAt),
+          inArray(alertEntry.status, ["pending_approval", "approved"]),
+          arrayOverlaps(alertEntry.types, [...content.types]),
+        ),
+      )
+      .orderBy(desc(alertEntry.createdAt))
+      .limit(200);
+    const candidates = rows.map((row) => ({ alertId: row.alertId, audience: row.audience as Audience }));
+    const rsns = new Set([...audienceRsns(content.audience), ...candidates.flatMap((candidate) => audienceRsns(candidate.audience))]);
+    const neighbourhoods = await places.neighbourhoodsOf(tx, [...rsns]);
+    return possibleDuplicateOf({ alertId: thread.id, audience: content.audience }, candidates, (rsn) => neighbourhoods.get(rsn) ?? null);
+  }
+
+  /**
+   * Starts one press of Submit (or of "Try translation again"): in one short transaction under the thread's lock it settles whether
+   * the key was already used (then the first attempt's result is returned and nothing else happens), whether another attempt is
+   * running (refused: SUBMIT_IN_PROGRESS), and whether the draft can be submitted at all (so no translation is paid for a draft
+   * that would be refused), then records the attempt as `running` and returns the draft as it was when Submit was pressed,
+   * what the preparation needs to know (read from the database) and the possible duplicate. A "Try translation again" first
+   * returns the pending entry to draft in this same transaction, the person becoming an editor.
+   */
+  async function beginSubmit(
+    actor: AlertActor,
+    ref: EntryRef,
+    key: string,
+    mode: SubmitMode,
+  ): Promise<AlertResult<SubmitStart>> {
+    return change(mode.kind === "submit" ? "entry.submitted" : "entry.returned", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<SubmitStart> => {
+      if (!SUBMIT_KEY_PATTERN.test(key)) throw new Refused("SUBMIT_KEY_INVALID");
+      const { thread, standing, entry } = await open(tx, actor, ref);
+      const row = entry!;
+      const at = now();
+      const markAbandoned = async (attemptKey: string) => {
+        const [failed] = await tx
+          .update(alertSubmitAttempt)
+          .set({ state: "failed", outcome: "SUBMIT_ABANDONED" })
+          .where(and(eq(alertSubmitAttempt.entryId, row.id), eq(alertSubmitAttempt.key, attemptKey), eq(alertSubmitAttempt.state, "running")))
+          .returning();
+        return failed;
+      };
+      // The same key as an earlier press: that attempt's result, whatever the entry has become since.
+      const [same] = await tx.select().from(alertSubmitAttempt).where(and(eq(alertSubmitAttempt.entryId, row.id), eq(alertSubmitAttempt.key, key))).for("update");
+      if (same) {
+        if (same.actorId !== actor.staffId) throw new Refused("OUT_OF_SCOPE");
+        const settled = same.state === "running" && isStaleAttempt(same.startedAt, at) ? ((await markAbandoned(key)) ?? same) : same;
+        return { kind: "replay", attempt: attemptOf(settled, at) };
+      }
+      // One attempt at a time: a press while another runs waits for it, unless its function is gone.
+      const [running] = await tx.select().from(alertSubmitAttempt).where(and(eq(alertSubmitAttempt.entryId, row.id), eq(alertSubmitAttempt.state, "running"))).for("update");
+      if (running) {
+        if (!isStaleAttempt(running.startedAt, at)) throw new Refused("SUBMIT_IN_PROGRESS");
+        await markAbandoned(running.key);
+      }
+      // TODO(E08): an Ambassador's post is attributed to their building ("Building ambassador, {building}") and is not yet
+      // verified (D-1); this epic's texts say "from the Hub", "Verified by the Hub", so only Hub staff submit through here.
+      if (standing.role === "ambassador") throw new Refused("NOT_ALLOWED");
+      let content: EntryContent;
+      if (mode.kind === "submit") {
+        mustBeEditor(row, actor.staffId);
+        mustAuthor(standing, actor.staffId, contentOf(row));
+        mustTransition(thread, row, "pending_approval");
+        content = contentOf(row);
+        // The draft the author saved and saw is the draft that is submitted: someone else saving in between is refused, nothing frozen.
+        if (mode.draft !== undefined && mode.draft !== draftFingerprint(content)) throw new Refused("DRAFT_CHANGED");
+      } else {
+        if (row.status !== "pending_approval") throw new Refused("ENTRY_NOT_PENDING");
+        if (row.version !== mode.seen.version || row.contentHash !== mode.seen.contentHash) throw new Refused("ENTRY_CHANGED");
+        mustAuthor(standing, actor.staffId, contentOf(row));
+        content = (await returnIn(tx, row, thread, actor, "retranslate")).content;
+      }
+      const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
+      if (invalid) throw new Refused(invalid);
+      await mustExist(tx, content.audience);
+      const duplicateOf = await findPossibleDuplicate(tx, thread, row, content);
+      const slug = thread.slug;
+      if (slug === null) throw new Error("alerting: a thread has no slug");
+      const [created] = await tx.insert(alertSubmitAttempt).values({ entryId: row.id, key, kind: mode.kind, actorId: actor.staffId }).returning();
+      const context: PrepareContext = {
+        alertId: thread.id,
+        entryId: row.id,
+        isDrill: thread.isDrill,
+        kind: row.kind as EntryKind,
+        supersedesId: null,
+        channels: ENTRY_CHANNELS,
+        slug,
+        verified: true,
+        attribution: { role: "hub" },
+      };
+      return { kind: "started", attempt: attemptOf(created, at), expected: content, context, possibleDuplicateOf: duplicateOf };
+    });
+  }
+
+  /**
+   * Ends an attempt that did not freeze anything: `running` becomes `failed` with the reason, and the answer says whether this call did it
+   * (false: the attempt was no longer running, because it committed, ended already or was taken as abandoned, or the write could not be
+   * made). Only the person who pressed it can end it. It touches the attempt row alone (no thread lock), so it can never wait on, or
+   * deadlock with, the transaction that freezes the entry: whichever reaches the row first wins, and a freeze that comes second finds the
+   * attempt failed and is refused.
+   */
+  async function markFailed(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal): Promise<boolean> {
+    try {
+      const ended = await db
+        .update(alertSubmitAttempt)
+        .set({ state: "failed", outcome })
+        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running"), eq(alertSubmitAttempt.actorId, actor.staffId)))
+        .returning({ key: alertSubmitAttempt.key });
+      return ended.length > 0;
+    } catch {
+      // The attempt stays `running` and reads as abandoned after the submit function's time limit: the entry is never stuck.
+      return false;
+    }
+  }
+
+  /**
+   * Freezes the prepared content (translated, rendered and hashed outside any lock) in one short transaction: it checks the attempt
+   * is still this person's running one, that the draft has not changed since Submit was pressed (DRAFT_CHANGED, "This alert
+   * changed while it was being prepared. Submit again.", nothing frozen), writes the frozen content as the next version with its
+   * hash, moves the entry to `pending_approval` and records the attempt as committed. Any refusal ends the attempt as failed.
+   */
+  async function completeSubmit(actor: AlertActor, ref: EntryRef, key: string, frozen: FrozenContent, expected: EntryContent, duplicateOf: string | null): Promise<AlertResult<EntryView>> {
+    const done = await change("entry.submitted", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
+      const { thread, standing, entry } = await open(tx, actor, ref);
+      const [attempt] = await tx.select().from(alertSubmitAttempt).where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key))).for("update");
+      if (!attempt || attempt.actorId !== actor.staffId || attempt.state !== "running") throw new Refused("SUBMIT_ABANDONED");
+      mustBeEditor(entry!, actor.staffId);
+      mustAuthor(standing, actor.staffId, contentOf(entry!));
+      const view = await submitIn(tx, entry!, thread, actor, frozen, expected, duplicateOf);
+      await tx
+        .update(alertSubmitAttempt)
+        .set({ state: "committed", resultVersion: view.version, resultHash: frozen.contentHash })
+        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key)));
+      return view;
+    });
+    if (!done.ok) await markFailed(actor, ref, key, done.error);
+    return done;
+  }
+
+  /**
+   * Ends an attempt that could not freeze anything (the preparation failed or was refused), and records the refusal (S01.04), both only
+   * when this call ended it: an attempt that had already committed (a freezing transaction whose answer was lost) or ended is left as it is,
+   * with no refusal added to its audit trail. True when this call ended the attempt.
+   */
+  async function failSubmit(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal, isDrill = false): Promise<boolean> {
+    if (!(await markFailed(actor, ref, key, outcome))) return false;
+    await audit.recordRefusal(db, {
+      action: "entry.submitted",
+      actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
+      subjectType: "alert_entry",
+      subjectId: UUID.test(ref.entryId) ? ref.entryId : null,
+      isDrill,
+      meta: { reason: AUDIT_REASON[outcome], refusal: outcome },
+    });
+    return true;
   }
 
   return {
@@ -368,40 +895,52 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
         if (!(AUTHORED_KINDS as readonly string[]).includes(input.kind)) throw new Refused("ILLEGAL_TRANSITION");
         if (Number.isNaN(input.reportedAt.getTime()) || input.reportedAt.getTime() > createdAt.getTime()) throw new Refused("REPORTED_AT_INVALID");
-        const invalid = contentRefusal(input.content) ?? validUntilRefusal(input.content.validUntil, createdAt);
+        const invalid = contentRefusal(input.content) ?? validUntilProblem(input.content.validUntil, createdAt);
         if (invalid) throw new Refused(invalid);
         mustAuthor(standing, actor.staffId, input.content);
         await mustExist(tx, input.content.audience);
-        await tx.execute(sql`select set_config('cvh.actor_id', ${actor.staffId}, true)`);
-        const [thread] = await tx
-          .insert(alert)
-          .values({ id: alertId, isDrill: input.isDrill, reportedAt: input.reportedAt, createdBy: actor.staffId })
-          .returning();
-        const [entry] = await tx
-          .insert(alertEntry)
-          .values({
-            id: entryId,
-            alertId,
-            kind: input.kind,
-            authorId: actor.staffId,
-            editorIds: [actor.staffId],
-            originalText: input.content.text,
-            types: [...input.content.types],
-            audience: input.content.audience,
-            phase: input.content.phase,
-            validUntil: input.content.validUntil,
-            createdAt,
-          })
-          .returning();
-        await audit.record(tx, {
-          action: "alert.created",
-          actorStaffId: actor.staffId,
-          subjectType: "alert",
-          subjectId: alertId,
-          isDrill: input.isDrill,
-          meta: { entry_id: entryId, kind: input.kind, types: [...input.content.types] },
-        });
-        return { thread: threadOf(thread), entry: entryOf(entry) };
+        return insertThread(tx, actor, { kind: input.kind, isDrill: input.isDrill, reportedAt: input.reportedAt, content: input.content }, { alertId, entryId, createdAt });
+      });
+    },
+
+    /**
+     * "Log a disruption" (O-11, S04.05): creates a thread and its first draft from what the person chose (the types, the place and
+     * the time of the first report). The audience is made from the place inside this transaction, the way chooseAudiencePlace
+     * makes it, and the first text is `input.textFor(audience)`: the suggested acknowledgement, which the author edits next. The
+     * draft starts valid until "until resolved" (24 elapsed hours from now) unless a time is given. Refused for a role that may not
+     * author this place or these types, a time of first report that is not a time or is later than now, and everything
+     * createAlert refuses. Audited as `alert.created`.
+     */
+    async logDisruption(actor: AlertActor, input: LogDisruptionInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      const alertId = newId();
+      const entryId = newId();
+      return change("alert.created", actor, { type: "alert", id: alertId }, async (tx) => {
+        drillOf.set(tx, input.isDrill);
+        const createdAt = now();
+        const standing = await staff.standing(tx, actor.staffId);
+        if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
+        if (!(AUTHORED_KINDS as readonly string[]).includes(input.kind)) throw new Refused("ILLEGAL_TRANSITION");
+        if (Number.isNaN(input.reportedAt.getTime()) || input.reportedAt.getTime() > createdAt.getTime()) throw new Refused("REPORTED_AT_INVALID");
+        const types = [...new Set(input.types)].sort();
+        if (types.length !== input.types.length) throw new Refused("TYPES_REPEATED");
+        if (types.length === 0) throw new Refused("TYPES_EMPTY");
+        // The role and the policy come first, as in chooseAudiencePlace: someone who may not do this learns nothing of the places.
+        mustAuthor(standing, actor.staffId, { types, audience: askedFor(input.place, { groups: [], types }) });
+        const resolved = await resolvePlace(tx, places, input.place, { groups: [], types });
+        if (!resolved.ok) throw new Refused(resolved.error);
+        const content: EntryContent = {
+          text: input.textFor(resolved.value),
+          types,
+          audience: resolved.value,
+          phase: input.phase ?? "problem",
+          validUntil: input.validUntil ?? new Date(createdAt.getTime() + UNTIL_RESOLVED_MS),
+          // The draft starts "until resolved" unless a time was given.
+          validUntilMode: input.validUntil ? "at" : "resolved",
+        };
+        const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, createdAt);
+        if (invalid) throw new Refused(invalid);
+        mustAuthor(standing, actor.staffId, content);
+        return insertThread(tx, actor, { kind: input.kind, isDrill: input.isDrill, reportedAt: input.reportedAt, content }, { alertId, entryId, createdAt });
       });
     },
 
@@ -414,7 +953,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       // return, discard, approve), and a refused save changes nothing.
       return change(null, actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { standing, entry } = await open(tx, actor, ref);
-        return writeDraft(tx, standing, actor, entry!, content);
+        return writeDraft(tx, standing, actor, entry!, content, { checkValidUntil: true });
       });
     },
 
@@ -433,7 +972,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // The role and the policy come first, for the draft as it is and for the scope and buildings asked for, so that
         // someone who may not do this learns nothing about which buildings, floors or neighbourhoods exist.
         mustAuthor(standing, actor.staffId, current);
-        mustAuthor(standing, actor.staffId, { types: current.types, audience: askedFor(choice, current) });
+        mustAuthor(standing, actor.staffId, { types: current.types, audience: askedFor(choice, { groups: current.audience.groups, types: current.types }) });
         const resolved = await resolvePlace(tx, places, choice, { groups: current.audience.groups, types: current.types });
         if (!resolved.ok) throw new Refused(resolved.error);
         return writeDraft(tx, standing, actor, entry!, { ...current, audience: resolved.value });
@@ -455,32 +994,25 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /**
-     * Submit: freezes the prepared content (translated, rendered and hashed outside any lock, by the
-     * caller) and moves the draft to `pending_approval` as the next version. `expected` is the
-     * content the preparation was made from; a draft that changed since is refused (DRAFT_CHANGED)
-     * and nothing is frozen.
-     */
-    async submitEntry(actor: AlertActor, ref: EntryRef, frozen: FrozenContent, expected?: EntryContent): Promise<AlertResult<EntryView>> {
-      return change("entry.submitted", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
-        const { thread, standing, entry } = await open(tx, actor, ref);
-        mustBeEditor(entry!, actor.staffId);
-        mustAuthor(standing, actor.staffId, contentOf(entry!));
-        return submitIn(tx, entry!, thread, actor, frozen, expected);
-      });
-    },
-
-    /**
      * Returns a pending entry to draft, keeping its text; clears the approval binding (hash, SMS bodies,
      * time) and the frozen translations. `edit`: someone who may author it pulls it back to change it,
      * and becomes an editor. `return`: an approver (not an editor, `aal2`) sends it back to its author,
      * and does not become one. Never for a web-published entry.
      */
-    async returnEntry(actor: AlertActor, ref: EntryRef, reason: Exclude<ReturnReason, "retranslate">): Promise<AlertResult<EntryView>> {
+    async returnEntry(
+      actor: AlertActor,
+      ref: EntryRef,
+      reason: Exclude<ReturnReason, "retranslate">,
+      options: ReviewAction & { note?: string } = {},
+    ): Promise<AlertResult<EntryView>> {
       return change("entry.returned", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { thread, standing, entry } = await open(tx, actor, ref);
         if (reason === "return") mustMayApprove(standing, actor, entry!);
         else mustAuthor(standing, actor.staffId, contentOf(entry!));
-        return returnIn(tx, entry!, thread, actor, reason);
+        // The role comes first, so someone who may not do this learns nothing; then the entry is the one the approver was shown, and the note is there.
+        mustMatchShown(entry!, options.shown);
+        const note = reason === "return" ? noteOf(options.note) : null;
+        return returnIn(tx, entry!, thread, actor, reason, note);
       });
     },
 
@@ -488,13 +1020,17 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
      * Discards a draft or a pending entry. A draft by an editor who may author it; a pending entry
      * also by an approver (not an editor). Never a web-published entry (it is withdrawn, E05).
      */
-    async discardEntry(actor: AlertActor, ref: EntryRef): Promise<AlertResult<EntryView>> {
+    async discardEntry(actor: AlertActor, ref: EntryRef, options: ReviewAction = {}): Promise<AlertResult<EntryView>> {
       return change("entry.discarded", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { thread, standing, entry } = await open(tx, actor, ref);
         mustTransition(thread, entry!, "discarded");
         if (entry!.editorIds.includes(actor.staffId)) mustAuthor(standing, actor.staffId, contentOf(entry!));
         else if (entry!.status === "pending_approval") mustMayApprove(standing, actor, entry!);
-        else throw new Refused("OUT_OF_SCOPE");
+        else if (entry!.status === "draft" && options.shown !== undefined) {
+          // An approver who read a pending entry that its author has pulled back since: the role still comes first, then they are told it changed.
+          mustMayApprove(standing, actor, entry!);
+        } else throw new Refused("OUT_OF_SCOPE");
+        mustMatchShown(entry!, options.shown);
         const from = entry!.status as "draft" | "pending_approval";
         const [discarded] = await tx.update(alertEntry).set({ status: "discarded" }).where(eq(alertEntry.id, entry!.id)).returning();
         await audit.record(tx, {
@@ -510,15 +1046,21 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /**
-     * Approves a pending entry exactly as the approver saw it (`shown`). Refused unless: the session is
-     * `aal2` (Admin and Coordinator), the policy lets this role approve, the approver is neither the
-     * author nor an editor, the author may still author it now (active, and their current assignments
-     * cover the buildings), the version and hash still match what was shown, and the valid-until is
-     * still ahead. Then the entry becomes `approved` and web-published and `feed_version` goes up
-     * (a drill changes nothing the web shows, so it does not), all in this transaction.
+     * Approves a pending entry exactly as the approver saw it (`shown`: the version, the hash and the number of people the text reaches).
+     * Refused unless: the session is `aal2` (Admin and Coordinator), the policy lets this role approve, the approver is neither the
+     * author nor an editor, the author may still author it now (active, and their current assignments cover the buildings), the version
+     * and hash still match what was shown, and the valid-until is still ahead. Then, in this one transaction: the entry becomes
+     * `approved` and web-published and `feed_version` goes up (a drill changes nothing the web shows, so it does not); the outbox's marker is
+     * set (`markApprovalTransaction`); the people to text are captured through `captureRecipients(entry, tx)` and their alert deliveries are
+     * written through `enqueueAlertDeliveries(tx, entryId, texts)`, each in the entry's frozen text message for the person's language; and if
+     * the number of texts that returns is not what the approver reviewed (RECIPIENT_COUNT_CHANGED, carrying that count) everything rolls back,
+     * the deliveries with it; else `entry.approved` is audited with the version, the hash and that recipient count. After it commits the
+     * caller revalidates the feed's tag and kicks the dispatcher (src/app/staff/alerts/approval).
+     *
+     * The order is the lock order of AD-18: alert, alert_entry, feed_version, then the delivery rows and the recipient rows `captureRecipients` locks.
      */
-    async approveEntry(actor: AlertActor, ref: EntryRef, shown: ApprovalBinding): Promise<AlertResult<EntryView>> {
-      return change("entry.approved", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
+    async approveEntry(actor: AlertActor, ref: EntryRef, shown: ApprovalRequest): Promise<AlertResult<ApprovalOutcome>> {
+      return change("entry.approved", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<ApprovalOutcome> => {
         const { thread, standing, entry } = await open(tx, actor, ref);
         const row = entry!;
         mustMayApprove(standing, actor, row);
@@ -547,62 +1089,106 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           .set({ status: "approved", approvedBy: actor.staffId, approvedVersion: row.version, approvedHash: row.contentHash })
           .where(eq(alertEntry.id, row.id))
           .returning();
+        let feedVersionNow: number | null = null;
         if (!thread.isDrill) {
           const bumped = await tx.update(feedVersion).set({ version: sql`${feedVersion.version} + 1` }).where(eq(feedVersion.id, 1)).returning({ version: feedVersion.version });
           if (bumped.length !== 1) throw new Error("alerting: feed_version has no row");
+          feedVersionNow = Number(bumped[0].version);
         }
+        // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
+        // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
+        await markApproval(tx, row.id);
+        // The snapshot, in this transaction (AD-7): who gets the text and in which language (`captureRecipients`), their texts queued through the
+        // outbox (`enqueueAlertDeliveries`), and the number of texts it returns by language. What the approver reviewed is compared with that.
+        const snapshot = await queueSnapshot(tx, recipientEntryOf(approved, thread));
+        const reviewed = shown.recipients ?? NO_RECIPIENTS;
+        if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
         await audit.record(tx, {
           action: "entry.approved",
           actorStaffId: actor.staffId,
           subjectType: "alert_entry",
           subjectId: row.id,
           isDrill: thread.isDrill,
-          meta: { entry_id: row.id, version: approved.version, content_hash: row.contentHash! },
+          meta: { entry_id: row.id, version: approved.version, content_hash: row.contentHash!, recipient_count: snapshot.total },
         });
-        return entryOf(approved);
+        return { entry: entryOf(approved), recipients: snapshot, feedVersion: feedVersionNow };
       });
     },
 
     /**
-     * "Try translation again" on a pending entry. In one short transaction it returns the entry to
-     * draft (the caller names the version and hash it was looking at, so a changed entry is refused),
-     * adding the person to `editor_ids`: they can no longer approve it. Then, outside any lock, it
-     * re-translates, renders and hashes the draft through `preparer`. Then, in a second short
-     * transaction, it re-submits as the next version with the new hash, refusing if the draft changed
-     * meanwhile. If preparing fails the entry stays a draft (the person an editor) and Submit is
-     * still there.
+     * The record of an approval form that was refused before any use case ran, because it did not carry what its action needs (the entry's
+     * version and hash, and for an approval the number of people the approver reviewed): a tampered or broken form. Every refusal is recorded
+     * with its reason (S04.07), so this is `entry.approved`, `entry.returned` or `entry.discarded` as refused, with the reason `validation` and
+     * the code `INVALID_FORM`, by the person, on the entry the form names. Nothing is read or changed besides the thread's drill flag.
      */
-    async retryTranslation(actor: AlertActor, ref: EntryRef, seen: ApprovalBinding, preparer: EntryPreparer): Promise<AlertResult<EntryView>> {
-      const returned = await change("entry.returned", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
-        const { thread, standing, entry } = await open(tx, actor, ref);
-        const row = entry!;
-        if (row.status !== "pending_approval") throw new Refused("ENTRY_NOT_PENDING");
-        if (row.version !== seen.version || row.contentHash !== seen.contentHash) throw new Refused("ENTRY_CHANGED");
-        mustAuthor(standing, actor.staffId, contentOf(row));
-        return { view: await returnIn(tx, row, thread, actor, "retranslate"), isDrill: thread.isDrill };
+    async refuseInvalidForm(actor: AlertActor, form: InvalidFormAction, ref: EntryRef): Promise<void> {
+      const [thread] = UUID.test(ref.alertId) ? await db.select({ isDrill: alert.isDrill }).from(alert).where(eq(alert.id, ref.alertId)) : [];
+      await audit.recordRefusal(db, {
+        action: INVALID_FORM_AUDIT_ACTION[form],
+        actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
+        subjectType: "alert_entry",
+        subjectId: UUID.test(ref.entryId) ? ref.entryId : null,
+        isDrill: thread?.isDrill ?? false,
+        meta: { reason: INVALID_FORM_REASON, refusal: INVALID_FORM_CODE },
       });
-      if (!returned.ok) return returned;
-      const draft = returned.value.view;
-      let frozen: FrozenContent;
-      try {
-        frozen = await preparer.prepare(draft.content, { alertId: ref.alertId, entryId: ref.entryId, isDrill: returned.value.isDrill });
-      } catch {
-        await audit.recordRefusal(db, {
-          action: "entry.submitted",
-          actorStaffId: actor.staffId,
-          subjectType: "alert_entry",
-          subjectId: ref.entryId,
-          isDrill: returned.value.isDrill,
-          meta: { reason: AUDIT_REASON.PREPARATION_FAILED },
-        });
-        return { ok: false, error: "PREPARATION_FAILED" };
-      }
-      return change("entry.submitted", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
-        const { thread, standing, entry } = await open(tx, actor, ref);
-        mustBeEditor(entry!, actor.staffId);
-        mustAuthor(standing, actor.staffId, contentOf(entry!));
-        return submitIn(tx, entry!, thread, actor, frozen, draft.content);
-      });
+    },
+
+    // Submit and "Try translation again" have one way in: beginSubmit, the preparation outside every lock, then completeSubmit (or
+    // failSubmit), run by createSubmitter (submit.ts). There is no other use case that freezes an entry, so none can skip the attempt table,
+    // the possible-duplicate check or the refusals of a translation that could not be made.
+    beginSubmit,
+    completeSubmit,
+    failSubmit,
+
+    /** Records one language's result on the running attempt, so a screen can show progress per language. A language that is not one, or an attempt that is not running, is ignored. */
+    async recordProgress(ref: EntryRef, key: string, lang: string, status: string): Promise<void> {
+      if (!(FROZEN_LANGS as readonly string[]).includes(lang) || !UUID.test(ref.entryId)) return;
+      await db
+        .update(alertSubmitAttempt)
+        .set({ progress: sql`${alertSubmitAttempt.progress} || ${JSON.stringify({ [lang]: status })}::jsonb` })
+        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running")));
+    },
+
+    /** Records the budget (milliseconds) the running attempt works to. */
+    async recordBudget(ref: EntryRef, key: string, budgetMs: number): Promise<void> {
+      if (!Number.isInteger(budgetMs) || budgetMs <= 0 || !UUID.test(ref.entryId)) return;
+      await db
+        .update(alertSubmitAttempt)
+        .set({ budgetMs })
+        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running")));
+    },
+
+    /** One thread, as stored; null when there is none. */
+    async getThread(alertId: string): Promise<ThreadView | null> {
+      if (!UUID.test(alertId)) return null;
+      const [row] = await db.select().from(alert).where(eq(alert.id, alertId));
+      return row ? threadOf(row) : null;
+    },
+
+    /**
+     * The entry's authoritative state, read in one snapshot (what a browser that lost the outcome of a submit, or returns to the
+     * entry later, fetches): the thread, the entry as stored, the latest attempt (a `running` one older than the function's time
+     * limit reads as failed) and, once there is one, the frozen translations. Null when there is no such entry.
+     */
+    async entryState(ref: EntryRef): Promise<EntryState | null> {
+      if (!UUID.test(ref.alertId) || !UUID.test(ref.entryId)) return null;
+      return db.transaction(
+        async (tx) => {
+          const [entryRow] = await tx.select().from(alertEntry).where(and(eq(alertEntry.id, ref.entryId), eq(alertEntry.alertId, ref.alertId)));
+          const [threadRow] = await tx.select().from(alert).where(eq(alert.id, ref.alertId));
+          if (!entryRow || !threadRow) return null;
+          const [latest] = await tx.select().from(alertSubmitAttempt).where(eq(alertSubmitAttempt.entryId, ref.entryId)).orderBy(desc(alertSubmitAttempt.startedAt)).limit(1);
+          const translations =
+            entryRow.status === "draft" || entryRow.status === "discarded"
+              ? []
+              : await tx
+                  .select({ lang: alertEntryTranslation.lang, status: alertEntryTranslation.status, machine: alertEntryTranslation.machine })
+                  .from(alertEntryTranslation)
+                  .where(eq(alertEntryTranslation.entryId, ref.entryId));
+          return { thread: threadOf(threadRow), entry: entryOf(entryRow), attempt: latest ? attemptOf(latest, now()) : null, translations };
+        },
+        { isolationLevel: "repeatable read" },
+      );
     },
 
     /** One entry of a thread, as stored; null when there is none. */
@@ -613,6 +1199,106 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         .from(alertEntry)
         .where(and(eq(alertEntry.id, ref.entryId), eq(alertEntry.alertId, ref.alertId)));
       return row ? entryOf(row) : null;
+    },
+
+    /**
+     * What the approval view shows (O-05, O-07; S04.07), read in one repeatable-read snapshot: the thread, the entry as stored with its frozen web texts and
+     * text messages, the author's role now, the possible duplicate and, for a pending entry, the number of people the text reaches as it stands now: the
+     * reviewed count the approver's Approve then names. Null when there is no such entry.
+     */
+    async review(ref: EntryRef): Promise<EntryReview | null> {
+      if (!UUID.test(ref.alertId) || !UUID.test(ref.entryId)) return null;
+      return db.transaction(
+        async (tx) => {
+          const [entryRow] = await tx.select().from(alertEntry).where(and(eq(alertEntry.id, ref.entryId), eq(alertEntry.alertId, ref.alertId)));
+          const [threadRow] = await tx.select().from(alert).where(eq(alert.id, ref.alertId));
+          if (!entryRow || !threadRow) return null;
+          const texts =
+            entryRow.status === "draft" || entryRow.status === "discarded"
+              ? []
+              : await tx
+                  .select({ lang: alertEntryTranslation.lang, body: alertEntryTranslation.body, status: alertEntryTranslation.status, machine: alertEntryTranslation.machine, model: alertEntryTranslation.model })
+                  .from(alertEntryTranslation)
+                  .where(eq(alertEntryTranslation.entryId, ref.entryId))
+                  .orderBy(alertEntryTranslation.lang);
+          const author = await staff.standing(tx, entryRow.authorId);
+          const thread = threadOf(threadRow);
+          const reached: RecipientCount =
+            entryRow.status === "pending_approval" ? await recipients.count(recipientEntryOf(entryRow, threadRow), tx) : { open: false, ...NO_RECIPIENTS };
+          let duplicate: EntryReview["duplicate"] = null;
+          if (entryRow.possibleDuplicateOf) {
+            const [other] = await tx
+              .select({ id: alertEntry.id })
+              .from(alertEntry)
+              .where(and(eq(alertEntry.alertId, entryRow.possibleDuplicateOf), inArray(alertEntry.status, ["pending_approval", "approved"])))
+              .orderBy(desc(alertEntry.createdAt))
+              .limit(1);
+            duplicate = { alertId: entryRow.possibleDuplicateOf, entryId: other?.id ?? null };
+          }
+          return {
+            thread,
+            entry: entryOf(entryRow),
+            authorRole: author?.role ?? null,
+            texts,
+            sms: (entryRow.smsBodies ?? {}) as Record<string, FrozenSmsBody>,
+            recipients: reached,
+            duplicate,
+          };
+        },
+        { isolationLevel: "repeatable read" },
+      );
+    },
+
+    /**
+     * What waits for a person and what they have in hand (S04.07's share of the Hub home; S04.10 builds the screen out). `waiting`: the pending
+     * entries of open threads that a Coordinator or an Admin may approve (not one they edited), longest waiting first. `mine`: the open drafts and pending
+     * entries the person is an editor of, newest first, with the note an approver wrote when they sent one back. Nothing is read for another role.
+     */
+    async incidents(actor: Pick<AlertActor, "staffId">): Promise<Incidents> {
+      if (!UUID.test(actor.staffId)) return { waiting: [], mine: [] };
+      const standing = await staff.standing(db, actor.staffId);
+      if (!standing || standing.status !== "active") return { waiting: [], mine: [] };
+      const columns = {
+        alertId: alertEntry.alertId,
+        entryId: alertEntry.id,
+        kind: alertEntry.kind,
+        status: alertEntry.status,
+        types: alertEntry.types,
+        isDrill: alert.isDrill,
+        version: alertEntry.version,
+        submittedAt: alertEntry.submittedAt,
+        returnedNote: alertEntry.returnedNote,
+      };
+      const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null }): IncidentRow => ({
+        alertId: row.alertId,
+        entryId: row.entryId,
+        kind: row.kind as EntryKind,
+        status: row.status as IncidentRow["status"],
+        types: row.types,
+        isDrill: row.isDrill,
+        version: row.version,
+        submittedAt: row.submittedAt,
+        returnedNote: row.returnedNote,
+      });
+      const open = and(eq(alert.status, "open"), inArray(alertEntry.status, ["draft", "pending_approval"]));
+      const mine = await db
+        .select(columns)
+        .from(alertEntry)
+        .innerJoin(alert, eq(alert.id, alertEntry.alertId))
+        .where(and(open, sql`${actor.staffId}::uuid = any (${alertEntry.editorIds})`))
+        .orderBy(desc(alertEntry.updatedAt))
+        .limit(100);
+      const mayApprove = standing.role === "coordinator" || standing.role === "admin";
+      const waiting = mayApprove
+        ? await db
+            .select(columns)
+            .from(alertEntry)
+            .innerJoin(alert, eq(alert.id, alertEntry.alertId))
+            .where(and(eq(alert.status, "open"), eq(alertEntry.status, "pending_approval"), sql`not (${actor.staffId}::uuid = any (${alertEntry.editorIds}))`))
+            .orderBy(alertEntry.submittedAt)
+            .limit(100)
+        : [];
+      return { waiting: waiting.map(rowOf), mine: mine.map(rowOf) };
     },
   };
 }

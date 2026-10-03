@@ -1,4 +1,6 @@
+import { createHash } from "node:crypto";
 import { canonicalAudience, type Audience } from "../../../contracts/audience";
+import { ALERT_TEXT_MAX, NEIGHBOURHOOD_ONLY_TYPES } from "../../../contracts/alertContent";
 import { RsnSchema } from "../../../contracts/places";
 
 /**
@@ -10,14 +12,21 @@ import { RsnSchema } from "../../../contracts/places";
 export const PHASES = ["problem", "in_progress"] as const;
 export type Phase = (typeof PHASES)[number];
 
-/** At most 600 characters of English text (epic E04, "Alert text limit"). */
-export const ALERT_TEXT_MAX = 600;
+/** At most 600 characters of English text (epic E04, "Alert text limit"), and the neighbourhood-wide types: the rules the Hub's screens say too (src/contracts/alertContent.ts). */
+export { ALERT_TEXT_MAX, NEIGHBOURHOOD_ONLY_TYPES };
 
-/** Heat, smoke and winter storm: neighbourhood audience only, authored by Coordinators and Admins only. */
-export const NEIGHBOURHOOD_ONLY_TYPES = ["heat", "smoke", "winter"] as const;
+/**
+ * Valid-until is at most 7 calendar days ahead (proposed engineering budget, epic E04). "Days" are counted on the Toronto wall
+ * clock by platform/clock#addTorontoDays (the spine's Time convention: never by adding milliseconds, which is an hour out
+ * across the clock changes), so the latest instant comes into `validUntilRefusal` from the application layer.
+ */
+export const VALID_UNTIL_MAX_DAYS = 7;
 
-/** Valid-until is at most 7 days ahead (proposed engineering budget, epic E04). */
-export const VALID_UNTIL_MAX_MS = 7 * 24 * 60 * 60 * 1000;
+/** "Until resolved" is 24 elapsed hours from now (a duration, so milliseconds are right), renewed by each update (epic E04, Valid until). */
+export const UNTIL_RESOLVED_MS = 24 * 60 * 60 * 1000;
+
+/** How the author chose the valid-until: "until resolved" (24 elapsed hours from the press, renewed by each save and submit) or a date and time. */
+export type ValidUntilMode = "at" | "resolved";
 
 export interface EntryContent {
   /** English, the authoring language. */
@@ -28,6 +37,11 @@ export interface EntryContent {
   audience: Audience;
   phase: Phase;
   validUntil: Date;
+  /**
+   * How the valid-until was chosen: the composer opens on it. Not part of what is frozen or hashed (the instant is), nor of whether two
+   * contents are the same. Not given (a caller that has no such choice) means "at" for a new draft and the draft's own for a save.
+   */
+  validUntilMode?: ValidUntilMode;
 }
 
 export type ContentRefusal =
@@ -89,6 +103,22 @@ export function sameContent(a: EntryContent, b: EntryContent): boolean {
   );
 }
 
+/**
+ * A fingerprint of a draft's content (SHA-256 of its stable JSON): what saving a draft answers with and a submit names, so that a submit
+ * can refuse a draft that is no longer the one the author saved and saw (someone else saved in between). Two contents have the same
+ * fingerprint exactly when `sameContent` says they are the same.
+ */
+export function draftFingerprint(content: EntryContent): string {
+  const stable = stableJson({
+    text: content.text,
+    phase: content.phase,
+    validUntil: content.validUntil.getTime(),
+    types: [...content.types].sort(),
+    audience: content.audience,
+  });
+  return createHash("sha256").update(stable, "utf8").digest("hex");
+}
+
 /** JSON with object keys sorted, so equal values compare equal whatever their key order (jsonb reorders keys). */
 export function stableJson(value: unknown): string {
   if (Array.isArray(value)) return `[${value.map(stableJson).join(",")}]`;
@@ -104,10 +134,12 @@ export function stableJson(value: unknown): string {
 
 export type ValidUntilRefusal = "VALID_UNTIL_PAST" | "VALID_UNTIL_TOO_FAR";
 
-/** Required in the future at submit and again at approval, and at most 7 days ahead. */
-export function validUntilRefusal(validUntil: Date, now: Date): ValidUntilRefusal | null {
-  const ahead = validUntil.getTime() - now.getTime();
-  if (ahead <= 0) return "VALID_UNTIL_PAST";
-  if (ahead > VALID_UNTIL_MAX_MS) return "VALID_UNTIL_TOO_FAR";
+/**
+ * Required in the future when a draft is saved, at submit and again at approval, and no later than `latest` (7 Toronto
+ * calendar days after `now`, from platform/clock#addTorontoDays).
+ */
+export function validUntilRefusal(validUntil: Date, now: Date, latest: Date): ValidUntilRefusal | null {
+  if (validUntil.getTime() <= now.getTime()) return "VALID_UNTIL_PAST";
+  if (validUntil.getTime() > latest.getTime()) return "VALID_UNTIL_TOO_FAR";
   return null;
 }

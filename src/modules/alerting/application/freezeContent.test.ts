@@ -6,7 +6,7 @@ import { SMS_MAX_BODY_LENGTH, countSms } from "../../messaging";
 import { ALERT_TEXT_MAX, type EntryContent } from "../domain/content";
 import { contentHash } from "../domain/hash";
 import { freezeContent, type FreezeInput } from "./freezeContent";
-import type { FrozenTranslation } from "./ports";
+import type { FrozenTranslation } from "../domain/translations";
 
 const AUDIENCE: Audience = { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }], groups: [], types: ["power"] };
 const TEXT = "Power is out on floors 4 to 6. Toronto Hydro is on site.";

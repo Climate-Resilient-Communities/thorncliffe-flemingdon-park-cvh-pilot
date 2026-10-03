@@ -34,7 +34,7 @@ describe("audit actions", () => {
   });
 
   it("gives no action a field that could hold a secret, a contact detail or a message", () => {
-    const FORBIDDEN = /password|passcode|token|secret|otp|totp|phone|number|email|mail|body|message|text|username|name|ip/i;
+    const FORBIDDEN = /password|passcode|token|secret|otp|totp|phone|number|email|mail|body|message|text|username|name|(^|_)ip($|_)/i;
     for (const [action, schema] of Object.entries(AUDIT_META)) {
       for (const key of Object.keys((schema as z.ZodObject).shape)) {
         expect(key, `${action}.meta.${key}`).not.toMatch(FORBIDDEN);
@@ -93,6 +93,8 @@ describe("toAuditRecord", () => {
     ["sms.test_sent", { http_status: 400, provider_error_code: 30032, reason: "provider_error" }],
     ["sms.test_sent", { http_status: 201, provider_status: "queued", twilio_sid: `SM${"0".repeat(32)}` }],
     ["sms.test_sent", { reason: "provider_error", outcome_unknown: true }],
+    // S06.06: the test text is refused while all texts are paused.
+    ["sms.test_sent", { reason: "paused" }],
     ["sms.test_attempted", {}],
   ])("accepts %s with %j", (action, meta) => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "ok")).not.toThrow();
@@ -443,9 +445,29 @@ describe("alert lifecycle actions (S04.03)", () => {
     ["entry.submitted", { entry_id: ENTRY, version: 1, content_hash: HASH_WITH_LONG_DIGIT_RUN }, "alert_entry"],
     ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "retranslate" }, "alert_entry"],
     ["entry.discarded", { entry_id: ENTRY, version: 0, from: "draft" }, "alert_entry"],
-    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64) }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64), recipient_count: 0 }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64), recipient_count: 120 }, "alert_entry"],
+    ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", with_note: true }, "alert_entry"],
   ])("accepts %s with its strict meta, a content hash included", (action, meta, subjectType) => {
     expect(toAuditRecord(alertEvent(action, meta, subjectType), "ok").meta).toEqual(meta);
+  });
+
+  it("accepts a refusal with its reason and the code of the rule that refused (S04.07), and a refused approval whose count changed with both counts", () => {
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "validation", refusal: "VALID_UNTIL_PAST" }), "refused").meta).toEqual({ reason: "validation", refusal: "VALID_UNTIL_PAST" });
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "conflict", refusal: "RECIPIENT_COUNT_CHANGED", recipient_count: 42, reviewed_count: 40 }), "refused").meta).toEqual({
+      reason: "conflict",
+      refusal: "RECIPIENT_COUNT_CHANGED",
+      recipient_count: 42,
+      reviewed_count: 40,
+    });
+    for (const action of ["alert.created", "entry.submitted", "entry.returned", "entry.discarded"]) {
+      expect(toAuditRecord(alertEvent(action, { reason: "conflict", refusal: "ENTRY_CHANGED" }, action === "alert.created" ? "alert" : "alert_entry"), "refused").meta).toEqual({ reason: "conflict", refusal: "ENTRY_CHANGED" });
+    }
+  });
+
+  it("rejects a refusal code that is text, and a return that carries its note", () => {
+    expect(() => toAuditRecord(alertEvent("entry.approved", { reason: "conflict", refusal: "This alert changed." }), "refused")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(alertEvent("entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", with_note: "Add the floors." }), "ok")).toThrow(AuditRecordError);
   });
 
   it("accepts a refusal with only its reason, including alert_closed", () => {
@@ -488,5 +510,50 @@ describe("alert lifecycle actions (S04.03)", () => {
     expect(findSensitiveValue({ nested: { content_hash: hidden }, list: [hidden] })).toBe("meta.nested.content_hash");
     expect(findSensitiveValue({ list: [hidden] })).toBe("meta.list[0]");
     expect(findSensitiveValue({ entry_id: hidden })).toBe("meta.entry_id");
+  });
+});
+
+describe("sending.paused and sending.resumed (S06.06)", () => {
+  const control = (action: "sending.paused" | "sending.resumed", meta: Record<string, unknown>) =>
+    event({ action, subjectType: "messaging_control", subjectId: "1", meta } as Partial<AuditEvent>);
+
+  it("record a pause with the counts of the texts it holds and of those already handed off, on the one switch", () => {
+    expect(toAuditRecord(control("sending.paused", { waiting: 12, handed_off: 3 }), "ok")).toMatchObject({
+      action: "sending.paused",
+      actorStaffId: STAFF,
+      subjectType: "messaging_control",
+      subjectId: "1",
+      outcome: "ok",
+      meta: { waiting: 12, handed_off: 3 },
+    });
+  });
+
+  it("record a resume with the count of the texts it lets go", () => {
+    expect(toAuditRecord(control("sending.resumed", { waiting: 12 }), "ok").meta).toEqual({ waiting: 12 });
+    expect(toAuditRecord(control("sending.resumed", { waiting: 0 }), "ok").meta).toEqual({ waiting: 0 });
+  });
+
+  it.each([
+    ["a pause with no waiting count", "sending.paused", { handed_off: 3 }, "meta is missing waiting"],
+    ["a pause with no handed-off count", "sending.paused", { waiting: 3 }, "meta is missing handed_off"],
+    ["a resume with no waiting count", "sending.resumed", {}, "meta is missing waiting"],
+  ])("refuse an ok record of %s", (_, action, meta, problem) => {
+    expect(() => toAuditRecord(control(action as "sending.paused", meta), "ok")).toThrow(problem);
+  });
+
+  it("record a refusal with only its reason: a reason that was not given, or a pause or resume that changed nothing", () => {
+    expect(toAuditRecord(control("sending.paused", { reason: "validation" }), "refused").meta).toEqual({ reason: "validation" });
+    expect(toAuditRecord(control("sending.paused", { reason: "conflict" }), "refused").meta).toEqual({ reason: "conflict" });
+    expect(toAuditRecord(control("sending.resumed", { reason: "conflict" }), "refused").meta).toEqual({ reason: "conflict" });
+  });
+
+  it("have nowhere to put the reason the Admin typed, which can hold anything: it lives on the switch while the pause lasts", () => {
+    expect(() => toAuditRecord(control("sending.paused", { waiting: 1, handed_off: 0, why: "Wrong alert sent to 416-555-0123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(control("sending.paused", { waiting: 1, handed_off: 0, details: "Twilio is down" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("refuse a count that is not a count", () => {
+    expect(() => toAuditRecord(control("sending.paused", { waiting: -1, handed_off: 0 }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(control("sending.resumed", { waiting: "12" }), "ok")).toThrow(AuditRecordError);
   });
 });

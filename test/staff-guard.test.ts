@@ -18,6 +18,11 @@ const unreachable = vi.hoisted(() => () => {
 });
 
 vi.mock("../src/app/staff/session", () => ({ currentStaffSession: async () => session.current }));
+// The approval's guard reads who edited the entry named in the request (S04.07); here no entry is there, so the guard's facts are the neutral ones
+// and what is under test is the session, the gate, the role and the authenticator level, before the action's own code.
+vi.mock("../src/app/staff/alerts", () => ({ alerting: () => ({ getEntry: async () => null }), alertSubmitter: unreachable }));
+// A rule that depends on the request's facts also loads the person's assignments; there are none to load here.
+vi.mock("../src/app/staff/scope", () => ({ assignmentsOf: async () => [] }));
 vi.mock("../src/app/staff/identity", () => ({
   identity: () => ({
     refuseUnauthenticated: async (...args: unknown[]) => void audits.unauthenticated.push(args),
@@ -325,6 +330,12 @@ const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/providers/actions.ts": "An Admin must sign in with their authenticator code to change providers. Sign in again and enter the code.",
   "src/app/staff/coverage/actions.ts": "An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
   "src/app/staff/directory/actions.ts": "An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.",
+  "src/app/staff/alerts/approval/actions.ts": "Approving needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
+  "src/app/staff/texts/actions.ts": "An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.",
+};
+/** What a role the policy refuses is told, where it is not "Only an Admin can ...": a Coordinator can approve too, but not what they wrote or changed (S04.07). */
+const FORBIDDEN_MESSAGE: Record<string, RegExp> = {
+  "src/app/staff/alerts/approval/actions.ts": /^Only a Coordinator or an Admin who did not write or change this alert can approve it\./,
 };
 
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {
@@ -373,14 +384,15 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
         for (const gate of SETUP_GATES.filter((candidate) => admits(spec.access, candidate))) {
           session.current = { ...atGate(gate, "aal1"), role };
           const answer = await action({ status: "idle" }, new FormData());
-          if (can(role, spec.privileged)) {
+          // A rule that depends on the entry (approval: not an editor of it) is asked with the neutral entry the mocked reader returns for "none".
+          if (can(role, spec.privileged, { actorId: atGate(gate).staffId, entry: { authorId: "00000000-0000-0000-0000-000000000000", editorIds: [], status: "pending_approval" } })) {
             expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({
               status: "refused",
               message: AAL2_MESSAGE[relative(file)] ?? GENERIC_AAL2_MESSAGE,
             });
             expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
           } else {
-            expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({ status: "refused", message: expect.stringMatching(/^Only an Admin can /) });
+            expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({ status: "refused", message: expect.stringMatching(FORBIDDEN_MESSAGE[relative(file)] ?? /^Only an Admin can /) });
             expect(audits.policy.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged, "forbidden"]);
           }
         }

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ENTRY_STATUSES, ENTRY_TRANSITIONS, checkApproval, isFinal, requestTransition, type ApprovalFacts, type EntryStatus } from "./lifecycle";
+import { ENTRY_STATUSES, ENTRY_TRANSITIONS, checkApproval, checkShownBinding, isFinal, requestTransition, type ApprovalFacts, type EntryStatus } from "./lifecycle";
 
 const ALLOWED: readonly [EntryStatus | null, EntryStatus][] = [
   [null, "draft"],
@@ -82,10 +82,15 @@ describe("approval", () => {
     expect(checkApproval(facts())).toBeNull();
   });
 
-  it("refuses an entry that is not pending", () => {
-    for (const status of ENTRY_STATUSES.filter((s) => s !== "pending_approval")) {
+  it("refuses an entry that is not waiting any more (approved, discarded, superseded, published by the system) as not pending", () => {
+    for (const status of ENTRY_STATUSES.filter((s) => s !== "pending_approval" && s !== "draft")) {
       expect(checkApproval(facts({ status })), status).toBe("ENTRY_NOT_PENDING");
     }
+  });
+
+  it("refuses an entry that went back to a draft since the approver read it as changed (This alert changed. Review it again.), whatever it holds", () => {
+    expect(checkApproval(facts({ status: "draft", contentHash: null }))).toBe("ENTRY_CHANGED");
+    expect(checkApproval(facts({ status: "draft" }))).toBe("ENTRY_CHANGED");
   });
 
   it("refuses the author and every editor", () => {
@@ -108,8 +113,32 @@ describe("approval", () => {
   });
 
   it("checks in order: not pending, then editor, then changed, then valid-until", () => {
-    expect(checkApproval(facts({ status: "draft", approverId: AUTHOR, shownVersion: 1, validUntil: NOW }))).toBe("ENTRY_NOT_PENDING");
+    expect(checkApproval(facts({ status: "approved", approverId: AUTHOR, shownVersion: 1, validUntil: NOW }))).toBe("ENTRY_NOT_PENDING");
+    expect(checkApproval(facts({ status: "draft", approverId: AUTHOR, shownVersion: 1, validUntil: NOW }))).toBe("EDITOR_CANNOT_APPROVE");
+    expect(checkApproval(facts({ status: "draft", validUntil: NOW }))).toBe("ENTRY_CHANGED");
     expect(checkApproval(facts({ approverId: AUTHOR, shownVersion: 1, validUntil: NOW }))).toBe("EDITOR_CANNOT_APPROVE");
     expect(checkApproval(facts({ shownVersion: 1, validUntil: NOW }))).toBe("ENTRY_CHANGED");
+  });
+});
+
+describe("the version and hash an approver was shown", () => {
+  const HASH = "a".repeat(64);
+  const binding = (over: Partial<Parameters<typeof checkShownBinding>[0]> = {}) => ({ status: "pending_approval" as EntryStatus, version: 3, contentHash: HASH, shownVersion: 3, shownHash: HASH, ...over });
+
+  it("holds for the pending entry with that version and hash", () => {
+    expect(checkShownBinding(binding())).toBeNull();
+  });
+
+  it("is a changed entry when it went back to a draft (pulled back by its author or returned by an approver), or has another version or hash", () => {
+    expect(checkShownBinding(binding({ status: "draft", contentHash: null }))).toBe("ENTRY_CHANGED");
+    expect(checkShownBinding(binding({ shownVersion: 2 }))).toBe("ENTRY_CHANGED");
+    expect(checkShownBinding(binding({ shownHash: "b".repeat(64) }))).toBe("ENTRY_CHANGED");
+    expect(checkShownBinding(binding({ contentHash: null }))).toBe("ENTRY_CHANGED");
+  });
+
+  it("is not pending for an entry that was approved, discarded or closed out since: another approver was first", () => {
+    for (const status of ["approved", "discarded", "superseded", "published_system"] as const) {
+      expect(checkShownBinding(binding({ status })), status).toBe("ENTRY_NOT_PENDING");
+    }
   });
 });

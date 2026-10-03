@@ -31,6 +31,7 @@ describe("describeOutcome", () => {
 
   it.each([
     ["not_allowlisted", "That phone is not on the approved list. Nothing was sent."],
+    ["paused", "Texts are paused, and this page stops with them. Nothing was sent. Resume texts first, then try again."],
     ["duplicate_number", "A test text went to that phone in the last 5 minutes. Nothing was sent. Wait, then try again."],
     ["duplicate_request", "This request was already sent. Nothing more was sent. Press the button again to send a new one."],
     ["not_available", "Texts cannot be sent from here. Nothing was sent."],

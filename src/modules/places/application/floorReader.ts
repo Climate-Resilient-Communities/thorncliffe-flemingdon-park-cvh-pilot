@@ -1,6 +1,6 @@
 // The floors of a building as other modules read them (S01.14): identity's assignments refer to floors by
 // id and may not import places (AD-2), so the composition root hands identity this reader as its port.
-import { asc, eq } from "drizzle-orm";
+import { asc, eq, inArray } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
 import { building, buildingFloor, neighbourhood } from "../adapters/schema";
 
@@ -34,4 +34,14 @@ export async function floorsOfBuilding(executor: DbExecutor, rsn: string, option
 export async function neighbourhoodIds(executor: DbExecutor): Promise<string[]> {
   const rows = await executor.select({ id: neighbourhood.id }).from(neighbourhood).orderBy(asc(neighbourhood.id));
   return rows.map((row) => row.id);
+}
+
+/**
+ * The neighbourhood of each building given, by rsn (a building that does not exist is left out): what the possible-duplicate
+ * check of an alert needs to compare a neighbourhood audience with a building one (S04.05). alerting may not import the table.
+ */
+export async function neighbourhoodsOfBuildings(executor: DbExecutor, rsns: readonly string[]): Promise<Map<string, string>> {
+  if (rsns.length === 0) return new Map();
+  const rows = await executor.select({ rsn: building.rsn, neighbourhoodId: building.neighbourhoodId }).from(building).where(inArray(building.rsn, [...rsns]));
+  return new Map(rows.map((row) => [row.rsn, row.neighbourhoodId]));
 }
