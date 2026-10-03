@@ -10,7 +10,8 @@
 --     target becomes `superseded` only by a change that happens in the same transaction as the approval of a correction or a withdrawal that names it.
 --     So a direct `update alert_entry set status = 'superseded'` with the app's credentials is refused, and two corrections of one entry cannot both be
 --     approved while the use case supersedes the target in that same transaction (`approveEntry` does; nothing else is allowed to). `superseded` is final: no transition leaves it.
---  3. The resident view `nondrill_alert_entry` gains `supersedes_id` (appended: a view the previous release reads keeps its columns). The web shows the
+--  3. A new resident view `nondrill_alert_entry_v2` carries `supersedes_id` beside the columns of `nondrill_alert_entry`, which is left exactly as it is
+--     (the previous release reads it during the deploy window; a changed definition is a contract change, so a later release removes it once nothing reads it). The web shows the
 --     correction above the original marked "Corrected", and a withdrawn entry as "Withdrawn" with the reason in its place (the withdrawal's own text,
 --     which is why the reason code itself stays out of the view and out of the feed: phones in the field parse the feed strictly).
 
@@ -295,9 +296,9 @@ $$;
 revoke all on function alert_entry_guard() from public, anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------------------------
--- The resident view: the entry a correction or a withdrawal replaces (an appended column)
+-- The resident view: the entry a correction or a withdrawal replaces (a new, versioned view; nondrill_alert_entry is unchanged)
 -- ---------------------------------------------------------------------------------------------
-create or replace view nondrill_alert_entry with (security_invoker = true) as
+create view nondrill_alert_entry_v2 with (security_invoker = true) as
   select
     e.id,
     e.alert_id,
@@ -317,3 +318,5 @@ create or replace view nondrill_alert_entry with (security_invoker = true) as
   join alert a on a.id = t.id
   where e.web_published_at is not null
     and e.status in ('pending_approval', 'approved', 'superseded', 'published_system');
+revoke all on table nondrill_alert_entry_v2 from public, anon, authenticated, service_role;
+grant select on table nondrill_alert_entry_v2 to cvh_app;
