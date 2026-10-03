@@ -367,6 +367,17 @@ export function ComposerBody({
     <Stack gap={screen.mode === "ack" ? "section-hub-review" : "section-hub"}>
       {header}
       {screen.notice && saveState.status === "idle" && <p role="status">{screen.notice}</p>}
+      {screen.returned && (
+        <section aria-labelledby="returned-title" data-testid="returned-note">
+          <Stack gap="related">
+            <h2 id="returned-title">{screen.returned.title}</h2>
+            <p>{screen.returned.lead}</p>
+            <p role="note" className="hub-flag hub-wrap hub-preline">
+              {screen.returned.note}
+            </p>
+          </Stack>
+        </section>
+      )}
       {screen.failure && ui.phase === "idle" && <Problem id="composer-failure" message={screen.failure} />}
       <Problem id={errorId} message={problem ?? (pullState.status === "refused" ? pullState.message : null)} />
       {busy && (

@@ -46,6 +46,25 @@
     overflow-wrap: anywhere;
   }
 
+  /* A note a person wrote: its own line breaks are kept (S04.07), and it wraps inside the column like any other text. */
+  .hub-preline {
+    white-space: pre-line;
+  }
+
+  /*
+   * A frozen text, shown as it goes out (S04.07): the English text, a language's web text and its text message. Line breaks and runs of spaces
+   * are kept, as the renderer and the phone keep them, so the approver reads the text as residents get it; it still wraps inside the column.
+   */
+  .hub-prewrap {
+    white-space: pre-wrap;
+  }
+
+  /* The line that opens a language (S04.07): a touch target the width of its column, the pointer over it, its text wrapping inside it. */
+  .hub-summary {
+    cursor: pointer;
+    overflow-wrap: anywhere;
+  }
+
   /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
   .hub-list-item {
     padding-block-end: var(--gap-related);

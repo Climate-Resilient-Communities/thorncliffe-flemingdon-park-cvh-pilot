@@ -82,7 +82,7 @@ describe("the permission test list", () => {
       for (const role of STAFF_ROLES) {
         // Out of the gate's reach is the setup sequence's refusal; otherwise the row agrees with can().
         if (row.expected[role] === "setup_incomplete") continue;
-        expect(row.expected[role] === "allowed", `${row.id} as ${role}`).toBe(can(role, row.action));
+        expect(row.expected[role] === "allowed", `${row.id} as ${role}`).toBe(can(role, row.action, row.policyContext));
       }
       if (row.writes === "business") expect(row.expected.director, `${row.id}: a Director may not write business data`).toBe("forbidden");
       if (row.kind === "action") expect(row.writes, `${row.id}: a server action acts`).not.toBe("none");

@@ -1,7 +1,8 @@
 // Drizzle tables of the alerting module (AD-2: only tables this module owns). Written by hand to
-// match db/migrations/20261002250000_alert_lifecycle.sql; test/db/drift.db.test.ts compares them
-// with the migrated database. The state-machine triggers, the grants (column-level updates for
-// cvh_app, nothing for anyone else) and the nondrill_alert view live only in the migration.
+// match db/migrations/20261002250000_alert_lifecycle.sql (and the later migrations that add to them);
+// test/db/drift.db.test.ts compares them with the migrated database. The state-machine triggers, the
+// grants (column-level updates for cvh_app, nothing for anyone else), the nondrill_alert view and the
+// approval timing views (S04.07) live only in the migrations.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, foreignKey, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
@@ -71,6 +72,8 @@ export const alertEntry = pgTable(
     smsBodies: jsonb("sms_bodies"),
     submittedAt: timestamp("submitted_at", { withTimezone: true }),
     returnedFor: text("returned_for"),
+    /** S04.07: the note an approver wrote when they sent the entry back to its author; exists exactly while `returnedFor` is `return` (db/migrations/20261003300000_alert_approval.sql). */
+    returnedNote: text("returned_note"),
     approvedBy: uuid("approved_by"),
     approvedAt: timestamp("approved_at", { withTimezone: true }),
     approvedVersion: integer("approved_version"),
@@ -116,6 +119,8 @@ export const alertEntry = pgTable(
     ),
     check("alert_entry_approved_has_approval", sql`${t.status} <> 'approved' or (${t.approvedBy} is not null and ${t.webPublishedAt} is not null)`),
     check("alert_entry_unapproved_has_none", sql`${t.status} not in ('draft', 'pending_approval', 'discarded') or ${t.approvedBy} is null`),
+    check("alert_entry_returned_note_valid", sql`${t.returnedNote} is null or (btrim(${t.returnedNote}) <> '' and char_length(${t.returnedNote}) <= 500)`),
+    check("alert_entry_return_has_note", sql`((${t.returnedFor} = 'return') is true) = (${t.returnedNote} is not null)`),
     check("alert_entry_returned_only_in_draft", sql`${t.status} not in ('pending_approval', 'approved') or ${t.returnedFor} is null`),
     foreignKey({ name: "alert_entry_author_id_fkey", columns: [t.authorId], foreignColumns: [staffAccountKey.id] }),
     foreignKey({ name: "alert_entry_approved_by_fkey", columns: [t.approvedBy], foreignColumns: [staffAccountKey.id] }),

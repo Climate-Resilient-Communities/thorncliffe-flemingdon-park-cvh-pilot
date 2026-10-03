@@ -48,4 +48,12 @@ export type AlertRefusal =
   | "FLOOR_NOT_IN_BUILDING"
   | "FLOOR_RANGE_REVERSED"
   | "FLOOR_RANGE_INCOMPLETE"
-  | "GROUP_UNKNOWN";
+  | "GROUP_UNKNOWN"
+  /**
+   * S04.07, the approval: the number of people who will get the text (the recipient snapshot taken inside the approval's transaction) is not the
+   * number the approver reviewed, so nothing was approved and they review the new number first; and the note an approver writes when they
+   * send an entry back to its author is missing or too long.
+   */
+  | "RECIPIENT_COUNT_CHANGED"
+  | "NOTE_REQUIRED"
+  | "NOTE_TOO_LONG";

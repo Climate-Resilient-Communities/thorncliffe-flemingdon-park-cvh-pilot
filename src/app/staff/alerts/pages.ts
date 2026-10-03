@@ -12,3 +12,9 @@ export const isComposerFrom = (value: unknown): value is ComposerFrom => value =
 /** The composer of a draft, from where the person came. */
 export const composerHref = (from: ComposerFrom, ref: { alertId: string; entryId: string }): string =>
   `${from === "ack" ? ACK_PAGE : COMPOSE_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
+
+/** The approval view (O-05, O-07; S04.07): where a second person reads exactly what goes out and approves, returns or discards it. */
+export const APPROVE_PAGE = "/staff/alerts/approve";
+
+/** The approval view of an entry. */
+export const approveHref = (ref: { alertId: string; entryId: string }): string => `${APPROVE_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;

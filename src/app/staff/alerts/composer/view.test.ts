@@ -45,6 +45,7 @@ function stateOf(overrides: Overrides = {}): EntryState {
       contentHash: null,
       submittedAt: null,
       returnedFor: null,
+      returnedNote: null,
       approvedBy: null,
       approvedAt: null,
       webPublishedAt: null,
