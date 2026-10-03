@@ -90,6 +90,8 @@ const rsn = z.string().regex(/^[0-9]{1,9}$/);
 const floorLabel = z.string().regex(/^[A-Za-z0-9 -]{1,8}$/);
 /** A SHA-256 as 64 lower-case hex digits (an entry's content hash). */
 const sha256 = z.string().regex(/^[0-9a-f]{64}$/);
+/** The code of a lifecycle refusal (`ENTRY_CHANGED`, `VALID_UNTIL_PAST`, ...): a code, never text (S04.07). */
+const refusalCode = z.string().regex(/^[A-Z][A-Z0-9_]{2,40}$/);
 /** An alert entry's kind (AD-5). */
 const entryKind = z.enum(["ack", "update", "correction", "withdrawal", "final"]);
 /** The floors of an assignment by id; null is every floor of the building. */
@@ -185,11 +187,21 @@ export const AUDIT_META = {
   // Alert threads and entries (S04.03). `alert.created` is on the thread (subject `alert`) and names its first
   // draft; the others are on the entry (subject `alert_entry`). `content_hash` is the frozen text's SHA-256, never
   // text. `entry_id` (and `version`, `content_hash` where the entry has them) are required on an ok record.
-  "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional() }),
-  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
-  "entry.returned": meta({ entry_id: id.optional(), version: count.optional(), returned_for: z.enum(["edit", "return", "retranslate"]).optional() }),
-  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional() }),
-  "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional() }),
+  // S04.07: a refusal also names its code (`refusal`: ENTRY_CHANGED, VALID_UNTIL_PAST, RECIPIENT_COUNT_CHANGED, ...), so the record
+  // says which rule refused and not only the group of reasons it belongs to; an approval records `recipient_count`, the number of
+  // people its recipient snapshot captured (AD-7, AR-11); a return records that it carried a note (the note itself is free text:
+  // it stays on the entry and never goes into the audit trail).
+  "alert.created": meta({ entry_id: id.optional(), kind: entryKind.optional(), types: z.array(code).max(9).optional(), refusal: refusalCode.optional() }),
+  "entry.submitted": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), refusal: refusalCode.optional() }),
+  "entry.returned": meta({
+    entry_id: id.optional(),
+    version: count.optional(),
+    returned_for: z.enum(["edit", "return", "retranslate"]).optional(),
+    with_note: z.literal(true).optional(),
+    refusal: refusalCode.optional(),
+  }),
+  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional(), refusal: refusalCode.optional() }),
+  "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), recipient_count: count.optional(), reviewed_count: count.optional(), refusal: refusalCode.optional() }),
   // The directory release (S02.05): an Admin publishes the directory as one numbered release. The subject is the
   // release (type `directory_release`, its number); `meta` holds counts only. The release number and the counts are
   // required on an ok record (REQUIRED_WHEN_OK), absent on a refusal, which carries its reason.
@@ -247,7 +259,7 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "entry.submitted": ["entry_id", "version", "content_hash"],
   "entry.returned": ["entry_id", "version", "returned_for"],
   "entry.discarded": ["entry_id", "from"],
-  "entry.approved": ["entry_id", "version", "content_hash"],
+  "entry.approved": ["entry_id", "version", "content_hash", "recipient_count"],
   "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
 };
 

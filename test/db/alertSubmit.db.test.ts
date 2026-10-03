@@ -475,7 +475,7 @@ describe("Submit", () => {
 
     expect(await alerting.approveEntry(actorOf(author), ref, shown)).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
     expect(await alerting.approveEntry(actorOf(approver), ref, { ...shown, contentHash: sha("another") })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
-    expect(await alerting.approveEntry(actorOf(approver), ref, shown)).toMatchObject({ ok: true, value: { status: "approved", version: 1 } });
+    expect(await alerting.approveEntry(actorOf(approver), ref, shown)).toMatchObject({ ok: true, value: { entry: { status: "approved", version: 1 } } });
   });
 
   it("records the budget and each language's progress on the attempt while the translation runs outside any lock, and a reader sees it running", async () => {
@@ -721,7 +721,7 @@ describe("what a submit refuses", () => {
     expect(await translationRows(ref.entryId)).toEqual([]);
     expect(row.editor_ids).toContain(editor.id);
     expect((await attempts(ref.entryId))[0]).toMatchObject({ state: "failed", outcome: "DRAFT_CHANGED" });
-    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict" } }]);
+    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict", refusal: "DRAFT_CHANGED" } }]);
     // Submit again: the new press freezes the text as it is now.
     expect(await r.submitter.submit(actorOf(author), ref, KEYS.two)).toMatchObject({ state: "committed" });
   });
@@ -740,7 +740,7 @@ describe("what a submit refuses", () => {
     expect(await attempts(ref.entryId)).toEqual([]);
     expect(await pendingCount(ref.alertId)).toBe(0);
     expect((await entryRow(ref.entryId)).original_text).toBe("Someone else's words.");
-    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict" } }]);
+    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict", refusal: "DRAFT_CHANGED" } }]);
     // Saving again, the author sees what is there and submits that: the fingerprint of the draft as it now is goes through.
     const again = await alerting.saveDraft(actorOf(author), ref, content({ text: "Someone else's words." }));
     if (!again.ok) throw new Error(`refused: ${again.error}`);
@@ -765,7 +765,7 @@ describe("what a submit refuses", () => {
     expect(await entryRow(ref.entryId)).toMatchObject({ status: "draft", content_hash: null });
     expect(await translationRows(ref.entryId)).toEqual([]);
     expect(await opsRows()).toMatchObject([{ kind: "alert.submit_failed", severity: "error", subject_id: ref.entryId, detail: { reason: "routes_unavailable" } }]);
-    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "provider_error" } }]);
+    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "provider_error", refusal: "ROUTES_UNAVAILABLE" } }]);
   });
 
   it("refuses when the routes do not answer at all (the real wait of the store grace) and does not hang", async () => {

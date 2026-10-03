@@ -45,4 +45,7 @@ export const AUDIT_REASON: Record<AlertRefusal, AuditReason> = {
   FLOOR_RANGE_REVERSED: "validation",
   FLOOR_RANGE_INCOMPLETE: "validation",
   GROUP_UNKNOWN: "validation",
+  RECIPIENT_COUNT_CHANGED: "conflict",
+  NOTE_REQUIRED: "validation",
+  NOTE_TOO_LONG: "validation",
 };

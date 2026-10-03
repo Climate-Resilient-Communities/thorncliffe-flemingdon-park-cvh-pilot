@@ -110,6 +110,8 @@ export interface ComposerScreen {
   notice?: string;
   /** Why the last attempt failed, shown on the draft it left. */
   failure?: string;
+  /** The note an approver wrote when they sent the entry back (S04.07), shown on the draft until it is submitted again. */
+  returned?: { title: string; lead: string; note: string };
   locked?: string;
   draft?: DraftFormView;
   pending?: PendingView;
@@ -254,6 +256,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     status,
     ...(input.saved && status === "draft" ? { notice: t("saved") } : {}),
     ...(lastFailed ? { failure: messages.errors[lastFailed] ?? messages.errors.invalid } : {}),
+    ...(status === "draft" && entry.returnedFor === "return" && entry.returnedNote ? { returned: { title: t("returned.title"), lead: t("returned.lead"), note: t("returned.note", { note: entry.returnedNote }) } } : {}),
     preview:
       input.preview === null
         ? null

@@ -26,6 +26,10 @@ import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/ap
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/staff/alerts/audience/AudienceBody";
 import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
+import { IncidentsList } from "@/app/staff/alerts/incidents/IncidentsList";
+import type { IncidentsView } from "@/app/staff/alerts/incidents/view";
+import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
+import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
 import { ComposerBody, type ComposerActions, type ComposerInitial } from "@/app/staff/alerts/composer/ComposerBody";
 import type { ComposerScreen } from "@/app/staff/alerts/composer/view";
 import type { SubmitApi } from "@/app/staff/alerts/composer/submitClient";
@@ -618,6 +622,41 @@ export function ComposerFixture({
   return (
     <AroundTheScreen texts={texts} brand={brand} signedIn current={screen.mode === "ack" ? "/staff/alerts/ack" : "/staff/alerts/compose"}>
       <ComposerBody screen={screen} actions={actions} initial={initial} api={api} reload={() => {}} />
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The approval view (S04.07; O-05 an alert, O-07 an ambassador's post) as a Coordinator sees it in the Hub shell: the app's own ApprovalBody on a view
+ * built by the app's own view function (e2e/layout/approval.spec.ts), with actions that do nothing, optionally already in the state a press reaches
+ * (`initial`: the return form, the discard confirmation, a count that changed).
+ */
+export function ApprovalFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: ApprovalScreen;
+  initial?: ApprovalInitial;
+}) {
+  const actions: ApprovalActions = { approve: noAction, returnToAuthor: noAction, discard: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/alerts/approve">
+      <ApprovalBody screen={screen} actions={actions} initial={initial} />
+    </AroundTheScreen>
+  );
+}
+
+/** The Hub home's list of what waits for a person (S04.07) inside the Hub shell, on the view the app's own function built. */
+export function IncidentsFixture({ texts, brand, view }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: IncidentsView }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <IncidentsList view={view} />
+      </Screen>
     </AroundTheScreen>
   );
 }

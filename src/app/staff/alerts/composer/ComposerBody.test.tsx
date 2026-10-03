@@ -36,6 +36,7 @@ function stateOf(entry: Record<string, unknown> = {}, attempt: Record<string, un
       contentHash: null,
       submittedAt: null,
       returnedFor: null,
+      returnedNote: null,
       approvedBy: null,
       approvedAt: null,
       webPublishedAt: null,

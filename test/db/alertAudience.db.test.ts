@@ -360,7 +360,7 @@ describe("a draft that was approved", () => {
   it("is no draft any more: neither its place nor its groups can be chosen, and nothing changes", async () => {
     const ref = await newDraft(coordinator);
     expect(await seams.freeze(actorOf(coordinator), ref, frozen("v1"))).toMatchObject({ ok: true });
-    expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { status: "approved" } });
+    expect(await alerting.approveEntry(actorOf(secondCoordinator), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { entry: { status: "approved" } } });
     const approved = await storedAudience(ref.entryId);
 
     expect(await alerting.chooseAudiencePlace(actorOf(coordinator), ref, { scope: "neighbourhood", neighbourhoodIds: ["FP"] })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });

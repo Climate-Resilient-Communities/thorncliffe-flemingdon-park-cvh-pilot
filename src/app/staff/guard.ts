@@ -227,12 +227,22 @@ export function PolicyRefusal({ children }: { children: ReactNode }): ReactNode 
  * A page is never privileged: its actions are (and are asked for aal2).
  */
 export function staffPage<P>(
-  spec: StaffSpec & { refused?: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode },
+  spec: StaffSpec & {
+    refused?: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode;
+    /**
+     * The facts of the page's request the role policy needs (see PolicyFacts), read from the database by the page, never taken from the
+     * request: an entry's approval view is for someone who is not an editor of it (`alert.approve`, S04.07). When declared it is always asked
+     * (for a session past the setup gate and a role the policy does not refuse outright); one that throws is a `bad_request`, which the
+     * page answers with its `refused` view like any refusal, unaudited: a page shows, and the calls it would make are audited by their own guards.
+     */
+    context?: (session: StaffSession, props: P) => Promise<PolicyFacts>;
+  },
   render: (session: StaffSession, props: P) => Promise<ReactNode> | ReactNode,
 ) {
-  const { refused } = spec;
+  const { refused, context } = spec;
   const page = async (props: P) => {
-    const { decision } = await judge(spec, await currentStaffSession());
+    const session = await currentStaffSession();
+    const { decision } = await judge(spec, session, context && session ? () => context(session, props) : undefined);
     if (decision.kind === "unauthenticated") redirect(SIGN_IN_PAGE);
     if (decision.kind === "outside_gate") redirect(GATE_PAGES[decision.session.gate]);
     if (decision.kind === "denied" || decision.kind === "bad_request") {

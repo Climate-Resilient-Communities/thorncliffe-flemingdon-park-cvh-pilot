@@ -34,7 +34,7 @@ describe("audit actions", () => {
   });
 
   it("gives no action a field that could hold a secret, a contact detail or a message", () => {
-    const FORBIDDEN = /password|passcode|token|secret|otp|totp|phone|number|email|mail|body|message|text|username|name|ip/i;
+    const FORBIDDEN = /password|passcode|token|secret|otp|totp|phone|number|email|mail|body|message|text|username|name|(^|_)ip($|_)/i;
     for (const [action, schema] of Object.entries(AUDIT_META)) {
       for (const key of Object.keys((schema as z.ZodObject).shape)) {
         expect(key, `${action}.meta.${key}`).not.toMatch(FORBIDDEN);
@@ -443,9 +443,29 @@ describe("alert lifecycle actions (S04.03)", () => {
     ["entry.submitted", { entry_id: ENTRY, version: 1, content_hash: HASH_WITH_LONG_DIGIT_RUN }, "alert_entry"],
     ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "retranslate" }, "alert_entry"],
     ["entry.discarded", { entry_id: ENTRY, version: 0, from: "draft" }, "alert_entry"],
-    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64) }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64), recipient_count: 0 }, "alert_entry"],
+    ["entry.approved", { entry_id: ENTRY, version: 2, content_hash: "a".repeat(64), recipient_count: 120 }, "alert_entry"],
+    ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", with_note: true }, "alert_entry"],
   ])("accepts %s with its strict meta, a content hash included", (action, meta, subjectType) => {
     expect(toAuditRecord(alertEvent(action, meta, subjectType), "ok").meta).toEqual(meta);
+  });
+
+  it("accepts a refusal with its reason and the code of the rule that refused (S04.07), and a refused approval whose count changed with both counts", () => {
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "validation", refusal: "VALID_UNTIL_PAST" }), "refused").meta).toEqual({ reason: "validation", refusal: "VALID_UNTIL_PAST" });
+    expect(toAuditRecord(alertEvent("entry.approved", { reason: "conflict", refusal: "RECIPIENT_COUNT_CHANGED", recipient_count: 42, reviewed_count: 40 }), "refused").meta).toEqual({
+      reason: "conflict",
+      refusal: "RECIPIENT_COUNT_CHANGED",
+      recipient_count: 42,
+      reviewed_count: 40,
+    });
+    for (const action of ["alert.created", "entry.submitted", "entry.returned", "entry.discarded"]) {
+      expect(toAuditRecord(alertEvent(action, { reason: "conflict", refusal: "ENTRY_CHANGED" }, action === "alert.created" ? "alert" : "alert_entry"), "refused").meta).toEqual({ reason: "conflict", refusal: "ENTRY_CHANGED" });
+    }
+  });
+
+  it("rejects a refusal code that is text, and a return that carries its note", () => {
+    expect(() => toAuditRecord(alertEvent("entry.approved", { reason: "conflict", refusal: "This alert changed." }), "refused")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(alertEvent("entry.returned", { entry_id: ENTRY, version: 1, returned_for: "return", with_note: "Add the floors." }), "ok")).toThrow(AuditRecordError);
   });
 
   it("accepts a refusal with only its reason, including alert_closed", () => {

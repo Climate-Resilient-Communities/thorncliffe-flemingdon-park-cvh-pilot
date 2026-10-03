@@ -1,3 +1,4 @@
+import type { RecipientCounts } from "../../../contracts/alertApproval";
 import type { AssuranceLevel } from "../../../contracts/staffAuth";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import type { AuditEvent } from "../../audit";
@@ -8,8 +9,13 @@ import type { EntryKind } from "../domain/lifecycle";
 import type { FrozenTranslation } from "../domain/translations";
 import type { AlertRefusal } from "../domain/refusals";
 
+/** What a refusal can carry besides its code: a refused approval whose recipient count changed carries the snapshot's count (S04.07). */
+export interface RefusalDetail {
+  recipients: RecipientCounts;
+}
+
 /** An expected outcome as a value (spine: Errors). */
-export type AlertResult<T> = { ok: true; value: T } | { ok: false; error: AlertRefusal };
+export type AlertResult<T> = { ok: true; value: T } | { ok: false; error: AlertRefusal; detail?: RefusalDetail };
 
 /**
  * Who acts: the staff member and the assurance level of their session, both read by the staff

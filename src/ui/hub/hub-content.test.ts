@@ -10,4 +10,10 @@ describe("hub-content.css", () => {
     expect(value(".hub-link.tap", "align-items")).toBe("center");
     expect(value(".hub-link.tap", "align-self")).toBe("flex-start");
   });
+
+  it("keeps the line breaks of a person's note and of a frozen text message, and lets a language's line wrap inside its column (S04.07)", () => {
+    expect(value(".hub-preline", "white-space")).toBe("pre-line");
+    expect(value(".hub-summary", "overflow-wrap")).toBe("anywhere");
+    expect(value(".hub-summary", "cursor")).toBe("pointer");
+  });
 });

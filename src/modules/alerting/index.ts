@@ -21,6 +21,10 @@ export interface AlertingWiring {
   audit?: AlertLifecycleDeps["audit"];
   staff?: AlertLifecycleDeps["staff"];
   places?: AlertLifecycleDeps["places"];
+  /** Who the text reaches: subscriptions' count and `captureRecipients` (S04.07). Default: subscriptions' port, empty until E07. */
+  recipients?: AlertLifecycleDeps["recipients"];
+  /** E06's approval marker (S06.01); see `createAlerting`. */
+  markApproval?: AlertLifecycleDeps["markApproval"];
 }
 
 export interface AlertSubmitterWiring {
@@ -63,18 +67,32 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     newId: wiring.newId,
     newSlug: wiring.newSlug,
     latestValidUntil: wiring.latestValidUntil,
+    // The approval's two seams (S04.07). `recipients` is subscriptions' count and snapshot port (E07 fills it in, in subscriptions; nothing here
+    // changes). `markApproval` is E06's: when the outbox is merged, this is the one line it adds, inside the approval's transaction and before
+    // `captureRecipients` writes anything:
+    //   markApproval: async (tx, entryId) => { await createDeliveryQueue().markApprovalTransaction(tx, entryId) },
+    // (messaging's `createDeliveryQueue`; alerting may import messaging). It is a no-op until then.
+    recipients: wiring.recipients,
+    markApproval: wiring.markApproval,
   });
 }
 
 export type {
   AlertLifecycle,
   ApprovalBinding,
+  ApprovalOutcome,
+  ApprovalRequest,
   AttemptView,
   EntryRef,
+  EntryReview,
   EntryState,
   EntryView,
+  IncidentRow,
+  Incidents,
   LogDisruptionInput,
   NewAlertInput,
+  ReviewAction,
+  ReviewedText,
   SubmitMode,
   SubmitStart,
   ThreadView,
@@ -85,7 +103,7 @@ export { createSubmitter, refusalOfPreparationError, type AlertSubmitter, type S
 export { ATTEMPT_KINDS, ATTEMPT_STALE_MS, ATTEMPT_STATES, ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "./domain/submitAttempt";
 export { audiencesOverlap, possibleDuplicateOf, type DuplicateCandidate, type NeighbourhoodOf } from "./domain/duplicates";
 export type { AudienceFloor, AudiencePlaces, BuildingChoice, PlaceChoice } from "./application/audience";
-export type { AlertActor, AlertAudit, AlertResult, EntryPreparer, FreezeRefusal, FrozenContent, FrozenSmsBody, PrepareContext, PrepareHooks, StaffDirectory } from "./application/ports";
+export type { AlertActor, AlertAudit, AlertResult, RefusalDetail, EntryPreparer, FreezeRefusal, FrozenContent, FrozenSmsBody, PrepareContext, PrepareHooks, StaffDirectory } from "./application/ports";
 export { FROZEN_LANGS, TranslationSetError, freezeTranslations, translatedToFrozen, type FrozenConversion, type FrozenTranslation } from "./domain/translations";
 export {
   ALERT_TEXT_MAX,

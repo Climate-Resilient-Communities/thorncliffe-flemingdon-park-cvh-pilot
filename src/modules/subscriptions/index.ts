@@ -46,3 +46,6 @@ export {
   type RateLimitRule,
   type RateLimiter,
 } from "./application/rateLimit";
+
+// The approval's recipient-count and snapshot port (S04.07): empty until E07 opens text sign-up.
+export { captureRecipients, countRecipients, recipientsPort, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "./application/recipients";
