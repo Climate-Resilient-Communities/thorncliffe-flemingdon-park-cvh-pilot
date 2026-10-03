@@ -57,6 +57,14 @@ export function systemPrompt(from: LangCode | null, to: LangCode): string {
 /** The longest answer asked for: a question is at most 200 characters, and a longer answer is not a translation. */
 export const MAX_OUTPUT_TOKENS = 200;
 
+/**
+ * The version of the prompt and of the language names in it, which is part of the cache key for alert translations
+ * (S04.02, AD-10): a different prompt may give a different translation, so a result made with another is never reused.
+ * Bump it with any change to `systemPrompt` or LANGUAGE_NAMES; src/modules/translation/adapters/cohereTranslator.alert.test.ts
+ * pins a fingerprint of both and fails until the two are changed together.
+ */
+export const PROMPT_VERSION = "1";
+
 let sdk: Promise<typeof import("cohere-ai")> | undefined;
 /** Loads the vendor's SDK once and keeps it; the composition root calls it at module load (like warmCohere) so the first translation pays no import. */
 export function warmCohereTranslator(): Promise<typeof import("cohere-ai")> {
@@ -131,7 +139,7 @@ export interface CohereTranslatorOptions {
 export function cohereTranslator(options: CohereTranslatorOptions): Translator {
   let client: CohereChatClient | undefined = options.client;
   return {
-    async translate({ text, from, to, model, signal }): Promise<Translation> {
+    async translate({ text, from, to, model, signal, maxOutputTokens }): Promise<Translation> {
       let response;
       try {
         if (!client) {
@@ -147,7 +155,7 @@ export function cohereTranslator(options: CohereTranslatorOptions): Translator {
               { role: "user", content: text },
             ],
             temperature: 0,
-            maxTokens: MAX_OUTPUT_TOKENS,
+            maxTokens: maxOutputTokens ?? MAX_OUTPUT_TOKENS,
           },
           { abortSignal: signal, maxRetries: 0 },
         );

@@ -12,6 +12,16 @@ describe("a spend event", () => {
     expect(toSpendEvent({ ...embed, tokensEstimated: true, ms: 840 })).toMatchObject({ tokensEstimated: true, ms: 840 });
   });
 
+  it("knows the purposes of the calls the app makes, among them the translation of an alert (S04.02)", () => {
+    for (const purpose of ["publish", "search", "test_set", "alert"] as const) expect(toSpendEvent({ ...embed, purpose }).purpose).toBe(purpose);
+    expect(toSpendEvent({ kind: "translate", purpose: "alert", model: "north-small-translate-09-2026", tokens: 640, ms: 3100 })).toMatchObject({
+      kind: "translate",
+      purpose: "alert",
+      releaseV: null,
+      calls: 1,
+    });
+  });
+
   it("is refused with a field it does not know, so no question or text can be stored", () => {
     expect(() => toSpendEvent({ ...embed, q: "where is the food bank" } as never)).toThrow(SpendEventError);
     expect(() => toSpendEvent({ ...embed, text: "Free legal help" } as never)).toThrow(SpendEventError);

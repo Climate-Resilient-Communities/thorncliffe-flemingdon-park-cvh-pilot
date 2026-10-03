@@ -266,8 +266,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `usage_count` (directory) | S02.15 | `campaign` (subscriptions) | S09.07 |
 | `spend_event` (spend) | S03.02 | | |
 | `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | | |
-| `translation_route` (translation) | S04.01 | | |
-| `translation_cache` (translation) | S04.02 | | |
+| `translation_route`, `translation_cache` (translation) | S04.02 (S04.01 later replaces the provisional timeouts in `translation_route` by a migration) | | |
 | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` (alerting), `disruption_type` (places) | S04.03 | | |
 | `delivery` (messaging) | S06.01 | | |
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
