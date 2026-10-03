@@ -1,6 +1,7 @@
 // The embedding model of the directory (AD-11, AD-15): Cohere, behind the Embedder port. The vendor's names (`input_type`,
-// `search_document`, billed units) stop here. Only the app's composition root builds it, and only where a Cohere key is
+// `search_document`, billed units) stop here (the REST client in src/platform/cohere speaks them). Only the app's composition root builds it, and only where a Cohere key is
 // configured (production); no test reaches the network: they hand the adapter a fake client, or use a fake Embedder.
+import { createCohereRestClient } from "@/platform/cohere/restClient";
 import { QueryEmbedError, type EmbeddedTexts, type Embedder, type QueryEmbedder, type QueryEmbedVendorFailure } from "../application/ports";
 
 /** The part of Cohere's v2 client the adapter calls: tests pass a fake. */
@@ -13,27 +14,12 @@ export interface CohereEmbedClient {
   };
 }
 
-let sdk: Promise<typeof import("cohere-ai")> | undefined;
-
-/**
- * Loads the vendor's SDK once and keeps it. The composition root calls it at module load where a key is configured, so the
- * first question on an instance does not pay the import inside the search's 2.2 s. A failed load is forgotten, so the next
- * call tries again.
- */
-export function warmCohere(): Promise<typeof import("cohere-ai")> {
-  if (!sdk) {
-    sdk = import("cohere-ai");
-    sdk.catch(() => (sdk = undefined));
-  }
-  return sdk;
-}
-
 export interface CohereEmbedderOptions {
   apiKey: string;
   model: string;
   /** Asks for vectors of this many numbers; left out, the model's own default applies (and the embedding config says so). */
   dims?: number;
-  /** For tests. By default the real client is created on the first call, so importing the module loads nothing. */
+  /** For tests. By default a client over Cohere's REST API (plain fetch) is created on the first call. */
   client?: CohereEmbedClient;
 }
 
@@ -43,10 +29,7 @@ export function cohereEmbedder(options: CohereEmbedderOptions): Embedder {
     model: options.model,
     config: { model: options.model, inputType: "search_document", embeddingType: "float", dims: options.dims ?? null },
     async embedDocuments(texts, { signal }): Promise<EmbeddedTexts> {
-      if (!client) {
-        const { CohereClient } = await warmCohere();
-        client = new CohereClient({ token: options.apiKey }) as unknown as CohereEmbedClient;
-      }
+      client ??= createCohereRestClient({ apiKey: options.apiKey });
       // The job decides whether to try again (and how often): the SDK's own retries would hide the time they take.
       const response = await client.v2.embed(
         { model: options.model, texts, inputType: "search_document", embeddingTypes: ["float"], ...(options.dims === undefined ? {} : { outputDimension: options.dims }) },
@@ -66,7 +49,7 @@ export interface CohereQueryEmbedderOptions {
   client?: CohereEmbedClient;
 }
 
-/** The vendor's HTTP status, wherever the SDK put it. Nothing else of the error is read: its message may repeat the request. */
+/** The vendor's HTTP status, wherever the client put it. Nothing else of the error is read: its message may repeat the request. */
 function statusOf(error: unknown): number | null {
   if (typeof error !== "object" || error === null) return null;
   const e = error as { statusCode?: unknown; status?: unknown };
@@ -76,8 +59,8 @@ function statusOf(error: unknown): number | null {
 
 /**
  * How a failed call of the vendor is told to ops, from its status alone (see QueryEmbedVendorFailure). Without a status, a
- * timeout or a network failure (fetch's TypeError, the SDK's timeout, a socket code) is the vendor being unreachable and
- * anything else (the SDK that did not load, a bug) is `other`.
+ * timeout or a network failure (fetch's TypeError, the client's timeout, a socket code) is the vendor being unreachable and
+ * anything else (a bug) is `other`.
  */
 function vendorFailureOf(error: unknown): QueryEmbedVendorFailure {
   const status = statusOf(error);
@@ -99,10 +82,7 @@ export function cohereQueryEmbedder(options: CohereQueryEmbedderOptions): QueryE
     async embedQuery({ text, model, dims, signal }) {
       let response;
       try {
-        if (!client) {
-          const { CohereClient } = await warmCohere();
-          client = new CohereClient({ token: options.apiKey }) as unknown as CohereEmbedClient;
-        }
+        client ??= createCohereRestClient({ apiKey: options.apiKey });
         // No retries: the search has 2.2 s for the whole leg, and a retry would hide the time it takes.
         response = await client.v2.embed(
           { model, texts: [text], inputType: "search_query", embeddingTypes: ["float"], ...(dims === null ? {} : { outputDimension: dims }) },

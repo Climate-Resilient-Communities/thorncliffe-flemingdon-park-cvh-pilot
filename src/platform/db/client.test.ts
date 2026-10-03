@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetEnvCache } from "../config/env";
-import { DB_POOL_MAX, createDb, getDb, resetDb } from "./client";
+import { DB_CONNECT_TIMEOUT_SECONDS, DB_POOL_MAX, DB_REQUEST_CONNECT_TIMEOUT_SECONDS, createDb, getDb, resetDb } from "./client";
 
 const POOLER = "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres";
 
@@ -23,6 +23,12 @@ describe("database client", () => {
     expect(createDb(POOLER, { max: 3 }).$client.options.max).toBe(3);
   });
 
+  it("gives a connection attempt 5 s, not postgres.js's 30 s, unless told otherwise", () => {
+    expect(DB_CONNECT_TIMEOUT_SECONDS).toBe(5);
+    expect(createDb(POOLER).$client.options.connect_timeout).toBe(5);
+    expect(createDb(POOLER, { connectTimeoutSeconds: 2 }).$client.options.connect_timeout).toBe(2);
+  });
+
   it("connects to DATABASE_URL from the validated environment", () => {
     vi.stubEnv("VERCEL_ENV", "");
     vi.stubEnv("SMS_MODE", "log");
@@ -35,6 +41,8 @@ describe("database client", () => {
     expect(db.$client.options.port).toEqual([6543]);
     expect(db.$client.options.prepare).toBe(false);
     expect(getDb()).toBe(db);
+    expect(DB_REQUEST_CONNECT_TIMEOUT_SECONDS).toBe(2);
+    expect(db.$client.options.connect_timeout).toBe(DB_REQUEST_CONNECT_TIMEOUT_SECONDS);
   });
 
   it("fails clearly when DATABASE_URL is not set", () => {

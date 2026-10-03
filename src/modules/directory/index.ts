@@ -103,5 +103,5 @@ export {
   type TranslatedLeg,
 } from "./application/search";
 export { QueryEmbedError, type QueryEmbedder } from "./application/ports";
-export { cohereQueryEmbedder, warmCohere, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
+export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
 export { DEFAULT_EMERGENCY_THRESHOLD, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs, type SearchHit } from "./domain/searchRanking";

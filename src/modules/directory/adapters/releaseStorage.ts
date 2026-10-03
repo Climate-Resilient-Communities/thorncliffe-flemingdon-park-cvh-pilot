@@ -121,7 +121,8 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
     },
     async get(file) {
       const key = checked(file);
-      await open();
+      // A read never makes or checks the bucket (that is the publish's job, in `put`): on the search's read path a bucket call
+      // would add two round trips to Storage to every cold request. A bucket that is not there answers not found.
       const { data, error } = await (await getClient()).storage.from(bucket).download(key);
       if (error) {
         const status = (error as { status?: number | string; statusCode?: number | string }).status ?? (error as { statusCode?: number | string }).statusCode;

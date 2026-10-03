@@ -59,7 +59,6 @@
     "@supabase/ssr": "0.12.7",
     "@supabase/supabase-js": "2.117.2",
     "canonicalize": "5.1.0",
-    "cohere-ai": "8.1.0",
     "drizzle-orm": "0.45.3",
     "eld": "2.1.0",
     "leaflet": "1.9.4",
