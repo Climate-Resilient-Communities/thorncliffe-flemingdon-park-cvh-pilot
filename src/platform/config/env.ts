@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseUntranslatedKeys } from "../../i18n/untranslated";
 import { PRODUCTION_HOST } from "./hosts";
 
 /**
@@ -149,6 +150,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        are kept in this folder instead of the private Supabase Storage
  *                                                        bucket (the end-to-end tests); an absolute path (a relative one would
  *                                                        name a different folder for each process that reads it)
+ * CVH_FAKE_UNTRANSLATED_KEYS
+ *                      server   optional; local development only (start-up fails on Vercel): comma-separated catalog
+ *                                                        keys (R31.title, ...) that every language but English shows as
+ *                                                        English behind "[EN] " on the pages rendered on request, so the
+ *                                                        resident page tests can measure the English fallback whatever is
+ *                                                        translated; read by src/i18n/untranslated.ts, which also ignores
+ *                                                        it on Vercel and during `next build`
  */
 
 /** A POSIX path from the root, or a Windows drive path. */
@@ -192,6 +200,7 @@ const rawSchema = z.object({
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
+  CVH_FAKE_UNTRANSLATED_KEYS: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
   COHERE_API_KEY: optionalText,
   SEARCH_EMBED_MODEL: optionalText,
@@ -715,6 +724,13 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_DIRECTORY_DIR: the local directory store is only allowed in local development, never on Vercel");
   } else if (raw.CVH_FAKE_DIRECTORY_DIR !== undefined && !ABSOLUTE_PATH.test(raw.CVH_FAKE_DIRECTORY_DIR)) {
     problems.push("CVH_FAKE_DIRECTORY_DIR: must be an absolute path");
+  }
+
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_UNTRANSLATED_KEYS !== undefined) {
+    problems.push("CVH_FAKE_UNTRANSLATED_KEYS: the English-fallback test seam is only allowed in local development, never on Vercel");
+  } else if (raw.CVH_FAKE_UNTRANSLATED_KEYS !== undefined) {
+    const { problem } = parseUntranslatedKeys(raw.CVH_FAKE_UNTRANSLATED_KEYS);
+    if (problem !== undefined) problems.push(`CVH_FAKE_UNTRANSLATED_KEYS: ${problem}`);
   }
 
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();

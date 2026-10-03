@@ -1,7 +1,7 @@
 import { expect, test, type Page } from "@playwright/test";
 import { stubBuildingList } from "./choices-fixture";
 import { newServer, stubDirectory, type DirectoryServer } from "./directory-fixture";
-import { expectBaseline, openResident, waitForFonts } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident, waitForFonts } from "./helpers";
 
 // S02.06: a resident browses and filters the directory (/{lang}/directory, /{lang}/directory/{id}). The release routes
 // are answered by directory-fixture.ts (the resident server has no database in these tests): release 7 has five sample
@@ -527,7 +527,19 @@ test.describe("in Urdu", () => {
       await expect(run, text).toHaveAttribute("dir", "ltr");
       await expect(run, text).toHaveAttribute("lang", "en");
     }
-    await expect(card.getByTestId("last-confirmed")).toHaveText("[EN] Last confirmed by the Hub September 30, 2026");
+    // The confirmed line is the catalog's Urdu wording with its date in Urdu's way of writing dates, in the page's
+    // direction. (English behind [EN] with an English date, in an English block, is measured in fallback.spec.ts.)
+    const confirmedTemplate = catalogText("ur", "directory.lastConfirmed");
+    const confirmed = card.getByTestId("last-confirmed");
+    if (isFallback(confirmedTemplate)) {
+      await expect(confirmed).toHaveText(confirmedTemplate.replace("{date}", "September 30, 2026"));
+      await expect(confirmed).toHaveAttribute("lang", "en");
+    } else {
+      await expect(confirmed).toHaveText(filledPattern(confirmedTemplate, "date"));
+      await expect(confirmed).toContainText("2026");
+      await expect(confirmed).not.toContainText("September");
+      await expect(confirmed).not.toHaveAttribute("lang", "en");
+    }
   });
 
   test("the machine-translation label is a solid upright tag, told apart from the dashed italic Not known; Read it in English names its listing; the original is a status", async ({ page }) => {

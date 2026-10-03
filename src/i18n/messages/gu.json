@@ -264,7 +264,7 @@
     "progress": "કામ ચાલુ છે",
     "resolved": "ઉકેલાયું",
     "unknown": "ખબર નથી",
-    "none": "[EN] Nothing active"
+    "none": "કંઈ સક્રિય નથી"
   },
   "groups": {
     "seniors": {
@@ -447,12 +447,12 @@
     "ambassadorHome": "એમ્બેસેડર: મારું બિલ્ડિંગ",
     "ambassadorLine": "{building} માટે અપડેટ પોસ્ટ કરો અથવા તમારો રાઉન્ડ કરો",
     "noBuildingLine": "તમારા વિસ્તારની ચેતવણીઓ અહીં દેખાય છે. તમારા બિલ્ડિંગની ચેતવણીઓ પહેલાં જોવા તમારું બિલ્ડિંગ ઉમેરો.",
-    "currentAlerts": "[EN] Current alerts",
-    "noCurrentAlerts": "[EN] No current alerts",
-    "myBuildings": "[EN] Your buildings",
-    "checking": "[EN] Checking for alerts",
-    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
+    "currentAlerts": "હાલની ચેતવણીઓ",
+    "noCurrentAlerts": "હાલમાં કોઈ ચેતવણી નથી",
+    "myBuildings": "તમારાં બિલ્ડિંગ",
+    "checking": "ચેતવણીઓ તપાસી રહ્યા છીએ",
+    "feedFailed": "અમે હમણાં ચેતવણીઓ તપાસી શક્યા નથી. જે જગ્યા પર \"ખબર નથી\" લખ્યું હોય ત્યાં હજી પણ ચેતવણી હોઈ શકે છે. અમે ફરી પ્રયત્ન કરીશું.",
+    "feedFailedOld": "અમે નવી ચેતવણીઓ તપાસી શક્યા નથી. છેલ્લે {t} લોડ થયેલું બતાવીએ છીએ."
   },
   "R04": {
     "deviceLabel": "સાદા ફોન પર ટેક્સ્ટ મેસેજ",
@@ -654,15 +654,15 @@
     "testTitle": "પરીક્ષણ માટેની શોધ",
     "testNote": "સંચાલકો માટે: બ્રીફમાંથી તૈયાર શોધ ચલાવવા કોઈ એક પર ટેપ કરો. રહેવાસીઓ આ જોતા નથી.",
     "testGloss": "(દરી: {gloss})",
-    "searching": "[EN] Searching",
-    "needsSignal": "[EN] Search needs signal",
-    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
-    "busy": "[EN] Search is busy, try again in a few minutes",
-    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
-    "updating": "[EN] Search results are being updated, try again",
-    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
-    "browseAll": "[EN] See all services and organisations",
-    "loading": "[EN] Loading the topics"
+    "searching": "શોધી રહ્યા છીએ",
+    "needsSignal": "શોધ માટે સિગ્નલ જોઈએ",
+    "needsSignalBody": "તમે હજી પણ નીચે કોઈ વિષય પસંદ કરી શકો છો, અથવા હબને ફોન કરી શકો છો.",
+    "busy": "શોધ વ્યસ્ત છે, થોડી મિનિટોમાં ફરી પ્રયત્ન કરો",
+    "busyBody": "તમે નીચે કોઈ વિષય પસંદ કરી શકો છો, અથવા હબને ફોન કરી શકો છો.",
+    "updating": "શોધનાં પરિણામો અપડેટ થઈ રહ્યાં છે, ફરી પ્રયત્ન કરો",
+    "updatingBody": "પરિણામો અપડેટ થાય ત્યાં સુધી તમે નીચે કોઈ વિષય પસંદ કરી શકો છો, અથવા હબને ફોન કરી શકો છો.",
+    "browseAll": "બધી સેવાઓ અને સંસ્થાઓ જુઓ",
+    "loading": "વિષયો લોડ થાય છે"
   },
   "R10": {
     "title": "પરિણામો",
@@ -698,7 +698,7 @@
     "communityOffer": "સમુદાય તરફથી ઓફર",
     "inCat": "વિષય: {cat}",
     "helpEmpty": "આમાં મદદ કરી શકે તેવી કોઈ સેવા આ ફિલ્ટર સાથે મેળ ખાતી નથી.",
-    "shownIn": "[EN] Shown in {lang}"
+    "shownIn": "{lang} માં બતાવ્યું"
   },
   "R11": {
     "title": "અમને હજી તે મળ્યું નથી",
@@ -4434,22 +4434,22 @@
     "providedByHub": "હબે આપ્યું, છેલ્લે {date} ના રોજ અપડેટ કર્યું"
   },
   "directory": {
-    "title": "[EN] Services and organisations",
-    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
-    "count": "[EN] {n} services",
-    "countOne": "[EN] 1 service",
-    "topic": "[EN] Topic",
-    "emergency": "[EN] Helps in an emergency",
-    "emergencyRole": "[EN] Emergency role",
-    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
-    "lastUpdated": "[EN] Last updated {time}",
-    "loading": "[EN] Loading the directory",
-    "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
-    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
-    "numbersLink": "[EN] See the essential numbers",
-    "backToList": "[EN] All services and organisations",
-    "suggestApply": "[EN] Show only {place}"
+    "title": "સેવાઓ અને સંસ્થાઓ",
+    "lead": "થોર્નક્લિફ પાર્ક અને ફ્લેમિંગ્ડન પાર્કમાં હબે જેની ખાતરી કરી છે તે સેવાઓ અને સંસ્થાઓ. યાદી ટૂંકી કરવા માટે કોઈ વિષય અથવા વિસ્તાર પસંદ કરો.",
+    "count": "{n} સેવાઓ",
+    "countOne": "1 સેવા",
+    "topic": "વિષય",
+    "emergency": "કટોકટીમાં મદદ કરે છે",
+    "emergencyRole": "કટોકટીમાં ભૂમિકા",
+    "lastConfirmed": "હબે છેલ્લે {date} ના રોજ ખાતરી કરી",
+    "lastUpdated": "છેલ્લું અપડેટ {time}",
+    "loading": "ડિરેક્ટરી લોડ થાય છે",
+    "couldNotLoad": "ડિરેક્ટરી લોડ ન થઈ",
+    "couldNotLoadBody": "હબ તમને ફોન પર સેવા શોધવામાં મદદ કરી શકે છે.",
+    "couldNotLoadNumbers": "નંબરોના પાના પર તમને જરૂર પડી શકે તેવા બીજા નંબરો છે.",
+    "numbersLink": "જરૂરી નંબરો જુઓ",
+    "backToList": "બધી સેવાઓ અને સંસ્થાઓ",
+    "suggestApply": "ફક્ત {place} બતાવો"
   },
   "map": {
     "lead": "થોર્નક્લિફ પાર્ક અને ફ્લેમિંગ્ડન પાર્કમાં સેવાઓ, સંસ્થાઓ અને એપાર્ટમેન્ટ ઇમારતો. તે શું છે તે જોવા માટે પિન પર ટૅપ કરો.",
