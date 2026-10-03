@@ -11,6 +11,8 @@ export interface TranslateRequest {
   /** The model id, from config (a route), never chosen by the adapter. */
   model: string;
   signal: AbortSignal;
+  /** The most the model may write, when the text is longer than a question (an alert, S04.02); the adapter's default for a question when absent. */
+  maxOutputTokens?: number;
 }
 
 export interface Translation {

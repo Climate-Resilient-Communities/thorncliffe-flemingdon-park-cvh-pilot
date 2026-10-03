@@ -8,6 +8,45 @@ export {
   type QuestionTranslationFailure,
   type QuestionTranslator,
 } from "./application/questionTranslator";
+// S04.02: alerts translated by route (`translation_route`), checked, cached (`translation_cache`) and recorded in spend.
+export { PROMPT_VERSION } from "./adapters/cohereTranslator";
+export {
+  AlertRoutesUnavailableError,
+  AlertTranslationInputError,
+  STORE_GRACE_MS,
+  checkVersion,
+  createAlertTranslator,
+  type AlertTranslation,
+  type AlertTranslator,
+  type AlertTranslatorDeps,
+} from "./application/alertTranslator";
+export type { TranslationCache, ZhHantConverter } from "./application/alertPorts";
+export {
+  ALERT_MAX_OUTPUT_TOKENS,
+  ALERT_SPEND_KIND,
+  ALERT_TARGET_LANGS,
+  type AttemptOutcome,
+  type AttemptResult,
+  type CachedTranslation,
+  type LanguageOutcome,
+  type TranslationCacheKey,
+} from "./domain/alertTranslation";
+export { CHECK_LOGIC_VERSION, ELD_VERSION, checkAlertTranslation, type AlertCheckFailure, type CheckScript, type LanguageCheck } from "./domain/alertChecks";
+export {
+  MAX_ATTEMPT_TIMEOUT_MS,
+  MAX_ROUTE_DEADLINE_MS,
+  ROUTE_LANGS,
+  RouteConfigError,
+  buildRoutes,
+  routeDeadlineMs,
+  type RouteLang,
+  type RoutePosition,
+  type RouteRow,
+  type RouteSource,
+  type TranslationRoute,
+} from "./domain/alertRoutes";
+export { readTranslationRoutes } from "./adapters/routeStore";
+export { drizzleTranslationCache } from "./adapters/cacheStore";
 export {
   ENGLISH_MARGIN,
   QUESTION_SOURCES,
