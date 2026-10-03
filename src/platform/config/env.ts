@@ -149,6 +149,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        are kept in this folder instead of the private Supabase Storage
  *                                                        bucket (the end-to-end tests); an absolute path (a relative one would
  *                                                        name a different folder for each process that reads it)
+ * CVH_FAKE_TRANSLATOR  server   optional; local development only (start-up fails on Vercel): `sample` translates an alert
+ *                                                        with a fake model that answers every language with a fixed passing
+ *                                                        sample text, so a submit can be run end to end with no Cohere key (the
+ *                                                        end-to-end tests); never a real translation
  */
 
 /** A POSIX path from the root, or a Windows drive path. */
@@ -192,6 +196,7 @@ const rawSchema = z.object({
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
+  CVH_FAKE_TRANSLATOR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
   COHERE_API_KEY: optionalText,
   SEARCH_EMBED_MODEL: optionalText,
@@ -304,6 +309,8 @@ export interface Env {
   fakeGuidesFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
+  /** Local development only: translate alerts with the fake model that answers every language with a sample text (end-to-end tests). */
+  fakeTranslator?: "sample";
   /** Cohere's API key: set only in production. The publish job embeds search data when it is set, and publishes without when not. */
   cohereApiKey?: string;
   /** The search settings, with their defaults; they apply only where a key is configured. */
@@ -716,6 +723,11 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   } else if (raw.CVH_FAKE_DIRECTORY_DIR !== undefined && !ABSOLUTE_PATH.test(raw.CVH_FAKE_DIRECTORY_DIR)) {
     problems.push("CVH_FAKE_DIRECTORY_DIR: must be an absolute path");
   }
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_TRANSLATOR !== undefined) {
+    problems.push("CVH_FAKE_TRANSLATOR: the translation fake is only allowed in local development, never on Vercel");
+  } else if (raw.CVH_FAKE_TRANSLATOR !== undefined && raw.CVH_FAKE_TRANSLATOR !== "sample") {
+    problems.push('CVH_FAKE_TRANSLATOR: the only fake is "sample"');
+  }
 
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();
   const cohereKey = raw.COHERE_API_KEY?.trim();
@@ -776,6 +788,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
+    fakeTranslator: raw.CVH_FAKE_TRANSLATOR === "sample" ? "sample" : undefined,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
   };
 }

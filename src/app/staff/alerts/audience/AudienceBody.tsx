@@ -35,6 +35,16 @@ function Steps({ steps }: { steps: StepsView }) {
   );
 }
 
+/** The way back to the composer the pages were opened from (S04.05); nothing when they were not opened from one. */
+function Back({ back }: { back?: { href: string; label: string } }) {
+  if (!back) return null;
+  return (
+    <a className="tap hub-link" href={back.href} data-testid="audience-back">
+      {back.label}
+    </a>
+  );
+}
+
 /** "Who gets it now": the saved audience in words, and the way to the other step. The aside of both pages. */
 function Aside({ view }: { view: AsideView }) {
   return (
@@ -77,6 +87,7 @@ export function AudienceBody({ screen, actions, initial }: { screen: AudienceScr
           <p role="note" className="hub-flag">
             {screen.message}
           </p>
+          <Back back={screen.back} />
         </Stack>
         <Aside view={screen.aside} />
       </Grid>
@@ -90,6 +101,7 @@ export function AudienceBody({ screen, actions, initial }: { screen: AudienceScr
           <p>{screen.lead}</p>
           <Notice text={screen.notice} />
           <Steps steps={screen.steps} />
+          <Back back={screen.back} />
         </Stack>
         {screen.kind === "place" ? (
           <PlaceForm screen={screen} action={actions.place} initialState={initial?.place} />

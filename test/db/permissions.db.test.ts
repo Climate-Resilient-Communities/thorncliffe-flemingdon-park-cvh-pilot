@@ -28,7 +28,8 @@ import {
   type StaffAuthService,
 } from "../../src/modules/identity";
 import { record, recordRefusal, type AuditEvent } from "../../src/modules/audit";
-import { createAlerting } from "../../src/modules/alerting";
+import { createAlertSubmitter, createAlerting } from "../../src/modules/alerting";
+import { noTranslation } from "../../src/modules/translation";
 import { createBuildingService, floorsOfBuilding } from "../../src/modules/places";
 import { memoryIdentityProvider, type MemoryIdentityProvider } from "../../src/modules/identity/adapters/memoryIdentityProvider";
 import { totpCode } from "../../src/modules/identity/adapters/memoryTotp";
@@ -46,6 +47,7 @@ const wired = vi.hoisted(() => ({
   places: null as unknown,
   assignmentService: null as unknown,
   alerting: null as unknown,
+  alertSubmitter: null as unknown,
   db: null as unknown,
   publish: null as unknown,
 }));
@@ -69,7 +71,8 @@ vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }))
 // The coverage page and its actions (S01.14) read and write through identity's assignments on the app's own connection.
 vi.mock("../../src/app/staff/assignments", () => ({ assignments: () => wired.assignmentService }));
 // The audience pickers and their actions (S04.04) run the alert use cases on the app's own connection.
-vi.mock("../../src/app/staff/alerts", () => ({ alerting: () => wired.alerting }));
+// Submit and the entry state (S04.05) run on the same connection, with no translation model and nothing to freeze: the endpoints are called for a draft that does not exist.
+vi.mock("../../src/app/staff/alerts", () => ({ alerting: () => wired.alerting, alertSubmitter: () => wired.alertSubmitter }));
 // The assignments the guard reads for the caller.
 vi.mock("../../src/app/staff/scope", () => ({ assignmentsOf: async () => wired.assignments }));
 
@@ -177,7 +180,17 @@ beforeEach(async () => {
   wired.assignments = [];
   const assignmentService = createAssignments({ db: app, floors: { floorsOf: floorsOfBuilding } });
   wired.assignmentService = assignmentService;
-  wired.alerting = createAlerting({ db: app });
+  const alerting = createAlerting({ db: app });
+  wired.alerting = alerting;
+  wired.alertSubmitter = createAlertSubmitter({
+    alerting,
+    db: app,
+    translator: noTranslation(),
+    translationConfigured: false,
+    freeze: () => {
+      throw new Error("no entry is frozen in the permission test");
+    },
+  });
   wired.places = createBuildingService({
     db: app,
     audit: { record: (tx, event) => record(tx, event as AuditEvent), recordRefusal: (db, event) => recordRefusal(db, event as AuditEvent) },

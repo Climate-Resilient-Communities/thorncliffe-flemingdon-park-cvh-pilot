@@ -36,6 +36,16 @@
     background-color: var(--surface);
   }
 
+  /*
+   * Text that is an item of a row (a language's name and what became of it, S04.05): it wraps inside the row, even a word that cannot
+   * break (a long translated label), instead of keeping the row wider than its column. `anywhere`, not `break-word`: the item's
+   * minimum width must shrink with it.
+   */
+  .hub-wrap {
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
   /* An item of a list of records: a hairline under it and room before the next, so two items never run together. */
   .hub-list-item {
     padding-block-end: var(--gap-related);

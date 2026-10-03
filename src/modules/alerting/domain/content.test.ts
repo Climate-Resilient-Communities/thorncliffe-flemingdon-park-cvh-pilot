@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { Audience } from "../../../contracts/audience";
-import { ALERT_TEXT_MAX, VALID_UNTIL_MAX_MS, audienceBuildings, contentRefusal, isWideContent, sameContent, stableJson, validUntilRefusal, type EntryContent } from "./content";
+import { ALERT_TEXT_MAX, UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, stableJson, validUntilRefusal, type EntryContent } from "./content";
 
 const FLOOR = "01900000-0000-7000-8000-000000000001";
 type BuildingList = Extract<Audience, { scope: "buildings" }>["buildings"];
@@ -94,13 +94,46 @@ describe("sameContent", () => {
   });
 });
 
+describe("draftFingerprint", () => {
+  it("is a SHA-256, the same for the same content whatever the order of the types or the keys of the audience, and different for any change a submit would freeze", () => {
+    const base = draftFingerprint(content());
+    expect(base).toMatch(/^[0-9a-f]{64}$/);
+    expect(draftFingerprint(content({ types: ["power", "water"] }))).toBe(draftFingerprint(content({ types: ["water", "power"] })));
+    const reordered = { types: ["power"], groups: [], buildings: [{ floors: null, rsn: "4154146" }], scope: "buildings" } as Audience;
+    expect(draftFingerprint(content({ audience: reordered }))).toBe(base);
+    for (const changed of [
+      content({ text: "Other." }),
+      content({ phase: "in_progress" }),
+      content({ validUntil: new Date("2026-10-02T15:00:01Z") }),
+      content({ types: ["power", "water"] }),
+      content({ audience: neighbourhoodAudience() }),
+      content({ audience: { ...buildingsAudience(), groups: ["seniors"] } }),
+    ]) {
+      expect(draftFingerprint(changed)).not.toBe(base);
+    }
+  });
+
+  it("agrees with sameContent, and does not count how the valid-until was chosen, which is not what is frozen", () => {
+    const a = content({ validUntilMode: "at" });
+    const b = content({ validUntilMode: "resolved" });
+    expect(sameContent(a, b)).toBe(true);
+    expect(draftFingerprint(a)).toBe(draftFingerprint(b));
+  });
+});
+
 describe("validUntilRefusal", () => {
   const NOW = new Date("2026-10-01T15:00:00Z");
-  it("requires a time ahead, at most 7 days", () => {
-    expect(validUntilRefusal(NOW, NOW)).toBe("VALID_UNTIL_PAST");
-    expect(validUntilRefusal(new Date(NOW.getTime() - 1000), NOW)).toBe("VALID_UNTIL_PAST");
-    expect(validUntilRefusal(new Date(NOW.getTime() + 1), NOW)).toBeNull();
-    expect(validUntilRefusal(new Date(NOW.getTime() + VALID_UNTIL_MAX_MS), NOW)).toBeNull();
-    expect(validUntilRefusal(new Date(NOW.getTime() + VALID_UNTIL_MAX_MS + 1), NOW)).toBe("VALID_UNTIL_TOO_FAR");
+  const LATEST = new Date("2026-10-08T15:00:00Z");
+  it("requires a time ahead, no later than the latest the caller works out", () => {
+    expect(validUntilRefusal(NOW, NOW, LATEST)).toBe("VALID_UNTIL_PAST");
+    expect(validUntilRefusal(new Date(NOW.getTime() - 1000), NOW, LATEST)).toBe("VALID_UNTIL_PAST");
+    expect(validUntilRefusal(new Date(NOW.getTime() + 1), NOW, LATEST)).toBeNull();
+    expect(validUntilRefusal(LATEST, NOW, LATEST)).toBeNull();
+    expect(validUntilRefusal(new Date(LATEST.getTime() + 1), NOW, LATEST)).toBe("VALID_UNTIL_TOO_FAR");
+  });
+
+  it("counts the limit in days and 'until resolved' in elapsed hours", () => {
+    expect(VALID_UNTIL_MAX_DAYS).toBe(7);
+    expect(UNTIL_RESOLVED_MS).toBe(24 * 60 * 60 * 1000);
   });
 });

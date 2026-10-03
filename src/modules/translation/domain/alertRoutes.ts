@@ -71,6 +71,19 @@ const checkKey = (row: RouteRow) => JSON.stringify([row.eldCode, row.script, row
 export const routeDeadlineMs = (positions: readonly { attemptTimeoutMs: number }[]): number => positions.reduce((sum, position) => sum + position.attemptTimeoutMs, 0);
 
 /**
+ * What a submit adds to the longest route deadline: the submit budget is "the longest route deadline plus 5 s" (epic E04,
+ * Submit budget; proposed engineering budget, not a PRD number). The 5 s cover reading the routes, the stores' grace periods
+ * after the last language ends, and the render, hash and freeze that follow.
+ */
+export const SUBMIT_MARGIN_MS = 5_000;
+
+/** The longest route deadline among the routes, 0 for none. */
+export const longestRouteDeadlineMs = (routes: readonly { deadlineMs: number }[]): number => routes.reduce((longest, route) => Math.max(longest, route.deadlineMs), 0);
+
+/** A submit finishes within the longest route deadline plus 5 s, and the author sees progress per language until then. */
+export const submitBudgetMs = (routes: readonly { deadlineMs: number }[]): number => longestRouteDeadlineMs(routes) + SUBMIT_MARGIN_MS;
+
+/**
  * Turns the stored rows into routes, one per language that has rows, in the order of ROUTE_LANGS. Refuses (RouteConfigError)
  * rows that are not a route, so a bad migration fails loudly instead of translating by a route nobody meant: an unknown
  * language or script, positions repeated, a model twice in one route, an attempt timeout that is not whole seconds or is
