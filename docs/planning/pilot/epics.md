@@ -2158,7 +2158,7 @@ So that I can trust what I read and act on it.
 
 ### Story S04.09 — Each phone puts the alerts that matter to its owner first
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h 37 min (started 2026-10-03 15:08 UTC, built 16:45 UTC)
 - **Traces:** FR-A13, FR-A9 (on the phone), AR-26, UX-DR5 (X-12) · **Depends on:** S04.08, S04.04 · **Branch:** `e04-s09-tailored-order`
 
 As a resident,
