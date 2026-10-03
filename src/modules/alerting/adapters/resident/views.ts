@@ -18,8 +18,8 @@ export const nondrillAlert = pgView("nondrill_alert", {
   createdAt: timestamp("created_at", { withTimezone: true }).notNull(),
 }).existing();
 
-/** The web-published entries of those threads, with what a resident may read of each and the thread's address (`slug`). */
-export const nondrillAlertEntry = pgView("nondrill_alert_entry", {
+/** (v2: S04.08's `nondrill_alert_entry` stays as it was for the previous release; this one appends `supersedes_id`.) The web-published entries of those threads, with what a resident may read of each and the thread's address (`slug`). */
+export const nondrillAlertEntryV2 = pgView("nondrill_alert_entry_v2", {
   id: uuid().notNull(),
   alertId: uuid("alert_id").notNull(),
   slug: text().notNull(),
@@ -32,6 +32,8 @@ export const nondrillAlertEntry = pgView("nondrill_alert_entry", {
   webPublishedAt: timestamp("web_published_at", { withTimezone: true }).notNull(),
   verified: boolean().notNull(),
   superseded: boolean().notNull(),
+  /** S05.02: the entry a correction or a withdrawal replaces; null for every other entry. */
+  supersedesId: uuid("supersedes_id"),
 }).existing();
 
 /** The frozen web text of each of those entries, one row per translated language. */

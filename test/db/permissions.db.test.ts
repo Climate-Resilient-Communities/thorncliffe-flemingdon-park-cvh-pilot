@@ -390,7 +390,7 @@ describe.each(STAFF_ENDPOINTS.map((endpoint) => [endpoint.id, endpoint] as const
       expect(denials).toEqual([]);
       return;
     }
-    const meta = expected === "forbidden" ? { status: 403, permission: endpoint.action, route: endpoint.route, reason: "forbidden" } : { status: 403, route: endpoint.route, reason: "setup_incomplete" };
+    const meta = expected === "forbidden" ? { status: 403, permission: endpoint.action, route: endpoint.route, reason: endpoint.auditedReason?.[caller] ?? "forbidden" } : { status: 403, route: endpoint.route, reason: "setup_incomplete" };
     expect(denials).toEqual([{ actor_staff_id: id, outcome: "refused", meta }]);
     if (endpoint.kind === "route") {
       expect(answer).toEqual({ status: 403, body: { error: expected } });

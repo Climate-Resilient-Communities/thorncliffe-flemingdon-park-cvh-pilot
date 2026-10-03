@@ -714,6 +714,7 @@
     "amberBody": "Amber Alerts are official alerts about a missing child. The real wording always comes from Alert Ready.",
     "endedResolved": "This alert has ended. It was resolved {t}.",
     "endedWithdrawn": "The Hub withdrew this alert. {reason}",
+    "withdrawn": "Withdrawn",
     "endedExpired": "This alert has ended. It expired {t} without a final update.",
     "validLine": "Valid {until}",
     "timeLine": "Posted {posted} · Updated {updated}",
@@ -4573,7 +4574,13 @@
         "FLOOR_NOT_IN_BUILDING": "One of the floors no longer exists. Change the place.",
         "NEIGHBOURHOOD_NOT_FOUND": "That neighbourhood does not exist. Change the place.",
         "forbidden": "Only a Coordinator or an Admin can write an alert.",
-        "invalid": "That could not be done. Reload the page and try again."
+        "invalid": "That could not be done. Reload the page and try again.",
+        "TARGET_NOT_VALID": "That entry is not one that can be corrected or withdrawn. Go back and choose again.",
+        "TARGET_SUPERSEDED": "That entry was corrected or withdrawn already. Go back and read the alert as it is now.",
+        "TARGET_NOT_PUBLISHED": "Residents have not read that entry, so there is nothing to correct or withdraw. Wait for its approval, or discard it.",
+        "WITHDRAWAL_REASON_INVALID": "Choose why you are withdrawing it.",
+        "replaceForbidden": "Only a Coordinator or an Admin can correct or withdraw an alert.",
+        "replaceAal2": "Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code."
       },
       "updateTitle": "Add an update",
       "promoteTitle": "Promote to full alert",
@@ -4591,14 +4598,34 @@
           "correction": "Correction",
           "withdrawal": "Withdrawal",
           "final": "Final"
-        }
+        },
+        "leadReplace": "What residents read now, newest first. A correction is added above the entry it corrects. A withdrawal puts the reason in the place of the entry. Nothing is deleted."
       },
       "carried": "Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.",
       "carriedStart": "Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.",
       "sameAudience": "Who it is for is the same as the alert now.",
       "phaseRequired": "Required: choose where things stand now.",
       "updateClosed": "This alert is already closed. Nothing more can be added to it.",
-      "updateUnpublished": "Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first."
+      "updateUnpublished": "Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.",
+      "correctTitle": "Correct an alert",
+      "withdrawTitle": "Withdraw an alert",
+      "correctLead": "A correction is added to the same alert in the open. The earlier wording stays readable, marked \"Corrected\", and residents see what changed. A second person approves it before anyone sees it.",
+      "withdrawLead": "Residents see \"Withdrawn\" and the reason in the place of the entry. A second person approves it before anyone sees it. If nothing else in the alert is left, the alert closes as withdrawn.",
+      "correctTargetsTitle": "1. Which entry needs correcting?",
+      "withdrawTargetsTitle": "1. Which entry are you withdrawing?",
+      "targetsLead": "These are the entries residents can read now. One that was corrected or withdrawn already is not here.",
+      "targetsNone": "No entry of this alert can be corrected or withdrawn now.",
+      "targetChoose": "Choose this entry",
+      "targetChosen": "Chosen",
+      "replacesTitle": "The entry residents read now",
+      "correctTextLabel": "2. The corrected wording",
+      "withdrawWordsLabel": "Words for residents (needed for \"Other\")",
+      "withdrawWordsHint": "Residents read the reason in the place of the entry, in their language. Add words of your own, or write the whole reason if you chose \"Other\". At most {max} characters.",
+      "withdrawReasonLegend": "2. Why are you withdrawing it?",
+      "withdrawReasonHint": "Residents see that the entry was withdrawn, with this reason.",
+      "withdrawTextLabel": "What residents read in the place of the entry",
+      "withdrawTextHint": "The reason, in English. It is translated into every language when you submit. At most {max} characters.",
+      "withdrawCarried": "Who it is for is who the withdrawn entry was for, and everyone who got that entry also gets this withdrawal."
     },
     "approve": {
       "title": "Approve an alert",
@@ -4701,13 +4728,19 @@
         "NEIGHBOURHOOD_NOT_FOUND": "A neighbourhood of this alert no longer exists, so it cannot be approved. Return it to its author.",
         "AUDIENCE_INVALID": "Who this alert is for is not valid, so it cannot be approved. Return it to its author.",
         "forbidden": "Only a Coordinator or an Admin who did not write or change this alert can approve it.",
-        "invalid": "That could not be done. Reload the page and try again."
+        "invalid": "That could not be done. Reload the page and try again.",
+        "TARGET_NOT_VALID": "The entry this replaces is not one that can be corrected or withdrawn any more. Discard this.",
+        "TARGET_SUPERSEDED": "The entry this replaces was corrected or withdrawn first. Discard this and read the alert as it is now.",
+        "TARGET_NOT_PUBLISHED": "Residents have not read the entry this replaces, so there is nothing to replace. Discard this."
       },
       "updateNote": "This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are.",
       "published": {
         "titleAck": "The acknowledgement is out",
         "titleAlert": "The alert is out",
         "titleDrill": "Practice publish: nothing was sent to residents",
+        "titleCorrection": "The correction is out",
+        "titleWithdrawal": "The withdrawal is out",
+        "webWithdrawn": "Residents now read \"Withdrawn\" and the reason in the place of the entry.",
         "leadDrill": "This is a drill. The rows below show what would have gone where.",
         "whereTitle": "What went where",
         "webLabel": "App and web",
@@ -4730,7 +4763,19 @@
         "toHome": "Back to incidents",
         "toUpdate": "Post an update",
         "toPromote": "Promote to a full alert"
-      }
+      },
+      "correctionTitle": "Approve a correction",
+      "withdrawalTitle": "Approve a withdrawal",
+      "correctionLead": "Read exactly what residents will see in place of the entry below. You approve this version only. If it changes while you read, you review it again.",
+      "withdrawalLead": "Read exactly what residents will read in the place of the entry below. You approve this version only. If it changes while you read, you review it again.",
+      "replacesTitle": "What this replaces",
+      "replacesEntry": "{kind}, {time}",
+      "replacesCorrection": "Residents read this above the entry it corrects. The entry stays readable below it, marked \"Corrected\".",
+      "replacesWithdrawal": "Residents read \"Withdrawn\" and the reason in the place of this entry.",
+      "withdrawalReason": "Reason: {reason}",
+      "reachesOriginal": "This goes to everyone who got the original, and to everyone in the audience above.",
+      "closesThread": "Nothing else in this alert is left for residents to read. Approving it closes the alert as withdrawn: nothing more is sent for it, and its drafts and waiting entries are discarded.",
+      "targetGone": "The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it."
     },
     "incidents": {
       "waitingTitle": "Waiting for your approval",
@@ -4781,7 +4826,9 @@
       "readOnly": "Read-only: you can see what is open here and change nothing.",
       "readOnlyRunningLead": "Alerts residents are reading now, the most recently published first.",
       "drillsLead": "Practice only. Nothing here reaches residents.",
-      "drillsNone": "No drill is running."
+      "drillsNone": "No drill is running.",
+      "correct": "Correct an entry",
+      "withdraw": "Withdraw an entry"
     },
     "resetAuthenticator": {
       "title": "Reset an authenticator",
@@ -4951,6 +4998,19 @@
         "pauseFailed": "Texts were not paused. Try again. If it fails again, tell IT.",
         "resumeFailed": "Texts were not resumed. Try again. If it fails again, tell IT.",
         "unreadable": "The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT."
+      }
+    },
+    "correct": {
+      "reasons": {
+        "wrong_place": "Wrong place",
+        "wrong_information": "Wrong information",
+        "duplicate": "Duplicate of another alert",
+        "other": "Other (write the reason)"
+      },
+      "reasonText": {
+        "wrong_place": "This alert named the wrong place. It has been withdrawn.",
+        "wrong_information": "This alert had wrong information. It has been withdrawn.",
+        "duplicate": "This alert repeated another alert. It has been withdrawn."
       }
     }
   },

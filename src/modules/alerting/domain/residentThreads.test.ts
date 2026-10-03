@@ -115,6 +115,20 @@ describe("the threads of the feed", () => {
     }
   });
 
+  it("names the entry a correction or a withdrawal replaces (S05.02), and no other entry names one; the withdrawal's reason is its own text, not a field the phones in the field would refuse", () => {
+    const rows = [
+      row({ entryId: E(1), publishedAt: new Date("2026-10-01T14:00:00Z"), superseded: true }),
+      row({ entryId: E(2), kind: "correction", supersedesId: E(1), publishedAt: new Date("2026-10-01T15:00:00Z") }),
+      row({ entryId: E(3), kind: "withdrawal", supersedesId: E(2), publishedAt: new Date("2026-10-01T16:00:00Z"), originalText: "This alert had wrong information. It has been withdrawn." }),
+    ];
+    const [thread] = assembleThreads(rows, "en");
+
+    expect(thread.entries.map((entry) => [entry.id, entry.supersedes_id])).toEqual([[E(1), undefined], [E(2), E(1)], [E(3), E(2)]]);
+    expect(thread.entries[2].text.body).toBe("This alert had wrong information. It has been withdrawn.");
+    expect(Object.keys(thread.entries[2]).sort()).toEqual(["attribution", "id", "kind", "original", "published_at", "supersedes_id", "text", "verified"]);
+    expect(FeedThreadSchema.safeParse(thread).success).toBe(true);
+  });
+
   it("marks an entry that is not verified as such", () => {
     expect(assembleThreads([row({ verified: false })], "en")[0].entries[0].verified).toBe(false);
   });

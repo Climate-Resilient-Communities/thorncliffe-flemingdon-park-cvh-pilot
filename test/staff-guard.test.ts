@@ -331,11 +331,13 @@ const AAL2_MESSAGE: Record<string, string> = {
   "src/app/staff/coverage/actions.ts": "An Admin must sign in with their authenticator code to assign ambassadors. Sign in again and enter the code.",
   "src/app/staff/directory/actions.ts": "An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.",
   "src/app/staff/alerts/approval/actions.ts": "Approving needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
+  "src/app/staff/alerts/correct/actions.ts": "Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.",
   "src/app/staff/texts/actions.ts": "An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.",
 };
 /** What a role the policy refuses is told, where it is not "Only an Admin can ...": a Coordinator can approve too, but not what they wrote or changed (S04.07). */
 const FORBIDDEN_MESSAGE: Record<string, RegExp> = {
   "src/app/staff/alerts/approval/actions.ts": /^Only a Coordinator or an Admin who did not write or change this alert can approve it\./,
+  "src/app/staff/alerts/correct/actions.ts": /^Only a Coordinator or an Admin can correct or withdraw an alert\./,
 };
 
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {
@@ -374,7 +376,7 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
 
   it("refuse a session below aal2 when privileged (403 aal2_required) for a role the policy allows, and any other role as forbidden, before their own code", async () => {
     const { guardSpecOf } = await import("../src/app/staff/guard");
-    const { can } = await import("../src/modules/identity");
+    const { can, decidePolicy } = await import("../src/modules/identity");
     const exportsOf: Record<string, (...args: unknown[]) => Promise<{ status: string; message?: string }>> = await import(file);
     for (const [name, action] of Object.entries(exportsOf)) {
       const spec = guardSpecOf(action);
@@ -393,7 +395,9 @@ describe.each(actionFiles.map((file) => [relative(file), file]))("server actions
             expect(audits.belowAal2.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged]);
           } else {
             expect(answer, `${name} as ${role} at ${gate}`).toMatchObject({ status: "refused", message: expect.stringMatching(FORBIDDEN_MESSAGE[relative(file)] ?? /^Only an Admin can /) });
-            expect(audits.policy.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged, "forbidden"]);
+            // "forbidden" where the role never may; "out_of_scope" where it may, but not on the entry given (an Ambassador and a correction, S05.02: their own pending entries only).
+            const neutral = { authorId: "00000000-0000-0000-0000-000000000000", editorIds: [], status: "pending_approval" };
+            expect(audits.policy.at(-1)).toEqual([atGate(gate).staffId, spec.route, spec.privileged, decidePolicy(role, spec.privileged, { actorId: atGate(gate).staffId, entry: neutral })]);
           }
         }
       }

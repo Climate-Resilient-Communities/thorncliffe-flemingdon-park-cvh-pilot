@@ -124,4 +124,20 @@ export const drizzleDeliveryStore: DeliveryStore = {
       .where(and(mine, or(inArray(delivery.state, ["submitted", "unknown"]), and(eq(delivery.state, "claimed"), isNotNull(delivery.handedOffAt)))));
     return { skipped: skipped.length, inFlight: inFlight.length };
   },
+
+  async cancelForEntries(tx: DbTransaction, entryIds) {
+    const mine = and(inArray(delivery.entryId, [...entryIds]), eq(delivery.kind, "alert"));
+    // One statement, like `skipForRecipient`: it waits for a row another transaction holds (the dispatcher's claim or hand-off) and then re-checks that
+    // the row is still unhanded, so a hand-off that commits first leaves its row alone.
+    const cancelled = await tx
+      .update(delivery)
+      .set({ state: "cancelled" })
+      .where(and(mine, isNull(delivery.handedOffAt), inArray(delivery.state, ["queued", "claimed"])))
+      .returning({ id: delivery.id });
+    const inFlight = await tx
+      .select({ id: delivery.id })
+      .from(delivery)
+      .where(and(mine, or(inArray(delivery.state, ["submitted", "unknown"]), and(eq(delivery.state, "claimed"), isNotNull(delivery.handedOffAt)))));
+    return { cancelled: cancelled.length, inFlight: inFlight.length };
+  },
 };

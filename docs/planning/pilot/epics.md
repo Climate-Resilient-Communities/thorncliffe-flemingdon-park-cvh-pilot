@@ -2270,7 +2270,7 @@ So that residents follow one running story instead of many separate alerts.
 
 ### Story S05.02 — Hub staff correct or withdraw what residents saw, in the open
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 47 min (started 2026-10-03 15:31 UTC, built 17:18 UTC)
 - **Traces:** FR-A16 (web), FR-A15, AR-8 (supersession), AR-11 (correction recipients handoff), UX-DR16 (O-15), UX-DR6 · **Depends on:** S05.01 · **Branch:** `e05-s02-corrections-withdrawals`
 
 As a Hub Coordinator,

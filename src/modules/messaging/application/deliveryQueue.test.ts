@@ -11,7 +11,7 @@ const tx = {} as DbTransaction;
 
 /** A store that remembers what it was asked and answers as the real one would for a new row. */
 function fakeStore() {
-  const calls = { inserted: [] as NewDelivery[][], approvals: [] as string[], skips: [] as unknown[] };
+  const calls = { inserted: [] as NewDelivery[][], approvals: [] as string[], skips: [] as unknown[], cancels: [] as string[][] };
   const store: DeliveryStore = {
     async insert(_tx, rows) {
       calls.inserted.push([...rows]);
@@ -23,6 +23,10 @@ function fakeStore() {
     async skipForRecipient(_tx, recipient) {
       calls.skips.push(recipient);
       return { skipped: 2, inFlight: 1 };
+    },
+    async cancelForEntries(_tx, entryIds) {
+      calls.cancels.push([...entryIds]);
+      return { cancelled: 3, inFlight: 1 };
     },
   };
   return { store, calls };
@@ -212,5 +216,20 @@ describe("a recipient's deletion", () => {
     const { queue, calls } = queueOf();
     expect(await queue.skipRecipientDeliveries(tx, { kind: "subscriber", id: ID })).toEqual({ skipped: 2, inFlight: 1 });
     expect(calls.skips).toEqual([{ kind: "subscriber", id: ID }]);
+  });
+});
+
+describe("cancelQueued (S05.02)", () => {
+  it("asks the store to cancel the rows of the entries, each once, and returns what it did", async () => {
+    const { queue, calls } = queueOf();
+    expect(await queue.cancelQueued([ENTRY, ENTRY, ID], tx)).toEqual({ cancelled: 3, inFlight: 1 });
+    expect(calls.cancels).toEqual([[ENTRY, ID]]);
+  });
+
+  it("does nothing, and does not ask the store, for no entry or an id that is not one", async () => {
+    const { queue, calls } = queueOf();
+    expect(await queue.cancelQueued([], tx)).toEqual({ cancelled: 0, inFlight: 0 });
+    expect(await queue.cancelQueued(["not-an-id"], tx)).toEqual({ cancelled: 0, inFlight: 0 });
+    expect(calls.cancels).toEqual([]);
   });
 });

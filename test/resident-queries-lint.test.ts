@@ -34,6 +34,7 @@ describe("the resident query rule (resident-queries-read-nondrill-only)", () => 
   it.each([
     ["the thread view", 'export const q = "select id from nondrill_alert";'],
     ["the entry view", 'export const q = "select id from nondrill_alert_entry";'],
+    ["the versioned entry view", 'export const q = "select id from nondrill_alert_entry_v2";'],
     ["the translation view", "export const q = `select body from nondrill_alert_entry_translation where lang = ${1}`;"],
     ["a word that only contains the name", 'export const q = "alerting alerts alerted";'],
     ["an identifier", "export const alertCount = 1;"],

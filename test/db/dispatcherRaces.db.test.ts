@@ -229,13 +229,6 @@ interface Scenario {
   prepare(): Promise<{ id: string; change: (beforeCommit: () => Promise<void>) => Promise<Change>; stoppedAs: "cancelled" | "skipped" }>;
 }
 
-/** The statement `cancelQueued` is (S06.03): stop the unhanded rows of the entries, and report the rows already in flight. */
-async function cancelUnhanded(tx: postgres.TransactionSql, entryIds: string[]): Promise<Change> {
-  const stopped = await tx`update delivery set state = 'cancelled' where entry_id = any(${entryIds}) and state in ('queued', 'claimed') and handed_off_at is null returning id`;
-  const [inFlight] = await tx`select count(*)::int as n from delivery where entry_id = any(${entryIds}) and (state in ('submitted', 'unknown') or (state = 'claimed' and handed_off_at is not null))`;
-  return { stopped: stopped.length, inFlight: inFlight.n as number };
-}
-
 async function recipientTable() {
   const name = `scratch_race_recipient_${randomBytes(4).toString("hex")}`;
   await owner.unsafe(`create table ${name} (id uuid primary key)`);
@@ -254,10 +247,11 @@ const scenarios: Scenario[] = [
       return {
         id: ids[0],
         change: (beforeCommit) =>
-          appSql.begin(async (tx) => {
-            const result = await cancelUnhanded(tx, [entry.entryId]);
+          app.transaction(async (tx) => {
+            // messaging's cancelQueued (S05.02), the port the correction's approval calls in its own transaction.
+            const result = await createDeliveryQueue().cancelQueued([entry.entryId], tx);
             await beforeCommit();
-            return result;
+            return { stopped: result.cancelled, inFlight: result.inFlight };
           }),
         stoppedAs: "cancelled",
       };
@@ -271,11 +265,11 @@ const scenarios: Scenario[] = [
       return {
         id: ids[0],
         change: (beforeCommit) =>
-          appSql.begin(async (tx) => {
-            const result = await cancelUnhanded(tx, [entry.entryId]);
-            await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${entry.alertId}`;
+          app.transaction(async (tx) => {
+            const result = await createDeliveryQueue().cancelQueued([entry.entryId], tx);
+            await tx.execute(drizzleSql`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${entry.alertId}`);
             await beforeCommit();
-            return result;
+            return { stopped: result.cancelled, inFlight: result.inFlight };
           }),
         stoppedAs: "cancelled",
       };

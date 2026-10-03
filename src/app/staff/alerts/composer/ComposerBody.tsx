@@ -73,6 +73,7 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
   const [time, setTime] = useState(form.valid.fields.time);
   // The answer to "before or after the clock change" for a stored time in the repeated hour travels with the form until the time is edited.
   const [fold, setFold] = useState<"" | "before" | "after">(form.valid.fields.fold);
+  const [reason, setReason] = useState(form.reasons?.items.find((item) => item.checked)?.id ?? "");
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set([...(form.types?.building ?? []), ...(form.types?.neighbourhood ?? [])].filter((item) => item.checked).map((item) => item.id)));
   const [phase, setPhase] = useState(form.phase?.items.find((item) => item.checked)?.id ?? "");
   const over = text.length > form.text.max;
@@ -120,6 +121,20 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           </Stack>
         </fieldset>
       )}
+      {form.reasons && (
+        <fieldset aria-labelledby="composer-reason-legend" aria-describedby="composer-reason-hint">
+          <Stack gap="target">
+            <legend id="composer-reason-legend">{form.reasons.legend}</legend>
+            <p id="composer-reason-hint">{form.reasons.hint}</p>
+            {form.reasons.items.map((item) => (
+              <label key={item.id} className="hub-choice">
+                <input type="radio" name="reason" value={item.id} checked={reason === item.id} required onChange={() => setReason(item.id)} />
+                <span>{item.label}</span>
+              </label>
+            ))}
+          </Stack>
+        </fieldset>
+      )}
       <Stack gap="related">
         <label htmlFor="composer-text">
           <strong>{form.text.label}</strong>
@@ -131,7 +146,7 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           name="text"
           rows={6}
           value={text}
-          required
+          required={!form.reasons}
           aria-describedby={`composer-text-hint composer-text-count${describedBy ? ` ${describedBy}` : ""}`}
           aria-invalid={over || undefined}
           data-testid="composer-text"
@@ -141,6 +156,7 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           {fill(form.text.counter, { n: text.length })}
         </p>
       </Stack>
+      {!form.validFixed && (
       <fieldset aria-labelledby="composer-valid-legend" aria-describedby={describedBy}>
         <Stack gap="target">
           <legend id="composer-valid-legend">{form.valid.title}</legend>
@@ -202,6 +218,7 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           )}
         </Stack>
       </fieldset>
+      )}
     </Stack>
   );
 }
@@ -344,8 +361,9 @@ export function ComposerBody({
       </button>
     </Inline>
   );
-  // A new update has one action: Save draft, which makes the draft and goes on to its composer, where it is submitted.
-  const newActions = (
+  // A new update has one action: Save draft, which makes the draft and goes on to its composer, where it is submitted. A correction or a withdrawal has
+  // none until an entry is chosen (S05.02).
+  const newActions = !screen.draft ? undefined : (
     <Inline gap="target" wrap>
       <button className="hub-button hub-button--primary" type="submit" form={FORM_ID} disabled={savePending} data-testid="save-draft">
         {screen.actions.save}
@@ -375,6 +393,53 @@ export function ComposerBody({
     </Stack>
   );
 
+  // The entry a correction or a withdrawal is about, as residents read it now (O-15, S05.02).
+  const replaces = screen.replaces && (
+    <section aria-labelledby="replaces-title" data-testid="replaces">
+      <Stack gap="related">
+        <h2 id="replaces-title">{screen.replaces.title}</h2>
+        <p className="hub-wrap">
+          <strong data-testid="replaces-heading">{screen.replaces.heading}</strong>
+        </p>
+        <p className="hub-wrap hub-preline" lang="en" data-testid="replaces-text">
+          {screen.replaces.text}
+        </p>
+      </Stack>
+    </section>
+  );
+
+  // The entries that can be corrected or withdrawn: the person chooses one before anything is written (O-15, S05.02).
+  const targets = screen.targets && (
+    <section aria-labelledby="targets-title" data-testid="targets">
+      <Stack gap="related">
+        <h2 id="targets-title">{screen.targets.title}</h2>
+        <p>{screen.targets.lead}</p>
+        {screen.targets.none && (
+          <p role="note" className="hub-flag" data-testid="targets-none">
+            {screen.targets.none}
+          </p>
+        )}
+        <Stack as="ul" gap="related">
+          {screen.targets.items.map((item) => (
+            <li key={item.key} className="hub-list-item" data-testid="target" data-selected={item.selected ? "true" : undefined}>
+              <Stack gap="subline">
+                <p className="hub-wrap">
+                  <strong>{item.heading}</strong>
+                </p>
+                <p className="hub-wrap hub-preline" lang="en">
+                  {item.text}
+                </p>
+                <a className="tap hub-link" href={item.href} aria-current={item.selected ? "true" : undefined} data-testid="target-choose">
+                  {item.selected ? screen.targets!.chosen : screen.targets!.choose}
+                </a>
+              </Stack>
+            </li>
+          ))}
+        </Stack>
+      </Stack>
+    </section>
+  );
+
   // The running alert an update adds to: what residents read now, newest first, each entry with its time and where things stood (S05.01).
   const thread = screen.thread && (
     <section aria-labelledby="thread-title" data-testid="thread-digest">
@@ -402,6 +467,8 @@ export function ComposerBody({
   const body = (
     <Stack gap={screen.mode === "ack" ? "section-hub-review" : "section-hub"}>
       {header}
+      {targets}
+      {replaces}
       {thread}
       {screen.startNote && <p data-testid="start-note">{screen.startNote}</p>}
       {screen.notice && saveState.status === "idle" && <p role="status">{screen.notice}</p>}
@@ -438,6 +505,7 @@ export function ComposerBody({
             <input type="hidden" name="alert" value={alertId} />
             <input type="hidden" name="entry" value={entryId} />
             <input type="hidden" name="from" value={screen.from} />
+            {screen.targetId && <input type="hidden" name="target" value={screen.targetId} />}
             <DraftFields form={screen.draft} state={shown} errorId={errorId} />
           </Stack>
         </form>
@@ -506,7 +574,7 @@ export function ComposerBody({
             {screen.aside.change.same && <p data-testid="audience-same">{screen.aside.change.same}</p>}
           </Stack>
         )}
-        {screen.status === "draft" && (
+        {screen.status === "draft" && screen.mode !== "withdraw" && (
           <>
             <a className="tap hub-link" href={screen.aside.link.href}>
               {screen.aside.link.label}

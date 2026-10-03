@@ -43,6 +43,9 @@ export const APPROVAL_MESSAGE_CODES = [
   "ILLEGAL_TRANSITION",
   "WEB_PUBLISHED",
   "UNKNOWN_TYPE",
+  "TARGET_NOT_VALID",
+  "TARGET_SUPERSEDED",
+  "TARGET_NOT_PUBLISHED",
   "BUILDING_NOT_FOUND",
   "FLOOR_NOT_IN_BUILDING",
   "NEIGHBOURHOOD_NOT_FOUND",
@@ -140,6 +143,20 @@ export interface ApprovalScreen {
   };
   /** Set once the entry is approved (O-06): what went where. Absent for every other state. */
   published?: PublishedView;
+  /**
+   * What a correction or a withdrawal replaces (S05.02): the entry as residents read it now, what they will see instead, and who it goes to (everyone who got the
+   * original, and everyone in its audience now). `gone` is why it cannot be approved when the entry was corrected or withdrawn since; `closes` says the alert
+   * closes as withdrawn when this is approved. Null for every other entry.
+   */
+  replaces: {
+    title: string;
+    lead: string;
+    target: { heading: string; text: string };
+    reason: string | null;
+    reach: string;
+    closes: string | null;
+    gone: string | null;
+  } | null;
   fallback: { summary: string; recipients: string | null } | null;
   allTranslated: string | null;
   duplicate: { text: string; link: { href: string; label: string } | null } | null;
@@ -211,6 +228,23 @@ export function countChangedView(input: { review: EntryReview; snapshot: Recipie
     cost: cents === null ? t("costUnknown") : t("costNow", { amount: formatCents(cents) }),
     confirm: t("countConfirm"),
     reviewed: encodeCounts(snapshot),
+  };
+}
+
+/** What a correction or a withdrawal replaces, in words (S05.02): null for an entry that replaces nothing. */
+function replacesOf(review: EntryReview, t: Text, compose: Text): ApprovalScreen["replaces"] {
+  const { entry, target } = review;
+  if ((entry.kind !== "correction" && entry.kind !== "withdrawal") || !target) return null;
+  const withdrawal = entry.kind === "withdrawal";
+  return {
+    title: t("replacesTitle"),
+    lead: withdrawal ? t("replacesWithdrawal") : t("replacesCorrection"),
+    target: { heading: t("replacesEntry", { kind: compose(`thread.kind.${target.kind}`), time: target.publishedAt ? formatTorontoDateTime(target.publishedAt) : "" }), text: target.text },
+    reason: withdrawal && entry.withdrawalReason ? t("withdrawalReason", { reason: englishText(`staff.correct.reasons.${entry.withdrawalReason}`) }) : null,
+    // The rule of AD-7, in words for the approver: a correction or a withdrawal reaches everyone who got the original, as well as the people in its own audience now.
+    reach: t("reachesOriginal"),
+    closes: review.closesThread === true ? t("closesThread") : null,
+    gone: target.valid ? null : t("targetGone"),
   };
 }
 
@@ -296,6 +330,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
   const published = entry.status === "approved" ? publishedOf() : undefined;
   function publishedOf(): PublishedView {
     const drill = thread.isDrill;
+    const withdrawal = entry.kind === "withdrawal";
+    const correction = entry.kind === "correction";
     const ownWords = review.texts.filter((text) => text.status !== "fallback_en").map((text) => text.lang as LangCode);
     const webLanguages: LangCode[] = ["en", ...TRANSLATED_LANGS.filter((lang) => ownWords.includes(lang))];
     const textLanguages = (["en", ...TRANSLATED_LANGS] as LangCode[]).filter((lang) => review.sms[lang] !== undefined);
@@ -308,7 +344,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
             value:
               input.residentAlertsEnabled === false
                 ? t("published.webOff")
-                : thread.status === "open"
+                : withdrawal
+                  ? t("published.webWithdrawn")
+                  : thread.status === "open"
                   ? t("published.webValue", { n: webLanguages.length })
                   : t("published.webEnded", { n: webLanguages.length }),
             languages: { label: t("published.webLanguages"), items: webLanguages.map(languageView) },
@@ -328,11 +366,20 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       value: drill ? t("published.textsDrill") : textLanguages.length === 0 ? t("published.textsNone") : t("published.textsNotOpen", { n: textLanguages.length }),
       ...(!drill && textLanguages.length > 0 ? { languages: { label: t("published.textsLanguages"), items: textLanguages.map(languageView) } } : {}),
     });
-    rows.push({ id: "valid", label: t("published.validLabel"), value: formatTorontoDateTime(entry.content.validUntil) });
-    const open = thread.status === "open";
+    // A withdrawal is read as a reason in the place of an entry, so it has no validity of its own and nothing to add an update to.
+    if (!withdrawal) rows.push({ id: "valid", label: t("published.validLabel"), value: formatTorontoDateTime(entry.content.validUntil) });
+    const open = thread.status === "open" && !withdrawal;
     const ack = entry.kind === "ack";
     return {
-      title: drill ? t("published.titleDrill") : ack ? t("published.titleAck") : t("published.titleAlert"),
+      title: drill
+        ? t("published.titleDrill")
+        : withdrawal
+          ? t("published.titleWithdrawal")
+          : correction
+            ? t("published.titleCorrection")
+            : ack
+              ? t("published.titleAck")
+              : t("published.titleAlert"),
       drill: drill ? t("published.leadDrill") : null,
       whereTitle: t("published.whereTitle"),
       rows,
@@ -351,8 +398,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     variant,
     ref,
     here: approveHref(ref),
-    title: variant === "alert" ? t("title") : t("ambassadorTitle"),
-    lead: variant === "alert" ? t("lead") : t("ambassadorLead"),
+    title: entry.kind === "correction" ? t("correctionTitle") : entry.kind === "withdrawal" ? t("withdrawalTitle") : variant === "alert" ? t("title") : t("ambassadorTitle"),
+    lead: entry.kind === "correction" ? t("correctionLead") : entry.kind === "withdrawal" ? t("withdrawalLead") : variant === "alert" ? t("lead") : t("ambassadorLead"),
     status: locked ? "locked" : "review",
     ...(locked ? { locked } : {}),
     // Told where it matters: to the approver deciding (an entry waiting for them), and on the confirmation (an approved entry), not on an entry that
@@ -389,6 +436,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
         : null,
     ...(published ? { published } : {}),
     allTranslated: hasTexts && fallbackLangs.length === 0 ? t("allTranslated") : null,
+    replaces: replacesOf(review, t, compose),
     duplicate: entry.possibleDuplicateOf
       ? { text: t("duplicate"), link: review.duplicate?.entryId ? { href: approveHref({ alertId: review.duplicate.alertId, entryId: review.duplicate.entryId }), label: t("duplicateLink") } : null }
       : null,

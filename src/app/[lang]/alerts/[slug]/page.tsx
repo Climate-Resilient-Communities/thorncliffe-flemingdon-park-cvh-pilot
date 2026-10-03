@@ -18,7 +18,9 @@ export async function generateMetadata({ params }: PageProps<"/[lang]/alerts/[sl
   const loaded = await loadAlert(lang, slug);
   if (!loaded) return {};
   const t = (await getTranslations({ locale: lang })) as unknown as Translate;
-  return { title: alertView(loaded.thread, { lang, serverNow: loaded.serverNow, t }).types.map((type) => type.word).join(", ") };
+  // The share preview says what the alert says now (S05.02): its description is the words of the entry that stands (a correction's, never the wording it replaced).
+  const { preview } = alertView(loaded.thread, { lang, serverNow: loaded.serverNow, t });
+  return { title: preview.title, description: preview.description, openGraph: { title: preview.title, description: preview.description } };
 }
 
 /**

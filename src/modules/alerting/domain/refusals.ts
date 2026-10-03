@@ -64,4 +64,13 @@ export type AlertRefusal =
   | "NO_PUBLISHED_ENTRY"
   | "ENTRY_ID_INVALID"
   /** An update that follows other entries keeps the thread's types: a different type is a different disruption. */
-  | "TYPES_CHANGED";
+  | "TYPES_CHANGED"
+  /**
+   * S05.02, a correction or a withdrawal: the entry it names is not a valid target (not an entry of this thread, or a withdrawal notice); it was corrected
+   * or withdrawn already; residents have read nothing of it (a draft, a discarded entry, or one still waiting with nothing published). And the reason of a
+   * withdrawal is not one of the catalog's. A closed thread is `ALERT_CLOSED`.
+   */
+  | "TARGET_NOT_VALID"
+  | "TARGET_SUPERSEDED"
+  | "TARGET_NOT_PUBLISHED"
+  | "WITHDRAWAL_REASON_INVALID";

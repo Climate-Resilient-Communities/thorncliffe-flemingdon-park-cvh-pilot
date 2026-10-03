@@ -32,6 +32,8 @@ export interface AlertingWiring {
   /** The outbox's approval marker and alert-text writer (S06.01); see `createAlerting`. Default: messaging's `createDeliveryQueue()`. */
   markApproval?: AlertLifecycleDeps["markApproval"];
   queueAlertTexts?: AlertLifecycleDeps["queueAlertTexts"];
+  /** messaging's `cancelQueued(entryIds, tx)` (S05.02); see `createAlerting`. Default: messaging's `createDeliveryQueue().cancelQueued`. */
+  cancelQueued?: AlertLifecycleDeps["cancelQueued"];
   /** Cents CAD per text message segment, for each queued text's cost estimate (src/app/staff/alerts.ts gives `getEnv().smsPricePerSegmentCents`). */
   pricePerSegmentCents?: AlertLifecycleDeps["pricePerSegmentCents"];
 }
@@ -97,6 +99,10 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
       wiring.queueAlertTexts ??
       (async (tx, entryId, texts) => settled(await queue.enqueueAlertDeliveries(tx, entryId, texts), "the alert texts").map((queued) => ({ lang: queued.delivery.lang }))),
     pricePerSegmentCents: wiring.pricePerSegmentCents,
+    // Every use case that replaces an entry or closes a thread (S05.02: the approval of a correction or a withdrawal; S05.03 and S05.04 close) stops the texts
+    // of the entries it replaces or closes in its own transaction: messaging's `cancelQueued(entryIds, tx)` on the outbox, which the dispatcher's hand-off
+    // point (it locks a row and checks it is still `queued`) cannot overtake.
+    cancelQueued: wiring.cancelQueued ?? (async (tx, entryIds) => void (await queue.cancelQueued(entryIds, tx))),
   });
 }
 
@@ -107,6 +113,8 @@ export type {
   ApprovalOutcome,
   ApprovalRequest,
   AttemptView,
+  CorrectInput,
+  WithdrawInput,
   EntryRef,
   EntryReview,
   EntryState,
@@ -123,6 +131,22 @@ export type {
 } from "./application/lifecycle";
 export type { RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
+// S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
+export { type CloseAlert, type CloseAlertDeps, type CloseAlertInput, type Closed, type ClosedReason } from "./application/closeAlert";
+export {
+  SUPERSEDING_KINDS,
+  WITHDRAWAL_REASONS,
+  isSupersedingKind,
+  isWithdrawalReason,
+  substantiveRemains,
+  targetRefusal,
+  validTargets,
+  withdrawalText,
+  type SupersedingKind,
+  type TargetFacts,
+  type TargetRefusal,
+  type WithdrawalReason,
+} from "./domain/corrections";
 export { createEntryPreparer, type EntryPreparerDeps, type EntryTranslator } from "./application/prepareEntry";
 export { createSubmitter, refusalOfPreparationError, type AlertSubmitter, type SubmitReport, type SubmitterDeps } from "./application/submit";
 export { ATTEMPT_KINDS, ATTEMPT_STALE_MS, ATTEMPT_STATES, ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "./domain/submitAttempt";
