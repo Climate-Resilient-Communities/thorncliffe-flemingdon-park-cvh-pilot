@@ -13,6 +13,12 @@ export const isFallbackText = (text: ListingText): boolean => text.status === "f
 /** True when a model translated this text (or it was converted from one that was): it carries the machine-translation label. */
 export const isMachineText = (text: ListingText): boolean => text.machine;
 
+/**
+ * True for a machine translation no person has reviewed (AD-11 pilot change, directory descriptions): shown in the page
+ * language, but labelled "Machine-translated; not reviewed by a person" instead of x04.label.
+ */
+export const isUnreviewedMachineText = (text: ListingText): boolean => text.machine && !isFallbackText(text) && text.review_status !== "reviewed";
+
 type BlockTag = "p" | "span" | "div" | "li";
 
 /**
@@ -55,18 +61,19 @@ export function UnavailableNote({ lang, testId = "directory-unavailable-note" }:
 
 /**
  * The machine-translation label (x04) and "Read it in English": a toggle that shows the English original in place of the
- * machine-translated texts of one listing, and back. The toggle is described by the provider's name (`describedBy` is the
+ * machine-translated texts of one listing, and back. When one of those texts is a machine translation no person has
+ * reviewed (`unreviewed`, AD-11 pilot change) the label says so: x04.unreviewed, "Machine-translated; not reviewed by a person". The toggle is described by the provider's name (`describedBy` is the
  * id of the name), so a screen reader moving through a list of identical buttons says which listing each belongs to.
  * "Original (English)" is a status: it is announced when the original is shown, and its element is always in the page so
  * that the announcement happens (an empty status takes no room).
  */
-export function MachineLabel({ english, onToggle, describedBy }: { english: boolean; onToggle: () => void; describedBy: string }) {
+export function MachineLabel({ english, onToggle, describedBy, unreviewed = false }: { english: boolean; onToggle: () => void; describedBy: string; unreviewed?: boolean }) {
   const t = useTranslations();
   const name = languageOf("en").native;
   return (
-    <div className="dir-mt" data-testid="machine-label">
+    <div className="dir-mt" data-testid="machine-label" data-review={unreviewed ? "none" : "reviewed"}>
       <ResidentText as="span" className="dir-mt__label">
-        {t("x04.label")}
+        {t(unreviewed ? "x04.unreviewed" : "x04.label")}
       </ResidentText>
       <button type="button" className="dir-link tap" aria-pressed={english} aria-describedby={describedBy} onClick={onToggle} data-testid="show-english">
         <ResidentText>{t("x04.showSource", { lang: name })}</ResidentText>

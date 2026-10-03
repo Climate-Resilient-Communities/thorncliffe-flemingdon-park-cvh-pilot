@@ -207,8 +207,6 @@ describe("planProviderCatalogue: translations (reviewed and current only, as S02
   });
 
   it.each([
-    ["a machine translation with no review", reviewed(SERVICES, "x", { status: "machine", reviewer: null, reviewedOn: null }), "machine"],
-    ["a record with no status at all (what translate_catalogue.py writes)", { source: SERVICES, text: "x", model: "m" }, "machine"],
     ["a reviewed translation of English that has changed since", reviewed("Older services text", "x"), "stale"],
     ["a reviewed record with a placeholder reviewer", reviewed(SERVICES, "x", { reviewer: "PLACEHOLDER reviewer" }), "review_incomplete"],
     ["a reviewed record with no review date", reviewed(SERVICES, "x", { reviewedOn: null }), "review_incomplete"],
@@ -253,13 +251,168 @@ describe("planProviderCatalogue: translations (reviewed and current only, as S02
   });
 
   it("reports the counts per reason and language", () => {
-    const result = plan({ catalogue: catalogue([provider("M001")]), translations: { ur: translation(SERVICES, { source: SERVICES, text: "x", model: "m" }) } });
+    const result = plan({ catalogue: catalogue([provider("M001")]), translations: { ur: translation("Health Clinics", { source: "Health Clinics", text: "x", model: "m" }) } });
     const lines = formatProviderReport(result.report);
 
     expect(lines[0]).toBe("Providers: 1 in 2 categories");
     expect(lines).toContain("Translations loaded (reviewed and current): 0");
-    expect(lines.join("\n")).toMatch(/machine translation, no review recorded \(ur 1\)/);
+    expect(lines).toContain("Machine translations of descriptions loaded, not reviewed, shown labelled: 0");
+    expect(lines.join("\n")).toMatch(/machine translation, no review recorded \(only descriptions may load unreviewed\) \(ur 1\)/);
     expect(lines.join("\n")).toMatch(/not translated yet/);
+  });
+});
+
+describe("planProviderCatalogue: unreviewed machine translations of descriptions (AD-11 pilot change, 2026-10-03)", () => {
+  const SERVICES = "Free drop-in at 1 Overlea Blvd, M4H 1C6: Mon-Fri 9:30-4:30, call 416-555-0100 or see example.org.";
+  const ROLE = "Warm room during cold alerts. Call 911 in danger.";
+  const machine = (english: string, text: string, change: Partial<ProviderTranslationRecord> = {}): ProviderTranslationRecord => ({
+    source: english,
+    text,
+    model: "north-small-translate-09-2026",
+    ...change,
+  });
+  const PS = "په 1 Overlea Blvd, M4H 1C6 کې وړیا: Mon-Fri 9:30-4:30، 416-555-0100 ته زنګ ووهئ یا example.org وګورئ.";
+  const one = (records: Partial<Record<string, ProviderTranslationRecord>>, change: Record<string, unknown> = {}) =>
+    plan({
+      catalogue: catalogue([provider("M001", { services: { id: "x", en: SERVICES }, ...change })]),
+      translations: Object.fromEntries(Object.entries(records).map(([lang, record]) => [lang, translation(SERVICES, record!)])),
+    });
+
+  it("loads a current machine translation of a description, in Pashto too, as `machine` with no reviewer, and the report counts it apart", () => {
+    const result = one({ ps: machine(SERVICES, PS), fr: machine(SERVICES, "Accueil gratuit au 1 Overlea Blvd, M4H 1C6 : du lundi au vendredi 9:30-4:30, appelez le 416-555-0100 ou voyez example.org.") });
+
+    expect(result.providers[0].texts.services).toMatchObject({ en: SERVICES, ps: PS });
+    expect(result.providers[0].translations.services.ps).toEqual({ model: "north-small-translate-09-2026", status: "machine", sourceHash: sourceHash(SERVICES) });
+    expect(result.providers[0].withheld).toEqual({});
+    expect(result.report.translations.loaded).toBe(0);
+    expect(result.report.translations.machine).toEqual([
+      { lang: "ps", count: 1 },
+      { lang: "fr", count: 1 },
+    ]);
+    expect(formatProviderReport(result.report)).toContain("Machine translations of descriptions loaded, not reviewed, shown labelled: 2 (ps 1, fr 1)");
+  });
+
+  it("keeps a reviewed translation reviewed: counted as reviewed, not as machine", () => {
+    const result = one({ ps: reviewed(SERVICES, PS) });
+
+    expect(result.providers[0].translations.services.ps).toMatchObject({ status: "reviewed", reviewer: "Wei Chen" });
+    expect(result.report.translations.loaded).toBe(1);
+    expect(result.report.translations.machine).toEqual([]);
+  });
+
+  it("does not load a stale machine translation: the English changed since, so the English shows", () => {
+    const result = one({ ps: machine("Free drop-in, older text.", PS) });
+
+    expect(result.providers[0].texts.services).toEqual({ en: SERVICES });
+    expect(result.providers[0].withheld).toEqual({ services: { ps: "stale" } });
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "stale", count: 1 });
+  });
+
+  it.each([
+    ["a changed phone number", PS.replace("416-555-0100", "416-555-0101")],
+    ["a dropped phone number", PS.replace("416-555-0100", "")],
+    ["a changed postal code", PS.replace("M4H 1C6", "M4H 1C9")],
+    ["a changed web address", PS.replace("example.org", "example.com")],
+    ["a changed time", PS.replace("9:30", "9:00")],
+    ["a changed street number", PS.replace("1 Overlea", "11 Overlea")],
+    ["a number the English does not have", `${PS} 24`],
+  ])("does not load a machine translation with %s: the English shows (facts_changed)", (_, text) => {
+    const result = one({ ps: machine(SERVICES, text) });
+
+    expect(result.providers[0].texts.services).toEqual({ en: SERVICES });
+    expect(result.providers[0].translations).toEqual({});
+    expect(result.providers[0].withheld).toEqual({ services: { ps: "facts_changed" } });
+    expect(result.report.translations.machine).toEqual([]);
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "facts_changed", count: 1 });
+  });
+
+  it("does not load an emergency role, a category or a subcategory name unless reviewed, however good the machine text", () => {
+    const result = plan({
+      catalogue: catalogue([provider("M001", { emergencyRole: { id: "y", en: ROLE } })]),
+      translations: {
+        ps: {
+          texts: {
+            ...translation(ROLE, machine(ROLE, "د سړو خبرتیاوو پر مهال تود ځای. په خطر کې 911 ته زنګ ووهئ.")).texts,
+            ...translation("Health & Wellness", machine("Health & Wellness", "روغتیا")).texts,
+            ...translation("Health Clinics", machine("Health Clinics", "کلینیکونه")).texts,
+          },
+        },
+      },
+    });
+
+    expect(result.providers[0].texts.emergency_role).toEqual({ en: ROLE });
+    expect(result.providers[0].withheld.emergency_role).toEqual({ ps: "machine" });
+    expect(result.categories[0].labels).toEqual({ en: "Health & Wellness" });
+    expect(result.providers[0].subcategories[0].labels).toEqual({ en: "Health Clinics" });
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "machine", count: 3 });
+  });
+
+  it("carries machineChecks along but never as a review: no reviewer, no date, status machine", () => {
+    const result = one({ ps: machine(SERVICES, PS, { machineChecks: ["automated", "back_translation", "made up"] }) });
+
+    expect(result.providers[0].translations.services.ps).toEqual({
+      model: "north-small-translate-09-2026",
+      status: "machine",
+      sourceHash: sourceHash(SERVICES),
+      machineChecks: ["automated", "back_translation"],
+    });
+  });
+
+  it("does not take a record marked reviewed with machine checks but no reviewer as reviewed or as machine", () => {
+    const result = one({ ps: machine(SERVICES, PS, { status: "reviewed", machineChecks: ["automated", "line_review", "back_translation", "claude_correction"] }) });
+
+    expect(result.providers[0].texts.services).toEqual({ en: SERVICES });
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "review_incomplete", count: 1 });
+  });
+
+  it("keeps a description naming a crisis or emergency line in English until a person reviews it (safety_critical), counted apart", () => {
+    const english = "Toronto Fire Services, 24/7 rescue. Non-emergency line: 416-338-9050.";
+    const result = plan({
+      catalogue: catalogue([provider("M001", { services: { id: "x", en: english } })]),
+      translations: { ps: translation(english, machine(english, "د ټورنټو اور وژنې خدمتونه، 24/7. غیر بیړنۍ کرښه: 416-338-9050.")) },
+    });
+
+    expect(result.providers[0].texts.services).toEqual({ en: english });
+    expect(result.providers[0].withheld).toEqual({ services: { ps: "safety_critical" } });
+    expect(result.report.translations.machine).toEqual([]);
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(formatProviderReport(result.report).join("\n")).toMatch(/safety-critical description .*\(ps 1\)/);
+    expect(result.report.safetyCritical).toEqual({ emergency_role: 0, emergency_category: 0, crisis_text: 1, providers: 1 });
+  });
+
+  it.each([
+    ["has an emergency role", { emergencyRole: { id: "y", en: "Warm room in cold alerts." } }, { emergency_role: 1, emergency_category: 0, crisis_text: 0, providers: 1 }],
+    ["is in Support & Emergency Services", { categories: ["Support & Emergency Services"] }, { emergency_role: 0, emergency_category: 1, crisis_text: 0, providers: 1 }],
+  ])("keeps the description of a provider that %s in English until reviewed (decision 42), counted by criterion", (_, change, counts) => {
+    const labels = { ...LABELS, categories: { ...LABELS.categories, "Support & Emergency Services": label("Support & Emergency Services") } };
+    const result = planProviderCatalogue(
+      { catalogue: catalogue([provider("M001", { services: { id: "x", en: SERVICES }, ...change })], labels), translations: { ps: translation(SERVICES, machine(SERVICES, PS)) } },
+      options,
+    );
+
+    expect(result.failures).toEqual([]);
+    expect(result.providers[0].texts.services).toEqual({ en: SERVICES });
+    expect(result.providers[0].withheld.services).toEqual({ ps: "safety_critical" });
+    expect(result.report.safetyCritical).toEqual(counts);
+    expect(formatProviderReport(result.report)).toContain(
+      `Safety-critical providers, descriptions kept in English until reviewed: 1 (an emergency role ${counts.emergency_role}, in "Support & Emergency Services" ${counts.emergency_category}, naming a crisis or emergency line ${counts.crisis_text}; a provider may meet several)`,
+    );
+  });
+
+  it("loads a reviewed description of a safety-critical provider as before", () => {
+    const result = one({ ps: reviewed(SERVICES, PS) }, { emergencyRole: { id: "y", en: "Warm room in cold alerts." } });
+    expect(result.providers[0].texts.services).toMatchObject({ ps: PS });
+  });
+
+  it("keeps a description that mentions 911 in English even when the machine text keeps 911 (safety_critical before lost_required)", () => {
+    const english = "Call 911 in an emergency; otherwise 416-555-0100.";
+    const result = plan({
+      catalogue: catalogue([provider("M001", { services: { id: "x", en: english } })]),
+      translations: { es: translation(english, machine(english, "Llame al 911 en una emergencia; si no, al 416-555-0100.")) },
+    });
+
+    expect(result.providers[0].texts.services).toEqual({ en: english });
+    expect(result.report.translations.unavailable).toContainEqual({ lang: "es", reason: "safety_critical", count: 1 });
   });
 });
 

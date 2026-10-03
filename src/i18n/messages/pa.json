@@ -137,7 +137,8 @@
     "unavailable": "ਇਸ ਭਾਸ਼ਾ ਵਿੱਚ ਅਜੇ ਉਪਲਬਧ ਨਹੀਂ",
     "unavailableBody": "ਇਸਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ।",
     "showSource": "{lang} ਵਿੱਚ ਪੜ੍ਹੋ",
-    "original": "ਮੂਲ ({lang})"
+    "original": "ਮੂਲ ({lang})",
+    "unreviewed": "ਮਸ਼ੀਨ ਅਨੁਵਾਦ; ਕਿਸੇ ਵਿਅਕਤੀ ਨੇ ਇਸ ਦੀ ਸਮੀਖਿਆ ਨਹੀਂ ਕੀਤੀ"
   },
   "x05": {
     "title": "ਆਪਣੀ ਭਾਸ਼ਾ ਵਿੱਚ ਚੇਤਾਵਨੀਆਂ ਅਤੇ ਮਦਦ ਲਓ",
@@ -4334,6 +4335,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {

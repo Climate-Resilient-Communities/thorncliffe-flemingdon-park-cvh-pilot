@@ -35,6 +35,14 @@ describe("the Directory release screen's words", () => {
     expect(view.stale?.heading).toBe("Translations not published because the English changed after they were made: 2. Residents see the English for these.");
   });
 
+  it("says how many descriptions of the current release are unreviewed machine translations (AD-11 pilot change), and nothing for a release from before it", () => {
+    const counts = { providers: 91, categories: 8, languages: 16, files: 16, translations: 1180, machine: 656, fallbacks: 262, stale: 2 };
+    expect(directoryReleaseView(release({ counts }), release({ counts }), PROVIDERS, day, NOW).current?.machine).toBe(
+      "Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: 656. The next publish sends out about as many unless reviews are recorded first.",
+    );
+    expect(directoryReleaseView(release(), release(), PROVIDERS, day, NOW).current?.machine).toBeNull();
+  });
+
   it("shows no publish state while nothing is being built", () => {
     expect(directoryReleaseView(release(), release(), PROVIDERS, day, NOW).building).toBeNull();
     expect(directoryReleaseView(null, null, { published: 0, total: 99 }, day, NOW).building).toBeNull();

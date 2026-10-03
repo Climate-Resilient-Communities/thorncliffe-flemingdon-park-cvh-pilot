@@ -969,6 +969,15 @@ So that residents only see listings the Hub has checked.
 **When** the catalogue seed script runs
 **Then** `provider`, `provider_location`, `category` and `provider_category` are upserted keyed by provider `id`; running it twice changes nothing; a provider in several categories is stored once; `seed.run` is audited with counts
 
+> **Pilot change (product owner, 2026-10-03, decisions 39 and 42), AD-11:** the "reviewed catalogue" of this story no longer means reviewed-only for one kind of text. The original rule (only `reviewed`, current translations load; anything else shows English with `translation.unavailable`) still holds for everything except the following criterion, added by the change.
+
+**Given** a provider's ordinary description (`services`) whose translation in a language (any of the 14, Pashto included) is a current machine translation no person has reviewed *(added by the pilot change)*
+**When** the catalogue seed script runs
+**Then** it is loaded with provenance `status: "machine"` and no reviewer or review date, unless any phone number, postal code, email, web address, time or number of the English is missing or changed in it (then it is not loaded, reason `facts_changed`); a stale one (its `source` is not the current English) is still not loaded
+**And** emergency roles and category and subcategory names still load only when `reviewed`; `machineChecks` on a record is never taken as a review
+**And** the description of a safety-critical provider (it has an emergency role, is in "Support & Emergency Services", or its English names a crisis or emergency line: 911, 988, crisis, helpline, hotline, non-emergency line, emergency department, ...) is not loaded unreviewed (reason `safety_critical`, decision 42) and shows in English until reviewed; the report counts the providers by criterion
+**And** the report and the `seed.run` audit count reviewed, machine-labelled (`translations_machine`) and not-loaded translations (with why) separately
+
 **Given** the catalogue file fails its zod schema (missing `id`, duplicate `id`, coordinates outside Toronto, a category not in `labels`)
 **When** the script runs
 **Then** nothing is loaded and the report lists every failing entry
@@ -1009,6 +1018,13 @@ So that every resident gets the same, complete set of listings in their language
 **Given** a provider translation whose recorded source hash no longer matches the current English text
 **When** the release is written
 **Then** that stale translation is not published; the listing carries the English text with `translation.unavailable`, and the publish report lists every stale text by provider and language
+
+**Given** a provider description the seed loaded as an unreviewed machine translation *(added by the pilot change to AD-11, product owner, 2026-10-03; until then only reviewed translations were published)*
+**When** the release is written
+**Then** it is published with `machine: true`, `review_status: "none"` and `reviewed_on: null` (zh-Hant converted from an unreviewed zh likewise), its facts still matching the English, and the resident sees it labelled "Machine-translated; not reviewed by a person" with the English original one tap away
+**And** an emergency role, a category or subcategory name is still published only when reviewed; a reviewed translation is published as before, without that label
+**And** a safety-critical provider's description (decision 42) is published in English with `translation.unavailable` until its translation is reviewed (`safety_critical`, counted in the release), and the facts of a machine description must match the English in order and count, times with their a.m./p.m. and weekdays included
+**And** `DirectoryListingV1` gains no field or value, so releases written before the change still parse; the release counts the labelled texts (`machine`)
 
 **Given** the job is stopped part way (function time limit or failure)
 **When** it runs again

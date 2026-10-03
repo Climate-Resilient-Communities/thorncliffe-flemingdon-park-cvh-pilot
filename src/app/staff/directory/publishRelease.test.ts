@@ -60,6 +60,18 @@ describe("Publish directory (server action work)", () => {
     expect(await publishFromForm(deps, session)).toMatchObject({ status: "done", notes: ["Files already stored when this publish continued: 5.", "This release has no search data, so search is not available to residents until a release has it."] });
   });
 
+  it("says how many unreviewed machine translations of descriptions the publish sent out (AD-11 pilot change)", async () => {
+    directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, machine: 656, fallbacks: 0, stale: 0 } }));
+
+    expect(await publishFromForm(deps, session)).toMatchObject({
+      status: "done",
+      notes: [
+        'Descriptions sent out as machine translations no person has reviewed, labelled "Machine-translated; not reviewed by a person" for residents: 656.',
+        "This release has no search data, so search is not available to residents until a release has it.",
+      ],
+    });
+  });
+
   it("says how many search vectors the release holds and how many were copied from the previous release", async () => {
     directory.publishDirectory.mockResolvedValue(ok({ counts: { ...counts, fallbacks: 0, stale: 0 }, search: { vectors: 99, reused: 97, embedded: 2 } }));
 

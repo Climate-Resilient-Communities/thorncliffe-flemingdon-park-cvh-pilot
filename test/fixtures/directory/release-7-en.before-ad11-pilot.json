@@ -1,0 +1,336 @@
+{
+ "v": 1,
+ "release_v": 7,
+ "lang": "en",
+ "catalogue_hash": "65ebc92799faec62b7599dd42b1fae420451b8b53d2551aa6e4bdc89fd887a56",
+ "categories": [
+  {
+   "id": "food",
+   "sort_order": 1,
+   "name": {
+    "lang": "en",
+    "body": "Food",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "e4eb18069d65aaa901cecb66371155f389643796428e9d54c5f5127c91ab3fdc",
+    "original": {
+     "lang": "en",
+     "body": "Food"
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   }
+  },
+  {
+   "id": "health",
+   "sort_order": 2,
+   "name": {
+    "lang": "en",
+    "body": "Health and wellness",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "04d81a79944a9bd3f85105e0659b5f8c4dfe0d971d7afc61b9b5f8127d268b93",
+    "original": {
+     "lang": "en",
+     "body": "Health and wellness"
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   }
+  },
+  {
+   "id": "legal",
+   "sort_order": 3,
+   "name": {
+    "lang": "en",
+    "body": "Legal and government services",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "0b9c8320aaa04a5d7735f977681986c858a849a20c740dec605d0e7117bb4582",
+    "original": {
+     "lang": "en",
+     "body": "Legal and government services"
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   }
+  },
+  {
+   "id": "community",
+   "sort_order": 4,
+   "name": {
+    "lang": "en",
+    "body": "Public spaces",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "8c66f0205e7aa948142b74e9a91dab682c68aca3300df007699a2d4bf37164dd",
+    "original": {
+     "lang": "en",
+     "body": "Public spaces"
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   }
+  }
+ ],
+ "providers": [
+  {
+   "id": "P101",
+   "name": "Thorncliffe Park Food Bank",
+   "category_ids": [
+    "food"
+   ],
+   "subcategories": [],
+   "neighbourhood_ids": [
+    "TP"
+   ],
+   "locations": [
+    {
+     "street": "45 Overlea Blvd",
+     "city": "Toronto",
+     "postal": "M4H 1K2",
+     "lat": 43.705,
+     "lng": -79.34
+    }
+   ],
+   "contact": {
+    "phone": [
+     "(416)555-0101"
+    ],
+    "email": [
+     "food@example.org"
+    ],
+    "social": [],
+    "web": [
+     "https://example.org/food-bank/"
+    ]
+   },
+   "services": {
+    "lang": "en",
+    "body": "Free groceries every Tuesday and Friday, and hot meals on Saturday.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "433b4da057ca4142c9335518d30bd75eaa9da26c9d9e3b54c9c5918d252aaf83",
+    "original": {
+     "lang": "en",
+     "body": "Free groceries every Tuesday and Friday, and hot meals on Saturday."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "emergency_role": {
+    "lang": "en",
+    "body": "Hands out ready-to-eat food and water during a long power cut.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "22281e089a5c5312030f735359587d1dc3beb42f79606f70591e9f4a05d1aedf",
+    "original": {
+     "lang": "en",
+     "body": "Hands out ready-to-eat food and water during a long power cut."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "last_confirmed": "2026-09-30"
+  },
+  {
+   "id": "P102",
+   "name": "Flemingdon Community Health Centre",
+   "category_ids": [
+    "health"
+   ],
+   "subcategories": [],
+   "neighbourhood_ids": [
+    "FP"
+   ],
+   "locations": [
+    {
+     "street": "10 Gateway Blvd",
+     "city": "North York",
+     "postal": "M3C 1H9",
+     "lat": 43.705,
+     "lng": -79.34
+    }
+   ],
+   "contact": {
+    "phone": [
+     "(416)555-0102 | (416)555-0103 (Ext 211)",
+     "(613)555-0104 & (647)555-0105 (Spanish)"
+    ],
+    "email": [
+     "care@example.org"
+    ],
+    "social": [
+     "X @example | Facebook @example"
+    ],
+    "web": [
+     "https://www.example.org/health"
+    ]
+   },
+   "services": {
+    "lang": "en",
+    "body": "Family doctors, nurses and mental health counselling. No appointment needed for walk-in nurses.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "b7e6afce8ddef88b100fc416cfe9ab2a9a80c9b467de6c60e05b378a52dc83e5",
+    "original": {
+     "lang": "en",
+     "body": "Family doctors, nurses and mental health counselling. No appointment needed for walk-in nurses."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "emergency_role": null,
+   "last_confirmed": "2026-09-15"
+  },
+  {
+   "id": "P103",
+   "name": "East York Legal Clinic",
+   "category_ids": [
+    "legal"
+   ],
+   "subcategories": [],
+   "neighbourhood_ids": [],
+   "locations": [
+    {
+     "street": "1 Main St",
+     "city": "East York",
+     "postal": "M4C 2L3",
+     "lat": 43.705,
+     "lng": -79.34
+    }
+   ],
+   "contact": {
+    "phone": [],
+    "email": [],
+    "social": [],
+    "web": []
+   },
+   "services": {
+    "lang": "en",
+    "body": "Free legal advice on housing, immigration and benefits.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "f162caa0b9cc7e63fb47a3992d2c7b3729392b752ccbf1820a51223d8ab06e26",
+    "original": {
+     "lang": "en",
+     "body": "Free legal advice on housing, immigration and benefits."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "emergency_role": null,
+   "last_confirmed": "2026-08-15"
+  },
+  {
+   "id": "P104",
+   "name": "Overlea Cooling Room",
+   "category_ids": [
+    "community"
+   ],
+   "subcategories": [],
+   "neighbourhood_ids": [
+    "TP"
+   ],
+   "locations": [
+    {
+     "street": "7 Overlea Blvd",
+     "city": "Toronto",
+     "postal": "M4H 1M5",
+     "lat": 43.705,
+     "lng": -79.34
+    }
+   ],
+   "contact": {
+    "phone": [
+     "(416)555-0106"
+    ],
+    "email": [],
+    "social": [],
+    "web": []
+   },
+   "services": {
+    "lang": "en",
+    "body": "A library reading room with free Wi-Fi and phone charging.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "f425c46bb11bd57ebd796509e009af623786fb0e8d2911a331f934a6d3bd6ce5",
+    "original": {
+     "lang": "en",
+     "body": "A library reading room with free Wi-Fi and phone charging."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "emergency_role": {
+    "lang": "en",
+    "body": "Open as a cooling room during heat warnings. Not a medical service.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "b0ef26c6be420b76db6820f7cbf74f94788be83a1d552f1a6fa925908e942817",
+    "original": {
+     "lang": "en",
+     "body": "Open as a cooling room during heat warnings. Not a medical service."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "last_confirmed": "2026-09-28"
+  },
+  {
+   "id": "P105",
+   "name": "Don Mills Settlement Services",
+   "category_ids": [
+    "legal",
+    "community"
+   ],
+   "subcategories": [],
+   "neighbourhood_ids": [
+    "FP"
+   ],
+   "locations": [
+    {
+     "street": "20 Gateway Blvd",
+     "city": "North York",
+     "postal": "M3C 3N2",
+     "lat": 43.705,
+     "lng": -79.34
+    }
+   ],
+   "contact": {
+    "phone": [
+     "Emergency: 911 | City: 311"
+    ],
+    "email": [],
+    "social": [],
+    "web": []
+   },
+   "services": {
+    "lang": "en",
+    "body": "Help for newcomers: forms, job search and language classes.",
+    "machine": false,
+    "model": null,
+    "status": "source",
+    "source_hash": "386f4c26c64bd1d1d4b933adfaa05980b9cfd092de8f522ef10ceac7e80f5d6a",
+    "original": {
+     "lang": "en",
+     "body": "Help for newcomers: forms, job search and language classes."
+    },
+    "review_status": "source",
+    "reviewed_on": null
+   },
+   "emergency_role": null,
+   "last_confirmed": "2026-09-01"
+  }
+ ]
+}

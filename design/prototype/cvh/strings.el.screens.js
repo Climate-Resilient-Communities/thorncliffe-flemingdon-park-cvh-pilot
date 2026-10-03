@@ -1336,6 +1336,8 @@
    "reviewed": "Ελέγχθηκε από το Hub, τελευταία ενημέρωση {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Μετάφραση από μηχανή· δεν έχει ελεγχθεί από άνθρωπο" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {
