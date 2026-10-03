@@ -73,6 +73,8 @@ for (const code of ["ur", "ps", "prs"]) {
 
 test("the English heading of a right-to-left page is a left-to-right block: its text starts at the left gutter", async ({ page }) => {
   await openResident(page, "/ur/does-not-exist", 390);
+  // The heading is drawn after the page loads (a failed attempt in CI had no node to select yet).
+  await expect(page.locator("main h1[lang=en][dir=ltr]")).toBeVisible();
   const { heading, main } = await page.evaluate(() => {
     const range = document.createRange();
     range.selectNodeContents(document.querySelector("main h1[lang=en][dir=ltr]")!);

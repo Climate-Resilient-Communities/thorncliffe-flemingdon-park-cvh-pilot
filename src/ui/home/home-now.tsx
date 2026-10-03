@@ -179,8 +179,8 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
       <Screen surface="resident" testId="home">
         <Stack gap="section-resident">
           {heading}
-          <Not911 variant="inline" t={x01} />
           {children}
+          <Not911 variant="inline" t={x01} />
         </Stack>
       </Screen>
     );
@@ -200,16 +200,21 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
         <Stack gap="section-resident">
           {heading}
 
-          {/* One live region, always mounted, so a screen reader hears the note when it is put into it. */}
+          {/* One live region, always mounted, so a screen reader hears the note when it is put into it. Its text does not
+              change while the failure lasts (the words of `feedFailed`, with no time in them), so it is announced once and
+              not at every poll. How old the feed on screen is does change, so that line is outside the live region. */}
           <div className="home-live" role="status" data-testid="feed-status">
             {feed.failed && (
               <div className="home-note" data-testid="feed-failed">
-                <ResidentText as="p">
-                  {feed.feed && feed.staleMs !== null ? t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) }) : t("feedFailed")}
-                </ResidentText>
+                <ResidentText as="p">{t("feedFailed")}</ResidentText>
               </div>
             )}
           </div>
+          {feed.failed && feed.feed && feed.staleMs !== null && (
+            <div className="home-note" data-testid="feed-last-loaded">
+              <ResidentText as="p">{t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) })}</ResidentText>
+            </div>
+          )}
 
           {rows.buildings.length > 0 ? (
             <section data-testid="home-buildings">
@@ -257,10 +262,12 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </section>
           )}
 
-          {/* The short 911 notice (owner decision 36; prototype R-03's X01_Not911 inline), the shared component. */}
-          <Not911 variant="inline" t={x01} />
-
           {children}
+
+          {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), the shared component: the
+              last item on home, after `children` (the link to "What I have told the CVH"). When the "Every day" section is
+              added it moves directly under it. */}
+          <Not911 variant="inline" t={x01} />
         </Stack>
       </div>
     </Screen>

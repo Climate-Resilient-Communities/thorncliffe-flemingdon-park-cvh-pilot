@@ -1245,7 +1245,9 @@ So that I can see at a glance whether anything affects me.
 
 **Given** home (R-03)
 **When** it is shown, with or without chosen buildings
-**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is at the bottom, under "Everyday", and nowhere else on the screen
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is on home once and nowhere else on the screen (owner decision 36); the inline notice is the last item on home; when the "Every day" section is added (owner decision 37) it moves directly under it
+
+**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
@@ -2044,7 +2046,7 @@ So that a mistake is caught by a second person before residents see it.
 
 **Given** the approver presses Approve
 **When** the session is `aal2`, the approver is not an editor, the policy allows it at approval time, the version and hash match what was shown, and the valid-until is still in the future
-**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag('feed')` runs after commit, and `entry.approved` is audited with the version, hash and recipient count
+**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag(FEED_TAG, { expire: 0 })` runs after commit (a bare `revalidateTag` only marks the entry stale), and `entry.approved` is audited with the version, hash and recipient count
 **And** if any condition fails, nothing changes and the refusal is recorded with the reason shown
 
 **Given** the snapshot count differs from the reviewed count

@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { AudienceSchema } from "./audience";
+import { AudienceSchema, NEIGHBOURHOOD_ID } from "./audience";
 import { RsnSchema } from "./places";
 import { LangCodeSchema } from "./lang";
 
@@ -56,13 +56,18 @@ export const FeedV1 = z.strictObject({
   threads: z.array(FeedThreadSchema),
   places: z.strictObject({
     buildings: z.array(z.strictObject({ rsn: RsnSchema, ...PlaceState })),
-    neighbourhoods: z.array(z.strictObject({ id: z.string().regex(/^[A-Z]{2,6}$/), ...PlaceState })),
+    neighbourhoods: z.array(z.strictObject({ id: z.string().regex(NEIGHBOURHOOD_ID), ...PlaceState })),
   }),
 });
 export type FeedV1 = z.infer<typeof FeedV1>;
 export type FeedThread = z.infer<typeof FeedThreadSchema>;
 
-/** The cache tag of the feed: every transaction that changes web-visible state revalidates it after commit (AD-17). */
+/**
+ * The cache tag of the feed (AD-17). Every transaction that changes web-visible state must, after it commits, expire it
+ * with `revalidateTag(FEED_TAG, { expire: 0 })` (as `src/app/staff/buildings/actions.ts` does for the building list), not
+ * with `revalidateTag(FEED_TAG)`: in Next 16 that only marks the entry stale, and a stale entry is still served once while
+ * a new one is built, so residents could read "No current alerts" after an alert was published.
+ */
 export const FEED_TAG = "feed";
 
 /** The URL a phone asks. The language is the page language: the one query value, the same for everyone who reads that language. */
@@ -70,5 +75,7 @@ export const feedPath = (lang: string): string => `/api/feed?lang=${encodeURICom
 
 /** The failure body for a request the feed cannot answer (AD-20: `{error:{code, message_key}}` is only for failures). */
 export const FeedErrorV1 = z.strictObject({
-  error: z.strictObject({ code: z.enum(["LANG_INVALID", "FEED_UNAVAILABLE"]), message_key: z.string() }),
+  v: z.literal(1),
+  /** `LANG_INVALID`: no language, or not one of ours. `query_invalid`: the language is fine but the query has more than `lang`. */
+  error: z.strictObject({ code: z.enum(["LANG_INVALID", "query_invalid", "FEED_UNAVAILABLE"]), message_key: z.string() }),
 });

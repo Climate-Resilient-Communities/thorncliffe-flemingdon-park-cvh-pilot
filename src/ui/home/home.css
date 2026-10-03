@@ -1,9 +1,9 @@
 /*
  * Home (R-03, S02.11): the status of the resident's buildings and neighbourhood, and the current alerts. Spacing from
- * the semantic tokens, direction from logical properties only, so the screen mirrors in Urdu, Pashto and Dari without
- * a [dir] rule. A status is always its words, its shape and its colour together (never colour alone). The four colours
- * are the prototype's reserved incident-status set (design/prototype/cvh/cvh.css, --status-*), each 6.5:1 or better
- * on white; they are used for status and nothing else.
+ * the semantic tokens, direction from logical properties, so the screen mirrors in Urdu, Pashto and Dari; the one [dir]
+ * rule is the chevron, which is flipped by hand. A status is always its words, its shape and its colour together
+ * (never colour alone). The four colours are the prototype's reserved incident-status set (design/prototype/cvh/cvh.css,
+ * --status-*), each 6.5:1 or better on white; they are used for status and nothing else.
  */
 @layer components {
   .home-list {
