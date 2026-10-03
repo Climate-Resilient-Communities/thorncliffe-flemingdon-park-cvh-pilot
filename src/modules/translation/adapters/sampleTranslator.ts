@@ -17,7 +17,7 @@ export function sampleTranslator(): Translator {
     async translate(request: TranslateRequest): Promise<Translation> {
       if (request.signal.aborted) throw new TranslateError("aborted");
       const text = SAMPLES[request.to];
-      if (text === undefined) throw new TranslateError("failed");
+      if (text === undefined) throw new TranslateError("other");
       return { text, inputTokens: 0, outputTokens: 0 };
     },
   };
