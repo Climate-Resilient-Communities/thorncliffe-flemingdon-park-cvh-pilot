@@ -109,9 +109,9 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: seven pages that exist (Incidents, Coverage, People, Providers, Directory, Buildings and the first-text spike's Test text) and two that are listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(7);
-      await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(2);
+      // The menu is the real one for an Admin: nine pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, People, Providers, Directory, Buildings and the first-text spike's Test text) and one that is listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(9);
+      await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(1);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
       await expectShellDoesNotOverflow(page);
@@ -288,11 +288,14 @@ test.describe("what a screen reader reads", () => {
       ["/staff/sms-test", "Test text"],
       ["/staff/buildings", "Buildings"],
       ["/staff/coverage", "Coverage"],
+      ["/staff/alerts/log", "Log a disruption"],
+      ["/staff/alerts/compose", "Compose an alert"],
+      ["/staff/alerts/compose/", "Compose an alert"],
     ] as const) {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(7);
+      await expect(links).toHaveCount(9);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
@@ -301,7 +304,7 @@ test.describe("what a screen reader reads", () => {
     await open(page, { texts: REAL_TEXTS, current: "/staff/people" });
     await expect(page.getByTestId("hub-side").getByRole("link", { name: "Incidents" })).not.toHaveAttribute("aria-current", "page");
     // An unbuilt page is never current, whatever the path.
-    await expect(sideNav(page).getByTestId("hub-nav-compose")).not.toHaveAttribute("aria-current", /./);
+    await expect(sideNav(page).getByTestId("hub-nav-rounds")).not.toHaveAttribute("aria-current", /./);
     // A path outside every item: none current.
     await open(page, { texts: REAL_TEXTS, current: "/staff/elsewhere" });
     await expect(page.locator("[aria-current]")).toHaveCount(0);
@@ -313,10 +316,7 @@ test.describe("what a screen reader reads", () => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, { texts: REAL_TEXTS });
 
-    for (const [id, name] of [
-      ["compose", "Compose an alert"],
-      ["rounds", "Check-in rounds"],
-    ] as const) {
+    for (const [id, name] of [["rounds", "Check-in rounds"]] as const) {
       const item = sideNav(page).getByTestId(`hub-nav-${id}`);
       await expect(item).toHaveText(name);
       await expect(item).toHaveAttribute("role", "link");
@@ -327,16 +327,20 @@ test.describe("what a screen reader reads", () => {
       await expect(sideNav(page).getByRole("link", { name, disabled: true })).toHaveCount(1);
       await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(0);
     }
-    for (const name of ["Incidents", "Coverage", "People", "Directory", "Buildings", "Test text"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
+    for (const name of ["Incidents", "Log a disruption", "Compose an alert", "Coverage", "People", "Directory", "Buildings", "Test text"]) await expect(sideNav(page).getByRole("link", { name, disabled: false })).toHaveCount(1);
 
     // Tab visits the pages and passes over the unbuilt ones.
     await sideNav(page).getByTestId("hub-nav-incidents").focus();
     await page.keyboard.press("Tab");
+    await expect(sideNav(page).getByTestId("hub-nav-log")).toBeFocused();
+    await page.keyboard.press("Tab");
+    await expect(sideNav(page).getByTestId("hub-nav-compose")).toBeFocused();
+    await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-coverage")).toBeFocused();
     await page.keyboard.press("Tab");
     await expect(sideNav(page).getByTestId("hub-nav-people")).toBeFocused();
-    await sideNav(page).getByTestId("hub-nav-compose").focus();
-    await expect(sideNav(page).getByTestId("hub-nav-compose")).not.toBeFocused();
+    await sideNav(page).getByTestId("hub-nav-rounds").focus();
+    await expect(sideNav(page).getByTestId("hub-nav-rounds")).not.toBeFocused();
   });
 
   test("every item of the menu, linked or not, is at least the tap size high and muted when it is not a page yet", async ({ page }) => {
@@ -344,13 +348,13 @@ test.describe("what a screen reader reads", () => {
     await open(page, { texts: REAL_TEXTS });
     const tap = await tokenPx(page, "--tap");
 
-    for (const id of ["incidents", "compose", "rounds", "coverage", "people", "buildings"]) {
+    for (const id of ["incidents", "log", "compose", "rounds", "coverage", "people", "buildings"]) {
       expect((await box(sideNav(page).getByTestId(`hub-nav-${id}`))).height, id).toBeGreaterThanOrEqual(tap);
     }
     const colour = (id: string) => computed(sideNav(page).getByTestId(`hub-nav-${id}`), "color");
-    expect(await colour("compose")).toBe(await colour("rounds"));
-    expect(await colour("compose")).not.toBe(await colour("people"));
-    expect(await computed(sideNav(page).getByTestId("hub-nav-compose"), "font-weight")).toBe("400");
+    expect(await colour("rounds")).not.toBe(await colour("people"));
+    expect(await colour("compose")).toBe(await colour("people"));
+    expect(await computed(sideNav(page).getByTestId("hub-nav-rounds"), "font-weight")).toBe("400");
   });
 
   test("the person is read as one sentence with the name isolated, and sign-out is a named button", async ({ page }) => {

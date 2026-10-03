@@ -87,6 +87,10 @@ const NO_SUCH_FLOOR = "01900000-0000-7000-8000-00000000f100";
 const BUILDING_ACTION_NAMES = ["addFloorAction", "renameFloorAction", "removeFloorAction", "confirmBuildingAction", "setContactAction"] as const;
 const COVERAGE_ACTIONS = "src/app/staff/coverage/actions.ts";
 const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
+const ALERT_LOG_ACTIONS = "src/app/staff/alerts/log/actions.ts";
+const ALERT_COMPOSER_ACTIONS = "src/app/staff/alerts/composer/actions.ts";
+/** The key of one press of Submit: what a browser makes with `crypto.randomUUID()`. */
+const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
 const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
@@ -115,6 +119,10 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     gate: "hub",
     expected: WIDE_AUTHORS,
   },
+  // S04.05: "Log a disruption" (O-11), the acknowledgement composer (O-12) and the alert composer (O-02): policy action `alert.author_wide`.
+  { id: "page /staff/alerts/log", kind: "page", file: "src/app/staff/alerts/log/page.tsx", export: "default", route: "/staff/alerts/log", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/ack", kind: "page", file: "src/app/staff/alerts/ack/page.tsx", export: "default", route: "/staff/alerts/ack", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/compose", kind: "page", file: "src/app/staff/alerts/compose/page.tsx", export: "default", route: "/staff/alerts/compose", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
@@ -152,6 +160,43 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
 
   // ---- route handlers ----
   { id: "GET /api/staff/me", kind: "route", file: "src/app/api/staff/me/route.ts", export: "GET", route: "/api/staff/me", action: "session.read_own", writes: "none", gate: "hub", expected: EVERYONE },
+  // S04.05: Submit, "Try translation again" and the entry's state (policy action `alert.author_wide`). The entry does not exist, so a
+  // Coordinator's or an Admin's call passes the guard and is refused by the use case (or, for the state, by its lookup), changing nothing.
+  {
+    id: "POST /api/staff/alerts/entries/submit",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/submit/route.ts",
+    export: "POST",
+    route: "/api/staff/alerts/entries/submit",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, alert_id: NO_SUCH_ALERT, entry_id: NO_SUCH_ALERT, key: SUBMIT_KEY },
+    expected: WIDE_AUTHORS,
+  },
+  {
+    id: "POST /api/staff/alerts/entries/retranslate",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/retranslate/route.ts",
+    export: "POST",
+    route: "/api/staff/alerts/entries/retranslate",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    body: { v: 1, alert_id: NO_SUCH_ALERT, entry_id: NO_SUCH_ALERT, key: SUBMIT_KEY, seen_version: 1, seen_hash: "0".repeat(64) },
+    expected: WIDE_AUTHORS,
+  },
+  {
+    id: "GET /api/staff/alerts/entries/state",
+    kind: "route",
+    file: "src/app/api/staff/alerts/entries/state/route.ts",
+    export: "GET",
+    route: "/api/staff/alerts/entries/state",
+    action: "alert.author_wide",
+    writes: "none",
+    gate: "hub",
+    expected: WIDE_AUTHORS,
+  },
   {
     id: "POST /api/staff/password",
     kind: "route",
@@ -312,6 +357,37 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     forbiddenMessage: /^Only a Coordinator or an Admin can /,
     expected: WIDE_AUTHORS,
   },
+  // S04.05: "Log a disruption" and the composers' Save draft and Pull back to edit (policy action `alert.author_wide`). "Log a disruption" is
+  // sent with no type ticked and the composers' actions name a draft that does not exist, so a Coordinator's or an Admin's call passes the guard
+  // and is refused by the form or the use case, changing nothing.
+  {
+    id: `action ${ALERT_LOG_ACTIONS}#logDisruptionAction`,
+    kind: "action",
+    file: ALERT_LOG_ACTIONS,
+    export: "logDisruptionAction",
+    route: "/staff/alerts/log",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { kind: "ack" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
+  ...(["saveDraftAction", "pullBackAction"] as const).map(
+    (name): StaffEndpoint => ({
+      id: `action ${ALERT_COMPOSER_ACTIONS}#${name}`,
+      kind: "action",
+      file: ALERT_COMPOSER_ACTIONS,
+      export: name,
+      route: "/staff/alerts/compose",
+      action: "alert.author_wide",
+      writes: "business",
+      gate: "hub",
+      form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT },
+      forbiddenMessage: /^Only a Coordinator or an Admin can /,
+      expected: WIDE_AUTHORS,
+    }),
+  ),
   // S02.04: publish, unpublish and confirm a provider (policy action `provider.manage`, Admins at aal2).
   ...(["publishProviderAction", "unpublishProviderAction", "confirmProviderAction"] as const).map(
     (name): StaffEndpoint => ({

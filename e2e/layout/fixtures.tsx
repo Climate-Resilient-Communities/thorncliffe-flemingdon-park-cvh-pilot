@@ -26,6 +26,12 @@ import { BuildingsBody, type BuildingActions, type BuildingsInitial } from "@/ap
 import type { BuildingsScreen } from "@/app/staff/buildings/view";
 import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/staff/alerts/audience/AudienceBody";
 import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
+import { ComposerBody, type ComposerActions, type ComposerInitial } from "@/app/staff/alerts/composer/ComposerBody";
+import type { ComposerScreen } from "@/app/staff/alerts/composer/view";
+import type { SubmitApi } from "@/app/staff/alerts/composer/submitClient";
+import { LogBody } from "@/app/staff/alerts/log/LogBody";
+import type { LogState } from "@/app/staff/alerts/log/logDisruption";
+import type { LogScreen } from "@/app/staff/alerts/log/view";
 import { CoverageBody, type CoverageActions, type CoverageInitial } from "@/app/staff/coverage/CoverageBody";
 import type { CoverageScreen } from "@/app/staff/coverage/view";
 import { ProviderList, type ProviderListLabels, type ProviderRowData } from "@/app/staff/providers/ProviderList";
@@ -561,6 +567,57 @@ export function AudienceFixture({
       <Screen surface="staff" width="review" testId="screen">
         <AudienceBody screen={screen} actions={actions} initial={initial} />
       </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * "Log a disruption" (S04.05, O-11) as a Coordinator sees it in the Hub shell: the app's own LogBody on a view built by the app's own
+ * view function, in the `log` Screen the page uses, with an action that does nothing and, where a picture needs it, a form already in
+ * its refused state (`initialState`).
+ */
+export function LogFixture({
+  texts,
+  brand,
+  screen,
+  initialState,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: LogScreen;
+  initialState?: LogState;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/alerts/log">
+      <Screen surface="staff" width="log" testId="screen">
+        <LogBody screen={screen} action={noAction} initialState={initialState} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The acknowledgement composer (O-12) and the alert composer (O-02, S04.05) as a Coordinator sees them in the Hub shell: the app's own
+ * ComposerBody on a view built by the app's own view function. The body draws its own Screen (with the sticky actions region), so
+ * the fixture adds only the shell. Its actions do nothing and its calls to the server are the `api` the test gives it.
+ */
+export function ComposerFixture({
+  texts,
+  brand,
+  screen,
+  initial,
+  api,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  screen: ComposerScreen;
+  initial?: ComposerInitial;
+  api?: SubmitApi;
+}) {
+  const actions: ComposerActions = { save: noAction, pullBack: noAction };
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current={screen.mode === "ack" ? "/staff/alerts/ack" : "/staff/alerts/compose"}>
+      <ComposerBody screen={screen} actions={actions} initial={initial} api={api} reload={() => {}} />
     </AroundTheScreen>
   );
 }

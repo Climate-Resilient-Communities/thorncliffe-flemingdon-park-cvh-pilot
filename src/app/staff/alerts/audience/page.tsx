@@ -35,8 +35,8 @@ export default staffPage(
     const screen = !draft
       ? missingScreen()
       : draft.status !== "draft"
-        ? lockedScreen(draft.plans, draft.audience)
-        : placeScreen(draft.plans, draft.audience, draft.ref, { notice: savedNotice(query) });
+        ? lockedScreen(draft.plans, draft.audience, undefined, draft.from, draft.ref)
+        : placeScreen(draft.plans, draft.audience, draft.ref, { notice: savedNotice(query), from: draft.from });
     return (
       <Screen surface="staff" width="review">
         <AudienceBody screen={screen} actions={actions} />
