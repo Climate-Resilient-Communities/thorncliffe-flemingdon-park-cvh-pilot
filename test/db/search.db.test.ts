@@ -23,8 +23,10 @@ import {
 } from "@/modules/directory";
 import { SPEND_LOCK_KEY } from "@/modules/spend";
 import { recordOpsEvent } from "@/modules/ops";
+import { recordSearchNote } from "../../src/app/searchOps";
+import { translateQuotaWatch } from "../../src/app/translateQuota";
 import { SEARCH_RATE_LIMIT, createRateLimiter } from "@/modules/subscriptions";
-import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
+import { TranslateError, cohereTranslator, createQuestionTranslator, type QuestionRoute, type Translator } from "@/modules/translation";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -199,7 +201,7 @@ describe("search", () => {
     }
   });
 
-  const service = (embedder: QueryEmbedder | null, extra: Partial<Pick<SearchDeps, "translator" | "onFailure" | "legTimeoutMs" | "spendPurpose" | "log" | "defer" | "totalBudgetMs" | "snapshotFailureTtlMs" | "storage">> = {}) =>
+  const service = (embedder: QueryEmbedder | null, extra: Partial<Pick<SearchDeps, "translator" | "onFailure" | "onSpendWritten" | "legTimeoutMs" | "spendPurpose" | "log" | "defer" | "totalBudgetMs" | "snapshotFailureTtlMs" | "storage">> = {}) =>
     createSearch({ db: () => app, storage: () => storage, embedder, ...extra });
   const rows = (table: string) => sql.unsafe(`select * from ${table} order by id`).then((r) => r.map((row) => ({ ...row })));
   const routeDeps = (embedder: QueryEmbedder | null, now?: () => Date): SearchRouteDeps => ({
@@ -658,6 +660,77 @@ describe("search", () => {
       expect(spend.filter((r) => r.kind === "embed")).toHaveLength(5);
     });
 
+    describe("the translation model's limit (S03.05, owner decision 45)", () => {
+      const NORTH = "north-small-translate-09-2026";
+      const COMMAND = "command-a-translate-08-2025";
+      /** The routed model is past its monthly limit; Command A answers. */
+      const pastLimit: Translator = {
+        async translate({ model }) {
+          if (model === NORTH) throw new TranslateError("quota");
+          return { text: "I need a lawyer", inputTokens: 30, outputTokens: 6 };
+        },
+      };
+      const fallback: QuestionRoute = { ps: COMMAND, prs: COMMAND, ur: COMMAND, romanized_or_mixed: COMMAND, ambiguous_arabic: COMMAND };
+
+      it("writes the model that hit its limit and the model that rescued the question into ops_event.detail, through the app's own mapping, and bills only the one that answered", async () => {
+        await publish();
+        const model = fakeQueryEmbedder();
+        const questions = createQuestionTranslator({ translator: pastLimit, route: ROUTE, fallback });
+
+        const body = await service(model.embedder, { translator: questions, onFailure: (note) => recordSearchNote(app, note) }).search({ q: PASHTO, lang: "ps" });
+
+        expect(body).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+        const events = await rows("ops_event");
+        expect(events.map((e) => ({ kind: e.kind, severity: e.severity, subject_type: e.subject_type, subject_id: e.subject_id, reason: e.detail.reason, model: e.detail.model })).sort((a, b) => a.reason.localeCompare(b.reason))).toEqual([
+          { kind: "search.leg_failed", severity: "warning", subject_type: "directory_release", subject_id: "1", reason: "translate_fallback_used", model: COMMAND },
+          { kind: "search.leg_failed", severity: "warning", subject_type: "directory_release", subject_id: "1", reason: "translate_quota", model: NORTH },
+        ]);
+        // Counts, codes and the model id: nothing else is in the detail.
+        for (const event of events) expect(Object.keys(event.detail).sort()).toEqual(["model", "ms", "reason"]);
+        // The 429 wrote no spend row; the translation that answered is Command A's.
+        expect((await rows("spend_event")).filter((r) => r.kind === "translate")).toMatchObject([{ model: COMMAND, purpose: "search", release_v: 1, tokens: "36", tokens_estimated: false }]);
+        expect(await rows("search_log")).toMatchObject([{ translated_leg: "used" }]);
+      });
+
+      it("tells ops a model is near its monthly limit once: the month's translate rows of that model, in Toronto's month, are counted after the response, and 80% writes one event", async () => {
+        await publish();
+        await sql.unsafe("delete from ops_event");
+        const model = fakeQueryEmbedder();
+        const checks: Promise<unknown>[] = [];
+        const watch = translateQuotaWatch({ db: () => app, limits: { [NORTH]: 10 }, defer: (work) => void checks.push(work()) });
+        const ask = async () => {
+          await service(model.embedder, { translator: fakeTranslator().questions, onSpendWritten: watch }).search({ q: PASHTO, lang: "ps" });
+          await Promise.all(checks.splice(0));
+        };
+        // Six calls this month, and three from two months ago, which are not this month's; and another model's.
+        for (let i = 0; i < 6; i++) await sql`insert into spend_event (kind, purpose, model, tokens) values ('translate', 'search', ${NORTH}, 30)`;
+        for (let i = 0; i < 3; i++) await sql`insert into spend_event (at, kind, purpose, model, tokens) values (now() - interval '62 days', 'translate', 'search', ${NORTH}, 30)`;
+        for (let i = 0; i < 9; i++) await sql`insert into spend_event (kind, purpose, model, tokens) values ('translate', 'search', ${COMMAND}, 30)`;
+
+        await ask(); // 7 of 10
+        expect(await rows("ops_event")).toEqual([]);
+
+        await ask(); // 8 of 10: 80%
+        expect(await rows("ops_event")).toMatchObject([{ kind: "search.leg_failed", severity: "warning", subject_type: null, subject_id: null, detail: { reason: "translate_quota_near", ms: 0, model: NORTH } }]);
+
+        await ask();
+        await ask(); // 10 of 10, and over: still the one event
+        expect(await rows("ops_event")).toHaveLength(1);
+      });
+
+      it("does nothing about a model with no limit configured: no count, no event", async () => {
+        await publish();
+        const model = fakeQueryEmbedder();
+        const checks: Promise<unknown>[] = [];
+        const watch = translateQuotaWatch({ db: () => app, limits: { [COMMAND]: 1 }, defer: (work) => void checks.push(work()) });
+
+        await service(model.embedder, { translator: fakeTranslator().questions, onSpendWritten: watch }).search({ q: PASHTO, lang: "ps" });
+
+        expect(checks).toHaveLength(0);
+        expect(await rows("ops_event")).toEqual([]);
+      });
+    });
+
     it("stores in search_log only at, lang, query_lang, release_v, ms, result_count, status, top_score and translated_leg", async () => {
       await publish();
 
@@ -761,7 +834,7 @@ describe("search", () => {
       expect(errors).toHaveLength(1);
       const error = errors[0] as Error;
       expect([error.message, String(error.stack), JSON.stringify(error), inspect(error, { depth: 10, showHidden: true })].join("\n")).not.toContain(MARKER);
-      expect(error).toMatchObject({ name: "TranslateError", code: "failed" });
+      expect(error).toMatchObject({ name: "TranslateError", code: "other" });
       expect((await rows("search_log")).map((r) => r.translated_leg)).toEqual(["used", "failed", "failed"]);
     });
 
