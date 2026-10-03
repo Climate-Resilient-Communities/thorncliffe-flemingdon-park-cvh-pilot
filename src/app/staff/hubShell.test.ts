@@ -36,7 +36,7 @@ describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
-    expect(items("ambassador").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds"]);
+    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds"]);
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });

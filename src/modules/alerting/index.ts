@@ -303,3 +303,8 @@ export {
 export { freezeContent, type FreezeInput, type FreezeResult } from "./application/freezeContent";
 export { canonicalContent, contentHash, contentHashInput, type ContentHashInput, type HashedEntry, type HashedSmsBody, type HashedWebText } from "./domain/hash";
 export type { AlertRefusal } from "./domain/refusals";
+
+// S08.01: an Ambassador's home (A-01): the open alerts about their assigned buildings, as residents read them, and their own posts with each one's state.
+// The scope (current assignments, the neighbourhood of each building) is the caller's; nothing is read for a person with none.
+export { createAmbassadorHome, type AmbassadorAlert, type AmbassadorHome, type AmbassadorHomeView, type AmbassadorPost, type AmbassadorScope } from "./application/ambassadorHome";
+export { AMBASSADOR_POST_STATES, audienceCoversAssigned, coveringFeedEntry, postIsInScope, postState, type AmbassadorPostState, type PostFacts } from "./domain/ambassadorHome";

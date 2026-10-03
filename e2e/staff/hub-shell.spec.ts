@@ -60,7 +60,7 @@ test.describe("signed in at the Hub gate", () => {
 
     await expect(page.getByTestId("hub-shell")).toBeVisible();
     await expect(page.locator("main")).toHaveCount(1);
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Right now");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("My building");
     await expect(page.getByTestId("hub-person")).toHaveText("Signed in as Ann Okafor, Ambassador");
     await expect(page.getByRole("button", { name: "Sign out" })).toBeVisible();
     await expect(page.getByTestId("hub-side")).toBeHidden();
@@ -77,7 +77,7 @@ test.describe("signed in at the Hub gate", () => {
     await page.getByRole("button", { name: "Menu" }).click();
     const menu = page.getByRole("dialog", { name: "Menu" });
     await expect(menu.getByRole("navigation", { name: "Hub", exact: true })).toBeVisible();
-    await expect(menu.getByRole("link", { name: "Incidents" })).toHaveAttribute("aria-current", "page");
+    await expect(menu.getByRole("link", { name: "My building" })).toHaveAttribute("aria-current", "page");
     // The alert screens are for the roles that write alerts (S04.05): an Ambassador's menu has neither.
     await expect(menu.getByRole("link", { name: "Compose an alert" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Log a disruption" })).toHaveCount(0);
@@ -96,7 +96,7 @@ test.describe("signed in at the Hub gate", () => {
     await expect(page.getByTestId("hub-side")).toBeVisible();
     await expect(page.getByRole("button", { name: "Menu" })).toBeHidden();
     await expect(page.getByTestId("hub-person")).toHaveText("Signed in as Rosa Medina, Ambassador");
-    await expect(page.getByTestId("hub-side").getByRole("link", { name: "Incidents" })).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("hub-side").getByRole("link", { name: "My building" })).toHaveAttribute("aria-current", "page");
     await expectNoHorizontalScroll(page);
 
     // The banner and every page sit inside the one <main> of the shell, and the person's page is inside the Screen.

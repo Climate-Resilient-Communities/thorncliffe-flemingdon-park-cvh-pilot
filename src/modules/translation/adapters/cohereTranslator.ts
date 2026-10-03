@@ -7,6 +7,7 @@
 // in the user message; and unprompted it may answer a question instead of translating it, so the prompt forbids that and
 // the caller rejects an answer far longer than the question.
 import type { LangCode } from "@/contracts/lang";
+import { createCohereRestClient } from "@/platform/cohere/restClient";
 import { TranslateError, type TranslateErrorCode, type Translation, type Translator } from "../application/ports";
 
 /** The part of Cohere's v2 client the adapter calls: tests pass a fake. */
@@ -65,20 +66,6 @@ export const MAX_OUTPUT_TOKENS = 200;
  */
 export const PROMPT_VERSION = "1";
 
-let sdk: Promise<typeof import("cohere-ai")> | undefined;
-/** Loads the vendor's SDK once and keeps it; the composition root calls it at module load (like warmCohere) so the first translation pays no import. */
-export function warmCohereTranslator(): Promise<typeof import("cohere-ai")> {
-  return loadSdk();
-}
-
-function loadSdk(): Promise<typeof import("cohere-ai")> {
-  if (!sdk) {
-    sdk = import("cohere-ai");
-    sdk.catch(() => (sdk = undefined));
-  }
-  return sdk;
-}
-
 /** Wording of a limit that is the month's (Cohere: "You are past the per-month request limit for this model"). */
 const MONTHLY_LIMIT = /per[\s-]*month|monthly|past the .{0,40}limit|out of (calls|quota)|quota/i;
 /** Wording that says the limit is the month's, for an error that came with no status to say it is a limit at all. */
@@ -86,7 +73,7 @@ const SAYS_MONTHLY = /per[\s-]*month|monthly/i;
 /** Wording of a transient limit. */
 const TRANSIENT_LIMIT = /per[\s-]*(minute|second)|too many requests|slow down|rate[\s-]*limit/i;
 
-/** The vendor's status code, wherever the SDK or a wrapper put it. */
+/** The vendor's status code, wherever the client or a wrapper put it. */
 function statusOf(error: unknown): number | null {
   if (typeof error !== "object" || error === null) return null;
   const e = error as { statusCode?: unknown; status?: unknown; response?: { status?: unknown } };
@@ -96,7 +83,7 @@ function statusOf(error: unknown): number | null {
 
 /**
  * The vendor's own message: the `message` of the response body, only to be matched against keywords here (never stored,
- * logged or thrown). Nothing else is read: the SDK's `Error.message` repeats the whole body, and a body may echo the request.
+ * logged or thrown). Nothing else is read: the client's `Error.message` repeats the whole body, and a body may echo the request.
  */
 function wordsOf(error: unknown): string {
   try {
@@ -110,7 +97,7 @@ function wordsOf(error: unknown): string {
 
 /**
  * Sorts a vendor error into a class. The status decides first; the words (the body's `message`) only choose between the
- * classes of a 429, or name the monthly limit when the SDK gave no status. A 429 that does not say it is transient counts
+ * classes of a 429, or name the monthly limit when the client gave no status. A 429 that does not say it is transient counts
  * as `quota`: both fall back, and quota is the one that is shown to ops as needing someone. Without a status, only an
  * error that clearly says the monthly limit is `quota`; one that does not is `other` (or `unavailable`, for the network).
  */
@@ -128,7 +115,7 @@ export function classifyCohereError(error: unknown): Exclude<TranslateErrorCode,
 
 export interface CohereTranslatorOptions {
   apiKey: string;
-  /** For tests. By default the real client is created on the first call, so importing the module loads nothing. */
+  /** For tests. By default a client over Cohere's REST API (plain fetch) is created on the first call. */
   client?: CohereChatClient;
 }
 
@@ -142,10 +129,7 @@ export function cohereTranslator(options: CohereTranslatorOptions): Translator {
     async translate({ text, from, to, model, signal, maxOutputTokens }): Promise<Translation> {
       let response;
       try {
-        if (!client) {
-          const { CohereClient } = await loadSdk();
-          client = new CohereClient({ token: options.apiKey }) as unknown as CohereChatClient;
-        }
+        client ??= createCohereRestClient({ apiKey: options.apiKey });
         // No retries: the search leg has 2.2 s, and a retry would hide the time it takes.
         response = await client.v2.chat(
           {
