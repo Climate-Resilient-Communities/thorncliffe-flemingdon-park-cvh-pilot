@@ -15,7 +15,9 @@
 // provider_location, category and provider_category keyed by provider id. Running it twice changes
 // nothing; a provider that left providers.json is unpublished and flagged "not in catalogue",
 // never deleted. A translation that is not reviewed and current is not loaded (the text shows in
-// English with translation.unavailable); the report counts them.
+// English with translation.unavailable); the report counts them. A provider's description is the
+// exception (AD-11 pilot change): a current machine translation that keeps every fact of the English
+// loads unreviewed and is shown labelled; the report counts those apart, by language.
 //
 // Exit code 0: the catalogue was loaded (or, with --dry-run, would load).
 // Exit code 1: the file failed its schema, so nothing was loaded and every failing entry is listed;

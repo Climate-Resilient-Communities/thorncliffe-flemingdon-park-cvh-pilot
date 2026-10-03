@@ -10,7 +10,7 @@ import { isEnglishFallback, ResidentText } from "../text/resident-text";
 import { Isolated } from "../text/isolated";
 import { phoneEntries, socialEntries, webEntry } from "./contact";
 import { formatDayText } from "./format";
-import { HowTheyHelp, ListingBlock, MachineLabel, isMachineText } from "./listing-text";
+import { HowTheyHelp, ListingBlock, MachineLabel, isMachineText, isUnreviewedMachineText } from "./listing-text";
 import { neighbourhoodName } from "./neighbourhood-names";
 import "./directory.css";
 
@@ -106,7 +106,8 @@ function Contacts({ provider }: { provider: ListingProvider }) {
  * pilot's providers are the organisations, so a listing and its organisation are one page). The facts are the same: topics,
  * contacts, day-to-day services, emergency role ("How they can help") and the day the Hub last confirmed them. A detail the
  * file does not give reads "Not known". The machine-translation label and "Read it in English" sit on the card once, and
- * switch every machine-translated text of the card between the page language and its English original.
+ * switch every machine-translated text of the card between the page language and its English original; the label says
+ * "not reviewed by a person" when one of them (a description, AD-11 pilot change) has had no person's review.
  */
 export function ProviderView({ provider, categories, lang, variant }: { provider: ListingProvider; categories: CategoryNames; lang: LaunchCode; variant: "card" | "page" }) {
   const t = useTranslations();
@@ -116,7 +117,9 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
   const nbhds = provider.neighbourhood_ids;
   const nameId = `provider-name-${provider.id}`;
   const names = provider.category_ids.map((id) => categories.get(id)).filter((text): text is ListingText => text !== undefined);
-  const machine = machineTexts(provider, categories).length > 0;
+  const machineList = machineTexts(provider, categories);
+  const machine = machineList.length > 0;
+  const unreviewed = machineList.some(isUnreviewedMachineText);
   const confirmed = t("directory.lastConfirmed", { date: formatDayText(provider.last_confirmed, isEnglishFallback(t("directory.lastConfirmed")) ? "en-CA" : locale) });
   const Heading = variant === "page" ? "h1" : "h2";
 
@@ -167,7 +170,7 @@ export function ProviderView({ provider, categories, lang, variant }: { provider
             </li>
           )}
         </ul>
-        {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} describedBy={nameId} />}
+        {machine && <MachineLabel english={english} onToggle={() => setEnglish((on) => !on)} describedBy={nameId} unreviewed={unreviewed} />}
       </header>
 
       <dl className="dir-facts">

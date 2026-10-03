@@ -200,6 +200,8 @@ export const AUDIT_META = {
     files: count.optional(),
     /** Texts published in a language other than English. */
     translations: count.optional(),
+    /** Of those, unreviewed machine translations of descriptions, shown labelled (AD-11 pilot change). */
+    machine: count.optional(),
     /** Texts published as English with translation.unavailable. */
     fallbacks: count.optional(),
     /** Translations withheld because the English changed since they were made. */

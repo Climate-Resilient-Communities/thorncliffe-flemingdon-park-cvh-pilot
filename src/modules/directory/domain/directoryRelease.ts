@@ -14,8 +14,16 @@
 //    published, and the release report lists it by provider and language. The seed never loads a stale
 //    translation, so it leaves a note of it on the provider (`withheld`: text key -> language -> why), and
 //    that note, not the loaded text, is what the report is made from;
+//  - pilot change to AD-11 (product owner, 2026-10-03): a provider's ordinary description (`services`) also
+//    ships when the seed loaded it as a current machine translation no person has reviewed, and its facts
+//    (phone numbers, postal codes, emails, web addresses, times, numbers) still match the English (lostFacts).
+//    It is published with `machine: true`, `status: "ok"` (or `script_converted` for zh-Hant), `review_status:
+//    "none"` and `reviewed_on: null`: the listing contract is unchanged, and the client labels any translated
+//    text whose review_status is not `reviewed` "Machine-translated; not reviewed by a person", the English
+//    original one tap away. The emergency role, category and subcategory names still ship reviewed only;
 //  - zh-Hant is never read from the catalogue: it is converted from the reviewed zh text with OpenCC
-//    (status `script_converted`), and only while that zh text is itself reviewed and current;
+//    (status `script_converted`), and only while that zh text is itself reviewed and current (for a
+//    description, also a current machine zh, and the conversion is then unreviewed too);
 //  - every shipped text keeps its traceability: the English original, the hash of that English, the
 //    model or conversion, and the review status;
 //  - every provider carries `neighbourhood_ids`, taken from the Hub's list (data/catalogue/provider-neighbourhoods.json)
@@ -109,8 +117,13 @@ export interface ReleaseCounts {
   categories: number;
   languages: number;
   files: number;
-  /** Texts published in a language other than English: reviewed translations and conversions. */
+  /** Texts published in a language other than English: reviewed translations and conversions, and the unreviewed machine ones. */
   translations: number;
+  /**
+   * Of `translations`, the unreviewed machine translations of descriptions, shown labelled (AD-11 pilot change). Absent
+   * from releases made before that change.
+   */
+  machine?: number;
   /** Texts published as English with translation.unavailable, the stale ones included. */
   fallbacks: number;
   stale: number;
@@ -141,6 +154,7 @@ export class ReleaseDataError extends Error {
 // ---------------------------------------------------------------- one text
 interface Tally {
   translations: number;
+  machine: number;
   fallbacks: number;
   stale: StaleText[];
   unavailable: Map<string, UnavailableTexts>;
@@ -150,6 +164,7 @@ const asRecord = (text: string | undefined, provenance: Record<string, unknown> 
   if (text === undefined) return null;
   const read = (name: string) => (typeof provenance?.[name] === "string" ? (provenance[name] as string) : undefined);
   const status = read("status");
+  const checks = provenance?.machineChecks;
   return {
     text,
     model: read("model"),
@@ -157,6 +172,7 @@ const asRecord = (text: string | undefined, provenance: Record<string, unknown> 
     status: status === "machine" || status === "reviewed" ? status : undefined,
     reviewer: read("reviewer"),
     reviewedOn: read("reviewedOn"),
+    ...(Array.isArray(checks) ? { machineChecks: checks.filter((check): check is string => typeof check === "string") } : {}),
   };
 };
 
@@ -167,6 +183,8 @@ interface TextSources {
   provenance: Record<string, Record<string, unknown>> | null;
   /** language -> why the seed did not load a translation the files have; null when the seed kept no note. */
   withheld?: Record<string, string> | null;
+  /** True for a provider's description: an unreviewed machine translation may ship, labelled (AD-11 pilot change). */
+  allowMachine?: boolean;
 }
 
 /**
@@ -218,6 +236,9 @@ function listingText(
     };
   };
   const lost = (result: ReturnType<typeof evaluateTranslation>): UnavailableReason => ("unavailable" in result ? result.unavailable : "incomplete_record");
+  const options = { allowMachine: sources.allowMachine === true };
+  /** An unreviewed machine translation: published, but with no review claimed (review_status `none`). */
+  const isMachine = (result: { loaded: { provenance: Record<string, unknown> } }) => result.loaded.provenance.status === "machine";
 
   if (lang === "zh-Hant") {
     const zhText = sources.labels.zh;
@@ -242,14 +263,16 @@ function listingText(
       conversion: { from: "zh", fromTextHash: hash(zhText), openccVersion: zhHant.openccVersion, config: zhHant.config },
     };
     const files = { ...fileOf("zh-Hant", converted), ...fileOf("zh", zhRecord) };
-    const result = evaluateTranslation("zh-Hant", key, english, files, hash, ["911"]);
+    const result = evaluateTranslation("zh-Hant", key, english, files, hash, ["911"], options);
     if (!("loaded" in result)) {
-      const zhResult = evaluateTranslation("zh", key, english, files, hash, ["911"]);
+      const zhResult = evaluateTranslation("zh", key, english, files, hash, ["911"], options);
       const reason = lost(result);
       const zhStale = "unavailable" in zhResult && zhResult.unavailable === "stale";
       return fallback(reason, reason === "stale" || zhStale);
     }
     tally.translations += 1;
+    const unreviewed = isMachine(result);
+    if (unreviewed) tally.machine += 1;
     return {
       lang,
       body: result.loaded.text,
@@ -258,8 +281,8 @@ function listingText(
       status: "script_converted",
       source_hash: sourceHash,
       original,
-      review_status: "reviewed",
-      reviewed_on: zhRecord.reviewedOn ?? null,
+      review_status: unreviewed ? "none" : "reviewed",
+      reviewed_on: unreviewed ? null : (zhRecord.reviewedOn ?? null),
       conversion,
     };
   }
@@ -274,12 +297,16 @@ function listingText(
     return { lang, body: text, machine: true, model: null, status: "ok", source_hash: sourceHash, original, review_status: "reviewed", reviewed_on: null };
   }
   const record = asRecord(text, provenanceOf(lang));
-  const result = evaluateTranslation(lang as Exclude<LangCode, "en" | "zh-Hant">, key, english, fileOf(lang as Exclude<LangCode, "en">, record), hash, ["911"]);
+  const result = evaluateTranslation(lang as Exclude<LangCode, "en" | "zh-Hant">, key, english, fileOf(lang as Exclude<LangCode, "en">, record), hash, ["911"], options);
   if (!("loaded" in result)) {
     const reason = lost(result);
     return fallback(reason, reason === "stale");
   }
   tally.translations += 1;
+  if (isMachine(result)) {
+    tally.machine += 1;
+    return { lang, body: result.loaded.text, machine: true, model: result.loaded.provenance.model as string, status: "ok", source_hash: sourceHash, original, review_status: "none", reviewed_on: null };
+  }
   const provenance = result.loaded.provenance as { model: string; reviewedOn: string; sourceHash: string };
   return {
     lang,
@@ -329,7 +356,7 @@ function listingFile(lang: LangCode, input: ReleaseInput, tally: Tally, problems
     }
     const role = p.texts.emergency_role?.en;
     const text = (key: string, english: string) =>
-      listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null }, p.id, p.name, key, input, tally);
+      listingText(lang, english, { labels: p.texts[key], provenance: p.translations[key] ?? {}, withheld: p.withheld?.[key] ?? null, allowMachine: key === "services" }, p.id, p.name, key, input, tally);
     providers.push({
       id: p.id,
       name: p.name,
@@ -365,15 +392,17 @@ export function planRelease(input: ReleaseInput): ReleasePlan {
     languages: RELEASE_LANGS.length,
     files: RELEASE_LANGS.length,
     translations: 0,
+    machine: 0,
     fallbacks: 0,
     stale: 0,
   };
   const report: ReleaseReport = { stale: [], unavailable: [] };
   const unavailable = new Map<string, UnavailableTexts>();
   for (const lang of RELEASE_LANGS) {
-    const tally: Tally = { translations: 0, fallbacks: 0, stale: [], unavailable };
+    const tally: Tally = { translations: 0, machine: 0, fallbacks: 0, stale: [], unavailable };
     const body = listingFile(lang, input, tally, problems);
     counts.translations += tally.translations;
+    counts.machine = (counts.machine ?? 0) + tally.machine;
     counts.fallbacks += tally.fallbacks;
     report.stale.push(...tally.stale);
     files.push({ lang, body, sha256: input.hash(body), bytes: Buffer.byteLength(body, "utf8") });

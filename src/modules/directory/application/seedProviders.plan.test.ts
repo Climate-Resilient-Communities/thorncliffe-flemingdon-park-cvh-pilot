@@ -44,10 +44,38 @@ describe("the real data/catalogue files (S02.04)", () => {
     }
   });
 
-  it("loads no translation yet: the catalogue's translations are machine output with no review recorded", () => {
+  it("loads no reviewed translation yet: the catalogue's translations are machine output with no review recorded", () => {
     expect(real.report.translations.loaded).toBe(0);
-    expect(real.report.translations.unavailable.every((u) => u.reason === "machine")).toBe(true);
+    expect(real.report.translations.unavailable.every((u) => u.reason === "machine" || u.reason === "facts_changed")).toBe(true);
     expect(new Set(real.report.translations.unavailable.map((u) => u.lang))).toEqual(new Set(["ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"]));
+  });
+
+  it("loads the machine translations of descriptions whose facts match the English, in every language, Pashto included (AD-11 pilot change)", () => {
+    const langs = ["ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"];
+    expect(real.report.translations.machine.map((m) => m.lang)).toEqual(langs);
+    for (const { lang, count } of real.report.translations.machine) {
+      // Every description is either loaded unreviewed or withheld because a fact changed; nothing else.
+      const changed = real.report.translations.unavailable.find((u) => u.lang === lang && u.reason === "facts_changed")?.count ?? 0;
+      expect(count + changed, lang).toBe(99);
+      expect(count, lang).toBeGreaterThan(70);
+    }
+    const loaded = real.providers.filter((p) => p.texts.services.ps !== undefined);
+    expect(loaded.length).toBeGreaterThan(70);
+    for (const p of loaded) {
+      expect(p.translations.services.ps).toMatchObject({ status: "machine" });
+      expect(p.translations.services.ps).not.toHaveProperty("reviewer");
+      expect(p.translations.services.ps).not.toHaveProperty("reviewedOn");
+    }
+  });
+
+  it("keeps the emergency roles and the category and subcategory names reviewed-only: none is loaded", () => {
+    for (const p of real.providers) {
+      expect(Object.keys(p.texts.emergency_role ?? { en: "" }), p.id).toEqual(["en"]);
+      expect(p.translations.emergency_role, p.id).toBeUndefined();
+      for (const sub of p.subcategories) expect(Object.keys(sub.labels)).toEqual(["en"]);
+    }
+    for (const c of real.categories) expect(Object.keys(c.labels)).toEqual(["en"]);
+    expect(real.providers.some((p) => p.withheld.emergency_role?.ps === "machine")).toBe(true);
   });
 
   it("finds each provider text's id in the translation files (the ids it computes are the ones the build wrote)", () => {
@@ -85,6 +113,10 @@ describe("a catalogue where a language file is missing (S02.04)", () => {
     // Nothing else changes: the other languages report as they did.
     const others = (r: typeof real) => r.report.translations.unavailable.filter((u) => u.lang !== "ur");
     expect(others(missing)).toEqual(others(real));
-    expect(missing.providers.map((p) => p.texts)).toEqual(real.providers.map((p) => p.texts));
+    const withoutUr = (texts: Record<string, Record<string, string>>) =>
+      Object.fromEntries(Object.entries(texts).map(([key, byLang]) => [key, Object.fromEntries(Object.entries(byLang).filter(([lang]) => lang !== "ur"))]));
+    expect(missing.providers.map((p) => withoutUr(p.texts))).toEqual(real.providers.map((p) => withoutUr(p.texts)));
+    expect(missing.providers.every((p) => p.texts.services.ur === undefined)).toBe(true);
+    expect(missing.report.translations.machine.map((m) => m.lang)).not.toContain("ur");
   });
 });
