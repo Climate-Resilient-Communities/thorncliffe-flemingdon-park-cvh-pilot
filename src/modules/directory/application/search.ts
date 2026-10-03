@@ -131,6 +131,24 @@ export type SearchFailureNote =
 /** What the translated-question leg did, as `search_log.translated_leg` records it. */
 export type TranslatedLeg = "not_needed" | "used" | "failed" | "timed_out";
 
+/**
+ * What a search saw before it answered, for the test-set runner's measurement of the no-match threshold (S03.07): the scores
+ * below the threshold are never in the answer, so the runner is handed the similarities the ranking was made from. Provider
+ * ids and similarities only, never the question or its translation.
+ */
+export interface SearchObservation {
+  releaseV: number;
+  /** The release's threshold, and the emergency-only threshold as configured (the fail-safe applies it at most as high as the release's). */
+  threshold: number;
+  emergencyThreshold: number;
+  /** The providers of an emergency category in this release. */
+  emergencyProviders: ReadonlySet<string>;
+  /** What the translated-question leg did. */
+  translatedLeg: TranslatedLeg;
+  /** The similarity of every provider of the release in each leg that completed: the direct leg first, then the translated one. */
+  legs: { leg: "direct" | "translated"; similarities: ReadonlyMap<string, number> }[];
+}
+
 /** One search_log row: counts and codes only. */
 export interface SearchLogRow {
   lang: LangCode;
@@ -182,6 +200,11 @@ export interface SearchDeps {
   log?: boolean;
   /** Handed the writes still pending when the response is ready, so the app can finish them after the response (`after()`). */
   defer?: (work: Promise<unknown>) => void;
+  /**
+   * Told what each search that answered (`ok` or `no_clear_match`) saw, just before the answer is returned (S03.07's runner
+   * measures the threshold from it). It must return at once, holds no question, and a failure in it changes nothing.
+   */
+  observe?: (seen: SearchObservation) => void;
   /**
    * Told of each spend row once it is written (after the write, which the response waits for only within its budget). It must
    * return at once: what it starts (the app counts a model's month against its limit) runs after the response, never in it.
@@ -274,6 +297,16 @@ async function readCurrent(db: Db, timeoutMs?: number): Promise<CurrentRelease |
   return { number: row.number, search: record.success ? record.data : null, files: row.files as CurrentRelease["files"] };
 }
 
+/**
+ * The current release's number and the embedding model and threshold its search data recorded, read the way a search reads
+ * it; null when there is no current release or it has no search data. The test-set runner reports which release, model and
+ * threshold it measured before it asks the first question.
+ */
+export async function currentSearchFacts(db: Db, timeoutMs = 5_000): Promise<{ release: number; model: string; threshold: number } | null> {
+  const current = await readCurrent(db, timeoutMs);
+  return current?.search ? { release: current.number, model: current.search.embed_model, threshold: current.search.threshold } : null;
+}
+
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
   const vectorsBody = await storage.get(record.vectors_path);
   if (vectorsBody === null || sha256Hex(vectorsBody) !== record.sha256) throw new Error("vectors file is missing or changed");
@@ -338,6 +371,15 @@ export function questionSourceOf(detected: QuestionLanguage, q?: string): Questi
   if (detected.confidence === "ambiguous_arabic") return detected.confidence;
   if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs" || detected.lang === "ur")) return detected.lang;
   return null;
+}
+
+/**
+ * The kind of translation a question would need, or null when it needs none: the rule `search` applies, on the request as
+ * `search` reads it. The test-set runner uses it to count the vendor calls a run will make before it makes any.
+ */
+export function questionLegSource(input: { q: string; lang: LangCode }): QuestionSource | null {
+  const parsed = parseSearchRequest(input);
+  return parsed.ok ? questionSourceOf(detect(parsed.value.q, parsed.value.lang), parsed.value.q) : null;
 }
 
 /** How a leg ended: its similarities, or why it has none. */
@@ -710,6 +752,16 @@ export function createSearch(deps: SearchDeps): SearchService {
     const emergencyThreshold = Math.min(deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, data.threshold);
     const emergency = emergencyFirst(results, data.emergency) || emergencyInTop(completed, data.emergency, emergencyThreshold);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
+    if (deps.observe) {
+      const legs: SearchObservation["legs"] = [];
+      if (direct.ok) legs.push({ leg: "direct", similarities: direct.similarities });
+      if (translated?.ok) legs.push({ leg: "translated", similarities: translated.similarities });
+      try {
+        deps.observe({ releaseV: data.releaseV, threshold: data.threshold, emergencyThreshold: deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, emergencyProviders: data.emergency, translatedLeg: translatedOutcome, legs });
+      } catch {
+        // A measurement never changes an answer.
+      }
+    }
     await finish();
     return { v: 1, release_v: data.releaseV, query_lang: queryLang, status, emergency_first: emergency, results };
   }

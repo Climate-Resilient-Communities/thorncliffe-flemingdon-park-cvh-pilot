@@ -2,7 +2,9 @@
 // translated-question leg (Cohere, only where a key is configured, which is production; the leg's models come from
 // `search_question_route`, SEARCH_QUESTION_ROUTE, and the model it retries with when one is past its limit, per kind of
 // question, from SEARCH_QUESTION_FALLBACK), the private store of the release files, the database, and the rate limiter. Server
-// only. The route src/app/api/search/route.ts uses it; so does the search test-set runner's engine (`searchTestSetEngine`).
+// only. The route src/app/api/search/route.ts uses it. (The search test-set runner against production,
+// scripts/search-test-set/productionEngine.ts, is a script and cannot import this server-only module: it builds the same
+// composition from the same parts and the same settings.)
 //
 // directory may not import ops, so the app writes the ops event of a search that could not answer, from the reason and
 // the duration the use case hands it; the same for a rate limiter that could not count, and for a search the route cut at
@@ -87,7 +89,8 @@ export function searchService(): SearchService {
  * The engine of the search test-set runner: the same use case, but its usage is counted as `test_set` and it writes no
  * `search_log` row (they are not residents' searches). `translatedLeg: false` runs it without the translated-question leg,
  * so a run with the leg on and one with it off show the leg's effect per language (S03.05). It never falls back to a second
- * model, so that S03.07's run measures the routed models and not whichever answered.
+ * model, so a run through it measures the routed models and not whichever answered. (S03.07's production run builds its engine
+ * in scripts/search-test-set/productionEngine.ts instead, with the fallback as production resolves it.)
  */
 export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): SearchService {
   return createSearch({

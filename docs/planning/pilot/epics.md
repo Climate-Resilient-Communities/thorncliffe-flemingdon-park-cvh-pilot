@@ -1702,7 +1702,7 @@ So that I find help without knowing the provider's name.
 
 ### Story S03.07 — Team picks the embedding model and the no-match threshold
 
-- **Size:** S · **Estimate:** 2 h (+ about 3 h contingent) · **Actual:** —
+- **Size:** S · **Estimate:** 2 h (+ about 3 h contingent) · **Actual:** 1 h 19 min (started 2026-10-03 08:58 UTC, built 10:17 UTC), after an earlier prep run that stopped unfinished
 - **Traces:** FR-D2-Q, AR-15 (embedding model open question) · **Depends on:** S03.05 · **Branch:** `e03-s07-model-threshold`
 
 As a developer,

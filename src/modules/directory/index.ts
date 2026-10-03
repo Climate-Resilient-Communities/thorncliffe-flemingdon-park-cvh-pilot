@@ -92,12 +92,16 @@ export {
   SEARCH_SPEND_PURPOSE,
   SearchFailure,
   createSearch,
+  currentSearchFacts,
+  questionLegSource,
   type SearchDeps,
   type SearchFailureCode,
   type SearchFailureNote,
+  type SearchObservation,
   type SearchService,
   type SearchStageReason,
+  type TranslatedLeg,
 } from "./application/search";
 export { QueryEmbedError, type QueryEmbedder } from "./application/ports";
 export { cohereQueryEmbedder, warmCohere, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
-export { MAX_RESULTS, RRF_K, cosine, rankLegs, type SearchHit } from "./domain/searchRanking";
+export { DEFAULT_EMERGENCY_THRESHOLD, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs, type SearchHit } from "./domain/searchRanking";
