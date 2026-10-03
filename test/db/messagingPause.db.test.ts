@@ -446,7 +446,8 @@ describe("while texts are paused", () => {
     expect(await control()).toMatchObject({ handed_off_at_pause: 0 });
     // The allowance: that one text went out, and the other two are back in the queue, so the alert is part-way through being stopped.
     expect(world.provider.calls).toHaveLength(1);
-    expect(await world.statesOf(alert.ids)).toEqual({ [alert.ids[0]]: "submitted", [alert.ids[1]]: "queued", [alert.ids[2]]: "queued" });
+    // The three texts share a priority and their ids were made in the same millisecond, so which one is claimed first is not fixed.
+    expect(Object.values(await world.statesOf(alert.ids)).sort()).toEqual(["queued", "queued", "submitted"]);
 
     // Once the hand-off has committed it is a text already handed to the provider: a later pause of the same alert counts it.
     await pause.resume({ actorStaffId: who });
