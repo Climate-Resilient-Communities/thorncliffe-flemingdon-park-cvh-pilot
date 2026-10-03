@@ -16,9 +16,8 @@
 // condition failing never stops the others. The texts are `transactional`, purpose `oncall_alert`, to `oncall` recipients: claim rank 1 (after
 // fire alerts, before everything else), exempt from the pause, and a delivery row holds the roster entry's id and never a number (AR-12, AR-17).
 // An empty roster is not an error: the event still records the condition and the Hub's banner shows a sender that is failing.
-import { englishText } from "../../../i18n/text";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
-import { countSms, LEASE_STALE_AFTER_MS, type DeliveryResult, type Enqueued, type SenderHealthReader, type TransactionalInput } from "../../messaging";
+import { LEASE_STALE_AFTER_MS, type DeliveryResult, type Enqueued, renderOncallText, type SenderHealthReader, type TransactionalInput } from "../../messaging";
 import { healthStore } from "../adapters/healthStore";
 import { oncallStore } from "../adapters/oncallStore";
 import { SENDER_CONDITIONS, SIGNATURE_FAILURE_LIMIT, SIGNATURE_WINDOW_MS, decide, type Observation } from "../domain/health";
@@ -60,9 +59,9 @@ export interface HealthJob {
 
 const nameOf = (error: unknown) => (error instanceof Error ? error.name : "NonError");
 
-/** The text to the on-call Admins for a condition: English, counts only, one segment where the count allows. */
+/** The text to the on-call Admins for a condition: built by messaging's renderer (AD-21), English, counts only, one segment. */
 export function oncallText(condition: HealthCondition, count: number): string {
-  return englishText(`ops.oncall.text.${condition}`, { count });
+  return renderOncallText(condition, count).body;
 }
 
 export function createHealthJob(deps: HealthJobDeps): HealthJob {
@@ -105,8 +104,7 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
   async function textTheOncall(tx: DbTransaction, condition: HealthCondition, count: number, now: Date): Promise<number> {
     const ids = await oncallStore.ids(tx);
     if (ids.length === 0) return 0;
-    const body = oncallText(condition, count);
-    const segments = countSms(body).segments;
+    const { body, segments } = renderOncallText(condition, count);
     const costEstimateCents = Math.ceil(segments * deps.pricePerSegmentCents());
     const stamp = now.getTime();
     for (const id of ids) {
@@ -143,6 +141,8 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
           await record(tx, { kind: "health.condition_recovered", detail: { condition } });
           return { condition, status: "ok", holds: false, action: "recovered" };
         case "hold":
+          // A new episode inside the 30-minute text interval is texted about by no one, but it is still recorded: the limit is on texts, not on the record.
+          if (decision.begins) await record(tx, { kind: "health.condition_alerted", detail: { condition, count: seen.count, notified: 0, first: true, rate_limited: true } });
           await healthStore.save(tx, condition, { active: true, keepSince: !decision.begins, alerted: false, eventId: null });
           return { condition, status: "ok", holds: true, action: "held" };
         case "alert": {

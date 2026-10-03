@@ -1,5 +1,6 @@
 // The ops module's public interface (AD-2, AD-23): the operational event log. Other modules and the app write ops events
-// only through recordOpsEvent (or recordOpsEventUnlessBusy, for an event anyone can cause); the health job (E09) reads them.
+// only through recordOpsEvent (or recordOpsEventUnlessBusy, for an event anyone can cause). The health job (S06.07) judges the five sending conditions
+// and texts the on-call roster; E09's weekly review reads the events.
 export { recordOpsEvent, recordOpsEventUnlessBusy } from "./application/recordOpsEvent";
 export {
   ALERT_SUBMIT_FAILURE_REASONS,

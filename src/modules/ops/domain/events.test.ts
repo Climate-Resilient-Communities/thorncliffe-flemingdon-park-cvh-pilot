@@ -162,6 +162,16 @@ describe("the health job's events (S06.07)", () => {
     });
   });
 
+  it("records a new episode inside the text interval as rate limited, with nobody texted", () => {
+    expect(toOpsEventRecord({ kind: "health.condition_alerted", detail: { condition: "queue_stuck", count: 1, notified: 0, first: true, rate_limited: true } }).detail).toEqual({
+      condition: "queue_stuck",
+      count: 1,
+      notified: 0,
+      first: true,
+      rate_limited: true,
+    });
+  });
+
   it("records a recovery as information", () => {
     expect(toOpsEventRecord({ kind: "health.condition_recovered", detail: { condition: "sender_stalled" } })).toMatchObject({ severity: "info", detail: { condition: "sender_stalled" } });
   });

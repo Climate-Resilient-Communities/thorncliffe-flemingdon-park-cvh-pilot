@@ -169,11 +169,12 @@ export const OPS_EVENT_KINDS = {
   /**
    * The health job found a condition and texted the on-call Admins (S06.07). `count` is how many things the condition counts (stuck texts, unknown
    * deliveries, failures; 1 for a setting), `notified` how many on-call numbers were queued a text (0 when the roster is empty: the Hub banner and this
-   * event still record it), `first` whether the condition began with this run. Counts and codes only.
+   * event still record it), `first` whether the condition began with this run, `rate_limited` that a new episode began inside the 30-minute
+   * text interval, so it is recorded here and nothing was texted (`notified` 0). Counts and codes only.
    */
   "health.condition_alerted": {
     severity: "error",
-    detail: z.strictObject({ condition: z.enum(HEALTH_CONDITIONS), count, notified: count, first: z.boolean() }),
+    detail: z.strictObject({ condition: z.enum(HEALTH_CONDITIONS), count, notified: count, first: z.boolean(), rate_limited: z.boolean().optional() }),
   },
   /** A condition the health job had raised no longer holds (S06.07); no further text is sent for it. */
   "health.condition_recovered": {

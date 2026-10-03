@@ -275,6 +275,12 @@ describe("a text queued and due for more than 5 minutes outside a pause", () => 
     expect(await reportOf("queue_stuck")).toMatchObject({ holds: true, action: "held" });
     expect(await oncallTexts()).toHaveLength(1);
     expect(await stateOf("queue_stuck")).toMatchObject({ active: true });
+    // The second episode is in ops_event though nobody was texted for it.
+    expect((await healthEvents()).map((row) => [row.kind, row.detail])).toEqual([
+      ["health.condition_alerted", { condition: "queue_stuck", count: 1, notified: 1, first: true }],
+      ["health.condition_recovered", { condition: "queue_stuck" }],
+      ["health.condition_alerted", { condition: "queue_stuck", count: 1, notified: 0, first: true, rate_limited: true }],
+    ]);
 
     await backdateAlert("queue_stuck", 31);
     expect(await reportOf("queue_stuck")).toMatchObject({ action: "alerted", texts: 1 });

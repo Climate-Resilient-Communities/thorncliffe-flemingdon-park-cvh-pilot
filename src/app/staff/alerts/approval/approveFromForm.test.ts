@@ -185,6 +185,7 @@ describe("Discard", () => {
 describe("approvalRefusalMessage", () => {
   it("is the view's wording where it has some and a general line for anything else", () => {
     expect(approvalRefusalMessage("ENTRY_CHANGED")).toBe("This alert changed. Review it again.");
+    expect(approvalRefusalMessage("ONCALL_REQUIRED")).toBe("No on-call number is set, so this alert cannot be approved yet. An Admin adds one on the On-call numbers page. Nothing was approved.");
     expect(approvalRefusalMessage("SOMETHING_ELSE")).toBe("That could not be done. Reload the page and try again.");
   });
 });

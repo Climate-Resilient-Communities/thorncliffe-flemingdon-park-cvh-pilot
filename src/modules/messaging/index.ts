@@ -388,6 +388,7 @@ export {
   type SmsEntry,
   type SmsTranslated,
 } from "./domain/smsBody";
+export { ONCALL_TEXT_CONDITIONS, renderOncallText, type OncallTextCondition, type RenderedOncallText } from "./domain/oncallText";
 export { NORMALISATION_TABLE, SMS_MAX_BODY_LENGTH, countSms, normaliseSms, type SmsCount, type SmsEncoding } from "./domain/smsEncoding";
 export { estimateSmsCost, priceInThousandthsOfCent, type CostBasis, type SmsCostEstimate, type SmsCostInput } from "./domain/smsCost";
 
