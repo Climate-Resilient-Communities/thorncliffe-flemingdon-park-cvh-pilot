@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { NO_RECIPIENTS, RETURN_NOTE_MAX, decodeCounts, encodeCounts, sameRecipientCounts, type RecipientCounts } from "./alertApproval";
-import { FEED_TAG } from "./feedTag";
 
 describe("the count an approver reviews", () => {
   const counts: RecipientCounts = { total: 5, byLanguage: { en: 3, ur: 2 } };
@@ -44,11 +43,5 @@ describe("the count an approver reviews", () => {
   it("has no one in it before E07, and the note of a return is at most 500 characters", () => {
     expect(NO_RECIPIENTS).toEqual({ total: 0, byLanguage: {} });
     expect(RETURN_NOTE_MAX).toBe(500);
-  });
-});
-
-describe("the feed's cache tag", () => {
-  it("is 'feed' (AD-17): the tag the feed route caches under and an approval expires", () => {
-    expect(FEED_TAG).toBe("feed");
   });
 });

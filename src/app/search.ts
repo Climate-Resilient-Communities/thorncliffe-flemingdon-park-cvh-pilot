@@ -5,7 +5,8 @@
 // only. The route src/app/api/search/route.ts uses it; so does the search test-set runner's engine (`searchTestSetEngine`).
 //
 // directory may not import ops, so the app writes the ops event of a search that could not answer, from the reason and
-// the duration the use case hands it; the same for a rate limiter that could not count. Writes still pending when the
+// the duration the use case hands it; the same for a rate limiter that could not count, and for a search the route cut at
+// its hard deadline. Writes still pending when the
 // response is ready (spend_event, search_log, the ops events) finish after it, through `after()`; so does the count that
 // warns ops when a translation model nears its monthly limit (SEARCH_TRANSLATE_MONTHLY_CALLS).
 import "server-only";
@@ -104,6 +105,11 @@ export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): 
 /** Writes the ops event of a rate limiter that could not count (the search then answered 503 `search_unavailable`). */
 export async function recordLimiterFailure(ms: number): Promise<void> {
   await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms } });
+}
+
+/** Writes the ops event of a search cut at the route's hard deadline (it answered 503 `search_unavailable`): a reason and a duration. */
+export async function recordSearchDeadline(ms: number): Promise<void> {
+  await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "deadline", ms } });
 }
 
 /** The per-client limiter, salted with a key derived from the Supabase secret key (a fixed local key where there is none). */

@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { FEED_TAG } from "@/contracts/feedTag";
+import { FEED_TAG } from "@/contracts/feed";
 import type { ApprovalOutcome } from "@/modules/alerting";
 import { afterApproval, type AfterApprovalDeps } from "./afterApproval";
 

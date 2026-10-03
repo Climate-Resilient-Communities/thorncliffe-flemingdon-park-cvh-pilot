@@ -263,7 +263,8 @@
     "active": "সক্রিয় সমস্যা",
     "progress": "কাজ চলছে",
     "resolved": "সমাধান হয়েছে",
-    "unknown": "জানা নেই"
+    "unknown": "জানা নেই",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "এখন করার মতো একটি কাজ",
     "ambassadorHome": "অ্যাম্বাসেডর: আমার বিল্ডিং",
     "ambassadorLine": "{building}-এর জন্য হালনাগাদ পোস্ট করুন বা আপনার রাউন্ড দিন",
-    "noBuildingLine": "আপনার পাড়ার সতর্কতা এখানে দেখায়। আপনার বিল্ডিংয়ের সতর্কতা আগে দেখতে বিল্ডিং যোগ করুন।"
+    "noBuildingLine": "আপনার পাড়ার সতর্কতা এখানে দেখায়। আপনার বিল্ডিংয়ের সতর্কতা আগে দেখতে বিল্ডিং যোগ করুন।",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "সাধারণ ফোনে টেক্সট মেসেজ",

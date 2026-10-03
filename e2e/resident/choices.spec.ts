@@ -38,7 +38,7 @@ test.describe("first visit", () => {
 
     await page.getByTestId("step-skip").click();
     await page.waitForURL("**/en");
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nothing is happening right now.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Alerts now");
 
     // Skipping everything saves nothing but the language and that the steps were gone through.
     expect(await savedChoices(page)).toEqual({ v: 1, lang: "en", welcomed: true });
@@ -462,7 +462,7 @@ test.describe("choices that are missing, corrupt or fail the schema", () => {
     await openResident(page, "/en", 390);
     await expect(page.getByTestId("first-run-gate")).toHaveAttribute("data-state", "ready");
     await expect(page.getByTestId("choices-link")).toBeVisible();
-    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Nothing is happening right now.");
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Alerts now");
     // Not sent anywhere, however long it is given.
     await page.waitForTimeout(500);
     expect(new URL(page.url()).pathname).toBe("/en");

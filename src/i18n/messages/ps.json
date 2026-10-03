@@ -263,7 +263,8 @@
     "active": "فعاله ستونزه",
     "progress": "کار روان دی",
     "resolved": "حل شوه",
-    "unknown": "نامعلوم"
+    "unknown": "نامعلوم",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "یو کار چې اوس یې وکړئ",
     "ambassadorHome": "سفیر: زما ودانۍ",
     "ambassadorLine": "د {building} لپاره نوی خبر خپور کړئ یا خپل ګرځښت وکړئ",
-    "noBuildingLine": "ستاسو د سیمې خبرتیاوې دلته ښکاري. خپله ودانۍ ورزیاته کړئ چې د هغې خبرتیاوې لومړی ووینئ."
+    "noBuildingLine": "ستاسو د سیمې خبرتیاوې دلته ښکاري. خپله ودانۍ ورزیاته کړئ چې د هغې خبرتیاوې لومړی ووینئ.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "په ساده تلیفون کې لنډ پیغام",

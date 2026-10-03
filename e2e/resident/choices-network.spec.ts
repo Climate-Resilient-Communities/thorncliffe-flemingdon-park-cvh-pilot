@@ -53,14 +53,16 @@ test("no request carries the saved selection, and the only data requests are the
     for (const secret of SECRETS) expect(text, `${request.method} ${request.url} carries ${secret}`).not.toContain(secret);
   }
 
-  // The data requests: only the building list, with no query and no body, the same for everyone.
+  // The data requests: only the building list and the public feed (home), with no body and no cookie, the same for
+  // everyone: the list with no query, the feed with the page language and nothing else.
   const own = seen.filter((request) => new URL(request.url).origin === new URL(page.url()).origin);
   const data = own.filter((request) => new URL(request.url).pathname.startsWith("/api/"));
   expect(data.length).toBeGreaterThan(0);
   for (const request of data) {
     expect(request.method).toBe("GET");
-    expect(new URL(request.url).pathname).toBe("/api/buildings");
-    expect(new URL(request.url).search).toBe("");
+    const { pathname, search } = new URL(request.url);
+    expect(["/api/buildings", "/api/feed"]).toContain(pathname);
+    expect(search).toMatch(pathname === "/api/feed" ? /^\?lang=[a-zA-Z-]+$/ : /^$/);
     expect(request.body).toBe("");
     expect(JSON.parse(request.headers)).not.toHaveProperty("cookie");
   }

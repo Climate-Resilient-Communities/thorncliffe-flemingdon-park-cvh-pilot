@@ -11,7 +11,24 @@ import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
 import type { QueryEmbedder } from "./ports";
 import { DEFAULT_SEARCH_SETTINGS } from "@/platform/config/env";
-import { DEFAULT_FALLBACK_MIN_BUDGET_MS, SearchFailure, createSearch, questionSourceOf, type SearchDeps, type SearchFailureNote, type SearchLogRow, type SearchSnapshot } from "./search";
+import { LISTING_PATH, RELEASE_V, VECTORS_PATH, never, releaseDb, releaseStore } from "../../../../test/helpers/searchRelease";
+import { DEFAULT_STORAGE_TIMEOUT_MS } from "../adapters/releaseStorage";
+import {
+  ANSWER_MARGIN_MS,
+  DEFAULT_FALLBACK_MIN_BUDGET_MS,
+  DEFAULT_LEG_TIMEOUT_MS,
+  DEFAULT_TOTAL_BUDGET_MS,
+  SNAPSHOT_LOAD_TIMEOUT_MS,
+  SearchFailure,
+  createSearch,
+  questionSourceOf,
+  type SearchDeps,
+  type SearchFailureNote,
+  type SearchLogRow,
+  type SearchService,
+  type SearchSnapshot,
+  type SearchWriter,
+} from "./search";
 
 const MODEL = "embed-v4.0";
 const ROUTE: QuestionRoute = {
@@ -1108,5 +1125,169 @@ describe("the translated-question leg", () => {
       // A misconfigured 0.9 is held to the release's 0.3: 0.27 stays below it.
       expect((await run("em just below", { emergencyThreshold: 0.9 })).result).toMatchObject({ emergency_first: false });
     });
+  });
+});
+
+// The request's deadline over the snapshot read (the database read of the current release, and the release's data, loaded
+// or joined) and over the writes: whatever never answers, the search ends at the request's own deadline, and a load another
+// request started is only waited for until then (it runs on for the searches after it). The read is the real one, over a
+// fake database and a fake store (test/helpers/searchRelease.ts); time is vitest's fake clock.
+describe("the request's deadline over the snapshot read and the writes", () => {
+  let notes: SearchFailureNote[];
+  let deferred: Promise<unknown>[];
+  let embedCalls: number;
+
+  beforeEach(() => {
+    vi.useFakeTimers();
+    notes = [];
+    deferred = [];
+    embedCalls = 0;
+  });
+  afterEach(() => vi.useRealTimers());
+
+  /** The question's embedding: provider M001's axis after 100 ms; cancelled by its signal. */
+  const embedder: QueryEmbedder = {
+    embedQuery({ signal }) {
+      embedCalls += 1;
+      return new Promise((resolve, reject) => {
+        const timer = setTimeout(() => resolve({ vector: [1, 0], tokens: 4 }), 100);
+        signal.addEventListener("abort", () => (clearTimeout(timer), reject(new Error("aborted"))));
+      });
+    },
+  };
+
+  function service(parts: { db?: ReturnType<typeof releaseDb>; store?: ReturnType<typeof releaseStore>; writer?: SearchWriter; snapshotLoadTimeoutMs?: number; snapshotFailureTtlMs?: number }) {
+    const db = parts.db ?? releaseDb();
+    const store = parts.store ?? releaseStore();
+    return createSearch({
+      db: () => db.db,
+      storage: () => store.storage,
+      embedder,
+      writer: parts.writer ?? { log: async () => undefined, spend: async () => undefined },
+      defer: (work) => void deferred.push(work),
+      onFailure: async (note) => void notes.push(note),
+      snapshotLoadTimeoutMs: parts.snapshotLoadTimeoutMs,
+      snapshotFailureTtlMs: parts.snapshotFailureTtlMs,
+      clock: () => Date.now(),
+    });
+  }
+
+  /** Starts a search now, on fake time, without moving the clock; `took` is when it settled, from its own start. */
+  function start(search: SearchService, startedAgoMs = 0) {
+    const started = Date.now() - startedAgoMs;
+    let took = -1;
+    let outcome: unknown;
+    void search.search({ q: "lawyer", lang: "en", v: RELEASE_V }, started).then(
+      (body) => ((outcome = body), (took = Date.now() - started)),
+      (error: unknown) => ((outcome = error), (took = Date.now() - started)),
+    );
+    return { took: () => took, outcome: () => outcome };
+  }
+
+  const unavailable = { name: "SearchFailure", code: "search_unavailable" };
+
+  it.each([
+    ["never makes the connection", { connect: "never" as const }],
+    ["never answers the read", { read: "never" as const }],
+  ])("answers search_unavailable at 2.2 s when the database %s of the current release, calls no model and tells ops timed_out", async (_, behaviour) => {
+    const store = releaseStore();
+    const search = start(service({ db: releaseDb(behaviour), store }));
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(search.outcome()).toMatchObject(unavailable);
+    expect(search.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
+    expect(store.gets).toEqual([]);
+    expect(embedCalls).toBe(0);
+    expect(notes).toMatchObject([{ reason: "timed_out", releaseV: null }]);
+  });
+
+  it("gives the read of the current release a statement timeout of the time left to the deadline, and reads nothing once it is spent", async () => {
+    const db = releaseDb();
+    const search = start(service({ db }), 500);
+    const late = releaseDb();
+    const tooLate = start(service({ db: late }), 2300);
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(db.statements).toEqual(["set local statement_timeout = 1700", "select current release"]);
+    expect(search.outcome()).toMatchObject({ status: "ok", release_v: RELEASE_V });
+    expect(late.transactions()).toBe(0);
+    expect(tooLate.outcome()).toMatchObject(unavailable);
+  });
+
+  it("answers at 2.2 s when the store never answers the download, and a second search joins that download instead of starting another", async () => {
+    const store = releaseStore({ never: true });
+    const search = service({ store });
+
+    const first = start(search);
+    await vi.advanceTimersByTimeAsync(1500);
+    const second = start(search);
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(first.outcome()).toMatchObject(unavailable);
+    expect(second.outcome()).toMatchObject(unavailable);
+    expect(first.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
+    expect(second.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
+    expect(store.gets).toEqual([VECTORS_PATH]);
+    expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
+  });
+
+  it("stops waiting for a load it joined at its own deadline, though the load would finish later, and the load still completes for the searches after it", async () => {
+    // Each file takes 2 s: the load that starts with the first search ends at about 4 s.
+    const store = releaseStore({ ms: 2000 });
+    const search = service({ store });
+
+    const first = start(search); // its deadline: 2.2 s
+    await vi.advanceTimersByTimeAsync(500);
+    const lessTime = start(search, 1000); // a request that began 1 s before it got here: its deadline is at 1.7 s
+    await vi.advanceTimersByTimeAsync(2500);
+    const joining = start(search); // at 3 s: joins the load, which ends within its time
+    await vi.advanceTimersByTimeAsync(2000);
+    const later = start(search); // at 5 s: the data is in memory
+    await vi.advanceTimersByTimeAsync(5000);
+
+    expect(first.outcome()).toMatchObject(unavailable);
+    expect(first.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
+    expect(lessTime.outcome()).toMatchObject(unavailable);
+    expect(lessTime.took()).toBe(DEFAULT_LEG_TIMEOUT_MS); // 1.2 s after it joined, not when the load ended
+    expect(joining.outcome()).toMatchObject({ status: "ok", release_v: RELEASE_V, results: [{ provider_id: "M001" }] });
+    expect(joining.took()).toBeLessThan(1200);
+    expect(later.outcome()).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+    expect(later.took()).toBeLessThan(200);
+    expect(store.gets).toEqual([VECTORS_PATH, LISTING_PATH]); // one load, shared
+    expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
+  });
+
+  it("gives up a load that never settles after SNAPSHOT_LOAD_TIMEOUT_MS: the searches after it fail at once for the failure TTL, then a new load starts", async () => {
+    // Above the store's own worst case (bucket check, bucket creation, vectors and listing, each with its own timeout).
+    expect(SNAPSHOT_LOAD_TIMEOUT_MS).toBeGreaterThan(4 * DEFAULT_STORAGE_TIMEOUT_MS);
+    const store = releaseStore({ never: true });
+    const search = service({ store, snapshotLoadTimeoutMs: 5000, snapshotFailureTtlMs: 10_000 });
+
+    const first = start(search);
+    await vi.advanceTimersByTimeAsync(6000);
+    const meanwhile = start(search); // the load was given up at about 5 s: it failed a moment ago
+    await vi.advanceTimersByTimeAsync(10_000);
+    const after = start(search); // past the failure TTL: tried again
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(first.took()).toBe(DEFAULT_LEG_TIMEOUT_MS);
+    expect(meanwhile.outcome()).toMatchObject(unavailable);
+    expect(meanwhile.took()).toBeLessThan(100);
+    expect(after.outcome()).toMatchObject(unavailable);
+    expect(store.gets).toEqual([VECTORS_PATH, VECTORS_PATH]);
+    // The search that failed at once is not told again.
+    expect(notes.map((n) => n.reason)).toEqual(["timed_out", "timed_out"]);
+  });
+
+  it("answers by 2.4 s when the writes never finish, ahead of the route's hard deadline, and hands them to defer", async () => {
+    const search = start(service({ writer: { log: never, spend: never } }));
+
+    await vi.advanceTimersByTimeAsync(10_000);
+
+    expect(search.outcome()).toMatchObject({ status: "ok", results: [{ provider_id: "M001" }] });
+    expect(search.took()).toBe(DEFAULT_TOTAL_BUDGET_MS - ANSWER_MARGIN_MS);
+    expect(deferred).toHaveLength(1);
   });
 });

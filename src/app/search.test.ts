@@ -12,10 +12,12 @@ const mocks = vi.hoisted(() => ({
   after: vi.fn(),
   createSearch: vi.fn(),
   getEnv: vi.fn(),
+  /** The rows the app inserts (the ops events); nothing reaches a database. */
+  inserted: [] as unknown[],
 }));
 
 vi.mock("next/server", () => ({ after: mocks.after }));
-vi.mock("@/platform/db", () => ({ getDb: () => ({}) }));
+vi.mock("@/platform/db", () => ({ getDb: () => ({ insert: () => ({ values: async (row: unknown) => void mocks.inserted.push(row) }) }) }));
 vi.mock("./directoryRelease", () => ({ directoryStorage: () => ({}) }));
 vi.mock("@/platform/config/env", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/platform/config/env")>()), getEnv: mocks.getEnv }));
 vi.mock("@/modules/directory", async (importOriginal) => ({
@@ -117,5 +119,14 @@ describe("search composition (S03.05)", () => {
     expect(work).toHaveBeenCalledTimes(1);
     app.deferAfterResponse(Promise.reject(new Error("a write that failed"))); // a promise is still accepted, and never unhandled
     await Promise.resolve();
+  });
+
+  it("writes a search the route cut at its hard deadline as search.unavailable with reason deadline and the duration, nothing else", async () => {
+    const { app } = await load();
+    mocks.inserted.length = 0;
+
+    await app.recordSearchDeadline(2500);
+
+    expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "deadline", ms: 2500 } }]);
   });
 });

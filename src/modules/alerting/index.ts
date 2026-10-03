@@ -2,9 +2,10 @@
 // lifecycle they follow. Other modules and the app use only what is exported here.
 import type { Db } from "../../platform/db";
 import { readStaffStanding } from "../identity";
-import { floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
+import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
 import { recordOpsEvent, type OpsEvent } from "../ops";
+import { createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 import { createEntryPreparer, type EntryTranslator } from "./application/prepareEntry";
 import { createSubmitter, type AlertSubmitter } from "./application/submit";
@@ -102,6 +103,33 @@ export { createEntryPreparer, type EntryPreparerDeps, type EntryTranslator } fro
 export { createSubmitter, refusalOfPreparationError, type AlertSubmitter, type SubmitReport, type SubmitterDeps } from "./application/submit";
 export { ATTEMPT_KINDS, ATTEMPT_STALE_MS, ATTEMPT_STATES, ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "./domain/submitAttempt";
 export { audiencesOverlap, possibleDuplicateOf, type DuplicateCandidate, type NeighbourhoodOf } from "./domain/duplicates";
+
+export interface FeedWiring {
+  /** Required unless both `version` and `places` are given. */
+  db?: Db;
+  /** Test and local-development seam: the places the feed lists, instead of the places module's. */
+  places?: () => Promise<FeedPlaces>;
+  /** Test and local-development seam: the feed version, instead of the database's. */
+  version?: () => Promise<number>;
+  /** The alerts residents are told. Until S04.08 builds the web publish, none. */
+  alerts?: FeedAlerts;
+  now?: () => Date;
+}
+
+/** `GET /api/feed` (AD-17): FeedV1 from the feed version, the places module's buildings and neighbourhoods, and the alerts. */
+export function createFeed(wiring: FeedWiring): FeedReader {
+  return createFeedReader({
+    db: wiring.db,
+    places: wiring.places ?? (() => createResidentBuildings({ db: requireDb(wiring.db) }).placeIds()),
+    version: wiring.version,
+    alerts: wiring.alerts,
+    now: wiring.now,
+  });
+}
+
+export type { FeedAlerts, FeedPlaces, FeedReader } from "./application/feed";
+export { NO_ALERTS_YET } from "./application/feed";
+export { NO_STATUS, type PlaceState } from "./domain/feed";
 export type { AudienceFloor, AudiencePlaces, BuildingChoice, PlaceChoice } from "./application/audience";
 export type { AlertActor, AlertAudit, AlertResult, RefusalDetail, EntryPreparer, FreezeRefusal, FrozenContent, FrozenSmsBody, PrepareContext, PrepareHooks, StaffDirectory } from "./application/ports";
 export { FROZEN_LANGS, TranslationSetError, freezeTranslations, translatedToFrozen, type FrozenConversion, type FrozenTranslation } from "./domain/translations";

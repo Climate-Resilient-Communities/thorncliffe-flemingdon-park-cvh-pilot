@@ -9,7 +9,7 @@
 // `kickDispatcher` below is that seam, a no-op until E06 is merged, and the page that hosts the approval's actions exports `maxDuration = 60`
 // (src/app/staff/alerts/approve/page.tsx), because the dispatcher's run lives in that function after the response and shares its time.
 import { revalidateTag } from "next/cache";
-import { FEED_TAG } from "@/contracts/feedTag";
+import { FEED_TAG } from "@/contracts/feed";
 import type { ApprovalOutcome } from "@/modules/alerting";
 
 export interface AfterApprovalDeps {

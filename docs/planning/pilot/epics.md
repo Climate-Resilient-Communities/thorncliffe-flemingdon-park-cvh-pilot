@@ -115,7 +115,7 @@ NFR-N9: Total build and running cost within about CAD 1,000 for two months (curr
 - AR-24: derived building/neighbourhood status in `status.ts` with phase and precedence (AD-19).
 - AR-25: versioned public feed with feed_version, edge cache, polling, service-worker highest-version rule, archive endpoint, share URL `?l=` (AD-17).
 - AR-26: device-only personalisation, no cookies on resident routes (asserted), aggregate usage beacon (AD-3).
-- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers and check-in screens (AD-16).
+- AR-27: strings and tokens generated from the prototype; RTL logical CSS; Noto subsets; basic mode; one 911 block on alerts, guides, numbers, home (inline) and check-in screens (AD-16).
 
 ### UX Design Requirements
 
@@ -1234,7 +1234,7 @@ So that I know what to do before, during and after a disruption.
 ### Story S02.11 — Resident home shows their buildings and the current alerts
 
 - **Size:** M · **Estimate:** 6 h · **Actual:** —
-- **Traces:** UX-DR5, AR-20 (`FeedV1`), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
+- **Traces:** UX-DR5, AR-20 (`FeedV1`), AR-27 (911 block), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
 
 As a resident,
 I want a home screen that starts with my buildings,
@@ -1258,6 +1258,12 @@ So that I can see at a glance whether anything affects me.
 **Given** home is visible
 **When** 60 seconds pass
 **Then** the feed is fetched again; a response with a lower `feed_version` than the highest seen is discarded
+
+**Given** home (R-03)
+**When** it is shown, with or without chosen buildings
+**Then** the shared inline 911 notice (`Not911`, `variant="inline"`, the catalog's `x01.short`) is on home once and nowhere else on the screen (owner decision 36); the inline notice is the last item on home; when the "Every day" section is added (owner decision 37) it moves directly under it
+
+**Note (AD-16, pending design review):** these parts of home are not in the prototype's `R03_Home` and are styled only in `src/ui/home/home.css`: the per-building status list, the neighbourhood rows, and the "Checking" and failure notes (`R03.checking`, `R03.feedFailed`, `R03.feedFailedOld`). The prototype has no per-building status to copy, so they are recorded here, not added to the prototype, until the design owner reviews them. The prototype's archive link (`s.R03.archive`) is not built: no archive route exists yet (`/api/feed/archive` and the archive screen R-08 arrive with S05.07), so home has no link to it.
 
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
@@ -1645,7 +1651,7 @@ So that I am not disadvantaged by the language or script I use.
 
 ### Story S03.06 — Resident asks a question and sees the right listings
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 7 h 41 min (started 2026-10-02 23:21 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-D2-Q, UX-DR10, AR-27 (911 block), NFR-N2 · **Depends on:** S03.04, S02.06, S02.10 · **Branch:** `e03-s06-ask-screens`
 
 As a resident,
@@ -1839,7 +1845,7 @@ So that timeouts are set from evidence before alerts depend on them.
 
 ### Story S04.02 — Alerts are translated by route, checked and never sent in the wrong language
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S03.05, S03.02 · **Branch:** `e04-s02-translation-routes`
 
 As a resident who reads Pashto,
@@ -2005,7 +2011,7 @@ So that residents know we are on it before we have the details.
 
 ### Story S04.06 — Each text is rendered once and frozen at submit
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 4 h 30 min (started 2026-10-03 02:32 UTC, merged 2026-10-03 07:03 UTC)
 - **Traces:** AR-19 (renderer), FR-A5, FR-A3 · **Depends on:** S04.02 · **Branch:** `e04-s06-sms-renderer`
 
 As a Hub Coordinator approving an alert,
@@ -2070,7 +2076,7 @@ So that a mistake is caught by a second person before residents see it.
 
 **Given** the approver presses Approve
 **When** the session is `aal2`, the approver is not an editor, the policy allows it at approval time, the version and hash match what was shown, and the valid-until is still in the future
-**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag('feed')` runs after commit, and `entry.approved` is audited with the version, hash and recipient count
+**Then** in one transaction the recipient snapshot is captured through `captureRecipients(entry, tx)`, the entry becomes `approved`, `web_published_at` is set and `feed_version` is incremented; `revalidateTag(FEED_TAG, { expire: 0 })` runs after commit (a bare `revalidateTag` only marks the entry stale), and `entry.approved` is audited with the version, hash and recipient count
 **And** if any condition fails, nothing changes and the refusal is recorded with the reason shown
 
 **Given** the snapshot count differs from the reviewed count
