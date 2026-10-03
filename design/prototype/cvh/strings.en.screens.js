@@ -1610,6 +1610,7 @@
      place of the entry. The prototype's own words are kept where they fit (O15, R07). */
   m(en, { staff: { compose: {
     correctTitle: 'Correct an alert', withdrawTitle: 'Withdraw an alert',
+    thread: { leadReplace: 'What residents read now, newest first. A correction is added above the entry it corrects. A withdrawal puts the reason in the place of the entry. Nothing is deleted.' },
     correctLead: 'A correction is added to the same alert in the open. The earlier wording stays readable, marked "Corrected", and residents see what changed. A second person approves it before anyone sees it.',
     withdrawLead: 'Residents see "Withdrawn" and the reason in the place of the entry. A second person approves it before anyone sees it. If nothing else in the alert is left, the alert closes as withdrawn.',
     correctTargetsTitle: '1. Which entry needs correcting?', withdrawTargetsTitle: '1. Which entry are you withdrawing?',

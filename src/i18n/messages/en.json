@@ -4501,7 +4501,8 @@
           "correction": "Correction",
           "withdrawal": "Withdrawal",
           "final": "Final"
-        }
+        },
+        "leadReplace": "What residents read now, newest first. A correction is added above the entry it corrects. A withdrawal puts the reason in the place of the entry. Nothing is deleted."
       },
       "carried": "Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.",
       "carriedStart": "Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.",

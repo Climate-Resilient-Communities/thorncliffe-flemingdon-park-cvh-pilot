@@ -102,11 +102,26 @@ describe("the alert page", () => {
     await expect(AlertPage(params("en", "kbcdfghj"))).rejects.toThrow("the feed could not be read");
   });
 
-  it("titles the page with the types of the alert", async () => {
+  it("titles the page with the types of the alert, and describes it with the words of the entry that stands (the share preview says what the alert says)", async () => {
     state.feed = feedOf(thread({ types: ["elevator", "power"], entries: [englishEntry()] }));
+    const description = englishEntry().text.body;
 
-    expect(await generateMetadata(params("en", "kbcdfghj"))).toEqual({ title: "Elevator, Power" });
+    expect(await generateMetadata(params("en", "kbcdfghj"))).toEqual({ title: "Elevator, Power", description, openGraph: { title: "Elevator, Power", description } });
     expect(await generateMetadata(params("en", "nosuchslug"))).toEqual({});
+  });
+
+  it("describes a corrected alert with the correction, never the wording it replaced: the feed, the alert and the share preview agree", async () => {
+    const original = englishEntry({ n: 1, published_at: "2026-10-01T14:00:00.000Z" });
+    const corrected = englishEntry({ n: 2, kind: "correction", supersedes_id: original.id, published_at: "2026-10-01T14:30:00.000Z", text: { lang: "en", body: "Power is out on floors 1 to 8.", machine: false, model: null, status: "source", source_hash: "a".repeat(64) } });
+    state.feed = feedOf(thread({ entries: [original, corrected] }));
+
+    const metadata = await generateMetadata(params("en", "kbcdfghj"));
+
+    expect(metadata.description).toBe("Correction: Power is out on floors 1 to 8.");
+    expect(metadata.description).not.toContain(original.text.body);
+    const page = await html(AlertPage, "en", "kbcdfghj");
+    expect(page).toContain("Power is out on floors 1 to 8.");
+    expect(page).toContain('data-mark="corrected"');
   });
 
   it("finds the thread among several by its slug, never by position", async () => {

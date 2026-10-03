@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ACK_PAGE, COMPOSE_PAGE, PROMOTE_PAGE, UPDATE_PAGE, composerHref, composerOf, composerPage, isComposerFrom, updateHref } from "./pages";
+import { ACK_PAGE, COMPOSE_PAGE, CORRECT_PAGE, PROMOTE_PAGE, UPDATE_PAGE, WITHDRAW_PAGE, composerHref, composerOf, composerPage, correctHref, isComposerFrom, updateHref, withdrawHref } from "./pages";
 
 const ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const ENTRY = "01900000-0000-7000-8000-00000000e177";
@@ -27,10 +27,26 @@ describe("which composer an entry is written on (S05.01)", () => {
   });
 });
 
+describe("which composer a correction or a withdrawal is written on (S05.02)", () => {
+  it("is its own page, whatever came before it", () => {
+    expect(composerOf("correction")).toBe("correct");
+    expect(composerOf("correction", ["ack", "update"])).toBe("correct");
+    expect(composerOf("withdrawal")).toBe("withdraw");
+    expect(composerOf("withdrawal", ["ack"])).toBe("withdraw");
+  });
+});
+
 describe("the addresses of the composers", () => {
-  it("are four pages, each its own, and only those four are composers", () => {
-    expect([ACK_PAGE, COMPOSE_PAGE, UPDATE_PAGE, PROMOTE_PAGE]).toEqual(["/staff/alerts/ack", "/staff/alerts/compose", "/staff/alerts/update", "/staff/alerts/promote"]);
-    for (const from of ["ack", "compose", "update", "promote"]) expect(isComposerFrom(from)).toBe(true);
+  it("are six pages, each its own, and only those six are composers", () => {
+    expect([ACK_PAGE, COMPOSE_PAGE, UPDATE_PAGE, PROMOTE_PAGE, CORRECT_PAGE, WITHDRAW_PAGE]).toEqual([
+      "/staff/alerts/ack",
+      "/staff/alerts/compose",
+      "/staff/alerts/update",
+      "/staff/alerts/promote",
+      "/staff/alerts/correct",
+      "/staff/alerts/withdraw",
+    ]);
+    for (const from of ["ack", "compose", "update", "promote", "correct", "withdraw"]) expect(isComposerFrom(from)).toBe(true);
     for (const value of ["approve", "", null, undefined, 3, "toString", "__proto__", "constructor"]) expect(isComposerFrom(value), String(value)).toBe(false);
     expect(composerPage("promote")).toBe(PROMOTE_PAGE);
   });
@@ -39,5 +55,13 @@ describe("the addresses of the composers", () => {
     expect(composerHref("update", { alertId: ALERT, entryId: ENTRY })).toBe(`/staff/alerts/update?alert=${ALERT}&entry=${ENTRY}`);
     expect(updateHref(ALERT, false)).toBe(`/staff/alerts/update?alert=${ALERT}`);
     expect(updateHref(ALERT, true)).toBe(`/staff/alerts/promote?alert=${ALERT}`);
+  });
+
+  it("open the start of a correction or a withdrawal, with the entry chosen when there is one", () => {
+    expect(correctHref(ALERT)).toBe(`/staff/alerts/correct?alert=${ALERT}`);
+    expect(correctHref(ALERT, ENTRY)).toBe(`/staff/alerts/correct?alert=${ALERT}&target=${ENTRY}`);
+    expect(withdrawHref(ALERT)).toBe(`/staff/alerts/withdraw?alert=${ALERT}`);
+    expect(withdrawHref(ALERT, ENTRY)).toBe(`/staff/alerts/withdraw?alert=${ALERT}&target=${ENTRY}`);
+    expect(composerHref("withdraw", { alertId: ALERT, entryId: ENTRY })).toBe(`/staff/alerts/withdraw?alert=${ALERT}&entry=${ENTRY}`);
   });
 });

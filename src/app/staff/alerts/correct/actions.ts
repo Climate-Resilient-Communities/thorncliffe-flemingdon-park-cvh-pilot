@@ -25,6 +25,9 @@ const deps = { alerting, now: () => new Date() };
 /** The entry the guard judges on: one nobody in this call wrote (see above). */
 const NOT_THEIRS = { authorId: "00000000-0000-0000-0000-000000000000", editorIds: [], status: "pending_approval" };
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars -- the guard's `context` takes the action's arguments; the stand-in entry needs none of them
+const context = async (_session: unknown, _previous: ComposeState, _form: FormData) => ({ entry: NOT_THEIRS });
+
 /** A draft that was made goes on to its composer; a refusal stays in the form. */
 const finish = (state: ComposeState): ComposeState => {
   if (state.status === "started") redirect(state.location);
@@ -36,14 +39,14 @@ const finish = (state: ComposeState): ComposeState => {
  * and goes on to its composer, where it is submitted for a second person's approval.
  */
 export const startCorrectionAction = staffAction(
-  { route: "/staff/alerts/correct", access: "hub", action: "alert.correct", context: async (_session: unknown, _previous: ComposeState, _form: FormData) => ({ entry: NOT_THEIRS }) },
+  { route: "/staff/alerts/correct", access: "hub", action: "alert.correct", context },
   async (session, _facts, _previous: ComposeState, form: FormData) => finish(await startCorrectionFromForm(deps, session, form)),
   (error) => refused(error),
 );
 
 /** "Save draft" on a new withdrawal (O-15 "Withdraw"): the reason from the catalog and the words for residents, for the entry it names. */
 export const startWithdrawalAction = staffAction(
-  { route: "/staff/alerts/withdraw", access: "hub", action: "alert.withdraw", context: async (_session: unknown, _previous: ComposeState, _form: FormData) => ({ entry: NOT_THEIRS }) },
+  { route: "/staff/alerts/withdraw", access: "hub", action: "alert.withdraw", context },
   async (session, _facts, _previous: ComposeState, form: FormData) => finish(await startWithdrawalFromForm(deps, session, form)),
   (error) => refused(error),
 );

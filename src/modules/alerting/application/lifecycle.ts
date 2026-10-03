@@ -32,7 +32,7 @@ import { isSupersedingKind, isWithdrawalReason, substantiveRemains, targetRefusa
 import { createCloseAlert } from "./closeAlert";
 import { Refused } from "./refused";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
-import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
+import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, StaffDirectory } from "./ports";
 import { publishedSummaries, readRunningThreads, readThreadSummary, type RunningThread, type ThreadSummary } from "./threads";
 import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";

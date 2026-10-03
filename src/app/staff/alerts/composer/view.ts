@@ -283,10 +283,10 @@ function messagesOf(t: Text): ComposerMessages {
 }
 
 /** The running alert as residents read it: newest entry first, each with its time and where things stood, and the thread's valid-until (S05.01). */
-function threadDigest(summary: ThreadSummary, t: Text): ThreadDigestView {
+function threadDigest(summary: ThreadSummary, t: Text, replacing = false): ThreadDigestView {
   return {
     title: t("thread.title"),
-    lead: t("thread.lead"),
+    lead: t(replacing ? "thread.leadReplace" : "thread.lead"),
     validUntil: summary.validUntil === null ? "" : t("thread.validUntil", { time: formatTorontoDateTime(summary.validUntil) }),
     entries: summary.entries.map((entry) => ({
       key: entry.id,
@@ -391,7 +391,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
             note: input.preview.nineOneOneFirst ? t("preview911First") : t("preview911Last"),
             segments: input.preview.sms.segments,
           },
-    ...((followUp || replacing) && input.thread ? { thread: threadDigest(input.thread, t) } : {}),
+    ...((followUp || replacing) && input.thread ? { thread: threadDigest(input.thread, t, isReplacingMode(mode)) } : {}),
     ...(input.target ? { replaces: replacesOf(input.target, t) } : {}),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(results, t) },
     aside: {
@@ -596,7 +596,7 @@ export function replaceStartScreen(input: ReplaceStartInput): ComposerScreen {
     benchmark: "",
     status: "new",
     startNote: target ? t("startNote") : undefined,
-    thread: threadDigest(input.thread, t),
+    thread: threadDigest(input.thread, t, true),
     preview: null,
     targets: {
       title: t(withdrawing ? "withdrawTargetsTitle" : "correctTargetsTitle"),
