@@ -1,5 +1,6 @@
+import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -774,5 +775,34 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
   ])("refuses a bad %s (%s) and names the variable", (name, value, message) => {
     expect(problemsOf({ ...production, [name]: value }).join("\n")).toMatch(message);
+  });
+});
+
+describe("SMS_PRICE_PER_SEGMENT_CENTS (S04.06)", () => {
+  it("defaults to 1.5 cents CAD per segment in every environment, and docs/config.md documents it", () => {
+    for (const base of [production, preview, local]) expect(parseEnv(base).smsPricePerSegmentCents).toBe(DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS);
+    expect(DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS).toBe(1.5);
+    expect(readFileSync("docs/config.md", "utf8")).toMatch(/`SMS_PRICE_PER_SEGMENT_CENTS`[^\n]*default `1\.5`/);
+  });
+
+  it.each([
+    ["1.5", 1.5],
+    [" 2 ", 2],
+    ["0.001", 0.001],
+    ["1.234", 1.234],
+    ["100", 100],
+    ["100.000", 100],
+  ])("reads %j as %s cents", (value, price) => {
+    expect(parseEnv({ ...production, SMS_PRICE_PER_SEGMENT_CENTS: value }).smsPricePerSegmentCents).toBe(price);
+  });
+
+  it("treats a blank value as unset", () => {
+    expect(parseEnv({ ...production, SMS_PRICE_PER_SEGMENT_CENTS: "  " }).smsPricePerSegmentCents).toBe(DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS);
+  });
+
+  it.each(["0", "0.000", "-1", "1.2345", "100.001", "101", "1e2", "free", "1,5", "$1.5", "NaN", "Infinity", ".5", "1."])("refuses %j and names the variable", (value) => {
+    expect(problemsOf({ ...production, SMS_PRICE_PER_SEGMENT_CENTS: value })).toEqual([
+      expect.stringMatching(/^SMS_PRICE_PER_SEGMENT_CENTS: must be a positive number of cents with at most three decimals/),
+    ]);
   });
 });

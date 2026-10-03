@@ -455,6 +455,7 @@
     "now": "ngayon",
     "levelOfficial": "Opisyal na alerto mula sa {source}.",
     "levelCommunity": "Alerto ng komunidad mula sa Hub. Beripikado ng Hub.",
+    "fromHub": "Alerto ng komunidad mula sa Hub",
     "levelAmbassador": "Alerto ng komunidad mula sa isang ambassador ng gusali. Hindi pa beripikado.",
     "stop": "Para itigil ang lahat ng mensahe mula sa Hub, sumagot ng STOP.",
     "verifiedKeyword": "Para malaman ang ibig sabihin ng beripikado, sumagot ng INFO.",
