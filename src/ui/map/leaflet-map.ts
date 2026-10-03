@@ -64,7 +64,8 @@ const escape = (text: string) => text.replace(/[&<>"']/g, (c) => `&#${c.charCode
 function pinIcon(L: Leaflet, pin: MapPin, words: PinWords): DivIcon {
   const word = words.word(pin);
   const wordHtml = word
-    ? `<span class="map-pin__word" dir="auto"${word.lang ? ` lang="${escape(word.lang)}"` : ""} aria-hidden="true">${escape(word.text)}</span>`
+    ? // The label is placed in the map's left-to-right frame; only its words take their own direction.
+      `<span class="map-pin__word" aria-hidden="true"><span dir="auto"${word.lang ? ` lang="${escape(word.lang)}"` : ""}>${escape(word.text)}</span></span>`
     : "";
   return L.divIcon({
     className: `map-pin map-pin--${pin.marker}`,

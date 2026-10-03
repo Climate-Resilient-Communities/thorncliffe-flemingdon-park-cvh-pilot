@@ -139,7 +139,7 @@
 
   /* Short enough that the whole map, its credit included, fits on a phone screen under the heading and the switch. */
   .map-canvas {
-    block-size: clamp(16rem, calc(100dvh - 24rem), 34rem);
+    block-size: clamp(16rem, calc(100dvh - 27rem), 34rem);
   }
 
   .map-credit {
@@ -301,6 +301,10 @@
     font-weight: 700;
     line-height: 1.3;
     text-align: center;
+  }
+
+  .map-pin__word > span {
+    display: block;
   }
 
   .map-pin:focus-visible,
