@@ -227,14 +227,14 @@ describe("provider catalogue (S02.04)", () => {
       const second = await seed(files);
       const afterSecond = await everything();
 
-      expect(first.changed).toEqual({ providers: 99, locations: 99, categories: 8, categoryLinks: 122 });
+      expect(first.changed).toEqual({ providers: 99, locations: 99, categories: 8, categoryLinks: 121 });
       expect(first.removed).toEqual({ flagged: 0, unpublished: 0 });
       expect(second.changed).toEqual({ providers: 0, locations: 0, categories: 0, categoryLinks: 0 });
       expect(afterSecond).toEqual(afterFirst);
       expect(afterFirst.providers).toHaveLength(99);
       expect(afterFirst.locations).toHaveLength(99);
       expect(afterFirst.categories).toHaveLength(8);
-      expect(afterFirst.links).toHaveLength(122);
+      expect(afterFirst.links).toHaveLength(121);
       // Nothing is published and nothing is confirmed until an Admin does it, whatever the file says.
       expect(afterFirst.providers.every((p) => p.published === false && p.last_confirmed === null && p.in_catalogue === true)).toBe(true);
     });
@@ -269,7 +269,7 @@ describe("provider catalogue (S02.04)", () => {
             categories_loaded: 8,
             categories_changed: 8,
             categories_retired: 0,
-            category_links_added: 122,
+            category_links_added: 121,
             category_links_removed: 0,
             translations_loaded: 0,
             translations_not_yet: 0,

@@ -34,3 +34,15 @@ export const currentPublishedTerms = termsService.currentPublishedTerms;
 export const currentConsentVersion = termsService.currentConsentVersion;
 /** What /{lang}/terms shows: the published terms, or the draft and why it is not published. */
 export const termsPageView = termsService.termsPageView;
+
+export {
+  DEFAULT_RATE_LIMIT_TIMEOUT_MS,
+  RATE_LIMIT_RETENTION_MS,
+  SEARCH_RATE_LIMIT,
+  clientHash,
+  createRateLimiter,
+  normaliseClientAddress,
+  rateLimitKeyFromSecret,
+  type RateLimitRule,
+  type RateLimiter,
+} from "./application/rateLimit";
