@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -634,6 +634,15 @@ describe("Cohere and the search settings (S03.02)", () => {
         romanized_or_mixed: "command-a-translate-08-2025",
         ambiguous_arabic: "command-a-translate-08-2025",
       },
+      questionFallback: {
+        ps: null,
+        prs: "command-a-translate-08-2025",
+        ur: "command-a-translate-08-2025",
+        romanized_or_mixed: "command-a-translate-08-2025",
+        ambiguous_arabic: "command-a-translate-08-2025",
+      },
+      fallbackMinBudgetMs: 800,
+      translateMonthlyCalls: {},
     });
   });
 
@@ -655,6 +664,55 @@ describe("Cohere and the search settings (S03.02)", () => {
       emergencyCategories: ["Support & Emergency Services", "Crisis Lines"],
       allowance: { callsPerMonth: 40, tokensPerMonth: 100000 },
       questionRoute: DEFAULT_QUESTION_ROUTE,
+      questionFallback: DEFAULT_QUESTION_FALLBACK,
+      fallbackMinBudgetMs: 800,
+      translateMonthlyCalls: {},
+    });
+  });
+
+  it("defaults the fallback per kind of question (owner decision 45): Dari and Urdu to Command A Translate, Pashto off, and the kinds routed to Command A have it only if their route changes", () => {
+    const fallback = parseEnv(production).search.questionFallback;
+    expect(fallback).toEqual({ ps: null, prs: "command-a-translate-08-2025", ur: "command-a-translate-08-2025", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: "command-a-translate-08-2025" });
+    // Never the routed model itself: where the route already is the fallback there is nothing to retry with (the translator skips it).
+    for (const kind of ["romanized_or_mixed", "ambiguous_arabic"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).toBe(fallback[kind]);
+    for (const kind of ["prs", "ur"] as const) expect(DEFAULT_QUESTION_ROUTE[kind]).not.toBe(fallback[kind]);
+  });
+
+  it("reads SEARCH_QUESTION_FALLBACK like the route: a kind left out keeps its default, kind=off turns the retry off for it, kind=model changes it, off alone for all", () => {
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: " ps = command-a-translate-08-2025 , ur=off" }).search.questionFallback).toEqual({
+      ps: "command-a-translate-08-2025",
+      prs: "command-a-translate-08-2025",
+      ur: null,
+      romanized_or_mixed: "command-a-translate-08-2025",
+      ambiguous_arabic: "command-a-translate-08-2025",
+    });
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "prs=command-r-translate-01-2027" }).search.questionFallback.prs).toBe("command-r-translate-01-2027");
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionFallback).toEqual({ ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null });
+    // The route is its own setting: changing one leaves the other alone.
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK: "off" }).search.questionRoute).toEqual(DEFAULT_QUESTION_ROUTE);
+    expect(parseEnv({ ...production, SEARCH_QUESTION_ROUTE: "off" }).search.questionFallback).toEqual(DEFAULT_QUESTION_FALLBACK);
+  });
+
+  it("no longer reads the single-model SEARCH_QUESTION_FALLBACK_MODEL (nothing was deployed with it)", () => {
+    expect(parseEnv({ ...production, SEARCH_QUESTION_FALLBACK_MODEL: "off" }).search.questionFallback).toEqual(DEFAULT_QUESTION_FALLBACK);
+  });
+
+  it("reads SEARCH_FALLBACK_MIN_BUDGET_MS: 800 by default, a whole number of milliseconds from 0 to 2200", () => {
+    expect(parseEnv(production).search.fallbackMinBudgetMs).toBe(800);
+    for (const [text, ms] of [["0", 0], [" 300 ", 300], ["2200", 2200]] as const) {
+      expect(parseEnv({ ...production, SEARCH_FALLBACK_MIN_BUDGET_MS: text }).search.fallbackMinBudgetMs, text).toBe(ms);
+    }
+    for (const bad of ["2201", "-1", "0.5", "1e3", "fast", "10000"]) {
+      expect(problemsOf({ ...production, SEARCH_FALLBACK_MIN_BUDGET_MS: bad }).join("\n"), bad).toMatch(/SEARCH_FALLBACK_MIN_BUDGET_MS: must be a whole number of milliseconds from 0 to 2200/);
+    }
+  });
+
+  it("reads SEARCH_TRANSLATE_MONTHLY_CALLS: no limit by default, and model=limit pairs", () => {
+    expect(parseEnv(production).search.translateMonthlyCalls).toEqual({});
+    expect(parseEnv({ ...production, SEARCH_TRANSLATE_MONTHLY_CALLS: "north-small-translate-09-2026=1000" }).search.translateMonthlyCalls).toEqual({ "north-small-translate-09-2026": 1000 });
+    expect(parseEnv({ ...production, SEARCH_TRANSLATE_MONTHLY_CALLS: " north-small-translate-09-2026 = 1000 , command-a-translate-08-2025=250, " }).search.translateMonthlyCalls).toEqual({
+      "north-small-translate-09-2026": 1000,
+      "command-a-translate-08-2025": 250,
     });
   });
 
@@ -700,6 +758,20 @@ describe("Cohere and the search settings (S03.02)", () => {
     ["SEARCH_QUESTION_ROUTE", "ps=a,ps=b", /SEARCH_QUESTION_ROUTE: must be/],
     ["SEARCH_QUESTION_ROUTE", "north-small-translate-09-2026", /SEARCH_QUESTION_ROUTE: must be/],
     ["SEARCH_QUESTION_ROUTE", " , ", /SEARCH_QUESTION_ROUTE: must be/],
+    ["SEARCH_QUESTION_FALLBACK", "xx=command-a-translate-08-2025", /SEARCH_QUESTION_FALLBACK: must be `off`, or comma-separated kind=model pairs/],
+    ["SEARCH_QUESTION_FALLBACK", "ps=command a", /SEARCH_QUESTION_FALLBACK: must be/],
+    ["SEARCH_QUESTION_FALLBACK", "ps=a,ps=b", /SEARCH_QUESTION_FALLBACK: must be/],
+    ["SEARCH_QUESTION_FALLBACK", "command-a-translate-08-2025", /SEARCH_QUESTION_FALLBACK: must be/],
+    ["SEARCH_QUESTION_FALLBACK", " , ", /SEARCH_QUESTION_FALLBACK: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north-small-translate-09-2026", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be comma-separated model=limit pairs/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north-small-translate-09-2026=0", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north-small-translate-09-2026=lots", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north-small-translate-09-2026=-5", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north-small-translate-09-2026=1.5", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "north small=10", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "a=1,a=2", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", " , ", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
+    ["SEARCH_TRANSLATE_MONTHLY_CALLS", "a=1;b=2", /SEARCH_TRANSLATE_MONTHLY_CALLS: must be/],
     ["EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", "lots", /EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: must be a whole number of at least 1/],
   ])("refuses a bad %s (%s) and names the variable", (name, value, message) => {
     expect(problemsOf({ ...production, [name]: value }).join("\n")).toMatch(message);

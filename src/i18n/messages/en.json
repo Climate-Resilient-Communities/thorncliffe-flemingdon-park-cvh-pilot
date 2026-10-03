@@ -137,7 +137,8 @@
     "unavailable": "Not yet available in this language",
     "unavailableBody": "This has not been translated into {lang} yet.",
     "showSource": "Read it in {lang}",
-    "original": "Original ({lang})"
+    "original": "Original ({lang})",
+    "unreviewed": "Machine-translated; not reviewed by a person"
   },
   "x05": {
     "title": "Get alerts and help in your language",
@@ -645,7 +646,16 @@
     "clear": "Clear what I wrote",
     "testTitle": "Test queries",
     "testNote": "For facilitators: tap one to run a scripted search from the brief. Residents do not see this.",
-    "testGloss": "(Dari: {gloss})"
+    "testGloss": "(Dari: {gloss})",
+    "searching": "Searching",
+    "needsSignal": "Search needs signal",
+    "needsSignalBody": "You can still choose a topic below, or call the Hub.",
+    "busy": "Search is busy, try again in a few minutes",
+    "busyBody": "You can choose a topic below, or call the Hub.",
+    "updating": "Search results are being updated, try again",
+    "updatingBody": "You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "See all services and organisations",
+    "loading": "Loading the topics"
   },
   "R10": {
     "title": "Results",
@@ -680,7 +690,8 @@
     "hoursUnknown": "Hours not known",
     "communityOffer": "Community offer",
     "inCat": "Topic: {cat}",
-    "helpEmpty": "No service that can help with this matches these filters."
+    "helpEmpty": "No service that can help with this matches these filters.",
+    "shownIn": "Shown in {lang}"
   },
   "R11": {
     "title": "We could not find that yet",
@@ -4511,6 +4522,8 @@
       "searchData": "Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {

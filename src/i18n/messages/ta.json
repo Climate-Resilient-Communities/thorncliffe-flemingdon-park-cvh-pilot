@@ -137,7 +137,8 @@
     "unavailable": "இந்த மொழியில் இன்னும் இல்லை",
     "unavailableBody": "இது இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை.",
     "showSource": "{lang} மொழியில் படி",
-    "original": "மூலம் ({lang})"
+    "original": "மூலம் ({lang})",
+    "unreviewed": "இயந்திர மொழிபெயர்ப்பு; எந்த நபரும் இதைச் சரிபார்க்கவில்லை"
   },
   "x05": {
     "title": "உங்கள் மொழியில் எச்சரிக்கைகளையும் உதவியையும் பெறுங்கள்",
@@ -645,7 +646,16 @@
     "clear": "நான் எழுதியதை அழி",
     "testTitle": "சோதனைத் தேடல்கள்",
     "testNote": "ஒருங்கிணைப்பாளர்களுக்கு: திட்ட அறிக்கையில் உள்ள ஒரு தேடலை இயக்க, ஒன்றைத் தொடுங்கள். குடியிருப்பாளர்களுக்கு இது தெரியாது.",
-    "testGloss": "(தாரி: {gloss})"
+    "testGloss": "(தாரி: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "முடிவுகள்",
@@ -680,7 +690,8 @@
     "hoursUnknown": "நேரம் தெரியாது",
     "communityOffer": "சமூக உதவி",
     "inCat": "தலைப்பு: {cat}",
-    "helpEmpty": "இதற்கு உதவக்கூடிய எந்தச் சேவையும் இந்த வடிகட்டிகளுக்குப் பொருந்தவில்லை."
+    "helpEmpty": "இதற்கு உதவக்கூடிய எந்தச் சேவையும் இந்த வடிகட்டிகளுக்குப் பொருந்தவில்லை.",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "அதை இன்னும் கண்டுபிடிக்க முடியவில்லை",
@@ -4511,6 +4522,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {

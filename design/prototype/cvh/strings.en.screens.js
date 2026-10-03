@@ -1331,6 +1331,15 @@
     numbersLink: 'See the essential numbers',
     backToList: 'All services and organisations',
     suggestApply: 'Show only {place}' } });
+  /* AD-11 pilot change (product owner, 2026-10-03): an ordinary directory description a model translated and no person has reviewed yet is shown with this label, its English original one tap away (x04.showSource). */
+  m(en, { x04: { unreviewed: 'Machine-translated; not reviewed by a person' } });
+  /* The ask screen a resident opens at /{lang}/search (S03.06, FR-D2-Q, UX-DR10): the wording R-09, R-10 and R-11 did not need, for a search that is waiting, cannot reach the server, is refused or is being updated. Not a prototype screen. */
+  m(en, {
+    R09: { searching: 'Searching', needsSignal: 'Search needs signal', needsSignalBody: 'You can still choose a topic below, or call the Hub.',
+      busy: 'Search is busy, try again in a few minutes', busyBody: 'You can choose a topic below, or call the Hub.',
+      updating: 'Search results are being updated, try again', updatingBody: 'You can choose a topic below while they are updated, or call the Hub.',
+      browseAll: 'See all services and organisations', loading: 'Loading the topics' },
+    R10: { shownIn: 'Shown in {lang}' } });
   /* The resident map at /{lang}/map (S02.07, FR-D3, UX-DR12): R-14 (map), R-15 (list) and R-16 (preview) as the pilot has them, over the directory's release file and the pilot buildings. Not prototype wording: the prototype's map had no real tiles, no offline state and no buildings. */
   m(en, { map: {
     lead: 'Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.',
@@ -1370,6 +1379,8 @@
     searchData: 'Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.',
     searchNone: 'This release has no search data, so search is not available to residents until a release has it.',
     fallbacks: 'Texts with no reviewed translation yet, shown in English: {count}.',
+    machine: 'Descriptions sent out as machine translations no person has reviewed, labelled "Machine-translated; not reviewed by a person" for residents: {count}.',
+    currentMachine: 'Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.',
     staleHeading: 'Translations not published because the English changed after they were made: {count}. Residents see the English for these.',
     staleItem: '{name}: {field}, {language}',
     fields: { services: 'Services', emergencyRole: 'Emergency role', name: 'Name' },

@@ -158,13 +158,13 @@ export function buildListing(lang: Lang, release: number, change: { drop?: strin
 
 export const listingUrl = (release: number, lang: string) => `/api/directory/${release}/${lang}.json`;
 
-export function buildManifest(release: number, hash: string = CATALOGUE_HASH) {
+export function buildManifest(release: number, hash: string = CATALOGUE_HASH, search: "available" | "unavailable" = "unavailable") {
   return {
     v: 1,
     release_v: release,
     published_at: "2026-10-01T15:00:00.000Z",
     catalogue_hash: hash,
-    search: { status: "unavailable" },
+    search: search === "available" ? { status: "available", embed_model: "embed-v4.0", vectors_path: `releases/${release}/vectors.json` } : { status: "unavailable" },
     files: Object.fromEntries(LANG_CODES.map((lang) => [lang, listingUrl(release, lang)])),
   };
 }
@@ -173,6 +173,8 @@ export function buildManifest(release: number, hash: string = CATALOGUE_HASH) {
 export type DirectoryServer = {
   /** The release the manifest names. */
   release: number;
+  /** Whether the manifest says search is available (S03.06). The default is unavailable, as for every release before E03. */
+  search?: "available" | "unavailable";
   /** The manifest cannot be reached (no signal). */
   manifestDown?: boolean;
   /** How the listing files of the current release are answered. */
@@ -195,7 +197,7 @@ export async function stubDirectory(page: Page, server: DirectoryServer) {
   const context = page.context();
   await context.route("**/api/directory/manifest", (route: Route) => {
     server.requests.push("GET /api/directory/manifest");
-    return server.manifestDown ? route.abort("internetdisconnected") : route.fulfill({ json: buildManifest(server.release, server.hash), headers: { "Cache-Control": "no-store" } });
+    return server.manifestDown ? route.abort("internetdisconnected") : route.fulfill({ json: buildManifest(server.release, server.hash, server.search), headers: { "Cache-Control": "no-store" } });
   });
   await context.route(/\/api\/directory\/\d+\/[A-Za-z-]+\.json$/, (route: Route) => {
     const url = new URL(route.request().url());

@@ -318,6 +318,9 @@ async function completeRelease(
         categories: counts.categories,
         files: counts.files,
         translations: counts.translations,
+        // A release planned before the AD-11 pilot change has no machine count.
+        ...(counts.machine === undefined ? {} : { machine: counts.machine }),
+        ...(counts.safetyCritical === undefined ? {} : { safety_critical: counts.safetyCritical }),
         fallbacks: counts.fallbacks,
         stale: counts.stale,
         attempts: release.attempts,

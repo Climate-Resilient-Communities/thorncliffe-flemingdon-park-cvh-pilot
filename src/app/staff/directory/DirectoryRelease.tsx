@@ -5,7 +5,7 @@ import { StaleList } from "./StaleList";
 /** What the Directory release screen shows, already in words (see view.ts). */
 export interface DirectoryReleaseView {
   /** The current release and its counts, or null before the first publish. */
-  current: { headline: string; counts: string } | null;
+  current: { headline: string; counts: string; machine: string | null } | null;
   none: string;
   publishedNow: string;
   /** The translations the current release withheld because the English changed, every one. */
@@ -28,6 +28,7 @@ export function DirectoryRelease({ view }: { view: DirectoryReleaseView }) {
           <>
             <p data-testid="release-current">{view.current.headline}</p>
             <p data-testid="release-counts">{view.current.counts}</p>
+            {view.current.machine && <p data-testid="release-machine">{view.current.machine}</p>}
           </>
         )}
         <p data-testid="release-published-now">{view.publishedNow}</p>

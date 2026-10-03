@@ -40,6 +40,7 @@ export function directoryReleaseView(
               categories: current.counts.categories,
               languages: current.counts.languages,
             }),
+            machine: (current.counts.machine ?? 0) > 0 ? englishText("staff.directory.currentMachine", { count: current.counts.machine ?? 0 }) : null,
           },
     none: englishText("staff.directory.none"),
     publishedNow: englishText("staff.directory.publishedNow", { published: providers.published, total: providers.total }),

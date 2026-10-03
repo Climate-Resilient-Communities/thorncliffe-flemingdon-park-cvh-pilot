@@ -1361,6 +1361,8 @@
    "reviewed": "ਹੱਬ ਨੇ ਜਾਂਚਿਆ, ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "ਮਸ਼ੀਨ ਅਨੁਵਾਦ; ਕਿਸੇ ਵਿਅਕਤੀ ਨੇ ਇਸ ਦੀ ਸਮੀਖਿਆ ਨਹੀਂ ਕੀਤੀ" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {
