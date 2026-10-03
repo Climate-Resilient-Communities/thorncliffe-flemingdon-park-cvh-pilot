@@ -1645,8 +1645,8 @@ So that I find help without knowing the provider's name.
 **And** if the refresh fails, it shows "Search results are being updated, try again" and the category list
 
 **Given** `emergency_first` is true
-**When** results are shown
-**Then** the one catalog 911 block appears above the results
+**When** results are shown, or there are none (including `status: no_clear_match`; the server sets `emergency_first` there too, decision 41)
+**Then** the one catalog 911 block appears above the results, or above the no-match state when there are none
 
 **Given** `status: no_clear_match`
 **When** shown (R-11)

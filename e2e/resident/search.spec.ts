@@ -183,6 +183,28 @@ test("emergency_first puts the shared 911 block above the results, once", async 
   await shot(page, 390, "search-emergency-en-390.png");
 });
 
+test("no_clear_match with emergency_first shows one 911 block above the no-match state, with the topics, the Hub link and the 911 line", async ({ page }) => {
+  const { reply } = await setUp(page);
+  reply.current = { json: answer({ status: "no_clear_match", emergency: true }) };
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+  await ask(page, "the power is out and it is very hot");
+
+  await expect(page.getByTestId("ask-none-title")).toBeVisible();
+  await expect(page.getByTestId("ask-emergency-first")).toHaveCount(1);
+  await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toHaveCount(1);
+  const above = await page.evaluate(() => {
+    const block = document.querySelector('[data-testid="ask-emergency-first"]')!;
+    const none = document.querySelector('[data-testid="ask-none-title"]')!;
+    return Boolean(block.compareDocumentPosition(none) & Node.DOCUMENT_POSITION_FOLLOWING);
+  });
+  expect(above).toBe(true);
+  await expect(page.getByTestId("ask-topic-food")).toBeVisible();
+  await expect(page.getByTestId("ask-help").getByTestId("hub-call")).toHaveAttribute("href", /^tel:\+1/);
+  await expect(page.getByTestId("ask-911-link")).toBeVisible();
+  await expect(page.getByTestId("ask-results")).toHaveCount(0);
+});
+
 test("no_clear_match shows the prototype's R-11: the topics, the Hub's number and the 911 line", async ({ page }) => {
   const { reply } = await setUp(page);
   reply.current = { json: answer({ status: "no_clear_match" }) };
