@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import { LAUNCH_CODES } from "./languages";
 import { SMS_STRING_KEYS, fillSms, smsStrings } from "./smsStrings";
@@ -6,7 +7,6 @@ import en from "./messages/en.json";
 const PLACEHOLDERS: Partial<Record<keyof typeof SMS_STRING_KEYS, string[]>> = {
   verifiedBy: ["org"],
   ambassador: ["building"],
-  community: ["author"],
   link: ["url"],
 };
 
@@ -33,12 +33,26 @@ describe("smsStrings", () => {
       notYetVerified: en.x02.notYetVerified,
       hub: en.x02.hub,
       ambassador: en.x02.ambassador,
-      community: en.x02.community,
+      fromHub: en.R04.fromHub,
       machineLabel: en.x04.label,
       unavailable: en.x04.unavailable,
       link: en.R04.link,
       stop: en.R04.stop,
     });
+  });
+
+  // The Hub's attribution is the prototype's own text-message wording of every language, whole: the first sentence of
+  // R04.levelCommunity without its final stop (a full stop, an Urdu or Persian stop, a danda, an ideographic stop).
+  // Building it from "community alert from {author}" and "the Hub" gave "de le Hub", "de el Hub" and "od Hub".
+  const firstSentence = (text: string) => text.split(/(?<=[.\u3002\u06D4\u0964])\s*/u)[0].replace(/[.\u3002\u06D4\u0964]$/u, "");
+  const catalog = (lang: string) => JSON.parse(readFileSync(`src/i18n/messages/${lang}.json`, "utf8")) as { R04: { levelCommunity: string; fromHub: string } };
+
+  it.each(LAUNCH_CODES.map((lang) => [lang]))("%s: the Hub attribution is the first sentence of R04.levelCommunity, the prototype's own text-message wording", (lang) => {
+    const { R04 } = catalog(lang);
+
+    expect(SMS_STRING_KEYS.fromHub).toBe("R04.fromHub");
+    expect(smsStrings(lang as (typeof LAUNCH_CODES)[number]).fromHub).toBe(firstSentence(R04.levelCommunity));
+    expect(R04.fromHub).toBe(firstSentence(R04.levelCommunity));
   });
 
   it("uses x04.unavailable as translation.unavailable, and the 911 line the catalog marks for text messages", () => {

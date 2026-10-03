@@ -90,7 +90,11 @@ const CONTROLS = /[\u0000-\u0009\u000B-\u001F\u007F-\u009F]/g;
  * The one fixed normalisation of a body, applied before it is counted and frozen: Unicode NFC (an é typed as
  * "e" plus a combining accent is the one GSM-7 letter é, not two UCS-2 characters), line endings as "\n",
  * the table above, no other control characters, no spaces at the end of a line, at most one blank line in a row,
- * and nothing before or after the text. Idempotent. The same input gives the same output on every machine.
+ * and nothing before or after the text. NFC runs twice: first, because it turns some characters into ones the
+ * table maps (U+2000 and U+2001 become U+2002 and U+2003); last, because removing a character that sat between a
+ * letter and its accent (the degree sign, a soft hyphen, a zero-width space) leaves the two side by side, and
+ * only a second composition makes them the one letter. Idempotent. The same input gives the same output on every
+ * machine.
  */
 export function normaliseSms(text: string): string {
   return text
@@ -100,7 +104,8 @@ export function normaliseSms(text: string): string {
     .replace(CONTROLS, "")
     .replace(/ +\n/g, "\n")
     .replace(/\n{3,}/g, "\n\n")
-    .trim();
+    .trim()
+    .normalize("NFC");
 }
 
 // ---------------------------------------------------------------------------------------------------------

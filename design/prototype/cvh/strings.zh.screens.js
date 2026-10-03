@@ -231,6 +231,7 @@
    "now": "现在",
    "levelOfficial": "来自{source}的官方警报。",
    "levelCommunity": "来自中心的社区警报。已由中心核实。",
+   "fromHub": "来自中心的社区警报",
    "levelAmbassador": "来自楼宇联络员的社区警报。尚未核实。",
    "stop": "如要停止接收中心的所有短信，请回复 STOP。",
    "verifiedKeyword": "如想了解“已核实”的意思，请回复 INFO。",

@@ -454,6 +454,7 @@
     "now": "now",
     "levelOfficial": "Official alert from {source}.",
     "levelCommunity": "Community alert from the Hub. Verified by the Hub.",
+    "fromHub": "Community alert from the Hub",
     "levelAmbassador": "Community alert from a building ambassador. Not yet verified.",
     "stop": "To stop all messages from the Hub, reply STOP.",
     "verifiedKeyword": "To learn what verified means, reply INFO.",

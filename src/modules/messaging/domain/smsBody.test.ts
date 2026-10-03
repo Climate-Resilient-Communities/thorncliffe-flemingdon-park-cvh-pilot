@@ -103,6 +103,19 @@ describe("render: the English body, part by part", () => {
     expect(lines(render(entry({ verified: true }), "en", false, SLUG, BASE).body)[0]).toBe("Verified by the Hub");
   });
 
+  // A Hub post's attribution is the catalog's own whole sentence, never "community alert from {author}" with the
+  // Hub's name dropped in: that joined a preposition to an article ("de le Hub", "de el Hub", "od Hub").
+  it.each([
+    ["fr", "Alerte communautaire du Hub", "de le Hub"],
+    ["es", "Alerta comunitaria del Hub", "de el Hub"],
+    ["sk", "Komunitné upozornenie od Hubu", "od Hub"],
+  ] as const)("%s: a Hub post says %j, not a preposition joined to an article", (lang, expected, wrong) => {
+    const attribution = lines(render(entry(), lang, false, SLUG, BASE).body)[1];
+
+    expect(attribution).toBe(expected);
+    expect(attribution.endsWith(wrong)).toBe(false);
+  });
+
   it("names a building ambassador by role and building, never by name", () => {
     const out = render(entry({ verified: false, attribution: { role: "ambassador", building: "10 Thorncliffe Park Dr" } }), "en", false, SLUG, BASE);
 
@@ -186,7 +199,7 @@ describe("render: the text, the label and the fallback", () => {
     const out = render(entry({ translations: [translated("ur", URDU)] }), "ur", false, SLUG, BASE);
     const strings = smsStrings("ur");
 
-    expect(lines(out.body)).toEqual([fillSms(strings.verifiedBy, { org: strings.hub }), fillSms(strings.community, { author: strings.hub }), URDU, strings.machineLabel, strings.call911, fillSms(strings.link, { url: LINK }), strings.stop]);
+    expect(lines(out.body)).toEqual([fillSms(strings.verifiedBy, { org: strings.hub }), strings.fromHub, URDU, strings.machineLabel, strings.call911, fillSms(strings.link, { url: LINK }), strings.stop]);
   });
 
   it("adds no label to a translation that is not a machine's, or to English", () => {
@@ -205,7 +218,7 @@ describe("render: the text, the label and the fallback", () => {
     const out = render(entry({ translations: [translated(lang, "anything stored", { status: "fallback_en", machine: false })] }), lang as LaunchCode, false, SLUG, BASE);
     const all = lines(out.body);
 
-    expect(all).toEqual([fillSms(strings.verifiedBy, { org: strings.hub }), fillSms(strings.community, { author: strings.hub }), ENGLISH, strings.unavailable, strings.call911, fillSms(strings.link, { url: LINK }), strings.stop]);
+    expect(all).toEqual([fillSms(strings.verifiedBy, { org: strings.hub }), strings.fromHub, ENGLISH, strings.unavailable, strings.call911, fillSms(strings.link, { url: LINK }), strings.stop]);
     expect(out.body).not.toContain("anything stored");
     expect(all).not.toContain(strings.machineLabel);
     expect(strings.unavailable).toBe(smsStrings(lang as LaunchCode).unavailable);
@@ -317,7 +330,7 @@ const COUNTS: Record<LaunchCode, ["gsm7" | "ucs2", number, number]> = {
   pa: ["ucs2", 6, 5],
   zh: ["ucs2", 3, 3],
   es: ["ucs2", 6, 5],
-  fr: ["ucs2", 7, 5],
+  fr: ["ucs2", 6, 5],
   en: ["gsm7", 2, 2],
 };
 
@@ -364,7 +377,7 @@ describe("the catalog strings the renderer uses", () => {
   it("are the ones named in SMS_STRING_KEYS, and no word comes from anywhere else", () => {
     const out = render(entry({ types: ["fire"], kind: "correction", translations: [translated("ur", "متن")] }), "ur", true, SLUG, BASE);
     const strings = smsStrings("ur");
-    const expected = [strings.exercise, strings.correction, strings.call911, fillSms(strings.verifiedBy, { org: strings.hub }), fillSms(strings.community, { author: strings.hub }), "متن", strings.machineLabel, fillSms(strings.link, { url: LINK }), strings.stop];
+    const expected = [strings.exercise, strings.correction, strings.call911, fillSms(strings.verifiedBy, { org: strings.hub }), strings.fromHub, "متن", strings.machineLabel, fillSms(strings.link, { url: LINK }), strings.stop];
 
     expect(lines(out.body)).toEqual(expected);
     expect(Object.keys(SMS_STRING_KEYS)).toHaveLength(12);

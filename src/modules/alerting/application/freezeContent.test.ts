@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import type { Audience } from "../../../contracts/audience";
 import { LAUNCH_CODES } from "../../../i18n/languages";
+import { sha256Hex } from "../../../platform/hash";
 import { SMS_MAX_BODY_LENGTH, countSms } from "../../messaging";
 import { ALERT_TEXT_MAX, type EntryContent } from "../domain/content";
 import { contentHash } from "../domain/hash";
@@ -9,7 +10,8 @@ import type { FrozenTranslation } from "./ports";
 
 const AUDIENCE: Audience = { scope: "buildings", buildings: [{ rsn: "4154146", floors: null }], groups: [], types: ["power"] };
 const TEXT = "Power is out on floors 4 to 6. Toronto Hydro is on site.";
-const SOURCE_HASH = "a".repeat(64);
+// A translation carries the SHA-256 of the English it was made from, and a freeze refuses one made from other English.
+const SOURCE_HASH = sha256Hex(TEXT);
 
 const content = (over: Partial<EntryContent> = {}): EntryContent => ({
   text: TEXT,
@@ -118,7 +120,8 @@ describe("freezeContent", () => {
     ["the entry it corrects", { kind: "correction", supersedesId: "01900000-0000-7000-8000-0000000000b1" }],
     ["a drill", { isDrill: true }],
     ["the channels", { channels: ["web"] }],
-    ["the text", { content: content({ text: `${TEXT} Stay away.` }) }],
+    // The translations are of the new English too: a freeze of translations made from other English is refused (below).
+    ["the text", { content: content({ text: `${TEXT} Stay away.` }), translations: input().translations.map((t) => ({ ...t, sourceHash: sha256Hex(`${TEXT} Stay away.`) })) }],
     ["the types", { content: content({ types: ["fire"], audience: { ...AUDIENCE, types: ["fire"] } }) }],
     ["the phase", { content: content({ phase: "in_progress" }) }],
     ["valid until", { content: content({ validUntil: new Date("2026-10-03T19:00:00Z") }) }],
@@ -158,6 +161,38 @@ describe("freezeContent", () => {
     const value = frozen({ content: content({ text: long }), translations: [] });
 
     for (const lang of LAUNCH_CODES) expect(value.smsBodies[lang].body.length, lang).toBeLessThanOrEqual(SMS_MAX_BODY_LENGTH);
+  });
+
+  describe("a translation made from other English than the draft is refused, whatever its status", () => {
+    const OLD_TEXT = "Power is out on floors 4 to 5.";
+
+    it.each([
+      ["a machine translation", translation("ur", { sourceHash: sha256Hex(OLD_TEXT) }), "ur"],
+      ["a fallback", translation("fr", { status: "fallback_en", machine: false, model: null, body: OLD_TEXT, sourceHash: sha256Hex(OLD_TEXT) }), "fr"],
+      ["a script conversion", translation("zh-Hant", { status: "script_converted", model: null, sourceHash: sha256Hex(OLD_TEXT) }), "zh-Hant"],
+    ])("%s of the text before the author's last edit: TRANSLATION_STALE, naming only the language", (_, stale, lang) => {
+      const result = freezeContent(input({ translations: [translation("ps"), stale] }));
+
+      expect(result).toEqual({ ok: false, error: "TRANSLATION_STALE", lang });
+      expect(JSON.stringify(result)).not.toContain(TEXT);
+      expect(JSON.stringify(result)).not.toContain(OLD_TEXT);
+    });
+
+    it("refuses a set one of whose translations is stale, though the rest are current, and a hash that is not a hash", () => {
+      expect(freezeContent(input({ translations: [translation("ur"), translation("ps", { sourceHash: sha256Hex(OLD_TEXT) }), translation("ta")] }))).toEqual({ ok: false, error: "TRANSLATION_STALE", lang: "ps" });
+      expect(freezeContent(input({ translations: [translation("ur", { sourceHash: "" })] }))).toEqual({ ok: false, error: "TRANSLATION_STALE", lang: "ur" });
+    });
+
+    it("hashes the raw text as the author wrote it: a translation of the same words with other spacing is stale, not current", () => {
+      const result = freezeContent(input({ content: content({ text: ` ${TEXT}` }) }));
+
+      expect(result).toMatchObject({ ok: false, error: "TRANSLATION_STALE" });
+    });
+
+    it("accepts a set made from the English being frozen, and a freeze with no translations at all", () => {
+      expect(freezeContent(input({ translations: [translation("ur"), translation("ps")] })).ok).toBe(true);
+      expect(freezeContent(input({ translations: [] })).ok).toBe(true);
+    });
   });
 
   it("throws for a slug or origin that is not one, rather than freezing a broken link", () => {

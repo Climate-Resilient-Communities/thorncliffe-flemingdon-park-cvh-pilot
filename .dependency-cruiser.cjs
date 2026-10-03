@@ -49,10 +49,18 @@ module.exports = {
     {
       name: "sms-adapter-outside-messaging",
       comment:
-        "An SMS-sending adapter (the Twilio adapter, the fake) is imported only inside src/modules/messaging: every outbound text is built by messaging's one renderer and handed to the provider by messaging's own code, so no other module or route can build or send a body of its own (AD-21, S04.06). Name a new sending adapter *Sms.ts in messaging/adapters and it is covered",
+        "Every file in src/modules/messaging/adapters (the Twilio adapter, the fake, and whatever E06 adds: a Messaging Service settings check, a webhook client) is imported only inside src/modules/messaging: every outbound text is built by messaging's one renderer and handed to the provider by messaging's own code, so no other module or route can build or send a body of its own (AD-21, S04.06). The rule covers the folder, not a file name, so a new adapter is under it without anyone remembering a naming convention",
       severity: "error",
       from: { pathNot: `${MODULES}messaging/` },
-      to: { path: `${MODULES}messaging/adapters/[^/]*Sms\\.ts$` },
+      to: { path: `${MODULES}messaging/adapters/` },
+    },
+    {
+      name: "sms-strings-only-from-the-renderer",
+      comment:
+        "The words of a text message (src/i18n/smsStrings.ts) are read by messaging's one renderer (messaging/domain/smsBody.ts) and by tests, and by nothing else, however the import is spelled (relative or the @/ alias): no other code can put a text message's lines together (AD-21, S04.06)",
+      severity: "error",
+      from: { pathNot: [`${MODULES}messaging/domain/smsBody\\.ts$`, "\\.test\\.tsx?$"] },
+      to: { path: `${SRC}i18n/smsStrings\\.ts$` },
     },
     {
       name: "module-imports-outside-layers",

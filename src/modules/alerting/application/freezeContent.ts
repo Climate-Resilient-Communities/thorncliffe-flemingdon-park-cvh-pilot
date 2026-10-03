@@ -6,6 +6,7 @@
 //
 // S04.05's submit calls this with the translations S04.02 returned and hands the result to the lifecycle's
 // `submit` as the `FrozenContent`.
+import { sha256Hex } from "../../../platform/hash";
 import { SMS_MAX_BODY_LENGTH, renderAll, type SmsAttribution } from "../../messaging";
 import type { EntryContent } from "../domain/content";
 import { contentHash } from "../domain/hash";
@@ -34,14 +35,24 @@ export interface FreezeInput {
 }
 
 /**
- * A text the provider would refuse (more than 1600 characters), in one language: nothing is frozen. Translation can
- * make a 600-character English text longer than that in a script that needs more characters.
+ * Nothing is frozen when:
+ * - `SMS_BODY_TOO_LONG`: a text the provider would refuse (more than 1600 characters) in one language. Translation
+ *   can make a 600-character English text longer than that in a script that needs more characters.
+ * - `TRANSLATION_STALE`: a translation was made from other English than the draft being frozen (its `sourceHash` is
+ *   not the SHA-256 of the draft's text), such as a set that was still in flight when "Try translation again" ran
+ *   after the author edited the text. The approver would approve, and residents would receive, text translated
+ *   from words the author no longer has. The caller translates again.
+ * Both name the language and never the text.
  */
-export type FreezeResult = { ok: true; value: FrozenContent } | { ok: false; error: "SMS_BODY_TOO_LONG"; lang: string };
+export type FreezeResult = { ok: true; value: FrozenContent } | { ok: false; error: "SMS_BODY_TOO_LONG" | "TRANSLATION_STALE"; lang: string };
 
 /** The text messages of every launch language, the web texts and the hash of all of it. */
 export function freezeContent(input: FreezeInput): FreezeResult {
   const { content } = input;
+  // The source hash is of the raw English text, as the translation (S04.02) and the content hash (hash.ts) take it.
+  const sourceHash = sha256Hex(content.text);
+  const stale = input.translations.find((translation) => translation.sourceHash !== sourceHash);
+  if (stale) return { ok: false, error: "TRANSLATION_STALE", lang: stale.lang };
   const rendered = renderAll(
     { kind: input.kind, types: content.types, text: content.text, verified: input.verified, attribution: input.attribution, translations: input.translations },
     input.isDrill,

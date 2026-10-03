@@ -102,7 +102,7 @@ export function render(entry: SmsEntry, lang: LaunchCode, isDrill: boolean, slug
   lines.push(
     entry.attribution.role === "ambassador"
       ? fillSms(strings.ambassador, { building: entry.attribution.building })
-      : fillSms(strings.community, { author: strings.hub }),
+      : strings.fromHub,
   ); // 5
   lines.push(text); // 6
   if (label !== null) lines.push(label); // 7

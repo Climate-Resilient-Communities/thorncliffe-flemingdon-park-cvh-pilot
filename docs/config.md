@@ -65,4 +65,5 @@ The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildi
 - Smart Encoding must be **off** on the Messaging Service. The approver sees the frozen body and the
   provider must send exactly those bytes; Smart Encoding would rewrite characters after approval and
   change the segment count the estimate was made from (AD-21). E06 reads the setting before sending
-  and raises an on-call alert if it is on, and every request also sets `SmartEncoded=false`.
+  and raises an on-call alert if it is on, and every request also sets `SmartEncoded=false` (the S01.15
+  Twilio adapter does; E06's sender keeps it).

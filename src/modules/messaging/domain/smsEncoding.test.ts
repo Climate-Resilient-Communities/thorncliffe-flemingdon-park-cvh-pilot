@@ -58,6 +58,48 @@ describe("normaliseSms", () => {
     }
   });
 
+  // A character the table removes can sit between a letter and its combining accent. Removing it leaves the accent
+  // next to the letter, so the composition (NFC) has to run after the removals as well as before them: otherwise a
+  // second pass composes what the first left decomposed, and the frozen body costs UCS-2 for a letter GSM-7 has.
+  it.each([
+    ["the degree sign", "e\u00B0\u0301", "é"],
+    ["a soft hyphen", "e\u00AD\u0301", "é"],
+    ["a zero-width space", "a\u200B\u0301", "á"],
+    ["a word joiner", "e\u2060\u0301", "é"],
+    ["a byte order mark", "e\uFEFF\u0301", "é"],
+    ["a control character", "e\u0007\u0301", "é"],
+  ])("composes a letter and its accent that %s kept apart", (_, input, expected) => {
+    const once = normaliseSms(input);
+
+    expect(once).toBe(expected);
+    expect(normaliseSms(once)).toBe(once);
+    expect(once).toBe(once.normalize("NFC"));
+  });
+
+  it("costs a letter an accent was split from as the one GSM-7 letter it is, when GSM-7 has the letter", () => {
+    expect(countSms(normaliseSms("Cafe\u00AD\u0301"))).toEqual({ encoding: "gsm7", units: 4, segments: 1 });
+  });
+
+  it("is idempotent on 5000 strings made of the characters that interact: letters, accents, the table, controls, spaces, line ends", () => {
+    const pool = [
+      "e", "a", "A", "é", "ç", " ", " ", "\n", "\r", "\t", "x", "1", "😀", "ا", "क", "\u094D", "\u200D", "\u200C", "\u200F", "\u200E",
+      "\u0301", "\u0300", "\u0308", "\u0323", "\u0327", "\u0340", "\u2000", "\u2001", "\u212B", "\u2126", "\u0007", "\u0000", "\u007F", "\u0085",
+      ...Object.keys(NORMALISATION_TABLE),
+    ];
+    let state = 12345; // a fixed seed: the same strings on every machine
+    const next = (n: number) => {
+      state = (Math.imul(state, 1664525) + 1013904223) >>> 0;
+      return state % n;
+    };
+    for (let i = 0; i < 5000; i++) {
+      const input = Array.from({ length: 1 + next(14) }, () => pool[next(pool.length)]).join("");
+      const once = normaliseSms(input);
+
+      expect(normaliseSms(once), JSON.stringify(input)).toBe(once);
+      expect(once, JSON.stringify(input)).toBe(once.normalize("NFC"));
+    }
+  });
+
   it("leaves emoji alone (they are UCS-2, two code units each)", () => {
     expect(normaliseSms("Stay safe 😀")).toBe("Stay safe 😀");
     expect(countSms("Stay safe 😀")).toEqual({ encoding: "ucs2", units: 12, segments: 1 });
