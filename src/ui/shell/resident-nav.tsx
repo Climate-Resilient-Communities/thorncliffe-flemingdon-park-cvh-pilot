@@ -22,10 +22,14 @@ export type ResidentNavProps = {
   items: readonly NavItem[];
 };
 
-/** The item whose page this is: the exact path of its link or of one of its other paths, or a page below one (never home for every page). */
+/**
+ * The item whose page this is: the exact path of its link or of one of its other paths, or a page below one. Home's own path is the
+ * exception: every page is below it, so home is current on that path alone (and on the other paths it was given, such as the alerts).
+ */
 export function isCurrent(pathname: string, item: Pick<NavItem, "href" | "alsoCurrentOn">, isHome: boolean) {
   const path = pathname.replace(/\/$/, "");
-  return [item.href, ...(item.alsoCurrentOn ?? [])].some((href) => path === href || (!isHome && path.startsWith(`${href}/`)));
+  const own = path === item.href || (!isHome && path.startsWith(`${item.href}/`));
+  return own || (item.alsoCurrentOn ?? []).some((href) => path === href || path.startsWith(`${href}/`));
 }
 
 /**

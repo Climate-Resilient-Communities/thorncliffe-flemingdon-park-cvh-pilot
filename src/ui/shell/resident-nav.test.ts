@@ -26,6 +26,17 @@ describe("isCurrent", () => {
     expect(isCurrent("/en/ready", help, false)).toBe(false);
   });
 
+  it("marks home on the alerts' pages when it is given them, and still on no other page below it (R-07 is on Now)", () => {
+    const now = { href: "/en", alsoCurrentOn: ["/en/alerts"] };
+
+    expect(isCurrent("/en", now, true)).toBe(true);
+    expect(isCurrent("/en/alerts/kbcdfghj", now, true)).toBe(true);
+    expect(isCurrent("/en/alerts/kbcdfghj/verified", now, true)).toBe(true);
+    expect(isCurrent("/en/alertsx", now, true)).toBe(false);
+    expect(isCurrent("/en/ready", now, true)).toBe(false);
+    expect(isCurrent("/en/directory", now, true)).toBe(false);
+  });
+
   it("does not mark an item that was given no extra path on the directory", () => {
     expect(isCurrent("/en/directory", ready, false)).toBe(false);
   });

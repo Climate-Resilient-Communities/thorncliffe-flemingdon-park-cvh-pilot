@@ -151,6 +151,14 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        `publish` only, while Cohere's price is unknown. Questions and
  *                                                        test-set runs have allowances of their own. The publish job refuses
  *                                                        to embed past it. Defaults 500 calls and 2,000,000 tokens
+ * RESIDENT_ALERTS_ENABLED
+ *                      server   optional                 `true` or `false`: whether the feed and the alert pages tell residents
+ *                                                        about any alert (AD-17, S04.08), the launch gate. Production runs with
+ *                                                        it OFF until E05's corrections and closing are released: unset means
+ *                                                        false there, and `true` in production fails start-up while
+ *                                                        RESIDENT_ALERTS_RELEASED (below) is false. Previews and local development
+ *                                                        run with it on unless it is set to false. A value that is neither fails
+ *                                                        start-up (a typo must not switch the gate)
  * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
  *                                                        phone may keep viewed tiles: read by src/platform/config/mapTiles.ts
  *                                                        when the map pages are built, not here (S02.07)
@@ -162,6 +170,9 @@ import { PRODUCTION_HOST } from "./hosts";
  *                      server   optional; local development only (start-up fails on Vercel): the resident building
  *                                                        page reads its buildings from this JSON file instead of the
  *                                                        database (the resident page tests and their screenshots)
+ * CVH_FAKE_FEED_FILE   server   optional; local development only (start-up fails on Vercel): the feed and the alert pages read their
+ *                                                        threads from this JSON file instead of the database (the resident page
+ *                                                        tests and their screenshots); never a real alert
  * CVH_FAKE_GUIDES_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the resident guide and
  *                                                        essential-numbers pages read their guides and numbers from this JSON
@@ -218,6 +229,8 @@ const rawSchema = z.object({
   SMS_USD_TO_CAD_RATE: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
+  CVH_FAKE_FEED_FILE: optionalText,
+  RESIDENT_ALERTS_ENABLED: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   CVH_FAKE_TRANSLATOR: optionalText,
@@ -316,6 +329,15 @@ export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 /** PROVISIONAL (S06.08): Canadian dollars per US dollar, the rate Twilio's prices (billed in US dollars) are converted at until the owner sets one. */
 export const DEFAULT_SMS_USD_TO_CAD_RATE = 1.4;
 
+/**
+ * The launch gate of E04 (S04.08, epics: "Launch gate kept"): production does not show residents any alert until E05's corrections and
+ * closing are released. While this is false, `RESIDENT_ALERTS_ENABLED=true` in production fails start-up and the variable unset is off, so
+ * the production configuration cannot turn alerts on by a setting alone. E05's last story ("an Admin changes RESIDENT_ALERTS_ENABLED to
+ * true through a production deploy") flips this to true in that same deploy, records it in the launch-readiness checklist, and updates the
+ * configuration test (src/platform/config/residentAlerts.test.ts), which pins it.
+ */
+export const RESIDENT_ALERTS_RELEASED = false;
+
 export interface Env {
   environment: AppEnvironment;
   smsMode: "live" | "log";
@@ -338,6 +360,10 @@ export interface Env {
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
   fakeBuildingsFile?: string;
+  /** Local development only: the feed's threads for the resident page tests, read instead of the database. */
+  fakeFeedFile?: string;
+  /** Whether the feed and the alert pages tell residents about any alert (the launch gate, see RESIDENT_ALERTS_RELEASED). */
+  residentAlertsEnabled: boolean;
   fakeGuidesFile?: string;
   /** Local development only: the folder the directory release files are kept in (end-to-end tests). */
   fakeDirectoryDir?: string;
@@ -774,6 +800,27 @@ export function parseSearchEnv(source: Record<string, string | undefined>): Sear
   return search;
 }
 
+/**
+ * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true` AND the alerts have been released
+ * (RESIDENT_ALERTS_RELEASED); `true` before that is refused, so a setting in Vercel cannot show residents an alert early. Everywhere
+ * else the default is on (previews run with it on), and `false` turns it off. Anything but `true` or `false` is refused.
+ */
+function parseResidentAlerts(value: string | undefined, environment: AppEnvironment, problems: string[]): boolean {
+  const normal = value === undefined ? undefined : value.trim().toLowerCase();
+  if (normal !== undefined && normal !== "true" && normal !== "false") {
+    problems.push(`RESIDENT_ALERTS_ENABLED: must be "true" or "false", not ${shown(value as string)}`);
+    return false;
+  }
+  if (environment === "production") {
+    if (normal === "true" && !RESIDENT_ALERTS_RELEASED) {
+      problems.push("RESIDENT_ALERTS_ENABLED: must not be \"true\" in production until E05's corrections and closing are released (S04.08, RESIDENT_ALERTS_RELEASED)");
+      return false;
+    }
+    return normal === "true";
+  }
+  return normal !== "false";
+}
+
 /** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
@@ -829,6 +876,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_BUILDINGS_FILE !== undefined) {
     problems.push("CVH_FAKE_BUILDINGS_FILE: the buildings fake is only allowed in local development, never on Vercel");
   }
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_FEED_FILE !== undefined) {
+    problems.push("CVH_FAKE_FEED_FILE: the feed fake is only allowed in local development, never on Vercel");
+  }
+  const residentAlertsEnabled = parseResidentAlerts(raw.RESIDENT_ALERTS_ENABLED, environment, problems);
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_GUIDES_FILE !== undefined) {
     problems.push("CVH_FAKE_GUIDES_FILE: the guides fake is only allowed in local development, never on Vercel");
   }
@@ -904,6 +955,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,
     fakeBuildingsFile: raw.CVH_FAKE_BUILDINGS_FILE,
+    fakeFeedFile: raw.CVH_FAKE_FEED_FILE,
+    residentAlertsEnabled,
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     fakeTranslator: raw.CVH_FAKE_TRANSLATOR === "sample" ? "sample" : undefined,

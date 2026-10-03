@@ -70,6 +70,20 @@ export type FeedThread = z.infer<typeof FeedThreadSchema>;
  */
 export const FEED_TAG = "feed";
 
+/**
+ * How long the edge may keep one answer (`s-maxage`), and how long the app's own data cache keeps one before it is read again: 15
+ * seconds (AD-17). With the phone's own poll every 60 seconds (`FEED_POLL_MS`, src/ui/home/feed-poll.ts) a resident who has the page
+ * open sees an approved alert within `FEED_VISIBILITY_BUDGET_MS`. test/feedVisibility.test.ts keeps the three in step, and
+ * e2e/staff/feed-visibility.spec.ts measures it end to end with the clock controlled.
+ */
+export const FEED_EDGE_MAX_AGE_SECONDS = 15;
+
+/**
+ * The proposed engineering budget (S04.08; not a service guarantee) from an alert's approval to a resident with the page open,
+ * visible and online reading it on their next successful poll: the edge's 15 seconds plus the poll's 60.
+ */
+export const FEED_VISIBILITY_BUDGET_MS = 75_000;
+
 /** The URL a phone asks. The language is the page language: the one query value, the same for everyone who reads that language. */
 export const feedPath = (lang: string): string => `/api/feed?lang=${encodeURIComponent(lang)}`;
 

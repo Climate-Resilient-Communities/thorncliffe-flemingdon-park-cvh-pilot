@@ -2123,7 +2123,7 @@ So that a mistake is caught by a second person before residents see it.
 
 ### Story S04.08 — Residents read approved alerts in their language, with origin and verification
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 56 min (started 2026-10-03 09:57 UTC, built 11:53 UTC, across a container restart)
 - **Traces:** FR-A1 (web), FR-A3, FR-A5, AR-7 (`FeedV1`), AR-6 (drill isolation), UX-DR6 · **Depends on:** S04.07, S02.11, S02.10 · **Branch:** `e04-s08-feed-and-alert-detail`
 
 As a resident,
