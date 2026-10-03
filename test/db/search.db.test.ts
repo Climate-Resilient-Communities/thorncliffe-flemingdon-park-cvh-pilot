@@ -1282,8 +1282,11 @@ describe("search", () => {
           (${monthStart}, 'embed', 'publish', 'embed-v4.0', 5, 10),
           (${monthStart} - interval '1 second', 'embed', 'publish', 'embed-v4.0', 100, 10),
           (now() - interval '45 days', 'translate', 'search', 'north-small-translate-09-2026', 100, 10),
-          (now() + interval '45 days', 'embed', 'search', 'embed-v4.0', 100, 10),
-          (now(), 'sms', 'alert', 'twilio', 100, 0)`);
+          (now() + interval '45 days', 'embed', 'search', 'embed-v4.0', 100, 10)`);
+      // A text's estimate (S06.08's shape: its delivery, language, segments and cost) is not a Cohere call and is not counted.
+      await sql.unsafe(`
+        insert into spend_event (at, kind, purpose, model, calls, tokens, delivery_id, lang, is_drill, segments, cost_estimate_cents)
+        values (now(), 'sms', 'transactional', 'twilio', 100, 0, gen_random_uuid(), 'en', false, 1, 2)`);
 
       expect(await cohereCallsThisMonth(app, new Date())).toBe(15);
       await sql.unsafe("delete from spend_event");
