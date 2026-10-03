@@ -24,13 +24,13 @@ describe("the recipient-count and snapshot port before E07 (S04.07)", () => {
     expect(await countRecipients(entry(), untouchable)).toEqual({ open: false, total: 0, byLanguage: {} });
   });
 
-  it("captures no recipients inside the approval's transaction and writes nothing", async () => {
-    expect(await captureRecipients(entry(), untouchable)).toEqual({ total: 0, byLanguage: {} });
+  it("captures no recipients inside the approval's transaction and writes nothing: no recipient, so no delivery and a count of 0", async () => {
+    expect(await captureRecipients(entry(), untouchable)).toEqual([]);
   });
 
   it("answers the same for a drill and for a correction: nobody", async () => {
-    expect(await captureRecipients(entry({ isDrill: true }), untouchable)).toEqual({ total: 0, byLanguage: {} });
-    expect(await captureRecipients(entry({ kind: "correction", supersedesId: "01900000-0000-7000-8000-00000000e100" }), untouchable)).toEqual({ total: 0, byLanguage: {} });
+    expect(await captureRecipients(entry({ isDrill: true }), untouchable)).toEqual([]);
+    expect(await captureRecipients(entry({ kind: "correction", supersedesId: "01900000-0000-7000-8000-00000000e100" }), untouchable)).toEqual([]);
   });
 
   it("is offered as one port with both calls, which is what the approval is wired to", async () => {

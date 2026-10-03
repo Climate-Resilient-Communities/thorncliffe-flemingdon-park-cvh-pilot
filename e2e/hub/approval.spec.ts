@@ -113,9 +113,28 @@ test("an entry that is no longer waiting, at 390px", async ({ page }) => {
   await expectBaseline(page, "approval-returned-390.png");
 });
 
+/** `pauseNoticeForApprover()`'s sentence while all texts are paused (S06.06): the catalog's `staff.texts.paused.approver`. */
+const PAUSED = "Texts are paused; this will send when resumed";
+const pausedScreen = (options: ReviewOptions = {}): ApprovalScreen =>
+  approvalScreen({ review: reviewOf(options), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER, pauseNotice: PAUSED });
+
+test("while all texts are paused, on the approval view and on the confirmation of an approval, at 390px", async ({ page }) => {
+  await openApproval(page, 390, { screen: pausedScreen({ recipients: OPEN }) });
+  await expect(page.getByTestId("pause-notice")).toHaveText(PAUSED);
+  await expect(page.getByTestId("approve-button")).toBeEnabled();
+  await expectBaseline(page, "approval-paused-390.png");
+
+  await openApproval(page, 390, { screen: pausedScreen({ entry: { status: "approved" } }) });
+  await expect(page.getByTestId("locked-note")).toContainText("approved and is published");
+  await expect(page.getByTestId("pause-notice")).toHaveText(PAUSED);
+  await expectBaseline(page, "approval-paused-confirmed-390.png");
+});
+
 test("fits the phone without scrolling sideways in every state", async ({ page }) => {
   const states: Array<[ApprovalScreen, Parameters<typeof mount<"ApprovalFixture">>[2]["initial"]?]> = [
     [screenOf()],
+    [pausedScreen()],
+    [pausedScreen({ entry: { status: "approved" } })],
     [screenOf({ recipients: OPEN, fallback: ["ur"], duplicate: { alertId: OTHER_ALERT, entryId: OTHER_ENTRY } })],
     [screenOf({ authorRole: "ambassador" })],
     [screenOf(), { mode: "return" }],

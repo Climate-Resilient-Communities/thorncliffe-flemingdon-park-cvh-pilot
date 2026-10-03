@@ -4,7 +4,8 @@
 // the two approvers at once and the approval racing a pull-back or a new submit, Return to author with its note, Discard, what the approval view
 // reads, the incidents list, and the pilot's timings with drills kept apart (FR-M2).
 // The use cases run as the app's own role (cvh_app_login); the recipient port is a fake that writes a row through the approval's transaction, which
-// is how these tests see that it ran inside it.
+// is how these tests see that it ran inside it, and names the people to text. The outbox is the real one (S06.01): the people the fake names get
+// real `delivery` rows, written through `enqueueAlertDeliveries` after the real marker, in the approval's transaction (the last describe).
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import postgres from "postgres";
@@ -14,7 +15,8 @@ import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
 import { createAlerting, type AlertActor, type AlertLifecycle, type EntryContent, type EntryRef, type FrozenContent } from "../../src/modules/alerting";
 import { createAssignments } from "../../src/modules/identity";
-import type { RecipientEntry, RecipientsPort } from "../../src/modules/subscriptions";
+import { createDeliveryQueue } from "../../src/modules/messaging";
+import type { AlertRecipient, RecipientEntry, RecipientsPort } from "../../src/modules/subscriptions";
 import { floorsOfBuilding } from "../../src/modules/places";
 import { createDb, type Db, type DbTransaction } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
@@ -30,6 +32,8 @@ let clock = NOW;
 
 const sha = (tag: string) => createHash("sha256").update(tag).digest("hex");
 const NONE: RecipientCounts = { total: 0, byLanguage: {} };
+/** Cents CAD per text message segment: each queued text's estimate is its segments times this, rounded up to the cent. */
+const PRICE = 1.5;
 
 const buildingAudience = (types: string[] = ["power"]): Audience => ({ scope: "buildings", buildings: [{ rsn: RSN, floors: null }], groups: [], types: [...types].sort() });
 const content = (over: Partial<EntryContent> = {}): EntryContent => ({
@@ -88,6 +92,18 @@ let captureThrows: Error | null = null;
 
 const rowsOf = <T,>(result: unknown) => result as unknown as T[];
 
+/**
+ * The people a snapshot's counts stand for: that many new subscribers (a drill's roster members) in each language. The count the approval audits and
+ * compares is the number of texts the outbox returns for them, so these are the counts the tests below expect back.
+ */
+const recipientsOf = (counts: RecipientCounts, isDrill = false): AlertRecipient[] =>
+  Object.entries(counts.byLanguage).flatMap(([lang, n]) => Array.from({ length: n ?? 0 }, () => ({ kind: isDrill ? "roster" : "subscriber", id: randomUUID(), lang }) as AlertRecipient));
+
+/** What the port names, when a test wants particular people instead of counts (`snapshot` is then ignored). */
+let people: AlertRecipient[] | null = null;
+/** What the port's capture finds the transaction's outbox marker to be, when it runs. */
+let markerSeenByCapture: string | null | undefined;
+
 const port: RecipientsPort = {
   count: async () => ({ open: texting, ...snapshot }),
   capture: async (entry, tx) => {
@@ -99,15 +115,20 @@ const port: RecipientsPort = {
     const [state] = rowsOf<{ status: string; same_now: boolean }>(await tx.execute(sql`select status, approved_at = now() as same_now from alert_entry where id = ${entry.entryId}`));
     const [feed] = rowsOf<{ version: string }>(await tx.execute(sql`select version::text as version from feed_version`));
     seen.captured = { status: state.status, sameNow: state.same_now, feedVersion: Number(feed.version) };
+    markerSeenByCapture = rowsOf<{ marker: string | null }>(await tx.execute(sql`select nullif(current_setting('cvh.approval_entry_id', true), '') as marker`))[0].marker;
     await tx.execute(sql`insert into approval_probe (entry_id, txid) values (${entry.entryId}, txid_current())`);
     if (captureThrows) throw captureThrows;
-    return snapshot;
+    return people ?? recipientsOf(snapshot, entry.isDrill);
   },
 };
 
+/** The outbox's own marker (S06.01), logged: the same call `createAlerting` makes by default, so the deliveries the port's people get are accepted. */
+const outbox = createDeliveryQueue();
 const marker = async (tx: DbTransaction, entryId: string) => {
   log.push(`mark ${entryId}`);
   seen.markTxid = rowsOf<{ id: string }>(await tx.execute(sql`select txid_current()::text as id`))[0].id;
+  const marked = await outbox.markApprovalTransaction(tx, entryId);
+  if (!marked.ok) throw new Error(`the outbox refused the marker: ${marked.error}`);
 };
 
 async function clear() {
@@ -153,7 +174,7 @@ beforeAll(async () => {
   adminC = await account("admin");
   director = await account("director");
   ambassador = await account("ambassador");
-  alerting = createAlerting({ db: app, now: () => clock, recipients: port, markApproval: marker });
+  alerting = createAlerting({ db: app, now: () => clock, recipients: port, markApproval: marker, pricePerSegmentCents: () => PRICE });
   seams = submitSeams(owner, alerting);
 });
 
@@ -178,6 +199,8 @@ afterAll(async () => {
 beforeEach(async () => {
   clock = NOW;
   snapshot = NONE;
+  people = null;
+  markerSeenByCapture = undefined;
   texting = false;
   captureThrows = null;
   log.length = 0;
@@ -210,9 +233,25 @@ const auditRows = () =>
   owner<{ action: string; outcome: string; actor_staff_id: string | null; subject_id: string | null; is_drill: boolean; meta: Record<string, unknown> }[]>`
     select action, outcome, actor_staff_id, subject_id, is_drill, meta from audit_event where subject_type in ('alert', 'alert_entry') order by id`;
 
-/** Everything an approval or a refusal of one could change, as one value: the entry, the thread, the feed version, the probe and the translations. */
+/** The alert deliveries the outbox holds for an entry, as the tests compare them (no ids or times: only what an approval decides). */
+const deliveryRows = (entryId: string) =>
+  owner<{ kind: string; state: string; recipient_kind: string; recipient_id: string; lang: string; body: string; segments: number; cost_estimate_cents: number; idempotency_key: string }[]>`
+    select kind, state, recipient_kind, recipient_id, lang, body, segments, cost_estimate_cents, idempotency_key from delivery where entry_id = ${entryId} order by idempotency_key`;
+const deliveryCount = async () => Number((await owner`select count(*) as n from delivery`)[0].n);
+
+/**
+ * Everything an approval or a refusal of one could change, as one value: the entry, the thread, the feed version, the probe, the translations and
+ * the deliveries.
+ */
 async function world(ref: EntryRef) {
-  return { entry: await entryRow(ref.entryId), thread: await threadRow(ref.alertId), feed: await feedVersion(), probe: await probeRows(), translations: await translationCount(ref.entryId) };
+  return {
+    entry: await entryRow(ref.entryId),
+    thread: await threadRow(ref.alertId),
+    feed: await feedVersion(),
+    probe: await probeRows(),
+    translations: await translationCount(ref.entryId),
+    deliveries: await deliveryCount(),
+  };
 }
 
 /** Direct SQL with the app's credentials: one transaction, the acting account set the way a use case sets it. */
@@ -320,11 +359,11 @@ describe("the approval transaction", () => {
     expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.approved", outcome: "ok", is_drill: true, meta: { recipient_count: 0 } });
   });
 
-  it("fails the approval, with nothing changed, when the port counts people wrongly (parts that do not add up to the total)", async () => {
+  it("fails the approval, with nothing changed, when the port names a person in a language that is not one (the count is of the texts queued, so it cannot be miscounted)", async () => {
     const ref = await newPending();
-    snapshot = { total: 5, byLanguage: { en: 2 } };
+    people = [{ kind: "subscriber", id: randomUUID(), lang: "xx" as AlertRecipient["lang"] }];
     const before = await world(ref);
-    await expect(alerting.approveEntry(actorOf(coordB), ref, shownOf("v1"))).rejects.toThrow(/adding up to its total/);
+    await expect(alerting.approveEntry(actorOf(coordB), ref, shownOf("v1"))).rejects.toThrow(/language that is not one/);
     expect(await world(ref)).toEqual(before);
   });
 
@@ -337,11 +376,129 @@ describe("the approval transaction", () => {
     expect((await auditRows()).filter((row) => row.action === "entry.approved")).toEqual([]);
   });
 
-  it("runs on the default wiring too (subscriptions' port, no marker): nobody is captured before E07, and the count audited is 0", async () => {
+  it("runs on the default wiring too (subscriptions' port, the real outbox's marker): nobody is captured before E07, no delivery is written, and the count audited is 0", async () => {
     const plain = createAlerting({ db: app, now: () => clock });
     const ref = await newPending();
     expect(await plain.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true, value: { recipients: { total: 0, byLanguage: {} } } });
     expect((await auditRows()).at(-1)?.meta).toMatchObject({ recipient_count: 0 });
+    expect(await deliveryCount()).toBe(0);
+  });
+});
+
+// --- the outbox (S06.01): the people the port names get their texts in the approval's transaction -----------------------------------------
+
+describe("the alert texts an approval queues (S06.01)", () => {
+  const person = (lang: AlertRecipient["lang"], kind: AlertRecipient["kind"] = "subscriber"): AlertRecipient => ({ kind, id: randomUUID(), lang });
+
+  it("sets the outbox's marker before the port is asked for anyone, and writes one alert delivery per person through the outbox, in the entry's frozen text message for that person's language", async () => {
+    const ref = await newPending();
+    const [en, ur, ps, zhHant] = [person("en"), person("ur"), person("ps"), person("zh-Hant")];
+    people = [en, ur, ps, zhHant];
+    texting = true;
+    const reviewed: RecipientCounts = { total: 4, byLanguage: { en: 3, ur: 1 } };
+
+    const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1", 1, reviewed));
+
+    // The count is the number of texts the outbox returned, by the language of the body: ps and zh-Hant have no text message of their own, so
+    // they get the English one and are counted under English.
+    expect(result).toMatchObject({ ok: true, value: { entry: { status: "approved" }, recipients: reviewed } });
+    // The marker was already set when the port was asked, and it named this entry.
+    expect(markerSeenByCapture).toBe(ref.entryId);
+    expect(log).toEqual([`mark ${ref.entryId}`, `capture ${ref.entryId}`]);
+    const rows = await deliveryRows(ref.entryId);
+    expect(rows).toHaveLength(4);
+    const byRecipient = new Map(rows.map((row) => [row.recipient_id, row]));
+    expect(byRecipient.get(en.id)).toMatchObject({ kind: "alert", state: "queued", recipient_kind: "subscriber", lang: "en", body: "en v1", segments: 1, cost_estimate_cents: 2 });
+    expect(byRecipient.get(ur.id)).toMatchObject({ kind: "alert", state: "queued", recipient_kind: "subscriber", lang: "ur", body: "ur v1", segments: 2, cost_estimate_cents: 3 });
+    for (const fallback of [ps, zhHant]) {
+      expect(byRecipient.get(fallback.id)).toMatchObject({ kind: "alert", state: "queued", lang: "en", body: "en v1", segments: 1, cost_estimate_cents: 2 });
+    }
+    expect(rows.map((row) => row.idempotency_key)).toEqual([en.id, ur.id, ps.id, zhHant.id].map((id) => `${ref.entryId}:${id}:sms`).sort());
+    // The audited count is the number of texts.
+    expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.approved", outcome: "ok", meta: { recipient_count: 4 } });
+    // One transaction: the approval and the deliveries commit together.
+    expect(await probeRows()).toHaveLength(1);
+  });
+
+  it("writes a drill's texts for its roster members only through the same outbox, and counts them", async () => {
+    const ref = await newPending(authorA, "v1", true);
+    people = [person("en", "roster"), person("ur", "roster")];
+    const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1", 1, { total: 2, byLanguage: { en: 1, ur: 1 } }));
+    expect(result).toMatchObject({ ok: true, value: { feedVersion: null, recipients: { total: 2, byLanguage: { en: 1, ur: 1 } } } });
+    expect((await deliveryRows(ref.entryId)).map((row) => row.recipient_kind)).toEqual(["roster", "roster"]);
+    expect((await auditRows()).at(-1)).toMatchObject({ is_drill: true, meta: { recipient_count: 2 } });
+  });
+
+  it("gives a person named twice, and an id in capitals, one text under the id the database gives, so the count is of people", async () => {
+    const ref = await newPending();
+    const one = person("en");
+    people = [one, { ...one, id: one.id.toUpperCase() }, person("ur")];
+    const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1", 1, { total: 2, byLanguage: { en: 1, ur: 1 } }));
+    expect(result).toMatchObject({ ok: true, value: { recipients: { total: 2, byLanguage: { en: 1, ur: 1 } } } });
+    expect((await deliveryRows(ref.entryId)).map((row) => row.recipient_id)).toContain(one.id);
+    expect(await deliveryCount()).toBe(2);
+  });
+
+  it("refuses with the texts' count when it is not the reviewed one, and the deliveries go with the rollback: nothing is queued", async () => {
+    const ref = await newPending();
+    people = [person("en"), person("en"), person("ur")];
+    texting = true;
+    const before = await world(ref);
+
+    const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1", 1, { total: 2, byLanguage: { en: 1, ur: 1 } }));
+
+    expect(result).toEqual({ ok: false, error: "RECIPIENT_COUNT_CHANGED", detail: { recipients: { total: 3, byLanguage: { en: 2, ur: 1 } } } });
+    // The deliveries were written in the approval's transaction before the counts were compared, and the refusal took them back.
+    expect(await world(ref)).toEqual(before);
+    expect(await deliveryCount()).toBe(0);
+    expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
+  });
+
+  it("writes no delivery for a refusal that comes before the capture", async () => {
+    const ref = await newPending();
+    people = [person("en")];
+    expect(await alerting.approveEntry(actorOf(authorA), ref, shownOf("v1"))).toMatchObject({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
+    expect(log).toEqual([]);
+    expect(await deliveryCount()).toBe(0);
+  });
+
+  it("fails the approval, with nothing queued, when the capture throws after the marker", async () => {
+    const ref = await newPending();
+    people = [person("en")];
+    captureThrows = new Error("a subscriber row could not be locked");
+    const before = await world(ref);
+    await expect(alerting.approveEntry(actorOf(coordB), ref, shownOf("v1"))).rejects.toThrow(/could not be locked/);
+    expect(await world(ref)).toEqual(before);
+    expect(await deliveryCount()).toBe(0);
+  });
+
+  it("is neither refused nor changed by the pause (S06.06): the same rows are queued while texts are paused, which only the sender reads", async () => {
+    const queued = async (tag: string) => {
+      const ref = await newPending(authorA, tag);
+      const crowd = [person("en"), person("ur"), person("ps")];
+      people = crowd;
+      const result = await alerting.approveEntry(actorOf(coordB), ref, shownOf(tag, 1, { total: 3, byLanguage: { en: 2, ur: 1 } }));
+      const rows = (await deliveryRows(ref.entryId)).map(({ recipient_id, idempotency_key, ...rest }) => ({
+        ...rest,
+        who: crowd.findIndex((one) => one.id === recipient_id),
+        key: idempotency_key.replace(ref.entryId, "entry").replace(recipient_id, "recipient"),
+      }));
+      return { result, rows: rows.sort((a, b) => a.who - b.who) };
+    };
+    const running = await queued("v1");
+    expect(running.result).toMatchObject({ ok: true });
+
+    await owner`update messaging_control set paused = true, paused_by = ${adminC.id}, paused_at = now(), reason = 'a provider problem' where id = 1`;
+    try {
+      const paused = await queued("w1");
+      expect(paused.result).toMatchObject({ ok: true, value: { entry: { status: "approved" }, recipients: { total: 3, byLanguage: { en: 2, ur: 1 } } } });
+      // The same rows but for what each text says (the body carries the tag).
+      const bodyless = (rows: typeof running.rows) => rows.map(({ body, ...rest }) => ({ ...rest, bodyLang: body.slice(0, 2) }));
+      expect(bodyless(paused.rows)).toEqual(bodyless(running.rows));
+      expect(paused.rows.every((row) => row.state === "queued" && row.kind === "alert")).toBe(true);
+    } finally {
+      await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
+    }
   });
 });
 

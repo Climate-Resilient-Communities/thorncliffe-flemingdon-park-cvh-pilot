@@ -27,7 +27,7 @@ describe("what follows an approval that committed", () => {
     expect(d.revalidate).not.toHaveBeenCalled();
   });
 
-  it("kicks the dispatcher (E06's seam) once, after the commit, with no argument", async () => {
+  it("kicks the dispatcher (S06.02's seam) once, after the commit, with no argument", async () => {
     const d = deps();
     await afterApproval(outcome(8), d.wired);
     expect(d.kickDispatcher).toHaveBeenCalledTimes(1);
