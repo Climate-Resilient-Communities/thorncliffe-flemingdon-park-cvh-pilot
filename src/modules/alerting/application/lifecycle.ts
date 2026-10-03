@@ -22,13 +22,13 @@ import { audienceRsns, type Audience } from "../../../contracts/audience";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
 import { possibleDuplicateOf } from "../domain/duplicates";
-import { AUTHORED_KINDS, checkApproval, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
+import { AUTHORED_KINDS, checkApproval, checkShownBinding, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
 import type { AlertRefusal } from "../domain/refusals";
 import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
 import { FROZEN_LANGS } from "../domain/translations";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
-import { AUDIT_REASON } from "./refusalReasons";
+import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
 
 export interface AlertLifecycleDeps {
@@ -49,8 +49,8 @@ export interface AlertLifecycleDeps {
    */
   recipients?: RecipientsPort;
   /**
-   * E06's approval seam (S06.01): called first in the approval's transaction, with the entry being approved, before `captureRecipients`
-   * writes anything. E06 wires `createDeliveryQueue().markApprovalTransaction` here, in `createAlerting`; nothing else changes. A no-op until then.
+   * E06's approval seam (S06.01): called in the approval's transaction after the entry is approved and `feed_version` is raised, with the
+   * entry being approved, and before `captureRecipients` writes anything. E06 wires `createDeliveryQueue().markApprovalTransaction` here, in `createAlerting`; nothing else changes. A no-op until then.
    */
   markApproval?: (tx: DbTransaction, entryId: string) => Promise<void>;
 }
@@ -594,13 +594,14 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /**
-   * The approver was shown a version and hash of a pending entry (S04.07): an entry that is not pending any more, or has another version or
-   * hash (it was pulled back, edited and submitted again while the approver read), is refused. Only judged where a person names what they saw.
+   * The approver was shown a version and hash of a pending entry (S04.07): an entry that changed since (pulled back to a draft, or edited and
+   * submitted again while the approver read: ENTRY_CHANGED) or is not waiting any more (approved or discarded: ENTRY_NOT_PENDING) is refused.
+   * Only judged where a person names what they saw.
    */
   function mustMatchShown(row: EntryRow, shown: ApprovalBinding | undefined) {
     if (shown === undefined) return;
-    if (row.status !== "pending_approval") throw new Refused("ENTRY_NOT_PENDING");
-    if (row.version !== shown.version || row.contentHash !== shown.contentHash) throw new Refused("ENTRY_CHANGED");
+    const refusal = checkShownBinding({ status: row.status as EntryStatus, version: row.version, contentHash: row.contentHash, shownVersion: shown.version, shownHash: shown.contentHash });
+    if (refusal) throw new Refused(refusal);
   }
 
   /** The note of a return: control characters taken out, trimmed, present, and at most RETURN_NOTE_MAX characters (counted as the database counts them). */
@@ -1008,7 +1009,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         mustTransition(thread, entry!, "discarded");
         if (entry!.editorIds.includes(actor.staffId)) mustAuthor(standing, actor.staffId, contentOf(entry!));
         else if (entry!.status === "pending_approval") mustMayApprove(standing, actor, entry!);
-        else throw new Refused("OUT_OF_SCOPE");
+        else if (entry!.status === "draft" && options.shown !== undefined) {
+          // An approver who read a pending entry that its author has pulled back since: the role still comes first, then they are told it changed.
+          mustMayApprove(standing, actor, entry!);
+        } else throw new Refused("OUT_OF_SCOPE");
         mustMatchShown(entry!, options.shown);
         const from = entry!.status as "draft" | "pending_approval";
         const [discarded] = await tx.update(alertEntry).set({ status: "discarded" }).where(eq(alertEntry.id, entry!.id)).returning();
@@ -1087,6 +1091,24 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           meta: { entry_id: row.id, version: approved.version, content_hash: row.contentHash!, recipient_count: snapshot.total },
         });
         return { entry: entryOf(approved), recipients: snapshot, feedVersion: feedVersionNow };
+      });
+    },
+
+    /**
+     * The record of an approval form that was refused before any use case ran, because it did not carry what its action needs (the entry's
+     * version and hash, and for an approval the number of people the approver reviewed): a tampered or broken form. Every refusal is recorded
+     * with its reason (S04.07), so this is `entry.approved`, `entry.returned` or `entry.discarded` as refused, with the reason `validation` and
+     * the code `INVALID_FORM`, by the person, on the entry the form names. Nothing is read or changed besides the thread's drill flag.
+     */
+    async refuseInvalidForm(actor: AlertActor, form: InvalidFormAction, ref: EntryRef): Promise<void> {
+      const [thread] = UUID.test(ref.alertId) ? await db.select({ isDrill: alert.isDrill }).from(alert).where(eq(alert.id, ref.alertId)) : [];
+      await audit.recordRefusal(db, {
+        action: INVALID_FORM_AUDIT_ACTION[form],
+        actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
+        subjectType: "alert_entry",
+        subjectId: UUID.test(ref.entryId) ? ref.entryId : null,
+        isDrill: thread?.isDrill ?? false,
+        meta: { reason: INVALID_FORM_REASON, refusal: INVALID_FORM_CODE },
       });
     },
 

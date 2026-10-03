@@ -3,6 +3,7 @@
 import { useActionState, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import type { ApprovalState } from "./approveFromForm";
+import { confirmedCount } from "./countConfirmation";
 import type { ApprovalScreen, LanguageReviewView } from "./view";
 
 /** An approval form's server action (actions.ts): the form's last state and its data in, the new state out. */
@@ -69,7 +70,7 @@ function LanguageItem({ row, webLabel }: { row: LanguageReviewView; webLabel: st
               <p>
                 <strong>{webLabel}</strong>
               </p>
-              <p className="hub-wrap hub-preline" lang={row.bcp47} dir={row.dir} data-testid={`web-${row.lang}`}>
+              <p className="hub-wrap hub-prewrap" lang={row.bcp47} dir={row.dir} data-testid={`web-${row.lang}`}>
                 {row.web}
               </p>
             </div>
@@ -79,7 +80,7 @@ function LanguageItem({ row, webLabel }: { row: LanguageReviewView; webLabel: st
               <p className="hub-wrap">
                 <strong>{row.sms.summary}</strong>
               </p>
-              <p className="hub-wrap hub-preline" lang={row.bcp47} dir={row.dir} data-testid={`sms-${row.lang}`}>
+              <p className="hub-wrap hub-prewrap" lang={row.bcp47} dir={row.dir} data-testid={`sms-${row.lang}`}>
                 {row.sms.body}
               </p>
             </div>
@@ -108,10 +109,12 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
   const [returnState, returnAction, returning] = useActionState(actions.returnToAuthor, initial?.returnToAuthor ?? IDLE);
   const [discardState, discardAction, discarding] = useActionState(actions.discard, IDLE);
   const [mode, setMode] = useState<"return" | "discard" | null>(initial?.mode ?? null);
-  const [confirmed, setConfirmed] = useState(false);
+  // The state the approver ticked the confirmation for: an answer that says the number changed again is a new state, so it starts unconfirmed.
+  const [confirmedFor, setConfirmedFor] = useState<ApprovalState | null>(null);
   const [note, setNote] = useState("");
 
   const changed = approveState.status === "count_changed" ? approveState.view : null;
+  const confirmed = confirmedCount(confirmedFor, approveState);
   const busy = approving || returning || discarding;
   const problem = [approveState, returnState, discardState].map((state) => (state.status === "refused" ? state.message : null)).find((message) => message !== null) ?? null;
   const over = [...note].length > screen.returnForm.max;
@@ -205,7 +208,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
             </Stack>
             <p data-testid="count-cost">{changed.cost}</p>
             <label className="hub-choice">
-              <input type="checkbox" name="confirm-count" form={APPROVE_FORM} required checked={confirmed} onChange={(event) => setConfirmed(event.target.checked)} data-testid="confirm-count" />
+              <input type="checkbox" name="confirm-count" form={APPROVE_FORM} required checked={confirmed} onChange={(event) => setConfirmedFor(event.target.checked ? approveState : null)} data-testid="confirm-count" />
               <span>{changed.confirm}</span>
             </label>
           </Stack>
@@ -255,7 +258,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
       <section aria-labelledby="english-title" data-testid="english-text">
         <Stack gap="related">
           <h2 id="english-title">{screen.english.title}</h2>
-          <p className="hub-wrap hub-preline" lang="en" data-testid="english-body">
+          <p className="hub-wrap hub-prewrap" lang="en" data-testid="english-body">
             {screen.english.body}
           </p>
         </Stack>

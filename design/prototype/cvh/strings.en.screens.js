@@ -1270,6 +1270,7 @@
     channels: 'Where it goes:',
     channelWeb: 'Web app, in every launch language.',
     channelSms: 'Text messages, in the language of each person who signed up.',
+    channelDrill: 'The drill roster only. A drill is never shown on the web app or texted to residents.',
     recipients: 'Text message recipients:',
     recipientsNotOpen: 'Text sign-up is not open yet.',
     recipientsByLanguage: 'By language:',

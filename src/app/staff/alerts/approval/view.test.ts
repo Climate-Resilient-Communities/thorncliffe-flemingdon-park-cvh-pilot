@@ -110,6 +110,13 @@ describe("the approval view of an alert waiting for a second person (O-05)", () 
     expect(screen.header.drill).toBeNull();
   });
 
+  it("lists no resident channel for a drill, whether or not texting is open, so the channels never contradict 'It never reaches residents'", () => {
+    const drill = ["The drill roster only. A drill is never shown on the web app or texted to residents."];
+    expect(screenOf({ thread: { isDrill: true } }).facts.channels.items).toEqual(drill);
+    expect(screenOf({ thread: { isDrill: true }, recipients: { open: true, total: 2, byLanguage: { en: 2 } } }).facts.channels.items).toEqual(drill);
+    expect(screen.facts.channels.items).toEqual(["Web app, in every launch language."]);
+  });
+
   it("has its own words for every refusal an approval, a return or a discard can end with", () => {
     const messages = APPROVAL_MESSAGE_CODES.map((code) => screen.messages.errors[code]);
     for (const message of messages) expect(message).not.toBe(screen.messages.errors.invalid);

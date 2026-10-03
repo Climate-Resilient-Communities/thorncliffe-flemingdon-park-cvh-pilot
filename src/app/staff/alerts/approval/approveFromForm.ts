@@ -19,7 +19,7 @@ export type ApprovalState =
   | { status: "done"; location: string };
 
 export interface ApprovalDeps {
-  alerting: () => Pick<AlertLifecycle, "approveEntry" | "returnEntry" | "discardEntry" | "review">;
+  alerting: () => Pick<AlertLifecycle, "approveEntry" | "returnEntry" | "discardEntry" | "review" | "refuseInvalidForm">;
   /** What must follow an approval that committed: the feed's tag is revalidated (and, with E06, the dispatcher kicked). Never called for a refusal. */
   afterApproval: (outcome: ApprovalOutcome) => Promise<void>;
   /** Cents CAD per segment (SMS_PRICE_PER_SEGMENT_CENTS). */
@@ -44,6 +44,12 @@ const text = (form: FormData, name: string): string => {
   return typeof value === "string" ? value : "";
 };
 
+/** A form that does not carry what was shown: no use case runs, the refusal is recorded with its reason (INVALID_FORM), and the person is told to reload. */
+async function invalidForm(deps: ApprovalDeps, session: Pick<StaffSession, "staffId" | "aal">, form: "approve" | "return" | "discard", ref: { alertId: string; entryId: string }): Promise<ApprovalState> {
+  await deps.alerting().refuseInvalidForm({ staffId: session.staffId, aal: session.aal }, form, ref);
+  return { status: "refused", message: t("errors.invalid") };
+}
+
 /** The version and hash the form carries (what the approver was shown): null for anything that is not one. */
 function shownOf(form: FormData): { version: number; contentHash: string } | null {
   const version = text(form, "version");
@@ -61,7 +67,7 @@ export async function approveFromForm(deps: ApprovalDeps, session: Pick<StaffSes
   const ref = draftRefOf(form);
   const shown = shownOf(form);
   const reviewed = decodeCounts(text(form, "reviewed"));
-  if (!shown || !reviewed) return { status: "refused", message: t("errors.invalid") };
+  if (!shown || !reviewed) return invalidForm(deps, session, "approve", ref);
   const result = await deps.alerting().approveEntry({ staffId: session.staffId, aal: session.aal }, ref, { ...shown, recipients: reviewed });
   if (result.ok) {
     // After the commit, and never able to turn an approval that is done into a failure: the effects are the feed's tag and (E06) the dispatcher.
@@ -82,7 +88,7 @@ async function countChanged(deps: ApprovalDeps, ref: { alertId: string; entryId:
 export async function returnFromForm(deps: ApprovalDeps, session: Pick<StaffSession, "staffId" | "aal">, form: FormData): Promise<ApprovalState> {
   const ref = draftRefOf(form);
   const shown = shownOf(form);
-  if (!shown) return { status: "refused", message: t("errors.invalid") };
+  if (!shown) return invalidForm(deps, session, "return", ref);
   const result = await deps.alerting().returnEntry({ staffId: session.staffId, aal: session.aal }, ref, "return", { shown, note: text(form, "note") });
   return result.ok ? { status: "done", location: approveHref(ref) } : refused(result.error);
 }
@@ -91,7 +97,7 @@ export async function returnFromForm(deps: ApprovalDeps, session: Pick<StaffSess
 export async function discardFromForm(deps: ApprovalDeps, session: Pick<StaffSession, "staffId" | "aal">, form: FormData): Promise<ApprovalState> {
   const ref = draftRefOf(form);
   const shown = shownOf(form);
-  if (!shown) return { status: "refused", message: t("errors.invalid") };
+  if (!shown) return invalidForm(deps, session, "discard", ref);
   const result = await deps.alerting().discardEntry({ staffId: session.staffId, aal: session.aal }, ref, { shown });
   return result.ok ? { status: "done", location: approveHref(ref) } : refused(result.error);
 }

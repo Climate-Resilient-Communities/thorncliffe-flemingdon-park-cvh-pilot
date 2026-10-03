@@ -372,10 +372,35 @@ describe("every refusal changes nothing and is recorded with its reason", () => 
       run: (ref) => alerting.approveEntry(actorOf(coordB), ref, shownOf("v1")),
     },
     {
-      name: "an entry that is no longer pending (pulled back to a draft)",
-      error: "ENTRY_NOT_PENDING",
+      name: "an entry its author pulled back to a draft while the approver read it",
+      error: "ENTRY_CHANGED",
       reason: "conflict",
       setup: async (ref) => void (await alerting.returnEntry(actorOf(authorA), ref, "edit")),
+      run: (ref) => alerting.approveEntry(actorOf(coordB), ref, shownOf("v1")),
+    },
+    {
+      name: "an entry another approver returned to its author while the approver read it",
+      error: "ENTRY_CHANGED",
+      reason: "conflict",
+      setup: async (ref) => void (await alerting.returnEntry(actorOf(adminC), ref, "return", { note: "Say which floors." })),
+      run: (ref) => alerting.approveEntry(actorOf(coordB), ref, shownOf("v1")),
+    },
+    {
+      name: "an entry another approver approved first",
+      error: "ENTRY_NOT_PENDING",
+      reason: "conflict",
+      setup: async (ref) => {
+        expect(await alerting.approveEntry(actorOf(adminC), ref, shownOf("v1"))).toMatchObject({ ok: true });
+        // The refusal that follows is the one under test: what the first approval captured is not part of it.
+        log.length = 0;
+      },
+      run: (ref) => alerting.approveEntry(actorOf(coordB), ref, shownOf("v1")),
+    },
+    {
+      name: "an entry another approver discarded while the approver read it",
+      error: "ENTRY_NOT_PENDING",
+      reason: "conflict",
+      setup: async (ref) => void (await alerting.discardEntry(actorOf(adminC), ref, { shown: shownOf("v1") })),
       run: (ref) => alerting.approveEntry(actorOf(coordB), ref, shownOf("v1")),
     },
     {
@@ -480,7 +505,8 @@ describe("concurrency", () => {
         expect(row).toMatchObject({ status: "approved", approved_hash: sha(`r${round}`), content_hash: sha(`r${round}`) });
       } else {
         pulledFirst += 1;
-        expect(approval, `round ${round}`).toEqual({ ok: false, error: "ENTRY_NOT_PENDING" });
+        // The entry the approver read was pulled back: it changed ("This alert changed. Review it again."), it was not approved by someone else.
+        expect(approval, `round ${round}`).toEqual({ ok: false, error: "ENTRY_CHANGED" });
         expect(pullBack, `round ${round}`).toMatchObject({ ok: true });
         expect(row).toMatchObject({ status: "draft", approved_by: null, content_hash: null });
       }
@@ -502,8 +528,8 @@ describe("concurrency", () => {
         expect(row, `round ${round}`).toMatchObject({ status: "approved", version: 1, approved_hash: sha(`s${round}a`) });
         expect(chain.ok, `round ${round}`).toBe(false);
       } else {
-        // The approver's version is gone: whichever moment they came in, they were refused and nothing was approved.
-        expect(["ENTRY_NOT_PENDING", "ENTRY_CHANGED"], `round ${round}: ${JSON.stringify(approval)}`).toContain((approval as { error: string }).error);
+        // The approver's version is gone: whichever moment they came in (the entry a draft, or another version of it pending), it is a changed entry.
+        expect(approval, `round ${round}`).toEqual({ ok: false, error: "ENTRY_CHANGED" });
         expect(row.approved_by, `round ${round}`).toBeNull();
         expect(row.status, `round ${round}`).not.toBe("approved");
       }
@@ -616,7 +642,12 @@ describe("Return to author with a note", () => {
     expect(await alerting.returnEntry(actorOf(coordB), ref, "return", { shown: { version: 1, contentHash: sha("other") }, note: "x" })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
     expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
     await alerting.returnEntry(actorOf(authorA), ref, "edit");
-    expect(await alerting.returnEntry(actorOf(coordB), ref, "return", { shown: shownOf("v1"), note: "x" })).toEqual({ ok: false, error: "ENTRY_NOT_PENDING" });
+    // The author pulled it back while the approver read: the entry changed, as it does for an approval.
+    expect(await alerting.returnEntry(actorOf(coordB), ref, "return", { shown: shownOf("v1"), note: "x" })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
+    // One that another approver discarded is not waiting any more.
+    const gone = await newPending(authorA, "g1");
+    await alerting.discardEntry(actorOf(adminC), gone, { shown: shownOf("g1") });
+    expect(await alerting.returnEntry(actorOf(coordB), gone, "return", { shown: shownOf("g1"), note: "x" })).toEqual({ ok: false, error: "ENTRY_NOT_PENDING" });
   });
 
   it("is an approver's act only: an editor, a session below aal2 and a role that never approves are refused, whatever the note", async () => {
@@ -679,6 +710,52 @@ describe("Discard", () => {
     expect(await alerting.discardEntry(actorOf(adminC), ref, { shown: shownOf("v1") })).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
     expect(await alerting.discardEntry(actorOf(adminC), ref)).toEqual({ ok: false, error: "ILLEGAL_TRANSITION" });
     expect((await entryRow(ref.entryId)).status).toBe("approved");
+  });
+
+  it("is refused as a changed entry for an approver who read what its author pulled back to a draft since, and as nothing to do for anyone else who has no say in a draft", async () => {
+    const ref = await newPending();
+    await alerting.returnEntry(actorOf(authorA), ref, "edit");
+    const before = await world(ref);
+    expect(await alerting.discardEntry(actorOf(coordB), ref, { shown: shownOf("v1") })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
+    // The role still comes first: a session below aal2 and a role that never approves learn nothing about the entry.
+    expect(await alerting.discardEntry(actorOf(coordB, "aal1"), ref, { shown: shownOf("v1") })).toEqual({ ok: false, error: "AAL2_REQUIRED" });
+    expect(await alerting.discardEntry(actorOf(director), ref, { shown: shownOf("v1") })).toEqual({ ok: false, error: "NOT_ALLOWED" });
+    // Without a version and hash to name, someone who did not write the draft has nothing to discard.
+    expect(await alerting.discardEntry(actorOf(coordB), ref)).toEqual({ ok: false, error: "OUT_OF_SCOPE" });
+    expect(await world(ref)).toEqual(before);
+    expect((await auditRows()).filter((row) => row.action === "entry.discarded" && row.outcome === "refused").map((row) => row.meta.refusal)).toEqual(["ENTRY_CHANGED", "AAL2_REQUIRED", "NOT_ALLOWED", "OUT_OF_SCOPE"]);
+    // The author still discards their own draft.
+    expect(await alerting.discardEntry(actorOf(authorA), ref)).toMatchObject({ ok: true, value: { status: "discarded" } });
+  });
+});
+
+// --- a form that did not carry what was shown ---------------------------------------------------------------------------------------
+
+describe("a form that did not carry what was shown", () => {
+  it.each([
+    ["approve", "entry.approved"],
+    ["return", "entry.returned"],
+    ["discard", "entry.discarded"],
+  ] as const)("is recorded for %s as a refusal with the reason validation and the code INVALID_FORM, by the person, on the entry it names, and changes nothing", async (form, action) => {
+    const ref = await newPending();
+    const before = await world(ref);
+    const auditBefore = (await auditRows()).length;
+    await alerting.refuseInvalidForm(actorOf(coordB), form, ref);
+    expect(await world(ref)).toEqual(before);
+    expect((await auditRows()).slice(auditBefore)).toEqual([
+      { action, outcome: "refused", actor_staff_id: coordB.id, subject_id: ref.entryId, is_drill: false, meta: { reason: "validation", refusal: "INVALID_FORM" } },
+    ]);
+  });
+
+  it("keeps a drill apart in the record, and never throws for ids that are not ones", async () => {
+    const drill = await newPending(authorA, "d1", true);
+    await alerting.refuseInvalidForm(actorOf(coordB), "approve", drill);
+    await alerting.refuseInvalidForm(actorOf(coordB), "approve", { alertId: "nonsense", entryId: "nonsense" });
+    const written = (await auditRows()).filter((row) => row.action === "entry.approved");
+    expect(written).toEqual([
+      { action: "entry.approved", outcome: "refused", actor_staff_id: coordB.id, subject_id: drill.entryId, is_drill: true, meta: { reason: "validation", refusal: "INVALID_FORM" } },
+      { action: "entry.approved", outcome: "refused", actor_staff_id: coordB.id, subject_id: null, is_drill: false, meta: { reason: "validation", refusal: "INVALID_FORM" } },
+    ]);
   });
 });
 

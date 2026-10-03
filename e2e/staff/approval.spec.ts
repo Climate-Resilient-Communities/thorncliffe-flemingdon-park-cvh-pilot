@@ -150,6 +150,11 @@ test("a second Coordinator reads what was submitted on a phone, approves it, and
     await expect(phone.getByTestId("web-ur")).toBeVisible();
     await expect(phone.getByTestId("sms-ur")).toBeVisible();
 
+    // A second tab of the same person, opened before they approve: it still offers Approve when the entry is no longer waiting (a stale tab, a double tap).
+    const stale = await second.context.newPage();
+    await stale.goto(approvalUrl(ref));
+    await expect(stale.getByTestId("approve-button")).toBeVisible();
+
     // Approve: the page shows what became of the entry.
     const before = await feedVersion();
     await approve.click();
@@ -169,11 +174,19 @@ test("a second Coordinator reads what was submitted on a phone, approves it, and
       meta: { entry_id: ref.entryId, version: 1, content_hash: pending.content_hash, recipient_count: 0 },
     });
 
-    // A second press of the same approval (a stale tab, a double tap) changes nothing: the entry is not waiting any more.
+    // A second press of the same approval, from the stale tab, changes nothing: the entry is not waiting any more, and the refusal is in the record.
+    await stale.getByTestId("approve-button").click();
+    await expect(stale.getByTestId("approval-error")).toHaveText("This alert is no longer waiting for approval. Reload the page to see what happened.", { timeout: 30_000 });
+    expect(await entryRow(ref.entryId)).toEqual(approved);
+    expect(await feedVersion()).toBe(before + 1);
+    const afterSecondPress = await auditOf(ref.entryId);
+    expect(afterSecondPress.filter((row) => row.action === "entry.approved" && row.outcome === "ok")).toHaveLength(1);
+    expect(afterSecondPress.at(-1)).toMatchObject({ action: "entry.approved", outcome: "refused", actor_staff_id: second.person.id, meta: { reason: "conflict", refusal: "ENTRY_NOT_PENDING" } });
+
+    // The page itself is never cached, whatever became of the entry.
     const again = await phone.request.get(approvalUrl(ref));
     expect(again.status()).toBe(200);
     expect(again.headers()["cache-control"]).toContain("no-store");
-    expect(await feedVersion()).toBe(before + 1);
   } finally {
     await second.context.close();
   }
@@ -221,15 +234,14 @@ test("an approval pressed on a page that went stale changes nothing and is recor
     // The approver presses Approve on what they were shown: refused, in words, and nothing changed.
     const before = await feedVersion();
     await phone.getByTestId("approve-button").click();
-    await expect(phone.locator("p.hub-error").first()).toContainText(/changed|no longer waiting/, { timeout: 30_000 });
+    await expect(phone.getByTestId("approval-error")).toHaveText("This alert changed. Review it again.", { timeout: 30_000 });
     expect(await entryRow(ref.entryId)).toEqual(pulledBack);
     expect(await feedVersion()).toBe(before);
 
     // The refusal is in the record, with who tried and why, and no approval is.
     const audit = await auditOf(ref.entryId);
     expect(audit.filter((row) => row.action === "entry.approved" && row.outcome === "ok")).toHaveLength(0);
-    expect(audit.at(-1)).toMatchObject({ action: "entry.approved", outcome: "refused", actor_staff_id: second.person.id });
-    expect(typeof (audit.at(-1)?.meta as { refusal?: string }).refusal).toBe("string");
+    expect(audit.at(-1)).toMatchObject({ action: "entry.approved", outcome: "refused", actor_staff_id: second.person.id, meta: { reason: "conflict", refusal: "ENTRY_CHANGED" } });
   } finally {
     await second.context.close();
   }

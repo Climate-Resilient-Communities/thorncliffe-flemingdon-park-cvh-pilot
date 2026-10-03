@@ -22,13 +22,14 @@ function deps(options: { approve?: unknown; ret?: unknown; discard?: unknown; re
   const returnEntry = vi.fn<(actor: unknown, ref: unknown, reason: string, options: unknown) => Promise<unknown>>(async () => options.ret ?? { ok: true, value: {} });
   const discardEntry = vi.fn<(actor: unknown, ref: unknown, options: unknown) => Promise<unknown>>(async () => options.discard ?? { ok: true, value: {} });
   const review = vi.fn(async () => (options.review === undefined ? reviewOf({ recipients: { open: true, ...REVIEWED } }) : options.review));
+  const refuseInvalidForm = vi.fn<(actor: unknown, form: string, ref: unknown) => Promise<void>>(async () => undefined);
   const afterApproval = vi.fn(async () => undefined);
   const wired: ApprovalDeps = {
-    alerting: () => ({ approveEntry, returnEntry, discardEntry, review }) as unknown as ReturnType<ApprovalDeps["alerting"]>,
+    alerting: () => ({ approveEntry, returnEntry, discardEntry, review, refuseInvalidForm }) as unknown as ReturnType<ApprovalDeps["alerting"]>,
     afterApproval,
     pricePerSegmentCents: () => 1.5,
   };
-  return { approveEntry, returnEntry, discardEntry, review, afterApproval, wired };
+  return { approveEntry, returnEntry, discardEntry, review, refuseInvalidForm, afterApproval, wired };
 }
 
 describe("Approve", () => {
@@ -103,7 +104,17 @@ describe("Approve", () => {
       const d = deps();
       expect(await approveFromForm(d.wired, session, bad)).toEqual({ status: "refused", message: "That could not be done. Reload the page and try again." });
       expect(d.approveEntry).not.toHaveBeenCalled();
+      // The refusal is recorded all the same (every refusal is, with its reason): by this person, for an approval, on the entry the form names.
+      expect(d.refuseInvalidForm).toHaveBeenCalledTimes(1);
+      expect(d.refuseInvalidForm).toHaveBeenCalledWith({ staffId: session.staffId, aal: "aal2" }, "approve", { alertId: ALERT, entryId: ENTRY });
+      expect(d.afterApproval).not.toHaveBeenCalled();
     }
+  });
+
+  it("records nothing as an invalid form for a form that carries what was shown", async () => {
+    const d = deps();
+    await approveFromForm(d.wired, session, approveForm());
+    expect(d.refuseInvalidForm).not.toHaveBeenCalled();
   });
 
   it("is refused when the entry is gone by the time the new count is wanted", async () => {
@@ -138,6 +149,7 @@ describe("Return to author", () => {
     const bare = deps();
     expect(await returnFromForm(bare.wired, session, form([["alert", ALERT], ["entry", ENTRY], ["note", "Hi"]]))).toMatchObject({ status: "refused" });
     expect(bare.returnEntry).not.toHaveBeenCalled();
+    expect(bare.refuseInvalidForm).toHaveBeenCalledWith({ staffId: session.staffId, aal: "aal2" }, "return", { alertId: ALERT, entryId: ENTRY });
   });
 });
 
@@ -155,6 +167,7 @@ describe("Discard", () => {
     const bare = deps();
     expect(await discardFromForm(bare.wired, session, form([["alert", ALERT], ["entry", ENTRY]]))).toMatchObject({ status: "refused" });
     expect(bare.discardEntry).not.toHaveBeenCalled();
+    expect(bare.refuseInvalidForm).toHaveBeenCalledWith({ staffId: session.staffId, aal: "aal2" }, "discard", { alertId: ALERT, entryId: ENTRY });
   });
 });
 

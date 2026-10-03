@@ -259,8 +259,8 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     facts: {
       title: t("factsTitle"),
       audience: { label: t("audience"), sentence: aside.sentence, ...(aside.floorNote ? { floorNote: aside.floorNote } : {}), groups: aside.groups },
-      // Texting is a channel once it is open; until then the web is the only one the approval can promise.
-      channels: { label: t("channels"), items: open ? [t("channelWeb"), t("channelSms")] : [t("channelWeb")] },
+      // Texting is a channel once it is open; until then the web is the only one the approval can promise. A drill reaches no resident on either (AD-6).
+      channels: { label: t("channels"), items: thread.isDrill ? [t("channelDrill")] : open ? [t("channelWeb"), t("channelSms")] : [t("channelWeb")] },
       recipients: {
         label: t("recipients"),
         count: String(review.recipients.total),

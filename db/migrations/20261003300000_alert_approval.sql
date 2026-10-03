@@ -14,8 +14,9 @@
 --     whether its thread is a drill, and the summary is grouped by it, so a rehearsal never counts as a real response.
 --
 -- New constraints on tables that already exist are NOT VALID (expand-only; see 20261002290000_alert_audience_shape.sql for why none is
--- validated here): no entry has been returned with a note before this migration, and a NOT VALID check still binds every insert and
--- update. The entry guard is replaced, not duplicated (a new trigger on a table the previous release writes is a destructive change).
+-- validated here): no entry has been returned with a note before this migration (an earlier return without one is made a plain draft below,
+-- because a NOT VALID check still binds every insert and update, rows already there included). The entry guard is replaced, not duplicated
+-- (a new trigger on a table the previous release writes is a destructive change).
 --
 -- Supabase's default privileges grant every new relation in public to anon, authenticated and service_role, so the views take those
 -- back; only cvh_app (S01.04) reads them.
@@ -24,6 +25,14 @@
 -- 1. alert_entry.returned_note
 -- ---------------------------------------------------------------------------------------------
 alter table alert_entry add column returned_note text;
+-- A NOT VALID check still binds every UPDATE of every row, so a row that already breaks the check below could no longer be saved or discarded.
+-- An entry an approver sent back before this migration (`returned_for = 'return'`: S04.03's use case existed, no screen did; none outside development
+-- databases) has no note, because the column is new. It becomes a plain draft: its text stays, only the mark of that return goes. The entry guard of
+-- S04.05 refuses a change of `returned_for` on a draft, so it is off for this one statement and back on, in this same transaction, before anything else
+-- can write (the guard replaced below is then the one that runs).
+alter table alert_entry disable trigger alert_entry_guard;
+update alert_entry set returned_for = null where returned_for = 'return';
+alter table alert_entry enable trigger alert_entry_guard;
 alter table alert_entry add constraint alert_entry_returned_note_valid check (returned_note is null or (btrim(returned_note) <> '' and char_length(returned_note) <= 500)) not valid;
 -- The note and the reason go together: an approver's return (`return`) has a note, every other state of the entry has none.
 alter table alert_entry add constraint alert_entry_return_has_note check (((returned_for = 'return') is true) = (returned_note is not null)) not valid;

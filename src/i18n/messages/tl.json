@@ -4483,6 +4483,7 @@
       "channels": "[EN] Where it goes:",
       "channelWeb": "[EN] Web app, in every launch language.",
       "channelSms": "[EN] Text messages, in the language of each person who signed up.",
+      "channelDrill": "[EN] The drill roster only. A drill is never shown on the web app or texted to residents.",
       "recipients": "[EN] Text message recipients:",
       "recipientsNotOpen": "[EN] Text sign-up is not open yet.",
       "recipientsByLanguage": "[EN] By language:",

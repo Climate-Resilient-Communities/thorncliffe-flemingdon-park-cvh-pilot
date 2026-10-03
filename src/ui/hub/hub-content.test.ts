@@ -11,8 +11,9 @@ describe("hub-content.css", () => {
     expect(value(".hub-link.tap", "align-self")).toBe("flex-start");
   });
 
-  it("keeps the line breaks of a person's note and of a frozen text message, and lets a language's line wrap inside its column (S04.07)", () => {
+  it("keeps the line breaks of a person's note, the line breaks and spaces of a frozen text (what the approver reads is what residents get), and lets a language's line wrap inside its column (S04.07)", () => {
     expect(value(".hub-preline", "white-space")).toBe("pre-line");
+    expect(value(".hub-prewrap", "white-space")).toBe("pre-wrap");
     expect(value(".hub-summary", "overflow-wrap")).toBe("anywhere");
     expect(value(".hub-summary", "cursor")).toBe("pointer");
   });
