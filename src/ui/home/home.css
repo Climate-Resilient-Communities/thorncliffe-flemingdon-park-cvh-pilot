@@ -183,4 +183,86 @@
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m9 5 7 7-7 7'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m9 5 7 7-7 7'/%3E%3C/svg%3E");
   }
+
+  /*
+   * The Every day destinations (find help, map, be ready): a port of the prototype's .cvh-dest, large labelled buttons of
+   * equal weight (cvh.css:153): the label in the lead size, bold, at least 68 px tall (the floor is on the list item, below),
+   * the icons 1.25 times the size of the others, and a line under the label in the caption size.
+   */
+  .home-dest {
+    /* The prototype's 14 px between a destination's icon, its text and its chevron: the snug card inset's value, named for this use. */
+    --home-dest-gap: var(--inset-card-snug);
+    display: flex;
+    align-items: center;
+    gap: var(--home-dest-gap);
+    flex: 1;
+    box-sizing: border-box;
+    padding-block: var(--inset-card-compact);
+    padding-inline: var(--inset-button-large-inline);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-lead-size);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  /* The prototype's .cvh-section puts 12 px between the title and each destination, and so between the destinations. */
+  .home-list--dest {
+    gap: var(--gap-stack);
+  }
+
+  /*
+   * The prototype's 68 px floor is on the list item, and the link fills it. The link itself carries the `tap` utility, which
+   * sits in a later cascade layer than this file and so sets the link's own minimum (44 px, 56 px in basic mode).
+   */
+  .home-list--dest > li {
+    display: flex;
+    min-block-size: 68px;
+  }
+
+  .home-dest .home-ico {
+    inline-size: calc(var(--size-icon) * 1.25);
+    block-size: calc(var(--size-icon) * 1.25);
+  }
+
+  .home-dest__text {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .home-dest__line {
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+  }
+
+  /* Basic mode keeps only the label: the prototype's `cvh-hide-basic` on the line under each destination. */
+  :root[data-basic="true"] .home-dest__line {
+    display: none;
+  }
+
+  .home-dest:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .home-ico--search {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m15.5 15.5 5 5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m15.5 15.5 5 5'/%3E%3C/svg%3E");
+  }
+
+  .home-ico--map {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+  }
+
+  .home-ico--ready {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='4.5' y='3.5' width='15' height='18' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 3.5h6v3H9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m8.5 12.5 2 2 4-4'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8.5 17.5h7'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='4.5' y='3.5' width='15' height='18' rx='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 3.5h6v3H9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m8.5 12.5 2 2 4-4'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M8.5 17.5h7'/%3E%3C/svg%3E");
+  }
 }

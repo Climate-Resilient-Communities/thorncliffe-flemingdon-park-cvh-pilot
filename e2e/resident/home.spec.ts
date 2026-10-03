@@ -1,7 +1,7 @@
 import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { feedOf, stubFeed } from "./home-fixture";
-import { expectBaseline, openResident } from "./helpers";
+import { catalogText, expectBaseline, openResident } from "./helpers";
 
 // S02.11: home (R-03) shows the resident's buildings first, each with its status in words, icon and colour and a link
 // to its page; the neighbourhood; and the current alerts. The feed is fetched again every 60 seconds and an answer older
@@ -434,38 +434,54 @@ test.describe("the feed is fetched again every 60 seconds", () => {
   });
 });
 
-// Owner decisions 36 and 37: the short 911 notice (the shared inline block, the catalog's x01.short) is the last item on
-// home, after the link to what the resident has told the CVH, in every state of the screen. `toContainText("911")` would
-// prove nothing: the badge is aria-hidden decoration that always says 911, so the sentence is what is asserted.
-test.describe("the short 911 notice on home", () => {
+// Owner decisions 36 and 37: home ends with the "Every day" destinations (find help, map, be ready, as in the prototype's
+// R-03), then the short 911 notice (the shared inline block, the catalog's x01.short) directly under them, then the link
+// to what the resident has told the CVH, in every state of the screen.
+// `toContainText("911")` would prove nothing: the badge is aria-hidden decoration that always says 911, so the sentence is
+// what is asserted.
+test.describe("the Every day destinations and the short 911 notice on home", () => {
   const SHORT = "Not an emergency service. In danger? Call 911.";
 
-  const expectLast = async (page: Page) => {
+  const expectEveryDayThenNotice = async (page: Page) => {
     const notice = page.locator('[data-component="not-911"]');
     await expect(notice).toHaveCount(1);
     await expect(notice).toHaveAttribute("data-variant", "inline");
     await expect(notice.locator("p")).toHaveText(SHORT);
-    // The last child of the home content, directly after the link to what the resident has told the CVH.
+
+    await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
+    await expect(page.getByTestId("home-every-day").locator("li")).toHaveCount(3);
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
+    await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
+    await expect(page.getByTestId("home-dest-map")).toContainText("Map");
+    await expect(page.getByTestId("home-dest-map")).toHaveAttribute("href", "/en/map");
+    await expect(page.getByTestId("home-dest-beReady")).toContainText("Be ready");
+    await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
+
+    // The last three children of the home content, in order: the "Every day" section, the notice (nothing sits between
+    // them), and the link to what the resident has told the CVH, which ends the screen.
     const order = await page.evaluate(() => {
       const content = document.querySelector('[data-testid="home-now"]')!.firstElementChild!;
-      const children = [...content.children];
-      const describe = (element: Element | undefined) => element?.getAttribute("data-component") ?? element?.getAttribute("data-testid") ?? element?.tagName ?? null;
-      return { last: describe(children.at(-1)), before: describe(children.at(-2)), choicesLink: children.at(-2)?.matches('[data-testid="choices-link"]') ?? false };
+      const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
+      return [...content.children].slice(-3).map(describe);
     });
-    expect(order).toEqual({ last: "not-911", before: "choices-link", choicesLink: true });
+    expect(order).toEqual(["home-every-day", "not-911", "choices-link"]);
   };
 
-  test("is the last item with chosen buildings and a feed that answered", async ({ page }) => {
+  test("come after the buildings, the neighbourhood and the alerts, with chosen buildings and a feed that answered", async ({ page }) => {
     await stubFeed(page, [feedOf(1, { buildings: { [MILEPOST]: { status: "active" } } })]);
     await choose(page, MILEPOST);
 
     await openResident(page, "/en", 390);
     await ready(page);
 
-    await expectLast(page);
+    await expectEveryDayThenNotice(page);
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid="home-buildings"], [data-testid="home-neighbourhoods"], [data-testid="home-alerts"], [data-testid="home-every-day"]')].map((element) => element.getAttribute("data-testid")),
+    );
+    expect(order).toEqual(["home-buildings", "home-neighbourhoods", "home-alerts", "home-every-day"]);
   });
 
-  test("is the last item with no chosen building", async ({ page }) => {
+  test("are there with no chosen building", async ({ page }) => {
     await stubFeed(page, [feedOf(1)]);
     await choose(page);
 
@@ -473,23 +489,104 @@ test.describe("the short 911 notice on home", () => {
     await ready(page);
     await expect(page.getByTestId("home-invite")).toBeVisible();
 
-    await expectLast(page);
+    await expectEveryDayThenNotice(page);
   });
 
-  test("is the last item when the feed could not be read, with or without chosen buildings", async ({ page }) => {
+  test("are there when the feed could not be read, with or without chosen buildings", async ({ page }) => {
     await stubFeed(page, ["unavailable"]);
     await choose(page, MILEPOST);
 
     await openResident(page, "/en", 390);
     await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "failed");
     await expect(page.getByTestId("feed-failed")).toBeVisible();
-    await expectLast(page);
+    await expectEveryDayThenNotice(page);
 
     await page.evaluate((value) => localStorage.setItem("cvh.choices", value), JSON.stringify({ v: 1, lang: "en", welcomed: true, buildings: [] }));
     await page.reload();
     await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "failed");
     await expect(page.getByTestId("home-invite")).toBeVisible();
-    await expectLast(page);
+    await expectEveryDayThenNotice(page);
+  });
+
+  test("find help and be ready open their pages", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.getByTestId("home-dest-findHelp").click();
+    await page.waitForURL("**/en/directory");
+
+    await page.goBack();
+    await ready(page);
+    await page.getByTestId("home-dest-beReady").click();
+    await page.waitForURL("**/en/ready");
+  });
+
+  test("do not make the browser fetch their pages before the resident taps one", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+    const asked: string[] = [];
+    page.on("request", (request) => {
+      const { pathname } = new URL(request.url());
+      if (["/en/directory", "/en/map", "/en/ready"].includes(pathname)) asked.push(`${request.method()} ${request.url()}`);
+    });
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.waitForLoadState("networkidle");
+
+    await expect(page.getByTestId("home-dest-map")).toBeVisible();
+    expect(asked).toEqual([]);
+  });
+
+  // The destinations are the same for every resident and need nothing from the phone, so the page as the server sent it
+  // (no script has run) already has them, with the notice directly under them and the link to the choices last.
+  test.describe("as the server sent the page, before any script has run", () => {
+    test.use({ javaScriptEnabled: false });
+
+    for (const language of ["en", "ur"] as const) {
+      test(`${language}: Every day with its three links, then the notice, then the link to what the resident has told the CVH`, async ({ page }) => {
+        await openResident(page, `/${language}`, 390);
+
+        await expect(page.getByTestId("home-every-day").locator("a")).toHaveCount(3);
+        for (const [key, path] of [["findHelp", "directory"], ["map", "map"], ["beReady", "ready"]] as const) {
+          await expect(page.getByTestId(`home-dest-${key}`)).toHaveAttribute("href", `/${language}/${path}`);
+        }
+        await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+        const order = await page.evaluate(() => {
+          const content = document.querySelector('[data-testid="home"] .layout-screen__body')!.firstElementChild!;
+          const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
+          return [...content.children].map(describe);
+        });
+        expect(order.slice(-3)).toEqual(["home-every-day", "not-911", "choices-link"]);
+      });
+    }
+  });
+
+  // The prototype's .cvh-dest is a large button of at least 68 px with a line under its label, and that line is
+  // `cvh-hide-basic`: basic mode keeps only the label.
+  test("are large tap targets with a line under each label, and basic mode keeps only the label", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+    await openResident(page, "/en", 390);
+    await ready(page);
+
+    const heights = () => page.getByTestId("home-every-day").locator("a").evaluateAll((all) => all.map((one) => Math.round(one.getBoundingClientRect().height)));
+    const lines = page.getByTestId("home-every-day").locator(".home-dest__line");
+    await expect(lines).toHaveCount(3);
+    for (const line of await lines.all()) await expect(line).toBeVisible();
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText(catalogText("en", "R03.findHelpLine"));
+    for (const height of await heights()) expect(height).toBeGreaterThanOrEqual(68);
+
+    await page.evaluate(() => document.documentElement.setAttribute("data-basic", "true"));
+    for (const line of await lines.all()) await expect(line).toBeHidden();
+    // Only the label is left, and each link still fills a row of the prototype's 68 px (more than the basic-mode tap target of 56).
+    for (const key of ["findHelp", "map", "beReady"]) await expect(page.getByTestId(`home-dest-${key}`)).toBeVisible();
+    // What is shown, not the text in the markup: the line is still in the page, hidden.
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help", { useInnerText: true });
+    await expect(page.getByTestId("home-dest-findHelp")).not.toContainText(catalogText("en", "R03.findHelpLine"), { useInnerText: true });
+    for (const height of await heights()) expect(height).toBeGreaterThanOrEqual(68);
   });
 });
 
@@ -598,5 +695,36 @@ for (const language of ["en", "ur"] as const) {
         await expectBaseline(page, `home-${state}-${language}-${width}.png`);
       });
     }
+  }
+}
+
+// Baseline screenshots of the whole home page (owner decisions 36 and 37): the ones above show the first screen, which
+// leaves "Every day" and the 911 notice below the fold. With chosen buildings, in English and Urdu (right to left), at the
+// three phone widths. The viewport grows to the page, so the baseline shows everything, as the Be ready ones do.
+for (const language of ["en", "ur"] as const) {
+  for (const width of [320, 390, 768] as const) {
+    test(`${language} whole home page at ${width}px has no horizontal scrolling and matches its baseline screenshot`, async ({ page }) => {
+      await stubFeed(page, [STATES.buildings.feed]);
+      await choose(page, ...STATES.buildings.choose);
+
+      await openResident(page, `/${language}`, width);
+      await ready(page);
+      await expect(page.getByTestId("first-run-gate")).toHaveAttribute("data-state", "ready");
+      await page.waitForLoadState("networkidle");
+      await expect(page.getByTestId("home-every-day")).toBeVisible();
+
+      const needed = await page.evaluate(() => {
+        const main = document.querySelector("main")!;
+        return Math.ceil(main.scrollHeight + (document.documentElement.clientHeight - main.clientHeight));
+      });
+      await page.setViewportSize({ width, height: needed });
+
+      const overflow = await page.evaluate(() => ({
+        page: document.documentElement.scrollWidth - document.documentElement.clientWidth,
+        main: document.querySelector("main")!.scrollWidth - document.querySelector("main")!.clientWidth,
+      }));
+      expect(overflow).toEqual({ page: 0, main: 0 });
+      await expectBaseline(page, `home-whole-${language}-${width}.png`);
+    });
   }
 }

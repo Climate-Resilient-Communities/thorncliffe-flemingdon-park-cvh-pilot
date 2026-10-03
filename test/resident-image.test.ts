@@ -21,9 +21,12 @@ describe("resident test image", () => {
     expect(images).toEqual([`v${version}-noble`]);
   });
 
+  // The update scripts pass `changed`, not `all`: `all` rewrites every baseline on every run, and the rasteriser's
+  // sub-threshold byte differences then show up as changed files that no change explains (while the comparison passes).
+  // `changed` rewrites only the baselines that fail the comparison.
   it("is the only place CI and the npm scripts name an image", () => {
     expect(manifest.scripts["test:resident:docker"]).toBe("scripts/resident-docker.sh");
-    expect(manifest.scripts["test:resident:update"]).toBe("scripts/resident-docker.sh --update-snapshots=all");
+    expect(manifest.scripts["test:resident:update"]).toBe("scripts/resident-docker.sh --update-snapshots=changed");
     expect(read(".github/workflows/ci.yml")).not.toMatch(/mcr\.microsoft\.com\/playwright/);
     expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:resident:docker/);
   });
@@ -33,7 +36,7 @@ describe("resident test image", () => {
 
     expect([...hub.matchAll(/mcr\.microsoft\.com\/playwright:([^"\s]+)"/g)].map((match) => match[1])).toEqual([`v${version}-noble`]);
     expect(manifest.scripts["test:hub:docker"]).toBe("scripts/hub-docker.sh");
-    expect(manifest.scripts["test:hub:update"]).toBe("scripts/hub-docker.sh --update-snapshots=all");
+    expect(manifest.scripts["test:hub:update"]).toBe("scripts/hub-docker.sh --update-snapshots=changed");
     expect(hub).toMatch(/-e HUB_PINNED_IMAGE=1/);
     expect(read("e2e/hub/helpers.ts")).toMatch(/process\.env\.HUB_PINNED_IMAGE === "1"/);
     expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:hub:docker/);
