@@ -1,6 +1,6 @@
 import { GATE_PAGES, SignInRequest } from "@/contracts/staffAuth";
 import { englishText } from "@/i18n/text";
-import { clientAddress } from "@/app/staff/clientAddress";
+import { clientAddress } from "@/app/clientAddress";
 import { publicStaffRoute, readJson, staffError, staffJson } from "@/app/staff/guard";
 import { identityConfigured, requestAuthSessions, staffAuth } from "@/app/staff/identity";
 

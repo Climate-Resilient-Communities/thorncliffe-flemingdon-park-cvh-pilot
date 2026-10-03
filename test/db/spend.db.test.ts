@@ -166,12 +166,12 @@ describe("spend_event (S03.02)", () => {
 
     it("counts only the usage of one purpose when asked: the publish allowance is not used up by questions or test-set runs", async () => {
       await at("2026-10-05T12:00:00Z", 2, 20);
-      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-06T12:00:00Z")}, 'embed', 'query', 'embed-v4.0', 100, 5000)`;
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-06T12:00:00Z")}, 'embed', 'search', 'embed-v4.0', 100, 5000)`;
       await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-07T12:00:00Z")}, 'embed', 'test_set', 'embed-v4.0', 40, 900)`;
       const now = new Date("2026-10-08T00:00:00Z");
 
       expect(await monthlyUsage(app, "embed", now, "publish")).toEqual({ calls: 2, tokens: 20 });
-      expect(await monthlyUsage(app, "embed", now, "query")).toEqual({ calls: 100, tokens: 5000 });
+      expect(await monthlyUsage(app, "embed", now, "search")).toEqual({ calls: 100, tokens: 5000 });
       expect(await monthlyUsage(app, "embed", now, "test_set")).toEqual({ calls: 40, tokens: 900 });
       expect(await monthlyUsage(app, "embed", now)).toEqual({ calls: 142, tokens: 5920 });
     });

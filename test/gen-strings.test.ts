@@ -183,7 +183,9 @@ describe("string catalogs", () => {
       }
     }
     const fr = leaves(read(COMMITTED, "fr"));
-    expect(fr["R07.notYetKnown"]).toBe(`${MARKER}Not known yet`);
+    // Staff screens stay in English (staff write in English), so a staff key shows English behind the marker.
+    expect(fr["staff.bootstrap.incomplete"]).toBe(`${MARKER}Finish setting up two Admins first`);
+    expect(fr["R07.notYetKnown"]).toBe("Pas encore connu");
     expect(fr["x04.label"]).toBe("Traduit automatiquement");
   });
 

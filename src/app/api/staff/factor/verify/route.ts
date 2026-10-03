@@ -1,7 +1,7 @@
 import { FactorCodeRequest, GATE_PAGES, type StaffApiError } from "@/contracts/staffAuth";
 import { englishText } from "@/i18n/text";
 import type { AuthenticatorCodeError } from "@/modules/identity";
-import { clientAddress } from "@/app/staff/clientAddress";
+import { clientAddress } from "@/app/clientAddress";
 import { readJson, staffError, staffJson, staffRoute } from "@/app/staff/guard";
 import { requestAuthSessions, staffAuth } from "@/app/staff/identity";
 

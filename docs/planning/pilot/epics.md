@@ -1534,6 +1534,10 @@ So that a question in any language finds an English-sourced listing.
 **When** it searches
 **Then** the response carries the current `release_v`, and the client refreshes the manifest and loads that release's listing file before showing results (falling back per S02.06 if that download fails, in which case it shows "Search results are being updated, try again" and the category list)
 
+**Given** the two client criteria above (the listing lookup by `release_v`, and the refresh of the manifest when the client's `v` is older)
+**When** this story is delivered
+**Then** the server side is built here and the client side is delivered by S03.06 (this story has no client screen)
+
 **Given** the current release has `search: {status: "unavailable"}`
 **When** a search arrives
 **Then** it returns `status: "unavailable"` (an expected outcome) and calls no model
@@ -1630,6 +1634,15 @@ So that I find help without knowing the provider's name.
 **When** the server returns `status: ok`
 **Then** the 1 to 5 qualifying listings are shown exactly as published in `query_lang`, in the returned order, with "Last confirmed by the Hub {date}", the machine-translation label where it applies, and a note "Shown in {language}" when `query_lang` differs from the page language
 **And** if the `query_lang` listing file is not on the phone, it is downloaded first; if that fails, the results are shown in the page language with that note
+
+**Given** the response's `release_v`
+**When** the client shows results
+**Then** it looks the ids up only in the listing file for exactly that `release_v`; if that file is not on the phone it downloads it first
+
+**Given** the client's `v` is older than the current release
+**When** it searches
+**Then** the response carries the current `release_v`, and the client refreshes the manifest and loads that release's listing file before showing results
+**And** if the refresh fails, it shows "Search results are being updated, try again" and the category list
 
 **Given** `emergency_first` is true
 **When** results are shown
