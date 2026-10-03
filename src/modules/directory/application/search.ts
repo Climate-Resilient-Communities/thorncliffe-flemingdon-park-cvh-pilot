@@ -43,9 +43,10 @@
 //    `spend_event` (kind `translate`) as counts only. `search_log` takes counts and codes, ops events take a reason and a
 //    duration, and every failure that leaves this function is a SearchFailure holding a code.
 //  - Why a search could not answer: each failure also carries a safe classification (`error` of the note the app turns into an
-//    ops event, and one `search.failed` log line): a schema path (`listing_schema:providers.0.name`), a Postgres SQLSTATE,
-//    `timed_out`, a translation failure's class (`translate_failed:quota`) or an error's class name. Never an error's message,
-//    an address, a hash or the question (src/platform/safeError.ts).
+//    ops event, and one `search.failed` log line): a schema path (`listing_schema:providers.0.name`), a fault of the release's
+//    files (`vectors_missing`, `vectors_hash`, `vectors_release`, `listing_missing`, `listing_hash`), a Postgres SQLSTATE,
+//    `timed_out`, a vendor failure's class (`translate_failed:quota`, `embed_failed:limited`) or an error's class name. Never an
+//    error's message, an address, a hash or the question (src/platform/safeError.ts, src/contracts/safeError.ts).
 import { and, eq, sql } from "drizzle-orm";
 import { DirectoryListingV1 } from "@/contracts/directory";
 import type { LangCode } from "@/contracts/lang";
@@ -69,7 +70,7 @@ import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
-import type { DirectoryStorage, QueryEmbedder } from "./ports";
+import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder } from "./ports";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
@@ -113,6 +114,15 @@ const TIMED_OUT = "timed_out";
  */
 function classifyTranslation(error: unknown): string {
   if (error instanceof QuestionTranslationError) return error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`;
+  return classifyError(error);
+}
+
+/**
+ * The safe classification of a failed embedding: its code and, for a vendor failure, how the vendor's call failed from its
+ * status (`embed_failed:limited`, `embed_failed:auth`); any other error as classifyError does. Never a message.
+ */
+function classifyEmbedding(error: unknown): string {
+  if (error instanceof QueryEmbedError) return error.vendor === undefined ? error.code : `${error.code}:${error.vendor}`;
   return classifyError(error);
 }
 
@@ -302,16 +312,18 @@ async function readCurrent(db: Db, timeoutMs?: number): Promise<CurrentRelease |
 
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
   const vectorsBody = await storage.get(record.vectors_path);
-  if (vectorsBody === null || sha256Hex(vectorsBody) !== record.sha256) throw new Error("vectors file is missing or changed");
+  if (vectorsBody === null) throw new SafeDetailError("vectors_missing");
+  if (sha256Hex(vectorsBody) !== record.sha256) throw new SafeDetailError("vectors_hash");
   const vectorsParsed = VectorsFileSchema.safeParse(JSON.parse(vectorsBody));
   if (!vectorsParsed.success) throw new SafeDetailError(schemaFailure("vectors_schema", vectorsParsed.error.issues));
   const vectors = vectorsParsed.data;
-  if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new Error("vectors file is not this release's");
+  if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new SafeDetailError("vectors_release");
 
   // Which providers are emergency results: the English listing of the same release names each provider's categories.
   const entry = release.files.en;
   const listingBody = entry ? await storage.get(entry.path) : null;
-  if (!entry || listingBody === null || sha256Hex(listingBody) !== entry.sha256) throw new Error("listing file is missing or changed");
+  if (!entry || listingBody === null) throw new SafeDetailError("listing_missing");
+  if (sha256Hex(listingBody) !== entry.sha256) throw new SafeDetailError("listing_hash");
   const listingParsed = DirectoryListingV1.safeParse(JSON.parse(listingBody));
   if (!listingParsed.success) throw new SafeDetailError(schemaFailure("listing_schema", listingParsed.error.issues));
   const listing = listingParsed.data;
@@ -355,7 +367,7 @@ const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve,
 function capped<T>(work: Promise<T>, ms: number): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined;
   const expired = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error("the release's search data took too long to load")), Math.max(0, ms));
+    timer = setTimeout(() => reject(new SafeDetailError(TIMED_OUT)), Math.max(0, ms));
   });
   work.catch(() => undefined);
   return Promise.race([work, expired]).finally(() => clearTimeout(timer));
@@ -597,7 +609,7 @@ export function createSearch(deps: SearchDeps): SearchService {
         } catch (error) {
           if (error instanceof StageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
           if (error instanceof TranslateStageError) return { ok: false, reason: error.reason, ...(error.detail === undefined ? {} : { detail: error.detail }) };
-          return { ok: false, reason: "embed_failed", detail: classifyError(error) };
+          return { ok: false, reason: "embed_failed", detail: classifyEmbedding(error) };
         }
       })();
       return { done, cancel };
@@ -617,7 +629,7 @@ export function createSearch(deps: SearchDeps): SearchService {
         embedded = await embedder.embedQuery({ text, model: data.model, dims: data.dims, signal: leg.signal });
       } catch (error) {
         settle(call, leg.signal.aborted ? "estimate" : "none");
-        throw leg.signal.aborted ? new StageError("timed_out") : new StageError("embed_failed", false, classifyError(error));
+        throw leg.signal.aborted ? new StageError("timed_out") : new StageError("embed_failed", false, classifyEmbedding(error));
       }
       // An answer that is not a vector of the release's size was still billed.
       settle(call, typeof embedded?.tokens === "number" ? embedded.tokens : null);

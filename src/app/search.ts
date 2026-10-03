@@ -107,7 +107,7 @@ export async function recordLimiterFailure(ms: number, error: string): Promise<v
   await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms, error } });
 }
 
-/** Writes the ops event of a search cut at the route's hard deadline (it answered 503 `search_unavailable`): a reason, a duration and its classification (`timed_out`). */
+/** Writes the ops event of a search cut at the route's hard deadline (it answered 503 `search_unavailable`): a reason, a duration and its classification (`timed_out` and the stage that was pending, e.g. `timed_out:search`). */
 export async function recordSearchDeadline(ms: number, error: string): Promise<void> {
   await recordOpsEvent(getDb(), { kind: "search.unavailable", detail: { reason: "deadline", ms, error } });
 }

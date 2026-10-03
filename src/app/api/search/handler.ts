@@ -33,8 +33,9 @@ export interface SearchRouteDeps {
    */
   onLimiterFailure?: (ms: number, error: string) => Promise<void>;
   /**
-   * Told, after the response, that the request was cut at the hard deadline, with how long it had run and its classification
-   * (always `timed_out`; the app writes the ops event).
+   * Told, after the response, that the request was cut at the hard deadline, with how long it had run and its classification:
+   * `timed_out` and the stage that was still pending (`timed_out:body`, `timed_out:limiter`, `timed_out:search`). The app writes
+   * the ops event.
    */
   onDeadline?: (ms: number, error: string) => Promise<void>;
   /** Runs work still pending after the response (`after()` in the app). Without it such work simply runs on. */
@@ -58,8 +59,13 @@ function failure(code: SearchErrorCode, headers: Record<string, string> = {}): R
   return Response.json(searchErrorBody(code), { status: SEARCH_ERROR_STATUS[code], headers: { ...NO_STORE, ...headers } });
 }
 
-/** What the hard deadline is classified as: it is a timeout whatever was pending. */
-const DEADLINE_CLASSIFICATION = "timed_out";
+/** Where an answer is: the stage still pending when the hard deadline cuts it. */
+type Stage = "body" | "limiter" | "search";
+
+/** What the hard deadline is classified as: a timeout, with the stage that was pending (`timed_out:limiter`). */
+function classifyDeadline(stage: Stage): string {
+  return `timed_out:${stage}`;
+}
 
 /** The handler's own budget for the limiter ran out (the limiter had not answered). */
 class LimiterTimedOut extends Error {
@@ -68,7 +74,8 @@ class LimiterTimedOut extends Error {
 
 /**
  * A classification of a limiter failure that is safe to store and log: `timed_out` when the handler's budget expired, else the
- * Postgres SQLSTATE (five characters), else the error's class name (letters only, at most 40), else `unknown`. Never a message.
+ * Postgres SQLSTATE (five characters), else a connection error's constant code (`CONNECT_TIMEOUT`), else the error's class name
+ * (letters only, at most 40), else `unknown` (see classifyError). Never a message.
  */
 export function classifyLimiterError(error: unknown): string {
   if (error instanceof LimiterTimedOut) return "timed_out";
@@ -108,7 +115,8 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
   const expired = new Promise<"deadline">((resolve) => {
     timer = setTimeout(() => resolve("deadline"), Math.max(0, started + (deps.deadlineMs ?? DEFAULT_TOTAL_BUDGET_MS) - clock()));
   });
-  const answering = answer(deps, request, clock, started);
+  const progress: { stage: Stage } = { stage: "body" };
+  const answering = answer(deps, request, clock, started, progress);
   // Cut at the deadline, it may still reject later: that is not unhandled.
   answering.catch(() => undefined);
   try {
@@ -121,14 +129,15 @@ export async function searchResponse(deps: SearchRouteDeps, request: Request): P
     clearTimeout(timer);
   }
   const ms = Math.round(clock() - started);
+  const why = classifyDeadline(progress.stage);
   // One line for the platform's function logs: the safe fields only.
-  console.error(`search.failed reason=deadline code=${DEADLINE_CLASSIFICATION} ms=${ms}`);
-  if (deps.onDeadline) tell(deps, () => deps.onDeadline!(ms, DEADLINE_CLASSIFICATION));
+  console.error(`search.failed reason=deadline code=${why} ms=${ms}`);
+  if (deps.onDeadline) tell(deps, () => deps.onDeadline!(ms, why));
   return failure("search_unavailable");
 }
 
 /** The answer itself: the body, the count, the search. Each stage has a limit of its own; the hard deadline is over all of them. */
-async function answer(deps: SearchRouteDeps, request: Request, clock: () => number, started: number): Promise<Response> {
+async function answer(deps: SearchRouteDeps, request: Request, clock: () => number, started: number, progress: { stage: Stage }): Promise<Response> {
   let raw: unknown;
   try {
     const text = await request.text();
@@ -140,6 +149,7 @@ async function answer(deps: SearchRouteDeps, request: Request, clock: () => numb
   const parsed = parseSearchRequest(raw);
   if (!parsed.ok) return failure(parsed.code);
 
+  progress.stage = "limiter";
   try {
     const counted = await within(
       Promise.resolve().then(() => deps.limiter().check(SEARCH_RATE_LIMIT, deps.client(request.headers))),
@@ -158,6 +168,7 @@ async function answer(deps: SearchRouteDeps, request: Request, clock: () => numb
     return failure("search_unavailable");
   }
 
+  progress.stage = "search";
   try {
     const body = SearchV1Schema.parse(await deps.search().search(parsed.value, started));
     return Response.json(body, { headers: NO_STORE });

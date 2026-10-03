@@ -2,14 +2,13 @@
 // `detail` schema (a field that is not listed rejects the event), none has a free-text field, and every value is
 // a code or a count, so personal data has nowhere to go. Later stories add their kinds here.
 import { z } from "zod";
+import { SafeErrorSchema } from "@/contracts/safeError";
 
 const count = z.number().int().nonnegative().max(1_000_000);
-// A classification of a failure: a SQLSTATE, a class name, `timed_out` or `listing_schema:providers.0.field`. Characters
-// `A-Za-z0-9_.:` only (no message, no space), and not an address or a hash.
-const safeError = z
-  .string()
-  .regex(/^[A-Za-z0-9_.:]{1,80}$/)
-  .refine((v) => !/^\d{1,3}(\.\d{1,3}){3}$/.test(v) && !/^[0-9a-f]{32,}$/.test(v));
+// A classification of a failure: a SQLSTATE, a class name, `timed_out`, `translate_failed:quota` or
+// `listing_schema:providers.0.field`. A few shapes of one token (or a code and a detail), never a message, an address or a hash
+// (src/contracts/safeError.ts is the one definition of them).
+const safeError = SafeErrorSchema;
 const code = z.string().regex(/^[a-z][a-z0-9_]{0,39}$/);
 
 /** Why a directory publish failed (S02.05): the Admin's "Publish failed" names it. */

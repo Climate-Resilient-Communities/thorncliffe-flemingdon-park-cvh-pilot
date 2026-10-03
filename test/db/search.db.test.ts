@@ -334,7 +334,18 @@ describe("search", () => {
 
       await expect(service(fakeQueryEmbedder().embedder, { onFailure: async (n) => void notes.push(n) }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ name: "SearchFailure", code: "search_unavailable" });
 
-      expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1 }]);
+      expect(notes).toMatchObject([{ reason: "snapshot_failed", releaseV: 1, error: "vectors_hash" }]);
+    });
+
+    it("tells a vectors file the store no longer has as vectors_missing, written to the ops event with the release", async () => {
+      await publish();
+      storage.files.delete("releases/1/vectors.json");
+
+      await expect(service(fakeQueryEmbedder().embedder, { onFailure: (note) => recordSearchNote(app, note) }).search({ q: "lawyer", lang: "en" })).rejects.toMatchObject({ code: "search_unavailable" });
+
+      expect(await rows("ops_event")).toMatchObject([
+        { kind: "search.unavailable", subject_type: "directory_release", subject_id: "1", detail: { reason: "snapshot_failed", error: "vectors_missing" } },
+      ]);
     });
 
     /** Replaces the English listing of release 1 as a release made at another time would have it, and records its hash on the release. */
@@ -883,7 +894,11 @@ describe("search", () => {
       expect(error).toMatchObject({ name: "QueryEmbedError", code: "embed_failed" });
       expect(out.lines.join("\n")).not.toContain(MARKER);
       expect(await everythingStored()).not.toContain(MARKER);
-      expect(await rows("ops_event")).toMatchObject([{ kind: "search.unavailable" }, { kind: "search.unavailable" }]);
+      // What the ops events say of the two failures is a class: the error's own, and the adapter's class of the vendor's failure.
+      expect(await rows("ops_event")).toMatchObject([
+        { kind: "search.unavailable", detail: { reason: "embed_failed", error: "Error" } },
+        { kind: "search.unavailable", detail: { reason: "embed_failed", error: "embed_failed:other" } },
+      ]);
     });
 
     it("leaves neither the question nor its English translation anywhere, through the translated-question leg too, even when the translation model throws an error that echoes its request (S03.05)", async () => {
@@ -1050,7 +1065,7 @@ describe("search", () => {
         class PostgresLikeError extends Error {}
         expect(await classify(denied)).toEqual(["42501"]);
         expect(await classify(new PostgresLikeError("secret message"))).toEqual(["PostgresLikeError"]);
-        expect(await classify(Object.assign(new Error("x"), { code: "ECONNREFUSED" }))).toEqual(["Error"]);
+        expect(await classify(Object.assign(new Error("x"), { code: "ECONNREFUSED" }))).toEqual(["ECONNREFUSED"]);
         expect(await classify("a string")).toEqual(["unknown"]);
         expect(await classify(Object.create(null))).toEqual(["unknown"]);
         const lines = logged.mock.calls.map((c) => c.join(" "));
