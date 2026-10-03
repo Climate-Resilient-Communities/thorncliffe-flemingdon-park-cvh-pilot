@@ -362,7 +362,8 @@ test.describe("a corrected and a withdrawn entry (S05.02)", () => {
     expect(byKind.withdrawal.supersedes_id).toBe(thread.entries[1].id);
     expect(byKind.ack.supersedes_id).toBeUndefined();
     expect(byKind.withdrawal.text.body).toBe(WITHDRAWAL_REASON);
-    expect(Object.keys(byKind.withdrawal).sort()).toEqual(["attribution", "id", "kind", "original", "phase", "published_at", "supersedes_id", "text", "verified"]);
+    // A withdrawal has no phase of its own (the thread keeps the one it had), and no reason code: its text is the reason.
+    expect(Object.keys(byKind.withdrawal).sort()).toEqual(["attribution", "id", "kind", "original", "published_at", "supersedes_id", "text", "verified"]);
   });
 
   test('shows the correction above the entry it replaces, which stays readable marked "Corrected", and a withdrawn entry marked "Withdrawn" with the reason in its place', async ({ page }) => {
