@@ -1482,6 +1482,7 @@
       "people": "[EN] People",
       "smsTest": "[EN] Test text",
       "buildings": "[EN] Buildings",
+      "ambassadorHome": "[EN] My building",
       "providers": "[EN] Providers",
       "directory": "[EN] Directory",
       "texts": "[EN] Pause texts",
@@ -4303,6 +4304,30 @@
         "allWithFloors": "[EN] You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.",
         "rangeReversed": "[EN] The range goes from a higher floor to a lower one. Put the lower floor first."
       }
+    },
+    "ambassadorHome": {
+      "title": "[EN] My building",
+      "titleMany": "[EN] My buildings",
+      "lead": "[EN] What residents are reading about your buildings, and the updates you have posted.",
+      "assignedAll": "[EN] You are the ambassador for {building}, all floors.",
+      "assignedFloors": "[EN] You are the ambassador for {building}, floors {floors}.",
+      "notAssigned": "[EN] You are not assigned to a building. The Hub will assign you, and this page then shows your buildings.",
+      "activeTitle": "[EN] Happening in your buildings",
+      "activeNone": "[EN] Nothing active in your buildings.",
+      "about": "[EN] About {places}",
+      "residentsRead": "[EN] See what residents read",
+      "until": "[EN] Until {time}",
+      "postsTitle": "[EN] Your updates",
+      "postsNone": "[EN] You have not posted an update yet.",
+      "postLine": "[EN] {types} · Posted {time}",
+      "returnedNote": "[EN] Note from the Hub: {note}",
+      "states": {
+        "returned": "[EN] Sent back to you by the Hub"
+      },
+      "roundTitle": "[EN] Your round",
+      "roundCount": "[EN] {n} check-in requests on your floors",
+      "roundCountOne": "[EN] 1 check-in request on your floors",
+      "roundNone": "[EN] No check-in round right now. It starts when the Hub sends a heat or power alert for your building."
     },
     "audience": {
       "placeTitle": "[EN] Who is this alert for? The place",

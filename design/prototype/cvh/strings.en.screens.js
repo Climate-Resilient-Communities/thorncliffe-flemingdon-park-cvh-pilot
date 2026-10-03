@@ -1091,6 +1091,22 @@
       chooseScope: 'Choose which floors: all floors, or only the floors you pick.',
       allWithFloors: 'You chose all floors but also picked floors or a range. Choose all floors on their own, or choose only the floors you pick.',
       rangeReversed: 'The range goes from a higher floor to a lower one. Put the lower floor first.' } } } });
+  /* The Ambassador's home (S08.01, A-01 "My building"), the pilot's staff version: the alerts about their buildings, their own posts and their round. Words
+     that A-01 already has (the sections, "From the Hub", "Verified", the post states) are the prototype's own: A01.* and A03.states.*. */
+  m(en, { hub: { nav: { ambassadorHome: 'My building' } } });
+  m(en, { staff: { ambassadorHome: {
+    title: 'My building', titleMany: 'My buildings',
+    lead: 'What residents are reading about your buildings, and the updates you have posted.',
+    assignedAll: 'You are the ambassador for {building}, all floors.', assignedFloors: 'You are the ambassador for {building}, floors {floors}.',
+    notAssigned: 'You are not assigned to a building. The Hub will assign you, and this page then shows your buildings.',
+    activeTitle: 'Happening in your buildings', activeNone: 'Nothing active in your buildings.',
+    about: 'About {places}', residentsRead: 'See what residents read',
+    until: 'Until {time}',
+    postsTitle: 'Your updates', postsNone: 'You have not posted an update yet.',
+    postLine: '{types} · Posted {time}', returnedNote: 'Note from the Hub: {note}',
+    states: { returned: 'Sent back to you by the Hub' },
+    roundTitle: 'Your round', roundCount: '{n} check-in requests on your floors', roundCountOne: '1 check-in request on your floors',
+    roundNone: 'No check-in round right now. It starts when the Hub sends a heat or power alert for your building.' } } });
   /* Who an alert is for (S04.04, O-03 the place and O-04 the groups), the pilot's staff version: one shared rule (AD-7). */
   m(en, { staff: { audience: {
     placeTitle: 'Who is this alert for? The place', groupsTitle: 'Who is this alert for? The groups',

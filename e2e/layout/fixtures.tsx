@@ -37,6 +37,8 @@ import { AudienceBody, type AudienceActions, type AudienceInitial } from "@/app/
 import type { AudienceScreen } from "@/app/staff/alerts/audience/view";
 import { IncidentsList } from "@/app/staff/alerts/incidents/IncidentsList";
 import type { IncidentsView } from "@/app/staff/alerts/incidents/view";
+import { AmbassadorHomeBody } from "@/app/staff/ambassador/AmbassadorHomeBody";
+import type { AmbassadorHomeView } from "@/app/staff/ambassador/view";
 import { ApprovalBody, type ApprovalActions, type ApprovalInitial } from "@/app/staff/alerts/approval/ApprovalBody";
 import type { ApprovalScreen } from "@/app/staff/alerts/approval/view";
 import { ComposerBody, type ComposerActions, type ComposerInitial } from "@/app/staff/alerts/composer/ComposerBody";
@@ -665,6 +667,17 @@ export function IncidentsFixture({ texts, brand, view }: { texts: HubShellTexts;
     <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
       <Screen surface="staff" testId="screen">
         <IncidentsList view={view} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/** The Ambassador's home (A-01, S08.01) inside the Hub shell, on the view the app's own function built. */
+export function AmbassadorHomeFixture({ texts, brand, view }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: AmbassadorHomeView }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff">
+      <Screen surface="staff" testId="screen">
+        <AmbassadorHomeBody view={view} />
       </Screen>
     </AroundTheScreen>
   );

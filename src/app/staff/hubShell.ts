@@ -33,7 +33,10 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
       id: "disruption",
       label: englishText("hub.sections.disruption"),
       items: [
-        { id: "incidents", label: englishText("hub.nav.incidents"), href: "/staff", exact: true, icon: "now" },
+        // An Ambassador's home is their own (A-01, S08.01), at the same address: the other roles' home is the Hub's incidents list.
+        role === "ambassador"
+          ? { id: "ambassador-home", label: englishText("hub.nav.ambassadorHome"), href: "/staff", exact: true, icon: "building" as const }
+          : { id: "incidents", label: englishText("hub.nav.incidents"), href: "/staff", exact: true, icon: "now" as const },
         ...(can(role, "alert.author_wide")
           ? [
               { id: "log", label: englishText("hub.nav.log"), href: LOG_PAGE, icon: "flag" as const },
