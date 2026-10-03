@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
@@ -164,6 +164,31 @@ $$);
 ```
 
 To stop it, `select cron.unschedule('cvh-health')`. An independent outside check of the job itself (what looks if pg_cron or the app stops altogether) is E09's.
+
+**The expire job (S05.04, `/api/jobs/expire`).** Every minute it closes each open alert thread whose latest published, non-superseded entry is past its
+valid-until (compared as UTC instants, so the clock changes cannot move it): in one transaction per thread, under the thread's lock, it adds a web-only system
+final ("This alert has expired without a further update. The problem may continue. Contact the Hub for current information.", from the string catalog
+`staff.expire.finalText`, in English until it is translated) and closes the thread as `expired`, which residents read as "Expired", never "Resolved". It needs the
+same `JOB_SECRET` as the other job routes and no other variable, sends no text and reads no Twilio credential, so it works in every environment. A run closes at most
+100 threads; a thread whose transaction fails is rolled back and recorded as an `ops_event` (`alert.expire_failed`, a failure class only), and the next run closes it.
+A thread closed more than 5 minutes after its valid-until is recorded too (`alert.expire_late`): it means earlier runs were missed (pg_cron stopped, the app was
+down or the route answered an error), which is how a failed pg_cron run shows up in `ops_event` for E09's health job, together with `cron.job_run_details` and
+`net._http_response` (pg_net's record of the HTTP answers, which the route's 500 for a run that closed nothing and failed everything it tried also reaches).
+**The owner schedules it, once, in production's Supabase SQL editor as `postgres`, after the Vault secrets of step 1 above exist; this repository does not apply it,
+and it is never run in a preview:**
+
+```sql
+-- 5. The expire job, every minute.
+select cron.schedule('cvh-expire', '* * * * *', $$
+  select net.http_post(
+    url := (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_base_url') || '/api/jobs/expire',
+    headers := jsonb_build_object('Content-Type', 'application/json', 'Authorization', 'Bearer ' || (select decrypted_secret from vault.decrypted_secrets where name = 'cvh_job_secret')),
+    timeout_milliseconds := 60000
+  );
+$$);
+```
+
+To stop it, `select cron.unschedule('cvh-expire')`; threads then stay open past their valid-until until it runs again (residents still read the valid-until).
 
 **On-call numbers (S06.07).** No variable is involved. An Admin signed in with the authenticator opens Hub, Administration, "On-call numbers" (`/staff/oncall`) and
 adds each Admin's Canadian mobile number with a name or role (at most 10); only the last four digits are shown afterwards, and no audit record, event or log

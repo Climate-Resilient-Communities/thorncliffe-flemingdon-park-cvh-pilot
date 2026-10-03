@@ -51,7 +51,7 @@ describe("ops events", () => {
   it("allows a key named error only where it is a safe classification, which refuses free text, a message and an address", () => {
     const withError = Object.entries(OPS_EVENT_KINDS).filter(([, spec]) => "error" in spec.detail.shape);
 
-    expect(withError.map(([kind]) => kind).sort()).toEqual(["search.leg_failed", "search.unavailable"]);
+    expect(withError.map(([kind]) => kind).sort()).toEqual(["alert.expire_failed", "search.leg_failed", "search.unavailable"]);
     for (const [kind, spec] of withError) {
       const error = (spec.detail.shape as unknown as { error: z.ZodType }).error;
       for (const free of ["connection refused at 10.0.0.1", "took too long", "You are past the per-month limit", "2001:db8::1", "203.0.113.5", "schema:203.0.113.9", "a".repeat(81), "mujhe madad chahiye"]) {
@@ -192,6 +192,15 @@ describe("the health job's events (S06.07)", () => {
 
   it("rejects a recovery event with anything but the condition", () => {
     expect(() => toOpsEventRecord({ kind: "health.condition_recovered", detail: { condition: "queue_stuck", note: "fixed" } } as never)).toThrow(OpsEventError);
+  });
+
+  it("records the expire job's events (S05.04): a thread that could not be closed (a failure class) and one closed late (minutes), and refuses anything else", () => {
+    const subjectId = "01900000-0000-7000-8000-000000000001";
+    expect(toOpsEventRecord({ kind: "alert.expire_failed", subjectType: "alert", subjectId, detail: { error: "ECONNRESET" } })).toMatchObject({ kind: "alert.expire_failed", severity: "error", detail: { error: "ECONNRESET" } });
+    expect(toOpsEventRecord({ kind: "alert.expire_late", subjectType: "alert", subjectId, detail: { minutes_late: 90 } })).toMatchObject({ kind: "alert.expire_late", severity: "warning", detail: { minutes_late: 90 } });
+    expect(() => toOpsEventRecord({ kind: "alert.expire_failed", detail: { error: "connection refused at 10.0.0.1" } })).toThrow(OpsEventError);
+    expect(() => toOpsEventRecord({ kind: "alert.expire_late", detail: { minutes_late: -1 } })).toThrow(OpsEventError);
+    expect(() => toOpsEventRecord({ kind: "alert.expire_late", detail: { minutes_late: 5, slug: "abc" } as never })).toThrow(OpsEventError);
   });
 
   it("names the five conditions", () => {

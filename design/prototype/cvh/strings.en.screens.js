@@ -1731,6 +1731,9 @@
       wrong_place: 'This alert named the wrong place. It has been withdrawn.',
       wrong_information: 'This alert had wrong information. It has been withdrawn.',
       duplicate: 'This alert repeated another alert. It has been withdrawn.' } } } });
+  // S05.04: the words of the system final the expire job adds when an alert runs past its valid-until (web only; shown in English until translated).
+  m(en, { staff: { expire: {
+    finalText: 'This alert has expired without a further update. The problem may continue. Contact the Hub for current information.' } } });
   m(en, { staff: { approve: {
     correctionTitle: 'Approve a correction', withdrawalTitle: 'Approve a withdrawal',
     correctionLead: 'Read exactly what residents will see in place of the entry below. You approve this version only. If it changes while you read, you review it again.',
