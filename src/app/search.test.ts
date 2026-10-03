@@ -121,12 +121,21 @@ describe("search composition (S03.05)", () => {
     await Promise.resolve();
   });
 
-  it("writes a search the route cut at its hard deadline as search.unavailable with reason deadline and the duration, nothing else", async () => {
+  it("writes a search the route cut at its hard deadline as search.unavailable with reason deadline, the duration and its classification timed_out, nothing else", async () => {
     const { app } = await load();
     mocks.inserted.length = 0;
 
-    await app.recordSearchDeadline(2500);
+    await app.recordSearchDeadline(2500, "timed_out");
 
-    expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "deadline", ms: 2500 } }]);
+    expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "deadline", ms: 2500, error: "timed_out" } }]);
+  });
+
+  it("writes a rate limiter that could not count as search.unavailable with reason rate_limit_failed, the duration and its classification, nothing else", async () => {
+    const { app } = await load();
+    mocks.inserted.length = 0;
+
+    await app.recordLimiterFailure(1003, "42501");
+
+    expect(mocks.inserted).toEqual([{ kind: "search.unavailable", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "rate_limit_failed", ms: 1003, error: "42501" } }]);
   });
 });

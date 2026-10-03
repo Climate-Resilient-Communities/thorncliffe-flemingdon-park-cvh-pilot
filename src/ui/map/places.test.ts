@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import type { ListingProvider, ListingText } from "@/contracts/directory";
+import { DirectoryListingV1, type ListingProvider, type ListingText } from "@/contracts/directory";
+import { buildListing } from "../../../e2e/resident/directory-fixture";
 import { buildingPins, inBounds, listInView, markerOf, NEIGHBOURHOODS_VIEW, pinHref, providerPins } from "./places";
 
 const sha = (text: string) => createHash("sha256").update(text).digest("hex");
@@ -53,6 +54,17 @@ describe("pins", () => {
   it("one pin per place of a provider, each provider once, and nothing outside Toronto", () => {
     const pins = providerPins([provider("P1", "A", [], [IN, OUT_OF_VIEW]), provider("P1", "A again", [], [IN]), provider("P2", "B", [], [[0, 0]])]);
     expect(pins.map((p) => p.key)).toEqual(["P1:0", "P1:1"]);
+  });
+
+  it("makes the pins of a listing published before providers carried neighbourhood_ids: the map reads the file the directory reads", () => {
+    const older = buildListing("en", 3) as { providers: Record<string, unknown>[] };
+    older.providers.forEach((p) => delete p.neighbourhood_ids);
+
+    const read = DirectoryListingV1.parse(older).providers;
+    const pins = providerPins(read);
+
+    expect(read.length).toBeGreaterThan(0);
+    expect(pins.map((p) => p.id)).toEqual(read.map((p) => p.id));
   });
 
   it("a building without a place has no pin", () => {
