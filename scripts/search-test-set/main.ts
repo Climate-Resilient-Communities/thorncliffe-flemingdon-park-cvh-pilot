@@ -47,9 +47,11 @@ import {
   type LocatedQuestion,
   type SearchEngine,
 } from "./lib";
+import { runProduction, wantsProductionEngine } from "./production";
 
 const USAGE = `usage: search-test-set validate [--require-checked]
        search-test-set run --engine <module> --release <n> --model <name> --threshold <x> --translated-leg on|off [--split tuning|evaluation|all --final] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
+       search-test-set run --engine production --model <name> --translated-leg on|off [--release <n>] [--split tuning] [--scores] [--summary-file <path>] [--yes]
        search-test-set --compare <report a> <report b> [--fail-on-worse]`;
 
 function option(argv: string[], name: string): string | undefined {
@@ -173,9 +175,14 @@ function compare(argv: string[], root: string): number {
   }
 }
 
-export async function main(argv: string[], _env: NodeJS.ProcessEnv, root: string): Promise<number> {
+export async function main(argv: string[], env: NodeJS.ProcessEnv, root: string): Promise<number> {
   if (argv.includes("--compare")) return compare(argv, root);
   if (argv[0] === "validate") return validate(argv, root);
+  if (wantsProductionEngine(argv)) {
+    // The real search use case, built from the environment (production.ts); loaded only when asked for.
+    const { makeProductionEngine } = await import("./productionEngine");
+    return runProduction(argv, env, root, { loadQuestions, makeEngine: makeProductionEngine, usage: USAGE });
+  }
   if (argv[0] === "run") return run(argv, root);
   console.error(USAGE);
   return 2;

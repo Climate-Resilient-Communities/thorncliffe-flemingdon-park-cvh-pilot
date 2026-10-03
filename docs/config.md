@@ -31,7 +31,7 @@ in Preview or Development: start-up fails there.
 
 | Environment | Secrets and variables | Rules |
 |---|---|---|
-| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`; variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL` | deploys from `main` only |
+| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (both for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
 | `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
@@ -40,6 +40,20 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
+
+The "Search test set" workflow (Actions tab, S03.07) asks the tuning questions of
+`data/search-test-set/questions.jsonl` to production's real search use case (the current release, Cohere's
+`embed-v4.0` for the questions, the private bucket) and reports the hit rate per language, no-match and
+emergency accuracy, p50 and p95 per question, the embedding usage and a suggested threshold; the
+suggestion sets nothing. Inputs: `split` (tuning only; the evaluation subset is S03.08's) and `leg`
+(the translated-question leg `off`, `on` or `both`; `on` needs S03.05 in the build). It runs from `main`
+only, in the `production` environment, and stops naming any of `PRODUCTION_DATABASE_URL`,
+`COHERE_API_KEY`, `SUPABASE_SECRET_KEY` or `NEXT_PUBLIC_SUPABASE_URL` that is missing there. The key
+stays out of Vercel's Preview and Development and out of the repository; the run does not use the app's
+environment check, so that check is unchanged. Each question is one embedding call counted as
+`test_set` spend; it writes no `search_log` row. The same run from a shell, with those four values
+exported (the database one as `SEARCH_TEST_DATABASE_URL`):
+`npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg off --scores --yes`.
 
 ## Supabase (Auth settings)
 

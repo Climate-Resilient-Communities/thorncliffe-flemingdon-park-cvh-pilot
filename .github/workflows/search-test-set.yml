@@ -1,0 +1,140 @@
+name: Search test set
+
+# Run by the owner or the team from the Actions tab: asks the questions of the search test set to production's real
+# search use case (the current release, Cohere's question embedding, the private bucket of the release files) and
+# reports the hit rate per language, no-match and emergency accuracy, p50 and p95 per question, the embedding usage and
+# the threshold the tuning scores suggest (S03.07). Manual only; it runs from main, never from a branch.
+#
+# What it costs: one embedding call per question (counted in spend_event as purpose test_set). It writes no search_log
+# row and changes no release. Only the tuning subset runs: the evaluation subset is S03.08's acceptance evidence.
+on:
+  workflow_dispatch:
+    inputs:
+      split:
+        description: "Which questions to ask (tuning only; the evaluation subset is S03.08's)"
+        type: choice
+        required: true
+        default: tuning
+        options:
+          - tuning
+      leg:
+        description: "The translated-question leg: on, off, or both (off first, then on). on needs S03.05 in the build"
+        type: choice
+        required: true
+        default: off
+        options:
+          - "off"
+          - "on"
+          - both
+
+permissions:
+  contents: read
+
+# Two runs never overlap, and a queued run is never cancelled half way.
+concurrency:
+  group: search-test-set
+  cancel-in-progress: false
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  run:
+    name: Search test set
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    # The production environment holds the secrets and accepts runs from main only (repository settings > Environments).
+    environment: production
+    env:
+      SPLIT: ${{ inputs.split }}
+      LEG: ${{ inputs.leg }}
+    steps:
+      - name: Check the inputs
+        run: |
+          if [ "$GITHUB_REF" != refs/heads/main ]; then
+            echo "::error title=Search test set not run::It runs from main only."
+            exit 1
+          fi
+          [ "$SPLIT" = tuning ] || { echo "::error title=Search test set not run::Only the tuning subset can be run here; the evaluation subset is S03.08's."; exit 1; }
+          case "$LEG" in off | on | both) ;; *) echo "::error title=Search test set not run::Unknown leg."; exit 1 ;; esac
+      # The exact commit this run was started on, which is main's head.
+      - uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+      - name: Check this commit is still the head of main
+        run: |
+          head=$(git ls-remote origin refs/heads/main | cut -f1)
+          if [ "$head" != "$GITHUB_SHA" ]; then
+            echo "::error title=Search test set not run::$GITHUB_SHA is no longer the head of main ($head); run the workflow again."
+            exit 1
+          fi
+      # Names the missing setting before anything is installed or called; values are never printed.
+      - name: Check the production environment has what the run needs
+        env:
+          PRODUCTION_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+        run: |
+          missing=0
+          for name in PRODUCTION_DATABASE_URL COHERE_API_KEY SUPABASE_SECRET_KEY NEXT_PUBLIC_SUPABASE_URL; do
+            if [ -z "${!name}" ]; then
+              kind=secret
+              [ "$name" = NEXT_PUBLIC_SUPABASE_URL ] && kind=variable
+              echo "::error title=Missing $kind $name::$name is not set in the production environment (repository settings > Environments > production). Add it, see docs/config.md."
+              missing=1
+            fi
+          done
+          exit $missing
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - name: Run the search test set
+        env:
+          SEARCH_TEST_DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
+          SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
+          NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
+        run: |
+          set -o pipefail
+          mkdir -p "$RUNNER_TEMP/search-test-set"
+          legs=("$LEG")
+          [ "$LEG" = both ] && legs=(off on)
+          status=0
+          for leg in "${legs[@]}"; do
+            echo "::group::Translated-question leg $leg"
+            npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg "$leg" --split "$SPLIT" \
+              --scores --yes --out-dir "$RUNNER_TEMP/search-test-set" \
+              --summary-file "$RUNNER_TEMP/search-test-set/summary-$leg.md" 2>&1 | tee "$RUNNER_TEMP/search-test-set/log-$leg.txt" || status=1
+            echo "::endgroup::"
+          done
+          exit $status
+      # Reports and logs hold question ids, scores and counts, never a question's text.
+      - name: Upload the reports
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: search-test-set-${{ github.run_id }}
+          path: ${{ runner.temp }}/search-test-set
+          if-no-files-found: ignore
+          retention-days: 30
+      # Aggregates only: per language hit rates, no-match and emergency accuracy, timings, embedding usage, the suggested threshold.
+      - name: Write the summary
+        if: ${{ !cancelled() }}
+        run: |
+          {
+            echo "## Search test set ($SPLIT, leg $LEG) at $GITHUB_SHA"
+            echo
+            shopt -s nullglob
+            files=("$RUNNER_TEMP"/search-test-set/summary-*.md)
+            if [ ${#files[@]} -eq 0 ]; then
+              echo "The run produced no summary; see the job log."
+            else
+              for file in "${files[@]}"; do cat "$file"; echo; done
+              echo "The per-question scores are in the uploaded report."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
