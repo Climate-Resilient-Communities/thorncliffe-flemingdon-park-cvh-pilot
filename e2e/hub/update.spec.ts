@@ -147,10 +147,10 @@ for (const width of [390, 1280]) {
   test(`the approval of an update that widens and narrows who it is for, at ${width}px`, async ({ page }) => {
     const review = reviewOf({
       entry: { kind: "update", content: { text: UPDATE_TEXT, types: ["elevator", "power"], audience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3), floorId("4154146", 4)] }, { rsn: "4154159", floors: null }], groups: [], types: ["elevator", "power"] }, phase: "in_progress", validUntil: new Date("2026-10-05T14:00:00.000Z"), validUntilMode: "resolved" } },
-      threadAudience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3)] }, { rsn: "7777777", floors: null }], groups: [], types: ["elevator", "power"] },
+      threadAudience: { scope: "buildings", buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3)] }, { rsn: "4154763", floors: null }], groups: [], types: ["elevator", "power"] },
     });
     await page.setViewportSize({ width, height: 800 });
-    await mount(page, "ApprovalFixture", { texts: REAL_TEXTS, brand, screen: approvalScreen({ review, plans: REVIEW_PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER }) });
+    await mount(page, "ApprovalFixture", { texts: REAL_TEXTS, brand, screen: approvalScreen({ review, plans: [...REVIEW_PLANS, PLANS[2]], pricePerSegmentCents: 1.5, viewerId: APPROVER }) });
     await fitToPage(page, width);
     await expect(page.getByTestId("update-note")).toContainText("update to an alert residents are already reading");
     await expect(page.getByTestId("audience-also-for")).toContainText("Now also for: ");
