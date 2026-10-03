@@ -67,6 +67,29 @@ written (its `ms` is 0: no search is behind it): once per model per month per in
 again. It is a warning only: nothing is refused at the limit, and a failed count changes nothing. The count is of calls as this
 app made them; the vendor's own count is the one that decides, so set the limit a little under it.
 
+## Messaging outbox (S06.01)
+
+The outbox (`delivery`) adds no environment variable, and nothing in it reads Twilio's credentials or calls a provider: sending is S06.02.
+What it fixes in code and in the migration, so changing one is a change to both (`src/modules/messaging/domain/deliveryRules.ts`,
+`delivery_purpose_rule()` in `db/migrations/20261003400000_delivery_outbox.sql`, compared by `test/db/delivery.db.test.ts`):
+
+| Module | Purpose of a `transactional` text | Goes to | `send_by` at most |
+|---|---|---|---|
+| `alerting` | `approver_notice` | `staff` | 30 minutes (proposed) |
+| `subscriptions` | `confirmation` | `pending_signup` | 48 hours |
+| `subscriptions` | `welcome` | `subscriber` | 24 hours (proposed) |
+| `subscriptions` | `menu_reply` | `subscriber` | 30 minutes |
+| `subscriptions` | `prompt_reply` | `subscriber` | 30 minutes (proposed) |
+| `subscriptions` | `edit_link` | `subscriber` | 30 minutes (proposed) |
+| `subscriptions` | `signup_info` | `inbound_reply` | the `inbound_reply` row's `expires_at` (30 minutes) |
+| `checkins` | `escalation` | `oncall` | 60 minutes (proposed) |
+| `ops` | `oncall_alert` | `oncall` | 30 minutes (proposed) |
+
+The windows marked "proposed" are engineering proposals for the owner to confirm; the others are in the E06 definitions. A text still
+queued after its `send_by` is skipped at the hand-off point, not sent late. Logs show a phone number only as its last two digits
+(`+*********23`), whichever field it reaches. The sources that give the dispatcher a recipient's number are wired in
+`src/app/messaging.ts`; none exists until the stories that create the recipients' tables (S06.05, S06.07, S07.02, S07.04).
+
 ## GitHub: environments
 
 | Environment | Secrets and variables | Rules |
