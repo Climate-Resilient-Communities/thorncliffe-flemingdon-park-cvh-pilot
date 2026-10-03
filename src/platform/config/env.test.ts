@@ -734,3 +734,19 @@ describe("SMS_PRICE_PER_SEGMENT_CENTS (S04.06)", () => {
     ]);
   });
 });
+
+describe("CVH_FAKE_TRANSLATOR", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(parseEnv({ ...local, CVH_FAKE_TRANSLATOR: "sample" }).fakeTranslator).toBe("sample");
+    expect(parseEnv(local).fakeTranslator).toBeUndefined();
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_TRANSLATOR: "sample" })).toContain("CVH_FAKE_TRANSLATOR: the translation fake is only allowed in local development, never on Vercel");
+    }
+  });
+
+  it("names one fake, `sample`, and nothing else", () => {
+    for (const other of ["1", "true", "cohere", "Sample"]) {
+      expect(problemsOf({ ...local, CVH_FAKE_TRANSLATOR: other }), other).toContain('CVH_FAKE_TRANSLATOR: the only fake is "sample"');
+    }
+  });
+});

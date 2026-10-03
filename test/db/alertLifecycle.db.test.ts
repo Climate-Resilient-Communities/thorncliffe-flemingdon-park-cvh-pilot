@@ -57,11 +57,19 @@ const frozen = (tag: string): FrozenContent => ({
   smsBodies: { en: { body: `en ${tag}`, encoding: "gsm7", segments: 1 }, ur: { body: `ur ${tag}`, encoding: "ucs2", segments: 1 } },
   translations: [
     { lang: "ur", body: `ur ${tag}`, machine: true, model: "m1", status: "translated", sourceHash: sha("source") },
-    { lang: "zh-Hant", body: `zh-Hant ${tag}`, machine: true, model: null, status: "script_converted", sourceHash: sha("source") },
+    {
+      lang: "zh-Hant",
+      body: `zh-Hant ${tag}`,
+      machine: true,
+      model: "opencc-js 1.4.2",
+      status: "script_converted",
+      sourceHash: sha("source"),
+      conversion: { from: "zh", fromTextHash: sha("zh"), openccVersion: "1.4.2", config: "s2twp" },
+    },
   ],
 });
 
-const preparerOf = (tag: string): EntryPreparer => ({ prepare: async () => frozen(tag) });
+const preparerOf = (tag: string): EntryPreparer => ({ prepare: async () => ({ ok: true, value: frozen(tag) }) });
 const failingPreparer: EntryPreparer = {
   prepare: async () => {
     throw new Error("every model failed");
@@ -103,7 +111,7 @@ async function clear() {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
-    await tx.unsafe("truncate alert_entry_translation, alert_entry, alert");
+    await tx.unsafe("truncate alert_submit_attempt, alert_entry_translation, alert_entry, alert");
   });
   await owner`update staff_account set role = ${authorA.role}::staff_role, status = 'active' where id = ${authorA.id}`;
 }
@@ -187,7 +195,7 @@ const auditRows = () =>
 async function insertRawAlert(alertId: string) {
   await owner.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${authorA.id}, true)`;
-    await tx`insert into alert (id, is_drill, reported_at, created_by) values (${alertId}, false, ${new Date(NOW.getTime() - 60_000)}, ${authorA.id})`;
+    await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, false, ${new Date(NOW.getTime() - 60_000)}, ${authorA.id}, ${alertId.slice(-12)})`;
   });
 }
 
@@ -303,7 +311,7 @@ async function seedRaw(status: EntryStatus): Promise<{ alertId: string; entryId:
 /** The statement that makes a legal transition from `from` to `to` by an actor who may. */
 async function legalChange(tx: postgres.TransactionSql, id: string, from: EntryStatus, to: EntryStatus) {
   if (from === "draft" && to === "pending_approval") {
-    await tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${id}, 'ur', 'body', 'translated', ${sha("source")})`;
+    await tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${id}, 'ur', 'body', 'm1', 'translated', ${sha("source")})`;
     return tx`update alert_entry set status = 'pending_approval', version = 1, content_hash = ${sha("h")}, sms_bodies = ${tx.json({ en: { body: "x" } })}, submitted_at = now() where id = ${id}`;
   }
   if (from === "pending_approval" && to === "draft") return tx`update alert_entry set status = 'draft', returned_for = 'return', content_hash = null, sms_bodies = null, submitted_at = null where id = ${id}`;
@@ -681,7 +689,7 @@ describe("a pending_approval entry", () => {
       ["sms_bodies", (tx) => tx`update alert_entry set sms_bodies = ${tx.json({ en: { body: "other" } })} where id = ${ref.entryId}`],
       ["content_hash", (tx) => tx`update alert_entry set content_hash = ${sha("other")} where id = ${ref.entryId}`],
       ["version", (tx) => tx`update alert_entry set version = version + 1 where id = ${ref.entryId}`],
-      ["translation added", (tx) => tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${ref.entryId}, 'fr', 'b', 'translated', ${sha("s")})`],
+      ["translation added", (tx) => tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${ref.entryId}, 'fr', 'b', 'm1', 'translated', ${sha("s")})`],
       ["translation removed", (tx) => tx`delete from alert_entry_translation where entry_id = ${ref.entryId} and lang = 'ur'`],
     ];
     for (const actor of [authorA.id, coordB.id]) {
@@ -787,7 +795,7 @@ describe("Try translation again", () => {
     const slow: EntryPreparer = {
       prepare: async () => {
         await alerting.saveDraft(actorOf(adminC), ref, content({ text: "Edited while preparing." }));
-        return frozen("v2");
+        return { ok: true, value: frozen("v2") };
       },
     };
     expect(await alerting.retryTranslation(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, slow)).toEqual({ ok: false, error: "DRAFT_CHANGED" });
@@ -877,7 +885,7 @@ describe("feed_version", () => {
 // --- review fixes (S04.03) ------------------------------------------------------------------------------
 
 const insertTranslation = (tx: postgres.TransactionSql, entryId: string) =>
-  tx`insert into alert_entry_translation (entry_id, lang, body, status, source_hash) values (${entryId}, 'ur', 'body', 'translated', ${sha("source")})`;
+  tx`insert into alert_entry_translation (entry_id, lang, body, model, status, source_hash) values (${entryId}, 'ur', 'body', 'm1', 'translated', ${sha("source")})`;
 const submitSql = (tx: postgres.TransactionSql, entryId: string, tag = "x") =>
   tx`update alert_entry set status = 'pending_approval', version = version + 1, content_hash = ${sha(tag)}, sms_bodies = ${tx.json({ en: { body: "x" } })}, submitted_at = now() where id = ${entryId}`;
 
@@ -963,7 +971,7 @@ describe("the thread insert trigger", () => {
   const insertAlert = (actor: string | null, createdBy: string, createdAt?: string) =>
     asApp(actor, (tx) =>
       tx.unsafe(
-        `insert into alert (id, is_drill, reported_at, created_by${createdAt ? ", created_at" : ""}) values ('${randomUUID()}', false, now() - interval '1 minute', '${createdBy}'${createdAt ? `, '${createdAt}'` : ""}) returning created_at`,
+        `insert into alert (id, is_drill, reported_at, created_by, slug${createdAt ? ", created_at" : ""}) values ('${randomUUID()}', false, now() - interval '1 minute', '${createdBy}', '${randomBytes(4).toString("hex")}x2'${createdAt ? `, '${createdAt}'` : ""}) returning created_at`,
       ),
     );
 

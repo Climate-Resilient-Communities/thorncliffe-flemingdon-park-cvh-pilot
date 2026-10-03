@@ -369,7 +369,7 @@ scripts/                   # seed loaders, string and token generators, search t
 | --- | --- |
 | identity | `staff_account`, `staff_bootstrap`, `staff_session`, `sign_in_failure`, `sign_in_lock`, `ambassador_assignment`, `ambassador_assignment_floor` |
 | places | `neighbourhood`, `building`, `building_floor`, `disruption_type` |
-| alerting | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` |
+| alerting | `alert`, `alert_entry`, `alert_entry_translation`, `alert_submit_attempt`, `feed_version` |
 | subscriptions | `subscriber`, `subscriber_place`, `subscriber_topic_optout`, `pending_signup`, `sms_prompt`, `subscription_edit_token`, `inbound_keyword_count`, `inbound_seen`, `inbound_reply`, `drill_roster`, `rate_limit`, `campaign` |
 | messaging | `delivery`, `messaging_control` (pause), `dispatcher_lease`, `sms_test_send` (S01.15's first-text spike; E06 removes it) |
 | checkins | `checkin`, `checkin_tally` |

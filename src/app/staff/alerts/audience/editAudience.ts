@@ -2,6 +2,7 @@ import { RsnSchema } from "@/contracts/places";
 import { englishText } from "@/i18n/text";
 import type { AlertLifecycle, AlertRefusal, BuildingChoice, PlaceChoice } from "@/modules/alerting";
 import type { StaffSession } from "../../session";
+import { isComposerFrom, type ComposerFrom } from "../pages";
 
 /**
  * What an audience form shows after a submission (O-03, O-04). Every text is already resolved from the
@@ -58,8 +59,14 @@ const texts = (form: FormData, name: string) => form.getAll(name).filter((value)
 
 
 /** Where a saved choice lands: the next page, with what was done in the query (read back by ./view.ts). */
-export function savedLocation(page: "place" | "groups", ref: DraftRef): string {
-  return `${GROUPS_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, done: page }).toString()}`;
+export function savedLocation(page: "place" | "groups", ref: DraftRef, from: ComposerFrom | null = null): string {
+  return `${GROUPS_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, done: page, ...(from ? { from } : {}) }).toString()}`;
+}
+
+/** The composer the pages were opened from (S04.05): a hidden field `from`, sent back so a saved choice keeps the way back to it. */
+export function composerFrom(form: FormData): ComposerFrom | null {
+  const value = form.get("from");
+  return isComposerFrom(value) ? value : null;
 }
 
 /**
@@ -113,12 +120,12 @@ export async function savePlaceFromForm(deps: AudienceDeps, session: Pick<StaffS
   if (!parsed.ok) return parsed.state;
   const ref = draftRefOf(form);
   const result = await deps.alerting().chooseAudiencePlace({ staffId: session.staffId, aal: session.aal }, ref, parsed.choice);
-  return result.ok ? { status: "saved", location: savedLocation("place", ref) } : { status: "refused", message: refusalMessage(result.error) };
+  return result.ok ? { status: "saved", location: savedLocation("place", ref, composerFrom(form)) } : { status: "refused", message: refusalMessage(result.error) };
 }
 
 /** "Save the groups": any number of the groups offered, or none. */
 export async function saveGroupsFromForm(deps: AudienceDeps, session: Pick<StaffSession, "staffId" | "aal">, form: FormData): Promise<AudienceState> {
   const ref = draftRefOf(form);
   const result = await deps.alerting().chooseAudienceGroups({ staffId: session.staffId, aal: session.aal }, ref, texts(form, "group"));
-  return result.ok ? { status: "saved", location: savedLocation("groups", ref) } : { status: "refused", message: refusalMessage(result.error) };
+  return result.ok ? { status: "saved", location: savedLocation("groups", ref, composerFrom(form)) } : { status: "refused", message: refusalMessage(result.error) };
 }

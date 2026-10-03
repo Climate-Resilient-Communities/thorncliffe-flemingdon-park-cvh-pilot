@@ -11,7 +11,8 @@ import { SMS_MAX_BODY_LENGTH, renderAll, type SmsAttribution } from "../../messa
 import type { EntryContent } from "../domain/content";
 import { contentHash } from "../domain/hash";
 import type { EntryKind } from "../domain/lifecycle";
-import type { FrozenContent, FrozenSmsBody, FrozenTranslation } from "./ports";
+import type { FreezeResult, FrozenContent, FrozenSmsBody } from "./ports";
+import type { FrozenTranslation } from "../domain/translations";
 
 export interface FreezeInput {
   alertId: string;
@@ -44,7 +45,7 @@ export interface FreezeInput {
  *   from words the author no longer has. The caller translates again.
  * Both name the language and never the text.
  */
-export type FreezeResult = { ok: true; value: FrozenContent } | { ok: false; error: "SMS_BODY_TOO_LONG" | "TRANSLATION_STALE"; lang: string };
+export type { FreezeRefusal, FreezeResult } from "./ports";
 
 /** The text messages of every launch language, the web texts and the hash of all of it. */
 export function freezeContent(input: FreezeInput): FreezeResult {

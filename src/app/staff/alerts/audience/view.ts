@@ -6,6 +6,7 @@ import type { Audience } from "@/contracts/audience";
 import { GROUPS } from "@/contracts/groups";
 import { englishText } from "@/i18n/text";
 import type { BuildingFloorPlan } from "@/modules/places";
+import { composerHref, type ComposerFrom } from "../pages";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "./editAudience";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -43,11 +44,20 @@ export interface BuildingRowView {
   noFloors?: string;
 }
 
+/** The way back to the composer the pages were opened from (S04.05): shown only when they were opened from one. */
+export interface BackLink {
+  from: ComposerFrom;
+  href: string;
+  label: string;
+}
+
 export interface PlaceScreen {
   kind: "place";
   title: string;
   lead: string;
   notice?: string;
+  /** Set when the page was opened from a composer. */
+  back?: BackLink;
   ref: DraftRef;
   steps: StepsView;
   scope: { title: string; neighbourhood: { label: string; line: string; checked: boolean }; buildings: { label: string; line: string; checked: boolean } };
@@ -63,6 +73,7 @@ export interface GroupsScreen {
   title: string;
   lead: string;
   notice?: string;
+  back?: BackLink;
   ref: DraftRef;
   steps: StepsView;
   legend: string;
@@ -85,6 +96,7 @@ export interface LockedScreen {
   kind: "locked";
   title: string;
   message: string;
+  back?: BackLink;
   aside: AsideView;
 }
 
@@ -119,17 +131,20 @@ function joinWords(items: readonly string[]): string {
   return `${items.slice(0, -1).join(", ")} and ${items.at(-1)}`;
 }
 
-const refQuery = (ref: DraftRef) => new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString();
+const refQuery = (ref: DraftRef, from: ComposerFrom | null = null) => new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, ...(from ? { from } : {}) }).toString();
 
-function stepsOf(ref: DraftRef, current: "place" | "groups", t: Text): StepsView {
+function stepsOf(ref: DraftRef, current: "place" | "groups", t: Text, from: ComposerFrom | null = null): StepsView {
   return {
     label: t("stepsLabel"),
     items: [
-      { id: "place", label: t("stepPlace"), href: `${PLACE_PAGE}?${refQuery(ref)}`, current: current === "place" },
-      { id: "groups", label: t("stepGroups"), href: `${GROUPS_PAGE}?${refQuery(ref)}`, current: current === "groups" },
+      { id: "place", label: t("stepPlace"), href: `${PLACE_PAGE}?${refQuery(ref, from)}`, current: current === "place" },
+      { id: "groups", label: t("stepGroups"), href: `${GROUPS_PAGE}?${refQuery(ref, from)}`, current: current === "groups" },
     ],
   };
 }
+
+/** The link back to the composer the person came from, or nothing when they did not come from one. */
+const backOf = (ref: DraftRef, from: ComposerFrom | null, t: Text): { back: BackLink } | Record<string, never> => (from ? { back: { from, href: composerHref(from, ref), label: t("backToAlert") } } : {});
 
 /** The floors of a building by their labels, in the building's own order (lowest first), for the ids given. */
 const floorLabels = (plan: BuildingFloorPlan, ids: readonly string[]) => plan.floors.filter((floor) => ids.includes(floor.id)).map((floor) => floor.label);
@@ -157,9 +172,15 @@ export function asideOf(audience: Audience, plans: readonly BuildingFloorPlan[],
   return { title: t("whoTitle"), sentence, ...(floorNote ? { floorNote } : {}), groups, link };
 }
 
-export function placeScreen(plans: readonly BuildingFloorPlan[], audience: Audience, ref: DraftRef, options: { notice?: string; text?: Text } = {}): PlaceScreen {
-  const t = options.text ?? catalogText;
-  const chosen = new Map<string, string[] | null>(audience.scope === "buildings" ? audience.buildings.map((building) => [building.rsn, building.floors] as const) : []);
+/** The choosing part of the place picker: the scope, the neighbourhoods and the buildings with their floors, with what is chosen ticked. */
+export type PlaceFieldsView = Pick<PlaceScreen, "scope" | "neighbourhoods" | "buildingsSection" | "floorLabels">;
+
+/**
+ * The place picker's fields for the buildings in `plans`, with the audience's choice ticked, or with nothing ticked for `null` (a
+ * disruption being logged has no audience yet, S04.05). Shared by the place page (O-03) and by "Log a disruption" (O-11).
+ */
+export function placeFieldsOf(plans: readonly BuildingFloorPlan[], audience: Audience | null, t: Text = catalogText): PlaceFieldsView {
+  const chosen = new Map<string, string[] | null>(audience?.scope === "buildings" ? audience.buildings.map((building) => [building.rsn, building.floors] as const) : []);
   const neighbourhoods = new Map<string, { id: string; name: string; count: number }>();
   const groups = new Map<string, PlaceScreen["buildingsSection"]["groups"][number]>();
   for (const plan of plans) {
@@ -181,18 +202,12 @@ export function placeScreen(plans: readonly BuildingFloorPlan[], audience: Audie
     groups.set(plan.neighbourhoodId, group);
   }
   for (const group of groups.values()) group.title = t("buildingGroup", { name: neighbourhoods.get(group.id)!.name, n: group.rows.length });
-  const chosenNeighbourhoods = audience.scope === "neighbourhood" ? audience.neighbourhood_ids : [];
+  const chosenNeighbourhoods = audience?.scope === "neighbourhood" ? audience.neighbourhood_ids : [];
   return {
-    kind: "place",
-    title: t("placeTitle"),
-    lead: t("placeLead"),
-    ...(options.notice ? { notice: options.notice } : {}),
-    ref,
-    steps: stepsOf(ref, "place", t),
     scope: {
       title: t("scopeTitle"),
-      neighbourhood: { label: t("scopeNeighbourhood"), line: t("scopeNeighbourhoodLine"), checked: audience.scope === "neighbourhood" },
-      buildings: { label: t("scopeBuildings"), line: t("scopeBuildingsLine"), checked: audience.scope === "buildings" },
+      neighbourhood: { label: t("scopeNeighbourhood"), line: t("scopeNeighbourhoodLine"), checked: audience?.scope === "neighbourhood" },
+      buildings: { label: t("scopeBuildings"), line: t("scopeBuildingsLine"), checked: audience?.scope === "buildings" },
     },
     neighbourhoods: {
       title: t("neighbourhoodsTitle"),
@@ -200,26 +215,43 @@ export function placeScreen(plans: readonly BuildingFloorPlan[], audience: Audie
     },
     buildingsSection: { title: t("buildingsTitle"), hint: t("buildingsHint"), groups: [...groups.values()] },
     floorLabels: { whole: t("wholeBuilding"), some: t("someFloors"), pick: t("pickFloors"), range: t("range"), from: t("from"), to: t("to"), none: t("none") },
-    submit: t("savePlace"),
-    aside: asideOf(audience, plans, { href: `${GROUPS_PAGE}?${refQuery(ref)}`, label: t("toGroups") }, t),
   };
 }
 
-export function groupsScreen(plans: readonly BuildingFloorPlan[], audience: Audience, ref: DraftRef, options: { notice?: string; text?: Text } = {}): GroupsScreen {
+export function placeScreen(plans: readonly BuildingFloorPlan[], audience: Audience, ref: DraftRef, options: { notice?: string; text?: Text; from?: ComposerFrom | null } = {}): PlaceScreen {
   const t = options.text ?? catalogText;
+  const from = options.from ?? null;
+  return {
+    kind: "place",
+    title: t("placeTitle"),
+    lead: t("placeLead"),
+    ...(options.notice ? { notice: options.notice } : {}),
+    ...backOf(ref, from, t),
+    ref,
+    steps: stepsOf(ref, "place", t, from),
+    ...placeFieldsOf(plans, audience, t),
+    submit: t("savePlace"),
+    aside: asideOf(audience, plans, { href: `${GROUPS_PAGE}?${refQuery(ref, from)}`, label: t("toGroups") }, t),
+  };
+}
+
+export function groupsScreen(plans: readonly BuildingFloorPlan[], audience: Audience, ref: DraftRef, options: { notice?: string; text?: Text; from?: ComposerFrom | null } = {}): GroupsScreen {
+  const t = options.text ?? catalogText;
+  const from = options.from ?? null;
   return {
     kind: "groups",
     title: t("groupsTitle"),
     lead: t("groupsLead"),
     ...(options.notice ? { notice: options.notice } : {}),
+    ...backOf(ref, from, t),
     ref,
-    steps: stepsOf(ref, "groups", t),
+    steps: stepsOf(ref, "groups", t, from),
     legend: t("groupsFieldset"),
     hint: t("groupsHint"),
     webNote: t("groupsWeb"),
     groups: GROUPS.map((group) => ({ id: group, label: t(`groupNames.${group}`), line: t(`groupLines.${group}`), checked: audience.groups.includes(group) })),
     submit: t("saveGroups"),
-    aside: asideOf(audience, plans, { href: `${PLACE_PAGE}?${refQuery(ref)}`, label: t("toPlace") }, t),
+    aside: asideOf(audience, plans, { href: `${PLACE_PAGE}?${refQuery(ref, from)}`, label: t("toPlace") }, t),
   };
 }
 
@@ -227,6 +259,6 @@ export function missingScreen(t: Text = catalogText): MissingScreen {
   return { kind: "missing", message: t("missing"), back: { href: "/staff", label: t("back") } };
 }
 
-export function lockedScreen(plans: readonly BuildingFloorPlan[], audience: Audience, t: Text = catalogText): LockedScreen {
-  return { kind: "locked", title: t("placeTitle"), message: t("locked"), aside: asideOf(audience, plans, { href: `/staff`, label: t("back") }, t) };
+export function lockedScreen(plans: readonly BuildingFloorPlan[], audience: Audience, t: Text = catalogText, from: ComposerFrom | null = null, ref?: DraftRef): LockedScreen {
+  return { kind: "locked", title: t("placeTitle"), message: t("locked"), ...(ref ? backOf(ref, from, t) : {}), aside: asideOf(audience, plans, { href: `/staff`, label: t("back") }, t) };
 }

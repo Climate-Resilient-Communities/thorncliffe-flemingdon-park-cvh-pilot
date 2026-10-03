@@ -78,8 +78,9 @@ test.describe("signed in at the Hub gate", () => {
     const menu = page.getByRole("dialog", { name: "Menu" });
     await expect(menu.getByRole("navigation", { name: "Hub", exact: true })).toBeVisible();
     await expect(menu.getByRole("link", { name: "Incidents" })).toHaveAttribute("aria-current", "page");
-    await expect(menu.getByRole("link", { name: "Compose an alert", disabled: true })).toHaveCount(1);
-    await expect(menu.getByRole("link", { name: "Compose an alert", disabled: false })).toHaveCount(0);
+    // The alert screens are for the roles that write alerts (S04.05): an Ambassador's menu has neither.
+    await expect(menu.getByRole("link", { name: "Compose an alert" })).toHaveCount(0);
+    await expect(menu.getByRole("link", { name: "Log a disruption" })).toHaveCount(0);
     await expect(menu.getByRole("link", { name: "Check-in rounds", disabled: true })).toHaveCount(1);
     await expect(menu.getByRole("link", { name: "People" })).toHaveCount(0);
     await expect(menu.getByText("Moderation")).toHaveCount(0);

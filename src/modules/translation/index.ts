@@ -20,6 +20,15 @@ export {
   type AlertTranslator,
   type AlertTranslatorDeps,
 } from "./application/alertTranslator";
+export {
+  STOP_AFTER_ROUTES_MS,
+  createSubmitTranslator,
+  noTranslation,
+  type SubmitTranslateInput,
+  type SubmitTranslation,
+  type SubmitTranslator,
+  type SubmitTranslatorDeps,
+} from "./application/submitTranslator";
 export type { TranslationCache, ZhHantConverter } from "./application/alertPorts";
 export {
   ALERT_MAX_OUTPUT_TOKENS,
@@ -37,8 +46,11 @@ export {
   MAX_ROUTE_DEADLINE_MS,
   ROUTE_LANGS,
   RouteConfigError,
+  SUBMIT_MARGIN_MS,
   buildRoutes,
+  longestRouteDeadlineMs,
   routeDeadlineMs,
+  submitBudgetMs,
   type RouteLang,
   type RoutePosition,
   type RouteRow,
@@ -46,6 +58,7 @@ export {
   type TranslationRoute,
 } from "./domain/alertRoutes";
 export { readTranslationRoutes } from "./adapters/routeStore";
+export { sampleTranslator } from "./adapters/sampleTranslator";
 export { drizzleTranslationCache } from "./adapters/cacheStore";
 export {
   ENGLISH_MARGIN,

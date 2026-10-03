@@ -4,7 +4,7 @@ import { useActionState, useReducer, useState } from "react";
 import { Inline, Stack } from "@/ui";
 import { floorControlsEnabled, initialRow, rowReducer } from "./buildingRowState";
 import type { AudienceState } from "./editAudience";
-import type { BuildingRowView, GroupsScreen, PlaceScreen } from "./view";
+import type { BuildingRowView, GroupsScreen, PlaceFieldsView, PlaceScreen } from "./view";
 
 /** An audience form's server action (actions.ts): the form's last state and its data in, the new state out. */
 export type AudienceAction = (previous: AudienceState, form: FormData) => Promise<AudienceState>;
@@ -122,27 +122,21 @@ function BuildingRow({ row, labels }: { row: BuildingRowView; labels: PlaceScree
 }
 
 /**
- * The place picker's form (O-03): a whole neighbourhood, or buildings each with the whole building or some floors. The
- * scope is chosen, not assumed: neither is selected to begin with for a draft with no place, and a form sent without
- * one is refused. One form with one Save button; the choices are judged by the server.
+ * The place picker's choosing fields, in one place so that "Log a disruption" (O-11) uses the same ones as the place page (O-03): the
+ * scope, a whole neighbourhood or buildings each with the whole building or some floors. The scope is chosen, not assumed: neither
+ * is selected to begin with for a draft with no place. The fields keep their own state, so a refusal that resets the form (React 19
+ * resets a form after its action) leaves the choices as they were. `describedBy` names the refusal that applies to the scope.
  */
-export function PlaceForm({ screen, action, initialState = IDLE }: { screen: PlaceScreen; action: AudienceAction; initialState?: AudienceState }) {
-  const [state, formAction, pending] = useActionState(action, initialState);
+export function PlaceFields({ screen, describedBy }: { screen: PlaceFieldsView; describedBy?: string }) {
   const [scope, setScope] = useState<"neighbourhood" | "buildings" | "">(screen.scope.neighbourhood.checked ? "neighbourhood" : screen.scope.buildings.checked ? "buildings" : "");
   const [neighbourhoods, setNeighbourhoods] = useState<ReadonlySet<string>>(new Set(screen.neighbourhoods.items.filter((n) => n.checked).map((n) => n.id)));
-  const errorId = "audience-error";
   return (
-    <form action={formAction}>
-      <Stack gap="section-hub-main">
-        <input type="hidden" name="alert" value={screen.ref.alertId} />
-        <input type="hidden" name="entry" value={screen.ref.entryId} />
-        <Refusal id={errorId} state={state} />
-
+    <>
         <fieldset>
           <Stack gap="target">
             <legend>{screen.scope.title}</legend>
             <label className="hub-choice">
-              <input type="radio" name="scope" value="neighbourhood" checked={scope === "neighbourhood"} onChange={() => setScope("neighbourhood")} aria-describedby={state.status === "refused" ? errorId : undefined} />
+              <input type="radio" name="scope" value="neighbourhood" checked={scope === "neighbourhood"} onChange={() => setScope("neighbourhood")} aria-describedby={describedBy} />
               <span>
                 {screen.scope.neighbourhood.label}. {screen.scope.neighbourhood.line}
               </span>
@@ -202,6 +196,22 @@ export function PlaceForm({ screen, action, initialState = IDLE }: { screen: Pla
           </Stack>
         </section>
 
+    </>
+  );
+}
+
+/** The place picker's form (O-03): the place fields and one Save button; the choices are judged by the server. */
+export function PlaceForm({ screen, action, initialState = IDLE }: { screen: PlaceScreen; action: AudienceAction; initialState?: AudienceState }) {
+  const [state, formAction, pending] = useActionState(action, initialState);
+  const errorId = "audience-error";
+  return (
+    <form action={formAction}>
+      <Stack gap="section-hub-main">
+        <input type="hidden" name="alert" value={screen.ref.alertId} />
+        <input type="hidden" name="entry" value={screen.ref.entryId} />
+        {screen.back && <input type="hidden" name="from" value={screen.back.from} />}
+        <Refusal id={errorId} state={state} />
+        <PlaceFields screen={screen} describedBy={state.status === "refused" ? errorId : undefined} />
         <Inline gap="target" align="center">
           <button className="hub-button hub-button--primary" type="submit" disabled={pending}>
             {screen.submit}
@@ -225,6 +235,7 @@ export function GroupsForm({ screen, action, initialState = IDLE }: { screen: Gr
       <Stack gap="stack">
         <input type="hidden" name="alert" value={screen.ref.alertId} />
         <input type="hidden" name="entry" value={screen.ref.entryId} />
+        {screen.back && <input type="hidden" name="from" value={screen.back.from} />}
         <Refusal id={errorId} state={state} />
         <fieldset aria-describedby={state.status === "refused" ? errorId : undefined}>
           <Stack gap="target">

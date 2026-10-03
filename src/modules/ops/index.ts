@@ -2,11 +2,13 @@
 // only through recordOpsEvent; the health job (E09) reads them.
 export { recordOpsEvent } from "./application/recordOpsEvent";
 export {
+  ALERT_SUBMIT_FAILURE_REASONS,
   OPS_EVENT_KINDS,
   OpsEventError,
   PUBLISH_FAILURE_REASONS,
   SEARCH_FAILURE_REASONS,
   toOpsEventRecord,
+  type AlertSubmitFailureReason,
   type OpsEvent,
   type OpsEventKind,
   type PublishFailureReason,
