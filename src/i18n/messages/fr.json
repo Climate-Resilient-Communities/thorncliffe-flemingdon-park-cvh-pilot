@@ -264,7 +264,7 @@
     "progress": "Travaux en cours",
     "resolved": "Réglé",
     "unknown": "Inconnu",
-    "none": "[EN] Nothing active"
+    "none": "Rien en cours"
   },
   "groups": {
     "seniors": {
@@ -447,12 +447,12 @@
     "ambassadorHome": "Ambassadeur : mon immeuble",
     "ambassadorLine": "Publier une mise à jour ou faire votre tournée pour {building}",
     "noBuildingLine": "Les alertes pour votre quartier s'affichent ici. Ajoutez votre immeuble pour voir ses alertes en premier.",
-    "currentAlerts": "[EN] Current alerts",
-    "noCurrentAlerts": "[EN] No current alerts",
-    "myBuildings": "[EN] Your buildings",
-    "checking": "[EN] Checking for alerts",
-    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
+    "currentAlerts": "Alertes en cours",
+    "noCurrentAlerts": "Aucune alerte en cours",
+    "myBuildings": "Vos immeubles",
+    "checking": "Vérification des alertes",
+    "feedFailed": "Nous n'avons pas pu vérifier les alertes pour le moment. Un lieu marqué « Inconnu » peut tout de même avoir une alerte. Nous allons réessayer.",
+    "feedFailedOld": "Nous n'avons pas pu vérifier s'il y a de nouvelles alertes. Affichage de ce qui a été chargé pour la dernière fois {t}."
   },
   "R04": {
     "deviceLabel": "Texto sur un téléphone de base",
@@ -654,15 +654,15 @@
     "testTitle": "Recherches de test",
     "testNote": "Pour les animateurs : touchez-en une pour lancer une recherche préparée tirée du document de cadrage. Les résidents ne voient pas ceci.",
     "testGloss": "(Dari : {gloss})",
-    "searching": "[EN] Searching",
-    "needsSignal": "[EN] Search needs signal",
-    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
-    "busy": "[EN] Search is busy, try again in a few minutes",
-    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
-    "updating": "[EN] Search results are being updated, try again",
-    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
-    "browseAll": "[EN] See all services and organisations",
-    "loading": "[EN] Loading the topics"
+    "searching": "Recherche en cours",
+    "needsSignal": "La recherche a besoin de réseau",
+    "needsSignalBody": "Vous pouvez quand même choisir un sujet ci-dessous, ou appeler le Hub.",
+    "busy": "La recherche est surchargée, réessayez dans quelques minutes",
+    "busyBody": "Vous pouvez choisir un sujet ci-dessous, ou appeler le Hub.",
+    "updating": "Les résultats de recherche sont en cours de mise à jour, réessayez",
+    "updatingBody": "Vous pouvez choisir un sujet ci-dessous pendant leur mise à jour, ou appeler le Hub.",
+    "browseAll": "Voir tous les services et organismes",
+    "loading": "Chargement des sujets"
   },
   "R10": {
     "title": "Résultats",
@@ -698,7 +698,7 @@
     "communityOffer": "Offre communautaire",
     "inCat": "Sujet : {cat}",
     "helpEmpty": "Aucun service qui peut aider pour ceci ne correspond à ces filtres.",
-    "shownIn": "[EN] Shown in {lang}"
+    "shownIn": "Affiché en {lang}"
   },
   "R11": {
     "title": "Nous n'avons pas encore trouvé",
@@ -4434,22 +4434,22 @@
     "providedByHub": "Fourni par le Hub, dernière mise à jour le {date}"
   },
   "directory": {
-    "title": "[EN] Services and organisations",
-    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
-    "count": "[EN] {n} services",
-    "countOne": "[EN] 1 service",
-    "topic": "[EN] Topic",
-    "emergency": "[EN] Helps in an emergency",
-    "emergencyRole": "[EN] Emergency role",
-    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
-    "lastUpdated": "[EN] Last updated {time}",
-    "loading": "[EN] Loading the directory",
-    "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
-    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
-    "numbersLink": "[EN] See the essential numbers",
-    "backToList": "[EN] All services and organisations",
-    "suggestApply": "[EN] Show only {place}"
+    "title": "Services et organismes",
+    "lead": "Ce que le Hub a confirmé à Thorncliffe Park et Flemingdon Park. Choisissez un sujet ou un quartier pour réduire la liste.",
+    "count": "{n} services",
+    "countOne": "1 service",
+    "topic": "Sujet",
+    "emergency": "Aide en cas d'urgence",
+    "emergencyRole": "Rôle en cas d'urgence",
+    "lastConfirmed": "Confirmé par le Hub pour la dernière fois le {date}",
+    "lastUpdated": "Dernière mise à jour le {time}",
+    "loading": "Chargement du répertoire",
+    "couldNotLoad": "Le répertoire n'a pas pu se charger",
+    "couldNotLoadBody": "Le Hub peut vous aider à trouver un service par téléphone.",
+    "couldNotLoadNumbers": "La page des numéros donne les autres numéros dont vous pourriez avoir besoin.",
+    "numbersLink": "Voir les numéros essentiels",
+    "backToList": "Tous les services et organismes",
+    "suggestApply": "Afficher seulement {place}"
   },
   "map": {
     "lead": "Services, organismes et immeubles d'habitation à Thorncliffe Park et Flemingdon Park. Touchez une épingle pour voir de quoi il s'agit.",

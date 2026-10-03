@@ -264,7 +264,7 @@
     "progress": "کار جریان دارد",
     "resolved": "حل شد",
     "unknown": "معلوم نیست",
-    "none": "[EN] Nothing active"
+    "none": "هیچ چیز فعال نیست"
   },
   "groups": {
     "seniors": {
@@ -447,12 +447,12 @@
     "ambassadorHome": "سفیر: ساختمان من",
     "ambassadorLine": "برای {building} خبر تازه بنویسید یا دور احوال‌پرسی خود را انجام دهید",
     "noBuildingLine": "هشدارهای محله شما اینجا نشان داده می‌شود. ساختمان خود را اضافه کنید تا هشدارهای آن را اول ببینید.",
-    "currentAlerts": "[EN] Current alerts",
-    "noCurrentAlerts": "[EN] No current alerts",
-    "myBuildings": "[EN] Your buildings",
-    "checking": "[EN] Checking for alerts",
-    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
+    "currentAlerts": "هشدارهای فعلی",
+    "noCurrentAlerts": "فعلاً هشداری نیست",
+    "myBuildings": "ساختمان‌های شما",
+    "checking": "هشدارها بررسی می‌شوند",
+    "feedFailed": "همین حالا نتوانستیم هشدارها را بررسی کنیم. جایی که «معلوم نیست» نوشته شده، شاید هنوز هشدار داشته باشد. دوباره کوشش می‌کنیم.",
+    "feedFailedOld": "نتوانستیم هشدارهای تازه را بررسی کنیم. آنچه آخرین بار {t} بارگذاری شد نشان داده می‌شود."
   },
   "R04": {
     "deviceLabel": "پیام کوتاه در یک تلفون ساده",
@@ -654,15 +654,15 @@
     "testTitle": "جستجوهای آزمایشی",
     "testNote": "برای تسهیل‌کنندگان: روی یکی بزنید تا یک جستجوی آماده از رهنمود اجرا شود. باشندگان این را نمی‌بینند.",
     "testGloss": "(دری: {gloss})",
-    "searching": "[EN] Searching",
-    "needsSignal": "[EN] Search needs signal",
-    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
-    "busy": "[EN] Search is busy, try again in a few minutes",
-    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
-    "updating": "[EN] Search results are being updated, try again",
-    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
-    "browseAll": "[EN] See all services and organisations",
-    "loading": "[EN] Loading the topics"
+    "searching": "جستجو جریان دارد",
+    "needsSignal": "جستجو به سیگنال نیاز دارد",
+    "needsSignalBody": "هنوز می‌توانید یک موضوع را در پایین انتخاب کنید، یا به مرکز زنگ بزنید.",
+    "busy": "جستجو مصروف است، چند دقیقه بعد دوباره کوشش کنید",
+    "busyBody": "می‌توانید یک موضوع را در پایین انتخاب کنید، یا به مرکز زنگ بزنید.",
+    "updating": "نتیجه‌های جستجو تازه می‌شوند، دوباره کوشش کنید",
+    "updatingBody": "تا وقتی نتیجه‌ها تازه می‌شوند، می‌توانید یک موضوع را در پایین انتخاب کنید، یا به مرکز زنگ بزنید.",
+    "browseAll": "همه خدمات و سازمان‌ها را ببینید",
+    "loading": "موضوع‌ها بارگذاری می‌شوند"
   },
   "R10": {
     "title": "نتیجه‌ها",
@@ -698,7 +698,7 @@
     "communityOffer": "پیشکش اجتماعی",
     "inCat": "موضوع: {cat}",
     "helpEmpty": "هیچ خدمتی که در این مورد کمک کرده بتواند، با این فیلترها مطابقت ندارد.",
-    "shownIn": "[EN] Shown in {lang}"
+    "shownIn": "به {lang} نشان داده شده"
   },
   "R11": {
     "title": "ما هنوز آن را پیدا نتوانستیم",
@@ -4434,22 +4434,22 @@
     "providedByHub": "از طرف مرکز، آخرین تغییر {date}"
   },
   "directory": {
-    "title": "[EN] Services and organisations",
-    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
-    "count": "[EN] {n} services",
-    "countOne": "[EN] 1 service",
-    "topic": "[EN] Topic",
-    "emergency": "[EN] Helps in an emergency",
-    "emergencyRole": "[EN] Emergency role",
-    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
-    "lastUpdated": "[EN] Last updated {time}",
-    "loading": "[EN] Loading the directory",
-    "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
-    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
-    "numbersLink": "[EN] See the essential numbers",
-    "backToList": "[EN] All services and organisations",
-    "suggestApply": "[EN] Show only {place}"
+    "title": "خدمات و سازمان‌ها",
+    "lead": "خدمات و سازمان‌هایی که مرکز در تورنکلیف پارک و فلمینگدن پارک تأیید کرده است. برای کوتاه کردن فهرست، یک موضوع یا یک محله را انتخاب کنید.",
+    "count": "{n} خدمت",
+    "countOne": "1 خدمت",
+    "topic": "موضوع",
+    "emergency": "در حالت اضطراری کمک می‌کند",
+    "emergencyRole": "نقش در حالت اضطراری",
+    "lastConfirmed": "آخرین تأیید مرکز {date}",
+    "lastUpdated": "آخرین تغییر {time}",
+    "loading": "رهنما بارگذاری می‌شود",
+    "couldNotLoad": "رهنما بارگذاری نشد",
+    "couldNotLoadBody": "مرکز می‌تواند از راه تلفون در یافتن یک خدمت به شما کمک کند.",
+    "couldNotLoadNumbers": "در صفحه شماره‌ها، شماره‌های دیگری که شاید لازم داشته باشید آمده است.",
+    "numbersLink": "شماره‌های ضروری را ببینید",
+    "backToList": "همه خدمات و سازمان‌ها",
+    "suggestApply": "فقط {place} را نشان دهید"
   },
   "map": {
     "lead": "خدمات، سازمان‌ها و ساختمان‌های آپارتمانی در تورنکلیف پارک و فلمینگدن پارک. روی یک نشانگر بزنید تا ببینید چیست.",
