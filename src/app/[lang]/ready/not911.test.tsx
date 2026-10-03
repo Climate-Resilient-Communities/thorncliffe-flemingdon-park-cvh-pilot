@@ -52,7 +52,7 @@ const PAGES: { name: string; render: Render }[] = [
   })),
   { name: "essential numbers", render: async (lang) => (await NumbersPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
   { name: "Be ready", render: async (lang) => (await ReadyPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
-  // Home (R-03, owner decision 36): the short notice at the bottom, drawn on the server render before the phone's choices are read.
+  // Home (R-03, owner decisions 36 and 37): the short notice, the last item, drawn on the server render before the phone's choices are read.
   { name: "home", render: async (lang) => (await HomePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
 ];
 
@@ -69,6 +69,19 @@ describe("the 911 block", () => {
         expect(hasNot911(html), `${name} (${lang})`).toBe(1);
         if (inlineOnly.has(name)) expect(html, `${name} (${lang})`).toContain('data-variant="inline"');
       }
+    }
+  });
+
+  it("is the last thing on the server render of home, after the link to what the resident has told the CVH (owner decisions 36 and 37)", async () => {
+    const home = PAGES.find((candidate) => candidate.name === "home")!;
+    for (const lang of ["en", "ur"]) {
+      const html = renderToStaticMarkup(await home.render(lang));
+      const marker = html.indexOf('data-component="not-911"');
+      expect(html.indexOf('data-testid="choices-link"'), lang).toBeGreaterThan(-1);
+      expect(html.indexOf('data-testid="choices-link"'), lang).toBeLessThan(marker);
+      // After the notice's own closing tag only closing tags remain: nothing follows it on the screen.
+      const after = html.slice(html.indexOf("</div>", marker) + "</div>".length);
+      expect(after.replace(/<\/[a-z0-9]+>/g, ""), lang).toBe("");
     }
   });
 

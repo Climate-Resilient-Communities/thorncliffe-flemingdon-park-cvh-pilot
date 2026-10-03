@@ -157,7 +157,10 @@ describe("validating a questions file", () => {
 });
 
 describe("the committed starter set", () => {
-  const { questions, errors } = parseQuestions(REAL, IDS);
+  const parsed = parseQuestions(REAL, IDS);
+  const errors = parsed.errors;
+  // The starter set of S03.01; draft tuning questions (author claude-draft) are checked below.
+  const questions = parsed.questions.filter((q) => q.author === "dev-agent");
   const expectedOf = (id: string) => questions.find((x) => x.id === id)!.expected;
 
   it("passes the schema and names only providers of data/catalogue/providers.json", () => {
@@ -187,8 +190,8 @@ describe("the committed starter set", () => {
     }
   });
 
-  it("has unique question texts", () => {
-    expect(new Set(questions.map((q) => q.q)).size).toBe(questions.length);
+  it("has unique question texts, drafts included", () => {
+    expect(new Set(parsed.questions.map((q) => q.q)).size).toBe(parsed.questions.length);
   });
 
   it("is written by dev-agent and honestly unchecked: nobody has done the second check yet", () => {
@@ -206,6 +209,46 @@ describe("the committed starter set", () => {
     expect(expectedOf("sk-02")).not.toContain("M093"); // a tenants association contact list, no help with landlord problems
     expect(expectedOf("el-02")).not.toContain("M019"); // the Archdiocese's administrative office, not a church
     expect(expectedOf("hi-01")).not.toContain("M024"); // an early learning academy, not a primary school
+  });
+});
+
+describe("the evaluation subset", () => {
+  // Pinned on purpose: the official evaluation set comes from ambassadors (S03.08). Until then it holds only
+  // the S03.01 starter questions below, so any new evaluation question fails here until this list is
+  // deliberately updated.
+  const STARTER_EVALUATION_IDS = [
+    "en-02", "ur-02", "ur-04", "ps-01", "tl-02", "prs-02", "gu-02", "ta-02",
+    "el-02", "sk-02", "bn-02", "hi-02", "pa-02", "zh-02", "es-02", "fr-02",
+  ];
+
+  it("is exactly the starter evaluation questions", () => {
+    const { questions } = parseQuestions(REAL, IDS);
+    expect(questions.filter((q) => q.split === "evaluation").map((q) => q.id)).toEqual(STARTER_EVALUATION_IDS);
+  });
+});
+
+describe("the draft tuning questions", () => {
+  const { questions } = parseQuestions(REAL, IDS);
+  const drafts = questions.filter((q) => q.author === "claude-draft"); // ambassador questions (S03.08) are not drafts
+
+  it("are written by claude-draft, unchecked, and in the tuning subset only (the evaluation subset stays ambassador-written, S03.08)", () => {
+    expect(drafts.length).toBeGreaterThan(0);
+    for (const q of drafts) {
+      expect(q.lang, q.id).toBeTruthy();
+      expect(q.split, q.id).toBe("tuning");
+      expect([q.checked_by, q.checked_on], q.id).toEqual([null, null]);
+    }
+  });
+
+  it("number each language's questions on from the starter set, in order and grouped by language", () => {
+    const seen: string[] = [];
+    for (const q of questions) {
+      expect(q.id.startsWith(`${q.lang}-`), q.id).toBe(true);
+      if (seen.at(-1) !== q.lang) {
+        expect(seen, `${q.lang} is not grouped`).not.toContain(q.lang);
+        seen.push(q.lang);
+      }
+    }
   });
 });
 
@@ -599,7 +642,7 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
   it("validate passes on the committed set and reports the questions nobody has checked yet", () => {
     const { code, out } = cli(["validate"]);
     expect(code).toBe(0);
-    expect(out).toContain("32 questions, all valid");
+    expect(out).toContain(`${REAL_QUESTIONS.length} questions, all valid`);
     expect(out).toContain("not yet checked by a second team member");
   });
 
@@ -631,6 +674,52 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
     expect(readdirSync(dir).sort()).toEqual(["2026-10-02-model-a-leg-off-tuning.json", "2026-10-02-model-a-leg-on-tuning.json", "engine.mjs"]);
   });
 
+  it("warns when --translated-leg is given but the engine module has no createEngine, and not when it has one", () => {
+    const dir = tempDir();
+    const common = ["run", "--release", "3", "--threshold", "0.4", "--out-dir", dir, "--date", "2026-10-02", "--model", "m"];
+    const made = `export function createEngine() { return async () => ({ v: 1, release_v: 3, query_lang: "en", status: "no_clear_match", emergency_first: false, results: [] }); }\n`;
+
+    const plain = cli([...common, "--engine", engineFile(dir, GOOD_ENGINE), "--translated-leg", "on"]);
+    expect(plain.code, plain.err).toBe(0);
+    expect(plain.err).toContain("--translated-leg on was given, but");
+    expect(plain.err).toContain("has no createEngine()");
+
+    const withFactory = cli([...common, "--engine", engineFile(dir, made, "made.mjs"), "--translated-leg", "off"]);
+    expect(withFactory.code, withFactory.err).toBe(0);
+    expect(withFactory.err).not.toContain("has no createEngine()");
+  });
+
+  it("tells createEngine whether the translated-question leg is on, so one engine module gives both reports and the leg's effect per language shows (S03.05)", () => {
+    const dir = tempDir();
+    // With the leg on, the romanized Urdu tuning question (ur-03) finds the food bank it expects; with it off, nothing.
+    const engine = engineFile(
+      dir,
+      `export function createEngine({ translatedLeg }) {
+        return async ({ q }) => {
+          const found = translatedLeg && q.includes("khana");
+          return { v: 1, release_v: 3, query_lang: "en", status: found ? "ok" : "no_clear_match", emergency_first: false, results: found ? [{ provider_id: "M008", score: 0.9 }] : [] };
+        };
+      }\n`,
+    );
+    const common = ["run", "--engine", engine, "--release", "3", "--threshold", "0.4", "--out-dir", dir, "--date", "2026-10-02", "--model", "m"];
+
+    const off = cli([...common, "--translated-leg", "off"]);
+    const on = cli([...common, "--translated-leg", "on"]);
+    expect(off.code, off.err).toBe(0);
+    expect(on.code, on.err).toBe(0);
+    const read = (leg: string) => TestSetReportSchema.parse(JSON.parse(readFileSync(path.join(dir, `2026-10-02-m-leg-${leg}-tuning.json`), "utf8")));
+    const [reportOff, reportOn] = [read("off"), read("on")];
+    expect(reportOff.translated_leg).toBe(false);
+    expect(reportOn.translated_leg).toBe(true);
+    expect(reportOff.subsets.tuning!.by_language_kind["ur/romanized"]!.top3.hits).toBe(0);
+    expect(reportOn.subsets.tuning!.by_language_kind["ur/romanized"]!.top3.hits).toBe(1);
+
+    const compared = cli(["--compare", path.join(dir, "2026-10-02-m-leg-on-tuning.json"), path.join(dir, "2026-10-02-m-leg-off-tuning.json")]);
+    expect(compared.out).toMatch(/ur/);
+    expect(compared.out).toContain("leg on");
+    expect(compared.out).toContain("leg off");
+  });
+
   it("run needs --final for the evaluation subset (evaluation, or all)", () => {
     const dir = tempDir();
     const engine = engineFile(dir, GOOD_ENGINE);
@@ -650,8 +739,8 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
     expect(all.code, all.err).toBe(0);
     expect(readdirSync(dir).sort()).toEqual(["2026-10-02-m-leg-on-all.json", "2026-10-02-m-leg-on-evaluation.json", "engine.mjs"]);
     const report = TestSetReportSchema.parse(JSON.parse(readFileSync(path.join(dir, "2026-10-02-m-leg-on-all.json"), "utf8")));
-    expect(report.subsets.tuning!.overall.questions + report.subsets.evaluation!.overall.questions).toBe(32);
-    expect(report.question_count).toBe(32);
+    expect(report.subsets.tuning!.overall.questions + report.subsets.evaluation!.overall.questions).toBe(REAL_QUESTIONS.length);
+    expect(report.question_count).toBe(REAL_QUESTIONS.length);
   });
 
   it("run dates the report in Toronto by default", () => {
@@ -719,7 +808,7 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
     const different = cli(["--compare", all, tuning, "--fail-on-worse"]);
     expect(different.code).toBe(1); // the evaluation subset is missing from B
     expect(different.out).toContain("evaluation subset: missing from report B");
-    expect(different.out).toContain("WARNING: A ran 32 questions");
+    expect(different.out).toContain(`WARNING: A ran ${REAL_QUESTIONS.length} questions`);
   });
 
   it("run needs its options, and compare needs two readable reports", () => {

@@ -32,7 +32,9 @@ test("no redirect to /en/ sets a cookie either, and the browser ends up with non
   page.on("response", async (response) => {
     cookies.push(...(await response.headersArray()).filter(({ name }) => name.toLowerCase() === "set-cookie").map(({ value }) => `${response.url()}: ${value}`));
   });
-  for (const path of ["/en", "/ur", "/xx/map", "/prs"]) {
+  // Not the map: its tiles come from the tile provider, another site whose cookies are not the app's (S02.07; map.spec.ts
+  // checks that tile requests carry no cookie).
+  for (const path of ["/en", "/ur", "/xx/ready", "/prs"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
   }
@@ -77,4 +79,14 @@ test("the building list sets no cookie", async ({ request }) => {
   const response = await request.get("/api/buildings", { maxRedirects: 0 });
 
   expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});
+
+// S03.04: a question is personal. /api/search sets no cookie, whether it answers or refuses, and is never cacheable.
+test("the search endpoint sets no cookie and is not cacheable, for a question and for a refused one", async ({ request }) => {
+  for (const data of [{ q: "", lang: "en" }, { q: "a question", lang: "xx" }, { q: "a question", lang: "en" }]) {
+    const response = await request.post("/api/search", { data, maxRedirects: 0 });
+
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(data)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
 });

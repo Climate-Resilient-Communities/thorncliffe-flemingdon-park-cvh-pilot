@@ -1,4 +1,4 @@
-import { expect, test, type Page, type Request } from "@playwright/test";
+import { expect, test, type Page, type Request, type Route } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
 import { feedOf, stubFeed } from "./home-fixture";
 import { expectBaseline, openResident } from "./helpers";
@@ -163,32 +163,69 @@ test.describe("a resident with no chosen building", () => {
   });
 });
 
+/**
+ * Counts the feed requests the page makes, as the browser reports them (not as the stub answers them), and can wait
+ * until every request made so far has been reported: a request sent before a later one is reported before it, so one
+ * round trip of our own (a request to a path the stub does not answer) is the barrier. A negative check ("no ask yet")
+ * then needs no sleep.
+ */
+function countFeedRequests(page: Page) {
+  let count = 0;
+  page.on("request", (request) => {
+    if (new URL(request.url()).pathname === "/api/feed") count += 1;
+  });
+  return {
+    count: () => count,
+    settled: () => roundTrip(page),
+  };
+}
+
+const roundTrip = (page: Page) => page.evaluate(() => fetch("/favicon.ico").then(() => undefined, () => undefined));
+
+const setVisibility = (page: Page, state: "hidden" | "visible") =>
+  page.evaluate((value) => {
+    Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
+    document.dispatchEvent(new Event("visibilitychange"));
+  }, state);
+
+/** From now on /api/feed is held: each request is kept, unanswered, until the test answers it. */
+async function holdFeed(page: Page) {
+  await page.unroute("**/api/feed**");
+  const held: Route[] = [];
+  await page.route("**/api/feed**", (route) => {
+    held.push(route);
+  });
+  return held;
+}
+
 test.describe("the feed is fetched again every 60 seconds", () => {
   test("home asks again after 60 seconds, again after another 60, and shows what the newer answer says", async ({ page }) => {
-    const seen = await stubFeed(page, [feedOf(1), feedOf(2, { buildings: { [MILEPOST]: { status: "active" } } }), feedOf(3, { buildings: { [MILEPOST]: { status: "resolved" } } })]);
+    const requests = countFeedRequests(page);
+    await stubFeed(page, [feedOf(1), feedOf(2, { buildings: { [MILEPOST]: { status: "active" } } }), feedOf(3, { buildings: { [MILEPOST]: { status: "resolved" } } })]);
     await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
     await choose(page, MILEPOST);
 
     await openResident(page, "/en", 390);
     await ready(page);
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Nothing active");
-    expect(seen).toHaveLength(1);
+    expect(requests.count()).toBe(1);
 
     await page.clock.fastForward(59_000);
-    await page.waitForTimeout(150);
-    expect(seen).toHaveLength(1);
+    await requests.settled();
+    expect(requests.count()).toBe(1);
 
     await page.clock.fastForward(1_000);
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
-    expect(seen).toHaveLength(2);
+    expect(requests.count()).toBe(2);
 
     await page.clock.fastForward(60_000);
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Resolved");
-    expect(seen).toHaveLength(3);
+    expect(requests.count()).toBe(3);
   });
 
-  test("discards an answer with a lower feed_version than the highest seen", async ({ page }) => {
-    const seen = await stubFeed(page, [
+  test("discards an answer with a lower feed_version than the highest seen, keeps the screen as it was, and asks again a few seconds later", async ({ page }) => {
+    const requests = countFeedRequests(page);
+    await stubFeed(page, [
       feedOf(5, { buildings: { [MILEPOST]: { status: "active" } } }),
       feedOf(3, { buildings: { [MILEPOST]: { status: "none" } } }),
       feedOf(6, { buildings: { [MILEPOST]: { status: "resolved" } } }),
@@ -200,14 +237,39 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await ready(page);
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
 
-    // An older copy (feed_version 3) arrives after version 5 was seen: the screen does not go back.
+    // An older copy (feed_version 3) arrives after version 5 was seen: the screen does not go back, and it is no failure.
     await page.clock.fastForward(60_000);
-    await expect.poll(() => seen.length).toBe(2);
-    await page.waitForTimeout(250);
+    await expect.poll(requests.count).toBe(2);
+    await requests.settled();
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
 
-    await page.clock.fastForward(60_000);
+    // The retry, 5 seconds later, is answered with version 6.
+    await page.clock.fastForward(5_000);
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Resolved");
+    expect(requests.count()).toBe(3);
+  });
+
+  test("a lower feed_version on coming back to home does not leave every status on 'Checking' for a minute: it asks again within seconds", async ({ page }) => {
+    const requests = countFeedRequests(page);
+    // The first answer is version 9. The page stays open, so 9 is remembered when home is opened again: that ask is answered with 4, the retry with 9.
+    await stubFeed(page, [feedOf(9, { buildings: { [MILEPOST]: { status: "active" } } }), feedOf(4), feedOf(9, { buildings: { [MILEPOST]: { status: "active" } } })]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.getByTestId(`home-building-${MILEPOST}`).click();
+    await page.waitForURL(`**/en/buildings/${MILEPOST}`);
+    await page.goBack();
+    await expect.poll(requests.count).toBe(2);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "loading");
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Checking for alerts");
+
+    await page.clock.fastForward(5_000);
+    await ready(page);
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
+    expect(requests.count()).toBe(3);
   });
 
   test("keeps the last answer on screen, and says so, when a later ask fails", async ({ page }) => {
@@ -219,7 +281,8 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await ready(page);
     await page.clock.fastForward(60_000);
 
-    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+    await expect(page.getByTestId("feed-failed")).toContainText("We could not check for alerts");
+    await expect(page.getByTestId("feed-last-loaded")).toContainText("Showing what was last loaded 1 minute ago");
     await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
   });
 
@@ -234,107 +297,230 @@ test.describe("the feed is fetched again every 60 seconds", () => {
     await expect(page.getByTestId("feed-failed")).toHaveCount(0);
 
     // From now on the feed route never answers.
-    await page.unroute("**/api/feed**");
-    let asked = 0;
-    await page.route("**/api/feed**", () => {
-      asked += 1;
-    });
+    const held = await holdFeed(page);
 
     // The ask at 60 seconds hangs; it is given up after 20 seconds and the screen says the answer is old.
     await page.clock.fastForward(60_000);
-    await expect.poll(() => asked).toBe(1);
+    await expect.poll(() => held.length).toBe(1);
     await page.clock.fastForward(20_000);
-    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+    await expect(page.getByTestId("feed-failed")).toContainText("We could not check for alerts");
+    await expect(page.getByTestId("feed-last-loaded")).toContainText("Showing what was last loaded");
     await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
 
-    // The next tick asks again and the note stays; a newer ask replacing one still in flight is a failure too.
+    // The next tick asks again and the note stays.
     await page.clock.fastForward(40_000);
-    await expect.poll(() => asked).toBe(2);
-    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+    await expect.poll(() => held.length).toBe(2);
+    await expect(page.getByTestId("feed-failed")).toContainText("We could not check for alerts");
   });
 
-  test("a newer ask replacing one still in flight is a failure: the note shows at once, without waiting for the timeout", async ({ page }) => {
+  test("a failure is announced once: the live region does not change at later polls, and the age shown outside it does", async ({ page }) => {
+    await stubFeed(page, [feedOf(4, { buildings: { [MILEPOST]: { status: "active" } } }), "unavailable"]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.clock.fastForward(60_000);
+    await expect(page.getByTestId("feed-failed")).toBeVisible();
+    const announced = await page.getByTestId("feed-status").innerText();
+    expect(announced).toContain("We could not check for alerts");
+    expect(announced).not.toMatch(/ago|minute/);
+    await expect(page.getByTestId("feed-last-loaded")).toContainText("1 minute ago");
+    await page.evaluate(() => {
+      const changes: string[] = [];
+      (window as unknown as { __liveChanges: string[] }).__liveChanges = changes;
+      new MutationObserver((records) => records.forEach((record) => changes.push(record.type))).observe(document.querySelector('[data-testid="feed-status"]')!, { subtree: true, childList: true, characterData: true, attributes: true });
+    });
+
+    // Three more polls fail too, and the data on screen is 4 minutes old by now.
+    for (let minute = 0; minute < 3; minute += 1) await page.clock.fastForward(60_000);
+    await expect(page.getByTestId("feed-last-loaded")).toContainText("4 minutes ago");
+    expect(await page.getByTestId("feed-status").innerText()).toBe(announced);
+    expect(await page.evaluate(() => (window as unknown as { __liveChanges: string[] }).__liveChanges)).toEqual([]);
+  });
+
+  test("a newer ask replacing one still in flight is not a failure: nothing is announced, and the newer answer is shown", async ({ page }) => {
     await stubFeed(page, [feedOf(4)]);
     await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
     await choose(page, MILEPOST);
 
     await openResident(page, "/en", 390);
     await ready(page);
-
-    await page.unroute("**/api/feed**");
-    let asked = 0;
-    await page.route("**/api/feed**", () => {
-      asked += 1;
-    });
-    const setVisibility = (state: "hidden" | "visible") =>
-      page.evaluate((value) => {
-        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
-        document.dispatchEvent(new Event("visibilitychange"));
-      }, state);
+    const held = await holdFeed(page);
 
     // The first ask hangs. No time passes, so the timeout has not fired.
-    await setVisibility("hidden");
-    await setVisibility("visible");
-    await expect.poll(() => asked).toBe(1);
+    await setVisibility(page, "hidden");
+    await setVisibility(page, "visible");
+    await expect.poll(() => held.length).toBe(1);
+    // A second ask replaces it while it is still in flight.
+    await setVisibility(page, "hidden");
+    await setVisibility(page, "visible");
+    await expect.poll(() => held.length).toBe(2);
     await expect(page.getByTestId("feed-failed")).toHaveCount(0);
 
-    // A second ask replaces it while it is still in flight.
-    await setVisibility("hidden");
-    await setVisibility("visible");
-    await expect.poll(() => asked).toBe(2);
-    await expect(page.getByTestId("feed-failed")).toContainText("Showing what was last loaded");
+    // The newer ask is answered; the replaced one's answer, if it ever came, would be ignored.
+    await held[1].fulfill({ json: feedOf(5, { buildings: { [MILEPOST]: { status: "active" } } }) });
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
   });
 
-  test("shows the short 911 notice (the shared inline block) under Every day on home, with the find help and be ready links above it", async ({ page }) => {
-    await stubFeed(page, [feedOf(1)]);
-    await choose(page, MILEPOST);
-
-    await openResident(page, "/en", 390);
-    await ready(page);
-
-    const notice = page.locator('[data-component="not-911"]');
-    await expect(notice).toHaveCount(1);
-    await expect(notice).toHaveAttribute("data-variant", "inline");
-    await expect(notice).toContainText("911");
-    const below = await page.evaluate(() => {
-      const box = (selector: string) => document.querySelector(selector)!.getBoundingClientRect().bottom;
-      return box('[data-component="not-911"]') >= box('[data-testid="home-every-day"]');
-    });
-    expect(below).toBe(true);
-    await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
-    await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
-    await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
-    // The notice is the next thing after the "Every day" section: nothing sits between them.
-    const directlyUnder = await page.evaluate(
-      () => document.querySelector('[data-testid="home-every-day"]')!.nextElementSibling === document.querySelector('[data-component="not-911"]'),
-    );
-    expect(directlyUnder).toBe(true);
-  });
-
-  test("polls nothing while the page is hidden, and asks once, straight away, when it is visible again", async ({ page }) => {
-    const seen = await stubFeed(page, [feedOf(1)]);
+  test("coming back to the tab after more than 2 minutes says nothing is wrong while the check runs, and nothing after it answers", async ({ page }) => {
+    await stubFeed(page, [feedOf(4)]);
     await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
     await choose(page, MILEPOST);
 
     await openResident(page, "/en", 390);
     await ready(page);
-    expect(seen).toHaveLength(1);
+    const held = await holdFeed(page);
 
-    const setVisibility = (state: "hidden" | "visible") =>
-      page.evaluate((value) => {
-        Object.defineProperty(document, "visibilityState", { configurable: true, get: () => value });
-        document.dispatchEvent(new Event("visibilitychange"));
-      }, state);
+    await setVisibility(page, "hidden");
+    await page.clock.fastForward(5 * 60_000);
+    await setVisibility(page, "visible");
+    await expect.poll(() => held.length).toBe(1);
 
-    await setVisibility("hidden");
+    // The check is running, the feed on screen is 5 minutes old: no note, not even once.
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+    await expect(page.getByTestId("feed-last-loaded")).toHaveCount(0);
+    await held[0].fulfill({ json: feedOf(5, { buildings: { [MILEPOST]: { status: "resolved" } } }) });
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Resolved");
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+  });
+
+  test("becoming visible starts the 60 seconds over: the next tick does not replace, and so cancel, the ask it made", async ({ page }) => {
+    await stubFeed(page, [feedOf(4)]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    const held = await holdFeed(page);
+
+    // 50 seconds in, the page becomes visible and asks; that ask is slow.
+    await page.clock.fastForward(50_000);
+    await setVisibility(page, "hidden");
+    await setVisibility(page, "visible");
+    await expect.poll(() => held.length).toBe(1);
+
+    // The old tick would be at 60 seconds, 10 from now. With the 60 seconds started over it is at 110, so at 65 there is still one ask.
+    await page.clock.fastForward(15_000);
+    await roundTrip(page);
+    expect(held).toHaveLength(1);
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+
+    await held[0].fulfill({ json: feedOf(5, { buildings: { [MILEPOST]: { status: "active" } } }) });
+    await expect(statusOf(page, `home-building-${MILEPOST}`)).toHaveText("Active problem");
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+  });
+
+  test("polls nothing while the page is hidden, and asks once, straight away, when it is visible again", async ({ page }) => {
+    const requests = countFeedRequests(page);
+    await stubFeed(page, [feedOf(1)]);
+    await page.clock.install({ time: new Date("2026-10-01T12:00:00Z") });
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    expect(requests.count()).toBe(1);
+
+    await setVisibility(page, "hidden");
     await page.clock.fastForward(180_000);
-    await page.waitForTimeout(250);
-    expect(seen).toHaveLength(1);
+    await requests.settled();
+    expect(requests.count()).toBe(1);
 
-    await setVisibility("visible");
-    await expect.poll(() => seen.length).toBe(2);
-    await page.waitForTimeout(250);
-    expect(seen).toHaveLength(2);
+    await setVisibility(page, "visible");
+    await expect.poll(requests.count).toBe(2);
+    await requests.settled();
+    expect(requests.count()).toBe(2);
+  });
+});
+
+// Owner decisions 36 and 37: home ends with the "Every day" destinations (find help, map, be ready, as in the prototype's
+// R-03), then the short 911 notice (the shared inline block, the catalog's x01.short) directly under them, then the link
+// to what the resident has told the CVH, in every state of the screen.
+// `toContainText("911")` would prove nothing: the badge is aria-hidden decoration that always says 911, so the sentence is
+// what is asserted.
+test.describe("the Every day destinations and the short 911 notice on home", () => {
+  const SHORT = "Not an emergency service. In danger? Call 911.";
+
+  const expectEveryDayThenNotice = async (page: Page) => {
+    const notice = page.locator('[data-component="not-911"]');
+    await expect(notice).toHaveCount(1);
+    await expect(notice).toHaveAttribute("data-variant", "inline");
+    await expect(notice.locator("p")).toHaveText(SHORT);
+
+    await expect(page.getByTestId("home-every-day-title")).toHaveText("Every day");
+    await expect(page.getByTestId("home-every-day").locator("li")).toHaveCount(3);
+    await expect(page.getByTestId("home-dest-findHelp")).toContainText("Find help");
+    await expect(page.getByTestId("home-dest-findHelp")).toHaveAttribute("href", "/en/directory");
+    await expect(page.getByTestId("home-dest-map")).toContainText("Map");
+    await expect(page.getByTestId("home-dest-map")).toHaveAttribute("href", "/en/map");
+    await expect(page.getByTestId("home-dest-beReady")).toContainText("Be ready");
+    await expect(page.getByTestId("home-dest-beReady")).toHaveAttribute("href", "/en/ready");
+
+    // The last three children of the home content, in order: the "Every day" section, the notice (nothing sits between
+    // them), and the link to what the resident has told the CVH, which ends the screen.
+    const order = await page.evaluate(() => {
+      const content = document.querySelector('[data-testid="home-now"]')!.firstElementChild!;
+      const describe = (element: Element) => element.getAttribute("data-component") ?? element.getAttribute("data-testid") ?? element.tagName;
+      return [...content.children].slice(-3).map(describe);
+    });
+    expect(order).toEqual(["home-every-day", "not-911", "choices-link"]);
+  };
+
+  test("come after the buildings, the neighbourhood and the alerts, with chosen buildings and a feed that answered", async ({ page }) => {
+    await stubFeed(page, [feedOf(1, { buildings: { [MILEPOST]: { status: "active" } } })]);
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+
+    await expectEveryDayThenNotice(page);
+    const order = await page.evaluate(() =>
+      [...document.querySelectorAll('[data-testid="home-buildings"], [data-testid="home-neighbourhoods"], [data-testid="home-alerts"], [data-testid="home-every-day"]')].map((element) => element.getAttribute("data-testid")),
+    );
+    expect(order).toEqual(["home-buildings", "home-neighbourhoods", "home-alerts", "home-every-day"]);
+  });
+
+  test("are there with no chosen building", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await expect(page.getByTestId("home-invite")).toBeVisible();
+
+    await expectEveryDayThenNotice(page);
+  });
+
+  test("are there when the feed could not be read, with or without chosen buildings", async ({ page }) => {
+    await stubFeed(page, ["unavailable"]);
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "failed");
+    await expect(page.getByTestId("feed-failed")).toBeVisible();
+    await expectEveryDayThenNotice(page);
+
+    await page.evaluate((value) => localStorage.setItem("cvh.choices", value), JSON.stringify({ v: 1, lang: "en", welcomed: true, buildings: [] }));
+    await page.reload();
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "failed");
+    await expect(page.getByTestId("home-invite")).toBeVisible();
+    await expectEveryDayThenNotice(page);
+  });
+
+  test("find help and be ready open their pages", async ({ page }) => {
+    await stubFeed(page, [feedOf(1)]);
+    await choose(page, MILEPOST);
+
+    await openResident(page, "/en", 390);
+    await ready(page);
+    await page.getByTestId("home-dest-findHelp").click();
+    await page.waitForURL("**/en/directory");
+
+    await page.goBack();
+    await ready(page);
+    await page.getByTestId("home-dest-beReady").click();
+    await page.waitForURL("**/en/ready");
   });
 });
 

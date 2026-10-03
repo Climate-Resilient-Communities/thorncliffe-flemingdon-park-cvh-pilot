@@ -216,7 +216,6 @@ describe("planRelease: which text ships in a language", () => {
   });
 
   it.each([
-    ["machine, not reviewed", { status: "machine" }],
     ["reviewed without a reviewer", { reviewer: "" }],
     ["a placeholder reviewer", { reviewer: "PLACEHOLDER reviewer" }],
     ["reviewed without a valid date", { reviewedOn: "2026-13-40" }],
@@ -308,11 +307,22 @@ describe("planRelease: zh-Hant", () => {
     expect(plan([p]).files["zh-Hant"].providers[0].services.body).toBe("免费軟務。紧急情况请拨打 911。");
   });
 
-  it("is English with translation.unavailable while there is no reviewed zh", () => {
-    const p = provider("M001", { translations: { services: { ur: provenance(ENGLISH), zh: provenance(ENGLISH, { status: "machine" }) } } });
-    const text = plan([p]).files["zh-Hant"].providers[0].services;
+  it("is English with translation.unavailable while there is no reviewed zh (an emergency role, a name)", () => {
+    const role = "Police. Call 911 first.";
+    const p = provider("M001", { texts: { services: { en: ENGLISH }, emergency_role: { en: role, zh: "警察。请先拨打 911。" } }, translations: { emergency_role: { zh: provenance(role, { status: "machine" }) } } });
+    const text = plan([p]).files["zh-Hant"].providers[0].emergency_role;
 
-    expect(text).toMatchObject({ status: "fallback_en", body: ENGLISH, notice: TRANSLATION_UNAVAILABLE });
+    expect(text).toMatchObject({ status: "fallback_en", body: role, notice: TRANSLATION_UNAVAILABLE });
+  });
+
+  it("converts a description's unreviewed machine zh as unreviewed too (AD-11 pilot change)", () => {
+    // Not the fixture's English: it names 911, so it would stay English (safety_critical).
+    const english = "Free legal help.";
+    const p = provider("M001", { texts: { services: { en: english, zh: "免费软务。" } }, translations: { services: { zh: provenance(english, { status: "machine", reviewer: undefined, reviewedOn: undefined }) } } });
+    const { files } = plan([p]);
+
+    expect(files.zh.providers[0].services).toMatchObject({ status: "ok", machine: true, review_status: "none", reviewed_on: null });
+    expect(files["zh-Hant"].providers[0].services).toMatchObject({ status: "script_converted", body: "免费軟務。", machine: true, review_status: "none", reviewed_on: null, conversion: { from: "zh" } });
   });
 
   it("converts category and subcategory names from zh too", () => {
@@ -321,6 +331,142 @@ describe("planRelease: zh-Hant", () => {
 
     expect(files["zh-Hant"].categories[0].name).toMatchObject({ status: "script_converted", body: "軟務" });
     expect(files["zh-Hant"].providers[0].subcategories[0]).toMatchObject({ status: "script_converted", body: "軟務", conversion: { from: "zh" } });
+  });
+});
+
+describe("planRelease: unreviewed machine translations of descriptions (AD-11 pilot change, 2026-10-03)", () => {
+  const SERVICES = "Free legal help at 1 Overlea Blvd, M4H 1C6. Call 416-555-0100, Mon-Fri 9:30-4:30.";
+  const PS = "په 1 Overlea Blvd, M4H 1C6 کې وړیا حقوقي مرسته. 416-555-0100 ته زنګ ووهئ، Mon-Fri 9:30-4:30.";
+  const machine = (english: string) => ({ model: "north-small-translate-09-2026", status: "machine", sourceHash: sha256Hex(english) });
+  const seeded = (text: string, change: Partial<SnapshotProvider> = {}) =>
+    provider("M001", { texts: { services: { en: SERVICES, ps: text } }, translations: { services: { ps: machine(SERVICES) } }, ...change });
+
+  it("ships the machine text with machine: true and review_status none, no reviewer, the English original beside it", () => {
+    const { files, counts } = plan([seeded(PS)]);
+
+    expect(files.ps.providers[0].services).toEqual({
+      lang: "ps",
+      body: PS,
+      machine: true,
+      model: "north-small-translate-09-2026",
+      status: "ok",
+      source_hash: sha256Hex(SERVICES),
+      original: { lang: "en", body: SERVICES },
+      review_status: "none",
+      reviewed_on: null,
+    });
+    expect(files.ps.providers[0].services).not.toHaveProperty("notice");
+    expect(counts.machine).toBe(1);
+    expect(counts.translations).toBeGreaterThanOrEqual(1);
+  });
+
+  it("keeps the contact details and address from the catalogue fields, never from the machine text", () => {
+    const { files } = plan([seeded(PS, { contact: { phone: ["416-555-0100"], web: ["https://example.org"] } })]);
+
+    expect(files.ps.providers[0]).toMatchObject({
+      contact: { phone: ["416-555-0100"], email: [], social: [], web: ["https://example.org"] },
+      locations: [{ street: "1 Overlea Blvd", city: "Toronto", postal: "M4H 1C6" }],
+    });
+  });
+
+  it("falls back to the English when the machine text lost or changed a fact of the English", () => {
+    const { files, report } = plan([seeded(PS.replace("416-555-0100", "416-555-0199"))]);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES, notice: TRANSLATION_UNAVAILABLE });
+    expect(report.unavailable).toContainEqual({ lang: "ps", reason: "facts_changed", count: 1 });
+  });
+
+  it("falls back to the English when the machine text is stale", () => {
+    const p = seeded(PS, { translations: { services: { ps: machine("Older English.") } } });
+    const { files, report } = plan([p]);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES });
+    expect(report.stale).toEqual([{ subject: "M001", name: "Provider M001", text: "services", lang: "ps" }]);
+  });
+
+  it("does not ship an unreviewed emergency role, category or subcategory name", () => {
+    const role = "Warm room in cold alerts. Call 911 in danger.";
+    const p = seeded(PS, {
+      texts: { services: { en: SERVICES, ps: PS }, emergency_role: { en: role, ps: "په سړو خبرتیاوو کې تود ځای. په خطر کې 911 ته زنګ ووهئ." } },
+      translations: { services: { ps: machine(SERVICES) }, emergency_role: { ps: machine(role) } },
+    });
+    const categories: SnapshotCategory[] = [{ id: "c-legal", sortOrder: 1, labels: { en: "Legal", ps: "حقوقي" }, translations: { ps: machine("Legal") } }];
+    const { files } = plan([p], categories);
+
+    expect(files.ps.providers[0].emergency_role).toMatchObject({ status: "fallback_en", body: role, notice: TRANSLATION_UNAVAILABLE });
+    expect(files.ps.categories[0].name).toMatchObject({ status: "fallback_en", body: "Legal" });
+    // A provider with an emergency role is safety-critical (decision 42): its description stays English too.
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES, notice: TRANSLATION_UNAVAILABLE });
+  });
+
+  it("keeps a description naming a crisis or emergency line in English (safety_critical), counted apart, even if the seed loaded it", () => {
+    const crisis = "Kids Help Phone 1-800-668-6868, any time.";
+    const p = provider("M001", { texts: { services: { en: crisis, ps: "Kids Help Phone 1-800-668-6868، هر وخت." } }, translations: { services: { ps: machine(crisis) } } });
+    const { files, report, counts } = plan([p]);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: crisis, notice: TRANSLATION_UNAVAILABLE });
+    expect(report.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(counts.safetyCritical).toBe(1);
+    expect(counts.machine).toBe(0);
+  });
+
+  it("keeps the description of a provider in Support & Emergency Services in English (decision 42), whatever the seed loaded", () => {
+    const categories: SnapshotCategory[] = [{ id: "c-sos", sortOrder: 1, labels: { en: "Support & Emergency Services" }, translations: {} }];
+    const { files, counts } = plan([seeded(PS, { categoryIds: ["c-sos"] })], categories);
+
+    expect(files.ps.providers[0].services).toMatchObject({ status: "fallback_en", body: SERVICES });
+    expect(counts.safetyCritical).toBe(1);
+  });
+
+  it("reports a description the seed withheld as safety_critical under that reason", () => {
+    const p = provider("M001", { texts: { services: { en: SERVICES } }, translations: {}, withheld: { services: { ps: "safety_critical" } } });
+    const { report, counts } = plan([p]);
+
+    expect(report.unavailable).toContainEqual({ lang: "ps", reason: "safety_critical", count: 1 });
+    expect(counts.safetyCritical).toBe(1);
+  });
+
+  it("keeps a reviewed description reviewed: review_status reviewed, with its date", () => {
+    const p = seeded(PS, { translations: { services: { ps: provenance(SERVICES) } } });
+
+    expect(plan([p]).files.ps.providers[0].services).toMatchObject({ status: "ok", review_status: "reviewed", reviewed_on: "2026-09-01" });
+  });
+});
+
+describe("the listing contract across the AD-11 pilot change", () => {
+  it("parses a release written before the change (no machine count, no unreviewed text) with the same schema", () => {
+    // A listing file as release 6 wrote it, before the pilot change: the contract gained no field or value since.
+    const before = {
+      v: 1,
+      release_v: 6,
+      lang: "ur",
+      catalogue_hash: HASH,
+      categories: [{ id: "c-legal", sort_order: 2, name: { lang: "ur", body: "قانونی", machine: true, model: "m", status: "ok", source_hash: sha256Hex("Legal"), original: { lang: "en", body: "Legal" }, review_status: "reviewed", reviewed_on: "2026-09-01" } }],
+      providers: [
+        {
+          id: "M001",
+          name: "Provider M001",
+          category_ids: ["c-legal"],
+          neighbourhood_ids: ["TP"],
+          subcategories: [],
+          locations: [{ street: "1 Overlea Blvd", city: "Toronto", postal: "M4H 1C6", lat: 43.7, lng: -79.34 }],
+          contact: { phone: [], email: [], social: [], web: [] },
+          services: { lang: "ur", body: ENGLISH, machine: false, model: null, status: "fallback_en", source_hash: sha256Hex(ENGLISH), original: { lang: "en", body: ENGLISH }, review_status: "none", reviewed_on: null, notice: TRANSLATION_UNAVAILABLE },
+          emergency_role: null,
+          last_confirmed: "2026-09-20",
+        },
+      ],
+    };
+    expect(DirectoryListingV1.safeParse(before).success).toBe(true);
+  });
+
+  it("writes files the same schema parses, with no field the schema does not know (old clients parse them too)", () => {
+    const { raw } = plan([provider("M001", { translations: { services: { ur: { model: "m", status: "machine", sourceHash: sha256Hex(ENGLISH), machineChecks: ["automated"] } } } })]);
+    const ur = raw.find((file) => file.lang === "ur")!;
+
+    expect(DirectoryListingV1.strict().safeParse(JSON.parse(ur.body)).success).toBe(true);
+    expect(ur.body).not.toContain("machineChecks");
+    expect(ur.body).not.toContain("machine_checks");
   });
 });
 

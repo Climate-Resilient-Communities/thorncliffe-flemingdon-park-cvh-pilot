@@ -60,9 +60,9 @@ describe("the resident building list", () => {
     const list = await createResidentBuildings({ db: app }).list();
 
     expect(list).toEqual([
-      { rsn: "300", address: "5 Gamma Ave", neighbourhoodId: "FP", neighbourhood: "Flemingdon Park", floors: [{ id: ground, label: "G" }] },
-      { rsn: "100", address: "1 Alpha Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", floors: [{ id: first, label: "1" }, { id: second, label: "2" }] },
-      { rsn: "200", address: "9 Beta Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", floors: [] },
+      { rsn: "300", address: "5 Gamma Ave", neighbourhoodId: "FP", neighbourhood: "Flemingdon Park", lat: 43.7, lng: -79.34, floors: [{ id: ground, label: "G" }] },
+      { rsn: "100", address: "1 Alpha Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, floors: [{ id: first, label: "1" }, { id: second, label: "2" }] },
+      { rsn: "200", address: "9 Beta Rd", neighbourhoodId: "TP", neighbourhood: "Thorncliffe Park", lat: 43.7, lng: -79.34, floors: [] },
     ]);
     expect(BuildingListSchema.safeParse({ v: 1, generated_at: new Date().toISOString(), buildings: list }).success).toBe(true);
   });
@@ -74,7 +74,7 @@ describe("the resident building list", () => {
 
     const [listed] = await createResidentBuildings({ db: app }).list();
 
-    expect(Object.keys(listed).sort()).toEqual(["address", "floors", "neighbourhood", "neighbourhoodId", "rsn"]);
+    expect(Object.keys(listed).sort()).toEqual(["address", "floors", "lat", "lng", "neighbourhood", "neighbourhoodId", "rsn"]);
   });
 
   it("is empty before the buildings are loaded", async () => {

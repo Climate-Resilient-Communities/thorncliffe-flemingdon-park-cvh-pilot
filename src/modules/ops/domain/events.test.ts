@@ -44,6 +44,59 @@ describe("ops events", () => {
     }
   });
 
+  it("turns a search that could not answer into a row of a reason and a duration, and refuses anything else (S03.04)", () => {
+    expect(toOpsEventRecord({ kind: "search.unavailable", subjectType: "directory_release", subjectId: "2", detail: { reason: "timed_out", ms: 2203 } })).toEqual({
+      kind: "search.unavailable",
+      severity: "warning",
+      subjectType: "directory_release",
+      subjectId: "2",
+      detail: { reason: "timed_out", ms: 2203 },
+    });
+    expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 1003 } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 1003 } });
+    // The route's hard deadline: a reason and how long the request had run, and nothing else.
+    expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "deadline", ms: 2500 } })).toEqual({
+      kind: "search.unavailable",
+      severity: "warning",
+      subjectType: null,
+      subjectId: null,
+      detail: { reason: "deadline", ms: 2500 },
+    });
+    for (const detail of [{ reason: "deadline" }, { reason: "deadline", ms: 2500, q: "میری عمارت میں آگ لگی ہے" }, { reason: "deadline", ms: -1 }]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
+    }
+    for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
+    }
+    // A vendor call of a leg failed while the other leg answered (S03.05).
+    expect(toOpsEventRecord({ kind: "search.leg_failed", subjectType: "directory_release", subjectId: "2", detail: { reason: "translate_failed", ms: 900 } })).toMatchObject({
+      severity: "warning",
+      detail: { reason: "translate_failed", ms: 900 },
+    });
+    for (const detail of [{ reason: "timed_out", ms: 1 }, { reason: "embed_failed", ms: 1, q: "x" }, { reason: "embed_failed" }]) {
+      expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
+    }
+    // A translation model past its limit, the fallback that rescued it, and a model near its monthly limit (a warning, no request: ms 0),
+    // with the model id (a vendor name, not personal data).
+    for (const reason of ["translate_quota", "translate_fallback_used", "translate_quota_near"] as const) {
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300, model: "north-small-translate-09-2026" } })).toMatchObject({
+        severity: "warning",
+        detail: { reason, ms: 300, model: "north-small-translate-09-2026" },
+      });
+      expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason, ms: 300 } })).toMatchObject({ detail: { reason, ms: 300 } });
+    }
+    expect(toOpsEventRecord({ kind: "search.leg_failed", detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" } })).toMatchObject({
+      severity: "warning",
+      detail: { reason: "translate_quota_near", ms: 0, model: "north-small-translate-09-2026" },
+    });
+    for (const detail of [
+      { reason: "translate_quota", ms: 1, model: "You are past the per-month request limit" },
+      { reason: "translate_quota", ms: 1, model: "x".repeat(65) },
+      { reason: "translate_quota", ms: 1, model: "m", message: "429" },
+    ]) {
+      expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
+    }
+  });
+
   it("names the publish failure reasons the directory job gives", () => {
     expect([...PUBLISH_FAILURE_REASONS]).toEqual([
       "storage_unavailable",

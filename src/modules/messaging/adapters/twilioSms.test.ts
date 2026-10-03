@@ -28,7 +28,8 @@ describe("the Twilio adapter", () => {
     const headers = init?.headers as Record<string, string>;
     expect(headers.Authorization).toBe(`Basic ${Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString("base64")}`);
     expect(headers["Content-Type"]).toBe("application/x-www-form-urlencoded");
-    expect(Object.fromEntries(new URLSearchParams(init?.body as string))).toEqual({ To: TEXT.to, From: TEXT.from, Body: TEXT.body });
+    // Smart Encoding is off on every request (AD-21): the provider sends the frozen body as it is.
+    expect(Object.fromEntries(new URLSearchParams(init?.body as string))).toEqual({ To: TEXT.to, From: TEXT.from, Body: TEXT.body, SmartEncoded: "false" });
     // The credentials travel only in the header, and a redirect is never followed with them.
     expect(String(url)).not.toContain(AUTH_TOKEN);
     expect(init?.redirect).toBe("error");

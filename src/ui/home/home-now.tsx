@@ -18,10 +18,11 @@ import { useFeed } from "./use-feed";
 import "../choices/choices.css";
 import "./home.css";
 
-// The Every day destinations the prototype's R-03 lists that have a route today. The map (R-14) is left out until it
-// has one.
+// The Every day destinations of the prototype's R-03, in its order: find help (the directory, R-09), the map (R-14) and
+// be ready (R-24). Each one's words are the catalog's R03 key of the same name and `${key}Line`.
 const DESTINATIONS = [
   { key: "findHelp", icon: "search", path: "/directory" },
+  { key: "map", icon: "map", path: "/map" },
   { key: "beReady", icon: "ready", path: "/ready" },
 ] as const;
 
@@ -207,16 +208,21 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
         <Stack gap="section-resident">
           {heading}
 
-          {/* One live region, always mounted, so a screen reader hears the note when it is put into it. */}
+          {/* One live region, always mounted, so a screen reader hears the note when it is put into it. Its text does not
+              change while the failure lasts (the words of `feedFailed`, with no time in them), so it is announced once and
+              not at every poll. How old the feed on screen is does change, so that line is outside the live region. */}
           <div className="home-live" role="status" data-testid="feed-status">
             {feed.failed && (
               <div className="home-note" data-testid="feed-failed">
-                <ResidentText as="p">
-                  {feed.feed && feed.staleMs !== null ? t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) }) : t("feedFailed")}
-                </ResidentText>
+                <ResidentText as="p">{t("feedFailed")}</ResidentText>
               </div>
             )}
           </div>
+          {feed.failed && feed.feed && feed.staleMs !== null && (
+            <div className="home-note" data-testid="feed-last-loaded">
+              <ResidentText as="p">{t("feedFailedOld", { t: agoText(feed.staleMs, translateTime) })}</ResidentText>
+            </div>
+          )}
 
           {rows.buildings.length > 0 ? (
             <section data-testid="home-buildings">
@@ -286,7 +292,8 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             </Stack>
           </section>
 
-          {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), under "Every day". */}
+          {/* The short 911 notice (owner decisions 36 and 37; prototype R-03's X01_Not911 inline), the shared component:
+              directly under "Every day", above `children` (the link to "What I have told the CVH"). */}
           <Not911 variant="inline" t={x01} />
 
           {children}

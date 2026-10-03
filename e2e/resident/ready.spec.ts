@@ -1,5 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
-import { expectBaseline, openResident } from "./helpers";
+import { catalogText, expectBaseline, filledPattern, isFallback, openResident } from "./helpers";
 
 // S02.10: Be ready (R-24), a guide (R-25) and the essential numbers (R-31) in the resident shell. The server runs with
 // CVH_FAKE_GUIDES_FILE and CVH_FAKE_BUILDINGS_FILE (playwright.resident.config.ts), so the sample guides and buildings in
@@ -196,7 +196,7 @@ test.describe("a guide (R-25)", () => {
       expect(cacheControl, path).not.toContain("s-maxage");
       expect(cacheControl, path).not.toContain("public");
       await expect(page.getByTestId("shell-nav"), path).toBeVisible();
-      await expect(page.locator("main h1"), path).toContainText("This page could not be found.");
+      await expect(page.locator("main h1"), path).toHaveText(catalogText(path.split("/")[1], "shell.pageNotFound"));
     }
   });
 
@@ -371,13 +371,19 @@ test.describe("the essential numbers (R-31)", () => {
     await expect(page.getByTestId("number-hydro-digits")).toHaveText("(416) 542-8000");
     await expect(page.getByTestId("number-hydro-digits")).toHaveAttribute("dir", "ltr");
     await expect(page.getByTestId("numbers-911-digits").locator("bdi")).toHaveAttribute("dir", "ltr");
-    // The English strings Urdu lacks are marked [EN] and set left to right.
+    // The page's own wording is Urdu: the checked line is Urdu with the date in Urdu's format, in the page's direction,
+    // and "Call" is Urdu, so the call link is too. (A string a language lacks, English behind [EN] as a left-to-right
+    // block with an English date, is in fallback.spec.ts, on a page that still has one.)
+    const checkedTemplate = catalogText("ur", "R31.checked");
+    expect(isFallback(checkedTemplate), "Urdu has R31.checked").toBe(false);
     const checked = page.getByTestId("numbers-checked");
-    await expect(checked).toHaveText("[EN] Checked by the Hub, last updated September 30, 2026");
-    await expect(checked).toHaveAttribute("dir", "ltr");
-    // "Call" is English behind a fallback, so the call link reads as one English line with its number beside it.
-    await expect(page.getByTestId("number-211-call")).toHaveAttribute("lang", "en");
-    await expect(page.getByTestId("number-211-call")).toHaveAttribute("dir", "ltr");
+    await expect(checked).toHaveText(filledPattern(checkedTemplate, "date"));
+    await expect(checked).toContainText("30");
+    await expect(checked).toContainText("2026");
+    await expect(checked).not.toContainText("September");
+    await expect(checked).not.toHaveAttribute("lang", "en");
+    await expect(page.getByTestId("number-211-call")).toContainText(catalogText("ur", "R31.call"));
+    await expect(page.getByTestId("number-211-call")).not.toHaveAttribute("lang", "en");
     // The address of a building is an English, left-to-right run.
     await expect(page.getByTestId("building-contact-address").first().locator("bdi")).toHaveAttribute("dir", "ltr");
   });

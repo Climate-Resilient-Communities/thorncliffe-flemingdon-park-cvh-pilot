@@ -50,6 +50,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        smsTestProblem names the rule (never the value), no number is approved and
  *                                                        the page shows that texts are not set up. Set outside production it does
  *                                                        fail start-up: that is a secret-placement rule
+ * SMS_PRICE_PER_SEGMENT_CENTS
+ *                      server   optional                 the price of one text message segment in cents CAD: a positive number with at
+ *                                                        most three decimals and no more than 100 (1.5 is a cent and a half); default
+ *                                                        1.5. PROVISIONAL: IT confirms it from Twilio's price for Canadian toll-free
+ *                                                        numbers. The renderer's cost estimate (S04.06) is segments x recipients x this
+ *                                                        price, rounded up to whole cents, and always shown as an estimate
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -69,11 +75,52 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        recorded on each release. PROVISIONAL default 0.3: S03.07 chooses it
  *                                                        from the tuning subset; changing it means publishing a new release,
  *                                                        which copies the existing vectors
+ * SEARCH_EMERGENCY_THRESHOLD
+ *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
+ *                                                        among the top 3 of either leg turns `emergency_first` on, even when
+ *                                                        no result reaches SEARCH_THRESHOLD (owner decision 41: a fail-safe,
+ *                                                        it never turns the flag off); default 0.25, and at most
+ *                                                        SEARCH_THRESHOLD. Read at search time, not recorded on a release
  * SEARCH_EMERGENCY_CATEGORIES
  *                      server   optional                 comma-separated English names of the categories whose results put
  *                                                        the 911 block first, recorded on each release; default
  *                                                        "Support & Emergency Services". A name the catalogue does not have
  *                                                        refuses the publish (search_config_invalid)
+ * SEARCH_QUESTION_ROUTE
+ *                      server   optional                 `search_question_route` (S03.05): the Cohere model that translates a
+ *                                                        question to English for the translated-question leg of search, per
+ *                                                        kind of question, as comma-separated `kind=model` pairs; a kind left
+ *                                                        out keeps its default, `kind=off` switches the leg off for it, and
+ *                                                        `off` alone switches it off for all. Kinds: ps, prs, ur,
+ *                                                        romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults:
+ *                                                        north-small-translate-09-2026 for ps, prs and ur (native-script
+ *                                                        Urdu, owner decision 40),
+ *                                                        command-a-translate-08-2025 for romanized_or_mixed and
+ *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
+ *                                                        Readiness). It applies only where COHERE_API_KEY is set
+ * SEARCH_QUESTION_FALLBACK
+ *                      server   optional                 the Cohere model the translated-question leg retries once with when
+ *                                                        the routed model is past its limit (HTTP 429: quota or rate limit),
+ *                                                        per kind of question, in the shape of SEARCH_QUESTION_ROUTE: comma-
+ *                                                        separated `kind=model` pairs, a kind left out keeps its default,
+ *                                                        `kind=off` means no retry for it, `off` alone for all. Kinds: ps, prs,
+ *                                                        ur, romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults (owner
+ *                                                        decision 45): command-a-translate-08-2025 for prs, ur,
+ *                                                        romanized_or_mixed and ambiguous_arabic (for the last two it only
+ *                                                        applies if their route is changed: the routed model is that model),
+ *                                                        off for ps (Command A Translate turned Pashto into Dari; S03.07 decides).
+ *                                                        Never the routed model itself
+ * SEARCH_FALLBACK_MIN_BUDGET_MS
+ *                      server   optional                 the least time (0 to 2200 ms, default 800) that must be left of the
+ *                                                        leg's 2.2 s for the fallback to be tried: a call that cannot finish
+ *                                                        would only be billed
+ * SEARCH_TRANSLATE_MONTHLY_CALLS
+ *                      server   optional                 `model=limit` pairs: the translation calls a model may use in a
+ *                                                        calendar month (America/Toronto), as the vendor limits them, e.g.
+ *                                                        north-small-translate-09-2026=1000. No default: unset, there is no
+ *                                                        warning. When translate spend_event rows of a model with a limit
+ *                                                        reach 80% of it, ops gets one `search.leg_failed` event
+ *                                                        (`translate_quota_near`) per model per month per instance
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -81,6 +128,9 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        `publish` only, while Cohere's price is unknown. Questions and
  *                                                        test-set runs have allowances of their own. The publish job refuses
  *                                                        to embed past it. Defaults 500 calls and 2,000,000 tokens
+ * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
+ *                                                        phone may keep viewed tiles: read by src/platform/config/mapTiles.ts
+ *                                                        when the map pages are built, not here (S02.07)
  * CVH_FAKE_IDENTITY_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of
@@ -137,6 +187,7 @@ const rawSchema = z.object({
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
   TWILIO_FROM_NUMBER: optionalText,
   SMS_TEST_ALLOWLIST: optionalText,
+  SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   CVH_FAKE_IDENTITY_FILE: optionalText,
   CVH_FAKE_BUILDINGS_FILE: optionalText,
   CVH_FAKE_GUIDES_FILE: optionalText,
@@ -145,7 +196,12 @@ const rawSchema = z.object({
   COHERE_API_KEY: optionalText,
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
+  SEARCH_EMERGENCY_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
+  SEARCH_QUESTION_ROUTE: optionalText,
+  SEARCH_QUESTION_FALLBACK: optionalText,
+  SEARCH_FALLBACK_MIN_BUDGET_MS: optionalText,
+  SEARCH_TRANSLATE_MONTHLY_CALLS: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -158,20 +214,72 @@ export interface SearchSettings {
   embedModel: string;
   /** Similarity below which a question has no clear match (provisional until S03.07). */
   threshold: number;
+  /** Similarity at which an emergency provider among the top 3 of a leg sets `emergency_first` without a clear match (owner decision 41); at most `threshold`. */
+  emergencyThreshold: number;
   /** English names of the categories that put the 911 block first. */
   emergencyCategories: string[];
   /** Embedding usage the calendar month may reach: calls and input tokens. */
   allowance: { callsPerMonth: number; tokensPerMonth: number };
+  /** `search_question_route` (S03.05): the translation model per kind of question; null switches the translated leg off for it. */
+  questionRoute: QuestionRouteSettings;
+  /** The model the translated leg retries once with when the routed model is past a limit, per kind of question; null: no retry for it. */
+  questionFallback: QuestionRouteSettings;
+  /** The least time (ms) that must be left of the leg's budget for the fallback to be tried. */
+  fallbackMinBudgetMs: number;
+  /** The translation calls a model may use in a calendar month, where the vendor limits them (model id to limit); empty: no warning. */
+  translateMonthlyCalls: Readonly<Record<string, number>>;
 }
+
+/** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
+export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic"] as const;
+export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS)[number], string | null>>;
+
+/**
+ * PROVISIONAL (the addendum's routing table): North Small Translate for Pashto, Dari and native-script Urdu (owner decision
+ * 40, 2026-10-03: the catalogue's model for ur), Command A Translate for the rest.
+ */
+export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
+  ps: "north-small-translate-09-2026",
+  prs: "north-small-translate-09-2026",
+  ur: "north-small-translate-09-2026",
+  romanized_or_mixed: "command-a-translate-08-2025",
+  ambiguous_arabic: "command-a-translate-08-2025",
+};
+
+/**
+ * PROVISIONAL (owner decision 45, 2026-10-03; the addendum's routing table gives Dari's second choice): Command A Translate
+ * for Dari, and for native-script Urdu (the addendum says Command A does not write Urdu, but a question is only read into
+ * English and the owner tested that it does), and for the kinds whose route already is Command A (there it is skipped, and
+ * applies only if their route changes). Pashto has none: Command A Translate returned Dari for Pashto, until S03.07's
+ * test set shows it reads Pashto well.
+ */
+export const DEFAULT_QUESTION_FALLBACK: QuestionRouteSettings = {
+  ps: null,
+  prs: "command-a-translate-08-2025",
+  ur: "command-a-translate-08-2025",
+  romanized_or_mixed: "command-a-translate-08-2025",
+  ambiguous_arabic: "command-a-translate-08-2025",
+};
+
+/** The longest time the leg has (the E03 search time limit, DEFAULT_LEG_TIMEOUT_MS of the directory module): the most a minimum budget can be. */
+const LEG_BUDGET_MS = 2200;
 
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
   threshold: 0.3,
+  emergencyThreshold: 0.25,
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
+  questionRoute: DEFAULT_QUESTION_ROUTE,
+  questionFallback: DEFAULT_QUESTION_FALLBACK,
+  fallbackMinBudgetMs: 800,
+  translateMonthlyCalls: {},
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
+
+/** PROVISIONAL (S04.06): cents CAD per text message segment until IT records Twilio's price for Canadian toll-free numbers. */
+export const DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS = 1.5;
 
 export interface Env {
   environment: AppEnvironment;
@@ -187,6 +295,8 @@ export interface Env {
   smsTestAllowlist: string[];
   /** Why the test text is not set up although it was configured (names the rule, never a value); undefined when nothing is wrong. */
   smsTestProblem?: string;
+  /** Cents CAD per text message segment (at most three decimals): the price an alert's cost estimate uses (S04.06). */
+  smsPricePerSegmentCents: number;
   /** Local development only: the identity fake's state file (end-to-end tests). */
   fakeIdentityFile?: string;
   /** Local development only: sample buildings for the resident page tests, read instead of the database. */
@@ -423,6 +533,20 @@ function parseSmsTestAllowlist(value: string | undefined, environment: AppEnviro
   return { allowlist: [...new Set(entries)] };
 }
 
+const SMS_PRICE_PROBLEM = "SMS_PRICE_PER_SEGMENT_CENTS: must be a positive number of cents with at most three decimals, no more than 100, such as 1.5";
+
+/** The price of a text message segment in cents CAD: positive, at most three decimals, at most 100; the default when unset. */
+function parseSmsPrice(value: string | undefined, problems: string[]): number {
+  if (value === undefined) return DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS;
+  const text = value.trim();
+  const price = Number(text);
+  if (!/^[0-9]{1,3}(\.[0-9]{1,3})?$/.test(text) || !(price > 0 && price <= 100)) {
+    problems.push(SMS_PRICE_PROBLEM);
+    return DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS;
+  }
+  return price;
+}
+
 /** A whole number of at least 1 from a variable, or the default; a bad value is a problem that names the variable, never the value. */
 function positiveInteger(name: string, value: string | undefined, fallback: number, problems: string[]): number {
   if (value === undefined) return fallback;
@@ -431,6 +555,69 @@ function positiveInteger(name: string, value: string | undefined, fallback: numb
     return fallback;
   }
   return Number(value);
+}
+
+const questionKindsProblem = (name: string) =>
+  `${name}: must be \`off\`, or comma-separated kind=model pairs (kinds ps, prs, ur, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once`;
+
+/** A per-kind setting (the route and the fallback share the shape): `off` alone, or `kind=model|off` pairs over the defaults. */
+function parseQuestionKinds(name: string, value: string | undefined, defaults: QuestionRouteSettings, problems: string[]): QuestionRouteSettings {
+  if (value === undefined) return defaults;
+  const text = value.trim();
+  if (text === "off") return { ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null };
+  const settings: Record<string, string | null> = { ...defaults };
+  const seen = new Set<string>();
+  for (const pair of text.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
+    const match = /^([a-z_]+)\s*=\s*(\S+)$/.exec(pair);
+    const kind = match?.[1];
+    const model = match?.[2];
+    if (!kind || !model || !(QUESTION_ROUTE_KINDS as readonly string[]).includes(kind) || seen.has(kind) || (model !== "off" && !EMBED_MODEL_ID.test(model))) {
+      problems.push(questionKindsProblem(name));
+      return defaults;
+    }
+    seen.add(kind);
+    settings[kind] = model === "off" ? null : model;
+  }
+  if (seen.size === 0) {
+    problems.push(questionKindsProblem(name));
+    return defaults;
+  }
+  return settings as QuestionRouteSettings;
+}
+
+/** The least time left for the fallback: a whole number of milliseconds from 0 to the leg's 2.2 s. */
+function parseFallbackMinBudget(value: string | undefined, problems: string[]): number {
+  const fallback = DEFAULT_SEARCH_SETTINGS.fallbackMinBudgetMs;
+  if (value === undefined) return fallback;
+  const text = value.trim();
+  if (!/^[0-9]{1,4}$/.test(text) || Number(text) > LEG_BUDGET_MS) {
+    problems.push(`SEARCH_FALLBACK_MIN_BUDGET_MS: must be a whole number of milliseconds from 0 to ${LEG_BUDGET_MS}`);
+    return fallback;
+  }
+  return Number(text);
+}
+
+const TRANSLATE_MONTHLY_CALLS_PROBLEM = "SEARCH_TRANSLATE_MONTHLY_CALLS: must be comma-separated model=limit pairs (model a model id, limit a whole number of at least 1), each model at most once";
+
+/** The monthly calls a model may use, per model, or none (no warning) when unset. */
+function parseTranslateMonthlyCalls(value: string | undefined, problems: string[]): Readonly<Record<string, number>> {
+  if (value === undefined) return DEFAULT_SEARCH_SETTINGS.translateMonthlyCalls;
+  const limits: Record<string, number> = {};
+  for (const pair of value.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
+    const match = /^(\S+?)\s*=\s*([0-9]{1,9})$/.exec(pair);
+    const model = match?.[1];
+    const limit = Number(match?.[2]);
+    if (!model || !EMBED_MODEL_ID.test(model) || !(limit >= 1) || Object.hasOwn(limits, model)) {
+      problems.push(TRANSLATE_MONTHLY_CALLS_PROBLEM);
+      return DEFAULT_SEARCH_SETTINGS.translateMonthlyCalls;
+    }
+    limits[model] = limit;
+  }
+  if (Object.keys(limits).length === 0) {
+    problems.push(TRANSLATE_MONTHLY_CALLS_PROBLEM);
+    return DEFAULT_SEARCH_SETTINGS.translateMonthlyCalls;
+  }
+  return limits;
 }
 
 function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
@@ -444,6 +631,14 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.3");
     else threshold = value;
   }
+  let emergencyThreshold = defaults.emergencyThreshold;
+  if (raw.SEARCH_EMERGENCY_THRESHOLD !== undefined) {
+    const text = raw.SEARCH_EMERGENCY_THRESHOLD.trim();
+    const value = Number(text);
+    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1, such as 0.25");
+    else emergencyThreshold = value;
+  }
+  if (emergencyThreshold > threshold) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD");
   let emergencyCategories = defaults.emergencyCategories;
   if (raw.SEARCH_EMERGENCY_CATEGORIES !== undefined) {
     const names = [...new Set(raw.SEARCH_EMERGENCY_CATEGORIES.split(",").map((name) => name.trim()).filter((name) => name !== ""))];
@@ -453,11 +648,16 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   return {
     embedModel,
     threshold,
+    emergencyThreshold,
     emergencyCategories,
     allowance: {
       callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
       tokensPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
     },
+    questionRoute: parseQuestionKinds("SEARCH_QUESTION_ROUTE", raw.SEARCH_QUESTION_ROUTE, DEFAULT_QUESTION_ROUTE, problems),
+    questionFallback: parseQuestionKinds("SEARCH_QUESTION_FALLBACK", raw.SEARCH_QUESTION_FALLBACK, DEFAULT_QUESTION_FALLBACK, problems),
+    fallbackMinBudgetMs: parseFallbackMinBudget(raw.SEARCH_FALLBACK_MIN_BUDGET_MS, problems),
+    translateMonthlyCalls: parseTranslateMonthlyCalls(raw.SEARCH_TRANSLATE_MONTHLY_CALLS, problems),
   };
 }
 
@@ -492,6 +692,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("COHERE_API_KEY: set but blank; unset it or give it the key");
   }
   const search = parseSearchSettings(raw, problems);
+  const smsPricePerSegmentCents = parseSmsPrice(raw.SMS_PRICE_PER_SEGMENT_CENTS, problems);
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -568,6 +769,7 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
         : undefined,
     smsTestAllowlist,
     smsTestProblem,
+    smsPricePerSegmentCents,
     cohereApiKey: raw.COHERE_API_KEY?.trim(),
     search,
     fakeIdentityFile: raw.CVH_FAKE_IDENTITY_FILE,

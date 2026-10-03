@@ -1,6 +1,7 @@
-// The messaging module's public interface (AD-2, AD-8). Today it holds only S01.15's first-text
+// The messaging module's public interface (AD-2, AD-8, AD-21). It holds S04.06's renderer (the one builder of an
+// alert's text message body, its encoding and segment count, and the cost estimate) and S01.15's first-text
 // spike: one test text from production to an approved phone, through the Twilio adapter. E06's
-// outbound queue replaces it (and nothing else may call the SMS adapter then).
+// outbound queue replaces the spike. No other module imports an SMS adapter (a dependency rule enforces it).
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
 import { drizzleTestSendStore } from "./adapters/testSendStore";
@@ -65,3 +66,16 @@ export type { TestTextRefusal } from "./domain/testText";
 export { numberChoice, numberKeyFromSecret, resolveNumberChoice, UNKNOWN_AFTER_MS } from "./application/sendTestText";
 export type { SendTestTextInput, SendTestTextOutcome, TestTextConfig, TestTextLog, TestTextService, UnknownAttempt } from "./application/sendTestText";
 export type { ProviderAnswer, SmsProvider } from "./application/ports";
+export {
+  NINE_ONE_ONE_FIRST_TYPES,
+  alertLink,
+  isNineOneOneFirst,
+  render,
+  renderAll,
+  type RenderedSms,
+  type SmsAttribution,
+  type SmsEntry,
+  type SmsTranslated,
+} from "./domain/smsBody";
+export { NORMALISATION_TABLE, SMS_MAX_BODY_LENGTH, countSms, normaliseSms, type SmsCount, type SmsEncoding } from "./domain/smsEncoding";
+export { estimateSmsCost, priceInThousandthsOfCent, type CostBasis, type SmsCostEstimate, type SmsCostInput } from "./domain/smsCost";

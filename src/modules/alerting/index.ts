@@ -95,4 +95,6 @@ export {
   type TransitionRequest,
   type TransitionRule,
 } from "./domain/lifecycle";
+export { freezeContent, type FreezeInput, type FreezeResult } from "./application/freezeContent";
+export { canonicalContent, contentHash, contentHashInput, type ContentHashInput, type HashedEntry, type HashedSmsBody, type HashedWebText } from "./domain/hash";
 export type { AlertRefusal } from "./domain/refusals";

@@ -17,7 +17,7 @@ import { FloorIdSchema, RsnSchema } from "./places";
  */
 export const SAFETY_OVERRIDE_TYPES: readonly string[] = ["fire"];
 
-const NEIGHBOURHOOD_ID = /^[A-Z]{2,6}$/;
+export const NEIGHBOURHOOD_ID = /^[A-Z]{2,6}$/;
 const TYPE_ID = /^[a-z][a-z_]{1,19}$/;
 
 const NeighbourhoodIdSchema = z.string().regex(NEIGHBOURHOOD_ID);

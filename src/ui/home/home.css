@@ -1,9 +1,9 @@
 /*
  * Home (R-03, S02.11): the status of the resident's buildings and neighbourhood, and the current alerts. Spacing from
- * the semantic tokens, direction from logical properties only, so the screen mirrors in Urdu, Pashto and Dari without
- * a [dir] rule. A status is always its words, its shape and its colour together (never colour alone). The four colours
- * are the prototype's reserved incident-status set (design/prototype/cvh/cvh.css, --status-*), each 6.5:1 or better
- * on white; they are used for status and nothing else.
+ * the semantic tokens, direction from logical properties, so the screen mirrors in Urdu, Pashto and Dari; the one [dir]
+ * rule is the chevron, which is flipped by hand. A status is always its words, its shape and its colour together
+ * (never colour alone). The four colours are the prototype's reserved incident-status set (design/prototype/cvh/cvh.css,
+ * --status-*), each 6.5:1 or better on white; they are used for status and nothing else.
  */
 @layer components {
   .home-list {
@@ -184,7 +184,7 @@
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m9 5 7 7-7 7'/%3E%3C/svg%3E");
   }
 
-  /* The Every day destinations (find help, be ready): a row at least 44 px tall, like a place row, linking on. */
+  /* The Every day destinations (find help, map, be ready): a row at least 44 px tall, like a place row, linking on. */
   .home-dest {
     display: flex;
     align-items: center;
@@ -207,6 +207,11 @@
   .home-ico--search {
     -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m15.5 15.5 5 5'/%3E%3C/svg%3E");
     mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='10.5' cy='10.5' r='6.5'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='m15.5 15.5 5 5'/%3E%3C/svg%3E");
+  }
+
+  .home-ico--map {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
   }
 
   .home-ico--ready {

@@ -3,7 +3,7 @@
 import { randomBytes } from "node:crypto";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
-import { monthlyUsage, recordSpendEvent, withSpendLock } from "@/modules/spend";
+import { monthlyModelCalls, monthlyUsage, recordSpendEvent, withSpendLock } from "@/modules/spend";
 import { createDb, type Db } from "@/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -166,12 +166,12 @@ describe("spend_event (S03.02)", () => {
 
     it("counts only the usage of one purpose when asked: the publish allowance is not used up by questions or test-set runs", async () => {
       await at("2026-10-05T12:00:00Z", 2, 20);
-      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-06T12:00:00Z")}, 'embed', 'query', 'embed-v4.0', 100, 5000)`;
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-06T12:00:00Z")}, 'embed', 'search', 'embed-v4.0', 100, 5000)`;
       await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-07T12:00:00Z")}, 'embed', 'test_set', 'embed-v4.0', 40, 900)`;
       const now = new Date("2026-10-08T00:00:00Z");
 
       expect(await monthlyUsage(app, "embed", now, "publish")).toEqual({ calls: 2, tokens: 20 });
-      expect(await monthlyUsage(app, "embed", now, "query")).toEqual({ calls: 100, tokens: 5000 });
+      expect(await monthlyUsage(app, "embed", now, "search")).toEqual({ calls: 100, tokens: 5000 });
       expect(await monthlyUsage(app, "embed", now, "test_set")).toEqual({ calls: 40, tokens: 900 });
       expect(await monthlyUsage(app, "embed", now)).toEqual({ calls: 142, tokens: 5920 });
     });
@@ -182,6 +182,53 @@ describe("spend_event (S03.02)", () => {
       const usage = await app.transaction(async (tx) => monthlyUsage(tx, "embed", new Date("2026-10-06T00:00:00Z")));
 
       expect(usage).toEqual({ calls: 2, tokens: 20 });
+    });
+  });
+
+  describe("the month's calls of one model (the translation quota warning)", () => {
+    const NORTH = "north-small-translate-09-2026";
+    const COMMAND = "command-a-translate-08-2025";
+    const row = (iso: string, model: string, purpose = "search", kind = "translate", calls = 1) =>
+      sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date(iso)}, ${kind}, ${purpose}, ${model}, ${calls}, 30)`;
+
+    it("is zero before anything is recorded", async () => {
+      expect(await monthlyModelCalls(app, "translate", NORTH, new Date("2026-10-15T12:00:00Z"))).toBe(0);
+    });
+
+    it("counts the calls of that model and kind in the calendar month, whoever made them: questions and test-set runs alike", async () => {
+      await row("2026-10-02T12:00:00Z", NORTH);
+      await row("2026-10-03T12:00:00Z", NORTH, "test_set");
+      await row("2026-10-04T12:00:00Z", NORTH, "search", "translate", 3); // a row stands for its calls
+      await row("2026-10-05T12:00:00Z", COMMAND); // another model
+      await row("2026-10-06T12:00:00Z", NORTH, "search", "embed"); // another kind
+      const now = new Date("2026-10-15T12:00:00Z");
+
+      expect(await monthlyModelCalls(app, "translate", NORTH, now)).toBe(5);
+      expect(await monthlyModelCalls(app, "translate", COMMAND, now)).toBe(1);
+      expect(await monthlyModelCalls(app, "embed", NORTH, now)).toBe(1);
+    });
+
+    it("starts the month at midnight in Toronto, and leaves the months before and after out", async () => {
+      await row("2026-09-15T12:00:00Z", NORTH);
+      await row("2026-10-01T03:59:00Z", NORTH); // 23:59 on September 30th in Toronto
+      await row("2026-10-01T04:00:00Z", NORTH); // October 1st, 00:00
+      await row("2026-11-01T03:59:00Z", NORTH); // 23:59 on October 31st
+      await row("2026-11-01T04:00:00Z", NORTH); // November 1st, 00:00
+
+      expect(await monthlyModelCalls(app, "translate", NORTH, new Date("2026-10-20T12:00:00Z"))).toBe(2);
+      expect(await monthlyModelCalls(app, "translate", NORTH, new Date("2026-09-20T12:00:00Z"))).toBe(2);
+    });
+
+    it("reads as the app's role through the (kind, at) index, in one query", async () => {
+      await row("2026-10-02T12:00:00Z", NORTH);
+      // The plan, with sequential scans off so that a table this small still shows which index a query can use.
+      await appSql.unsafe("set enable_seqscan = off");
+      const plan = await appSql.unsafe(
+        `explain select coalesce(sum(calls), 0) from spend_event where kind = 'translate' and at >= '2026-10-01T04:00:00Z' and at < '2026-11-01T04:00:00Z' and model = '${NORTH}'`,
+      );
+      await appSql.unsafe("reset enable_seqscan");
+
+      expect(plan.map((p) => String(p["QUERY PLAN"])).join("\n")).toMatch(/spend_event_kind_at_idx/);
     });
   });
 });

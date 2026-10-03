@@ -1142,9 +1142,8 @@
    "id": "M007",
    "name": "The Neighbourhood Organization (TNO)",
    "categories": [
-    "Support & Emergency Services",
-    "Health & Wellness",
-    "Non-Profits"
+    "Non-Profits",
+    "Health & Wellness"
    ],
    "subcategories": [
     "Food Collaboratives",
@@ -1224,7 +1223,7 @@
    "id": "M008",
    "name": "Flemingdon Food Bank",
    "categories": [
-    "Support & Emergency Services"
+    "Non-Profits"
    ],
    "subcategories": [
     "Food Collaboratives"

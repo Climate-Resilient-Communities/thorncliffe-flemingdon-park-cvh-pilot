@@ -41,7 +41,22 @@ describe("buildingContactCards", () => {
     expect(cards[2].provided).toBe("Provided by the Hub, last updated September 30, 2026");
     expect(cards[2].role).toBe("Building management");
 
+    // In Urdu the label and the day are both written the Urdu way: still the Toronto day, on the Gregorian calendar.
     const urdu = buildingContactCards(LIST, translator(ur, "ur"), "ur");
+    const urduDay = (iso: string, timeZone: string) => new Intl.DateTimeFormat("ur", { dateStyle: "long", timeZone, calendar: "gregory" }).format(new Date(iso));
+    expect(urdu[2].provided).toBe(ur.building.providedByHub.replace("{date}", urduDay("2026-10-01T03:00:00Z", "America/Toronto")));
+    expect(urdu[2].provided).not.toContain(urduDay("2026-10-01T03:00:00Z", "UTC"));
+    expect(urdu[2].provided).toMatch(/2026|۲۰۲۶/);
+    expect(urdu[2].role).toBe(ur.building.roles.buildingManagement);
+    expect(urdu[2].role).not.toMatch(/^\[EN\]/);
+  });
+
+  it("writes the day the English way when the label fell back to English", () => {
+    const stub = translator(
+      { ...en, building: { ...en.building, providedByHub: `[EN] ${en.building.providedByHub}`, roles: { ...en.building.roles, superintendent: `[EN] ${en.building.roles.superintendent}` } } },
+      "ur",
+    );
+    const urdu = buildingContactCards(LIST, stub, "ur");
     expect(urdu[0].provided).toMatch(/^\[EN\] Provided by the Hub, last updated September 30, 2026$/);
     expect(urdu[0].role).toBe("[EN] Superintendent");
   });
