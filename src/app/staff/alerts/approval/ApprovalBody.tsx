@@ -267,6 +267,39 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           <Bound screen={screen} reviewed={changed ? changed.reviewed : screen.binding.reviewed} />
         </form>
       )}
+      {/* A correction or a withdrawal shows the entry it replaces, as residents read it now, what they will see instead, and who it goes to (S05.02). */}
+      {screen.replaces && (
+        <section aria-labelledby="replaces-title" data-testid="replaces">
+          <Stack gap="related">
+            <h2 id="replaces-title">{screen.replaces.title}</h2>
+            <p className="hub-wrap">{screen.replaces.lead}</p>
+            <p className="hub-wrap">
+              <strong data-testid="replaces-heading">{screen.replaces.target.heading}</strong>
+            </p>
+            <p className="hub-wrap hub-prewrap" lang="en" data-testid="replaces-text">
+              {screen.replaces.target.text}
+            </p>
+            {screen.replaces.reason && (
+              <p className="hub-wrap" data-testid="replaces-reason">
+                {screen.replaces.reason}
+              </p>
+            )}
+            <p role="note" className="hub-flag hub-wrap" data-testid="replaces-reach">
+              {screen.replaces.reach}
+            </p>
+            {screen.replaces.closes && (
+              <p role="note" className="hub-flag hub-wrap" data-testid="replaces-closes">
+                {screen.replaces.closes}
+              </p>
+            )}
+            {screen.replaces.gone && (
+              <p role="alert" className="hub-error hub-wrap" data-testid="replaces-gone">
+                {screen.replaces.gone}
+              </p>
+            )}
+          </Stack>
+        </section>
+      )}
       <section aria-labelledby="english-title" data-testid="english-text">
         <Stack gap="related">
           <h2 id="english-title">{screen.english.title}</h2>

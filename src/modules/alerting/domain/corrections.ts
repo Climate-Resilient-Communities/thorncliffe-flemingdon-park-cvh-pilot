@@ -70,12 +70,12 @@ export function substantiveRemains(entries: readonly RemainingFacts[], supersede
 }
 
 /**
- * The text of a withdrawal for the reason chosen. A reason from the catalog has fixed words (`catalogText`, the Hub's English catalog, which the text messages
- * and the web show in the resident's language through the entry's frozen translations); "other" is the words the Hub wrote. Control characters are taken out
- * and the ends trimmed before the use case checks it is there and short enough.
+ * The text of a withdrawal for the reason chosen. A reason from the catalog has fixed words (`catalogText`, the Hub's English catalog: the web and the text
+ * messages show them in each resident's language through the entry's frozen translations), to which the Hub may add words of its own; "other" is the words
+ * the Hub wrote, and is empty (so the use case refuses it) when they wrote none. Control characters are taken out and the ends trimmed.
  */
 export function withdrawalText(reason: WithdrawalReason, wording: string, catalogText: (reason: Exclude<WithdrawalReason, "other">) => string): string {
   const own = wording.replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "").trim();
   if (reason === "other") return own;
-  return catalogText(reason);
+  return own === "" ? catalogText(reason) : `${catalogText(reason)} ${own}`;
 }

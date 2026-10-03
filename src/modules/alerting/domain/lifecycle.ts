@@ -85,6 +85,8 @@ export function requestTransition(request: TransitionRequest): TransitionDecisio
   if (!rule) return { ok: false, refusal: "ILLEGAL_TRANSITION" };
   if (!request.threadOpen && !(request.closing === true && rule.action === "discard")) return { ok: false, refusal: "ALERT_CLOSED" };
   if (request.webPublished && (rule.action === "return" || rule.action === "discard")) return { ok: false, refusal: "WEB_PUBLISHED" };
+  // A pending entry is superseded only when residents can read it (the D-1 case, E08): one with nothing published has nothing to replace.
+  if (rule.action === "supersede" && request.from === "pending_approval" && !request.webPublished) return { ok: false, refusal: "ILLEGAL_TRANSITION" };
   return { ok: true, action: rule.action };
 }
 

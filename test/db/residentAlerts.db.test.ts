@@ -314,7 +314,8 @@ describe("the resident views", () => {
 
     // The thread's view is S04.03's, as it was: changing a view the previous release may read is a contract change.
     expect(await columns("nondrill_alert")).toEqual(["id", "status", "closed_reason", "reported_at", "closed_at", "created_at"]);
-    expect(await columns("nondrill_alert_entry")).toEqual(["id", "alert_id", "slug", "kind", "phase", "types", "audience", "valid_until", "original_text", "web_published_at", "verified", "superseded"]);
+    // S05.02 appended the entry a correction or a withdrawal replaces; the reason of a withdrawal is its own text, so no reason code is shown.
+    expect(await columns("nondrill_alert_entry")).toEqual(["id", "alert_id", "slug", "kind", "phase", "types", "audience", "valid_until", "original_text", "web_published_at", "verified", "superseded", "supersedes_id"]);
     expect(await columns("nondrill_alert_entry_translation")).toEqual(["entry_id", "lang", "body", "machine", "model", "status", "source_hash"]);
   });
 

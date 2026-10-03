@@ -195,6 +195,8 @@ export interface EntryReview {
    * as such, and the approval will refuse it).
    */
   target?: { id: string; kind: EntryKind; status: EntryStatus; text: string; phase: Phase; publishedAt: Date | null; valid: boolean; audience: Audience } | null;
+  /** A withdrawal that, once approved, leaves no published, non-superseded substantive entry: it closes the thread `withdrawn` (S05.02). False for everything else. */
+  closesThread?: boolean;
 }
 
 /** One entry on someone's incidents list (S04.07's share of O-01, which S04.10 builds out). */
@@ -1605,6 +1607,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           }
           // A correction or a withdrawal shows the entry it replaces, as residents read it now (S05.02).
           let target: EntryReview["target"] = null;
+          let closesThread = false;
           if (entryRow.supersedesId !== null) {
             const [replaced] = await tx.select().from(alertEntry).where(and(eq(alertEntry.id, entryRow.supersedesId), eq(alertEntry.alertId, ref.alertId)));
             if (replaced) {
@@ -1618,6 +1621,11 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
                 valid: targetRefusal(targetFactsOf(replaced)) === null,
                 audience: replaced.audience as Audience,
               };
+              // A withdrawal that leaves nothing substantive closes the thread: the approver is told before they approve.
+              if (entryRow.kind === "withdrawal") {
+                const all = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, ref.alertId));
+                closesThread = !substantiveRemains(all.map((row) => ({ id: row.id, kind: row.kind as EntryKind, status: row.status as EntryStatus, webPublishedAt: row.webPublishedAt })), [replaced.id]);
+              }
             }
           }
           return {
@@ -1631,6 +1639,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             threadAudience,
             threadCoveringId,
             target,
+            closesThread,
           };
         },
         { isolationLevel: "repeatable read" },

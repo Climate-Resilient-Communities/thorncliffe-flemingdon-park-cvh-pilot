@@ -585,6 +585,30 @@ describe("approving a correction", () => {
     expect((await auditRows()).filter((row) => row.action === "entry.approved" && row.outcome === "refused")).toHaveLength(1);
   });
 
+  it("replaces a pending entry that residents already read (the D-1 case, E08) when a correction of it is approved, and a pending one with nothing published is not a target", async () => {
+    const { ref } = await approvedThread();
+    const hash = sha("d1");
+    const seedPending = async (published: boolean) => {
+      const id = randomUUID();
+      await owner.begin(async (tx) => {
+        await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+        await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies, submitted_at, web_published_at, created_at)
+                 values (${id}, ${ref.alertId}, 'update', 'pending_approval', ${authorA.id}, ${[authorA.id]}, 'Posted before approval.', ${["power"]}, ${tx.json(audienceOf(RSN))}, 'problem', ${new Date("2026-10-02T15:00:00Z")},
+                         1, ${hash}, ${tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } })}, now(), ${published ? new Date() : null}, ${new Date(NOW.getTime() + 500)})`;
+        await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+      });
+      return { alertId: ref.alertId, entryId: id };
+    };
+    const unpublished = await seedPending(false);
+    expect(await alerting.correctEntry(actorOf(authorA), { alertId: ref.alertId, targetId: unpublished.entryId }, correctInput())).toEqual({ ok: false, error: "TARGET_NOT_PUBLISHED" });
+
+    const read = await seedPending(true);
+    const correction = await pendingCorrection(read);
+    expect(await alerting.approveEntry(actorOf(coordB), correction, await shownOfRow(correction))).toMatchObject({ ok: true });
+    expect((await entryRow(read.entryId)).status).toBe("superseded");
+    expect((await entryRow(unpublished.entryId)).status).toBe("pending_approval");
+  });
+
   it("refuses to approve a correction of an entry in a thread that closed since", async () => {
     const { ref } = await approvedThread();
     await approvedUpdate(ref.alertId);

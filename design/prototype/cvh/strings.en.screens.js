@@ -1604,4 +1604,55 @@
     runningLine: '{kind}, {phase}. Valid until {time}',
     runningPublished: 'Last published {time}',
     addUpdate: 'Add an update', promote: 'Promote to full alert' } } });
+  /* Correcting or withdrawing what residents read (S05.02, O-15 "Correct" and "Withdraw"), the pilot's staff version. In the prototype a correction is published at
+     once and the earlier wording stays below it (O15); here the author writes it on the same composer as every entry and a second person approves it before anyone
+     sees it. A withdrawal gives a reason from a short list (wrong place, wrong information, duplicate, other with the Hub's own words), which residents read in the
+     place of the entry. The prototype's own words are kept where they fit (O15, R07). */
+  m(en, { staff: { compose: {
+    correctTitle: 'Correct an alert', withdrawTitle: 'Withdraw an alert',
+    correctLead: 'A correction is added to the same alert in the open. The earlier wording stays readable, marked "Corrected", and residents see what changed. A second person approves it before anyone sees it.',
+    withdrawLead: 'Residents see "Withdrawn" and the reason in the place of the entry. A second person approves it before anyone sees it. If nothing else in the alert is left, the alert closes as withdrawn.',
+    correctTargetsTitle: '1. Which entry needs correcting?', withdrawTargetsTitle: '1. Which entry are you withdrawing?',
+    targetsLead: 'These are the entries residents can read now. One that was corrected or withdrawn already is not here.',
+    targetsNone: 'No entry of this alert can be corrected or withdrawn now.',
+    targetChoose: 'Choose this entry', targetChosen: 'Chosen',
+    replacesTitle: 'The entry residents read now',
+    correctTextLabel: '2. The corrected wording',
+    withdrawWordsLabel: 'Words for residents (needed for "Other")',
+    withdrawWordsHint: 'Residents read the reason in the place of the entry, in their language. Add words of your own, or write the whole reason if you chose "Other". At most {max} characters.',
+    withdrawReasonLegend: '2. Why are you withdrawing it?',
+    withdrawReasonHint: 'Residents see that the entry was withdrawn, with this reason.',
+    withdrawTextLabel: 'What residents read in the place of the entry',
+    withdrawTextHint: 'The reason, in English. It is translated into every language when you submit. At most {max} characters.',
+    withdrawCarried: 'Who it is for is who the withdrawn entry was for, and everyone who got that entry also gets this withdrawal.',
+    errors: {
+      TARGET_NOT_VALID: 'That entry is not one that can be corrected or withdrawn. Go back and choose again.',
+      TARGET_SUPERSEDED: 'That entry was corrected or withdrawn already. Go back and read the alert as it is now.',
+      TARGET_NOT_PUBLISHED: 'Residents have not read that entry, so there is nothing to correct or withdraw. Wait for its approval, or discard it.',
+      WITHDRAWAL_REASON_INVALID: 'Choose why you are withdrawing it.',
+      replaceForbidden: 'Only a Coordinator or an Admin can correct or withdraw an alert.',
+      replaceAal2: 'Correcting or withdrawing needs a sign-in confirmed with your authenticator. Sign out, sign in again and enter your code.' } } } });
+  m(en, { staff: { correct: {
+    reasons: { wrong_place: 'Wrong place', wrong_information: 'Wrong information', duplicate: 'Duplicate of another alert', other: 'Other (write the reason)' },
+    reasonText: {
+      wrong_place: 'This alert named the wrong place. It has been withdrawn.',
+      wrong_information: 'This alert had wrong information. It has been withdrawn.',
+      duplicate: 'This alert repeated another alert. It has been withdrawn.' } } } });
+  m(en, { staff: { approve: {
+    correctionTitle: 'Approve a correction', withdrawalTitle: 'Approve a withdrawal',
+    correctionLead: 'Read exactly what residents will see in place of the entry below. You approve this version only. If it changes while you read, you review it again.',
+    withdrawalLead: 'Read exactly what residents will read in the place of the entry below. You approve this version only. If it changes while you read, you review it again.',
+    replacesTitle: 'What this replaces',
+    replacesEntry: '{kind}, {time}',
+    replacesCorrection: 'Residents read this above the entry it corrects. The entry stays readable below it, marked "Corrected".',
+    replacesWithdrawal: 'Residents read "Withdrawn" and the reason in the place of this entry.',
+    withdrawalReason: 'Reason: {reason}',
+    reachesOriginal: 'This goes to everyone who got the original, and to everyone in the audience above.',
+    closesThread: 'Nothing else in this alert is left for residents to read. Approving it closes the alert as withdrawn: nothing more is sent for it, and its drafts and waiting entries are discarded.',
+    targetGone: 'The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it.',
+    errors: {
+      TARGET_NOT_VALID: 'The entry this replaces is not one that can be corrected or withdrawn any more. Discard this.',
+      TARGET_SUPERSEDED: 'The entry this replaces was corrected or withdrawn first. Discard this and read the alert as it is now.',
+      TARGET_NOT_PUBLISHED: 'Residents have not read the entry this replaces, so there is nothing to replace. Discard this.' } } } });
+  m(en, { staff: { incidents: { correct: 'Correct an entry', withdraw: 'Withdraw an entry' } } });
 })();

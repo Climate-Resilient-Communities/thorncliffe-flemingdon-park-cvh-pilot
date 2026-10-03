@@ -35,8 +35,19 @@ describe("what is running, on the Hub home", () => {
         note: null,
         drill: false,
         link: { href: `/staff/alerts/update?alert=${ALERT}`, label: "Add an update" },
+        // S05.02: a running alert can be corrected, or an entry of it withdrawn.
+        more: [
+          { href: `/staff/alerts/correct?alert=${ALERT}`, label: "Correct an entry" },
+          { href: `/staff/alerts/withdraw?alert=${ALERT}`, label: "Withdraw an entry" },
+        ],
       },
     ]);
+  });
+
+  it("draws the links to correct and to withdraw beside the one to add to the alert", () => {
+    const out = renderToStaticMarkup(<IncidentsList view={incidentsView(none, "coordinator", undefined, [thread()])} />);
+    expect(out).toMatch(/<a class="tap hub-link" href="\/staff\/alerts\/correct\?alert=[^"]*" data-testid="item-more">Correct an entry<\/a>/);
+    expect(out).toMatch(/<a class="tap hub-link" href="\/staff\/alerts\/withdraw\?alert=[^"]*" data-testid="item-more">Withdraw an entry<\/a>/);
   });
 
   it('offers "Promote to full alert" on a thread that is still only an acknowledgement', () => {

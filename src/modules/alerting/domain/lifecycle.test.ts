@@ -20,9 +20,9 @@ describe("entry transitions", () => {
     expect(ENTRY_TRANSITIONS.map((rule) => [rule.from, rule.to])).toEqual(ALLOWED);
   });
 
-  it("allow each transition of the epic on an open thread, with no web publication", () => {
+  it("allow each transition on an open thread, with no web publication but for those that supersede an entry residents read", () => {
     for (const [from, to] of ALLOWED) {
-      expect(requestTransition({ from, to, webPublished: false, threadOpen: true }), `${from} -> ${to}`).toMatchObject({ ok: true });
+      expect(requestTransition({ from, to, webPublished: to === "superseded", threadOpen: true }), `${from} -> ${to}`).toMatchObject({ ok: true });
     }
   });
 
@@ -65,6 +65,8 @@ describe("entry transitions", () => {
     expect(requestTransition({ from: "approved", to: "superseded", webPublished: true, threadOpen: true })).toEqual({ ok: true, action: "supersede" });
     expect(requestTransition({ from: "pending_approval", to: "superseded", webPublished: true, threadOpen: true })).toEqual({ ok: true, action: "supersede" });
     expect(requestTransition({ from: "approved", to: "superseded", webPublished: true, threadOpen: false })).toEqual({ ok: false, refusal: "ALERT_CLOSED" });
+    // A pending entry with nothing published has nothing to replace.
+    expect(requestTransition({ from: "pending_approval", to: "superseded", webPublished: false, threadOpen: true })).toEqual({ ok: false, refusal: "ILLEGAL_TRANSITION" });
     for (const from of ["draft", "discarded", "superseded", "published_system"] as const) {
       expect(requestTransition({ from, to: "superseded", webPublished: true, threadOpen: true }), from).toEqual({ ok: false, refusal: "ILLEGAL_TRANSITION" });
     }

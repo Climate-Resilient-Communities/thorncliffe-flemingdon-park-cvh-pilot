@@ -8,13 +8,25 @@ export const UPDATE_PAGE = "/staff/alerts/update";
 /** "Promote to full alert" (O-13, S05.01): the first update to an acknowledgement. */
 export const PROMOTE_PAGE = "/staff/alerts/promote";
 
-/**
- * Which composer a person came from: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14) or the promotion of an
- * acknowledgement (O-13).
- */
-export type ComposerFrom = "ack" | "compose" | "update" | "promote";
+/** "Correct" (O-15, S05.02): a correction of an entry residents read, added to the same alert in the open. */
+export const CORRECT_PAGE = "/staff/alerts/correct";
+/** "Withdraw" (O-15, S05.02): a withdrawal of an entry residents read, with a reason from the catalog. */
+export const WITHDRAW_PAGE = "/staff/alerts/withdraw";
 
-const COMPOSER_PAGES: Record<ComposerFrom, string> = { ack: ACK_PAGE, compose: COMPOSE_PAGE, update: UPDATE_PAGE, promote: PROMOTE_PAGE };
+/**
+ * Which composer a person came from: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14), the promotion of an
+ * acknowledgement (O-13), a correction (O-15) or a withdrawal (O-15).
+ */
+export type ComposerFrom = "ack" | "compose" | "update" | "promote" | "correct" | "withdraw";
+
+const COMPOSER_PAGES: Record<ComposerFrom, string> = {
+  ack: ACK_PAGE,
+  compose: COMPOSE_PAGE,
+  update: UPDATE_PAGE,
+  promote: PROMOTE_PAGE,
+  correct: CORRECT_PAGE,
+  withdraw: WITHDRAW_PAGE,
+};
 
 export const isComposerFrom = (value: unknown): value is ComposerFrom => typeof value === "string" && Object.hasOwn(COMPOSER_PAGES, value);
 
@@ -28,6 +40,9 @@ export const composerPage = (from: ComposerFrom): string => COMPOSER_PAGES[from]
  */
 export function composerOf(kind: string, priorKinds: readonly string[] = []): ComposerFrom {
   if (kind === "ack") return "ack";
+  // A correction and a withdrawal (S05.02) are written on their own pages, whatever came before them.
+  if (kind === "correction") return "correct";
+  if (kind === "withdrawal") return "withdraw";
   if (priorKinds.length === 0) return "compose";
   return priorKinds.every((prior) => prior === "ack") ? "promote" : "update";
 }
@@ -38,6 +53,12 @@ export const composerHref = (from: ComposerFrom, ref: { alertId: string; entryId
 
 /** The start of an update to a running alert: nothing is made until the author saves it (S05.01). `promote` is the first update to an acknowledgement. */
 export const updateHref = (alertId: string, promote: boolean): string => `${promote ? PROMOTE_PAGE : UPDATE_PAGE}?${new URLSearchParams({ alert: alertId }).toString()}`;
+
+/** The start of a correction (O-15): the entries that can be corrected, and, with `target`, the form for that one. */
+export const correctHref = (alertId: string, target?: string): string => `${CORRECT_PAGE}?${new URLSearchParams({ alert: alertId, ...(target ? { target } : {}) }).toString()}`;
+
+/** The start of a withdrawal (O-15): the entries that can be withdrawn, and, with `target`, the form for that one. */
+export const withdrawHref = (alertId: string, target?: string): string => `${WITHDRAW_PAGE}?${new URLSearchParams({ alert: alertId, ...(target ? { target } : {}) }).toString()}`;
 
 /** The approval view (O-05, O-07; S04.07): where a second person reads exactly what goes out and approves, returns or discards it. */
 export const APPROVE_PAGE = "/staff/alerts/approve";

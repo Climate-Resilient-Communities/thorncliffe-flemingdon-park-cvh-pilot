@@ -216,7 +216,7 @@ begin
     -- Only an approved correction or withdrawal naming the entry replaces it, and it was approved in this very transaction (the approval's `approved_at` is
     -- now(), the transaction's own time): a direct change of the status cannot supersede an entry quietly.
     if old.status = 'pending_approval' and old.web_published_at is null then
-      raise exception 'alert_entry: only a web-published pending entry is superseded' using errcode = 'check_violation';
+      raise exception 'alert_entry: pending_approval to superseded is not an allowed transition unless the entry is web-published' using errcode = 'check_violation';
     end if;
     if new.version is distinct from old.version
        or new.content_hash is distinct from old.content_hash

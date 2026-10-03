@@ -3,14 +3,14 @@
 //
 // "Waiting for your approval" is for a Coordinator or an Admin: pending entries they did not edit, the longest wait first. "Running alerts" is for the roles
 // that write to them (S05.01): the open threads residents are reading, each with "Add an update", or "Promote to full alert" while it is still only an
-// acknowledgement; a closed thread is not listed, so none offers either. "Your alerts" is what the person is an editor of: a draft an approver sent back
+// acknowledgement, and (S05.02) "Correct" and "Withdraw" for the entries residents read; a closed thread is not listed, so none offers any. "Your alerts" is what the person is an editor of: a draft an approver sent back
 // shows the approver's note until it is submitted again (the note's only other place is the composer). Drills are listed apart from real alerts and
 // tagged, so a rehearsal is never mistaken for one.
 import type { IncidentRow, Incidents, RunningThread } from "@/modules/alerting";
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
-import { approveHref, composerHref, updateHref } from "../pages";
+import { approveHref, composerHref, correctHref, updateHref, withdrawHref } from "../pages";
 import { typeName } from "../typeNames";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -30,6 +30,8 @@ export interface IncidentItemView {
   note: string | null;
   drill: boolean;
   link: { href: string; label: string };
+  /** The other things to do with a running alert (S05.02): correct an entry, withdraw an entry. */
+  more?: { href: string; label: string }[];
 }
 
 export interface IncidentsView {
@@ -68,6 +70,10 @@ const runningOf = (thread: RunningThread, t: Text): IncidentItemView => ({
   note: null,
   drill: thread.isDrill,
   link: { href: updateHref(thread.alertId, thread.ackOnly), label: thread.ackOnly ? t("promote") : t("addUpdate") },
+  more: [
+    { href: correctHref(thread.alertId), label: t("correct") },
+    { href: withdrawHref(thread.alertId), label: t("withdraw") },
+  ],
 });
 
 export function incidentsView(incidents: Incidents, role: StaffRole, t: Text = catalogText, running: readonly RunningThread[] = []): IncidentsView {
