@@ -1,8 +1,27 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { KICK_RUN_LIMIT_MS, MESSAGING_OPS_EVENT_KINDS, RUN_LIMIT_MS, UNKNOWN_CAUSES, type DispatcherDeps, type MessagingLog, type MessagingOpsEvent } from "@/modules/messaging";
-import { DELIVERY_UNKNOWN_CAUSES, OPS_EVENT_KINDS, toOpsEventRecord } from "@/modules/ops";
+import {
+  CALLBACK_IGNORED_REASONS as MESSAGING_CALLBACK_IGNORED_REASONS,
+  CALLBACK_TARGETS,
+  KICK_RUN_LIMIT_MS,
+  MESSAGING_OPS_EVENT_KINDS,
+  RUN_LIMIT_MS,
+  SIGNATURE_FAILURE_REASONS as MESSAGING_SIGNATURE_FAILURE_REASONS,
+  UNKNOWN_CAUSES,
+  type DispatcherDeps,
+  type MessagingLog,
+  type MessagingOpsEvent,
+} from "@/modules/messaging";
+import {
+  CALLBACK_IGNORED_REASONS,
+  DELIVERY_UNKNOWN_CAUSES,
+  OPS_EVENT_KINDS,
+  SIGNATURE_FAILURE_REASONS,
+  UNKNOWN_RESOLVED_STATUSES,
+  WEBHOOK_ROUTES,
+  toOpsEventRecord,
+} from "@/modules/ops";
 import type { Db, DbExecutor } from "@/platform/db";
-import { SenderNotConfigured, appDispatcher, dispatcherConfig, kickDispatcher, opsRecorder, runDispatchJob, runKickJob, runMessagingServiceCheck, systemClock } from "./dispatch";
+import { SIGNATURE_FAILURE_EVENT_LIMIT, SenderNotConfigured, appDispatcher, dispatcherConfig, kickDispatcher, opsRecorder, runDispatchJob, runKickJob, runMessagingServiceCheck, systemClock } from "./dispatch";
 
 // What the dispatcher is built with (its run limit among it) is observed here; the dispatcher itself is the real one, and runs against
 // no database (its lease statement fails at once, which these tests ignore: only the limit it was given matters).
@@ -149,10 +168,13 @@ describe("starting the dispatcher right after an approval ends", () => {
 });
 
 describe("messaging's operational events in ops_event", () => {
-  /** An executor that keeps the rows ops would insert. */
-  const recorder = () => {
+  /** An executor that keeps the rows ops would insert, and says `recent` rows of the kind were recorded lately (what a capped event counts). */
+  const recorder = (recent = 0) => {
     const rows: Record<string, unknown>[] = [];
-    const executor = { insert: () => ({ values: async (row: Record<string, unknown>) => void rows.push(row) }) } as unknown as DbExecutor;
+    const executor = {
+      insert: () => ({ values: async (row: Record<string, unknown>) => void rows.push(row) }),
+      select: () => ({ from: () => ({ where: async () => [{ n: recent }] }) }),
+    } as unknown as DbExecutor;
     return { rows, executor };
   };
 
@@ -162,6 +184,12 @@ describe("messaging's operational events in ops_event", () => {
     { kind: "dispatch.provider_auth_failed", detail: { http_status: 401 } },
     { kind: "messaging.smart_encoding_on", detail: {} },
     { kind: "messaging.service_check_failed", detail: { reason: "http_404" } },
+    // The status callbacks (S06.04).
+    { kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: "delivered" } },
+    { kind: "delivery.callback_ignored", detail: { reason: "no_ref" } },
+    { kind: "delivery.callback_ignored", deliveryId: DELIVERY, detail: { reason: "not_in_flight" } },
+    { kind: "delivery.provider_id_mismatch", deliveryId: DELIVERY, detail: {} },
+    { kind: "webhook.signature_invalid", detail: { route: "twilio_status", reason: "signature_mismatch" } },
   ];
 
   it("has an ops event for every kind messaging can record, and records each as the ops module defines it", async () => {
@@ -175,7 +203,48 @@ describe("messaging's operational events in ops_event", () => {
       { kind: "dispatch.provider_auth_failed", severity: "error", subjectType: null, subjectId: null, detail: { http_status: 401 } },
       { kind: "messaging.smart_encoding_on", severity: "error", subjectType: null, subjectId: null, detail: {} },
       { kind: "messaging.service_check_failed", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "http_404" } },
+      { kind: "delivery.unknown_resolved", severity: "info", subjectType: "delivery", subjectId: DELIVERY, detail: { status: "delivered" } },
+      { kind: "delivery.callback_ignored", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "no_ref" } },
+      { kind: "delivery.callback_ignored", severity: "warning", subjectType: "delivery", subjectId: DELIVERY, detail: { reason: "not_in_flight" } },
+      { kind: "delivery.provider_id_mismatch", severity: "error", subjectType: "delivery", subjectId: DELIVERY, detail: {} },
+      { kind: "webhook.signature_invalid", severity: "warning", subjectType: null, subjectId: null, detail: { route: "twilio_status", reason: "signature_mismatch" } },
     ]);
+  });
+
+  it("keeps at most SIGNATURE_FAILURE_EVENT_LIMIT signature failures in 10 minutes, since anyone can cause one, and never limits the callbacks' own events", async () => {
+    expect(SIGNATURE_FAILURE_EVENT_LIMIT).toEqual({ max: 50, withinMs: 600_000 });
+    const failure: MessagingOpsEvent = { kind: "webhook.signature_invalid", detail: { route: "twilio_status", reason: "missing_signature" } };
+    const under = recorder(SIGNATURE_FAILURE_EVENT_LIMIT.max - 1);
+    await opsRecorder.record(under.executor, failure);
+    expect(under.rows).toHaveLength(1);
+    const full = recorder(SIGNATURE_FAILURE_EVENT_LIMIT.max);
+    await opsRecorder.record(full.executor, failure);
+    expect(full.rows).toHaveLength(0);
+    await opsRecorder.record(full.executor, { kind: "delivery.callback_ignored", detail: { reason: "no_ref" } });
+    expect(full.rows).toHaveLength(1);
+  });
+
+  it("knows the same reasons a callback is refused, ignored or resolved as messaging does (ops may not import messaging's domain, so a test holds the lists together)", () => {
+    expect([...SIGNATURE_FAILURE_REASONS].sort()).toEqual([...MESSAGING_SIGNATURE_FAILURE_REASONS].sort());
+    expect([...CALLBACK_IGNORED_REASONS].sort()).toEqual([...MESSAGING_CALLBACK_IGNORED_REASONS].sort());
+    expect([...UNKNOWN_RESOLVED_STATUSES].sort()).toEqual([...CALLBACK_TARGETS].sort());
+    expect([...WEBHOOK_ROUTES]).toEqual(["twilio_status"]);
+    for (const reason of MESSAGING_SIGNATURE_FAILURE_REASONS) {
+      expect(() => toOpsEventRecord({ kind: "webhook.signature_invalid", detail: { route: "twilio_status", reason } }), reason).not.toThrow();
+    }
+    for (const reason of MESSAGING_CALLBACK_IGNORED_REASONS) {
+      expect(() => toOpsEventRecord({ kind: "delivery.callback_ignored", detail: { reason } }), reason).not.toThrow();
+    }
+    for (const status of CALLBACK_TARGETS) {
+      expect(() => toOpsEventRecord({ kind: "delivery.unknown_resolved", subjectType: "delivery", subjectId: DELIVERY, detail: { status } }), status).not.toThrow();
+    }
+  });
+
+  it("refuses a callback event with a field outside its schema: no address, no number, no id of the provider", () => {
+    expect(() => toOpsEventRecord({ kind: "webhook.signature_invalid", detail: { route: "twilio_status", reason: "missing_signature", ip: "203.0.113.9" } as never })).toThrow();
+    expect(() => toOpsEventRecord({ kind: "delivery.provider_id_mismatch", detail: { sid: "SM0123456789abcdef0123456789abcdef" } as never })).toThrow();
+    expect(() => toOpsEventRecord({ kind: "delivery.callback_ignored", detail: { reason: "no_ref", to: "+14165550123" } as never })).toThrow();
+    expect(() => toOpsEventRecord({ kind: "delivery.unknown_resolved", detail: { status: "queued" } as never })).toThrow();
   });
 
   it("knows the same causes of an unknown text as messaging does (ops may not import messaging's domain, so a test holds the two lists together)", () => {

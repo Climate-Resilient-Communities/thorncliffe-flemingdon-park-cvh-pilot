@@ -69,6 +69,23 @@ export const DELIVERY_UNKNOWN_CAUSES = [
   "no_terminal_status",
 ] as const;
 
+/** The webhook routes whose signature failures are counted (S06.04; S07.04 adds `twilio_inbound`). */
+export const WEBHOOK_ROUTES = ["twilio_status"] as const;
+
+/** Why a webhook's signature was refused (S06.04): no `X-Twilio-Signature` header, or one that is not the request's signature. */
+export const SIGNATURE_FAILURE_REASONS = ["missing_signature", "signature_mismatch"] as const;
+
+/**
+ * Why a validly signed status callback changed nothing and is counted (S06.04). The same codes as messaging's
+ * `CALLBACK_IGNORED_REASONS` (a test in src/app compares them; ops may not import messaging's domain). `no_ref`: no delivery reference in
+ * the URL; `unknown_ref`: a reference no delivery has (or one that cannot be a delivery's); `invalid_payload`: no usable MessageSid or
+ * MessageStatus; `not_in_flight`: the delivery was never handed to the provider, or ended without a provider id.
+ */
+export const CALLBACK_IGNORED_REASONS = ["no_ref", "unknown_ref", "invalid_payload", "not_in_flight"] as const;
+
+/** The state a callback moved an `unknown` delivery to (S06.04). The same codes as messaging's `CALLBACK_TARGETS` (compared by the same test). */
+export const UNKNOWN_RESOLVED_STATUSES = ["submitted", "delivered", "undelivered", "failed"] as const;
+
 export const OPS_EVENT_KINDS = {
   /**
    * A delivery became `unknown` (S06.02): the provider's answer was ambiguous, or the sweep found no outcome for a hand-off (5 minutes) or
@@ -81,6 +98,40 @@ export const OPS_EVENT_KINDS = {
       cause: z.enum(DELIVERY_UNKNOWN_CAUSES),
       http_status: z.number().int().min(100).max(599).optional(),
     }),
+  },
+  /**
+   * A delivery that was `unknown` moved on because the provider's signed status callback arrived late (S06.04): `status` is the state it
+   * moved to. The `delivery.unknown` of the same delivery is thereby resolved: the health job (S06.07) records the recovery from it.
+   * Subject: the delivery. Codes only.
+   */
+  "delivery.unknown_resolved": {
+    severity: "info",
+    detail: z.strictObject({ status: z.enum(UNKNOWN_RESOLVED_STATUSES) }),
+  },
+  /**
+   * A validly signed status callback changed nothing and is counted (S06.04): see CALLBACK_IGNORED_REASONS. Subject: the delivery,
+   * when the callback named one. A repeat, a late non-terminal status or any status after a final one is ordinary and not recorded.
+   */
+  "delivery.callback_ignored": {
+    severity: "warning",
+    detail: z.strictObject({ reason: z.enum(CALLBACK_IGNORED_REASONS) }),
+  },
+  /**
+   * A signed status callback carried a different provider id than the one the delivery already has (S06.04): nothing was changed,
+   * because a provider id never changes. Subject: the delivery. The two ids are not recorded.
+   */
+  "delivery.provider_id_mismatch": {
+    severity: "error",
+    detail: z.strictObject({}),
+  },
+  /**
+   * A webhook request whose signature was refused (S06.04, AD-23): more than 5 in 10 minutes raise the on-call alert (S06.07). The request
+   * was answered 403 and did nothing else. Anyone can send such a request, so the app records at most a fixed number in any 10 minutes
+   * (src/app/dispatch.ts): the count past the alert's threshold is what matters, not every attempt. Codes only: no address, no body.
+   */
+  "webhook.signature_invalid": {
+    severity: "warning",
+    detail: z.strictObject({ route: z.enum(WEBHOOK_ROUTES), reason: z.enum(SIGNATURE_FAILURE_REASONS) }),
   },
   /** The provider refused the credentials (HTTP 401 or 403) several texts in a row, so the run stopped (S06.02); the texts that were refused are `failed`. */
   "dispatch.provider_auth_failed": {

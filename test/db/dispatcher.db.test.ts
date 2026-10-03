@@ -479,7 +479,8 @@ describe("a run", () => {
       expect(form.Body).toBe(row.body);
       expect(form.SmartEncoded).toBe("false");
       expect(form.MessagingServiceSid).toBe(SERVICE_SID);
-      expect(form.StatusCallback).toBe(`${BASE_URL}/api/twilio/status?ref=${row.callback_ref}`);
+      // The URL Twilio calls, and with it (in the fragment, which Twilio does not sign) the retry policy for a 5xx.
+      expect(form.StatusCallback).toBe(`${BASE_URL}/api/twilio/status?ref=${row.callback_ref}#rc=3&rp=ct,5xx`);
       expect(form.To).toBe(numberOf(row.recipient_id as string));
       expect(form).not.toHaveProperty("From");
     }

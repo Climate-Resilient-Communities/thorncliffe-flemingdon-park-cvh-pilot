@@ -12,6 +12,7 @@ import {
   PROVIDER_TIMEOUT_MS,
   RUN_LIMIT_MS,
   RUN_MARGIN_MS,
+  STATUS_CALLBACK_CONNECTION_OVERRIDES,
   alertNotSendable,
   authFailureStopsRun,
   capacitySegments,
@@ -20,6 +21,7 @@ import {
   createPaceLimiter,
   isAuthFailure,
   pauseApplies,
+  providerStatusCallbackUrl,
   statusCallbackUrl,
   takeWithinSegments,
   type AlertStanding,
@@ -299,5 +301,21 @@ describe("the status callback URL", () => {
     const ref = "0190aaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
     expect(statusCallbackUrl("https://cvh.example", ref)).toBe(`https://cvh.example/api/twilio/status?ref=${ref}`);
     expect(statusCallbackUrl("https://cvh.example/", ref)).toBe(`https://cvh.example/api/twilio/status?ref=${ref}`);
+  });
+
+  it("is given to the provider with Twilio's connection overrides in the fragment: up to three retries, on a connection failure or any 5xx and not on a 4xx", () => {
+    const ref = "0190aaaa-bbbb-4ccc-8ddd-eeeeeeeeeeee";
+    const given = providerStatusCallbackUrl("https://cvh.example/", ref);
+    expect(given).toBe(`https://cvh.example/api/twilio/status?ref=${ref}#rc=3&rp=ct,5xx`);
+    expect(STATUS_CALLBACK_CONNECTION_OVERRIDES).toBe("#rc=3&rp=ct,5xx");
+    // Twilio's documented limits: `rc` is 0 to 5 (default 1) and `rp` takes ct, rt, 4xx, 5xx and all, as a comma-separated list (default ct).
+    const overrides = new URLSearchParams(given.split("#")[1]);
+    expect([...overrides.keys()].sort()).toEqual(["rc", "rp"]);
+    expect(Number(overrides.get("rc"))).toBeGreaterThan(1);
+    expect(Number(overrides.get("rc"))).toBeLessThanOrEqual(5);
+    expect(overrides.get("rp")?.split(",").sort()).toEqual(["5xx", "ct"]);
+    // Everything before the fragment is the URL that is called and signed, unchanged: the fragment never reaches the server or the signature.
+    expect(given.split("#")[0]).toBe(statusCallbackUrl("https://cvh.example", ref));
+    expect(new URL(given).search).toBe(`?ref=${ref}`);
   });
 });

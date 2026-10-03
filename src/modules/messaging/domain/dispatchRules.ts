@@ -9,6 +9,7 @@
  */
 import { SAFETY_OVERRIDE_TYPES } from "../../../contracts/audience";
 import type { DeliveryKind, RecipientKind } from "./deliveryRules";
+import { STATUS_CALLBACK_PATH } from "./statusCallback";
 
 /** The sender lease lasts 60 seconds from its last renewal (E06 "Sender lease"). */
 export const LEASE_TTL_MS = 60_000;
@@ -311,5 +312,22 @@ export function alertNotSendable(standing: AlertStanding | null, recipientKind: 
 
 /** The URL the provider calls back with a text's status: `PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}` (S06.04 checks the signature against it). */
 export function statusCallbackUrl(publicBaseUrl: string, callbackRef: string): string {
-  return `${publicBaseUrl.replace(/\/+$/, "")}/api/twilio/status?ref=${encodeURIComponent(callbackRef)}`;
+  return `${publicBaseUrl.replace(/\/+$/, "")}${STATUS_CALLBACK_PATH}?ref=${encodeURIComponent(callbackRef)}`;
+}
+
+/**
+ * Twilio's webhook connection overrides for the status callback, in the URL's fragment (S06.04). By default Twilio retries a webhook once
+ * and only when the TCP or TLS connection fails (`rc=1`, `rp=ct`), so a 5xx, which is what the route answers when its database fails
+ * while a final status is applied, would lose that status for good. `rc=3` asks for up to three retries and `rp=ct,5xx` for them on a
+ * connection failure and on any 5xx answer (not on a 4xx: a refused signature is not mended by sending it again). Twilio's own total time
+ * limit (`tt`, 15 s by default and at most 15 s) covers the retries, so a database that stays down longer is left to the sweep, which
+ * makes the text `unknown` (visible, never lost, never sent again). Every callback is idempotent, so a retry changes nothing that the
+ * first did not. The fragment is never sent to the server and Twilio leaves it out of the signature, so the URL the callback is
+ * checked against (`statusCallbackUrl`) is unchanged.
+ */
+export const STATUS_CALLBACK_CONNECTION_OVERRIDES = "#rc=3&rp=ct,5xx";
+
+/** The `StatusCallback` the provider is given: the URL it will call (and sign) plus the connection overrides that make a 5xx worth a retry. */
+export function providerStatusCallbackUrl(publicBaseUrl: string, callbackRef: string): string {
+  return `${statusCallbackUrl(publicBaseUrl, callbackRef)}${STATUS_CALLBACK_CONNECTION_OVERRIDES}`;
 }

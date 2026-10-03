@@ -39,7 +39,7 @@ import {
   createPaceLimiter,
   isAuthFailure,
   pauseApplies,
-  statusCallbackUrl,
+  providerStatusCallbackUrl,
   type SubmitAnswer,
   type SubmitOutcome,
 } from "../domain/dispatchRules";
@@ -263,7 +263,7 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
           to: handOff.number,
           body: row.body,
           messagingServiceSid: config.messagingServiceSid,
-          statusCallback: statusCallbackUrl(config.publicBaseUrl, row.callbackRef),
+          statusCallback: providerStatusCallbackUrl(config.publicBaseUrl, row.callbackRef),
         });
         outcome = classifyAnswer(answer, row.attempts);
       } catch (error) {
