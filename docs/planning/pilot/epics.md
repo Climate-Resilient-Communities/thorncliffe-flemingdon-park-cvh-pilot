@@ -1576,7 +1576,7 @@ So that a question in any language finds an English-sourced listing.
 
 ### Story S03.05 — Questions in Pashto, Dari and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** —
+- **Size:** M · **Estimate:** 5 h · **Actual:** — (started 2026-10-03 00:37 UTC)
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
 As a resident who writes in Pashto, Dari or romanized Urdu,
