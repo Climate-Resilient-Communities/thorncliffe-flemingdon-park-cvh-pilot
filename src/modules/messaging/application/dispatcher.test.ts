@@ -547,3 +547,51 @@ describe("the spend seam (S06.08)", () => {
     expect(events).toEqual([{ kind: "delivery.unknown", deliveryId: "01900000-0000-7000-8000-0000000d0001", detail: { cause: "server_error", http_status: 503 } }]);
   });
 });
+
+describe("the matching rule's seam when a slow response fills a provider id (S06.08)", () => {
+  // A transaction that can open a savepoint, as the real one can.
+  const savepointTx: DbTransaction = { transaction: async <T>(run: (transaction: DbTransaction) => Promise<T>) => run(savepointTx) } as unknown as DbTransaction;
+  const savepointDb = { transaction: async <T>(run: (transaction: DbTransaction) => Promise<T>) => run(savepointTx) } as unknown as Db;
+
+  /** A run whose outcome write finds the row already moved on (the sweep made it unknown), so the provider id is only filled. */
+  function slowResponse(filled: "filled" | "same" | "different" | "not_fillable", afterProviderId?: DispatcherDeps["afterProviderId"]) {
+    const memory = memoryStore([view()]);
+    memory.store.recordOutcome = async () => false;
+    memory.store.fillProviderId = async () => filled;
+    return setup([], {}, { db: savepointDb, store: memory.store, afterProviderId });
+  }
+
+  it("is called once, in a savepoint, with the row and the id it now has, when the id was filled", async () => {
+    const seen: { tx: unknown; id: string; providerMessageId: string | null }[] = [];
+    const { dispatcher } = slowResponse("filled", async (given, delivery) => void seen.push({ tx: given, id: delivery.id, providerMessageId: delivery.providerMessageId }));
+    await dispatcher.run();
+    expect(seen).toEqual([{ tx: savepointTx, id: "01900000-0000-7000-8000-0000000d0001", providerMessageId: SID }]);
+  });
+
+  it("is not called when the row already had the id, had a different one, or could not be filled", async () => {
+    for (const filled of ["same", "different", "not_fillable"] as const) {
+      const seen: string[] = [];
+      const { dispatcher } = slowResponse(filled, async (_tx, delivery) => void seen.push(delivery.id));
+      await dispatcher.run();
+      expect(seen, filled).toEqual([]);
+    }
+  });
+
+  it("never undoes the id when it fails: the failure is logged by hook, id and error name, and the run goes on", async () => {
+    const { dispatcher, lines } = slowResponse("filled", async () => {
+      throw new RangeError("the matching failed for +14165550123");
+    });
+    const report = await dispatcher.run();
+    expect(report.status).toBe("ok");
+    expect(lines.find((line) => line.evt === "dispatch.spend_hook_failed")?.fields).toEqual({ hook: "provider_id", delivery_id: "01900000-0000-7000-8000-0000000d0001", error: "RangeError" });
+    expect(JSON.stringify(lines)).not.toContain("5550123");
+  });
+
+  it("is not called by a run that records its outcome itself (the estimate and the matching are afterOutcome's)", async () => {
+    const seen: string[] = [];
+    const { dispatcher } = setup([view()], {}, { db: savepointDb, afterProviderId: async (_tx, delivery) => void seen.push(delivery.id) });
+    const report = await dispatcher.run();
+    expect(report.submitted).toBe(1);
+    expect(seen).toEqual([]);
+  });
+});

@@ -10,7 +10,7 @@ const getDb = vi.hoisted(() => vi.fn(() => {
 vi.mock("@/platform/db", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/platform/db")>()), getDb }));
 vi.mock("@/platform/config/env", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@/platform/config/env")>()),
-  getEnv: () => ({ publicBaseUrl: "https://cvh.example" }),
+  getEnv: () => ({ publicBaseUrl: "https://cvh.example", smsPricePerSegmentCents: 1.5 }),
 }));
 
 const TOKEN = "fake-auth-token-for-tests";
@@ -28,7 +28,7 @@ describe("the status callbacks of the app", () => {
   it("check the signature with the account's Auth Token against the environment's PUBLIC_BASE_URL, and record what they refuse in ops_event", async () => {
     const events: MessagingOpsEvent[] = [];
     const callbacks = appStatusCallbacks({
-      env: { twilio: { accountSid: ACCOUNT, authToken: TOKEN }, publicBaseUrl: "https://cvh.example" },
+      env: { twilio: { accountSid: ACCOUNT, authToken: TOKEN }, publicBaseUrl: "https://cvh.example", smsPricePerSegmentCents: 1.5 },
       db: {} as Db,
       ops: { record: async (_executor, event) => void events.push(event) },
       log: { info: () => undefined, error: () => undefined },
