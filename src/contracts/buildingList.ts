@@ -16,6 +16,12 @@ export const BuildingListSchema = z.object({
       address: z.string(),
       neighbourhoodId: z.string(),
       neighbourhood: z.string(),
+      /**
+       * Where the building is (the City register's point), for its pin on the map (S02.07). The server always sends it;
+       * optional so that a list without it (an older server, a test's sample list) still loads, and that building has no pin.
+       */
+      lat: z.number().optional(),
+      lng: z.number().optional(),
       /** Lowest first. */
       floors: z.array(z.object({ id: FloorIdSchema, label: z.string() })),
     }),

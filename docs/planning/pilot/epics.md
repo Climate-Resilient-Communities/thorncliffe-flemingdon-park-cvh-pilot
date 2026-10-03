@@ -1083,7 +1083,7 @@ So that I can find help near me in my language.
 
 ### Story S02.07 — Resident finds providers and buildings on a map
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** — (started 2026-10-02 23:23 UTC, merge pending)
 - **Traces:** FR-D3, UX-DR12, AR-3 (tile cache) · **Depends on:** S02.06, S01.13 · **Branch:** `e02-s07-map`
 
 As a resident,

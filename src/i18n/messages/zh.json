@@ -4430,6 +4430,24 @@
     "backToList": "[EN] All services and organisations",
     "suggestApply": "[EN] Show only {place}"
   },
+  "map": {
+    "lead": "Thorncliffe Park 和 Flemingdon Park 的服务、机构和公寓楼。点击标记，查看它是什么。",
+    "service": "服务或机构",
+    "building": "公寓楼",
+    "pinName": "{name}：{kind}",
+    "noSignal": "没有信号时无法使用地图",
+    "noSignalBody": "列表中有地图上的所有地点。",
+    "notSaved": "地图的这一部分没有保存在您的手机上",
+    "notSavedBody": "您在有信号时看过的地图部分会保留在手机上。标记和列表仍可使用。",
+    "listTitle": "地图这一部分的地点",
+    "listLead": "与地图显示的地点相同。移动或缩放地图即可改变此列表。",
+    "listEmpty": "地图的这一部分没有内容。请移动或缩放地图，或显示整个区域。",
+    "wholeArea": "显示整个区域",
+    "buildings": "公寓楼",
+    "buildingsCount": "{n} 栋楼",
+    "buildingsCountOne": "1 栋楼",
+    "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
+  },
   "guides": {
     "reviewed": "已由中心审核，最后更新于{date}"
   }
