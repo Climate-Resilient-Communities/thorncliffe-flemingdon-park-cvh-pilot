@@ -90,6 +90,18 @@ describe("the permission test list", () => {
     }
   });
 
+  it("gives a Director the Hub home to read and refuses them every alert endpoint: each action, each route and each alert page (S04.10)", () => {
+    const home = STAFF_ENDPOINTS.find((row) => row.id === "page /staff");
+    expect(home, "the Hub home is on the list").toMatchObject({ kind: "page", writes: "none", action: "hub.open" });
+    expect(home?.expected.director).toBe("allowed");
+    const alerts = STAFF_ENDPOINTS.filter((row) => /\/alerts(\/|$)/.test(row.route));
+    // The approval, the composers, the audience pickers, submit and its state: all of the alert surface is there.
+    expect(alerts.length).toBeGreaterThanOrEqual(15);
+    for (const row of alerts) expect(row.expected.director, `${row.id}: a Director only reads the Hub home`).toBe("forbidden");
+    // And the home itself offers a Director nothing to do: their role may not take any action behind a link on it.
+    for (const action of ["alert.author", "alert.author_wide", "alert.approve", "alert.correct", "alert.withdraw", "alert.send"] as const) expect(can("director", action), action).toBe(false);
+  });
+
   it("calls every route handler and server action that writes with a real request", () => {
     for (const row of STAFF_ENDPOINTS) {
       if (row.kind === "route" && row.writes !== "none") expect(row.body, row.id).toBeDefined();
