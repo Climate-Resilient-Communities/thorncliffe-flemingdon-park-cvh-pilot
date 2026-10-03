@@ -229,6 +229,8 @@ const updateInput = (over: Partial<AddUpdateInput> = {}): AddUpdateInput => ({
 
 async function newUpdate(alertId: string, by: Account = authorA, over: Partial<AddUpdateInput> = {}): Promise<EntryRef> {
   const input = updateInput(over);
+  // Entries are ordered by their creation time (the id only breaks a tie), so each update is made a second after the one before it, as in life.
+  clock = new Date(clock.getTime() + 1000);
   const made = await alerting.addUpdate(actorOf(by), { alertId }, input);
   if (!made.ok) throw new Error(`addUpdate refused: ${made.error}`);
   return { alertId, entryId: made.value.entry.id };
@@ -737,8 +739,6 @@ describe("the thread as residents read it", () => {
 
   it("tells the composer an update follows other entries, and the incidents list to open it on the update composer", async () => {
     const { ref } = await approvedThread();
-    // The entries' order is their creation time (the id only breaks a tie): the update is made a second after the acknowledgement, as it is in life.
-    clock = new Date(NOW.getTime() + 1000);
     const update = await newUpdate(ref.alertId, authorA);
     expect((await alerting.entryState(ref))?.priorKinds).toEqual([]);
     expect((await alerting.entryState(update))?.priorKinds).toEqual(["ack"]);
