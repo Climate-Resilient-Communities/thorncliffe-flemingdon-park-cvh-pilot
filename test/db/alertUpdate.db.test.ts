@@ -737,6 +737,8 @@ describe("the thread as residents read it", () => {
 
   it("tells the composer an update follows other entries, and the incidents list to open it on the update composer", async () => {
     const { ref } = await approvedThread();
+    // The entries' order is their creation time (the id only breaks a tie): the update is made a second after the acknowledgement, as it is in life.
+    clock = new Date(NOW.getTime() + 1000);
     const update = await newUpdate(ref.alertId, authorA);
     expect((await alerting.entryState(ref))?.priorKinds).toEqual([]);
     expect((await alerting.entryState(update))?.priorKinds).toEqual(["ack"]);
