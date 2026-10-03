@@ -268,6 +268,7 @@ Each table is created by the first story that needs it, in that story's migratio
 | `rate_limit` (subscriptions), `search_log` (directory) | S03.04 | | |
 | `translation_route`, `translation_cache` (translation) | S04.02 (S04.01 later replaces the provisional timeouts in `translation_route` by a migration) | | |
 | `alert`, `alert_entry`, `alert_entry_translation`, `feed_version` (alerting), `disruption_type` (places) | S04.03 | | |
+| `alert_submit_attempt` (alerting) | S04.05 | | |
 | `delivery` (messaging) | S06.01 | | |
 | `messaging_control`, `dispatcher_lease` (messaging) | S06.02 | | |
 | `drill_roster` (subscriptions) | S06.05 | | |
@@ -1796,7 +1797,7 @@ Hub staff log a disruption, post a short acknowledgement, and write an alert for
 ### Story S04.01 — Team measures translation latency and sets the timeouts
 
 - **Size:** S · **Estimate:** 4 h · **Actual:** —
-- **Traces:** AR-14 (p99-derived timeout), Launch readiness (p99) · **Depends on:** S03.05, S03.02 · **Branch:** `e04-s01-translation-latency`
+- **Traces:** AR-14 (p99-derived timeout), Launch readiness (p99) · **Depends on:** S03.05, S03.02, S04.02 · **Branch:** `e04-s01-translation-latency`
 
 As a developer,
 I want measured translation times for every language and model in its route,
@@ -1821,7 +1822,7 @@ So that timeouts are set from evidence before alerts depend on them.
 ### Story S04.02 — Alerts are translated by route, checked and never sent in the wrong language
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S04.01 · **Branch:** `e04-s02-translation-routes`
+- **Traces:** FR-A3 (alerts), AR-14, D-4, D-5 · **Depends on:** S03.05, S03.02 · **Branch:** `e04-s02-translation-routes`
 
 As a resident who reads Pashto,
 I want alert translations checked before anyone sees them,
