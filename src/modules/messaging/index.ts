@@ -1,8 +1,10 @@
-// The messaging module's public interface (AD-2, AD-8). Today it holds only S01.15's first-text
-// spike: one test text from production to an approved phone, through the Twilio adapter. E06's
-// outbound queue replaces it (and nothing else may call the SMS adapter then).
+// The messaging module's public interface (AD-2, AD-8). It holds the outbox (S06.01: every outbound text is one `delivery`
+// row, written before it is sent and never holding a phone number; the states, the idempotent queue, the ContactResolver
+// port) and S01.15's first-text spike: one test text from production to an approved phone, through the Twilio adapter.
+// E06's sender replaces the spike (and nothing else may call the SMS adapter then).
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
+import { drizzleDeliveryStore } from "./adapters/deliveryStore";
 import { drizzleTestSendStore } from "./adapters/testSendStore";
 import { twilioSmsProvider } from "./adapters/twilioSms";
 import {
@@ -16,6 +18,21 @@ import {
   type UnknownAttempt,
 } from "./application/sendTestText";
 import type { SmsProvider } from "./application/ports";
+import { createDeliveryQueueService, type DeliveryQueue, type DeliveryQueueDeps } from "./application/deliveryQueue";
+
+export interface DeliveryQueueWiring {
+  /** Test seams. */
+  newId?: DeliveryQueueDeps["newId"];
+  now?: DeliveryQueueDeps["now"];
+}
+
+/**
+ * The outbox's use cases on the `delivery` table. They run in the caller's transaction (the approval's, the sign-up's), so the
+ * module needs no database handle of its own.
+ */
+export function createDeliveryQueue(wiring: DeliveryQueueWiring = {}): DeliveryQueue {
+  return createDeliveryQueueService({ store: drizzleDeliveryStore, newId: wiring.newId, now: wiring.now });
+}
 
 export interface TestTextWiring {
   db: Db;
@@ -65,3 +82,66 @@ export type { TestTextRefusal } from "./domain/testText";
 export { numberChoice, numberKeyFromSecret, resolveNumberChoice, UNKNOWN_AFTER_MS } from "./application/sendTestText";
 export type { SendTestTextInput, SendTestTextOutcome, TestTextConfig, TestTextLog, TestTextService, UnknownAttempt } from "./application/sendTestText";
 export type { ProviderAnswer, SmsProvider } from "./application/ports";
+
+// The outbox (S06.01).
+export { ContactNumberInvalid, ContactSourceNotWired, createContactResolver } from "./application/contactResolver";
+export type {
+  AlertTextInput,
+  CampaignTextInput,
+  DeliveryQueue,
+  TransactionalInput,
+} from "./application/deliveryQueue";
+export type {
+  ContactResolver,
+  DeliveryRecipient,
+  DeliveryResult,
+  DeliveryStore,
+  DeliveryView,
+  Enqueued,
+  MessagingLog,
+  NewDelivery,
+  RecipientNumberSource,
+  RecipientNumberSources,
+  ResolvedContact,
+  SendBy,
+  SkippedForRecipient,
+} from "./application/deliveryPorts";
+export { stdoutMessagingLog } from "./adapters/messagingLog";
+export {
+  ALERT_RECIPIENT_KINDS,
+  BODY_MAX_CHARS,
+  CHANNELS,
+  CREATING_MODULES,
+  DELIVERY_KINDS,
+  NUMBER_CONSUMED_AT_HAND_OFF,
+  RECIPIENT_KINDS,
+  RECIPIENT_OWNER,
+  SEGMENTS_MAX,
+  TRANSACTIONAL_PURPOSES,
+  alertKey,
+  campaignRefusal,
+  contentRefusal,
+  isConsumedAtHandOff,
+  outboundKey,
+  purposeRule,
+  transactionalRefusal,
+  type Channel,
+  type CreatingModule,
+  type DeliveryContent,
+  type DeliveryKind,
+  type DeliveryRefusal,
+  type RecipientKind,
+  type TransactionalPurpose,
+} from "./domain/deliveryRules";
+export {
+  DELIVERY_STATES,
+  TERMINAL_STATES,
+  TRANSITION_TABLE,
+  UNRESOLVED_STATES,
+  canStopBeforeHandOff,
+  canTransition,
+  isTerminal,
+  type DeliveryState,
+  type TransitionRow,
+} from "./domain/deliveryState";
+export { looksLikePhoneNumber, maskForLog, maskPhoneNumbers } from "./domain/phoneNumber";

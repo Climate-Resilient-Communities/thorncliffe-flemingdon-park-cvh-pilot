@@ -8,14 +8,10 @@ export const TEST_TEXT_BODY = "CVH test from production";
 /** A second text to the same number within this long is refused as a duplicate. */
 export const DUPLICATE_WINDOW_MS = 5 * 60_000;
 
-/** An E.164 number: "+", a non-zero country code digit, then up to 14 more digits. */
-const E164 = /^\+[1-9][0-9]{7,14}$/;
-
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
-export function isE164(value: unknown): value is string {
-  return typeof value === "string" && E164.test(value);
-}
+// An E.164 number is checked in one place (the outbox, S06.01).
+export { isE164 } from "./phoneNumber";
 
 export function isRequestId(value: unknown): value is string {
   return typeof value === "string" && UUID.test(value);
