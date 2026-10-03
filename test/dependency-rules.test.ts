@@ -118,6 +118,76 @@ describe("dependency rules", () => {
     expect(violations).toHaveLength(2);
   });
 
+  it("reject importing an SMS adapter outside messaging, and allow messaging's own code to", async () => {
+    const { cruised, violations } = await check("deps-sms-adapter");
+    const smsAdapter = violations.filter((v) => v.rule === "sms-adapter-outside-messaging");
+
+    expect(cruised).toBe(9);
+    expect(smsAdapter).toHaveLength(3);
+    expect(smsAdapter).toEqual(
+      expect.arrayContaining([
+        {
+          rule: "sms-adapter-outside-messaging",
+          from: at("deps-sms-adapter", "modules/alerting/application/notify.ts"),
+          to: at("deps-sms-adapter", "modules/messaging/adapters/twilioSms.ts"),
+        },
+        {
+          rule: "sms-adapter-outside-messaging",
+          from: at("deps-sms-adapter", "app/page.ts"),
+          to: at("deps-sms-adapter", "modules/messaging/adapters/fakeSms.ts"),
+        },
+        // An adapter that is not named like a sender is covered too: the rule is the folder, not a file name.
+        {
+          rule: "sms-adapter-outside-messaging",
+          from: at("deps-sms-adapter", "modules/alerting/application/checkSettings.ts"),
+          to: at("deps-sms-adapter", "modules/messaging/adapters/serviceSettings.ts"),
+        },
+      ]),
+    );
+    // messaging's application code imports both adapters and breaks no rule.
+    expect(violations.filter((v) => v.from.includes("modules/messaging/"))).toEqual([]);
+  });
+
+  it("covers every file in messaging/adapters, whatever it is named, and nothing outside that folder", () => {
+    // The rule's own `to.path`, read from the config the checks run with (a forbidden rule may also be of the
+    // "dependents" kind, which has no `to`, so the type is narrowed here).
+    const rule = options.ruleSet?.forbidden?.find((candidate) => candidate.name === "sms-adapter-outside-messaging") as { to: { path: string } } | undefined;
+    const covers = (file: string) => new RegExp(rule?.to.path ?? "$^").test(file);
+
+    expect(rule).toBeDefined();
+    const adapters = readdirSync("src/modules/messaging/adapters");
+    expect(adapters.length).toBeGreaterThan(0);
+    for (const name of adapters) expect(covers(`src/modules/messaging/adapters/${name}`), name).toBe(true);
+    expect(covers("src/modules/messaging/adapters/anything/deeper/file.ts")).toBe(true);
+    for (const file of ["src/modules/messaging/domain/smsBody.ts", "src/modules/messaging/index.ts", "src/modules/alerting/adapters/schema.ts", "src/platform/db/index.ts"]) {
+      expect(covers(file), file).toBe(false);
+    }
+  });
+
+  it("reject reading a text message's words outside the renderer, and allow the renderer to", async () => {
+    const { cruised, violations } = await check("deps-sms-strings");
+    const strings = violations.filter((v) => v.rule === "sms-strings-only-from-the-renderer");
+
+    expect(cruised).toBe(5);
+    expect(strings).toHaveLength(2);
+    expect(strings).toEqual(
+      expect.arrayContaining([
+        {
+          rule: "sms-strings-only-from-the-renderer",
+          from: at("deps-sms-strings", "modules/alerting/application/notify.ts"),
+          to: at("deps-sms-strings", "i18n/smsStrings.ts"),
+        },
+        {
+          rule: "sms-strings-only-from-the-renderer",
+          from: at("deps-sms-strings", "app/page.ts"),
+          to: at("deps-sms-strings", "i18n/smsStrings.ts"),
+        },
+      ]),
+    );
+    // The renderer (messaging/domain/smsBody.ts) imports them and breaks no rule.
+    expect(violations.filter((v) => v.from.includes("modules/messaging/"))).toEqual([]);
+  });
+
   it("reject the audience matcher importing anything but zod and the contract files beside it", async () => {
     const { violations } = await check("deps-matcher-contract");
 

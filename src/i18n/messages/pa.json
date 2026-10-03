@@ -137,7 +137,8 @@
     "unavailable": "ਇਸ ਭਾਸ਼ਾ ਵਿੱਚ ਅਜੇ ਉਪਲਬਧ ਨਹੀਂ",
     "unavailableBody": "ਇਸਦਾ ਅਜੇ {lang} ਵਿੱਚ ਅਨੁਵਾਦ ਨਹੀਂ ਹੋਇਆ।",
     "showSource": "{lang} ਵਿੱਚ ਪੜ੍ਹੋ",
-    "original": "ਮੂਲ ({lang})"
+    "original": "ਮੂਲ ({lang})",
+    "unreviewed": "ਮਸ਼ੀਨ ਅਨੁਵਾਦ; ਕਿਸੇ ਵਿਅਕਤੀ ਨੇ ਇਸ ਦੀ ਸਮੀਖਿਆ ਨਹੀਂ ਕੀਤੀ"
   },
   "x05": {
     "title": "ਆਪਣੀ ਭਾਸ਼ਾ ਵਿੱਚ ਚੇਤਾਵਨੀਆਂ ਅਤੇ ਮਦਦ ਲਓ",
@@ -461,6 +462,7 @@
     "now": "ਹੁਣੇ",
     "levelOfficial": "{source} ਵੱਲੋਂ ਅਧਿਕਾਰਤ ਚੇਤਾਵਨੀ।",
     "levelCommunity": "ਹੱਬ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ। ਹੱਬ ਨੇ ਪੁਸ਼ਟੀ ਕੀਤੀ।",
+    "fromHub": "ਹੱਬ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ",
     "levelAmbassador": "ਬਿਲਡਿੰਗ ਐਂਬੈਸਡਰ ਵੱਲੋਂ ਭਾਈਚਾਰਕ ਚੇਤਾਵਨੀ। ਅਜੇ ਪੁਸ਼ਟੀ ਨਹੀਂ ਹੋਈ।",
     "stop": "ਹੱਬ ਦੇ ਸਾਰੇ ਮੈਸੇਜ ਬੰਦ ਕਰਨ ਲਈ STOP ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।",
     "verifiedKeyword": "ਪੁਸ਼ਟੀ ਦਾ ਮਤਲਬ ਜਾਣਨ ਲਈ INFO ਲਿਖ ਕੇ ਜਵਾਬ ਦਿਓ।",
@@ -651,7 +653,16 @@
     "clear": "ਜੋ ਮੈਂ ਲਿਖਿਆ ਉਹ ਮਿਟਾਓ",
     "testTitle": "ਟੈਸਟ ਖੋਜਾਂ",
     "testNote": "ਸਹਾਇਕਾਂ ਲਈ: ਬ੍ਰੀਫ਼ ਵਿੱਚੋਂ ਲਿਖੀ ਹੋਈ ਖੋਜ ਚਲਾਉਣ ਲਈ ਕਿਸੇ ਇੱਕ ਨੂੰ ਦਬਾਓ। ਵਸਨੀਕਾਂ ਨੂੰ ਇਹ ਨਹੀਂ ਦਿਸਦਾ।",
-    "testGloss": "(ਦਰੀ: {gloss})"
+    "testGloss": "(ਦਰੀ: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "ਨਤੀਜੇ",
@@ -686,7 +697,8 @@
     "hoursUnknown": "ਸਮਾਂ ਪਤਾ ਨਹੀਂ",
     "communityOffer": "ਭਾਈਚਾਰੇ ਵੱਲੋਂ ਪੇਸ਼ਕਸ਼",
     "inCat": "ਵਿਸ਼ਾ: {cat}",
-    "helpEmpty": "ਇਸ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਣ ਵਾਲੀ ਕੋਈ ਵੀ ਸੇਵਾ ਇਨ੍ਹਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।"
+    "helpEmpty": "ਇਸ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਣ ਵਾਲੀ ਕੋਈ ਵੀ ਸੇਵਾ ਇਨ੍ਹਾਂ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਨਹੀਂ ਖਾਂਦੀ।",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "ਅਸੀਂ ਇਹ ਅਜੇ ਨਹੀਂ ਲੱਭ ਸਕੇ",
@@ -4341,6 +4353,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {
@@ -4436,6 +4450,24 @@
     "numbersLink": "[EN] See the essential numbers",
     "backToList": "[EN] All services and organisations",
     "suggestApply": "[EN] Show only {place}"
+  },
+  "map": {
+    "lead": "Thorncliffe Park ਅਤੇ Flemingdon Park ਵਿੱਚ ਸੇਵਾਵਾਂ, ਸੰਸਥਾਵਾਂ ਅਤੇ ਅਪਾਰਟਮੈਂਟ ਇਮਾਰਤਾਂ। ਕੋਈ ਪਿੰਨ ਕੀ ਹੈ, ਇਹ ਦੇਖਣ ਲਈ ਉਸ ਨੂੰ ਟੈਪ ਕਰੋ।",
+    "service": "ਸੇਵਾ ਜਾਂ ਸੰਸਥਾ",
+    "building": "ਅਪਾਰਟਮੈਂਟ ਇਮਾਰਤ",
+    "pinName": "{name}: {kind}",
+    "noSignal": "ਸਿਗਨਲ ਤੋਂ ਬਿਨਾਂ ਨਕਸ਼ਾ ਉਪਲਬਧ ਨਹੀਂ",
+    "noSignalBody": "ਨਕਸ਼ੇ ਦੀਆਂ ਸਾਰੀਆਂ ਥਾਵਾਂ ਸੂਚੀ ਵਿੱਚ ਹਨ।",
+    "notSaved": "ਨਕਸ਼ੇ ਦਾ ਇਹ ਹਿੱਸਾ ਤੁਹਾਡੇ ਫ਼ੋਨ 'ਤੇ ਸੰਭਾਲਿਆ ਨਹੀਂ ਗਿਆ",
+    "notSavedBody": "ਸਿਗਨਲ ਹੋਣ ਵੇਲੇ ਤੁਸੀਂ ਨਕਸ਼ੇ ਦੇ ਜੋ ਹਿੱਸੇ ਦੇਖੇ, ਉਹ ਤੁਹਾਡੇ ਫ਼ੋਨ 'ਤੇ ਰਹਿੰਦੇ ਹਨ। ਪਿੰਨ ਅਤੇ ਸੂਚੀ ਹਾਲੇ ਵੀ ਕੰਮ ਕਰਦੇ ਹਨ।",
+    "listTitle": "ਨਕਸ਼ੇ ਦੇ ਇਸ ਹਿੱਸੇ ਦੀਆਂ ਥਾਵਾਂ",
+    "listLead": "ਉਹੀ ਥਾਵਾਂ ਜੋ ਨਕਸ਼ਾ ਦਿਖਾਉਂਦਾ ਹੈ। ਇਹ ਸੂਚੀ ਬਦਲਣ ਲਈ ਨਕਸ਼ੇ ਨੂੰ ਹਿਲਾਓ ਜਾਂ ਜ਼ੂਮ ਕਰੋ।",
+    "listEmpty": "ਨਕਸ਼ੇ ਦੇ ਇਸ ਹਿੱਸੇ ਵਿੱਚ ਕੁਝ ਨਹੀਂ। ਨਕਸ਼ੇ ਨੂੰ ਹਿਲਾਓ ਜਾਂ ਜ਼ੂਮ ਕਰੋ, ਜਾਂ ਸਾਰਾ ਇਲਾਕਾ ਦਿਖਾਓ।",
+    "wholeArea": "ਸਾਰਾ ਇਲਾਕਾ ਦਿਖਾਓ",
+    "buildings": "ਅਪਾਰਟਮੈਂਟ ਇਮਾਰਤਾਂ",
+    "buildingsCount": "{n} ਇਮਾਰਤਾਂ",
+    "buildingsCountOne": "1 ਇਮਾਰਤ",
+    "filtered": "ਸਿਰਫ਼ ਉਹ ਥਾਵਾਂ ਦਿਖਾਈਆਂ ਜਾ ਰਹੀਆਂ ਹਨ ਜੋ ਡਾਇਰੈਕਟਰੀ ਵਿੱਚ ਤੁਹਾਡੇ ਚੁਣੇ ਫਿਲਟਰਾਂ ਨਾਲ ਮੇਲ ਖਾਂਦੀਆਂ ਹਨ।"
   },
   "guides": {
     "reviewed": "ਹੱਬ ਨੇ ਜਾਂਚਿਆ, ਆਖ਼ਰੀ ਵਾਰ {date} ਨੂੰ ਅੱਪਡੇਟ ਕੀਤਾ"

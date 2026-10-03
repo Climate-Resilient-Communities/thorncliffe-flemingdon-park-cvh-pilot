@@ -32,7 +32,9 @@ test("no redirect to /en/ sets a cookie either, and the browser ends up with non
   page.on("response", async (response) => {
     cookies.push(...(await response.headersArray()).filter(({ name }) => name.toLowerCase() === "set-cookie").map(({ value }) => `${response.url()}: ${value}`));
   });
-  for (const path of ["/en", "/ur", "/xx/map", "/prs"]) {
+  // Not the map: its tiles come from the tile provider, another site whose cookies are not the app's (S02.07; map.spec.ts
+  // checks that tile requests carry no cookie).
+  for (const path of ["/en", "/ur", "/xx/ready", "/prs"]) {
     await page.goto(path);
     await page.waitForLoadState("networkidle");
   }

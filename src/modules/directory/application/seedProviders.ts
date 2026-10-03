@@ -10,6 +10,8 @@
 //    Admins own them (application/providers.ts);
 //  - a provider keeps `withheld`: the translations of the files that were not loaded although they exist (stale, machine,
 //    ...), by text key and language, which is how the directory release reports the stale ones (S02.05);
+//  - an unreviewed machine translation of a description that the plan loads (AD-11 pilot change) is stored like any
+//    loaded text, its provenance saying `status: "machine"`; the audit counts it apart (`translations_machine`);
 //  - the run records the hash of the catalogue files it loaded in `catalogue_load`, in the same transaction, and takes the
 //    publish lock first, so a directory publish and a seed never overlap: a release is built from providers that
 //    `catalogue_load` describes;
@@ -22,6 +24,7 @@ import { catalogueLoad, category, provider, providerCategory, providerLocation }
 import {
   formatProviderFailures,
   formatProviderReport,
+  machineLoaded,
   planProviderCatalogue,
   type ProviderCatalogueInput,
   type ProviderSeedPlan,
@@ -235,6 +238,9 @@ export async function seedProviders(db: Db, input: ProviderCatalogueInput, versi
           category_links_added: linksAdded,
           category_links_removed: linksRemoved,
           translations_loaded: translations.loaded,
+          translations_machine: machineLoaded(plan.report),
+          providers_safety_critical: plan.report.safetyCritical.providers,
+          translations_safety_critical: translations.unavailable.filter((u) => u.reason === "safety_critical").reduce((sum, u) => sum + u.count, 0),
           translations_not_yet: notYet,
         },
         warnings: notLoaded,

@@ -244,11 +244,14 @@ test("a provider that is not in the release says so", async ({ page }) => {
   expect((await page.request.get("/en/directory/not-an-id")).status()).toBe(404);
 });
 
-test("Find help in the navigation opens the directory", async ({ page }) => {
+test("Find help in the navigation opens the ask screen, which leads to the directory, and both are marked as Find help", async ({ page }) => {
   await setUp(page);
   await openResident(page, "/en", 390);
 
   await page.getByTestId("shell-nav-help").click();
+  await expect(page).toHaveURL(/\/en\/search$/);
+  await expect(page.getByTestId("shell-nav-help")).toHaveAttribute("aria-current", "page");
+  await page.getByTestId("ask-browse-all").click();
   await expect(page).toHaveURL(/\/en\/directory$/);
   await expect(page.getByTestId("shell-nav-help")).toHaveAttribute("aria-current", "page");
   await waitForList(page);

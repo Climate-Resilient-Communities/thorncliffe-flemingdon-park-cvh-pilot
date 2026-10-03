@@ -149,6 +149,7 @@ window.CVH_STRINGS.en = {
  R04: {
    deviceLabel: 'Text message on a basic phone', from: 'Thorncliffe Hub', fromNumber: 'CVH alerts', lockScreen: 'Lock screen', now: 'now',
    levelOfficial: 'Official alert from {source}.', levelCommunity: 'Community alert from the Hub. Verified by the Hub.',
+   fromHub: 'Community alert from the Hub',
    levelAmbassador: 'Community alert from a building ambassador. Not yet verified.',
    stop: 'To stop all messages from the Hub, reply STOP.', verifiedKeyword: 'To learn what verified means, reply INFO.',
    ackMore: 'More information to come.', update: 'Update to the alert "{headline}":', correction: 'Correction to the alert "{headline}": {changed}',

@@ -1,0 +1,426 @@
+/*
+ * The resident map (S02.07; prototype R-14, R-15, R-16). Spacing from the semantic tokens and direction from logical
+ * properties, so the screen mirrors in Urdu, Pashto and Dari. The map itself is laid out left to right in every language
+ * (dir="ltr" on the canvas: it is a picture); the words on it carry their own direction.
+ *
+ * Kinds of pin are told apart by shape, icon and words, never by colour alone: a service is a circle, a cooling space a
+ * square, a water fountain a diamond, a public washroom a circle with a double ring, a building a filled square; the
+ * three special kinds also carry their name beside the pin.
+ */
+@layer components {
+  .map-hint {
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .map-strong {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* Visually hidden, read by screen readers (the names of pins and clusters). */
+  .map-sr {
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
+
+  .map-ico {
+    display: inline-block;
+    flex: none;
+    inline-size: var(--size-icon);
+    block-size: var(--size-icon);
+    background-color: currentcolor;
+    -webkit-mask-size: contain;
+    mask-size: contain;
+    -webkit-mask-repeat: no-repeat;
+    mask-repeat: no-repeat;
+    -webkit-mask-position: center;
+    mask-position: center;
+  }
+
+  /* Map and list: a segmented control. */
+  .map-segment {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .map-segment__btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-label);
+    border: 0;
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  .map-segment__btn[aria-pressed="true"] {
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .map-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    align-self: start;
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid transparent;
+    border-radius: var(--radius-card);
+    font: inherit;
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  .map-btn--primary {
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  .map-btn--secondary {
+    border-color: var(--control-border);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .map-btn--quiet {
+    padding-inline: 0;
+    background-color: transparent;
+    color: var(--accent-text);
+    text-decoration: underline;
+  }
+
+  .map-segment__btn:focus-visible,
+  .map-btn:focus-visible,
+  .map-close:focus-visible,
+  .map-entry__link:focus-visible,
+  .map-preview:focus-visible,
+  .map-credit a:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .map-filtered {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding: var(--inset-card-compact);
+    border: 2px solid var(--accent-bar);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-warm);
+    color: var(--text-on-warm);
+  }
+
+  /* R-14: the map, with its messages and the preview card over it. */
+  .map-frame {
+    position: relative;
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    overflow: hidden;
+  }
+
+  .map-frame[hidden] {
+    display: none;
+  }
+
+  /* Short enough that the whole map, its credit included, fits on a phone screen under the heading and the switch. */
+  .map-canvas {
+    block-size: clamp(16rem, calc(100dvh - 27rem), 34rem);
+  }
+
+  .map-credit {
+    position: absolute;
+    inset-block-end: 0;
+    inset-inline-end: 0;
+    z-index: 1001;
+    max-inline-size: 100%;
+    padding-inline: var(--gap-label);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+  }
+
+  .map-credit a {
+    color: var(--accent-text);
+  }
+
+  .map-msg,
+  .map-band,
+  .map-preview {
+    position: absolute;
+    z-index: 1100;
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding: var(--inset-card-compact);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+  }
+
+  .map-msg {
+    inset-inline: var(--gutter-resident);
+    inset-block-start: 30%;
+  }
+
+  /* At the foot of the map, above the credit, so the zoom buttons stay in reach. */
+  .map-band {
+    inset-inline: var(--gap-label);
+    inset-block-end: 2rem;
+  }
+
+  .map-preview {
+    inset-inline: var(--gap-label);
+    inset-block-end: var(--gap-stack);
+    max-block-size: calc(100% - 2 * var(--gap-stack));
+    overflow-y: auto;
+  }
+
+  .map-preview__head {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-label);
+  }
+
+  .map-preview__kind {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .map-preview__name {
+    overflow-wrap: anywhere;
+  }
+
+  .map-close {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    background-color: transparent;
+    color: var(--ink);
+    cursor: pointer;
+  }
+
+  /* The pins: Leaflet places the element and sizes it (44 by 44); the mark is centred in its body. */
+  .map-pin {
+    font-family: var(--type-family-sans);
+    color: var(--ink);
+  }
+
+  .map-pin__body,
+  .map-pin--inline {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  .map-pin--inline {
+    flex: none;
+    inline-size: var(--tap);
+    block-size: var(--tap);
+  }
+
+  .map-pin__mark {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 2rem;
+    block-size: 2rem;
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-disc);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+  }
+
+  .map-pin__mark .map-ico {
+    inline-size: 1.125rem;
+    block-size: 1.125rem;
+  }
+
+  .map-pin--cooling .map-pin__mark {
+    border-radius: 4px;
+  }
+
+  .map-pin--water .map-pin__mark {
+    border-radius: 4px;
+    transform: rotate(45deg);
+  }
+
+  .map-pin--water .map-pin__mark .map-ico {
+    transform: rotate(-45deg);
+  }
+
+  .map-pin--washroom .map-pin__mark {
+    border-width: 4px;
+    border-style: double;
+  }
+
+  .map-pin--building .map-pin__mark {
+    inline-size: 1.75rem;
+    block-size: 1.75rem;
+    border-radius: 2px;
+    border-color: var(--surface-deep);
+    background-color: var(--surface-deep);
+    color: var(--on-deep);
+  }
+
+  /* The words beside a cooling space, water fountain or public washroom. */
+  .map-pin__word {
+    position: absolute;
+    inset-block-start: calc(100% - 6px);
+    inset-inline-start: 50%;
+    transform: translateX(-50%);
+    inline-size: max-content;
+    max-inline-size: 8rem;
+    padding-inline: var(--gap-subline);
+    border: 1px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    line-height: 1.3;
+    text-align: center;
+  }
+
+  .map-pin__word > span {
+    display: block;
+  }
+
+  .map-pin:focus-visible,
+  .map-cluster:focus-visible {
+    outline: 3px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .map-cluster {
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-disc);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-family: var(--type-family-sans);
+    font-weight: 700;
+  }
+
+  .map-cluster__body {
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    inline-size: 100%;
+    block-size: 100%;
+  }
+
+  /* A tile that is neither kept nor reachable: nothing, over the map's plain background. */
+  .map-tile--missing {
+    visibility: hidden;
+  }
+
+  /* R-15: the list of the places on screen. */
+  .map-entries {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-target);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .map-entry {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
+  }
+
+  .map-entry__text {
+    display: flex;
+    flex-direction: column;
+    min-inline-size: 0;
+  }
+
+  .map-entry__link {
+    display: inline-flex;
+    align-items: center;
+    min-block-size: var(--tap-current);
+    color: var(--accent-text);
+    font-weight: 700;
+    overflow-wrap: anywhere;
+  }
+
+  /* Icons: masks copied from the prototype's icon rules (design/prototype/cvh/cvh.css), so each takes its text colour. */
+  .map-ico--cooling {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='12' r='2'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 10c0-3 1-6 4-6.5 1.8 3-.5 5.5-2.5 7.2M13.7 13c2.6 1.5 4.6 3.9 3.4 6.7-3.4 0-4.3-3.3-4.8-5.9M10.3 13c-2.6 1.5-5.6 2.2-7.6 0 1.6-3 4.9-2.3 7.3-1.4'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--water {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 3h12l-1.5 17.5a1 1 0 0 1-1 .9h-7a1 1 0 0 1-1-.9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 8.5c2.3 1 3.7-1 5.5 0s3.3 1 5.5 0'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 3h12l-1.5 17.5a1 1 0 0 1-1 .9h-7a1 1 0 0 1-1-.9z'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6.5 8.5c2.3 1 3.7-1 5.5 0s3.3 1 5.5 0'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--washroom {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='7' cy='4.5' r='1.8'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='17' cy='4.5' r='1.8'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M5 21v-6H3.8L5 9h4l1.2 6H9v6M15 21v-9M19 21v-9M14 12V8.5h6V12'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 3v18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='7' cy='4.5' r='1.8'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='17' cy='4.5' r='1.8'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M5 21v-6H3.8L5 9h4l1.2 6H9v6M15 21v-9M19 21v-9M14 12V8.5h6V12'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 3v18'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--building {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='5' y='2.5' width='14' height='19' rx='1'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 7h.01M12 7h.01M15 7h.01M9 11h.01M12 11h.01M15 11h.01M9 15h.01M15 15h.01'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M10.5 21.5v-4h3v4'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Crect fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' x='5' y='2.5' width='14' height='19' rx='1'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 7h.01M12 7h.01M15 7h.01M9 11h.01M12 11h.01M15 11h.01M9 15h.01M15 15h.01'/%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M10.5 21.5v-4h3v4'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--service {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 9.5 12 4l9 5.5M5 9.5v9M9.7 9.5v9M14.3 9.5v9M19 9.5v9M3 20.5h18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M3 9.5 12 4l9 5.5M5 9.5v9M9.7 9.5v9M14.3 9.5v9M19 9.5v9M3 20.5h18'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--map {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M12 21.5s7-6.2 7-12a7 7 0 0 0-14 0c0 5.8 7 12 7 12z'/%3E%3Ccircle fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' cx='12' cy='9.5' r='2.5'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--list {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 6h11.5M9 12h11.5M9 18h11.5'/%3E%3Ccircle fill='%23000' cx='4.5' cy='6' r='1.4'/%3E%3Ccircle fill='%23000' cx='4.5' cy='12' r='1.4'/%3E%3Ccircle fill='%23000' cx='4.5' cy='18' r='1.4'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M9 6h11.5M9 12h11.5M9 18h11.5'/%3E%3Ccircle fill='%23000' cx='4.5' cy='6' r='1.4'/%3E%3Ccircle fill='%23000' cx='4.5' cy='12' r='1.4'/%3E%3Ccircle fill='%23000' cx='4.5' cy='18' r='1.4'/%3E%3C/svg%3E");
+  }
+
+  .map-ico--close {
+    -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");
+    mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='none' stroke='%23000' stroke-width='2' stroke-linecap='round' stroke-linejoin='round' d='M6 6l12 12M18 6 6 18'/%3E%3C/svg%3E");
+  }
+}
+
+/*
+ * Leaflet's own controls, sized as touch targets. Leaflet's stylesheet is not in a layer, so these overrides are not
+ * either, and are more specific than Leaflet's rules.
+ */
+.map-frame .map-canvas.leaflet-container {
+  font-family: var(--type-family-sans);
+}
+
+.map-frame .map-canvas .leaflet-bar a {
+  inline-size: var(--tap);
+  block-size: var(--tap);
+  line-height: var(--tap);
+  font-size: var(--type-h3-size);
+  color: var(--ink);
+}

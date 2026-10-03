@@ -137,7 +137,8 @@
     "unavailable": "இந்த மொழியில் இன்னும் இல்லை",
     "unavailableBody": "இது இன்னும் {lang} மொழியில் மொழிபெயர்க்கப்படவில்லை.",
     "showSource": "{lang} மொழியில் படி",
-    "original": "மூலம் ({lang})"
+    "original": "மூலம் ({lang})",
+    "unreviewed": "இயந்திர மொழிபெயர்ப்பு; எந்த நபரும் இதைச் சரிபார்க்கவில்லை"
   },
   "x05": {
     "title": "உங்கள் மொழியில் எச்சரிக்கைகளையும் உதவியையும் பெறுங்கள்",
@@ -461,6 +462,7 @@
     "now": "இப்போது",
     "levelOfficial": "{source} வழங்கிய அதிகாரப்பூர்வ எச்சரிக்கை.",
     "levelCommunity": "மையம் வழங்கிய சமூக எச்சரிக்கை. மையம் சரிபார்த்தது.",
+    "fromHub": "மையம் வழங்கிய சமூக எச்சரிக்கை",
     "levelAmbassador": "கட்டடத் தூதர் வழங்கிய சமூக எச்சரிக்கை. இன்னும் சரிபார்க்கப்படவில்லை.",
     "stop": "மையத்திலிருந்து வரும் எல்லாச் செய்திகளையும் நிறுத்த, STOP என்று பதில் அனுப்புங்கள்.",
     "verifiedKeyword": "சரிபார்க்கப்பட்டது என்பதன் பொருளை அறிய, INFO என்று பதில் அனுப்புங்கள்.",
@@ -651,7 +653,16 @@
     "clear": "நான் எழுதியதை அழி",
     "testTitle": "சோதனைத் தேடல்கள்",
     "testNote": "ஒருங்கிணைப்பாளர்களுக்கு: திட்ட அறிக்கையில் உள்ள ஒரு தேடலை இயக்க, ஒன்றைத் தொடுங்கள். குடியிருப்பாளர்களுக்கு இது தெரியாது.",
-    "testGloss": "(தாரி: {gloss})"
+    "testGloss": "(தாரி: {gloss})",
+    "searching": "[EN] Searching",
+    "needsSignal": "[EN] Search needs signal",
+    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
+    "busy": "[EN] Search is busy, try again in a few minutes",
+    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
+    "updating": "[EN] Search results are being updated, try again",
+    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
+    "browseAll": "[EN] See all services and organisations",
+    "loading": "[EN] Loading the topics"
   },
   "R10": {
     "title": "முடிவுகள்",
@@ -686,7 +697,8 @@
     "hoursUnknown": "நேரம் தெரியாது",
     "communityOffer": "சமூக உதவி",
     "inCat": "தலைப்பு: {cat}",
-    "helpEmpty": "இதற்கு உதவக்கூடிய எந்தச் சேவையும் இந்த வடிகட்டிகளுக்குப் பொருந்தவில்லை."
+    "helpEmpty": "இதற்கு உதவக்கூடிய எந்தச் சேவையும் இந்த வடிகட்டிகளுக்குப் பொருந்தவில்லை.",
+    "shownIn": "[EN] Shown in {lang}"
   },
   "R11": {
     "title": "அதை இன்னும் கண்டுபிடிக்க முடியவில்லை",
@@ -4341,6 +4353,8 @@
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
+      "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
+      "currentMachine": "[EN] Descriptions in the current release that are machine translations no person has reviewed, labelled for residents: {count}. The next publish sends out about as many unless reviews are recorded first.",
       "staleHeading": "[EN] Translations not published because the English changed after they were made: {count}. Residents see the English for these.",
       "staleItem": "{name}: {field}, {language}",
       "fields": {
@@ -4436,6 +4450,24 @@
     "numbersLink": "[EN] See the essential numbers",
     "backToList": "[EN] All services and organisations",
     "suggestApply": "[EN] Show only {place}"
+  },
+  "map": {
+    "lead": "Thorncliffe Park மற்றும் Flemingdon Park-இல் உள்ள சேவைகள், அமைப்புகள் மற்றும் அடுக்குமாடிக் கட்டடங்கள். அது என்ன என்று பார்க்க ஒரு குறியைத் தட்டுங்கள்.",
+    "service": "சேவை அல்லது அமைப்பு",
+    "building": "அடுக்குமாடிக் கட்டடம்",
+    "pinName": "{name}: {kind}",
+    "noSignal": "சிக்னல் இல்லாமல் வரைபடம் கிடைக்காது",
+    "noSignalBody": "வரைபடத்தில் உள்ள எல்லா இடங்களும் பட்டியலில் உள்ளன.",
+    "notSaved": "வரைபடத்தின் இந்தப் பகுதி உங்கள் ஃபோனில் சேமிக்கப்படவில்லை",
+    "notSavedBody": "சிக்னல் இருந்தபோது நீங்கள் பார்த்த வரைபடப் பகுதிகள் உங்கள் ஃபோனில் இருக்கும். குறிகளும் பட்டியலும் இப்போதும் வேலை செய்யும்.",
+    "listTitle": "வரைபடத்தின் இந்தப் பகுதியில் உள்ள இடங்கள்",
+    "listLead": "வரைபடம் காட்டும் அதே இடங்கள். இந்தப் பட்டியலை மாற்ற வரைபடத்தை நகர்த்துங்கள் அல்லது பெரிதாக்குங்கள்/சிறிதாக்குங்கள்.",
+    "listEmpty": "வரைபடத்தின் இந்தப் பகுதியில் எதுவும் இல்லை. வரைபடத்தை நகர்த்துங்கள் அல்லது பெரிதாக்குங்கள்/சிறிதாக்குங்கள், அல்லது முழுப் பகுதியையும் காட்டுங்கள்.",
+    "wholeArea": "முழுப் பகுதியையும் காட்டு",
+    "buildings": "அடுக்குமாடிக் கட்டடங்கள்",
+    "buildingsCount": "{n} கட்டடங்கள்",
+    "buildingsCountOne": "1 கட்டடம்",
+    "filtered": "அடைவில் நீங்கள் தேர்ந்தெடுத்த வடிகட்டிகளுக்குப் பொருந்தும் இடங்கள் மட்டுமே காட்டப்படுகின்றன."
   },
   "guides": {
     "reviewed": "மையம் சரிபார்த்தது, கடைசியாகப் புதுப்பித்தது {date}"
