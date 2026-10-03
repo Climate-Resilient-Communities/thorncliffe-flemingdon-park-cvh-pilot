@@ -195,8 +195,8 @@ test("no_clear_match with emergency_first shows one 911 block above the no-match
   await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toHaveCount(1);
   const above = await page.evaluate(() => {
     const block = document.querySelector('[data-testid="ask-emergency-first"]')!;
-    const none = document.querySelector('[data-testid="ask-none-title"]')!;
-    return Boolean(block.compareDocumentPosition(none) & Node.DOCUMENT_POSITION_FOLLOWING);
+    const help = document.querySelector('[data-testid="ask-help"]')!;
+    return Boolean(block.compareDocumentPosition(help) & Node.DOCUMENT_POSITION_FOLLOWING);
   });
   expect(above).toBe(true);
   await expect(page.getByTestId("ask-topic-food")).toBeVisible();
