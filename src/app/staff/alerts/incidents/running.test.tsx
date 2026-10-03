@@ -79,6 +79,8 @@ describe("what is running, on the Hub home", () => {
     expect(view.readOnly).toBe("Read-only: you can see what is open here and change nothing.");
     expect(view.running?.items.map((item) => [item.key, item.link])).toEqual([[`running-${ALERT}`, null]]);
     expect(view.drills.items.map((item) => [item.key, item.link])).toEqual([[`running-${OTHER_ALERT}`, null]]);
+    // Nor the Correct and Withdraw links of S05.02, which a Director may not use.
+    for (const item of [...(view.running?.items ?? []), ...view.drills.items]) expect(item.more).toBeUndefined();
     expect(view.waiting).toBeNull();
     expect(view.start).toBeNull();
     expect(incidentsView(none, "coordinator").readOnly).toBeNull();

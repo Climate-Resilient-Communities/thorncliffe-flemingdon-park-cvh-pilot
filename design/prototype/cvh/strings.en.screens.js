@@ -1619,6 +1619,8 @@
   /* The published confirmation (O-06, S04.10): what went where, once an entry is approved. Wording from O06_Published.html. */
   m(en, { staff: { approve: { published: {
     titleAck: 'The acknowledgement is out', titleAlert: 'The alert is out', titleDrill: 'Practice publish: nothing was sent to residents',
+    titleCorrection: 'The correction is out', titleWithdrawal: 'The withdrawal is out',
+    webWithdrawn: 'Residents now read "Withdrawn" and the reason in the place of the entry.',
     leadDrill: 'This is a drill. The rows below show what would have gone where.',
     whereTitle: 'What went where',
     webLabel: 'App and web',
