@@ -38,6 +38,8 @@ import { createSmsSpendHooks, type SmsSpendDeps, type SmsSpendHooks } from "./ap
 import { drizzleMeasureStore } from "./adapters/measureStore";
 import { createDeliveryMeasures as createDeliveryMeasuresService, type DeliveryMeasures } from "./application/deliveryMeasures";
 import type { DeliveryProviderIds } from "../spend";
+import { drizzleSenderHealth } from "./adapters/healthStore";
+import type { SenderHealthReader } from "./application/senderHealth";
 
 export interface DeliveryQueueWiring {
   /** Test seams. */
@@ -102,6 +104,23 @@ export const deliveryProviderIds: DeliveryProviderIds = drizzleProviderIds;
 export function createDeliveryMeasures(): DeliveryMeasures {
   return createDeliveryMeasuresService({ store: drizzleMeasureStore });
 }
+
+/**
+ * What the health job (ops, S06.07) reads about the sender: how many texts are stuck or due, how long ago the sender lease was renewed, the
+ * texts handed off with no outcome, and the deliveries that are `unknown`. Counts, ages and ids only.
+ */
+export function createSenderHealth(): SenderHealthReader {
+  return drizzleSenderHealth;
+}
+export {
+  LEASE_STALE_AFTER_MS,
+  STUCK_QUEUE_AFTER_MS,
+  UNKNOWN_IDS_LIMIT,
+  UNKNOWN_WINDOW_MS,
+  UNSETTLED_HAND_OFF_AFTER_MS,
+  type SenderHealth,
+  type SenderHealthReader,
+} from "./application/senderHealth";
 
 export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
 
@@ -369,6 +388,7 @@ export {
   type SmsEntry,
   type SmsTranslated,
 } from "./domain/smsBody";
+export { ONCALL_TEXT_CONDITIONS, renderOncallText, type OncallTextCondition, type RenderedOncallText } from "./domain/oncallText";
 export { NORMALISATION_TABLE, SMS_MAX_BODY_LENGTH, countSms, normaliseSms, type SmsCount, type SmsEncoding } from "./domain/smsEncoding";
 export { estimateSmsCost, priceInThousandthsOfCent, type CostBasis, type SmsCostEstimate, type SmsCostInput } from "./domain/smsCost";
 

@@ -1343,6 +1343,7 @@
       FLOOR_NOT_IN_BUILDING: 'A floor of this alert no longer exists, so it cannot be approved. Return it to its author.',
       NEIGHBOURHOOD_NOT_FOUND: 'A neighbourhood of this alert no longer exists, so it cannot be approved. Return it to its author.',
       AUDIENCE_INVALID: 'Who this alert is for is not valid, so it cannot be approved. Return it to its author.',
+      ONCALL_REQUIRED: 'No on-call number is set, so this alert cannot be approved yet. An Admin adds one on the On-call numbers page. Nothing was approved.',
       forbidden: 'Only a Coordinator or an Admin who did not write or change this alert can approve it.',
       invalid: 'That could not be done. Reload the page and try again.' } } } });
   /* What waits for a person and what they have in hand (S04.07's share of the Hub home, O-01; S04.10 builds the screen out). */
@@ -1571,6 +1572,60 @@
       pauseFailed: 'Texts were not paused. Try again. If it fails again, tell IT.',
       resumeFailed: 'Texts were not resumed. Try again. If it fails again, tell IT.',
       unreadable: 'The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT.' } } } });
+  /* The on-call roster, the stuck-queue alert and the Hub's sender banner (S06.07). Not a prototype screen: the Hub's list-and-form page, in the Pause texts
+     page's words. The texts to on-call Admins hold counts only, never a number or a name; each fits one text message segment (GSM-7). */
+  m(en, { hub: { nav: { oncall: 'On-call numbers' } },
+  staff: { oncall: {
+    title: 'On-call numbers',
+    lead: 'The Admins who get a text when sending is stuck or failing, so a problem is fixed before residents miss an alert. A text goes to every number on this list.',
+    rule: 'Once texts are going out, no alert except a drill can be approved while this list is empty.',
+    listHeading: 'Numbers that get the text',
+    empty: 'No on-call number is set.',
+    emptyConsequence: 'Add at least one before texts go live: until then no alert except a drill can be approved once texts are live.',
+    count: '{n} on-call numbers',
+    countOne: '1 on-call number',
+    hidden: 'Only the last four digits of a number are shown.',
+    addHeading: 'Add a number',
+    label: 'Name or role',
+    labelHint: 'For example "IT lead". Up to 40 characters. Shown only here.',
+    number: 'Mobile number',
+    numberHint: 'A Canadian number, for example 416-555-0123. It is stored for sending texts and shown here only as its last four digits.',
+    add: 'Add number',
+    adding: 'Adding number',
+    remove: 'Remove',
+    removing: 'Removing',
+    removeFor: 'Remove {label}',
+    done: {
+      added: '{label} was added. The list now has {n} numbers.',
+      addedOne: '{label} was added. The list now has 1 number.',
+      removed: '{label} was removed. The list now has {n} numbers.',
+      removedOne: '{label} was removed. The list now has 1 number.',
+      removedNone: '{label} was removed. The list is now empty.',
+      skipped: '{n} waiting texts to that number were cancelled.',
+      skippedOne: '1 waiting text to that number was cancelled.' },
+    errors: {
+      label_missing: 'Give the number a name or role.',
+      label_too_long: 'The name or role can have at most 40 characters.',
+      number_invalid: 'That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.',
+      number_duplicate: 'That number is already on the list.',
+      roster_full: 'The list is full: at most 10 numbers. Remove one first.',
+      not_found: 'That number is no longer on the list. Reload the page.',
+      forbidden: 'Only an Admin can change the on-call numbers.',
+      aal2Required: 'An Admin must sign in with their authenticator code to change the on-call numbers. Sign in again and enter the code.',
+      failed: 'The list was not changed. Try again. If it fails again, tell IT.',
+      unreadable: 'The Hub could not read the on-call numbers. Reload the page. If this stays, tell IT.' } },
+  health: {
+    banner: 'Sending is failing',
+    queue_stuck: 'Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.',
+    sender_stalled: 'No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.',
+    since: 'Since {when}',
+    tell: 'Tell IT now.' } },
+  ops: { oncall: { text: {
+    queue_stuck: 'CVH: texts are not being sent. Waiting more than 5 minutes: {count}. Check the Hub.',
+    delivery_unknown: 'CVH: texts with an unknown outcome: {count}. Check the Hub.',
+    sender_stalled: 'CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.',
+    smart_encoding_on: 'CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.',
+    signature_failures: 'CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.' } } } });
   /* Adding an update to a running alert (S05.01, O-14 "Add an update", O-13 "Promote to full alert"), the pilot's staff version. In the prototype an update
      is published at once from a template; here the author writes it on the same composer as every entry (the text, where things stand, the valid-until),
      submits it, and a second person approves it. The alert's audience, types and languages are carried over from the entry that covers it. The prototype's

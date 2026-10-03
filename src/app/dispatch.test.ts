@@ -183,6 +183,7 @@ describe("messaging's operational events in ops_event", () => {
     { kind: "delivery.unknown", deliveryId: DELIVERY, detail: { cause: "no_outcome_after_hand_off" } },
     { kind: "dispatch.provider_auth_failed", detail: { http_status: 401 } },
     { kind: "messaging.smart_encoding_on", detail: {} },
+    { kind: "messaging.smart_encoding_off", detail: {} },
     { kind: "messaging.service_check_failed", detail: { reason: "http_404" } },
     // The status callbacks (S06.04).
     { kind: "delivery.unknown_resolved", deliveryId: DELIVERY, detail: { status: "delivered" } },
@@ -202,6 +203,7 @@ describe("messaging's operational events in ops_event", () => {
       { kind: "delivery.unknown", severity: "error", subjectType: "delivery", subjectId: DELIVERY, detail: { cause: "no_outcome_after_hand_off" } },
       { kind: "dispatch.provider_auth_failed", severity: "error", subjectType: null, subjectId: null, detail: { http_status: 401 } },
       { kind: "messaging.smart_encoding_on", severity: "error", subjectType: null, subjectId: null, detail: {} },
+      { kind: "messaging.smart_encoding_off", severity: "info", subjectType: null, subjectId: null, detail: {} },
       { kind: "messaging.service_check_failed", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "http_404" } },
       { kind: "delivery.unknown_resolved", severity: "info", subjectType: "delivery", subjectId: DELIVERY, detail: { status: "delivered" } },
       { kind: "delivery.callback_ignored", severity: "warning", subjectType: null, subjectId: null, detail: { reason: "no_ref" } },
@@ -279,14 +281,15 @@ describe("the daily Messaging Service check", () => {
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
-  it("records nothing when Smart Encoding is off, and raises ops_event messaging.smart_encoding_on when it is on", async () => {
+  it("records ops_event messaging.smart_encoding_off when Smart Encoding is off (so the health job sees an earlier 'on' put right), and messaging.smart_encoding_on when it is on", async () => {
     const recorded: MessagingOpsEvent[] = [];
     const ops = { record: async (_executor: DbExecutor, event: MessagingOpsEvent) => void recorded.push(event) };
     const off = stubService(false);
     await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_off" });
     expect(off).toHaveBeenCalledTimes(1);
-    expect(recorded).toEqual([]);
+    expect(recorded).toEqual([{ kind: "messaging.smart_encoding_off", detail: {} }]);
 
+    recorded.length = 0;
     stubService(true);
     await expect(runMessagingServiceCheck({ env: live, db: {} as Db, log, ops })).resolves.toEqual({ status: "smart_encoding_on" });
     expect(recorded).toEqual([{ kind: "messaging.smart_encoding_on", detail: {} }]);

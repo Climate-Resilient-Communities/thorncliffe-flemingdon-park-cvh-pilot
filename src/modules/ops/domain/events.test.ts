@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { z } from "zod";
-import { OPS_EVENT_KINDS, OpsEventError, PUBLISH_FAILURE_REASONS, toOpsEventRecord } from "./events";
+import { HEALTH_CONDITIONS, OPS_EVENT_KINDS, OpsEventError, PUBLISH_FAILURE_REASONS, toOpsEventRecord } from "./events";
 
 describe("ops events", () => {
   it("turns a failed publish into a row: kind, severity, subject and a detail of codes and counts", () => {
@@ -148,5 +148,53 @@ describe("ops events", () => {
       "gave_up",
       "unexpected",
     ]);
+  });
+});
+
+describe("the health job's events (S06.07)", () => {
+  it("records a condition that texted the on-call Admins with codes and counts only", () => {
+    expect(toOpsEventRecord({ kind: "health.condition_alerted", detail: { condition: "queue_stuck", count: 12, notified: 2, first: true } })).toEqual({
+      kind: "health.condition_alerted",
+      severity: "error",
+      subjectType: null,
+      subjectId: null,
+      detail: { condition: "queue_stuck", count: 12, notified: 2, first: true },
+    });
+  });
+
+  it("records a new episode inside the text interval as rate limited, with nobody texted", () => {
+    expect(toOpsEventRecord({ kind: "health.condition_alerted", detail: { condition: "queue_stuck", count: 1, notified: 0, first: true, rate_limited: true } }).detail).toEqual({
+      condition: "queue_stuck",
+      count: 1,
+      notified: 0,
+      first: true,
+      rate_limited: true,
+    });
+  });
+
+  it("records a recovery as information", () => {
+    expect(toOpsEventRecord({ kind: "health.condition_recovered", detail: { condition: "sender_stalled" } })).toMatchObject({ severity: "info", detail: { condition: "sender_stalled" } });
+  });
+
+  it("records that Smart Encoding was found off, for the end of an earlier finding that it was on", () => {
+    expect(toOpsEventRecord({ kind: "messaging.smart_encoding_off", detail: {} })).toMatchObject({ severity: "info", detail: {} });
+  });
+
+  it.each([
+    ["a condition that is not one of the five", { condition: "disk_full", count: 1, notified: 1, first: true }],
+    ["a number in the detail", { condition: "queue_stuck", count: 1, notified: 1, first: true, number: "+14165550123" }],
+    ["a name in the detail", { condition: "queue_stuck", count: 1, notified: 1, first: true, label: "IT lead" }],
+    ["a count that is text", { condition: "queue_stuck", count: "12", notified: 1, first: true }],
+    ["no first flag", { condition: "queue_stuck", count: 1, notified: 1 }],
+  ])("rejects an alert event with %s", (_name, detail) => {
+    expect(() => toOpsEventRecord({ kind: "health.condition_alerted", detail } as never)).toThrow(OpsEventError);
+  });
+
+  it("rejects a recovery event with anything but the condition", () => {
+    expect(() => toOpsEventRecord({ kind: "health.condition_recovered", detail: { condition: "queue_stuck", note: "fixed" } } as never)).toThrow(OpsEventError);
+  });
+
+  it("names the five conditions", () => {
+    expect([...HEALTH_CONDITIONS]).toEqual(["queue_stuck", "delivery_unknown", "sender_stalled", "smart_encoding_on", "signature_failures"]);
   });
 });

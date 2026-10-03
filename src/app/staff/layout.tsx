@@ -4,6 +4,8 @@ import "../globals.css";
 import "./fonts.generated.css";
 import "./staff.css";
 import { can } from "@/modules/identity";
+import { activeSenderConditions } from "@/modules/ops";
+import { getDb } from "@/platform/db";
 import { AdminShortfallBanner } from "./AdminShortfallBanner";
 import { logShortfallCheckFailure, showAdminShortfallBanner } from "./adminShortfall";
 import { PUBLIC_SANS_LATIN } from "./fonts";
@@ -12,6 +14,8 @@ import { identity } from "./identity";
 import { messagingPause, pausedByName } from "./messagingPause";
 import { PauseBanner } from "./PauseBanner";
 import { loadPauseBanner, logPauseBannerFailure } from "./pauseBanner";
+import { SenderBanner } from "./SenderBanner";
+import { loadSenderBanner, logSenderBannerFailure } from "./senderBanner";
 import { currentStaffSession } from "./session";
 import { StaffShell } from "./StaffShell";
 
@@ -31,7 +35,7 @@ export default async function StaffLayout({ children }: LayoutProps<"/staff">) {
   // The one font file every staff page needs (Latin text), preloaded as the resident layout preloads its own.
   preload(PUBLIC_SANS_LATIN, { as: "font", type: "font/woff2", crossOrigin: "anonymous" });
   const session = await currentStaffSession();
-  const [shortfall, paused] = await Promise.all([
+  const [shortfall, paused, failing] = await Promise.all([
     showAdminShortfallBanner({ session: async () => session, identity, logError: logShortfallCheckFailure }),
     // Only a Hub screen carries it: the sign-in page and the setup gates are not where to read about the Hub's texts.
     session && hubShellUser(session)
@@ -42,11 +46,14 @@ export default async function StaffLayout({ children }: LayoutProps<"/staff">) {
           logError: logPauseBannerFailure,
         })
       : null,
+    // "Sending is failing" (S06.07): from what the health job last found, on a Hub screen only, like the pause banner.
+    session && hubShellUser(session) ? loadSenderBanner({ active: () => activeSenderConditions(getDb()), logError: logSenderBannerFailure }) : null,
   ]);
   return (
     <html lang="en">
       <body>
         <StaffShell session={session}>
+          {failing && <SenderBanner view={failing} />}
           {paused && <PauseBanner view={paused} />}
           {shortfall && <AdminShortfallBanner />}
           {children}

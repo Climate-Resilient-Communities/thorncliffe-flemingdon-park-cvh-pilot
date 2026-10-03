@@ -75,6 +75,12 @@ export interface AlertLifecycleDeps {
    * here; the default does nothing (the use case's own tests, which write no delivery).
    */
   cancelQueued?: (tx: DbTransaction, entryIds: readonly string[]) => Promise<void>;
+  /**
+   * The on-call rule of the approval (S06.07): while `required()` is true (texting is live, decided by the composition root), a non-drill alert is
+   * approved only if `hasNumber(tx)` finds at least one number on ops' on-call roster, read in the approval's transaction; otherwise it is refused
+   * with ONCALL_REQUIRED and nothing changes. Left out (the use case's own tests), the rule is off.
+   */
+  oncall?: { required: () => boolean; hasNumber: (tx: DbTransaction) => Promise<boolean> };
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -1373,6 +1379,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // ... and the places it names are still there: a floor removed since the submit is not a floor to text. (A withdrawal goes to the people the withdrawn
         // entry went to: a floor removed since must not stop it.)
         if (row.kind !== "withdrawal") await mustExist(tx, contentOf(row).audience);
+        // S06.07: once texting is live, a real alert is approved only if someone is on call to hear that sending is failing (a drill is not).
+        if (!thread.isDrill && deps.oncall?.required() && !(await deps.oncall.hasNumber(tx))) throw new Refused("ONCALL_REQUIRED");
         // A correction or a withdrawal replaces the entry it names (S05.02): that entry is locked now (alert, then the approving entry, then the target; the
         // thread's lock already serializes every change to this thread) and judged again, because it may have been corrected or withdrawn since this was
         // submitted, and two corrections of one entry must not both go through.

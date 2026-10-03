@@ -23,11 +23,11 @@ function check(reading: SmartEncodingReading) {
 }
 
 describe("the Messaging Service check", () => {
-  it("reads the service's Smart Encoding setting and, when it is off, only logs that it checked", async () => {
+  it("reads the service's Smart Encoding setting and, when it is off, records that it was found off (the health job's recovery) and logs that it checked", async () => {
     const { service, asked, events, lines } = check({ kind: "read", smartEncoding: false });
     await expect(service.run()).resolves.toEqual({ status: "smart_encoding_off" });
     expect(asked).toEqual([SERVICE]);
-    expect(events).toEqual([]);
+    expect(events).toEqual([{ kind: "messaging.smart_encoding_off", detail: {} }]);
     expect(lines).toEqual([{ level: "info", evt: "messaging_service.checked", fields: { smart_encoding: false } }]);
   });
 

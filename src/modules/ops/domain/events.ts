@@ -74,6 +74,14 @@ export const DELIVERY_UNKNOWN_CAUSES = [
   "no_terminal_status",
 ] as const;
 
+/**
+ * The conditions the health job watches (S06.07, AD-23) and raises the on-call alert for: texts queued and due for more than 5 minutes outside a
+ * pause; a delivery that became `unknown` (or a hand-off the sweep could not settle); no sender running while texts are due; Smart Encoding found
+ * on; and webhook signature failures past 5 in 10 minutes. The same codes as `health_condition.condition`.
+ */
+export const HEALTH_CONDITIONS = ["queue_stuck", "delivery_unknown", "sender_stalled", "smart_encoding_on", "signature_failures"] as const;
+export type HealthCondition = (typeof HEALTH_CONDITIONS)[number];
+
 /** The webhook routes whose signature failures are counted (S06.04; S07.04 adds `twilio_inbound`). */
 export const WEBHOOK_ROUTES = ["twilio_status"] as const;
 
@@ -148,10 +156,30 @@ export const OPS_EVENT_KINDS = {
     severity: "error",
     detail: z.strictObject({}),
   },
+  /** The daily check found Smart Encoding off (S06.02): the health job (S06.07) reads it as the end of an earlier "on". At most one a day. */
+  "messaging.smart_encoding_off": {
+    severity: "info",
+    detail: z.strictObject({}),
+  },
   /** The daily check could not read the Messaging Service's setting (S06.02), so it cannot say Smart Encoding is off. A code only. */
   "messaging.service_check_failed": {
     severity: "warning",
     detail: z.strictObject({ reason: code }),
+  },
+  /**
+   * The health job found a condition and texted the on-call Admins (S06.07). `count` is how many things the condition counts (stuck texts, unknown
+   * deliveries, failures; 1 for a setting), `notified` how many on-call numbers were queued a text (0 when the roster is empty: the Hub banner and this
+   * event still record it), `first` whether the condition began with this run, `rate_limited` that a new episode began inside the 30-minute
+   * text interval, so it is recorded here and nothing was texted (`notified` 0). Counts and codes only.
+   */
+  "health.condition_alerted": {
+    severity: "error",
+    detail: z.strictObject({ condition: z.enum(HEALTH_CONDITIONS), count, notified: count, first: z.boolean(), rate_limited: z.boolean().optional() }),
+  },
+  /** A condition the health job had raised no longer holds (S06.07); no further text is sent for it. */
+  "health.condition_recovered": {
+    severity: "info",
+    detail: z.strictObject({ condition: z.enum(HEALTH_CONDITIONS) }),
   },
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
   "directory.publish_failed": {

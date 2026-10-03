@@ -8,6 +8,10 @@ import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directo
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
 import { PauseBanner } from "@/app/staff/PauseBanner";
+import { SenderBanner } from "@/app/staff/SenderBanner";
+import type { SenderBannerView } from "@/app/staff/senderBanner";
+import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
+import { OncallView } from "@/app/staff/oncall/OncallView";
 import type { PauseBannerView } from "@/app/staff/pauseBanner";
 import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
 import { TextsView } from "@/app/staff/texts/TextsView";
@@ -815,6 +819,56 @@ export function TextsFixture({
       {banner ? <PauseBanner view={banner} /> : null}
       <Screen surface="staff" testId="screen">
         <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the On-call numbers screen (S06.07), as an Admin sees it: the real body (OncallView) and the real, behaviour-free list and
+ * forms (OncallFormsView) with the state a press would leave, and, while the sender is failing, the banner the Hub layout puts above every Hub
+ * screen (SenderBanner), here above this one. Every number is a fictional one masked to its last four digits.
+ */
+export function OncallFixture({
+  texts,
+  brand,
+  count,
+  unreadable,
+  form,
+  banner,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  count: number;
+  unreadable?: boolean;
+  form: ComponentProps<typeof OncallFormsView>;
+  banner?: SenderBannerView;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/oncall"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      {banner ? <SenderBanner view={banner} /> : null}
+      <Screen surface="staff" testId="screen">
+        <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
       </Screen>
     </HubShell>
   );
