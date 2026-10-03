@@ -3,6 +3,8 @@
 import { useTranslations } from "next-intl";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import type { BuildingList } from "@/contracts/buildingList";
+import type { DeviceChoices } from "@/contracts/deviceChoices";
 import type { FeedThread } from "@/contracts/feed";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { useBuildingList, useChoices } from "../choices/use-choices";
@@ -12,9 +14,10 @@ import { Stack } from "../layout/stack";
 import { AlertCard, alertView, type Translate as AlertTranslate } from "../alert";
 import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
-import { ResidentText } from "../text/resident-text";
+import { ResidentText, isEnglishFallback } from "../text/resident-text";
 import { agoText } from "./feed-poll";
 import { homeRows, type BuildingRow, type NeighbourhoodRow, type Shown } from "./home-view";
+import { adviceFor, deviceProfile, tailorThreads } from "./tailoring";
 import { useFeed } from "./use-feed";
 import "../choices/choices.css";
 import "./home.css";
@@ -110,9 +113,22 @@ function NeighbourhoodRowView({ row, name }: { row: NeighbourhoodRow; name: (id:
  * the page says so once, in the words of x04 (content has no visible "[EN]"; only interface strings do). Every "ago" is measured against the
  * feed's own `server_now`, never this phone's clock.
  */
-function CurrentAlerts({ threads, serverNow, lang }: { threads: readonly FeedThread[]; serverNow: string; lang: LaunchCode }) {
+function CurrentAlerts({
+  threads,
+  serverNow,
+  lang,
+  choices,
+  list,
+}: {
+  threads: readonly FeedThread[];
+  serverNow: string;
+  lang: LaunchCode;
+  choices: DeviceChoices | null;
+  list: BuildingList | null;
+}) {
   const t = useTranslations("R03");
   const x04 = useTranslations("x04");
+  const tailoredCatalog = useTranslations("tailored");
   const all = useTranslations() as unknown as AlertTranslate;
   if (threads.length === 0) {
     return (
@@ -126,8 +142,23 @@ function CurrentAlerts({ threads, serverNow, lang }: { threads: readonly FeedThr
       </div>
     );
   }
-  const views = threads.map((thread) => alertView(thread, { lang, serverNow: new Date(serverNow), t: all }));
-  const anyEnglish = views.some((view) => view.current.text.fallback);
+  // Tailored here, on the phone (S04.09): the profile of this phone orders and marks the feed's threads and picks the one line of advice; no alert
+  // is dropped, and nothing of the choices leaves the page.
+  const profile = deviceProfile(choices, list);
+  const chosenGroups = choices?.groups ?? [];
+  const adviceLines = (type: string, group: string): readonly string[] | undefined => {
+    const key = `${type}.${group}`;
+    if (!tailoredCatalog.has(key)) return undefined;
+    const lines = tailoredCatalog.raw(key) as unknown;
+    return Array.isArray(lines) ? lines.filter((line): line is string => typeof line === "string") : undefined;
+  };
+  const cards = tailorThreads(threads, profile).map(({ thread, matched, highlighted }) => ({
+    view: alertView(thread, { lang, serverNow: new Date(serverNow), t: all }),
+    highlighted,
+    advice: matched ? adviceFor(thread.types, chosenGroups, adviceLines) : null,
+  }));
+  const views = cards.map((card) => card.view);
+  const anyEnglish = views.some((view) => view.current.text.fallback) || cards.some((card) => card.advice !== null && isEnglishFallback(card.advice));
   return (
     <Stack gap="related">
       {anyEnglish && (
@@ -141,8 +172,8 @@ function CurrentAlerts({ threads, serverNow, lang }: { threads: readonly FeedThr
         </div>
       )}
       <ul className="alert-card-list" data-testid="home-threads">
-        {views.map((view) => (
-          <AlertCard key={view.slug} view={view} lang={lang} t={all} />
+        {cards.map(({ view, highlighted, advice }) => (
+          <AlertCard key={view.slug} view={view} lang={lang} t={all} highlighted={highlighted} advice={advice} />
         ))}
       </ul>
     </Stack>
@@ -297,7 +328,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             <section data-testid="home-alerts">
               <Stack gap="related">
                 <ResidentText as="h2">{t("currentAlerts")}</ResidentText>
-                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} />
+                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} choices={choices} list={list} />
               </Stack>
             </section>
           )}

@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { ContentText } from "../text/content-text";
 import { FALLBACK_MARKER, ResidentText, isEnglishFallback } from "../text/resident-text";
 import type { AlertView, EntryView, OriginView, TextView, TypeView } from "./alert-view";
 import "./alert-icons.css";
@@ -170,5 +171,28 @@ export function ThreadEntryText({ view, entry, latest }: { view: AlertView; entr
       {entry.text.machine && <MachineMark view={view} testId={`${testId}-mt`} />}
       {entry.english !== null && <ShowEnglish english={entry.english} summary={view.showEnglish} label={view.originalLabel} testId={`${testId}-english`} />}
     </>
+  );
+}
+
+/**
+ * X-12, the tailored block (S04.09): the one line of advice for an alert that is for this phone's owner, under the words "What this means for you". It
+ * names no group and does not say why it is shown, and it has no link to the choices or to "the version everyone gets": the alert itself is the
+ * standard text, and this is only an addition to it. An advice line in English for want of a translation (the catalog marks it "[EN] ") is set
+ * left to right in English on its own element, without the marker; the page says once that part of it is in English.
+ */
+export function TailoredAdvice({ title, line, testId }: { title: string; line: string; testId: string }) {
+  const fallback = isEnglishFallback(line);
+  return (
+    <section className="alert-tailored" aria-label={withoutMarker(title)} data-testid={testId}>
+      <ResidentText as="h3" className="alert-strong">
+        {title}
+      </ResidentText>
+      <p className="alert-tailored__line">
+        <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />
+        <ContentText as="span" unavailable={fallback} testId={`${testId}-line`}>
+          {withoutMarker(line)}
+        </ContentText>
+      </p>
+    </section>
   );
 }

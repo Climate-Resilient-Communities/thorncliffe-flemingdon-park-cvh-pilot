@@ -8,7 +8,8 @@ import { isLaunchCode } from "@/i18n/languages";
 // Home's client component runs on the phone, so it gets just these parts of the language's catalog, not the whole of it.
 // The alert cards (S04.08) read the words of an alert's view: the types (x13), the kinds of entry and the guide names (R07, hazards), the
 // valid-until's day words (R29, time) and the Hub's attribution (R04.fromHub, one string of that group).
-const NAMESPACES = ["R03", "R07", "R29", "status", "neighbourhoods", "time", "hazards", "x01", "x02", "x04", "x13"] as const;
+// The tailored cards (S04.09) read the title of the advice block (x12) and the advice lines (tailored).
+const NAMESPACES = ["R03", "R07", "R29", "status", "neighbourhoods", "time", "hazards", "x01", "x02", "x04", "x12", "x13", "tailored"] as const;
 
 /**
  * Home (R-03, S02.11): the resident's buildings with their status, the neighbourhood, and the current alerts, from the
