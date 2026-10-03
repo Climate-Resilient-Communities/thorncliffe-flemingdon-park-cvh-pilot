@@ -74,6 +74,17 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        the 911 block first, recorded on each release; default
  *                                                        "Support & Emergency Services". A name the catalogue does not have
  *                                                        refuses the publish (search_config_invalid)
+ * SEARCH_QUESTION_ROUTE
+ *                      server   optional                 `search_question_route` (S03.05): the Cohere model that translates a
+ *                                                        question to English for the translated-question leg of search, per
+ *                                                        kind of question, as comma-separated `kind=model` pairs; a kind left
+ *                                                        out keeps its default, `kind=off` switches the leg off for it, and
+ *                                                        `off` alone switches it off for all. Kinds: ps, prs,
+ *                                                        romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults:
+ *                                                        north-small-translate-09-2026 for ps and prs,
+ *                                                        command-a-translate-08-2025 for romanized_or_mixed and
+ *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
+ *                                                        Readiness). It applies only where COHERE_API_KEY is set
  * EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH
  *                      server   optional                 the publish allowance (AD-15): how many embedding calls and input
  *                                                        tokens the directory publish may use in a calendar month
@@ -146,6 +157,7 @@ const rawSchema = z.object({
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
+  SEARCH_QUESTION_ROUTE: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
   EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH: optionalText,
 });
@@ -162,13 +174,28 @@ export interface SearchSettings {
   emergencyCategories: string[];
   /** Embedding usage the calendar month may reach: calls and input tokens. */
   allowance: { callsPerMonth: number; tokensPerMonth: number };
+  /** `search_question_route` (S03.05): the translation model per kind of question; null switches the translated leg off for it. */
+  questionRoute: QuestionRouteSettings;
 }
+
+/** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
+export const QUESTION_ROUTE_KINDS = ["ps", "prs", "romanized_or_mixed", "ambiguous_arabic"] as const;
+export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS)[number], string | null>>;
+
+/** PROVISIONAL (the addendum's routing table): North Small Translate for Pashto and Dari, Command A Translate for the rest. */
+export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
+  ps: "north-small-translate-09-2026",
+  prs: "north-small-translate-09-2026",
+  romanized_or_mixed: "command-a-translate-08-2025",
+  ambiguous_arabic: "command-a-translate-08-2025",
+};
 
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
   threshold: 0.3,
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
+  questionRoute: DEFAULT_QUESTION_ROUTE,
 };
 
 const EMBED_MODEL_ID = /^[A-Za-z0-9][A-Za-z0-9._-]{0,63}$/;
@@ -433,6 +460,33 @@ function positiveInteger(name: string, value: string | undefined, fallback: numb
   return Number(value);
 }
 
+const QUESTION_ROUTE_PROBLEM =
+  "SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs (kinds ps, prs, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once";
+
+function parseQuestionRoute(value: string | undefined, problems: string[]): QuestionRouteSettings {
+  if (value === undefined) return DEFAULT_QUESTION_ROUTE;
+  const text = value.trim();
+  if (text === "off") return { ps: null, prs: null, romanized_or_mixed: null, ambiguous_arabic: null };
+  const route: Record<string, string | null> = { ...DEFAULT_QUESTION_ROUTE };
+  const seen = new Set<string>();
+  for (const pair of text.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
+    const match = /^([a-z_]+)\s*=\s*(\S+)$/.exec(pair);
+    const kind = match?.[1];
+    const model = match?.[2];
+    if (!kind || !model || !(QUESTION_ROUTE_KINDS as readonly string[]).includes(kind) || seen.has(kind) || (model !== "off" && !EMBED_MODEL_ID.test(model))) {
+      problems.push(QUESTION_ROUTE_PROBLEM);
+      return DEFAULT_QUESTION_ROUTE;
+    }
+    seen.add(kind);
+    route[kind] = model === "off" ? null : model;
+  }
+  if (seen.size === 0) {
+    problems.push(QUESTION_ROUTE_PROBLEM);
+    return DEFAULT_QUESTION_ROUTE;
+  }
+  return route as QuestionRouteSettings;
+}
+
 function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   const defaults = DEFAULT_SEARCH_SETTINGS;
   const embedModel = raw.SEARCH_EMBED_MODEL?.trim() ?? defaults.embedModel;
@@ -458,6 +512,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
       callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),
       tokensPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_TOKENS_PER_MONTH, defaults.allowance.tokensPerMonth, problems),
     },
+    questionRoute: parseQuestionRoute(raw.SEARCH_QUESTION_ROUTE, problems),
   };
 }
 
