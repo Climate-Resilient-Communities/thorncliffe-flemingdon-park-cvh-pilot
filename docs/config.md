@@ -27,7 +27,7 @@ are in `src/platform/config/env.ts`.
 | `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
 | `MAP_TILE_ATTRIBUTION`, `MAP_TILE_ATTRIBUTION_URL` | no | `© OpenStreetMap contributors © CARTO`, `https://carto.com/attributions`; required whenever `MAP_TILE_URL` is set | 2026-10-02 |
 | `MAP_TILE_MAX_ZOOM` | no | default `19` | default |
-| `MAP_TILE_CACHEABLE`, `MAP_TILE_CACHE_LIMIT`, `MAP_TILE_CACHE_DAYS` | no | `true`, `200` (the phone never keeps more than 200), `30` (CARTO's limit; 7 for Stadia). **`MAP_TILE_CACHEABLE=true` must be set** with a custom `MAP_TILE_URL`: a set URL is treated as a new provider and is not cacheable unless said | check |
+| `MAP_TILE_CACHEABLE`, `MAP_TILE_CACHE_DAYS`, `MAP_TILE_CACHE_LIMIT` | no | `true` and `30` set in production and preview (`MAP_TILE_CACHEABLE=true` is needed with a custom `MAP_TILE_URL`: a set URL is treated as a new provider and is not cacheable unless said; 30 days is CARTO's limit, 7 for Stadia); the limit stays the default `200` (the phone never keeps more than 200) | 2026-10-02 |
 
 The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the comparison and IT's confirmation of CARTO
 Positron are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change

@@ -1,7 +1,42 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { expect, test, type Page } from "@playwright/test";
 import { LAUNCH_LANGUAGES } from "../../src/i18n/languages";
 
 export const LANGUAGES = LAUNCH_LANGUAGES;
+
+/** The marker of a catalog string that has no translation yet and falls back to English (FALLBACK_MARKER in src/ui). */
+export const FALLBACK = "[EN] ";
+
+const catalogs = new Map<string, Record<string, unknown>>();
+
+/**
+ * A string of a language's generated catalog (src/i18n/messages/<lang>.json) by its full key, such as
+ * `shell.pageNotFound`, exactly as the page gets it: translated, or English behind the [EN] marker. The tests read the
+ * expected wording from here rather than writing it out, so translating a string does not break a test of behaviour.
+ */
+export function catalogText(lang: string, key: string): string {
+  let catalog = catalogs.get(lang);
+  if (!catalog) {
+    const file = path.join(__dirname, "..", "..", "src", "i18n", "messages", `${lang}.json`);
+    catalog = JSON.parse(readFileSync(file, "utf8")) as Record<string, unknown>;
+    catalogs.set(lang, catalog);
+  }
+  const value = key.split(".").reduce<unknown>((node, part) => (node && typeof node === "object" ? (node as Record<string, unknown>)[part] : undefined), catalog);
+  if (typeof value !== "string") throw new Error(`The ${lang} catalog has no string ${key}`);
+  return value;
+}
+
+/** True when a catalog string is English standing in for a missing translation. */
+export const isFallback = (text: string) => text.startsWith(FALLBACK);
+
+/** A pattern for a catalog string with one {placeholder} filled by anything: for a date whose wording the browser formats. */
+export function filledPattern(template: string, placeholder: string): RegExp {
+  const [before, after, ...rest] = template.split(`{${placeholder}}`);
+  if (after === undefined || rest.length > 0) throw new Error(`"${template}" does not have {${placeholder}} once`);
+  const escape = (text: string) => text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  return new RegExp(`^${escape(before)}(.+)${escape(after)}$`);
+}
 export const WIDTHS = [320, 390, 768] as const;
 /** A phone-shaped height for each test width. */
 export const HEIGHTS: Record<(typeof WIDTHS)[number], number> = { 320: 640, 390: 844, 768: 1024 };

@@ -519,7 +519,7 @@ Researched 2026-10-02. Assumed pilot volume: about 3,000 residents × 3 map sess
 - `MAP_TILE_SUBDOMAINS` empty, because the keyed URL has no `{s}`.
 - `MAP_TILE_ATTRIBUTION=© OpenStreetMap contributors © CARTO`
 - `MAP_TILE_ATTRIBUTION_URL=https://carto.com/attributions`
-- **`MAP_TILE_CACHEABLE=true`** (with `MAP_TILE_CACHE_LIMIT=200`, `MAP_TILE_CACHE_DAYS=30`). This must be set explicitly. A set `MAP_TILE_URL` counts as a new provider, so without it nothing is kept.
+- `MAP_TILE_CACHEABLE=true` and `MAP_TILE_CACHE_DAYS=30`; the limit stays the default 200. These must be set explicitly: a set `MAP_TILE_URL` counts as a new provider, so without them nothing is kept.
 
 The defaults in `mapTiles.ts` are the keyless URL `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png` (subdomains `abcd`, cacheable, 200 tiles, 30 days). They are only a fallback for local runs and tests: keyless legacy access ends 2026-11-30. If the provider changes, use `MAP_TILE_CACHE_DAYS=7` for Stadia, and consider `MAP_TILE_CACHEABLE=false` for OpenStreetMap, whose policy forbids offline use.
 

@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { LANGUAGES, openResident } from "./helpers";
+import { catalogText, isFallback, LANGUAGES, openResident } from "./helpers";
 
 // S02.02: a path under a language that has no page (a mistyped or old link) is a 404 drawn inside the resident shell, in
 // the language of the URL, not Next's bare English page. (Every navigation destination has its page since S02.07's map.)
@@ -19,26 +19,35 @@ for (const language of LANGUAGES.filter(({ code }) => ["ur", "prs", "zh", "en", 
     await expect(page.getByTestId("shell-nav").locator("a")).toHaveCount(4);
     // Not Next's own 404 page.
     await expect(page.locator("html#__next_error__")).toHaveCount(0);
-    await expect(page.locator("main h1")).toContainText("This page could not be found.");
+    await expect(page.locator("main h1")).toHaveText(catalogText(language.code, "shell.pageNotFound"));
     expect(await page.locator("body").innerText()).not.toMatch(/^404/m);
   });
 }
 
-test("the 404 of a right-to-left language shows the English fallback as a left-to-right English block", async ({ page }) => {
+test("the 404 of a right-to-left language is in that language and direction, with no English marking", async ({ page }) => {
   await openResident(page, `/ur${MISSING}`, 390);
 
-  const run = page.locator("main h1");
-  await expect(run).toHaveAttribute("lang", "en");
-  await expect(run).toHaveAttribute("dir", "ltr");
-  await expect(run).toHaveText("[EN] This page could not be found.");
-  // Direction and the page's own words are Urdu's.
-  await expect(page.getByTestId("shell-nav-map")).toContainText("نقشہ");
+  // Urdu has these strings, so the heading and its line are Urdu, right to left. (How a string a language lacks is shown,
+  // as a left-to-right English block inside a right-to-left page, is fallback.spec.ts.)
+  const heading = catalogText("ur", "shell.pageNotFound");
+  const body = catalogText("ur", "shell.pageNotFoundBody");
+  expect(isFallback(heading), "the Urdu 404 heading is translated").toBe(false);
+  expect(isFallback(body), "the Urdu 404 line is translated").toBe(false);
+  await expect(page.locator("main h1")).toHaveText(heading);
+  await expect(page.locator("main h1 + p")).toHaveText(body);
+  for (const selector of ["main h1", "main h1 + p"]) {
+    const run = page.locator(selector);
+    await expect(run, selector).not.toHaveAttribute("lang", "en");
+    expect(await run.evaluate((element) => getComputedStyle(element).direction), selector).toBe("rtl");
+  }
+  await expect(page.locator("main bdi, main [lang=en]")).toHaveCount(0);
+  await expect(page.getByTestId("shell-nav-map")).toContainText(catalogText("ur", "shell.nav.map"));
 });
 
 test("English has no [EN] marker on its 404", async ({ page }) => {
   await openResident(page, "/en/ready/anything/deeper?x=1", 390);
 
-  await expect(page.locator("main h1")).toHaveText("This page could not be found.");
+  await expect(page.locator("main h1")).toHaveText(catalogText("en", "shell.pageNotFound"));
   await expect(page.locator("main bdi, main [lang=en]")).toHaveCount(0);
 });
 
