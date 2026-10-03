@@ -1,0 +1,125 @@
+{
+  "note": "The 20 representative English alert texts for S04.01 (scripts/translation-latency): 10 short acknowledgements and 10 full alerts of 300 to 600 characters, drawn from the prototype (design/prototype/cvh/data.js alerts and strings.en.screens.js templates). Sample places only; no real person.",
+  "texts": [
+    {
+      "id": "ack-power",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.power",
+      "text": "Power is out on floors 1 to 6 of Sample Tower A. We are finding out why. More information to come. Keep your fridge and freezer closed. Use a flashlight, not candles."
+    },
+    {
+      "id": "ack-water",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.water",
+      "text": "Water is off on floors 10 to 22 of Sample Tower A. We are finding out why. More information to come. Keep some water aside when it comes back. Ask a neighbour on another floor if you need water now."
+    },
+    {
+      "id": "ack-elevator",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.elevator",
+      "text": "The elevator is not working in Sample Tower B. We are finding out why. More information to come. Use the stairs with care. Your floor ambassador can help bring things up."
+    },
+    {
+      "id": "ack-fire",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.fire",
+      "text": "The fire alarm is ringing on floor 7 of Sample Tower C. We are finding out why. More information to come. If you hear the alarm, leave by the stairs. Do not use the elevator."
+    },
+    {
+      "id": "ack-flood",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.flood",
+      "text": "Water is leaking on floors P1 to 3 of Sample Tower C. We are finding out where it comes from. More information to come. Stay away from the water and move things off the floor."
+    },
+    {
+      "id": "ack-heat",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.heat",
+      "text": "It is dangerously hot today. We are checking which cooling spaces are open. More information to come. Drink water often and spend a few hours each day somewhere cool."
+    },
+    {
+      "id": "ack-smoke",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.smoke",
+      "text": "There is wildfire smoke in the air. We are checking which spaces have clean air. More information to come. Keep windows closed. Stay inside if you can."
+    },
+    {
+      "id": "ack-winter",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.winter",
+      "text": "A winter storm is here. We are finding out what it means for the buildings. More information to come. Charge your phone and a battery pack now."
+    },
+    {
+      "id": "ack-other",
+      "kind": "ack",
+      "source": "strings.en.screens.js O12.acks.other",
+      "text": "Something is wrong in Sample Tower A. We are finding out what. More information to come. Stay where you are safe and wait for the next message."
+    },
+    {
+      "id": "ack-storm-outage",
+      "kind": "ack",
+      "source": "data.js alerts AL-10 entry e1 (ack) + action",
+      "text": "The power and both elevators went out overnight in the storm. We are finding out why. More information to come. Stay warm in one room with the door closed. Do not use a stove or barbecue to heat your home."
+    },
+    {
+      "id": "alert-heat-warning",
+      "kind": "alert",
+      "source": "data.js alerts AL-01",
+      "text": "Heat warning for Toronto. Where: All of Toronto, including Thorncliffe Park and Flemingdon Park. Heat warning in effect. A period of very hot and humid weather is expected. Daytime highs near 33 degrees with humidex values near 40 are expected today through Friday. Overnight lows near 23 degrees will provide little relief. Environment and Climate Change Canada has extended the warning to Friday evening. What to do now: Drink water often and spend a few hours each day somewhere cool. Not known yet: Whether the heat will last into the weekend."
+    },
+    {
+      "id": "alert-rainfall-warning",
+      "kind": "alert",
+      "source": "data.js alerts AL-02",
+      "text": "Rainfall warning for Toronto. Where: All of Toronto. Rainfall warning in effect. Heavy downpours with total amounts of 50 to 75 millimetres are expected by this evening. Localized flooding in low-lying areas is possible. What to do now: Stay out of flooded underground parking and stairwells. Not known yet: Which streets will flood."
+    },
+    {
+      "id": "alert-winter-storm-warning",
+      "kind": "alert",
+      "source": "data.js alerts AL-03",
+      "text": "Winter storm warning for Toronto. Where: All of Toronto. Winter storm warning in effect. Snowfall of 20 to 30 centimetres with strong winds gusting to 70 km/h, beginning overnight. Travel will be hazardous. Power outages are possible. What to do now: Charge your phone and a battery pack tonight. Not known yet: Whether the power will go out."
+    },
+    {
+      "id": "alert-power-out",
+      "kind": "alert",
+      "source": "data.js alerts AL-05 (entries e1, e2, e3, e5)",
+      "text": "Power is out. Where: Sample Tower A, B and C, floors 1 to 8. Power is out on floors 1 to 6. We are finding out why. More information to come. Toronto Hydro is on site. A piece of equipment failed. Power may be back after 11 pm. Phone charging and a warm room are open at the community room, 10 Gateway Boulevard, until 9 pm. Power is back on floors 1 to 4. Floors 5 to 8 are still out. What to do now: Keep your fridge and freezer closed. Use a flashlight, not candles. Not known yet: Cause not known yet."
+    },
+    {
+      "id": "alert-hot-days",
+      "kind": "alert",
+      "source": "data.js alerts AL-06",
+      "text": "Very hot days until Friday. Where: Thorncliffe Park and Flemingdon Park. It will be very hot until Friday. Apartments without air conditioning can get dangerously hot. Two more cooling spaces are open this afternoon: Flemingdon Park Library and Dennis R. Timbrell Community Centre. What to do now: Go somewhere cool for a few hours each afternoon. Not known yet: Whether the heat will last into the weekend."
+    },
+    {
+      "id": "alert-elevator-water",
+      "kind": "alert",
+      "source": "data.js alerts AL-07 (ambassador line, machine English; one sentence added)",
+      "text": "Elevator is out and water is off. Where: Sample Tower A, floors 10 to 22. The elevator has stopped and there is no water on floors 10 to 22. The superintendent has been told. Ambassadors are checking on residents on the upper floors who asked for help. What to do now: Use the stairs with care. Ask a neighbour on a lower floor for water if you need it. Not known yet: When the elevator and water will be back."
+    },
+    {
+      "id": "alert-elevator-repairs",
+      "kind": "alert",
+      "source": "data.js alerts AL-08",
+      "text": "Elevators out for repairs. Where: Sample Tower B, all floors. Both elevators are out of service for repairs, expected to take about three weeks. Repairs are on schedule. Neighbours can carry groceries up for you. A new part arrives next week. Rides to medical appointments are available. The repair date has moved to Friday next week. What to do now: If you cannot use the stairs, ask for grocery or transport help below. Not known yet: The exact day the elevators will be back."
+    },
+    {
+      "id": "alert-lower-level-water",
+      "kind": "alert",
+      "source": "data.js alerts AL-09",
+      "text": "Water in the lower level. Where: Sample Tower C, floors P1 to 3. Water is coming into the lower level. We are finding out how much. More information to come. Parking level P1 is closed. Move your car from P1 only if you can do it safely. The water has been pumped out and P1 is open again. Report any leaks in your unit to your superintendent. What to do now: Do not go into the parking level. Move to a higher floor if water reaches your unit. Not known yet: How much water has come in."
+    },
+    {
+      "id": "alert-power-elevators",
+      "kind": "alert",
+      "source": "data.js alerts AL-10",
+      "text": "Power and elevators are out. Where: Sample Tower B, all floors. The power and both elevators went out overnight in the storm. We are finding out why. More information to come. A warm room with phone charging is open at the community room, 10 Gateway Boulevard. Ambassadors are checking on residents who asked. What to do now: Stay warm in one room with the door closed. Do not use a stove or barbecue to heat your home. Not known yet: When the power will be back."
+    },
+    {
+      "id": "alert-water-repair",
+      "kind": "alert",
+      "source": "strings.en.screens.js O02.tpl.water + O12.acks.water (wording extended to full-alert length)",
+      "text": "Water is off for a pipe repair. Where: Sample Tower A, floors 10 to 22. The building has shut off the water to repair a pipe. The superintendent expects the repair to take most of the day. Bottled water is available at the community room, 10 Gateway Boulevard, until 9 pm. What to do now: Fill a jug of water now if you still can. Ask a neighbour on another floor if you need water. Not known yet: When the water will be back on."
+    }
+  ]
+}

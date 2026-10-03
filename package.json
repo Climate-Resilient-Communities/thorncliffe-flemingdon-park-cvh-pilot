@@ -29,6 +29,7 @@
     "seed:providers": "node scripts/seed/providers.mjs",
     "derive:neighbourhoods": "node scripts/catalogue/provider-neighbourhoods.mjs",
     "search-test-set": "node scripts/search-test-set/index.mjs",
+    "translation-latency": "node scripts/translation-latency/index.mjs",
     "gen:tokens": "node scripts/gen-tokens.mjs",
     "check:tokens": "node scripts/gen-tokens.mjs --check",
     "check:spacing": "node scripts/check-css.mjs spacing",

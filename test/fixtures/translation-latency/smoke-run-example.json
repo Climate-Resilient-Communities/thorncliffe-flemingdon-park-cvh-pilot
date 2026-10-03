@@ -1,0 +1,153 @@
+{
+  "schema": "cvh.translation-latency/v1",
+  "date": "2026-10-02",
+  "started_at": "2026-10-03T02:43:22.378Z",
+  "finished_at": "2026-10-03T02:43:27.366Z",
+  "complete": true,
+  "code_path": {
+    "adapter": "src/modules/translation/adapters/cohereTranslator.ts (cohereTranslator, no retries)",
+    "prompt": "systemPrompt('en', lang): the module's generic translate prompt from S03.05; S04.02 had not defined an alert prompt when this was measured",
+    "temperature": 0,
+    "max_output_tokens": 1024,
+    "call_timeout_ms": 60000,
+    "output_check": "script-share-v1"
+  },
+  "texts": {
+    "file": "data/translation-latency/texts.json",
+    "sha256": "8f8de5f65c5296963c18eca48adb8db7a44b813a5312a637d691e7e8baf46050",
+    "ids": [
+      "ack-power",
+      "alert-power-out"
+    ]
+  },
+  "repetitions": 1,
+  "routes": {
+    "ur": [
+      "north-small-translate-09-2026",
+      "tiny-aya-fire"
+    ],
+    "es": [
+      "command-a-translate-08-2025",
+      "north-small-translate-09-2026"
+    ]
+  },
+  "key_vars": [
+    "COHERE_API_KEY",
+    "COHERE_API_KEY2"
+  ],
+  "percentile_method": "nearest-rank",
+  "spend_events": "not recorded: this script writes no spend_event rows (the report's usage is the record); production records each call's time in spend_event",
+  "planned_calls": 4,
+  "stopped": [],
+  "results": [
+    {
+      "lang": "ur",
+      "model": "north-small-translate-09-2026",
+      "position": 1,
+      "attempts": 2,
+      "ok": 2,
+      "failures": 0,
+      "failures_by_kind": {
+        "empty": 0,
+        "wrong_script": 0,
+        "timeout": 0,
+        "error": 0
+      },
+      "rate_limited": 0,
+      "quota_exhausted": 0,
+      "latency_ms": {
+        "n": 2,
+        "p50": 445.4,
+        "p95": 1242.4,
+        "p99": 1242.4,
+        "max": 1242.4
+      },
+      "usage": {
+        "calls": 2,
+        "input_tokens": 306,
+        "output_tokens": 322,
+        "calls_without_token_counts": 0
+      }
+    },
+    {
+      "lang": "es",
+      "model": "command-a-translate-08-2025",
+      "position": 1,
+      "attempts": 2,
+      "ok": 2,
+      "failures": 0,
+      "failures_by_kind": {
+        "empty": 0,
+        "wrong_script": 0,
+        "timeout": 0,
+        "error": 0
+      },
+      "rate_limited": 0,
+      "quota_exhausted": 0,
+      "latency_ms": {
+        "n": 2,
+        "p50": 1019.8,
+        "p95": 2275,
+        "p99": 2275,
+        "max": 2275
+      },
+      "usage": {
+        "calls": 2,
+        "input_tokens": 311,
+        "output_tokens": 230,
+        "calls_without_token_counts": 0
+      }
+    }
+  ],
+  "failures_over_threshold": [],
+  "samples": [
+    {
+      "lang": "es",
+      "model": "command-a-translate-08-2025",
+      "position": 1,
+      "text_id": "ack-power",
+      "rep": 1,
+      "key_var": "COHERE_API_KEY",
+      "outcome": "ok",
+      "ms": 1019.8,
+      "input_tokens": 106,
+      "output_tokens": 54
+    },
+    {
+      "lang": "ur",
+      "model": "north-small-translate-09-2026",
+      "position": 1,
+      "text_id": "ack-power",
+      "rep": 1,
+      "key_var": "COHERE_API_KEY2",
+      "outcome": "ok",
+      "ms": 445.4,
+      "input_tokens": 105,
+      "output_tokens": 74
+    },
+    {
+      "lang": "es",
+      "model": "command-a-translate-08-2025",
+      "position": 1,
+      "text_id": "alert-power-out",
+      "rep": 1,
+      "key_var": "COHERE_API_KEY",
+      "outcome": "ok",
+      "ms": 2275,
+      "input_tokens": 205,
+      "output_tokens": 176
+    },
+    {
+      "lang": "ur",
+      "model": "north-small-translate-09-2026",
+      "position": 1,
+      "text_id": "alert-power-out",
+      "rep": 1,
+      "key_var": "COHERE_API_KEY2",
+      "outcome": "ok",
+      "ms": 1242.4,
+      "input_tokens": 201,
+      "output_tokens": 248
+    }
+  ]
+}
