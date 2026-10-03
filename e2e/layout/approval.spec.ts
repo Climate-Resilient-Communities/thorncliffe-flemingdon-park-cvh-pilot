@@ -37,9 +37,14 @@ function longestText(lang: string): Text {
 
 const OPEN: ReviewOptions["recipients"] = { open: true, total: 12, byLanguage: { en: 5, ur: 4, fr: 3 } };
 
+/** `pauseNoticeForApprover()`'s sentence (S06.06): the catalog's `staff.texts.paused.approver`, shown while all texts are paused. */
+const PAUSE_NOTICE = "Texts are paused; this will send when resumed";
+
 interface Page_ {
   name: string;
   review: ReviewOptions;
+  /** All texts are paused: the screen carries the notice (the longest label of the language where the labels are the longest ones). */
+  paused?: boolean;
   initial?: () => ApprovalInitial;
   /** The testids of the actions the sticky region shows. */
   actions: string[];
@@ -50,6 +55,7 @@ const PAGES: Page_[] = [
   { name: "O-05 with texting open, languages that fell back and a possible duplicate", review: { recipients: OPEN, fallback: ["ur", "ps", "prs"], duplicate: { alertId: "01900000-0000-7000-8000-00000000a1e8", entryId: "01900000-0000-7000-8000-00000000e178" } }, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-07 an ambassador's post", review: { authorRole: "ambassador" }, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 returning it to its author with a note", review: {}, initial: () => ({ mode: "return" }), actions: ["send-back-button", "cancel-button"] },
+  { name: "O-05 while all texts are paused (S06.06)", review: {}, paused: true, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 confirming a discard", review: {}, initial: () => ({ mode: "discard" }), actions: ["discard-confirm-button", "cancel-button"] },
   {
     name: "O-05 with a count that changed",
@@ -72,6 +78,7 @@ function screenOf(which: Page_, lang: string, text?: Text): ApprovalScreen {
     plans: text ? plansFor(lang) : PLANS,
     pricePerSegmentCents: 1.5,
     viewerId: VIEWER,
+    pauseNotice: which.paused ? (text ? text("pauseNotice") : PAUSE_NOTICE) : null,
     ...(text ? { text } : {}),
   });
 }
@@ -257,5 +264,23 @@ test.describe("the phone, at 390 px, with the app's own English words", () => {
       expect(labels).toEqual(["Approve", "Return to author", "Discard"]);
       expect((await page.locator("body").innerText()).toLowerCase()).not.toMatch(/edit and approve|approve and edit/);
     }
+  });
+
+  test("tells the approver that texts are paused above the text, inside the screen, and leaves Approve where it was, within thumb reach (S06.06)", async ({ page }) => {
+    await page.setViewportSize(VIEWPORT);
+    const paused = PAGES.find((which) => which.paused)!;
+    await open(page, paused, "en", "real");
+    const notice = page.getByTestId("pause-notice");
+    await expect(notice).toHaveText(PAUSE_NOTICE);
+    const where = await box(notice);
+    expect(where.top).toBeGreaterThanOrEqual(0);
+    expect(where.bottom).toBeLessThanOrEqual((await box(page.getByTestId("english-body"))).top + 0.5);
+    // Approve is enabled, in the sticky region, in the lower part of the screen, as without the notice.
+    const approve = page.getByTestId("approve-button");
+    await expect(approve).toBeEnabled();
+    expect((await box(approve)).top).toBeGreaterThanOrEqual(VIEWPORT.height * 0.6);
+    // And nothing of the notice when texts are going out.
+    await open(page, PAGES[0], "en", "real");
+    await expect(page.getByTestId("pause-notice")).toHaveCount(0);
   });
 });

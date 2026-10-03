@@ -20,7 +20,7 @@ export type ApprovalState =
 
 export interface ApprovalDeps {
   alerting: () => Pick<AlertLifecycle, "approveEntry" | "returnEntry" | "discardEntry" | "review" | "refuseInvalidForm">;
-  /** What must follow an approval that committed: the feed's tag is revalidated (and, with E06, the dispatcher kicked). Never called for a refusal. */
+  /** What must follow an approval that committed: the feed's tag is revalidated and the dispatcher kicked (S06.02). Never called for a refusal or a rollback. */
   afterApproval: (outcome: ApprovalOutcome) => Promise<void>;
   /** Cents CAD per segment (SMS_PRICE_PER_SEGMENT_CENTS). */
   pricePerSegmentCents: () => number;
@@ -70,7 +70,7 @@ export async function approveFromForm(deps: ApprovalDeps, session: Pick<StaffSes
   if (!shown || !reviewed) return invalidForm(deps, session, "approve", ref);
   const result = await deps.alerting().approveEntry({ staffId: session.staffId, aal: session.aal }, ref, { ...shown, recipients: reviewed });
   if (result.ok) {
-    // After the commit, and never able to turn an approval that is done into a failure: the effects are the feed's tag and (E06) the dispatcher.
+    // After the commit, and never able to turn an approval that is done into a failure: the effects are the feed's tag and the dispatcher (S06.02's kick).
     await deps.afterApproval(result.value);
     return { status: "done", location: approveHref(ref) };
   }

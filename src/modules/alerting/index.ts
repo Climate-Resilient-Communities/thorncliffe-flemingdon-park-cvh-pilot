@@ -4,6 +4,7 @@ import type { Db } from "../../platform/db";
 import { readStaffStanding } from "../identity";
 import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
+import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { recordOpsEvent, type OpsEvent } from "../ops";
 import { createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
@@ -27,8 +28,11 @@ export interface AlertingWiring {
   places?: AlertLifecycleDeps["places"];
   /** Who the text reaches: subscriptions' count and `captureRecipients` (S04.07). Default: subscriptions' port, empty until E07. */
   recipients?: AlertLifecycleDeps["recipients"];
-  /** E06's approval marker (S06.01); see `createAlerting`. */
+  /** The outbox's approval marker and alert-text writer (S06.01); see `createAlerting`. Default: messaging's `createDeliveryQueue()`. */
   markApproval?: AlertLifecycleDeps["markApproval"];
+  queueAlertTexts?: AlertLifecycleDeps["queueAlertTexts"];
+  /** Cents CAD per text message segment, for each queued text's cost estimate (src/app/staff/alerts.ts gives `getEnv().smsPricePerSegmentCents`). */
+  pricePerSegmentCents?: AlertLifecycleDeps["pricePerSegmentCents"];
 }
 
 export interface AlertSubmitterWiring {
@@ -59,8 +63,18 @@ export function createAlertSubmitter(wiring: AlertSubmitterWiring): AlertSubmitt
   });
 }
 
-/** The lifecycle use cases wired to the alerting tables, the audit trail and identity's view of who is who. */
+/**
+ * What the outbox answers is a value; a refusal of something a correct approval never asks (an id that is not a UUID, a body the entry did not
+ * freeze) is a bug, so the approval fails with it and its transaction rolls back, deliveries and all.
+ */
+function settled<T>(result: DeliveryResult<T>, what: string): T {
+  if (!result.ok) throw new Error(`alerting: the outbox refused ${what}: ${result.error}`);
+  return result.value;
+}
+
+/** The lifecycle use cases wired to the alerting tables, the audit trail, identity's view of who is who and messaging's outbox. */
 export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
+  const queue = createDeliveryQueue();
   return createAlertLifecycle({
     db: wiring.db,
     audit: wiring.audit ?? { record: (tx, event) => audit.record(tx, event), recordRefusal: (db, event) => audit.recordRefusal(db, event) },
@@ -71,13 +85,17 @@ export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
     newId: wiring.newId,
     newSlug: wiring.newSlug,
     latestValidUntil: wiring.latestValidUntil,
-    // The approval's two seams (S04.07). `recipients` is subscriptions' count and snapshot port (E07 fills it in, in subscriptions; nothing here
-    // changes). `markApproval` is E06's: when the outbox is merged, this is the one line it adds, inside the approval's transaction and before
-    // `captureRecipients` writes anything:
-    //   markApproval: async (tx, entryId) => { await createDeliveryQueue().markApprovalTransaction(tx, entryId) },
-    // (messaging's `createDeliveryQueue`; alerting may import messaging). It is a no-op until then.
+    // The approval's seams (S04.07 with S06.01). `recipients` is subscriptions' count and capture port (E07 fills it in, in subscriptions; nothing
+    // here changes): it says who gets a text and in which language, and writes nothing. The rest is the outbox, reached only through messaging's
+    // public index, inside the approval's transaction: `markApproval` is `createDeliveryQueue().markApprovalTransaction(tx, entryId)`, which runs
+    // before anyone is captured; `queueAlertTexts` is `enqueueAlertDeliveries(tx, entryId, texts)`, the only way an alert delivery is written, with
+    // the entry's frozen body and segments for each person's language; the number of texts it returns is the recipient count the approval audits.
     recipients: wiring.recipients,
-    markApproval: wiring.markApproval,
+    markApproval: wiring.markApproval ?? (async (tx, entryId) => void settled(await queue.markApprovalTransaction(tx, entryId), "the approval marker")),
+    queueAlertTexts:
+      wiring.queueAlertTexts ??
+      (async (tx, entryId, texts) => settled(await queue.enqueueAlertDeliveries(tx, entryId, texts), "the alert texts").map((queued) => ({ lang: queued.delivery.lang }))),
+    pricePerSegmentCents: wiring.pricePerSegmentCents,
   });
 }
 

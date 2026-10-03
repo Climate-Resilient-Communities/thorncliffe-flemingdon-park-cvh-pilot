@@ -90,6 +90,11 @@ export interface ApprovalScreen {
   status: "review" | "locked";
   /** Why the entry is not waiting for this person (a locked screen), and the note sent with a return. */
   locked?: { message: string; note?: string };
+  /**
+   * "Texts are paused; this will send when resumed" while all texts are paused (S06.06's `pauseNoticeForApprover()`), on the approval view and on
+   * the confirmation of an approval (the screen of an approved entry); null otherwise. It informs and never changes or refuses the approval.
+   */
+  pauseNotice: string | null;
   header: { types: string; submitted: string; drill: string | null; by: string | null };
   english: { title: string; body: string };
   facts: {
@@ -120,6 +125,8 @@ export interface ApprovalInput {
   pricePerSegmentCents: number;
   /** The person looking: they cannot approve what they wrote or changed. */
   viewerId: string;
+  /** What `pauseNoticeForApprover()` answered: the sentence while texts are paused, null otherwise (or when the switch could not be read). */
+  pauseNotice?: string | null;
   /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
 }
@@ -249,6 +256,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     lead: variant === "alert" ? t("lead") : t("ambassadorLead"),
     status: locked ? "locked" : "review",
     ...(locked ? { locked } : {}),
+    // Told where it matters: to the approver deciding (an entry waiting for them), and on the confirmation (an approved entry), not on an entry that
+    // was returned, discarded or is waiting for someone else, whose texts the pause does not hold.
+    pauseNotice: input.pauseNotice && (!locked || entry.status === "approved") ? input.pauseNotice : null,
     header: {
       types: entry.content.types.map(typeName).join(", "),
       submitted: entry.submittedAt ? t("submitted", { time: formatTorontoDateTime(entry.submittedAt), version: entry.version }) : "",

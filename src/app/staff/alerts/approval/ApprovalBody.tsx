@@ -189,6 +189,12 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           </Stack>
         </section>
       )}
+      {/* While texts are paused (S06.06): on the view an approver decides on and on the confirmation of an approval. It only informs; Approve works as always. */}
+      {screen.pauseNotice && (
+        <p role="note" className="hub-flag" data-testid="pause-notice">
+          {screen.pauseNotice}
+        </p>
+      )}
       <Problem id="approval-error" message={problem} />
       {changed && (
         <section aria-labelledby="count-title" aria-live="polite" data-testid="count-changed">

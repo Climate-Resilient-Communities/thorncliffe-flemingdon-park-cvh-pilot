@@ -13,6 +13,7 @@ import { randomBytes } from "node:crypto";
 import { and, arrayOverlaps, desc, eq, inArray, lt, ne, or, sql } from "drizzle-orm";
 import { decidePolicy, meetsAssurance } from "../../identity";
 import { recipientsPort, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "../../subscriptions";
+import { alertTextsOf, countsOfTexts, type AlertText } from "./approvalTexts";
 import type { Db, DbTransaction } from "../../../platform/db";
 import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
@@ -44,15 +45,25 @@ export interface AlertLifecycleDeps {
   /** The latest valid-until allowed now: 7 Toronto calendar days ahead (platform/clock#addTorontoDays). A seam for tests. */
   latestValidUntil?: (now: Date) => Date;
   /**
-   * Who the text reaches (S04.07): the count the approval view shows (`count`) and the recipient snapshot the approval captures inside its
-   * transaction (`capture`, which is `captureRecipients(entry, tx)`). Subscriptions' port, empty until E07.
+   * Who the text reaches (S04.07): the count the approval view shows (`count`) and the people the approval captures inside its transaction
+   * (`capture`, which is `captureRecipients(entry, tx)`: who gets a text and in which language; it writes nothing). Subscriptions' port, empty until E07.
    */
   recipients?: RecipientsPort;
   /**
-   * E06's approval seam (S06.01): called in the approval's transaction after the entry is approved and `feed_version` is raised, with the
-   * entry being approved, and before `captureRecipients` writes anything. E06 wires `createDeliveryQueue().markApprovalTransaction` here, in `createAlerting`; nothing else changes. A no-op until then.
+   * The outbox's approval marker (S06.01): called in the approval's transaction after the entry is approved and `feed_version` is raised, with the
+   * entry being approved, and before `captureRecipients` is asked for anyone or anything is written. `createAlerting` wires messaging's
+   * `createDeliveryQueue().markApprovalTransaction` here; the default does nothing (the use case's own tests, which write no delivery).
    */
   markApproval?: (tx: DbTransaction, entryId: string) => Promise<void>;
+  /**
+   * The outbox's writer of alert texts (S06.01), called once in the approval's transaction after the marker, with the texts for the people
+   * captured and only when there are some. `createAlerting` wires messaging's `createDeliveryQueue().enqueueAlertDeliveries` here and gives
+   * back every text the outbox holds for the entry, the number of which is the count the approval audits and compares with the reviewed one.
+   * Without one, an approval that captured anyone fails and changes nothing.
+   */
+  queueAlertTexts?: (tx: DbTransaction, entryId: string, texts: readonly AlertText[]) => Promise<readonly { lang: string }[]>;
+  /** Cents CAD per text message segment (SMS_PRICE_PER_SEGMENT_CENTS), for each queued text's cost estimate; read only when someone is to be texted. */
+  pricePerSegmentCents?: () => number;
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -354,6 +365,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const { db, audit, staff, places } = deps;
   const recipients = deps.recipients ?? recipientsPort;
   const markApproval = deps.markApproval ?? (async () => undefined);
+  const queueAlertTexts = deps.queueAlertTexts;
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
   const newSlug = deps.newSlug ?? randomSlug;
@@ -626,14 +638,19 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     smsBodies: (row.smsBodies ?? {}) as Record<string, RecipientSmsBody>,
   });
 
-  /** A count the port gave must be one: whole numbers that add up, so a port that miscounts fails here and not in an audit record. */
-  function checkedCounts(counts: RecipientCounts): RecipientCounts {
-    const parts = Object.values(counts.byLanguage);
-    const sum = parts.reduce<number>((total, n) => total + (n ?? 0), 0);
-    if (!Number.isSafeInteger(counts.total) || counts.total < 0 || parts.some((n) => !Number.isSafeInteger(n) || (n ?? 0) < 0) || sum !== counts.total) {
-      throw new Error("alerting: the recipient port returned a count that is not whole numbers adding up to its total");
-    }
-    return counts;
+  /**
+   * The snapshot of an approval (AD-7, S06.01): the people the recipient port captures in this transaction, queued as texts through the outbox
+   * (`queueAlertTexts`: messaging's `enqueueAlertDeliveries(tx, entryId, texts)`), each in the entry's frozen text message for the person's language,
+   * and the count of the texts the outbox returns, in all and by the language of the body: the count that is audited and compared with the reviewed
+   * one. The marker that lets the database accept an alert delivery has been set by now. Nobody captured (all of E04 to E06: texting is not open):
+   * nothing is written.
+   */
+  async function queueSnapshot(tx: DbTransaction, entry: RecipientEntry): Promise<RecipientCounts> {
+    const captured = await recipients.capture(entry, tx);
+    const texts = alertTextsOf({ recipients: captured, smsBodies: entry.smsBodies, pricePerSegmentCents: deps.pricePerSegmentCents });
+    if (texts.length === 0) return NO_RECIPIENTS;
+    if (!queueAlertTexts) throw new Error("alerting: people were captured for an approval but no outbox is wired to queue their texts");
+    return countsOfTexts(await queueAlertTexts(tx, entry.entryId, texts));
   }
 
   /** Inserts the thread and its first draft (the author its first editor), audited as `alert.created`. The caller has judged everything. */
@@ -1033,12 +1050,14 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
      * Refused unless: the session is `aal2` (Admin and Coordinator), the policy lets this role approve, the approver is neither the
      * author nor an editor, the author may still author it now (active, and their current assignments cover the buildings), the version
      * and hash still match what was shown, and the valid-until is still ahead. Then, in this one transaction: the entry becomes
-     * `approved` and web-published and `feed_version` goes up (a drill changes nothing the web shows, so it does not); E06's marker is set;
-     * the recipient snapshot is captured through `captureRecipients(entry, tx)`; and if it counts anyone else than the approver reviewed
-     * (RECIPIENT_COUNT_CHANGED, carrying the snapshot's count) everything rolls back, the snapshot with it; else `entry.approved` is audited
-     * with the version, the hash and the recipient count. After it commits the caller revalidates the feed's tag (src/app/staff/alerts/approval).
+     * `approved` and web-published and `feed_version` goes up (a drill changes nothing the web shows, so it does not); the outbox's marker is
+     * set (`markApprovalTransaction`); the people to text are captured through `captureRecipients(entry, tx)` and their alert deliveries are
+     * written through `enqueueAlertDeliveries(tx, entryId, texts)`, each in the entry's frozen text message for the person's language; and if
+     * the number of texts that returns is not what the approver reviewed (RECIPIENT_COUNT_CHANGED, carrying that count) everything rolls back,
+     * the deliveries with it; else `entry.approved` is audited with the version, the hash and that recipient count. After it commits the
+     * caller revalidates the feed's tag and kicks the dispatcher (src/app/staff/alerts/approval).
      *
-     * The order is the lock order of AD-18: alert, alert_entry, feed_version, then the delivery and recipient rows that `captureRecipients` writes.
+     * The order is the lock order of AD-18: alert, alert_entry, feed_version, then the delivery rows and the recipient rows `captureRecipients` locks.
      */
     async approveEntry(actor: AlertActor, ref: EntryRef, shown: ApprovalRequest): Promise<AlertResult<ApprovalOutcome>> {
       return change("entry.approved", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<ApprovalOutcome> => {
@@ -1076,10 +1095,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           if (bumped.length !== 1) throw new Error("alerting: feed_version has no row");
           feedVersionNow = Number(bumped[0].version);
         }
-        // E06's hook (S06.01): the transaction says that the alert deliveries about to be written are this entry's approval. Nothing is written before it.
+        // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
+        // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
         await markApproval(tx, row.id);
-        // The recipient snapshot, in this transaction (AD-7): who gets the text, and in which language. What the approver reviewed is compared with it.
-        const snapshot = checkedCounts(await recipients.capture(recipientEntryOf(approved, thread), tx));
+        // The snapshot, in this transaction (AD-7): who gets the text and in which language (`captureRecipients`), their texts queued through the
+        // outbox (`enqueueAlertDeliveries`), and the number of texts it returns by language. What the approver reviewed is compared with that.
+        const snapshot = await queueSnapshot(tx, recipientEntryOf(approved, thread));
         const reviewed = shown.recipients ?? NO_RECIPIENTS;
         if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
         await audit.record(tx, {

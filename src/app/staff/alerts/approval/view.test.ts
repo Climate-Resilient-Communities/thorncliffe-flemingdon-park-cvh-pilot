@@ -185,6 +185,41 @@ describe("an entry that is not waiting for this person", () => {
   });
 });
 
+describe("the notice that all texts are paused (S06.06)", () => {
+  const NOTICE = "Texts are paused; this will send when resumed";
+
+  it("is shown on the approval view, which stays as it is: every action, the count and the cost", () => {
+    const paused = screenOf({}, { pauseNotice: NOTICE });
+    expect(paused).toMatchObject({ status: "review", pauseNotice: NOTICE });
+    const running = screenOf();
+    expect(running.pauseNotice).toBeNull();
+    // Nothing else of the view differs: the pause neither refuses nor changes the approval.
+    expect({ ...paused, pauseNotice: null }).toEqual(running);
+  });
+
+  it("is shown on the confirmation of an approval, the screen of an approved entry", () => {
+    expect(screenOf({ entry: { status: "approved" } }, { pauseNotice: NOTICE })).toMatchObject({ status: "locked", locked: { message: "This alert was approved and is published." }, pauseNotice: NOTICE });
+  });
+
+  it("is nothing when the notice is null, or was not asked for", () => {
+    expect(screenOf({}, { pauseNotice: null }).pauseNotice).toBeNull();
+    expect(screenOf({ entry: { status: "approved" } }, { pauseNotice: null }).pauseNotice).toBeNull();
+    expect(screenOf({}, { pauseNotice: "" }).pauseNotice).toBeNull();
+  });
+
+  it("is not told on an entry the pause does not hold: one sent back, discarded, written by the viewer, or on a closed thread", () => {
+    for (const options of [
+      { entry: { status: "draft" as const, contentHash: null, submittedAt: null, returnedFor: "return" as const, returnedNote: "Say which floors." } },
+      { entry: { status: "discarded" as const } },
+      { thread: { status: "closed" as const } },
+    ]) {
+      expect(screenOf(options, { pauseNotice: NOTICE }).pauseNotice, JSON.stringify(options)).toBeNull();
+    }
+    const own = approvalScreen({ review: reviewOf(), plans: PLANS, pricePerSegmentCents: PRICE, viewerId: AUTHOR, pauseNotice: NOTICE });
+    expect(own).toMatchObject({ status: "locked", pauseNotice: null });
+  });
+});
+
 describe("the count an approval was refused for", () => {
   const review = reviewOf({ recipients: { open: true, total: 5, byLanguage: { en: 3, ur: 2 } } });
 

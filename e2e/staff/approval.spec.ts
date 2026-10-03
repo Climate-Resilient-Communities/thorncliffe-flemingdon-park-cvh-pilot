@@ -295,3 +295,31 @@ test("an approver returns an entry with a note the author reads, and discards an
     await second.context.close();
   }
 });
+
+test("while all texts are paused the approver is told so on the approval view and on its confirmation, and the approval goes through all the same (S06.06)", async ({ page, browser, baseURL }) => {
+  const author = await signIn(page, "coordinator");
+  const ref = await submitAnAcknowledgement(page);
+  const notice = "Texts are paused; this will send when resumed";
+  await sql`update messaging_control set paused = true, paused_by = ${author.id}, paused_at = now(), reason = 'A provider problem' where id = 1`;
+  const second = await secondPerson(browser, baseURL, "coordinator");
+  try {
+    const phone = second.page;
+    await phone.goto(approvalUrl(ref));
+    await expect(phone.getByRole("heading", { level: 1, name: "Approve an alert" })).toBeVisible();
+    await expect(phone.getByTestId("pause-notice")).toHaveText(notice);
+    // Approve is as available as ever, and the approval is not changed: published, the feed's version raised, audited.
+    await expect(phone.getByTestId("approve-button")).toBeEnabled();
+    const before = await feedVersion();
+    await phone.getByTestId("approve-button").click();
+    await expect(phone.getByTestId("locked-note")).toContainText("approved and is published", { timeout: 30_000 });
+    await expect(phone.getByTestId("pause-notice")).toHaveText(notice);
+    expect(await entryRow(ref.entryId)).toMatchObject({ status: "approved", approved_by: second.person.id, approved_version: 1 });
+    expect(await feedVersion()).toBe(before + 1);
+    expect((await auditOf(ref.entryId)).at(-1)).toMatchObject({ action: "entry.approved", outcome: "ok", actor_staff_id: second.person.id });
+    // The pause is as it was left: the approval neither lifted it nor changed it.
+    expect((await sql`select paused, reason from messaging_control where id = 1`)[0]).toMatchObject({ paused: true, reason: "A provider problem" });
+  } finally {
+    await second.context.close();
+    await sql`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
+  }
+});

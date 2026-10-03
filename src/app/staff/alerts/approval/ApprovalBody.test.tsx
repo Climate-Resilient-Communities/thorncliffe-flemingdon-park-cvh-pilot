@@ -212,3 +212,29 @@ describe("an entry that is not waiting for this person", () => {
     expect(out).toContain("The note sent: Say which floors.");
   });
 });
+
+describe("the notice that all texts are paused (S06.06)", () => {
+  const NOTICE = "Texts are paused; this will send when resumed";
+  const withNotice = (options: Parameters<typeof reviewOf>[0] = {}) => approvalScreen({ review: reviewOf(options), plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER, pauseNotice: NOTICE });
+
+  it("is shown on the approval view as a note, above the text, and the actions are exactly what they were", () => {
+    const out = html(withNotice());
+    expect(out).toMatch(/<p role="note" class="hub-flag" data-testid="pause-notice">Texts are paused; this will send when resumed<\/p>/);
+    expect(out.indexOf('data-testid="pause-notice"')).toBeLessThan(out.indexOf('data-testid="english-body"'));
+    // Approve is as available as ever: the pause informs and refuses nothing.
+    expect(region(out)).toContain('data-testid="approve-button"');
+    expect(region(out)).not.toContain("disabled");
+  });
+
+  it("is shown on the confirmation of an approval, after what became of the entry", () => {
+    const out = html(withNotice({ entry: { status: "approved" } }));
+    expect(out).toContain("This alert was approved and is published.");
+    expect(out).toContain('data-testid="pause-notice"');
+    expect(out.indexOf('data-testid="locked-note"')).toBeLessThan(out.indexOf('data-testid="pause-notice"'));
+  });
+
+  it("is nothing when the notice is null: no note, no empty line", () => {
+    expect(html(screenOf())).not.toContain("pause-notice");
+    expect(html(screenOf({ entry: { status: "approved" } }))).not.toContain("pause-notice");
+  });
+});

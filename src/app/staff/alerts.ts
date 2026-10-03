@@ -3,6 +3,7 @@
 // that alerting wires itself (src/modules/alerting/index.ts), and Submit on top of it (S04.05): the translation of
 // this environment (./alertTranslation.ts) and the renderer's public origin (./freezeEntry.ts). Server only.
 import { createAlertSubmitter, createAlerting, type AlertLifecycle, type AlertSubmitter } from "@/modules/alerting";
+import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { alertTranslation } from "./alertTranslation";
 import { freezeEntryContent } from "./freezeEntry";
@@ -10,9 +11,12 @@ import { freezeEntryContent } from "./freezeEntry";
 let service: AlertLifecycle | undefined;
 let submitter: AlertSubmitter | undefined;
 
-/** The alert thread and entry use cases (S04.03), the audience pickers (S04.04) and logging a disruption (S04.05). */
+/**
+ * The alert thread and entry use cases (S04.03), the audience pickers (S04.04), logging a disruption (S04.05) and the approval (S04.07), whose
+ * transaction writes the alert deliveries through messaging's outbox (S06.01); each queued text's cost estimate uses the configured price of a segment.
+ */
 export function alerting(): AlertLifecycle {
-  return (service ??= createAlerting({ db: getDb() }));
+  return (service ??= createAlerting({ db: getDb(), pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents }));
 }
 
 /** Submit and "Try translation again" (S04.05): from the browser's key to a frozen, pending entry, and the entry's state a browser fetches when it did not see the outcome. */

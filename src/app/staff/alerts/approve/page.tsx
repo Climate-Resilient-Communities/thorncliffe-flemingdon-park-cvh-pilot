@@ -9,9 +9,10 @@ import { refOfQuery, type ApprovalQuery } from "../approval/loadApproval";
 export const metadata: Metadata = { title: englishText("staff.approve.title") };
 
 /**
- * The approval's actions live in this function, and so does what follows an approval that committed. When E06's dispatcher is kicked after the commit
- * (`kickDispatcher()` in src/app/staff/alerts/approval/afterApproval.ts), its run lives in this function after the response and shares its time:
- * the segment's `maxDuration` must be a literal 60 (Next.js reads it statically), as the submit route's is.
+ * The approval's actions live in this function, and so does what follows an approval that committed: the dispatcher is kicked after the commit
+ * (S06.02's `kickDispatcher()`, called by src/app/staff/alerts/approval/afterApproval.ts), and its run lives in this function after the response and
+ * shares its time. The segment's `maxDuration` must therefore be a literal 60 (Next.js reads it statically; approvalKick.test.ts reads it from this
+ * file), as the submit route's is.
  */
 export const maxDuration = 60;
 
