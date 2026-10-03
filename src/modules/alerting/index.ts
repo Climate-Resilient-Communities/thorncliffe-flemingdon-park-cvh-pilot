@@ -7,7 +7,7 @@ import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
 import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
-import { readClosedSlugs, readClosedThread, readOpenThreads } from "./adapters/resident/readThreads";
+import { readClosedSlugs, readClosedThread, readOpenThreads, readStatusThreads } from "./adapters/resident/readThreads";
 import { createCloseAlert } from "./application/closeAlert";
 import { createExpirer, type Expirer } from "./application/expire";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
@@ -232,11 +232,12 @@ export interface FeedWiring {
 /**
  * The alerts residents read (S04.08, the `FeedAlerts` port of S02.11): the open threads that have a web-published entry,
  * each entry's text in the language asked for (or the English fallback), read from the resident views only (AD-6), so a drill
- * is never among them. The derived status of each place is S05.06's: until then every place is `none`.
+ * is never among them. The status of each place is derived from the status threads (`readStatusThreads`, S05.06).
  */
 export function createResidentAlerts(db: Db): FeedAlerts {
   return {
-    read: async (lang) => ({ threads: await readOpenThreads(db, lang), statuses: { buildings: new Map(), neighbourhoods: new Map() } }),
+    read: async (lang) => ({ threads: await readOpenThreads(db, lang) }),
+    readStatusThreads: (now) => readStatusThreads(db, now),
     readClosed: (lang, slug) => readClosedThread(db, lang, slug),
     readClosedSlugs: () => readClosedSlugs(db),
   };

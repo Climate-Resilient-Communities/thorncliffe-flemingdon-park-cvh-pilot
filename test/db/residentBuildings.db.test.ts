@@ -86,10 +86,10 @@ describe("the resident building list", () => {
     await building("200", "TP", "9 Beta Rd");
     await building("100", "TP", "1 Alpha Rd");
 
-    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: ["100", "200"], neighbourhoods: ["FP", "TP"] });
+    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: ["100", "200"], neighbourhoods: ["FP", "TP"], neighbourhoodOf: { "100": "TP", "200": "TP" } });
   });
 
   it("has no place ids before the buildings are loaded", async () => {
-    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: [], neighbourhoods: [] });
+    expect(await createResidentBuildings({ db: app }).placeIds()).toEqual({ buildings: [], neighbourhoods: [], neighbourhoodOf: {} });
   });
 });

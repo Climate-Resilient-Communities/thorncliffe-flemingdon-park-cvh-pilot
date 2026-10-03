@@ -5,10 +5,13 @@
 // view's `where not is_drill`), and an entry that is not web-published is not in the second, so neither can reach a
 // resident however this query is changed. The rule against naming another alert relation here is `eslint.config.mjs`'s
 // `resident-queries-read-nondrill-only`.
-import { and, asc, eq, type SQL } from "drizzle-orm";
+import { and, asc, eq, gt, or, type SQL } from "drizzle-orm";
 import type { LangCode } from "../../../../contracts/lang";
 import type { Db } from "../../../../platform/db";
+import { AudienceSchema } from "../../../../contracts/audience";
+import type { EntryKind } from "../../domain/lifecycle";
 import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../../domain/residentThreads";
+import { RESOLVED_WINDOW_MS, type StatusEntry, type StatusThread } from "../../domain/status";
 import { nondrillAlert, nondrillAlertEntryV2, nondrillAlertEntryTranslation } from "./views";
 
 /** The published entries of the threads `where` picks, each with its text in `lang` (none for English: the entry's own text is English), oldest first. */
@@ -91,4 +94,51 @@ export async function readClosedThread(db: Db, lang: LangCode, slug: string) {
   if (rows.length === 0) return null;
   const [thread] = await db.select({ reason: nondrillAlert.closedReason }).from(nondrillAlert).where(eq(nondrillAlert.id, rows[0].threadId));
   return assembleClosedThread(rows, lang, thread?.reason ?? null);
+}
+
+/**
+ * The status threads (S05.06, AD-19): the non-drill threads that are open, and those closed `resolved` in the 12 hours before `now`, with every published entry (no
+ * text: status needs the kind, phase, verification, audience and whether it was replaced). Read from the same resident views as the feed, so a drill never appears;
+ * the closed ones are not in the feed's thread list, which is why this is its own statement. An entry whose audience does not parse is kept with a null audience: it covers nothing but still counts when the covering entry is chosen.
+ */
+export async function readStatusThreads(db: Db, now: Date): Promise<StatusThread[]> {
+  const since = new Date(now.getTime() - RESOLVED_WINDOW_MS);
+  const rows = await db
+    .select({
+      threadId: nondrillAlert.id,
+      status: nondrillAlert.status,
+      closedReason: nondrillAlert.closedReason,
+      closedAt: nondrillAlert.closedAt,
+      slug: nondrillAlertEntryV2.slug,
+      entryId: nondrillAlertEntryV2.id,
+      kind: nondrillAlertEntryV2.kind,
+      phase: nondrillAlertEntryV2.phase,
+      audience: nondrillAlertEntryV2.audience,
+      verified: nondrillAlertEntryV2.verified,
+      superseded: nondrillAlertEntryV2.superseded,
+      publishedAt: nondrillAlertEntryV2.webPublishedAt,
+    })
+    .from(nondrillAlertEntryV2)
+    .innerJoin(nondrillAlert, eq(nondrillAlert.id, nondrillAlertEntryV2.alertId))
+    .where(or(eq(nondrillAlert.status, "open"), and(eq(nondrillAlert.status, "closed"), eq(nondrillAlert.closedReason, "resolved"), gt(nondrillAlert.closedAt, since))))
+    .orderBy(asc(nondrillAlertEntryV2.webPublishedAt), asc(nondrillAlertEntryV2.id));
+  const threads = new Map<string, StatusThread & { entries: StatusEntry[] }>();
+  for (const row of rows) {
+    const audience = AudienceSchema.safeParse(row.audience);
+    let thread = threads.get(row.threadId);
+    if (!thread) {
+      thread = { id: row.threadId, slug: row.slug, state: row.status === "open" ? "open" : "closed", closeReason: row.closedReason, closedAt: row.closedAt, entries: [] };
+      threads.set(row.threadId, thread);
+    }
+    thread.entries.push({
+      id: row.entryId,
+      kind: row.kind as EntryKind,
+      phase: row.phase,
+      verified: row.verified,
+      superseded: row.superseded,
+      publishedAt: row.publishedAt,
+      audience: audience.success ? audience.data : null,
+    });
+  }
+  return [...threads.values()];
 }

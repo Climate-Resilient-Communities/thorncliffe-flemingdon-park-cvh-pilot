@@ -11,6 +11,8 @@ export interface PublicBuilding {
   rsn: string;
   address: string;
   neighbourhoodName: string;
+  /** The neighbourhood's id: a neighbourhood alert covers the building through it (status, S05.06). */
+  neighbourhoodId?: string;
   /** Each fact is null when the register did not say: "not known". */
   storeys: number | null;
   elevators: number | null;
@@ -35,6 +37,7 @@ export async function readPublicBuilding(db: Db, rsn: string): Promise<PublicBui
       rsn: building.rsn,
       address: building.address,
       neighbourhoodName: neighbourhood.name,
+      neighbourhoodId: building.neighbourhoodId,
       storeys: building.storeys,
       elevators: building.elevators,
       emergencyPower: building.emergencyPower,
@@ -56,6 +59,7 @@ export async function readPublicBuilding(db: Db, rsn: string): Promise<PublicBui
     rsn: row.rsn,
     address: row.address,
     neighbourhoodName: row.neighbourhoodName,
+    neighbourhoodId: row.neighbourhoodId,
     storeys: row.storeys,
     elevators: row.elevators,
     emergencyPower: row.emergencyPower,

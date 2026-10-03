@@ -10,6 +10,9 @@ type Raw = Omit<PublicBuilding, "factsUpdatedAt" | "contact"> & {
   contact: { role: ContactRole; phone: string; updatedAt: string } | null;
 };
 
+/** The pilot's two neighbourhoods by name, for a sample file that gives no id. */
+const FIXTURE_NEIGHBOURHOOD_IDS: Record<string, string> = { "Thorncliffe Park": "TP", "Flemingdon Park": "FP" };
+
 /** The sample buildings in the file, by rsn. Throws, naming the file, when it is not an array of buildings. */
 export function readBuildingsFixtureFile(file: string): Map<string, PublicBuilding> {
   let parsed: unknown;
@@ -27,6 +30,7 @@ export function readBuildingsFixtureFile(file: string): Map<string, PublicBuildi
       raw.rsn,
       {
         ...raw,
+        neighbourhoodId: raw.neighbourhoodId ?? FIXTURE_NEIGHBOURHOOD_IDS[raw.neighbourhoodName],
         factsUpdatedAt: new Date(raw.factsUpdatedAt),
         contact: raw.contact ? { ...raw.contact, owner: "hub" as const, updatedAt: new Date(raw.contact.updatedAt) } : null,
       },
