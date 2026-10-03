@@ -60,8 +60,9 @@ this needs a person, and it is told before the retry, so it is told even when th
 `translate_failed` is any other vendor failure, including the fallback's and a failure of our own (an adapter that says it was
 cancelled when nothing cancelled it, an unexpected exception); a translation refused by a check is not a vendor failure and
 writes none. If the fallback fails too, or there is no time or no fallback for that kind of question, the leg is `failed` and
-the direct leg answers alone; a fallback that is cut at the 2.2 s deadline gives `timed_out`. The search test-set runner never
-falls back, so S03.07 measures the routed models and not whichever answered.
+the direct leg answers alone; a fallback that is cut at the 2.2 s deadline gives `timed_out`. The production test-set run
+(S03.07, below) builds the leg as the app does, so it falls back too; its report lists the model of each translation call and
+counts the questions a fallback model translated, and `SEARCH_QUESTION_FALLBACK=off` for the run measures the routed models alone.
 
 With `SEARCH_TRANSLATE_MONTHLY_CALLS` set, ops is warned before a limit is reached. Each time a translation `spend_event` row is
 written for a model that has a limit, the model's translate rows in the current calendar month (America/Toronto, whoever made
@@ -205,7 +206,7 @@ changes a delivery.
 
 | Environment | Secrets and variables | Rules |
 |---|---|---|
-| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`; variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL` | deploys from `main` only |
+| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
 | `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
@@ -214,6 +215,55 @@ scoped to that team: `vercel promote` and `vercel rollback` look up the token's 
 
 The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
 `seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
+
+The "Search test set" workflow (Actions tab, S03.07) asks the tuning questions of `data/search-test-set/questions.jsonl` to
+production's real search use case (the current release, Cohere's `embed-v4.0`, the private bucket, and with the leg on the
+translated-question leg) and reports the hit rate per language, no-match and emergency accuracy, p50 and p95 per question, the
+vendor usage and a suggested no-match threshold; the suggestion sets nothing. It runs from `main` only, in the `production`
+environment, and the evaluation subset is refused (S03.08's).
+
+Add to the GitHub `production` environment (repository settings > Environments > production), once:
+
+- secrets `COHERE_API_KEY` (production's key), `SUPABASE_SECRET_KEY` (reads the private release bucket) and `SEARCH_TEST_DATABASE_URL`, set to production's app `DATABASE_URL` (the app's own login, `cvh_app`, which can do all this run does: read the release and the spend, write spend rows). The run does not take `PRODUCTION_DATABASE_URL`, the superuser's, and the workflow stops if `SEARCH_TEST_DATABASE_URL` is not set;
+- variable `NEXT_PUBLIC_SUPABASE_URL`;
+- only if production sets them in Vercel, variables of the same names and values: `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, and `SEARCH_THRESHOLD` (checked only: the run measures the threshold the current release recorded). Unset means the defaults, as in production;
+- optional variables `SEARCH_TEST_MONTHLY_CALLS` (the calls a month the Cohere key allows in all: 1000, the free trial key's) and `SEARCH_TEST_RESERVE_CALLS` (the calls of them kept for live search, which no run uses: 200). Set the first if the key is upgraded.
+
+The workflow names any missing secret or variable and stops before it calls anything. The key stays out of Vercel's Preview and Development and out of
+the repository; the run does not use the app's environment check, which is unchanged.
+
+Before a run, look at the month. The trial key is shared with live search, and a key that runs out gives every resident's question a
+429 until the month turns (search then answers "unavailable"). A run of both legs plans about 440 calls, 44% of the month. The run
+checks it too: once it is told to go, and before its first call, it reads this month's Cohere calls (embedding and translation, every
+purpose, the calendar month in America/Toronto) from `spend_event`, prints them with the allowance and what is left, and refuses to
+start when those calls and its own worst case (its plan with every retry, never more than `max_calls`) would pass the allowance less
+the reserve: with the defaults, 1000 - 200 = 800 calls. To see the count yourself, in the production database (the SQL editor, read only):
+
+```sql
+select kind, purpose, sum(calls) as calls
+from spend_event
+where kind in ('embed', 'translate')
+  and at >= (date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto')
+group by kind, purpose
+order by kind, purpose;
+```
+
+`spend_event` is the app's own record, so it can miss a call that never reached it (a process that died): the vendor's own count, in
+Cohere's dashboard, is the one that decides. Check that too before the first run of a month.
+
+To run it: Actions > Search test set > Run workflow, on `main`: `split` tuning, `leg` `both` (off, then on), `max_calls` empty (500).
+`confirm` is unticked by default: the run then only prints the plan (the calls per leg and the allowance) and succeeds, and calls
+nothing. Run it that way first, read the plan, then run it again with `confirm` ticked. Calls are paced, never pass `max_calls`, and
+a run stops, reports partial results and fails when the cap, a vendor's monthly quota, repeated vendor failures or repeated search
+failures say so (the leg after a leg that stopped is not run). A 429 or another vendor failure is its own outcome in the report,
+never a miss. The use case records each call as `test_set` spend and no `search_log` row is written. The job summary holds
+aggregates only; the per-question report (ids, scores and counts, never a question's text) is in the run's artifact, and the
+report and the chosen threshold are committed afterwards (provisional until S03.08). The printed output stays in the job log, where GitHub
+masks the secrets; it is not uploaded, because an artifact of this public repository can be downloaded by anyone signed in to GitHub.
+A run that ends badly (an error, or the step's 25-minute limit) leaves a progress file of the questions asked so far in the artifact,
+with the same kind of content. From a shell, with the same values exported (the database as `SEARCH_TEST_DATABASE_URL`):
+`npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg both --yes`; `--plan-only` prints the plan
+and stops, and without either flag it prints the plan and exits 2.
 
 ### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
 

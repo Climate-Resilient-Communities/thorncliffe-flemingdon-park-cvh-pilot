@@ -1,6 +1,6 @@
 import { readFileSync } from "node:fs";
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, resetEnvCache } from "./env";
+import { DEFAULT_QUESTION_FALLBACK, DEFAULT_QUESTION_ROUTE, DEFAULT_SMS_PRICE_PER_SEGMENT_CENTS, EnvError, failClosedEnvironment, getEnv, parseEnv, parseSearchEnv, resetEnvCache } from "./env";
 import { PRODUCTION_HOST } from "./hosts";
 
 const PROD_URL = `https://${PRODUCTION_HOST}`;
@@ -820,5 +820,41 @@ describe("CVH_FAKE_TRANSLATOR", () => {
     for (const other of ["1", "true", "cohere", "Sample"]) {
       expect(problemsOf({ ...local, CVH_FAKE_TRANSLATOR: other }), other).toContain('CVH_FAKE_TRANSLATOR: the only fake is "sample"');
     }
+  });
+});
+
+describe("parseSearchEnv (the search settings alone, for the test-set runner)", () => {
+  it("resolves the search settings by the same rules and defaults as the app, whatever else the variables hold", () => {
+    expect(parseSearchEnv({})).toEqual(parseEnv({ ...production }).search);
+    const values = {
+      SEARCH_QUESTION_ROUTE: " ps = command-a-translate-08-2025 , ur=off",
+      SEARCH_QUESTION_FALLBACK: "prs=off",
+      SEARCH_FALLBACK_MIN_BUDGET_MS: "1200",
+      SEARCH_THRESHOLD: "0.4",
+      SEARCH_EMERGENCY_THRESHOLD: "0.35",
+    };
+    expect(parseSearchEnv({ ...values, COHERE_API_KEY: "a-key", DATABASE_URL: "not looked at" })).toEqual(parseEnv({ ...production, ...values }).search);
+  });
+
+  it("treats a blank variable as unset, as the workflow's unset variables arrive", () => {
+    expect(parseSearchEnv({ SEARCH_QUESTION_ROUTE: "", SEARCH_QUESTION_FALLBACK: "  ", SEARCH_EMERGENCY_THRESHOLD: "" }).questionFallback).toEqual(DEFAULT_QUESTION_FALLBACK);
+  });
+
+  it("looks only at the search variables: a Cohere key outside production is not its business", () => {
+    expect(() => parseSearchEnv({ COHERE_API_KEY: "a-key", VERCEL_ENV: "preview" })).not.toThrow();
+  });
+
+  it("refuses a bad value with the app's own message, naming the variable and never the value", () => {
+    let error: unknown;
+    try {
+      parseSearchEnv({ SEARCH_QUESTION_ROUTE: "ps=a model with spaces", SEARCH_FALLBACK_MIN_BUDGET_MS: "9999", SEARCH_EMERGENCY_THRESHOLD: "0.9" });
+    } catch (e) {
+      error = e;
+    }
+    expect(error).toBeInstanceOf(EnvError);
+    expect((error as EnvError).problems).toEqual(
+      expect.arrayContaining([expect.stringMatching(/^SEARCH_QUESTION_ROUTE:/), expect.stringMatching(/^SEARCH_FALLBACK_MIN_BUDGET_MS:/), expect.stringMatching(/^SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD/)]),
+    );
+    expect(JSON.stringify((error as EnvError).problems)).not.toContain("a model with spaces");
   });
 });
