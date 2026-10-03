@@ -694,7 +694,6 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   };
 }
 
-/** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 /**
  * The launch gate. Production: off unless RESIDENT_ALERTS_ENABLED is `true` AND the alerts have been released
  * (RESIDENT_ALERTS_RELEASED); `true` before that is refused, so a setting in Vercel cannot show residents an alert early. Everywhere
@@ -716,6 +715,7 @@ function parseResidentAlerts(value: string | undefined, environment: AppEnvironm
   return normal !== "false";
 }
 
+/** Validates a raw variable map. Throws EnvError listing every rule that failed. */
 export function parseEnv(source: Record<string, string | undefined>): Env {
   const raw = rawSchema.parse(source);
   const problems: string[] = [];

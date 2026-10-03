@@ -103,6 +103,7 @@ function textOf(entry: FeedEntry): TextView {
 
 function entryOf(entry: FeedEntry, serverNow: Date, t: Translate): EntryView {
   const text = textOf(entry);
+  // SEAM(E05): a withdrawal reads as "Update" until E05 adds withdrawals and an R07.kinds.withdrawal string.
   const kinds: Record<string, string> = { ack: "ack", update: "update", correction: "correction", final: "final", withdrawal: "update" };
   const timeT: Translate = (key, values) => t(`time.${key}`, values);
   return {

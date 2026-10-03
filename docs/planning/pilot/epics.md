@@ -1966,7 +1966,7 @@ So that the web and, later, texts reach exactly the people it is for.
 
 ### Story S04.05 — Hub staff log a disruption and write an acknowledgement or alert
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 3 h 20 min (started 2026-10-03 04:08 UTC, built 07:28 UTC)
 - **Traces:** FR-A4, FR-A1, UX-DR16 (O-11, O-12, O-02), FR-M2 · **Depends on:** S04.02, S04.03, S04.04, S04.06 · **Branch:** `e04-s05-log-and-compose`
 
 As a Hub Coordinator,
@@ -2057,7 +2057,7 @@ So that what I approve is what residents get, byte for byte.
 
 ### Story S04.07 — A second person approves exactly what they reviewed, on a phone
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 26 min (started 2026-10-03 07:29 UTC, built 09:55 UTC), plus the E06 wiring
 - **Traces:** FR-A15, FR-A3 (recipients per language), AR-19 (approval view), UX-DR16 (O-05, O-07), FR-M2 · **Depends on:** S04.03, S04.05, S04.06 · **Branch:** `e04-s07-approval`
 
 As a Hub Coordinator,
