@@ -96,6 +96,28 @@ A change to which translations a release carries reaches residents only through 
 3. **Seed, then publish.** Run "Seed production" with `seed:providers` as a dry run, compare its report with the one
    in the pull request, then run it to apply. Then an Admin presses **Publish directory**. Nothing changes for
    residents until that publish: they keep the current release, built from the earlier seed.
+## Translation of alerts (S04.02)
+
+Alerts are translated at submit by the routes in the `translation_route` table (spine AD-10). The routes are not an environment
+variable: they are rows, seeded by the migration `20261003010000_translation_route_cache.sql` from the addendum's routing table, and
+a change is a later migration. The only secret translation needs is `COHERE_API_KEY` (above), production only: previews and local
+runs have no key, and the tests use a fake model.
+
+| Setting | Where it lives | Value | Who changes it |
+|---|---|---|---|
+| The ordered models of each language | `translation_route.model` by `position` (1 is the first choice) | the addendum's table: Pashto `north-small-translate-09-2026` only; Dari North then `command-a-translate-08-2025`; French, Spanish, Chinese, Greek, Hindi Command A Translate then North; Urdu, Bengali, Tamil, Punjabi North then `tiny-aya-fire`; Tagalog, Slovak North then `tiny-aya-water`; Gujarati `tiny-aya-fire` then North | a migration |
+| Each model's attempt timeout | `translation_route.attempt_timeout_ms` | **provisional**: 10 s for each of two models, 20 s for Pashto's one (`source = 'provisional'`) | S04.01's migration, from measured latency (`source = 'measured'`) |
+| A language's route deadline | not stored: the sum of its attempt timeouts, at most 30 s | **provisional**: 20 s for every language | follows from the attempt timeouts |
+| The check each language's output must pass | `translation_route.eld_code`, `script`, `marker_letters`, `excluded_letters` | spine AD-10 | a migration |
+| The prompt's version | `PROMPT_VERSION` in `src/modules/translation/adapters/cohereTranslator.ts` | `1` | the developer who changes the prompt or a language name in it (a test fails until the version and its pinned fingerprint are changed together) |
+| The checks' version | `CHECK_LOGIC_VERSION` and `ELD_VERSION` in `src/modules/translation/domain/alertChecks.ts` | `2`, `2.1.0` | the developer who changes how checks are applied, how a model's output is normalised before them (version 2: digits of any script written 0-9, design note D-13) or the `eld` package |
+| How long a store is waited for | `STORE_GRACE_MS` in `src/modules/translation/application/alertTranslator.ts` (and `storeGraceMs` in the translator's dependencies, for tests) | 1 s: a cache read that does not answer is a miss, a cache or spend write that does not finish is given up, the routes read that does not answer rejects the translation | the developer, with the submit budget (the longest route deadline plus 5 s) in view: at most four graces follow one another (the routes read; then zh-Hant's converter, its cache read and the final flush of writes) |
+
+The attempt timeouts and deadlines are provisional until S04.01 has measured latency and replaced them by a later migration; they
+are re-measured from the per-call times recorded in `spend_event` (kind `translate`, purpose `alert`, no text) after the pilot's
+first two weeks and whenever a model or route changes. The translation cache (`translation_cache`) needs no setting: its key holds the
+prompt version, the check version and, for zh-Hant, OpenCC's version and configuration, so a change to any of them makes a fresh
+translation and nothing older is reused.
 
 ## Supabase (Auth settings)
 
