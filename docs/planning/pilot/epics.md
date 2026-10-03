@@ -2828,7 +2828,7 @@ So that we can stop a mistake or a provider problem immediately.
 
 ### Story S06.07 — A stuck queue or failing sender alerts the on-call Admin
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 18 min (started 2026-10-03 15:38 UTC, built 16:56 UTC)
 - **Traces:** AR-21 (minimal), NFR-N6 · **Depends on:** S06.04, S06.06 · **Branch:** `e06-s07-stuck-queue-alert`
 
 As the on-call Admin,
