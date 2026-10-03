@@ -47,6 +47,8 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     if (!thread) throw new Refused("ALERT_NOT_FOUND");
     if (thread.status !== "open") throw new Refused("ALERT_CLOSED");
     const entries = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id)).for("update");
+    // The entry whose texts are kept is an entry of this thread.
+    if (input.keepEntryId !== undefined && !entries.some((entry) => entry.id === input.keepEntryId)) throw new Refused("ENTRY_NOT_FOUND");
 
     // Nothing that residents have not read stays behind a closed thread: its drafts and its entries waiting for approval are discarded. (A pending entry
     // that is web-published, E08's D-1 case, was read by residents and is never discarded: the entry trigger refuses it.)

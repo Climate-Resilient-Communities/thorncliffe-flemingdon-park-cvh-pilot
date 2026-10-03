@@ -9,7 +9,7 @@
 --     is approved only while its target is still a valid target (approved, or pending approval and web-published, and not a withdrawal notice), and the
 --     target becomes `superseded` only by a change that happens in the same transaction as the approval of a correction or a withdrawal that names it.
 --     So a direct `update alert_entry set status = 'superseded'` with the app's credentials is refused, and two corrections of one entry cannot both be
---     approved, whatever the use case did. `superseded` is final: no transition leaves it.
+--     approved while the use case supersedes the target in that same transaction (`approveEntry` does; nothing else is allowed to). `superseded` is final: no transition leaves it.
 --  3. The resident view `nondrill_alert_entry` gains `supersedes_id` (appended: a view the previous release reads keeps its columns). The web shows the
 --     correction above the original marked "Corrected", and a withdrawn entry as "Withdrawn" with the reason in its place (the withdrawal's own text,
 --     which is why the reason code itself stays out of the view and out of the feed: phones in the field parse the feed strictly).
@@ -275,7 +275,7 @@ begin
       raise exception 'alert_entry: the approval must name the version and hash that are pending' using errcode = 'check_violation';
     end if;
     -- A correction or a withdrawal is approved only while the entry it replaces is still a valid target (approved, or pending and web-published): two
-    -- corrections of the same entry cannot both be approved, whatever the use case did.
+    -- corrections of the same entry cannot both be approved, provided the use case supersedes the target in the same transaction.
     if new.kind in ('correction', 'withdrawal') then
       select t.alert_id, t.kind, t.status, t.web_published_at into target from public.alert_entry t where t.id = new.supersedes_id;
       if not found or target.alert_id <> new.alert_id

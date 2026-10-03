@@ -93,6 +93,8 @@ describe("a withdrawn entry", () => {
     expect(v.current.text.body).toBe(ORIGINAL);
     expect(v.preview.description).toBe(ORIGINAL);
     expect(v.times).toBe("Posted 1 hour ago · Updated 40 minutes ago");
+    // The card shows the standing acknowledgement, so it says when that was posted and not when the withdrawn update was.
+    expect(v.cardTime).toBe("Posted 1 hour ago");
   });
 
   it("is drawn with the word and the reason, and the withdrawn wording is not shown as something to act on", () => {

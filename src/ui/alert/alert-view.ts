@@ -194,7 +194,7 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     current: entryOf(standing, serverNow, t),
     origin: originOf(standing, t),
     times,
-    cardTime: newestFirst.length > 1 ? t("R03.updated", { t: ago(latest.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
+    cardTime: standing.id !== first.id ? t("R03.updated", { t: ago(standing.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
     ended: valid === null ? t("R07.expiredNote") : null,
     unavailableTitle: t("x04.unavailable"),

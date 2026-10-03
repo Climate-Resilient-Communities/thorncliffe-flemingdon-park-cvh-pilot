@@ -363,6 +363,24 @@ describe("making a withdrawal", () => {
     expect(await alerting.withdrawEntry(actorOf(authorA), { alertId: ref.alertId, targetId: ref.entryId }, withdrawInput({ reason: "other", text: "   " }))).toEqual({ ok: false, error: "TEXT_EMPTY" });
   });
 
+  it("renews a withdrawal's valid-until on each save and each submit, so one drafted a day ago is submitted and approved with its texts queued", async () => {
+    const { ref } = await approvedThread({ validUntil: new Date("2026-10-05T15:00:00Z") }, "ack", 2);
+    const withdrawal = await newWithdrawal(ref);
+    // 25 hours later the first valid-until has passed; a save renews it, and so does the submit.
+    clock = new Date(clock.getTime() + 25 * 3600 * 1000);
+    const current = (await alerting.getEntry(withdrawal))!.content;
+    const saved = await alerting.saveDraft(actorOf(authorA), withdrawal, { ...current, text: "Withdrawn: it gave wrong information." });
+    expect(saved.ok).toBe(true);
+    expect((await entryRow(withdrawal.entryId)).valid_until.getTime()).toBe(clock.getTime() + 24 * 3600 * 1000);
+    clock = new Date(clock.getTime() + 23 * 3600 * 1000);
+    await submitted(withdrawal);
+    expect((await entryRow(withdrawal.entryId)).valid_until.getTime()).toBe(clock.getTime() + 24 * 3600 * 1000);
+    recipientIds = [randomUUID(), randomUUID()];
+    const approved = await alerting.approveEntry(actorOf(coordB), withdrawal, await shownOfRow(withdrawal));
+    expect(approved.ok).toBe(true);
+    expect(await stateCounts(withdrawal.entryId)).toEqual({ queued: 2 });
+  });
+
   it("keeps only the notice's words changeable: saving a withdrawal's draft changes its text and nothing about who it is for", async () => {
     const { ref } = await approvedThread({ audience: audienceOf(RSN, [floorId(RSN, 3)]) });
     const withdrawal = await newWithdrawal(ref);

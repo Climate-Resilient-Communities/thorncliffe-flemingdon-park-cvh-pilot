@@ -132,7 +132,7 @@ export type {
 export type { RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 // S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
-export { createCloseAlert, type CloseAlert, type CloseAlertDeps, type CloseAlertInput, type Closed, type ClosedReason } from "./application/closeAlert";
+export { type CloseAlert, type CloseAlertDeps, type CloseAlertInput, type Closed, type ClosedReason } from "./application/closeAlert";
 export {
   SUPERSEDING_KINDS,
   WITHDRAWAL_REASONS,

@@ -568,7 +568,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   ): Promise<EntryView> {
     if (entry.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
     // A withdrawal is the target's: who it is for, its types and where things stood are the target's, and only the notice's words are the author's (S05.02).
-    if (entry.kind === "withdrawal") content = { ...contentOf(entry), text: content.text };
+    // Its valid-until is "until resolved", 24 elapsed hours from each save (and from each submit), so a withdrawal left a day as a draft can still be completed.
+    if (entry.kind === "withdrawal") content = { ...contentOf(entry), text: content.text, validUntil: new Date(now().getTime() + UNTIL_RESOLVED_MS), validUntilMode: "resolved" };
     // Saving the composer's draft judges the time the author entered (in the future, at most 7 days ahead); the audience
     // pickers change who it is for and not when it ends, so they leave a time that has since passed to the submit's own check.
     const invalid = contentRefusal(content) ?? (options.checkValidUntil ? validUntilProblem(content.validUntil, now()) : null);
@@ -934,6 +935,11 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         content = contentOf(row);
         // The draft the author saved and saw is the draft that is submitted: someone else saving in between is refused, nothing frozen.
         if (mode.draft !== undefined && mode.draft !== draftFingerprint(content)) throw new Refused("DRAFT_CHANGED");
+        // A withdrawal's "until resolved" runs 24 elapsed hours from this press (before the content is hashed), so one drafted long ago is not stuck.
+        if (row.kind === "withdrawal") {
+          const [renewed] = await tx.update(alertEntry).set({ validUntil: new Date(at.getTime() + UNTIL_RESOLVED_MS), validUntilMode: "resolved" }).where(eq(alertEntry.id, row.id)).returning();
+          content = contentOf(renewed);
+        }
       } else {
         if (row.status !== "pending_approval") throw new Refused("ENTRY_NOT_PENDING");
         if (row.version !== mode.seen.version || row.contentHash !== mode.seen.contentHash) throw new Refused("ENTRY_CHANGED");
