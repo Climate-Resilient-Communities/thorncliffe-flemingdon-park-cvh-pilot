@@ -8,7 +8,7 @@
 // The use cases run as the app's own role (cvh_app_login).
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
-import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
+import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
@@ -35,6 +35,8 @@ import type { AlertRecipient, RecipientEntry, RecipientsPort } from "../../src/m
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 import { submitSeams } from "./alertSubmitSeams";
+import { deferred, dispatcherWorld, fakeResolver, type DispatcherWorld } from "./dispatcherSupport";
+import { drizzleDispatchStore } from "../../src/modules/messaging";
 
 const RSN = "4154246";
 const floorId = (rsn: string, index: number) => `01900000-0000-7000-8000-${rsn.padStart(8, "0")}${String(index).padStart(4, "0")}`;
@@ -53,7 +55,7 @@ const content = (over: Partial<EntryContent> = {}): EntryContent => ({
   types: ["power"],
   audience: audienceOf(RSN),
   phase: "problem",
-  validUntil: new Date("2026-10-02T15:00:00Z"),
+  validUntil: liveUntil ?? new Date("2026-10-02T15:00:00Z"),
   validUntilMode: "at",
   ...over,
 });
@@ -88,6 +90,9 @@ let appSql: postgres.Sql;
 let app: Db;
 let alerting: AlertLifecycle;
 let seams: ReturnType<typeof submitSeams>;
+let world: DispatcherWorld;
+/** Set by the sender's tests: the sender judges a valid-until by the real database clock, so their entries must be valid until after today. */
+let liveUntil: Date | undefined;
 const accounts: Account[] = [];
 
 async function account(role: Role): Promise<Account> {
@@ -155,9 +160,11 @@ beforeAll(async () => {
   ambassador = await account("ambassador");
   alerting = createAlerting({ db: app, now: () => clock, recipients: port, pricePerSegmentCents: () => 5 });
   seams = submitSeams(owner, alerting);
+  world = dispatcherWorld(owner, appSql, app);
 });
 
 afterAll(async () => {
+  await world.reset();
   await clear();
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table audit_event disable trigger audit_event_no_update_or_delete");
@@ -244,7 +251,7 @@ const updateInput = (over: Partial<Parameters<AlertLifecycle["addUpdate"]>[2]> =
   entryId: randomUUID(),
   text: "Toronto Hydro is on site. Power may be back after 11 pm.",
   phase: "in_progress" as const,
-  validUntil: new Date("2026-10-02T09:00:00Z"),
+  validUntil: liveUntil ?? new Date("2026-10-02T09:00:00Z"),
   validUntilMode: "at" as const,
   ...over,
 });
@@ -267,7 +274,7 @@ const correctInput = (over: Partial<CorrectInput> = {}): CorrectInput => ({
   entryId: randomUUID(),
   text: "Power is out on floors 1 to 8, not floors 1 to 6.",
   phase: "problem",
-  validUntil: new Date("2026-10-02T15:00:00Z"),
+  validUntil: liveUntil ?? new Date("2026-10-02T15:00:00Z"),
   validUntilMode: "at",
   ...over,
 });
@@ -948,5 +955,96 @@ describe("what residents read", () => {
     const withdrawal = await pendingWithdrawal(ref);
     expect(await alerting.approveEntry(actorOf(coordB), withdrawal, await shownOfRow(withdrawal))).toMatchObject({ ok: true });
     expect(await readFeed()).toEqual([]);
+  });
+});
+
+// --- the sender after a correction (S06.03) ----------------------------------------------------------------------------------------------------
+// The real approval, the real `cancelQueued` and the real sender (the provider and the numbers are fakes).
+
+const bodyOfEntry = async (entryId: string) => (await owner<{ body: string }[]>`select body from delivery where entry_id = ${entryId} limit 1`)[0].body;
+
+describe("a correction and the sender (S06.03)", () => {
+  beforeEach(() => {
+    liveUntil = new Date(Date.now() + 2 * 86_400_000);
+  });
+
+  afterEach(async () => {
+    liveUntil = undefined;
+    await world.reset();
+  });
+
+  it("an original part-sent: the correction cancels the queued and the claimed-but-not-handed-off rows in its transaction, leaves the handed-off and submitted rows, and goes to every recipient of the original", async () => {
+    const { ref } = await approvedThread({}, "ack", 4);
+    const original = await owner<{ id: string; recipient_id: string }[]>`select id, recipient_id from delivery where entry_id = ${ref.entryId} order by id`;
+    const recipients = original.map((row) => row.recipient_id);
+    const rows = original.map((row) => row.id);
+    const [submittedRow, handedOffRow, claimedRow, queuedRow] = rows;
+    await owner`update delivery set state = 'claimed', claimed_by = 'w', claim_token = ${randomUUID()} where id = any(${[submittedRow, handedOffRow, claimedRow]})`;
+    await owner`update delivery set handed_off_at = now() where id = any(${[submittedRow, handedOffRow]})`;
+    await owner`update delivery set state = 'submitted', provider_message_id = ${`SM${"b".repeat(32)}`} where id = ${submittedRow}`;
+    const correction = await pendingCorrection(ref);
+    recipientIds = recipients;
+
+    expect(await alerting.approveEntry(actorOf(coordB), correction, await shownOfRow(correction))).toMatchObject({ ok: true });
+
+    const states = Object.fromEntries((await owner<{ id: string; state: string }[]>`select id, state from delivery where entry_id = ${ref.entryId}`).map((row) => [row.id, row.state]));
+    expect(states[submittedRow]).toBe("submitted");
+    expect(states[handedOffRow]).toBe("claimed");
+    expect(states[claimedRow]).toBe("cancelled");
+    expect(states[queuedRow]).toBe("cancelled");
+    // The correction goes to every recipient of the original.
+    const sentTo = (await owner<{ recipient_id: string }[]>`select recipient_id from delivery where entry_id = ${correction.entryId}`).map((row) => row.recipient_id).sort();
+    expect(sentTo).toEqual([...recipients].sort());
+  });
+
+  it("a correction approved between the sender's claim and its hand-off: the original's row is cancelled and not sent, the correction's text goes", async () => {
+    const { ref } = await approvedThread({}, "ack", 1);
+    const correction = await pendingCorrection(ref);
+    recipientIds = [randomUUID()];
+    const shown = await shownOfRow(correction);
+    let approved: unknown;
+    const store = {
+      ...drizzleDispatchStore,
+      async claim(...args: Parameters<typeof drizzleDispatchStore.claim>) {
+        const result = await drizzleDispatchStore.claim(...args);
+        if (result.kind === "claimed" && approved === undefined) approved = await alerting.approveEntry(actorOf(coordB), correction, shown);
+        return result;
+      },
+    };
+
+    await world.dispatcher({ store }).run();
+
+    expect(approved).toMatchObject({ ok: true });
+    expect(await stateCounts(ref.entryId)).toEqual({ cancelled: 1 });
+    expect(world.provider.calls.map((call) => call.body)).toEqual([await bodyOfEntry(correction.entryId)]);
+  });
+
+  it("a correction approved while a hand-off holds the original's row: it waits, finds the text handed off and leaves it, so the original goes and the correction follows", async () => {
+    const { ref } = await approvedThread({}, "ack", 1);
+    const correction = await pendingCorrection(ref);
+    recipientIds = [randomUUID()];
+    const shown = await shownOfRow(correction);
+    const inside = deferred();
+    const proceed = deferred();
+    let first = true;
+    const resolver = fakeResolver({
+      onResolve: async () => {
+        if (!first) return;
+        first = false;
+        inside.resolve();
+        await proceed.promise;
+      },
+    });
+    const run = world.dispatcher({ resolver: resolver.resolver }).run();
+    await inside.promise;
+    const approving = alerting.approveEntry(actorOf(coordB), correction, shown);
+    await world.untilSomeoneWaitsForALock();
+    proceed.resolve();
+    const [, approved] = await Promise.all([run, approving]);
+
+    expect(approved).toMatchObject({ ok: true });
+    expect(await stateCounts(ref.entryId)).toEqual({ submitted: 1 });
+    await world.dispatcher().run();
+    expect(await stateCounts(correction.entryId)).toEqual({ submitted: 1 });
   });
 });
