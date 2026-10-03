@@ -96,33 +96,42 @@ const SMS = { body: `Thorncliffe Flemingdon Hub: ${ACK_TEXT}\nhttps://cvh.exampl
 const screenOf = (mode: ComposerMode, state: EntryState, options: { preview?: boolean; saved?: boolean } = {}) =>
   composerScreen({ mode, state, plans: PLANS, preview: options.preview === false ? null : { sms: SMS, nineOneOneFirst: false }, saved: options.saved ?? false, now: NOW });
 
-async function openComposer(page: Page, width: number, height: number, props: Omit<Parameters<typeof mount<"ComposerFixture">>[2], "texts" | "brand">) {
+/** The viewport is as tall as the page, so the picture shows all of it, with the sticky actions at its end. */
+async function fitToPage(page: Page, width: number) {
+  await page.setViewportSize({ width, height: 800 });
+  const height = await page.evaluate(() => document.documentElement.scrollHeight);
   await page.setViewportSize({ width, height });
-  await mount(page, "ComposerFixture", { texts: REAL_TEXTS, brand, ...props });
 }
 
-async function openLog(page: Page, width: number, height: number, props: Omit<Parameters<typeof mount<"LogFixture">>[2], "texts" | "brand" | "screen"> & { kind?: "ack" | "update" } = {}) {
-  await page.setViewportSize({ width, height });
+async function openComposer(page: Page, width: number, props: Omit<Parameters<typeof mount<"ComposerFixture">>[2], "texts" | "brand">) {
+  await page.setViewportSize({ width, height: 800 });
+  await mount(page, "ComposerFixture", { texts: REAL_TEXTS, brand, ...props });
+  await fitToPage(page, width);
+}
+
+async function openLog(page: Page, width: number, props: Omit<Parameters<typeof mount<"LogFixture">>[2], "texts" | "brand" | "screen"> & { kind?: "ack" | "update" } = {}) {
+  await page.setViewportSize({ width, height: 800 });
   const { kind, ...rest } = props;
   await mount(page, "LogFixture", { texts: REAL_TEXTS, brand, screen: logScreen(PLANS, NOW, { kind: kind ?? "ack" }), ...rest });
+  await fitToPage(page, width);
 }
 
 for (const width of [390, 1280]) {
   test(`Log a disruption at ${width}px`, async ({ page }) => {
-    await openLog(page, width, width === 390 ? 2300 : 1500);
+    await openLog(page, width);
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Log a disruption");
     await expectBaseline(page, `log-${width}.png`);
   });
 
   test(`the acknowledgement composer, a draft with its text message preview, at ${width}px`, async ({ page }) => {
-    await openComposer(page, width, width === 390 ? 3000 : 1900, { screen: screenOf("ack", stateOf(), { saved: true }) });
+    await openComposer(page, width, { screen: screenOf("ack", stateOf(), { saved: true }) });
     await expect(page.getByTestId("composer-text")).toHaveValue(ACK_TEXT);
     await expect(page.getByTestId("audience-sentence")).toHaveText("Residents of 4 Milepost Pl (floors 3, 4, 5) and 85-95 Thorncliffe Park Dr (all floors).");
     await expectBaseline(page, `composer-ack-draft-${width}.png`);
   });
 
   test(`the alert composer, a draft, at ${width}px`, async ({ page }) => {
-    await openComposer(page, width, width === 390 ? 3300 : 2100, { screen: screenOf("alert", stateOf({ kind: "update", types: ["power", "elevator"] })) });
+    await openComposer(page, width, { screen: screenOf("alert", stateOf({ kind: "update", types: ["power", "elevator"] })) });
     await expect(page.getByRole("heading", { level: 1 })).toHaveText("Write an alert");
     await expectBaseline(page, `composer-alert-draft-${width}.png`);
   });
@@ -133,7 +142,7 @@ for (const width of [390, 1280]) {
       translations: SOME_FELL_BACK,
       attempt: { state: "committed", resultVersion: 2, finishedAt: NOW },
     });
-    await openComposer(page, width, width === 390 ? 2600 : 1700, { screen: screenOf("ack", state, { preview: false }) });
+    await openComposer(page, width, { screen: screenOf("ack", state, { preview: false }) });
     await expect(page.getByTestId("fallback-summary")).toContainText("2 of 15 languages could not be translated");
     await expect(page.getByTestId("duplicate-note")).toBeVisible();
     await expectBaseline(page, `composer-submitted-fallback-${width}.png`);
@@ -142,7 +151,7 @@ for (const width of [390, 1280]) {
 
 test("a submit that is running, with the languages settled so far, at 390px", async ({ page }) => {
   const state = stateOf({ attempt: { state: "running", progress: { ur: "fallback_en", ps: "translated", tl: "translated", zh: "translated", fr: "translated" } } });
-  await openComposer(page, 390, 3000, { screen: screenOf("ack", state) });
+  await openComposer(page, 390, { screen: screenOf("ack", state) });
   await expect(page.getByTestId("progress-summary")).toHaveText("5 of 15 languages done");
   await expect(page.getByTestId("submit-button")).toBeDisabled();
   await expect(page.getByTestId("save-draft")).toBeDisabled();
@@ -151,7 +160,7 @@ test("a submit that is running, with the languages settled so far, at 390px", as
 
 test("a submitted entry with every language translated, at 390px", async ({ page }) => {
   const state = stateOf({ entry: { status: "pending_approval", version: 1, contentHash: "d".repeat(64), submittedAt: NOW }, translations: ALL_TRANSLATED, attempt: { state: "committed", resultVersion: 1, finishedAt: NOW } });
-  await openComposer(page, 390, 2300, { screen: screenOf("ack", state, { preview: false }) });
+  await openComposer(page, 390, { screen: screenOf("ack", state, { preview: false }) });
   await expect(page.getByTestId("all-translated")).toBeVisible();
   await expect(page.getByTestId("retry-translation")).toHaveCount(0);
   await expectBaseline(page, "composer-submitted-translated-390.png");
@@ -159,15 +168,15 @@ test("a submitted entry with every language translated, at 390px", async ({ page
 
 test("a draft after a failed attempt, a refused save and the clock-change question, at 390px", async ({ page }) => {
   const failed = stateOf({ attempt: { state: "failed", outcome: "ROUTES_UNAVAILABLE", finishedAt: NOW } });
-  await openComposer(page, 390, 3000, { screen: screenOf("ack", failed) });
+  await openComposer(page, 390, { screen: screenOf("ack", failed) });
   await expect(page.locator("p.hub-error")).toContainText("The translation settings could not be read");
   await expectBaseline(page, "composer-failed-390.png");
 
-  await openComposer(page, 390, 3000, { screen: screenOf("ack", stateOf()), initial: { save: { status: "refused", message: "The text is too long: at most 600 characters." } } });
+  await openComposer(page, 390, { screen: screenOf("ack", stateOf()), initial: { save: { status: "refused", message: "The text is too long: at most 600 characters." } } });
   await expect(page.locator("p.hub-error")).toHaveText("The text is too long: at most 600 characters.");
   await expectBaseline(page, "composer-refused-390.png");
 
-  await openComposer(page, 390, 3000, {
+  await openComposer(page, 390, {
     screen: screenOf("ack", stateOf()),
     initial: { save: { status: "ask", question: "1:30 a.m. happens twice on Sunday, November 1, because the clocks go back. Do you mean before or after the clock change?", before: "Before the clock change (1:30 a.m. EDT)", after: "After the clock change (1:30 a.m. EST)" } },
   });
@@ -176,11 +185,11 @@ test("a draft after a failed attempt, a refused save and the clock-change questi
 });
 
 test("Log a disruption after a refusal and with the clock-change question, at 390px", async ({ page }) => {
-  await openLog(page, 390, 2400, { initialState: { status: "refused", message: "Choose at least one type." } });
+  await openLog(page, 390, { initialState: { status: "refused", message: "Choose at least one type." } });
   await expect(page.locator("p.hub-error")).toHaveText("Choose at least one type.");
   await expectBaseline(page, "log-refused-390.png");
 
-  await openLog(page, 390, 2500, {
+  await openLog(page, 390, {
     initialState: { status: "ask", question: "1:30 a.m. happens twice on Sunday, November 1, because the clocks go back. Do you mean before or after the clock change?", before: "Before the clock change (1:30 a.m. EDT)", after: "After the clock change (1:30 a.m. EST)" },
   });
   await expect(page.getByRole("group", { name: "Before or after the clock change" })).toBeVisible();
@@ -189,7 +198,7 @@ test("Log a disruption after a refusal and with the clock-change question, at 39
 
 test("an entry that can no longer be changed here, at 390px", async ({ page }) => {
   const state = stateOf({ entry: { status: "approved", version: 1, contentHash: "d".repeat(64) }, translations: ALL_TRANSLATED });
-  await openComposer(page, 390, 2000, { screen: screenOf("ack", state, { preview: false }) });
+  await openComposer(page, 390, { screen: screenOf("ack", state, { preview: false }) });
   await expect(page.getByTestId("locked-note")).toContainText("approved and is published");
   await expect(page.locator(".layout-screen__actions")).toHaveCount(0);
   await expectBaseline(page, "composer-locked-390.png");
@@ -203,7 +212,7 @@ test("fits the phone without scrolling sideways in every state", async ({ page }
     ["ack", stateOf({ entry: { status: "pending_approval", version: 2, contentHash: "d".repeat(64) }, translations: SOME_FELL_BACK }), false],
   ];
   for (const [mode, state, preview] of states) {
-    await openComposer(page, 390, 900, { screen: screenOf(mode, state, { preview }) });
+    await openComposer(page, 390, { screen: screenOf(mode, state, { preview }) });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= document.documentElement.clientWidth), `${mode} ${state.entry.status}`).toBe(true);
   }
 });
