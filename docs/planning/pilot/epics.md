@@ -1267,7 +1267,7 @@ So that I can see at a glance whether anything affects me.
 ### Story S02.12 — Resident installs the CVH and reads it without signal
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** NFR-N3, AR-3, FR-M1 (installs) · **Depends on:** S02.06, S02.07, S02.10, S02.11 · **Branch:** `e02-s12-install-offline`
+- **Traces:** NFR-N3, AR-3, FR-M1 (installs) · **Depends on:** S02.06, S02.07, S02.10, S02.11 · **Branch:** `e02-s12-offline`
 
 As a resident on an older phone with poor signal,
 I want to install the CVH and still read it when signal drops,
