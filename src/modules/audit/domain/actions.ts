@@ -225,6 +225,13 @@ export const AUDIT_META = {
   }),
   // Written in the claim's own transaction, before Twilio is called: a send is never invisible to the audit trail.
   "sms.test_attempted": meta({}),
+
+  // The pause (S06.06): an Admin at aal2 pauses or resumes all texts. The subject is the one pause switch (type `messaging_control`,
+  // id 1). `meta` holds counts only: the reason the Admin typed is free text, which an audit record never holds, so it lives on the
+  // switch itself while the pause lasts. `waiting` is the texts the pause holds (or that resume lets go), `handed_off` the texts
+  // already handed to the provider among those of the alerts and campaigns it holds. All are required on an ok record.
+  "sending.paused": meta({ waiting: count.optional(), handed_off: count.optional() }),
+  "sending.resumed": meta({ waiting: count.optional() }),
 } as const satisfies Record<string, z.ZodType>;
 
 export type AuditAction = keyof typeof AUDIT_META;
@@ -245,6 +252,8 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "entry.discarded": ["entry_id", "from"],
   "entry.approved": ["entry_id", "version", "content_hash"],
   "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
+  "sending.paused": ["waiting", "handed_off"],
+  "sending.resumed": ["waiting"],
 };
 
 export const AUDIT_ACTIONS = Object.keys(AUDIT_META) as AuditAction[];

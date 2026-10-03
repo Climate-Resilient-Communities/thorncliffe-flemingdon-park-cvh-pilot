@@ -110,7 +110,7 @@ The routes refuse a request without `Authorization: Bearer <secret>` (401), and 
 job open. If Vercel's deployment protection covers the production URL, `net.http_post` needs the protection bypass header too
 (`x-vercel-protection-bypass` with the bypass secret kept in the Vault). To rotate: set `JOB_SECRET_PREVIOUS` to the old value and `JOB_SECRET` to a new one in
 Vercel and deploy; `select vault.update_secret((select id from vault.secrets where name = 'cvh_job_secret'), '<new value>')`; then remove
-`JOB_SECRET_PREVIOUS`. To stop sending without a deploy, pause the texts (S06.06); to stop the schedule, `select cron.unschedule('cvh-dispatch')`.
+`JOB_SECRET_PREVIOUS`. To stop sending without a deploy, pause the texts (Hub, Administration, "Pause texts"; see "Pausing texts" below); to stop the schedule, `select cron.unschedule('cvh-dispatch')`.
 The health job (S06.07, `/api/jobs/health`) is scheduled the same way when it exists; it reads `ops_event` and the sender lease's `renewed_at`.
 
 **Messaging Service: Smart Encoding off, and who may change the service.** Smart Encoding replaces characters it thinks are the same (a typographic
@@ -120,6 +120,16 @@ records `messaging.smart_encoding_on` in `ops_event` (severity error) when it is
 cannot read is recorded as `messaging.service_check_failed` (warning), never taken for off. The configuration-control assumption the procedures
 (S09.03) repeat: only named Admins change the Messaging Service, texts are paused while they do, and the check is run again before texts resume
 (`curl -X POST -H "Authorization: Bearer <JOB_SECRET>" <production URL>/api/jobs/messaging-config`).
+
+**Pausing texts (S06.06).** No variable, secret or schedule is involved: an Admin signed in with the authenticator (`aal2`) opens Hub, Administration,
+"Pause texts" (`/staff/texts`), gives the reason and presses "Pause all texts". From that moment the dispatcher claims nothing except texts to on-call
+numbers (so a problem with sending is still reported), a text it had already claimed goes back to the queue before it is handed to Twilio, and every Hub
+screen shows "Texts are paused" with who, when and why. Texts approved or created while paused wait in the queue. A text that was already handed to Twilio
+cannot be recalled: the page says how many had been handed over when the pause was made. "Resume texts" ends the pause; the dispatcher then continues in
+the usual order and checks each text again just before it is handed over, so a text of an alert that was corrected, withdrawn or closed meanwhile, or whose
+valid-until time has passed, is cancelled or skipped instead of sent (a final alert, and the withdrawal that closed an alert, are still sent). Pausing and
+resuming are audited (`sending.paused`, `sending.resumed`); the reason is kept on the switch only while the pause lasts. It is the first thing to do for a
+wrong alert, a provider problem, and before anyone changes the Messaging Service.
 
 ## GitHub: environments
 

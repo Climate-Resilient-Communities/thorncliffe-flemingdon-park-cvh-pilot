@@ -1,7 +1,7 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
 // db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger), db/migrations/20261003100000_delivery_outbox.sql
-// (the outbox) and db/migrations/20261003200000_dispatcher.sql (the sender lease, the pause switch and the claim order); the drift test
-// compares them.
+// (the outbox), db/migrations/20261003200000_dispatcher.sql (the sender lease, the pause switch and the claim order) and
+// db/migrations/20261003260000_messaging_pause.sql (the app's update of the pause); the drift test compares them.
 // The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
 import { bigint, boolean, check, index, integer, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
@@ -176,7 +176,8 @@ export const dispatcherLease = pgTable(
 
 /**
  * The pause switch (S06.02 reads it, S06.06 sets it, audited): one row. While `paused`, nothing the pause applies to is claimed
- * or handed off; on-call texts are exempt. A missing row reads as paused.
+ * or handed off; on-call texts are exempt. A missing row reads as paused. `handedOffAtPause` is the count of texts already handed to
+ * the provider, among those of the alerts and campaigns the pause holds, taken in the transaction that set the pause.
  */
 export const messagingControl = pgTable(
   "messaging_control",
@@ -187,12 +188,15 @@ export const messagingControl = pgTable(
     pausedAt: timestamp("paused_at", { withTimezone: true }),
     reason: text(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    handedOffAtPause: integer("handed_off_at_pause"),
   },
   (t) => [
     index("messaging_control_paused_by_idx").on(t.pausedBy),
     check("messaging_control_single_row", sql`${t.id} = 1`),
     check("messaging_control_reason_length", sql`${t.reason} is null or (btrim(${t.reason}) <> '' and char_length(${t.reason}) <= 500)`),
     check("messaging_control_pause_stated", sql`not ${t.paused} or (${t.pausedBy} is not null and ${t.pausedAt} is not null and ${t.reason} is not null)`),
+    check("messaging_control_handed_off_valid", sql`${t.handedOffAtPause} is null or ${t.handedOffAtPause} >= 0`),
     pgPolicy("messaging_control_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("messaging_control_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

@@ -490,3 +490,48 @@ describe("alert lifecycle actions (S04.03)", () => {
     expect(findSensitiveValue({ entry_id: hidden })).toBe("meta.entry_id");
   });
 });
+
+describe("sending.paused and sending.resumed (S06.06)", () => {
+  const control = (action: "sending.paused" | "sending.resumed", meta: Record<string, unknown>) =>
+    event({ action, subjectType: "messaging_control", subjectId: "1", meta } as Partial<AuditEvent>);
+
+  it("record a pause with the counts of the texts it holds and of those already handed off, on the one switch", () => {
+    expect(toAuditRecord(control("sending.paused", { waiting: 12, handed_off: 3 }), "ok")).toMatchObject({
+      action: "sending.paused",
+      actorStaffId: STAFF,
+      subjectType: "messaging_control",
+      subjectId: "1",
+      outcome: "ok",
+      meta: { waiting: 12, handed_off: 3 },
+    });
+  });
+
+  it("record a resume with the count of the texts it lets go", () => {
+    expect(toAuditRecord(control("sending.resumed", { waiting: 12 }), "ok").meta).toEqual({ waiting: 12 });
+    expect(toAuditRecord(control("sending.resumed", { waiting: 0 }), "ok").meta).toEqual({ waiting: 0 });
+  });
+
+  it.each([
+    ["a pause with no waiting count", "sending.paused", { handed_off: 3 }, "meta is missing waiting"],
+    ["a pause with no handed-off count", "sending.paused", { waiting: 3 }, "meta is missing handed_off"],
+    ["a resume with no waiting count", "sending.resumed", {}, "meta is missing waiting"],
+  ])("refuse an ok record of %s", (_, action, meta, problem) => {
+    expect(() => toAuditRecord(control(action as "sending.paused", meta), "ok")).toThrow(problem);
+  });
+
+  it("record a refusal with only its reason: a reason that was not given, or a pause or resume that changed nothing", () => {
+    expect(toAuditRecord(control("sending.paused", { reason: "validation" }), "refused").meta).toEqual({ reason: "validation" });
+    expect(toAuditRecord(control("sending.paused", { reason: "conflict" }), "refused").meta).toEqual({ reason: "conflict" });
+    expect(toAuditRecord(control("sending.resumed", { reason: "conflict" }), "refused").meta).toEqual({ reason: "conflict" });
+  });
+
+  it("have nowhere to put the reason the Admin typed, which can hold anything: it lives on the switch while the pause lasts", () => {
+    expect(() => toAuditRecord(control("sending.paused", { waiting: 1, handed_off: 0, why: "Wrong alert sent to 416-555-0123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(control("sending.paused", { waiting: 1, handed_off: 0, details: "Twilio is down" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("refuse a count that is not a count", () => {
+    expect(() => toAuditRecord(control("sending.paused", { waiting: -1, handed_off: 0 }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(control("sending.resumed", { waiting: "12" }), "ok")).toThrow(AuditRecordError);
+  });
+});

@@ -2,7 +2,8 @@
 // row, written before it is sent and never holding a phone number; the states, the idempotent queue, the ContactResolver
 // port) and S01.15's first-text spike: one test text from production to an approved phone, through the Twilio adapter.
 // S06.02 adds the sender (the dispatcher: the sender lease, the claim order, the hand-off point, the pace, the outcomes) and the
-// Messaging Service check. E06's sender replaces the spike (and nothing else may call the SMS adapter then).
+// Messaging Service check. S06.06 adds the pause: the one switch an Admin sets to stop every text not yet handed to the provider.
+// E06's sender replaces the spike (and nothing else may call the SMS adapter then).
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
 import { drizzleDeliveryStore } from "./adapters/deliveryStore";
@@ -24,6 +25,8 @@ import { drizzleDispatchStore } from "./adapters/dispatchStore";
 import { createDispatcher as createDispatcherService } from "./application/dispatcher";
 import type { DispatchStore, Dispatcher, DispatcherDeps } from "./application/dispatcherPorts";
 import { createMessagingServiceCheck, type MessagingServiceCheck, type MessagingServiceCheckDeps } from "./application/serviceCheck";
+import { drizzlePauseStore } from "./adapters/pauseStore";
+import { createMessagingPause as createMessagingPauseService, type MessagingPause, type PauseAudit, type PauseStore } from "./application/messagingPause";
 
 export interface DeliveryQueueWiring {
   /** Test seams. */
@@ -58,6 +61,26 @@ export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
 /** The daily check of the Messaging Service's Smart Encoding setting (S06.02). */
 export function createServiceCheck(wiring: MessagingServiceCheckWiring): MessagingServiceCheck {
   return createMessagingServiceCheck(wiring);
+}
+
+export interface MessagingPauseWiring {
+  db: Db;
+  /** Test seams: another store, and the audit writer. */
+  store?: PauseStore;
+  audit?: PauseAudit;
+}
+
+/**
+ * The pause (S06.06): an Admin's one switch that stops every text not yet handed to the provider, and what it says now. The use
+ * cases run in their own transactions (the pause or resume and its audit record, together). Who may call them is the staff guard's rule
+ * (`sending.pause`, Admins at aal2), asked by the caller before it comes here.
+ */
+export function createMessagingPause(wiring: MessagingPauseWiring): MessagingPause {
+  return createMessagingPauseService({
+    db: wiring.db,
+    store: wiring.store ?? drizzlePauseStore,
+    audit: wiring.audit ?? { record: audit.record, recordRefusal: audit.recordRefusal },
+  });
 }
 
 export interface TestTextWiring {
@@ -244,3 +267,8 @@ export {
   type SubmitOutcome,
   type UnknownCause,
 } from "./domain/dispatchRules";
+
+// The pause (S06.06).
+export { MessagingControlInconsistent, MessagingControlMissing } from "./application/messagingPause";
+export type { MessagingPause, PauseAudit, PauseOutcome, PauseRow, PauseStatus, PauseStore, PausedStatus, ResumeOutcome } from "./application/messagingPause";
+export { PAUSE_REASON_MAX_CHARS, cleanPauseReason, type CleanedReason, type PauseReasonProblem } from "./domain/pauseRules";

@@ -94,7 +94,8 @@ describe("the sender's tables", () => {
       ["dispatcher_lease", "delete from dispatcher_lease"],
       ["dispatcher_lease", "insert into dispatcher_lease (id, token, holder, expires_at, renewed_at, paced_until) values (1, gen_random_uuid(), 'x', now(), now(), now())"],
       ["dispatcher_lease", "truncate dispatcher_lease"],
-      ["messaging_control", "update messaging_control set paused = true"],
+      ["messaging_control", "update messaging_control set id = 2"],
+      ["messaging_control", "truncate messaging_control"],
       ["messaging_control", "delete from messaging_control"],
       ["messaging_control", "insert into messaging_control (id) values (1)"],
     ]) {
@@ -122,9 +123,10 @@ describe("the sender's tables", () => {
       }
       return names;
     };
-    // The lease: the five columns a run changes, and not the row's id. The pause: nothing yet (S06.06 adds its own grant).
+    // The lease: the five columns a run changes, and not the row's id. The pause: the six columns of the Admin's pause and resume
+    // (S06.06's grant), and not the row's id (test/db/messagingPause.db.test.ts runs them with the app's own credentials).
     expect(await changeable("dispatcher_lease")).toEqual(["expires_at", "holder", "paced_until", "renewed_at", "token"]);
-    expect(await changeable("messaging_control")).toEqual([]);
+    expect(await changeable("messaging_control")).toEqual(["handed_off_at_pause", "paused", "paused_at", "paused_by", "reason", "updated_at"]);
     const [select] = await owner`select has_table_privilege('cvh_app', 'public.messaging_control', 'select') as ok`;
     expect(select.ok).toBe(true);
   });
