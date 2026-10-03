@@ -10,6 +10,7 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import en from "@/i18n/messages/en.json";
 import ur from "@/i18n/messages/ur.json";
 import type { ResidentContent } from "@/modules/directory";
+import { englishEntry, thread } from "@/ui/alert/alert-test-helpers";
 
 const root = path.join(__dirname, "..", "..", "..", "..");
 const content: ResidentContent = JSON.parse(readFileSync(path.join(root, "e2e", "resident", "fixtures", "guides.json"), "utf8"));
@@ -23,6 +24,11 @@ vi.mock("next-intl/server", () => ({
     createTranslator({ locale, messages: (locale === "ur" ? ur : en) as unknown as AbstractIntlMessages, namespace } as never),
 }));
 vi.mock("next/navigation", async (original) => ({ ...(await original<object>()), useRouter: () => ({ replace: () => undefined, push: () => undefined, prefetch: () => undefined }), usePathname: () => "/en" }));
+// An alert for the alert pages (S04.08), which the 911 block must be on too.
+vi.mock("@/app/feedCache", () => ({
+  residentAlertsEnabled: () => true,
+  readCachedFeed: async () => ({ v: 1, feed_version: 1, server_now: "2026-10-01T15:00:00.000Z", threads: [thread({ entries: [englishEntry()] })], places: { buildings: [], neighbourhoods: [] } }),
+}));
 vi.mock("./source", () => ({
   loadResidentContent: async () => (state.empty ? { guides: [], numbers: [] } : state.content),
   loadBuildingContacts: async () => [],
@@ -32,6 +38,8 @@ import ReadyPage from "./page";
 import GuidePage from "./[guide]/page";
 import NumbersPage from "./numbers/page";
 import HomePage from "../page";
+import AlertPage from "../alerts/[slug]/page";
+import VerifiedPage from "../alerts/[slug]/verified/page";
 
 /** The marker the 911 block carries (src/ui/emergency/not-911.tsx). */
 export const hasNot911 = (html: string) => (html.match(/data-component="not-911"/g) ?? []).length;
@@ -39,7 +47,7 @@ export const hasNot911 = (html: string) => (html.match(/data-component="not-911"
 type Render = (lang: string) => Promise<ReactElement>;
 
 /** The pages that must draw the inline (one-line) 911 block, not the full one: `data-variant` is on the marker. */
-const inlineOnly = new Set(["Be ready", "home"]);
+const inlineOnly = new Set(["Be ready", "home", "what verified means"]);
 
 /**
  * The pages that must draw the 911 block. The alert and check-in screens (E04, E08) add themselves here when they are built:
@@ -54,6 +62,9 @@ const PAGES: { name: string; render: Render }[] = [
   { name: "Be ready", render: async (lang) => (await ReadyPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
   // Home (R-03, owner decisions 36 and 37): the short notice, the last item, drawn on the server render before the phone's choices are read.
   { name: "home", render: async (lang) => (await HomePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
+  // An alert (R-07, S04.08): the full block, once. What "verified" means (R-28) has the short form, as in the prototype.
+  { name: "alert detail", render: async (lang) => (await AlertPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
+  { name: "what verified means", render: async (lang) => (await VerifiedPage({ params: Promise.resolve({ lang, slug: "kbcdfghj" }) } as never)) as ReactElement },
 ];
 
 beforeEach(() => {
@@ -62,7 +73,7 @@ beforeEach(() => {
 });
 
 describe("the 911 block", () => {
-  it("is on every guide, the essential-numbers page, Be ready and home, exactly once, in English and in Urdu", async () => {
+  it("is on every guide, the essential-numbers page, Be ready, home, an alert and what verified means, exactly once, in English and in Urdu", async () => {
     for (const { name, render } of PAGES) {
       for (const lang of ["en", "ur"]) {
         const html = renderToStaticMarkup(await render(lang));
@@ -102,7 +113,7 @@ describe("the 911 block", () => {
   });
 
   it("is the one component: no page of the list writes its own copy of the words", () => {
-    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
+    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx", "../../../ui/alert/alert-detail.tsx", "../../../ui/alert/verified-explainer.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
     for (const source of sources) {
       expect(source).toMatch(/<Not911 /);
       expect(source).not.toMatch(/not an emergency service/i);

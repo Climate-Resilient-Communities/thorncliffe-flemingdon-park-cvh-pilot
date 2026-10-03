@@ -46,9 +46,10 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const { x01 } = (await getMessages({ locale: lang })) as { x01: Record<"text" | "call" | "short", string> };
   const clientMessages = { x01: { text: x01.text, call: x01.call, short: x01.short } };
   // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24). "Find help" opens the ask screen
-  // (R-09, /search, S03.06), which links to the directory (S02.06). It is marked as the current item on both.
+  // (R-09, /search, S03.06), which links to the directory (S02.06). It is marked as the current item on both. An alert (R-07) and what
+  // "verified" means (R-28) belong to Now, as in the prototype.
   const nav: NavItem[] = [
-    { id: "now", icon: "now", label: shell("nav.now"), href: `/${lang}` },
+    { id: "now", icon: "now", label: shell("nav.now"), href: `/${lang}`, alsoCurrentOn: [`/${lang}/alerts`] },
     { id: "help", icon: "search", label: shell("nav.help"), href: `/${lang}/search`, alsoCurrentOn: [`/${lang}/directory`] },
     { id: "map", icon: "map", label: shell("nav.map"), href: `/${lang}/map` },
     { id: "ready", icon: "ready", label: shell("nav.ready"), href: `/${lang}/ready` },

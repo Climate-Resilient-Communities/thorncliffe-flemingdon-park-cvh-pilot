@@ -18,7 +18,7 @@ exec docker run --rm --init --ipc=host \
   --user "$(id -u):$(id -g)" \
   -e HOME=/tmp \
   -e RESIDENT_PINNED_IMAGE=1 \
-  -e CI -e E2E_PORT \
+  -e CI -e E2E_PORT -e E2E_ALERTS_PORT \
   -v "$root:/work" -w /work \
   "$IMAGE" \
   node_modules/.bin/playwright test -c playwright.resident.config.ts "$@"

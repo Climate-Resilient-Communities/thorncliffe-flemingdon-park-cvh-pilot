@@ -131,13 +131,6 @@
     color: var(--text-on-warm);
   }
 
-  .home-thread {
-    padding: var(--inset-card-compact);
-    border: 1.5px solid var(--border);
-    border-radius: var(--radius-card);
-    background-color: var(--surface-raised);
-  }
-
   .home-invite {
     align-self: flex-start;
     gap: var(--gap-label);

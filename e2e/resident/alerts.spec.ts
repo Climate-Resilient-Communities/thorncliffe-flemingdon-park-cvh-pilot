@@ -1,0 +1,384 @@
+import { expect, test, type Page } from "@playwright/test";
+import { FeedV1 } from "../../src/contracts/feed";
+import { LAUNCH_LANGUAGES } from "../../src/i18n/languages";
+import { ALERTS_URL } from "./alerts-server";
+import { catalogText, expectBaseline, isFallback, openResident } from "./helpers";
+
+// S04.08: alert detail (R-07), what "verified" means (R-28) and the alert cards on home (R-03), against the production build with the feed's
+// threads read from fixtures/feed.json (CVH_FAKE_FEED_FILE; the second server of playwright.resident.config.ts, so no other test sees an alert).
+// The feed's clock is fixed in that file (2026-10-01 15:00 UTC, 11:00 in Toronto), so every "ago" and "valid until" reads the same every day.
+//   kbcdfghj  elevator: an acknowledgement (every language but English translated) and an update (translated into Urdu only, Pashto failed)
+//   mnpqrstv  power and heat, not yet verified, no translation: English everywhere else
+//   xyzw2345  other: its valid-until has passed and nothing has closed it yet
+
+test.use({
+  baseURL: ALERTS_URL,
+  storageState: { cookies: [], origins: [{ origin: ALERTS_URL, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
+});
+
+const T1 = "kbcdfghj";
+const T2 = "mnpqrstv";
+const T3 = "xyzw2345";
+const UPDATE = "Update: a technician is on site and the elevator should be working again by 6 pm.";
+const ACK_EN = "The elevator at 85 Thorncliffe Park Dr is out of service. Please use the stairs and call the Hub if you need help.";
+
+const noCookie = (response: { headersArray(): { name: string }[] }) => response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie");
+
+/** Grows the viewport to the whole page, so the baseline shows the whole alert, not the first screen. */
+async function showWholePage(page: Page, width: number) {
+  const needed = await page.evaluate(() => {
+    const main = document.querySelector("main")!;
+    return Math.ceil(main.scrollHeight + document.documentElement.clientHeight - main.clientHeight);
+  });
+  await page.setViewportSize({ width, height: needed });
+}
+
+/**
+ * The tap rule for what the page itself draws (the shell's closed language sheet has links of no size): every visible link, button and disclosure
+ * summary of the main area is at least --tap-current (44 px, 56 px in basic mode) in both dimensions.
+ */
+const tapViolations = (page: Page) =>
+  page.evaluate(() => {
+    const minimum = parseFloat(getComputedStyle(document.documentElement).getPropertyValue("--tap-current"));
+    return [...document.querySelectorAll<HTMLElement>("main a[href], main button, main summary")]
+      .filter((element) => element.checkVisibility())
+      .filter((element) => {
+        const { width, height } = element.getBoundingClientRect();
+        return width < minimum || height < minimum;
+      })
+      .map((element) => element.outerHTML.slice(0, 80));
+  });
+
+const overflow = (page: Page) => page.evaluate(() => ({ page: document.documentElement.scrollWidth - document.documentElement.clientWidth, main: document.querySelector("main")!.scrollWidth - document.querySelector("main")!.clientWidth }));
+
+test.describe("the feed with alerts", () => {
+  test("lists the open threads in the language asked for, a valid FeedV1, with no cookie and a 15-second edge cache", async ({ request }) => {
+    const response = await request.get("/api/feed?lang=ur", { maxRedirects: 0 });
+
+    expect(response.status()).toBe(200);
+    expect(noCookie(response)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("public, max-age=0, s-maxage=15");
+    const feed = FeedV1.parse(await response.json());
+    expect(feed.feed_version).toBe(7);
+    expect(feed.server_now).toBe("2026-10-01T15:00:00.000Z");
+    expect(feed.threads.map((thread) => thread.slug)).toEqual([T1, T2, T3]);
+    const [elevator] = feed.threads;
+    expect(elevator.entries.map((entry) => [entry.kind, entry.phase, entry.verified, entry.attribution])).toEqual([
+      ["ack", "problem", true, { role: "hub" }],
+      ["update", "in_progress", true, { role: "hub" }],
+    ]);
+    expect(elevator.entries[0].text).toMatchObject({ lang: "ur", machine: true, status: "ok" });
+    expect(elevator.entries[0].original).toEqual({ lang: "en", body: ACK_EN });
+  });
+
+  test("gives English its own text as the source, and a language that has no text the English with fallback_en", async ({ request }) => {
+    const english = FeedV1.parse(await (await request.get("/api/feed?lang=en")).json());
+    expect(english.threads[0].entries[0].text).toMatchObject({ lang: "en", body: ACK_EN, status: "source", machine: false, model: null });
+
+    const tagalog = FeedV1.parse(await (await request.get("/api/feed?lang=tl")).json());
+    expect(tagalog.threads[0].entries[1].text).toMatchObject({ lang: "tl", body: UPDATE, status: "fallback_en", machine: false });
+    const pashto = FeedV1.parse(await (await request.get("/api/feed?lang=ps")).json());
+    expect(pashto.threads[0].entries[1].text).toMatchObject({ lang: "ps", body: UPDATE, status: "fallback_en" });
+  });
+});
+
+test.describe("home", () => {
+  test("shows each alert as a card with its types, words, origin, verification and time, and the whole card opens the alert", async ({ page }) => {
+    await openResident(page, "/en", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+
+    const cards = page.getByTestId("home-threads").locator("li");
+    await expect(cards).toHaveCount(3);
+    const first = page.getByTestId(`alert-card-${T1}`);
+    await expect(first.getByTestId("alert-types")).toContainText("Elevator");
+    await expect(first.getByTestId(`alert-card-text-${T1}`)).toHaveText(UPDATE);
+    await expect(first.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
+    await expect(first.getByTestId("alert-verification")).toHaveText("Verified by the Hub");
+    await expect(first).toContainText("Posted 1 hour ago · Updated 20 minutes ago");
+    await expect(first).toHaveAttribute("href", `/en/alerts/${T1}`);
+    // Power and heat, and not yet verified: words, not colour alone.
+    const second = page.getByTestId(`alert-card-${T2}`);
+    await expect(second.getByTestId("alert-types")).toContainText("Power");
+    await expect(second.getByTestId("alert-types")).toContainText("Heat");
+    await expect(second.getByTestId("alert-verification")).toHaveText("Not yet verified");
+    await expect(second.getByTestId("alert-origin")).toHaveAttribute("data-verified", "false");
+    // The statuses of the places are S05.06's: until then every place is "none", and "No current alerts" is never shown over a card.
+    await expect(page.getByTestId("no-current-alerts")).toHaveCount(0);
+
+    await first.click();
+    await expect(page).toHaveURL(`${ALERTS_URL}/en/alerts/${T1}`);
+    await expect(page.getByTestId("alert-detail")).toBeVisible();
+  });
+
+  test("sets an English text that stands in for a translation left to right in English, and says so once in the page's language", async ({ page }) => {
+    await openResident(page, "/tl", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+
+    const text = page.getByTestId(`alert-card-text-${T1}`);
+    await expect(text).toHaveText(UPDATE);
+    await expect(text).toHaveAttribute("lang", "en");
+    await expect(text).toHaveAttribute("dir", "ltr");
+    await expect(text).toHaveAttribute("data-translation", "unavailable");
+    await expect(page.getByTestId("home-content-fallback")).toBeVisible();
+    await expect(page.getByTestId("home-content-fallback")).toContainText(catalogText("tl", "x04.unavailable").replace(/^\[EN\] /, ""));
+  });
+
+  for (const lang of ["en", "ur"] as const) {
+    test(`${lang}: the alert cards at 390px have no horizontal scrolling and match their baseline screenshot`, async ({ page }) => {
+      await openResident(page, `/${lang}`, 390, 900);
+      await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+      await expect(page.getByTestId(`alert-card-${T1}`)).toBeVisible();
+      await showWholePage(page, 390);
+
+      expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+      expect(await tapViolations(page)).toEqual([]);
+      await expectBaseline(page, `alerts-home-${lang}-390.png`);
+    });
+  }
+});
+
+test.describe("alert detail (R-07)", () => {
+  test("shows the types, the words, the origin and verification with a link to what it means, when it was posted and how long it is valid, in English", async ({ page }) => {
+    const response = await openResident(page, `/en/alerts/${T1}`, 390);
+
+    expect(response!.status()).toBe(200);
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText("Elevator");
+    await expect(page.getByTestId("alert-type-elevator").locator(".alert-ico")).toBeVisible();
+    await expect(page.getByTestId("alert-text")).toHaveText(UPDATE);
+    await expect(page.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
+    await expect(page.getByTestId("alert-whatmeans")).toContainText("Verified by the Hub");
+    await expect(page.getByTestId("alert-whatmeans")).toContainText("What this means");
+    await expect(page.getByTestId("alert-whatmeans")).toHaveAttribute("href", `/en/alerts/${T1}/verified`);
+    await expect(page.getByTestId("alert-times")).toHaveText("Posted 1 hour ago · Updated 20 minutes ago");
+    // The feed's clock says 11:00 in Toronto and the alert is valid until 18:00 that day.
+    await expect(page.getByTestId("alert-valid")).toHaveText(/^Valid until today at 6:00\s?PM$/);
+    // English needs no label and has no other text to show.
+    await expect(page.getByTestId("alert-mt")).toHaveCount(0);
+    await expect(page.getByTestId("alert-unavailable")).toHaveCount(0);
+  });
+
+  test("lists the thread newest first, with the latest marked", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    const entries = page.getByTestId("alert-thread").locator("li");
+    await expect(entries).toHaveCount(2);
+    await expect(entries.nth(0)).toContainText("Update");
+    await expect(entries.nth(0)).toContainText("Latest");
+    await expect(entries.nth(0)).toContainText(UPDATE);
+    await expect(entries.nth(1)).toContainText("First message");
+    await expect(entries.nth(1)).toContainText(ACK_EN);
+  });
+
+  test("has the not-911 statement and the 911 block once, and a link to the matching guide opened at During", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+    await expect(page.locator('[data-component="not-911"]')).toContainText("The CVH is not an emergency service.");
+    await expect(page.locator('[data-component="not-911"]')).toContainText("If someone is in danger, call 911.");
+    const guide = page.getByTestId("alert-guide-elevator");
+    await expect(guide).toHaveAttribute("href", "/en/ready/elevator#during");
+    await expect(guide).toContainText("What to do: the elevator failure guide");
+
+    await guide.click();
+    await expect(page).toHaveURL(`${ALERTS_URL}/en/ready/elevator#during`);
+    // The guide opens at "During", with the focus on that heading and the note that says why (S02.10).
+    await expect(page.getByTestId("guide-opened-during")).toBeVisible();
+    await expect(page.locator("#during-heading")).toBeFocused();
+  });
+
+  test("links an alert of the type Other to no guide", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T3}`, 390);
+
+    await expect(page.getByTestId("alert-actions")).toHaveCount(0);
+    await expect(page.locator('a[href*="/ready/"]')).toHaveCount(0);
+    await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+  });
+
+  test("links to what verified means, and back", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    await page.getByTestId("alert-whatmeans").click();
+    await expect(page).toHaveURL(`${ALERTS_URL}/en/alerts/${T1}/verified`);
+    await expect(page.getByTestId("verified-explainer")).toBeVisible();
+    await page.getByTestId("verified-back-button").click();
+    await expect(page).toHaveURL(`${ALERTS_URL}/en/alerts/${T1}`);
+  });
+
+  test("marks an alert that is not yet verified in words, in shape and in its icon, and a fallback text in English with the note", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T2}`, 390);
+
+    await expect(page.getByTestId("alert-verification")).toHaveText("Not yet verified");
+    await expect(page.getByTestId("alert-origin")).toHaveAttribute("data-verified", "false");
+    await expect(page.locator(".alert-verify--unverified .alert-ico--unverified")).toBeVisible();
+    await expect(page.locator(".alert-verify--verified")).toHaveCount(0);
+    await expect(page.getByTestId("alert-types")).toContainText("Power");
+    await expect(page.getByTestId("alert-types")).toContainText("Heat");
+    // The verified alert has its own, different shape: filled where this one is outlined.
+    const shape = (selector: string) => page.locator(selector).evaluate((element) => getComputedStyle(element).backgroundColor);
+    const unverified = await shape(".alert-verify--unverified");
+    await openResident(page, `/en/alerts/${T1}`, 390);
+    expect(await shape(".alert-verify--verified")).not.toBe(unverified);
+  });
+
+  test("says an alert's time has passed when it has and nothing closed it yet, and shows no valid line", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T3}`, 390);
+
+    await expect(page.getByTestId("alert-ended")).toHaveText("This alert reached its end time without a final update.");
+    await expect(page.getByTestId("alert-valid")).toHaveCount(0);
+  });
+
+  test("says in Urdu that part of it is machine translated, shows the label, and 'Read it in English' shows the English, left to right", async ({ page }) => {
+    await openResident(page, `/ur/alerts/${T1}`, 390);
+
+    await expect(page.locator("html")).toHaveAttribute("dir", "rtl");
+    const text = page.getByTestId("alert-text");
+    await expect(text).toHaveAttribute("lang", "ur");
+    await expect(text).toHaveAttribute("dir", "rtl");
+    await expect(page.getByTestId("alert-mt")).toContainText(catalogText("ur", "x04.label"));
+    const toggle = page.getByTestId("alert-english-toggle");
+    await expect(toggle).toHaveText(catalogText("ur", "x04.showSource").replace("{lang}", "English"));
+    // Closed until the resident opens it.
+    await expect(page.getByTestId("alert-english-body")).toBeHidden();
+    await toggle.click();
+    const english = page.getByTestId("alert-english-body");
+    await expect(english).toBeVisible();
+    await expect(english).toHaveText(UPDATE);
+    await expect(english).toHaveAttribute("lang", "en");
+    await expect(english).toHaveAttribute("dir", "ltr");
+    await toggle.click();
+    await expect(english).toBeHidden();
+  });
+
+  for (const lang of ["ps", "tl"] as const) {
+    test(`${lang}: a language the alert was not translated into shows the English with the note that says so, in ${lang}`, async ({ page }) => {
+      await openResident(page, `/${lang}/alerts/${T1}`, 390);
+
+      const text = page.getByTestId("alert-text");
+      await expect(text).toHaveText(UPDATE);
+      await expect(text).toHaveAttribute("lang", "en");
+      await expect(text).toHaveAttribute("dir", "ltr");
+      await expect(text).toHaveAttribute("data-translation", "unavailable");
+      // The note is the catalog's, in the resident's language (or its English behind the [EN] marker where that language has none yet).
+      const note = page.getByTestId("alert-unavailable");
+      await expect(note).toBeVisible();
+      await expect(note).toHaveAttribute("role", "note");
+      const title = catalogText(lang, "x04.unavailable");
+      await expect(note).toContainText(isFallback(title) ? title.slice("[EN] ".length) : title);
+      // It was not machine translated, so no label and no second English.
+      await expect(page.getByTestId("alert-mt")).toHaveCount(0);
+      await expect(page.getByTestId("alert-english")).toHaveCount(0);
+    });
+  }
+
+  test("is a 404 inside the shell for an address nobody has an alert at, and shows nothing of any alert", async ({ page }) => {
+    for (const path of [`/en/alerts/nosuchslug`, `/en/alerts/${T1.toUpperCase()}`, `/en/alerts/x`, `/en/alerts`, `/en/alerts/${T1}/nothing`, `/ur/alerts/nosuchslug`]) {
+      const response = await openResident(page, path, 390);
+
+      expect(response!.status(), path).toBe(404);
+      await expect(page.getByTestId("shell-nav"), path).toBeVisible();
+      await expect(page.locator("main h1"), path).toHaveText(catalogText(path.split("/")[1], "shell.pageNotFound").replace(/^\[EN\] /, ""));
+      await expect(page.getByTestId("alert-detail"), path).toHaveCount(0);
+    }
+    expect((await openResident(page, `/en/alerts/nosuchslug/verified`, 390))!.status()).toBe(404);
+  });
+
+  test("marks Now as the current page in the navigation", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    await expect(page.getByTestId("shell-nav-now")).toHaveAttribute("aria-current", "page");
+    await expect(page.getByTestId("shell-nav-ready")).not.toHaveAttribute("aria-current", "page");
+  });
+
+  test("sets no cookie, in any language, for an alert, for what verified means, or for a 404", async ({ request }) => {
+    const checked: string[] = [];
+    for (const { code } of LAUNCH_LANGUAGES) {
+      for (const path of [`/${code}/alerts/${T1}`, `/${code}/alerts/${T1}/verified`, `/${code}/alerts/nosuchslug`]) {
+        const response = await request.get(path, { maxRedirects: 0 });
+
+        expect(noCookie(response), path).toEqual([]);
+        checked.push(path);
+      }
+      const feed = await request.get(`/api/feed?lang=${code}`, { maxRedirects: 0 });
+      expect(noCookie(feed), code).toEqual([]);
+    }
+    expect(checked).toHaveLength(LAUNCH_LANGUAGES.length * 3);
+  });
+
+  test("asks the server for nothing about the resident: the alert page is the same request for everyone", async ({ page }) => {
+    const requests: string[] = [];
+    page.on("request", (request) => {
+      const url = new URL(request.url());
+      if (url.origin === new URL(ALERTS_URL).origin) requests.push(`${request.method()} ${url.pathname}${url.search}`);
+    });
+    await openResident(page, `/en/alerts/${T1}`, 390);
+
+    for (const line of requests) expect(line, line).not.toMatch(/building|floor|group|4154146/i);
+    expect(requests.some((line) => line.startsWith("POST"))).toBe(false);
+  });
+
+  for (const [lang, slug, name] of [
+    ["en", T1, "elevator"],
+    ["ur", T1, "elevator"],
+    ["en", T2, "unverified"],
+    ["en", T3, "ended"],
+    ["ps", T1, "fallback"],
+  ] as const) {
+    for (const width of lang === "en" || lang === "ur" ? ([390, 1280] as const) : ([390] as const)) {
+      test(`${lang} ${name} alert at ${width}px has no horizontal scrolling, every link is a tap target and it matches its baseline screenshot`, async ({ page }) => {
+        await openResident(page, `/${lang}/alerts/${slug}`, width, 900);
+        if (lang === "ur") await page.getByTestId("alert-english-toggle").click();
+        await showWholePage(page, width);
+
+        expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+        expect(await tapViolations(page)).toEqual([]);
+        await expectBaseline(page, `alert-${lang}-${name}-${width}.png`);
+      });
+    }
+  }
+
+  for (const width of [320, 768] as const) {
+    test(`the alert has no horizontal scrolling at ${width}px in English and in a right-to-left language`, async ({ page }) => {
+      for (const lang of ["en", "ur"]) {
+        await openResident(page, `/${lang}/alerts/${T1}`, width);
+
+        expect(await overflow(page), lang).toEqual({ page: 0, main: 0 });
+      }
+    });
+  }
+});
+
+test.describe("what verified means (R-28)", () => {
+  test("says who verified this alert and when, what the words mean and the words one will see, in the page language", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T1}/verified`, 390);
+
+    await expect(page.getByRole("heading", { level: 1 })).toHaveText('What "verified" means');
+    await expect(page.getByTestId("verified-line")).toHaveText("The Hub verified this alert 20 minutes ago.");
+    await expect(page.getByTestId("legend-verified")).toHaveAttribute("data-current", "true");
+    await expect(page.getByTestId("legend-unverified")).toHaveAttribute("data-current", "false");
+    await expect(page.getByTestId("verified-body")).toContainText("Verified means someone at the Hub");
+    await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+  });
+
+  test("says an alert that is not yet verified is not wrong, and can be acted on", async ({ page }) => {
+    await openResident(page, `/en/alerts/${T2}/verified`, 390);
+
+    await expect(page.getByTestId("legend-unverified")).toHaveAttribute("data-current", "true");
+    await expect(page.getByTestId("verified-this")).toContainText("Not yet verified does not mean it is wrong.");
+    await expect(page.getByTestId("verified-line")).toHaveCount(0);
+  });
+
+  for (const [lang, slug, name] of [
+    ["en", T1, "verified"],
+    ["ur", T1, "verified"],
+    ["en", T2, "unverified"],
+  ] as const) {
+    test(`${lang} ${name} page at 390px has no horizontal scrolling and matches its baseline screenshot`, async ({ page }) => {
+      await openResident(page, `/${lang}/alerts/${slug}/verified`, 390, 900);
+      await showWholePage(page, 390);
+
+      expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+      expect(await tapViolations(page)).toEqual([]);
+      await expectBaseline(page, `alert-verified-${lang}-${name}-390.png`);
+    });
+  }
+});

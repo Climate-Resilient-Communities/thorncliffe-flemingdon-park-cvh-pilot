@@ -63,6 +63,14 @@ module.exports = {
       to: { path: `${SRC}i18n/smsStrings\\.ts$` },
     },
     {
+      name: "resident-queries-read-nondrill-only",
+      comment:
+        "The files of src/modules/alerting/adapters/resident (every resident-reachable read of the alerts: the feed, the alert detail, and what E05 adds) read the three nondrill_ views declared in resident/views.ts and import no other alert table, so a drill's thread, a draft or an unpublished entry cannot be selected there (AD-6, S04.08). The ESLint rule of the same name forbids naming another alert relation in a string there.",
+      severity: "error",
+      from: { path: `${MODULES}alerting/adapters/resident/`, pathNot: "\\.test\\.tsx?$" },
+      to: { path: `${MODULES}alerting/adapters/schema\\.ts$` },
+    },
+    {
       name: "module-imports-outside-layers",
       comment: "Modules import only src/modules (per the diagram), src/platform, src/contracts and src/i18n (spine layer table)",
       severity: "error",

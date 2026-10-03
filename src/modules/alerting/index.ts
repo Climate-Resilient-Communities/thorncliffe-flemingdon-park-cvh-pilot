@@ -5,7 +5,8 @@ import { readStaffStanding } from "../identity";
 import { createResidentBuildings, floorsOfBuilding, neighbourhoodIds, neighbourhoodsOfBuildings } from "../places";
 import * as audit from "../audit";
 import { recordOpsEvent, type OpsEvent } from "../ops";
-import { createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
+import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
+import { readOpenThreads } from "./adapters/resident/readThreads";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 import { createEntryPreparer, type EntryTranslator } from "./application/prepareEntry";
 import { createSubmitter, type AlertSubmitter } from "./application/submit";
@@ -111,24 +112,42 @@ export interface FeedWiring {
   places?: () => Promise<FeedPlaces>;
   /** Test and local-development seam: the feed version, instead of the database's. */
   version?: () => Promise<number>;
-  /** The alerts residents are told. Until S04.08 builds the web publish, none. */
+  /** Test and local-development seam: the alerts residents are told, instead of the database's web-published ones. Ignored while `alertsEnabled` is not true. */
   alerts?: FeedAlerts;
+  /**
+   * `RESIDENT_ALERTS_ENABLED` from the validated environment (AD-17, S04.08), the launch gate: false (and not saying so counts as
+   * false) and the feed tells no one about any alert, whatever else is wired. Production runs with it off until E05 is released.
+   */
+  alertsEnabled?: boolean;
   now?: () => Date;
+}
+
+/**
+ * The alerts residents read (S04.08, the `FeedAlerts` port of S02.11): the open threads that have a web-published entry,
+ * each entry's text in the language asked for (or the English fallback), read from the resident views only (AD-6), so a drill
+ * is never among them. The derived status of each place is S05.06's: until then every place is `none`.
+ */
+export function createResidentAlerts(db: Db): FeedAlerts {
+  return {
+    read: async (lang) => ({ threads: await readOpenThreads(db, lang), statuses: { buildings: new Map(), neighbourhoods: new Map() } }),
+  };
 }
 
 /** `GET /api/feed` (AD-17): FeedV1 from the feed version, the places module's buildings and neighbourhoods, and the alerts. */
 export function createFeed(wiring: FeedWiring): FeedReader {
+  const alerts = wiring.alertsEnabled !== true ? NO_ALERTS_YET : (wiring.alerts ?? (wiring.db ? createResidentAlerts(wiring.db) : NO_ALERTS_YET));
   return createFeedReader({
     db: wiring.db,
     places: wiring.places ?? (() => createResidentBuildings({ db: requireDb(wiring.db) }).placeIds()),
     version: wiring.version,
-    alerts: wiring.alerts,
+    alerts,
     now: wiring.now,
   });
 }
 
 export type { FeedAlerts, FeedPlaces, FeedReader } from "./application/feed";
 export { NO_ALERTS_YET } from "./application/feed";
+export { readFeedFixtureFile, type FeedFixture } from "./adapters/residentFixture";
 export { NO_STATUS, type PlaceState } from "./domain/feed";
 export type { AudienceFloor, AudiencePlaces, BuildingChoice, PlaceChoice } from "./application/audience";
 export type { AlertActor, AlertAudit, AlertResult, RefusalDetail, EntryPreparer, FreezeRefusal, FrozenContent, FrozenSmsBody, PrepareContext, PrepareHooks, StaffDirectory } from "./application/ports";

@@ -1,0 +1,237 @@
+{
+  "feed_version": 7,
+  "server_now": "2026-10-01T15:00:00.000Z",
+  "threads": [
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0001",
+      "slug": "kbcdfghj",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0011",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "elevator"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "elevator"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "The elevator at 85 Thorncliffe Park Dr is out of service. Please use the stairs and call the Hub if you need help.",
+          "published_at": "2026-10-01T14:00:00.000Z",
+          "verified": true,
+          "translations": {
+            "ur": {
+              "body": "85 تھورنکلف پارک ڈرائیو کی لفٹ بند ہے۔ براہ کرم سیڑھیاں استعمال کریں اور مدد کی ضرورت ہو تو ہب کو کال کریں۔",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "ps": {
+              "body": "د 85 تهورنکلف پارک ډرایو لفټ بند دی. مهرباني وکړئ زینې وکاروئ او که مرستې ته اړتیا لرئ هب ته زنګ ووهئ.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "prs": {
+              "body": "آسانسور ساختمان 85 تورنکلیف پارک درایو از کار افتاده است. لطفاً از پله ها استفاده کنید و در صورت نیاز به کمک با مرکز تماس بگیرید.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "hi": {
+              "body": "85 थॉर्नक्लिफ पार्क ड्राइव की लिफ्ट बंद है। कृपया सीढ़ियों का उपयोग करें और मदद चाहिए तो हब को कॉल करें।",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "bn": {
+              "body": "85 থর্নক্লিফ পার্ক ড্রাইভের লিফট বন্ধ আছে। অনুগ্রহ করে সিঁড়ি ব্যবহার করুন এবং সাহায্যের প্রয়োজন হলে হাবকে ফোন করুন।",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "ta": {
+              "body": "85 தோர்ன்கிளிஃப் பார்க் டிரைவில் உள்ள மின்தூக்கி இயங்கவில்லை. தயவுசெய்து படிக்கட்டுகளைப் பயன்படுத்தவும், உதவி தேவைப்பட்டால் ஹப்பை அழைக்கவும்.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "pa": {
+              "body": "85 ਥੋਰਨਕਲਿਫ ਪਾਰਕ ਡਰਾਈਵ ਦੀ ਲਿਫਟ ਬੰਦ ਹੈ। ਕਿਰਪਾ ਕਰਕੇ ਪੌੜੀਆਂ ਦੀ ਵਰਤੋਂ ਕਰੋ ਅਤੇ ਮਦਦ ਚਾਹੀਦੀ ਹੋਵੇ ਤਾਂ ਹੱਬ ਨੂੰ ਫ਼ੋਨ ਕਰੋ।",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "gu": {
+              "body": "85 થોર્નક્લિફ પાર્ક ડ્રાઇવની લિફ્ટ બંધ છે. કૃપા કરીને સીડીનો ઉપયોગ કરો અને મદદની જરૂર હોય તો હબને ફોન કરો.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "el": {
+              "body": "Το ασανσέρ στο 85 Thorncliffe Park Dr είναι εκτός λειτουργίας. Παρακαλούμε χρησιμοποιήστε τις σκάλες και καλέστε το Hub αν χρειάζεστε βοήθεια.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "zh": {
+              "body": "85 Thorncliffe Park Dr 的电梯停止运行。请使用楼梯，如需帮助请致电 Hub。",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "tl": {
+              "body": "Sira ang elevator sa 85 Thorncliffe Park Dr. Mangyaring gamitin ang hagdan at tawagan ang Hub kung kailangan ninyo ng tulong.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "sk": {
+              "body": "Výťah na 85 Thorncliffe Park Dr nefunguje. Použite prosím schody a zavolajte Hub, ak potrebujete pomoc.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "es": {
+              "body": "El ascensor en 85 Thorncliffe Park Dr está fuera de servicio. Por favor use las escaleras y llame al Hub si necesita ayuda.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "fr": {
+              "body": "L'ascenseur au 85 Thorncliffe Park Dr est hors service. Veuillez utiliser les escaliers et appeler le Hub si vous avez besoin d'aide.",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            }
+          }
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0012",
+          "kind": "update",
+          "phase": "in_progress",
+          "types": [
+            "elevator"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "elevator"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Update: a technician is on site and the elevator should be working again by 6 pm.",
+          "published_at": "2026-10-01T14:40:00.000Z",
+          "verified": true,
+          "translations": {
+            "ur": {
+              "body": "85 تھورنکلف پارک ڈرائیو کی لفٹ بند ہے۔ براہ کرم سیڑھیاں استعمال کریں اور مدد کی ضرورت ہو تو ہب کو کال کریں۔",
+              "machine": true,
+              "model": "north-small-translate-09-2026",
+              "status": "translated",
+              "source_hash": "42e53c95b2ac4cf27fd693959dfd4186fab27afeb0be67b7fb9d10f878318251"
+            },
+            "ps": {
+              "body": "Update: a technician is on site and the elevator should be working again by 6 pm.",
+              "machine": false,
+              "model": null,
+              "status": "fallback_en",
+              "source_hash": "0c7ce84bcef205d83f987df972a09172e890434ec20f5a5cdd5daaf1ffc286af"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0002",
+      "slug": "mnpqrstv",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0021",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power",
+            "heat"
+          ],
+          "audience": {
+            "scope": "neighbourhood",
+            "neighbourhood_ids": [
+              "TP"
+            ],
+            "groups": [],
+            "types": [
+              "elevator"
+            ]
+          },
+          "valid_until": "2026-10-02T13:00:00.000Z",
+          "original_text": "Power is out on floors 3 to 5 of 12 Overlea Blvd. Use the stairs with a light, and check on neighbours who need help.",
+          "published_at": "2026-10-01T14:20:00.000Z",
+          "verified": false,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0003",
+      "slug": "xyzw2345",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0031",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "other"
+          ],
+          "audience": {
+            "scope": "neighbourhood",
+            "neighbourhood_ids": [
+              "TP"
+            ],
+            "groups": [],
+            "types": [
+              "elevator"
+            ]
+          },
+          "valid_until": "2026-10-01T14:30:00.000Z",
+          "original_text": "A water main near 5 Gamma Ave is being repaired. Water pressure may be low until noon.",
+          "published_at": "2026-10-01T13:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    }
+  ]
+}

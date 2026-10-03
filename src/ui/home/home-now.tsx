@@ -9,6 +9,7 @@ import { useBuildingList, useChoices } from "../choices/use-choices";
 import { useGateBuildingList } from "../choices/building-list-context";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { AlertCard, alertView, type Translate as AlertTranslate } from "../alert";
 import { Not911 } from "../emergency";
 import { Isolated } from "../text/isolated";
 import { ResidentText } from "../text/resident-text";
@@ -93,16 +94,18 @@ function NeighbourhoodRowView({ row, name }: { row: NeighbourhoodRow; name: (id:
 }
 
 /**
- * The current alerts. The seam for S04.08: it fills `feed.threads` with the approved, web-published, non-drill alerts and
- * replaces this plain list with the alert cards (R-03's `cvh-acard`, with origin, verification and a link to R-07).
- * Until a thread exists the feed has none, and the screen says so. A thread is never hidden behind "No current alerts".
+ * The current alerts (S04.08): each open, web-published, non-drill thread of the feed as a card (R-03's `cvh-acard`): its types (X-13), its
+ * words in the page language, who sent it and whether the Hub checked it (X-02) and when it was posted, the whole card the link to the alert
+ * (R-07). Until a thread exists the feed has none, and the screen says so. A thread is never hidden behind "No current alerts".
  *
- * An alert text that is English standing in for a missing translation (`fallback_en`) is set left to right in English on
- * its own element, and the page says so once, in the words of x04 (content has no visible "[EN]"; only interface strings do).
+ * An alert text that is English standing in for a missing translation (`fallback_en`) is set left to right in English on its own element, and
+ * the page says so once, in the words of x04 (content has no visible "[EN]"; only interface strings do). Every "ago" is measured against the
+ * feed's own `server_now`, never this phone's clock.
  */
-function CurrentAlerts({ threads, lang }: { threads: readonly FeedThread[]; lang: LaunchCode }) {
+function CurrentAlerts({ threads, serverNow, lang }: { threads: readonly FeedThread[]; serverNow: string; lang: LaunchCode }) {
   const t = useTranslations("R03");
   const x04 = useTranslations("x04");
+  const all = useTranslations() as unknown as AlertTranslate;
   if (threads.length === 0) {
     return (
       <div className="home-card" data-testid="no-current-alerts">
@@ -115,8 +118,8 @@ function CurrentAlerts({ threads, lang }: { threads: readonly FeedThread[]; lang
       </div>
     );
   }
-  const latestOf = (thread: FeedThread) => thread.entries[thread.entries.length - 1].text;
-  const anyEnglish = threads.some((thread) => latestOf(thread).status === "fallback_en");
+  const views = threads.map((thread) => alertView(thread, { lang, serverNow: new Date(serverNow), t: all }));
+  const anyEnglish = views.some((view) => view.current.text.fallback);
   return (
     <Stack gap="related">
       {anyEnglish && (
@@ -129,18 +132,10 @@ function CurrentAlerts({ threads, lang }: { threads: readonly FeedThread[]; lang
           </Stack>
         </div>
       )}
-      <ul className="home-list" data-testid="home-threads">
-        {threads.map((thread) => {
-          const text = latestOf(thread);
-          const english = text.status === "fallback_en";
-          return (
-            <li className="home-thread" key={thread.id} data-testid={`home-thread-${thread.slug}`}>
-              <p lang={english ? "en" : text.lang} dir={english ? "ltr" : "auto"}>
-                {text.body}
-              </p>
-            </li>
-          );
-        })}
+      <ul className="alert-card-list" data-testid="home-threads">
+        {views.map((view) => (
+          <AlertCard key={view.slug} view={view} lang={lang} t={all} />
+        ))}
       </ul>
     </Stack>
   );
@@ -257,7 +252,7 @@ export function HomeNow({ lang, children }: { lang: LaunchCode; children?: React
             <section data-testid="home-alerts">
               <Stack gap="related">
                 <ResidentText as="h2">{t("currentAlerts")}</ResidentText>
-                <CurrentAlerts threads={feed.feed.threads} lang={lang} />
+                <CurrentAlerts threads={feed.feed.threads} serverNow={feed.feed.server_now} lang={lang} />
               </Stack>
             </section>
           )}

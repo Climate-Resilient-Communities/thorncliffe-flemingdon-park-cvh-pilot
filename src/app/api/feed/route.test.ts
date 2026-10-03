@@ -12,6 +12,10 @@ vi.mock("./source", () => ({
   },
 }));
 
+// The launch gate (RESIDENT_ALERTS_ENABLED) as the validated environment would say it; the route does not read it itself, the cache's key does.
+const gate = vi.hoisted(() => ({ enabled: true }));
+vi.mock("@/platform/config/env", () => ({ getEnv: () => ({ residentAlertsEnabled: gate.enabled, publicBaseUrl: "https://cvh.example" }) }));
+
 // Next's data cache as far as the route depends on it: the function is run once per key and its value kept (a failure is
 // not kept), and the options the route gave are recorded.
 const cacheOptions = vi.hoisted(() => ({ seen: [] as { keys?: string[]; options?: { revalidate?: number | false; tags?: string[] } }[] }));
@@ -35,6 +39,7 @@ const places = { buildings: [{ rsn: "4154146", status: "none", verified: true }]
 const feed = (over: Record<string, unknown> = {}) => ({ v: 1, feed_version: 0, server_now: "2026-10-01T15:00:00.000Z", threads: [], places, ...over });
 
 beforeEach(() => {
+  gate.enabled = true;
   answer = async () => feed();
   reads.length = 0;
   cached.values.clear();
@@ -81,6 +86,50 @@ describe("GET /api/feed", () => {
 
     expect(response.headers.get("Set-Cookie")).toBeNull();
     expect(response.headers.get("Cache-Control")).toBe("public, max-age=0, s-maxage=15");
+  });
+
+  it("with threads in the answer: sets no cookie, is shareable for 15 seconds, and is a valid FeedV1 (S04.08)", async () => {
+    const id = "0198a000-0000-7000-8000-000000000001";
+    const thread = {
+      id,
+      slug: "kbcdfghj",
+      types: ["power"],
+      audience: { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] },
+      state: "open",
+      valid_until: "2026-10-02T15:00:00.000Z",
+      entries: [
+        {
+          id,
+          kind: "ack",
+          phase: "problem",
+          verified: true,
+          attribution: { role: "hub" },
+          published_at: "2026-10-01T14:00:00.000Z",
+          text: { lang: "ur", body: "x", machine: true, model: "m", status: "ok", source_hash: "h" },
+          original: { lang: "en", body: "Power is out." },
+        },
+      ],
+    };
+    answer = async () => feed({ feed_version: 3, threads: [thread] });
+
+    const response = await get("/api/feed?lang=ur");
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("Set-Cookie")).toBeNull();
+    expect(response.headers.get("Cache-Control")).toBe("public, max-age=0, s-maxage=15");
+    expect(FeedV1.parse(await response.json()).threads).toHaveLength(1);
+  });
+
+  it("keeps the launch gate and the deployment's address in the cache's key, so an answer made with alerts on, or for another deployment, is never read by this one", async () => {
+    await get("/api/feed?lang=en");
+    expect(cacheOptions.seen.at(-1)?.keys).toEqual(["feed", "en", "alerts-on", "https://cvh.example"]);
+
+    gate.enabled = false;
+    await get("/api/feed?lang=en");
+
+    expect(cacheOptions.seen.at(-1)?.keys).toEqual(["feed", "en", "alerts-off", "https://cvh.example"]);
+    // Two entries, so the second request read again instead of taking the first's.
+    expect(reads).toEqual(["en", "en"]);
   });
 
   it.each(LANG_CODES)("answers for %s", async (lang) => {
