@@ -121,6 +121,8 @@ for (const code of ["ur", "ps", "prs"]) {
 test("the English block of a right-to-left page is a left-to-right block: its text starts at the left gutter", async ({ page }) => {
   const [{ selector, key }] = fallbackBlocks("ur");
   await openFallbackPage(page, "ur");
+  // The block is drawn after the page loads (a failed attempt in CI had no node to select yet).
+  await expect(page.locator(`${selector}[lang=en][dir=ltr]`)).toBeVisible();
   const { block, main } = await page.evaluate((css) => {
     const range = document.createRange();
     range.selectNodeContents(document.querySelector(`${css}[lang=en][dir=ltr]`)!);

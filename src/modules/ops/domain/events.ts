@@ -22,8 +22,12 @@ export const PUBLISH_FAILURE_REASONS = [
 ] as const;
 export type PublishFailureReason = (typeof PUBLISH_FAILURE_REASONS)[number];
 
-/** Why a search could not answer (S03.04): the stage and how it ended (`rate_limit_failed`: the per-client count could not be made). Never the question. */
-export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out", "rate_limit_failed"] as const;
+/**
+ * Why a search could not answer (S03.04): the stage and how it ended (`rate_limit_failed`: the per-client count could not be
+ * made; `deadline`: the route's hard deadline, 2.5 s from the request start, came while something was still pending, and the
+ * route answered 503 then). Never the question.
+ */
+export const SEARCH_FAILURE_REASONS = ["snapshot_failed", "embed_failed", "embed_invalid", "timed_out", "rate_limit_failed", "deadline"] as const;
 export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 
 /**

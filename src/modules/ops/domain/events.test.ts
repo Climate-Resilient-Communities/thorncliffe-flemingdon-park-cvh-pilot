@@ -53,6 +53,17 @@ describe("ops events", () => {
       detail: { reason: "timed_out", ms: 2203 },
     });
     expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "rate_limit_failed", ms: 1003 } })).toMatchObject({ detail: { reason: "rate_limit_failed", ms: 1003 } });
+    // The route's hard deadline: a reason and how long the request had run, and nothing else.
+    expect(toOpsEventRecord({ kind: "search.unavailable", detail: { reason: "deadline", ms: 2500 } })).toEqual({
+      kind: "search.unavailable",
+      severity: "warning",
+      subjectType: null,
+      subjectId: null,
+      detail: { reason: "deadline", ms: 2500 },
+    });
+    for (const detail of [{ reason: "deadline" }, { reason: "deadline", ms: 2500, q: "میری عمارت میں آگ لگی ہے" }, { reason: "deadline", ms: -1 }]) {
+      expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
+    }
     for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
       expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
     }

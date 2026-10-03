@@ -525,6 +525,41 @@ describe("search", () => {
       }
     }, 15_000);
 
+    it("answers 503 within 2.5 s while directory_release is locked (a migration holding it), and the database stops the read at the deadline through its statement timeout", async () => {
+      await publish();
+      const model = fakeQueryEmbedder();
+      const locked = gate();
+      const release = gate();
+      const holder = connect(serverUrl());
+      const holding = holder.begin(async (tx) => {
+        await tx.unsafe("lock table directory_release in access exclusive mode");
+        locked.open();
+        await release.promise;
+      });
+      await locked.promise;
+      // The app's reads of directory_release that are waiting for that lock.
+      const waiting = async () =>
+        (
+          await sql`select count(*)::int as n from pg_stat_activity
+                    where datname = current_database() and usename = 'cvh_app_login' and wait_event_type = 'Lock' and query like '%directory_release%'`
+        )[0].n as number;
+      try {
+        const started = performance.now();
+        const response = await post(routeDeps(model.embedder), { q: "lawyer", lang: "en" });
+        const took = performance.now() - started;
+
+        expect(response.status).toBe(503);
+        expect(took).toBeLessThan(2500);
+        expect(model.calls).toEqual([]);
+        // Not left waiting for the lock, holding its connection, after the request stopped waiting for it.
+        await vi.waitFor(async () => expect(await waiting()).toBe(0), { timeout: 1000, interval: 50 });
+      } finally {
+        release.open();
+        await holding;
+        await holder.end({ timeout: 5 });
+      }
+    }, 15_000);
+
     it("stops a count that waits for a lock after the limiter's own timeout, not the connection's", async () => {
       const locked = gate();
       const release = gate();

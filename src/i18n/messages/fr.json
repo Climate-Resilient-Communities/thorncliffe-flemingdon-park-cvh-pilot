@@ -263,7 +263,8 @@
     "active": "Problème en cours",
     "progress": "Travaux en cours",
     "resolved": "Réglé",
-    "unknown": "Inconnu"
+    "unknown": "Inconnu",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "Une chose à faire maintenant",
     "ambassadorHome": "Ambassadeur : mon immeuble",
     "ambassadorLine": "Publier une mise à jour ou faire votre tournée pour {building}",
-    "noBuildingLine": "Les alertes pour votre quartier s'affichent ici. Ajoutez votre immeuble pour voir ses alertes en premier."
+    "noBuildingLine": "Les alertes pour votre quartier s'affichent ici. Ajoutez votre immeuble pour voir ses alertes en premier.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "Texto sur un téléphone de base",
