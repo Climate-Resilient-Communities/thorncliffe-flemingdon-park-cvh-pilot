@@ -501,9 +501,10 @@ describe("closeAlert", () => {
     await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "resolved", keepEntryId: randomUUID() }))).rejects.toMatchObject({ refusal: "ENTRY_NOT_FOUND" });
     // The acknowledgement is an approved entry of this thread, but it is not a final.
     await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "resolved", keepEntryId: one.ref.entryId }))).rejects.toThrow(/closed by an approved final/);
-    // Closing as resolved or withdrawn names the entry that closes the thread.
-    await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "resolved" }))).rejects.toThrow(/names the entry that closes the thread/);
-    await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "withdrawn" }))).rejects.toThrow(/names the entry that closes the thread/);
+    // Closing, whatever the reason, names the entry that closes the thread.
+    await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "resolved" } as never))).rejects.toThrow(/always names the entry that closes the thread/);
+    await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "withdrawn" } as never))).rejects.toThrow(/always names the entry that closes the thread/);
+    await expect(asActor((tx) => closeAlert(tx, { staffId: coordB.id }, { alertId: one.ref.alertId, reason: "expired" } as never))).rejects.toThrow(/always names the entry that closes the thread/);
     expect(await threadRow(one.ref.alertId)).toMatchObject({ status: "open" });
   });
 
@@ -701,78 +702,130 @@ describe("the thread trigger, against direct SQL with the app's credentials", ()
 // --- concurrency ---------------------------------------------------------------------------------------------------------------------------
 
 describe("concurrent actions on one thread", () => {
-  const approvedAfterClose = async (alertId: string) =>
-    (await owner`select count(*)::int as n from alert_entry e join alert a on a.id = e.alert_id where e.alert_id = ${alertId} and e.approved_at is not null and e.approved_at > a.closed_at`)[0].n as number;
-
-  it("an approval and a close: either the approval comes first and is closed over, or the close does and the approval is refused; no entry is approved in a closed thread", async () => {
-    for (let round = 0; round < 3; round += 1) {
-      const { ref } = await approvedThread({}, 0);
-      const update = await submitted(await newUpdate(ref.alertId));
-      const final = await pendingFinal(ref.alertId);
-
-      const [updateResult, finalResult] = await Promise.all([
-        alerting.approveEntry(actorOf(coordB), update, await shownOfRow(update)),
-        alerting.approveEntry(actorOf(adminC), final, await shownOfRow(final)),
-      ]);
-
-      expect(finalResult).toMatchObject({ ok: true });
-      if (updateResult.ok) {
-        expect((await entryRow(update.entryId)).status).toBe("approved");
-        expect((await entryRow(update.entryId)).approved_at.getTime()).toBeLessThanOrEqual((await threadRow(ref.alertId)).closed_at.getTime());
-      } else {
-        expect(updateResult).toEqual({ ok: false, error: "ALERT_CLOSED" });
-        expect((await entryRow(update.entryId)).status).toBe("discarded");
+  /**
+   * Runs the actions on one thread in a fixed order, deterministically: a separate owner transaction holds the thread's lock, each action is started in turn and
+   * waits (a lock wait is seen in pg_stat_activity) before the next starts, then the lock is released. Waiters are served in the order they queued, so the first
+   * action takes the thread first, whatever the timing.
+   */
+  // The test's `owner` connection is a single one: the lock holder and the monitor have their own, so neither waits behind the actions.
+  let holderSql: ReturnType<typeof connect>;
+  let monitorSql: ReturnType<typeof connect>;
+  beforeAll(() => {
+    holderSql = connect(serverUrl());
+    monitorSql = connect(serverUrl());
+  });
+  afterAll(async () => {
+    await holderSql.end({ timeout: 5 });
+    await monitorSql.end({ timeout: 5 });
+  });
+  const lockWaiters = async (): Promise<number> =>
+    (await monitorSql`select count(*)::int as n from pg_stat_activity where datname = current_database() and wait_event_type = 'Lock'`)[0].n as number;
+  async function inOrder<T>(alertId: string, actions: ReadonlyArray<() => Promise<T>>): Promise<T[]> {
+    let release!: () => void;
+    const held = new Promise<void>((resolve) => (release = resolve));
+    let locked!: () => void;
+    const gotLock = new Promise<void>((resolve) => (locked = resolve));
+    const holder = holderSql.begin(async (tx) => {
+      await tx`select id from alert where id = ${alertId} for update`;
+      locked();
+      await held;
+    });
+    await gotLock;
+    const running: Promise<T>[] = [];
+    try {
+      for (const action of actions) {
+        const before = await lockWaiters();
+        running.push(action());
+        const deadline = Date.now() + 15000;
+        while ((await lockWaiters()) <= before) {
+          if (Date.now() > deadline) throw new Error("an action did not queue on the thread's lock");
+          await new Promise((resolve) => setTimeout(resolve, 20));
+        }
       }
-      expect(await approvedAfterClose(ref.alertId)).toBe(0);
-      expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "resolved", closing_entry_id: final.entryId });
+    } finally {
+      release();
+      await holder;
     }
+    return Promise.all(running);
+  }
+
+  const approveOf = async (actor: ReturnType<typeof actorOf>, ref: Awaited<ReturnType<typeof pendingFinal>>) => {
+    const shown = await shownOfRow(ref);
+    return () => alerting.approveEntry(actor, ref, shown);
+  };
+
+  it("an update's approval then a final's: the update is approved and the final closes over it", async () => {
+    const { ref } = await approvedThread({}, 0);
+    const update = await submitted(await newUpdate(ref.alertId));
+    const final = await pendingFinal(ref.alertId);
+    const [updateResult, finalResult] = await inOrder(ref.alertId, [await approveOf(actorOf(coordB), update), await approveOf(actorOf(adminC), final)]);
+    expect(updateResult).toMatchObject({ ok: true });
+    expect(finalResult).toMatchObject({ ok: true });
+    expect((await entryRow(update.entryId)).status).toBe("approved");
+    expect((await entryRow(update.entryId)).approved_at.getTime()).toBeLessThanOrEqual((await threadRow(ref.alertId)).closed_at.getTime());
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "resolved", closing_entry_id: final.entryId });
   });
 
-  it("two finals: exactly one is approved and closes the thread, the other is refused ALERT_CLOSED and discarded with the close", async () => {
+  it("a final's approval then an update's: the thread is closed and the update is refused ALERT_CLOSED, discarded with the close, never approved", async () => {
+    const { ref } = await approvedThread({}, 0);
+    const update = await submitted(await newUpdate(ref.alertId));
+    const final = await pendingFinal(ref.alertId);
+    const [finalResult, updateResult] = await inOrder(ref.alertId, [await approveOf(actorOf(adminC), final), await approveOf(actorOf(coordB), update)]);
+    expect(finalResult).toMatchObject({ ok: true });
+    expect(updateResult).toEqual({ ok: false, error: "ALERT_CLOSED" });
+    const row = await entryRow(update.entryId);
+    expect(row.status).toBe("discarded");
+    expect(row.approved_at).toBeNull();
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "resolved", closing_entry_id: final.entryId });
+  });
+
+  it.each([
+    ["one", "two"],
+    ["two", "one"],
+  ] as const)("two finals, %s approved first: that one closes the thread, the other is refused ALERT_CLOSED and discarded with the close", async (first, second) => {
     const { ref } = await approvedThread();
-    const one = await pendingFinal(ref.alertId);
-    const two = await pendingFinal(ref.alertId);
-
-    const results = await Promise.all([alerting.approveEntry(actorOf(coordB), one, await shownOfRow(one)), alerting.approveEntry(actorOf(adminC), two, await shownOfRow(two))]);
-
-    expect(results.filter((result) => result.ok)).toHaveLength(1);
-    expect(results.filter((result) => !result.ok)).toEqual([{ ok: false, error: "ALERT_CLOSED" }]);
-    const rows = await entryRows(ref.alertId);
-    expect(rows.filter((row) => row.kind === "final" && row.status === "approved")).toHaveLength(1);
-    expect(rows.filter((row) => row.kind === "final" && row.status === "discarded")).toHaveLength(1);
-    expect((await threadRow(ref.alertId)).closing_entry_id).toBe(rows.find((row) => row.kind === "final" && row.status === "approved")!.id);
+    const finals = { one: await pendingFinal(ref.alertId), two: await pendingFinal(ref.alertId) };
+    const results = await inOrder(ref.alertId, [await approveOf(actorOf(coordB), finals[first]), await approveOf(actorOf(adminC), finals[second])]);
+    expect(results[0]).toMatchObject({ ok: true });
+    expect(results[1]).toEqual({ ok: false, error: "ALERT_CLOSED" });
+    expect((await entryRow(finals[first].entryId)).status).toBe("approved");
+    expect((await entryRow(finals[second].entryId)).status).toBe("discarded");
+    expect((await threadRow(ref.alertId)).closing_entry_id).toBe(finals[first].entryId);
     expect((await auditRows()).filter((row) => row.action === "alert.closed" && row.outcome === "ok")).toHaveLength(1);
   });
 
-  it("a correction approval and the expire job's close (stood in for by a transaction that locks the thread first, as S05.04's job must): as if one ran after the other", async () => {
-    for (let round = 0; round < 3; round += 1) {
+  describe("a correction's approval and the expire job's close (stood in for by a transaction that locks the thread, as S05.04's job must)", () => {
+    const expire = (alertId: string) => async (): Promise<unknown> =>
+      owner.begin(async (tx) => {
+        await tx`select id from alert where id = ${alertId} for update`;
+        const [row] = await tx`select status from alert where id = ${alertId}`;
+        if (row.status === "open") await tx`update alert set status = 'closed', closed_reason = 'expired', closed_at = now() where id = ${alertId}`;
+      });
+    const pendingCorrection = async () => {
       const { ref } = await approvedThread();
       clock = new Date(clock.getTime() + 1000);
       const made = await alerting.correctEntry(actorOf(authorA), { alertId: ref.alertId, targetId: ref.entryId }, { entryId: randomUUID(), text: "Corrected wording.", phase: "problem", validUntil: new Date("2026-10-02T15:00:00Z"), validUntilMode: "at" });
       if (!made.ok) throw new Error("correctEntry refused");
-      const correction = await submitted({ alertId: ref.alertId, entryId: made.value.entry.id });
-      const shown = await shownOfRow(correction);
+      return { ref, correction: await submitted({ alertId: ref.alertId, entryId: made.value.entry.id }) };
+    };
 
-      const [approval] = await Promise.all([
-        alerting.approveEntry(actorOf(coordB), correction, shown),
-        owner.begin(async (tx) => {
-          await tx`select id from alert where id = ${ref.alertId} for update`;
-          const [row] = await tx`select status from alert where id = ${ref.alertId}`;
-          if (row.status === "open") await tx`update alert set status = 'closed', closed_reason = 'expired', closed_at = now() where id = ${ref.alertId}`;
-        }),
-      ]);
+    it("the approval first: the target is superseded, then the thread expires", async () => {
+      const { ref, correction } = await pendingCorrection();
+      const [approval] = await inOrder<unknown>(ref.alertId, [await approveOf(actorOf(coordB), correction), expire(ref.alertId)]);
+      expect(approval).toMatchObject({ ok: true });
+      expect((await entryRow(ref.entryId)).status).toBe("superseded");
+      expect((await entryRow(correction.entryId)).status).toBe("approved");
+      expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "expired" });
+    });
 
-      const thread = await threadRow(ref.alertId);
-      expect(thread).toMatchObject({ status: "closed", closed_reason: "expired" });
-      if (approval.ok) {
-        expect((await entryRow(ref.entryId)).status).toBe("superseded");
-      } else {
-        expect(approval).toEqual({ ok: false, error: "ALERT_CLOSED" });
-        expect((await entryRow(correction.entryId)).status).toBe("pending_approval");
-        expect((await entryRow(ref.entryId)).status).toBe("approved");
-      }
-      expect(await approvedAfterClose(ref.alertId)).toBe(0);
-    }
+    it("the close first: the approval is refused ALERT_CLOSED and nothing changes", async () => {
+      const { ref, correction } = await pendingCorrection();
+      const [, approval] = await inOrder<unknown>(ref.alertId, [expire(ref.alertId), await approveOf(actorOf(coordB), correction)]);
+      expect(approval).toEqual({ ok: false, error: "ALERT_CLOSED" });
+      expect((await entryRow(correction.entryId)).status).toBe("pending_approval");
+      expect((await entryRow(ref.entryId)).status).toBe("approved");
+      expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "expired" });
+    });
   });
 });
 
@@ -796,6 +849,10 @@ describe("what a resident reads of a thread that closed", () => {
     // An open thread, an unknown address and a drill are not found there.
     const open = await approvedThread();
     expect(await residents.readClosed!("en", open.slug)).toBeNull();
+    // The slugs the app gates the address on: the closed thread's, not the open one's.
+    const slugs = await residents.readClosedSlugs!();
+    expect(slugs).toContain(slug);
+    expect(slugs).not.toContain(open.slug);
     expect(await residents.readClosed!("en", "zzzzzzzz")).toBeNull();
     const drill = await approvedThread({}, 0, true);
     const drillFinal = await pendingFinal(drill.ref.alertId);

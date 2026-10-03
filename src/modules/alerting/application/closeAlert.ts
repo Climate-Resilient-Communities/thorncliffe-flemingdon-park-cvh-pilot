@@ -30,10 +30,10 @@ export interface CloseAlertInput {
   reason: ClosedReason;
   /**
    * The entry whose deliveries are not cancelled and that is recorded as the one that closed the thread: the final being approved (`resolved`, required),
-   * the withdrawal that leaves nothing (`withdrawn`, required), or the expire job's system final (`expired`). It must be an entry of this thread, approved
+   * the withdrawal that leaves nothing (`withdrawn`, required), or the expire job's system final (`expired`): always required, as the database requires it. It must be an entry of this thread, approved
    * (or published by the system) and of the kind the reason needs: closing never keeps an entry that is not the closing one.
    */
-  keepEntryId?: string;
+  keepEntryId: string;
   /** The caller raised `feed_version` in this transaction already (an approval does, before it closes): closing then does not raise it again. */
   feedRaised?: boolean;
 }
@@ -73,10 +73,10 @@ export function createCloseAlert(deps: CloseAlertDeps) {
     // The entry whose texts are kept is an entry of this thread (one of another thread, or one that is not there, is refused) and is the entry that closes
     // it: a resolved thread is closed by its approved final, a withdrawn one by its approved withdrawal, an expired one by its system final. Anything else is
     // a caller's mistake, not a refusal a person can cause: the transaction rolls back.
-    const kept = input.keepEntryId === undefined ? undefined : entries.find((entry) => entry.id === input.keepEntryId);
-    if (input.keepEntryId !== undefined && !kept) throw new Refused("ENTRY_NOT_FOUND");
-    if (input.reason !== "expired" && !kept) throw new Error(`closeAlert: closing as ${input.reason} names the entry that closes the thread (keepEntryId)`);
-    if (kept && (kept.kind !== CLOSING_ENTRY[input.reason].kind || kept.status !== CLOSING_ENTRY[input.reason].status)) {
+    if (!input.keepEntryId) throw new Error(`closeAlert: closing as ${input.reason} always names the entry that closes the thread (keepEntryId)`);
+    const kept = entries.find((entry) => entry.id === input.keepEntryId);
+    if (!kept) throw new Refused("ENTRY_NOT_FOUND");
+    if (kept.kind !== CLOSING_ENTRY[input.reason].kind || kept.status !== CLOSING_ENTRY[input.reason].status) {
       throw new Error(`closeAlert: a thread closed as ${input.reason} is closed by an ${CLOSING_ENTRY[input.reason].status} ${CLOSING_ENTRY[input.reason].kind}, not a ${kept.status} ${kept.kind}`);
     }
 

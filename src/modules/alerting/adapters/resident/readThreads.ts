@@ -71,6 +71,16 @@ export async function readOpenThreads(db: Db, lang: LangCode) {
   return assembleThreads(await readOpenEntries(db, lang), lang);
 }
 
+/** The slugs of the closed threads residents can read (one cheap statement): the gate in front of `readClosedThread`, so an address that is no closed thread's costs no further read. */
+export async function readClosedSlugs(db: Db): Promise<string[]> {
+  const rows = await db
+    .selectDistinct({ slug: nondrillAlertEntryV2.slug })
+    .from(nondrillAlertEntryV2)
+    .innerJoin(nondrillAlert, eq(nondrillAlert.id, nondrillAlertEntryV2.alertId))
+    .where(eq(nondrillAlert.status, "closed"));
+  return rows.map((row) => row.slug);
+}
+
 /**
  * The closed thread with this slug for one language, read now (S05.03): R-07 shows a thread that closed, with its close reason, the final message and every earlier
  * entry. It is read from the same resident views as the feed (a drill's thread is not in them; an entry that is not web-published is not), and never is in the feed.

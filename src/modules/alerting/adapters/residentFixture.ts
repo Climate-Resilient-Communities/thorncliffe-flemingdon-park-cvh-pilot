@@ -93,6 +93,7 @@ export function readFeedFixtureFile(file: string): FeedFixture {
         threads: assembleThreads(fixtureRows(readFileSync(file, "utf8"), lang).rows, lang),
         statuses: { buildings: new Map(), neighbourhoods: new Map() },
       }),
+      readClosedSlugs: async () => [...new Set(fixtureRows(readFileSync(file, "utf8"), "en", true).rows.map((row) => row.slug))],
       readClosed: async (lang, slug) => {
         const { rows, reasons } = fixtureRows(readFileSync(file, "utf8"), lang, true);
         const own = rows.filter((row) => row.slug === slug);

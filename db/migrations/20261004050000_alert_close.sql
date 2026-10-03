@@ -46,9 +46,17 @@ begin
     -- The database's clock times the close, as it times an approval: the two are the same instant for a close that comes with an approval. `now()` is the
     -- start of the transaction, which can be earlier than an approval another transaction committed first while this one waited for the thread's lock, so a close
     -- is never timed before the latest approval of its thread.
-    new.closed_at := greatest(now(), coalesce((select max(e.approved_at) from public.alert_entry e where e.alert_id = new.id), now()));
-    -- The app closes a thread only beside the entry that closes it, made in this transaction.
-    if session_user = 'cvh_app_login' then
+    -- (Only a close that names its entry is raised to the latest approval: for a close without one, which only the owner's own tools and fixtures make, `closed_at`
+    -- stays the transaction's time, so an earlier approval of another transaction is never mistaken for the closing entry by the legacy `approved_at = closed_at` rule.)
+    if new.closing_entry_id is not null then
+      new.closed_at := greatest(now(), coalesce((select max(e.approved_at) from public.alert_entry e where e.alert_id = new.id), now()));
+    else
+      new.closed_at := now();
+    end if;
+    -- The app closes a thread only beside the entry that closes it, made in this transaction. Every login is held to it (a jobs worker's, a renamed pooler role's),
+    -- not one login by name; only the table's owner (the migrator's own tools and the tests' fixtures) and a superuser are not the app.
+    if session_user <> (select pg_catalog.pg_get_userbyid(c.relowner) from pg_catalog.pg_class c where c.oid = 'public.alert'::regclass)
+       and not exists (select 1 from pg_catalog.pg_roles r where r.rolname = session_user and r.rolsuper) then
       if new.closing_entry_id is null then
         raise exception 'alert: a thread is closed beside the entry that closes it (closing_entry_id)' using errcode = 'check_violation';
       end if;

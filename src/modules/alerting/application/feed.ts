@@ -28,6 +28,8 @@ export interface FeedAlerts {
    * address. It is not in `read`: the feed lists open threads only. Null when no closed thread has the slug. A source that has no closed threads leaves it out.
    */
   readClosed?(lang: LangCode, slug: string): Promise<FeedThread | null>;
+  /** The slugs of the closed threads: the app asks this (cached) before `readClosed`, so a slug that is no closed thread's costs the database nothing more. */
+  readClosedSlugs?(): Promise<string[]>;
 }
 
 /** Before S04.08: no threads, so every place is `none`. */

@@ -6,8 +6,7 @@
 // E05) the feed has no thread and no alert page opens. A thread that closed is not in the feed but opens from its address (S05.03: its close reason, the final
 // message and every earlier entry, read from the same views). An unknown address, a drill's and a gate-off request are all the same answer: not found, with no detail.
 import { cache } from "react";
-import { residentAlertsEnabled, readCachedFeed } from "@/app/feedCache";
-import { readClosedAlert } from "@/app/api/feed/source";
+import { residentAlertsEnabled, readCachedClosedAlert, readCachedFeed } from "@/app/feedCache";
 import type { FeedThread } from "@/contracts/feed";
 import type { LaunchCode } from "@/i18n/languages";
 
@@ -28,5 +27,7 @@ export const loadAlert = cache(async (lang: LaunchCode, slug: string): Promise<L
   if (!residentAlertsEnabled() || !SLUG.test(slug)) return null;
   const feed = await readCachedFeed(lang);
   const thread = feed.threads.find((candidate) => candidate.slug === slug);
-  return thread ? { thread, serverNow: new Date(feed.server_now) } : readClosedAlert(lang, slug);
+  if (thread) return { thread, serverNow: new Date(feed.server_now) };
+  const closed = await readCachedClosedAlert(lang, slug);
+  return closed ? { thread: closed.thread, serverNow: new Date(closed.serverNow) } : null;
 });

@@ -1579,11 +1579,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       return readThreadSummary(db, alertId);
     },
 
-    /** The open threads residents have something substantive to read in, newest news first: what the Hub can add an update to (a closed thread is not here). */
+    /** The threads that closed since `since`, newest first: the Hub home's "Recently closed" section. */
     async closedThreads(since: Date): Promise<ClosedThread[]> {
       return readClosedThreads(db, since);
     },
 
+    /** The open threads residents have something substantive to read in, newest news first: what the Hub can add an update to (a closed thread is not here). */
     async runningThreads(): Promise<RunningThread[]> {
       return readRunningThreads(db);
     },

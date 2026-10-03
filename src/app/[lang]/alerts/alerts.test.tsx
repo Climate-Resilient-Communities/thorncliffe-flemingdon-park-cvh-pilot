@@ -26,12 +26,10 @@ vi.mock("@/app/feedCache", () => ({
     if (state.failing) throw new Error("the feed could not be read");
     return state.feed;
   },
-}));
-vi.mock("@/app/api/feed/source", () => ({
-  readClosedAlert: async (lang: string, slug: string) => {
+  readCachedClosedAlert: async (lang: string, slug: string) => {
     state.closedReads.push(`${lang}:${slug}`);
     const found = state.closed.get(slug);
-    return found ? { thread: found, serverNow: new Date("2026-10-01T15:00:00.000Z") } : null;
+    return found ? { thread: found, serverNow: "2026-10-01T15:00:00.000Z" } : null;
   },
 }));
 vi.mock("next-intl/server", () => ({
