@@ -94,7 +94,7 @@ test.describe("home", () => {
     await expect(first.getByTestId(`alert-card-text-${T1}`)).toHaveText(UPDATE);
     await expect(first.getByTestId("alert-attribution")).toHaveText("Community alert from the Hub");
     await expect(first.getByTestId("alert-verification")).toHaveText("Verified by the Hub");
-    await expect(first).toContainText("Posted 1 hour ago · Updated 20 minutes ago");
+    await expect(first).toContainText("Updated 20 minutes ago");
     await expect(first).toHaveAttribute("href", `/en/alerts/${T1}`);
     // Power and heat, and not yet verified: words, not colour alone.
     const second = page.getByTestId(`alert-card-${T2}`);
