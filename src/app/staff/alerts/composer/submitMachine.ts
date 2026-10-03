@@ -88,6 +88,3 @@ export function submitReducer(ui: SubmitUi, event: SubmitEvent): SubmitUi {
 
 /** How many of the languages have settled. */
 export const doneCount = (progress: Readonly<Record<string, string>>): number => Object.keys(progress).length;
-
-/** Whether the screen should be polling the entry's state: while an attempt runs, and while its answer is unseen. */
-export const shouldPoll = (ui: SubmitUi): boolean => ui.phase === "running";

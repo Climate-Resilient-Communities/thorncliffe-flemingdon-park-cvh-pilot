@@ -131,6 +131,7 @@ export interface ComposerInput {
   preview: { sms: RenderedSms; nineOneOneFirst: boolean } | null;
   saved: boolean;
   now: Date;
+  /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
 }
 
@@ -170,7 +171,7 @@ export const MESSAGE_CODES = [
   "NEIGHBOURHOOD_NOT_FOUND",
 ] as const;
 
-const WAITING: "waiting" = "waiting";
+const WAITING = "waiting" as const;
 
 function typeChoices(ids: readonly string[], ticked: ReadonlySet<string>): ChoiceView[] {
   return ids.map((id) => ({ id, label: typeName(id), checked: ticked.has(id) }));
@@ -237,7 +238,9 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   const lastFailed = attempt?.state === "failed" && entry.status === "draft" && !input.saved ? attempt.outcome : null;
   const placeHref = `${PLACE_PAGE}?${refQuery}`;
   const audience: Audience = content.audience;
-  const aside = asideOf(audience, input.plans, { href: placeHref, label: t("asideLink.place") }, (key, values) => englishText(`staff.audience.${key}`, values));
+  // The aside's sentences are the audience pages' words; a `text` given for the layout tests puts its words in them too.
+  const audienceText: Text = input.text ?? ((key, values) => englishText(`staff.audience.${key}`, values));
+  const aside = asideOf(audience, input.plans, { href: placeHref, label: t("asideLink.place") }, audienceText);
 
   const screen: ComposerScreen = {
     mode,

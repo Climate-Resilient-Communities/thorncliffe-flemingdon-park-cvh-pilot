@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import type { EntryState, SubmitResult } from "@/contracts/alertSubmit";
-import { UNSEEN_POLLS_BEFORE_GIVING_UP, doneCount, initialSubmitUi, shouldPoll, submitReducer, type SubmitEvent, type SubmitUi } from "./submitMachine";
+import { UNSEEN_POLLS_BEFORE_GIVING_UP, doneCount, initialSubmitUi, submitReducer, type SubmitEvent, type SubmitUi } from "./submitMachine";
 
 const ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const ENTRY = "01900000-0000-7000-8000-00000000e177";
@@ -122,12 +122,8 @@ describe("coming back to an entry that is being submitted", () => {
 });
 
 describe("what the screen asks of the machine", () => {
-  it("counts the languages that have settled and polls only while an attempt is running", () => {
+  it("counts the languages that have settled", () => {
     expect(doneCount({})).toBe(0);
     expect(doneCount({ fr: "translated", ur: "fallback_en" })).toBe(2);
-    expect(shouldPoll({ phase: "idle", message: null })).toBe(false);
-    expect(shouldPoll({ phase: "saving" })).toBe(false);
-    expect(shouldPoll(run([sent]))).toBe(true);
-    expect(shouldPoll({ phase: "ended", outcome: "committed" })).toBe(false);
   });
 });

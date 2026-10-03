@@ -19,11 +19,11 @@ const entryOf = (kind: "ack" | "update"): EntryView => ({ id: ENTRY, alertId: AL
 
 function deps(options: { entry?: EntryView | null; save?: { ok: true } | { ok: false; error: AlertRefusal }; back?: { ok: true; kind: string } | { ok: false; error: AlertRefusal } } = {}) {
   const getEntry = vi.fn(async () => (options.entry === undefined ? entryOf("ack") : options.entry));
-  const saveDraft = vi.fn(async (_actor: unknown, _ref: unknown, _content: EntryContent) => {
+  const saveDraft = vi.fn<(actor: unknown, ref: unknown, content: EntryContent) => Promise<unknown>>(async () => {
     const save = options.save ?? { ok: true as const };
     return save.ok ? { ok: true as const, value: entryOf("ack") } : save;
   });
-  const returnEntry = vi.fn(async (_actor: unknown, _ref: unknown, _why: string) => {
+  const returnEntry = vi.fn<(actor: unknown, ref: unknown, why: string) => Promise<unknown>>(async () => {
     const back = options.back ?? { ok: true as const, kind: "ack" };
     return back.ok ? { ok: true as const, value: entryOf(back.kind === "update" ? "update" : "ack") } : back;
   });

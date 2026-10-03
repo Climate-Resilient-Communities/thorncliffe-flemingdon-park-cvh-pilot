@@ -134,7 +134,7 @@ export function addTorontoDays(instant: Date, days: number): Date {
   const sub = instant.getTime() - Math.floor(instant.getTime() / MINUTE) * MINUTE;
   const found = instantsOf(local);
   if (found.length > 0) return new Date(found[found.length - 1] + sub);
-  // In the gap: read the time with the offset before the change, which lands the same distance past the gap.
+  // In the skipped hour: use the offset from before the change, which lands the same distance past the skipped hour.
   const wallMs = Date.UTC(local.year, local.month - 1, local.day, local.hour, local.minute);
   return new Date(wallMs - offsetMinutesAt(wallMs - 24 * 60 * MINUTE) * MINUTE + sub);
 }

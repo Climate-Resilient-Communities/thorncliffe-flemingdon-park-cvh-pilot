@@ -11,7 +11,7 @@ import { SMS_MAX_BODY_LENGTH, renderAll, type SmsAttribution } from "../../messa
 import type { EntryContent } from "../domain/content";
 import { contentHash } from "../domain/hash";
 import type { EntryKind } from "../domain/lifecycle";
-import type { FreezeResult, FrozenContent, FrozenSmsBody } from "./ports";
+import type { FreezeResult, FrozenSmsBody } from "./ports";
 import type { FrozenTranslation } from "../domain/translations";
 
 export interface FreezeInput {

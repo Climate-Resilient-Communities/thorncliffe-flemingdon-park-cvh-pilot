@@ -22,7 +22,7 @@ const PLAN = {
 } as unknown as BuildingFloorPlan;
 
 function deps(result: { ok: true } | { ok: false; error: AlertRefusal } = { ok: true }) {
-  const logDisruption = vi.fn(async (_actor: unknown, _input: LogDisruptionInput) =>
+  const logDisruption = vi.fn<(actor: unknown, input: LogDisruptionInput) => Promise<unknown>>(async () =>
     result.ok ? { ok: true as const, value: { thread: { id: THREAD }, entry: { id: ENTRY } } } : { ok: false as const, error: result.error },
   );
   const wired = { alerting: () => ({ logDisruption }) as unknown as ReturnType<LogDeps["alerting"]>, plans: async () => [PLAN], now: () => new Date("2026-10-04T14:00:00.000Z") } satisfies LogDeps;

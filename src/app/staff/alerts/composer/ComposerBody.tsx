@@ -3,7 +3,7 @@
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import type { ComposeState } from "./editDraft";
-import { doneCount, initialSubmitUi, shouldPoll, submitReducer, type SubmitKind } from "./submitMachine";
+import { doneCount, initialSubmitUi, submitReducer, type SubmitKind } from "./submitMachine";
 import { submitApi, type SubmitApi } from "./submitClient";
 import type { ComposerScreen, DraftFormView, LanguageRowView, PendingView } from "./view";
 
@@ -48,11 +48,11 @@ function LanguageList({ rows, progress, waiting, results }: { rows: LanguageRowV
         return (
           <li key={row.lang} className="hub-list-item" data-testid={`language-${row.lang}`} data-state={progress === null ? row.state : (settled ?? "waiting")}>
             <Inline gap="related" align="baseline" wrap>
-              <strong lang={row.bcp47} dir={row.dir}>
+              <strong className="hub-wrap" lang={row.bcp47} dir={row.dir}>
                 {row.native}
               </strong>
-              <span>{row.english}</span>
-              <span>{label}</span>
+              <span className="hub-wrap">{row.english}</span>
+              <span className="hub-wrap">{label}</span>
             </Inline>
           </li>
         );
@@ -82,9 +82,9 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
   return (
     <Stack gap="stack">
       {form.types ? (
-        <fieldset aria-describedby={describedBy}>
+        <fieldset aria-labelledby="composer-types-legend" aria-describedby={describedBy}>
           <Stack gap="target">
-            <legend>{form.types.legend}</legend>
+            <legend id="composer-types-legend">{form.types.legend}</legend>
             <input type="hidden" name="types-sent" value="1" />
             <Inline gap="target" wrap>
               {[...form.types.building, ...form.types.neighbourhood].map((item) => (
@@ -102,9 +102,9 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
         </p>
       )}
       {form.phase && (
-        <fieldset>
+        <fieldset aria-labelledby="composer-phase-legend">
           <Stack gap="target">
-            <legend>{form.phase.legend}</legend>
+            <legend id="composer-phase-legend">{form.phase.legend}</legend>
             {form.phase.items.map((item) => (
               <label key={item.id} className="hub-choice">
                 <input type="radio" name="phase" value={item.id} checked={phase === item.id} onChange={() => setPhase(item.id)} />
@@ -135,9 +135,9 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           {fill(form.text.counter, { n: text.length })}
         </p>
       </Stack>
-      <fieldset aria-describedby={describedBy}>
+      <fieldset aria-labelledby="composer-valid-legend" aria-describedby={describedBy}>
         <Stack gap="target">
-          <legend>{form.valid.title}</legend>
+          <legend id="composer-valid-legend">{form.valid.title}</legend>
           <label className="hub-choice">
             <input type="radio" name="valid-mode" value="resolved" checked={validMode === "resolved"} onChange={() => setValidMode("resolved")} />
             <span>{form.valid.resolvedLabel}</span>
@@ -176,9 +176,9 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
           </Inline>
           <p>{form.valid.hint}</p>
           {state.status === "ask" && (
-            <fieldset>
+            <fieldset aria-labelledby="composer-fold-legend">
               <Stack gap="target">
-                <legend>{form.valid.foldLegend}</legend>
+                <legend id="composer-fold-legend">{form.valid.foldLegend}</legend>
                 <p role="alert" className="hub-error" data-testid="fold-question">
                   {state.question}
                 </p>

@@ -56,8 +56,8 @@ function setup(options: { begin?: unknown; prepare?: EntryPreparer["prepare"]; c
     beginSubmit: vi.fn(async () => (calls.push("begin"), options.begin ?? { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null } })),
     completeSubmit: vi.fn(async () => (calls.push("complete"), options.complete ?? { ok: true, value: { version: 1 } })),
     failSubmit: vi.fn(async () => void calls.push("fail")),
-    recordProgress: vi.fn(async (_ref: unknown, _key: string, _lang: string, _status: string): Promise<void> => undefined),
-    recordBudget: vi.fn(async (_ref: unknown, _key: string, _budgetMs: number): Promise<void> => undefined),
+    recordProgress: vi.fn<(ref: unknown, key: string, lang: string, status: string) => Promise<void>>(async () => undefined),
+    recordBudget: vi.fn<(ref: unknown, key: string, budgetMs: number) => Promise<void>>(async () => undefined),
     entryState: vi.fn(async () => null),
   };
   const preparer: EntryPreparer = { prepare: options.prepare ?? (async (_content, _context, hooks) => (calls.push("prepare"), hooks?.onBudget?.(25_000), hooks?.onLanguage?.(translation("ur")), hooks?.onLanguage?.(translation("ps", "fallback_en")), { ok: true, value: FROZEN } as FreezeResult)) };
