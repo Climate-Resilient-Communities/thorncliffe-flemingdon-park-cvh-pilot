@@ -1,3 +1,5 @@
+import { readFileSync } from "node:fs";
+import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { sha256Hex } from "@/platform/hash";
 import { LANG_CODES } from "./lang";
@@ -112,5 +114,22 @@ describe("ListingProviderSchema neighbourhood_ids", () => {
     ["a string instead of a list", { neighbourhood_ids: "TP" }],
   ])("rejects %s", (_name, change) => {
     expect(ListingProviderSchema.safeParse(provider(change)).success).toBe(false);
+  });
+});
+
+describe("frozen release files (backward compatibility across the AD-11 pilot change)", () => {
+  // Listing files in the release format before the pilot change, frozen in test/fixtures/directory: never regenerate them.
+  const frozen = (lang: string) =>
+    JSON.parse(readFileSync(path.join(__dirname, "..", "..", "test", "fixtures", "directory", `release-7-${lang}.before-ad11-pilot.json`), "utf8")) as unknown;
+
+  it.each(["en", "ur"])("parses the frozen %s file with today's contract", (lang) => {
+    const parsed = DirectoryListingV1.safeParse(frozen(lang));
+    expect(parsed.success, JSON.stringify(parsed.error?.issues)).toBe(true);
+  });
+
+  it("finds no unreviewed machine text in a release from before the change: every translated text there is reviewed", () => {
+    const listing = DirectoryListingV1.parse(frozen("ur"));
+    const texts = listing.providers.flatMap((p) => [p.services, ...(p.emergency_role ? [p.emergency_role] : []), ...p.subcategories]);
+    expect(texts.filter((t) => t.machine && t.status !== "fallback_en" && t.review_status !== "reviewed")).toEqual([]);
   });
 });

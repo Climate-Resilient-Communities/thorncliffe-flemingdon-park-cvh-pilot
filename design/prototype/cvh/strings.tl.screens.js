@@ -220,6 +220,7 @@
    "now": "ngayon",
    "levelOfficial": "Opisyal na alerto mula sa {source}.",
    "levelCommunity": "Alerto ng komunidad mula sa Hub. Beripikado ng Hub.",
+   "fromHub": "Alerto ng komunidad mula sa Hub",
    "levelAmbassador": "Alerto ng komunidad mula sa isang ambassador ng gusali. Hindi pa beripikado.",
    "stop": "Para itigil ang lahat ng mensahe mula sa Hub, sumagot ng STOP.",
    "verifiedKeyword": "Para malaman ang ibig sabihin ng beripikado, sumagot ng INFO.",
@@ -1349,6 +1350,8 @@
    "reviewed": "Sinuri ng Hub, huling na-update {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Isinalin ng makina; hindi pa nasuri ng tao" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

@@ -38,6 +38,14 @@ export interface MonthlyUsage {
   tokens: number;
 }
 
+/** The spend rows whose `at` falls in the calendar month (America/Toronto) that `now` falls in. */
+function inCalendarMonth(now: Date) {
+  return and(
+    gte(spendEvent.at, sql`(date_trunc('month', ${now.toISOString()}::timestamptz at time zone 'America/Toronto') at time zone 'America/Toronto')`),
+    lt(spendEvent.at, sql`((date_trunc('month', ${now.toISOString()}::timestamptz at time zone 'America/Toronto') + interval '1 month') at time zone 'America/Toronto')`),
+  );
+}
+
 /**
  * What a kind of usage has used so far in the calendar month (America/Toronto) that `now` falls in, in calls and tokens.
  * With `purpose` only the usage made for that purpose counts (the publish allowance is not eaten by questions or test-set
@@ -50,13 +58,19 @@ export async function monthlyUsage(executor: DbExecutor, kind: string, now: Date
       tokens: sql<string>`coalesce(sum(${spendEvent.tokens}), 0)`,
     })
     .from(spendEvent)
-    .where(
-      and(
-        eq(spendEvent.kind, kind),
-        purpose === undefined ? undefined : eq(spendEvent.purpose, purpose),
-        gte(spendEvent.at, sql`(date_trunc('month', ${now.toISOString()}::timestamptz at time zone 'America/Toronto') at time zone 'America/Toronto')`),
-        lt(spendEvent.at, sql`((date_trunc('month', ${now.toISOString()}::timestamptz at time zone 'America/Toronto') + interval '1 month') at time zone 'America/Toronto')`),
-      ),
-    );
+    .where(and(eq(spendEvent.kind, kind), purpose === undefined ? undefined : eq(spendEvent.purpose, purpose), inCalendarMonth(now)));
   return { calls: Number(row?.calls ?? 0), tokens: Number(row?.tokens ?? 0) };
+}
+
+/**
+ * The calls one model has used so far in the calendar month (America/Toronto) that `now` falls in, for a kind of usage,
+ * whoever made them (a vendor's limit is the key's, not a purpose's). One query on `spend_event_kind_at_idx` (kind, at): the
+ * model is only matched among that month's rows of the kind.
+ */
+export async function monthlyModelCalls(executor: DbExecutor, kind: string, model: string, now: Date): Promise<number> {
+  const [row] = await executor
+    .select({ calls: sql<string>`coalesce(sum(${spendEvent.calls}), 0)` })
+    .from(spendEvent)
+    .where(and(eq(spendEvent.kind, kind), inCalendarMonth(now), eq(spendEvent.model, model)));
+  return Number(row?.calls ?? 0);
 }

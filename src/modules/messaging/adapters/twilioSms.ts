@@ -50,7 +50,9 @@ export function twilioSmsProvider(config: TwilioConfig): SmsProvider {
             "Content-Type": "application/x-www-form-urlencoded",
             Accept: "application/json",
           },
-          body: new URLSearchParams({ To: text.to, From: text.from, Body: text.body }).toString(),
+          // SmartEncoded=false on every request (AD-21): Twilio must send the body byte for byte, never a copy in which it
+          // has swapped characters for look-alikes after the approver saw the text and the segments were counted.
+          body: new URLSearchParams({ To: text.to, From: text.from, Body: text.body, SmartEncoded: "false" }).toString(),
           // Never follow a redirect with the credentials.
           redirect: "error",
           signal: AbortSignal.timeout(timeoutMs),

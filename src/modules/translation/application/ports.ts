@@ -11,6 +11,8 @@ export interface TranslateRequest {
   /** The model id, from config (a route), never chosen by the adapter. */
   model: string;
   signal: AbortSignal;
+  /** The most the model may write, when the text is longer than a question (an alert, S04.02); the adapter's default for a question when absent. */
+  maxOutputTokens?: number;
 }
 
 export interface Translation {
@@ -29,12 +31,24 @@ export interface Translator {
   translate(request: TranslateRequest): Promise<Translation>;
 }
 
+/**
+ * Why a translation call failed, as the adapter classified the vendor's error: `quota` (past the vendor's limit for the
+ * model, in practice the monthly one), `rate_limited` (a transient limit), `unavailable` (5xx or the network), `other`, or
+ * `aborted` (the caller's signal cancelled it). Only the class leaves the adapter, never the vendor's text.
+ */
+export type TranslateErrorCode = "quota" | "rate_limited" | "unavailable" | "other" | "aborted";
+
+/** Whether a second model may be tried after this failure: the first model's limit, not the request, is what failed. */
+export function isLimitFailure(code: TranslateErrorCode): boolean {
+  return code === "quota" || code === "rate_limited";
+}
+
 /** Why a translation call failed: a code only. */
 export class TranslateError extends Error {
   override name = "TranslateError";
-  readonly code: "failed" | "aborted";
-  constructor(code: "failed" | "aborted") {
-    super(code === "aborted" ? "The translation was cancelled" : "The translation failed");
+  readonly code: TranslateErrorCode;
+  constructor(code: TranslateErrorCode) {
+    super(code === "aborted" ? "The translation was cancelled" : `The translation failed (${code})`);
     this.code = code;
   }
 }

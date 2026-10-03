@@ -72,6 +72,28 @@ describe("ProviderView", () => {
     expect(render("en", "P101")).not.toContain('data-testid="machine-label"');
   });
 
+  it("labels a description no person has reviewed 'Machine-translated; not reviewed by a person', with the English one tap away (AD-11 pilot change)", () => {
+    const listing = DirectoryListingV1.parse(buildListing("ur", 7));
+    const services = { ...listing.providers.find((p) => p.id === "P101")!.services, review_status: "none" as const, reviewed_on: null };
+    const html = render("ur", "P101", "card", { services });
+
+    expect(html).toContain('data-review="none"');
+    expect(html).toContain(ur.x04.unreviewed);
+    expect(html).not.toContain(`>${ur.x04.label}<`);
+    expect(html).toContain('data-testid="show-english"');
+    expect(html).toContain(services.body);
+    expect(ur.x04.unreviewed).not.toMatch(/^\[EN\]/);
+    expect(en.x04.unreviewed).toBe("Machine-translated; not reviewed by a person");
+  });
+
+  it("keeps the reviewed label on reviewed text: no 'not reviewed by a person'", () => {
+    const html = render("ur", "P101");
+
+    expect(html).toContain('data-review="reviewed"');
+    expect(html).not.toContain(ur.x04.unreviewed);
+    expect(html).toContain(`>${ur.x04.label}<`);
+  });
+
   it("marks English standing in for a missing translation, with no machine label for it, and no [EN] in the content", () => {
     const html = render("ur", "P105");
 

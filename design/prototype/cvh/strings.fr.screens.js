@@ -231,6 +231,7 @@
    "now": "maintenant",
    "levelOfficial": "Alerte officielle de {source}.",
    "levelCommunity": "Alerte communautaire du Hub. Vérifiée par le Hub.",
+   "fromHub": "Alerte communautaire du Hub",
    "levelAmbassador": "Alerte communautaire d'un ambassadeur de l'immeuble. Pas encore vérifiée.",
    "stop": "Pour arrêter tous les messages du Hub, répondez STOP.",
    "verifiedKeyword": "Pour savoir ce que « vérifié » veut dire, répondez INFO.",
@@ -1360,6 +1361,8 @@
    "reviewed": "Vérifié par le Hub, dernière mise à jour le {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Traduction automatique, non révisée par une personne" } });
   /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
   m(t, {
    "map": {

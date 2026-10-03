@@ -1,9 +1,11 @@
-// The messaging module's public interface (AD-2, AD-8). It holds the outbox (S06.01: every outbound text is one `delivery`
+// The messaging module's public interface (AD-2, AD-8, AD-21). It holds S04.06's renderer (the one builder of an alert's text
+// message body, its encoding and segment count, and the cost estimate), the outbox (S06.01: every outbound text is one `delivery`
 // row, written before it is sent and never holding a phone number; the states, the idempotent queue, the ContactResolver
 // port) and S01.15's first-text spike: one test text from production to an approved phone, through the Twilio adapter.
 // S06.02 adds the sender (the dispatcher: the sender lease, the claim order, the hand-off point, the pace, the outcomes) and the
 // Messaging Service check. S06.06 adds the pause: the one switch an Admin sets to stop every text not yet handed to the provider.
-// E06's sender replaces the spike (and nothing else may call the SMS adapter then).
+// E06's sender replaces the spike (and nothing else may call the SMS adapter then); no other module imports an SMS adapter
+// (a dependency rule enforces it).
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
 import { drizzleDeliveryStore } from "./adapters/deliveryStore";
@@ -272,3 +274,18 @@ export {
 export { MessagingControlInconsistent, MessagingControlMissing } from "./application/messagingPause";
 export type { MessagingPause, PauseAudit, PauseOutcome, PauseRow, PauseStatus, PauseStore, PausedStatus, ResumeOutcome } from "./application/messagingPause";
 export { PAUSE_REASON_MAX_CHARS, cleanPauseReason, type CleanedReason, type PauseReasonProblem } from "./domain/pauseRules";
+
+// The renderer (S04.06).
+export {
+  NINE_ONE_ONE_FIRST_TYPES,
+  alertLink,
+  isNineOneOneFirst,
+  render,
+  renderAll,
+  type RenderedSms,
+  type SmsAttribution,
+  type SmsEntry,
+  type SmsTranslated,
+} from "./domain/smsBody";
+export { NORMALISATION_TABLE, SMS_MAX_BODY_LENGTH, countSms, normaliseSms, type SmsCount, type SmsEncoding } from "./domain/smsEncoding";
+export { estimateSmsCost, priceInThousandthsOfCent, type CostBasis, type SmsCostEstimate, type SmsCostInput } from "./domain/smsCost";
