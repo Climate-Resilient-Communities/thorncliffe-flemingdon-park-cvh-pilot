@@ -263,7 +263,8 @@
     "active": "Aktibong problema",
     "progress": "Inaayos pa",
     "resolved": "Naayos na",
-    "unknown": "Hindi alam"
+    "unknown": "Hindi alam",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "Isang bagay na gagawin ngayon",
     "ambassadorHome": "Ambassador: ang gusali ko",
     "ambassadorLine": "Mag-post ng update o gawin ang iyong pag-ikot para sa {building}",
-    "noBuildingLine": "Dito lumalabas ang mga alerto para sa inyong lugar. Idagdag ang iyong gusali para unang makita ang mga alerto nito."
+    "noBuildingLine": "Dito lumalabas ang mga alerto para sa inyong lugar. Idagdag ang iyong gusali para unang makita ang mga alerto nito.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "Text message sa simpleng telepono",

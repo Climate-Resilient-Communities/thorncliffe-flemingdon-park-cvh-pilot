@@ -263,7 +263,8 @@
     "active": "Ενεργό πρόβλημα",
     "progress": "Γίνονται εργασίες",
     "resolved": "Λύθηκε",
-    "unknown": "Άγνωστο"
+    "unknown": "Άγνωστο",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "Ένα πράγμα να κάνετε τώρα",
     "ambassadorHome": "Πρεσβευτής: το κτίριό μου",
     "ambassadorLine": "Δημοσιεύστε μια ενημέρωση ή κάντε τον γύρο σας για το {building}",
-    "noBuildingLine": "Εδώ εμφανίζονται ειδοποιήσεις για τη γειτονιά σας. Προσθέστε το κτίριό σας για να βλέπετε πρώτα τις δικές του."
+    "noBuildingLine": "Εδώ εμφανίζονται ειδοποιήσεις για τη γειτονιά σας. Προσθέστε το κτίριό σας για να βλέπετε πρώτα τις δικές του.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "Γραπτό μήνυμα σε απλό τηλέφωνο",

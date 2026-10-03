@@ -263,7 +263,8 @@
     "active": "நடப்புப் பிரச்சினை",
     "progress": "வேலை நடக்கிறது",
     "resolved": "தீர்ந்தது",
-    "unknown": "தெரியாது"
+    "unknown": "தெரியாது",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "இப்போது செய்ய வேண்டிய ஒன்று",
     "ambassadorHome": "தூதர்: என் கட்டடம்",
     "ambassadorLine": "{building}-க்கு ஒரு புதுப்பிப்பைப் பதிவிடுங்கள் அல்லது உங்கள் சுற்றைச் செய்யுங்கள்",
-    "noBuildingLine": "உங்கள் பகுதிக்கான எச்சரிக்கைகள் இங்கே தெரியும். உங்கள் கட்டடத்தின் எச்சரிக்கைகளை முதலில் பார்க்க, உங்கள் கட்டடத்தைச் சேருங்கள்."
+    "noBuildingLine": "உங்கள் பகுதிக்கான எச்சரிக்கைகள் இங்கே தெரியும். உங்கள் கட்டடத்தின் எச்சரிக்கைகளை முதலில் பார்க்க, உங்கள் கட்டடத்தைச் சேருங்கள்.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "சாதாரணத் தொலைபேசியில் குறுஞ்செய்தி",

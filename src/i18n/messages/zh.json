@@ -263,7 +263,8 @@
     "active": "当前问题",
     "progress": "正在处理",
     "resolved": "已解决",
-    "unknown": "不详"
+    "unknown": "不详",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "现在可以做的一件事",
     "ambassadorHome": "联络员：我的楼宇",
     "ambassadorLine": "为 {building} 发布更新或进行巡查",
-    "noBuildingLine": "您所在社区的警报会显示在这里。添加您的楼宇，优先查看它的警报。"
+    "noBuildingLine": "您所在社区的警报会显示在这里。添加您的楼宇，优先查看它的警报。",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "普通手机上的短信",
