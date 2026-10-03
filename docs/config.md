@@ -70,8 +70,10 @@ queued after its `send_by` is skipped at the hand-off point, not sent late. Logs
 One dispatcher sends every text, and nothing else calls the SMS provider. It runs two ways: `POST /api/jobs/dispatch`, which pg_cron calls
 every minute, and `kickDispatcher()` (`src/app/dispatch.ts`), which the approval calls right after its transaction commits. Both take the
 sender lease (one row, 60 seconds, renewed every 20) or exit without claiming, so they can overlap safely. A run sends for 50 seconds at most
-(its limit is 60 and it keeps a 10-second margin), at the shared pace of `SMS_SEGMENTS_PER_SECOND` (default 3), and the next run continues
-from where it stopped. Where the settings are: `SMS_MODE=log` (every environment except production) sends nothing, reads no Twilio
+(its limit is 60 and it keeps a 10-second margin, which covers the 8 seconds the adapter waits for Twilio's answer and the write of the
+outcome), at the shared pace of `SMS_SEGMENTS_PER_SECOND` (default 3), and the next run continues from where it stopped. The run an approval
+starts is shorter (20 seconds, so about 10 seconds of sending): it lives inside the approving request's function, after the response, so
+that route must export `maxDuration = 60`; pg_cron's next run sends whatever the kick did not. Where the settings are: `SMS_MODE=log` (every environment except production) sends nothing, reads no Twilio
 credential and makes each sendable row `skipped_env`; `live` needs `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` and `TWILIO_MESSAGING_SERVICE_SID`
 (all production only). Every request goes through the Messaging Service with `SmartEncoded=false` and the status callback
 `PUBLIC_BASE_URL/api/twilio/status?ref={callback_ref}`.

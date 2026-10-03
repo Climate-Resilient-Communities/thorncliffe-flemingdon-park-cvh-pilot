@@ -3,14 +3,16 @@
 // Service. Server only. This is the one place that reads Twilio's credentials for sending, and only where SMS_MODE is `live`: under
 // `log` the dispatcher gets no provider and nothing here touches `env.twilio`.
 //
-// Two ways in, one use case: `/api/jobs/dispatch` (pg_cron every minute, with the job secret) and `kickDispatcher()`, which the
-// approval use case (S04.07) calls right after its transaction commits. Both take the sender lease or exit without claiming, so
-// they can overlap safely.
+// Two ways in, one use case: `/api/jobs/dispatch` (pg_cron every minute, with the job secret, `maxDuration` 60 s, a run of up to 60 s) and
+// `kickDispatcher()`, which the approval use case (S04.07) calls right after its transaction ends, in `after()` of the approving
+// request, with a shorter run (KICK_RUN_LIMIT_MS) because it lives only as long as that request's function. Both take the sender
+// lease or exit without claiming, so they can overlap safely.
 import "server-only";
 import { after } from "next/server";
 import { alertStandingReader } from "@/modules/alerting";
 import {
   createDispatcher,
+  KICK_RUN_LIMIT_MS,
   createServiceCheck,
   stdoutMessagingLog,
   twilioMessageSubmitter,
@@ -89,6 +91,8 @@ export interface DispatcherParts {
   clock?: DispatcherClock;
   log?: MessagingLog;
   ops?: OpsRecorder;
+  /** The run's time limit (default 60 s, the job route's `maxDuration`); the kick passes KICK_RUN_LIMIT_MS. */
+  runLimitMs?: number;
 }
 
 /** The dispatcher on the real environment and database (every part can be replaced in a test). Throws SenderNotConfigured where live sending is not set up. */
@@ -103,6 +107,7 @@ export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
     clock: parts.clock ?? systemClock,
     config: dispatcherConfig(env),
     segmentsPerSecond: env.smsSegmentsPerSecond,
+    runLimitMs: parts.runLimitMs,
   });
 }
 
@@ -112,11 +117,24 @@ export function runDispatchJob(parts: DispatcherParts = {}): Promise<DispatchRep
 }
 
 /**
- * Starts the dispatcher right after an approval commits (AD-8). Call it once the approving transaction has committed, never inside it:
- * the run only sees rows that are committed. It never throws and never waits for the run; the run finishes after the response
- * (`after`), and an error is logged. Where no request is under way (a script or a test) the run just starts.
+ * The run an approval starts: a short one (KICK_RUN_LIMIT_MS, 20 s, so it sends for 10 s, about 30 segments). It lives inside the
+ * approving request's function, after the response, and a function that ends mid-run could be killed after a hand-off was saved and
+ * before the provider call or the outcome write, which leaves that text `unknown` (never sent again). pg_cron's next run, with the
+ * full minute, sends whatever the kick did not.
  */
-export function kickDispatcher(run: () => Promise<DispatchReport> = runDispatchJob, schedule: (task: () => Promise<void>) => void = scheduleAfterResponse): void {
+export function runKickJob(parts: DispatcherParts = {}): Promise<DispatchReport> {
+  return runDispatchJob({ ...parts, runLimitMs: KICK_RUN_LIMIT_MS });
+}
+
+/**
+ * Starts the dispatcher right after an approval's transaction ends (AD-8). Call it once the approving transaction has finished, never
+ * inside it: the run only sees rows that are saved. It never throws and never waits for the run; the run finishes after the response
+ * (`after`), and an error is logged. Where no request is under way (a script or a test) the run just starts.
+ *
+ * The run uses the approving request's function time: the route or action that calls this must export `maxDuration = 60` (S06.02's
+ * note for S04.07 in epics.md), and the run's own limit is KICK_RUN_LIMIT_MS, so the approval's work and the run fit inside it.
+ */
+export function kickDispatcher(run: () => Promise<DispatchReport> = runKickJob, schedule: (task: () => Promise<void>) => void = scheduleAfterResponse): void {
   schedule(async () => {
     try {
       await run();

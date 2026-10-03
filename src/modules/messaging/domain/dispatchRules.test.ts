@@ -1,9 +1,19 @@
 import { describe, expect, it } from "vitest";
+import { SAFETY_OVERRIDE_TYPES } from "../../../contracts/audience";
 import {
+  AUTH_FAILURE_LIMIT,
   BACKOFF_MS,
   CLAIM_RANKS,
+  FIRST_ALERT_TYPES,
+  KICK_RUN_LIMIT_MS,
+  LEASE_TTL_MS,
   MAX_ATTEMPTS,
+  OUTCOME_WRITE_ALLOWANCE_MS,
+  PROVIDER_TIMEOUT_MS,
+  RUN_LIMIT_MS,
+  RUN_MARGIN_MS,
   alertNotSendable,
+  authFailureStopsRun,
   capacitySegments,
   claimRank,
   classifyAnswer,
@@ -17,14 +27,13 @@ import {
 } from "./dispatchRules";
 import { RECIPIENT_KINDS, type RecipientKind } from "./deliveryRules";
 
-const NOW = new Date("2026-10-03T15:00:00Z");
 const SID = `SM${"0123456789abcdef".repeat(2)}`;
 
 describe("the claim order", () => {
-  it("puts fire and evacuation alert entries first, then on-call and other transactional texts, then building before neighbourhood alerts", () => {
+  it("puts fire alert entries (the fire type covers an evacuation) first, then on-call and other transactional texts, then building before neighbourhood alerts", () => {
     const rank = (row: Parameters<typeof claimRank>[0]) => claimRank(row);
-    expect(rank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["fire"], audienceScope: "neighbourhood" })).toBe(CLAIM_RANKS.fireOrEvacuationAlert);
-    expect(rank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["power", "evacuation"], audienceScope: "buildings" })).toBe(CLAIM_RANKS.fireOrEvacuationAlert);
+    expect(rank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["fire"], audienceScope: "neighbourhood" })).toBe(CLAIM_RANKS.fireAlert);
+    expect(rank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["power", "fire"], audienceScope: "buildings" })).toBe(CLAIM_RANKS.fireAlert);
     expect(rank({ kind: "transactional", recipientKind: "oncall" })).toBe(CLAIM_RANKS.oncall);
     expect(rank({ kind: "transactional", recipientKind: "subscriber" })).toBe(CLAIM_RANKS.transactional);
     expect(rank({ kind: "transactional", recipientKind: "inbound_reply" })).toBe(CLAIM_RANKS.transactional);
@@ -32,7 +41,7 @@ describe("the claim order", () => {
     expect(rank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["power"], audienceScope: "neighbourhood" })).toBe(CLAIM_RANKS.neighbourhoodAlert);
     expect(rank({ kind: "campaign", recipientKind: "subscriber" })).toBe(CLAIM_RANKS.campaign);
     const order = [
-      CLAIM_RANKS.fireOrEvacuationAlert,
+      CLAIM_RANKS.fireAlert,
       CLAIM_RANKS.oncall,
       CLAIM_RANKS.transactional,
       CLAIM_RANKS.buildingAlert,
@@ -40,6 +49,13 @@ describe("the claim order", () => {
       CLAIM_RANKS.campaign,
     ];
     expect([...order].sort((a, b) => a - b)).toEqual(order);
+  });
+
+  it("takes the types that rank first from the audience rules' safety types, so the two cannot drift apart, and knows no `evacuation` type of its own", () => {
+    expect([...FIRST_ALERT_TYPES]).toEqual([...SAFETY_OVERRIDE_TYPES]);
+    expect(FIRST_ALERT_TYPES).toContain("fire");
+    // `evacuation` is not a disruption type (the catalogue's `fire` is "Fire alarm or evacuation"): it would not rank first.
+    expect(claimRank({ kind: "alert", recipientKind: "subscriber", entryTypes: ["evacuation"], audienceScope: "buildings" })).toBe(CLAIM_RANKS.buildingAlert);
   });
 
   it("ranks an alert with no types or scope as a neighbourhood alert, never ahead of a fire", () => {
@@ -119,13 +135,26 @@ describe("what a provider's answer means", () => {
     expect(isAuthFailure({ kind: "rejected", httpStatus: 400, errorCode: 21211, message: null })).toBe(false);
     expect(isAuthFailure(accepted)).toBe(false);
   });
+
+  it("stops the run at the first 401 (the account's credentials are wrong), and at the third 403 in a row (a 403 can be about one text)", () => {
+    const refused = (httpStatus: number): SubmitAnswer => ({ kind: "rejected", httpStatus, errorCode: null, message: null });
+    expect(authFailureStopsRun(refused(401), 1)).toBe(true);
+    expect(authFailureStopsRun(refused(403), 1)).toBe(false);
+    expect(authFailureStopsRun(refused(403), AUTH_FAILURE_LIMIT - 1)).toBe(false);
+    expect(authFailureStopsRun(refused(403), AUTH_FAILURE_LIMIT)).toBe(true);
+    // Any other answer never stops it, however many came before.
+    expect(authFailureStopsRun(refused(400), 99)).toBe(false);
+    expect(authFailureStopsRun(refused(500), 99)).toBe(false);
+    expect(authFailureStopsRun(accepted, 99)).toBe(false);
+    expect(authFailureStopsRun({ kind: "no_answer", reason: "timeout" }, 99)).toBe(false);
+  });
 });
 
 describe("sendable at the hand-off point (alert)", () => {
   const standing = (over: Partial<AlertStanding> = {}): AlertStanding => ({
     entryStatus: "approved",
     entryKind: "ack",
-    validUntil: new Date(NOW.getTime() + 3_600_000),
+    validUntilPassed: false,
     threadOpen: true,
     isClosingEntry: false,
     isDrill: false,
@@ -133,38 +162,54 @@ describe("sendable at the hand-off point (alert)", () => {
   });
 
   it("sends an approved entry of an open thread, before its valid-until, to a subscriber", () => {
-    expect(alertNotSendable(standing(), "subscriber", NOW)).toBeNull();
+    expect(alertNotSendable(standing(), "subscriber")).toBeNull();
   });
 
   it("cancels what was withdrawn: an entry that is superseded, discarded, not approved or gone", () => {
-    expect(alertNotSendable(standing({ entryStatus: "superseded" }), "subscriber", NOW)).toEqual({ outcome: "cancelled", reason: "entry_superseded" });
-    expect(alertNotSendable(standing({ entryStatus: "discarded" }), "subscriber", NOW)).toEqual({ outcome: "cancelled", reason: "entry_discarded" });
-    expect(alertNotSendable(standing({ entryStatus: "pending_approval" }), "subscriber", NOW)).toEqual({ outcome: "cancelled", reason: "entry_not_approved" });
-    expect(alertNotSendable(null, "subscriber", NOW)).toEqual({ outcome: "cancelled", reason: "entry_missing" });
+    expect(alertNotSendable(standing({ entryStatus: "superseded" }), "subscriber")).toEqual({ outcome: "cancelled", reason: "entry_superseded" });
+    expect(alertNotSendable(standing({ entryStatus: "discarded" }), "subscriber")).toEqual({ outcome: "cancelled", reason: "entry_discarded" });
+    expect(alertNotSendable(standing({ entryStatus: "pending_approval" }), "subscriber")).toEqual({ outcome: "cancelled", reason: "entry_not_approved" });
+    expect(alertNotSendable(null, "subscriber")).toEqual({ outcome: "cancelled", reason: "entry_missing" });
   });
 
   it("cancels the texts of a closed thread, except the closing entry's", () => {
-    expect(alertNotSendable(standing({ threadOpen: false }), "subscriber", NOW)).toEqual({ outcome: "cancelled", reason: "thread_closed" });
-    expect(alertNotSendable(standing({ threadOpen: false, entryKind: "final", isClosingEntry: true }), "subscriber", NOW)).toBeNull();
-    expect(alertNotSendable(standing({ threadOpen: false, entryKind: "withdrawal", isClosingEntry: true }), "subscriber", NOW)).toBeNull();
+    expect(alertNotSendable(standing({ threadOpen: false }), "subscriber")).toEqual({ outcome: "cancelled", reason: "thread_closed" });
+    expect(alertNotSendable(standing({ threadOpen: false, entryKind: "final", isClosingEntry: true }), "subscriber")).toBeNull();
+    expect(alertNotSendable(standing({ threadOpen: false, entryKind: "withdrawal", isClosingEntry: true }), "subscriber")).toBeNull();
   });
 
   it("skips an ack, update or correction past its valid-until, but never checks a final or a withdrawal", () => {
-    const past = new Date(NOW.getTime() - 1);
+    // The database says whether it has passed (its own clock decides; the rule takes no instant).
     for (const entryKind of ["ack", "update", "correction"] as const) {
-      expect(alertNotSendable(standing({ entryKind, validUntil: past }), "subscriber", NOW), entryKind).toEqual({ outcome: "skipped", reason: "valid_until_passed" });
+      expect(alertNotSendable(standing({ entryKind, validUntilPassed: true }), "subscriber"), entryKind).toEqual({ outcome: "skipped", reason: "valid_until_passed" });
+      expect(alertNotSendable(standing({ entryKind, validUntilPassed: false }), "subscriber"), entryKind).toBeNull();
     }
-    // The instant itself is past: valid-until is exclusive.
-    expect(alertNotSendable(standing({ validUntil: NOW }), "subscriber", NOW)).toEqual({ outcome: "skipped", reason: "valid_until_passed" });
     for (const entryKind of ["final", "withdrawal"] as const) {
-      expect(alertNotSendable(standing({ entryKind, validUntil: past }), "subscriber", NOW), entryKind).toBeNull();
+      expect(alertNotSendable(standing({ entryKind, validUntilPassed: true }), "subscriber"), entryKind).toBeNull();
     }
   });
 
   it("sends a drill entry only to the drill roster, and a real entry never to it", () => {
-    expect(alertNotSendable(standing({ isDrill: true }), "roster", NOW)).toBeNull();
-    expect(alertNotSendable(standing({ isDrill: true }), "subscriber", NOW)).toEqual({ outcome: "skipped", reason: "drill_recipient_mismatch" });
-    expect(alertNotSendable(standing({ isDrill: false }), "roster", NOW)).toEqual({ outcome: "skipped", reason: "drill_recipient_mismatch" });
+    expect(alertNotSendable(standing({ isDrill: true }), "roster")).toBeNull();
+    expect(alertNotSendable(standing({ isDrill: true }), "subscriber")).toEqual({ outcome: "skipped", reason: "drill_recipient_mismatch" });
+    expect(alertNotSendable(standing({ isDrill: false }), "roster")).toEqual({ outcome: "skipped", reason: "drill_recipient_mismatch" });
+  });
+});
+
+describe("the run's time", () => {
+  it("keeps a margin that covers the provider's longest wait and the outcome's write, so the last send of a run ends inside the run's limit", () => {
+    // A send may start as late as the limit less the margin; it then waits at most PROVIDER_TIMEOUT_MS and writes its outcome.
+    expect(PROVIDER_TIMEOUT_MS + OUTCOME_WRITE_ALLOWANCE_MS).toBeLessThanOrEqual(RUN_MARGIN_MS);
+    expect(RUN_LIMIT_MS - RUN_MARGIN_MS + PROVIDER_TIMEOUT_MS + OUTCOME_WRITE_ALLOWANCE_MS).toBeLessThanOrEqual(RUN_LIMIT_MS);
+    // The lease outlives a run, so a holder that ends in time never loses it to the next.
+    expect(RUN_LIMIT_MS).toBeLessThanOrEqual(LEASE_TTL_MS);
+  });
+
+  it("gives the run an approval starts a shorter limit that still leaves it time to send, and ends well inside a 60 s function", () => {
+    expect(KICK_RUN_LIMIT_MS).toBeLessThan(RUN_LIMIT_MS);
+    // It sends for at least a few seconds (the first texts of an alert), and a function of 60 s has room for the approval and the run.
+    expect(KICK_RUN_LIMIT_MS - RUN_MARGIN_MS).toBeGreaterThanOrEqual(5_000);
+    expect(KICK_RUN_LIMIT_MS).toBeLessThanOrEqual(30_000);
   });
 });
 

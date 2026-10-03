@@ -67,6 +67,14 @@ export interface SweepResult {
   requeued: number;
   /** Rows that became `unknown`, by cause (each is recorded in ops_event by the same transaction). */
   unknown: { id: string; cause: UnknownCause }[];
+  /**
+   * Rows the sweep could not settle this time: the row's own transaction (the change and its ops_event) rolled back and the row is
+   * left as it was, to be tried again at the next run. One such row never stops the others, and never stops the run from sending.
+   * `error` is the error's name only.
+   */
+  failed: { id: string; cause: UnknownCause; error: string }[];
+  /** Rows that became `unknown` whose `afterUnknown` hook failed (its writes were undone, the row and its ops_event were kept). */
+  hookFailed: { id: string; error: string }[];
 }
 
 /** The state a row not sent at the hand-off point goes to (the transition table's `claimed` rows). */
@@ -90,17 +98,34 @@ export interface DispatchStore {
   isPaused(tx: DbTransaction): Promise<boolean>;
   /**
    * Rows claimed under a token that is no longer current and not handed off return to `queued` (no attempt counted): the new
-   * lease holder requeues what the old one claimed. Rows already handed off are left for their callback or the sweep.
+   * lease holder requeues what the old one claimed. Rows already handed off are left for their callback or the sweep. The statement
+   * names the lease (`token = mine and expires_at > now()`), so a worker whose lease was taken requeues nothing of the new holder's.
    */
-  requeueOrphans(db: Db, input: { token: string }): Promise<number>;
+  requeueOrphans(db: Db, input: { token: string; skewMs: number }): Promise<number>;
+  /** Whether any text a claim could take now is queued and due (while paused only those to on-call numbers): a holder whose queue ran dry asks it once after giving up the lease, so a kick that found the lease held is not lost. */
+  hasDueRows(db: Db, input: { skewMs: number }): Promise<boolean>;
   /**
    * Claims at most `maxRows` queued, due rows in claim order (`FOR UPDATE SKIP LOCKED`, re-checked still queued and due), and no
    * more than `maxSegments` segments of them, committing `claimed` with this worker and lease token in its own short transaction.
    * While the pause is on only the rows it does not apply to are claimed. A claim whose lease is not this token's claims nothing.
    */
   claim(db: Db, input: { token: string; workerId: string; skewMs: number; maxRows: number; maxSegments: number }): Promise<ClaimResult>;
-  /** The expiry rules, in one transaction: unhanded claims past 5 minutes return to `queued`; handed-off rows with no outcome for 5 minutes and `submitted` rows with no terminal status for 24 hours become `unknown`, each given to `recordUnknown` (with the row as it is now) in the same transaction. */
-  sweep(db: Db, input: { skewMs: number; recordUnknown(tx: DbTransaction, row: DeliveryView, cause: UnknownCause): Promise<void> }): Promise<SweepResult>;
+  /**
+   * The expiry rules: unhanded claims past 5 minutes return to `queued` (one statement); handed-off rows with no outcome for 5 minutes
+   * and `submitted` rows with no terminal status for 24 hours become `unknown`, at most `maxRows` of them, each in its own transaction
+   * with `recordUnknown` (the row as it is now), so a row that cannot be recorded rolls back alone and is reported in `failed`. Inside that
+   * transaction `afterUnknown` (when given) runs in a savepoint: if it throws, only its own writes are undone and the row stays `unknown`
+   * with its event (reported in `hookFailed`).
+   */
+  sweep(
+    db: Db,
+    input: {
+      skewMs: number;
+      maxRows: number;
+      recordUnknown(tx: DbTransaction, row: DeliveryView, cause: UnknownCause): Promise<void>;
+      afterUnknown?(tx: DbTransaction, row: DeliveryView, cause: UnknownCause): Promise<void>;
+    },
+  ): Promise<SweepResult>;
   /** Puts back the rows this token claimed and never handed off (a pause, the end of the run's time, a lost lease); no attempt counted. */
   releaseClaims(db: Db, input: { token: string }): Promise<number>;
   /** Locks the delivery row `FOR UPDATE` (the hand-off's first step); null when it does not exist. */
@@ -120,7 +145,8 @@ export interface DispatchStore {
  * reads about an alert delivery's entry and thread, inside the hand-off transaction. null when the entry does not exist.
  */
 export interface AlertStandingReader {
-  standingOf(tx: DbTransaction, entryId: string): Promise<AlertStanding | null>;
+  /** `skewMs` is DispatcherClock's: the reader asks the database whether the valid-until has passed, moved by it (0 in production). */
+  standingOf(tx: DbTransaction, entryId: string, skewMs: number): Promise<AlertStanding | null>;
 }
 
 /**
@@ -183,6 +209,9 @@ export interface DispatcherDeps {
   /**
    * S06.08's seam: called inside the transaction that records an outcome the first time it is written, for the outcomes the
    * spend estimate is counted at (`submitted` and `unknown`, never a requeue), so the estimate commits with the outcome or not at all.
+   * The sweep calls it with `unknown` for a text handed off with no outcome, in a savepoint of that row's own transaction: if it
+   * throws there, its writes are undone and the row still becomes `unknown` with its ops_event, so a failing hook never stops the
+   * queue and never hides an unknown text (the spend is then counted by the reconciliation, as an unmatched actual).
    */
   afterOutcome?: (tx: DbTransaction, delivery: DeliveryView, outcome: "submitted" | "unknown") => Promise<void>;
 }
@@ -202,8 +231,8 @@ export interface DispatchReport {
   stopped: number;
   /** Segments the provider was handed (what the pace counts). */
   segments: number;
-  /** What the sweep did at the start of the run. */
-  sweep: { requeued: number; unknown: number };
+  /** What the sweep did at the start of the run (`failed`: rows it could not settle and will try again; it never stops the run). */
+  sweep: { requeued: number; unknown: number; failed: number };
 }
 
 export interface Dispatcher {

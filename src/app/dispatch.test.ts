@@ -1,8 +1,27 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
-import { MESSAGING_OPS_EVENT_KINDS, UNKNOWN_CAUSES, type MessagingLog, type MessagingOpsEvent } from "@/modules/messaging";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { KICK_RUN_LIMIT_MS, MESSAGING_OPS_EVENT_KINDS, RUN_LIMIT_MS, UNKNOWN_CAUSES, type DispatcherDeps, type MessagingLog, type MessagingOpsEvent } from "@/modules/messaging";
 import { DELIVERY_UNKNOWN_CAUSES, OPS_EVENT_KINDS, toOpsEventRecord } from "@/modules/ops";
 import type { Db, DbExecutor } from "@/platform/db";
-import { SenderNotConfigured, appDispatcher, dispatcherConfig, kickDispatcher, opsRecorder, runMessagingServiceCheck, systemClock } from "./dispatch";
+import { SenderNotConfigured, appDispatcher, dispatcherConfig, kickDispatcher, opsRecorder, runDispatchJob, runKickJob, runMessagingServiceCheck, systemClock } from "./dispatch";
+
+// What the dispatcher is built with (its run limit among it) is observed here; the dispatcher itself is the real one, and runs against
+// no database (its lease statement fails at once, which these tests ignore: only the limit it was given matters).
+const built = vi.hoisted(() => ({ deps: [] as unknown[] }));
+vi.mock("@/modules/messaging", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@/modules/messaging")>();
+  return {
+    ...actual,
+    createDispatcher: (deps: DispatcherDeps) => {
+      built.deps.push(deps);
+      return actual.createDispatcher(deps);
+    },
+  };
+});
+vi.mock("@/platform/db", async (importOriginal) => ({ ...(await importOriginal<typeof import("@/platform/db")>()), getDb: () => ({}) }));
+vi.mock("@/platform/config/env", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@/platform/config/env")>()),
+  getEnv: () => ({ smsMode: "log", publicBaseUrl: "https://cvh.example", smsSegmentsPerSecond: 3 }),
+}));
 
 const ACCOUNT = `AC${"0".repeat(32)}`;
 const SERVICE = `MG${"1".repeat(32)}`;
@@ -66,7 +85,37 @@ describe("where the dispatcher sends", () => {
   });
 });
 
-describe("starting the dispatcher right after an approval commits", () => {
+describe("the run an approval starts", () => {
+  beforeEach(() => void (built.deps.length = 0));
+  const quietParts = () => ({
+    env: envThatMustNotReadTwilio("log"),
+    db: {} as Db,
+    resolver: { resolve: async () => ({ found: false as const, reason: "recipient_gone" as const }) },
+    alerts: { standingOf: async () => null },
+    ops: { record: async () => undefined },
+    log: { info: () => undefined, error: () => undefined },
+  });
+  const limitOf = (index: number) => (built.deps[index] as DispatcherDeps).runLimitMs;
+
+  it("is a short one, so it ends well inside the approving request's function, while the job route's run has the whole minute", async () => {
+    await runKickJob(quietParts()).catch(() => undefined);
+    await runDispatchJob(quietParts()).catch(() => undefined);
+    expect(limitOf(0)).toBe(KICK_RUN_LIMIT_MS);
+    // No limit given: the dispatcher's own (RUN_LIMIT_MS, the job route's maxDuration).
+    expect(limitOf(1)).toBeUndefined();
+    expect(KICK_RUN_LIMIT_MS).toBeLessThan(RUN_LIMIT_MS);
+  });
+
+  it("is what kickDispatcher starts when it is not given a run of its own", async () => {
+    vi.spyOn(console, "log").mockImplementation(() => undefined);
+    let task: (() => Promise<void>) | undefined;
+    kickDispatcher(undefined, (scheduled) => void (task = scheduled));
+    await task!();
+    expect(limitOf(0)).toBe(KICK_RUN_LIMIT_MS);
+  });
+});
+
+describe("starting the dispatcher right after an approval ends", () => {
   it("schedules the run after the response and returns at once, whatever the run does", async () => {
     let task: (() => Promise<void>) | undefined;
     const run = vi.fn(async () => ({}) as never);

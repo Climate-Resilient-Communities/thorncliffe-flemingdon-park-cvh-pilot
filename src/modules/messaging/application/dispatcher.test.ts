@@ -16,6 +16,7 @@ import {
   type MessageSubmitter,
   type MessagingOpsEvent,
   type StoppedState,
+  type SweepResult,
 } from "./dispatcherPorts";
 
 const NOW = Date.parse("2026-10-03T15:00:00Z");
@@ -61,9 +62,26 @@ function view(over: Partial<DeliveryView> = {}): DeliveryView {
 /** An in-memory outbox that behaves as the real store does for one run: it claims in the order given and records every change. */
 function memoryStore(
   queued: DeliveryView[],
-  flags: { leaseFree?: boolean; paused?: boolean; renewalKept?: boolean; leaseHeldAtHandOff?: boolean; claimLeaseLost?: boolean; sweepUnknown?: { row: DeliveryView; cause: UnknownCause }[] } = {},
+  flags: {
+    leaseFree?: boolean;
+    paused?: boolean;
+    renewalKept?: boolean;
+    leaseHeldAtHandOff?: boolean;
+    claimLeaseLost?: boolean;
+    sweepUnknown?: { row: DeliveryView; cause: UnknownCause }[];
+    /** The sweep's `recordUnknown` fails for these rows (their transaction rolls back: reported in `failed`), and its `afterUnknown` for these (reported in `hookFailed`). */
+    sweepRecordFails?: Set<string>;
+    sweepHookFails?: Set<string>;
+    sweepThrows?: boolean;
+    requeueOrphansThrows?: boolean;
+    /** Rows that appear when the first pass gives the lease up (an approval that lands while the holder makes its last, empty claim). */
+    arriveAfterFirstRelease?: () => DeliveryView[];
+    dueCheckThrows?: boolean;
+  } = {},
 ) {
   const rows = new Map(queued.map((row) => [row.id, { ...row }]));
+  let releases = 0;
+  let requeues = 0;
   const calls: string[] = [];
   const outcomes: { id: string; kind: string }[] = [];
   const store: DispatchStore = {
@@ -77,6 +95,8 @@ function memoryStore(
     },
     async releaseLease() {
       calls.push("releaseLease");
+      if (releases === 0 && flags.arriveAfterFirstRelease) for (const row of flags.arriveAfterFirstRelease()) rows.set(row.id, { ...row });
+      releases += 1;
     },
     async leaseHeld() {
       return flags.leaseHeldAtHandOff !== false;
@@ -85,7 +105,16 @@ function memoryStore(
       return flags.paused === true;
     },
     async requeueOrphans() {
+      calls.push("requeueOrphans");
+      requeues += 1;
+      // Only the upkeep's own requeue (the first) fails: the one before each claim is part of the loop.
+      if (flags.requeueOrphansThrows && requeues === 1) throw new Error("the database is down for +14165550123");
       return 0;
+    },
+    async hasDueRows() {
+      calls.push("hasDueRows");
+      if (flags.dueCheckThrows) throw new Error("the database is down");
+      return [...rows.values()].some((row) => row.state === "queued");
     },
     async claim(_db, input) {
       calls.push("claim");
@@ -96,9 +125,26 @@ function memoryStore(
     },
     async sweep(_db, input) {
       calls.push("sweep");
-      const found = flags.sweepUnknown ?? [];
-      for (const { row, cause } of found) await input.recordUnknown(tx, row, cause);
-      return { requeued: 0, unknown: found.map(({ row, cause }) => ({ id: row.id, cause })) };
+      if (flags.sweepThrows) throw new Error("the sweep failed for +14165550123");
+      // As the real store does: each row in a transaction of its own (a failure of its event leaves it for the next run), the hook in a savepoint.
+      const result: SweepResult = { requeued: 0, unknown: [], failed: [], hookFailed: [] };
+      for (const { row, cause } of flags.sweepUnknown ?? []) {
+        try {
+          if (flags.sweepRecordFails?.has(row.id)) throw new Error("ops_event is unavailable");
+          await input.recordUnknown(tx, row, cause);
+        } catch (error) {
+          result.failed.push({ id: row.id, cause, error: (error as Error).name });
+          continue;
+        }
+        result.unknown.push({ id: row.id, cause });
+        try {
+          if (flags.sweepHookFails?.has(row.id)) throw new Error("the spend_event insert failed");
+          await input.afterUnknown?.(tx, row, cause);
+        } catch (error) {
+          result.hookFailed.push({ id: row.id, error: (error as Error).name });
+        }
+      }
+      return result;
     },
     async releaseClaims() {
       calls.push("releaseClaims");
@@ -156,7 +202,7 @@ function clockOf(start = NOW): DispatcherClock & { sleeps: number[]; at(): numbe
   };
 }
 
-const standing = (over: Partial<AlertStanding> = {}): AlertStanding => ({ entryStatus: "approved", entryKind: "ack", validUntil: new Date(NOW + 3_600_000), threadOpen: true, isClosingEntry: false, isDrill: false, ...over });
+const standing = (over: Partial<AlertStanding> = {}): AlertStanding => ({ entryStatus: "approved", entryKind: "ack", validUntilPassed: false, threadOpen: true, isClosingEntry: false, isDrill: false, ...over });
 
 function setup(queued: DeliveryView[], flags: Parameters<typeof memoryStore>[1] = {}, over: Partial<DispatcherDeps> = {}) {
   const memory = memoryStore(queued, flags);
@@ -252,6 +298,151 @@ describe("a run's order", () => {
   });
 });
 
+describe("the upkeep before sending never stops the sending", () => {
+  const stale = (n: number) => view({ id: `01900000-0000-7000-8000-0000000d01${n}0`, state: "claimed", handedOffAt: new Date(NOW) });
+
+  it("goes on to claim and send when the sweep throws, logging the error's name only", async () => {
+    const { dispatcher, sent, lines } = setup([view()], { sweepThrows: true });
+    const report = await dispatcher.run();
+    expect(report).toMatchObject({ status: "ok", claimed: 1, submitted: 1 });
+    expect(sent).toHaveLength(1);
+    const failed = lines.filter((line) => line.evt === "dispatch.sweep_failed");
+    expect(failed).toEqual([{ level: "error", evt: "dispatch.sweep_failed", fields: { step: "sweep", error: "Error" } }]);
+    // No message of the error (it could quote a number) reaches the log.
+    expect(JSON.stringify(lines)).not.toContain("5550123");
+  });
+
+  it("goes on to sweep, claim and send when the first requeue of an old holder's rows throws", async () => {
+    const { dispatcher, sent, lines, calls } = setup([view()], { requeueOrphansThrows: true });
+    const report = await dispatcher.run();
+    expect(report).toMatchObject({ status: "ok", submitted: 1 });
+    expect(sent).toHaveLength(1);
+    expect(calls.indexOf("sweep")).toBeGreaterThan(calls.indexOf("requeueOrphans"));
+    expect(lines.filter((line) => line.evt === "dispatch.sweep_failed")).toEqual([{ level: "error", evt: "dispatch.sweep_failed", fields: { step: "requeue_orphans", error: "Error" } }]);
+    expect(JSON.stringify(lines)).not.toContain("5550123");
+  });
+
+  it("reports the rows the sweep could not settle and the spend hooks that failed, by id and error name, and still sends", async () => {
+    const [a, b, c] = [1, 2, 3].map(stale);
+    const seen: string[] = [];
+    const { dispatcher, sent, lines, events } = setup([view()], { sweepUnknown: [{ row: a, cause: "no_outcome_after_hand_off" }, { row: b, cause: "no_outcome_after_hand_off" }, { row: c, cause: "no_outcome_after_hand_off" }], sweepRecordFails: new Set([a.id]), sweepHookFails: new Set([b.id]) }, {
+      afterOutcome: async (_tx, delivery, outcome) => void seen.push(`${outcome}:${delivery.id}`),
+    });
+    const report = await dispatcher.run();
+    expect(report.sweep).toEqual({ requeued: 0, unknown: 2, failed: 1 });
+    expect(report.submitted).toBe(1);
+    expect(sent).toHaveLength(1);
+    expect(lines.find((line) => line.evt === "dispatch.sweep_row_failed")).toEqual({ level: "error", evt: "dispatch.sweep_row_failed", fields: { delivery_id: a.id, cause: "no_outcome_after_hand_off", error: "Error" } });
+    expect(lines.find((line) => line.evt === "dispatch.sweep_spend_hook_failed")?.fields).toEqual({ delivery_id: b.id, error: "Error" });
+    // The event of a row that could not be recorded is not written (its transaction rolled back); the other two are.
+    expect(events.map((event) => event.kind === "delivery.unknown" && event.deliveryId)).toEqual([b.id, c.id]);
+  });
+
+  it("gives the store no spend hook when none is wired, and a hook that only counts a text handed off with no outcome", async () => {
+    const withoutHook = memoryStore([]);
+    let given: unknown = "unset";
+    const original = withoutHook.store.sweep;
+    withoutHook.store.sweep = async (db2, input) => ((given = input.afterUnknown), original(db2, input));
+    const base = { db, store: withoutHook.store, resolver: { resolve: async () => ({ found: false as const, reason: "recipient_gone" as const }) }, alerts: { standingOf: async () => null }, ops: { record: async () => undefined }, log: { info: () => undefined, error: () => undefined }, clock: clockOf(), config: { mode: "log" as const }, workerId: () => "w" };
+    await createDispatcher(base).run();
+    expect(given).toBeUndefined();
+
+    const seen: string[] = [];
+    await createDispatcher({ ...base, afterOutcome: async (_tx, delivery, outcome) => void seen.push(`${outcome}:${delivery.id}`) }).run();
+    const hook = given as NonNullable<Parameters<DispatchStore["sweep"]>[1]["afterUnknown"]>;
+    await hook(tx, stale(1), "no_outcome_after_hand_off");
+    await hook(tx, stale(2), "no_terminal_status");
+    expect(seen).toEqual([`unknown:${stale(1).id}`]);
+  });
+});
+
+describe("the holder looks once more after giving up the lease", () => {
+  const late = () => view({ id: "01900000-0000-7000-8000-0000000d0777", callbackRef: "01900000-0000-7000-8000-0000000c0777" });
+
+  it("takes the lease again and sends what arrived while it made its last, empty claim (the kick that found the lease held exited)", async () => {
+    const { dispatcher, sent, calls, rows, lines } = setup([], { arriveAfterFirstRelease: () => [late()] });
+    const report = await dispatcher.run();
+    expect(report).toMatchObject({ status: "ok", claimed: 1, submitted: 1 });
+    expect(sent).toHaveLength(1);
+    expect(calls.filter((call) => call === "acquireLease")).toHaveLength(2);
+    expect(calls.filter((call) => call === "releaseLease")).toHaveLength(2);
+    // The upkeep ran once, in the first pass.
+    expect(calls.filter((call) => call === "sweep")).toHaveLength(1);
+    expect(rows.get(late().id)?.state).toBe("submitted");
+    expect(lines.filter((line) => line.evt === "dispatch.run_finished")).toHaveLength(1);
+  });
+
+  it("looks only once: rows that keep arriving wait for the next run, and a row it cannot hand off is not tried again and again", async () => {
+    let arrived = 0;
+    const { dispatcher, calls } = setup([], { arriveAfterFirstRelease: () => (arrived += 1, [late()]) }, { campaigns: undefined });
+    await dispatcher.run();
+    expect(arrived).toBe(1);
+    expect(calls.filter((call) => call === "acquireLease").length).toBeLessThanOrEqual(2);
+    expect(calls.filter((call) => call === "hasDueRows")).toHaveLength(1);
+  });
+
+  it("does not look when nothing is due, when its time is up, or when the lease was lost", async () => {
+    const quiet = setup([view()]);
+    await quiet.dispatcher.run();
+    expect(quiet.calls.filter((call) => call === "acquireLease")).toHaveLength(1);
+
+    const lost = setup([view()], { renewalKept: false }, { leaseRenewAfterMs: 0 });
+    await lost.dispatcher.run();
+    expect(lost.calls).not.toContain("hasDueRows");
+
+    const over = setup([view()], {}, { runLimitMs: 10_000, marginMs: 10_000 });
+    await over.dispatcher.run();
+    expect(over.calls).not.toContain("hasDueRows");
+  });
+
+  it("does not look after a pass in which a hand-off failed: that row goes back to the queue and is not tried again and again", async () => {
+    const campaign = view({ kind: "campaign", campaignId: "01900000-0000-7000-8000-0000000b0001", purpose: "reconsent", createdByModule: "subscriptions", idempotencyKey: "campaign:c:reconsent:r" });
+    const { dispatcher, calls, lines, rows } = setup([campaign]);
+    await dispatcher.run();
+    expect(lines.filter((line) => line.evt === "dispatch.hand_off_failed")).toHaveLength(1);
+    expect(calls.filter((call) => call === "acquireLease")).toHaveLength(1);
+    expect(calls).not.toContain("hasDueRows");
+    expect([...rows.values()][0].state).toBe("queued");
+  });
+
+  it("does not look when another dispatcher holds the lease at the start (the first pass said lease_held)", async () => {
+    const { dispatcher, calls } = setup([view()], { leaseFree: false });
+    expect((await dispatcher.run()).status).toBe("lease_held");
+    expect(calls).toEqual(["acquireLease"]);
+  });
+
+  it("keeps the run's status when another holder takes the lease first, and survives a failed look", async () => {
+    const { dispatcher, calls, lines } = setup([], { arriveAfterFirstRelease: () => [late()], dueCheckThrows: true });
+    const report = await dispatcher.run();
+    expect(report.status).toBe("ok");
+    expect(calls.filter((call) => call === "acquireLease")).toHaveLength(1);
+    expect(lines.some((line) => line.evt === "dispatch.due_check_failed")).toBe(true);
+  });
+});
+
+describe("a text that must not be sent after a 401", () => {
+  const refused = (httpStatus: number): MessageSubmitter => ({ submit: async () => ({ kind: "rejected", httpStatus, errorCode: 20003, message: "Authenticate" }) });
+  const rowsOf = (count: number) => Array.from({ length: count }, (_, n) => view({ id: `01900000-0000-7000-8000-0000000d02${n.toString().padStart(2, "0")}`, callbackRef: `01900000-0000-7000-8000-0000000c02${n.toString().padStart(2, "0")}` }));
+  const config = (submitter: MessageSubmitter) => ({ mode: "live" as const, submitter, messagingServiceSid: `MG${"1".repeat(32)}`, publicBaseUrl: "https://cvh.example" });
+
+  it("stops the run at the first 401: one text is refused, and the rest are put back untouched", async () => {
+    const { dispatcher, rows, outcomes, events } = setup(rowsOf(6), {}, { config: config(refused(401)), batchRows: 6 });
+    const report = await dispatcher.run();
+    expect(report.status).toBe("provider_auth_failed");
+    expect(outcomes).toHaveLength(1);
+    expect([...rows.values()].filter((row) => row.state === "queued")).toHaveLength(5);
+    expect(events.some((event) => event.kind === "dispatch.provider_auth_failed")).toBe(true);
+  });
+
+  it("stops at the third 403 in a row, not before", async () => {
+    const { dispatcher, outcomes, rows } = setup(rowsOf(6), {}, { config: config(refused(403)), batchRows: 6 });
+    const report = await dispatcher.run();
+    expect(report.status).toBe("provider_auth_failed");
+    expect(outcomes).toHaveLength(3);
+    expect([...rows.values()].filter((row) => row.state === "queued")).toHaveLength(3);
+  });
+});
+
 describe("a campaign text at the hand-off point", () => {
   const campaignRow = () => view({ kind: "campaign", campaignId: "01900000-0000-7000-8000-0000000b0001", purpose: "reconsent", createdByModule: "subscriptions", idempotencyKey: "campaign:c:reconsent:r" });
 
@@ -343,7 +534,7 @@ describe("the spend seam (S06.08)", () => {
       afterOutcome: async (_tx, delivery, outcome) => void seen.push(`${outcome}:${delivery.id}`),
     });
     const report = await dispatcher.run();
-    expect(report.sweep).toEqual({ requeued: 0, unknown: 2 });
+    expect(report.sweep).toEqual({ requeued: 0, unknown: 2, failed: 0 });
     // Both are recorded in ops_event; only the first is counted (the second was counted when it was submitted).
     expect(events.map((event) => event.kind === "delivery.unknown" && event.deliveryId)).toEqual([handedOff.id, submitted.id]);
     expect(seen).toEqual([`unknown:${handedOff.id}`]);

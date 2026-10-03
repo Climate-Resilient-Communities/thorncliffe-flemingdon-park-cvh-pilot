@@ -1,6 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { and, asc, eq, gt, inArray, isNotNull, isNull, lt, lte, ne, sql, type SQL } from "drizzle-orm";
-import type { DeliveryView } from "../application/deliveryPorts";
+import { and, asc, eq, exists, gt, inArray, isNotNull, isNull, lt, lte, ne, or, sql, type SQL } from "drizzle-orm";
 import type { DispatchStore, LockedDelivery, SweepResult } from "../application/dispatcherPorts";
 import type { UnknownCause } from "../domain/dispatchRules";
 import { CLAIM_EXPIRY_MS, MAX_ATTEMPTS, SUBMITTED_EXPIRY_MS, takeWithinSegments } from "../domain/dispatchRules";
@@ -15,6 +14,9 @@ import { delivery, dispatcherLease, messagingControl } from "./schema";
 const dbNow = (skewMs: number): SQL => (skewMs === 0 ? sql`now()` : sql`(now() + ${Math.trunc(skewMs)}::double precision * interval '1 millisecond')`);
 const ahead = (skewMs: number, ms: number): SQL => sql`(${dbNow(skewMs)} + ${Math.trunc(ms)}::double precision * interval '1 millisecond')`;
 const behind = (skewMs: number, ms: number): SQL => sql`(${dbNow(skewMs)} - ${Math.trunc(ms)}::double precision * interval '1 millisecond')`;
+
+/** An error's name only: its message could quote data, and nothing here may keep it. */
+const nameOf = (error: unknown) => (error instanceof Error ? error.name : "NonError");
 
 /** The row a run's token still holds: claimed by it and not yet handed off (what a stop before the hand-off may change). */
 const claimedUnhanded = (id: string, token: string) =>
@@ -80,15 +82,33 @@ export const drizzleDispatchStore: DispatchStore = {
 
   isPaused,
 
-  async requeueOrphans(db, { token }) {
+  async requeueOrphans(db, { token, skewMs }) {
     // A claimed row of another token and no hand-off: its holder lost the lease, so nothing will hand it off. (A handed-off row
-    // is left: its callback, or the 5-minute sweep, settles it, and it is never queued again.)
+    // is left: its callback, or the 5-minute sweep, settles it, and it is never queued again.) The statement names this token's
+    // lease, as every claim and hand-off does: a worker whose lease was taken is not the holder and puts nothing back.
+    const holdsLease = exists(
+      db
+        .select({ one: sql`1` })
+        .from(dispatcherLease)
+        .where(and(eq(dispatcherLease.id, 1), eq(dispatcherLease.token, token), gt(dispatcherLease.expiresAt, dbNow(skewMs)))),
+    );
     const back = await db
       .update(delivery)
       .set({ state: "queued" })
-      .where(and(eq(delivery.state, "claimed"), isNull(delivery.handedOffAt), ne(delivery.claimToken, token)))
+      .where(and(eq(delivery.state, "claimed"), isNull(delivery.handedOffAt), ne(delivery.claimToken, token), holdsLease))
       .returning({ id: delivery.id });
     return back.length;
+  },
+
+  async hasDueRows(db, { skewMs }) {
+    // The rows a claim could take now: while paused only those to on-call numbers (a missing control row counts as paused, as in `isPaused`).
+    const notPaused = sql`not coalesce((select ${messagingControl.paused} from ${messagingControl} where ${messagingControl.id} = 1), true)`;
+    const [due] = await db
+      .select({ id: delivery.id })
+      .from(delivery)
+      .where(and(eq(delivery.state, "queued"), lte(delivery.dueAt, dbNow(skewMs)), or(eq(delivery.recipientKind, "oncall"), notPaused)))
+      .limit(1);
+    return due !== undefined;
   },
 
   async claim(db, { token, workerId, skewMs, maxRows, maxSegments }) {
@@ -115,32 +135,58 @@ export const drizzleDispatchStore: DispatchStore = {
     });
   },
 
-  async sweep(db, { skewMs, recordUnknown }) {
-    return db.transaction(async (tx): Promise<SweepResult> => {
-      const requeued = await tx
-        .update(delivery)
-        .set({ state: "queued" })
-        .where(and(eq(delivery.state, "claimed"), isNull(delivery.handedOffAt), lt(delivery.claimedAt, behind(skewMs, CLAIM_EXPIRY_MS))))
-        .returning({ id: delivery.id });
-      // Handed off and no outcome in 5 minutes: the text may or may not have gone, so it is `unknown`, never queued again.
-      const noOutcome = await tx
-        .update(delivery)
-        .set({ state: "unknown" })
-        .where(and(eq(delivery.state, "claimed"), isNotNull(delivery.handedOffAt), lt(delivery.handedOffAt, behind(skewMs, CLAIM_EXPIRY_MS))))
-        .returning();
-      const noStatus = await tx
-        .update(delivery)
-        .set({ state: "unknown" })
-        .where(and(eq(delivery.state, "submitted"), lt(delivery.submittedAt, behind(skewMs, SUBMITTED_EXPIRY_MS))))
-        .returning();
-      const unknown: { row: DeliveryView; cause: UnknownCause }[] = [
-        ...noOutcome.map((row) => ({ row: viewOf(row), cause: "no_outcome_after_hand_off" as const })),
-        ...noStatus.map((row) => ({ row: viewOf(row), cause: "no_terminal_status" as const })),
-      ];
-      // Each `unknown` is recorded in the transaction that made it, so none goes unseen.
-      for (const { row, cause } of unknown) await recordUnknown(tx, row, cause);
-      return { requeued: requeued.length, unknown: unknown.map(({ row, cause }) => ({ id: row.id, cause })) };
-    });
+  async sweep(db, { skewMs, maxRows, recordUnknown, afterUnknown }) {
+    // Claimed for 5 minutes and never handed off: nothing can have been sent, so it goes back to the queue (one statement, no hook).
+    const requeued = await db
+      .update(delivery)
+      .set({ state: "queued" })
+      .where(and(eq(delivery.state, "claimed"), isNull(delivery.handedOffAt), lt(delivery.claimedAt, behind(skewMs, CLAIM_EXPIRY_MS))))
+      .returning({ id: delivery.id });
+
+    // Handed off and no outcome in 5 minutes: the text may or may not have gone, so it is `unknown`, never queued again. Submitted and
+    // no final status in 24 hours: `unknown` too. Each such row is settled in a transaction of its own (the change and its event), so
+    // a row that cannot be settled rolls back alone and never holds up the others, or the sending that follows the sweep.
+    const noOutcome = and(eq(delivery.state, "claimed"), isNotNull(delivery.handedOffAt), lt(delivery.handedOffAt, behind(skewMs, CLAIM_EXPIRY_MS)));
+    const noStatus = and(eq(delivery.state, "submitted"), lt(delivery.submittedAt, behind(skewMs, SUBMITTED_EXPIRY_MS)));
+    const expired = await db
+      .select({ id: delivery.id, state: delivery.state })
+      .from(delivery)
+      .where(or(noOutcome, noStatus))
+      .orderBy(asc(delivery.createdAt), asc(delivery.id))
+      .limit(maxRows);
+
+    const result: SweepResult = { requeued: requeued.length, unknown: [], failed: [], hookFailed: [] };
+    for (const candidate of expired) {
+      const cause: UnknownCause = candidate.state === "claimed" ? "no_outcome_after_hand_off" : "no_terminal_status";
+      try {
+        const settled = await db.transaction(async (tx): Promise<{ hookError: string | null } | null> => {
+          // The same condition again, on the row as it is now: a callback or the run's own outcome write may have moved it since.
+          const [row] = await tx
+            .update(delivery)
+            .set({ state: "unknown" })
+            .where(and(eq(delivery.id, candidate.id), cause === "no_outcome_after_hand_off" ? noOutcome : noStatus))
+            .returning();
+          if (!row) return null;
+          const view = viewOf(row);
+          // The event is written in the transaction that made the row `unknown`, so none goes unseen: if it cannot be written, the row stays as it was.
+          await recordUnknown(tx, view, cause);
+          if (!afterUnknown) return { hookError: null };
+          // The hook (the spend estimate, S06.08) runs in a savepoint: if it fails only its own writes are undone, and the row stays `unknown` with its event.
+          try {
+            await tx.transaction((savepoint) => afterUnknown(savepoint, view, cause));
+            return { hookError: null };
+          } catch (error) {
+            return { hookError: nameOf(error) };
+          }
+        });
+        if (settled === null) continue;
+        result.unknown.push({ id: candidate.id, cause });
+        if (settled.hookError !== null) result.hookFailed.push({ id: candidate.id, error: settled.hookError });
+      } catch (error) {
+        result.failed.push({ id: candidate.id, cause, error: nameOf(error) });
+      }
+    }
+    return result;
   },
 
   async releaseClaims(db, { token }) {

@@ -2,7 +2,8 @@
 //  1. takes the sender lease (a conditional update, only when the previous lease expired) or exits without claiming anything;
 //  2. returns the rows an earlier lease holder claimed and never handed off, and sweeps the expired claims (5 minutes without a
 //     hand-off: back to `queued`; handed off with no outcome for 5 minutes, or `submitted` for 24 hours: `unknown`, recorded
-//     in ops_event, never sent again);
+//     in ops_event, never sent again). Each `unknown` is settled in a transaction of its own, and a failure of the upkeep is
+//     logged and never stops the sending that follows: a row that cannot be settled is left for the next run;
 //  3. claims a few rows at a time in claim order (`FOR UPDATE SKIP LOCKED`, `claimed` with the worker and the lease token in its
 //     own short transaction), never more than it can send at the pace before its time limit less a margin;
 //  4. for each row passes the hand-off point: ONE short transaction that locks the delivery row `FOR UPDATE`, checks this
@@ -15,6 +16,8 @@
 //     provider's id; not accepted (HTTP 429 with an error body, or a connection that failed before the request was sent) back to
 //     `queued` with backoff, at most 3 times and then `failed`; a permanent error `failed`; anything else `unknown`. The outcome
 //     is written only while the row is still `claimed` by this token, so a late response never overwrites a callback's state.
+//  6. gives the lease up and looks once more: a kick that found the lease held (while this run made its last, empty claim) exited
+//     without claiming, so if anything is due the holder takes the lease again for one more pass.
 //
 // The guarantee is no automatic duplicate submission, not exactly-once delivery: a text is handed to the provider at most once,
 // and a text whose outcome is unclear is `unknown` and never sent again. Under `SMS_MODE=log` nothing is sent and no credential
@@ -22,14 +25,15 @@
 // to the provider call; no log line, outcome or error here ever holds it.
 import { randomBytes } from "node:crypto";
 import {
-  AUTH_FAILURE_LIMIT,
   CLAIM_BATCH_ROWS,
   DEFAULT_SEGMENTS_PER_SECOND,
   LEASE_RENEW_AFTER_MS,
   LEASE_TTL_MS,
   RUN_LIMIT_MS,
   RUN_MARGIN_MS,
+  SWEEP_BATCH_ROWS,
   alertNotSendable,
+  authFailureStopsRun,
   capacitySegments,
   classifyAnswer,
   createPaceLimiter,
@@ -62,7 +66,7 @@ const emptyReport = (): DispatchReport => ({
   skippedEnv: 0,
   stopped: 0,
   segments: 0,
-  sweep: { requeued: 0, unknown: 0 },
+  sweep: { requeued: 0, unknown: 0, failed: 0 },
 });
 
 /** An error's name only: its message could quote data, and a log line must not. */
@@ -84,17 +88,56 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
     const sendUntil = startedAt + runLimitMs - marginMs;
     const workerId = newWorkerId();
 
+    const idle = await pass(report, { workerId, sendUntil, first: true });
+    // A kick that arrived while that pass still held the lease (on its last, empty claim) exited without claiming, and the rows it was
+    // started for would wait for the next pg_cron run. So once the lease is given up, a holder whose queue ran dry looks once more, and
+    // takes the lease again if anything is due. (One more pass at most, and none after a pass that ended for another reason: a pause,
+    // the end of its time, a lost lease, refused credentials, or a row it could not hand off, which is not tried again and again.)
+    if (idle && report.status === "ok" && clock.now().getTime() < sendUntil) {
+      const due = await store.hasDueRows(db, { skewMs: clock.skewMs() }).catch((error: unknown) => {
+        log.error("dispatch.due_check_failed", { error: nameOf(error) });
+        return false;
+      });
+      if (due) await pass(report, { workerId, sendUntil, first: false });
+    }
+    if (report.status !== "lease_held") {
+      log.info("dispatch.run_finished", {
+        worker: workerId,
+        status: report.status,
+        claimed: report.claimed,
+        handed_off: report.handedOff,
+        submitted: report.submitted,
+        requeued: report.requeued,
+        failed: report.failed,
+        unknown: report.unknown,
+        skipped_env: report.skippedEnv,
+        stopped: report.stopped,
+        segments: report.segments,
+      });
+    }
+    return report;
+  }
+
+  /**
+   * One holding of the lease, from taking it to giving it up. The first pass of a run also sweeps; the report is the run's. Returns
+   * whether the pass ended because its claim found the queue empty (and no hand-off failed), the one end after which another look is worth it.
+   */
+  async function pass(report: DispatchReport, { workerId, sendUntil, first }: { workerId: string; sendUntil: number; first: boolean }): Promise<boolean> {
     const lease = await store.acquireLease(db, { holder: workerId, ttlMs: LEASE_TTL_MS, skewMs: clock.skewMs() });
     if (!lease) {
-      // Another dispatcher sends: this run claims nothing.
-      report.status = "lease_held";
-      log.info("dispatch.lease_held", { worker: workerId });
-      return report;
+      // Another dispatcher sends: this run claims nothing. (After a first pass, another holder has taken over: it sends what is due.)
+      if (first) {
+        report.status = "lease_held";
+        log.info("dispatch.lease_held", { worker: workerId });
+      }
+      return false;
     }
     const { token } = lease;
     const limiter = createPaceLimiter(rate, clock.now().getTime(), lease.paceBarrierMs);
     let renewedAt = clock.now().getTime();
     let authFailures = 0;
+    let handOffFailures = 0;
+    let queueRanDry = false;
 
     /** Renews the lease when it is due; false means it was lost and the run must stop at once, without calling the provider. */
     async function renewIfDue(): Promise<boolean> {
@@ -126,8 +169,9 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
         if (locked.sendByPassed) return stop("skipped", "send_by_passed");
         // 5. The entry and its thread (alerts), or the campaign.
         if (current.kind === "alert") {
-          const standing = await alerts.standingOf(tx, current.entryId ?? "");
-          const refusal = alertNotSendable(standing, current.recipientKind, clock.now());
+          // The valid-until is judged by the database's clock, as the lease, the send-by and every claim's age are (skew: see DispatcherClock).
+          const standing = await alerts.standingOf(tx, current.entryId ?? "", skewMs);
+          const refusal = alertNotSendable(standing, current.recipientKind);
           if (refusal) return stop(refusal.outcome, refusal.reason);
         } else if (current.kind === "campaign") {
           if (!deps.campaigns) throw new CampaignReaderNotWired();
@@ -187,6 +231,7 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
       } catch (error) {
         // The transaction rolled back: the row is still this token's claim, not handed off, and goes back at the end of the batch.
         log.error("dispatch.hand_off_failed", { delivery_id: row.id, error: nameOf(error) });
+        handOffFailures += 1;
         return "next";
       }
       if (handOff.kind === "lease_lost") {
@@ -234,8 +279,8 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
         log.error("dispatch.outcome_unrecorded", { delivery_id: row.id, outcome: outcome.kind, error: nameOf(error) });
       }
       authFailures = answer && isAuthFailure(answer) ? authFailures + 1 : 0;
-      if (authFailures >= AUTH_FAILURE_LIMIT && answer?.kind === "rejected") {
-        // Wrong credentials fail every text for good: stop after a few instead of failing the whole queue.
+      if (answer?.kind === "rejected" && authFailureStopsRun(answer, authFailures)) {
+        // Wrong credentials fail every text for good: stop at the first 401 (a few 403s) instead of failing the whole queue.
         report.status = "provider_auth_failed";
         log.error("dispatch.provider_auth_failed", { http_status: answer.httpStatus });
         await ops.record(db, { kind: "dispatch.provider_auth_failed", detail: { http_status: answer.httpStatus } }).catch((error: unknown) => log.error("dispatch.ops_event_failed", { error: nameOf(error) }));
@@ -244,18 +289,41 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
       return "next";
     }
 
+    /** The upkeep before sending. It is never allowed to stop the sending: a failure is logged (the error's name only) and the run goes on to claim. */
+    async function upkeep(): Promise<void> {
+      try {
+        await store.requeueOrphans(db, { token, skewMs: clock.skewMs() });
+      } catch (error) {
+        log.error("dispatch.sweep_failed", { step: "requeue_orphans", error: nameOf(error) });
+      }
+      try {
+        const afterOutcome = deps.afterOutcome;
+        const swept = await store.sweep(db, {
+          skewMs: clock.skewMs(),
+          maxRows: SWEEP_BATCH_ROWS,
+          // Written in the transaction that makes the row `unknown`, so none goes unseen; if it cannot be written, that row alone is left for the next run.
+          recordUnknown: async (tx, unknownRow, cause) => {
+            await ops.record(tx, { kind: "delivery.unknown", deliveryId: unknownRow.id, detail: { cause } });
+          },
+          // A text handed off with no outcome may have been charged, so the spend estimate is counted now, with the outcome; one that was
+          // already `submitted` was counted when the provider accepted it (never twice). The store runs this in a savepoint: if it fails, the
+          // row is still `unknown` with its event (the failure is logged), so a failing hook never stops the queue.
+          afterUnknown: afterOutcome
+            ? async (tx, unknownRow, cause) => {
+                if (cause === "no_outcome_after_hand_off") await afterOutcome(tx, unknownRow, "unknown");
+              }
+            : undefined,
+        });
+        report.sweep = { requeued: swept.requeued, unknown: swept.unknown.length, failed: swept.failed.length };
+        for (const failure of swept.failed) log.error("dispatch.sweep_row_failed", { delivery_id: failure.id, cause: failure.cause, error: failure.error });
+        for (const failure of swept.hookFailed) log.error("dispatch.sweep_spend_hook_failed", { delivery_id: failure.id, error: failure.error });
+      } catch (error) {
+        log.error("dispatch.sweep_failed", { step: "sweep", error: nameOf(error) });
+      }
+    }
+
     try {
-      await store.requeueOrphans(db, { token });
-      const swept = await store.sweep(db, {
-        skewMs: clock.skewMs(),
-        recordUnknown: async (tx, unknownRow, cause) => {
-          await ops.record(tx, { kind: "delivery.unknown", deliveryId: unknownRow.id, detail: { cause } });
-          // A text handed off with no outcome may have been charged, so the spend estimate is counted now, with the outcome; one
-          // that was already `submitted` was counted when the provider accepted it (never twice).
-          if (cause === "no_outcome_after_hand_off") await deps.afterOutcome?.(tx, unknownRow, "unknown");
-        },
-      });
-      report.sweep = { requeued: swept.requeued, unknown: swept.unknown.length };
+      if (first) await upkeep();
 
       for (;;) {
         const remainingMs = sendUntil - clock.now().getTime();
@@ -265,7 +333,7 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
           break;
         }
         // The rows an old holder claimed after its lease went are put back before this holder looks at the queue.
-        await store.requeueOrphans(db, { token });
+        await store.requeueOrphans(db, { token, skewMs: clock.skewMs() });
         const capacity = config.mode === "live" ? capacitySegments(remainingMs, rate) : Number.MAX_SAFE_INTEGER;
         if (capacity < 1) break;
         const claim = await store.claim(db, { token, workerId, skewMs: clock.skewMs(), maxRows: batchRows, maxSegments: capacity });
@@ -273,7 +341,10 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
           report.status = "lease_lost";
           break;
         }
-        if (claim.rows.length === 0) break;
+        if (claim.rows.length === 0) {
+          queueRanDry = true;
+          break;
+        }
         report.claimed += claim.rows.length;
 
         let next: "next" | "end_batch" | "stop" = "next";
@@ -311,20 +382,7 @@ export function createDispatcher(deps: DispatcherDeps): Dispatcher {
         .releaseLease(db, { token, skewMs: clock.skewMs(), paceDebtMs: limiter.debtMs(now) })
         .catch((error: unknown) => log.error("dispatch.release_lease_failed", { error: nameOf(error) }));
     }
-    log.info("dispatch.run_finished", {
-      worker: workerId,
-      status: report.status,
-      claimed: report.claimed,
-      handed_off: report.handedOff,
-      submitted: report.submitted,
-      requeued: report.requeued,
-      failed: report.failed,
-      unknown: report.unknown,
-      skipped_env: report.skippedEnv,
-      stopped: report.stopped,
-      segments: report.segments,
-    });
-    return report;
+    return queueRanDry && handOffFailures === 0;
   }
 
   return { run };

@@ -10,7 +10,7 @@
 // caller does, and carries the status callback URL the caller gives. The credentials are used only in the Authorization header:
 // they are never put in a URL, a log line or an error, and an error's message is masked before it goes anywhere.
 import type { MessageSubmission, MessageSubmitter, MessagingServiceReader } from "../application/dispatcherPorts";
-import type { NoAnswerReason, NotSentReason, SubmitAnswer } from "../domain/dispatchRules";
+import { PROVIDER_TIMEOUT_MS, type NoAnswerReason, type NotSentReason, type SubmitAnswer } from "../domain/dispatchRules";
 import { maskPhoneNumbers } from "../domain/phoneNumber";
 
 export interface TwilioServiceConfig {
@@ -22,7 +22,11 @@ export interface TwilioServiceConfig {
   messagingBaseUrl?: string;
   /** A test seam (default the global fetch). */
   fetch?: typeof fetch;
-  /** How long to wait for Twilio's answer once the request is sent (default 15 seconds). */
+  /**
+   * How long to wait for Twilio's answer once the request is sent. The default for a text is PROVIDER_TIMEOUT_MS (8 seconds), which
+   * the run's margin covers (so a send that starts as late as it may ends inside the run's time limit); reading the service's
+   * settings, a daily job with no such limit, waits up to 15 seconds.
+   */
   timeoutMs?: number;
 }
 
@@ -93,7 +97,7 @@ const basicAuth = (config: TwilioServiceConfig) => `Basic ${Buffer.from(`${confi
 export function twilioMessageSubmitter(config: TwilioServiceConfig): MessageSubmitter {
   const base = (config.baseUrl ?? "https://api.twilio.com").replace(/\/+$/, "");
   const doFetch = config.fetch ?? globalThis.fetch;
-  const timeoutMs = config.timeoutMs ?? 15_000;
+  const timeoutMs = config.timeoutMs ?? PROVIDER_TIMEOUT_MS;
 
   return {
     async submit(submission: MessageSubmission): Promise<SubmitAnswer> {

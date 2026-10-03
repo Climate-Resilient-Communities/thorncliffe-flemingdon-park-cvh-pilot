@@ -8,11 +8,13 @@ import { randomBytes, randomUUID } from "node:crypto";
 import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
+import { SAFETY_OVERRIDE_TYPES } from "../../src/contracts/audience";
 import {
   CLAIM_RANKS,
   FIRST_ALERT_TYPES,
   LEASE_TTL_MS,
   RECIPIENT_KINDS,
+  SWEEP_BATCH_ROWS,
   claimRank,
   createContactResolver,
   drizzleDispatchStore,
@@ -22,6 +24,7 @@ import {
 import { createDb, type Db } from "../../src/platform/db";
 import { sql as drizzleSql } from "drizzle-orm";
 import { FAKE_NUMBER, FAKE_SID } from "./deliveryFixtures";
+import { opsRecorder } from "../../src/app/dispatch";
 import { BASE_URL, SERVICE_SID, dispatcherWorld, fakeProvider, fakeResolver, numberOf, sidOf, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
 
@@ -142,13 +145,13 @@ describe("the sender's tables", () => {
     const fire = await world.seedAlert({ types: ["fire"], scope: "buildings" });
     const building = await world.seedAlert({ types: ["power"], scope: "buildings" });
     const neighbourhood = await world.seedAlert({ types: ["power"], scope: "neighbourhood" });
-    expect((await world.rowOf(fire.ids[0])).claim_rank).toBe(CLAIM_RANKS.fireOrEvacuationAlert);
+    expect((await world.rowOf(fire.ids[0])).claim_rank).toBe(CLAIM_RANKS.fireAlert);
     expect((await world.rowOf(building.ids[0])).claim_rank).toBe(CLAIM_RANKS.buildingAlert);
     expect((await world.rowOf(neighbourhood.ids[0])).claim_rank).toBe(CLAIM_RANKS.neighbourhoodAlert);
 
     // The SQL function is the domain function: every kind, recipient kind, type list and scope.
     const kinds = ["alert", "transactional", "campaign"] as const;
-    const typeLists: (string[] | null)[] = [null, [], ["power"], ["fire"], ["power", "evacuation"], ["flood", "fire", "smoke"]];
+    const typeLists: (string[] | null)[] = [null, [], ["power"], ["fire"], ["evacuation"], ["power", "evacuation"], ["flood", "fire", "smoke"]];
     const scopes: (string | null)[] = [null, "neighbourhood", "buildings"];
     let compared = 0;
     for (const kind of kinds) {
@@ -163,7 +166,9 @@ describe("the sender's tables", () => {
       }
     }
     expect(compared).toBe(3 * RECIPIENT_KINDS.length * typeLists.length * scopes.length);
-    expect(FIRST_ALERT_TYPES).toEqual(["fire", "evacuation"]);
+    // The types that rank first are the audience rules' safety types: `fire` ("Fire alarm or evacuation"); there is no `evacuation` type.
+    expect([...FIRST_ALERT_TYPES]).toEqual(["fire"]);
+    expect([...FIRST_ALERT_TYPES]).toEqual([...SAFETY_OVERRIDE_TYPES]);
   });
 
   it("keep the rest of the insert trigger S06.01 made (an alert outside its approval is still refused)", async () => {
@@ -239,7 +244,7 @@ describe("the claim", () => {
     return result.rows;
   }
 
-  it("takes fire and evacuation alerts first, then on-call and other transactional texts, then building before neighbourhood alerts, then oldest first", async () => {
+  it("takes fire alerts first (the fire type covers an evacuation), then on-call and other transactional texts, then building before neighbourhood alerts, then oldest first", async () => {
     const labels = new Map<string, string>();
     const label = (ids: string[], name: string) => ids.forEach((id) => labels.set(id, name));
     // Created in the worst order for the claim: the lowest priority first.
@@ -247,12 +252,12 @@ describe("the claim", () => {
     label(await world.seedTransactional(2), "transactional");
     label((await world.seedAlert({ types: ["power"], scope: "buildings" })).ids, "building");
     label(await world.seedTransactional(1, { recipient_kind: "oncall", purpose: "oncall_alert", created_by_module: "ops" }), "oncall");
-    label((await world.seedAlert({ types: ["evacuation"], scope: "buildings" })).ids, "evacuation");
-    label((await world.seedAlert({ types: ["fire"], scope: "neighbourhood" })).ids, "fire");
+    label((await world.seedAlert({ types: ["fire"], scope: "buildings" })).ids, "fire in buildings");
+    label((await world.seedAlert({ types: ["fire"], scope: "neighbourhood" })).ids, "fire in neighbourhood");
 
     const mine = await lease();
     const rows = await claimedRows(mine.token);
-    expect(rows.map((row) => labels.get(row.id))).toEqual(["evacuation", "fire", "oncall", "transactional", "transactional", "building", "neighbourhood", "neighbourhood"]);
+    expect(rows.map((row) => labels.get(row.id))).toEqual(["fire in buildings", "fire in neighbourhood", "oncall", "transactional", "transactional", "building", "neighbourhood", "neighbourhood"]);
   });
 
   it("takes the oldest first among equals", async () => {
@@ -332,14 +337,32 @@ describe("the claim", () => {
     await claimedRows(old.token, { maxRows: 2 });
     await appSql`update delivery set handed_off_at = now() where id = ${handedOff}`;
     const replacement = await store.acquireLease(app, { holder: "new", ttlMs: LEASE_TTL_MS, skewMs: 61_000 });
-    expect(await store.requeueOrphans(app, { token: replacement!.token })).toBe(1);
+    expect(await store.requeueOrphans(app, { token: replacement!.token, skewMs: 61_000 })).toBe(1);
     const back = await world.rowOf(unhanded);
     expect([back.state, back.attempts, back.claimed_by, back.claim_token, back.handed_off_at]).toEqual(["queued", 0, null, null, null]);
     expect(await world.statesOf([handedOff, queued])).toEqual({ [handedOff]: "claimed", [queued]: "queued" });
     // Nothing of the current holder's own is touched.
     const mine = await claimedRows(replacement!.token, { skewMs: 61_000, maxRows: 1 });
-    expect(await store.requeueOrphans(app, { token: replacement!.token })).toBe(0);
+    expect(await store.requeueOrphans(app, { token: replacement!.token, skewMs: 61_000 })).toBe(0);
     expect(mine).toHaveLength(1);
+  });
+
+  it("puts back nothing for a worker that is not the lease holder: its token changed, or its lease expired (the new holder's claims stay claimed)", async () => {
+    const [first, second] = await world.seedTransactional(2);
+    const old = await lease("old");
+    const replacement = await store.acquireLease(app, { holder: "new", ttlMs: LEASE_TTL_MS, skewMs: 61_000 });
+    await claimedRows(replacement!.token, { skewMs: 61_000, maxRows: 1 });
+    await appSql`update delivery set state = 'claimed', claimed_by = 'ghost', claim_token = ${randomUUID()} where id = ${second}`;
+    // The old worker (token changed) wakes and calls the requeue before a claim, with no renewal due: it finds it is not the holder.
+    expect(await store.requeueOrphans(app, { token: old.token, skewMs: 61_000 })).toBe(0);
+    expect(await world.statesOf([first, second])).toEqual({ [first]: "claimed", [second]: "claimed" });
+    // The new holder, whose lease is current, puts the ghost's row back and leaves its own claim alone.
+    expect(await store.requeueOrphans(app, { token: replacement!.token, skewMs: 61_000 })).toBe(1);
+    expect(await world.statesOf([first, second])).toEqual({ [first]: "claimed", [second]: "queued" });
+    // A holder whose own lease has expired is no holder either (the clock is 2 minutes past it).
+    await appSql`update delivery set state = 'claimed', claimed_by = 'ghost', claim_token = ${randomUUID()} where id = ${second}`;
+    expect(await store.requeueOrphans(app, { token: replacement!.token, skewMs: 61_000 + 2 * 60_000 })).toBe(0);
+    expect((await world.rowOf(second)).state).toBe("claimed");
   });
 
   it("puts back what a run claimed and did not hand off, by its token alone", async () => {
@@ -375,6 +398,55 @@ describe("a run", () => {
     const again = await world.dispatcher().run();
     expect(again).toMatchObject({ status: "ok", claimed: 0, handedOff: 0 });
     expect(world.provider.calls).toHaveLength(5);
+  });
+
+  it("takes the lease again, once, for rows approved while it made its last, empty claim: the kick that found the lease held exited, and would otherwise wait for pg_cron", async () => {
+    const kicks: string[] = [];
+    let alert: { ids: string[] } | undefined;
+    let claims = 0;
+    const holder = {
+      ...store,
+      async claim(...args: Parameters<typeof store.claim>) {
+        const result = await store.claim(...args);
+        claims += 1;
+        if (claims === 1 && result.kind === "claimed" && result.rows.length === 0) {
+          // The approval's transaction ends now, and its kick starts a run: the holder still has the lease, so the kick exits at once.
+          alert = await world.seedAlert({ types: ["fire"], recipients: 2 });
+          kicks.push((await world.dispatcher().run()).status);
+        }
+        return result;
+      },
+    };
+    const report = await world.dispatcher({ store: holder }).run();
+
+    expect(kicks).toEqual(["lease_held"]);
+    expect(report).toMatchObject({ status: "ok", claimed: 2, submitted: 2 });
+    expect(await world.statesOf(alert!.ids)).toEqual({ [alert!.ids[0]]: "submitted", [alert!.ids[1]]: "submitted" });
+    expect(world.provider.calls).toHaveLength(2);
+    // Two passes, two leases (each given up), and nothing is sent twice.
+    expect(world.lines.filter((line) => line.evt === "dispatch.run_finished")).toHaveLength(1);
+    expect(new Set(world.provider.calls.map((call) => call.statusCallback)).size).toBe(2);
+    const [lease] = await owner`select expires_at <= now() as free from dispatcher_lease`;
+    expect(lease.free).toBe(true);
+  });
+
+  it("does not look again after a pause (rows it must not claim are waiting) or when nothing is due, and a due text to an on-call number is still found while paused", async () => {
+    const dueChecks: boolean[] = [];
+    const watching = { ...store, async hasDueRows(...args: Parameters<typeof store.hasDueRows>) { const due = await store.hasDueRows(...args); dueChecks.push(due); return due; } };
+    await world.seedTransactional(2);
+    await world.setPause(true);
+    await world.dispatcher({ store: watching }).run();
+    // Paused: the two queued resident texts are not "due" for a claim, so the holder does not take the lease again for them.
+    expect(dueChecks).toEqual([false]);
+    expect(world.provider.calls).toHaveLength(0);
+    // An on-call text is: it is claimed in the pause.
+    dueChecks.length = 0;
+    await world.seedTransactional(1, { recipient_kind: "oncall", purpose: "oncall_alert", created_by_module: "ops" });
+    expect(await store.hasDueRows(app, { skewMs: 0 })).toBe(true);
+    await world.dispatcher({ store: watching }).run();
+    expect(world.provider.calls).toHaveLength(1);
+    // The on-call text was sent in the pass itself; the resident texts still wait for the pause to end, so no second look is taken.
+    expect(dueChecks).toEqual([false]);
   });
 
   it("releases the lease and any claim at the end, so the next run (or an approval's) is not kept waiting", async () => {
@@ -621,21 +693,36 @@ describe("each provider outcome", () => {
     expect((await world.opsEvents("delivery.unknown"))[0].detail).toEqual({ cause: "rate_limited_without_error_body", http_status: 429 });
   });
 
-  it("stops the run after repeated 401s (the credentials are wrong), putting the rest back instead of failing the whole queue", async () => {
+  it("stops the run at the first 401 (the account's credentials are wrong): one text is refused, the rest are put back instead of failing the whole queue, and a second run does the same", async () => {
     const ids = await world.seedTransactional(10);
     world.provider.answer({ kind: "rejected", httpStatus: 401, errorCode: 20003, message: "Authenticate" });
+    const report = await world.dispatcher().run();
+    expect(report.status).toBe("provider_auth_failed");
+    expect(world.provider.calls).toHaveLength(1);
+    const states = Object.values(await world.statesOf(ids));
+    expect(states.filter((state) => state === "failed")).toHaveLength(1);
+    expect(states.filter((state) => state === "queued")).toHaveLength(9);
+    expect((await world.opsEvents("dispatch.provider_auth_failed"))[0]).toMatchObject({ severity: "error", detail: { http_status: 401 } });
+    // The next run (pg_cron's) loses one more text, not the queue: the on-call Admin has one alert per run until the credentials are fixed.
+    await world.dispatcher().run();
+    expect(world.provider.calls).toHaveLength(2);
+    expect(Object.values(await world.statesOf(ids)).filter((state) => state === "queued")).toHaveLength(8);
+  });
+
+  it("stops the run at the third 403 in a row, not before: a 403 can be about one text", async () => {
+    const ids = await world.seedTransactional(10);
+    world.provider.answer({ kind: "rejected", httpStatus: 403, errorCode: 20005, message: "Account not active" });
     const report = await world.dispatcher().run();
     expect(report.status).toBe("provider_auth_failed");
     expect(world.provider.calls).toHaveLength(3);
     const states = Object.values(await world.statesOf(ids));
     expect(states.filter((state) => state === "failed")).toHaveLength(3);
     expect(states.filter((state) => state === "queued")).toHaveLength(7);
-    expect((await world.opsEvents("dispatch.provider_auth_failed"))[0]).toMatchObject({ severity: "error", detail: { http_status: 401 } });
   });
 
-  it("does not let a 401 followed by good answers stop the run", async () => {
+  it("does not let a 403 followed by good answers stop the run", async () => {
     await world.seedTransactional(6);
-    world.provider.answer((_s, n) => (n === 2 || n === 4 ? { kind: "rejected", httpStatus: 401, errorCode: 20003, message: "x" } : { kind: "accepted", httpStatus: 201, status: "queued", messageId: sidOf(n) }));
+    world.provider.answer((_s, n) => (n === 2 || n === 4 ? { kind: "rejected", httpStatus: 403, errorCode: 21408, message: "x" } : { kind: "accepted", httpStatus: 201, status: "queued", messageId: sidOf(n) }));
     const report = await world.dispatcher().run();
     expect(report.status).toBe("ok");
     expect(world.provider.calls).toHaveLength(6);
@@ -766,6 +853,7 @@ describe("the sweep", () => {
     const unknown: { id: string; cause: string }[] = [];
     const result = await store.sweep(app, {
       skewMs: world.clock.skewMs(),
+      maxRows: SWEEP_BATCH_ROWS,
       recordUnknown: async (_tx, row, cause) => void unknown.push({ id: row.id, cause }),
     });
     return { result, unknown, states: await world.statesOf(ids) };
@@ -787,7 +875,7 @@ describe("the sweep", () => {
     world.clock.advance(2 * 60_000);
     const { result, states } = await stateAfterSweep([stale, fresh]);
     expect(states).toEqual({ [stale]: "queued", [fresh]: "queued" });
-    expect(result).toEqual({ requeued: 2, unknown: [] });
+    expect(result).toEqual({ requeued: 2, unknown: [], failed: [], hookFailed: [] });
     expect((await world.rowOf(stale)).attempts).toBe(0);
   });
 
@@ -827,7 +915,7 @@ describe("the sweep", () => {
     const counted: string[] = [];
     const report = await world.dispatcher({ afterOutcome: async (_tx, delivery, outcome) => void counted.push(`${outcome}:${delivery.id}`) }).run();
 
-    expect(report.sweep).toEqual({ requeued: 0, unknown: 2 });
+    expect(report.sweep).toEqual({ requeued: 0, unknown: 2, failed: 0 });
     // The spend estimate (S06.08) is counted for the text handed off with no outcome, and not again for the one counted when it was submitted.
     expect(counted).toEqual([`unknown:${handedOff}`]);
     expect(world.provider.calls).toHaveLength(0);
@@ -842,18 +930,173 @@ describe("the sweep", () => {
     expect(events.every((event) => event.severity === "error" && event.subject_type === "delivery")).toBe(true);
   });
 
-  it("rolls the whole sweep back when an event cannot be recorded, so no unknown goes unseen", async () => {
-    const handedOff = await claimed(true);
+  it("settles each row in a transaction of its own: a row whose event cannot be recorded stays as it was (no unknown goes unseen), and the others become unknown", async () => {
+    const bad = await claimed(true);
+    const good = await claimed(true);
+    const another = await claimed(true);
     world.clock.advance(6 * 60_000);
-    await expect(
-      store.sweep(app, {
-        skewMs: world.clock.skewMs(),
-        recordUnknown: async () => {
-          throw new Error("ops_event is unavailable");
+    const result = await store.sweep(app, {
+      skewMs: world.clock.skewMs(),
+      maxRows: SWEEP_BATCH_ROWS,
+      recordUnknown: async (tx, row, cause) => {
+        if (row.id === bad) throw new Error("ops_event is unavailable");
+        await opsRecorder.record(tx, { kind: "delivery.unknown", deliveryId: row.id, detail: { cause } });
+      },
+    });
+    expect(result.failed).toEqual([{ id: bad, cause: "no_outcome_after_hand_off", error: "Error" }]);
+    expect(result.unknown.map((row) => row.id).sort()).toEqual([good, another].sort());
+    expect(await world.statesOf([bad, good, another])).toEqual({ [bad]: "claimed", [good]: "unknown", [another]: "unknown" });
+    // Each event was written in the transaction of the row it belongs to: the two that became unknown have one, the one that did not has none.
+    expect((await world.opsEvents("delivery.unknown")).map((event) => event.subject_id).sort()).toEqual([good, another].sort());
+    // The next sweep tries the failed row again.
+    const again = await store.sweep(app, { skewMs: world.clock.skewMs(), maxRows: SWEEP_BATCH_ROWS, recordUnknown: async () => undefined });
+    expect(again.unknown.map((row) => row.id)).toEqual([bad]);
+    expect(await world.stateOf(bad)).toBe("unknown");
+  });
+
+  it("runs the spend hook in a savepoint: when it fails its own writes are undone, and the row is still unknown with its event", async () => {
+    const table = `scratch_sweep_spend_${randomBytes(4).toString("hex")}`;
+    await owner.unsafe(`create table ${table} (delivery_id uuid primary key, cents integer not null)`);
+    await owner.unsafe(`grant select, insert on ${table} to cvh_app`);
+    scratchTables.push(table);
+    const failing = await claimed(true);
+    const fine = await claimed(true);
+    world.clock.advance(6 * 60_000);
+    const result = await store.sweep(app, {
+      skewMs: world.clock.skewMs(),
+      maxRows: SWEEP_BATCH_ROWS,
+      recordUnknown: async (tx, row, cause) => {
+        await opsRecorder.record(tx, { kind: "delivery.unknown", deliveryId: row.id, detail: { cause } });
+      },
+      afterUnknown: async (tx, row) => {
+        // The estimate is written first, then the hook fails: the failing row's estimate must not survive.
+        await tx.execute(drizzleSql.raw(`insert into ${table} (delivery_id, cents) values ('${row.id}', 2)`));
+        if (row.id === failing) throw new Error("the spend_event insert failed");
+      },
+    });
+    expect(result.failed).toEqual([]);
+    expect(result.hookFailed).toEqual([{ id: failing, error: "Error" }]);
+    expect(result.unknown.map((row) => row.id).sort()).toEqual([failing, fine].sort());
+    expect(await world.statesOf([failing, fine])).toEqual({ [failing]: "unknown", [fine]: "unknown" });
+    expect((await world.opsEvents("delivery.unknown")).map((event) => event.subject_id).sort()).toEqual([failing, fine].sort());
+    // Only the row whose hook finished has its estimate; the failing hook's write was undone with its savepoint.
+    expect((await owner.unsafe(`select delivery_id from ${table}`)).map((row) => row.delivery_id)).toEqual([fine]);
+  });
+
+  it("settles at most `maxRows` rows in one call and leaves the rest for the next, oldest first", async () => {
+    const ids = [await claimed(true), await claimed(true), await claimed(true)];
+    world.clock.advance(6 * 60_000);
+    const sweep = (maxRows: number) => store.sweep(app, { skewMs: world.clock.skewMs(), maxRows, recordUnknown: async () => undefined });
+    expect((await sweep(2)).unknown.map((row) => row.id)).toEqual([ids[0], ids[1]]);
+    expect(await world.statesOf(ids)).toEqual({ [ids[0]]: "unknown", [ids[1]]: "unknown", [ids[2]]: "claimed" });
+    expect((await sweep(2)).unknown.map((row) => row.id)).toEqual([ids[2]]);
+  });
+
+  it("checks each row's condition again in its own transaction: a row a callback moved on after the sweep chose it is left as the callback made it, and gets no event", async () => {
+    const first = await claimed(true);
+    const second = await claimed(true);
+    world.clock.advance(6 * 60_000);
+    const recorded: string[] = [];
+    const result = await store.sweep(app, {
+      skewMs: world.clock.skewMs(),
+      maxRows: SWEEP_BATCH_ROWS,
+      recordUnknown: async (_tx, row) => {
+        recorded.push(row.id);
+        // While the first row is being settled, the signed callback for the second one arrives (S06.04 writes its state).
+        await appSql`update delivery set state = 'submitted', provider_message_id = ${sidOf(5)} where id = ${second}`;
+      },
+    });
+    expect(result.unknown.map((row) => row.id)).toEqual([first]);
+    expect(recorded).toEqual([first]);
+    expect(await world.statesOf([first, second])).toEqual({ [first]: "unknown", [second]: "submitted" });
+  });
+
+  describe("never stops the sending that follows it", () => {
+    /** A handed-off row nobody settled (its outcome write failed), found by the sweep 6 minutes later, and a fire alert approved after it. */
+    async function staleRowAndFireAlert() {
+      const stale = await claimed(true);
+      world.clock.advance(6 * 60_000);
+      const fire = await world.seedAlert({ types: ["fire"], recipients: 2 });
+      return { stale, fire };
+    }
+
+    it("when the spend hook keeps failing for the stale row: the row still becomes unknown with its event, the failure is logged, and the fire alert is submitted", async () => {
+      const { stale, fire } = await staleRowAndFireAlert();
+      const counted: string[] = [];
+      const afterOutcome = async (_tx: unknown, delivery: { id: string }, outcome: "submitted" | "unknown") => {
+        if (outcome === "unknown") throw new Error("spend_event insert failed");
+        counted.push(delivery.id);
+      };
+      // Three runs, a minute apart: whatever the first one did, none of them is held up.
+      const reports = [];
+      for (let run = 0; run < 3; run += 1) {
+        reports.push(await world.dispatcher({ afterOutcome: afterOutcome as never }).run());
+        world.clock.advance(60_000);
+      }
+      expect(await world.stateOf(stale)).toBe("unknown");
+      expect((await world.opsEvents("delivery.unknown")).filter((event) => event.subject_id === stale)).toHaveLength(1);
+      expect(world.lines.filter((line) => line.evt === "dispatch.sweep_spend_hook_failed").map((line) => line.fields)).toEqual([{ delivery_id: stale, error: "Error" }]);
+      expect(reports[0].sweep).toEqual({ requeued: 0, unknown: 1, failed: 0 });
+      expect(await world.statesOf(fire.ids)).toEqual({ [fire.ids[0]]: "submitted", [fire.ids[1]]: "submitted" });
+      expect(world.provider.calls).toHaveLength(2);
+      expect(counted.sort()).toEqual([...fire.ids].sort());
+    });
+
+    it("when the stale row's event can never be recorded: the row is left for the next run, each run says so, and fire alerts approved at any time are submitted", async () => {
+      const { stale, fire } = await staleRowAndFireAlert();
+      const failingOps = {
+        record: async (executor: Parameters<typeof opsRecorder.record>[0], event: Parameters<typeof opsRecorder.record>[1]) => {
+          if (event.kind === "delivery.unknown") throw new Error("ops_event is unavailable");
+          return opsRecorder.record(executor, event);
         },
-      }),
-    ).rejects.toThrow(/unavailable/);
-    expect(await world.stateOf(handedOff)).toBe("claimed");
+      };
+      const first = await world.dispatcher({ ops: failingOps }).run();
+      expect(first.sweep).toMatchObject({ unknown: 0, failed: 1 });
+      expect(first.status).toBe("ok");
+      expect(await world.statesOf(fire.ids)).toEqual({ [fire.ids[0]]: "submitted", [fire.ids[1]]: "submitted" });
+      expect(await world.stateOf(stale)).toBe("claimed");
+
+      // Another alert, approved after the sweep failed, and two more runs: the queue is never blocked.
+      for (let run = 0; run < 2; run += 1) {
+        world.clock.advance(60_000);
+        const later = await world.seedAlert({ types: ["fire"] });
+        const report = await world.dispatcher({ ops: failingOps }).run();
+        expect(report.sweep).toMatchObject({ unknown: 0, failed: 1 });
+        expect(await world.stateOf(later.ids[0])).toBe("submitted");
+      }
+      expect(world.provider.calls).toHaveLength(4);
+      expect(world.lines.filter((line) => line.evt === "dispatch.sweep_row_failed").length).toBe(3);
+      expect(await world.stateOf(stale)).toBe("claimed");
+
+      // Once the event can be written again, the next sweep settles the row.
+      await world.dispatcher().run();
+      expect(await world.stateOf(stale)).toBe("unknown");
+      expect(world.provider.calls).toHaveLength(4);
+    });
+
+    it("when the sweep, or the requeue before it, throws altogether: the failure is logged by name and the run goes on to claim and send", async () => {
+      const [id] = await world.seedTransactional(1);
+      let requeues = 0;
+      const broken = {
+        ...drizzleDispatchStore,
+        async requeueOrphans(...args: Parameters<typeof drizzleDispatchStore.requeueOrphans>) {
+          requeues += 1;
+          if (requeues === 1) throw new Error("connection terminated for +14165550123");
+          return drizzleDispatchStore.requeueOrphans(...args);
+        },
+        async sweep() {
+          throw new Error("the sweep failed for +14165550123");
+        },
+      };
+      const report = await world.dispatcher({ store: broken }).run();
+      expect(report).toMatchObject({ status: "ok", submitted: 1 });
+      expect(await world.stateOf(id)).toBe("submitted");
+      expect(world.lines.filter((line) => line.evt === "dispatch.sweep_failed").map((line) => line.fields)).toEqual([
+        { step: "requeue_orphans", error: "Error" },
+        { step: "sweep", error: "Error" },
+      ]);
+      expect(JSON.stringify(world.lines)).not.toContain("5550123");
+    });
   });
 
   it("makes a requeued unhanded row sendable again, once, and never sends the handed-off one", async () => {
@@ -1071,6 +1314,23 @@ describe("the hand-off point re-reads whether the row is still sendable", () => 
       results[kind] = await world.stateOf(ids[0]);
     }
     expect(results).toEqual({ ack: "skipped", update: "skipped", correction: "skipped", final: "submitted", withdrawal: "submitted" });
+  });
+
+  it("judges the valid-until by the database's clock, never the app server's: an app clock that is hours off changes nothing", async () => {
+    const validUntil = new Date(Date.now() + 60 * 60_000);
+    // The app server's clock says it is five hours later, but the database (skew 0) says the valid-until is an hour away: sent.
+    const ahead = await world.seedAlert({ kind: "ack", validUntil });
+    const appAhead = { ...world.clock, now: () => new Date(Date.now() + 5 * 3_600_000), skewMs: () => 0 };
+    await world.dispatcher({ clock: appAhead }).run();
+    expect(await world.stateOf(ahead.ids[0])).toBe("submitted");
+
+    // The app server's clock says it is still before the valid-until, but the database (skew two hours) says it has passed: skipped.
+    await world.reset();
+    const behind = await world.seedAlert({ kind: "ack", validUntil });
+    const appBehind = { ...world.clock, now: () => new Date(Date.now() - 5 * 3_600_000), skewMs: () => 2 * 3_600_000 };
+    await world.dispatcher({ clock: appBehind }).run();
+    expect(await world.stateOf(behind.ids[0])).toBe("skipped");
+    expect(world.provider.calls).toHaveLength(0);
   });
 
   it("sends a drill entry only to the drill roster, and never a real entry to it", async () => {

@@ -3,9 +3,15 @@
 // composition root (src/app/dispatch.ts) wires. It reads through the hand-off's own transaction and takes no lock: whatever
 // must stop a send (a correction, a withdrawal, a discard, a close) writes the delivery rows itself under the delivery row's lock,
 // which the hand-off holds (E06 definitions, "Hand-off point").
-import { eq } from "drizzle-orm";
+import { eq, sql, type SQL } from "drizzle-orm";
 import type { AlertStanding, AlertStandingReader } from "../../messaging";
 import { alert, alertEntry } from "./schema";
+
+/**
+ * The database's instant, moved by `skewMs` (0 in production, so it is exactly `now()`): the valid-until is judged by the database's
+ * clock, as the lease, a claim's age and the `send_by` are, and never by an app server's. A test with a fake clock gives the difference.
+ */
+const dbNow = (skewMs: number): SQL => (skewMs === 0 ? sql`now()` : sql`(now() + ${Math.trunc(skewMs)}::double precision * interval '1 millisecond')`);
 
 /**
  * The closing entry is the entry whose approval closed the thread: its approved `final`, or the withdrawal that left no
@@ -26,12 +32,12 @@ export function isClosingEntry(row: { entryStatus: string; entryKind: string; ap
 }
 
 export const alertStandingReader: AlertStandingReader = {
-  async standingOf(tx, entryId): Promise<AlertStanding | null> {
+  async standingOf(tx, entryId, skewMs): Promise<AlertStanding | null> {
     const [row] = await tx
       .select({
         entryStatus: alertEntry.status,
         entryKind: alertEntry.kind,
-        validUntil: alertEntry.validUntil,
+        validUntilPassed: sql<boolean>`${alertEntry.validUntil} <= ${dbNow(skewMs)}`,
         approvedAt: alertEntry.approvedAt,
         threadStatus: alert.status,
         closedAt: alert.closedAt,
@@ -44,7 +50,7 @@ export const alertStandingReader: AlertStandingReader = {
     return {
       entryStatus: row.entryStatus,
       entryKind: row.entryKind as AlertStanding["entryKind"],
-      validUntil: row.validUntil,
+      validUntilPassed: row.validUntilPassed,
       threadOpen: row.threadStatus === "open",
       isClosingEntry: isClosingEntry(row),
       isDrill: row.isDrill,

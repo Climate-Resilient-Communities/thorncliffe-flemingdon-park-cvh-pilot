@@ -1,5 +1,6 @@
 // The Messaging Service adapter against a fake `fetch`: no network call is ever made.
 import { describe, expect, it, vi } from "vitest";
+import { OUTCOME_WRITE_ALLOWANCE_MS, PROVIDER_TIMEOUT_MS, RUN_MARGIN_MS } from "../domain/dispatchRules";
 import { twilioMessageSubmitter, twilioMessagingServiceReader, notSentReason } from "./twilioMessagingService";
 
 // Obviously fake credentials and numbers.
@@ -54,6 +55,22 @@ describe("the Messaging Service submission", () => {
     expect(String(url)).not.toContain(AUTH_TOKEN);
     expect(init?.body as string).not.toContain(AUTH_TOKEN);
     expect(init?.redirect).toBe("error");
+  });
+
+  it("waits for Twilio's answer no longer than the run's margin allows (PROVIDER_TIMEOUT_MS by default), so the last send of a run ends inside the run", async () => {
+    const waits: number[] = [];
+    const spy = vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => (waits.push(ms), new AbortController().signal));
+    try {
+      const { sms } = submitter(async () => json({ sid: MESSAGE_SID, status: "queued" }, 201));
+      await sms.submit(SUBMISSION);
+      // A caller may give its own limit (a test seam), and the daily settings read keeps its own, longer one.
+      const own = twilioMessageSubmitter({ accountSid: ACCOUNT_SID, authToken: AUTH_TOKEN, timeoutMs: 1234, fetch: (async () => json({ sid: MESSAGE_SID, status: "queued" }, 201)) as unknown as typeof fetch });
+      await own.submit(SUBMISSION);
+      expect(waits).toEqual([PROVIDER_TIMEOUT_MS, 1234]);
+      expect(PROVIDER_TIMEOUT_MS + OUTCOME_WRITE_ALLOWANCE_MS).toBeLessThanOrEqual(RUN_MARGIN_MS);
+    } finally {
+      spy.mockRestore();
+    }
   });
 
   it("sets SmartEncoded=false on every request: the caller has no way to leave it out or turn it on", async () => {

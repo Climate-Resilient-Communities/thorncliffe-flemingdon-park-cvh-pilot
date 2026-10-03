@@ -7,6 +7,7 @@
  * The guarantee behind all of it is no automatic duplicate submission, not exactly-once delivery: a text is handed to the
  * provider at most once, and anything unclear after the request may have been sent is `unknown`, never sent again.
  */
+import { SAFETY_OVERRIDE_TYPES } from "../../../contracts/audience";
 import type { DeliveryKind, RecipientKind } from "./deliveryRules";
 
 /** The sender lease lasts 60 seconds from its last renewal (E06 "Sender lease"). */
@@ -26,16 +27,35 @@ export const DEFAULT_SEGMENTS_PER_SECOND = 3;
 /** A run lasts at most this long (the route's `maxDuration`), and plans its sends to end 10 s before the limit. */
 export const RUN_LIMIT_MS = 60_000;
 export const RUN_MARGIN_MS = 10_000;
+/**
+ * The longest the adapter waits for the provider's answer once a request is sent, and what the run still needs after the answer
+ * (the outcome's write, the claims put back, the lease given up). The last send of a run starts at the run's limit less the margin,
+ * so the margin must cover both: a send that starts as late as it may still finishes, and its outcome is written, inside the limit.
+ * A unit test holds the three together.
+ */
+export const PROVIDER_TIMEOUT_MS = 8_000;
+export const OUTCOME_WRITE_ALLOWANCE_MS = 2_000;
+/**
+ * The limit of the run an approval starts (`kickDispatcher`). That run lives inside the approving request's function, after the
+ * response, so it must end well inside that function's `maxDuration`; the approving route sets 60 s (S04.07), and pg_cron's next run
+ * (every minute) takes whatever the kick did not send. With the margin above it sends for 10 s, about 30 segments.
+ */
+export const KICK_RUN_LIMIT_MS = 20_000;
+/** Rows the sweep settles in one run (the rest wait for the next one), so a backlog cannot use up a run that has texts to send. */
+export const SWEEP_BATCH_ROWS = 200;
 /** Rows claimed at a time, so a fire alert approved during a burst is claimed at the next batch, not the next run. */
 export const CLAIM_BATCH_ROWS = 10;
-/** After this many 401 or 403 answers in a row the run stops: the credentials are wrong, and every further text would fail for good. */
+/**
+ * A 401 stops the run at once (the credentials are wrong for the whole account, and every further text would fail for good); a 403 stops
+ * it after this many in a row (a 403 can also be about one text, so a few are tolerated).
+ */
 export const AUTH_FAILURE_LIMIT = 3;
 
 // --- claim order -----------------------------------------------------------------------------------------
 
 /** Where a row stands in the claim order: lower goes first, then oldest first. */
 export const CLAIM_RANKS = {
-  fireOrEvacuationAlert: 0,
+  fireAlert: 0,
   oncall: 1,
   transactional: 2,
   buildingAlert: 3,
@@ -44,17 +64,21 @@ export const CLAIM_RANKS = {
 } as const;
 export type ClaimRank = (typeof CLAIM_RANKS)[keyof typeof CLAIM_RANKS];
 
-/** The entry types that put an alert first (the disruption types `fire` and `evacuation`). */
-export const FIRST_ALERT_TYPES = ["fire", "evacuation"] as const;
+/**
+ * The entry types that put an alert first: the safety types of the audience rules (`SAFETY_OVERRIDE_TYPES`), the disruption type
+ * `fire` ("Fire alarm or evacuation", the one type that covers an evacuation). `delivery_claim_rank()` in the database repeats the
+ * list, and a test compares the two.
+ */
+export const FIRST_ALERT_TYPES: readonly string[] = SAFETY_OVERRIDE_TYPES;
 
 /**
- * The claim order of the E06 definitions: fire and evacuation alert entries first, then on-call and other transactional
+ * The claim order of the E06 definitions: fire alert entries first (the `fire` type covers an evacuation), then on-call and other transactional
  * texts, then building-level before neighbourhood-level alerts (then oldest first, which the caller adds). A campaign text,
  * which the definitions do not rank, goes last. `delivery_claim_rank()` in the database is this function, fixed when the row
  * is created from what the entry says (its types and audience scope never change once it is submitted).
  */
 export function claimRank(row: { kind: DeliveryKind; recipientKind: RecipientKind; entryTypes?: readonly string[] | null; audienceScope?: string | null }): ClaimRank {
-  if (row.kind === "alert" && (row.entryTypes ?? []).some((type) => (FIRST_ALERT_TYPES as readonly string[]).includes(type))) return CLAIM_RANKS.fireOrEvacuationAlert;
+  if (row.kind === "alert" && (row.entryTypes ?? []).some((type) => FIRST_ALERT_TYPES.includes(type))) return CLAIM_RANKS.fireAlert;
   if (row.kind === "transactional" && row.recipientKind === "oncall") return CLAIM_RANKS.oncall;
   if (row.kind === "transactional") return CLAIM_RANKS.transactional;
   if (row.kind === "alert" && row.audienceScope === "buildings") return CLAIM_RANKS.buildingAlert;
@@ -217,9 +241,16 @@ function notAccepted(attempts: number, errorCode: number | null): SubmitOutcome 
   return { kind: "requeue", dueInMs: BACKOFF_MS[attempts] };
 }
 
-/** Whether an answer says the credentials are wrong (the run stops after AUTH_FAILURE_LIMIT of them in a row). */
+/** Whether an answer says the credentials are wrong or not allowed (401 or 403). */
 export function isAuthFailure(answer: SubmitAnswer): boolean {
   return answer.kind === "rejected" && (answer.httpStatus === 401 || answer.httpStatus === 403);
+}
+
+/** Whether the run stops: at the first 401, or at the AUTH_FAILURE_LIMIT-th 401 or 403 in a row (`inARow` counts this answer). */
+export function authFailureStopsRun(answer: SubmitAnswer, inARow: number): boolean {
+  if (answer.kind !== "rejected") return false;
+  if (answer.httpStatus === 401) return true;
+  return answer.httpStatus === 403 && inARow >= AUTH_FAILURE_LIMIT;
 }
 
 // --- sendable at the hand-off point --------------------------------------------------------------------
@@ -229,7 +260,8 @@ export interface AlertStanding {
   /** The entry's status: only `approved` is sendable (`superseded` and `discarded` are named in the reasons). */
   entryStatus: string;
   entryKind: "ack" | "update" | "correction" | "withdrawal" | "final";
-  validUntil: Date;
+  /** Whether the entry's valid-until has passed, by the database's clock (the reader asks the database; no app clock decides). */
+  validUntilPassed: boolean;
   threadOpen: boolean;
   /** The entry whose approval closed the thread: its deliveries stay sendable after the close. */
   isClosingEntry: boolean;
@@ -264,7 +296,7 @@ export interface NotSendable {
  * `cancelled` (the same as `cancelQueued` would have made it); a text that is too late or has no right recipient is `skipped`.
  * `null` is sendable.
  */
-export function alertNotSendable(standing: AlertStanding | null, recipientKind: RecipientKind, now: Date): NotSendable | null {
+export function alertNotSendable(standing: AlertStanding | null, recipientKind: RecipientKind): NotSendable | null {
   if (standing === null) return { outcome: "cancelled", reason: "entry_missing" };
   if (standing.entryStatus !== "approved") {
     const reason: NotSendableReason = standing.entryStatus === "superseded" ? "entry_superseded" : standing.entryStatus === "discarded" ? "entry_discarded" : "entry_not_approved";
@@ -272,7 +304,7 @@ export function alertNotSendable(standing: AlertStanding | null, recipientKind: 
   }
   if (!standing.threadOpen && !standing.isClosingEntry) return { outcome: "cancelled", reason: "thread_closed" };
   const expires = standing.entryKind === "ack" || standing.entryKind === "update" || standing.entryKind === "correction";
-  if (expires && standing.validUntil.getTime() <= now.getTime()) return { outcome: "skipped", reason: "valid_until_passed" };
+  if (expires && standing.validUntilPassed) return { outcome: "skipped", reason: "valid_until_passed" };
   if (standing.isDrill !== (recipientKind === "roster")) return { outcome: "skipped", reason: "drill_recipient_mismatch" };
   return null;
 }
