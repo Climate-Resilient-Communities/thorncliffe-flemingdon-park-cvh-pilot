@@ -39,7 +39,8 @@ export function drizzleTranslationCache(executor: DbExecutor): TranslationCache 
         status: value.status,
         fromTextHash: value.fromTextHash,
       };
-      // A model's text is written once: whoever got there first stands. A conversion is replaced when it was made from another zh text.
+      // A model's text is written once: whoever got there first stands, and the table's update policy gives the app no way to
+      // change it. A conversion is replaced when it was made from another zh text.
       if (value.status === "ok") await executor.insert(translationCache).values(values).onConflictDoNothing();
       else
         await executor

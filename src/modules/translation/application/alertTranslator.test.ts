@@ -12,12 +12,15 @@ import type { TranslationRoute } from "../domain/alertRoutes";
 import { ALERT_MAX_OUTPUT_TOKENS, ALERT_TARGET_LANGS, estimateAlertCallTokens, type CachedTranslation, type TranslationCacheKey } from "../domain/alertTranslation";
 import type { TranslationCache, ZhHantConverter } from "./alertPorts";
 import type { Translator } from "./ports";
-import { AlertTranslationInputError, checkVersion, createAlertTranslator, type AlertTranslatorDeps } from "./alertTranslator";
+import { CHECK_LOGIC_VERSION } from "../domain/alertChecks";
+import { AlertRoutesUnavailableError, AlertTranslationInputError, STORE_GRACE_MS, checkVersion, createAlertTranslator, type AlertTranslation, type AlertTranslatorDeps } from "./alertTranslator";
 
 const SOURCE_HASH = sha256Hex(ENGLISH_ALERT);
 const ALL_GOOD = (call: { lang: string }): Behaviour => ({ text: GOOD[call.lang]! });
 
-function fakeCache(options: { failGet?: boolean; failPut?: boolean } = {}) {
+const NEVER = new Promise<never>(() => {});
+
+function fakeCache(options: { failGet?: boolean; failPut?: boolean; hangGet?: (key: TranslationCacheKey) => boolean; hangPut?: (key: TranslationCacheKey) => boolean } = {}) {
   const rows = new Map<string, { key: TranslationCacheKey; value: CachedTranslation }>();
   const puts: { key: TranslationCacheKey; value: CachedTranslation }[] = [];
   const gets: TranslationCacheKey[] = [];
@@ -26,10 +29,12 @@ function fakeCache(options: { failGet?: boolean; failPut?: boolean } = {}) {
     async get(key) {
       gets.push(key);
       if (options.failGet) throw new Error("cache down");
+      if (options.hangGet?.(key)) return NEVER;
       return rows.get(id(key))?.value ?? null;
     },
     async put(key, value) {
       if (options.failPut) throw new Error("cache down");
+      if (options.hangPut?.(key)) return NEVER;
       puts.push({ key, value });
       rows.set(id(key), { key, value });
     },
@@ -746,6 +751,324 @@ describe("what each call records in spend", () => {
 
     expect(result.translations.every((text) => text.status !== "fallback_en")).toBe(true);
     expect(result.spendFailures).toBe(14);
+  });
+});
+
+/** Starts a translation and notes, on the fake clock, when it ended and how: its result or the error it rejected with. */
+function timed(t: Harness, options: { signal?: AbortSignal; english?: string } = {}) {
+  const started = Date.now();
+  const end: { at: number | null; result?: AlertTranslation; error?: unknown } = { at: null };
+  const run = t.alerts.translate({ english: options.english ?? ENGLISH_ALERT, signal: options.signal }).then(
+    (result) => {
+      end.at = Date.now() - started;
+      end.result = result;
+    },
+    (error: unknown) => {
+      end.at = Date.now() - started;
+      end.error = error;
+    },
+  );
+  return { end, run, started };
+}
+
+describe("a store that does not answer (the cache, spend, the converter, the routes) never holds a translation up", () => {
+  const longestDeadline = Math.max(...SEEDED_ROUTES.map((route) => route.deadlineMs));
+
+  it("treats a cache read that does not answer as a miss after the grace, and goes on to the model", async () => {
+    const t = setup({ cache: fakeCache({ hangGet: () => true }) });
+    const { end, run, started } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(STORE_GRACE_MS - 1);
+    expect(t.calls).toHaveLength(0);
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(t.calls).toHaveLength(14);
+    expect(t.calls.every((call) => call.at - started === STORE_GRACE_MS)).toBe(true);
+    expect(end.result!.translations.every((text) => text.status !== "fallback_en")).toBe(true);
+    // Fourteen languages, and zh-Hant's own read, which comes after zh's.
+    expect(end.result!.cacheFailures).toBe(15);
+    expect(end.at).toBe(2 * STORE_GRACE_MS);
+  });
+
+  it("ends a language at its route deadline when its cache read has not answered by then", async () => {
+    const routes = withRoute("ur", (route) => ({ ...route, positions: positions([NORTH, 3]), deadlineMs: 3000 }));
+    const t = setup({ routes, cache: fakeCache({ hangGet: (key) => key.lang === "ur" }), deps: { storeGraceMs: 60_000 } });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(2_999);
+    expect(end.at).toBeNull();
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(end.at).toBe(3000);
+    expect(t.calls.some((call) => call.lang === "ur")).toBe(false);
+    expect(of(end.result!.outcomes, "ur")).toMatchObject({ status: "fallback_en", fallbackReason: "route_exhausted", attempts: [], ms: 3000 });
+    expect(of(end.result!.translations, "ur")).toMatchObject({ status: "fallback_en", body: ENGLISH_ALERT, model: null });
+    expect(of(end.result!.translations, "es").status).toBe("ok");
+    // The deadline, not the store, ended it: nothing the cache did wrong.
+    expect(end.result!.cacheFailures).toBe(0);
+  });
+
+  it("ends every language the moment the caller cancels while their cache reads have not answered", async () => {
+    const controller = new AbortController();
+    const t = setup({ cache: fakeCache({ hangGet: () => true }), deps: { storeGraceMs: 60_000 } });
+    const { end, run } = timed(t, { signal: controller.signal });
+
+    await vi.advanceTimersByTimeAsync(500);
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(0);
+    await run;
+
+    expect(end.at).toBe(500);
+    expect(t.calls).toHaveLength(0);
+    expect(end.result!.translations.every((text) => text.status === "fallback_en")).toBe(true);
+    expect(of(end.result!.outcomes, "ur")).toMatchObject({ fallbackReason: "cancelled", attempts: [] });
+    expect(of(end.result!.outcomes, "zh-Hant").fallbackReason).toBe("zh_unavailable");
+  });
+
+  it("does not wait for a cache write that never finishes: each language has its text at once, and the translation resolves after the grace", async () => {
+    const seen: [string, number][] = [];
+    let startedAt = 0;
+    const t = setup({ cache: fakeCache({ hangPut: () => true }), deps: { onLanguage: (text) => void seen.push([text.lang, Date.now() - startedAt]) } });
+    const { end, run, started } = timed(t);
+    startedAt = started;
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(seen).toHaveLength(15);
+    expect(seen.every(([, at]) => at === 0)).toBe(true);
+    expect(end.result!.translations.every((text) => text.status !== "fallback_en")).toBe(true);
+    expect(end.result!.cacheFailures).toBe(15);
+    expect(end.at).toBe(STORE_GRACE_MS);
+  });
+
+  it("does not wait for a spend write that never finishes: every language has its text, and the translation resolves after the grace", async () => {
+    const t = setup({ deps: { recordSpend: () => NEVER } });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(end.result!.translations.every((text) => text.status !== "fallback_en")).toBe(true);
+    expect(end.result!.spendFailures).toBe(14);
+    expect(end.at).toBe(STORE_GRACE_MS);
+  });
+
+  it("counts a spend write that was too slow and failed later once, at the grace", async () => {
+    const t = setup({
+      deps: {
+        recordSpend: () =>
+          new Promise<void>((_resolve, reject) => {
+            setTimeout(() => reject(new Error("database down")), 5_000);
+          }),
+      },
+    });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(end.result!.spendFailures).toBe(14);
+    expect(end.at).toBe(STORE_GRACE_MS);
+  });
+
+  it("resolves within the longest route deadline plus 5 s when every model and every store hangs", async () => {
+    const t = setup({
+      behaviour: () => ({ hang: true }),
+      cache: fakeCache({ hangGet: () => true, hangPut: () => true }),
+      deps: { recordSpend: () => NEVER, zhHant: () => NEVER },
+    });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    await run;
+
+    expect(end.result!.translations).toHaveLength(15);
+    expect(end.result!.translations.every((text) => text.status === "fallback_en")).toBe(true);
+    expect(end.at).toBeGreaterThanOrEqual(longestDeadline);
+    expect(end.at).toBeLessThanOrEqual(longestDeadline + 5_000);
+  });
+
+  it("resolves within the longest route deadline plus 5 s when zh answers late and every store that zh-Hant and the flush use then hangs", async () => {
+    const routes = withRoute("zh", (route) => ({ ...route, positions: positions([COMMAND_A, 20]), deadlineMs: 20_000 }));
+    const t = setup({
+      routes,
+      behaviour: (call) => (call.lang === "zh" ? { text: GOOD.zh!, afterMs: 19_000 } : ALL_GOOD(call)),
+      cache: fakeCache({ hangGet: (key) => key.lang === "zh-Hant", hangPut: () => true }),
+      deps: { recordSpend: () => NEVER },
+    });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(60_000);
+    await run;
+
+    expect(of(end.result!.translations, "zh-Hant")).toMatchObject({ status: "script_converted" });
+    expect(end.at).toBeGreaterThan(19_000 + STORE_GRACE_MS);
+    expect(end.at).toBeLessThanOrEqual(longestDeadline + 5_000);
+  });
+
+  it("gives up on a converter that does not load: zh-Hant is the English fallback after the grace, and the other languages are not held up", async () => {
+    const seen: [string, number][] = [];
+    let startedAt = 0;
+    const t = setup({ deps: { zhHant: () => NEVER, onLanguage: (text) => void seen.push([text.lang, Date.now() - startedAt]) } });
+    const { end, run, started } = timed(t);
+    startedAt = started;
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(of(end.result!.outcomes, "zh-Hant")).toMatchObject({ status: "fallback_en", fallbackReason: "conversion_failed" });
+    expect(seen.filter(([lang]) => lang !== "zh-Hant").every(([, at]) => at === 0)).toBe(true);
+    expect(end.at).toBe(STORE_GRACE_MS);
+  });
+
+  it("rejects, instead of waiting, when the routes do not answer in time, and calls no model", async () => {
+    const t = setup({ deps: { routes: () => NEVER } });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(STORE_GRACE_MS - 1);
+    expect(end.at).toBeNull();
+    await vi.advanceTimersByTimeAsync(1);
+    await run;
+
+    expect(end.error).toBeInstanceOf(AlertRoutesUnavailableError);
+    expect(end.at).toBe(STORE_GRACE_MS);
+    expect(t.calls).toHaveLength(0);
+  });
+
+  it("ends every language as the English fallback at once when the caller cancels while the routes are read", async () => {
+    const controller = new AbortController();
+    const t = setup({ deps: { routes: () => NEVER, storeGraceMs: 60_000 } });
+    const { end, run } = timed(t, { signal: controller.signal });
+
+    await vi.advanceTimersByTimeAsync(300);
+    controller.abort();
+    await vi.advanceTimersByTimeAsync(0);
+    await run;
+
+    expect(end.at).toBe(300);
+    expect(end.result!.translations.map((text) => text.lang)).toEqual([...ALERT_TARGET_LANGS]);
+    expect(end.result!.translations.every((text) => text.status === "fallback_en" && text.body === ENGLISH_ALERT)).toBe(true);
+    expect(end.result!.outcomes.every((outcome) => outcome.fallbackReason === "cancelled")).toBe(true);
+    expect(t.calls).toHaveLength(0);
+  });
+
+  it("still rejects with what the routes threw (a bad route row), and calls no model", async () => {
+    const t = setup({
+      deps: {
+        routes: async () => {
+          throw new Error("route row is not a route");
+        },
+      },
+    });
+    const { end, run } = timed(t);
+
+    await vi.advanceTimersByTimeAsync(40_000);
+    await run;
+
+    expect(end.error).toMatchObject({ message: "route row is not a route" });
+    expect(t.calls).toHaveLength(0);
+  });
+});
+
+describe("a text read from the cache is checked again", () => {
+  it("does not use a cached text that fails the check, and asks the model again", async () => {
+    const t = setup();
+    await translate(t);
+    for (const row of t.cache.rows.values()) if (row.key.lang === "fr") row.value = { ...row.value, body: "edited by hand" };
+    const callsBefore = t.calls.length;
+
+    const again = await translate(t);
+
+    expect(t.calls.slice(callsBefore).map((call) => call.lang)).toEqual(["fr"]);
+    expect(of(again.translations, "fr")).toMatchObject({ status: "ok", body: GOOD.fr });
+    expect(of(again.outcomes, "fr").attempts.map((attempt) => attempt.result)).toEqual(["passed"]);
+    expect(again.cacheFailures).toBe(1);
+  });
+
+  it("does not use the English handed back, or a text in another script, that the cache holds for a language", async () => {
+    const t = setup();
+    await translate(t);
+    for (const row of t.cache.rows.values()) {
+      if (row.key.lang === "ta") row.value = { ...row.value, body: ENGLISH_ALERT };
+      if (row.key.lang === "bn") row.value = { ...row.value, body: GOOD.hi! };
+    }
+    const callsBefore = t.calls.length;
+
+    const again = await translate(t);
+
+    expect(t.calls.slice(callsBefore).map((call) => call.lang).sort()).toEqual(["bn", "ta"]);
+    expect(of(again.translations, "ta").body).toBe(GOOD.ta);
+    expect(of(again.translations, "bn").body).toBe(GOOD.bn);
+  });
+
+  it("still uses a cached text that passes", async () => {
+    const t = setup();
+    await translate(t);
+    const callsBefore = t.calls.length;
+
+    const again = await translate(t);
+
+    expect(t.calls).toHaveLength(callsBefore);
+    expect(again.cacheFailures).toBe(0);
+  });
+});
+
+describe("digits are Western in every language (design note D-13)", () => {
+  // The zero of each script's digits: a model may write 85 as ٨٥, ۸۵, ८५, ৮৫ ...
+  const ZERO: Record<string, number> = { ur: 0x0660, ps: 0x06f0, prs: 0x06f0, hi: 0x0966, bn: 0x09e6, pa: 0x0a66, gu: 0x0ae6, ta: 0x0be6, zh: 0xff10 };
+  const own = (lang: string) => GOOD[lang]!.replace(/[0-9]/g, (digit) => String.fromCodePoint(ZERO[lang]! + Number(digit)));
+  const eastern = (call: { lang: string }): Behaviour => ({ text: ZERO[call.lang] === undefined ? GOOD[call.lang]! : own(call.lang) });
+
+  it("maps the digits a model wrote in its own script to 0-9 in the result, before anything is cached", async () => {
+    const t = setup({ behaviour: eastern });
+
+    const { translations } = await translate(t);
+
+    for (const lang of Object.keys(ZERO)) {
+      expect(own(lang), lang).not.toBe(GOOD[lang]);
+      expect(of(translations, lang), lang).toMatchObject({ status: "ok", body: GOOD[lang] });
+      expect(t.cache.puts.find((put) => put.key.lang === lang)!.value.body, lang).toBe(GOOD[lang]);
+    }
+    expect(of(translations, "zh-Hant").body).toContain("85");
+    expect(of(translations, "zh-Hant").body).not.toMatch(/[０-９]/);
+    const notWestern = /(?![0-9])\p{Nd}/u;
+    expect(t.cache.puts.filter((put) => notWestern.test(put.value.body)).map((put) => put.key.lang)).toEqual([]);
+  });
+
+  it("maps a building number, a time and a phone number alike, and leaves the words around them", async () => {
+    const english = "Call 416 555 0199 before 10:30 at 85 Thorncliffe Park Dr.";
+    const t = setup({ behaviour: (call) => (call.lang === "ur" ? { text: "لفٹ ۸۵ تھورنکلف پارک ڈرائیو۔ ۱۰:۳۰ سے پہلے ۴۱۶ ۵۵۵ ۰۱۹۹ پر کال کریں۔" } : ALL_GOOD(call)) });
+
+    const { translations } = await finish(t.alerts.translate({ english }));
+
+    expect(of(translations, "ur").body).toBe("لفٹ 85 تھورنکلف پارک ڈرائیو۔ 10:30 سے پہلے 416 555 0199 پر کال کریں۔");
+  });
+
+  it("does not take a text of nothing but digits for a translation, in any script's digits", async () => {
+    const t = setup({ behaviour: (call) => (call.lang === "ur" ? { text: "۸۵ ۱۱۱" } : ALL_GOOD(call)) });
+
+    const { outcomes } = await translate(t);
+
+    expect(of(outcomes, "ur").attempts.map((attempt) => attempt.result)).toEqual(["wrong_script", "wrong_script"]);
+  });
+
+  it("does not reuse a text cached by the checks of an earlier version, which did not map digits", async () => {
+    expect(Number(CHECK_LOGIC_VERSION)).toBeGreaterThanOrEqual(2);
+    const t = setup();
+    const ur = SEEDED_ROUTES.find((route) => route.lang === "ur")!;
+    const earlier = checkVersion(ur.check).replace(new RegExp(`^${CHECK_LOGIC_VERSION}\\.`), "1.");
+    expect(earlier).not.toBe(checkVersion(ur.check));
+    const key: TranslationCacheKey = { sourceHash: SOURCE_HASH, lang: "ur", modelId: NORTH, promptVersion: "p1", checkVersion: earlier, openccVersion: "", openccConfig: "" };
+    const value: CachedTranslation = { body: own("ur"), status: "ok", fromTextHash: null };
+    t.cache.rows.set(t.cache.id(key), { key, value });
+
+    const { translations } = await translate(t);
+
+    expect(t.calls.filter((call) => call.lang === "ur")).toHaveLength(1);
+    expect(of(translations, "ur").body).toBe(GOOD.ur);
   });
 });
 

@@ -9,9 +9,21 @@
 //
 // `zh-Hant` is not translated: once zh has passed it is converted with OpenCC and marked `script_converted`.
 //
+// Digits are Western (0-9) in every language until each community decides (prototype design note D-13): whatever digits a
+// model writes (Arabic-Indic, Devanagari, Bengali ...) are mapped to 0-9 before the output is checked, cached or returned,
+// the same as the offline catalogue script does.
+//
 // Passing results are cached under every part of AD-10's key, and only passing results: a failure is never cached, so a
-// failed language is tried again next time. Each call to a model records its usage in spend_event, without text: what the
-// vendor billed, or an estimate for a call that was aborted before it answered.
+// failed language is tried again next time. A cached text is checked again when it is read: one that no longer passes (the
+// table gives the app no way to change one, so this means it was changed outside the app) is not used. Each call to a model
+// records its usage in spend_event, without text: what the vendor billed, or an estimate for a call that was aborted before
+// it answered.
+//
+// No store is waited for without limit. A cache read ends at the language's stop (its route deadline or the caller's cancel)
+// and, if the store does not answer within STORE_GRACE_MS, counts as a miss; a cache write and a spend write that do not
+// finish within STORE_GRACE_MS are given up (counted, never failing the translation) and the language does not wait for them.
+// So a language ends by its route deadline whatever the stores do, and `translate` resolves within the longest route deadline
+// plus a few grace periods (the submit budget's 5 s).
 //
 // The result carries codes and counts only (how each attempt ended), never text beyond the Translated texts themselves.
 // Nothing here knows a vendor's language code: the Translator port takes LangCode, and the adapter maps it.
@@ -28,12 +40,23 @@ import {
   estimateAlertCallTokens,
   type AttemptOutcome,
   type AttemptResult,
+  type CachedTranslation,
   type LanguageOutcome,
   type TranslationCacheKey,
 } from "../domain/alertTranslation";
 import { normaliseTranslation } from "../domain/questionTranslation";
+import { toWesternDigits } from "../domain/westernDigits";
 import type { TranslationCache, ZhHantConverter } from "./alertPorts";
 import type { Translator } from "./ports";
+
+/**
+ * The longest a store (the routes, a cache read or write, a spend write) is waited for, in milliseconds. A read that does not
+ * answer in time counts as a miss, a write that does not finish is given up, and the failure is counted, never failing the
+ * translation. Short enough that the worst case, four of them one after another (the routes read; then, after the longest
+ * route deadline, zh-Hant's converter, its cache read and the final flush of writes), stays inside the submit budget (that
+ * deadline plus 5 s).
+ */
+export const STORE_GRACE_MS = 1000;
 
 /** The check version of one language: the rules' version, `eld`'s, and the language's own check (a route row), so changing any of them is a new key. */
 export function checkVersion(check: LanguageCheck): string {
@@ -55,6 +78,8 @@ export interface AlertTranslatorDeps {
   checkVersion?: string;
   /** Milliseconds from a monotonic clock, to time attempts. Defaults to performance.now. */
   clock?: () => number;
+  /** How long a store is waited for (see STORE_GRACE_MS). Defaults to STORE_GRACE_MS. */
+  storeGraceMs?: number;
   /** Called with each language's text the moment it is settled, so a screen can show progress per language. A failure in it is ignored. */
   onLanguage?: (translated: Translated) => void;
 }
@@ -64,14 +89,19 @@ export interface AlertTranslation {
   translations: Translated[];
   /** How each language ended, in the same order. */
   outcomes: LanguageOutcome[];
-  /** Spend events that could not be written (the translation went on). */
+  /** Spend events that could not be written, or not within STORE_GRACE_MS (the translation went on). */
   spendFailures: number;
-  /** Cache reads or writes that failed (the translation went on as if the cache missed). */
+  /** Cache reads or writes that failed or were too slow, and cached texts that no longer pass their check (the translation went on as if the cache missed). */
   cacheFailures: number;
 }
 
 export interface AlertTranslator {
-  /** Translates `english` into every language. Resolves with a text for each; `signal` cancels what is still running (those languages end as `fallback_en`, and the caller, which cancelled, discards the result). */
+  /**
+   * Translates `english` into every language. Resolves with a text for each; `signal` cancels what is still running (those
+   * languages end as `fallback_en` at once, and the caller, which cancelled, discards the result). It never waits for a
+   * store without limit. It rejects only when the English is empty (AlertTranslationInputError) or the routes cannot be read
+   * (what `routes` threw, or AlertRoutesUnavailableError when it did not answer within STORE_GRACE_MS).
+   */
   translate(input: { english: string; signal?: AbortSignal }): Promise<AlertTranslation>;
 }
 
@@ -83,7 +113,42 @@ export class AlertTranslationInputError extends Error {
   }
 }
 
+/** `routes` did not answer within STORE_GRACE_MS: no language can be translated without its route, and the submit is not left waiting for them. */
+export class AlertRoutesUnavailableError extends Error {
+  override name = "AlertRoutesUnavailableError";
+  constructor() {
+    super("The translation routes could not be read in time");
+  }
+}
+
 type Stop = "deadline" | "cancelled";
+/** How a wait on a store ended: its answer, its failure, the grace running out (it is left to finish on its own), or the stop signal. */
+type Waited<T> = { ended: "value"; value: T } | { ended: "failed"; error: unknown } | { ended: "late" } | { ended: "stopped" };
+
+/**
+ * Waits for `work` for at most `ms`, and no longer than `stop` allows. Never rejects and leaves no timer behind. Work that is
+ * still running when the wait ends is not cancelled (the stores take no signal), but its result, or its failure, is ignored.
+ */
+function waitFor<T>(work: () => Promise<T>, ms: number, stop?: AbortSignal): Promise<Waited<T>> {
+  return new Promise((resolve) => {
+    const end = (result: Waited<T>) => {
+      clearTimeout(timer);
+      stop?.removeEventListener("abort", onStop);
+      resolve(result);
+    };
+    const onStop = () => end({ ended: "stopped" });
+    const timer = setTimeout(() => end({ ended: "late" }), ms);
+    if (stop?.aborted) return end({ ended: "stopped" });
+    stop?.addEventListener("abort", onStop, { once: true });
+    Promise.resolve()
+      .then(work)
+      .then(
+        (value) => end({ ended: "value", value }),
+        (error: unknown) => end({ ended: "failed", error }),
+      );
+  });
+}
+
 type CallResult = { text: string } | { failure: Exclude<AttemptResult, "cached" | "passed"> };
 interface LanguageRun {
   translated: Translated;
@@ -92,42 +157,52 @@ interface LanguageRun {
 
 export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslator {
   const clock = deps.clock ?? (() => performance.now());
+  const grace = deps.storeGraceMs ?? STORE_GRACE_MS;
 
   return {
     async translate({ english, signal }) {
       if (english.trim() === "") throw new AlertTranslationInputError();
       const sourceHash = sha256Hex(english);
-      const routes = new Map((await deps.routes()).map((route) => [route.lang, route]));
       const pending: Promise<void>[] = [];
       let spendFailures = 0;
       let cacheFailures = 0;
 
+      const fallback = (lang: Exclude<LangCode, "en">): Translated => ({ lang, body: english, machine: false, model: null, status: "fallback_en", source_hash: sourceHash });
+
+      // Without its routes nothing can be translated. A caller that cancels meanwhile gets every language as the English, at once.
+      const loaded = await waitFor(() => deps.routes(), grace, signal);
+      if (loaded.ended === "failed") throw loaded.error;
+      if (loaded.ended === "late") throw new AlertRoutesUnavailableError();
+      if (loaded.ended === "stopped") {
+        const translations = ALERT_TARGET_LANGS.map(fallback);
+        const outcomes = ALERT_TARGET_LANGS.map((lang): LanguageOutcome => ({ lang, status: "fallback_en", fallbackReason: "cancelled", attempts: [], ms: 0 }));
+        return { translations, outcomes, spendFailures, cacheFailures };
+      }
+      const routes = new Map(loaded.value.map((route) => [route.lang, route]));
+
+      /** A write is not waited for by the language that made it: it is given up after the grace, and `translate` waits for every one before it resolves. */
       const recordSpend = (event: SpendEventInput) => {
         pending.push(
-          Promise.resolve()
-            .then(() => deps.recordSpend(event))
-            .catch(() => {
-              spendFailures += 1;
-            }),
+          waitFor(() => deps.recordSpend(event), grace).then((write) => {
+            if (write.ended !== "value") spendFailures += 1;
+          }),
         );
       };
-      const readCache = async (key: TranslationCacheKey) => {
-        try {
-          return await deps.cache.get(key);
-        } catch {
-          cacheFailures += 1;
-          return null;
-        }
+      /** A read ends at `stop` (a miss); one that fails or is too slow is a miss and counted. */
+      const readCache = async (key: TranslationCacheKey, stop?: AbortSignal): Promise<CachedTranslation | null> => {
+        const read = await waitFor(() => deps.cache.get(key), grace, stop);
+        if (read.ended === "value") return read.value;
+        if (read.ended !== "stopped") cacheFailures += 1;
+        return null;
       };
-      const writeCache = async (key: TranslationCacheKey, value: Parameters<TranslationCache["put"]>[1]) => {
-        try {
-          await deps.cache.put(key, value);
-        } catch {
-          cacheFailures += 1;
-        }
+      const writeCache = (key: TranslationCacheKey, value: CachedTranslation) => {
+        pending.push(
+          waitFor(() => deps.cache.put(key, value), grace).then((write) => {
+            if (write.ended !== "value") cacheFailures += 1;
+          }),
+        );
       };
 
-      const fallback = (lang: Exclude<LangCode, "en">): Translated => ({ lang, body: english, machine: false, model: null, status: "fallback_en", source_hash: sourceHash });
       const finished = (run: LanguageRun): LanguageRun => {
         try {
           deps.onLanguage?.(run.translated);
@@ -192,7 +267,7 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
           }
           const billed = tokensOf(answer.value);
           recordSpend(spendEvent(model, billed ?? estimateAlertCallTokens(english), billed === null, elapsed()));
-          const text = normaliseTranslation(typeof answer.value?.text === "string" ? answer.value.text : "");
+          const text = toWesternDigits(normaliseTranslation(typeof answer.value?.text === "string" ? answer.value.text : ""));
           const failure = checkAlertTranslation(route.check, english, text);
           return failure === null ? { text } : { failure };
         } catch {
@@ -232,18 +307,23 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
           for (const position of route.positions) {
             if (state.stop !== null) break;
             const key: TranslationCacheKey = { sourceHash, lang, modelId: position.model, promptVersion: deps.promptVersion, checkVersion: version, openccVersion: "", openccConfig: "" };
-            const cached = await readCache(key);
+            const cached = await readCache(key, language.signal);
             if (state.stop !== null) break;
             if (cached !== null && cached.status === "ok") {
-              attempts.push({ position: position.position, model: position.model, result: "cached", ms: 0 });
-              return finished(done({ lang, body: cached.body, machine: true, model: position.model, status: "ok", source_hash: sourceHash }, attempts, null));
+              // A stored text is checked again as it is read: one that fails the check is not used and the model is asked. The
+              // key holds the check's version, so a failing hit was changed outside the app, never by a change of the checks.
+              if (checkAlertTranslation(route.check, english, cached.body) === null) {
+                attempts.push({ position: position.position, model: position.model, result: "cached", ms: 0 });
+                return finished(done({ lang, body: cached.body, machine: true, model: position.model, status: "ok", source_hash: sourceHash }, attempts, null));
+              }
+              cacheFailures += 1;
             }
             const began = clock();
             const result = await callModel(route, position.model, position.attemptTimeoutMs, language.signal, () => state.stop ?? "deadline");
             const ms = Math.max(0, Math.round(clock() - began));
             if ("text" in result) {
               attempts.push({ position: position.position, model: position.model, result: "passed", ms });
-              await writeCache(key, { body: result.text, status: "ok", fromTextHash: null });
+              writeCache(key, { body: result.text, status: "ok", fromTextHash: null });
               return finished(done({ lang, body: result.text, machine: true, model: position.model, status: "ok", source_hash: sourceHash }, attempts, null));
             }
             attempts.push({ position: position.position, model: position.model, result: result.failure, ms });
@@ -265,7 +345,9 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
           });
         if (zh.translated.status !== "ok" || zh.translated.model === null) return done(fallback("zh-Hant"), "zh_unavailable");
         try {
-          const converter = await deps.zhHant();
+          const loadedConverter = await waitFor(() => deps.zhHant(), grace, signal);
+          if (loadedConverter.ended !== "value") return done(fallback("zh-Hant"), loadedConverter.ended === "stopped" ? "cancelled" : "conversion_failed");
+          const converter = loadedConverter.value;
           const zhRoute = routes.get("zh")!;
           const fromTextHash = sha256Hex(zh.translated.body);
           const key: TranslationCacheKey = {
@@ -278,12 +360,13 @@ export function createAlertTranslator(deps: AlertTranslatorDeps): AlertTranslato
             openccConfig: converter.config,
           };
           // A cached conversion is reused only if it was made from the very zh text in hand.
-          const cached = await readCache(key);
+          const cached = await readCache(key, signal);
+          if (signal?.aborted) return done(fallback("zh-Hant"), "cancelled");
           let body = cached !== null && cached.status === "script_converted" && cached.fromTextHash === fromTextHash ? cached.body : null;
           if (body === null) {
             body = converter.convert(zh.translated.body);
             if (typeof body !== "string" || body.trim() === "") return done(fallback("zh-Hant"), "conversion_failed");
-            await writeCache(key, { body, status: "script_converted", fromTextHash });
+            writeCache(key, { body, status: "script_converted", fromTextHash });
           }
           return done(
             {

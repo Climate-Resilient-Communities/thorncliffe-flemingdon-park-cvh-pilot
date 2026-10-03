@@ -2,7 +2,8 @@
 // model does: answer (after a delay, with usage), fail, or hang until it is cancelled; and it records every call and every abort
 // of a call's signal, so a test can say a timed-out attempt was aborted and that a late answer was never used. Like the Cohere
 // adapter, a call that is cancelled rejects with TranslateError("aborted"), unless the script says to ignore the cancel and
-// answer late anyway.
+// answer late anyway. A vendor failure rejects with a plain Error: the alert translator counts any rejection as a failed
+// attempt and reads no error code, so the fake does not depend on the adapter's code list (which another change is widening).
 import type { LangCode } from "@/contracts/lang";
 import { TranslateError, type TranslateRequest, type Translator } from "../application/ports";
 
@@ -66,7 +67,7 @@ export function fakeTranslator(behaviour: (call: { lang: LangCode; model: string
         if (plan.hang) return;
         const settle = () => {
           if (signal.aborted && plan.ignoreAbort) lateAnswers.push({ lang: to, model });
-          if (plan.error) reject(new TranslateError("failed"));
+          if (plan.error) reject(new Error("vendor error"));
           else resolve({ text: plan.text ?? "", inputTokens: plan.inputTokens === undefined ? 120 : plan.inputTokens, outputTokens: plan.outputTokens === undefined ? 90 : plan.outputTokens });
         };
         // An answer with no delay comes at once, so a test with no delays needs no clock.

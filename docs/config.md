@@ -38,6 +38,20 @@ build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_P
 (release search data) is deployed; `SEARCH_QUESTION_ROUTE` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
 in Preview or Development: start-up fails there.
 
+## GitHub: environments
+
+| Environment | Secrets and variables | Rules |
+|---|---|---|
+| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`; variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL` | deploys from `main` only |
+| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
+
+`VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
+scoped to that team: `vercel promote` and `vercel rollback` look up the token's user and fail with
+"User not found (404)" otherwise.
+
+The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
+`seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
+
 ## Translation of alerts (S04.02)
 
 Alerts are translated at submit by the routes in the `translation_route` table (spine AD-10). The routes are not an environment
@@ -52,27 +66,14 @@ runs have no key, and the tests use a fake model.
 | A language's route deadline | not stored: the sum of its attempt timeouts, at most 30 s | **provisional**: 20 s for every language | follows from the attempt timeouts |
 | The check each language's output must pass | `translation_route.eld_code`, `script`, `marker_letters`, `excluded_letters` | spine AD-10 | a migration |
 | The prompt's version | `PROMPT_VERSION` in `src/modules/translation/adapters/cohereTranslator.ts` | `1` | the developer who changes the prompt or a language name in it (a test fails until the version and its pinned fingerprint are changed together) |
-| The checks' version | `CHECK_LOGIC_VERSION` and `ELD_VERSION` in `src/modules/translation/domain/alertChecks.ts` | `1`, `2.1.0` | the developer who changes how checks are applied or the `eld` package |
+| The checks' version | `CHECK_LOGIC_VERSION` and `ELD_VERSION` in `src/modules/translation/domain/alertChecks.ts` | `2`, `2.1.0` | the developer who changes how checks are applied, how a model's output is normalised before them (version 2: digits of any script written 0-9, design note D-13) or the `eld` package |
+| How long a store is waited for | `STORE_GRACE_MS` in `src/modules/translation/application/alertTranslator.ts` (and `storeGraceMs` in the translator's dependencies, for tests) | 1 s: a cache read that does not answer is a miss, a cache or spend write that does not finish is given up, the routes read that does not answer rejects the translation | the developer, with the submit budget (the longest route deadline plus 5 s) in view: at most four graces follow one another (the routes read; then zh-Hant's converter, its cache read and the final flush of writes) |
 
 The attempt timeouts and deadlines are provisional until S04.01 has measured latency and replaced them by a later migration; they
 are re-measured from the per-call times recorded in `spend_event` (kind `translate`, purpose `alert`, no text) after the pilot's
 first two weeks and whenever a model or route changes. The translation cache (`translation_cache`) needs no setting: its key holds the
 prompt version, the check version and, for zh-Hant, OpenCC's version and configuration, so a change to any of them makes a fresh
 translation and nothing older is reused.
-
-## GitHub: environments
-
-| Environment | Secrets and variables | Rules |
-|---|---|---|
-| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`; variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL` | deploys from `main` only |
-| `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
-
-`VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
-scoped to that team: `vercel promote` and `vercel rollback` look up the token's user and fail with
-"User not found (404)" otherwise.
-
-The "Seed production" workflow (Actions tab) runs `seed:providers`, `seed:buildings` or
-`seed:guides` with `PRODUCTION_DATABASE_URL`, in `dry-run` by default.
 
 ## Supabase (Auth settings)
 

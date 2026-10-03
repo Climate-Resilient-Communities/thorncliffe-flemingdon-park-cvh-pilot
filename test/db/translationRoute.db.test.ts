@@ -111,17 +111,37 @@ describe("translation_route and translation_cache (S04.02)", () => {
       await expect(appSql.unsafe("truncate translation_route")).rejects.toThrow(/permission denied/);
     });
 
-    it("reads and inserts cache rows, replaces only a conversion's text and source hash, and deletes nothing", async () => {
+    it("reads and inserts cache rows, replaces only a zh-Hant conversion's text and source hash, and deletes nothing", async () => {
       const hash = sha256Hex("rights test");
       await appSql.unsafe(`insert into translation_cache (source_hash, lang, model_id, prompt_version, check_version, body, status) values ('${hash}', 'ur', 'm', '1', 'c', 'متن', 'ok')`);
+      await appSql.unsafe(
+        `insert into translation_cache (source_hash, lang, model_id, prompt_version, check_version, opencc_version, opencc_config, body, status, from_text_hash)
+         values ('${hash}', 'zh-Hant', 'm', '1', 'c', '1.4.2', 'cfg', '電梯', 'script_converted', '${"a".repeat(64)}')`,
+      );
 
-      expect(await appSql`select count(*)::int as n from translation_cache where source_hash = ${hash}`).toEqual([{ n: 1 }]);
-      await expect(appSql.unsafe(`update translation_cache set body = 'x' where source_hash = '${hash}'`)).resolves.toBeDefined();
+      expect(await appSql`select count(*)::int as n from translation_cache where source_hash = ${hash}`).toEqual([{ n: 2 }]);
+      // A model's text is written once: the app's update sees no such row, whatever it sets (nothing is changed and no error is raised).
+      expect((await appSql.unsafe(`update translation_cache set body = 'x' where source_hash = '${hash}' and lang = 'ur'`)).count).toBe(0);
+      expect((await appSql.unsafe(`update translation_cache set body = 'x', from_text_hash = '${"b".repeat(64)}' where source_hash = '${hash}' and status = 'ok'`)).count).toBe(0);
+      expect(await sql`select body from translation_cache where source_hash = ${hash} and lang = 'ur'`).toEqual([{ body: "متن" }]);
+      // A conversion's text and source hash may be replaced.
+      expect((await appSql.unsafe(`update translation_cache set body = '電梯停止', from_text_hash = '${"b".repeat(64)}' where source_hash = '${hash}' and lang = 'zh-Hant'`)).count).toBe(1);
+      expect(await sql`select body, from_text_hash from translation_cache where source_hash = ${hash} and lang = 'zh-Hant'`).toEqual([{ body: "電梯停止", from_text_hash: "b".repeat(64) }]);
+      // Nothing else of a row can be changed, and a row cannot be deleted.
       await expect(appSql.unsafe(`update translation_cache set status = 'script_converted' where source_hash = '${hash}'`)).rejects.toThrow(/permission denied/);
       await expect(appSql.unsafe(`update translation_cache set lang = 'fr' where source_hash = '${hash}'`)).rejects.toThrow(/permission denied/);
       await expect(appSql.unsafe(`delete from translation_cache where source_hash = '${hash}'`)).rejects.toThrow(/permission denied/);
       await expect(appSql.unsafe("truncate translation_cache")).rejects.toThrow(/permission denied/);
       await sql.unsafe(`delete from translation_cache where source_hash = '${hash}'`);
+    });
+
+    it("has an update policy that sees only a zh-Hant conversion, before and after the change", async () => {
+      const [policy] = await sql`select qual, with_check from pg_policies where tablename = 'translation_cache' and policyname = 'translation_cache_app_update'`;
+
+      expect(policy!.qual).toContain("zh-Hant");
+      expect(policy!.qual).toContain("script_converted");
+      expect(policy!.with_check).toContain("zh-Hant");
+      expect(policy!.with_check).toContain("script_converted");
     });
 
     it.each(["translation_route", "translation_cache"])("has row level security on %s and nothing for the client roles", async (table) => {
@@ -307,13 +327,12 @@ describe("translation_route and translation_cache (S04.02)", () => {
       ]);
     });
 
-    it("replaces a conversion that was made from another zh text, through the app's update right, and leaves a model's text as it was", async () => {
+    it("replaces a conversion that was made from another zh text, through the app's update right", async () => {
       await clear();
       const fake = answers();
       const alerts = build(fake);
       await alerts.translate({ english: ENGLISH_ALERT });
       await sql.unsafe(`update translation_cache set body = 'stale', from_text_hash = '${"b".repeat(64)}' where lang = 'zh-Hant'`);
-      await sql.unsafe("update translation_cache set body = 'edited by hand' where lang = 'fr'");
 
       const result = await alerts.translate({ english: ENGLISH_ALERT });
 
@@ -321,8 +340,33 @@ describe("translation_route and translation_cache (S04.02)", () => {
       const [hant] = await sql`select body, from_text_hash from translation_cache where lang = 'zh-Hant'`;
       expect(hant!.body).toBe(result.translations.find((text) => text.lang === "zh-Hant")!.body);
       expect(hant!.from_text_hash).toBe(sha256Hex(GOOD.zh!));
-      // A model's text is written once: the cache's row stands, and is what a later submit gets.
-      expect(result.translations.find((text) => text.lang === "fr")!.body).toBe("edited by hand");
+    });
+
+    it("does not use a model's text that was changed behind the app's back and no longer passes its check: the model is asked again, and the row stands as it was left", async () => {
+      await clear();
+      const fake = answers();
+      const alerts = build(fake);
+      await alerts.translate({ english: ENGLISH_ALERT });
+      await sql.unsafe("update translation_cache set body = 'edited by hand' where lang = 'fr'");
+      const callsBefore = fake.calls.length;
+
+      const result = await alerts.translate({ english: ENGLISH_ALERT });
+
+      expect(fake.calls.slice(callsBefore).map((call) => call.lang)).toEqual(["fr"]);
+      expect(result.translations.find((text) => text.lang === "fr")).toMatchObject({ status: "ok", body: GOOD.fr });
+      expect(result.cacheFailures).toBe(1);
+      // A model's text is written once, and the app cannot change it, so the new text was not stored over the old one.
+      expect(await sql`select body from translation_cache where lang = 'fr'`).toEqual([{ body: "edited by hand" }]);
+    });
+
+    it("stores the digits of a model's text as 0-9", async () => {
+      await clear();
+      const eastern = fakeTranslator((call) => ({ text: call.lang === "ur" ? GOOD.ur!.replace("85", "۸۵") : GOOD[call.lang]! }));
+
+      const result = await build(eastern).translate({ english: ENGLISH_ALERT });
+
+      expect(result.translations.find((text) => text.lang === "ur")!.body).toBe(GOOD.ur);
+      expect(await sql`select body from translation_cache where lang = 'ur'`).toEqual([{ body: GOOD.ur }]);
     });
 
     it("keeps one row when two submits translate the same text at the same time", async () => {

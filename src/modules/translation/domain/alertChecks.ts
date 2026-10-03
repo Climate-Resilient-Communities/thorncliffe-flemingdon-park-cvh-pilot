@@ -36,8 +36,12 @@ const SCRIPT_LETTER: Record<CheckScript, RegExp> = {
  */
 export const MIN_SCRIPT_SHARE = 0.6;
 
-/** Bump when the rules below change in a way a language's own check (a route row) does not show. Part of the cache's check version. */
-export const CHECK_LOGIC_VERSION = "1";
+/**
+ * Bump when the rules below, or the normalising of a model's output before them, change in a way a language's own check (a route
+ * row) does not show. Part of the cache's check version. 1: the checks below; 2: digits of every script are written 0-9 before
+ * the check (D-13), so a text cached before is never reused.
+ */
+export const CHECK_LOGIC_VERSION = "2";
 
 /** The `eld` version the checks were written against; src/modules/translation/domain/alertChecks.test.ts keeps it equal to the installed package. Part of the cache's check version. */
 export const ELD_VERSION = "2.1.0";

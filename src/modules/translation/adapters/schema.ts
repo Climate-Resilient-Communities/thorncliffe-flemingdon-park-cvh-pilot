@@ -64,6 +64,12 @@ export const translationCache = pgTable(
     ),
     pgPolicy("translation_cache_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("translation_cache_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
-    pgPolicy("translation_cache_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+    // Only a zh-Hant conversion may be replaced, before and after the change: a model's text (`ok`) is written once.
+    pgPolicy("translation_cache_app_update", {
+      for: "update",
+      to: cvhApp,
+      using: sql`lang = 'zh-Hant' and status = 'script_converted'`,
+      withCheck: sql`lang = 'zh-Hant' and status = 'script_converted'`,
+    }),
   ],
 ).enableRLS();

@@ -26,7 +26,10 @@
 -- language, so they can be part of the primary key). Only passing results are stored: the status can be only `ok`
 -- (a model's text that passed the checks) or `script_converted` (zh-Hant), so a failure or the English fallback cannot be
 -- cached, whatever the code does. A zh-Hant row also names the sha256 of the zh text it was converted from, and the app
--- reuses it only for that zh text. The app inserts rows and can replace only a conversion's body and source hash.
+-- reuses it only for that zh text. The app inserts rows and can replace only a zh-Hant conversion's body and source hash
+-- (a column grant, and an update policy that sees only `script_converted` rows of zh-Hant, before and after the change).
+-- A model's text (`ok`) is written once: the app has no way to change or delete it, so a text that passed the checks stays
+-- as it passed, and what a cache read returns for it is what was checked.
 --
 -- Supabase's default privileges grant every new table in public to anon, authenticated and service_role, so each
 -- table takes those back; only cvh_app (S01.04) reaches them.
@@ -158,4 +161,6 @@ grant select, insert on table translation_cache to cvh_app;
 grant update (body, from_text_hash) on table translation_cache to cvh_app;
 create policy translation_cache_app_select on translation_cache for select to cvh_app using (true);
 create policy translation_cache_app_insert on translation_cache for insert to cvh_app with check (true);
-create policy translation_cache_app_update on translation_cache for update to cvh_app using (true) with check (true);
+create policy translation_cache_app_update on translation_cache for update to cvh_app
+  using (lang = 'zh-Hant' and status = 'script_converted')
+  with check (lang = 'zh-Hant' and status = 'script_converted');
