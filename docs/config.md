@@ -158,7 +158,11 @@ cannot be recalled: the page says how many had been handed over when the pause w
 the usual order and checks each text again just before it is handed over, so a text of an alert that was corrected, withdrawn or closed meanwhile, or whose
 valid-until time has passed, is cancelled or skipped instead of sent (a final alert, and the withdrawal that closed an alert, are still sent). Pausing and
 resuming are audited (`sending.paused`, `sending.resumed`); the reason is kept on the switch only while the pause lasts. It is the first thing to do for a
-wrong alert, a provider problem, and before anyone changes the Messaging Service.
+wrong alert, a provider problem, and before anyone changes the Messaging Service. The "Test text" page (S01.15, until S06.09 removes it) stops with the pause:
+it refuses to send while texts are paused. The pause stops only texts that have not yet been handed to Twilio, so it says how many had gone, but only for an
+alert that still had texts waiting: an alert that had finished sending when the pause was made is not reported (an owner decision is open on that). If the
+`messaging_control` row were ever missing, the sender would hold every text and every Hub screen would say "Texts are not going out ... Tell IT."; the
+migration makes the row and the app cannot delete it, so that means the database was changed by hand.
 
 ## GitHub: environments
 

@@ -49,16 +49,19 @@ export function maskedLabels(numbers: readonly string[]): string[] {
  *  - `invalid`: the request id or the number is not well formed;
  *  - `not_available`: this is not production with SMS_MODE live, or Twilio's account or number is not set;
  *  - `not_allowlisted`: the number is not one of SMS_TEST_ALLOWLIST;
+ *  - `paused`: all texts are paused (S06.06), or the pause switch cannot be found, which the sender reads as paused: the spike is a text
+ *    handed to the provider like any other, so the pause stops it too. Nothing is claimed, so a press after the resume is not a duplicate;
  *  - `duplicate_number`: a text to this number was claimed within the last 5 minutes;
  *  - `duplicate_request`: this request id was used before.
  */
-export type TestTextRefusal = "invalid" | "not_available" | "not_allowlisted" | "duplicate_number" | "duplicate_request";
+export type TestTextRefusal = "invalid" | "not_available" | "not_allowlisted" | "paused" | "duplicate_number" | "duplicate_request";
 
 /** The refusal reason the audit trail records for each refusal (the audit module's catalogue). */
-export const AUDIT_REASON_OF: Record<TestTextRefusal, "validation" | "not_available" | "not_allowlisted" | "duplicate"> = {
+export const AUDIT_REASON_OF: Record<TestTextRefusal, "validation" | "not_available" | "not_allowlisted" | "paused" | "duplicate"> = {
   invalid: "validation",
   not_available: "not_available",
   not_allowlisted: "not_allowlisted",
+  paused: "paused",
   duplicate_number: "duplicate",
   duplicate_request: "duplicate",
 };

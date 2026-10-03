@@ -93,6 +93,8 @@ describe("toAuditRecord", () => {
     ["sms.test_sent", { http_status: 400, provider_error_code: 30032, reason: "provider_error" }],
     ["sms.test_sent", { http_status: 201, provider_status: "queued", twilio_sid: `SM${"0".repeat(32)}` }],
     ["sms.test_sent", { reason: "provider_error", outcome_unknown: true }],
+    // S06.06: the test text is refused while all texts are paused.
+    ["sms.test_sent", { reason: "paused" }],
     ["sms.test_attempted", {}],
   ])("accepts %s with %j", (action, meta) => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "ok")).not.toThrow();

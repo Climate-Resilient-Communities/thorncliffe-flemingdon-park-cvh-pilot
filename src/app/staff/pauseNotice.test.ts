@@ -1,4 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
+import { MessagingControlMissing } from "@/modules/messaging";
 
 vi.mock("./messagingPause", () => ({ messagingPause: () => ({}), logPauseError: () => {} }));
 
@@ -25,5 +26,19 @@ describe("the approver's notice while texts are paused (S06.06)", () => {
 
     expect(notice).toBeNull();
     expect(logError).toHaveBeenCalledWith("messaging.pause_notice_failed", { error: "TypeError" });
+  });
+
+  it("is the paused sentence when the switch has no row, because the sender holds every text then; the failure is logged too", async () => {
+    const logError = vi.fn();
+
+    const notice = await pauseNoticeForApprover({
+      paused: async () => {
+        throw new MessagingControlMissing();
+      },
+      logError,
+    });
+
+    expect(notice).toBe("Texts are paused; this will send when resumed");
+    expect(logError).toHaveBeenCalledWith("messaging.pause_notice_failed", { error: "MessagingControlMissing" });
   });
 });

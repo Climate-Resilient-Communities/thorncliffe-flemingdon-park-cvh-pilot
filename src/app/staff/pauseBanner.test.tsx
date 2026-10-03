@@ -1,8 +1,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
-import type { PauseStatus } from "@/modules/messaging";
+import { MessagingControlMissing, type PauseStatus } from "@/modules/messaging";
 import { PauseBanner } from "./PauseBanner";
-import { loadPauseBanner, type PauseBannerDeps } from "./pauseBanner";
+import { loadPauseBanner, missingBanner, type PauseBannerDeps } from "./pauseBanner";
 
 const PAUSER = "01900000-0000-7000-8000-0000000000a1";
 const PAUSED: PauseStatus = { paused: true, pausedBy: PAUSER, pausedAt: new Date("2026-10-05T18:15:00Z"), reason: "Wrong alert sent to Thorncliffe Park", handedOffAtPause: 4 };
@@ -70,6 +70,29 @@ describe("the 'Texts are paused' banner on every Hub screen (S06.06)", () => {
     expect(logError).toHaveBeenCalledWith({ error: "TypeError" });
   });
 
+  it("says so when the pause switch has no row: the sender holds every text then, so the screen must not look as if texts go out", async () => {
+    const logError = vi.fn();
+
+    const view = await loadPauseBanner(
+      deps({
+        logError,
+        canResume: true,
+        status: async () => {
+          throw new MessagingControlMissing();
+        },
+      }),
+    );
+
+    // No link to resume, even for an Admin: there is no switch to clear.
+    expect(view).toEqual({
+      heading: "Texts are not going out",
+      by: "The pause switch is missing from the database, so every text is being held.",
+      why: "Tell IT.",
+      resume: null,
+    });
+    expect(logError).toHaveBeenCalledWith({ error: "MessagingControlMissing" });
+  });
+
   it("leaves the screen working when the check hangs, within the timeout", async () => {
     const logError = vi.fn();
     const started = Date.now();
@@ -120,6 +143,16 @@ describe("the banner as it is drawn", () => {
     const html = renderToStaticMarkup(<PauseBanner view={{ ...view, resume: null }} />);
 
     expect(html).toContain("Texts are paused");
+    expect(html).not.toContain("<a ");
+  });
+
+  it("draws the missing-switch banner as a status with no link, in words", () => {
+    const html = renderToStaticMarkup(<PauseBanner view={missingBanner()} />);
+
+    expect(html).toContain('role="status"');
+    expect(html).toContain("Texts are not going out");
+    expect(html).toContain("The pause switch is missing from the database, so every text is being held.");
+    expect(html).toContain("Tell IT.");
     expect(html).not.toContain("<a ");
   });
 

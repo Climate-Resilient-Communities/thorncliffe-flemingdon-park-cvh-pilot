@@ -64,6 +64,8 @@ export const REFUSAL_REASONS = [
   "not_available",
   /** A change to a thread that is closed (S04.03, ALERT_CLOSED). */
   "alert_closed",
+  /** S06.06: the test text was refused because all texts are paused. */
+  "paused",
 ] as const;
 
 /** Why an assignment was removed when it was not an Admin's choice: the refusal reasons, and the account leaving the Ambassador role. */

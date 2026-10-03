@@ -10,7 +10,7 @@ import postgres from "postgres";
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import * as audit from "../../src/modules/audit";
-import { createDeliveryQueue, createMessagingPause, drizzleDispatchStore, type DispatchStore, type MessagingPause } from "../../src/modules/messaging";
+import { createDeliveryQueue, createMessagingPause, drizzleDispatchStore, drizzlePauseStore, type DispatchStore, type MessagingPause, type PauseStore } from "../../src/modules/messaging";
 import { createDb, type Db } from "../../src/platform/db";
 import { dispatcherWorld, deferred, fakeResolver, sidOf, type DispatcherWorld } from "./dispatcherSupport";
 import { connect, serverUrl } from "./helpers";
@@ -97,6 +97,39 @@ async function handOff(ids: string[], to: "open" | "submitted" | "delivered" = "
 /** Claims rows without handing them off, as a run that stopped before the hand-off point would leave them. */
 async function claimOnly(ids: string[]) {
   for (const id of ids) await appSql`update delivery set state = 'claimed', claimed_by = 'worker-1', claim_token = ${randomUUID()} where id = ${id}`;
+}
+
+/**
+ * A pause store whose first `countWaiting` stops, after the use case has locked the row and before it writes anything, until the test lets it
+ * go: a second use case then really overlaps the first (it has to wait for the row lock), instead of merely running after it.
+ */
+function holdingStore() {
+  const entered = deferred();
+  const release = deferred();
+  let held = false;
+  const store: PauseStore = {
+    ...drizzlePauseStore,
+    async countWaiting(tx) {
+      const counted = await drizzlePauseStore.countWaiting(tx);
+      if (!held) {
+        held = true;
+        entered.resolve();
+        await release.promise;
+      }
+      return counted;
+    },
+  };
+  return { store, entered: entered.promise, release: release.resolve };
+}
+
+/** Whether a promise has settled yet (so a test can show that a call is still waiting). */
+function settled(promise: Promise<unknown>) {
+  const state = { done: false };
+  const finish = () => {
+    state.done = true;
+  };
+  promise.then(finish, finish);
+  return state;
 }
 
 // --- the table, with the app's credentials -------------------------------------------------------------------
@@ -212,6 +245,74 @@ describe("pausing all texts", () => {
     expect(records.filter((record) => record.outcome === "refused")).toHaveLength(1);
   });
 
+  it("makes one pause when the first press is still in its transaction: the second waits for the row lock, then finds the pause made", async () => {
+    const [a, b] = [await admin(), await admin()];
+    const hold = holdingStore();
+    // The first press has the row locked and is held before it writes anything, so the second really overlaps it.
+    const first = createMessagingPause({ db: app, store: hold.store }).pause({ actorStaffId: a, reason: "From A" });
+    await hold.entered;
+
+    const second = pause.pause({ actorStaffId: b, reason: "From B" });
+    const secondState = settled(second);
+    await world.untilSomeoneWaitsForALock();
+    expect(secondState.done).toBe(false);
+    hold.release();
+
+    expect(await first).toMatchObject({ kind: "paused", status: { pausedBy: a, reason: "From A" } });
+    expect(await second).toMatchObject({ kind: "already_paused", status: { pausedBy: a, reason: "From A" } });
+    expect(await control()).toMatchObject({ paused: true, paused_by: a, reason: "From A" });
+    expect((await audits()).map((record) => [record.action, record.actor_staff_id, record.outcome, record.meta])).toEqual([
+      ["sending.paused", a, "ok", { waiting: 0, handed_off: 0 }],
+      ["sending.paused", b, "refused", { reason: "conflict" }],
+    ]);
+  });
+
+  it("makes a resume that arrives while a pause is still in its transaction wait for it, and then resume what it made", async () => {
+    const [a, b] = [await admin(), await admin()];
+    const hold = holdingStore();
+    const first = createMessagingPause({ db: app, store: hold.store }).pause({ actorStaffId: a, reason: "Stop" });
+    await hold.entered;
+
+    const second = pause.resume({ actorStaffId: b });
+    const secondState = settled(second);
+    await world.untilSomeoneWaitsForALock();
+    expect(secondState.done).toBe(false);
+    hold.release();
+
+    expect(await first).toMatchObject({ kind: "paused" });
+    // Not "not_paused": the resume saw the pause the first press made, because it waited for the lock.
+    expect(await second).toEqual({ kind: "resumed", waiting: 0 });
+    expect(await control()).toMatchObject({ paused: false, paused_by: null, reason: null, handed_off_at_pause: null });
+    expect((await audits()).map((record) => [record.action, record.actor_staff_id, record.outcome])).toEqual([
+      ["sending.paused", a, "ok"],
+      ["sending.resumed", b, "ok"],
+    ]);
+  });
+
+  it("makes a pause that arrives while a resume is still in its transaction wait for it, and then pause again", async () => {
+    const [a, b] = [await admin(), await admin()];
+    await pause.pause({ actorStaffId: a, reason: "First" });
+    const hold = holdingStore();
+    const first = createMessagingPause({ db: app, store: hold.store }).resume({ actorStaffId: a });
+    await hold.entered;
+
+    const second = pause.pause({ actorStaffId: b, reason: "Second" });
+    const secondState = settled(second);
+    await world.untilSomeoneWaitsForALock();
+    expect(secondState.done).toBe(false);
+    hold.release();
+
+    expect(await first).toEqual({ kind: "resumed", waiting: 0 });
+    // Not "already_paused": the pause saw the resume, because it waited for the lock.
+    expect(await second).toMatchObject({ kind: "paused", status: { pausedBy: b, reason: "Second" } });
+    expect(await control()).toMatchObject({ paused: true, paused_by: b, reason: "Second" });
+    expect((await audits()).map((record) => [record.action, record.actor_staff_id, record.outcome])).toEqual([
+      ["sending.paused", a, "ok"],
+      ["sending.resumed", a, "ok"],
+      ["sending.paused", b, "ok"],
+    ]);
+  });
+
   it("counts the texts it holds and, among the alerts it is part-way through stopping, those already handed to the provider", async () => {
     // Alert A: 2 delivered or submitted, 1 delivered, 1 in an open hand-off, 1 waiting: part-way through, so its 4 handed-off texts count.
     const a = await world.seedAlert({ recipients: 5 });
@@ -298,8 +399,8 @@ describe("while texts are paused", () => {
     }
   });
 
-  it("lets the one text of an open hand-off go when the pause commits (the disclosed allowance), in flight, and puts the rest back", async () => {
-    const ids = await world.seedTransactional(3);
+  /** Starts a run whose first hand-off transaction stays open, does `during` while it is open, then lets it finish and the run end. */
+  async function duringOpenHandOff<T>(during: () => Promise<T>): Promise<T> {
     const inside = deferred();
     const proceed = deferred();
     let asks = 0;
@@ -314,17 +415,42 @@ describe("while texts are paused", () => {
     });
     const run = world.dispatcher({ resolver: resolver.resolver }).run();
     await inside.promise;
-
-    // The pause commits while the first hand-off transaction is open: it writes no delivery row and takes no lock on one, so it does not wait for it.
-    const outcome = await pause.pause({ actorStaffId: await admin(), reason: "Stop" });
+    const result = await during();
     proceed.resolve();
     await run;
+    return result;
+  }
+
+  it("lets the one text of an open hand-off go when the pause commits (the disclosed allowance), in flight, and puts the rest back", async () => {
+    const ids = await world.seedTransactional(3);
+
+    // The pause commits while the first hand-off transaction is open: it writes no delivery row and takes no lock on one, so it does not wait for it.
+    const outcome = await duringOpenHandOff(async () => pause.pause({ actorStaffId: await admin(), reason: "Stop" }));
 
     // The open hand-off was not "already handed off" when the pause committed, so it is not in the count; it is in flight afterwards.
     expect(outcome).toMatchObject({ kind: "paused", handedOff: 0 });
     expect(world.provider.calls).toHaveLength(1);
     expect(await world.stateOf(ids[0])).toBe("submitted");
     expect(await world.statesOf([ids[1], ids[2]])).toEqual({ [ids[1]]: "queued", [ids[2]]: "queued" });
+  });
+
+  it("leaves the text of an open hand-off out of the count even when its alert still has texts waiting, and counts it at the next pause", async () => {
+    // An alert is the case the count is about: transactional texts are never counted, so only an alert can show that the open hand-off is left out.
+    const alert = await world.seedAlert({ recipients: 3 });
+    const who = await admin();
+
+    const outcome = await duringOpenHandOff(() => pause.pause({ actorStaffId: who, reason: "Stop" }));
+
+    // At the moment the pause committed the alert had 3 texts waiting and none handed off: its open hand-off (the first text) was not in the count.
+    expect(outcome).toMatchObject({ kind: "paused", waiting: 3, handedOff: 0 });
+    expect(await control()).toMatchObject({ handed_off_at_pause: 0 });
+    // The allowance: that one text went out, and the other two are back in the queue, so the alert is part-way through being stopped.
+    expect(world.provider.calls).toHaveLength(1);
+    expect(await world.statesOf(alert.ids)).toEqual({ [alert.ids[0]]: "submitted", [alert.ids[1]]: "queued", [alert.ids[2]]: "queued" });
+
+    // Once the hand-off has committed it is a text already handed to the provider: a later pause of the same alert counts it.
+    await pause.resume({ actorStaffId: who });
+    expect(await pause.pause({ actorStaffId: who, reason: "Stop again" })).toMatchObject({ kind: "paused", waiting: 2, handedOff: 1 });
   });
 
   it("queues what is approved or created during the pause as usual: the rows are queued, due and in claim order, and nothing is sent", async () => {

@@ -114,6 +114,49 @@ describe("a number that is not on the allowlist", () => {
   });
 });
 
+describe("while all texts are paused (S06.06)", () => {
+  const pauseTexts = () => owner`update messaging_control set paused = true, paused_by = ${STAFF}, paused_at = now(), reason = 'test pause' where id = 1`;
+  const resumeTexts = () => owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
+
+  afterEach(async () => {
+    // Leave the switch as every other test expects it: one row, texts going out (and no row names the account the next reset removes).
+    await owner`insert into messaging_control (id) values (1) on conflict (id) do nothing`;
+    await resumeTexts();
+  });
+
+  it("refuses an approved number: no provider call, no ledger row, no attempt record, and one refused audit record without the number", async () => {
+    await pauseTexts();
+
+    await expect(press()).resolves.toEqual({ kind: "refused", reason: "paused" });
+
+    expect(provider.sent).toEqual([]);
+    expect(await ledger()).toEqual([]);
+    expect(await attemptRows()).toEqual([]);
+    expect(await auditRows()).toEqual([{ actor_staff_id: STAFF, outcome: "refused", subject_type: "sms_test_send", subject_id: null, meta: { reason: "paused" } }]);
+    expect(JSON.stringify(await auditRows())).not.toContain("5550101");
+  });
+
+  it("leaves no claim behind: after the resume the same number, and the same request, goes out at once", async () => {
+    const requestId = randomUUID();
+    await pauseTexts();
+    await expect(press(ALLOWED, requestId)).resolves.toEqual({ kind: "refused", reason: "paused" });
+
+    await resumeTexts();
+
+    await expect(press(ALLOWED, requestId)).resolves.toMatchObject({ kind: "sent" });
+    expect(provider.sent).toHaveLength(1);
+  });
+
+  it("counts a missing switch as paused, as the sender does", async () => {
+    await owner`delete from messaging_control`;
+
+    await expect(press()).resolves.toEqual({ kind: "refused", reason: "paused" });
+
+    expect(provider.sent).toEqual([]);
+    expect(await ledger()).toEqual([]);
+  });
+});
+
 describe("duplicates", () => {
   it("refuses a second press for the same number within 5 minutes, and allows it after", async () => {
     await press(ALLOWED);

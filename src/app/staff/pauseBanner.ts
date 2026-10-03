@@ -1,8 +1,11 @@
 import { englishText } from "@/i18n/text";
-import type { PauseStatus } from "@/modules/messaging";
+import { MessagingControlMissing, type PauseStatus } from "@/modules/messaging";
 import { TEXTS_PAGE, pausedBy, pausedWhy } from "./texts/view";
 
-/** What the banner on every Hub screen says while texts are paused. */
+/**
+ * What the banner on every Hub screen says while texts are paused. `by` and `why` are the two lines under the heading: who paused and when,
+ * and why. When the pause switch has gone missing they say instead what is wrong and whom to tell (`missingBanner`).
+ */
 export interface PauseBannerView {
   heading: string;
   by: string;
@@ -33,9 +36,24 @@ class BannerTimeout extends Error {
 }
 
 /**
+ * The banner a Hub screen shows when the pause switch's row is missing. The sender reads a missing row as paused (it fails closed), so every
+ * text is being held and nothing on the Hub would say why; nobody can resume (there is no switch to clear), so there is no link.
+ */
+export function missingBanner(): PauseBannerView {
+  return {
+    heading: englishText("staff.texts.paused.missing.banner"),
+    by: englishText("staff.texts.paused.missing.what"),
+    why: englishText("staff.texts.paused.missing.tell"),
+    resume: null,
+  };
+}
+
+/**
  * The banner to show above a Hub screen, or null when texts are not paused (S06.06). If the check fails, or takes longer than two seconds,
  * the screen is still shown, without the banner, and the failure is logged by the error's name: the banner informs, it guards nothing.
- * Who paused is a name from identity; a name that cannot be read is "an Admin", so the banner never hides a pause for want of it.
+ * Who paused is a name from identity; a name that cannot be read is "an Admin", so the banner never hides a pause for want of it. A switch
+ * with no row is the one failure that is not hidden: the sender holds every text then, so the banner says so (`missingBanner`), and the
+ * failure is logged as well.
  */
 export async function loadPauseBanner(deps: PauseBannerDeps): Promise<PauseBannerView | null> {
   let timer: ReturnType<typeof setTimeout> | undefined;
@@ -57,7 +75,7 @@ export async function loadPauseBanner(deps: PauseBannerDeps): Promise<PauseBanne
     return await Promise.race([read(), deadline]);
   } catch (error) {
     deps.logError({ error: error instanceof Error ? error.constructor.name : "unknown" });
-    return null;
+    return error instanceof MessagingControlMissing ? missingBanner() : null;
   } finally {
     clearTimeout(timer);
   }

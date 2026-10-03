@@ -17,6 +17,7 @@ import {
   numberKeyFromSecret,
   type TestTextAudit,
   type TestTextConfig,
+  type TestTextDeps,
   type TestTextLog,
   type TestTextService,
   type UnknownAttempt,
@@ -90,10 +91,11 @@ export interface TestTextWiring {
   config: TestTextConfig;
   /** Twilio's account; absent where there are no credentials (then nothing can be sent). */
   twilio?: { accountSid: string; authToken: string };
-  /** Test seams: another provider (a fake), the audit writer and the operational log. */
+  /** Test seams: another provider (a fake), the audit writer, the operational log and the reading of the pause switch. */
   provider?: SmsProvider;
   audit?: TestTextAudit;
   log?: TestTextLog;
+  isPaused?: TestTextDeps["isPaused"];
 }
 
 /** Structured, one JSON line per event, and never a number: the events carry ids and codes only. */
@@ -120,6 +122,13 @@ export function createTestText(wiring: TestTextWiring): TestTextService {
       return numberKeyFromSecret(twilio.authToken);
     },
     log: wiring.log ?? consoleLog,
+    // The pause (S06.06) stops this text too. A missing switch counts as paused, as it does for the sender.
+    isPaused:
+      wiring.isPaused ??
+      (async () => {
+        const row = await drizzlePauseStore.read(db);
+        return row === null || row.paused;
+      }),
   });
 }
 
@@ -202,6 +211,7 @@ export { looksLikePhoneNumber, maskForLog, maskPhoneNumbers } from "./domain/pho
 export { twilioMessageSubmitter, twilioMessagingServiceReader, notSentReason } from "./adapters/twilioMessagingService";
 export type { TwilioServiceConfig } from "./adapters/twilioMessagingService";
 export { drizzleDispatchStore } from "./adapters/dispatchStore";
+export { drizzlePauseStore } from "./adapters/pauseStore";
 export { CampaignReaderNotWired, MESSAGING_OPS_EVENT_KINDS } from "./application/dispatcherPorts";
 export type {
   AlertStandingReader,
