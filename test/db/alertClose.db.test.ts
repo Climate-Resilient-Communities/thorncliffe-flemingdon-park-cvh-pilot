@@ -382,6 +382,21 @@ describe("approving a final", () => {
     expect((await entryRow(ref.entryId)).status).toBe("approved");
   });
 
+  it("approves a final with nobody on call when texting is live, and closes the thread, while an update is still refused ONCALL_REQUIRED (staff engineer's decision: closing an alert residents are reading is never blocked)", async () => {
+    const live = createAlerting({ db: app, now: () => clock, recipients: port, pricePerSegmentCents: () => 5, oncall: { required: () => true } });
+    const { ref } = await approvedThread({}, 1);
+    await owner`delete from oncall_roster`;
+
+    const update = await submitted(await newUpdate(ref.alertId));
+    expect(await live.approveEntry(actorOf(coordB), update, await shownOfRow(update))).toEqual({ ok: false, error: "ONCALL_REQUIRED" });
+    expect((await entryRow(update.entryId)).status).toBe("pending_approval");
+    expect((await threadRow(ref.alertId)).status).toBe("open");
+
+    const final = await pendingFinal(ref.alertId);
+    expect(await live.approveEntry(actorOf(coordB), final, await shownOfRow(final))).toMatchObject({ ok: true, value: { entry: { id: final.entryId, status: "approved" } } });
+    expect(await threadRow(ref.alertId)).toMatchObject({ status: "closed", closed_reason: "resolved", closing_entry_id: final.entryId });
+  });
+
   it("discards every draft and every entry waiting for approval but the final, audits alert.closed with what it kept, and audits each discard as made by the close", async () => {
     const { ref } = await approvedThread();
     const draft = await newUpdate(ref.alertId);
