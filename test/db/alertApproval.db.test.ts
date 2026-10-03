@@ -137,6 +137,8 @@ async function clear() {
     await tx`delete from audit_event where subject_type in ('alert', 'alert_entry')`;
     await tx.unsafe("alter table audit_event enable trigger audit_event_no_update_or_delete");
     await tx.unsafe("truncate approval_probe, alert_submit_attempt, delivery, alert_entry_translation, alert_entry, alert");
+    // The on-call roster names the Admin who added a number (S06.07), whom afterAll deletes.
+    await tx`delete from oncall_roster`;
   });
   await owner`update staff_account set role = ${authorA.role}::staff_role, status = 'active' where id = ${authorA.id}`;
 }
@@ -1117,6 +1119,61 @@ describe("the timings (FR-M2)", () => {
       const [app] = await owner.unsafe(`select has_table_privilege('cvh_app', 'public.${view}', 'select') as ok`);
       expect(app.ok, view).toBe(true);
     }
+  });
+});
+
+describe("the on-call rule (S06.07)", () => {
+  /** The lifecycle with the rule on or off, as the composition root wires it (texting live or not), and ops' real roster behind it. */
+  const withRule = (required: boolean) =>
+    createAlerting({ db: app, now: () => clock, recipients: port, markApproval: marker, pricePerSegmentCents: () => PRICE, oncall: { required: () => required } });
+  const addNumber = () =>
+    owner`insert into oncall_roster (id, label, phone, added_by) values (${randomUUID()}, 'IT lead', '+14165550123', ${adminC.id})`;
+
+  it("refuses a real alert while texting is live and no on-call number is set, changes nothing, and records the refusal as setup incomplete", async () => {
+    const ref = await newPending();
+    const before = await world(ref);
+
+    const result = await withRule(true).approveEntry(actorOf(coordB), ref, shownOf("v1"));
+
+    expect(result).toEqual({ ok: false, error: "ONCALL_REQUIRED" });
+    expect(await world(ref)).toEqual(before);
+    expect((await entryRow(ref.entryId)).status).toBe("pending_approval");
+    expect(log).toEqual([]);
+    expect((await auditRows()).filter((row) => row.action === "entry.approved")).toEqual([
+      { action: "entry.approved", outcome: "refused", actor_staff_id: coordB.id, subject_id: ref.entryId, is_drill: false, meta: { reason: "setup_incomplete", refusal: "ONCALL_REQUIRED" } },
+    ]);
+  });
+
+  it("approves the same alert once an on-call number is on the roster", async () => {
+    const ref = await newPending();
+    expect(await withRule(true).approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: false, error: "ONCALL_REQUIRED" });
+
+    await addNumber();
+    expect(await withRule(true).approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: true, value: { entry: { status: "approved" } } });
+  });
+
+  it("does not apply to a drill, which may be approved with nobody on call", async () => {
+    const ref = await newPending(authorA, "v1", true);
+    expect(await withRule(true).approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: true });
+  });
+
+  it("is off where texting is not live (the owner's case today, SMS_MODE=log or Twilio not set up): a real alert is approved with nobody on call", async () => {
+    const ref = await newPending();
+    expect(await withRule(false).approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: true });
+  });
+
+  it("is off when the lifecycle is given no rule at all (the default)", async () => {
+    const ref = await newPending();
+    expect(await alerting.approveEntry(actorOf(coordB), ref, shownOf("v1"))).toMatchObject({ ok: true });
+  });
+
+  it("is judged in the approval's transaction: a number removed meanwhile is a number that is not there", async () => {
+    await addNumber();
+    const first = await newPending(authorA, "v1");
+    expect(await withRule(true).approveEntry(actorOf(coordB), first, shownOf("v1"))).toMatchObject({ ok: true });
+    await owner`delete from oncall_roster`;
+    const second = await newPending(authorA, "v2");
+    expect(await withRule(true).approveEntry(actorOf(coordB), second, shownOf("v2"))).toMatchObject({ ok: false, error: "ONCALL_REQUIRED" });
   });
 });
 

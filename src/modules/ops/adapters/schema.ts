@@ -1,10 +1,16 @@
 // Drizzle tables of the ops module (AD-2), written by hand to match db/migrations/20261002230000_directory_release.sql;
 // the drift test compares them. The grants (select and insert to cvh_app, nothing to anyone else) live only in the migration.
 import { sql } from "drizzle-orm";
-import { bigint, check, index, jsonb, pgPolicy, pgRole, pgTable, text, timestamp } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, jsonb, pgPolicy, pgRole, pgTable, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
+
+/**
+ * identity's staff_account, named here only so the foreign key below can be declared: Drizzle needs a table object, and ops may not
+ * import identity's schema (AD-2). Not exported; the real definition is src/modules/identity/adapters/schema.ts.
+ */
+const staffAccountKey = pgTable("staff_account", { id: uuid().primaryKey() });
 
 export const opsEvent = pgTable(
   "ops_event",
@@ -26,5 +32,54 @@ export const opsEvent = pgTable(
     check("ops_event_detail_object", sql`jsonb_typeof(${t.detail}) = 'object'`),
     pgPolicy("ops_event_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("ops_event_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The on-call roster (S06.07): the Admins' numbers that are texted when sending is stuck or failing. Personal data (AD-13): the number is read
+ * only by the ContactResolver's source and by the roster screen (masked), and goes into no log, audit record, `ops_event` or `delivery`. The app
+ * adds and deletes rows and never changes one. `delivery_forget_recipient('oncall')` (a trigger in the migration) is its ON DELETE SET NULL.
+ */
+export const oncallRoster = pgTable(
+  "oncall_roster",
+  {
+    id: uuid().primaryKey(),
+    label: text().notNull(),
+    phone: text().notNull(),
+    addedBy: uuid("added_by")
+      .notNull()
+      .references(() => staffAccountKey.id),
+    createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("oncall_roster_phone_idx").on(t.phone),
+    index("oncall_roster_added_by_idx").on(t.addedBy),
+    check("oncall_roster_label_format", sql`btrim(${t.label}) <> '' and char_length(${t.label}) <= 40 and ${t.label} !~ '[[:cntrl:]]'`),
+    check("oncall_roster_phone_format", sql`${t.phone} ~ '^\\+1[2-9][0-9]{9}$'`),
+    pgPolicy("oncall_roster_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("oncall_roster_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("oncall_roster_app_delete", { for: "delete", to: cvhApp, using: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * What the health job (`/api/jobs/health`) remembers of each condition it watches (S06.07): whether it holds, since when, when the on-call
+ * Admins were last texted about it and up to which `ops_event` it has told them. No personal data. The five rows are made by the migration.
+ */
+export const healthCondition = pgTable(
+  "health_condition",
+  {
+    condition: text().primaryKey(),
+    active: boolean().notNull().default(false),
+    since: timestamp({ withTimezone: true }),
+    lastAlertedAt: timestamp("last_alerted_at", { withTimezone: true }),
+    lastEventId: bigint("last_event_id", { mode: "number" }),
+    checkedAt: timestamp("checked_at", { withTimezone: true }),
+  },
+  (t) => [
+    check("health_condition_known", sql`${t.condition} in ('queue_stuck', 'delivery_unknown', 'sender_stalled', 'smart_encoding_on', 'signature_failures')`),
+    check("health_condition_since_stated", sql`${t.active} = (${t.since} is not null)`),
+    pgPolicy("health_condition_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("health_condition_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
   ],
 ).enableRLS();

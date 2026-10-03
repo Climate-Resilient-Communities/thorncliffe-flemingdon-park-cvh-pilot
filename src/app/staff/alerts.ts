@@ -5,6 +5,7 @@
 import { createAlertSubmitter, createAlerting, type AlertLifecycle, type AlertSubmitter } from "@/modules/alerting";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
+import { textingIsLive } from "../textingLive";
 import { alertTranslation } from "./alertTranslation";
 import { freezeEntryContent } from "./freezeEntry";
 
@@ -16,7 +17,8 @@ let submitter: AlertSubmitter | undefined;
  * transaction writes the alert deliveries through messaging's outbox (S06.01); each queued text's cost estimate uses the configured price of a segment.
  */
 export function alerting(): AlertLifecycle {
-  return (service ??= createAlerting({ db: getDb(), pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents }));
+  // The on-call rule (S06.07): once texting is live, a real alert is approved only with an on-call number on the roster; off until then.
+  return (service ??= createAlerting({ db: getDb(), pricePerSegmentCents: () => getEnv().smsPricePerSegmentCents, oncall: { required: () => textingIsLive(getEnv()) } }));
 }
 
 /** Submit and "Try translation again" (S04.05): from the browser's key to a frozen, pending entry, and the entry's state a browser fetches when it did not see the outcome. */

@@ -561,3 +561,36 @@ describe("sending.paused and sending.resumed (S06.06)", () => {
     expect(() => toAuditRecord(control("sending.resumed", { waiting: "12" }), "ok")).toThrow(AuditRecordError);
   });
 });
+
+describe("oncall.added and oncall.removed (S06.07)", () => {
+  const roster = (action: "oncall.added" | "oncall.removed", meta: Record<string, unknown>) =>
+    event({ action, subjectType: "oncall_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);
+
+  it("record the change with the size of the roster afterwards and the roster row as the subject", () => {
+    expect(toAuditRecord(roster("oncall.added", { roster_size: 2 }), "ok")).toMatchObject({
+      action: "oncall.added",
+      actorStaffId: STAFF,
+      subjectType: "oncall_roster",
+      outcome: "ok",
+      meta: { roster_size: 2 },
+    });
+    expect(toAuditRecord(roster("oncall.removed", { roster_size: 0 }), "ok").meta).toEqual({ roster_size: 0 });
+  });
+
+  it("refuse an ok record without the size", () => {
+    expect(() => toAuditRecord(roster("oncall.added", {}), "ok")).toThrow("meta is missing roster_size");
+    expect(() => toAuditRecord(roster("oncall.removed", {}), "ok")).toThrow("meta is missing roster_size");
+  });
+
+  it("have nowhere to put the number or the label", () => {
+    expect(() => toAuditRecord(roster("oncall.added", { roster_size: 1, number: "+14165550123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(roster("oncall.added", { roster_size: 1, label: "Priya" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(roster("oncall.removed", { roster_size: 1, phone: "416 555 0123" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it("record a refusal with only its reason", () => {
+    for (const reason of ["validation", "duplicate", "conflict", "not_found"]) {
+      expect(toAuditRecord(roster("oncall.added", { reason }), "refused").meta).toEqual({ reason });
+    }
+  });
+});

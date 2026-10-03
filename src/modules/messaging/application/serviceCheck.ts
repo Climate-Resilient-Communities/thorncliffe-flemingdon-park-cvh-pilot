@@ -45,6 +45,11 @@ export function createMessagingServiceCheck(deps: MessagingServiceCheckDeps): Me
         log.error("messaging_service.smart_encoding_on", {});
         return { status: "smart_encoding_on" };
       }
+      // The check found it off: recorded so the health job can tell that an earlier "on" has been put right (S06.07).
+      // A failure to record it is logged and does not fail the check, which found what it was asked for.
+      await ops.record(db, { kind: "messaging.smart_encoding_off", detail: {} }).catch((error: unknown) => {
+        log.error("messaging_service.off_not_recorded", { error: error instanceof Error ? error.name : "NonError" });
+      });
       log.info("messaging_service.checked", { smart_encoding: false });
       return { status: "smart_encoding_off" };
     },

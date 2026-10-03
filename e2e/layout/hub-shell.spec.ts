@@ -109,8 +109,8 @@ test.describe("at 390 px", () => {
       await menuButton(page).click();
       await expect(drawer(page)).toBeVisible();
       expect(await drawer(page).evaluate((element: HTMLDialogElement) => element.matches(":modal"))).toBe(true);
-      // The menu is the real one for an Admin: ten pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, People, Providers, Directory, Buildings, Pause texts and the first-text spike's Test text) and one that is listed but not built yet.
-      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(10);
+      // The menu is the real one for an Admin: eleven pages that exist (Incidents, Log a disruption, Compose an alert, Coverage, People, Providers, Directory, Buildings, Pause texts, On-call numbers and the first-text spike's Test text) and one that is listed but not built yet.
+      await expect(page.getByTestId("hub-drawer-nav").locator("a[href]")).toHaveCount(11);
       await expect(page.getByTestId("hub-drawer-nav").locator("[aria-disabled='true']")).toHaveCount(1);
       await expectInsideViewport(page, [drawer(page), page.getByTestId("hub-menu-close")]);
       expect(await smallTargets(page)).toEqual([]);
@@ -296,7 +296,7 @@ test.describe("what a screen reader reads", () => {
       await open(page, { texts: REAL_TEXTS, current: path });
 
       const links = page.getByTestId("hub-side").locator("a[href]");
-      await expect(links).toHaveCount(10);
+      await expect(links).toHaveCount(11);
       await expect(page.locator("[aria-current]")).toHaveCount(2); // the side navigation's and the drawer's copy of it
       await expect(page.getByTestId("hub-side").locator("[aria-current='page']")).toHaveText(current);
       await expect(page.getByTestId("hub-side").getByRole("link", { name: current })).toHaveAttribute("aria-current", "page");
