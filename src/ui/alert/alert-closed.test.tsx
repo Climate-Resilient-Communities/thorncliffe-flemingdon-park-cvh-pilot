@@ -74,6 +74,31 @@ describe("an expired thread", () => {
   });
 });
 
+describe("an expired thread with the expire job's system final (S05.04)", () => {
+  const SYSTEM = "This alert has expired without a further update. The problem may continue. Contact the Hub for current information.";
+  const system = englishEntry({ n: 3, kind: "final", published_at: T("14:50"), ...body(SYSTEM) });
+  const t = closed("expired", [ack, update, system]);
+
+  it("is labelled Expired, never Resolved, with the clock icon, whatever the closing entry's kind is", () => {
+    const v = view(t);
+    expect(v.closed).toEqual({ reason: "expired", icon: "clock", title: "Expired 10 minutes ago", line: "This alert has ended. It expired 10 minutes ago without a final update." });
+    expect(v.current.text.body).toBe(SYSTEM);
+    const html = detail(t);
+    expect(html).toContain('data-testid="alert-closed" data-reason="expired"');
+    expect(html).toContain('data-testid="alert-closed-title">Expired 10 minutes ago</p>');
+    expect(html).toContain('<span class="alert-ico alert-ico--clock" aria-hidden="true"></span>');
+    expect(html).not.toContain("alert-ico--check");
+    expect(html).not.toMatch(/resolved/i);
+  });
+
+  it("previews the system's words in a shared link, which say it expired and never that it was resolved", () => {
+    const v = view(t);
+    expect(v.preview.description).toBe(SYSTEM);
+    expect(v.preview.description).not.toMatch(/resolved/i);
+    expect(v.closed?.reason).not.toBe("resolved");
+  });
+});
+
 describe("a withdrawn thread", () => {
   const t = closed("withdrawn", [ack, withdrawal]);
 

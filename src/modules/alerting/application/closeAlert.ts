@@ -64,7 +64,7 @@ const CLOSING_ENTRY: Record<ClosedReason, { kind: string; status: string }> = {
 
 /** `closeAlert` bound to its seams. The staff member is the one whose use case closes the thread (the actor of the audit records). */
 export function createCloseAlert(deps: CloseAlertDeps) {
-  return async function closeAlert(tx: DbTransaction, actor: { staffId: string }, input: CloseAlertInput): Promise<Closed> {
+  return async function closeAlert(tx: DbTransaction, actor: { staffId: string | null }, input: CloseAlertInput): Promise<Closed> {
     // The caller holds the thread's lock already; locking again costs nothing and keeps this function safe on its own.
     const [thread] = await tx.select().from(alert).where(eq(alert.id, input.alertId)).for("update");
     if (!thread) throw new Refused("ALERT_NOT_FOUND");

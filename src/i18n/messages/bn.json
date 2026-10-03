@@ -5118,6 +5118,9 @@
         "wrong_information": "[EN] This alert had wrong information. It has been withdrawn.",
         "duplicate": "[EN] This alert repeated another alert. It has been withdrawn."
       }
+    },
+    "expire": {
+      "finalText": "[EN] This alert has expired without a further update. The problem may continue. Contact the Hub for current information."
     }
   },
   "building": {

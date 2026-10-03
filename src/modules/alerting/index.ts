@@ -8,6 +8,8 @@ import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
 import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
 import { readClosedSlugs, readClosedThread, readOpenThreads } from "./adapters/resident/readThreads";
+import { createCloseAlert } from "./application/closeAlert";
+import { createExpirer, type Expirer } from "./application/expire";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 import { createEntryPreparer, type EntryTranslator } from "./application/prepareEntry";
 import { createSubmitter, type AlertSubmitter } from "./application/submit";
@@ -80,6 +82,38 @@ function settled<T>(result: DeliveryResult<T>, what: string): T {
   return result.value;
 }
 
+export interface AlertExpiryWiring {
+  db: Db;
+  /** The catalog's words of the system final (src/app/expire.ts reads `staff.expire.finalText` in English). */
+  finalText: () => string;
+  /** Test seams. */
+  now?: () => Date;
+  newId?: () => string;
+  batchLimit?: number;
+  audit?: AlertLifecycleDeps["audit"];
+  cancelQueued?: AlertLifecycleDeps["cancelQueued"];
+  ops?: { record(event: OpsEvent): Promise<void> };
+}
+
+/**
+ * The expire job (S05.04): closes every open thread whose covering entry is past its valid-until, each in its own transaction, with a system `final` and
+ * `closeAlert(..., 'expired')`. Wired to the same audit trail, outbox cancellation (`cancelQueued`, inside the closing transaction) and ops log as the lifecycle.
+ */
+export function createAlertExpiry(wiring: AlertExpiryWiring): Expirer {
+  const queue = createDeliveryQueue();
+  const trail = wiring.audit ?? { record: (tx, event) => audit.record(tx, event), recordRefusal: (db, event) => audit.recordRefusal(db, event) };
+  return createExpirer({
+    db: wiring.db,
+    audit: trail,
+    closeAlert: createCloseAlert({ audit: trail, cancelQueued: wiring.cancelQueued ?? (async (tx, entryIds) => void (await queue.cancelQueued(entryIds, tx))) }),
+    finalText: wiring.finalText,
+    ops: wiring.ops ?? { record: (event) => recordOpsEvent(wiring.db, event) },
+    now: wiring.now,
+    newId: wiring.newId,
+    batchLimit: wiring.batchLimit,
+  });
+}
+
 /** The lifecycle use cases wired to the alerting tables, the audit trail, identity's view of who is who and messaging's outbox. */
 export function createAlerting(wiring: AlertingWiring): AlertLifecycle {
   const queue = createDeliveryQueue();
@@ -139,6 +173,9 @@ export type {
 export type { ClosedThread, RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 // S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
+// S05.04: the expire job and when a thread expires (the covering entry's valid-until, compared as instants).
+export { EXPIRE_BATCH_LIMIT, type ExpireDeps, type ExpireReport, type Expirer } from "./application/expire";
+export { EXPIRE_LATE_MINUTES, expiryOf, isLate, type ExpiryDecision } from "./domain/expiry";
 export { type CloseAlert, type CloseAlertDeps, type CloseAlertInput, type Closed, type ClosedReason } from "./application/closeAlert";
 export {
   SUPERSEDING_KINDS,
