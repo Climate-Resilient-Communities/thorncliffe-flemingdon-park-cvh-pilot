@@ -72,4 +72,4 @@ export {
   type QuestionRoute,
   type QuestionSource,
 } from "./domain/questionTranslation";
-export { MAX_OUTPUT_TOKENS, classifyCohereError, cohereTranslator, systemPrompt, warmCohereTranslator, type CohereChatClient, type CohereTranslatorOptions } from "./adapters/cohereTranslator";
+export { MAX_OUTPUT_TOKENS, classifyCohereError, cohereTranslator, systemPrompt, type CohereChatClient, type CohereTranslatorOptions } from "./adapters/cohereTranslator";
