@@ -3,7 +3,7 @@ import { DirectoryListingV1 } from "@/contracts/directory";
 import type { SearchV1 } from "@/contracts/searchTestSet";
 import { buildListing, buildManifest } from "../../../e2e/resident/directory-fixture";
 import { keep, MANIFEST_URL, readKept, type KeptStorage } from "../directory/load-directory";
-import { resolveResults } from "./resolve-results";
+import { contentLangOf, resolveResults } from "./resolve-results";
 
 function memory(): KeptStorage & { data: Map<string, string> } {
   const data = new Map<string, string>();
@@ -117,5 +117,78 @@ describe("resolveResults", () => {
     const some = await resolveResults(answer({ ids: ["P101", "P999"] }), { lang: "en", heldRelease: 7, fetcher: server({}).fetcher, storage });
     expect(some.kind === "results" && some.providers.map((p) => p.id)).toEqual(["P101"]);
     expect(await resolveResults(answer({ ids: ["P999"] }), { lang: "en", heldRelease: 7, fetcher: server({}).fetcher, storage })).toEqual({ kind: "updating" });
+  });
+});
+
+describe("resolveResults: what stays on the phone", () => {
+  it("keeps the page language's listing when a search is answered in another language, and keeps no other listing", async () => {
+    const storage = memory();
+    keep(storage, { listing: listing("en", 7), publishedAt });
+    const { fetcher } = server({ "/api/directory/7/ur.json": buildListing("ur", 7) });
+    const out = await resolveResults(answer({ query_lang: "ur", ids: ["P101"] }), { lang: "en", heldRelease: 7, fetcher, storage });
+    expect(out.kind === "results" && out.shownLang).toBe("ur");
+    expect(readKept(storage, "en")?.listing.release_v).toBe(7);
+    expect([...storage.data.keys()]).toEqual(["cvh.directory.en"]);
+  });
+
+  it("keeps nothing of the question's language even when the release is newer, and keeps the page language's file of that release", async () => {
+    const storage = memory();
+    keep(storage, { listing: listing("en", 6), publishedAt });
+    const { fetcher, asked } = server({ "/api/directory/7/ur.json": buildListing("ur", 7), "/api/directory/7/en.json": buildListing("en", 7) }, buildManifest(7));
+    const out = await resolveResults(answer({ query_lang: "ur", ids: ["P101"] }), { lang: "en", heldRelease: 6, fetcher, storage });
+    expect(out.kind === "results" && [out.shownLang, out.note]).toEqual(["ur", true]);
+    expect(asked).toEqual([MANIFEST_URL, "/api/directory/7/ur.json", "/api/directory/7/en.json"]);
+    expect(readKept(storage, "en")?.listing.release_v).toBe(7);
+    expect(readKept(storage, "ur")).toBeNull();
+    expect([...storage.data.keys()]).toEqual(["cvh.directory.en"]);
+  });
+
+  it("keeps the page language's listing when the question's language file is the one that cannot be had", async () => {
+    const storage = memory();
+    keep(storage, { listing: listing("en", 6), publishedAt });
+    const { fetcher } = server({ "/api/directory/7/en.json": buildListing("en", 7) }, buildManifest(7));
+    const out = await resolveResults(answer({ query_lang: "ur", ids: ["P101"] }), { lang: "en", heldRelease: 6, fetcher, storage });
+    expect(out.kind === "results" && [out.shownLang, out.note]).toEqual(["en", true]);
+    expect([...storage.data.keys()]).toEqual(["cvh.directory.en"]);
+    expect(readKept(storage, "en")?.listing.release_v).toBe(7);
+  });
+
+  it("hands the refreshed manifest and the page language's listing of its release to the screen", async () => {
+    const storage = memory();
+    keep(storage, { listing: listing("en", 6), publishedAt });
+    const { fetcher } = server({ "/api/directory/7/en.json": buildListing("en", 7) }, buildManifest(7, undefined, "available"));
+    const told: { manifest: { release_v: number }; page: { listing: { release_v: number }; publishedAt: string } | null }[] = [];
+    await resolveResults(answer({ ids: ["P102"] }), { lang: "en", heldRelease: 6, fetcher, storage, onRefreshed: (refreshed) => told.push(refreshed) });
+    expect(told).toHaveLength(1);
+    expect(told[0].manifest.release_v).toBe(7);
+    expect(told[0].page?.listing.release_v).toBe(7);
+    expect(told[0].page?.publishedAt).toBe(publishedAt);
+  });
+
+  it("tells the manifest alone when the release's file could not be had, and tells nothing when the manifest was not read again or could not be", async () => {
+    const told: unknown[] = [];
+    const onRefreshed = (refreshed: unknown) => told.push(refreshed);
+    const none = await resolveResults(answer(), { lang: "en", heldRelease: 6, fetcher: server({}, buildManifest(7)).fetcher, storage: memory(), onRefreshed });
+    expect(none).toEqual({ kind: "updating" });
+    expect(told).toEqual([{ manifest: buildManifest(7), page: null }]);
+
+    told.length = 0;
+    const storage = memory();
+    keep(storage, { listing: listing("en", 7), publishedAt });
+    await resolveResults(answer(), { lang: "en", heldRelease: 7, fetcher: server({}).fetcher, storage, onRefreshed });
+    await resolveResults(answer(), { lang: "en", heldRelease: 6, fetcher: server({}).fetcher, storage, onRefreshed });
+    expect(told).toEqual([]);
+  });
+});
+
+describe("contentLangOf", () => {
+  it("is the language of the texts when it is not the page's", () => {
+    expect(contentLangOf("ur", "en")).toBe("ur");
+    expect(contentLangOf("en", "ur")).toBe("en");
+  });
+
+  it("is nothing when the texts are in the page's own language or in a language the app has no page for", () => {
+    expect(contentLangOf("en", "en")).toBeUndefined();
+    expect(contentLangOf("zh-Hant", "en")).toBeUndefined();
   });
 });

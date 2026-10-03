@@ -1,7 +1,7 @@
 import { DirectoryListingV1, listingPath, type DirectoryManifestV1, type ListingProvider } from "@/contracts/directory";
 import type { SearchV1 } from "@/contracts/searchTestSet";
-import { isLaunchCode } from "@/i18n/languages";
-import { fetchManifest, keep, readJson, readKept, FETCH_TIMEOUT_MS, type Fetcher, type KeptStorage } from "../directory/load-directory";
+import { isLaunchCode, type LaunchCode } from "@/i18n/languages";
+import { fetchManifest, keep, readJson, readKept, FETCH_TIMEOUT_MS, type Fetcher, type KeptListing, type KeptStorage } from "../directory/load-directory";
 
 // From the ids of an answer to the listings a resident reads (S03.06, AD-11, AD-20). The server returns provider ids and
 // the number of the release it searched; the text of every listing comes from the published listing file of exactly that
@@ -30,30 +30,68 @@ export type ResolveDeps = {
   fetcher?: Fetcher;
   storage?: KeptStorage | null;
   timeoutMs?: number;
+  /**
+   * Told once when the manifest was read again, with it and the page language's listing of the same release when that was
+   * made ready (and its publication moment is known), so the screen can show the new release and send its `v` next time.
+   */
+  onRefreshed?: (refreshed: { manifest: DirectoryManifestV1; page: KeptListing | null }) => void;
 };
 
+/** A listing of the page language and when its release was published (null when that is not known). */
+type Held = { listing: DirectoryListingV1; publishedAt: string | null };
+
 /**
- * The listing file of one language for exactly `release`: the kept one when it is that release, otherwise downloaded (the
- * file of a release never changes, so the address names it for good), checked against its schema, language and release,
- * and against the manifest when the manifest names the same release. A newer file than the kept one replaces it; an older
- * one never does (the directory shows the current release).
+ * The listing file of `lang` for exactly `release`, downloaded (the file of a release never changes, so its address names
+ * it for good) and checked against its schema, language and release, and against the manifest when the manifest names the
+ * same release.
  */
-async function listingOf(release: number, lang: string, deps: ResolveDeps, manifest: DirectoryManifestV1 | null): Promise<DirectoryListingV1 | null> {
-  const storage = deps.storage ?? null;
+async function download(release: number, lang: string, deps: ResolveDeps, manifest: DirectoryManifestV1 | null): Promise<DirectoryListingV1 | null> {
   const manifestHash = manifest?.release_v === release ? manifest.catalogue_hash : null;
-  const kept = readKept(storage, lang);
-  if (kept && kept.listing.release_v === release && (manifestHash === null || kept.listing.catalogue_hash === manifestHash)) return kept.listing;
   const parsed = DirectoryListingV1.safeParse(await readJson(deps.fetcher ?? fetch, listingPath(release, lang), deps.timeoutMs ?? FETCH_TIMEOUT_MS));
   if (!parsed.success) return null;
   const listing = parsed.data;
   if (listing.release_v !== release || listing.lang !== lang) return null;
   if (manifestHash !== null && listing.catalogue_hash !== manifestHash) return null;
-  // It is kept only when the moment the release was published is known (the manifest's, or the one kept with the same
-  // release in the page language), so "Last updated" never tells a made-up time.
-  const ofPage = readKept(storage, deps.lang);
-  const publishedAt = manifest?.release_v === release ? manifest.published_at : ofPage?.listing.release_v === release ? ofPage.publishedAt : null;
-  if (publishedAt !== null && (!kept || kept.listing.release_v <= release)) keep(storage, { listing, publishedAt });
   return listing;
+}
+
+/** The kept listing of `lang` when it is exactly `release` (and the manifest's catalogue when the manifest names that release). */
+function keptOf(release: number, lang: string, deps: ResolveDeps, manifest: DirectoryManifestV1 | null): KeptListing | null {
+  const manifestHash = manifest?.release_v === release ? manifest.catalogue_hash : null;
+  const kept = readKept(deps.storage ?? null, lang);
+  return kept && kept.listing.release_v === release && (manifestHash === null || kept.listing.catalogue_hash === manifestHash) ? kept : null;
+}
+
+/**
+ * The listing of the PAGE language for exactly `release`: the kept one when it is that release, otherwise downloaded. This
+ * is the only listing this module ever keeps on the phone (it is the offline directory). A newer file than the kept one
+ * replaces it; an older one never does (the directory shows the current release). It is kept only when the moment the
+ * release was published is known (the manifest's), so "Last updated" never tells a made-up time.
+ */
+async function pageListing(release: number, deps: ResolveDeps, manifest: DirectoryManifestV1 | null): Promise<Held | null> {
+  const kept = keptOf(release, deps.lang, deps, manifest);
+  if (kept) return { listing: kept.listing, publishedAt: kept.publishedAt };
+  const listing = await download(release, deps.lang, deps, manifest);
+  if (!listing) return null;
+  const publishedAt = manifest?.release_v === release ? manifest.published_at : null;
+  const older = readKept(deps.storage ?? null, deps.lang);
+  if (publishedAt !== null && (!older || older.listing.release_v <= release)) keep(deps.storage ?? null, { listing, publishedAt });
+  return { listing, publishedAt };
+}
+
+/**
+ * The listing of a language other than the page's for exactly `release`: one already kept by a visit in that language, or
+ * downloaded, and held in memory for this answer only. It is never written to the phone: a kept listing of the question's
+ * language would be a trace of the language the resident asked in, and `keep()` would drop the page language's own
+ * listing as an older release.
+ */
+async function foreignListing(release: number, lang: string, deps: ResolveDeps, manifest: DirectoryManifestV1 | null): Promise<DirectoryListingV1 | null> {
+  return keptOf(release, lang, deps, manifest)?.listing ?? (await download(release, lang, deps, manifest));
+}
+
+/** The `contentLang` of a card: the language of its texts when that is not the page's own, otherwise nothing. */
+export function contentLangOf(shownLang: string, pageLang: string): LaunchCode | undefined {
+  return isLaunchCode(shownLang) && shownLang !== pageLang ? shownLang : undefined;
 }
 
 /**
@@ -61,7 +99,10 @@ async function listingOf(release: number, lang: string, deps: ResolveDeps, manif
  * - the phone's `v` is older than the answer's `release_v` (or it held none): the manifest is read again first, and if that
  *   fails nothing is shown but "being updated";
  * - the listing file of `query_lang` for exactly `release_v` is the one the ids are looked up in, downloaded if the phone
- *   does not have it; if that fails, the page language's file of the same release is used and the screen says so;
+ *   does not have it and held in memory only; if that fails, the page language's file of the same release is used and the
+ *   screen says so;
+ * - only the page language's listing is kept on the phone; when the release is newer and the answer was in another
+ *   language, the page language's file of that release is downloaded and kept too;
  * - if neither can be had, "being updated".
  * An id the file does not hold is left out; if none is held it is "being updated" too, never a blank list.
  */
@@ -75,13 +116,28 @@ export async function resolveResults(answer: SearchV1, deps: ResolveDeps): Promi
   // A question language the resident app has no page for (zh-Hant) is shown in the page language, as before.
   const queryLang: string = isLaunchCode(answer.query_lang) ? answer.query_lang : deps.lang;
   const wanted = queryLang === deps.lang ? [deps.lang] : [queryLang, deps.lang];
+  let page: Held | null = null;
+  let outcome: ResolvedResults = { kind: "updating" };
   for (const lang of wanted) {
-    const listing = await listingOf(answer.release_v, lang, deps, manifest);
+    let listing: DirectoryListingV1 | null;
+    if (lang === deps.lang) {
+      page = await pageListing(answer.release_v, deps, manifest);
+      listing = page?.listing ?? null;
+    } else {
+      listing = await foreignListing(answer.release_v, lang, deps, manifest);
+    }
     if (!listing) continue;
     const byId = new Map(listing.providers.map((provider) => [provider.id, provider]));
     const providers = answer.results.map((result) => byId.get(result.provider_id)).filter((provider): provider is ListingProvider => provider !== undefined);
-    if (providers.length === 0) return { kind: "updating" };
-    return { kind: "results", providers, listing, shownLang: lang, note: queryLang !== deps.lang };
+    if (providers.length > 0) outcome = { kind: "results", providers, listing, shownLang: lang, note: queryLang !== deps.lang };
+    break;
   }
-  return { kind: "updating" };
+  // A newer release answered in another language: the page language's file of it is read and kept too, so the offline
+  // directory stays as current as the answer. Best effort: the results above do not wait on it succeeding.
+  if (manifest && !page && queryLang !== deps.lang) page = await pageListing(answer.release_v, deps, manifest);
+  if (manifest) {
+    const current = page && page.publishedAt !== null && manifest.release_v === page.listing.release_v ? { listing: page.listing, publishedAt: page.publishedAt } : null;
+    deps.onRefreshed?.({ manifest, page: current });
+  }
+  return outcome;
 }

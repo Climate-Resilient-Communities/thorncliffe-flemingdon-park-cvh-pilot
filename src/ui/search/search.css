@@ -15,18 +15,22 @@
     color: var(--ink);
   }
 
+  /* The box and the clear button side by side: the button is outside the text area, so a question typed in the other
+     direction (dir="auto") never runs under it. */
   .ask-field {
-    position: relative;
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-label);
   }
 
   .ask-input {
     box-sizing: border-box;
     display: block;
-    inline-size: 100%;
+    flex: 1 1 auto;
+    min-inline-size: 0;
     min-block-size: calc(var(--tap-current) * 2);
     padding-block: var(--gap-tight);
-    /* Room at the end edge for the clear button. */
-    padding-inline: var(--gap-related) calc(var(--tap-current) + var(--gap-label));
+    padding-inline: var(--gap-related);
     border: 1.5px solid var(--control-border);
     border-radius: var(--radius-card);
     background-color: var(--surface-raised);
@@ -43,9 +47,7 @@
   }
 
   .ask-clear {
-    position: absolute;
-    inset-block-start: 0;
-    inset-inline-end: 0;
+    flex: none;
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -60,16 +62,25 @@
     cursor: pointer;
   }
 
-  .dir-btn[disabled] {
+  .dir-btn[disabled],
+  .dir-btn[aria-disabled="true"] {
     border-color: var(--border);
     background-color: var(--surface-raised);
     color: var(--text-muted);
     cursor: not-allowed;
   }
 
-  /* The live region holds the heading of what happened; empty, it takes no room. */
+  /* The live region holds the heading of what happened. It stays rendered (an announcement needs the region to be in the
+     page before its text arrives), so empty it only has no size: not display: none. */
   .ask-status:empty {
-    display: none;
+    position: absolute;
+    inline-size: 1px;
+    block-size: 1px;
+    margin: -1px;
+    padding: 0;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
   }
 
   .ask-status__title {

@@ -9,7 +9,7 @@ import { expectBaseline, openResident, waitForFonts } from "./helpers";
 
 const SECRET = "zq-marker-7f3a91-landlord";
 
-type Reply = { status?: number; json?: unknown; headers?: Record<string, string>; abort?: boolean };
+type Reply = { status?: number; json?: unknown; headers?: Record<string, string>; abort?: boolean; delayMs?: number };
 type Asked = { method: string; url: string; body: string; headers: Record<string, string> };
 
 const answer = (change: { status?: "ok" | "no_clear_match" | "unavailable"; ids?: string[]; release?: number; lang?: string; emergency?: boolean } = {}) => ({
@@ -28,6 +28,7 @@ async function stubSearch(page: Page, reply: { current: Reply }): Promise<Asked[
     const request = route.request();
     asked.push({ method: request.method(), url: request.url(), body: request.postData() ?? "", headers: await request.allHeaders() });
     const r = reply.current;
+    if (r.delayMs) await new Promise((resolve) => setTimeout(resolve, r.delayMs));
     if (r.abort) return route.abort("internetdisconnected");
     return route.fulfill({ status: r.status ?? 200, json: r.json, headers: { "Cache-Control": "no-store", ...(r.headers ?? {}) } });
   });
@@ -64,6 +65,20 @@ async function shot(page: Page, width: number, name: string) {
   await expectBaseline(page, name);
 }
 
+/** No serious or critical violation (NFR-N2) on what is on screen now. */
+async function expectNoSeriousViolation(page: Page, state: string) {
+  await waitForFonts(page);
+  await page.addScriptTag({ content: axe.source });
+  const found = await page.evaluate(async () => {
+    const result = await (window as unknown as { axe: typeof axe }).axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] });
+    return result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`);
+  });
+  expect(found, state).toEqual([]);
+}
+
+/** The test id of the element that has focus, or its tag when it has none. */
+const focused = (page: Page) => page.evaluate(() => (document.activeElement as HTMLElement | null)?.getAttribute("data-testid") ?? document.activeElement?.tagName ?? "none");
+
 const listed = (page: Page) => page.locator("[data-testid=ask-results] > li > article").evaluateAll((cards) => cards.map((card) => card.getAttribute("data-provider-id")));
 
 test("with search available the box and the topics show, with the 911 line; with search unavailable only the topics and the 911 line", async ({ page }) => {
@@ -73,7 +88,9 @@ test("with search available the box and the topics show, with the 911 line; with
   await expect(page.getByTestId("ask-input")).toBeVisible();
   await expect(page.getByTestId("ask-input")).toHaveAttribute("placeholder", "For example: my landlord wants me to move out");
   await expect(page.getByTestId("ask-topic-food")).toHaveText("Food");
-  await expect(page.getByTestId("ask-911-link")).toHaveText("In an emergency, call 911");
+  // The prototype's X01_Not911 inline note, and the way to dial 911.
+  await expect(page.locator('[data-component="not-911"][data-variant="inline"]')).toContainText("Not an emergency service. In danger? Call 911.");
+  await expect(page.getByTestId("ask-911-link")).toHaveText("If someone is in danger, call 911.");
   await expect(page.getByTestId("ask-911-link")).toHaveAttribute("href", "tel:911");
   await shot(page, 390, "search-entry-en-390.png");
   await shot(page, 1280, "search-entry-en-1280.png");
@@ -89,6 +106,7 @@ test("with search available the box and the topics show, with the 911 line; with
   await expect(other.getByTestId("ask-form")).toHaveCount(0);
   await expect(other.getByTestId("ask-topic-food")).toBeVisible();
   await expect(other.getByTestId("ask-911-link")).toHaveAttribute("href", "tel:911");
+  await expect(other.locator('[data-component="not-911"][data-variant="inline"]')).toHaveCount(1);
   await shot(other, 390, "search-unavailable-en-390.png");
 });
 
@@ -153,14 +171,15 @@ test("emergency_first puts the shared 911 block above the results, once", async 
   await ask(page, "the power is out and it is very hot");
   await expect(page.getByTestId("ask-results")).toBeVisible();
 
-  await expect(page.locator('[data-component="not-911"]')).toHaveCount(1);
+  // One block above the results (the inline note at the end of the screen is the other variant).
+  await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toHaveCount(1);
   const order = await page.evaluate(() => {
-    const block = document.querySelector('[data-component="not-911"]')!;
+    const block = document.querySelector('[data-component="not-911"][data-variant="block"]')!;
     const results = document.querySelector('[data-testid="ask-results"]')!;
     return Boolean(block.compareDocumentPosition(results) & Node.DOCUMENT_POSITION_FOLLOWING);
   });
   expect(order).toBe(true);
-  await expect(page.locator('[data-component="not-911"]')).toContainText("The CVH is not an emergency service.");
+  await expect(page.locator('[data-component="not-911"][data-variant="block"]')).toContainText("The CVH is not an emergency service.");
   await shot(page, 390, "search-emergency-en-390.png");
 });
 
@@ -182,7 +201,7 @@ test("no_clear_match shows the prototype's R-11: the topics, the Hub's number an
   await shot(page, 1280, "search-no-match-en-1280.png");
 });
 
-test("rate limiting (429 with Retry-After), a failing server (503) and the unavailable status each show 'Search is busy', with the topics and the Hub's number", async ({ page }) => {
+test("rate limiting (429 with Retry-After) and a failing server (503) show 'Search is busy', with the topics and the Hub's number", async ({ page }) => {
   const { reply, asked } = await setUp(page);
   await openResident(page, "/en/search", 390);
   await ready(page);
@@ -207,12 +226,22 @@ test("rate limiting (429 with Retry-After), a failing server (503) and the unava
   await ask(page, "second");
   await expect(page.getByTestId("ask-busy-title")).toBeVisible();
   await expect(page.locator("body")).not.toContainText("search_unavailable");
+});
 
-  await page.reload();
+test("an unavailable answer from the server hides the box and shows only the topics, never 'Search is busy'", async ({ page }) => {
+  const { reply } = await setUp(page);
+  await openResident(page, "/en/search", 390);
   await ready(page);
   reply.current = { json: answer({ status: "unavailable" }) };
   await ask(page, "third");
-  await expect(page.getByTestId("ask-busy-title")).toBeVisible();
+  await expect(page.getByTestId("ask-form")).toHaveCount(0);
+  await expect(page.getByTestId("ask-busy-title")).toHaveCount(0);
+  await expect(page.getByTestId("ask-help")).toHaveCount(0);
+  await expect(page.getByTestId("ask-topic-food")).toBeVisible();
+  await expect(page.getByTestId("ask-911-link")).toHaveAttribute("href", "tel:911");
+  await expect(page.locator("body")).not.toContainText("Search is busy");
+  // The box went from under the resident's focus: it is on the topics, not lost.
+  expect(await focused(page)).toBe("ask-topics-title");
 });
 
 test("offline, a question gets 'Search needs signal' with the topics and the Hub's number, and topics still work from the kept listing", async ({ page }) => {
@@ -271,6 +300,12 @@ test("a question in another language shows the listings in that language with a 
   await expect(page.getByTestId("ask-shown-in")).toHaveText("Shown in اردو");
   await expect(page.getByTestId("provider-P101").getByTestId("provider-services")).toContainText("مفت راشن");
   await expect(page.getByTestId("provider-P101").getByTestId("provider-services").locator("p")).toHaveAttribute("lang", "ur");
+  // The Urdu listing is machine translated: the card says so, and offers the English original.
+  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toBeVisible();
+  await expect(page.getByTestId("provider-P101").getByTestId("show-english")).toBeVisible();
+  // The language's name inside the note is isolated, with its own language and direction.
+  await expect(page.getByTestId("ask-shown-in").locator("bdi")).toHaveAttribute("lang", "ur");
+  await expect(page.getByTestId("ask-shown-in").locator("bdi")).toHaveAttribute("dir", "rtl");
   expect(server.requests).toContain("GET /api/directory/7/ur.json");
 
   // Another visit, the Urdu file now cannot be had.
@@ -304,6 +339,78 @@ test("the Urdu ask screen mirrors, and its results and states render", async ({ 
   await shot(page, 390, "search-no-match-ur-390.png");
 });
 
+test("a question typed in Latin script on the Urdu screen does not run under the clear button", async ({ page }) => {
+  await setUp(page);
+  await openResident(page, "/ur/search", 390);
+  await ready(page);
+  await page.getByTestId("ask-input").fill("my landlord wants me to move out");
+  await expect(page.getByTestId("ask-clear")).toBeVisible();
+  // The button is beside the box, not over it: the two do not overlap, whatever the direction of the text.
+  const [input, clear] = await Promise.all([page.getByTestId("ask-input").boundingBox(), page.getByTestId("ask-clear").boundingBox()]);
+  const apart = input!.x + input!.width <= clear!.x + 0.5 || clear!.x + clear!.width <= input!.x + 0.5;
+  expect(apart).toBe(true);
+  await shot(page, 390, "search-latin-question-ur-390.png");
+});
+
+test("results in another language: the machine-translation label, axe and a screenshot, on the English page with Urdu results and the Urdu page with English results", async ({ page }) => {
+  const { reply } = await setUp(page);
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+  reply.current = { json: answer({ lang: "ur", ids: ["P101", "P104"] }) };
+  await ask(page, "مجھے کھانا چاہیے");
+  await expect(page.getByTestId("ask-results")).toBeVisible();
+  await expect(page.getByTestId("ask-shown-in")).toHaveText("Shown in اردو");
+  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toBeVisible();
+  await expectNoSeriousViolation(page, "en page, ur results");
+  await shot(page, 390, "search-results-other-en-390.png");
+
+  await openResident(page, "/ur/search", 390);
+  await ready(page);
+  reply.current = { json: answer({ lang: "en", ids: ["P101", "P104"] }) };
+  await ask(page, "I need food");
+  await expect(page.getByTestId("ask-results")).toBeVisible();
+  await expect(page.getByTestId("ask-shown-in")).toBeVisible();
+  await expect(page.getByTestId("ask-shown-in").locator("bdi").last()).toHaveAttribute("lang", "en");
+  await expect(page.getByTestId("provider-P101").getByTestId("machine-label")).toHaveCount(0);
+  await expectNoSeriousViolation(page, "ur page, en results");
+  await shot(page, 390, "search-results-other-ur-390.png");
+});
+
+test("submitting keeps focus on the button while the question is out, then moves it to the heading of the outcome", async ({ page }) => {
+  const { reply, asked } = await setUp(page);
+  await openResident(page, "/en/search", 390);
+  await ready(page);
+
+  reply.current = { json: answer(), delayMs: 1500 };
+  await page.getByTestId("ask-input").fill("food");
+  await page.getByTestId("ask-submit").focus();
+  await page.keyboard.press("Enter");
+  await expect(page.getByTestId("ask-searching")).toBeVisible();
+  // Inert, not disabled: it still has focus, and a second click asks nothing.
+  await expect(page.getByTestId("ask-submit")).toHaveAttribute("aria-disabled", "true");
+  await expect(page.getByTestId("ask-submit")).toHaveJSProperty("disabled", false);
+  await page.getByTestId("ask-submit").dispatchEvent("click");
+  expect(await focused(page)).toBe("ask-submit");
+  await expect(page.getByTestId("ask-results-title")).toBeVisible();
+  expect(await focused(page)).toBe("ask-results-title");
+  expect(asked).toHaveLength(1);
+
+  reply.current = { json: answer({ status: "no_clear_match" }) };
+  await ask(page, "nothing like it");
+  await expect(page.getByTestId("ask-none-title")).toBeVisible();
+  expect(await focused(page)).toBe("ask-none-title");
+
+  reply.current = { status: 503, json: { error: { code: "search_unavailable", message_key: "search.search_unavailable" } } };
+  await ask(page, "once more");
+  await expect(page.getByTestId("ask-busy-title")).toBeVisible();
+  expect(await focused(page)).toBe("ask-busy-title");
+
+  reply.current = { abort: true };
+  await ask(page, "and again");
+  await expect(page.getByTestId("ask-signal-title")).toBeVisible();
+  expect(await focused(page)).toBe("ask-signal-title");
+});
+
 // AD-3, FR-D2-Q: the question is sent only to /api/search, in the body of a POST. It is in no address, header or other
 // request, not in any storage of the phone, in no cookie, and in no console message.
 test("the question is sent only to /api/search and kept nowhere on the phone", async ({ page }) => {
@@ -335,9 +442,15 @@ test("the question is sent only to /api/search and kept nowhere on the phone", a
   await ask(page, `${SECRET} three`);
   await expect(page.getByTestId("ask-signal-title")).toBeVisible();
   // The browser's own address and history never hold it, and the box is not submitted as a form field.
+  // A real form submission (requestSubmit, as the Enter key does) never falls back to a GET: the address, the history and its state are untouched.
   await page.getByTestId("ask-input").fill(SECRET);
-  await page.getByTestId("ask-input").evaluate((input) => (input as HTMLTextAreaElement).form!.dispatchEvent(new Event("submit", { cancelable: true })));
+  const before = { url: page.url(), length: await page.evaluate(() => history.length) };
+  await page.getByTestId("ask-input").evaluate((input) => (input as HTMLTextAreaElement).form!.requestSubmit());
+  await expect(page.getByTestId("ask-signal-title")).toBeVisible();
   await page.waitForLoadState("networkidle");
+  expect(page.url()).toBe(before.url);
+  expect(await page.evaluate(() => history.length)).toBe(before.length);
+  expect(await page.evaluate(() => JSON.stringify(history.state))).not.toContain("zq-marker");
   expect(page.url()).not.toContain("zq-marker");
   expect(decodeURIComponent(page.url())).not.toContain(SECRET);
   expect(await page.getByTestId("ask-input").evaluate((input) => (input as HTMLTextAreaElement).name)).toBe("");
@@ -385,15 +498,7 @@ for (const lang of ["en", "ur", "ps"] as const) {
       await openResident(page, `/${lang}/search`, 390);
       await ready(page);
       if (basic) await page.evaluate(() => document.documentElement.setAttribute("data-basic", "true"));
-      const check = async (state: string) => {
-        await waitForFonts(page);
-        await page.addScriptTag({ content: axe.source });
-        const found = await page.evaluate(async () => {
-          const result = await (window as unknown as { axe: typeof axe }).axe.run(document, { runOnly: ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"] });
-          return result.violations.filter((v) => v.impact === "serious" || v.impact === "critical").map((v) => `${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(" | ")}`);
-        });
-        expect(found, state).toEqual([]);
-      };
+      const check = (state: string) => expectNoSeriousViolation(page, state);
       await check("entry");
       reply.current = { json: answer({ emergency: true, lang }) };
       await ask(page, "question");

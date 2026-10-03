@@ -1650,7 +1650,7 @@ So that I find help without knowing the provider's name.
 
 **Given** `status: no_clear_match`
 **When** shown (R-11)
-**Then** the resident sees "We couldn't find a clear match", the category list, the Hub's number as a `tel:` link and the general 911 line
+**Then** the resident sees "We could not find that yet" (the prototype's R-11 wording, which wins over any other wording under AD-16), the category list, the Hub's number as a `tel:` link and the general 911 line
 
 **Given** the phone is offline, the server is rate-limiting, or the server returns `search_unavailable`
 **When** the resident asks

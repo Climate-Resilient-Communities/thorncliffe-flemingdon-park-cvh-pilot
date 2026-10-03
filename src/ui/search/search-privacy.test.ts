@@ -54,6 +54,8 @@ describe("the ask screen's sources", () => {
     for (const { file, text } of sources) expect(text, file).not.toMatch(/n911|data-component="not-911"/);
     const screen = sources.find((s) => s.file === "ask-screen.tsx")!.text;
     expect(screen).toMatch(/import \{ Not911 \} from "\.\.\/emergency"/);
-    expect(screen.match(/<Not911 /g)).toHaveLength(1);
+    // The emergency_first block above the results, and the inline note (X01_Not911) that ends the screen.
+    expect(screen.match(/<Not911 /g)).toHaveLength(2);
+    expect(screen.match(/<Not911 variant="inline"/g)).toHaveLength(1);
   });
 });
