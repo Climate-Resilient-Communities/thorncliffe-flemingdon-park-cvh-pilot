@@ -92,6 +92,12 @@ function validate(argv: string[], root: string): number {
 
 async function loadEngine(modulePath: string, options: { translatedLeg: boolean }): Promise<SearchEngine> {
   const loaded = (await import(pathToFileURL(path.resolve(modulePath)).href)) as { default?: unknown; createEngine?: (options: { translatedLeg: boolean }) => unknown };
+  if (typeof loaded.createEngine !== "function") {
+    // The report says which leg setting it was run with: an engine that cannot be told is not made to follow it.
+    console.warn(
+      `WARNING: --translated-leg ${options.translatedLeg ? "on" : "off"} was given, but ${modulePath} has no createEngine(): its default export is used as it is, and the report's translated_leg is only as true as that engine is configured.`,
+    );
+  }
   const engine = typeof loaded.createEngine === "function" ? await loaded.createEngine(options) : loaded.default;
   const isObject = typeof engine === "object" && engine !== null && typeof (engine as { search?: unknown }).search === "function";
   if (typeof engine !== "function" && !isObject) {

@@ -11,14 +11,17 @@ import { after } from "next/server";
 import { cohereQueryEmbedder, createSearch, warmCohere, type SearchService } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import { createRateLimiter, rateLimitKeyFromSecret, type RateLimiter } from "@/modules/subscriptions";
-import { cohereTranslator, createQuestionTranslator, type QuestionTranslator } from "@/modules/translation";
+import { cohereTranslator, createQuestionTranslator, warmCohereTranslator, type QuestionTranslator } from "@/modules/translation";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { directoryStorage } from "./directoryRelease";
 
 // Where a key is configured, the vendor's SDK is imported when this module loads, so the first search on an instance does
 // not pay the import inside its 2.2 s. (The key is read from the process environment here; getEnv validates it on first use.)
-if (process.env.COHERE_API_KEY?.trim()) warmCohere().catch(() => undefined);
+if (process.env.COHERE_API_KEY?.trim()) {
+  warmCohere().catch(() => undefined);
+  warmCohereTranslator().catch(() => undefined);
+}
 
 let service: SearchService | undefined;
 let limiter: RateLimiter | undefined;
@@ -52,12 +55,12 @@ export function searchService(): SearchService {
     embedder: questionEmbedder(),
     translator: questionTranslator(),
     defer: deferAfterResponse,
-    onFailure: async ({ reason, releaseV, ms }) => {
-      await recordOpsEvent(getDb(), {
-        kind: "search.unavailable",
-        ...(releaseV === null ? {} : { subjectType: "directory_release", subjectId: String(releaseV) }),
-        detail: { reason, ms },
-      });
+    emergencyThreshold: getEnv().search.emergencyThreshold,
+    onFailure: async (note) => {
+      const subject = note.releaseV === null ? {} : { subjectType: "directory_release", subjectId: String(note.releaseV) };
+      // A vendor call that failed while the other leg answered is its own event: the search itself did not fail.
+      if (note.answered) await recordOpsEvent(getDb(), { kind: "search.leg_failed", ...subject, detail: { reason: note.reason, ms: note.ms } });
+      else await recordOpsEvent(getDb(), { kind: "search.unavailable", ...subject, detail: { reason: note.reason, ms: note.ms } });
     },
   });
   return service;
@@ -74,6 +77,7 @@ export function searchTestSetEngine(options: { translatedLeg?: boolean } = {}): 
     storage: directoryStorage,
     embedder: questionEmbedder(),
     translator: options.translatedLeg === false ? null : questionTranslator(),
+    emergencyThreshold: getEnv().search.emergencyThreshold,
     spendPurpose: "test_set",
     log: false,
   });

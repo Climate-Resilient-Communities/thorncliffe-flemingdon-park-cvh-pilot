@@ -22,7 +22,7 @@ export interface CohereChatClient {
 // What each launch language is called in the prompt. The wording for Dari matters: "Afghan" wording gave Pashto.
 const LANGUAGE_NAMES: Record<LangCode, string> = {
   en: "English",
-  ur: "Urdu",
+  ur: "Urdu (Arabic script)",
   ps: "Pashto (Afghan Pashto, Arabic script)",
   tl: "Tagalog (Filipino)",
   prs: "Persian (Dari, as written in Afghanistan)",
@@ -58,6 +58,11 @@ export function systemPrompt(from: LangCode | null, to: LangCode): string {
 export const MAX_OUTPUT_TOKENS = 200;
 
 let sdk: Promise<typeof import("cohere-ai")> | undefined;
+/** Loads the vendor's SDK once and keeps it; the composition root calls it at module load (like warmCohere) so the first translation pays no import. */
+export function warmCohereTranslator(): Promise<typeof import("cohere-ai")> {
+  return loadSdk();
+}
+
 function loadSdk(): Promise<typeof import("cohere-ai")> {
   if (!sdk) {
     sdk = import("cohere-ai");

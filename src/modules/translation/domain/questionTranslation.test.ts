@@ -1,6 +1,6 @@
 // The translated-question leg's checks (S03.05): the translation must be English and a translation, not an answer.
 import { describe, expect, it } from "vitest";
-import { checkTranslation, isEnglish, maxTranslationLength, normaliseTranslation, sourceLanguage } from "./questionTranslation";
+import { checkTranslation, estimateTranslationTokens, isEnglish, maxTranslationLength, normaliseTranslation, sourceLanguage } from "./questionTranslation";
 
 describe("isEnglish", () => {
   it.each(["I need a lawyer", "Where can I get free food for my children?", "food bank", "doctor", "dentist", "free wifi", "tax help", "Where is a free dental clinic nearby?"])(
@@ -39,8 +39,14 @@ describe("checkTranslation", () => {
     expect(checkTranslation(question, answer)).toBe("too_long");
   });
 
-  it("refuses a romanized question handed back unchanged, even one that looks English", () => {
-    expect(checkTranslation("Mujhe nearby free dental clinic batao", "mujhe nearby free dental clinic batao.")).toBe("not_english");
+  it("calls a question handed back unchanged that already reads as English `identical`: the leg was not needed, the model did not fail", () => {
+    expect(checkTranslation("Mujhe nearby free dental clinic batao", "mujhe nearby free dental clinic batao.")).toBe("identical");
+    expect(checkTranslation("free wifi", "Free WiFi!")).toBe("identical");
+  });
+
+  it("refuses a question handed back unchanged that is not English as `not_english`, a failure", () => {
+    expect(checkTranslation("mujhe bachon ke liye khana chahiye", "mujhe bachon ke liye khana chahiye")).toBe("not_english");
+    expect(checkTranslation("زه وړیا حقوقي مشوره غواړم", "زه وړیا حقوقي مشوره غواړم")).toBe("not_english");
   });
 
   it("refuses a translation that is not English", () => {
@@ -57,10 +63,24 @@ describe("normaliseTranslation", () => {
 });
 
 describe("sourceLanguage", () => {
-  it("names Pashto and Dari, and leaves romanized, mixed and ambiguous text for the model to tell", () => {
+  it("names Pashto, Dari and native-script Urdu (owner decision 40), and leaves romanized, mixed and ambiguous text for the model to tell", () => {
     expect(sourceLanguage("ps")).toBe("ps");
     expect(sourceLanguage("prs")).toBe("prs");
+    expect(sourceLanguage("ur")).toBe("ur");
     expect(sourceLanguage("romanized_or_mixed")).toBeNull();
     expect(sourceLanguage("ambiguous_arabic")).toBeNull();
+  });
+});
+
+describe("estimateTranslationTokens", () => {
+  it("counts the question, the system prompt that goes with it, and an answer about as long as the question", () => {
+    const question = "a".repeat(30); // 10 tokens
+    const system = "b".repeat(300); // 100 tokens
+    expect(estimateTranslationTokens(question, system)).toBe(100 + 10 + 10);
+    expect(estimateTranslationTokens(question)).toBe(10 + 10);
+  });
+
+  it("estimates the answer at no more than the longest answer asked for", () => {
+    expect(estimateTranslationTokens("a".repeat(3000), "")).toBe(1000 + 200);
   });
 });

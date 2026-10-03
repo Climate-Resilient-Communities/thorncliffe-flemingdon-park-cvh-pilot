@@ -1,6 +1,7 @@
 // The translated-question leg of search (S03.05), with fakes for the snapshot, the embedding model, the translation model
 // and the rows: which questions get the leg, the ranking over both legs, every way the leg can fail, and the 2.2 s / 2.5 s
-// time limits. Time is vitest's fake clock: nothing here waits for real, so no timing here can be flaky. The database
+// time limits, the translation starting with the request (not after the snapshot), the vendor failures told to ops, and the
+// emergency fail-safe. Time is vitest's fake clock: nothing here waits for real, so no timing here can be flaky. The database
 // side (search_log.translated_leg, spend_event, the privacy marker) is in test/db/search.db.test.ts.
 import { readFileSync } from "node:fs";
 import path from "node:path";
@@ -9,12 +10,13 @@ import { createQuestionTranslator, type QuestionRoute, type Translator } from "@
 import type { SpendEventInput } from "@/modules/spend";
 import { detect } from "../domain/questionLanguage";
 import type { QueryEmbedder } from "./ports";
-import { SearchFailure, createSearch, questionSourceOf, type SearchDeps, type SearchLogRow, type SearchSnapshot } from "./search";
+import { SearchFailure, createSearch, questionSourceOf, type SearchDeps, type SearchFailureNote, type SearchLogRow, type SearchSnapshot } from "./search";
 
 const MODEL = "embed-v4.0";
 const ROUTE: QuestionRoute = {
   ps: "north-small-translate-09-2026",
   prs: "north-small-translate-09-2026",
+  ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
 };
@@ -43,6 +45,11 @@ const PASHTO = "زه وړیا حقوقي مشوره غواړم"; // confident ps
 const PASHTO_EN = "I want free legal advice";
 const ROMANIZED = "mujhe madad chahiye"; // romanized_or_mixed
 const ROMANIZED_EN = "I need help";
+const URDU = "مجھے وکیل چاہیے"; // confident ur (Urdu letters)
+const URDU_EN = "I need a lawyer";
+
+/** A unit vector whose similarity with provider P1..P4 is the given number (the fifth axis is "nothing in particular"). */
+const unit = (similarities: [number, number, number, number]) => [...similarities, Math.sqrt(1 - similarities.reduce((sum, x) => sum + x * x, 0))];
 
 /** What the embedding model makes of each text. A text it does not know points at nothing in particular. */
 const VECTORS: Record<string, number[]> = {
@@ -52,12 +59,21 @@ const VECTORS: Record<string, number[]> = {
   [ROMANIZED]: [0.9, 0.5, 0.45, 0, 0],
   [ROMANIZED_EN]: [0, 0.5, 0.45, 0.1, 0],
   "I need a lawyer": [1, 0, 0, 0, 0],
+  // The emergency fail-safe: P2 is the emergency provider, the threshold is 0.3, the emergency-only threshold 0.25.
+  "em just below": unit([0, 0.27, 0, 0]), // emergency 0.27: no clear match, but an emergency provider is first
+  "em too low": unit([0, 0.24, 0, 0]), // emergency 0.24: below the emergency-only threshold
+  "other just below": unit([0, 0, 0.27, 0]), // P3 (not emergency) 0.27
+  "em fourth": unit([0.28, 0.27, 0.28, 0.28]), // emergency 0.27, but fourth: three others are above it
+  "em fourth and clear": unit([0.5, 0.35, 0.5, 0.5]), // emergency 0.35 qualifies as a result, though fourth in the leg
+  "I need an ambulance": unit([0, 0.27, 0, 0]),
 };
 
 interface Call {
   text: string;
   model: string;
   aborted: boolean;
+  /** When the call began (fake clock). */
+  at?: number;
 }
 
 /** A model call that takes `ms` of fake time. Cancelled while running, it records the abort and rejects; a stubborn one records it and answers anyway, late. */
@@ -95,7 +111,7 @@ function fakeTranslator(options: { ms?: number; answer?: (text: string) => strin
   const calls: Call[] = [];
   const translator: Translator = {
     translate({ text, model, signal }) {
-      const call = { text, model, aborted: false };
+      const call = { text, model, aborted: false, at: Date.now() };
       calls.push(call);
       if (options.fail) return Promise.reject(new Error(`vendor error echoing ${text}`));
       const answer = options.answer ?? ((t: string) => (t === PASHTO ? PASHTO_EN : t === ROMANIZED ? ROMANIZED_EN : "I need help"));
@@ -118,7 +134,14 @@ describe("the translated-question leg", () => {
   });
   afterEach(() => vi.useRealTimers());
 
-  function service(parts: { embedder: QueryEmbedder; translator?: Translator | null; route?: QuestionRoute; onFailure?: SearchDeps["onFailure"] }) {
+  function service(parts: {
+    embedder: QueryEmbedder;
+    translator?: Translator | null;
+    route?: QuestionRoute;
+    onFailure?: SearchDeps["onFailure"];
+    snapshotMs?: number;
+    emergencyThreshold?: number;
+  }) {
     return createSearch({
       db: () => {
         throw new Error("no database in this test");
@@ -128,7 +151,11 @@ describe("the translated-question leg", () => {
       },
       embedder: parts.embedder,
       translator: parts.translator ? createQuestionTranslator({ translator: parts.translator, route: parts.route ?? ROUTE }) : null,
-      snapshot: async () => SNAPSHOT,
+      snapshot: async () => {
+        if (parts.snapshotMs) await new Promise<void>((resolve) => setTimeout(resolve, parts.snapshotMs));
+        return SNAPSHOT;
+      },
+      emergencyThreshold: parts.emergencyThreshold,
       writer: {
         log: async (row) => void logs.push(row),
         spend: async (event) => void spends.push(event),
@@ -156,27 +183,29 @@ describe("the translated-question leg", () => {
   }
 
   describe("which questions get it", () => {
-    it("is run for Pashto, Dari, romanized or mixed, and ambiguous Arabic script, and for no other question", () => {
-      const of = (q: string, page: "en" | "ur" = "en") => questionSourceOf(detect(q, page));
+    it("is run for Pashto, Dari, native-script Urdu, romanized or mixed, and ambiguous Arabic script, and for no other question", () => {
+      const of = (q: string, page: "en" | "ur" = "en") => questionSourceOf(detect(q, page), q);
       expect(of(PASHTO)).toBe("ps");
       expect(of("کلینیک صحی رایگان بدون کارت صحی کجا است؟")).toBe("prs");
       expect(of(ROMANIZED)).toBe("romanized_or_mixed");
       expect(of("Mujhe nearby free dental clinic batao")).toBe("romanized_or_mixed");
       expect(of("مکان")).toBe("ambiguous_arabic");
       expect(of("I need a lawyer")).toBeNull();
-      expect(of("مجھے وکیل چاہیے")).toBeNull(); // confident Urdu
+      expect(of(URDU)).toBe("ur"); // confident Urdu (owner decision 40)
+      expect(of(URDU, "ur")).toBe("ur");
       expect(of("Necesito un abogado")).toBeNull();
     });
 
-    it("matches the forms of the test set's questions: every Pashto, Dari, romanized and mixed question, and none of the native others", () => {
+    it("matches the test set's native-script questions: every Pashto, Dari and Urdu one gets it, and none of the other scripts' (Latin-letter questions are the detector's, tuned in S03.07)", () => {
       const lines = readFileSync(path.join(process.cwd(), "data/search-test-set/questions.jsonl"), "utf8").split("\n").filter((l) => l.trim() !== "");
-      const questions = lines.map((l) => JSON.parse(l) as { id: string; lang: "en"; q: string; form: string });
-      const needing = questions.filter((x) => x.lang === ("ps" as string) || x.lang === ("prs" as string) || x.form !== "native");
-      expect(needing.length).toBeGreaterThan(0);
-      for (const x of questions) {
-        // The page language is English: the leg depends on how the question is written, not the page.
-        expect(questionSourceOf(detect(x.q, "en")) !== null, x.id).toBe(needing.includes(x));
-      }
+      const questions = lines.map((l) => JSON.parse(l) as { id: string; lang: string; q: string; form: string });
+      const arabic = questions.filter((x) => x.form === "native" && ["ps", "prs", "ur"].includes(x.lang));
+      const otherScripts = questions.filter((x) => x.form === "native" && ["bn", "pa", "gu", "ta", "el", "zh", "zh-Hant", "hi"].includes(x.lang));
+      expect(arabic.length).toBeGreaterThan(0);
+      expect(otherScripts.length).toBeGreaterThan(0);
+      // The page language is English: the leg depends on how the question is written, not the page.
+      for (const x of arabic) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBe(x.lang);
+      for (const x of otherScripts) expect(questionSourceOf(detect(x.q, "en"), x.q), x.id).toBeNull();
     });
 
     it("is not run, and is logged not_needed, for an English question", async () => {
@@ -189,6 +218,28 @@ describe("the translated-question leg", () => {
       expect(words.calls).toEqual([]);
       expect(model.calls.map((c) => c.text)).toEqual(["I need a lawyer"]);
       expect(logs).toMatchObject([{ translatedLeg: "not_needed" }]);
+    });
+
+    it("is not run for a clearly English question that eld only reads as romanized or mixed: no translate call for lawyer, rent, car repair", async () => {
+      for (const q of ["lawyer", "rent", "car repair"]) {
+        const model = fakeEmbedder();
+        const words = fakeTranslator();
+        logs = [];
+
+        await ask(service({ embedder: model.embedder, translator: words.translator }), q);
+
+        expect(words.calls, q).toEqual([]);
+        expect(model.calls.map((c) => c.text), q).toEqual([q]);
+        expect(logs, q).toMatchObject([{ translatedLeg: "not_needed" }]);
+      }
+    });
+
+    it("is still run for a romanized question with a romanized marker, even when eld reads it as English", async () => {
+      const words = fakeTranslator();
+
+      await ask(service({ embedder: fakeEmbedder().embedder, translator: words.translator }), "Mujhe nearby free dental clinic batao");
+
+      expect(words.calls).toHaveLength(1);
     });
 
     it("is not run when the route switches it off for that kind of question, or no translator is configured", async () => {
@@ -219,6 +270,18 @@ describe("the translated-question leg", () => {
       // 100 ms direct leg in parallel with 200 ms translation then 100 ms embedding.
       expect(took()).toBe(300);
       expect(logs).toEqual([{ lang: "ps", queryLang: "ps", releaseV: 3, ms: 300, status: "ok", resultCount: 1, topScore: 1, translatedLeg: "used" }]);
+    });
+
+    it("runs for native-script Urdu with the model the route names for ur, and uses the translation (owner decision 40)", async () => {
+      const model = fakeEmbedder();
+      const words = fakeTranslator({ answer: () => URDU_EN });
+
+      const { result } = await ask(service({ embedder: model.embedder, translator: words.translator }), URDU, "ur");
+
+      expect(words.calls).toMatchObject([{ text: URDU, model: "north-small-translate-09-2026" }]);
+      expect(model.calls.map((c) => c.text)).toEqual([URDU, URDU_EN]);
+      expect(result).toMatchObject({ status: "ok", query_lang: "ur", results: [{ provider_id: "P1" }] });
+      expect(logs).toMatchObject([{ translatedLeg: "used" }]);
     });
 
     it("ranks over both legs: threshold first, then reciprocal rank fusion of the qualifying providers, never by an RRF score against the threshold", async () => {
@@ -365,7 +428,11 @@ describe("the translated-question leg", () => {
       expect(took()).toBe(2200);
       expect(model.calls).toMatchObject([{ text: ROMANIZED, aborted: true }]);
       expect(logs).toMatchObject([{ status: "error", resultCount: 0, translatedLeg: "failed" }]);
-      expect(notes).toEqual([{ reason: "timed_out", releaseV: 3, ms: 2200 }]);
+      // The translation's vendor failure is told too (the search did not answer, and it is not the direct leg's reason).
+      expect(notes).toEqual([
+        { reason: "translate_failed", releaseV: 3, ms: 2200, answered: true },
+        { reason: "timed_out", releaseV: 3, ms: 2200 },
+      ]);
     });
 
     it("answers search_unavailable when the direct leg fails and the translated leg times out", async () => {
@@ -375,6 +442,230 @@ describe("the translated-question leg", () => {
 
       expect(result).toMatchObject({ code: "search_unavailable" });
       expect(logs).toMatchObject([{ status: "error", translatedLeg: "timed_out" }]);
+    });
+  });
+  describe("the translation starts with the request, not after the snapshot (P2-1)", () => {
+    it("with a snapshot that takes 1 s and a translation that takes 1 s, the leg completes within 2.2 s: only the translation's embedding waits for the snapshot", async () => {
+      const model = fakeEmbedder();
+      const words = fakeTranslator({ ms: 1000 });
+
+      const { result, took } = await ask(service({ embedder: model.embedder, translator: words.translator, snapshotMs: 1000 }), PASHTO, "ps");
+
+      // The translation began at the start of the request, in parallel with the snapshot read.
+      expect(words.calls).toMatchObject([{ text: PASHTO, aborted: false, at: expect.any(Number) }]);
+      expect(words.calls[0]!.at! - (Date.now() - 5000)).toBeLessThanOrEqual(5000); // sanity: a number on the same clock
+      // 1 s for both in parallel, then 100 ms to embed (in series they would take 2.1 s).
+      expect(took()).toBe(1100);
+      expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
+      expect(logs).toMatchObject([{ status: "ok", translatedLeg: "used", ms: 1100 }]);
+    });
+
+    it("completes where waiting for the snapshot first would run out of time (1.2 s and 1.2 s: 2.4 s in series)", async () => {
+      const words = fakeTranslator({ ms: 1200 });
+
+      const { result, took } = await ask(service({ embedder: fakeEmbedder().embedder, translator: words.translator, snapshotMs: 1200 }), PASHTO, "ps");
+
+      expect(took()).toBe(1300);
+      expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
+      expect(logs).toMatchObject([{ translatedLeg: "used" }]);
+    });
+
+    it("starts the translation before the snapshot is known", async () => {
+      const words = fakeTranslator({ ms: 100 });
+      const search = service({ embedder: fakeEmbedder().embedder, translator: words.translator, snapshotMs: 1000 });
+      const pending = search.search({ q: PASHTO, lang: "ps" }, Date.now());
+
+      await vi.advanceTimersByTimeAsync(1);
+      expect(words.calls).toHaveLength(1);
+      await vi.advanceTimersByTimeAsync(5000);
+      await pending;
+    });
+
+    it("writes the translation's spend row with the release number even though the translation settled before the snapshot", async () => {
+      const words = fakeTranslator({ ms: 200 });
+
+      await ask(service({ embedder: fakeEmbedder().embedder, translator: words.translator, snapshotMs: 1000 }), PASHTO, "ps");
+
+      expect(spends).toContainEqual(expect.objectContaining({ kind: "translate", releaseV: 3, tokensEstimated: false, ms: 200 }));
+    });
+
+    it("cancels the translation, and counts it, when the snapshot then fails or the budget is gone", async () => {
+      const words = fakeTranslator({ ms: 3000 });
+      const search = createSearch({
+        db: () => {
+          throw new Error("no database in this test");
+        },
+        storage: () => {
+          throw new Error("no store in this test");
+        },
+        embedder: fakeEmbedder().embedder,
+        translator: createQuestionTranslator({ translator: words.translator, route: ROUTE }),
+        snapshot: async () => {
+          await new Promise<void>((resolve) => setTimeout(resolve, 100));
+          throw new Error("store down");
+        },
+        writer: { log: async (row) => void logs.push(row), spend: async (event) => void spends.push(event) },
+        defer: (work) => void deferred.push(work),
+        clock: () => Date.now(),
+      });
+
+      const { result } = await ask(search, PASHTO, "ps");
+
+      expect(result).toMatchObject({ code: "search_unavailable" });
+      expect(words.calls).toMatchObject([{ aborted: true }]);
+      await Promise.all(deferred);
+      expect(spends).toContainEqual(expect.objectContaining({ kind: "translate", tokensEstimated: true }));
+      expect(logs).toMatchObject([{ status: "error", translatedLeg: "failed" }]);
+    });
+  });
+
+  describe("vendor failures are visible to ops (P2-2)", () => {
+    it("tells ops about a translation that failed at the vendor, although the direct leg answered", async () => {
+      const notes: SearchFailureNote[] = [];
+
+      const { result } = await ask(
+        service({ embedder: fakeEmbedder().embedder, translator: fakeTranslator({ fail: true }).translator, onFailure: async (n) => void notes.push(n) }),
+        ROMANIZED,
+      );
+
+      expect(result).toMatchObject({ status: "ok" });
+      expect(notes).toEqual([{ reason: "translate_failed", releaseV: 3, ms: expect.any(Number), answered: true }]);
+      expect(JSON.stringify(notes)).not.toContain(ROMANIZED);
+    });
+
+    it.each([
+      ["is not English", () => "Necesito asesoría legal gratuita"],
+      ["is empty", () => ""],
+      ["is an answer, not a translation", () => "There are many free legal clinics in Toronto. Call 211 to find one near you, or visit the Thorncliffe office."],
+      ["is the question itself, already English", (t: string) => t],
+    ])("does not tell ops about a translation that %s: a check rejected it, the vendor did not fail", async (_, answer) => {
+      const notes: SearchFailureNote[] = [];
+
+      await ask(service({ embedder: fakeEmbedder().embedder, translator: fakeTranslator({ answer }).translator, onFailure: async (n) => void notes.push(n) }), "Mujhe nearby free dental clinic batao");
+
+      expect(notes).toEqual([]);
+    });
+
+    it("tells ops about a direct leg whose embedding failed even though the translated leg rescued the answer", async () => {
+      const notes: SearchFailureNote[] = [];
+      const model = fakeEmbedder({ fail: (text) => text === PASHTO });
+
+      const { result } = await ask(service({ embedder: model.embedder, translator: fakeTranslator().translator, onFailure: async (n) => void notes.push(n) }), PASHTO, "ps");
+
+      expect(result).toMatchObject({ status: "ok", results: [{ provider_id: "P1" }] });
+      expect(notes).toEqual([{ reason: "embed_failed", releaseV: 3, ms: expect.any(Number), answered: true }]);
+    });
+
+    it("does not tell ops about a direct leg that merely ran out of time", async () => {
+      const notes: SearchFailureNote[] = [];
+      const model = fakeEmbedder({ ms: (text) => (text === ROMANIZED ? 3000 : 100) });
+
+      await ask(service({ embedder: model.embedder, translator: fakeTranslator().translator, onFailure: async (n) => void notes.push(n) }), ROMANIZED);
+
+      expect(notes).toEqual([]);
+    });
+
+    it("tells ops of the same failure once a minute, not on every search", async () => {
+      const notes: SearchFailureNote[] = [];
+      const search = service({ embedder: fakeEmbedder().embedder, translator: fakeTranslator({ fail: true }).translator, onFailure: async (n) => void notes.push(n) });
+
+      await ask(search, ROMANIZED);
+      await ask(search, ROMANIZED);
+      await ask(search, "mujhe khana chahiye");
+      expect(notes).toHaveLength(1);
+
+      await vi.advanceTimersByTimeAsync(61_000);
+      await ask(search, ROMANIZED);
+      expect(notes).toHaveLength(2);
+    });
+
+    it("keeps a different failure apart from one already reported", async () => {
+      const notes: SearchFailureNote[] = [];
+      const model = fakeEmbedder({ fail: (text) => text === ROMANIZED });
+      const search = service({ embedder: model.embedder, translator: fakeTranslator({ fail: true }).translator, onFailure: async (n) => void notes.push(n) });
+
+      // Direct embedding fails and the translation fails: no leg completes. The primary reason is told as always, and the translation's besides.
+      await ask(search, ROMANIZED);
+
+      expect(notes.map((n) => n.reason).sort()).toEqual(["embed_failed", "translate_failed"]);
+    });
+  });
+
+  describe("a translation that is the question itself", () => {
+    it("is logged not_needed, not failed, when the unchanged text passes the English check, and the direct leg answers alone", async () => {
+      const model = fakeEmbedder();
+      const words = fakeTranslator({ answer: (t) => t });
+
+      const { result } = await ask(service({ embedder: model.embedder, translator: words.translator }), "Mujhe nearby free dental clinic batao");
+
+      expect(result).toMatchObject({ status: "no_clear_match" });
+      expect(model.calls.map((c) => c.text)).toEqual(["Mujhe nearby free dental clinic batao"]); // not embedded a second time
+      expect(logs).toMatchObject([{ translatedLeg: "not_needed" }]);
+      // The call was still billed.
+      expect(spends).toContainEqual(expect.objectContaining({ kind: "translate", tokensEstimated: false }));
+    });
+
+    it("is still logged failed when the unchanged text is not English", async () => {
+      await ask(service({ embedder: fakeEmbedder().embedder, translator: fakeTranslator({ answer: (t) => t }).translator }), ROMANIZED);
+
+      expect(logs).toMatchObject([{ translatedLeg: "failed" }]);
+    });
+  });
+
+  describe("the emergency fail-safe (owner decision 41)", () => {
+    const run = (q: string, parts: Partial<Parameters<typeof service>[0]> = {}) => ask(service({ embedder: fakeEmbedder().embedder, ...parts }), q);
+
+    it("sets emergency_first on a no_clear_match: an emergency provider at 0.27 with a threshold of 0.3, and the results stay empty", async () => {
+      const { result } = await run("em just below");
+
+      expect(result).toEqual({ v: 1, release_v: 3, query_lang: "en", status: "no_clear_match", emergency_first: true, results: [] });
+      expect(logs).toMatchObject([{ status: "no_clear_match", resultCount: 0, topScore: null }]);
+    });
+
+    it("does not set it for a provider that is not an emergency one at 0.27", async () => {
+      const { result } = await run("other just below");
+
+      expect(result).toMatchObject({ status: "no_clear_match", emergency_first: false, results: [] });
+    });
+
+    it("does not set it for an emergency provider below the emergency-only threshold (0.24 against 0.25)", async () => {
+      expect((await run("em too low")).result).toMatchObject({ status: "no_clear_match", emergency_first: false });
+    });
+
+    it("looks at the top 3 of a leg: an emergency provider fourth at 0.27 does not set it", async () => {
+      expect((await run("em fourth")).result).toMatchObject({ status: "no_clear_match", emergency_first: false, results: [] });
+    });
+
+    it("holds when the translated leg alone qualifies (the direct leg finds nothing)", async () => {
+      const words = fakeTranslator({ answer: () => "I need an ambulance" });
+
+      const { result } = await run(PASHTO, { translator: words.translator });
+
+      expect(result).toEqual({ v: 1, release_v: 3, query_lang: "ps", status: "no_clear_match", emergency_first: true, results: [] });
+    });
+
+    it("holds when the direct leg alone qualifies (the translated leg failed)", async () => {
+      const { result } = await run("em just below", { translator: fakeTranslator({ fail: true }).translator });
+
+      expect(result).toMatchObject({ status: "no_clear_match", emergency_first: true });
+    });
+
+    it("only turns the flag on: an emergency result that qualifies keeps it on though fourth in its leg", async () => {
+      const { result } = await run("em fourth and clear");
+
+      expect(result).toMatchObject({ status: "ok", emergency_first: true });
+      expect((result as { results: { provider_id: string }[] }).results.map((h) => h.provider_id)).toContain("P2");
+    });
+
+    it("leaves emergency_first off for an ordinary result with no emergency provider near the top", async () => {
+      expect((await run("I need a lawyer")).result).toMatchObject({ status: "ok", emergency_first: false });
+    });
+
+    it("takes the emergency-only threshold from config, and never uses one above the release's threshold", async () => {
+      expect((await run("em too low", { emergencyThreshold: 0.2 })).result).toMatchObject({ emergency_first: true });
+      expect((await run("em just below", { emergencyThreshold: 0.28 })).result).toMatchObject({ emergency_first: false });
+      // A misconfigured 0.9 is held to the release's 0.3: 0.27 stays below it.
+      expect((await run("em just below", { emergencyThreshold: 0.9 })).result).toMatchObject({ emergency_first: false });
     });
   });
 });

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_RESULTS, RRF_K, cosine, emergencyFirst, rankLegs } from "./searchRanking";
+import { EMERGENCY_TOP_K, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs } from "./searchRanking";
 
 const leg = (entries: Record<string, number>) => new Map(Object.entries(entries));
 
@@ -60,5 +60,30 @@ describe("emergencyFirst", () => {
     expect(emergencyFirst(results, new Set(["B"]))).toBe(true);
     expect(emergencyFirst(results, new Set(["Z"]))).toBe(false);
     expect(emergencyFirst([], new Set(["B"]))).toBe(false);
+  });
+});
+
+describe("emergencyInTop (the emergency fail-safe, owner decision 41)", () => {
+  const emergency = new Set(["E"]);
+
+  it("is true for an emergency provider in a leg's top three at or above the emergency threshold, even below the release's threshold", () => {
+    expect(emergencyInTop([leg({ A: 0.2, B: 0.1, E: 0.27 })], emergency, 0.25)).toBe(true);
+    expect(emergencyInTop([leg({ E: 0.25 })], emergency, 0.25)).toBe(true); // at the threshold
+  });
+
+  it("is false below the emergency threshold, and for a provider that is not an emergency one", () => {
+    expect(emergencyInTop([leg({ E: 0.24 })], emergency, 0.25)).toBe(false);
+    expect(emergencyInTop([leg({ A: 0.27, E: 0.1 })], emergency, 0.25)).toBe(false);
+    expect(emergencyInTop([leg({ A: 0.9 })], new Set(), 0.25)).toBe(false);
+  });
+
+  it(`looks only at the top ${EMERGENCY_TOP_K} of a leg: a fourth place is not enough`, () => {
+    expect(emergencyInTop([leg({ A: 0.9, B: 0.8, C: 0.7, E: 0.6 })], emergency, 0.25)).toBe(false);
+    expect(emergencyInTop([leg({ A: 0.9, B: 0.8, E: 0.7, C: 0.6 })], emergency, 0.25)).toBe(true);
+  });
+
+  it("holds when either leg qualifies, the second one alone included, and is false with no leg", () => {
+    expect(emergencyInTop([leg({ A: 0.9, E: 0.01 }), leg({ E: 0.5, A: 0.1 })], emergency, 0.25)).toBe(true);
+    expect(emergencyInTop([], emergency, 0.25)).toBe(false);
   });
 });

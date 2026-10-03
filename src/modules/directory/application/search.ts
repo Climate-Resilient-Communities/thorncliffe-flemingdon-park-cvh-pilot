@@ -7,18 +7,25 @@
 //    next search. The vectors of a release are read from the private store once and kept in memory (the release's files
 //    never change), checked against the hash the release recorded.
 //  - The direct leg embeds the question as typed with the snapshot's model as a query (`input_type: search_query`).
-//  - The translated-question leg (S03.05): for Pashto, Dari, romanized or mixed, and ambiguous Arabic-script questions, the
-//    `translation` module translates the question to English with the model `search_question_route` names, checks that it
-//    is English, and the translation is embedded with the same snapshot's model, in parallel with the direct leg. The leg
-//    covers the translation and its embedding. `search_log.translated_leg` says what it did: `used`, `failed` (the call
-//    failed, or the answer was not English or was an answer rather than a translation), `timed_out`, or `not_needed`.
+//  - The translated-question leg (S03.05): for Pashto, Dari, native-script Urdu, romanized or mixed (but not one or two plainly
+//    English words), and ambiguous Arabic-script questions, the `translation` module translates the question to English
+//    with the model `search_question_route` names and checks that it is English; the translation is then embedded with the
+//    snapshot's model. The translation starts with the request, in parallel with the snapshot read and the direct leg (only
+//    its embedding waits for the snapshot). The leg covers the translation and its embedding. `search_log.translated_leg`
+//    says what it did: `used`, `failed` (the call failed, or the answer was not English or was an answer rather than a
+//    translation), `timed_out`, or `not_needed` (no leg was run, or the answer was the question itself, already English).
+//    A vendor call that failed while the other leg answered is still told to ops (`answered: true`), once a minute per reason.
 //  - Ranking (domain/searchRanking.ts) over the legs that completed: threshold first, then RRF (k = 60) when both did,
 //    top 5. When the direct leg fails but the translated one completed, the results come from the translated leg alone.
+//  - Emergency fail-safe (owner decision 41): `emergency_first` is also set when an emergency-category provider is in the
+//    top 3 of either completed leg at the emergency-only threshold, even with no clear match (the results then stay empty).
+//    It only ever turns the flag on.
 //  - Time: every leg is cancelled and ignored when still running 2.2 s after the request started (its result, should it
 //    arrive later, is never used), and the whole request
 //    answers within 2.5 s. "Started" is when the route took the request (it passes that time in), so reading the body and
 //    the rate limiter count against the budget. A search with no completed leg fails with `search_unavailable`; a release without search data,
-//    or a deployment without an embedding key, answers `status: "unavailable"` (an expected outcome) and calls no model.
+//    or a deployment without an embedding key, answers `status: "unavailable"` (an expected outcome) and calls no model (a
+//    translation already started for a release found to have no search data is cancelled).
 //  - No transaction and no spend lock are held across a vendor call: each call's usage is one plain insert in
 //    `spend_event` (purpose `search`; `test_set` for the test-set runner, which also writes no `search_log` row) after the call (or, for a call cancelled at the deadline, an estimate), outside the publish allowance (the lock and the allowance are the
 //    publish job's).
@@ -36,14 +43,16 @@ import {
   QuestionTranslationError,
   estimateTranslationTokens,
   questionTranslationSpend,
+  sourceLanguage,
+  systemPrompt,
   type QuestionSource,
   type QuestionTranslator,
 } from "@/modules/translation";
 import type { Db } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
 import { directoryRelease, searchLog } from "../adapters/schema";
-import { detect, type QuestionLanguage } from "../domain/questionLanguage";
-import { cosine, emergencyFirst, rankLegs } from "../domain/searchRanking";
+import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
+import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
 import type { DirectoryStorage, QueryEmbedder } from "./ports";
 
@@ -74,12 +83,16 @@ export class SearchFailure extends Error {
 
 export type SearchStageReason = "snapshot_failed" | "embed_failed" | "embed_invalid" | "timed_out";
 
-/** What the app is told when a search could not answer: a reason and a duration, never the question. */
-export interface SearchFailureNote {
-  reason: SearchStageReason;
-  releaseV: number | null;
-  ms: number;
-}
+/** A vendor call of a leg failed while the search still answered (the other leg completed). */
+export type SearchLegFailureReason = "embed_failed" | "translate_failed";
+
+/**
+ * What the app is told when a search could not answer (`answered` absent), or when a vendor call failed but the other leg
+ * answered (`answered: true`): a reason and a duration, never the question.
+ */
+export type SearchFailureNote =
+  | { reason: SearchStageReason; releaseV: number | null; ms: number; answered?: undefined }
+  | { reason: SearchLegFailureReason; releaseV: number | null; ms: number; answered: true };
 
 /** What the translated-question leg did, as `search_log.translated_leg` records it. */
 export type TranslatedLeg = "not_needed" | "used" | "failed" | "timed_out";
@@ -135,6 +148,11 @@ export interface SearchDeps {
   log?: boolean;
   /** Handed the writes still pending when the response is ready, so the app can finish them after the response (`after()`). */
   defer?: (work: Promise<unknown>) => void;
+  /**
+   * The emergency-only threshold (SEARCH_EMERGENCY_THRESHOLD, owner decision 41); default 0.25. Never used above the
+   * release's own threshold.
+   */
+  emergencyThreshold?: number;
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   /** Takes the request snapshot instead of the database and the store (a unit test of the legs and their timing). */
@@ -168,8 +186,16 @@ class StageError extends Error {
   }
 }
 
-/** The translated leg's translation failed or was not usable (not English, an answer instead of a translation). */
-class TranslateStageError extends Error {}
+/**
+ * The translated leg's translation did not give an English text: the vendor failed (`translate_failed`, told to ops), the
+ * answer was not usable (`translate_rejected`: not English, an answer instead of a translation), or it was the question
+ * itself, already English (`translate_identical`: the leg was not needed).
+ */
+class TranslateStageError extends Error {
+  constructor(readonly reason: "translate_failed" | "translate_rejected" | "translate_identical") {
+    super(reason);
+  }
+}
 
 /** A release's search data failed to load a moment ago. */
 class RecentSnapshotFailure extends Error {}
@@ -237,15 +263,17 @@ async function raceTimeout<T>(work: Promise<T>, ms: number, onTimeout: () => voi
 
 const sleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, Math.max(0, ms)));
 
-/** Which questions also search through English (the E03 definitions): Pashto, Dari, romanized or mixed, ambiguous Arabic script. */
-export function questionSourceOf(detected: QuestionLanguage): QuestionSource | null {
-  if (detected.confidence === "romanized_or_mixed" || detected.confidence === "ambiguous_arabic") return detected.confidence;
-  if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs")) return detected.lang;
+/** Which questions also search through English (the E03 definitions): Pashto, Dari, native-script Urdu, romanized or mixed (unless plainly English), ambiguous Arabic script. */
+export function questionSourceOf(detected: QuestionLanguage, q?: string): QuestionSource | null {
+  // A short English word eld cannot tell from a Latin launch language ("lawyer", "rent") needs no translation to English.
+  if (detected.confidence === "romanized_or_mixed") return q !== undefined && isClearlyEnglish(q) ? null : detected.confidence;
+  if (detected.confidence === "ambiguous_arabic") return detected.confidence;
+  if (detected.confidence === "confident" && (detected.lang === "ps" || detected.lang === "prs" || detected.lang === "ur")) return detected.lang;
   return null;
 }
 
 /** How a leg ended: its similarities, or why it has none. */
-type LegOutcome = { ok: true; similarities: Map<string, number> } | { ok: false; reason: SearchStageReason | "translate_failed" };
+type LegOutcome = { ok: true; similarities: Map<string, number> } | { ok: false; reason: SearchStageReason | "translate_failed" | "translate_rejected" | "translate_identical" };
 
 /** One paid call of a leg, until its usage is known (reported, estimated, or nothing when it failed before the vendor answered). */
 interface PaidCall {
@@ -253,6 +281,8 @@ interface PaidCall {
   model: string;
   /** Only for estimating tokens; never written anywhere. */
   text: string;
+  /** The instructions sent with `text` (a translation's system prompt; no question in it), for the same estimate. */
+  system: string;
   started: number;
   settled: boolean;
 }
@@ -272,6 +302,8 @@ export function createSearch(deps: SearchDeps): SearchService {
   };
   // Releases whose data failed to load, until when: a bad release is not downloaded again on every search.
   const failedUntil = new Map<number, number>();
+  // Vendor failures already told to ops (by reason), until when: the same failure is not reported again for the same TTL.
+  const reportedUntil = new Map<SearchLegFailureReason, number>();
   // The vectors of the newest releases, kept in memory: a release's files never change (a trigger refuses it).
   const cache = new Map<number, Promise<SnapshotData>>();
 
@@ -341,25 +373,31 @@ export function createSearch(deps: SearchDeps): SearchService {
       track(() => writer.log(at));
     };
 
-    // ---- the request snapshot
-    let snapshot: SearchSnapshot | null = null;
-    let snapshotFailure: SearchStageReason | null = null;
-    let repeat = false;
+    // ---- which legs the question needs. A question that needs the translated leg starts its translation now, at the
+    // start of the request, in parallel with the snapshot read: only the embedding of the translation waits for the snapshot.
+    // (Without an embedding key every search answers `unavailable`, so no translation is started either.)
+    const translator = deps.embedder ? (deps.translator ?? null) : null;
+    const source = translator ? questionSourceOf(detected, q) : null;
+    const translateModel = source && translator ? translator.modelFor(source) : null;
+    const translating = source !== null && translateModel !== null && translator !== null;
+
+    // ---- the request snapshot (read in parallel with the translation)
+    const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean } = { snapshot: null, failure: null, repeat: false };
     const reading = readSnapshot((v) => (releaseV = v));
     // An abandoned read may still reject after the deadline: that is not unhandled.
     reading.catch(() => undefined);
-    try {
-      const raced = await raceTimeout(reading, deadline - clock(), () => undefined);
-      if (raced === "timeout") snapshotFailure = "timed_out";
-      else snapshot = raced;
-    } catch (error) {
-      snapshotFailure = error instanceof StageError ? error.reason : "snapshot_failed";
-      repeat = error instanceof StageError && error.repeat;
-    }
-    if (snapshot) releaseV = snapshot.releaseV;
-
-    const source = deps.translator ? questionSourceOf(detected) : null;
-    const translateModel = source && deps.translator ? deps.translator.modelFor(source) : null;
+    // Settles (never rejects) when the snapshot is known, failed, or out of time: what a write that needs the release number waits for.
+    const snapshotKnown: Promise<void> = (async () => {
+      try {
+        const raced = await raceTimeout(reading, deadline - clock(), () => undefined);
+        if (raced === "timeout") state.failure = "timed_out";
+        else state.snapshot = raced;
+      } catch (error) {
+        state.failure = error instanceof StageError ? error.reason : "snapshot_failed";
+        state.repeat = error instanceof StageError && error.repeat;
+      }
+      if (state.snapshot) releaseV = state.snapshot.releaseV;
+    })();
 
     const fail = async (reason: SearchStageReason, translatedLeg: TranslatedLeg, quiet = false): Promise<never> => {
       log({ status: "error", resultCount: 0, topScore: null, translatedLeg });
@@ -369,48 +407,55 @@ export function createSearch(deps: SearchDeps): SearchService {
       throw new SearchFailure("search_unavailable");
     };
 
-    if (snapshotFailure !== null || snapshot === null) {
-      // No leg ran. A question that needed the translated leg did not get it.
-      const leg: TranslatedLeg = translateModel === null ? "not_needed" : snapshotFailure === "timed_out" ? "timed_out" : "failed";
-      return fail(snapshotFailure ?? "snapshot_failed", leg, repeat);
-    }
-    // No release, a release without search data, or no key: an expected outcome, and no model is called.
-    const embedder = deps.embedder;
-    if (!snapshot.data || !embedder) {
-      log({ status: "unavailable", resultCount: 0, topScore: null, translatedLeg: "not_needed" });
-      await finish();
-      return { v: 1, release_v: snapshot.releaseV ?? 0, query_lang: queryLang, status: "unavailable", emergency_first: false, results: [] };
-    }
-    const data = snapshot.data;
+    /**
+     * A vendor failure that did not make the search fail (the other leg answered) is still told to ops, once a minute per
+     * kind: a model that is down would otherwise be invisible behind the leg that works.
+     */
+    const reportVendorFailure = (reason: SearchLegFailureReason) => {
+      const now = clock();
+      const until = reportedUntil.get(reason);
+      if (until !== undefined && now < until) return;
+      reportedUntil.set(reason, now + failureTtlMs);
+      if (!deps.onFailure) return;
+      const at = { reason, releaseV, ms: elapsed(), answered: true as const };
+      track(() => deps.onFailure!(at));
+    };
 
     // ---- the legs: each paid call's usage is recorded once, as the vendor reported it, or estimated when it was cancelled.
+    // The release number is read when the row is written (a translation can settle before the snapshot is known).
     const settle = (call: PaidCall, tokens: number | null | "estimate" | "none") => {
       if (call.settled) return;
       call.settled = true;
       if (tokens === "none") return;
       const estimated = tokens === "estimate" || tokens === null;
-      const count = estimated ? (call.kind === "embed" ? estimateTokens([call.text]) : estimateTranslationTokens(call.text)) : tokens;
+      const count = estimated ? (call.kind === "embed" ? estimateTokens([call.text]) : estimateTranslationTokens(call.text, call.system)) : tokens;
       const ms = Math.round(clock() - call.started);
-      const event: SpendEventInput =
-        call.kind === "embed"
-          ? { kind: SEARCH_SPEND_KIND, purpose: spendPurpose, model: call.model, releaseV: data.releaseV, tokens: count, tokensEstimated: estimated, ms }
-          : questionTranslationSpend({ purpose: spendPurpose, model: call.model, releaseV: data.releaseV, tokens: count, tokensEstimated: estimated, ms });
-      track(() => writer.spend(event));
+      track(async () => {
+        await snapshotKnown;
+        const event: SpendEventInput =
+          call.kind === "embed"
+            ? { kind: SEARCH_SPEND_KIND, purpose: spendPurpose, model: call.model, releaseV, tokens: count, tokensEstimated: estimated, ms }
+            : questionTranslationSpend({ purpose: spendPurpose, model: call.model, releaseV, tokens: count, tokensEstimated: estimated, ms });
+        await writer.spend(event);
+      });
     };
 
     interface Leg {
       signal: AbortSignal;
-      start(kind: PaidCall["kind"], model: string, text: string): PaidCall;
+      start(kind: PaidCall["kind"], model: string, text: string, system?: string): PaidCall;
     }
 
-    /** Runs a leg until it completes or the deadline; at the deadline its calls are cancelled (and counted) and its result is never used. */
-    const runLeg = async (work: (leg: Leg) => Promise<Map<string, number>>): Promise<LegOutcome> => {
+    /**
+     * Runs a leg until it completes or the deadline; at the deadline its calls are cancelled (and counted) and its result is
+     * never used. `cancel` stops it early (the snapshot failed, or the release has no search data) and counts what it started.
+     */
+    const startLeg = (work: (leg: Leg) => Promise<Map<string, number>>): { done: Promise<LegOutcome>; cancel: () => void } => {
       const controller = new AbortController();
       const calls: PaidCall[] = [];
       const leg: Leg = {
         signal: controller.signal,
-        start(kind, model, text) {
-          const call: PaidCall = { kind, model, text, started: clock(), settled: false };
+        start(kind, model, text, system = "") {
+          const call: PaidCall = { kind, model, text, system, started: clock(), settled: false };
           calls.push(call);
           return call;
         },
@@ -422,12 +467,17 @@ export function createSearch(deps: SearchDeps): SearchService {
       };
       const running = Promise.resolve().then(() => work(leg));
       running.catch(() => undefined);
-      try {
-        const raced = await raceTimeout(running, deadline - clock(), cancel);
-        return raced === "timeout" ? { ok: false, reason: "timed_out" } : { ok: true, similarities: raced };
-      } catch (error) {
-        return { ok: false, reason: error instanceof StageError ? error.reason : error instanceof TranslateStageError ? "translate_failed" : "embed_failed" };
-      }
+      const done = (async (): Promise<LegOutcome> => {
+        try {
+          const raced = await raceTimeout(running, deadline - clock(), cancel);
+          return raced === "timeout" ? { ok: false, reason: "timed_out" } : { ok: true, similarities: raced };
+        } catch (error) {
+          if (error instanceof StageError) return { ok: false, reason: error.reason };
+          if (error instanceof TranslateStageError) return { ok: false, reason: error.reason };
+          return { ok: false, reason: "embed_failed" };
+        }
+      })();
+      return { done, cancel };
     };
 
     /** The budget is already spent (a slow body, limiter or snapshot): no call is made, and none is billed. */
@@ -436,7 +486,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       if (leg.signal.aborted || clock() >= deadline) throw new StageError("timed_out");
     };
 
-    const embedAndCompare = async (leg: Leg, text: string): Promise<Map<string, number>> => {
+    const embedAndCompare = async (leg: Leg, data: SnapshotData, embedder: QueryEmbedder, text: string): Promise<Map<string, number>> => {
       checkTime(leg);
       const call = leg.start("embed", data.model, text);
       let embedded;
@@ -456,41 +506,82 @@ export function createSearch(deps: SearchDeps): SearchService {
       return similarities;
     };
 
-    const directLeg = runLeg((leg) => embedAndCompare(leg, q));
-    const translatedLeg =
-      source !== null && translateModel !== null && deps.translator
-        ? runLeg(async (leg) => {
-            checkTime(leg);
-            const call = leg.start("translate", translateModel, q);
-            let english: string;
-            try {
-              const translated = await deps.translator!.toEnglish({ text: q, source, signal: leg.signal });
-              settle(call, translated.tokens);
-              english = translated.english;
-            } catch (error) {
-              // A model that answered was billed, whether or not its answer is used.
-              if (error instanceof QuestionTranslationError && error.billedTokens !== undefined) settle(call, error.billedTokens);
-              else settle(call, leg.signal.aborted ? "estimate" : "none");
-              if (leg.signal.aborted) throw new StageError("timed_out");
-              throw new TranslateStageError();
-            }
-            return embedAndCompare(leg, english);
-          })
-        : null;
-    const [direct, translated] = await Promise.all([directLeg, translatedLeg]);
+    const translatedRun = translating
+      ? startLeg(async (leg) => {
+          checkTime(leg);
+          const call = leg.start("translate", translateModel, q, systemPrompt(sourceLanguage(source), "en"));
+          let english: string;
+          try {
+            const translated = await translator.toEnglish({ text: q, source, signal: leg.signal });
+            settle(call, translated.tokens);
+            english = translated.english;
+          } catch (error) {
+            // A model that answered was billed, whether or not its answer is used.
+            if (error instanceof QuestionTranslationError && error.billedTokens !== undefined) settle(call, error.billedTokens);
+            else settle(call, leg.signal.aborted ? "estimate" : "none");
+            if (leg.signal.aborted) throw new StageError("timed_out");
+            if (error instanceof QuestionTranslationError && error.code === "identical") throw new TranslateStageError("translate_identical");
+            // The vendor failed (or answered nothing we can tell apart from that), as opposed to answering with something unusable.
+            const rejected = error instanceof QuestionTranslationError && error.code !== "translate_failed" && error.code !== "aborted";
+            throw new TranslateStageError(rejected ? "translate_rejected" : "translate_failed");
+          }
+          // Only the embedding of the translation needs the snapshot.
+          await snapshotKnown;
+          const known = state.snapshot;
+          if (!known?.data || !deps.embedder) throw new StageError("snapshot_failed");
+          return embedAndCompare(leg, known.data, deps.embedder, english);
+        })
+      : null;
 
-    const translatedOutcome: TranslatedLeg = translated === null ? "not_needed" : translated.ok ? "used" : translated.reason === "timed_out" ? "timed_out" : "failed";
-    const completed = [direct, translated].flatMap((leg) => (leg?.ok ? [leg.similarities] : []));
-    if (completed.length === 0) {
-      return fail(direct.ok ? "embed_failed" : (direct.reason as SearchStageReason), translatedOutcome);
+    await snapshotKnown;
+
+    const { snapshot, failure: snapshotFailure, repeat } = state;
+    if (snapshotFailure !== null || snapshot === null) {
+      // No leg ran. A question that needed the translated leg did not get it.
+      translatedRun?.cancel();
+      const leg: TranslatedLeg = !translating ? "not_needed" : snapshotFailure === "timed_out" ? "timed_out" : "failed";
+      return fail(snapshotFailure ?? "snapshot_failed", leg, repeat);
     }
+    const ready = snapshot;
+    // No release, a release without search data, or no key: an expected outcome, and no model is called.
+    const embedder = deps.embedder;
+    if (!ready.data || !embedder) {
+      translatedRun?.cancel();
+      log({ status: "unavailable", resultCount: 0, topScore: null, translatedLeg: "not_needed" });
+      await finish();
+      return { v: 1, release_v: ready.releaseV ?? 0, query_lang: queryLang, status: "unavailable", emergency_first: false, results: [] };
+    }
+    const data = ready.data;
+
+    const directRun = startLeg((leg) => embedAndCompare(leg, data, embedder, q));
+    const [direct, translated] = await Promise.all([directRun.done, translatedRun ? translatedRun.done : Promise.resolve(null)]);
+
+    const translatedOutcome: TranslatedLeg =
+      translated === null || (!translated.ok && translated.reason === "translate_identical") ? "not_needed" : translated.ok ? "used" : translated.reason === "timed_out" ? "timed_out" : "failed";
+    const completed = [direct, translated].flatMap((leg) => (leg?.ok ? [leg.similarities] : []));
+
+    // Vendor failures are told to ops even when the other leg answered (or, when none did, besides the reason below).
+    const vendor: SearchLegFailureReason[] = [];
+    if (translated && !translated.ok && translated.reason === "translate_failed") vendor.push("translate_failed");
+    for (const leg of [direct, translated]) if (leg && !leg.ok && leg.reason === "embed_failed") vendor.push("embed_failed");
+
+    if (completed.length === 0) {
+      const primary = (direct.ok ? "embed_failed" : direct.reason) as SearchStageReason;
+      for (const reason of new Set(vendor)) if (reason !== primary) reportVendorFailure(reason);
+      return fail(primary, translatedOutcome);
+    }
+    for (const reason of new Set(vendor)) reportVendorFailure(reason);
 
     // The ranking sequence over the legs that completed: threshold first, then RRF when there are two.
     const results = rankLegs(completed, data.threshold);
     const status = results.length === 0 ? "no_clear_match" : "ok";
+    // The emergency fail-safe (owner decision 41) can only turn the flag on: an emergency provider among the top 3 of either
+    // leg at the emergency-only threshold sets it, even with no clear match (the results then stay empty).
+    const emergencyThreshold = Math.min(deps.emergencyThreshold ?? DEFAULT_EMERGENCY_THRESHOLD, data.threshold);
+    const emergency = emergencyFirst(results, data.emergency) || emergencyInTop(completed, data.emergency, emergencyThreshold);
     log({ status, resultCount: results.length, topScore: results[0]?.score ?? null, translatedLeg: translatedOutcome });
     await finish();
-    return { v: 1, release_v: data.releaseV, query_lang: queryLang, status, emergency_first: emergencyFirst(results, data.emergency), results };
+    return { v: 1, release_v: data.releaseV, query_lang: queryLang, status, emergency_first: emergency, results };
   }
 
   async function has(providerId: string): Promise<boolean> {

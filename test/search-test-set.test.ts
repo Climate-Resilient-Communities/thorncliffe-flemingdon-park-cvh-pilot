@@ -674,6 +674,21 @@ describe("scripts/search-test-set", { timeout: 60_000 }, () => {
     expect(readdirSync(dir).sort()).toEqual(["2026-10-02-model-a-leg-off-tuning.json", "2026-10-02-model-a-leg-on-tuning.json", "engine.mjs"]);
   });
 
+  it("warns when --translated-leg is given but the engine module has no createEngine, and not when it has one", () => {
+    const dir = tempDir();
+    const common = ["run", "--release", "3", "--threshold", "0.4", "--out-dir", dir, "--date", "2026-10-02", "--model", "m"];
+    const made = `export function createEngine() { return async () => ({ v: 1, release_v: 3, query_lang: "en", status: "no_clear_match", emergency_first: false, results: [] }); }\n`;
+
+    const plain = cli([...common, "--engine", engineFile(dir, GOOD_ENGINE), "--translated-leg", "on"]);
+    expect(plain.code, plain.err).toBe(0);
+    expect(plain.err).toContain("--translated-leg on was given, but");
+    expect(plain.err).toContain("has no createEngine()");
+
+    const withFactory = cli([...common, "--engine", engineFile(dir, made, "made.mjs"), "--translated-leg", "off"]);
+    expect(withFactory.code, withFactory.err).toBe(0);
+    expect(withFactory.err).not.toContain("has no createEngine()");
+  });
+
   it("tells createEngine whether the translated-question leg is on, so one engine module gives both reports and the leg's effect per language shows (S03.05)", () => {
     const dir = tempDir();
     // With the leg on, the romanized Urdu tuning question (ur-03) finds the food bank it expects; with it off, nothing.

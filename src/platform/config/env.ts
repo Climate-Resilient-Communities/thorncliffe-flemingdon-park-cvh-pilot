@@ -69,6 +69,12 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        recorded on each release. PROVISIONAL default 0.3: S03.07 chooses it
  *                                                        from the tuning subset; changing it means publishing a new release,
  *                                                        which copies the existing vectors
+ * SEARCH_EMERGENCY_THRESHOLD
+ *                      server   optional                 the similarity (0 to 1) at which a provider of an emergency category
+ *                                                        among the top 3 of either leg turns `emergency_first` on, even when
+ *                                                        no result reaches SEARCH_THRESHOLD (owner decision 41: a fail-safe,
+ *                                                        it never turns the flag off); default 0.25, and at most
+ *                                                        SEARCH_THRESHOLD. Read at search time, not recorded on a release
  * SEARCH_EMERGENCY_CATEGORIES
  *                      server   optional                 comma-separated English names of the categories whose results put
  *                                                        the 911 block first, recorded on each release; default
@@ -79,9 +85,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        question to English for the translated-question leg of search, per
  *                                                        kind of question, as comma-separated `kind=model` pairs; a kind left
  *                                                        out keeps its default, `kind=off` switches the leg off for it, and
- *                                                        `off` alone switches it off for all. Kinds: ps, prs,
+ *                                                        `off` alone switches it off for all. Kinds: ps, prs, ur,
  *                                                        romanized_or_mixed, ambiguous_arabic. PROVISIONAL defaults:
- *                                                        north-small-translate-09-2026 for ps and prs,
+ *                                                        north-small-translate-09-2026 for ps, prs and ur (native-script
+ *                                                        Urdu, owner decision 40),
  *                                                        command-a-translate-08-2025 for romanized_or_mixed and
  *                                                        ambiguous_arabic (the addendum's routing; confirmed at Launch
  *                                                        Readiness). It applies only where COHERE_API_KEY is set
@@ -156,6 +163,7 @@ const rawSchema = z.object({
   COHERE_API_KEY: optionalText,
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
+  SEARCH_EMERGENCY_THRESHOLD: optionalText,
   SEARCH_EMERGENCY_CATEGORIES: optionalText,
   SEARCH_QUESTION_ROUTE: optionalText,
   EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH: optionalText,
@@ -170,6 +178,8 @@ export interface SearchSettings {
   embedModel: string;
   /** Similarity below which a question has no clear match (provisional until S03.07). */
   threshold: number;
+  /** Similarity at which an emergency provider among the top 3 of a leg sets `emergency_first` without a clear match (owner decision 41); at most `threshold`. */
+  emergencyThreshold: number;
   /** English names of the categories that put the 911 block first. */
   emergencyCategories: string[];
   /** Embedding usage the calendar month may reach: calls and input tokens. */
@@ -179,13 +189,17 @@ export interface SearchSettings {
 }
 
 /** The kinds of question that also search through English (the translation module's QuestionSource, kept here as plain names). */
-export const QUESTION_ROUTE_KINDS = ["ps", "prs", "romanized_or_mixed", "ambiguous_arabic"] as const;
+export const QUESTION_ROUTE_KINDS = ["ps", "prs", "ur", "romanized_or_mixed", "ambiguous_arabic"] as const;
 export type QuestionRouteSettings = Readonly<Record<(typeof QUESTION_ROUTE_KINDS)[number], string | null>>;
 
-/** PROVISIONAL (the addendum's routing table): North Small Translate for Pashto and Dari, Command A Translate for the rest. */
+/**
+ * PROVISIONAL (the addendum's routing table): North Small Translate for Pashto, Dari and native-script Urdu (owner decision
+ * 40, 2026-10-03: the catalogue's model for ur), Command A Translate for the rest.
+ */
 export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
   ps: "north-small-translate-09-2026",
   prs: "north-small-translate-09-2026",
+  ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
 };
@@ -193,6 +207,7 @@ export const DEFAULT_QUESTION_ROUTE: QuestionRouteSettings = {
 export const DEFAULT_SEARCH_SETTINGS: SearchSettings = {
   embedModel: "embed-v4.0",
   threshold: 0.3,
+  emergencyThreshold: 0.25,
   emergencyCategories: ["Support & Emergency Services"],
   allowance: { callsPerMonth: 500, tokensPerMonth: 2_000_000 },
   questionRoute: DEFAULT_QUESTION_ROUTE,
@@ -461,12 +476,12 @@ function positiveInteger(name: string, value: string | undefined, fallback: numb
 }
 
 const QUESTION_ROUTE_PROBLEM =
-  "SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs (kinds ps, prs, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once";
+  "SEARCH_QUESTION_ROUTE: must be `off`, or comma-separated kind=model pairs (kinds ps, prs, ur, romanized_or_mixed, ambiguous_arabic; model a model id or off), each kind at most once";
 
 function parseQuestionRoute(value: string | undefined, problems: string[]): QuestionRouteSettings {
   if (value === undefined) return DEFAULT_QUESTION_ROUTE;
   const text = value.trim();
-  if (text === "off") return { ps: null, prs: null, romanized_or_mixed: null, ambiguous_arabic: null };
+  if (text === "off") return { ps: null, prs: null, ur: null, romanized_or_mixed: null, ambiguous_arabic: null };
   const route: Record<string, string | null> = { ...DEFAULT_QUESTION_ROUTE };
   const seen = new Set<string>();
   for (const pair of text.split(",").map((p) => p.trim()).filter((p) => p !== "")) {
@@ -498,6 +513,14 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
     if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_THRESHOLD: must be a number from 0 to 1, such as 0.3");
     else threshold = value;
   }
+  let emergencyThreshold = defaults.emergencyThreshold;
+  if (raw.SEARCH_EMERGENCY_THRESHOLD !== undefined) {
+    const text = raw.SEARCH_EMERGENCY_THRESHOLD.trim();
+    const value = Number(text);
+    if (!/^[0-9]*\.?[0-9]+$/.test(text) || !(value >= 0 && value <= 1)) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be a number from 0 to 1, such as 0.25");
+    else emergencyThreshold = value;
+  }
+  if (emergencyThreshold > threshold) problems.push("SEARCH_EMERGENCY_THRESHOLD: must be no greater than SEARCH_THRESHOLD");
   let emergencyCategories = defaults.emergencyCategories;
   if (raw.SEARCH_EMERGENCY_CATEGORIES !== undefined) {
     const names = [...new Set(raw.SEARCH_EMERGENCY_CATEGORIES.split(",").map((name) => name.trim()).filter((name) => name !== ""))];
@@ -507,6 +530,7 @@ function parseSearchSettings(raw: Raw, problems: string[]): SearchSettings {
   return {
     embedModel,
     threshold,
+    emergencyThreshold,
     emergencyCategories,
     allowance: {
       callsPerMonth: positiveInteger("EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH", raw.EMBED_PUBLISH_ALLOWANCE_CALLS_PER_MONTH, defaults.allowance.callsPerMonth, problems),

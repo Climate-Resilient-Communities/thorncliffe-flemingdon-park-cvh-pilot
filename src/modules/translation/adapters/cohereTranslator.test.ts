@@ -45,6 +45,10 @@ describe("the Cohere translator", () => {
     expect(systemPrompt(null, "en")).toMatch(/Never answer/);
   });
 
+  it("tells the model which Urdu: the Arabic-script one the catalogue script names, for native-script Urdu questions", () => {
+    expect(systemPrompt("ur", "en")).toMatch(/Urdu \(Arabic script\)/);
+  });
+
   it("reports unknown usage as null, and keeps only the text parts of the answer", async () => {
     const { client } = fakeClient({ message: { content: [{ type: "thinking" }, { type: "text", text: "food" }, { type: "text", text: " bank" }] } });
 

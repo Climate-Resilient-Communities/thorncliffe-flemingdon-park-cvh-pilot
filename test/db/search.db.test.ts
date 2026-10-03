@@ -35,6 +35,7 @@ const TRANSLATED_MARKER = "zqtranslatedmarker";
 const ROUTE: QuestionRoute = {
   ps: "north-small-translate-09-2026",
   prs: "north-small-translate-09-2026",
+  ur: "north-small-translate-09-2026",
   romanized_or_mixed: "command-a-translate-08-2025",
   ambiguous_arabic: "command-a-translate-08-2025",
 };

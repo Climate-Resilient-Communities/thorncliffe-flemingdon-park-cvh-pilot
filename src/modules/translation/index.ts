@@ -16,7 +16,8 @@ export {
   estimateTranslationTokens,
   isEnglish,
   normaliseTranslation,
+  sourceLanguage,
   type QuestionRoute,
   type QuestionSource,
 } from "./domain/questionTranslation";
-export { MAX_OUTPUT_TOKENS, cohereTranslator, systemPrompt, type CohereChatClient, type CohereTranslatorOptions } from "./adapters/cohereTranslator";
+export { MAX_OUTPUT_TOKENS, cohereTranslator, systemPrompt, warmCohereTranslator, type CohereChatClient, type CohereTranslatorOptions } from "./adapters/cohereTranslator";

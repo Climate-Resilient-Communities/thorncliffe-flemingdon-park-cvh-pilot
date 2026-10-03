@@ -6,7 +6,7 @@ import type { QuestionRoute } from "../domain/questionTranslation";
 import { TranslateError, type Translator } from "./ports";
 import { QuestionTranslationError, createQuestionTranslator, questionTranslationSpend } from "./questionTranslator";
 
-const ROUTE: QuestionRoute = { ps: "north-small-translate-09-2026", prs: "north-small-translate-09-2026", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: null };
+const ROUTE: QuestionRoute = { ps: "north-small-translate-09-2026", prs: "north-small-translate-09-2026", ur: "north-small-translate-09-2026", romanized_or_mixed: "command-a-translate-08-2025", ambiguous_arabic: null };
 const MARKER = "zq7-marker-question";
 
 function fake(answer: string | Error, tokens: { inputTokens: number | null; outputTokens: number | null } = { inputTokens: 12, outputTokens: 5 }) {
