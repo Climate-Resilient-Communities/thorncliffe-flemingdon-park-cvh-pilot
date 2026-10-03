@@ -1,4 +1,9 @@
-import { matches, profileFromDevice, type Audience, type AudienceProfile } from "@/contracts/audience";
+import {
+  matches,
+  profileFromDevice,
+  type Audience,
+  type AudienceProfile,
+} from "@/contracts/audience";
 import type { BuildingList } from "@/contracts/buildingList";
 import type { DeviceChoices } from "@/contracts/deviceChoices";
 import { GROUPS } from "@/contracts/groups";
@@ -8,14 +13,18 @@ import { GROUPS } from "@/contracts/groups";
 // puts the alerts that are for the resident first and marks them, and adds one line of advice: it never hides an alert, and it never
 // says which group or which choice made an alert theirs. Pure: the components only draw it.
 
-const NO_BUILDINGS: BuildingList = { v: 1, generated_at: "1970-01-01T00:00:00.000Z", buildings: [] };
-
 /**
- * The profile of this phone for the shared matcher (S04.04). Without the building list a saved building still matches by its rsn; its floors and
- * neighbourhood are not known yet, which only widens the match (a floor-specific alert is then taken as for the building).
+ * The profile of this phone for the shared matcher (S04.04), or null when there is nothing to tailor to yet. Tailoring is by place: a phone with no
+ * saved building has none (the matcher would read an unknown neighbourhood as "every neighbourhood"), and while the building list is loading or
+ * has failed the neighbourhood of a saved building is not known, so tailoring waits for it rather than mark alerts that are not the resident's.
  */
-export function deviceProfile(choices: DeviceChoices | null, list: BuildingList | null): AudienceProfile {
-  return profileFromDevice(choices ?? { v: 1 }, list ?? NO_BUILDINGS);
+export function deviceProfile(
+  choices: DeviceChoices | null,
+  list: BuildingList | null,
+): AudienceProfile | null {
+  if (!choices || (choices.buildings ?? []).length === 0 || list === null)
+    return null;
+  return profileFromDevice(choices, list);
 }
 
 export interface Tailored<T> {
@@ -28,19 +37,39 @@ export interface Tailored<T> {
 
 /**
  * The threads in the order home shows them: those that match the profile first, then the rest, each in the order the feed gave them. Every thread
- * is in the result exactly once; none is dropped. When every alert matches, none is marked: a mark that every card has says nothing. A phone
- * with no building and no group saved has nothing to tailor to (the matcher would read it as "every neighbourhood", which puts the whole-
- * neighbourhood alerts ahead of the building ones for everyone who has not chosen): it gets the feed's own order and no mark.
+ * is in the result exactly once; none is dropped. When every alert matches, none is marked: a mark that every card has says nothing. With no profile
+ * (nothing saved by place, or the building list not ready) the feed's own order, no mark and nothing matched: no advice either.
  */
-export function tailorThreads<T extends { audience: Audience }>(threads: readonly T[], profile: AudienceProfile): Tailored<T>[] {
-  if (profile.places.length === 0 && profile.groups.length === 0) {
-    return threads.map((thread) => ({ thread, matched: matches(thread.audience, profile), highlighted: false }));
+export function tailorThreads<T extends { audience: Audience }>(
+  threads: readonly T[],
+  profile: AudienceProfile | null,
+): Tailored<T>[] {
+  if (profile === null || profile.places.length === 0) {
+    return threads.map((thread) => ({
+      thread,
+      matched: false,
+      highlighted: false,
+    }));
   }
-  const flagged = threads.map((thread) => ({ thread, mine: matches(thread.audience, profile) }));
+  const flagged = threads.map((thread) => ({
+    thread,
+    mine: matches(thread.audience, profile),
+  }));
   const first = flagged.filter((entry) => entry.mine);
   const rest = flagged.filter((entry) => !entry.mine);
   const mark = first.length > 0 && rest.length > 0;
-  return [...first.map(({ thread }) => ({ thread, matched: true, highlighted: mark })), ...rest.map(({ thread }) => ({ thread, matched: false, highlighted: false }))];
+  return [
+    ...first.map(({ thread }) => ({
+      thread,
+      matched: true,
+      highlighted: mark,
+    })),
+    ...rest.map(({ thread }) => ({
+      thread,
+      matched: false,
+      highlighted: false,
+    })),
+  ];
 }
 
 /** The groups that have advice in the catalog, in the order R-26 offers them; "a check-in" is a visit, not advice. */

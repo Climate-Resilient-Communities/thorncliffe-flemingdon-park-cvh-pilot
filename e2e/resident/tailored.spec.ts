@@ -75,6 +75,14 @@ test("a phone with nothing saved sees every alert in the feed's order, none mark
   await expect(page.locator('[data-testid^="alert-advice-"]')).toHaveCount(0);
 });
 
+test("a phone with a group and no building is tailored to nothing: the feed's order, none marked and no advice", async ({ page }) => {
+  await openHome(page, { v: 1, welcomed: true, groups: ["seniors"] });
+
+  expect(await order(page)).toHaveLength(4);
+  await expect(page.locator("a.alert-card--mine")).toHaveCount(0);
+  await expect(page.locator('[data-testid^="alert-advice-"]')).toHaveCount(0);
+});
+
 test("an advice line with no translation is shown in English, left to right, and the page says once that part of it is in English", async ({ page }) => {
   await openHome(page, SAVED, "/ur");
 

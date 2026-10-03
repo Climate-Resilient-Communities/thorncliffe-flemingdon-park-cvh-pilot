@@ -1,5 +1,9 @@
 import { NextIntlClientProvider } from "next-intl";
-import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
+import {
+  getMessages,
+  getTranslations,
+  setRequestLocale,
+} from "next-intl/server";
 import { notFound } from "next/navigation";
 import { ChoicesLink, FirstRunGate } from "@/ui/choices";
 import { HomeNow } from "@/ui/home";
@@ -8,8 +12,22 @@ import { isLaunchCode } from "@/i18n/languages";
 // Home's client component runs on the phone, so it gets just these parts of the language's catalog, not the whole of it.
 // The alert cards (S04.08) read the words of an alert's view: the types (x13), the kinds of entry and the guide names (R07, hazards), the
 // valid-until's day words (R29, time) and the Hub's attribution (R04.fromHub, one string of that group).
-// The tailored cards (S04.09) read the title of the advice block (x12) and the advice lines (tailored).
-const NAMESPACES = ["R03", "R07", "R29", "status", "neighbourhoods", "time", "hazards", "x01", "x02", "x04", "x12", "x13", "tailored"] as const;
+// The tailored cards (S04.09) read the title of the advice block (x12) and the advice lines (tailored). Only x12.title is shown on home: tailoredLink and standard must not be rendered there (the card never says why).
+const NAMESPACES = [
+  "R03",
+  "R07",
+  "R29",
+  "status",
+  "neighbourhoods",
+  "time",
+  "hazards",
+  "x01",
+  "x02",
+  "x04",
+  "x12",
+  "x13",
+  "tailored",
+] as const;
 
 /**
  * Home (R-03, S02.11): the resident's buildings with their status, the neighbourhood, and the current alerts, from the
@@ -21,9 +39,14 @@ export default async function ResidentHome({ params }: PageProps<"/[lang]">) {
   if (!isLaunchCode(lang)) notFound();
   setRequestLocale(lang);
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
-  const all = (await getMessages({ locale: lang })) as Record<string, Record<string, unknown>>;
+  const all = (await getMessages({ locale: lang })) as Record<
+    string,
+    Record<string, unknown>
+  >;
   const messages = {
-    ...Object.fromEntries(NAMESPACES.map((namespace) => [namespace, all[namespace]])),
+    ...Object.fromEntries(
+      NAMESPACES.map((namespace) => [namespace, all[namespace]]),
+    ),
     R04: { fromHub: all.R04.fromHub },
     R34: { buildingByRsn: all.R34.buildingByRsn },
   };
@@ -32,7 +55,9 @@ export default async function ResidentHome({ params }: PageProps<"/[lang]">) {
     <FirstRunGate lang={lang}>
       <NextIntlClientProvider locale={lang} messages={messages}>
         <HomeNow lang={lang}>
-          <ChoicesLink href={`/${lang}/choices`}>{shell("choices")}</ChoicesLink>
+          <ChoicesLink href={`/${lang}/choices`}>
+            {shell("choices")}
+          </ChoicesLink>
         </HomeNow>
       </NextIntlClientProvider>
     </FirstRunGate>
