@@ -390,6 +390,31 @@
     color: var(--ink);
   }
 
+  /* S05.02: an entry a correction replaced keeps its wording and says "Corrected"; one that was withdrawn says "Withdrawn" and shows the reason in its place. */
+  .alert-mark {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    padding-block: var(--offset-align-hairline);
+    padding-inline: var(--gap-label);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  .alert-mark--withdrawn {
+    border-style: dashed;
+  }
+
+  .alert-entry--corrected,
+  .alert-entry--withdrawn {
+    border-inline-start-style: dashed;
+  }
+
   .alert-tag {
     padding-block: var(--offset-align-hairline);
     padding-inline: var(--gap-label);

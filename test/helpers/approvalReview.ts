@@ -49,6 +49,9 @@ export interface ReviewOptions {
   threadAudience?: EntryReview["threadAudience"];
   /** The entry that covers the thread (S05.01); given with `threadAudience`, it is what the approval is bound to. */
   threadCoveringId?: string;
+  /** The entry a correction or a withdrawal replaces (S05.02), as the approver is shown it; and whether approving the withdrawal closes the thread. */
+  target?: EntryReview["target"];
+  closesThread?: boolean;
 }
 
 /** A pending acknowledgement, version 2, with every text frozen. */
@@ -107,5 +110,7 @@ export function reviewOf(options: ReviewOptions = {}): EntryReview {
     duplicate: options.duplicate ?? null,
     threadAudience: options.threadAudience ?? null,
     threadCoveringId: options.threadAudience ? (options.threadCoveringId ?? "01900000-0000-7000-8000-00000000c0e1") : null,
+    target: options.target ?? null,
+    closesThread: options.closesThread ?? false,
   };
 }

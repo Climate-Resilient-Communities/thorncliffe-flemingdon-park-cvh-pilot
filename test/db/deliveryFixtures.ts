@@ -68,6 +68,7 @@ export function deliveryFixtures(owner: Sql) {
     const bodies = options.bodies ?? DEFAULT_BODIES;
     const frozen = status !== "draft" && status !== "discarded";
     const hash = randomBytes(32).toString("hex");
+    const replacedIds: string[] = [];
     const types = options.types ?? ["power"];
     const audience =
       options.scope === "buildings"
@@ -77,17 +78,30 @@ export function deliveryFixtures(owner: Sql) {
       await tx`select set_config('cvh.actor_id', ${author}, true)`;
       await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, ${options.isDrill ?? false}, ${new Date(Date.now() - 60_000)}, ${author}, ${alertId.slice(-10)})`;
       await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+      // A correction or a withdrawal names the entry it replaces (S05.02): an acknowledgement of the same thread, approved before it.
+      const replaces = options.kind === "correction" || options.kind === "withdrawal";
+      const targetId = replaces ? randomUUID() : null;
+      if (targetId !== null) {
+        await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
+                                          version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, created_at)
+                 values (${targetId}, ${alertId}, 'ack', 'approved', ${author}, ${[author]}, 'original', ${types},
+                         ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2026-10-04T15:00:00Z")},
+                         1, ${hash}, ${tx.json(bodies as never)}, ${NOW}, ${approver}, ${NOW}, 1, ${hash}, ${NOW}, ${new Date(NOW.getTime() - 1000)})`;
+      }
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
-                                        version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)
+                                        version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at,
+                                        supersedes_id, withdrawal_reason)
                values (${entryId}, ${alertId}, ${options.kind ?? "ack"}, ${status}, ${author}, ${[author]}, 'text', ${types},
                        ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2026-10-04T15:00:00Z")},
                        ${frozen ? 1 : 0}, ${frozen ? hash : null}, ${frozen ? tx.json(bodies as never) : null}, ${frozen ? NOW : null},
                        ${status === "approved" ? approver : null}, ${status === "approved" ? NOW : null}, ${status === "approved" ? 1 : null},
-                       ${status === "approved" ? hash : null}, ${status === "approved" ? NOW : null})`;
+                       ${status === "approved" ? hash : null}, ${status === "approved" ? NOW : null},
+                       ${targetId}, ${options.kind === "withdrawal" ? "wrong_information" : null})`;
       await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+      if (targetId !== null) replacedIds.push(targetId);
     });
     alertIds.push(alertId);
-    entryIds.push(entryId);
+    entryIds.push(entryId, ...replacedIds);
     return { alertId, entryId, authorId: author, approverId: approver, bodies };
   }
 

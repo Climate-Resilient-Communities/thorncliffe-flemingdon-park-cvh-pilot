@@ -33,6 +33,11 @@ function Items({ items, id }: { items: IncidentItemView[]; id: string }) {
                 {item.link.label}
               </a>
             )}
+            {item.more?.map((link) => (
+              <a key={link.href} className="tap hub-link" href={link.href} data-testid="item-more">
+                {link.label}
+              </a>
+            ))}
           </Stack>
         </li>
       ))}

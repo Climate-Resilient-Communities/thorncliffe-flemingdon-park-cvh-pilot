@@ -232,6 +232,120 @@
           "translations": {}
         }
       ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000e0004",
+      "slug": "qrstvwxz",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0041",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Power is out on floors 1 to 6 at 40 Gateway Blvd. We are finding out why.",
+          "published_at": "2026-10-01T11:30:00.000Z",
+          "verified": true,
+          "superseded": true,
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0042",
+          "kind": "update",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Toronto Hydro says the power will be back by 1 pm.",
+          "published_at": "2026-10-01T11:40:00.000Z",
+          "verified": true,
+          "superseded": true,
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0043",
+          "kind": "correction",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "Power is out on floors 1 to 8 at 40 Gateway Blvd, not floors 1 to 6. We are finding out why.",
+          "published_at": "2026-10-01T12:00:00.000Z",
+          "verified": true,
+          "supersedes_id": "0198a000-0000-7000-8000-0000000e0041",
+          "translations": {}
+        },
+        {
+          "id": "0198a000-0000-7000-8000-0000000e0044",
+          "kind": "withdrawal",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-10-01T22:00:00.000Z",
+          "original_text": "This alert had wrong information. It has been withdrawn.",
+          "published_at": "2026-10-01T12:20:00.000Z",
+          "verified": true,
+          "supersedes_id": "0198a000-0000-7000-8000-0000000e0042",
+          "translations": {}
+        }
+      ]
     }
   ]
 }

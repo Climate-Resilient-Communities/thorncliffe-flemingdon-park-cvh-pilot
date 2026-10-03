@@ -324,6 +324,24 @@ async function legalChange(tx: postgres.TransactionSql, id: string, from: EntryS
   return tx`update alert_entry set status = ${to} where id = ${id}`;
 }
 
+/**
+ * The change to `superseded` (S05.02) is allowed only beside an approved correction or withdrawal that names the entry and was approved in this very transaction.
+ * The owner makes one with the trigger off (the way a migration would), then makes the change with the trigger on, all in one transaction.
+ */
+async function supersedeBesideCorrection(id: string) {
+  return owner.begin(async (tx) => {
+    await tx`select set_config('cvh.actor_id', ${authorA.id}, true)`;
+    const [target] = await tx`select alert_id from alert_entry where id = ${id}`;
+    await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+    await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
+                                      version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, supersedes_id)
+             values (${randomUUID()}, ${target.alert_id}, 'correction', 'approved', ${authorA.id}, ${[authorA.id]}, 'text', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")},
+                     1, ${sha("c")}, ${tx.json({ en: { body: "x", encoding: "gsm7", segments: 1 } })}, now(), ${coordB.id}, now(), 1, ${sha("c")}, now(), ${id})`;
+    await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+    return tx`update alert_entry set status = 'superseded' where id = ${id}`;
+  });
+}
+
 describe("the entry trigger and lifecycle.ts", () => {
   it("allow exactly the same transitions, for every pair of statuses", async () => {
     const outcomes: string[] = [];
@@ -334,7 +352,7 @@ describe("the entry trigger and lifecycle.ts", () => {
         const { entryId } = await seedRaw(from);
         const actor = to === "approved" ? coordB.id : authorA.id;
         // An approval is by someone who is not an editor; every other change is by the author.
-        const attempt = asApp(actor === coordB.id ? coordB.id : authorA.id, (tx) => legalChange(tx, entryId, from, to));
+        const attempt = to === "superseded" ? supersedeBesideCorrection(entryId) : asApp(actor === coordB.id ? coordB.id : authorA.id, (tx) => legalChange(tx, entryId, from, to));
         if (domain.ok) {
           await expect(attempt, `${from} -> ${to}`).resolves.toBeDefined();
           expect((await entryRow(entryId)).status).toBe(to);
@@ -346,7 +364,8 @@ describe("the entry trigger and lifecycle.ts", () => {
       }
     }
     expect(outcomes).toHaveLength(ENTRY_STATUSES.length ** 2 - 1);
-    expect(outcomes.filter((line) => line.endsWith("allowed"))).toHaveLength(ENTRY_TRANSITIONS.filter((rule) => rule.from !== null).length);
+    // A pending entry is superseded only when residents can read it: these rows are not web-published, so that one is refused here (alertCorrection.db.test.ts has the published case).
+    expect(outcomes.filter((line) => line.endsWith("allowed"))).toHaveLength(ENTRY_TRANSITIONS.filter((rule) => rule.from !== null && !(rule.from === "pending_approval" && rule.to === "superseded")).length);
   });
 
   it("start an entry as a draft only: [*] -> any other status is refused", async () => {
@@ -938,12 +957,14 @@ describe("the two-person rule in the trigger, against direct SQL", () => {
 });
 
 describe("what the trigger allows, against direct SQL", () => {
-  it("creates only an ack or an update (E05 widens this)", async () => {
+  it("creates only an ack, an update, a correction or a withdrawal (a final is S05.03's), and a correction or a withdrawal only beside the entry it replaces", async () => {
     const ref = await newDraft(authorA);
     const insert = (kind: string) =>
       asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
               values (${randomUUID()}, ${ref.alertId}, ${kind}, ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
-    for (const kind of ["correction", "withdrawal", "final"]) await expect(insert(kind), kind).rejects.toThrow(/only an ack or an update/);
+    await expect(insert("final")).rejects.toThrow(/only an ack, an update, a correction or a withdrawal/);
+    // A correction or a withdrawal that names nothing is refused by the table's check as well as by the trigger.
+    for (const kind of ["correction", "withdrawal"]) await expect(insert(kind), kind).rejects.toThrow(/names the entry it replaces/);
     await expect(insert("update")).resolves.toBeDefined();
   });
 

@@ -70,7 +70,12 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
             </ResidentText>
             <ol className="alert-thread">
               {view.entries.map((entry, index) => (
-                <li className={`alert-entry${index === 0 ? " alert-entry--latest" : ""}`} key={entry.id} data-testid={`alert-entry-${entry.id}`}>
+                <li
+                  className={`alert-entry${index === 0 ? " alert-entry--latest" : ""}${entry.mark ? ` alert-entry--${entry.mark.kind}` : ""}`}
+                  key={entry.id}
+                  data-testid={`alert-entry-${entry.id}`}
+                  data-mark={entry.mark?.kind}
+                >
                   <span className="alert-entry__kind">
                     <ResidentText>{entry.kindLabel}</ResidentText>
                     {index === 0 && (
@@ -87,6 +92,12 @@ export function AlertDetail({ view, lang, t }: { view: AlertView; lang: LaunchCo
                       </span>
                     )}
                   </span>
+                  {entry.mark && (
+                    <span className={`alert-mark alert-mark--${entry.mark.kind}`} data-testid={`alert-entry-mark-${entry.id}`}>
+                      <span className={`alert-ico alert-ico--${entry.mark.kind === "corrected" ? "corrected" : "info"} alert-ico--sm`} aria-hidden="true" />
+                      <ResidentText>{entry.mark.label}</ResidentText>
+                    </span>
+                  )}
                   <ThreadEntryText view={view} entry={entry} latest={index === 0} />
                 </li>
               ))}

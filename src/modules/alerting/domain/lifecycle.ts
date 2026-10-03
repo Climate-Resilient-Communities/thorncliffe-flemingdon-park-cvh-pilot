@@ -14,16 +14,18 @@
  *   draft --> discarded: discard
  *   pending_approval --> discarded: discard (only if not web-published)
  *   pending_approval --> approved: approve
+ *   approved --> superseded: a correction or a withdrawal that names it is approved (S05.02)
+ *   pending_approval --> superseded: the same, for a web-published pending entry (S05.02)
  * ```
  *
- * `superseded` and `published_system` are statuses E05 reaches (corrections, withdrawals, the expiry
- * job); no transition leads to them yet, so they are final here.
+ * `published_system` is a status E05's expiry job reaches (a system `final`); no transition leads to it yet, so it is final
+ * here. `superseded` is final: nothing leaves it.
  */
 
 export const ENTRY_KINDS = ["ack", "update", "correction", "withdrawal", "final"] as const;
 export type EntryKind = (typeof ENTRY_KINDS)[number];
 
-/** The kinds this epic creates; E05 adds the others. */
+/** The kinds a person starts a thread or an update with; a correction or a withdrawal names a target (S05.02), a final closes (S05.03). */
 export const AUTHORED_KINDS = ["ack", "update"] as const satisfies readonly EntryKind[];
 
 export const ENTRY_STATUSES = ["draft", "pending_approval", "approved", "discarded", "superseded", "published_system"] as const;
@@ -36,7 +38,7 @@ export type ReturnReason = (typeof RETURN_REASONS)[number];
 /** A return by these reasons changes the entry (a re-translation, an edit), so whoever does it becomes an editor. */
 export const EDITING_RETURN_REASONS = ["edit", "retranslate"] as const satisfies readonly ReturnReason[];
 
-export type TransitionAction = "create" | "submit" | "return" | "discard" | "approve";
+export type TransitionAction = "create" | "submit" | "return" | "discard" | "approve" | "supersede";
 
 export interface TransitionRule {
   /** null is the start: `[*] → draft`. */
@@ -53,6 +55,8 @@ export const ENTRY_TRANSITIONS: readonly TransitionRule[] = [
   { from: "draft", to: "discarded", action: "discard" },
   { from: "pending_approval", to: "discarded", action: "discard" },
   { from: "pending_approval", to: "approved", action: "approve" },
+  { from: "approved", to: "superseded", action: "supersede" },
+  { from: "pending_approval", to: "superseded", action: "supersede" },
 ];
 
 /** Why a transition is refused. The codes are the use cases' refusal codes too (./refusals.ts). */
@@ -81,6 +85,8 @@ export function requestTransition(request: TransitionRequest): TransitionDecisio
   if (!rule) return { ok: false, refusal: "ILLEGAL_TRANSITION" };
   if (!request.threadOpen && !(request.closing === true && rule.action === "discard")) return { ok: false, refusal: "ALERT_CLOSED" };
   if (request.webPublished && (rule.action === "return" || rule.action === "discard")) return { ok: false, refusal: "WEB_PUBLISHED" };
+  // A pending entry is superseded only when residents can read it (the D-1 case, E08): one with nothing published has nothing to replace.
+  if (rule.action === "supersede" && request.from === "pending_approval" && !request.webPublished) return { ok: false, refusal: "ILLEGAL_TRANSITION" };
   return { ok: true, action: rule.action };
 }
 

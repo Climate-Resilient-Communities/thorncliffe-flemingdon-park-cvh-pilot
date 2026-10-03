@@ -27,6 +27,7 @@ const EntrySchema = z.strictObject({
   published_at: z.iso.datetime(),
   verified: z.boolean(),
   superseded: z.boolean().default(false),
+  supersedes_id: z.uuid().optional(),
   translations: z.record(z.string(), TranslationSchema).default({}),
 });
 
@@ -64,6 +65,7 @@ export function fixtureRows(text: string, lang: string): { version: number; now:
         publishedAt: new Date(entry.published_at),
         verified: entry.verified,
         superseded: entry.superseded,
+        supersedesId: entry.supersedes_id ?? null,
         translation: translation ? { body: translation.body, machine: translation.machine, model: translation.model, status: translation.status, sourceHash: translation.source_hash } : null,
       };
     }),

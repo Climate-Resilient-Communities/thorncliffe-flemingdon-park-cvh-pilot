@@ -8,12 +8,12 @@ import type { LangCode } from "@/contracts/lang";
 import { englishText } from "@/i18n/text";
 import { LAUNCH_LANGUAGES } from "@/i18n/languages";
 import { ALERT_TEXT_MAX, BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES as NEIGHBOURHOOD_TYPES, TRANSLATED_LANGS as FROZEN_LANGS } from "@/contracts/alertContent";
-import type { EntryState, ThreadSummary, UpdateStart } from "@/modules/alerting";
+import type { EntryState, ThreadEntrySummary, ThreadSummary, UpdateStart, WithdrawalReason } from "@/modules/alerting";
 import type { RenderedSms } from "@/modules/messaging";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { asideOf, type AsideView } from "../audience/view";
 import { changeView, type ChangeView } from "../audience/change";
-import { composerPage, type ComposerFrom } from "../pages";
+import { composerPage, correctHref, withdrawHref, type ComposerFrom } from "../pages";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "../audience/editAudience";
 import { fieldsOfStoredInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
@@ -28,10 +28,16 @@ export const catalogText: Text = (key, values) => englishText(`staff.compose.${k
  * The composers: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14) and the promotion of an acknowledgement to a full alert (O-13,
  * which is the first update; S05.01). The last two are one composer with its own words, and start from the alert they add to.
  */
-export type ComposerMode = "ack" | "alert" | "update" | "promote";
+export type ComposerMode = "ack" | "alert" | "update" | "promote" | "correct" | "withdraw";
 
-/** An update added to a running alert: the thread's types, audience and languages are carried over, and the phase is required (S05.01). */
-export const isFollowUpMode = (mode: ComposerMode): mode is "update" | "promote" => mode === "update" || mode === "promote";
+/**
+ * An entry added to a running alert: the thread's types, audience and languages are carried over, and the phase is required (S05.01). A correction (O-15,
+ * S05.02) is one: it is added above the entry it corrects, and says what it changes about who the alert is for.
+ */
+export const isFollowUpMode = (mode: ComposerMode): mode is "update" | "promote" | "correct" => mode === "update" || mode === "promote" || mode === "correct";
+
+/** An entry that replaces another residents read: a correction or a withdrawal (O-15, S05.02). */
+export const isReplacingMode = (mode: ComposerMode): mode is "correct" | "withdraw" => mode === "correct" || mode === "withdraw";
 
 /** The page a mode is written on, the way the audience pages and the forms name it. */
 export const fromOfMode = (mode: ComposerMode): ComposerFrom => (mode === "alert" ? "compose" : mode);
@@ -76,6 +82,10 @@ export interface DraftFormView {
     mode: "resolved" | "at";
     fields: TimeFields;
   };
+  /** True on a withdrawal: its valid-until is not the author's (a withdrawal notice is never read as the thread's), so the form does not ask for it. */
+  validFixed?: true;
+  /** The reason of a withdrawal, chosen from the catalog (O-15, S05.02); only on the start of a withdrawal. */
+  reasons?: { legend: string; hint: string; items: ChoiceView[] };
 }
 
 /** A submitted entry waiting for a second person. */
@@ -147,6 +157,12 @@ export interface ComposerScreen {
   thread?: ThreadDigestView;
   /** What saving does, on a new update. */
   startNote?: string;
+  /** The entry a correction or a withdrawal is about, as residents read it now (O-15, S05.02); on the draft's composer and on the start once an entry is chosen. */
+  replaces?: { title: string; heading: string; text: string };
+  /** The id of the entry a new correction or withdrawal is about: the start form sends it as `target`. */
+  targetId?: string;
+  /** The entries that can be corrected or withdrawn (O-15): the person chooses one before anything is written. */
+  targets?: { title: string; lead: string; none: string | null; choose: string; chosen: string; items: { key: string; heading: string; text: string; selected: boolean; href: string }[] };
   languages: { title: string; lead: string; rows: LanguageRowView[] };
   aside: AsideView & {
     groupsLink: { href: string; label: string };
@@ -177,6 +193,8 @@ export interface ComposerInput {
   thread?: ThreadSummary | null;
   /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
+  /** The entry a correction or a withdrawal is about, as residents read it (O-15): its kind, its time and its words. */
+  target?: { kind: string; publishedAt: Date | null; text: string } | null;
 }
 
 /** The refusal and failure codes the composer can say, in words; the rest is "That could not be done". */
@@ -216,6 +234,10 @@ export const MESSAGE_CODES = [
   "NO_PUBLISHED_ENTRY",
   "ENTRY_ID_INVALID",
   "TYPES_CHANGED",
+  "TARGET_NOT_VALID",
+  "TARGET_SUPERSEDED",
+  "TARGET_NOT_PUBLISHED",
+  "WITHDRAWAL_REASON_INVALID",
 ] as const;
 
 const WAITING = "waiting" as const;
@@ -261,10 +283,10 @@ function messagesOf(t: Text): ComposerMessages {
 }
 
 /** The running alert as residents read it: newest entry first, each with its time and where things stood, and the thread's valid-until (S05.01). */
-function threadDigest(summary: ThreadSummary, t: Text): ThreadDigestView {
+function threadDigest(summary: ThreadSummary, t: Text, replacing = false): ThreadDigestView {
   return {
     title: t("thread.title"),
-    lead: t("thread.lead"),
+    lead: t(replacing ? "thread.leadReplace" : "thread.lead"),
     validUntil: summary.validUntil === null ? "" : t("thread.validUntil", { time: formatTorontoDateTime(summary.validUntil) }),
     entries: summary.entries.map((entry) => ({
       key: entry.id,
@@ -301,6 +323,8 @@ const TITLES: Record<ComposerMode, { title: (t: Text) => string; lead: (t: Text)
   alert: { title: (t) => t("alertTitle"), lead: (t) => t("alertLead") },
   update: { title: (t) => t("updateTitle"), lead: (t) => t("updateLead") },
   promote: { title: (t) => t("promoteTitle"), lead: (t) => t("promoteLead") },
+  correct: { title: (t) => t("correctTitle"), lead: (t) => t("correctLead") },
+  withdraw: { title: (t) => t("withdrawTitle"), lead: (t) => t("withdrawLead") },
 };
 
 /** Where things stand: two choices, required. On an update none is carried over: a new update has none ticked (`checked` null), a saved one the author's. */
@@ -322,6 +346,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   const content = entry.content;
   const from = fromOfMode(mode);
   const followUp = isFollowUpMode(mode);
+  const replacing = mode === "withdraw";
   const refQuery = new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, from }).toString();
   const here = `${composerPage(from)}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
   const results = new Map<string, LanguageResult>();
@@ -366,7 +391,8 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
             note: input.preview.nineOneOneFirst ? t("preview911First") : t("preview911Last"),
             segments: input.preview.sms.segments,
           },
-    ...(followUp && input.thread ? { thread: threadDigest(input.thread, t) } : {}),
+    ...((followUp || replacing) && input.thread ? { thread: threadDigest(input.thread, t, isReplacingMode(mode)) } : {}),
+    ...(input.target ? { replaces: replacesOf(input.target, t) } : {}),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(results, t) },
     aside: {
       ...aside,
@@ -375,6 +401,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
       channelsTitle: t("channelsTitle"),
       channels: [t("channelWeb"), t("channelSms")],
       ...(followUp ? { carried: t("carried"), change: changeOfUpdate(input.thread, entry.id, audience, input.plans, audienceText, t) } : {}),
+      ...(replacing ? { carried: t("withdrawCarried") } : {}),
     },
     actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
     // A running attempt always leaves the entry a draft (a "Try translation again" returns it to draft first).
@@ -387,13 +414,19 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   if (status === "draft") {
     const valid = fieldsOfStoredInstant(content.validUntil);
     screen.draft = {
-      text: { label: t("textLabel"), hint: t("textHint", { max: ALERT_TEXT_MAX }), value: content.text, max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
+      text: {
+        label: replacing ? t("withdrawTextLabel") : mode === "correct" ? t("correctTextLabel") : t("textLabel"),
+        hint: replacing ? t("withdrawTextHint", { max: ALERT_TEXT_MAX }) : t("textHint", { max: ALERT_TEXT_MAX }),
+        value: content.text,
+        max: ALERT_TEXT_MAX,
+        counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }),
+      },
       types:
         mode === "alert"
           ? { legend: t("typesLegend"), building: typeChoices(BUILDING_TYPES, ticked), neighbourhood: typeChoices(NEIGHBOURHOOD_TYPES, ticked) }
           : null,
       typesSummary: content.types.map(typeName).join(", "),
-      phase: mode === "alert" || followUp ? phaseOf(t, followUp, content.phase) : null,
+      phase: replacing ? null : mode === "alert" || followUp ? phaseOf(t, followUp, content.phase) : null,
       valid: {
         title: t("validTitle"),
         hint: t("validHint"),
@@ -405,6 +438,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
         mode: content.validUntilMode ?? "at",
         fields: valid,
       },
+      ...(replacing ? { validFixed: true as const } : {}),
     };
   } else if (status === "pending") {
     const n = fallbackLangs.length;
@@ -502,6 +536,140 @@ export function startScreen(input: StartInput): ComposerScreen {
       },
     },
   };
+}
+
+/** The entry a correction or a withdrawal is about, as residents read it now, above the form (O-15). */
+function replacesOf(target: { kind: string; publishedAt: Date | null; text: string }, t: Text): NonNullable<ComposerScreen["replaces"]> {
+  return {
+    title: t("replacesTitle"),
+    heading: t("thread.entry", { kind: t(`thread.kind.${target.kind}`), time: target.publishedAt ? formatTorontoDateTime(target.publishedAt) : "" }),
+    text: target.text,
+  };
+}
+
+export interface ReplaceStartInput {
+  mode: "correct" | "withdraw";
+  alertId: string;
+  /** The id the new entry will take: made when the page is drawn, so that pressing Save twice makes one draft (`correctEntry`, `withdrawEntry`). */
+  entryId: string;
+  /** The thread the entry is added to: the running alert shown above the form. */
+  thread: ThreadSummary;
+  /** The entries that can be corrected or withdrawn now (a valid target: `validTargets`), newest first. */
+  targets: readonly ThreadEntrySummary[];
+  /** The one the person chose; null before they choose. */
+  target: ThreadEntrySummary | null;
+  /** What a correction starts from, taken from the entry that covers the thread (alerting's `updateStart`); not used by a withdrawal. */
+  start: UpdateStart | null;
+  plans: readonly BuildingFloorPlan[];
+  /** The words of the screen; the layout tests give the longest labels of a language here. */
+  text?: Text;
+}
+
+/** The catalog's words for each reason of a withdrawal (`staff.correct.reasons.<reason>`). */
+export const withdrawalReasonLabel = (reason: WithdrawalReason): string => englishText(`staff.correct.reasons.${reason}`);
+
+/**
+ * The start of a correction or a withdrawal (O-15, S05.02): nothing is made until the author saves. First the entries that can be corrected or withdrawn, each
+ * a link that chooses it (with the running alert as residents read it above); once one is chosen, the form: for a correction, its words (the entry's own,
+ * to change), where things stand and the valid-until, with who it is for carried over from the alert; for a withdrawal, the reason from the catalog and,
+ * for "other", the words for residents. Saving makes the draft, which goes on to the composer, where it is submitted for a second person's approval.
+ */
+export function replaceStartScreen(input: ReplaceStartInput): ComposerScreen {
+  const t = input.text ?? catalogText;
+  const { mode, target, start } = input;
+  const withdrawing = mode === "withdraw";
+  const ref: DraftRef = { alertId: input.alertId, entryId: input.entryId };
+  const audienceText: Text = input.text ?? ((key, values) => englishText(`staff.audience.${key}`, values));
+  // Who it is for: the chosen entry's for a withdrawal, the alert's for a correction; before an entry is chosen, the alert's.
+  const audience = (withdrawing ? target?.audience : start?.audience) ?? input.thread.covering?.audience ?? input.targets[0]?.audience;
+  if (!audience) throw new Error("composer: a correction or a withdrawal starts from an alert that has something residents can read");
+  const aside = asideOf(audience, input.plans, { href: "", label: "" }, audienceText);
+  const hrefOf = (id: string) => (withdrawing ? withdrawHref(input.alertId, id) : correctHref(input.alertId, id));
+  const phaseChecked = target?.phase ?? null;
+  const screen: ComposerScreen = {
+    mode,
+    from: fromOfMode(mode),
+    ref,
+    title: TITLES[mode].title(t),
+    lead: TITLES[mode].lead(t),
+    firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
+    benchmark: "",
+    status: "new",
+    startNote: target ? t("startNote") : undefined,
+    thread: threadDigest(input.thread, t, true),
+    preview: null,
+    targets: {
+      title: t(withdrawing ? "withdrawTargetsTitle" : "correctTargetsTitle"),
+      lead: t("targetsLead"),
+      none: input.targets.length === 0 ? t("targetsNone") : null,
+      choose: t("targetChoose"),
+      chosen: t("targetChosen"),
+      items: input.targets.map((entry) => ({
+        key: entry.id,
+        heading: t("thread.entry", { kind: t(`thread.kind.${entry.kind}`), time: formatTorontoDateTime(entry.webPublishedAt) }),
+        text: entry.text,
+        selected: target?.id === entry.id,
+        href: hrefOf(entry.id),
+      })),
+    },
+    languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(new Map(), t) },
+    aside: {
+      ...aside,
+      groupsLink: { href: "", label: "" },
+      channelsTitle: t("channelsTitle"),
+      channels: [t("channelWeb"), t("channelSms")],
+      carried: withdrawing ? t("withdrawCarried") : t("carriedStart"),
+      change: { alsoFor: null, noLongerFor: null, same: null },
+    },
+    actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
+    resume: null,
+    lastAttemptKey: null,
+    messages: messagesOf(t),
+    here: `${composerPage(fromOfMode(mode))}?${new URLSearchParams({ alert: input.alertId, ...(target ? { target: target.id } : {}) }).toString()}`,
+  };
+  if (!target) return screen;
+  screen.targetId = target.id;
+  screen.replaces = replacesOf({ kind: target.kind, publishedAt: target.webPublishedAt, text: target.text }, t);
+  if (withdrawing) {
+    screen.draft = {
+      text: { label: t("withdrawWordsLabel"), hint: t("withdrawWordsHint", { max: ALERT_TEXT_MAX }), value: "", max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
+      types: null,
+      typesSummary: target.types.map(typeName).join(", "),
+      phase: null,
+      valid: {
+        title: t("validTitle"),
+        hint: t("validHint"),
+        resolvedLabel: t("validResolved"),
+        atLabel: t("validAt"),
+        dateLabel: englishText("staff.time.dateLabel"),
+        timeLabel: englishText("staff.time.timeLabel"),
+        foldLegend: englishText("staff.time.foldLegend"),
+        mode: "resolved",
+        fields: fieldsOfStoredInstant(new Date(input.thread.thread.reportedAt)),
+      },
+      validFixed: true,
+      reasons: { legend: t("withdrawReasonLegend"), hint: t("withdrawReasonHint"), items: (["wrong_place", "wrong_information", "duplicate", "other"] as const).map((id) => ({ id, label: withdrawalReasonLabel(id), checked: false })) },
+    };
+    return screen;
+  }
+  screen.draft = {
+    text: { label: t("correctTextLabel"), hint: t("textHint", { max: ALERT_TEXT_MAX }), value: target.text, max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
+    types: null,
+    typesSummary: (start?.types ?? target.types).map(typeName).join(", "),
+    phase: phaseOf(t, true, phaseChecked),
+    valid: {
+      title: t("validTitle"),
+      hint: t("validHint"),
+      resolvedLabel: t("validResolved"),
+      atLabel: t("validAt"),
+      dateLabel: englishText("staff.time.dateLabel"),
+      timeLabel: englishText("staff.time.timeLabel"),
+      foldLegend: englishText("staff.time.foldLegend"),
+      mode: start?.validUntilMode ?? "at",
+      fields: fieldsOfStoredInstant(start?.validUntil ?? target.validUntil),
+    },
+  };
+  return screen;
 }
 
 /**

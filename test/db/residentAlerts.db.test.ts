@@ -278,10 +278,11 @@ describe("the resident views", () => {
 
     expect(await asApp((sql) => sql`select id from nondrill_alert`)).toEqual([{ id: real.alertId }]);
     expect(await asApp((sql) => sql`select id, slug from nondrill_alert_entry`)).toEqual([{ id: real.entryIds[0], slug: "realslug1" }]);
+    expect(await asApp((sql) => sql`select id, slug from nondrill_alert_entry_v2`)).toEqual([{ id: real.entryIds[0], slug: "realslug1" }]);
     expect(await asApp((sql) => sql`select entry_id, lang from nondrill_alert_entry_translation`)).toEqual([{ entry_id: real.entryIds[0], lang: "ur" }]);
-    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_translation"]) {
-      const column = view === "nondrill_alert" ? "id" : view === "nondrill_alert_entry" ? "alert_id" : "entry_id";
-      const hidden = view === "nondrill_alert" ? [drill.alertId] : view === "nondrill_alert_entry" ? [drill.alertId] : drill.entryIds;
+    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_translation"]) {
+      const column = view === "nondrill_alert" ? "id" : view.startsWith("nondrill_alert_entry") && view !== "nondrill_alert_entry_translation" ? "alert_id" : "entry_id";
+      const hidden = view === "nondrill_alert" ? [drill.alertId] : view.startsWith("nondrill_alert_entry") && view !== "nondrill_alert_entry_translation" ? [drill.alertId] : drill.entryIds;
       const rows = await asApp((sql) => sql.unsafe(`select ${column} as k from ${view}`));
       for (const id of hidden) expect(rows.map((row) => row.k), view).not.toContain(id);
     }
@@ -293,11 +294,12 @@ describe("the resident views", () => {
     await seedThread({ slug: "drillslug", drill: true, entries: [{ translations: URDU }, { kind: "update", translations: URDU }] });
 
     expect(await asApp((sql) => sql`select count(*)::int as n from nondrill_alert_entry`)).toEqual([{ n: 0 }]);
+    expect(await asApp((sql) => sql`select count(*)::int as n from nondrill_alert_entry_v2`)).toEqual([{ n: 0 }]);
     expect(await asApp((sql) => sql`select count(*)::int as n from nondrill_alert_entry_translation`)).toEqual([{ n: 0 }]);
   });
 
   it("run with the caller's rights, and only the app's role may read them", async () => {
-    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_translation"]) {
+    for (const view of ["nondrill_alert", "nondrill_alert_entry", "nondrill_alert_entry_v2", "nondrill_alert_entry_translation"]) {
       const [info] = await owner`select reloptions from pg_class where oid = ${`public.${view}`}::regclass`;
       expect(info.reloptions, view).toContain("security_invoker=true");
       for (const role of ["anon", "authenticated", "service_role", "public"]) {
@@ -314,7 +316,9 @@ describe("the resident views", () => {
 
     // The thread's view is S04.03's, as it was: changing a view the previous release may read is a contract change.
     expect(await columns("nondrill_alert")).toEqual(["id", "status", "closed_reason", "reported_at", "closed_at", "created_at"]);
+    // S04.08's entry view is left as it was for the previous release; S05.02's v2 appends the entry a correction or a withdrawal replaces (the reason of a withdrawal is its own text, so no reason code is shown).
     expect(await columns("nondrill_alert_entry")).toEqual(["id", "alert_id", "slug", "kind", "phase", "types", "audience", "valid_until", "original_text", "web_published_at", "verified", "superseded"]);
+    expect(await columns("nondrill_alert_entry_v2")).toEqual(["id", "alert_id", "slug", "kind", "phase", "types", "audience", "valid_until", "original_text", "web_published_at", "verified", "superseded", "supersedes_id"]);
     expect(await columns("nondrill_alert_entry_translation")).toEqual(["entry_id", "lang", "body", "machine", "model", "status", "source_hash"]);
   });
 

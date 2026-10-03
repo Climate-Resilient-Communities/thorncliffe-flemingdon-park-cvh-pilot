@@ -3,7 +3,7 @@
 //
 // "Waiting for your approval" is for a Coordinator or an Admin: pending entries they did not edit, with how long each has waited, the longest wait first.
 // "Running alerts" follows it: the open threads residents are reading, the most recently published first. A Coordinator or an Admin gets "Add an update"
-// on each (S05.01), or "Promote to full alert" while it is still only an acknowledgement; a closed thread is not listed, so none offers either. A Director
+// on each (S05.01), or "Promote to full alert" while it is still only an acknowledgement, and "Correct" and "Withdraw" (S05.02) for the entries residents read; a closed thread is not listed, so none offers any. A Director
 // reads the same list and changes nothing (S01.12: the policy refuses every action to a Director, and the list carries no link to one). "Your alerts" is
 // what the person is an editor of: a draft an approver sent back shows the approver's note until it is submitted again (the note's only other place is the
 // composer). Drills are listed apart from real alerts, in their own labelled section, and tagged, so a rehearsal is never mistaken for one.
@@ -11,7 +11,7 @@ import type { IncidentRow, Incidents, RunningThread } from "@/modules/alerting";
 import type { StaffRole } from "@/contracts/staffRoles";
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
-import { approveHref, COMPOSE_PAGE, composerHref, LOG_PAGE, updateHref } from "../pages";
+import { approveHref, COMPOSE_PAGE, composerHref, correctHref, LOG_PAGE, updateHref, withdrawHref } from "../pages";
 import { typeName } from "../typeNames";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -34,6 +34,8 @@ export interface IncidentItemView {
   drill: boolean;
   /** Where the person goes next; null for a person who may not act on it (a Director reads the list and changes nothing). */
   link: { href: string; label: string } | null;
+  /** The other things to do with a running alert (S05.02): correct an entry, withdraw an entry. */
+  more?: { href: string; label: string }[];
 }
 
 interface Section {
@@ -85,8 +87,9 @@ const itemOf = (row: IncidentRow, kind: "waiting" | "mine", t: Text, now: Date):
     link:
       kind === "waiting"
         ? { href: approveHref(ref), label: t("review") }
-        : // An update that follows other entries is written on the update composer, which sends it to "Promote" or "Add an update" as it belongs.
-          { href: composerHref(row.kind === "ack" ? "ack" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
+        : // An update that follows other entries is written on the update composer, which sends it to "Promote" or "Add an update" as it belongs; a correction and a
+          // withdrawal (S05.02) are written on their own.
+          { href: composerHref(row.kind === "ack" ? "ack" : row.kind === "correction" ? "correct" : row.kind === "withdrawal" ? "withdraw" : row.followUp === true ? "update" : "compose", ref), label: t("open") },
   };
 };
 
@@ -100,6 +103,13 @@ const runningOf = (thread: RunningThread, t: Text, readOnly: boolean): IncidentI
   note: null,
   drill: thread.isDrill,
   link: readOnly ? null : { href: updateHref(thread.alertId, thread.ackOnly), label: thread.ackOnly ? t("promote") : t("addUpdate") },
+  // The other things to do with a running alert (S05.02): correct an entry, withdraw an entry. A Director is handed none.
+  more: readOnly
+    ? undefined
+    : [
+        { href: correctHref(thread.alertId), label: t("correct") },
+        { href: withdrawHref(thread.alertId), label: t("withdraw") },
+      ],
 });
 
 /** The Hub home for a person. `now` is when it is read: how long an entry has waited is counted to it. */

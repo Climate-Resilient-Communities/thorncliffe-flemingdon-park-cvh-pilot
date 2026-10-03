@@ -10,6 +10,7 @@ import { catalogText, expectBaseline, isFallback, openResident } from "./helpers
 //   kbcdfghj  elevator: an acknowledgement (every language but English translated) and an update (translated into Urdu only, Pashto failed)
 //   mnpqrstv  power and heat, not yet verified, no translation: English everywhere else
 //   xyzw2345  other: its valid-until has passed and nothing has closed it yet
+//   qrstvwxz  power: an acknowledgement that a correction replaced and an update that a withdrawal replaced (S05.02), the oldest news so the order of the others is what it was
 
 test.use({
   baseURL: ALERTS_URL,
@@ -19,6 +20,10 @@ test.use({
 const T1 = "kbcdfghj";
 const T2 = "mnpqrstv";
 const T3 = "xyzw2345";
+const T4 = "qrstvwxz";
+const CORRECTION = "Power is out on floors 1 to 8 at 40 Gateway Blvd, not floors 1 to 6. We are finding out why.";
+const WITHDRAWN_ACK = "Power is out on floors 1 to 6 at 40 Gateway Blvd. We are finding out why.";
+const WITHDRAWAL_REASON = "This alert had wrong information. It has been withdrawn.";
 const UPDATE = "Update: a technician is on site and the elevator should be working again by 6 pm.";
 const ACK_EN = "The elevator at 85 Thorncliffe Park Dr is out of service. Please use the stairs and call the Hub if you need help.";
 
@@ -61,7 +66,7 @@ test.describe("the feed with alerts", () => {
     const feed = FeedV1.parse(await response.json());
     expect(feed.feed_version).toBe(7);
     expect(feed.server_now).toBe("2026-10-01T15:00:00.000Z");
-    expect(feed.threads.map((thread) => thread.slug)).toEqual([T1, T2, T3]);
+    expect(feed.threads.map((thread) => thread.slug)).toEqual([T1, T2, T3, T4]);
     const [elevator] = feed.threads;
     expect(elevator.entries.map((entry) => [entry.kind, entry.phase, entry.verified, entry.attribution])).toEqual([
       ["ack", "problem", true, { role: "hub" }],
@@ -88,7 +93,7 @@ test.describe("home", () => {
     await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
 
     const cards = page.getByTestId("home-threads").locator("li");
-    await expect(cards).toHaveCount(3);
+    await expect(cards).toHaveCount(4);
     const first = page.getByTestId(`alert-card-${T1}`);
     await expect(first.getByTestId("alert-types")).toContainText("Elevator");
     await expect(first.getByTestId(`alert-card-text-${T1}`)).toHaveText(UPDATE);
@@ -343,6 +348,69 @@ test.describe("alert detail (R-07)", () => {
 
         expect(await overflow(page), lang).toEqual({ page: 0, main: 0 });
       }
+    });
+  }
+});
+
+test.describe("a corrected and a withdrawn entry (S05.02)", () => {
+  test("names the entry a correction or a withdrawal replaces in the feed, with no field a phone in the field would refuse", async ({ request }) => {
+    const feed = FeedV1.parse(await (await request.get("/api/feed?lang=en")).json());
+    const thread = feed.threads.find((candidate) => candidate.slug === T4)!;
+    const byKind = Object.fromEntries(thread.entries.map((entry) => [entry.kind, entry]));
+    expect(thread.entries.map((entry) => entry.kind)).toEqual(["ack", "update", "correction", "withdrawal"]);
+    expect(byKind.correction.supersedes_id).toBe(thread.entries[0].id);
+    expect(byKind.withdrawal.supersedes_id).toBe(thread.entries[1].id);
+    expect(byKind.ack.supersedes_id).toBeUndefined();
+    expect(byKind.withdrawal.text.body).toBe(WITHDRAWAL_REASON);
+    // A withdrawal has no phase of its own (the thread keeps the one it had), and no reason code: its text is the reason.
+    expect(Object.keys(byKind.withdrawal).sort()).toEqual(["attribution", "id", "kind", "original", "published_at", "supersedes_id", "text", "verified"]);
+  });
+
+  test('shows the correction above the entry it replaces, which stays readable marked "Corrected", and a withdrawn entry marked "Withdrawn" with the reason in its place', async ({ page }) => {
+    await openResident(page, `/en/alerts/${T4}`, 390);
+
+    // What is true now is the correction's; the home card says the same.
+    await expect(page.getByTestId("alert-text")).toHaveText(CORRECTION);
+    const entries = page.getByTestId("alert-thread").locator("li");
+    await expect(entries).toHaveCount(3);
+    await expect(entries.nth(0)).toContainText("Correction");
+    await expect(entries.nth(0)).toContainText("Latest");
+    await expect(entries.nth(0)).toContainText(CORRECTION);
+    await expect(entries.nth(0)).not.toHaveAttribute("data-mark", /.+/);
+    // The withdrawn update: the word and the reason in its place, not the wording it had.
+    await expect(entries.nth(1)).toHaveAttribute("data-mark", "withdrawn");
+    await expect(entries.nth(1)).toContainText("Withdrawn");
+    await expect(entries.nth(1)).toContainText(WITHDRAWAL_REASON);
+    await expect(entries.nth(1)).not.toContainText("Toronto Hydro says");
+    // The corrected acknowledgement: still readable, marked, with the time of the correction.
+    await expect(entries.nth(2)).toHaveAttribute("data-mark", "corrected");
+    await expect(entries.nth(2)).toContainText("Corrected 3 hours ago");
+    await expect(entries.nth(2)).toContainText(WITHDRAWN_ACK);
+    // The notice itself is not an entry of its own.
+    await expect(page.getByTestId("alert-thread")).not.toContainText("Withdrawal");
+  });
+
+  test("shows the home card with the correction's words, and the share preview says the same as the alert", async ({ page, request }) => {
+    await openResident(page, "/en", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+    await expect(page.getByTestId(`alert-card-text-${T4}`)).toHaveText(CORRECTION);
+
+    const html = await (await request.get(`/en/alerts/${T4}`)).text();
+    const description = (html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1];
+    const og = (html.match(/<meta property="og:description" content="([^"]*)"/) ?? [])[1];
+    expect(description).toBe(`Correction: ${CORRECTION}`);
+    expect(og).toBe(description);
+    expect(description).not.toContain("floors 1 to 6 at");
+  });
+
+  for (const width of [390, 1280] as const) {
+    test(`the alert at ${width}px has no horizontal scrolling, every link is a tap target and it matches its baseline screenshot`, async ({ page }) => {
+      await openResident(page, `/en/alerts/${T4}`, width, 900);
+      await showWholePage(page, width);
+
+      expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+      expect(await tapViolations(page)).toEqual([]);
+      await expectBaseline(page, `alert-en-corrected-${width}.png`);
     });
   }
 });

@@ -26,7 +26,7 @@ import {
   type DeliveryContent,
   type RecipientKind,
 } from "../domain/deliveryRules";
-import type { DeliveryResult, DeliveryStore, Enqueued, NewDelivery, SkippedForRecipient } from "./deliveryPorts";
+import type { CancelledForEntries, DeliveryResult, DeliveryStore, Enqueued, NewDelivery, SkippedForRecipient } from "./deliveryPorts";
 
 /** One alert text: whom it goes to and the entry's frozen SMS body for the language, with its segments and cost estimate. */
 export interface AlertTextInput extends DeliveryContent {
@@ -85,6 +85,14 @@ export interface DeliveryQueue {
    * `skipped`; rows already handed to the provider are left, and counted as in flight.
    */
   skipRecipientDeliveries(tx: DbTransaction, recipient: { kind: RecipientKind; id: string }): Promise<SkippedForRecipient>;
+  /**
+   * `cancelQueued(entryIds, tx)` (S05.02, AR-8): called by every use case that supersedes an entry, discards entries or closes a thread, in that use case's
+   * own transaction, so the entries' texts stop exactly when the change commits. The rows of these entries that are `queued`, or claimed and not yet handed
+   * to the provider, become `cancelled` (the delivery state machine's `cancelQueued` cause), in one statement that waits for a row the dispatcher holds
+   * and then re-checks that the row was not handed off, so a hand-off that commits first leaves its row alone (it is then counted as in flight and
+   * the text goes). Rows of other entries are never touched. Ids that are not UUIDs are ignored: nothing can be stopped for them.
+   */
+  cancelQueued(entryIds: readonly string[], tx: DbTransaction): Promise<CancelledForEntries>;
 }
 
 export function createDeliveryQueueService(deps: DeliveryQueueDeps): DeliveryQueue {
@@ -183,6 +191,12 @@ export function createDeliveryQueueService(deps: DeliveryQueueDeps): DeliveryQue
 
     skipRecipientDeliveries(tx, recipient) {
       return store.skipForRecipient(tx, recipient);
+    },
+
+    async cancelQueued(entryIds, tx) {
+      const ids = [...new Set(entryIds.filter(isUuid))];
+      if (ids.length === 0) return { cancelled: 0, inFlight: 0 };
+      return store.cancelForEntries(tx, ids);
     },
   };
 }

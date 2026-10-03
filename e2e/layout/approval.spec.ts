@@ -37,6 +37,18 @@ function longestText(lang: string): Text {
 
 const OPEN: ReviewOptions["recipients"] = { open: true, total: 12, byLanguage: { en: 5, ur: 4, fr: 3 } };
 
+/** The entry a correction or a withdrawal replaces (S05.02), as the approver is shown it. */
+const REPLACED: NonNullable<ReviewOptions["target"]> = {
+  id: "01900000-0000-7000-8000-00000000c0e1",
+  kind: "update",
+  status: "approved",
+  text: "Power is back on floors 1 to 4. Floors 5 to 8 are still out.",
+  phase: "in_progress",
+  publishedAt: new Date("2026-10-04T14:40:00.000Z"),
+  valid: true,
+  audience: reviewOf().entry.content.audience,
+};
+
 /** `pauseNoticeForApprover()`'s sentence (S06.06): the catalog's `staff.texts.paused.approver`, shown while all texts are paused. */
 const PAUSE_NOTICE = "Texts are paused; this will send when resumed";
 
@@ -67,6 +79,17 @@ const PAGES: Page_[] = [
         types: ["elevator", "power"],
       },
     },
+    actions: ["approve-button", "return-button", "discard-button"],
+  },
+  {
+    // S05.02: a correction and a withdrawal show the entry they replace as residents read it, who gets them, the reason, and that approving a withdrawal closes the alert.
+    name: "O-05 a correction of an entry residents read",
+    review: { entry: { kind: "correction", supersedesId: REPLACED.id }, target: REPLACED },
+    actions: ["approve-button", "return-button", "discard-button"],
+  },
+  {
+    name: "O-05 a withdrawal that closes the alert, with texting open",
+    review: { entry: { kind: "withdrawal", supersedesId: REPLACED.id, withdrawalReason: "duplicate" }, target: REPLACED, closesThread: true, recipients: OPEN },
     actions: ["approve-button", "return-button", "discard-button"],
   },
   { name: "O-05 returning it to its author with a note", review: {}, initial: () => ({ mode: "return" }), actions: ["send-back-button", "cancel-button"] },

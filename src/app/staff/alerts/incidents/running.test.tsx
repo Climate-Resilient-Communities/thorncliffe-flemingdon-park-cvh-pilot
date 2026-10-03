@@ -36,8 +36,19 @@ describe("what is running, on the Hub home", () => {
         note: null,
         drill: false,
         link: { href: `/staff/alerts/update?alert=${ALERT}`, label: "Add an update" },
+        // S05.02: a running alert can be corrected, or an entry of it withdrawn.
+        more: [
+          { href: `/staff/alerts/correct?alert=${ALERT}`, label: "Correct an entry" },
+          { href: `/staff/alerts/withdraw?alert=${ALERT}`, label: "Withdraw an entry" },
+        ],
       },
     ]);
+  });
+
+  it("draws the links to correct and to withdraw beside the one to add to the alert", () => {
+    const out = renderToStaticMarkup(<IncidentsList view={incidentsView(none, "coordinator", undefined, [thread()])} />);
+    expect(out).toMatch(/<a class="tap hub-link" href="\/staff\/alerts\/correct\?alert=[^"]*" data-testid="item-more">Correct an entry<\/a>/);
+    expect(out).toMatch(/<a class="tap hub-link" href="\/staff\/alerts\/withdraw\?alert=[^"]*" data-testid="item-more">Withdraw an entry<\/a>/);
   });
 
   it('offers "Promote to full alert" on a thread that is still only an acknowledgement', () => {
@@ -75,6 +86,16 @@ describe("what is running, on the Hub home", () => {
 
   it("says no alert is running when none is, for a role that writes them", () => {
     expect(incidentsView(none, "coordinator").running).toMatchObject({ title: "Running alerts", none: "No alert is running.", items: [] });
+  });
+
+  it("opens a correction and a withdrawal in their own composers from Your alerts (S05.02)", () => {
+    const mine = (over: Record<string, unknown>) => ({ alertId: ALERT, entryId: "01900000-0000-7000-8000-00000000e179", kind: "correction" as const, status: "draft" as const, types: ["elevator"], isDrill: false, version: 0, submittedAt: null, returnedNote: null, followUp: true, ...over });
+    const view = incidentsView({ waiting: [], mine: [mine({}), mine({ kind: "withdrawal", entryId: "01900000-0000-7000-8000-00000000e17b" })] }, "coordinator");
+    expect(view.mine.items.map((item) => item.link.href)).toEqual([
+      `/staff/alerts/correct?alert=${ALERT}&entry=01900000-0000-7000-8000-00000000e179`,
+      `/staff/alerts/withdraw?alert=${ALERT}&entry=01900000-0000-7000-8000-00000000e17b`,
+    ]);
+    expect(view.mine.items.map((item) => item.title)).toEqual(["Elevator · Correction", "Elevator · Withdrawal"]);
   });
 
   it("opens a follow-up update in its own composer from Your alerts, and a first entry in the one it was written on", () => {

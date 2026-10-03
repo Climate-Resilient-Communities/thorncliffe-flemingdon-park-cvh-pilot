@@ -76,6 +76,12 @@ export interface SkippedForRecipient {
   inFlight: number;
 }
 
+/** What a cancellation left of the entries' rows: `cancelled` is how many it stopped, `inFlight` how many were already handed to the provider and could not be. */
+export interface CancelledForEntries {
+  cancelled: number;
+  inFlight: number;
+}
+
 /**
  * Port: the outbox's table (messaging's `delivery`). Every call runs in the caller's transaction and reads and writes
  * through it only. `insert` is idempotent on the key: a row whose key exists is returned as it is, with no error, even
@@ -87,6 +93,8 @@ export interface DeliveryStore {
   markApproval(tx: DbTransaction, entryId: string): Promise<void>;
   /** Sets the recipient's `queued` and claimed-but-not-handed-off rows to `skipped`; rows already handed off are left. */
   skipForRecipient(tx: DbTransaction, recipient: { kind: RecipientKind; id: string }): Promise<SkippedForRecipient>;
+  /** Sets the `queued` and claimed-but-not-handed-off alert rows of these entries to `cancelled`; rows already handed off are left, and counted. */
+  cancelForEntries(tx: DbTransaction, entryIds: readonly string[]): Promise<CancelledForEntries>;
 }
 
 /** Where messaging reports what it did, with no personal data: structured, one JSON line per event (spine: Logging). */

@@ -55,6 +55,11 @@ export interface StaffEndpoint extends EndpointBase {
    * them): the approval is for someone who is not an editor of the entry, and the entry these calls name is not there, so nobody is excluded from it.
    */
   policyContext?: PolicyContext;
+  /**
+   * The reason the refusal is audited with for a role whose rule depends on the context (the policy's `out_of_scope`), when it is not `forbidden`: the answer is
+   * the same 403 `forbidden`. A correction or a withdrawal: an Ambassador's rule is their own pending entry (E08), which these calls never name.
+   */
+  auditedReason?: Partial<Record<RoleCaller, "out_of_scope">>;
   expected: Record<RoleCaller, Outcome>;
 }
 
@@ -98,6 +103,7 @@ const ALERT_AUDIENCE_ACTIONS = "src/app/staff/alerts/audience/actions.ts";
 const ALERT_LOG_ACTIONS = "src/app/staff/alerts/log/actions.ts";
 const ALERT_COMPOSER_ACTIONS = "src/app/staff/alerts/composer/actions.ts";
 const ALERT_APPROVAL_ACTIONS = "src/app/staff/alerts/approval/actions.ts";
+const ALERT_CORRECT_ACTIONS = "src/app/staff/alerts/correct/actions.ts";
 /** The key of one press of Submit: what a browser makes with `crypto.randomUUID()`. */
 const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 /** An alert thread and entry that do not exist: a Coordinator's or an Admin's call passes the guard and is refused by the use case. */
@@ -136,6 +142,10 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   // S05.01: "Add an update" (O-14) and "Promote to full alert" (O-13), the update composers: policy action `alert.author_wide`, like the composers they are.
   { id: "page /staff/alerts/update", kind: "page", file: "src/app/staff/alerts/update/page.tsx", export: "default", route: "/staff/alerts/update", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/promote", kind: "page", file: "src/app/staff/alerts/promote/page.tsx", export: "default", route: "/staff/alerts/promote", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  // S05.02: "Correct" and "Withdraw" (O-15): policy actions `alert.correct` and `alert.withdraw`, a Coordinator or an Admin. An Ambassador corrects or withdraws only their own
+  // pending entries (E08): the entry these pages judge on is one nobody wrote in the call, so an Ambassador is refused on the rule alone; a Director is refused on their role.
+  { id: "page /staff/alerts/correct", kind: "page", file: "src/app/staff/alerts/correct/page.tsx", export: "default", route: "/staff/alerts/correct", action: "alert.correct", writes: "none", gate: "hub", policyContext: NO_ENTRY, expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/withdraw", kind: "page", file: "src/app/staff/alerts/withdraw/page.tsx", export: "default", route: "/staff/alerts/withdraw", action: "alert.withdraw", writes: "none", gate: "hub", policyContext: NO_ENTRY, expected: WIDE_AUTHORS },
   // S04.07: the approval view (O-05, O-07): policy action `alert.approve`, a Coordinator or an Admin who is not an editor of the entry (the guard reads who
   // edited it from the database). The page names no entry here, so a Coordinator or an Admin is let through to the page's own "not found".
   {
@@ -431,6 +441,31 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     forbiddenMessage: /^Only a Coordinator or an Admin can /,
     expected: WIDE_AUTHORS,
   },
+  // S05.02: "Save draft" on a new correction or withdrawal (policy actions `alert.correct` and `alert.withdraw`, privileged: aal2). The thread does not exist, so a Coordinator's or an
+  // Admin's call passes the guard and is refused by the use case, changing nothing. An Ambassador (direct requests are refused now; their own pending entries are E08's) and a Director
+  // are refused on their role.
+  ...(
+    [
+      ["startCorrectionAction", "/staff/alerts/correct", "alert.correct"],
+      ["startWithdrawalAction", "/staff/alerts/withdraw", "alert.withdraw"],
+    ] as const
+  ).map(
+    ([name, route, action]): StaffEndpoint => ({
+      id: `action ${ALERT_CORRECT_ACTIONS}#${name}`,
+      kind: "action",
+      file: ALERT_CORRECT_ACTIONS,
+      export: name,
+      route,
+      action,
+      writes: "business",
+      gate: "hub",
+      form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, target: NO_SUCH_ALERT, from: action === "alert.correct" ? "correct" : "withdraw", text: "Power is out on floors 1 to 8.", phase: "problem", reason: "wrong_place", "valid-mode": "resolved" },
+      forbiddenMessage: /^Only a Coordinator or an Admin can correct or withdraw an alert\./,
+      policyContext: NO_ENTRY,
+      auditedReason: { ambassador: "out_of_scope", ambassador_out_of_scope: "out_of_scope" },
+      expected: WIDE_AUTHORS,
+    }),
+  ),
   // S04.07: Approve, Return to author and Discard on the approval view (policy action `alert.approve`, a privileged action: aal2, and never an editor of the
   // entry). The entry does not exist, so a Coordinator's or an Admin's call passes the guard and is refused by the form or the use case, changing nothing. An
   // Ambassador and a Director are refused on their role alone.
