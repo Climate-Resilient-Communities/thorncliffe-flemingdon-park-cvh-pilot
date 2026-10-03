@@ -94,6 +94,16 @@ describe("the Supabase Storage store", () => {
     expect(fake.calls.filter((call) => call.method === "GET" && call.url.endsWith(`/bucket/${DIRECTORY_BUCKET}`))).toHaveLength(1);
   });
 
+  it("makes and checks no bucket on a read (the search's read path): only the object is asked for, and a missing bucket reads as not found", async () => {
+    const fake = fakeStorage({ bucket: "missing" });
+    const store = make(fake);
+
+    expect(await store.get("releases/1/en.json")).toBeNull();
+
+    expect(fake.calls.filter((call) => /\/storage\/v1\/bucket/.test(call.url))).toEqual([]);
+    expect(fake.calls).toHaveLength(1);
+  });
+
   it("uses a private bucket that exists, and refuses a public one", async () => {
     const existing = fakeStorage({ bucket: "private" });
     await make(existing).put("releases/1/en.json", "{}");

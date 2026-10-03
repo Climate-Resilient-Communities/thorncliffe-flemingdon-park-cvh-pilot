@@ -47,6 +47,14 @@ module.exports = {
       to: { path: MODULES, pathNot: MODULE_INDEX },
     },
     {
+      name: "no-cohere-sdk",
+      comment:
+        "The vendor's SDK (cohere-ai) takes about 2.5 s to evaluate on a cold serverless start, in front of the first search's clock: Cohere is reached through src/platform/cohere/restClient.ts (plain fetch), and nothing in src imports the SDK",
+      severity: "error",
+      from: { path: SRC },
+      to: { path: "node_modules/cohere-ai/" },
+    },
+    {
       name: "sms-adapter-outside-messaging",
       comment:
         "Every file in src/modules/messaging/adapters (the Twilio adapter, the fake, and whatever E06 adds: a Messaging Service settings check, a webhook client) is imported only inside src/modules/messaging: every outbound text is built by messaging's one renderer and handed to the provider by messaging's own code, so no other module or route can build or send a body of its own (AD-21, S04.06). The rule covers the folder, not a file name, so a new adapter is under it without anyone remembering a naming convention",
