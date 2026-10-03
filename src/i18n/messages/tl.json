@@ -617,6 +617,7 @@
     "amberBody": "Ang Amber Alert ay opisyal na alerto tungkol sa nawawalang bata. Laging galing sa Alert Ready ang totoong pagkakasulat.",
     "endedResolved": "Natapos na ang alertong ito. Naayos ito {t}.",
     "endedWithdrawn": "Binawi ng Hub ang alertong ito. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "Natapos na ang alertong ito. Nag-expire ito {t} nang walang huling update.",
     "validLine": "May bisa {until}",
     "timeLine": "Ipinost {posted} · Na-update {updated}",

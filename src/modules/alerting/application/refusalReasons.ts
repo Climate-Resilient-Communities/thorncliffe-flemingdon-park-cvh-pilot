@@ -51,6 +51,10 @@ export const AUDIT_REASON: Record<AlertRefusal, AuditReason> = {
   NO_PUBLISHED_ENTRY: "conflict",
   ENTRY_ID_INVALID: "validation",
   TYPES_CHANGED: "validation",
+  TARGET_NOT_VALID: "conflict",
+  TARGET_SUPERSEDED: "conflict",
+  TARGET_NOT_PUBLISHED: "conflict",
+  WITHDRAWAL_REASON_INVALID: "validation",
 };
 
 /** The forms of the approval view (S04.07), and the audited action each stands for. */

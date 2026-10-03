@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert je oficiálne upozornenie o nezvestnom dieťati. Skutočné znenie vždy pochádza od Alert Ready.",
     "endedResolved": "Toto upozornenie skončilo. Vyriešené {t}.",
     "endedWithdrawn": "Hub toto upozornenie stiahol. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "Toto upozornenie skončilo. Platnosť skončila {t} bez poslednej aktualizácie.",
     "validLine": "Platí {until}",
     "timeLine": "Zverejnené {posted} · Aktualizované {updated}",

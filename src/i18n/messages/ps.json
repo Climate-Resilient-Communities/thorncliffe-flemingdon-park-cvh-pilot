@@ -617,6 +617,7 @@
     "amberBody": "Amber Alerts د ورک شوي ماشوم په اړه رسمي خبرتیاوې دي. اصلي متن تل له Alert Ready څخه راځي.",
     "endedResolved": "دا خبرتیا پای ته رسېدلې. {t} حل شوه.",
     "endedWithdrawn": "مرکز دا خبرتیا بېرته واخیسته. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "دا خبرتیا پای ته رسېدلې. وخت یې {t} تېر شو او وروستی خبر یې ورنه کړ.",
     "validLine": "اعتبار {until}",
     "timeLine": "خپور شو {posted} · بدلون {updated}",

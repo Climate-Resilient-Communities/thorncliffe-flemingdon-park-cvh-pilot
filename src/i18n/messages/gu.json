@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert એ ગુમ થયેલા બાળક વિશેની સત્તાવાર ચેતવણી છે. સાચું લખાણ હંમેશાં Alert Ready તરફથી આવે છે.",
     "endedResolved": "આ ચેતવણી પૂરી થઈ છે. તે {t} ઉકેલાઈ.",
     "endedWithdrawn": "હબે આ ચેતવણી પાછી ખેંચી. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "આ ચેતવણી પૂરી થઈ છે. છેલ્લા અપડેટ વગર તેનો સમય {t} પૂરો થયો.",
     "validLine": "માન્ય: {until}",
     "timeLine": "{posted} પોસ્ટ થયું · {updated} અપડેટ થયું",

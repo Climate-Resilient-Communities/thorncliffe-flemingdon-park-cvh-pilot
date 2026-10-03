@@ -5,7 +5,10 @@
 //    words wherever they appear;
 //  - a text that is English standing in for a translation that failed (`fallback_en`) is set left to right in English and says so, in the
 //    resident's language ("Not yet available in this language"); a machine translation carries its label and "Read it in English";
-//  - the attribution is the Hub's whole sentence (R04.fromHub): "the Hub" is never joined to a preposition word by word (spine AD-21).
+//  - the attribution is the Hub's whole sentence (R04.fromHub): "the Hub" is never joined to a preposition word by word (spine AD-21);
+//  - a correction is shown above the entry it replaces, which stays readable and is marked "Corrected"; a withdrawn entry is marked "Withdrawn" and shows
+//    the reason in its place, and the withdrawal notice is not an entry of its own (S05.02). What is true now (`current`, the card, the share preview) is the
+//    latest entry that was neither corrected nor withdrawn, so the feed, the alert and the preview always say the same.
 import { entriesNewestFirst, type FeedThread } from "@/contracts/feed";
 import { isLaunchCode, languageOf, type LaunchCode } from "@/i18n/languages";
 import { agoText } from "../home/feed-poll";
@@ -45,10 +48,21 @@ export interface OriginView {
   whatMeans: string;
 }
 
+/** What happened to an entry residents read earlier (S05.02): it was corrected (its wording stays readable) or withdrawn (the reason stands in its place). */
+export interface EntryMark {
+  kind: "corrected" | "withdrawn";
+  /** "Corrected 5 minutes ago" or "Withdrawn". */
+  label: string;
+}
+
 export interface EntryView {
   id: string;
+  /** The kind of entry as the feed has it. */
+  kind: FeedEntry["kind"];
   /** The catalog's name for the kind of entry ("First message", "Update", ...). */
   kindLabel: string;
+  /** Set on an entry a later correction or withdrawal replaced; null on every entry that still stands. */
+  mark: EntryMark | null;
   /** "10 minutes ago", from the feed's clock. */
   time: string;
   /** The phase the entry reported ("Active problem", "Work in progress"), in the catalog's status words; null where it reported none. */
@@ -61,7 +75,7 @@ export interface EntryView {
 export interface AlertView {
   slug: string;
   types: TypeView[];
-  /** The newest entry: what is true now. */
+  /** The latest entry that was neither corrected nor withdrawn: what is true now. */
   current: EntryView;
   origin: OriginView;
   /** "Posted 10 minutes ago" or "Posted 10 minutes ago · Updated 2 minutes ago". */
@@ -84,9 +98,14 @@ export interface AlertView {
   machineLabel: string;
   machineFrom: string;
   guides: { id: string; label: string; href: string }[];
-  /** Every entry, newest first (R-07's "Updates, newest first"); more than one only once the thread has an update. */
+  /** Every entry, newest first (R-07's "Updates, newest first"); more than one only once the thread has an update. A withdrawal notice is not among them. */
   entries: EntryView[];
+  /** The share preview (S05.08 builds the link): the title and description a shared link shows, from `current`, so it says what the alert says. */
+  preview: { title: string; description: string };
 }
+
+/** The longest description a link preview carries. */
+const PREVIEW_MAX = 200;
 
 const ENGLISH = languageOf("en");
 
@@ -105,18 +124,33 @@ function textOf(entry: FeedEntry): TextView {
   return { body: text.body, lang: language?.bcp47 ?? text.lang, dir: language?.dir ?? "ltr", fallback: false, machine: text.machine };
 }
 
-function entryOf(entry: FeedEntry, serverNow: Date, t: Translate): EntryView {
-  const text = textOf(entry);
-  // SEAM(E05): a withdrawal reads as "Update" until E05 adds withdrawals and an R07.kinds.withdrawal string.
+/**
+ * One entry as the screens draw it. `replacedBy` is the correction or withdrawal that replaced it, when there is one (S05.02): a corrected entry keeps its own
+ * wording and is marked "Corrected" with the time of the correction; a withdrawn entry is marked "Withdrawn" and its text is the reason (the withdrawal's own
+ * words, in the resident's language), the wording it had no longer being shown as something to act on.
+ */
+function entryOf(entry: FeedEntry, serverNow: Date, t: Translate, replacedBy?: FeedEntry): EntryView {
+  const withdrawal = replacedBy?.kind === "withdrawal" ? replacedBy : undefined;
+  const shown = withdrawal ?? entry;
+  const text = textOf(shown);
+  // A withdrawal notice is never an entry of the list, so its kind is only reached through the screens that name it.
   const kinds: Record<string, string> = { ack: "ack", update: "update", correction: "correction", final: "final", withdrawal: "update" };
   const timeT: Translate = (key, values) => t(`time.${key}`, values);
+  const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
+  const mark: EntryMark | null = !replacedBy
+    ? null
+    : withdrawal
+      ? { kind: "withdrawn", label: t("R07.withdrawn") }
+      : { kind: "corrected", label: t("R07.corrected", { t: ago(replacedBy.published_at) }) };
   return {
     id: entry.id,
+    kind: entry.kind,
     kindLabel: t(`R07.kinds.${kinds[entry.kind] ?? "update"}`),
-    time: agoText(serverNow.getTime() - new Date(entry.published_at).getTime(), timeT),
+    mark,
+    time: ago(entry.published_at),
     phase: entry.phase === "problem" ? t("status.active") : entry.phase === "in_progress" ? t("status.progress") : null,
     text,
-    english: text.machine ? entry.original.body : null,
+    english: text.machine ? shown.original.body : null,
   };
 }
 
@@ -141,7 +175,12 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   const timeT: Translate = (key, values) => t(`time.${key}`, values);
   const language = languageOf(lang);
   // The feed carries the entries oldest first and does not refuse an order; R-07 reads them newest first, by their own times (S05.01).
-  const newestFirst = entriesNewestFirst(thread.entries);
+  // A withdrawal notice is the reason shown on the entry it withdrew, never an entry of its own; a correction replaces the entry it names (S05.02).
+  const replacers = new Map<string, FeedEntry>();
+  for (const entry of thread.entries) if (entry.supersedes_id !== undefined) replacers.set(entry.supersedes_id, entry);
+  const visible = entriesNewestFirst(thread.entries.filter((entry) => entry.kind !== "withdrawal"));
+  const newestFirst = visible.length > 0 ? visible : entriesNewestFirst(thread.entries);
+  const standing = newestFirst.find((entry) => !replacers.has(entry.id)) ?? newestFirst[0];
   const latest = newestFirst[0];
   const first = newestFirst[newestFirst.length - 1];
   const ago = (iso: string) => agoText(serverNow.getTime() - new Date(iso).getTime(), timeT);
@@ -152,8 +191,8 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
   return {
     slug: thread.slug,
     types: thread.types.map((type) => typeOf(type, t)),
-    current: entryOf(latest, serverNow, t),
-    origin: originOf(latest, t),
+    current: entryOf(standing, serverNow, t),
+    origin: originOf(standing, t),
     times,
     cardTime: newestFirst.length > 1 ? t("R03.updated", { t: ago(latest.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
@@ -165,6 +204,19 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     machineLabel: t("x04.label"),
     machineFrom: t("x04.from", { lang: ENGLISH.native }),
     guides: guidesFor(thread.types).map((id) => ({ id, label: t("R07.guide", { hazard: lowerHazard(id) }), href: guideDuringHref(lang, id) })),
-    entries: newestFirst.map((entry) => entryOf(entry, serverNow, t)),
+    entries: newestFirst.map((entry) => entryOf(entry, serverNow, t, replacers.get(entry.id))),
+    preview: previewOf(thread, standing, t),
   };
+}
+
+/**
+ * The title and description of a shared link (S05.02; the share action is S05.08): the types' words, and the words of what is true now, so a link to a
+ * corrected alert previews the correction and never the wording it replaced. It reads the same `standing` entry as the card and the alert, from the same feed.
+ */
+function previewOf(thread: FeedThread, standing: FeedEntry, t: Translate): AlertView["preview"] {
+  const title = thread.types.map((type) => typeOf(type, t).word).join(", ");
+  const words = standing.text.body.replace(/\s+/g, " ").trim();
+  const lead = standing.kind === "correction" ? `${t("R07.kinds.correction")}: ${words}` : words;
+  const chars = [...lead];
+  return { title, description: chars.length > PREVIEW_MAX ? `${chars.slice(0, PREVIEW_MAX - 1).join("")}\u2026` : lead };
 }

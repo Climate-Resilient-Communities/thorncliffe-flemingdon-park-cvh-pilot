@@ -32,6 +32,8 @@ export const nondrillAlertEntry = pgView("nondrill_alert_entry", {
   webPublishedAt: timestamp("web_published_at", { withTimezone: true }).notNull(),
   verified: boolean().notNull(),
   superseded: boolean().notNull(),
+  /** S05.02: the entry a correction or a withdrawal replaces; null for every other entry. */
+  supersedesId: uuid("supersedes_id"),
 }).existing();
 
 /** The frozen web text of each of those entries, one row per translated language. */

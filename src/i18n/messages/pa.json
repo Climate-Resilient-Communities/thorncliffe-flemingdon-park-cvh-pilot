@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert ਗੁੰਮ ਹੋਏ ਬੱਚੇ ਬਾਰੇ ਅਧਿਕਾਰਤ ਚੇਤਾਵਨੀਆਂ ਹੁੰਦੀਆਂ ਹਨ। ਅਸਲੀ ਸ਼ਬਦ ਹਮੇਸ਼ਾ Alert Ready ਤੋਂ ਆਉਂਦੇ ਹਨ।",
     "endedResolved": "ਇਹ ਚੇਤਾਵਨੀ ਖ਼ਤਮ ਹੋ ਗਈ ਹੈ। ਇਹ {t} ਹੱਲ ਹੋ ਗਈ ਸੀ।",
     "endedWithdrawn": "ਹੱਬ ਨੇ ਇਹ ਚੇਤਾਵਨੀ ਵਾਪਸ ਲੈ ਲਈ। {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "ਇਹ ਚੇਤਾਵਨੀ ਖ਼ਤਮ ਹੋ ਗਈ ਹੈ। ਇਸ ਦੀ ਮਿਆਦ {t} ਆਖ਼ਰੀ ਅੱਪਡੇਟ ਤੋਂ ਬਿਨਾਂ ਖ਼ਤਮ ਹੋ ਗਈ।",
     "validLine": "{until} ਲਾਗੂ",
     "timeLine": "{posted} ਪੋਸਟ ਕੀਤਾ · {updated} ਅੱਪਡੇਟ ਕੀਤਾ",

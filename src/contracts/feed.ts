@@ -25,6 +25,10 @@ export const TranslatedSchema = z.strictObject({
 export const FeedEntrySchema = z.strictObject({
   id: z.uuid(),
   kind: z.enum(["ack", "update", "correction", "withdrawal", "final"]),
+  /**
+   * A correction or a withdrawal names the entry it replaces (S05.02): that entry is shown marked "Corrected", or "Withdrawn" with the reason, which is the
+   * withdrawal's own text. No field was added for it: phones in the field parse this schema strictly (src/modules/alerting/domain/feedCompat.test.ts).
+   */
   supersedes_id: z.uuid().optional(),
   phase: z.enum(["problem", "in_progress"]).optional(),
   verified: z.boolean(),

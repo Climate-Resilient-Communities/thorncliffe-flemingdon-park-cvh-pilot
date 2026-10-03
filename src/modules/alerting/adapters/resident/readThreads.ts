@@ -27,6 +27,7 @@ export async function readOpenEntries(db: Db, lang: LangCode): Promise<ResidentE
       publishedAt: nondrillAlertEntry.webPublishedAt,
       verified: nondrillAlertEntry.verified,
       superseded: nondrillAlertEntry.superseded,
+      supersedesId: nondrillAlertEntry.supersedesId,
       body: nondrillAlertEntryTranslation.body,
       machine: nondrillAlertEntryTranslation.machine,
       model: nondrillAlertEntryTranslation.model,
@@ -53,6 +54,7 @@ export async function readOpenEntries(db: Db, lang: LangCode): Promise<ResidentE
       publishedAt: row.publishedAt,
       verified: row.verified,
       superseded: row.superseded,
+      supersedesId: row.supersedesId,
       translation:
         row.body === null || row.machine === null || row.translationStatus === null || row.sourceHash === null
           ? null

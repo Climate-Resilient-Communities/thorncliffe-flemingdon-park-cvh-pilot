@@ -781,7 +781,7 @@
   whereLabel: 'Where', actionLabel: 'What to do now', notYetKnownLabel: 'Not known yet', latestTag: 'Latest', ambassadorOriginal: 'Original, in {lang}',
   officialCard: 'Official alert on the same event', openOfficial: 'Read the official alert', fromCommunity: 'This relays an official alert. The Hub adds what is happening here.',
   spacesFiltered: 'Showing spaces that do not ask for ID, from your choices.', supportSee: 'See the place', amberBody: 'Amber Alerts are official alerts about a missing child. The real wording always comes from Alert Ready.',
-  endedResolved: 'This alert has ended. It was resolved {t}.', endedWithdrawn: 'The Hub withdrew this alert. {reason}', endedExpired: 'This alert has ended. It expired {t} without a final update.', validLine: 'Valid {until}',
+  endedResolved: 'This alert has ended. It was resolved {t}.', endedWithdrawn: 'The Hub withdrew this alert. {reason}', withdrawn: 'Withdrawn', endedExpired: 'This alert has ended. It expired {t} without a final update.', validLine: 'Valid {until}',
   timeLine: 'Posted {posted} · Updated {updated}', timeLineOne: 'Posted {posted}', basicMore: 'Earlier updates: {n}' } });
   /* R08_Archive.html */
   m(en, { R08: { lead: 'Each alert stays readable here after it ends.', endedOn: 'Posted {posted}', backHome: 'Back to Now' } });

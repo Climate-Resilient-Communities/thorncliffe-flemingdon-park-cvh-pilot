@@ -204,8 +204,31 @@ export const AUDIT_META = {
     with_note: z.literal(true).optional(),
     refusal: refusalCode.optional(),
   }),
-  "entry.discarded": meta({ entry_id: id.optional(), version: count.optional(), from: z.enum(["draft", "pending_approval"]).optional(), refusal: refusalCode.optional() }),
+  // `by_close`: the discard was made by the thread's close (S05.02: every draft and pending entry is discarded when a thread closes).
+  "entry.discarded": meta({
+    entry_id: id.optional(),
+    version: count.optional(),
+    from: z.enum(["draft", "pending_approval"]).optional(),
+    by_close: z.literal(true).optional(),
+    refusal: refusalCode.optional(),
+  }),
   "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), recipient_count: count.optional(), reviewed_count: count.optional(), refusal: refusalCode.optional() }),
+  // S05.02: the approval of a correction or a withdrawal replaced the entry it names (subject: the replaced entry; `by` is the correction or withdrawal,
+  // `withdrawal_reason` the code a withdrawal gave). Written in the approval's own transaction, beside `entry.approved`.
+  "entry.superseded": meta({
+    entry_id: id.optional(),
+    by: id.optional(),
+    by_kind: z.enum(["correction", "withdrawal"]).optional(),
+    withdrawal_reason: z.enum(["wrong_place", "wrong_information", "duplicate", "other"]).optional(),
+    refusal: refusalCode.optional(),
+  }),
+  // S05.02: the one close path (`closeAlert`): how the thread closed, how many drafts and pending entries it discarded, and the entry whose texts were kept.
+  "alert.closed": meta({
+    closed_as: z.enum(["resolved", "expired", "withdrawn"]).optional(),
+    discarded: count.optional(),
+    kept_entry_id: id.optional(),
+    refusal: refusalCode.optional(),
+  }),
   // The directory release (S02.05): an Admin publishes the directory as one numbered release. The subject is the
   // release (type `directory_release`, its number); `meta` holds counts only. The release number and the counts are
   // required on an ok record (REQUIRED_WHEN_OK), absent on a refusal, which carries its reason.
@@ -272,6 +295,8 @@ const REQUIRED_WHEN_OK: Partial<Record<AuditAction, readonly string[]>> = {
   "entry.returned": ["entry_id", "version", "returned_for"],
   "entry.discarded": ["entry_id", "from"],
   "entry.approved": ["entry_id", "version", "content_hash", "recipient_count"],
+  "entry.superseded": ["entry_id", "by", "by_kind"],
+  "alert.closed": ["closed_as", "discarded"],
   "directory.published": ["release", "providers", "categories", "files", "translations", "fallbacks", "stale"],
   "sending.paused": ["waiting", "handed_off"],
   "sending.resumed": ["waiting"],

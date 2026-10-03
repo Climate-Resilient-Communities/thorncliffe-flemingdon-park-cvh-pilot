@@ -617,6 +617,7 @@
     "amberBody": "Les alertes AMBER sont des alertes officielles au sujet d'un enfant disparu. Le vrai texte vient toujours d'En Alerte.",
     "endedResolved": "Cette alerte est terminée. Le problème a été réglé {t}.",
     "endedWithdrawn": "Le Hub a retiré cette alerte. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "Cette alerte est terminée. Elle a expiré {t} sans dernière mise à jour.",
     "validLine": "Valide {until}",
     "timeLine": "Publié {posted} · Mis à jour {updated}",

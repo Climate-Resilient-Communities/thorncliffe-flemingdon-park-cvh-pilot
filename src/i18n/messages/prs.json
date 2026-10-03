@@ -617,6 +617,7 @@
     "amberBody": "هشدارهای Amber هشدارهای رسمی در مورد یک طفل گم‌شده هستند. متن اصلی همیشه از Alert Ready می‌آید.",
     "endedResolved": "این هشدار تمام شده است. {t} حل شد.",
     "endedWithdrawn": "مرکز این هشدار را پس گرفت. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "این هشدار تمام شده است. {t} بدون خبر نهایی ختم شد.",
     "validLine": "معتبر {until}",
     "timeLine": "نشر شد {posted} · تازه شد {updated}",

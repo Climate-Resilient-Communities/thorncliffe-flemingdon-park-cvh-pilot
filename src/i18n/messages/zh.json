@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert（安珀警报）是关于儿童失踪的官方警报。真正的措辞总是来自 Alert Ready。",
     "endedResolved": "这条警报已结束。已于{t}解决。",
     "endedWithdrawn": "中心撤回了这条警报。{reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "这条警报已结束。它于{t}过期，没有最后更新。",
     "validLine": "有效期：{until}",
     "timeLine": "{posted}发布 · {updated}更新",

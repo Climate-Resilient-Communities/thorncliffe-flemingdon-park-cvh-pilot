@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert किसी लापता बच्चे के बारे में आधिकारिक अलर्ट होते हैं। असली शब्द हमेशा Alert Ready से आते हैं।",
     "endedResolved": "यह अलर्ट खत्म हो गया है। यह {t} हल हुआ।",
     "endedWithdrawn": "हब ने यह अलर्ट वापस ले लिया। {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "यह अलर्ट खत्म हो गया है। यह {t} बिना आखिरी अपडेट के समाप्त हो गया।",
     "validLine": "{until} मान्य",
     "timeLine": "{posted} पोस्ट किया गया · {updated} अपडेट किया गया",

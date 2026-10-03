@@ -4,7 +4,7 @@
 // grants (column-level updates for cvh_app, nothing for anyone else), the nondrill_alert view and the
 // approval timing views (S04.07) live only in the migrations.
 import { sql } from "drizzle-orm";
-import { bigint, boolean, check, foreignKey, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
+import { type AnyPgColumn, bigint, boolean, check, foreignKey, index, integer, jsonb, pgPolicy, pgRole, pgTable, primaryKey, smallint, text, timestamp, uniqueIndex, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by S01.04's migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -83,10 +83,19 @@ export const alertEntry = pgTable(
     possibleDuplicateOf: uuid("possible_duplicate_of").references(() => alert.id),
     /** S04.05: how the author chose the valid-until, "until resolved" or a date and time; the composer opens on it. */
     validUntilMode: text("valid_until_mode").notNull().default("at"),
+    /** S05.02: the one entry a correction or a withdrawal replaces (the target); set when the entry is made and never changes (db/migrations/20261004030000_alert_corrections.sql). */
+    supersedesId: uuid("supersedes_id").references((): AnyPgColumn => alertEntry.id),
+    /** S05.02: why a withdrawal was made, from the catalog (`wrong_place`, `wrong_information`, `duplicate`, `other`); a withdrawal only. */
+    withdrawalReason: text("withdrawal_reason"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
+    check("alert_entry_supersedes_kind", sql`(${t.kind} in ('correction', 'withdrawal')) = (${t.supersedesId} is not null)`),
+    check("alert_entry_supersedes_not_self", sql`${t.supersedesId} is null or ${t.supersedesId} <> ${t.id}`),
+    check("alert_entry_withdrawal_reason_valid", sql`${t.withdrawalReason} is null or ${t.withdrawalReason} in ('wrong_place', 'wrong_information', 'duplicate', 'other')`),
+    check("alert_entry_withdrawal_reason_kind", sql`(${t.kind} = 'withdrawal') = (${t.withdrawalReason} is not null)`),
+    index("alert_entry_supersedes_id_idx").on(t.supersedesId),
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),
     check("alert_entry_draft_no_duplicate", sql`${t.status} <> 'draft' or ${t.possibleDuplicateOf} is null`),
     check("alert_entry_valid_until_mode_valid", sql`${t.validUntilMode} in ('at', 'resolved')`),

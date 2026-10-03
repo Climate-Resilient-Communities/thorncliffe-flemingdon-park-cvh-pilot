@@ -8,12 +8,15 @@ const ALLOWED: readonly [EntryStatus | null, EntryStatus][] = [
   ["draft", "discarded"],
   ["pending_approval", "discarded"],
   ["pending_approval", "approved"],
+  // S05.02: a correction or a withdrawal that names an entry replaces it, once approved.
+  ["approved", "superseded"],
+  ["pending_approval", "superseded"],
 ];
 
 const STARTS: readonly (EntryStatus | null)[] = [null, ...ENTRY_STATUSES];
 
 describe("entry transitions", () => {
-  it("are exactly the six of this epic", () => {
+  it("are exactly the eight there are: the six of S04.03 and the two that supersede (S05.02)", () => {
     expect(ENTRY_TRANSITIONS.map((rule) => [rule.from, rule.to])).toEqual(ALLOWED);
   });
 
@@ -23,7 +26,7 @@ describe("entry transitions", () => {
     }
   });
 
-  it("refuse every other pair of statuses (all 7 x 6 of them) as an illegal transition", () => {
+  it("refuse every other pair of statuses (all 7 x 6 of them, but the eight) as an illegal transition", () => {
     let refused = 0;
     for (const from of STARTS) {
       for (const to of ENTRY_STATUSES) {
@@ -54,8 +57,17 @@ describe("entry transitions", () => {
     expect(requestTransition({ from: "pending_approval", to: "approved", webPublished: true, threadOpen: true })).toMatchObject({ ok: true });
   });
 
-  it("leave approved, discarded, superseded and published_system with nowhere to go", () => {
-    expect(ENTRY_STATUSES.filter(isFinal)).toEqual(["approved", "discarded", "superseded", "published_system"]);
+  it("leave discarded, superseded and published_system with nowhere to go (an approved entry can be superseded)", () => {
+    expect(ENTRY_STATUSES.filter(isFinal)).toEqual(["discarded", "superseded", "published_system"]);
+  });
+
+  it("supersede an approved entry, or a web-published pending one, on an open thread, and nothing else", () => {
+    expect(requestTransition({ from: "approved", to: "superseded", webPublished: true, threadOpen: true })).toEqual({ ok: true, action: "supersede" });
+    expect(requestTransition({ from: "pending_approval", to: "superseded", webPublished: true, threadOpen: true })).toEqual({ ok: true, action: "supersede" });
+    expect(requestTransition({ from: "approved", to: "superseded", webPublished: true, threadOpen: false })).toEqual({ ok: false, refusal: "ALERT_CLOSED" });
+    for (const from of ["draft", "discarded", "superseded", "published_system"] as const) {
+      expect(requestTransition({ from, to: "superseded", webPublished: true, threadOpen: true }), from).toEqual({ ok: false, refusal: "ILLEGAL_TRANSITION" });
+    }
   });
 });
 

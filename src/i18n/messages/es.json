@@ -617,6 +617,7 @@
     "amberBody": "Las alertas Amber son alertas oficiales sobre un niño desaparecido. El texto real siempre viene de Alert Ready.",
     "endedResolved": "Esta alerta terminó. Se resolvió {t}.",
     "endedWithdrawn": "El Hub retiró esta alerta. {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "Esta alerta terminó. Venció {t} sin una novedad final.",
     "validLine": "Válida {until}",
     "timeLine": "Publicado {posted} · Actualizado {updated}",

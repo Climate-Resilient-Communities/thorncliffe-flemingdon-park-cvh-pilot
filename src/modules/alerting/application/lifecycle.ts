@@ -28,6 +28,9 @@ import type { AlertRefusal } from "../domain/refusals";
 import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
 import { FROZEN_LANGS } from "../domain/translations";
 import { coveringEntry, isPublished, updateStart } from "../domain/thread";
+import { isSupersedingKind, isWithdrawalReason, substantiveRemains, targetRefusal, type TargetFacts, type WithdrawalReason } from "../domain/corrections";
+import { createCloseAlert } from "./closeAlert";
+import { Refused } from "./refused";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
 import { publishedSummaries, readRunningThreads, readThreadSummary, type RunningThread, type ThreadSummary } from "./threads";
@@ -66,6 +69,12 @@ export interface AlertLifecycleDeps {
   queueAlertTexts?: (tx: DbTransaction, entryId: string, texts: readonly AlertText[]) => Promise<readonly { lang: string }[]>;
   /** Cents CAD per text message segment (SMS_PRICE_PER_SEGMENT_CENTS), for each queued text's cost estimate; read only when someone is to be texted. */
   pricePerSegmentCents?: () => number;
+  /**
+   * messaging's `cancelQueued(entryIds, tx)` (S05.02): called in the transaction of every use case that supersedes an entry or closes a thread, so the texts of
+   * those entries that are not yet handed to the provider stop exactly when the change commits. `createAlerting` wires `createDeliveryQueue().cancelQueued`
+   * here; the default does nothing (the use case's own tests, which write no delivery).
+   */
+  cancelQueued?: (tx: DbTransaction, entryIds: readonly string[]) => Promise<void>;
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -88,6 +97,10 @@ export interface EntryView {
   webPublishedAt: Date | null;
   /** The open, non-drill thread this entry may duplicate, worked out at submit (S04.05); the approver is shown a link to it. */
   possibleDuplicateOf: string | null;
+  /** The entry a correction or a withdrawal replaces (S05.02); null, or absent in a view built before it existed, for every other entry. */
+  supersedesId?: string | null;
+  /** Why a withdrawal was made, from the catalog (S05.02); null or absent for every other entry. */
+  withdrawalReason?: WithdrawalReason | null;
 }
 
 export interface ThreadView {
@@ -176,6 +189,12 @@ export interface EntryReview {
   threadAudience: Audience | null;
   /** The id of the entry that covers the thread now, whose audience `threadAudience` is: what the "Now also for" line was read against; null with it. */
   threadCoveringId: string | null;
+  /**
+   * The entry a correction or a withdrawal replaces, as residents read it now (S05.02): what the approver compares the correction with, and what the approval
+   * will replace. Null for every other entry. `valid` is whether it is still a valid target (a target already replaced since the entry was submitted is shown
+   * as such, and the approval will refuse it).
+   */
+  target?: { id: string; kind: EntryKind; status: EntryStatus; text: string; phase: Phase; publishedAt: Date | null; valid: boolean; audience: Audience } | null;
 }
 
 /** One entry on someone's incidents list (S04.07's share of O-01, which S04.10 builds out). */
@@ -274,6 +293,29 @@ export interface AddUpdateInput {
 }
 
 /**
+ * What a correction is made of (S05.02): the corrected English wording, where things stand (required, as for an update), and the valid-until the author chose.
+ * The types and the audience are not here: they start as the thread's, from the entry that covers it, and change only through the pickers afterwards.
+ */
+export interface CorrectInput {
+  /** The id the new entry takes, made by the page (as for an update): a request whose id is already this person's correction of this target returns it. */
+  entryId: string;
+  text: string;
+  phase: Phase;
+  validUntil: Date;
+  validUntilMode: ValidUntilMode;
+}
+
+/**
+ * What a withdrawal is made of (S05.02): the reason chosen from the catalog, and the notice residents read in the target's place (the words the Hub wrote for
+ * "other", else the catalog's words for the reason, which the caller puts here: `domain/corrections.ts#withdrawalText`). Everything else is the target's.
+ */
+export interface WithdrawInput {
+  entryId: string;
+  reason: string;
+  text: string;
+}
+
+/**
  * How a press starts: a submit, with the fingerprint (`draftFingerprint`) of the draft the author saved and saw just before pressing, or a
  * "Try translation again" of the pending version and hash the person was looking at.
  */
@@ -314,19 +356,10 @@ function askedFor(choice: PlaceChoice, current: { groups: Audience["groups"]; ty
     : { scope: "buildings", buildings: choice.buildings.map((building) => ({ rsn: building.rsn, floors: null })), groups, types };
 }
 
-/** Found inside a transaction: nothing was written, and the refusal is audited after the rollback. */
-class Refused extends Error {
-  constructor(
-    readonly refusal: AlertRefusal,
-    readonly detail?: RefusalDetail & { reviewed?: RecipientCounts },
-  ) {
-    super(refusal);
-  }
-}
-
 /** The refusals a trigger's message maps to: the race the use case's own checks lost. */
 const TRIGGER_MESSAGES: readonly [RegExp, AlertRefusal][] = [
   [/ALERT_CLOSED/, "ALERT_CLOSED"],
+  [/TARGET_NOT_VALID/, "TARGET_NOT_VALID"],
   [/cannot approve/, "EDITOR_CANNOT_APPROVE"],
   [/must name the version and hash/, "ENTRY_CHANGED"],
   [/web-published/, "WEB_PUBLISHED"],
@@ -367,6 +400,8 @@ const entryOf = (row: EntryRow): EntryView => ({
   approvedAt: row.approvedAt,
   webPublishedAt: row.webPublishedAt,
   possibleDuplicateOf: row.possibleDuplicateOf,
+  supersedesId: row.supersedesId,
+  withdrawalReason: row.withdrawalReason as WithdrawalReason | null,
 });
 
 const contentOf = (row: EntryRow): EntryContent => ({
@@ -404,11 +439,15 @@ const threadOf = (row: ThreadRow): ThreadView => {
 
 type AuditedAction = "alert.created" | "entry.created" | "entry.submitted" | "entry.returned" | "entry.discarded" | "entry.approved";
 
+/** What a correction or a withdrawal replaces, read under the thread's lock: what the rules read of the row. */
+const targetFactsOf = (row: EntryRow): TargetFacts => ({ id: row.id, kind: row.kind as EntryKind, status: row.status as EntryStatus, webPublishedAt: row.webPublishedAt });
+
 export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const { db, audit, staff, places } = deps;
   const recipients = deps.recipients ?? recipientsPort;
   const markApproval = deps.markApproval ?? (async () => undefined);
   const queueAlertTexts = deps.queueAlertTexts;
+  const cancelQueued = deps.cancelQueued ?? (async () => undefined);
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
   const newSlug = deps.newSlug ?? randomSlug;
@@ -417,6 +456,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const validUntilProblem = (validUntil: Date, at: Date) => validUntilRefusal(validUntil, at, latestValidUntil(at));
   /** The `is_drill` of the thread a transaction has read, for the record of a refusal that rolls it back. */
   const drillOf = new WeakMap<DbTransaction, boolean>();
+  /** The one way a thread closes (S05.02): inside the use case that decides it, in its transaction and under the thread's lock. */
+  const closeAlert = createCloseAlert({ audit, cancelQueued });
 
   /**
    * Runs one use case in a transaction. A refusal inside rolls it back and is audited as refused,
@@ -524,6 +565,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     options: { checkValidUntil: boolean } = { checkValidUntil: false },
   ): Promise<EntryView> {
     if (entry.status !== "draft") throw new Refused("ILLEGAL_TRANSITION");
+    // A withdrawal is the target's: who it is for, its types and where things stood are the target's, and only the notice's words are the author's (S05.02).
+    if (entry.kind === "withdrawal") content = { ...contentOf(entry), text: content.text };
     // Saving the composer's draft judges the time the author entered (in the future, at most 7 days ahead); the audience
     // pickers change who it is for and not when it ends, so they leave a time that has since passed to the submit's own check.
     const invalid = contentRefusal(content) ?? (options.checkValidUntil ? validUntilProblem(content.validUntil, now()) : null);
@@ -534,11 +577,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     mustAuthor(standing, actor.staffId, contentOf(entry));
     mustAuthor(standing, actor.staffId, content);
     // An update that follows other entries keeps the thread's types (S05.01): they are carried over, and a different type is a different disruption.
-    if (entry.kind === "update") {
+    // A correction keeps them too (S05.02).
+    if (entry.kind === "update" || entry.kind === "correction") {
       const covering = (await readThreadSummary(tx, entry.alertId))?.covering ?? null;
       if (covering !== null && covering.id !== entry.id && [...covering.types].sort().join("\n") !== [...content.types].sort().join("\n")) throw new Refused("TYPES_CHANGED");
     }
-    await mustExist(tx, content.audience);
+    if (entry.kind !== "withdrawal") await mustExist(tx, content.audience);
     const [saved] = await tx
       .update(alertEntry)
       .set({
@@ -566,6 +610,42 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (!entry.editorIds.includes(staffId)) throw new Refused("OUT_OF_SCOPE");
   };
 
+  /**
+   * The entry a correction or a withdrawal names, locked under the thread's lock (S05.02): the role policy first (a Director never; an Ambassador only their own
+   * pending entry, which is E08's, so now never), then whether it is a valid target, so someone who may not learns nothing of the thread's entries.
+   */
+  async function lockedTarget(tx: DbTransaction, thread: ThreadRow, standing: StaffStanding, actor: AlertActor, targetId: string, action: "alert.correct" | "alert.withdraw"): Promise<EntryRow> {
+    const asked = decidePolicy(standing.role, action, { actorId: actor.staffId });
+    if (asked === "forbidden") throw new Refused("NOT_ALLOWED");
+    // TODO(E08): an Ambassador corrects or withdraws only their own pending entries (the policy's `own_pending_entry`), which only E08's D-1 posts can be (web-published
+    // before approval). Until then they are refused whatever the entry: the policy's context for them is never asked.
+    if (standing.role === "ambassador") throw new Refused("OUT_OF_SCOPE");
+    if (!UUID.test(targetId)) throw new Refused(asked === "out_of_scope" ? "OUT_OF_SCOPE" : "TARGET_NOT_VALID");
+    const [target] = await tx
+      .select()
+      .from(alertEntry)
+      .where(and(eq(alertEntry.id, targetId), eq(alertEntry.alertId, thread.id)))
+      .for("update");
+    if (target) {
+      const decision = decidePolicy(standing.role, action, { actorId: actor.staffId, entry: { authorId: target.authorId, editorIds: target.editorIds, status: target.status } });
+      if (decision === "forbidden") throw new Refused("NOT_ALLOWED");
+      if (decision === "out_of_scope") throw new Refused("OUT_OF_SCOPE");
+    } else if (asked === "out_of_scope") {
+      throw new Refused("OUT_OF_SCOPE");
+    }
+    const refusal = targetRefusal(target ? targetFactsOf(target) : null);
+    if (refusal) throw new Refused(refusal);
+    return target;
+  }
+
+  /** A correction or a withdrawal still names a valid target of its thread (S05.02): refused with the reason when the entry was corrected or withdrawn since, or is not one residents read. */
+  async function mustHaveValidTarget(tx: DbTransaction, thread: ThreadRow, row: EntryRow) {
+    if (!isSupersedingKind(row.kind)) return;
+    const [target] = row.supersedesId === null ? [] : await tx.select().from(alertEntry).where(and(eq(alertEntry.id, row.supersedesId), eq(alertEntry.alertId, thread.id)));
+    const refusal = targetRefusal(target ? targetFactsOf(target) : null);
+    if (refusal) throw new Refused(refusal);
+  }
+
   async function submitIn(
     tx: DbTransaction,
     entry: EntryRow,
@@ -580,7 +660,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (!sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
     const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, now());
     if (invalid) throw new Refused(invalid);
-    await mustExist(tx, content.audience);
+    // A withdrawal goes to the people the withdrawn entry went to: the places its audience names may be gone since, and that must not stop it (S05.02).
+    await mustHaveValidTarget(tx, thread, entry);
+    if (entry.kind !== "withdrawal") await mustExist(tx, content.audience);
     if (!SHA256.test(frozen.contentHash) || !("en" in frozen.smsBodies) || frozen.translations.length === 0) {
       throw new Error("alerting: a submit freezes a SHA-256 content hash, an English SMS body and the translations");
     }
@@ -679,8 +761,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     alertId: row.alertId,
     kind: row.kind,
     isDrill: thread.isDrill,
-    // A correction or a withdrawal names the entry it replaces (E05); no entry here does.
-    supersedesId: null,
+    // A correction or a withdrawal names the entry it replaces (S05.02): E07's capture adds that entry's recipients to the entry's own.
+    supersedesId: row.supersedesId,
     audience: row.audience as Audience,
     types: row.types,
     smsBodies: (row.smsBodies ?? {}) as Record<string, RecipientSmsBody>,
@@ -702,7 +784,14 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /** Inserts a draft (the author its first editor): the one place an entry row is made, for a thread's first entry and for an update. The caller has judged everything. */
-  async function insertEntry(tx: DbTransaction, actor: AlertActor, ids: { alertId: string; entryId: string; createdAt: Date }, kind: (typeof AUTHORED_KINDS)[number], content: EntryContent): Promise<EntryRow> {
+  async function insertEntry(
+    tx: DbTransaction,
+    actor: AlertActor,
+    ids: { alertId: string; entryId: string; createdAt: Date },
+    kind: (typeof AUTHORED_KINDS)[number] | "correction" | "withdrawal",
+    content: EntryContent,
+    replaces?: { supersedesId: string; withdrawalReason?: WithdrawalReason },
+  ): Promise<EntryRow> {
     const [entry] = await tx
       .insert(alertEntry)
       .values({
@@ -718,6 +807,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         validUntil: content.validUntil,
         validUntilMode: content.validUntilMode ?? "at",
         createdAt: ids.createdAt,
+        ...(replaces ? { supersedesId: replaces.supersedesId, withdrawalReason: replaces.withdrawalReason ?? null } : {}),
       })
       .returning();
     return entry;
@@ -850,7 +940,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       }
       const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
       if (invalid) throw new Refused(invalid);
-      await mustExist(tx, content.audience);
+      // A correction or a withdrawal of an entry that is no longer a valid target is refused before anything is paid for or frozen (S05.02).
+      await mustHaveValidTarget(tx, thread, row);
+      if (row.kind !== "withdrawal") await mustExist(tx, content.audience);
       const duplicateOf = await findPossibleDuplicate(tx, thread, row, content);
       const slug = thread.slug;
       if (slug === null) throw new Error("alerting: a thread has no slug");
@@ -860,7 +952,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         entryId: row.id,
         isDrill: thread.isDrill,
         kind: row.kind as EntryKind,
-        supersedesId: null,
+        supersedesId: row.supersedesId ?? null,
         channels: ENTRY_CHANNELS,
         slug,
         verified: true,
@@ -1045,6 +1137,93 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     },
 
     /**
+     * "Correct" (O-15, S05.02): makes a draft `correction` that names `ref.targetId`, in one transaction under the thread's lock. The target must be a valid
+     * target (approved, or pending approval and web-published, not already replaced, not a withdrawal notice: TARGET_NOT_VALID, TARGET_SUPERSEDED,
+     * TARGET_NOT_PUBLISHED), in an open thread (ALERT_CLOSED); the role policy (`alert.correct`) is asked against the target, so an Ambassador is refused (their
+     * own pending entries are E08's) and a Director too, and a Coordinator or an Admin may correct any valid target. The correction starts from what covers the
+     * thread (the audience, the types, the valid-until choice), like an update; the phase is the author's and required. It goes on through the composer,
+     * submit and a second person's approval like any entry; approving it replaces the target (`approveEntry`). Audited as `entry.created`. A request that names
+     * an entry id this person already made as a correction of this target returns it and changes nothing.
+     */
+    async correctEntry(actor: AlertActor, ref: { alertId: string; targetId: string }, input: CorrectInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      return change("entry.created", actor, { type: "alert_entry", id: input.entryId }, async (tx) => {
+        const { thread, standing } = await open(tx, actor, { alertId: ref.alertId });
+        if (!UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
+        const [existing] = await tx.select().from(alertEntry).where(eq(alertEntry.id, input.entryId)).for("update");
+        if (existing) {
+          if (existing.alertId === thread.id && existing.authorId === actor.staffId && existing.kind === "correction" && existing.supersedesId === ref.targetId) {
+            return { thread: threadOf(thread), entry: entryOf(existing) };
+          }
+          throw new Refused("ENTRY_ID_INVALID");
+        }
+        const target = await lockedTarget(tx, thread, standing, actor, ref.targetId, "alert.correct");
+        const at = now();
+        const rows = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
+        const covering = coveringEntry(publishedSummaries(rows)) ?? publishedSummaries([target])[0];
+        const start = updateStart(covering, at);
+        const content: EntryContent = { text: input.text, types: start.types, audience: start.audience, phase: input.phase, validUntil: input.validUntil, validUntilMode: input.validUntilMode };
+        mustAuthor(standing, actor.staffId, content);
+        const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
+        if (invalid) throw new Refused(invalid);
+        const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "correction", content, { supersedesId: target.id });
+        await audit.record(tx, {
+          action: "entry.created",
+          actorStaffId: actor.staffId,
+          subjectType: "alert_entry",
+          subjectId: row.id,
+          isDrill: thread.isDrill,
+          meta: { entry_id: row.id, kind: "correction", types: [...content.types] },
+        });
+        return { thread: threadOf(thread), entry: entryOf(row) };
+      });
+    },
+
+    /**
+     * "Withdraw" (O-15, S05.02): makes a draft `withdrawal` that names `ref.targetId` with a reason from the catalog (wrong place, wrong information, duplicate,
+     * other: WITHDRAWAL_REASON_INVALID for anything else) and the notice residents read in the target's place (`input.text`: required, and for "other" the
+     * words the Hub wrote). Judged like `correctEntry`: the thread's lock, a valid target, the role policy (`alert.withdraw`). The withdrawal is the target's in
+     * everything else: its audience (who is told), its types, where things stood; its valid-until is 24 hours from now (it is not read as the thread's: a
+     * withdrawal notice is never substantive). Audited as `entry.created`.
+     */
+    async withdrawEntry(actor: AlertActor, ref: { alertId: string; targetId: string }, input: WithdrawInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      return change("entry.created", actor, { type: "alert_entry", id: input.entryId }, async (tx) => {
+        const { thread, standing } = await open(tx, actor, { alertId: ref.alertId });
+        if (!UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
+        const [existing] = await tx.select().from(alertEntry).where(eq(alertEntry.id, input.entryId)).for("update");
+        if (existing) {
+          if (existing.alertId === thread.id && existing.authorId === actor.staffId && existing.kind === "withdrawal" && existing.supersedesId === ref.targetId) {
+            return { thread: threadOf(thread), entry: entryOf(existing) };
+          }
+          throw new Refused("ENTRY_ID_INVALID");
+        }
+        const target = await lockedTarget(tx, thread, standing, actor, ref.targetId, "alert.withdraw");
+        if (!isWithdrawalReason(input.reason)) throw new Refused("WITHDRAWAL_REASON_INVALID");
+        const at = now();
+        const content: EntryContent = {
+          text: input.text,
+          types: target.types,
+          audience: target.audience as Audience,
+          phase: target.phase as Phase,
+          validUntil: new Date(at.getTime() + UNTIL_RESOLVED_MS),
+          validUntilMode: "resolved",
+        };
+        mustAuthor(standing, actor.staffId, content);
+        const invalid = contentRefusal(content);
+        if (invalid) throw new Refused(invalid);
+        const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "withdrawal", content, { supersedesId: target.id, withdrawalReason: input.reason });
+        await audit.record(tx, {
+          action: "entry.created",
+          actorStaffId: actor.staffId,
+          subjectType: "alert_entry",
+          subjectId: row.id,
+          isDrill: thread.isDrill,
+          meta: { entry_id: row.id, kind: "withdrawal", types: [...content.types] },
+        });
+        return { thread: threadOf(thread), entry: entryOf(row) };
+      });
+    },
+
+    /**
      * Saves a draft's content. Whoever saves a change becomes an editor (the trigger adds them), so
      * they can no longer approve this entry. A draft only, in an open thread.
      */
@@ -1183,20 +1362,57 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // AD-5: approval re-checks the author against their current status and assignments.
         const author = await staff.standing(tx, row.authorId);
         if (!author || author.status !== "active" || authoringRefusal(author, row.authorId, contentOf(row)) !== null) throw new Refused("AUTHOR_NOT_ALLOWED");
-        // ... and the places it names are still there: a floor removed since the submit is not a floor to text.
-        await mustExist(tx, contentOf(row).audience);
+        // ... and the places it names are still there: a floor removed since the submit is not a floor to text. (A withdrawal goes to the people the withdrawn
+        // entry went to: a floor removed since must not stop it.)
+        if (row.kind !== "withdrawal") await mustExist(tx, contentOf(row).audience);
+        // A correction or a withdrawal replaces the entry it names (S05.02): that entry is locked now (alert, then the approving entry, then the target; the
+        // thread's lock already serializes every change to this thread) and judged again, because it may have been corrected or withdrawn since this was
+        // submitted, and two corrections of one entry must not both go through.
+        let target: EntryRow | null = null;
+        if (isSupersedingKind(row.kind)) {
+          if (row.supersedesId === null) throw new Refused("TARGET_NOT_VALID");
+          [target] = await tx
+            .select()
+            .from(alertEntry)
+            .where(and(eq(alertEntry.id, row.supersedesId), eq(alertEntry.alertId, thread.id)))
+            .for("update");
+          const targetProblem = targetRefusal(target ? targetFactsOf(target) : null);
+          if (targetProblem) throw new Refused(targetProblem);
+          mustTransition(thread, target, "superseded");
+        }
         // `approved_at` and `web_published_at` are not sent: the entry trigger sets both to the database's now().
         const [approved] = await tx
           .update(alertEntry)
           .set({ status: "approved", approvedBy: actor.staffId, approvedVersion: row.version, approvedHash: row.contentHash })
           .where(eq(alertEntry.id, row.id))
           .returning();
+        // The replaced entry becomes `superseded` in this same transaction, after the approval (the entry trigger accepts it only beside the approved
+        // correction or withdrawal that names it) and audited with it.
+        if (target !== null) {
+          await tx.update(alertEntry).set({ status: "superseded" }).where(eq(alertEntry.id, target.id));
+          await audit.record(tx, {
+            action: "entry.superseded",
+            actorStaffId: actor.staffId,
+            subjectType: "alert_entry",
+            subjectId: target.id,
+            isDrill: thread.isDrill,
+            meta: {
+              entry_id: target.id,
+              by: row.id,
+              by_kind: row.kind as "correction" | "withdrawal",
+              ...(row.withdrawalReason !== null ? { withdrawal_reason: row.withdrawalReason as WithdrawalReason } : {}),
+            },
+          });
+        }
         let feedVersionNow: number | null = null;
         if (!thread.isDrill) {
           const bumped = await tx.update(feedVersion).set({ version: sql`${feedVersion.version} + 1` }).where(eq(feedVersion.id, 1)).returning({ version: feedVersion.version });
           if (bumped.length !== 1) throw new Error("alerting: feed_version has no row");
           feedVersionNow = Number(bumped[0].version);
         }
+        // The replaced entry's texts that are not yet handed to the provider stop in this same transaction (messaging's `cancelQueued`, after `feed_version`:
+        // the lock order of AD-18 is alert, alert_entry, feed_version, then delivery rows). Texts already handed over are in flight and cannot be stopped.
+        if (target !== null) await cancelQueued(tx, [target.id]);
         // The outbox's marker (S06.01, `createDeliveryQueue().markApprovalTransaction`): this transaction says that the alert deliveries about to be
         // written are this entry's approval, so the database accepts them. Nothing is captured and nothing is written before it.
         await markApproval(tx, row.id);
@@ -1213,6 +1429,14 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           isDrill: thread.isDrill,
           meta: { entry_id: row.id, version: approved.version, content_hash: row.contentHash!, recipient_count: snapshot.total },
         });
+        // A withdrawal that leaves no published, non-superseded substantive entry closes the thread `withdrawn`, in this same transaction, even though the
+        // withdrawal notice is itself published (it is never substantive): the notice's own texts are kept (`keepEntryId`) and every other entry's stop.
+        if (target !== null && row.kind === "withdrawal") {
+          const after = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
+          if (!substantiveRemains(after.map((entry) => ({ id: entry.id, kind: entry.kind as EntryKind, status: entry.status as EntryStatus, webPublishedAt: entry.webPublishedAt })), [target.id])) {
+            await closeAlert(tx, actor, { alertId: thread.id, reason: "withdrawn", keepEntryId: row.id });
+          }
+        }
         return { entry: entryOf(approved), recipients: snapshot, feedVersion: feedVersionNow };
       });
     },
@@ -1379,6 +1603,23 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
               threadCoveringId = covering.id;
             }
           }
+          // A correction or a withdrawal shows the entry it replaces, as residents read it now (S05.02).
+          let target: EntryReview["target"] = null;
+          if (entryRow.supersedesId !== null) {
+            const [replaced] = await tx.select().from(alertEntry).where(and(eq(alertEntry.id, entryRow.supersedesId), eq(alertEntry.alertId, ref.alertId)));
+            if (replaced) {
+              target = {
+                id: replaced.id,
+                kind: replaced.kind as EntryKind,
+                status: replaced.status as EntryStatus,
+                text: replaced.originalText,
+                phase: replaced.phase as Phase,
+                publishedAt: replaced.webPublishedAt,
+                valid: targetRefusal(targetFactsOf(replaced)) === null,
+                audience: replaced.audience as Audience,
+              };
+            }
+          }
           return {
             thread,
             entry: entryOf(entryRow),
@@ -1389,6 +1630,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             duplicate,
             threadAudience,
             threadCoveringId,
+            target,
           };
         },
         { isolationLevel: "repeatable read" },

@@ -617,6 +617,7 @@
     "amberBody": "Amber Alert گمشدہ بچے کے بارے میں سرکاری الرٹ ہوتے ہیں۔ اصل الفاظ ہمیشہ Alert Ready سے آتے ہیں۔",
     "endedResolved": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} حل ہوا۔",
     "endedWithdrawn": "ہب نے یہ الرٹ واپس لے لیا۔ {reason}",
+    "withdrawn": "[EN] Withdrawn",
     "endedExpired": "یہ الرٹ ختم ہو گیا ہے۔ یہ {t} آخری اپ ڈیٹ کے بغیر ختم ہوا۔",
     "validLine": "{until} تک لاگو",
     "timeLine": "{posted} پوسٹ ہوا · {updated} اپ ڈیٹ ہوا",

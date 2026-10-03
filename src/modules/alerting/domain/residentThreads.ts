@@ -35,6 +35,8 @@ export interface ResidentEntryRow {
   publishedAt: Date;
   verified: boolean;
   superseded: boolean;
+  /** The entry a correction or a withdrawal replaces (S05.02); null, or left out by a reader that has no such column, for every other entry. */
+  supersedesId?: string | null;
   translation: ResidentTranslationRow | null;
 }
 
@@ -78,6 +80,7 @@ function entryOf(row: ResidentEntryRow, lang: LangCode): FeedThread["entries"][n
     id: row.entryId,
     kind: row.kind as FeedThread["entries"][number]["kind"],
     ...(PHASED_KINDS.has(row.kind) ? { phase: row.phase as "problem" | "in_progress" } : {}),
+    ...(row.supersedesId ? { supersedes_id: row.supersedesId } : {}),
     verified: row.verified,
     attribution: { ...HUB_ATTRIBUTION },
     published_at: row.publishedAt.toISOString(),
