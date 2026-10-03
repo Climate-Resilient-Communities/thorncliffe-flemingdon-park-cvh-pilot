@@ -29,7 +29,52 @@ export type SearchFailureReason = (typeof SEARCH_FAILURE_REASONS)[number];
 /** Which vendor call of a search leg failed while the search still answered (S03.05): the embedding, or the question's translation. */
 export const SEARCH_LEG_FAILURE_REASONS = ["embed_failed", "translate_failed"] as const;
 
+/**
+ * Why a delivery became `unknown` (S06.02): an ambiguous answer from the provider, or a row the sweep found with no outcome.
+ * The same codes as messaging's UNKNOWN_CAUSES (a test in src/app compares them; ops may not import messaging's domain).
+ */
+export const DELIVERY_UNKNOWN_CAUSES = [
+  "server_error",
+  "rate_limited_without_error_body",
+  "unexpected_status",
+  "timeout",
+  "connection_lost",
+  "unusable_response",
+  "accepted_then_dropped",
+  "accepted_then_error",
+  "provider_threw",
+  "no_outcome_after_hand_off",
+  "no_terminal_status",
+] as const;
+
 export const OPS_EVENT_KINDS = {
+  /**
+   * A delivery became `unknown` (S06.02): the provider's answer was ambiguous, or the sweep found no outcome for a hand-off (5 minutes) or
+   * no terminal status for a `submitted` text (24 hours). It is never sent again automatically and may or may not have arrived; a late
+   * callback can still resolve it (S06.04). Subject: the delivery. The health job alerts the on-call Admin (S06.07). Codes only.
+   */
+  "delivery.unknown": {
+    severity: "error",
+    detail: z.strictObject({
+      cause: z.enum(DELIVERY_UNKNOWN_CAUSES),
+      http_status: z.number().int().min(100).max(599).optional(),
+    }),
+  },
+  /** The provider refused the credentials (HTTP 401 or 403) several texts in a row, so the run stopped (S06.02); the texts that were refused are `failed`. */
+  "dispatch.provider_auth_failed": {
+    severity: "error",
+    detail: z.strictObject({ http_status: z.number().int().min(400).max(499) }),
+  },
+  /** The daily check found Smart Encoding on in the Twilio Messaging Service (S06.02): the on-call Admin is alerted (S06.07). */
+  "messaging.smart_encoding_on": {
+    severity: "error",
+    detail: z.strictObject({}),
+  },
+  /** The daily check could not read the Messaging Service's setting (S06.02), so it cannot say Smart Encoding is off. A code only. */
+  "messaging.service_check_failed": {
+    severity: "warning",
+    detail: z.strictObject({ reason: code }),
+  },
   /** A directory publish gave up: the previous release stays current. Subject: the release (`directory_release`, its number) when one exists. */
   "directory.publish_failed": {
     severity: "error",

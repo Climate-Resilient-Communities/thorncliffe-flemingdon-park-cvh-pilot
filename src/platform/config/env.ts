@@ -50,6 +50,21 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        smsTestProblem names the rule (never the value), no number is approved and
  *                                                        the page shows that texts are not set up. Set outside production it does
  *                                                        fail start-up: that is a secret-placement rule
+ * JOB_SECRET, JOB_SECRET_PREVIOUS
+ *                      server   optional at start-up     secret; at least 32 random bytes as hex or base64, like the pepper
+ *                                                        (`openssl rand -hex 32`). The bearer secret of the job routes that
+ *                                                        pg_cron calls (/api/jobs/dispatch, /api/jobs/messaging-config; AD-15): a
+ *                                                        request without `Authorization: Bearer <secret>` is refused with 401. During
+ *                                                        a rotation both are accepted (JOB_SECRET_PREVIOUS is the old one); a missing
+ *                                                        or weak JOB_SECRET never stops the site, the job routes answer 503
+ *                                                        (jobs_not_configured) until it is set, and nothing runs unauthenticated.
+ *                                                        Set in production only (the pg_cron target and its secret in the project's
+ *                                                        Vault point at production, AD-15). Never a NEXT_PUBLIC_ variable
+ * SMS_SEGMENTS_PER_SECOND
+ *                      server   optional                 the shared send pace (E06 "Send pace"): at most this many SMS segments a
+ *                                                        second reach the provider in any one second, across every dispatcher run.
+ *                                                        Default 3 (Twilio's default toll-free rate); a whole number from 1 to 100.
+ *                                                        Not a TWILIO_ variable: it is not a credential and is allowed everywhere
  * COHERE_API_KEY (and any other COHERE_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret. Cohere's API key,
  *                                                        the one key of the pilot (AD-15), used by the directory publish job
@@ -163,6 +178,9 @@ const rawSchema = z.object({
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
+  JOB_SECRET: optionalText,
+  JOB_SECRET_PREVIOUS: optionalText,
+  SMS_SEGMENTS_PER_SECOND: optionalText,
   COHERE_API_KEY: optionalText,
   SEARCH_EMBED_MODEL: optionalText,
   SEARCH_THRESHOLD: optionalText,
@@ -247,6 +265,12 @@ export interface Env {
   staffPasswordPepper?: string;
   /** Why staff passwords are not configured (names the rule, never the value); undefined when they are. */
   staffPasswordPepperProblem?: string;
+  /** The secrets a job route accepts as its bearer token: JOB_SECRET, and JOB_SECRET_PREVIOUS during a rotation; only those that are strong enough. Empty: the job routes answer 503. */
+  jobSecrets: string[];
+  /** Why a job secret was not accepted (names the rule and the variable, never the value); undefined when nothing is wrong. */
+  jobSecretProblem?: string;
+  /** The shared send pace in SMS segments a second (SMS_SEGMENTS_PER_SECOND; default 3). */
+  smsSegmentsPerSecond: number;
 }
 
 export class EnvError extends Error {
@@ -446,6 +470,48 @@ export function staffPasswordPepperProblem(value: string | undefined): string | 
   return undefined;
 }
 
+export const JOB_SECRET_MIN_BYTES = 32;
+
+/**
+ * The rule for a job secret (JOB_SECRET, JOB_SECRET_PREVIOUS): at least 32 bytes of key material written as hex or base64, and not
+ * an obviously repeated pattern. Returns the problem (naming the variable, never the value), or undefined when the value is usable.
+ * Like the pepper it never fails start-up: a job route refuses instead, so a typo cannot take the whole site down.
+ */
+export function jobSecretProblem(name: string, value: string): string | undefined {
+  const trimmed = value.trim();
+  let bytes = 0;
+  if (/^[0-9a-fA-F]+$/.test(trimmed)) bytes = Math.floor(trimmed.length / 2);
+  else if (/^[A-Za-z0-9+/_-]+={0,2}$/.test(trimmed)) bytes = Math.floor((trimmed.replace(/=+$/, "").length * 3) / 4);
+  else return `${name}: must be hex or base64 (for example \`openssl rand -hex 32\`)`;
+  if (bytes < JOB_SECRET_MIN_BYTES || new Set(trimmed).size < 10) {
+    return `${name}: must be at least ${JOB_SECRET_MIN_BYTES} random bytes (for example \`openssl rand -hex 32\`)`;
+  }
+  return undefined;
+}
+
+/** The bearer secrets the job routes accept, and why one was left out. JOB_SECRET_PREVIOUS only counts next to a usable JOB_SECRET and must differ from it. */
+function parseJobSecrets(raw: Raw): { secrets: string[]; problem?: string } {
+  const problems: string[] = [];
+  const secrets: string[] = [];
+  const current = raw.JOB_SECRET?.trim();
+  const previous = raw.JOB_SECRET_PREVIOUS?.trim();
+  if (current !== undefined) {
+    const problem = jobSecretProblem("JOB_SECRET", current);
+    if (problem) problems.push(problem);
+    else secrets.push(current);
+  }
+  if (previous !== undefined) {
+    const problem = jobSecretProblem("JOB_SECRET_PREVIOUS", previous);
+    if (problem) problems.push(problem);
+    else if (secrets.length === 0) problems.push("JOB_SECRET_PREVIOUS: set without a usable JOB_SECRET (the previous secret only counts during a rotation)");
+    else if (previous === current) problems.push("JOB_SECRET_PREVIOUS: must differ from JOB_SECRET");
+    else secrets.push(previous);
+  }
+  return { secrets, problem: problems.length > 0 ? problems.join("; ") : undefined };
+}
+
+export const SMS_SEGMENTS_PER_SECOND_DEFAULT = 3;
+
 export const SMS_TEST_ALLOWLIST_PROBLEM =
   "SMS_TEST_ALLOWLIST: every entry must be an E.164 number such as +18885550100, separated by commas (the entries are not shown)";
 export const TWILIO_FROM_NUMBER_PROBLEM = "TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)";
@@ -574,6 +640,13 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("COHERE_API_KEY: set but blank; unset it or give it the key");
   }
   const search = parseSearchSettings(raw, problems);
+  const jobSecrets = parseJobSecrets(raw);
+  let smsSegmentsPerSecond = SMS_SEGMENTS_PER_SECOND_DEFAULT;
+  if (raw.SMS_SEGMENTS_PER_SECOND !== undefined) {
+    const text = raw.SMS_SEGMENTS_PER_SECOND.trim();
+    if (!/^[0-9]{1,3}$/.test(text) || Number(text) < 1 || Number(text) > 100) problems.push("SMS_SEGMENTS_PER_SECOND: must be a whole number from 1 to 100");
+    else smsSegmentsPerSecond = Number(text);
+  }
 
   const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
   const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
@@ -613,6 +686,9 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     if (name.startsWith("NEXT_PUBLIC_") && value !== undefined && value.trim() !== "") {
       if (name.includes("PEPPER") || (pepper !== undefined && value.trim() === pepper)) {
         problems.push(`${name}: holds the staff password pepper; NEXT_PUBLIC_ variables are sent to browsers`);
+      }
+      if (name.includes("JOB_SECRET") || [raw.JOB_SECRET?.trim(), raw.JOB_SECRET_PREVIOUS?.trim()].some((secret) => secret !== undefined && value.trim() === secret)) {
+        problems.push(`${name}: holds or names a job secret; NEXT_PUBLIC_ variables are sent to browsers`);
       }
     }
   }
@@ -657,6 +733,9 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     fakeGuidesFile: raw.CVH_FAKE_GUIDES_FILE,
     fakeDirectoryDir: raw.CVH_FAKE_DIRECTORY_DIR,
     ...pepperSettings(raw.STAFF_PASSWORD_PEPPER),
+    jobSecrets: jobSecrets.secrets,
+    jobSecretProblem: jobSecrets.problem,
+    smsSegmentsPerSecond,
   };
 }
 
@@ -679,6 +758,10 @@ export function getEnv(): Env {
   // A misconfigured spike variable never stops the server; the rule is logged (never the value) so IT can fix it.
   if (cached.smsTestProblem !== undefined) {
     console.error(JSON.stringify({ level: "error", evt: "env.sms_test_not_configured", module: "platform", rule: cached.smsTestProblem }));
+  }
+  // Likewise a job secret that is too weak never stops the server: the job routes refuse until it is fixed.
+  if (cached.jobSecretProblem !== undefined) {
+    console.error(JSON.stringify({ level: "error", evt: "env.job_secret_not_accepted", module: "platform", rule: cached.jobSecretProblem }));
   }
   return cached;
 }

@@ -1,9 +1,10 @@
 // Drizzle tables of the messaging module (AD-2), written by hand to match
-// db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger) and
-// db/migrations/20261003100000_delivery_outbox.sql (the outbox); the drift test compares them.
+// db/migrations/20261002220000_sms_test_send.sql (the first-text spike's ledger), db/migrations/20261003100000_delivery_outbox.sql
+// (the outbox) and db/migrations/20261003200000_dispatcher.sql (the sender lease, the pause switch and the claim order); the drift test
+// compares them.
 // The grants, the functions and the triggers live only in the migrations.
 import { sql } from "drizzle-orm";
-import { bigint, check, index, integer, pgPolicy, pgRole, pgTable, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
+import { bigint, boolean, check, index, integer, pgPolicy, pgRole, pgTable, smallint, text, timestamp, unique, uuid } from "drizzle-orm/pg-core";
 
 /** The app's own database role (created by the audit migration). */
 const cvhApp = pgRole("cvh_app").existing();
@@ -91,6 +92,8 @@ export const delivery = pgTable(
     completedAt: timestamp("completed_at", { withTimezone: true }),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+    /** The claim order as one number (S06.02), set by the insert trigger from the entry's frozen content: see `delivery_claim_rank()`. */
+    claimRank: smallint("claim_rank").notNull().default(5),
   },
   (t) => [
     unique("delivery_idempotency_key_unique").on(t.idempotencyKey),
@@ -140,8 +143,56 @@ export const delivery = pgTable(
     index("delivery_entry_id_idx").on(t.entryId).where(sql`${t.entryId} is not null`),
     index("delivery_recipient_idx").on(t.recipientKind, t.recipientId).where(sql`${t.recipientId} is not null`),
     index("delivery_unresolved_idx").on(t.state, t.dueAt).where(sql`${t.state} in ('queued', 'claimed', 'submitted', 'unknown')`),
+    check("delivery_claim_rank_valid", sql`${t.claimRank} between 0 and 5`),
+    index("delivery_claim_idx").on(t.claimRank, t.createdAt, t.id).where(sql`${t.state} = 'queued'`),
     pgPolicy("delivery_app_select", { for: "select", to: cvhApp, using: sql`true` }),
     pgPolicy("delivery_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
     pgPolicy("delivery_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The sender lease (S06.02, AD-8): the one row that decides which dispatcher sends. A run takes it by a conditional update
+ * once the previous lease has expired; every renewal, claim and hand-off compares `token = mine and expires_at > now()`.
+ * `pacedUntil` carries the shared send pace to the next holder. The row is made by the migration; the app only updates it.
+ */
+export const dispatcherLease = pgTable(
+  "dispatcher_lease",
+  {
+    id: smallint().primaryKey().default(1),
+    token: uuid().notNull(),
+    holder: text().notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    renewedAt: timestamp("renewed_at", { withTimezone: true }).notNull(),
+    pacedUntil: timestamp("paced_until", { withTimezone: true }).notNull(),
+  },
+  (t) => [
+    check("dispatcher_lease_single_row", sql`${t.id} = 1`),
+    check("dispatcher_lease_holder_format", sql`${t.holder} ~ '^[A-Za-z0-9._:-]{1,64}$'`),
+    pgPolicy("dispatcher_lease_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("dispatcher_lease_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();
+
+/**
+ * The pause switch (S06.02 reads it, S06.06 sets it, audited): one row. While `paused`, nothing the pause applies to is claimed
+ * or handed off; on-call texts are exempt. A missing row reads as paused.
+ */
+export const messagingControl = pgTable(
+  "messaging_control",
+  {
+    id: smallint().primaryKey().default(1),
+    paused: boolean().notNull().default(false),
+    pausedBy: uuid("paused_by").references(() => staffAccountKey.id),
+    pausedAt: timestamp("paused_at", { withTimezone: true }),
+    reason: text(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    index("messaging_control_paused_by_idx").on(t.pausedBy),
+    check("messaging_control_single_row", sql`${t.id} = 1`),
+    check("messaging_control_reason_length", sql`${t.reason} is null or (btrim(${t.reason}) <> '' and char_length(${t.reason}) <= 500)`),
+    check("messaging_control_pause_stated", sql`not ${t.paused} or (${t.pausedBy} is not null and ${t.pausedAt} is not null and ${t.reason} is not null)`),
+    pgPolicy("messaging_control_app_select", { for: "select", to: cvhApp, using: sql`true` }),
   ],
 ).enableRLS();

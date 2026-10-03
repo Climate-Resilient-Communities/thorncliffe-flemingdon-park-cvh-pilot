@@ -6,6 +6,9 @@ import { floorsOfBuilding, neighbourhoodIds } from "../places";
 import * as audit from "../audit";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 
+/** What the sender's hand-off point reads about an alert delivery's entry and thread (messaging's AlertStandingReader port, S06.02). */
+export { alertStandingReader, isClosingEntry } from "./adapters/handOffStanding";
+
 export interface AlertingWiring {
   db: Db;
   /** Test seams. */

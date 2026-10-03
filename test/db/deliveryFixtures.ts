@@ -46,7 +46,21 @@ export function deliveryFixtures(owner: Sql) {
   }
 
   /** An alert thread with one entry in `status`, carrying the frozen SMS bodies a submit would have stored. */
-  async function entry(status: EntryStatus = "pending_approval", options: { isDrill?: boolean; bodies?: FrozenBodies; authorId?: string } = {}): Promise<SeededEntry> {
+  async function entry(
+    status: EntryStatus = "pending_approval",
+    options: {
+      isDrill?: boolean;
+      bodies?: FrozenBodies;
+      authorId?: string;
+      /** The disruption types of the entry (default `power`); `fire` puts its texts first in the claim order. */
+      types?: string[];
+      /** The audience's scope: a neighbourhood (default) or buildings. */
+      scope?: "neighbourhood" | "buildings";
+      /** The kind of entry (default `ack`). */
+      kind?: "ack" | "update" | "correction" | "withdrawal" | "final";
+      validUntil?: Date;
+    } = {},
+  ): Promise<SeededEntry> {
     const author = options.authorId ?? (await staff("coordinator")).id;
     const approver = (await staff("admin")).id;
     const alertId = randomUUID();
@@ -54,14 +68,19 @@ export function deliveryFixtures(owner: Sql) {
     const bodies = options.bodies ?? DEFAULT_BODIES;
     const frozen = status !== "draft" && status !== "discarded";
     const hash = randomBytes(32).toString("hex");
+    const types = options.types ?? ["power"];
+    const audience =
+      options.scope === "buildings"
+        ? { scope: "buildings", buildings: [{ rsn: "1234567", floors: null }], groups: [], types }
+        : { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types };
     await owner.begin(async (tx) => {
       await tx`select set_config('cvh.actor_id', ${author}, true)`;
       await tx`insert into alert (id, is_drill, reported_at, created_by) values (${alertId}, ${options.isDrill ?? false}, ${new Date(Date.now() - 60_000)}, ${author})`;
       await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at)
-               values (${entryId}, ${alertId}, 'ack', ${status}, ${author}, ${[author]}, 'text', ${["power"]},
-                       ${tx.json({ scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] })}, 'problem', ${new Date("2026-10-04T15:00:00Z")},
+               values (${entryId}, ${alertId}, ${options.kind ?? "ack"}, ${status}, ${author}, ${[author]}, 'text', ${types},
+                       ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2026-10-04T15:00:00Z")},
                        ${frozen ? 1 : 0}, ${frozen ? hash : null}, ${frozen ? tx.json(bodies as never) : null}, ${frozen ? NOW : null},
                        ${status === "approved" ? approver : null}, ${status === "approved" ? NOW : null}, ${status === "approved" ? 1 : null},
                        ${status === "approved" ? hash : null}, ${status === "approved" ? NOW : null})`;
