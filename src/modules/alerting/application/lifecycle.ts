@@ -1380,7 +1380,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         // entry went to: a floor removed since must not stop it.)
         if (row.kind !== "withdrawal") await mustExist(tx, contentOf(row).audience);
         // S06.07: once texting is live, a real alert is approved only if someone is on call to hear that sending is failing (a drill is not).
-        if (!thread.isDrill && deps.oncall?.required() && !(await deps.oncall.hasNumber(tx))) throw new Refused("ONCALL_REQUIRED");
+        // Staff engineer's decision: never a correction or a withdrawal, which staff must always be able to publish to fix or take back wrong
+        // information residents are reading; their target checks below are reported as themselves.
+        if (!thread.isDrill && !isSupersedingKind(row.kind) && deps.oncall?.required() && !(await deps.oncall.hasNumber(tx))) throw new Refused("ONCALL_REQUIRED");
         // A correction or a withdrawal replaces the entry it names (S05.02): that entry is locked now (alert, then the approving entry, then the target; the
         // thread's lock already serializes every change to this thread) and judged again, because it may have been corrected or withdrawn since this was
         // submitted, and two corrections of one entry must not both go through.

@@ -664,6 +664,60 @@ describe("approving a correction", () => {
 
 // --- the trigger -------------------------------------------------------------------------------------------------------------------------
 
+describe("the on-call rule and corrections (S06.07, staff engineer's decision)", () => {
+  // Texting is live and the roster is empty: a real update or alert is refused ONCALL_REQUIRED, a correction or a withdrawal is not, because staff must
+  // always be able to fix or take back wrong information residents are reading.
+  const live = () => createAlerting({ db: app, now: () => clock, recipients: port, pricePerSegmentCents: () => 5, oncall: { required: () => true } });
+  const emptyRoster = async () => {
+    await owner`delete from oncall_roster`;
+  };
+
+  it("approves a correction and a withdrawal with nobody on call, and refuses an update and a new thread's first entry with ONCALL_REQUIRED", async () => {
+    const { ref } = await approvedThread({}, "ack", 2);
+    const update = await approvedUpdate(ref.alertId, 1);
+    await emptyRoster();
+
+    const correction = await pendingCorrection(update);
+    expect(await live().approveEntry(actorOf(coordB), correction, await shownOfRow(correction))).toMatchObject({ ok: true, value: { entry: { kind: "correction", status: "approved" } } });
+    expect((await entryRow(update.entryId)).status).toBe("superseded");
+
+    const withdrawal = await pendingWithdrawal(correction);
+    expect(await live().approveEntry(actorOf(coordB), withdrawal, await shownOfRow(withdrawal))).toMatchObject({ ok: true, value: { entry: { kind: "withdrawal", status: "approved" } } });
+
+    // An update of the same thread (not a correction) is still refused, and nothing changes.
+    clock = new Date(clock.getTime() + 1000);
+    const made = await alerting.addUpdate(actorOf(authorA), { alertId: ref.alertId }, updateInput());
+    if (!made.ok) throw new Error(`addUpdate refused: ${made.error}`);
+    const pendingUpdate = await submitted({ alertId: ref.alertId, entryId: made.value.entry.id });
+    expect(await live().approveEntry(actorOf(coordB), pendingUpdate, await shownOfRow(pendingUpdate))).toEqual({ ok: false, error: "ONCALL_REQUIRED" });
+    expect((await entryRow(pendingUpdate.entryId)).status).toBe("pending_approval");
+
+    // So is a new thread whose first entry is an update.
+    const created = await alerting.createAlert(actorOf(authorA), { kind: "update", isDrill: false, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
+    if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
+    const fresh = { alertId: created.value.thread.id, entryId: created.value.entry.id };
+    const done = await seams.freeze(actorOf(authorA), fresh, frozen(`fresh ${fresh.entryId}`));
+    if (!done.ok) throw new Error(`freeze refused: ${done.error}`);
+    expect(await live().approveEntry(actorOf(coordB), fresh, { version: 1, contentHash: sha(`fresh ${fresh.entryId}`), recipients: reviewed() })).toEqual({ ok: false, error: "ONCALL_REQUIRED" });
+  });
+
+  it("reports a correction's or a withdrawal's target problem as itself, never as ONCALL_REQUIRED", async () => {
+    const { ref } = await approvedThread({}, "ack", 2);
+    await approvedUpdate(ref.alertId);
+    const first = await newCorrection(ref, authorA);
+    const second = await newCorrection(ref, coordB);
+    const lateWithdrawal = await newWithdrawal(ref, authorA);
+    await submitted(first, authorA);
+    await submitted(second, coordB);
+    await submitted(lateWithdrawal, authorA);
+    await emptyRoster();
+
+    expect(await live().approveEntry(actorOf(adminC), first, await shownOfRow(first))).toMatchObject({ ok: true });
+    expect(await live().approveEntry(actorOf(adminC), second, await shownOfRow(second))).toEqual({ ok: false, error: "TARGET_SUPERSEDED" });
+    expect(await live().approveEntry(actorOf(adminC), lateWithdrawal, await shownOfRow(lateWithdrawal))).toEqual({ ok: false, error: "TARGET_SUPERSEDED" });
+  });
+});
+
 describe("the entry trigger", () => {
   /** A statement as the app's own role, in a transaction that names the acting account, as every use case does. */
   async function asApp<T>(actor: Account, run: (tx: postgres.TransactionSql) => Promise<T>): Promise<T> {

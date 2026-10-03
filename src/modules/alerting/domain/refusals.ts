@@ -76,6 +76,6 @@ export type AlertRefusal =
   | "WITHDRAWAL_REASON_INVALID"
   /**
    * S06.07, the approval of a non-drill alert while texting is live: the on-call roster has no number, so a stuck queue or a failing sender would
-   * go unreported. Nothing was approved. Off where texting is not live (the app decides, `AlertLifecycleDeps.oncall`).
+   * go unreported. Nothing was approved. Off where texting is not live (the app decides, `AlertLifecycleDeps.oncall`), and never for a correction or a withdrawal (staff engineer's decision).
    */
   | "ONCALL_REQUIRED";
