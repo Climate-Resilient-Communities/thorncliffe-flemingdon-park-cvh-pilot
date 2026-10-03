@@ -179,7 +179,25 @@ describe("alert detail (R-07)", () => {
     expect(count(html, /alert-entry--latest/g)).toBe(1);
   });
 
-  it("has every word it draws in the catalog of each language: R07.thread, R07.earlier, the kinds, the end-time note and the valid-until line", () => {
+  it("draws each entry's phase in the catalog's status words (status.active, status.progress), on the entry that reported it, in English and Urdu", () => {
+    const entries = [
+      englishEntry({ n: 1, kind: "ack", phase: "problem", published_at: "2026-10-01T13:00:00.000Z" }),
+      englishEntry({ n: 2, kind: "update", phase: "in_progress", published_at: "2026-10-01T14:30:00.000Z" }),
+      englishEntry({ n: 3, kind: "update", phase: undefined, published_at: "2026-10-01T14:45:00.000Z" }),
+    ];
+    for (const lang of ["en", "ur"] as const) {
+      const t = translatorFor(lang);
+      const html = render({ entries }, lang);
+      const phaseOf = (n: number) => html.match(new RegExp(`data-testid="alert-entry-phase-${ID(n)}"[^>]*>(?:<[^>]*>)*([^<]*)`))?.[1];
+      expect(phaseOf(1), lang).toBe(t("status.active"));
+      expect(phaseOf(2), lang).toBe(t("status.progress"));
+      expect(html, lang).not.toContain(`alert-entry-phase-${ID(3)}`);
+    }
+    expect(translatorFor("en")("status.active")).toBe("Active problem");
+    expect(translatorFor("en")("status.progress")).toBe("Work in progress");
+  });
+
+  it("has every word the thread uses in the catalog of each language: R07.thread, the kinds, the end-time note and the valid-until line (R07.earlier is not drawn by R-07)", () => {
     for (const lang of ["en", "ur", "fr"] as const) {
       const t = translatorFor(lang);
       for (const key of ["R07.thread", "R07.earlier", "R07.latestTag", "R07.expiredNote", "R07.timeLine", "R07.timeLineOne", "R07.kinds.ack", "R07.kinds.update", "R07.kinds.correction", "R07.kinds.final"]) {

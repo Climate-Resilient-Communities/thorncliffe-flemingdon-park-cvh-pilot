@@ -14,6 +14,9 @@ IMAGE="mcr.microsoft.com/playwright:v1.63.0-noble"
 
 root=$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)
 mkdir -p "$root/test-results"
+# Next's data cache in .next/cache may hold a building list from an earlier run in the same folder (the staff tests' server, with its
+# database); these tests have no database and expect none. They start with an empty cache (as scripts/resident-docker.sh does).
+rm -rf "$root/.next/cache/fetch-cache"
 
 # HUB_PINNED_IMAGE is what lets the screenshot assertions run (e2e/hub/helpers.ts).
 exec docker run --rm --init --ipc=host \

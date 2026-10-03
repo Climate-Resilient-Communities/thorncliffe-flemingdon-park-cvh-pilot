@@ -1,6 +1,6 @@
 // The only alert relations a resident query may name (AD-6, S04.08): the three views of
-// db/migrations/20261003510000_resident_alert_views.sql, each of which selects from `nondrill_alert`, never from
-// `alert`. They are declared `existing()`: Drizzle never creates or changes them, the migration does, and
+// db/migrations/20261003510000_resident_alert_views.sql, each of which selects from `nondrill_alert`; the entry
+// view also reads the slug from `alert`, only for a thread that its join to `nondrill_alert` has already shown is not a drill. They are declared `existing()`: Drizzle never creates or changes them, the migration does, and
 // test/db/drift.db.test.ts reads only `adapters/schema.ts`, where the tables are.
 //
 // The files of this directory may import this one and not `../schema` (the dependency rule `resident-queries-read-nondrill-only`),

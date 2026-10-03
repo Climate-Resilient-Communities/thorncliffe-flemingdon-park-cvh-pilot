@@ -19,7 +19,7 @@ export function AlertCard({ view, lang, t }: { view: AlertView; lang: LaunchCode
         <AlertText text={view.current.text} testId={`alert-card-text-${view.slug}`} />
         <OriginMark origin={view.origin} />
         <ResidentText as="p" className="alert-caption">
-          {view.times}
+          {view.cardTime}
         </ResidentText>
         <span className="alert-card__open">
           <ResidentText>{t("R03.readAlert")}</ResidentText>

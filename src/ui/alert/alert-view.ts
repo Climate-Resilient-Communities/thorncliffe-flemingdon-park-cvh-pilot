@@ -51,6 +51,8 @@ export interface EntryView {
   kindLabel: string;
   /** "10 minutes ago", from the feed's clock. */
   time: string;
+  /** The phase the entry reported ("Active problem", "Work in progress"), in the catalog's status words; null where it reported none. */
+  phase: string | null;
   text: TextView;
   /** The English the entry was written in, for "Read it in English"; null where the text is English already or it is not a machine translation. */
   english: string | null;
@@ -64,6 +66,8 @@ export interface AlertView {
   origin: OriginView;
   /** "Posted 10 minutes ago" or "Posted 10 minutes ago · Updated 2 minutes ago". */
   times: string;
+  /** The home card's one time line, as the prototype's R-03 card has it: "Posted 10 minutes ago" for one entry, "Updated 2 minutes ago" once there is an update. */
+  cardTime: string;
   /** "Valid until today at 3:00 p.m.", or null when the time has passed. */
   valid: string | null;
   /** Said when the alert's time has passed and the thread is not closed yet: "This alert reached its end time without a final update." */
@@ -110,6 +114,7 @@ function entryOf(entry: FeedEntry, serverNow: Date, t: Translate): EntryView {
     id: entry.id,
     kindLabel: t(`R07.kinds.${kinds[entry.kind] ?? "update"}`),
     time: agoText(serverNow.getTime() - new Date(entry.published_at).getTime(), timeT),
+    phase: entry.phase === "problem" ? t("status.active") : entry.phase === "in_progress" ? t("status.progress") : null,
     text,
     english: text.machine ? entry.original.body : null,
   };
@@ -150,6 +155,7 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     current: entryOf(latest, serverNow, t),
     origin: originOf(latest, t),
     times,
+    cardTime: newestFirst.length > 1 ? t("R03.updated", { t: ago(latest.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
     ended: valid === null ? t("R07.expiredNote") : null,
     unavailableTitle: t("x04.unavailable"),
