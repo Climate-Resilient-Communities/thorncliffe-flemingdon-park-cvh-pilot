@@ -57,6 +57,7 @@ const SEMANTIC_TOKENS: [string, string, string][] = [
   ["--size-symbol-hub", "--app-symbol-hub", "28px"],
   ["--size-header-resident-min", "--app-min-header-resident", "56px"],
   ["--size-topbar-hub-min", "--app-min-topbar-hub", "60px"],
+  ["--size-actions-max", "--app-max-actions", "50dvh"],
   ["--size-nav-item-resident-min", "--app-min-nav-item-resident", "64px"],
   ["--size-nav-item-resident-min-basic", "--app-min-nav-item-resident-basic", "80px"],
   ["--size-page-staff", "--app-page-staff", "1040px"],
