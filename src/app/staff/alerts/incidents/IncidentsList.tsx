@@ -2,7 +2,7 @@
 // threads, the person's own alerts, and the drills in their own labelled section. Pure: the layout tests and the screenshots render it on a view they built,
 // and the Hub home renders it on the person's own (IncidentsPanel.tsx).
 //
-// Below 800 px of content width it is one column, the main content first (what waits, the open threads, the person's alerts) and the aside (the drills)
+// Below 800 px of content width it is one column, the main content first (what waits for the person, always above the links that start something, then the open threads, the person's alerts) and the aside (the drills)
 // after it, filling the width; from 800 px two columns with the page's approved gap. A Director gets the same screen with no link to anything that
 // changes something.
 import { Grid, Stack } from "@/ui";
@@ -53,6 +53,15 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
           </p>
         )}
       </Stack>
+      {view.waiting && (
+        <section aria-labelledby="incidents-waiting-title" data-testid="incidents-waiting">
+          <Stack gap="related">
+            <h2 id="incidents-waiting-title" className="hub-wrap">{view.waiting.title}</h2>
+            <p>{view.waiting.items.length > 0 ? view.waiting.lead : view.waiting.none}</p>
+            {view.waiting.items.length > 0 && <Items items={view.waiting.items} id="waiting" />}
+          </Stack>
+        </section>
+      )}
       {view.start && (
         <nav aria-label={view.start.title} data-testid="incidents-start">
           <Stack as="ul" gap="subline">
@@ -65,15 +74,6 @@ export function IncidentsList({ view }: { view: IncidentsView }) {
             ))}
           </Stack>
         </nav>
-      )}
-      {view.waiting && (
-        <section aria-labelledby="incidents-waiting-title" data-testid="incidents-waiting">
-          <Stack gap="related">
-            <h2 id="incidents-waiting-title" className="hub-wrap">{view.waiting.title}</h2>
-            <p>{view.waiting.items.length > 0 ? view.waiting.lead : view.waiting.none}</p>
-            {view.waiting.items.length > 0 && <Items items={view.waiting.items} id="waiting" />}
-          </Stack>
-        </section>
       )}
       {view.running && (
         <section aria-labelledby="incidents-running-title" data-testid="incidents-running">

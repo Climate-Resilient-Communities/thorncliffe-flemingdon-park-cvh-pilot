@@ -136,6 +136,13 @@ describe("the incidents list as it is drawn", () => {
     expect(out).toMatch(/<p role="note" class="hub-flag hub-wrap hub-preline" data-testid="returned-note">Note from the approver: Say which floors\.\nThen submit\.<\/p>/);
   });
 
+  it("puts what waits for the person above the links that start something", () => {
+    const out = html({ waiting: [row()], mine: [] });
+    expect(out.indexOf('data-testid="incidents-waiting"')).toBeGreaterThan(-1);
+    expect(out.indexOf('data-testid="incidents-start"')).toBeGreaterThan(out.indexOf('data-testid="incidents-waiting"'));
+    expect(out.indexOf('data-testid="incidents-start"')).toBeGreaterThan(out.indexOf('data-testid="waiting-item"'));
+  });
+
   it("is only the person's own alerts for an Ambassador, and a Director has nothing to approve", () => {
     expect(html(none, "director")).not.toContain("approval");
     expect(html({ waiting: [], mine: [row({ status: "draft", submittedAt: null })] }, "ambassador")).toContain("Your alerts");

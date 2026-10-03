@@ -366,9 +366,14 @@ test("an Ambassador and a Director are refused the update pages, with the reason
         await expect(other.page.locator('p[role="alert"]')).toContainText("Only a Coordinator or an Admin can");
         await expect(other.page.locator("main form")).toHaveCount(0);
       }
-      // No list of running alerts either: they write none.
+      // An Ambassador has no list of running alerts: they write none. A Director reads the list (S04.10) and gets no link to change a thread.
       await other.page.goto("/staff");
-      await expect(other.page.getByTestId("incidents-running")).toHaveCount(0);
+      if (role === "ambassador") {
+        await expect(other.page.getByTestId("incidents-running")).toHaveCount(0);
+      } else {
+        await expect(other.page.getByTestId("incidents-running")).toHaveCount(1);
+        await expect(other.page.getByTestId("incidents-running").getByRole("link")).toHaveCount(0);
+      }
     } finally {
       await other.context.close();
     }
