@@ -22,13 +22,13 @@ import {
   createSearch,
   currentSearchFacts,
   supabaseDirectoryStorage,
-  warmCohere,
   type CohereEmbedClient,
   type DirectoryStorage,
   type SearchDeps,
   type SearchObservation,
 } from "@/modules/directory";
 import { monthlyUsage } from "@/modules/spend";
+import { createCohereRestClient } from "@/platform/cohere/restClient";
 import { TRANSLATE_SPEND_KIND, cohereTranslator, createQuestionTranslator, type CohereChatClient } from "@/modules/translation";
 import { SearchV1Schema } from "@/contracts/searchTestSet";
 import type { SearchSettings } from "@/platform/config/env";
@@ -147,13 +147,12 @@ export async function readCohereCallsThisMonth(env: ProductionEnv): Promise<numb
 
 /** The real engine: the production database, Cohere and the private bucket, from the run's settings. */
 export async function makeProductionEngine(env: ProductionEnv, options: { translatedLeg: boolean }): Promise<TuningEngine> {
-  const { CohereClient } = await warmCohere();
-  const cohere = new CohereClient({ token: env.cohereApiKey });
+  const cohere = createCohereRestClient({ apiKey: env.cohereApiKey });
   return engineFrom(
     {
       db: createDb(env.databaseUrl, { max: 2 }),
       storage: supabaseDirectoryStorage({ url: env.supabaseUrl, secretKey: env.supabaseSecretKey }),
-      clients: { embed: cohere as unknown as CohereEmbedClient, chat: cohere as unknown as CohereChatClient },
+      clients: { embed: cohere, chat: cohere },
       settings: env.search,
     },
     options,

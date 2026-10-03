@@ -13,22 +13,15 @@
 // warns ops when a translation model nears its monthly limit (SEARCH_TRANSLATE_MONTHLY_CALLS).
 import "server-only";
 import { after } from "next/server";
-import { cohereQueryEmbedder, createSearch, warmCohere, type SearchService } from "@/modules/directory";
+import { cohereQueryEmbedder, createSearch, type SearchService } from "@/modules/directory";
 import { recordOpsEvent } from "@/modules/ops";
 import { createRateLimiter, rateLimitKeyFromSecret, type RateLimiter } from "@/modules/subscriptions";
-import { cohereTranslator, createQuestionTranslator, warmCohereTranslator, type QuestionRoute, type QuestionTranslator } from "@/modules/translation";
+import { cohereTranslator, createQuestionTranslator, type QuestionRoute, type QuestionTranslator } from "@/modules/translation";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 import { directoryStorage } from "./directoryRelease";
 import { recordSearchNote } from "./searchOps";
 import { translateQuotaWatch } from "./translateQuota";
-
-// Where a key is configured, the vendor's SDK is imported when this module loads, so the first search on an instance does
-// not pay the import inside its 2.2 s. (The key is read from the process environment here; getEnv validates it on first use.)
-if (process.env.COHERE_API_KEY?.trim()) {
-  warmCohere().catch(() => undefined);
-  warmCohereTranslator().catch(() => undefined);
-}
 
 let service: SearchService | undefined;
 let limiter: RateLimiter | undefined;

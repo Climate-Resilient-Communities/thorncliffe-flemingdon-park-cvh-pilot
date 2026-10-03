@@ -33,9 +33,15 @@ export type DbExecutor = Db | DbTransaction;
  */
 export const DB_POOL_MAX = 10;
 
+/**
+ * How long one connection attempt may take before it fails (postgres.js's default is 30 s, which would outlast the search's
+ * whole budget and a function's maxDuration). A pooler answers a connect in tens of milliseconds, even cold.
+ */
+export const DB_CONNECT_TIMEOUT_SECONDS = 5;
+
 /** Creates a client for a pooler URL. No connection is opened until the first query. */
-export function createDb(url: string, options: { max?: number } = {}): Db {
-  const client = postgres(url, { prepare: false, max: options.max ?? DB_POOL_MAX });
+export function createDb(url: string, options: { max?: number; connectTimeoutSeconds?: number } = {}): Db {
+  const client = postgres(url, { prepare: false, max: options.max ?? DB_POOL_MAX, connect_timeout: options.connectTimeoutSeconds ?? DB_CONNECT_TIMEOUT_SECONDS });
   return drizzle({ client });
 }
 
