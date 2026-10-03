@@ -1,0 +1,428 @@
+/*
+ * The alert screens (S04.08): the card on home (R-03's .cvh-acard), alert detail (R-07), "what verified means" (R-28) and the marks they share:
+ * the disruption types (X-13, .cvh-dtype), the origin and verification marker (X-02, .cvh-origin and .cvh-verify), the machine-translation label
+ * and the note for a text that is not available in the language (X-04, .cvh-mt and .cvh-unavailable). Ports of those rules of the prototype
+ * (design/prototype/cvh/cvh.css), with spacing from the semantic tokens and direction from logical properties only, so the screens mirror in Urdu,
+ * Pashto and Dari without a [dir] rule. A mark is always its words and its shape together, never colour alone. Touch targets are the tap size.
+ */
+@layer components {
+  .alert-card-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  /* The card on home: the whole card is the link to the alert (R-07). */
+  .alert-card {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    box-sizing: border-box;
+    padding: var(--inset-card);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--text);
+    text-decoration: none;
+  }
+
+  .alert-card:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .alert-card__open {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+
+  .alert-text {
+    margin: 0;
+    font-size: var(--type-alert-size);
+    overflow-wrap: anywhere;
+    white-space: pre-line;
+  }
+
+  .alert-caption {
+    margin: 0;
+    font-size: var(--type-caption-size);
+    color: var(--text-muted);
+  }
+
+  .alert-strong {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  /* X-13: each disruption type is its icon in a disc and its words. */
+  .alert-types {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-type-grid-block) var(--gap-type-grid-inline);
+    margin: 0;
+    padding: 0;
+    font-size: inherit;
+    font-weight: 700;
+  }
+
+  .alert-type {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    color: var(--ink);
+    font-size: var(--type-body-size);
+    font-weight: 700;
+  }
+
+  .alert-type__disc {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--tap-current);
+    block-size: var(--tap-current);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-disc);
+    background-color: var(--surface-raised);
+  }
+
+  .alert-types--lg .alert-type {
+    font-size: var(--type-lead-size);
+  }
+
+  .alert-types--lg .alert-type__disc {
+    inline-size: calc(var(--tap-current) * 1.25);
+    block-size: calc(var(--tap-current) * 1.25);
+  }
+
+  /* X-02: who sent it, and whether the Hub checked it. */
+  .alert-origin {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+  }
+
+  .alert-origin__who {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-tight);
+    font-size: var(--type-caption-size);
+    color: var(--text);
+  }
+
+  .alert-origin__mark {
+    display: inline-flex;
+    flex: none;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    inline-size: var(--tap-current);
+    block-size: var(--tap-current);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-disc);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .alert-origin__level {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .alert-verify {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    box-sizing: border-box;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border-radius: var(--radius-card);
+    font-size: var(--type-body-size);
+    font-weight: 700;
+    text-align: start;
+    text-decoration: none;
+  }
+
+  /* Verified: filled. Not yet verified: outlined, so the two differ in shape and in words as well as in colour. */
+  .alert-verify--verified {
+    background-color: var(--ink);
+    color: var(--on-deep);
+  }
+
+  .alert-verify--unverified {
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    box-shadow: inset 0 0 0 2px var(--ink);
+  }
+
+  a.alert-verify:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .alert-verify__more {
+    margin-inline-start: var(--gap-subline);
+    font-size: var(--type-caption-size);
+    font-weight: 400;
+    text-decoration: underline;
+  }
+
+  /* X-04: a text a machine translated says so, and the English it was made from is one tap away. */
+  .alert-mt {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-subline) var(--gap-tight);
+    font-size: var(--type-caption-size);
+    color: var(--text);
+  }
+
+  .alert-mt__label {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--gap-label);
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border-radius: var(--radius-card);
+    background-color: color-mix(in srgb, var(--ink) 8%, var(--surface-raised));
+    color: var(--ink);
+    font-weight: 700;
+  }
+
+  .alert-english {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+  }
+
+  .alert-english > summary {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    min-block-size: var(--tap-current);
+    color: var(--accent-text);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    text-decoration: underline;
+    text-underline-offset: 3px;
+    cursor: pointer;
+  }
+
+  .alert-english > summary:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .alert-english__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    padding-inline-start: var(--gap-tight);
+    border-inline-start: 2px solid var(--border);
+  }
+
+  /* The text is English because it could not be translated: a note, not an error. */
+  .alert-unavailable,
+  .alert-note {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-tight);
+    padding: var(--inset-card-compact);
+    border: 1.5px dashed var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .alert-unavailable__body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+  }
+
+  .alert-back {
+    display: inline-flex;
+    align-items: center;
+    align-self: start;
+    gap: var(--gap-label);
+    min-block-size: var(--tap-current);
+    color: var(--accent-text);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .alert-article {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+    min-inline-size: 0;
+  }
+
+  /* What to do: a destination for each guide, the prototype's .cvh-dest. */
+  .alert-actions {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+  }
+
+  .alert-dest {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-icon);
+    box-sizing: border-box;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-tight);
+    padding-inline: var(--gap-icon);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-size: var(--type-lead-size);
+    font-weight: 700;
+    text-decoration: none;
+  }
+
+  .alert-dest:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .alert-dest__label {
+    flex: 1;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .alert-section {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+  }
+
+  /* R-07's thread: every entry, newest first, with the latest marked. */
+  .alert-thread {
+    display: flex;
+    flex-direction: column;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .alert-entry {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-label);
+    padding-block: var(--gap-tight);
+    padding-inline-start: var(--gap-icon);
+    border-inline-start: 3px solid var(--border);
+  }
+
+  .alert-entry--latest {
+    border-inline-start-color: var(--ink);
+  }
+
+  .alert-entry__kind {
+    display: inline-flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: var(--gap-label);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .alert-entry__time {
+    font-weight: 400;
+    color: var(--text-muted);
+  }
+
+  .alert-tag {
+    padding-block: var(--offset-align-hairline);
+    padding-inline: var(--gap-label);
+    border: 1.5px solid var(--ink);
+    border-radius: var(--radius-card);
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+  }
+
+  /* R-28: the words you will see on alerts. */
+  .alert-legend {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-related);
+    margin: 0;
+    padding: 0;
+    list-style: none;
+  }
+
+  .alert-legend__item {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-tight);
+  }
+
+  .alert-legend__body {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: var(--gap-subline);
+    min-inline-size: 0;
+  }
+
+  .alert-this {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    padding: var(--inset-card);
+    border: 2px solid var(--ink);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .alert-eyebrow {
+    margin: 0;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .alert-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--gap-label);
+    box-sizing: border-box;
+    min-block-size: var(--tap-current);
+    padding-block: var(--gap-label);
+    padding-inline: var(--inset-button-large-inline);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font-weight: 700;
+    text-align: center;
+    text-decoration: none;
+  }
+
+  .alert-button:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}

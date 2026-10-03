@@ -188,6 +188,35 @@ describe("dependency rules", () => {
     expect(violations.filter((v) => v.from.includes("modules/messaging/"))).toEqual([]);
   });
 
+  it("reject a resident query importing the alert tables, and allow it the nondrill views, its tests and the lifecycle's own code the tables (AD-6)", async () => {
+    const { cruised, violations } = await check("deps-resident-queries");
+
+    expect(cruised).toBe(7);
+    expect(violations).toEqual([
+      {
+        rule: "resident-queries-read-nondrill-only",
+        from: at("deps-resident-queries", "modules/alerting/adapters/resident/readEverything.ts"),
+        to: at("deps-resident-queries", "modules/alerting/adapters/schema.ts"),
+      },
+    ]);
+  });
+
+  it("covers every file of resident/ whatever it is named, and nothing outside that folder", () => {
+    const rule = options.ruleSet?.forbidden?.find((candidate) => candidate.name === "resident-queries-read-nondrill-only") as { from: { path: string; pathNot: string }; to: { path: string } } | undefined;
+    const from = (file: string) => new RegExp(rule?.from.path ?? "$^").test(file) && !new RegExp(rule?.from.pathNot ?? "$^").test(file);
+
+    expect(rule).toBeDefined();
+    const files = readdirSync("src/modules/alerting/adapters/resident");
+    expect(files.length).toBeGreaterThan(0);
+    for (const name of files.filter((file) => !/\.test\.tsx?$/.test(file))) expect(from(`src/modules/alerting/adapters/resident/${name}`), name).toBe(true);
+    expect(from("src/modules/alerting/adapters/resident/deeper/query.ts")).toBe(true);
+    for (const file of ["src/modules/alerting/adapters/schema.ts", "src/modules/alerting/application/lifecycle.ts", "src/modules/alerting/adapters/resident/readThreads.test.ts"]) {
+      expect(from(file), file).toBe(false);
+    }
+    expect(new RegExp(rule?.to.path ?? "$^").test("src/modules/alerting/adapters/schema.ts")).toBe(true);
+    expect(new RegExp(rule?.to.path ?? "$^").test("src/modules/alerting/adapters/resident/views.ts")).toBe(false);
+  });
+
   it("reject the audience matcher importing anything but zod and the contract files beside it", async () => {
     const { violations } = await check("deps-matcher-contract");
 
