@@ -1213,6 +1213,23 @@
     suggestApply: 'Show only {place}' } });
   /* AD-11 pilot change (product owner, 2026-10-03): an ordinary directory description a model translated and no person has reviewed yet is shown with this label, its English original one tap away (x04.showSource). */
   m(en, { x04: { unreviewed: 'Machine-translated; not reviewed by a person' } });
+  /* The resident map at /{lang}/map (S02.07, FR-D3, UX-DR12): R-14 (map), R-15 (list) and R-16 (preview) as the pilot has them, over the directory's release file and the pilot buildings. Not prototype wording: the prototype's map had no real tiles, no offline state and no buildings. */
+  m(en, { map: {
+    lead: 'Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.',
+    service: 'Service or organisation',
+    building: 'Apartment building',
+    pinName: '{name}: {kind}',
+    noSignal: 'The map is not available without signal',
+    noSignalBody: 'The list shows every place the map has.',
+    notSaved: 'This part of the map is not saved on your phone',
+    notSavedBody: 'Parts of the map you looked at with signal stay on your phone. The pins and the list still work.',
+    listTitle: 'Places on this part of the map',
+    listLead: 'The same places the map shows. Move or zoom the map to change this list.',
+    listEmpty: 'Nothing on this part of the map. Move or zoom the map, or show the whole area.',
+    wholeArea: 'Show the whole area',
+    buildings: 'Apartment buildings',
+    buildingsCount: '{n} buildings', buildingsCountOne: '1 building',
+    filtered: 'Showing only the places that match the filters you chose in the directory.' } });
   /* The guides and the essential numbers a resident reads at /{lang}/ready (S02.10, FR-D7). Wording the prototype's R-24, R-25 and R-31 did not need because their text was fixed English. */
   m(en, {
     R24: { none: 'The guides could not be loaded right now. If someone is in danger, call 911.' },

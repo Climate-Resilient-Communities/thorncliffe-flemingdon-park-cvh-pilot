@@ -1351,4 +1351,25 @@
  });
   /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
   m(t, { "x04": { "unreviewed": "Isinalin ng makina; hindi pa nasuri ng tao" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "Mga serbisyo, organisasyon at gusali ng apartment sa Thorncliffe Park at Flemingdon Park. I-tap ang isang pin para makita kung ano ito.",
+    "service": "Serbisyo o organisasyon",
+    "building": "Gusali ng apartment",
+    "pinName": "{name}: {kind}",
+    "noSignal": "Hindi magagamit ang mapa nang walang signal",
+    "noSignalBody": "Nasa listahan ang lahat ng lugar na nasa mapa.",
+    "notSaved": "Hindi naka-save sa iyong telepono ang bahaging ito ng mapa",
+    "notSavedBody": "Nananatili sa iyong telepono ang mga bahagi ng mapa na tiningnan mo nang may signal. Gumagana pa rin ang mga pin at ang listahan.",
+    "listTitle": "Mga lugar sa bahaging ito ng mapa",
+    "listLead": "Ang parehong mga lugar na ipinapakita ng mapa. Igalaw o i-zoom ang mapa para baguhin ang listahang ito.",
+    "listEmpty": "Walang nandito sa bahaging ito ng mapa. Igalaw o i-zoom ang mapa, o ipakita ang buong lugar.",
+    "wholeArea": "Ipakita ang buong lugar",
+    "buildings": "Mga gusali ng apartment",
+    "buildingsCount": "{n} gusali",
+    "buildingsCountOne": "1 gusali",
+    "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter na pinili mo sa direktoryo."
+   }
+  });
 })();

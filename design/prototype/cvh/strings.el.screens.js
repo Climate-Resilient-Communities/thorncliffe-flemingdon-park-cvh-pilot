@@ -1338,4 +1338,25 @@
  });
   /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
   m(t, { "x04": { "unreviewed": "Μετάφραση από μηχανή· δεν έχει ελεγχθεί από άνθρωπο" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "Υπηρεσίες, οργανισμοί και πολυκατοικίες στο Thorncliffe Park και στο Flemingdon Park. Πατήστε μια καρφίτσα για να δείτε τι είναι.",
+    "service": "Υπηρεσία ή οργανισμός",
+    "building": "Πολυκατοικία",
+    "pinName": "{name}: {kind}",
+    "noSignal": "Ο χάρτης δεν είναι διαθέσιμος χωρίς σήμα",
+    "noSignalBody": "Η λίστα έχει όλα τα μέρη του χάρτη.",
+    "notSaved": "Αυτό το μέρος του χάρτη δεν είναι αποθηκευμένο στο τηλέφωνό σας",
+    "notSavedBody": "Τα μέρη του χάρτη που είδατε με σήμα μένουν στο τηλέφωνό σας. Οι καρφίτσες και η λίστα λειτουργούν κανονικά.",
+    "listTitle": "Μέρη σε αυτό το τμήμα του χάρτη",
+    "listLead": "Τα ίδια μέρη που δείχνει ο χάρτης. Μετακινήστε ή μεγεθύνετε τον χάρτη για να αλλάξει η λίστα.",
+    "listEmpty": "Δεν υπάρχει τίποτα σε αυτό το τμήμα του χάρτη. Μετακινήστε ή μεγεθύνετε τον χάρτη, ή δείτε όλη την περιοχή.",
+    "wholeArea": "Δείτε όλη την περιοχή",
+    "buildings": "Πολυκατοικίες",
+    "buildingsCount": "{n} κτίρια",
+    "buildingsCountOne": "1 κτίριο",
+    "filtered": "Εμφανίζονται μόνο τα μέρη που ταιριάζουν με τα φίλτρα που επιλέξατε στον κατάλογο."
+   }
+  });
 })();

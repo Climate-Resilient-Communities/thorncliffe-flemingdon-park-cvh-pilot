@@ -1362,4 +1362,25 @@
  });
   /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
   m(t, { "x04": { "unreviewed": "Traducción automática; no revisada por una persona" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "Servicios, organizaciones y edificios de apartamentos en Thorncliffe Park y Flemingdon Park. Toque un marcador para ver qué es.",
+    "service": "Servicio u organización",
+    "building": "Edificio de apartamentos",
+    "pinName": "{name}: {kind}",
+    "noSignal": "El mapa no está disponible sin señal",
+    "noSignalBody": "La lista tiene todos los lugares del mapa.",
+    "notSaved": "Esta parte del mapa no está guardada en su teléfono",
+    "notSavedBody": "Las partes del mapa que vio con señal se quedan en su teléfono. Los marcadores y la lista siguen funcionando.",
+    "listTitle": "Lugares en esta parte del mapa",
+    "listLead": "Los mismos lugares que muestra el mapa. Mueva el mapa o haga zoom para cambiar esta lista.",
+    "listEmpty": "No hay nada en esta parte del mapa. Mueva el mapa o haga zoom, o muestre toda la zona.",
+    "wholeArea": "Mostrar toda la zona",
+    "buildings": "Edificios de apartamentos",
+    "buildingsCount": "{n} edificios",
+    "buildingsCountOne": "1 edificio",
+    "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
+   }
+  });
 })();

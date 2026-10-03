@@ -1338,4 +1338,25 @@
  });
   /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
   m(t, { "x04": { "unreviewed": "مشین سے ترجمہ؛ کسی شخص نے اس کا جائزہ نہیں لیا" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "تھارن کلف پارک اور فلیمنگڈن پارک میں خدمات، تنظیمیں اور اپارٹمنٹ عمارتیں۔ کوئی پن ٹیپ کریں تو پتا چلے گا کہ وہ کیا ہے۔",
+    "service": "خدمت یا تنظیم",
+    "building": "اپارٹمنٹ عمارت",
+    "pinName": "{name}: {kind}",
+    "noSignal": "سگنل کے بغیر نقشہ دستیاب نہیں",
+    "noSignalBody": "فہرست میں وہ تمام جگہیں ہیں جو نقشے پر ہیں۔",
+    "notSaved": "نقشے کا یہ حصہ آپ کے فون پر محفوظ نہیں",
+    "notSavedBody": "سگنل کے ساتھ دیکھے گئے نقشے کے حصے آپ کے فون پر رہتے ہیں۔ پن اور فہرست اب بھی کام کرتے ہیں۔",
+    "listTitle": "نقشے کے اس حصے کی جگہیں",
+    "listLead": "وہی جگہیں جو نقشہ دکھاتا ہے۔ یہ فہرست بدلنے کے لیے نقشے کو ہلائیں یا زوم کریں۔",
+    "listEmpty": "نقشے کے اس حصے میں کچھ نہیں۔ نقشے کو ہلائیں یا زوم کریں، یا پورا علاقہ دکھائیں۔",
+    "wholeArea": "پورا علاقہ دکھائیں",
+    "buildings": "اپارٹمنٹ عمارتیں",
+    "buildingsCount": "{n} عمارتیں",
+    "buildingsCountOne": "1 عمارت",
+    "filtered": "صرف وہ جگہیں دکھائی جا رہی ہیں جو ڈائریکٹری میں آپ کے چنے ہوئے فلٹرز سے ملتی ہیں۔"
+   }
+  });
 })();

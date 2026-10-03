@@ -1351,4 +1351,25 @@
  });
   /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
   m(t, { "x04": { "unreviewed": "د ماشین ژباړه؛ د کوم انسان له خوا نه ده کتل شوې" } });
+  /* The resident map (S02.07): the "map" strings. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "map": {
+    "lead": "په Thorncliffe Park او Flemingdon Park کې خدمتونه، سازمانونه او د اپارتمانونو ودانۍ. پر یوې نښې ټک وکړئ چې وګورئ څه دی.",
+    "service": "خدمت یا سازمان",
+    "building": "د اپارتمانونو ودانۍ",
+    "pinName": "{name}: {kind}",
+    "noSignal": "نقشه پرته له سیګنال نه نشته",
+    "noSignalBody": "لیست هغه ټول ځایونه لري چې په نقشه کې دي.",
+    "notSaved": "د نقشې دا برخه ستاسو په تلیفون کې نه ده خوندي شوې",
+    "notSavedBody": "د نقشې هغه برخې چې تاسو له سیګنال سره لیدلې، ستاسو په تلیفون کې پاتې کېږي. نښې او لیست لا هم کار کوي.",
+    "listTitle": "د نقشې په دې برخه کې ځایونه",
+    "listLead": "هماغه ځایونه چې نقشه یې ښيي. د دې لیست د بدلولو لپاره نقشه وښوروئ یا لویه او کوچنۍ کړئ.",
+    "listEmpty": "د نقشې په دې برخه کې هېڅ نشته. نقشه وښوروئ یا لویه او کوچنۍ کړئ، یا ټوله سیمه وښیاست.",
+    "wholeArea": "ټوله سیمه وښیاست",
+    "buildings": "د اپارتمانونو ودانۍ",
+    "buildingsCount": "{n} ودانۍ",
+    "buildingsCountOne": "1 ودانۍ",
+    "filtered": "یوازې هغه ځایونه ښودل کېږي چې په لارښود کې ستاسو له ټاکل شویو فلټرونو سره سمون لري."
+   }
+  });
 })();

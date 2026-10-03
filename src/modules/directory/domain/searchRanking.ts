@@ -7,6 +7,8 @@
 //  (4) return the top 5. Providers below the threshold are never added to fill the list.
 export const MAX_RESULTS = 5;
 export const RRF_K = 60;
+/** The emergency-only threshold when none is configured (SEARCH_EMERGENCY_THRESHOLD, owner decision 41). */
+export const DEFAULT_EMERGENCY_THRESHOLD = 0.25;
 
 export interface SearchHit {
   provider_id: string;
@@ -56,4 +58,23 @@ export function rankLegs(legs: readonly LegSimilarities[], threshold: number): S
 /** True when any result is a provider of an emergency category. */
 export function emergencyFirst(results: readonly SearchHit[], emergencyProviders: ReadonlySet<string>): boolean {
   return results.some((hit) => emergencyProviders.has(hit.provider_id));
+}
+
+/** How many of a leg's best providers the emergency fail-safe looks at (owner decision 41). */
+export const EMERGENCY_TOP_K = 3;
+
+/**
+ * The emergency fail-safe (owner decision 41): true when a provider of an emergency category is among the top
+ * EMERGENCY_TOP_K of any completed leg (by similarity, ties by id as in the ranking) and its similarity there is at least
+ * `threshold`, the emergency-only threshold (never above the release's). It looks at the legs, not at the results, so it
+ * holds when nothing reaches the release's threshold. The caller only ever ORs it into `emergency_first`.
+ */
+export function emergencyInTop(legs: readonly LegSimilarities[], emergencyProviders: ReadonlySet<string>, threshold: number): boolean {
+  return legs.some((leg) =>
+    [...leg]
+      .map(([id, score]) => ({ provider_id: id, score }))
+      .sort(byScoreThenId)
+      .slice(0, EMERGENCY_TOP_K)
+      .some((hit) => hit.score >= threshold && emergencyProviders.has(hit.provider_id)),
+  );
 }

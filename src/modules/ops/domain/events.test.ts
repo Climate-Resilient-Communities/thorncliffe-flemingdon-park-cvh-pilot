@@ -56,6 +56,14 @@ describe("ops events", () => {
     for (const detail of [{ reason: "the question was ...", ms: 1 }, { reason: "timed_out", ms: 1, q: "x" }, { reason: "timed_out" }]) {
       expect(() => toOpsEventRecord({ kind: "search.unavailable", detail } as never)).toThrow(OpsEventError);
     }
+    // A vendor call of a leg failed while the other leg answered (S03.05).
+    expect(toOpsEventRecord({ kind: "search.leg_failed", subjectType: "directory_release", subjectId: "2", detail: { reason: "translate_failed", ms: 900 } })).toMatchObject({
+      severity: "warning",
+      detail: { reason: "translate_failed", ms: 900 },
+    });
+    for (const detail of [{ reason: "timed_out", ms: 1 }, { reason: "embed_failed", ms: 1, q: "x" }, { reason: "embed_failed" }]) {
+      expect(() => toOpsEventRecord({ kind: "search.leg_failed", detail } as never)).toThrow(OpsEventError);
+    }
   });
 
   it("names the publish failure reasons the directory job gives", () => {

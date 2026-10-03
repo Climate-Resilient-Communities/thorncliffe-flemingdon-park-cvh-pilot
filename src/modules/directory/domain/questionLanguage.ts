@@ -141,3 +141,29 @@ export function detect(q: string, pageLang: LangCode): QuestionLanguage {
   const lang = latinLanguage(detected, pageLang);
   return lang ? outcome(lang, "confident", pageLang) : outcome(null, "romanized_or_mixed", pageLang);
 }
+
+/** How far below its best language eld may score English for a one- or two-word question to still count as English. */
+const CLEARLY_ENGLISH_MARGIN = 0.12;
+
+/**
+ * True for a short Latin-letter question that is plainly English, so that translating it to English cannot add anything.
+ * "lawyer", "rent" and "car repair" are `romanized_or_mixed` only because eld cannot tell one or two English words from a
+ * Latin launch language ("rent": da and sv at 0.80, English nowhere; "car repair": fr 0.73, en 0.71). It is true when the
+ * question has only Latin letters, no romanized South Asian marker (strong or ambiguous), at most two words, and eld does
+ * not reliably read it as another language (English within CLEARLY_ENGLISH_MARGIN of its best counts as English).
+ *
+ * Longer questions are never skipped here, though eld may read them as English: the test set has romanized questions that
+ * eld reads as reliably English without any marker ("free english class kothay", "mane english classes joie che free ma"),
+ * and those are what the translated leg is for.
+ */
+export function isClearlyEnglish(q: string): boolean {
+  const letters = q.match(/\p{L}/gu) ?? [];
+  if (letters.length === 0 || !letters.every((letter) => LATIN.test(letter))) return false;
+  const words = q.toLowerCase().match(/\p{L}+/gu) ?? [];
+  if (words.length > 2 || words.some((w) => ROMANIZED_WORDS.has(w) || AMBIGUOUS_ROMANIZED_WORDS.has(w))) return false;
+  const detected = eld.detect(q);
+  const scores = detected.getScores();
+  const best = Math.max(0, ...Object.values(scores));
+  const english = scores.en ?? 0;
+  return !(detected.isReliable() && english < best - CLEARLY_ENGLISH_MARGIN);
+}
