@@ -101,6 +101,9 @@ export interface DeliveryRecipient {
   kind: RecipientKind;
   /** Null once the recipient was deleted: there is no number to find. */
   id: string | null;
+  /** What the text is (S06.02): its kind and, for a transactional or campaign text, its purpose, so the source can judge whether the recipient is still eligible for it. */
+  deliveryKind?: DeliveryKind;
+  purpose?: string | null;
 }
 
 /** The number, in memory, or that the recipient is gone (deleted, expired, left the roster): the caller then skips the row. */
@@ -118,12 +121,14 @@ export interface ContactResolver {
 
 /**
  * Port, implemented by each module that owns recipients (subscriptions, identity, ops): the E.164 number held for one
- * recipient id, read through `tx`, or null when the recipient no longer exists or is no longer eligible. With
- * `consume`, the source locks the row `FOR UPDATE`, reads the number and deletes the row in `tx` (the
+ * recipient id, read through `tx`, or null when the recipient no longer exists or is no longer eligible. `deliveryKind` and
+ * `purpose` say what the text is, because eligibility depends on it (E06 "Sendable (`transactional`)": a confirmation only to a
+ * still-pending sign-up, other subscriber texts only to a receiving subscriber, on-call texts only to a number still on the roster,
+ * `signup_info` only before its row's `expires_at`). With `consume`, the source locks the row `FOR UPDATE`, reads the number and deletes the row in `tx` (the
  * `inbound_reply` rule). The number is the source's own data: messaging never writes it anywhere.
  */
 export interface RecipientNumberSource {
-  numberOf(tx: DbTransaction, recipientId: string, options: { consume: boolean }): Promise<string | null>;
+  numberOf(tx: DbTransaction, recipientId: string, options: { consume: boolean; deliveryKind?: DeliveryKind; purpose?: string | null }): Promise<string | null>;
 }
 
 /** Which source answers for each kind of recipient; a kind with none cannot be resolved (and says so loudly). */

@@ -12,6 +12,9 @@ import { createSubmitter, type AlertSubmitter } from "./application/submit";
 import type { FreezeResult } from "./application/ports";
 import type { FreezeInput } from "./application/freezeContent";
 
+/** What the sender's hand-off point reads about an alert delivery's entry and thread (messaging's AlertStandingReader port, S06.02). */
+export { alertStandingReader, isClosingEntry } from "./adapters/handOffStanding";
+
 export interface AlertingWiring {
   db: Db;
   /** Test seams. */

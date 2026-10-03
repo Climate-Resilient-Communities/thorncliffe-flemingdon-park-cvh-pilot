@@ -205,7 +205,7 @@ describe("the delivery table", () => {
     const columns = await owner`select column_name from information_schema.columns where table_schema = 'public' and table_name = 'delivery' order by column_name`;
     expect(columns.map((c) => c.column_name)).toEqual(
       [
-        "attempts", "body", "callback_ref", "campaign_id", "channel", "claim_token", "claimed_at", "claimed_by", "completed_at", "cost_estimate_cents",
+        "attempts", "body", "callback_ref", "campaign_id", "channel", "claim_rank", "claim_token", "claimed_at", "claimed_by", "completed_at", "cost_estimate_cents",
         "created_at", "created_by_module", "due_at", "entry_id", "handed_off_at", "id", "idempotency_key", "kind", "lang", "provider_error_code",
         "provider_message_id", "purpose", "recipient_id", "recipient_kind", "segments", "send_by", "state", "submitted_at", "updated_at",
       ].sort(),
