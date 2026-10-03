@@ -5,8 +5,9 @@ import { isNineOneOneFirst } from "@/modules/messaging";
 import { alerting } from "../../alerts";
 import { previewEntrySms } from "../../freezeEntry";
 import { buildings } from "../../places";
+import { composerOf } from "../pages";
 import { composerLocation } from "./editDraft";
-import { composerScreen, missingComposer, type ComposerMode, type ComposerScreen, type MissingComposer } from "./view";
+import { composerScreen, isFollowUpMode, missingComposer, modeOfFrom, type ComposerMode, type ComposerScreen, type MissingComposer } from "./view";
 
 export interface ComposerQuery {
   alert?: string | string[];
@@ -18,7 +19,9 @@ const first = (value: string | string[] | undefined) => (Array.isArray(value) ? 
 
 /**
  * The composer for the entry `?alert=<id>&entry=<id>` names, or the screen for an entry that is not there. An acknowledgement belongs
- * to the acknowledgement composer and a full alert to the alert composer: the other page sends the person to the right one.
+ * to the acknowledgement composer, the thread's first full alert to the alert composer, and an update that follows other entries to the update
+ * composer ("Promote to full alert" while every earlier entry is an acknowledgement, "Add an update" after that, S05.01): the other page sends the
+ * person to the right one, keeping the notice that a draft was saved.
  */
 export async function loadComposer(mode: ComposerMode, query: ComposerQuery, now: Date = new Date()): Promise<ComposerScreen | MissingComposer> {
   const alertId = first(query.alert);
@@ -27,8 +30,8 @@ export async function loadComposer(mode: ComposerMode, query: ComposerQuery, now
   const ref = { alertId, entryId };
   const state = await alerting().entryState(ref);
   if (!state) return missingComposer();
-  const rightMode: ComposerMode = state.entry.kind === "ack" ? "ack" : "alert";
-  if (rightMode !== mode) redirect(composerLocation(state.entry.kind, ref));
+  const rightFrom = composerOf(state.entry.kind, state.priorKinds);
+  if (modeOfFrom(rightFrom) !== mode) redirect(composerLocation(state.entry.kind, ref, first(query.saved) === "1" ? { saved: "1" } : {}, rightFrom));
   const { entry, thread } = state;
   const preview =
     entry.status === "draft"
@@ -37,5 +40,7 @@ export async function loadComposer(mode: ComposerMode, query: ComposerQuery, now
           nineOneOneFirst: isNineOneOneFirst(entry.content.types),
         }
       : null;
-  return composerScreen({ mode, state, plans: await buildings().listFloorPlans(), preview, saved: first(query.saved) === "1", now });
+  // An update shows the running alert it adds to, and what it changes about who the alert is for.
+  const summary = isFollowUpMode(mode) ? await alerting().threadSummary(alertId) : null;
+  return composerScreen({ mode, state, plans: await buildings().listFloorPlans(), preview, saved: first(query.saved) === "1", now, thread: summary });
 }

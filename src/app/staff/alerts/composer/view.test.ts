@@ -270,6 +270,19 @@ describe("an entry that can no longer be changed here", () => {
   });
 });
 
+describe("an entry of a thread that has closed", () => {
+  it("is locked with the closed note, draft or pending, with no form: the save, the submit and the approval would all be refused", () => {
+    for (const entry of [{ status: "draft" as const }, { status: "pending_approval" as const, version: 2, contentHash: "d".repeat(64), submittedAt: NOW }]) {
+      const state = stateOf({ entry });
+      const screen = composerScreen(input({ preview: null, state: { ...state, thread: { ...state.thread, status: "closed" } } }));
+      expect(screen.status, entry.status).toBe("locked");
+      expect(screen.locked, entry.status).toBe("This alert is closed.");
+      expect(screen.draft).toBeUndefined();
+      expect(screen.pending).toBeUndefined();
+    }
+  });
+});
+
 describe("the words the screen carries for the browser", () => {
   const { messages } = composerScreen(input());
 

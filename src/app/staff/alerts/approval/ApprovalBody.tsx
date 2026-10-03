@@ -47,6 +47,7 @@ function Bound({ screen, reviewed }: { screen: ApprovalScreen; reviewed?: string
       <input type="hidden" name="entry" value={screen.ref.entryId} />
       <input type="hidden" name="version" value={screen.binding.version} />
       <input type="hidden" name="hash" value={screen.binding.contentHash} />
+      {screen.binding.covering !== undefined && <input type="hidden" name="covering" value={screen.binding.covering} />}
       {reviewed !== undefined && <input type="hidden" name="reviewed" value={reviewed} />}
     </>
   );
@@ -178,6 +179,11 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
             {screen.header.by}
           </p>
         )}
+        {screen.header.update && (
+          <p role="note" className="hub-flag hub-wrap" data-testid="update-note">
+            {screen.header.update}
+          </p>
+        )}
       </Stack>
       {screen.locked && (
         <section data-testid="locked">
@@ -275,6 +281,21 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
             <strong>{facts.audience.label}</strong> <span data-testid="audience-sentence">{facts.audience.sentence}</span>{" "}
             <span data-testid="audience-groups">{facts.audience.groups}</span>
           </p>
+          {/* An update that changes who it is for says so right under who it is for: what it newly reaches, and what it no longer reaches (S05.01). */}
+          {facts.audience.change && (
+            <Stack gap="subline" testId="audience-change">
+              {facts.audience.change.alsoFor && (
+                <p role="note" className="hub-flag hub-wrap" data-testid="audience-also-for">
+                  {facts.audience.change.alsoFor}
+                </p>
+              )}
+              {facts.audience.change.noLongerFor && (
+                <p role="note" className="hub-flag hub-wrap" data-testid="audience-no-longer-for">
+                  {facts.audience.change.noLongerFor}
+                </p>
+              )}
+            </Stack>
+          )}
           <p className="hub-wrap" data-testid="fact-channels">
             <strong>{facts.channels.label}</strong> {facts.channels.items.join(" ")}
           </p>

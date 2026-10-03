@@ -442,6 +442,7 @@ describe("alert lifecycle actions (S04.03)", () => {
 
   it.each([
     ["alert.created", { entry_id: ENTRY, kind: "ack", types: ["power", "water"] }, "alert"],
+    ["entry.created", { entry_id: ENTRY, kind: "update", types: ["power", "water"] }, "alert_entry"],
     ["entry.submitted", { entry_id: ENTRY, version: 1, content_hash: HASH_WITH_LONG_DIGIT_RUN }, "alert_entry"],
     ["entry.returned", { entry_id: ENTRY, version: 1, returned_for: "retranslate" }, "alert_entry"],
     ["entry.discarded", { entry_id: ENTRY, version: 0, from: "draft" }, "alert_entry"],
@@ -460,7 +461,7 @@ describe("alert lifecycle actions (S04.03)", () => {
       recipient_count: 42,
       reviewed_count: 40,
     });
-    for (const action of ["alert.created", "entry.submitted", "entry.returned", "entry.discarded"]) {
+    for (const action of ["alert.created", "entry.created", "entry.submitted", "entry.returned", "entry.discarded"]) {
       expect(toAuditRecord(alertEvent(action, { reason: "conflict", refusal: "ENTRY_CHANGED" }, action === "alert.created" ? "alert" : "alert_entry"), "refused").meta).toEqual({ reason: "conflict", refusal: "ENTRY_CHANGED" });
     }
   });
@@ -477,6 +478,8 @@ describe("alert lifecycle actions (S04.03)", () => {
 
   it.each([
     ["alert.created", { kind: "ack" }],
+    ["entry.created", { kind: "update" }],
+    ["entry.created", { entry_id: ENTRY }],
     ["entry.submitted", { entry_id: ENTRY, version: 1 }],
     ["entry.returned", { entry_id: ENTRY, version: 1 }],
     ["entry.discarded", { version: 1, from: "draft" }],
@@ -493,6 +496,7 @@ describe("alert lifecycle actions (S04.03)", () => {
     ["a return reason outside the list", "entry.returned", { entry_id: ENTRY, version: 1, returned_for: "because" }],
     ["a discard from a status that cannot be discarded", "entry.discarded", { entry_id: ENTRY, from: "approved" }],
     ["a kind outside the list", "alert.created", { entry_id: ENTRY, kind: "rumour" }],
+    ["the text of an update", "entry.created", { entry_id: ENTRY, kind: "update", text: "Power is back" }],
   ])("rejects %s", (_, action, meta) => {
     expect(() => toAuditRecord(alertEvent(action, meta), "ok")).toThrow(AuditRecordError);
   });

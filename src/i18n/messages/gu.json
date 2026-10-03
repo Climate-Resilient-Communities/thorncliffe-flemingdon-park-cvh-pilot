@@ -4287,9 +4287,14 @@
         "outOfScope": "[EN] You are not assigned to one of those buildings.",
         "notFound": "[EN] That alert draft was not found.",
         "notDraft": "[EN] This alert was already submitted, so who it is for cannot change.",
-        "closed": "[EN] This alert is closed.",
+        "closed": "[EN] This alert is already closed.",
         "invalid": "[EN] That audience cannot be used. Reload the page and choose again."
-      }
+      },
+      "changeAlso": "[EN] Now also for: {list}",
+      "changeNoLonger": "[EN] No longer for: {list}",
+      "changeRestOf": "[EN] the rest of {place}",
+      "changeUnlistedBuilding": "[EN] a building that is not in the list",
+      "changeOutsideGroups": "[EN] residents who chose none of the groups"
     },
     "time": {
       "dateLabel": "[EN] Date",
@@ -4460,16 +4465,43 @@
         "WEB_PUBLISHED": "[EN] This alert is already published, so it cannot be changed. Correct it instead.",
         "ENTRY_NOT_PENDING": "[EN] This alert is not waiting for approval.",
         "ENTRY_CHANGED": "[EN] This alert changed. Reload the page to see it.",
-        "ALERT_CLOSED": "[EN] This alert is closed.",
+        "ALERT_CLOSED": "[EN] This alert is already closed.",
         "ALERT_NOT_FOUND": "[EN] That alert draft was not found.",
         "ENTRY_NOT_FOUND": "[EN] That alert draft was not found.",
+        "NO_PUBLISHED_ENTRY": "[EN] Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.",
+        "ENTRY_ID_INVALID": "[EN] That update could not be started. Reload the page and try again.",
+        "TYPES_CHANGED": "[EN] An update keeps the types of the alert. To report something else, log a new disruption.",
         "AUDIENCE_INVALID": "[EN] Who this alert is for is not valid. Change the place and the groups, then try again.",
         "BUILDING_NOT_FOUND": "[EN] One of the buildings no longer exists. Change the place.",
         "FLOOR_NOT_IN_BUILDING": "[EN] One of the floors no longer exists. Change the place.",
         "NEIGHBOURHOOD_NOT_FOUND": "[EN] That neighbourhood does not exist. Change the place.",
         "forbidden": "[EN] Only a Coordinator or an Admin can write an alert.",
         "invalid": "[EN] That could not be done. Reload the page and try again."
-      }
+      },
+      "updateTitle": "[EN] Add an update",
+      "promoteTitle": "[EN] Promote to full alert",
+      "updateLead": "[EN] Add what we know now to this alert. Residents see it above the earlier entries, which stay as they are. A second person approves it before anyone sees it.",
+      "promoteLead": "[EN] This is the first update to the acknowledgement. The same alert is updated for everyone who has it: nothing is sent as a new alert. A second person approves it before anyone sees it.",
+      "startNote": "[EN] Saving makes the draft. Then you can change who it is for, read the text message and submit it for approval.",
+      "thread": {
+        "title": "[EN] The running alert",
+        "lead": "[EN] What residents read now, newest first. Your update is added at the top: nothing here is replaced.",
+        "validUntil": "[EN] Valid until {time} (Toronto time)",
+        "entry": "{kind}, {time}",
+        "kind": {
+          "ack": "[EN] Acknowledgement",
+          "update": "[EN] Update",
+          "correction": "[EN] Correction",
+          "withdrawal": "[EN] Withdrawal",
+          "final": "[EN] Final"
+        }
+      },
+      "carried": "[EN] Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.",
+      "carriedStart": "[EN] Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.",
+      "sameAudience": "[EN] Who it is for is the same as the alert now.",
+      "phaseRequired": "[EN] Required: choose where things stand now.",
+      "updateClosed": "[EN] This alert is already closed. Nothing more can be added to it.",
+      "updateUnpublished": "[EN] Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first."
     },
     "approve": {
       "title": "[EN] Approve an alert",
@@ -4558,7 +4590,7 @@
         "NOT_ALLOWED": "[EN] Only a Coordinator or an Admin can approve an alert.",
         "AUTHOR_NOT_ALLOWED": "[EN] Its author can no longer write this alert, because their role or buildings changed, so it cannot be approved. Return it or discard it.",
         "ENTRY_NOT_PENDING": "[EN] This alert is no longer waiting for approval. Reload the page to see what happened.",
-        "ALERT_CLOSED": "[EN] This alert is closed.",
+        "ALERT_CLOSED": "[EN] This alert is already closed.",
         "ALERT_NOT_FOUND": "[EN] That alert was not found.",
         "ENTRY_NOT_FOUND": "[EN] That alert was not found.",
         "NOTE_REQUIRED": "[EN] Write a note for the author.",
@@ -4573,7 +4605,8 @@
         "AUDIENCE_INVALID": "[EN] Who this alert is for is not valid, so it cannot be approved. Return it to its author.",
         "forbidden": "[EN] Only a Coordinator or an Admin who did not write or change this alert can approve it.",
         "invalid": "[EN] That could not be done. Reload the page and try again."
-      }
+      },
+      "updateNote": "[EN] This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are."
     },
     "incidents": {
       "waitingTitle": "[EN] Waiting for your approval",
@@ -4598,7 +4631,14 @@
       "waitingSince": "[EN] Submitted {time}",
       "noteLabel": "[EN] Note from the approver: {note}",
       "review": "[EN] Review",
-      "open": "[EN] Open"
+      "open": "[EN] Open",
+      "runningTitle": "[EN] Running alerts",
+      "runningLead": "[EN] Alerts residents are reading now. Add what you know to the same alert instead of starting a new one.",
+      "runningNone": "[EN] No alert is running.",
+      "runningLine": "[EN] {kind}, {phase}. Valid until {time}",
+      "runningPublished": "[EN] Last published {time}",
+      "addUpdate": "[EN] Add an update",
+      "promote": "[EN] Promote to full alert"
     },
     "resetAuthenticator": {
       "title": "[EN] Reset an authenticator",

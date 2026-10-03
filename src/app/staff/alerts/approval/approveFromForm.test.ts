@@ -92,6 +92,17 @@ describe("Approve", () => {
     expect(again.approveEntry).toHaveBeenCalledWith(expect.anything(), expect.anything(), { version: 2, contentHash: HASH, recipients: snapshot });
   });
 
+  it("names the entry that covered the thread when the \"Now also for\" line was read, and refuses a form whose covering is not an id", async () => {
+    const covering = "01900000-0000-7000-8000-00000000c0e1";
+    const d = deps();
+    await approveFromForm(d.wired, session, approveForm(REVIEWED, [["covering", covering]]));
+    expect(d.approveEntry).toHaveBeenCalledWith(expect.anything(), expect.anything(), { version: 2, contentHash: HASH, recipients: REVIEWED, covering });
+    const bad = deps();
+    expect(await approveFromForm(bad.wired, session, approveForm(REVIEWED, [["covering", "not an id"]]))).toMatchObject({ status: "refused" });
+    expect(bad.approveEntry).not.toHaveBeenCalled();
+    expect(bad.refuseInvalidForm).toHaveBeenCalledTimes(1);
+  });
+
   it("refuses a form that does not carry what was shown: no version, a hash that is not one, no count, a count that does not add up", async () => {
     for (const bad of [
       form([["alert", ALERT], ["entry", ENTRY], ["hash", HASH], ["reviewed", encodeCounts(REVIEWED)]]),

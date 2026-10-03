@@ -2238,7 +2238,7 @@ A disruption stays one running thread: staff add updates, correct or withdraw wh
 
 ### Story S05.01 — Hub staff post updates to a running alert
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 55 min (started 2026-10-03 09:57 UTC, built 11:52 UTC, across a container restart)
 - **Traces:** FR-A7, FR-A4 (update), UX-DR16 (O-13, O-14), AR-8 · **Depends on:** S04.07 · **Branch:** `e05-s01-updates`
 
 As a Hub Coordinator,

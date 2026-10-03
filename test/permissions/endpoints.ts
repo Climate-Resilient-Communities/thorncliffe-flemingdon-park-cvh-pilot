@@ -133,6 +133,9 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/alerts/log", kind: "page", file: "src/app/staff/alerts/log/page.tsx", export: "default", route: "/staff/alerts/log", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/ack", kind: "page", file: "src/app/staff/alerts/ack/page.tsx", export: "default", route: "/staff/alerts/ack", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/compose", kind: "page", file: "src/app/staff/alerts/compose/page.tsx", export: "default", route: "/staff/alerts/compose", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  // S05.01: "Add an update" (O-14) and "Promote to full alert" (O-13), the update composers: policy action `alert.author_wide`, like the composers they are.
+  { id: "page /staff/alerts/update", kind: "page", file: "src/app/staff/alerts/update/page.tsx", export: "default", route: "/staff/alerts/update", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  { id: "page /staff/alerts/promote", kind: "page", file: "src/app/staff/alerts/promote/page.tsx", export: "default", route: "/staff/alerts/promote", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   // S04.07: the approval view (O-05, O-07): policy action `alert.approve`, a Coordinator or an Admin who is not an editor of the entry (the guard reads who
   // edited it from the database). The page names no entry here, so a Coordinator or an Admin is let through to the page's own "not found".
   {
@@ -413,6 +416,21 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
       expected: WIDE_AUTHORS,
     }),
   ),
+  // S05.01: "Save draft" on a new update (policy action `alert.author_wide`). The thread does not exist, so a Coordinator's or an Admin's call passes the guard and is
+  // refused by the use case ("that alert draft was not found"), changing nothing. An Ambassador and a Director are refused on their role alone.
+  {
+    id: `action ${ALERT_COMPOSER_ACTIONS}#startUpdateAction`,
+    kind: "action",
+    file: ALERT_COMPOSER_ACTIONS,
+    export: "startUpdateAction",
+    route: "/staff/alerts/update",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, from: "update", text: "Power is back on floors 1 to 4.", phase: "in_progress", "valid-mode": "resolved" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
   // S04.07: Approve, Return to author and Discard on the approval view (policy action `alert.approve`, a privileged action: aal2, and never an editor of the
   // entry). The entry does not exist, so a Coordinator's or an Admin's call passes the guard and is refused by the form or the use case, changing nothing. An
   // Ambassador and a Director are refused on their role alone.
