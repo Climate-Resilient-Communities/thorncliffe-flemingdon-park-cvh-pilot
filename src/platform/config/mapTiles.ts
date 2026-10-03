@@ -29,9 +29,11 @@ export interface MapTileConfig {
 }
 
 /**
- * Proposed default, awaiting IT confirmation: CARTO Positron (light_all), free for non-profit use up to 5 million tile
- * requests a month, browser caching allowed for up to 30 days. CARTO now issues free keys; IT adds `?key=...` to
- * MAP_TILE_URL once one is registered (keyless access is for keys' legacy period only).
+ * CARTO Positron (light_all), confirmed by IT on 2026-10-02: free for non-profit use up to 5 million tile requests a
+ * month, browser caching allowed for up to 30 days. Production and preview set the keyed URL
+ * (https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=..., no {s}) in MAP_TILE_URL, with its
+ * credit and MAP_TILE_CACHEABLE=true; the key is not stored in the repository. This keyless URL is only the fallback
+ * for local runs and tests: CARTO's keyless legacy access ends 2026-11-30.
  */
 export const DEFAULT_MAP_TILES: MapTileConfig = {
   urlTemplate: "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png",

@@ -23,14 +23,14 @@ are in `src/platform/config/env.ts`.
 | `SEARCH_EMBED_MODEL` | no | default `embed-v4.0` | default |
 | `SEARCH_EMERGENCY_CATEGORIES` | no | default `Support & Emergency Services` | default |
 
-| `MAP_TILE_URL` | no (a CARTO key in it is a public browser key) | default `https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png`; append `?key=…` once IT registers CARTO's free key (before 2026-11-30) | default (proposed, awaiting IT) |
-| `MAP_TILE_SUBDOMAINS` | no | default `abcd` (empty when another provider's URL has no `{s}`) | default |
-| `MAP_TILE_ATTRIBUTION`, `MAP_TILE_ATTRIBUTION_URL` | no | default `© OpenStreetMap contributors © CARTO`, `https://carto.com/attributions`; required with a new `MAP_TILE_URL` | default |
+| `MAP_TILE_URL` | no (the CARTO key in it is a public browser key, but it is not stored in the repository) | `https://basemaps.cartocdn.com/rastertiles/light_all/{z}/{x}/{y}.png?key=…` (CARTO Positron, confirmed by IT); production and preview. The code's keyless default is a fallback whose legacy access ends 2026-11-30 | 2026-10-02 |
+| `MAP_TILE_SUBDOMAINS` | no | empty (the keyed URL has no `{s}`); the default `abcd` applies only to the keyless fallback | 2026-10-02 |
+| `MAP_TILE_ATTRIBUTION`, `MAP_TILE_ATTRIBUTION_URL` | no | `© OpenStreetMap contributors © CARTO`, `https://carto.com/attributions`; required whenever `MAP_TILE_URL` is set | 2026-10-02 |
 | `MAP_TILE_MAX_ZOOM` | no | default `19` | default |
-| `MAP_TILE_CACHEABLE`, `MAP_TILE_CACHE_LIMIT`, `MAP_TILE_CACHE_DAYS` | no | default `true`, `200` (the phone never keeps more than 200), `30` (CARTO's limit; 7 for Stadia) | default |
+| `MAP_TILE_CACHEABLE`, `MAP_TILE_CACHE_LIMIT`, `MAP_TILE_CACHE_DAYS` | no | `true`, `200` (the phone never keeps more than 200), `30` (CARTO's limit; 7 for Stadia). **`MAP_TILE_CACHEABLE=true` must be set** with a custom `MAP_TILE_URL`: a set URL is treated as a new provider and is not cacheable unless said | check |
 
-The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the comparison and the proposal awaiting
-IT are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change
+The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the comparison and IT's confirmation of CARTO
+Positron are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change
 takes effect with the next deploy, and the same values may be set in Preview. A set value that is not valid fails the
 build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_PUBLISH_ALLOWANCE_*` variables and the `SEARCH_*` variables take effect once S03.02
 (release search data) is deployed. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
