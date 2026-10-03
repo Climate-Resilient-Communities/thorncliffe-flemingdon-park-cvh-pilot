@@ -94,7 +94,9 @@ test("a refusal, and a count that changed with the new number to confirm, at 390
   await openApproval(page, 390, { screen: screenOf({ recipients: OPEN }), initial: { approve: { status: "count_changed", view } } });
   await expect(page.getByTestId("count-changed")).toContainText("The number of people who will get this text changed from 12 to 14");
   await expect(page.getByTestId("count-cost")).toHaveText("Estimated cost now: $0.69 CAD (an estimate)");
-  // Approve waits for the confirmation (the page is static here: the checkbox is exercised in e2e/staff/approval.spec.ts).
+  // Approve waits for the confirmation. The page is static here (no hydration), so ticking is not exercised in this picture: the markup (a required
+  // checkbox bound to the approve form) is asserted in ApprovalBody.test.tsx, the answer with the new number in approveFromForm.test.ts and the use case's
+  // refusal in test/db/alertApproval.db.test.ts. A real browser cannot reach a changed count before E07 opens text sign-up.
   await expect(page.getByTestId("approve-button")).toBeDisabled();
   await expect(page.getByTestId("confirm-count")).not.toBeChecked();
   await expectBaseline(page, "approval-count-changed-390.png");
