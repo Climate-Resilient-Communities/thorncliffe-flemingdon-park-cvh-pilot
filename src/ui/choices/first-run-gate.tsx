@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, type ReactNode } from "react";
 import type { LaunchCode } from "@/i18n/languages";
+import { BuildingListContext } from "./building-list-context";
 import { gatePhase } from "./gate-phase";
 import { useBuildingList, useChoices, useReconcileChoices, useStorageUsable } from "./use-choices";
 import "./choices.css";
@@ -15,6 +16,8 @@ import "./choices.css";
  *
  * When the phone keeps nothing (blocked storage), nobody is sent anywhere: every visit would be a first one. Home is
  * shown, and its link to "What I have told the CVH" is the way to the steps.
+ *
+ * The loaded list is shared with the screen inside (BuildingListContext), so home does not ask for it again.
  *
  * The phone is only read after the page has loaded; until then, and without script, the page is shown as it came.
  */
@@ -33,7 +36,7 @@ export function FirstRunGate({ lang, children }: { lang: LaunchCode; children: R
 
   return (
     <div className="first-run-gate" data-state={phase} data-testid="first-run-gate">
-      {children}
+      <BuildingListContext.Provider value={state}>{children}</BuildingListContext.Provider>
     </div>
   );
 }

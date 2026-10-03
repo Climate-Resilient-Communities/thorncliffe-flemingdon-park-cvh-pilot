@@ -1,4 +1,5 @@
 import { expect, test } from "@playwright/test";
+import { FeedV1 } from "../../src/contracts/feed";
 import { LANGUAGES } from "./helpers";
 
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
@@ -45,6 +46,32 @@ test("no redirect to /en/ sets a cookie either, and the browser ends up with non
 
   expect(cookies).toEqual([]);
   expect(await context.cookies()).toEqual([]);
+});
+
+// S02.11: the public feed (the same for everyone) sets no cookie either, in any language, and is a valid FeedV1 with
+// no threads and every building and neighbourhood at status none while no alert can have been published (S04.08).
+test("the feed sets no cookie, in any language, and is a valid FeedV1 with every place at none", async ({ request }) => {
+  for (const { code } of LANGUAGES) {
+    const response = await request.get(`/api/feed?lang=${code}`, { maxRedirects: 0 });
+
+    expect(response.status(), code).toBe(200);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), code).toEqual([]);
+    expect(response.headers()["cache-control"], code).toBe("public, max-age=0, s-maxage=15");
+    const feed = FeedV1.parse(await response.json());
+    expect(feed.threads, code).toEqual([]);
+    expect(feed.places.buildings.length, code).toBeGreaterThan(0);
+    expect([...feed.places.buildings, ...feed.places.neighbourhoods].every((place) => place.status === "none"), code).toBe(true);
+  }
+});
+
+test("a feed request with a missing or unknown language is refused, with no cookie and no caching", async ({ request }) => {
+  for (const path of ["/api/feed", "/api/feed?lang=xx"]) {
+    const response = await request.get(path, { maxRedirects: 0 });
+
+    expect(response.status(), path).toBe(400);
+    expect(response.headers()["cache-control"], path).toBe("no-store");
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), path).toEqual([]);
+  }
 });
 
 // S02.03: the building list the phone keeps (public, the same for everyone) sets no cookie either, answered or not.

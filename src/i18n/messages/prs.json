@@ -263,7 +263,8 @@
     "active": "مشکل فعال",
     "progress": "کار جریان دارد",
     "resolved": "حل شد",
-    "unknown": "معلوم نیست"
+    "unknown": "معلوم نیست",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "یک کاری که همین حالا بکنید",
     "ambassadorHome": "سفیر: ساختمان من",
     "ambassadorLine": "برای {building} خبر تازه بنویسید یا دور احوال‌پرسی خود را انجام دهید",
-    "noBuildingLine": "هشدارهای محله شما اینجا نشان داده می‌شود. ساختمان خود را اضافه کنید تا هشدارهای آن را اول ببینید."
+    "noBuildingLine": "هشدارهای محله شما اینجا نشان داده می‌شود. ساختمان خود را اضافه کنید تا هشدارهای آن را اول ببینید.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "پیام کوتاه در یک تلفون ساده",

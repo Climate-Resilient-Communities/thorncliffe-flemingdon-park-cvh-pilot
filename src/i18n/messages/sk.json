@@ -263,7 +263,8 @@
     "active": "Aktívny problém",
     "progress": "Prebieha práca",
     "resolved": "Vyriešené",
-    "unknown": "Neznáme"
+    "unknown": "Neznáme",
+    "none": "[EN] Nothing active"
   },
   "groups": {
     "seniors": {
@@ -445,7 +446,13 @@
     "headsUpAction": "Jedna vec, ktorú treba urobiť teraz",
     "ambassadorHome": "Ambasádor: moja budova",
     "ambassadorLine": "Zverejnite aktualizáciu alebo urobte svoje kolo v budove {building}",
-    "noBuildingLine": "Tu sa zobrazujú upozornenia pre vašu štvrť. Pridajte svoju budovu a jej upozornenia uvidíte ako prvé."
+    "noBuildingLine": "Tu sa zobrazujú upozornenia pre vašu štvrť. Pridajte svoju budovu a jej upozornenia uvidíte ako prvé.",
+    "currentAlerts": "[EN] Current alerts",
+    "noCurrentAlerts": "[EN] No current alerts",
+    "myBuildings": "[EN] Your buildings",
+    "checking": "[EN] Checking for alerts",
+    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
+    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
   },
   "R04": {
     "deviceLabel": "SMS na obyčajnom telefóne",
