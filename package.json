@@ -39,10 +39,10 @@
     "test:resident": "playwright test -c playwright.resident.config.ts",
     "test:staff": "playwright test -c playwright.staff.config.ts",
     "test:resident:docker": "scripts/resident-docker.sh",
-    "test:resident:update": "scripts/resident-docker.sh --update-snapshots=all",
+    "test:resident:update": "scripts/resident-docker.sh --update-snapshots=changed",
     "test:hub": "playwright test -c playwright.hub.config.ts",
     "test:hub:docker": "scripts/hub-docker.sh",
-    "test:hub:update": "scripts/hub-docker.sh --update-snapshots=all",
+    "test:hub:update": "scripts/hub-docker.sh --update-snapshots=changed",
     "ci:local": "bash scripts/ci/local.sh"
   },
   "dependencies": {
