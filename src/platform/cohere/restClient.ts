@@ -4,7 +4,7 @@
 // translation and their fake clients did not change. Server only; tests pass `fetch`, nothing here reaches the network on its own.
 
 const DEFAULT_BASE_URL = "https://api.cohere.com";
-/** The SDK's own default; callers hand an AbortSignal with the budget they really have. */
+/** A safety cap chosen here (not the SDK's default, which is 300 s); callers hand an AbortSignal with the budget they really have. */
 const DEFAULT_TIMEOUT_MS = 60_000;
 
 export interface CohereEmbedRequest {

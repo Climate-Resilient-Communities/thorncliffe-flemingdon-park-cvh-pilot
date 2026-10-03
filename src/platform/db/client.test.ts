@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { resetEnvCache } from "../config/env";
-import { DB_CONNECT_TIMEOUT_SECONDS, DB_POOL_MAX, createDb, getDb, resetDb } from "./client";
+import { DB_CONNECT_TIMEOUT_SECONDS, DB_POOL_MAX, DB_REQUEST_CONNECT_TIMEOUT_SECONDS, createDb, getDb, resetDb } from "./client";
 
 const POOLER = "postgres://cvh_app_login.ref:secret@aws-0-ca-central-1.pooler.supabase.com:6543/postgres";
 
@@ -41,6 +41,8 @@ describe("database client", () => {
     expect(db.$client.options.port).toEqual([6543]);
     expect(db.$client.options.prepare).toBe(false);
     expect(getDb()).toBe(db);
+    expect(DB_REQUEST_CONNECT_TIMEOUT_SECONDS).toBe(2);
+    expect(db.$client.options.connect_timeout).toBe(DB_REQUEST_CONNECT_TIMEOUT_SECONDS);
   });
 
   it("fails clearly when DATABASE_URL is not set", () => {

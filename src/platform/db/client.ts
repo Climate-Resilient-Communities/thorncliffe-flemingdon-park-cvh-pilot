@@ -39,6 +39,9 @@ export const DB_POOL_MAX = 10;
  */
 export const DB_CONNECT_TIMEOUT_SECONDS = 5;
 
+/** The app's request-path client (getDb) gives up on a connect sooner: a stalled connect must not outlast the search's 2.5 s budget. */
+export const DB_REQUEST_CONNECT_TIMEOUT_SECONDS = 2;
+
 /** Creates a client for a pooler URL. No connection is opened until the first query. */
 export function createDb(url: string, options: { max?: number; connectTimeoutSeconds?: number } = {}): Db {
   const client = postgres(url, { prepare: false, max: options.max ?? DB_POOL_MAX, connect_timeout: options.connectTimeoutSeconds ?? DB_CONNECT_TIMEOUT_SECONDS });
@@ -54,7 +57,7 @@ export function getDb(): Db {
   if (!url) {
     throw new Error("DATABASE_URL is not set: the database is unavailable in this environment");
   }
-  db = createDb(url);
+  db = createDb(url, { connectTimeoutSeconds: DB_REQUEST_CONNECT_TIMEOUT_SECONDS });
   return db;
 }
 
