@@ -46,6 +46,38 @@
     text-underline-offset: 3px;
   }
 
+  /* A card with its tailored block (S04.09): the card, then the one line of advice for it. */
+  .alert-card-item {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+  }
+
+  /* An alert that is for this phone's owner, among others that are not: a heavier start edge in the accent bar colour. It carries no words (it
+     does not say why), so it is a shape as well as a colour. */
+  .alert-card--mine {
+    border-inline-start: 8px solid var(--accent-bar);
+  }
+
+  /* X-12: the one line of advice, the prototype's .cvh-tailored. */
+  .alert-tailored {
+    display: flex;
+    flex-direction: column;
+    gap: var(--gap-tight);
+    padding: var(--inset-card);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+  }
+
+  .alert-tailored__line {
+    display: flex;
+    align-items: flex-start;
+    gap: var(--gap-tight);
+    margin: 0;
+    font-size: var(--type-alert-size);
+    overflow-wrap: anywhere;
+  }
+
   .alert-text {
     margin: 0;
     font-size: var(--type-alert-size);
