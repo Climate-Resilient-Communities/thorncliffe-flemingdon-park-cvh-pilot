@@ -1547,7 +1547,7 @@
     updateUnpublished: 'Nothing is published in this alert yet, so there is nothing to add an update to. Wait for its approval first.' } } });
   m(en, { staff: { audience: {
     changeAlso: 'Now also for: {list}', changeNoLonger: 'No longer for: {list}',
-    changeRestOf: 'the rest of {place}', changeOutsideGroups: 'residents who chose none of the groups' } } });
+    changeRestOf: 'the rest of {place}', changeUnlistedBuilding: 'a building that is not in the list', changeOutsideGroups: 'residents who chose none of the groups' } } });
   m(en, { staff: { approve: {
     updateNote: 'This is an update to an alert residents are already reading. It is added above the earlier entries, which stay as they are.' } } });
   m(en, { staff: { incidents: {

@@ -4291,6 +4291,7 @@
       "changeAlso": "[EN] Now also for: {list}",
       "changeNoLonger": "[EN] No longer for: {list}",
       "changeRestOf": "[EN] the rest of {place}",
+      "changeUnlistedBuilding": "[EN] a building that is not in the list",
       "changeOutsideGroups": "[EN] residents who chose none of the groups"
     },
     "time": {

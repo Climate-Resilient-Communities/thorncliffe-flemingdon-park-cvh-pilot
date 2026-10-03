@@ -112,7 +112,7 @@ export interface ApprovalScreen {
   cannotEdit: string;
   languages: { title: string; lead: string; webLabel: string; rows: LanguageReviewView[] };
   /** What the approver was shown: the version and hash an approval, a return and a discard name, and the reviewed count Approve names. */
-  binding: { version: number; contentHash: string; reviewed: string };
+  binding: { version: number; contentHash: string; reviewed: string; /** The entry the "Now also for" line was read against (S05.01); absent when none was shown. */ covering?: string };
   actions: { label: string; approve: string; approveConfirmed: string; returnToAuthor: string; discard: string };
   returnForm: { title: string; hint: string; noteLabel: string; max: number; counter: string; send: string; cancel: string };
   discardForm: { title: string; lead: string; confirm: string; cancel: string };
@@ -293,7 +293,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
       : null,
     cannotEdit: t("cannotEdit"),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), webLabel: t("webText"), rows: languageRows },
-    binding: { version: entry.version, contentHash: entry.contentHash ?? "", reviewed: encodeCounts(review.recipients) },
+    binding: { version: entry.version, contentHash: entry.contentHash ?? "", reviewed: encodeCounts(review.recipients), ...(review.threadCoveringId === null ? {} : { covering: review.threadCoveringId }) },
     actions: { label: t("actionsLabel"), approve: t("approve"), approveConfirmed: t("approveConfirmed"), returnToAuthor: t("returnToAuthor"), discard: t("discard") },
     returnForm: { title: t("returnTitle"), hint: t("returnHint"), noteLabel: t("noteLabel"), max: RETURN_NOTE_MAX, counter: t("noteCounter", { n: "{n}", max: RETURN_NOTE_MAX }), send: t("sendBack"), cancel: t("cancel") },
     discardForm: { title: t("discardTitle"), lead: t("discardLead"), confirm: t("discardConfirm"), cancel: t("cancel") },

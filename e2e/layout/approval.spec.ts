@@ -50,14 +50,14 @@ const PAGES: Page_[] = [
   { name: "O-05 with texting open, languages that fell back and a possible duplicate", review: { recipients: OPEN, fallback: ["ur", "ps", "prs"], duplicate: { alertId: "01900000-0000-7000-8000-00000000a1e8", entryId: "01900000-0000-7000-8000-00000000e178" } }, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-07 an ambassador's post", review: { authorRole: "ambassador" }, actions: ["approve-button", "return-button", "discard-button"] },
   {
-    // S05.01: an update to a running alert that widens who it is for (a floor and a building added, the people outside the groups reached) and narrows it (a building dropped):
+    // S05.01: an update to a running alert that widens who it is for (a floor and a building added, the people outside the groups reached) and narrows it (a floor dropped):
     // "Now also for: ..." and "No longer for: ..." sit right under who it is for, above the fold, in every language with the longest labels.
     name: "O-05 an update that widens and narrows who it is for",
     review: {
       entry: { kind: "update" },
       threadAudience: {
         scope: "buildings",
-        buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3)] }, { rsn: "7777777", floors: null }],
+        buildings: [{ rsn: "4154146", floors: [floorId("4154146", 2), floorId("4154146", 3)] }],
         groups: [],
         types: ["elevator", "power"],
       },

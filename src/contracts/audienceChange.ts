@@ -60,7 +60,9 @@ function placesAdded(base: Audience, next: Audience, neighbourhoodOf: Neighbourh
     const known = base.scope === "neighbourhood" ? base.neighbourhood_ids : [];
     const listed = new Set(base.scope === "buildings" ? base.buildings.map((building) => neighbourhoodOf(building.rsn)) : []);
     const fresh = next.neighbourhood_ids.filter((id) => !known.includes(id));
-    return { neighbourhoodIds: fresh.filter((id) => !listed.has(id)), restOfNeighbourhoodIds: fresh.filter((id) => listed.has(id)), buildings: [] };
+    // A listed building whose neighbourhood is not known may be in any of them, so no neighbourhood is claimed to be entirely new: each is "the rest of".
+    const unknownListed = listed.has(null);
+    return { neighbourhoodIds: fresh.filter((id) => !unknownListed && !listed.has(id)), restOfNeighbourhoodIds: fresh.filter((id) => unknownListed || listed.has(id)), buildings: [] };
   }
   const buildings: PlacesDelta["buildings"] = [];
   for (const wanted of next.buildings) {

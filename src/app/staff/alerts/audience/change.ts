@@ -27,9 +27,11 @@ function listOf(delta: AudienceDelta, plans: readonly BuildingFloorPlan[], t: Te
     ...delta.places.restOfNeighbourhoodIds.map((id) => t("changeRestOf", { place: neighbourhoodName(id, plans) })),
     ...delta.places.buildings.map((chosen) => {
       const plan = plans.find((candidate) => candidate.rsn === chosen.rsn);
-      const address = plan?.address ?? chosen.rsn;
+      // A building the screen does not know (removed from the plans since) is never named by its number.
+      if (!plan) return t("changeUnlistedBuilding");
+      const address = plan.address;
       if (chosen.floors === null) return t("wholeOf", { address });
-      return t("floorsOf", { address, labels: plan ? floorLabels(plan, chosen.floors).join(", ") : chosen.floors.length });
+      return t("floorsOf", { address, labels: floorLabels(plan, chosen.floors).join(", ") });
     }),
     ...delta.groups.groups.map((group) => groupName(group, t)),
     ...(delta.groups.outsideGroups ? [t("changeOutsideGroups")] : []),

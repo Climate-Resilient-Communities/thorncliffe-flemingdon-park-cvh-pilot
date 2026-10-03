@@ -35,26 +35,27 @@ export const FeedEntrySchema = z.strictObject({
 });
 
 /**
- * A thread. `entries` is newest first by `published_at`, each with its time and phase, and every earlier entry stays in the list (an update adds an entry
- * and removes none; S05.01), so a resident reads the running story from the latest word back. `valid_until` is the valid-until of the entry that covers the
- * thread, the latest published, non-superseded substantive one (S05.01: a later update's choice replaces an earlier one's). The schema refuses a thread whose
- * entries are in another order, so a reader that forgets `newestFirst` (alerting's domain/thread.ts) fails the feed's own parse instead of showing it.
+ * A thread. `entries` keeps every earlier entry (an update adds an entry and removes none; S05.01), each with its time (`published_at`) and phase. The
+ * feed does not refuse an order: S04.08 builds the list oldest first, and a reader that wants the running story from the latest word back (R-07) calls
+ * `entriesNewestFirst`. An ordering slip must never fail the whole feed's parse and take every alert away from residents while one is running.
+ * `valid_until` is the valid-until of the entry that covers the thread, the latest published, non-superseded substantive one (S05.01: a later
+ * update's choice replaces an earlier one's).
  */
-export const FeedThreadSchema = z
-  .strictObject({
-    id: z.uuid(),
-    slug: z.string().min(1),
-    types: z.array(z.string()).min(1),
-    audience: AudienceSchema,
-    state: z.enum(["open", "closed"]),
-    close_reason: z.string().optional(),
-    valid_until: z.iso.datetime(),
-    entries: z.array(FeedEntrySchema).min(1),
-  })
-  .refine((thread) => thread.entries.every((entry, index) => index === 0 || Date.parse(entry.published_at) <= Date.parse(thread.entries[index - 1].published_at)), {
-    message: "entries are newest first, by published_at",
-    path: ["entries"],
-  });
+export const FeedThreadSchema = z.strictObject({
+  id: z.uuid(),
+  slug: z.string().min(1),
+  types: z.array(z.string()).min(1),
+  audience: AudienceSchema,
+  state: z.enum(["open", "closed"]),
+  close_reason: z.string().optional(),
+  valid_until: z.iso.datetime(),
+  entries: z.array(FeedEntrySchema).min(1),
+});
+
+/** A thread's entries newest first by `published_at` (ties: the later id first), whatever order they arrive in; the input is not changed. */
+export function entriesNewestFirst<T extends { id: string; published_at: string }>(entries: readonly T[]): T[] {
+  return [...entries].sort((a, b) => Date.parse(b.published_at) - Date.parse(a.published_at) || (a.id < b.id ? 1 : a.id > b.id ? -1 : 0));
+}
 
 const PlaceState = { status: PlaceStatusSchema, verified: z.boolean() };
 

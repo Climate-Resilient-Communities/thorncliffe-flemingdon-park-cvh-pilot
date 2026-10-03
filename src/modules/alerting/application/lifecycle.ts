@@ -26,7 +26,7 @@ import { AUTHORED_KINDS, checkApproval, checkShownBinding, requestTransition, ty
 import type { AlertRefusal } from "../domain/refusals";
 import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
 import { FROZEN_LANGS } from "../domain/translations";
-import { coveringEntry, updateStart } from "../domain/thread";
+import { coveringEntry, isPublished, updateStart } from "../domain/thread";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, RefusalDetail, StaffDirectory } from "./ports";
 import { publishedSummaries, readRunningThreads, readThreadSummary, type RunningThread, type ThreadSummary } from "./threads";
@@ -116,6 +116,11 @@ export interface ApprovalBinding {
 export interface ApprovalRequest extends ApprovalBinding {
   /** Left out, the approver reviewed nobody (the count before E07 opens text sign-up): a snapshot that counts anyone is then refused. */
   recipients?: RecipientCounts;
+  /**
+   * The entry that covered the thread when the approver read an update's "Now also for" line (S05.01). If another entry covers it by the time of the
+   * approval, the line no longer describes the thread and nothing is approved (ENTRY_CHANGED). Left out for an entry that was shown none.
+   */
+  covering?: string;
 }
 
 /** What an approval did, once it committed: the entry as approved, the recipient snapshot it captured, and the feed version it raised (null for a drill, which changes nothing the web shows). */
@@ -158,6 +163,8 @@ export interface EntryReview {
    * first entry and for an entry that is not waiting.
    */
   threadAudience: Audience | null;
+  /** The id of the entry that covers the thread now, whose audience `threadAudience` is: what the "Now also for" line was read against; null with it. */
+  threadCoveringId: string | null;
 }
 
 /** One entry on someone's incidents list (S04.07's share of O-01, which S04.10 builds out). */
@@ -1151,6 +1158,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           now: now(),
         });
         if (refusal) throw new Refused(refusal);
+        // The "Now also for" line was read against an entry that covers the thread; if another one covers it now, the line is out of date (S05.01).
+        if (shown.covering !== undefined && ((await readThreadSummary(tx, ref.alertId))?.covering?.id ?? null) !== shown.covering) throw new Refused("ENTRY_CHANGED");
         mustTransition(thread, row, "approved");
         // AD-5: approval re-checks the author against their current status and assignments.
         const author = await staff.standing(tx, row.authorId);
@@ -1270,9 +1279,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
                   .select({ lang: alertEntryTranslation.lang, status: alertEntryTranslation.status, machine: alertEntryTranslation.machine })
                   .from(alertEntryTranslation)
                   .where(eq(alertEntryTranslation.entryId, ref.entryId));
-          // The entries made before this one, oldest first: an entry that has some follows them (an update, S05.01).
+          // The entries made before this one that residents can read, oldest first: an entry that has some follows them (an update, S05.01). A draft or a
+          // discarded update is not among them, so the composer an update is written on is the one `isAckOnly` (the Hub home, the start page) would choose.
           const earlier = await tx
-            .select({ kind: alertEntry.kind })
+            .select({ kind: alertEntry.kind, status: alertEntry.status, webPublishedAt: alertEntry.webPublishedAt })
             .from(alertEntry)
             .where(
               and(
@@ -1287,7 +1297,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             entry: entryOf(entryRow),
             attempt: latest ? attemptOf(latest, now()) : null,
             translations,
-            priorKinds: earlier.map((row) => row.kind as EntryKind),
+            priorKinds: earlier.filter(isPublished).map((row) => row.kind as EntryKind),
           };
         },
         { isolationLevel: "repeatable read" },
@@ -1340,9 +1350,13 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           }
           // An update that waits shows what it changes about who the thread is for: the audience of the entry that covers the thread now (S05.01).
           let threadAudience: Audience | null = null;
+          let threadCoveringId: string | null = null;
           if (entryRow.status === "draft" || entryRow.status === "pending_approval") {
             const covering = (await readThreadSummary(tx, ref.alertId))?.covering ?? null;
-            if (covering !== null && covering.id !== entryRow.id) threadAudience = covering.audience;
+            if (covering !== null && covering.id !== entryRow.id) {
+              threadAudience = covering.audience;
+              threadCoveringId = covering.id;
+            }
           }
           return {
             thread,
@@ -1353,6 +1367,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             recipients: reached,
             duplicate,
             threadAudience,
+            threadCoveringId,
           };
         },
         { isolationLevel: "repeatable read" },
@@ -1379,7 +1394,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         submittedAt: alertEntry.submittedAt,
         returnedNote: alertEntry.returnedNote,
         // Another entry was made before this one in its thread: an update (S05.01), written on the update composer.
-        followUp: sql<boolean>`exists (select 1 from alert_entry earlier where earlier.alert_id = ${alertEntry.alertId} and earlier.id <> ${alertEntry.id} and (earlier.created_at, earlier.id) < (${alertEntry.createdAt}, ${alertEntry.id}))`,
+        followUp: sql<boolean>`exists (select 1 from alert_entry earlier where earlier.alert_id = ${alertEntry.alertId} and earlier.id <> ${alertEntry.id} and earlier.web_published_at is not null and earlier.status not in ('draft', 'discarded') and (earlier.created_at, earlier.id) < (${alertEntry.createdAt}, ${alertEntry.id}))`,
       };
       const rowOf = (row: { alertId: string; entryId: string; kind: string; status: string; types: string[]; isDrill: boolean; version: number; submittedAt: Date | null; returnedNote: string | null; followUp: boolean }): IncidentRow => ({
         alertId: row.alertId,

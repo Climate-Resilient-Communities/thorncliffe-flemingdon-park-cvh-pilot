@@ -11,7 +11,7 @@ import { afterAll, beforeAll, beforeEach, describe, expect, it } from "vitest";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
-import { FeedThreadSchema } from "../../src/contracts/feed";
+import { FeedThreadSchema, entriesNewestFirst } from "../../src/contracts/feed";
 import type { Translated } from "../../src/contracts/translated";
 import {
   FROZEN_LANGS,
@@ -560,11 +560,27 @@ describe("an update that changes who the thread is for", () => {
     expect((await entryRow(ref.entryId)).audience).toEqual({ scope: "neighbourhood", neighbourhood_ids: ["FP", "TP"].sort(), groups: [], types: ["power"] });
   });
 
+  it("binds the approval to the entry the \"Now also for\" line was read against: another update approved meanwhile makes the press ENTRY_CHANGED, and reading again then approves", async () => {
+    const { ref } = await approvedThread();
+    const first = await pendingUpdate(ref.alertId);
+    const second = await pendingUpdate(ref.alertId, authorA, { text: "Crews are on the way." });
+    const read = await alerting.review(second);
+    expect(read?.threadCoveringId).toBe(ref.entryId);
+    expect(await alerting.approveEntry(actorOf(coordB), first, await shownOfRow(first))).toMatchObject({ ok: true });
+    const shown = await shownOfRow(second);
+    expect(await alerting.approveEntry(actorOf(coordB), second, { ...shown, covering: ref.entryId })).toEqual({ ok: false, error: "ENTRY_CHANGED" });
+    expect((await entryRow(second.entryId)).status).toBe("pending_approval");
+    const again = await alerting.review(second);
+    expect(again?.threadCoveringId).toBe(first.entryId);
+    expect(await alerting.approveEntry(actorOf(coordB), second, { ...shown, covering: first.entryId })).toMatchObject({ ok: true });
+  });
+
   it("shows no audience to compare with for a thread's first entry, or once the entry is not waiting any more", async () => {
     const created = await alerting.createAlert(actorOf(authorA), { kind: "ack", isDrill: false, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content() });
     if (!created.ok) throw new Error("createAlert refused");
     const first = { alertId: created.value.thread.id, entryId: created.value.entry.id };
     expect((await alerting.review(first))?.threadAudience).toBeNull();
+    expect((await alerting.review(first))?.threadCoveringId).toBeNull();
 
     const { ref } = await approvedThread();
     const update = await pendingUpdate(ref.alertId);
@@ -603,7 +619,7 @@ describe("the thread as residents read it", () => {
     expect(summary?.ackOnly).toBe(false);
   });
 
-  it("is read by the feed's own contract in that order, and the contract refuses the other order", async () => {
+  it("is read by the feed's own contract in either order, and a reader turns it newest first", async () => {
     const { ref, slug } = await approvedThread();
     const update = await pendingUpdate(ref.alertId);
     expect(await alerting.approveEntry(actorOf(coordB), update, await shownOfRow(update))).toMatchObject({ ok: true });
@@ -628,8 +644,10 @@ describe("the thread as residents read it", () => {
       entries: entries.map(entryOf),
     });
     expect(FeedThreadSchema.safeParse(thread(summary.entries)).success).toBe(true);
-    expect(FeedThreadSchema.safeParse(thread([...summary.entries].reverse())).success).toBe(false);
-    // The rule a reader applies is the module's: newest first, whatever order the rows come in.
+    // The feed does not fail over the order (an ordering slip must not take every alert away from residents); R-07 turns it newest first.
+    const oldestFirst = FeedThreadSchema.parse(thread([...summary.entries].reverse()));
+    expect(entriesNewestFirst(oldestFirst.entries).map((entry) => entry.id)).toEqual(summary.entries.map((entry) => entry.id));
+    // The rule the Hub's read model applies is the module's: newest first, whatever order the rows come in.
     expect(newestFirst([...summary.entries].reverse()).map((entry) => entry.id)).toEqual(summary.entries.map((entry) => entry.id));
   });
 
@@ -695,6 +713,15 @@ describe("the thread as residents read it", () => {
     if (!first.ok) throw new Error("createAlert refused");
     expect((await alerting.entryState({ alertId: first.value.thread.id, entryId: first.value.entry.id }))?.priorKinds).toEqual([]);
     expect((await alerting.incidents({ staffId: authorA.id })).mine.find((row) => row.entryId === first.value.entry.id)?.followUp).toBe(false);
+  });
+
+  it("counts only what residents can read: an update started and discarded does not turn a second first-update into an 'Add an update'", async () => {
+    const { ref } = await approvedThread();
+    const discarded = await newUpdate(ref.alertId, authorA);
+    expect(await alerting.discardEntry(actorOf(authorA), discarded)).toMatchObject({ ok: true });
+    const second = await newUpdate(ref.alertId, authorA);
+    expect((await alerting.entryState(second))?.priorKinds).toEqual(["ack"]);
+    expect((await alerting.incidents({ staffId: authorA.id })).mine.find((row) => row.entryId === second.entryId)?.followUp).toBe(true);
   });
 });
 

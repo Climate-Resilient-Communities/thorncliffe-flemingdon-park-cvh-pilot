@@ -45,6 +45,21 @@ describe("an update that widens the audience", () => {
   });
 });
 
+describe("what the approval is bound to", () => {
+  it("names the entry that covers the thread, in the screen's binding and in every form, so a change of it is caught at the press", () => {
+    const screen = screenOf(NOW_AUDIENCE);
+    expect(screen.binding.covering).toBe("01900000-0000-7000-8000-00000000c0e1");
+    expect(html(screen)).toContain('name="covering" value="01900000-0000-7000-8000-00000000c0e1"');
+  });
+
+  it("names none for an entry that follows no other", () => {
+    const review = reviewOf();
+    const screen = approvalScreen({ review, plans: PLANS, pricePerSegmentCents: 1.5, viewerId: APPROVER });
+    expect(screen.binding.covering).toBeUndefined();
+    expect(html(screen)).not.toContain('name="covering"');
+  });
+});
+
 describe("an update that narrows the audience", () => {
   it('says "No longer for: ..." the same way, with what it stops reaching', () => {
     const screen = screenOf(buildings([{ rsn: "4154146", floors: [FLOORS_3_4[0]] }], ["seniors"]));
@@ -56,7 +71,7 @@ describe("an update that narrows the audience", () => {
 
   it("says both lines when it swaps one place for another", () => {
     const screen = screenOf(buildings([{ rsn: "4154146", floors: FLOORS_3_4 }, { rsn: "9999999", floors: null }], ["seniors"]));
-    expect(screen.facts.audience.change?.alsoFor).toBe("Now also for: 9999999 (all floors)");
+    expect(screen.facts.audience.change?.alsoFor).toBe("Now also for: a building that is not in the list");
     expect(screen.facts.audience.change?.noLongerFor).toBe("No longer for: 85-95 Thorncliffe Park Dr (all floors)");
   });
 
@@ -91,7 +106,7 @@ describe("the approval view as it is drawn", () => {
 
   it("puts the change right under who it is for, in flagged notes with the two lines apart, above the channels and the aside", () => {
     expect(changed).toContain('data-testid="update-note"');
-    expect(changed).toMatch(/<p role="note" class="hub-flag hub-wrap" data-testid="audience-also-for">Now also for: 9999999 \(all floors\)<\/p>/);
+    expect(changed).toMatch(/<p role="note" class="hub-flag hub-wrap" data-testid="audience-also-for">Now also for: a building that is not in the list<\/p>/);
     expect(changed).toMatch(/<p role="note" class="hub-flag hub-wrap" data-testid="audience-no-longer-for">No longer for: 4 Milepost Pl \(floors 4\)<\/p>/);
     const at = (id: string) => changed.indexOf(`data-testid="${id}"`);
     expect(at("fact-audience")).toBeLessThan(at("audience-also-for"));

@@ -133,6 +133,12 @@ describe("a building the places module does not know", () => {
     const result = change(nbhd(["TP"]), buildings([["999", null]]));
     expect(result.alsoFor.places.buildings).toEqual([{ rsn: "999", floors: null }]);
   });
+
+  it("does not let a thread for buildings, one of them unknown, claim that a whole neighbourhood is new: it is the rest of it", () => {
+    const result = change(buildings([["999", null]]), nbhd(["TP"]));
+    expect(result.alsoFor.places.neighbourhoodIds).toEqual([]);
+    expect(result.alsoFor.places.restOfNeighbourhoodIds).toEqual(["TP"]);
+  });
 });
 
 describe("isEmptyAudienceDelta", () => {

@@ -47,6 +47,7 @@ function Bound({ screen, reviewed }: { screen: ApprovalScreen; reviewed?: string
       <input type="hidden" name="entry" value={screen.ref.entryId} />
       <input type="hidden" name="version" value={screen.binding.version} />
       <input type="hidden" name="hash" value={screen.binding.contentHash} />
+      {screen.binding.covering !== undefined && <input type="hidden" name="covering" value={screen.binding.covering} />}
       {reviewed !== undefined && <input type="hidden" name="reviewed" value={reviewed} />}
     </>
   );

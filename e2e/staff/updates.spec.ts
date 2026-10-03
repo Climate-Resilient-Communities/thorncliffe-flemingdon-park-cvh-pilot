@@ -302,11 +302,16 @@ test("a thread closed while an update is written or waits for approval refuses i
     await sql`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${ack.alertId}`;
 
     // Pressing Submit on what was being written says so: "This alert is already closed" (the press saves the draft first, and the save is refused), and nothing is frozen.
-    await page.goto(`/staff/alerts/promote?alert=${writing.alertId}&entry=${writing.entryId}`);
+    // The author still has the draft open, from before the thread closed.
     await page.getByTestId("submit-button").click();
     await expect(page.locator("#composer-error")).toHaveText("This alert is already closed.", { timeout: 30_000 });
     expect(await entryRow(writing.entryId)).toMatchObject({ status: "draft", version: 0, content_hash: null });
     expect(await translationCount(writing.entryId)).toBe(0);
+    // Opened again, the draft is locked: it says the alert is closed and offers no form to fill in (S05.01).
+    await page.goto(`/staff/alerts/promote?alert=${writing.alertId}&entry=${writing.entryId}`);
+    await expect(page.getByTestId("locked-note")).toHaveText("This alert is closed.");
+    await expect(page.getByTestId("submit-button")).toHaveCount(0);
+    await expect(page.getByTestId("save-draft")).toHaveCount(0);
     // The submit itself, sent straight to the server, is refused with ALERT_CLOSED, the refusal is recorded and no attempt is made.
     const answer = await page.request.post("/api/staff/alerts/entries/submit", { data: { v: 1, alert_id: writing.alertId, entry_id: writing.entryId, key: randomUUID() } });
     expect(answer.status()).toBe(200);

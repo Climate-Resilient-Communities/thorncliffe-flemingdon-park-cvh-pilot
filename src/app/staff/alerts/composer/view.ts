@@ -329,7 +329,9 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   // A running attempt shows each language as it settled; the frozen translations show once they exist.
   if (attempt?.state === "running" && entry.status === "draft") for (const [lang, result] of Object.entries(attempt.progress)) results.set(lang, result as LanguageResult);
 
-  const status = entry.status === "draft" ? "draft" : entry.status === "pending_approval" ? "pending" : "locked";
+  // An entry of a thread that has closed cannot be saved, submitted or approved (ALERT_CLOSED), so it is not offered as a form to fill in: it is locked (S05.01).
+  const threadClosed = thread.status === "closed";
+  const status = threadClosed ? "locked" : entry.status === "draft" ? "draft" : entry.status === "pending_approval" ? "pending" : "locked";
   const ticked = new Set(content.types);
   const fallbackLangs = state.translations.filter((translation) => translation.status === "fallback_en").map((translation) => t(`languageNames.${translation.lang}`));
 
