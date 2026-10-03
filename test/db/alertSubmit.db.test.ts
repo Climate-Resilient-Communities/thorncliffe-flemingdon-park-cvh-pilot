@@ -740,6 +740,33 @@ describe("a possible duplicate", () => {
     expect((await entryRow(mine.entryId)).possible_duplicate_of).toBe(other.alertId);
     await expect(owner`update alert_entry set possible_duplicate_of = ${mine.alertId} where id = ${mine.entryId}`).rejects.toThrow();
   });
+
+  it("is held by the entry's guard through every transition: a return to draft must clear it, and a discard must keep it", async () => {
+    const other = await otherThread(content());
+    const mine = await submitted(author);
+    expect((await entryRow(mine.entryId)).possible_duplicate_of).toBe(other.alertId);
+
+    // A return to draft that leaves the link behind is refused.
+    await expect(
+      owner.begin(async (tx) => {
+        await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
+        await tx`update alert_entry set status = 'draft', returned_for = 'edit', content_hash = null, sms_bodies = null, submitted_at = null where id = ${mine.entryId}`;
+      }),
+    ).rejects.toThrow(/possible-duplicate link/);
+    // A discard that changes the link is refused; one that keeps it goes through.
+    await expect(
+      owner.begin(async (tx) => {
+        await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
+        await tx`update alert_entry set status = 'discarded', possible_duplicate_of = null where id = ${mine.entryId}`;
+      }),
+    ).rejects.toThrow(/discarding changes nothing else/);
+    expect(await entryRow(mine.entryId)).toMatchObject({ status: "pending_approval", possible_duplicate_of: other.alertId });
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
+      await tx`update alert_entry set status = 'discarded' where id = ${mine.entryId}`;
+    });
+    expect(await entryRow(mine.entryId)).toMatchObject({ status: "discarded", possible_duplicate_of: other.alertId });
+  });
 });
 
 // --- Try translation again ---------------------------------------------------------------------------------------------

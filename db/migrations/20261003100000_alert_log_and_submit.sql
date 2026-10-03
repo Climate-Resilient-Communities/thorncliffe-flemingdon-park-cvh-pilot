@@ -68,24 +68,203 @@ alter table alert_entry add constraint alert_entry_duplicate_not_self check (pos
 alter table alert_entry add constraint alert_entry_draft_no_duplicate check (status <> 'draft' or possible_duplicate_of is null) not valid;
 grant update (possible_duplicate_of) on table alert_entry to cvh_app;
 
--- The link is set by the submit that freezes the entry (draft to pending_approval) and cleared by the return to draft;
--- it never changes in any other update (a pending entry cannot be changed at all, and an approval keeps what it approves).
-create function alert_entry_duplicate_guard() returns trigger
+-- The link is set by the submit that freezes the entry (draft to pending_approval) and cleared by the return to draft; it never
+-- changes in any other update (a pending entry cannot be changed at all, and an approval keeps what it approves). That is S04.03's
+-- entry guard with the new column added to the fields it already holds still (a replaced function, not a second trigger: the
+-- guard of an existing table is one place, and a new trigger on a table the previous release writes is a destructive change).
+create or replace function alert_entry_guard() returns trigger
 language plpgsql
 set search_path = ''
 as $$
+declare
+  actor_text text := nullif(current_setting('cvh.actor_id', true), '');
+  actor uuid;
+  thread_status text;
+  content_changed boolean;
+  bad_type text;
 begin
-  if new.possible_duplicate_of is distinct from old.possible_duplicate_of
-     and not (old.status = 'draft' and new.status = 'pending_approval')
-     and not (old.status = 'pending_approval' and new.status = 'draft' and new.possible_duplicate_of is null) then
-    raise exception 'alert_entry: the possible-duplicate link changes only when the entry is submitted or returned to draft'
-      using errcode = 'check_violation';
+  if actor_text is not null and actor_text ~* '^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$' then
+    actor := actor_text::uuid;
+  end if;
+
+  select a.status into thread_status from public.alert a where a.id = new.alert_id;
+
+  if tg_op = 'INSERT' then
+    if new.status <> 'draft' then
+      raise exception 'alert_entry: a new entry starts as a draft, not %', new.status using errcode = 'check_violation';
+    end if;
+    if thread_status is distinct from 'open' then
+      raise exception 'ALERT_CLOSED: an entry cannot be added to a closed thread' using errcode = 'check_violation';
+    end if;
+    if actor is null then
+      raise exception 'alert_entry: the acting account (cvh.actor_id) is required' using errcode = 'check_violation';
+    end if;
+    if actor <> new.author_id then
+      raise exception 'alert_entry: the author must be the acting account' using errcode = 'check_violation';
+    end if;
+    if new.version <> 0 or new.web_published_at is not null then
+      raise exception 'alert_entry: a new entry has no version and is not web-published' using errcode = 'check_violation';
+    end if;
+    -- The table's check already allows the kinds E05 adds (correction, withdrawal, final), but only
+    -- ack and update are authored here; E05 widens this list together with its use cases.
+    if new.kind not in ('ack', 'update') then
+      raise exception 'alert_entry: only an ack or an update is created in this epic, not %', new.kind using errcode = 'check_violation';
+    end if;
+    new.editor_ids := array[new.author_id];
+    select t into bad_type from unnest(new.types) t where not exists (select 1 from public.disruption_type d where d.id = t) limit 1;
+    if bad_type is not null then
+      raise exception 'alert_entry: unknown type of disruption' using errcode = 'check_violation';
+    end if;
+    return new;
+  end if;
+
+  -- UPDATE
+  if new.id is distinct from old.id
+     or new.alert_id is distinct from old.alert_id
+     or new.kind is distinct from old.kind
+     or new.author_id is distinct from old.author_id
+     or new.created_at is distinct from old.created_at then
+    raise exception 'alert_entry: id, alert_id, kind, author_id and created_at never change' using errcode = 'check_violation';
+  end if;
+  new.updated_at := now();
+  content_changed := new.original_text is distinct from old.original_text
+    or new.types is distinct from old.types
+    or new.audience is distinct from old.audience
+    or new.phase is distinct from old.phase
+    or new.valid_until is distinct from old.valid_until;
+
+  if new.status = old.status then
+    -- No transition: only a draft can change, and only its content.
+    if old.status <> 'draft' then
+      raise exception 'alert_entry: a % entry cannot be changed; return it to draft first', old.status using errcode = 'check_violation';
+    end if;
+    if thread_status is distinct from 'open' then
+      raise exception 'ALERT_CLOSED: a closed thread''s draft cannot be changed' using errcode = 'check_violation';
+    end if;
+    if actor is null then
+      raise exception 'alert_entry: the acting account (cvh.actor_id) is required to change a draft' using errcode = 'check_violation';
+    end if;
+    if new.version is distinct from old.version
+       or new.content_hash is distinct from old.content_hash
+       or new.sms_bodies is distinct from old.sms_bodies
+       or new.submitted_at is distinct from old.submitted_at
+       or new.returned_for is distinct from old.returned_for
+       or new.approved_by is distinct from old.approved_by
+       or new.approved_at is distinct from old.approved_at
+       or new.approved_version is distinct from old.approved_version
+       or new.approved_hash is distinct from old.approved_hash
+       or new.web_published_at is distinct from old.web_published_at
+       or new.possible_duplicate_of is distinct from old.possible_duplicate_of then
+      raise exception 'alert_entry: a draft''s frozen fields, approval and publication do not change' using errcode = 'check_violation';
+    end if;
+    new.editor_ids := old.editor_ids;
+    if content_changed then
+      if not (actor = any (old.editor_ids)) then
+        new.editor_ids := old.editor_ids || actor;
+      end if;
+      select t into bad_type from unnest(new.types) t where not exists (select 1 from public.disruption_type d where d.id = t) limit 1;
+      if bad_type is not null then
+        raise exception 'alert_entry: unknown type of disruption' using errcode = 'check_violation';
+      end if;
+    end if;
+    return new;
+  end if;
+
+  -- A transition. Only these exist in this epic (lifecycle.ts mirrors them).
+  if not ((old.status = 'draft' and new.status in ('pending_approval', 'discarded'))
+          or (old.status = 'pending_approval' and new.status in ('draft', 'discarded', 'approved'))) then
+    raise exception 'alert_entry: % to % is not an allowed transition', old.status, new.status using errcode = 'check_violation';
+  end if;
+  -- A closed thread's entry changes only by a discard made while the thread is closing (AD-18).
+  if thread_status is distinct from 'open'
+     and not (new.status = 'discarded' and coalesce(current_setting('cvh.closing', true), '') = 'on') then
+    raise exception 'ALERT_CLOSED: a closed thread''s entry can only be discarded by its close' using errcode = 'check_violation';
+  end if;
+  if actor is null then
+    raise exception 'alert_entry: the acting account (cvh.actor_id) is required' using errcode = 'check_violation';
+  end if;
+  if content_changed then
+    raise exception 'alert_entry: a transition does not change the content' using errcode = 'check_violation';
+  end if;
+  if new.web_published_at is distinct from old.web_published_at and new.status <> 'approved' then
+    raise exception 'alert_entry: only approval publishes an entry' using errcode = 'check_violation';
+  end if;
+  new.editor_ids := old.editor_ids;
+
+  if old.status = 'draft' and new.status = 'pending_approval' then
+    -- Only an editor submits: someone who returned the entry without editing it (an approver) cannot
+    -- re-freeze its content and then approve it.
+    if not (actor = any (old.editor_ids)) then
+      raise exception 'alert_entry: only an editor submits' using errcode = 'check_violation';
+    end if;
+    if new.version <> old.version + 1 then
+      raise exception 'alert_entry: submit raises the version by one' using errcode = 'check_violation';
+    end if;
+    if new.content_hash is null or new.sms_bodies is null or new.submitted_at is null or not (new.sms_bodies ? 'en') then
+      raise exception 'alert_entry: submit freezes the hash, the SMS bodies and the time' using errcode = 'check_violation';
+    end if;
+    if new.returned_for is not null or new.approved_by is not null then
+      raise exception 'alert_entry: submit clears the return and holds no approval' using errcode = 'check_violation';
+    end if;
+    if not exists (select 1 from public.alert_entry_translation x where x.entry_id = new.id) then
+      raise exception 'alert_entry: submit freezes the translations' using errcode = 'check_violation';
+    end if;
+  elsif old.status = 'pending_approval' and new.status = 'draft' then
+    if old.web_published_at is not null then
+      raise exception 'alert_entry: a web-published entry never returns to draft' using errcode = 'check_violation';
+    end if;
+    if new.returned_for is null then
+      raise exception 'alert_entry: returning to draft names why (edit, return or retranslate)' using errcode = 'check_violation';
+    end if;
+    -- The return clears the approval binding; the version only ever goes up.
+    if new.content_hash is not null or new.sms_bodies is not null or new.submitted_at is not null or new.approved_by is not null
+       or new.possible_duplicate_of is not null or new.version <> old.version then
+      raise exception 'alert_entry: returning to draft clears the hash, the SMS bodies, the time and the possible-duplicate link, and keeps the version' using errcode = 'check_violation';
+    end if;
+    -- Whoever edits or re-translates becomes an editor; an approver who only returns it does not.
+    if new.returned_for in ('edit', 'retranslate') and not (actor = any (old.editor_ids)) then
+      new.editor_ids := old.editor_ids || actor;
+    end if;
+  elsif new.status = 'discarded' then
+    if old.web_published_at is not null then
+      raise exception 'alert_entry: a web-published entry is withdrawn, not discarded' using errcode = 'check_violation';
+    end if;
+    if new.version is distinct from old.version
+       or new.content_hash is distinct from old.content_hash
+       or new.sms_bodies is distinct from old.sms_bodies
+       or new.submitted_at is distinct from old.submitted_at
+       or new.returned_for is distinct from old.returned_for
+       or new.possible_duplicate_of is distinct from old.possible_duplicate_of
+       or new.approved_by is not null then
+      raise exception 'alert_entry: discarding changes nothing else' using errcode = 'check_violation';
+    end if;
+  else
+    -- pending_approval to approved
+    if new.approved_by is distinct from actor then
+      raise exception 'alert_entry: the approver must be the acting account' using errcode = 'check_violation';
+    end if;
+    if new.approved_by = any (old.editor_ids) then
+      raise exception 'alert_entry: an editor of the entry cannot approve it' using errcode = 'check_violation';
+    end if;
+    if old.content_hash is null
+       or new.approved_version is distinct from old.version
+       or new.approved_hash is distinct from old.content_hash
+       or new.version is distinct from old.version
+       or new.content_hash is distinct from old.content_hash
+       or new.sms_bodies is distinct from old.sms_bodies
+       or new.submitted_at is distinct from old.submitted_at
+       or new.possible_duplicate_of is distinct from old.possible_duplicate_of then
+      raise exception 'alert_entry: the approval must name the version and hash that are pending' using errcode = 'check_violation';
+    end if;
+    -- The database's clock times the approval and the publication, whatever the app sent: the two
+    -- are the same instant, and neither can be backdated or set in the future.
+    new.approved_at := now();
+    new.web_published_at := new.approved_at;
   end if;
   return new;
 end
 $$;
-revoke all on function alert_entry_duplicate_guard() from public, anon, authenticated, service_role;
-create trigger alert_entry_duplicate_guard before update on alert_entry for each row execute function alert_entry_duplicate_guard();
+revoke all on function alert_entry_guard() from public, anon, authenticated, service_role;
 
 -- ---------------------------------------------------------------------------------------------
 -- 3. alert_entry_translation.conversion and its checks
