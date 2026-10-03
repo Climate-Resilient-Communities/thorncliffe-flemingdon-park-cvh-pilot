@@ -67,6 +67,11 @@ describe("the entry that covers an open thread", () => {
     expect(coveringFeedEntry([entry("a", "ack"), entry("b", "update"), entry("c", "withdrawal", { supersedes_id: "b" })]).id).toBe("a");
   });
 
+  it("agrees with the resident feed on which kinds can cover: only the substantive ones", () => {
+    for (const kind of ["ack", "update", "correction", "final"] as const) expect(coveringFeedEntry([entry("a", "ack"), entry("b", kind)]).id).toBe("b");
+    expect(coveringFeedEntry([entry("a", "ack"), entry("b", "withdrawal")]).id).toBe("a");
+  });
+
   it("falls back to the latest entry when everything was replaced", () => {
     expect(coveringFeedEntry([entry("a", "ack"), entry("b", "withdrawal", { supersedes_id: "a" })]).id).toBe("b");
   });

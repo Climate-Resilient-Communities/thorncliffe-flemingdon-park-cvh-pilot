@@ -4,7 +4,7 @@
 //
 // The alerts come from the resident reader (AD-6: the non-drill views, web-published entries only), so the home shows exactly what residents are seeing, drills
 // never. The posts come from the person's own entries.
-import { and, desc, eq, inArray } from "drizzle-orm";
+import { and, desc, eq, inArray, isNotNull, ne, or } from "drizzle-orm";
 import { AudienceSchema, type Audience } from "../../../contracts/audience";
 import type { Db } from "../../../platform/db";
 import { readOpenThreads } from "../adapters/resident/readThreads";
@@ -72,7 +72,15 @@ export function createAmbassadorHome(db: Db) {
           .select({ entry: alertEntry })
           .from(alertEntry)
           .innerJoin(alert, eq(alert.id, alertEntry.alertId))
-          .where(and(eq(alertEntry.authorId, scope.staffId), eq(alert.isDrill, false)))
+          .where(
+            and(
+              eq(alertEntry.authorId, scope.staffId),
+              eq(alert.isDrill, false),
+              // Only what `postState` can show, so unsubmitted drafts and withdrawn-before-submit discards never crowd real posts out of the window.
+              or(ne(alertEntry.status, "draft"), eq(alertEntry.returnedFor, "return")),
+              or(ne(alertEntry.status, "discarded"), isNotNull(alertEntry.submittedAt)),
+            ),
+          )
           .orderBy(desc(alertEntry.createdAt), desc(alertEntry.id))
           .limit(200),
       ]);

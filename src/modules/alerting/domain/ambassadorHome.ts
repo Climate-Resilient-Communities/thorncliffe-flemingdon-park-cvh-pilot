@@ -3,6 +3,7 @@
 // assignment takes its building out of the home at once and a person with none sees nothing (fail closed).
 import type { Audience } from "../../../contracts/audience";
 import type { FeedThread } from "../../../contracts/feed";
+import { isSubstantive } from "./thread";
 
 /** The state of one of an Ambassador's own posts, as A-01 and A-03 word it. */
 export const AMBASSADOR_POST_STATES = ["live", "waiting", "approved", "verified", "returned", "declined", "withdrawn", "corrected"] as const;
@@ -33,11 +34,12 @@ export function postIsInScope(audience: Audience, assignedRsns: ReadonlySet<stri
 
 /**
  * The entry of an open thread that says what is going on now, from the feed's entries (oldest first): the latest substantive one that nothing replaced
- * (a withdrawal notice never covers), else the latest entry.
+ * (a withdrawal notice never covers), else the latest entry. The same rule as residentThreads' `coveringOf` (AD-19), over the feed's own entries: both use the
+ * shared SUBSTANTIVE_KINDS, so a new kind changes the two together.
  */
 export function coveringFeedEntry(entries: FeedThread["entries"]): FeedThread["entries"][number] {
   const replaced = new Set(entries.flatMap((entry) => (entry.supersedes_id ? [entry.supersedes_id] : [])));
-  const live = entries.filter((entry) => entry.kind !== "withdrawal" && !replaced.has(entry.id));
+  const live = entries.filter((entry) => isSubstantive(entry.kind) && !replaced.has(entry.id));
   return (live.length > 0 ? live : entries).at(-1)!;
 }
 

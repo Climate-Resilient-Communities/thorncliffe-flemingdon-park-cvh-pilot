@@ -291,6 +291,28 @@ describe("an Ambassador's own posts", () => {
     expect(byText["Declined post."]).toMatchObject({ entryId: declined.entryIds[0], state: "declined" });
   });
 
+  it("keeps a heavy author's real posts in view: more than 200 newer unsubmitted drafts do not crowd them out", async () => {
+    await assign(ambassador, RSN_A);
+    await seedThread({ slug: "crowdold01", entries: [{ author: ambassador, status: "pending_approval", publishedAt: null, text: "Old waiting post." }] });
+    const alertId = randomUUID();
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.actor_id', ${coordinator}, true)`;
+      await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${alertId}, false, ${new Date(NOW.getTime() - 3_600_000)}, ${coordinator}, 'crowddraft1')`;
+    });
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.actor_id', ${ambassador}, true)`;
+      await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+      await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version)
+               select gen_random_uuid(), ${alertId}, 'ack', 'draft', ${ambassador}, ${[ambassador]}, 'Draft.', ${["power"]}, ${tx.json(buildingsAudience(RSN_A) as never)}, 'problem', ${VALID_UNTIL}, 0
+               from generate_series(1, 210)`;
+      await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+    });
+
+    const { posts } = await home();
+
+    expect(posts.map((post) => post.text)).toEqual(["Old waiting post."]);
+  });
+
   it("lists a post as corrected or withdrawn once an approved correction or withdrawal replaced it", async () => {
     await assign(ambassador, RSN_A);
     const corrected = await seedThread({

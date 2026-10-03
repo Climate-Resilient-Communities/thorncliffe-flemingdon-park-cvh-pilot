@@ -11,7 +11,8 @@ import type { AmbassadorHomeData, AssignedBuilding } from "./view";
 
 let alertsAndPosts: AmbassadorHome | undefined;
 
-/** The open round for the person's floors. No round exists until E08's round stories; they replace this with the check-ins module's reader. */
+/** The open round for the person's floors. No round exists until E08's round stories; they replace this with the check-ins module's reader.
+ * TODO(E08 round stories): wire the real reader here and add a DB test of the count with an open round; until then this home always says "No check-in round right now". */
 export const rounds: RoundSummaryReader = NO_OPEN_ROUNDS;
 
 /** What the home shows for a person, from their assignments as they are now. */
