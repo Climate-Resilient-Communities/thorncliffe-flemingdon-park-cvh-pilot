@@ -1233,7 +1233,7 @@ So that I know what to do before, during and after a disruption.
 
 ### Story S02.11 — Resident home shows their buildings and the current alerts
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 12 h 20 min (started 2026-10-02 20:08 UTC, merged 2026-10-03 08:28 UTC)
 - **Traces:** UX-DR5, AR-20 (`FeedV1`), AR-27 (911 block), FR-A9 (on the phone) · **Depends on:** S02.03, S02.08 · **Branch:** `e02-s11-resident-home`
 
 As a resident,
