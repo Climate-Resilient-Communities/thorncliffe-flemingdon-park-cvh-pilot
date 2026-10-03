@@ -35,6 +35,9 @@ export default defineConfig({
     // test.use({ storageState: { cookies: [], origins: [] } }).
     storageState: { cookies: [], origins: [{ origin: localUrl, localStorage: [{ name: "cvh.choices", value: JSON.stringify({ v: 1, welcomed: true }) }] }] },
     browserName: "chromium",
+    // The service worker (S02.12) answers a page's requests itself, and page.route cannot see what it answers, so every
+    // test runs without it except the offline tests, which allow it (offline.spec.ts: test.use({ serviceWorkers: "allow" })).
+    serviceWorkers: "block",
     launchOptions: executablePath ? { executablePath } : undefined,
   },
   webServer: {

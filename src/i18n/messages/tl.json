@@ -1310,7 +1310,10 @@
     "floorsOne": "1 palapag ang napili",
     "floorsMany": "{n} palapag ang napili",
     "buildingsNone": "Walang napili",
-    "removeItem": "Alisin: {item}"
+    "removeItem": "Alisin: {item}",
+    "offlineTitle": "Pagbasa nang walang signal",
+    "offlineHelp": "Ang mga pahinang binubuksan mo nang may signal ay sine-save sa teleponong ito, kaya mababasa mo ulit ang mga ito nang walang signal. Laging naka-save ang mga numero. Sa unang pagkakataon, kailangan ng CVH ng signal para bumukas.",
+    "offlineNote": "Maaaring hindi mag-save ang teleponong ito ng mga pahina para magamit nang walang signal"
   },
   "R35": {
     "title": "Kumuha ng mga alerto para sa iyong gusali",
@@ -4471,5 +4474,11 @@
   },
   "guides": {
     "reviewed": "Sinuri ng Hub, huling na-update {date}"
+  },
+  "offline": {
+    "title": "Hindi naka-save sa iyong telepono ang pahinang ito",
+    "body": "Hindi pa ito nabubuksan sa teleponong ito nang may signal, kaya kailangan nito ng signal. Laging naka-save sa iyong telepono ang mga numero.",
+    "available": "Mababasa mo ang mga ito nang walang signal",
+    "none": "Wala pang ibang naka-save sa teleponong ito. Ang mga pahinang binubuksan mo nang may signal ay sine-save para sa susunod."
   }
 }

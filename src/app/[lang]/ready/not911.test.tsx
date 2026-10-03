@@ -32,6 +32,7 @@ import ReadyPage from "./page";
 import GuidePage from "./[guide]/page";
 import NumbersPage from "./numbers/page";
 import HomePage from "../page";
+import OfflinePage from "../offline/page";
 
 /** The marker the 911 block carries (src/ui/emergency/not-911.tsx). */
 export const hasNot911 = (html: string) => (html.match(/data-component="not-911"/g) ?? []).length;
@@ -54,6 +55,8 @@ const PAGES: { name: string; render: Render }[] = [
   { name: "Be ready", render: async (lang) => (await ReadyPage({ params: Promise.resolve({ lang }), searchParams: Promise.resolve({}) })) as ReactElement },
   // Home (R-03, owner decisions 36 and 37): the short notice, the last item, drawn on the server render before the phone's choices are read.
   { name: "home", render: async (lang) => (await HomePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
+  // The offline page (S02.12): what a phone without signal shows for a page it has not kept.
+  { name: "offline", render: async (lang) => (await OfflinePage({ params: Promise.resolve({ lang }) } as never)) as ReactElement },
 ];
 
 beforeEach(() => {
@@ -62,7 +65,7 @@ beforeEach(() => {
 });
 
 describe("the 911 block", () => {
-  it("is on every guide, the essential-numbers page, Be ready and home, exactly once, in English and in Urdu", async () => {
+  it("is on every guide, the essential-numbers page, Be ready, home and the offline page, exactly once, in English and in Urdu", async () => {
     for (const { name, render } of PAGES) {
       for (const lang of ["en", "ur"]) {
         const html = renderToStaticMarkup(await render(lang));
@@ -102,7 +105,7 @@ describe("the 911 block", () => {
   });
 
   it("is the one component: no page of the list writes its own copy of the words", () => {
-    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
+    const sources = ["page.tsx", "[guide]/page.tsx", "numbers/page.tsx", "../../../ui/home/home-now.tsx", "../offline/page.tsx"].map((file) => readFileSync(path.join(__dirname, file), "utf8"));
     for (const source of sources) {
       expect(source).toMatch(/<Not911 /);
       expect(source).not.toMatch(/not an emergency service/i);

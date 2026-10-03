@@ -1,4 +1,5 @@
 import { DirectoryListingV1, DirectoryManifestV1 } from "@/contracts/directory";
+import { FALLBACK_HEADER } from "../offline/protocol";
 
 // How the phone gets the directory (S02.06, AD-11, AD-20). It reads the published release files and nothing else: the
 // manifest (never cached), then the listing file of the page language, and keeps the last complete listing it has read.
@@ -12,10 +13,10 @@ export const CACHE_PREFIX = "cvh.directory.";
 /** How long one request for the manifest or a listing file may take, body included, before it counts as not reachable. */
 export const FETCH_TIMEOUT_MS = 8000;
 /**
- * The header with which a service worker marks a response it made up because the network was down (S02.12). A response
- * that carries it is not the server's answer, so it counts as unreachable here.
+ * The header with which the service worker marks a response it took from its cache because the network was down (S02.12).
+ * A response that carries it is not the server's answer, so a manifest that carries it is never taken as current.
  */
-export const FALLBACK_HEADER = "x-cvh-fallback";
+export { FALLBACK_HEADER };
 
 /** The part of Storage this uses, so a test can pass a plain object. */
 export type KeptStorage = Pick<Storage, "getItem" | "setItem" | "removeItem" | "key" | "length">;
@@ -113,10 +114,11 @@ function readReleaseOf(storage: KeptStorage, key: string): number | null {
 export type Fetcher = typeof fetch;
 
 /**
- * Reads one JSON body completely. Null for any failure: no signal, no answer within `timeoutMs`, a refusal, a response a
- * service worker made up (FALLBACK_HEADER), a body that stops short or is not JSON.
+ * Reads one JSON body completely: the value, and whether the service worker answered from its cache (FALLBACK_HEADER).
+ * Null for any failure: no signal and nothing kept, no answer within `timeoutMs`, a refusal, a body that stops short or is
+ * not JSON.
  */
-export async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promise<unknown> {
+export async function readJsonAnswer(fetcher: Fetcher, url: string, timeoutMs: number): Promise<{ json: unknown; fallback: boolean } | null> {
   try {
     // The signal covers the body too: a download that stalls after the headers is cut off as well.
     const signal = AbortSignal.timeout(timeoutMs);
@@ -124,20 +126,37 @@ export async function readJson(fetcher: Fetcher, url: string, timeoutMs: number)
     // The whole body is read first, so a refusal does not leave the request open and a download cut short throws here.
     const text = await response.text();
     if (!response.ok) return null;
-    // TODO(S02.12): the service worker must answer a failed manifest or listing request from its cache only with this
-    // header set (for example `x-cvh-fallback: 1`), never as a plain 200. Without it a stale manifest would look like the
-    // server's answer and the screen would call an old release current. Nothing sets it before S02.12; this side is done.
-    if (response.headers.get(FALLBACK_HEADER) !== null) return null;
-    return JSON.parse(text);
+    return { json: JSON.parse(text), fallback: response.headers.get(FALLBACK_HEADER) !== null };
   } catch {
     return null;
   }
+}
+
+/** One JSON body as the server answered it (readJsonAnswer); null also for a copy the service worker answered with. */
+export async function readJson(fetcher: Fetcher, url: string, timeoutMs: number): Promise<unknown> {
+  const answer = await readJsonAnswer(fetcher, url, timeoutMs);
+  return answer && !answer.fallback ? answer.json : null;
 }
 
 /** The manifest as the server names it now (never cached), or null when it cannot be read or fails its schema. */
 export async function fetchManifest(fetcher: Fetcher, timeoutMs: number = FETCH_TIMEOUT_MS): Promise<DirectoryManifestV1 | null> {
   const manifest = DirectoryManifestV1.safeParse(await readJson(fetcher, MANIFEST_URL, timeoutMs));
   return manifest.success ? manifest.data : null;
+}
+
+/**
+ * The listing file a manifest names for `lang`, read completely and checked against it; null when it cannot be. A copy the
+ * service worker answered with is taken only when `fromWorker` (it is then shown, never kept or called current).
+ */
+async function listingOf(fetcher: Fetcher, release: DirectoryManifestV1, lang: string, timeoutMs: number, fromWorker = false): Promise<DirectoryListingV1 | null> {
+  const path = release.files[lang as keyof typeof release.files];
+  if (!path) return null;
+  const answer = await readJsonAnswer(fetcher, path, timeoutMs);
+  if (answer?.fallback && !fromWorker) return null;
+  const listing = DirectoryListingV1.safeParse(answer?.json);
+  if (!listing.success) return null;
+  const l = listing.data;
+  return l.release_v === release.release_v && l.lang === lang && l.catalogue_hash === release.catalogue_hash ? l : null;
 }
 
 /**
@@ -148,7 +167,8 @@ export async function fetchManifest(fetcher: Fetcher, timeoutMs: number = FETCH_
  *   the manifest: same release, language and catalogue) and only then kept and shown;
  * - the download fails, is incomplete or fails the check, or the server cannot be asked: the kept listing is shown, not
  *   as current, and the next visit tries again (nothing is remembered about the failure);
- * - nothing was ever kept: `unavailable`.
+ * - nothing was ever kept: the release whose manifest and file the service worker kept, not as current (S02.12); with
+ *   none, `unavailable`.
  * `onKept` is called first with the kept listing as a not-current state, so the list can show while the server is asked,
  * and it is not called current until the manifest has confirmed it.
  */
@@ -169,10 +189,20 @@ export async function loadDirectory(
   const kept = readKept(storage, lang);
   if (kept) deps.onKept?.(keptState(kept));
 
-  const manifest = await fetchManifest(fetcher, timeoutMs);
+  const answer = await readJsonAnswer(fetcher, MANIFEST_URL, timeoutMs);
+  const parsed = DirectoryManifestV1.safeParse(answer?.json);
+  const manifest = parsed.success && !answer?.fallback ? parsed.data : null;
   deps.onManifest?.(manifest);
   const previous = (): DirectoryState => (kept ? keptState(kept) : { status: "unavailable" });
-  if (!manifest) return previous();
+  if (!manifest) {
+    // S02.12: nothing kept on the phone (localStorage blocked or cleared) but the service worker kept the manifest and its
+    // release's file: that release is shown, never as current, and nothing is written.
+    if (!kept && parsed.success && answer?.fallback) {
+      const listing = await listingOf(fetcher, parsed.data, lang, timeoutMs, true);
+      if (listing) return { status: "ready", listing, publishedAt: parsed.data.published_at, current: false };
+    }
+    return previous();
+  }
 
   const release = manifest;
   // A kept release is the current one only if it is the manifest's own: a number the manifest does not name (a release that
@@ -181,12 +211,8 @@ export async function loadDirectory(
     return { status: "ready", ...kept, current: true };
   }
 
-  const path = release.files[lang as keyof typeof release.files];
-  if (!path) return previous();
-  const listing = DirectoryListingV1.safeParse(await readJson(fetcher, path, timeoutMs));
-  if (!listing.success) return previous();
-  const l = listing.data;
-  if (l.release_v !== release.release_v || l.lang !== lang || l.catalogue_hash !== release.catalogue_hash) return previous();
+  const l = await listingOf(fetcher, release, lang, timeoutMs);
+  if (!l) return previous();
 
   const fresh: KeptListing = { listing: l, publishedAt: release.published_at };
   keep(storage, fresh);
