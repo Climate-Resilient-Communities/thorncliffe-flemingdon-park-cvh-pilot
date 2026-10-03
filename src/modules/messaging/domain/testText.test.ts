@@ -48,6 +48,7 @@ describe("the first-text spike's rules", () => {
       invalid: "validation",
       not_available: "not_available",
       not_allowlisted: "not_allowlisted",
+      paused: "paused",
       duplicate_number: "duplicate",
       duplicate_request: "duplicate",
     });

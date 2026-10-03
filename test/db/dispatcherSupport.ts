@@ -141,7 +141,7 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
 
   async function reset() {
     // The pause names a staff account, so it is cleared before the fixtures delete theirs.
-    await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null where id = 1`;
+    await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
     await fx.cleanup();
     await owner`update dispatcher_lease set token = gen_random_uuid(), holder = 'none', expires_at = to_timestamp(0), renewed_at = to_timestamp(0), paced_until = to_timestamp(0) where id = 1`;
     await owner`delete from ops_event where kind in ('delivery.unknown', 'dispatch.provider_auth_failed', 'messaging.smart_encoding_on', 'messaging.service_check_failed',
@@ -259,10 +259,13 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
   const statesOf = async (ids: string[]) => Object.fromEntries((await owner`select id, state from delivery where id = any(${ids})`).map((row) => [row.id as string, row.state as string]));
   const opsEvents = async (kind: string) => (await owner`select kind, severity, subject_type, subject_id, detail from ops_event where kind = ${kind} order by id`) as unknown as Row[];
 
-  /** Pauses (with who, when and why, as S06.06's use case will) or resumes, as the owner: this story only reads the switch. */
+  /**
+   * Pauses or resumes as the owner, for the sender's own tests (who paused, when and why, as the use case writes them): they are about what the
+   * dispatcher does when the switch is on at a chosen instant, not about the Admin's use case, which test/db/messagingPause.db.test.ts runs.
+   */
   async function setPause(on: boolean) {
     if (!on) {
-      await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null where id = 1`;
+      await owner`update messaging_control set paused = false, paused_by = null, paused_at = null, reason = null, handed_off_at_pause = null where id = 1`;
       return;
     }
     const admin = await fx.staff("admin");

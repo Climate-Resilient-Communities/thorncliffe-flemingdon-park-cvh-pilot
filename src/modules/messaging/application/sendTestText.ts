@@ -3,8 +3,10 @@
 // and the toll-free number work. E06's outbound queue replaces this.
 //
 // The order is the safety:
-//  1. refuse what is malformed, what is not production-live and configured, and what is not on the
-//     allowlist: none of that calls the provider or touches the ledger;
+//  1. refuse what is malformed, what is not production-live and configured, what is not on the
+//     allowlist, and every press while texts are paused (S06.06: the pause stops this text too, and
+//     it is checked before the claim so a refused press leaves no claim to block a press after the
+//     resume): none of that calls the provider or touches the ledger;
 //  2. claim the send in the ledger, in a transaction that holds an advisory lock on the number: a
 //     repeated request id, or a claim on the same number in the last 5 minutes, is refused as a
 //     duplicate. The claim commits before the provider is called, so a crash after it still blocks
@@ -69,6 +71,11 @@ export interface TestTextDeps {
    */
   numberKey: () => string;
   log: TestTextLog;
+  /**
+   * Whether all texts are paused now (S06.06). Read only once a press has passed the checks that need no database, just before the claim.
+   * A switch that cannot be found counts as paused, as it does for the sender; one that cannot be read throws, and nothing is sent.
+   */
+  isPaused: () => Promise<boolean>;
 }
 
 export interface SendTestTextInput {
@@ -195,6 +202,7 @@ export function createTestTextService(deps: TestTextDeps): TestTextService {
       const from = config.fromNumber;
       if (!config.live || !provider || !from) return refuse(actorStaffId, "not_available");
       if (!isAllowlisted(config.allowlist, number)) return refuse(actorStaffId, "not_allowlisted");
+      if (await deps.isPaused()) return refuse(actorStaffId, "paused");
 
       // The attempt's audit record is written in the claim's own transaction: a claim that commits always
       // has its record (and a record that cannot be written means no claim and no text).
