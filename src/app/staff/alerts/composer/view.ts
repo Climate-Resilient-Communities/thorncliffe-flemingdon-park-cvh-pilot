@@ -28,13 +28,16 @@ export const catalogText: Text = (key, values) => englishText(`staff.compose.${k
  * The composers: the acknowledgement (O-12), the alert (O-02), an update to a running alert (O-14) and the promotion of an acknowledgement to a full alert (O-13,
  * which is the first update; S05.01). The last two are one composer with its own words, and start from the alert they add to.
  */
-export type ComposerMode = "ack" | "alert" | "update" | "promote" | "correct" | "withdraw";
+export type ComposerMode = "ack" | "alert" | "update" | "promote" | "correct" | "withdraw" | "resolve";
 
 /**
  * An entry added to a running alert: the thread's types, audience and languages are carried over, and the phase is required (S05.01). A correction (O-15,
  * S05.02) is one: it is added above the entry it corrects, and says what it changes about who the alert is for.
  */
 export const isFollowUpMode = (mode: ComposerMode): mode is "update" | "promote" | "correct" => mode === "update" || mode === "promote" || mode === "correct";
+
+/** The final message of "Mark resolved" (O-16, S05.03): it adds to a running alert and closes it once a second person approves it. */
+export const isResolveMode = (mode: ComposerMode): mode is "resolve" => mode === "resolve";
 
 /** An entry that replaces another residents read: a correction or a withdrawal (O-15, S05.02). */
 export const isReplacingMode = (mode: ComposerMode): mode is "correct" | "withdraw" => mode === "correct" || mode === "withdraw";
@@ -157,6 +160,8 @@ export interface ComposerScreen {
   thread?: ThreadDigestView;
   /** What saving does, on a new update. */
   startNote?: string;
+  /** What happens once the entry is approved, on the final message of "Mark resolved" (O-16, S05.03): the alert closes, who gets it, what stops. */
+  after?: { title: string; items: string[] };
   /** The entry a correction or a withdrawal is about, as residents read it now (O-15, S05.02); on the draft's composer and on the start once an entry is chosen. */
   replaces?: { title: string; heading: string; text: string };
   /** The id of the entry a new correction or withdrawal is about: the start form sends it as `target`. */
@@ -283,10 +288,10 @@ function messagesOf(t: Text): ComposerMessages {
 }
 
 /** The running alert as residents read it: newest entry first, each with its time and where things stood, and the thread's valid-until (S05.01). */
-function threadDigest(summary: ThreadSummary, t: Text, replacing = false): ThreadDigestView {
+function threadDigest(summary: ThreadSummary, t: Text, lead: "lead" | "leadReplace" | "leadResolve" = "lead"): ThreadDigestView {
   return {
     title: t("thread.title"),
-    lead: t(replacing ? "thread.leadReplace" : "thread.lead"),
+    lead: t(`thread.${lead}`),
     validUntil: summary.validUntil === null ? "" : t("thread.validUntil", { time: formatTorontoDateTime(summary.validUntil) }),
     entries: summary.entries.map((entry) => ({
       key: entry.id,
@@ -325,7 +330,11 @@ const TITLES: Record<ComposerMode, { title: (t: Text) => string; lead: (t: Text)
   promote: { title: (t) => t("promoteTitle"), lead: (t) => t("promoteLead") },
   correct: { title: (t) => t("correctTitle"), lead: (t) => t("correctLead") },
   withdraw: { title: (t) => t("withdrawTitle"), lead: (t) => t("withdrawLead") },
+  resolve: { title: (t) => t("resolveTitle"), lead: (t) => t("resolveLead") },
 };
+
+/** What happens once a final message is approved (O-16): the alert closes, who gets the final entry, and what stops. */
+const afterOf = (t: Text): NonNullable<ComposerScreen["after"]> => ({ title: t("after.title"), items: [t("after.closes"), t("after.reach"), t("after.stops")] });
 
 /** Where things stand: two choices, required. On an update none is carried over: a new update has none ticked (`checked` null), a saved one the author's. */
 function phaseOf(t: Text, followUp: boolean, checked: string | null): NonNullable<DraftFormView["phase"]> {
@@ -347,6 +356,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
   const from = fromOfMode(mode);
   const followUp = isFollowUpMode(mode);
   const replacing = mode === "withdraw";
+  const resolving = isResolveMode(mode);
   const refQuery = new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, from }).toString();
   const here = `${composerPage(from)}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
   const results = new Map<string, LanguageResult>();
@@ -391,7 +401,8 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
             note: input.preview.nineOneOneFirst ? t("preview911First") : t("preview911Last"),
             segments: input.preview.sms.segments,
           },
-    ...((followUp || replacing) && input.thread ? { thread: threadDigest(input.thread, t, isReplacingMode(mode)) } : {}),
+    ...((followUp || replacing || resolving) && input.thread ? { thread: threadDigest(input.thread, t, resolving ? "leadResolve" : isReplacingMode(mode) ? "leadReplace" : "lead") } : {}),
+    ...(resolving ? { after: afterOf(t) } : {}),
     ...(input.target ? { replaces: replacesOf(input.target, t) } : {}),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(results, t) },
     aside: {
@@ -402,6 +413,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
       channels: [t("channelWeb"), t("channelSms")],
       ...(followUp ? { carried: t("carried"), change: changeOfUpdate(input.thread, entry.id, audience, input.plans, audienceText, t) } : {}),
       ...(replacing ? { carried: t("withdrawCarried") } : {}),
+      ...(resolving ? { carried: t("resolveCarried"), change: changeOfUpdate(input.thread, entry.id, audience, input.plans, audienceText, t) } : {}),
     },
     actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
     // A running attempt always leaves the entry a draft (a "Try translation again" returns it to draft first).
@@ -415,8 +427,8 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     const valid = fieldsOfStoredInstant(content.validUntil);
     screen.draft = {
       text: {
-        label: replacing ? t("withdrawTextLabel") : mode === "correct" ? t("correctTextLabel") : t("textLabel"),
-        hint: replacing ? t("withdrawTextHint", { max: ALERT_TEXT_MAX }) : t("textHint", { max: ALERT_TEXT_MAX }),
+        label: replacing ? t("withdrawTextLabel") : resolving ? t("resolveTextLabel") : mode === "correct" ? t("correctTextLabel") : t("textLabel"),
+        hint: replacing ? t("withdrawTextHint", { max: ALERT_TEXT_MAX }) : resolving ? t("resolveTextHint", { max: ALERT_TEXT_MAX }) : t("textHint", { max: ALERT_TEXT_MAX }),
         value: content.text,
         max: ALERT_TEXT_MAX,
         counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }),
@@ -426,7 +438,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
           ? { legend: t("typesLegend"), building: typeChoices(BUILDING_TYPES, ticked), neighbourhood: typeChoices(NEIGHBOURHOOD_TYPES, ticked) }
           : null,
       typesSummary: content.types.map(typeName).join(", "),
-      phase: replacing ? null : mode === "alert" || followUp ? phaseOf(t, followUp, content.phase) : null,
+      phase: replacing || resolving ? null : mode === "alert" || followUp ? phaseOf(t, followUp, content.phase) : null,
       valid: {
         title: t("validTitle"),
         hint: t("validHint"),
@@ -438,7 +450,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
         mode: content.validUntilMode ?? "at",
         fields: valid,
       },
-      ...(replacing ? { validFixed: true as const } : {}),
+      ...(replacing || resolving ? { validFixed: true as const } : {}),
     };
   } else if (status === "pending") {
     const n = fallbackLangs.length;
@@ -462,7 +474,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
 }
 
 export interface StartInput {
-  mode: "update" | "promote";
+  mode: "update" | "promote" | "resolve";
   alertId: string;
   /** The id the new entry will take: made when the page is drawn, so that pressing Save twice makes one draft (`addUpdate`). */
   entryId: string;
@@ -488,6 +500,7 @@ export interface StartInput {
 export function startScreen(input: StartInput): ComposerScreen {
   const t = input.text ?? catalogText;
   const { mode, start } = input;
+  const resolving = isResolveMode(mode);
   const ref: DraftRef = { alertId: input.alertId, entryId: input.entryId };
   const audienceText: Text = input.text ?? ((key, values) => englishText(`staff.audience.${key}`, values));
   const aside = asideOf(start.audience, input.plans, { href: "", label: "" }, audienceText);
@@ -500,8 +513,9 @@ export function startScreen(input: StartInput): ComposerScreen {
     firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
     benchmark: "",
     status: "new",
-    startNote: t("startNote"),
-    thread: threadDigest(input.thread, t),
+    startNote: t(resolving ? "resolveStartNote" : "startNote"),
+    thread: threadDigest(input.thread, t, resolving ? "leadResolve" : "lead"),
+    ...(resolving ? { after: afterOf(t) } : {}),
     preview: null,
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), rows: languageRows(new Map(), t) },
     aside: {
@@ -519,10 +533,16 @@ export function startScreen(input: StartInput): ComposerScreen {
     messages: messagesOf(t),
     here: `${composerPage(fromOfMode(mode))}?${new URLSearchParams({ alert: input.alertId }).toString()}`,
     draft: {
-      text: { label: t("textLabel"), hint: t("textHint", { max: ALERT_TEXT_MAX }), value: "", max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
+      text: {
+        label: resolving ? t("resolveTextLabel") : t("textLabel"),
+        hint: resolving ? t("resolveTextHint", { max: ALERT_TEXT_MAX }) : t("textHint", { max: ALERT_TEXT_MAX }),
+        value: "",
+        max: ALERT_TEXT_MAX,
+        counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }),
+      },
       types: null,
       typesSummary: start.types.map(typeName).join(", "),
-      phase: phaseOf(t, true, null),
+      phase: resolving ? null : phaseOf(t, true, null),
       valid: {
         title: t("validTitle"),
         hint: t("validHint"),
@@ -531,9 +551,10 @@ export function startScreen(input: StartInput): ComposerScreen {
         dateLabel: englishText("staff.time.dateLabel"),
         timeLabel: englishText("staff.time.timeLabel"),
         foldLegend: englishText("staff.time.foldLegend"),
-        mode: start.validUntilMode,
+        mode: resolving ? "resolved" : start.validUntilMode,
         fields: fieldsOfStoredInstant(start.validUntil),
       },
+      ...(resolving ? { validFixed: true as const } : {}),
     },
   };
 }
@@ -596,7 +617,7 @@ export function replaceStartScreen(input: ReplaceStartInput): ComposerScreen {
     benchmark: "",
     status: "new",
     startNote: target ? t("startNote") : undefined,
-    thread: threadDigest(input.thread, t, true),
+    thread: threadDigest(input.thread, t, "leadReplace"),
     preview: null,
     targets: {
       title: t(withdrawing ? "withdrawTargetsTitle" : "correctTargetsTitle"),

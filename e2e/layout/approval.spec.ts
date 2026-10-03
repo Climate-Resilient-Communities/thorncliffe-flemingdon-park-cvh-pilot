@@ -92,6 +92,12 @@ const PAGES: Page_[] = [
     review: { entry: { kind: "withdrawal", supersedesId: REPLACED.id, withdrawalReason: "duplicate" }, target: REPLACED, closesThread: true, recipients: OPEN },
     actions: ["approve-button", "return-button", "discard-button"],
   },
+  {
+    // S05.03: a final message says that approving it closes the alert and that it goes to everyone who got any entry of it, above the text, in every language with the longest labels.
+    name: "O-05 a final message that closes the alert, with texting open",
+    review: { entry: { kind: "final" }, closesThread: true, recipients: OPEN },
+    actions: ["approve-button", "return-button", "discard-button"],
+  },
   { name: "O-05 returning it to its author with a note", review: {}, initial: () => ({ mode: "return" }), actions: ["send-back-button", "cancel-button"] },
   { name: "O-05 while all texts are paused (S06.06)", review: {}, paused: true, actions: ["approve-button", "return-button", "discard-button"] },
   { name: "O-05 confirming a discard", review: {}, initial: () => ({ mode: "discard" }), actions: ["discard-confirm-button", "cancel-button"] },

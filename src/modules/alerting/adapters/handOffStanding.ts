@@ -14,15 +14,28 @@ import { alert, alertEntry } from "./schema";
 const dbNow = (skewMs: number): SQL => (skewMs === 0 ? sql`now()` : sql`(now() + ${Math.trunc(skewMs)}::double precision * interval '1 millisecond')`);
 
 /**
- * The closing entry is the entry whose approval closed the thread: its approved `final`, or the withdrawal that left no
- * substantive entry. Its approval and the close are one transaction (E05: `closeAlert(alertId, reason, keepEntryId)` runs in the
- * approval's transaction), so the entry's `approved_at` and the thread's `closed_at` are the same `now()`. Until E05 records the
- * kept entry explicitly (S05.03), that equality is how the closing entry is told from every other entry of a closed thread;
- * S05.03 and S06.03 replace this with the recorded entry and keep this reader's test.
+ * The closing entry is the entry whose approval closed the thread: its approved `final`, or the withdrawal that left no substantive entry (or, once the
+ * expire job exists, its system final). `closeAlert` records it as `alert.closing_entry_id` in the transaction that closes the thread (S05.03), and the
+ * database accepts a close from the app only beside it, so a thread closed since then names it and nothing else is the closing entry of that thread: the
+ * entry is it when it is that entry and still approved (or published by the system).
+ *
+ * A thread closed before the column existed (and a fixture written directly) records none: for those the closing entry is still told by the way its
+ * approval and the close were one transaction, so that the entry's `approved_at` and the thread's `closed_at` are the same `now()`.
  */
-export function isClosingEntry(row: { entryStatus: string; entryKind: string; approvedAt: Date | null; threadStatus: string; closedAt: Date | null }): boolean {
+export function isClosingEntry(row: {
+  entryId?: string;
+  entryStatus: string;
+  entryKind: string;
+  approvedAt: Date | null;
+  threadStatus: string;
+  closedAt: Date | null;
+  closingEntryId?: string | null;
+}): boolean {
+  if (row.threadStatus !== "closed") return false;
+  if (row.closingEntryId !== undefined && row.closingEntryId !== null) {
+    return row.entryId === row.closingEntryId && (row.entryStatus === "approved" || row.entryStatus === "published_system") && (row.entryKind === "final" || row.entryKind === "withdrawal");
+  }
   return (
-    row.threadStatus === "closed" &&
     row.entryStatus === "approved" &&
     (row.entryKind === "final" || row.entryKind === "withdrawal") &&
     row.approvedAt !== null &&
@@ -35,12 +48,14 @@ export const alertStandingReader: AlertStandingReader = {
   async standingOf(tx, entryId, skewMs): Promise<AlertStanding | null> {
     const [row] = await tx
       .select({
+        entryId: alertEntry.id,
         entryStatus: alertEntry.status,
         entryKind: alertEntry.kind,
         validUntilPassed: sql<boolean>`${alertEntry.validUntil} <= ${dbNow(skewMs)}`,
         approvedAt: alertEntry.approvedAt,
         threadStatus: alert.status,
         closedAt: alert.closedAt,
+        closingEntryId: alert.closingEntryId,
         isDrill: alert.isDrill,
       })
       .from(alertEntry)

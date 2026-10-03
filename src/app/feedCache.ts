@@ -9,7 +9,8 @@ import { unstable_cache } from "next/cache";
 import { FEED_EDGE_MAX_AGE_SECONDS, FEED_TAG, type FeedV1 } from "@/contracts/feed";
 import type { LangCode } from "@/contracts/lang";
 import { getEnv } from "@/platform/config/env";
-import { readFeed } from "./api/feed/source";
+import type { FeedThread } from "@/contracts/feed";
+import { readClosedAlert, readClosedSlugs, readFeed } from "./api/feed/source";
 
 /**
  * Whether residents are told about any alert in this deployment (RESIDENT_ALERTS_ENABLED, the launch gate: off in production until
@@ -29,3 +30,23 @@ const keyOf = (lang: LangCode): string[] => ["feed", lang, residentAlertsEnabled
 /** The feed for one language, from the data cache. A failure is thrown out of the cached function, so it is never cached. */
 export const readCachedFeed = (lang: LangCode): Promise<FeedV1> =>
   unstable_cache(() => readFeed(lang), keyOf(lang), { revalidate: FEED_EDGE_MAX_AGE_SECONDS, tags: [FEED_TAG] })();
+
+const closedSlugs = (): Promise<string[]> =>
+  unstable_cache(() => readClosedSlugs(), ["closed-slugs", residentAlertsEnabled() ? "alerts-on" : "alerts-off", getEnv().publicBaseUrl], { revalidate: FEED_EDGE_MAX_AGE_SECONDS, tags: [FEED_TAG] })();
+
+/**
+ * The thread with this slug that closed (S05.03), from the data cache under the feed's tag, so the approval that closes a thread expires it with the feed. The closed
+ * threads' slugs are one cached read: a slug that is not among them is answered null with no further read, so a public address cannot cost the database a read per
+ * guess. `serverNow` is an ISO string (the cache holds JSON).
+ */
+export async function readCachedClosedAlert(lang: LangCode, slug: string): Promise<{ thread: FeedThread; serverNow: string } | null> {
+  if (!(await closedSlugs()).includes(slug)) return null;
+  return unstable_cache(
+    async () => {
+      const found = await readClosedAlert(lang, slug);
+      return found ? { thread: found.thread, serverNow: found.serverNow.toISOString() } : null;
+    },
+    ["closed-alert", lang, slug, residentAlertsEnabled() ? "alerts-on" : "alerts-off", getEnv().publicBaseUrl],
+    { revalidate: FEED_EDGE_MAX_AGE_SECONDS, tags: [FEED_TAG] },
+  )();
+}

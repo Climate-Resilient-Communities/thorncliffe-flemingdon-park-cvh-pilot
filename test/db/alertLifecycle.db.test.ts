@@ -283,7 +283,8 @@ describe("alert.is_drill and the nondrill_alert view", () => {
 
   it("never reopens a closed thread or changes it", async () => {
     const ref = await newDraft();
-    await asApp(null, (tx) => tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${ref.alertId}`);
+    // A thread is closed only beside the entry that closes it when the app does it (S05.03); this fixture closes it as the owner, then the app tries to change it.
+    await owner`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${ref.alertId}`;
     await expect(asApp(null, (tx) => tx`update alert set status = 'open', closed_reason = null, closed_at = null where id = ${ref.alertId}`)).rejects.toThrow(/ALERT_CLOSED/);
     await expect(asApp(null, (tx) => tx`update alert set closed_reason = 'expired' where id = ${ref.alertId}`)).rejects.toThrow(/ALERT_CLOSED/);
   });
@@ -770,7 +771,7 @@ describe("a draft entry", () => {
 
   it("cannot be created in, or changed in, a closed thread", async () => {
     const ref = await newDraft(authorA);
-    await asApp(null, (tx) => tx`update alert set status = 'closed', closed_reason = 'expired', closed_at = now() where id = ${ref.alertId}`);
+    await owner`update alert set status = 'closed', closed_reason = 'expired', closed_at = now() where id = ${ref.alertId}`;
     await expect(asApp(authorA.id, (tx) => tx`update alert_entry set original_text = 'late' where id = ${ref.entryId}`)).rejects.toThrow(/ALERT_CLOSED/);
     await expect(
       asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
@@ -860,7 +861,8 @@ describe("the thread lock", () => {
   it("re-reads the thread after the lock and refuses with ALERT_CLOSED when it was closed while the use case waited", async () => {
     const ref = await newPending();
     let approval!: Promise<unknown>;
-    await appSql.begin(async (tx) => {
+    // The thread is locked and closed by a transaction of the owner's connection: the app closes a thread only beside the entry that closes it (S05.03).
+    await owner.begin(async (tx) => {
       await tx`select id from alert where id = ${ref.alertId} for update`;
       approval = alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") });
       await new Promise((resolve) => setTimeout(resolve, 300));
@@ -957,15 +959,17 @@ describe("the two-person rule in the trigger, against direct SQL", () => {
 });
 
 describe("what the trigger allows, against direct SQL", () => {
-  it("creates only an ack, an update, a correction or a withdrawal (a final is S05.03's), and a correction or a withdrawal only beside the entry it replaces", async () => {
+  it("creates only an ack, an update, a correction, a withdrawal or a final, and a correction or a withdrawal only beside the entry it replaces", async () => {
     const ref = await newDraft(authorA);
     const insert = (kind: string) =>
       asApp(authorA.id, (tx) => tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
               values (${randomUUID()}, ${ref.alertId}, ${kind}, ${authorA.id}, ${[authorA.id]}, 't', ${["power"]}, ${tx.json(NB_AUDIENCE)}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`);
-    await expect(insert("final")).rejects.toThrow(/only an ack, an update, a correction or a withdrawal/);
+    await expect(insert("system")).rejects.toThrow(/only an ack, an update, a correction, a withdrawal or a final is created/);
     // A correction or a withdrawal that names nothing is refused by the table's check as well as by the trigger.
     for (const kind of ["correction", "withdrawal"]) await expect(insert(kind), kind).rejects.toThrow(/names the entry it replaces/);
     await expect(insert("update")).resolves.toBeDefined();
+    // A final (S05.03) is a draft like the others: it is judged by its use case, and what makes it close the thread is the close that follows its approval.
+    await expect(insert("final")).resolves.toBeDefined();
   });
 
   it("times an approval by the database clock: approved_at and web_published_at are now(), whatever the app sends", async () => {

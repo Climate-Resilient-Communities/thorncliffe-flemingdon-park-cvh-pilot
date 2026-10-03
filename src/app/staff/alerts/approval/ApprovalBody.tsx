@@ -301,6 +301,20 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
           </Stack>
         </section>
       )}
+      {/* A final message closes the alert and goes to everyone who got any entry of it (S05.03). */}
+      {screen.closing && (
+        <section aria-labelledby="closing-title" data-testid="closing">
+          <Stack gap="related">
+            <h2 id="closing-title">{screen.closing.title}</h2>
+            <p role="note" className="hub-flag hub-wrap" data-testid="closing-reach">
+              {screen.closing.reach}
+            </p>
+            <p role="note" className="hub-flag hub-wrap" data-testid="closing-closes">
+              {screen.closing.closes}
+            </p>
+          </Stack>
+        </section>
+      )}
       <section aria-labelledby="english-title" data-testid="english-text">
         <Stack gap="related">
           <h2 id="english-title">{screen.english.title}</h2>

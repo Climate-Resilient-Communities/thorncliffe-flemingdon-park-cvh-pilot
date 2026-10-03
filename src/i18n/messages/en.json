@@ -4600,7 +4600,8 @@
           "withdrawal": "Withdrawal",
           "final": "Final"
         },
-        "leadReplace": "What residents read now, newest first. A correction is added above the entry it corrects. A withdrawal puts the reason in the place of the entry. Nothing is deleted."
+        "leadReplace": "What residents read now, newest first. A correction is added above the entry it corrects. A withdrawal puts the reason in the place of the entry. Nothing is deleted.",
+        "leadResolve": "What residents read now, newest first. Your final entry is added at the top and closes the alert: nothing here is deleted."
       },
       "carried": "Who it is for, the types and the languages are carried over from the alert. Change who it is for with the links below: the approver sees what changes.",
       "carriedStart": "Who it is for, the types and the languages are carried over from the alert. Save the draft first, then change who it is for if you need to.",
@@ -4626,7 +4627,19 @@
       "withdrawReasonHint": "Residents see that the entry was withdrawn, with this reason.",
       "withdrawTextLabel": "What residents read in the place of the entry",
       "withdrawTextHint": "The reason, in English. It is translated into every language when you submit. At most {max} characters.",
-      "withdrawCarried": "Who it is for is who the withdrawn entry was for, and everyone who got that entry also gets this withdrawal."
+      "withdrawCarried": "Who it is for is who the withdrawn entry was for, and everyone who got that entry also gets this withdrawal.",
+      "resolveTitle": "Mark resolved",
+      "resolveLead": "Resolving closes the alert with a final word. Nothing is deleted from residents' view: the alert moves to alerts that have ended with its whole thread. A second person approves the final message before anyone sees it.",
+      "resolveTextLabel": "Final entry",
+      "resolveTextHint": "One or two short sentences: what is fixed, and what to do if it is not fixed for you. At most {max} characters.",
+      "resolveStartNote": "Saving makes the draft. Then you can read the text message and submit it for approval. Approving it closes the alert.",
+      "resolveCarried": "Who it is for is who the alert is for now. Everyone who got any entry of this alert also gets the final entry, on the channels they got it on.",
+      "after": {
+        "title": "What happens when you resolve",
+        "closes": "The alert leaves the live list and moves to alerts that have ended. Opened from there, the final entry is on top and the thread below.",
+        "reach": "Everyone who got any entry of this alert gets the final entry by text, on the channels they got it on.",
+        "stops": "Nothing else is sent for this alert: texts still waiting for the other entries are cancelled, and drafts and entries waiting for approval are discarded."
+      }
     },
     "approve": {
       "title": "Approve an alert",
@@ -4764,7 +4777,9 @@
         "nextPromote": "When you know more, promote this to a full alert. Residents keep the same alert; nothing is re-entered.",
         "toHome": "Back to incidents",
         "toUpdate": "Post an update",
-        "toPromote": "Promote to a full alert"
+        "toPromote": "Promote to a full alert",
+        "titleFinal": "The alert is resolved",
+        "nextFinal": "The alert is closed. Nothing more can be added to it."
       },
       "correctionTitle": "Approve a correction",
       "withdrawalTitle": "Approve a withdrawal",
@@ -4777,7 +4792,12 @@
       "withdrawalReason": "Reason: {reason}",
       "reachesOriginal": "This goes to everyone who got the original, and to everyone in the audience above.",
       "closesThread": "Nothing else in this alert is left for residents to read. Approving it closes the alert as withdrawn: nothing more is sent for it, and its drafts and waiting entries are discarded.",
-      "targetGone": "The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it."
+      "targetGone": "The entry this replaces was corrected or withdrawn since it was written, so this cannot be approved. Discard it.",
+      "finalTitle": "Approve a final message",
+      "finalLead": "Read exactly what residents will read as the last word of this alert. You approve this version only. If it changes while you read, you review it again.",
+      "closingTitle": "What approving does",
+      "closingReach": "This goes to everyone who got any entry of this alert, on the channels they got it on, and to everyone in the audience above.",
+      "closingCloses": "Approving it closes the alert as resolved: nothing more is sent for it, and its drafts and waiting entries are discarded. Residents find it under alerts that have ended, with this message on top."
     },
     "incidents": {
       "waitingTitle": "Waiting for your approval",
@@ -4830,7 +4850,17 @@
       "drillsLead": "Practice only. Nothing here reaches residents.",
       "drillsNone": "No drill is running.",
       "correct": "Correct an entry",
-      "withdraw": "Withdraw an entry"
+      "withdraw": "Withdraw an entry",
+      "resolve": "Mark resolved",
+      "closedTitle": "Recently closed",
+      "closedLead": "Alerts that closed in the last 7 days, the most recent first. A closed alert cannot be added to.",
+      "closedLine": "{reason} {time}",
+      "closedReason": {
+        "resolved": "Resolved",
+        "expired": "Expired",
+        "withdrawn": "Withdrawn"
+      },
+      "closedFinal": "Final entry: {text}"
     },
     "resetAuthenticator": {
       "title": "Reset an authenticator",

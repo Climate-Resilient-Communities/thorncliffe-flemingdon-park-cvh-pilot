@@ -220,7 +220,7 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
     recipientKind?: "subscriber" | "roster";
     bodies?: FrozenBodies;
     validUntil?: Date;
-    /** Closes the thread in the approving transaction (the entry is then the closing entry). */
+    /** Closes the thread in the approving transaction (the entry is then the closing entry; it must be a `final`). */
     closes?: boolean;
   }
 
@@ -247,7 +247,8 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
                  values (${id}, 'alert', ${recipientKind}, ${recipient}, ${entry.entryId}, 'alerting', 'en', ${bodies.en.body}, ${bodies.en.segments}, 4, ${`${entry.entryId}:${recipient}:sms`})`;
       }
       await fx.approve(tx, entry);
-      if (options.closes) await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() where id = ${entry.alertId}`;
+      // The app closes a thread only beside the entry that closes it, approved in the same transaction (S05.03): this entry, which is then a final.
+      if (options.closes) await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now(), closing_entry_id = ${entry.entryId} where id = ${entry.alertId}`;
     });
     return { entry, ids, recipients };
   }

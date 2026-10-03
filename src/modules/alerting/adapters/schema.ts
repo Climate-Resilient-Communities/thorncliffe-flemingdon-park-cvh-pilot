@@ -30,6 +30,8 @@ export const alert = pgTable(
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     /** The thread's short public slug (S04.05): the texts link to `/a/{slug}`; made at creation, never changes (a trigger refuses it). */
     slug: text(),
+    /** The entry that closed the thread (S05.03): its texts stay sendable after the close. Set once, by the close; only a closed thread has one. */
+    closingEntryId: uuid("closing_entry_id").references((): AnyPgColumn => alertEntry.id),
   },
   (t) => [
     check("alert_status_valid", sql`${t.status} in ('open', 'closed')`),
@@ -41,6 +43,8 @@ export const alert = pgTable(
       sql`(${t.status} = 'open' and ${t.closedReason} is null and ${t.closedAt} is null) or (${t.status} = 'closed' and ${t.closedReason} is not null and ${t.closedAt} is not null)`,
     ),
     check("alert_reported_not_after_created", sql`${t.reportedAt} <= ${t.createdAt}`),
+    check("alert_closing_entry_closed", sql`${t.closingEntryId} is null or ${t.status} = 'closed'`),
+    index("alert_closing_entry_id_idx").on(t.closingEntryId),
     foreignKey({ name: "alert_created_by_fkey", columns: [t.createdBy], foreignColumns: [staffAccountKey.id] }),
     index("alert_created_by_idx").on(t.createdBy),
     pgPolicy("alert_app_select", { for: "select", to: cvhApp, using: sql`true` }),
@@ -134,6 +138,8 @@ export const alertEntry = pgTable(
     foreignKey({ name: "alert_entry_author_id_fkey", columns: [t.authorId], foreignColumns: [staffAccountKey.id] }),
     foreignKey({ name: "alert_entry_approved_by_fkey", columns: [t.approvedBy], foreignColumns: [staffAccountKey.id] }),
     index("alert_entry_alert_id_idx").on(t.alertId),
+    // S05.03: at most one final of a thread is ever approved or published, so two finals cannot both close it.
+    uniqueIndex("alert_entry_one_final").on(t.alertId).where(sql`${t.kind} = 'final' and ${t.status} in ('approved', 'published_system')`),
     index("alert_entry_author_id_idx").on(t.authorId),
     index("alert_entry_approved_by_idx").on(t.approvedBy),
     pgPolicy("alert_entry_app_select", { for: "select", to: cvhApp, using: sql`true` }),

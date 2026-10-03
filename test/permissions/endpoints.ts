@@ -143,6 +143,8 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   // S05.01: "Add an update" (O-14) and "Promote to full alert" (O-13), the update composers: policy action `alert.author_wide`, like the composers they are.
   { id: "page /staff/alerts/update", kind: "page", file: "src/app/staff/alerts/update/page.tsx", export: "default", route: "/staff/alerts/update", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   { id: "page /staff/alerts/promote", kind: "page", file: "src/app/staff/alerts/promote/page.tsx", export: "default", route: "/staff/alerts/promote", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
+  // S05.03: "Mark resolved" (O-16), the page of the final message: policy action `alert.author_wide`, like the other composers (an Ambassador's own screen for it is E08's).
+  { id: "page /staff/alerts/resolve", kind: "page", file: "src/app/staff/alerts/resolve/page.tsx", export: "default", route: "/staff/alerts/resolve", action: "alert.author_wide", writes: "none", gate: "hub", expected: WIDE_AUTHORS },
   // S05.02: "Correct" and "Withdraw" (O-15): policy actions `alert.correct` and `alert.withdraw`, a Coordinator or an Admin. An Ambassador corrects or withdraws only their own
   // pending entries (E08): the entry these pages judge on is one nobody wrote in the call, so an Ambassador is refused on the rule alone; a Director is refused on their role.
   { id: "page /staff/alerts/correct", kind: "page", file: "src/app/staff/alerts/correct/page.tsx", export: "default", route: "/staff/alerts/correct", action: "alert.correct", writes: "none", gate: "hub", policyContext: NO_ENTRY, expected: WIDE_AUTHORS },
@@ -440,6 +442,21 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     writes: "business",
     gate: "hub",
     form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, from: "update", text: "Power is back on floors 1 to 4.", phase: "in_progress", "valid-mode": "resolved" },
+    forbiddenMessage: /^Only a Coordinator or an Admin can /,
+    expected: WIDE_AUTHORS,
+  },
+  // S05.03: "Save draft" on a new final message (policy action `alert.author_wide`). The thread does not exist, so a Coordinator's or an Admin's call passes the guard and is
+  // refused by the use case, changing nothing. An Ambassador and a Director are refused on their role alone.
+  {
+    id: `action ${ALERT_COMPOSER_ACTIONS}#startFinalAction`,
+    kind: "action",
+    file: ALERT_COMPOSER_ACTIONS,
+    export: "startFinalAction",
+    route: "/staff/alerts/resolve",
+    action: "alert.author_wide",
+    writes: "business",
+    gate: "hub",
+    form: { alert: NO_SUCH_ALERT, entry: NO_SUCH_ALERT, from: "resolve", text: "Power is back on all floors." },
     forbiddenMessage: /^Only a Coordinator or an Admin can /,
     expected: WIDE_AUTHORS,
   },

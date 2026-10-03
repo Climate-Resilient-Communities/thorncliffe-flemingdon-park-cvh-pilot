@@ -7,7 +7,7 @@ import * as audit from "../audit";
 import { createDeliveryQueue, type DeliveryResult } from "../messaging";
 import { hasOncallNumber, recordOpsEvent, type OpsEvent } from "../ops";
 import { NO_ALERTS_YET, createFeedReader, requireDb, type FeedAlerts, type FeedPlaces, type FeedReader } from "./application/feed";
-import { readOpenThreads } from "./adapters/resident/readThreads";
+import { readClosedSlugs, readClosedThread, readOpenThreads } from "./adapters/resident/readThreads";
 import { createAlertLifecycle, type AlertLifecycle, type AlertLifecycleDeps } from "./application/lifecycle";
 import { createEntryPreparer, type EntryTranslator } from "./application/prepareEntry";
 import { createSubmitter, type AlertSubmitter } from "./application/submit";
@@ -120,6 +120,7 @@ export type {
   ApprovalRequest,
   AttemptView,
   CorrectInput,
+  StartFinalInput,
   WithdrawInput,
   EntryRef,
   EntryReview,
@@ -135,7 +136,7 @@ export type {
   SubmitStart,
   ThreadView,
 } from "./application/lifecycle";
-export type { RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
+export type { ClosedThread, RunningThread, ThreadEntrySummary, ThreadHead, ThreadSummary } from "./application/threads";
 export { previewSms, type PreviewContext } from "./application/previewSms";
 // S05.02: the one close path (`closeAlert`, AR-8) and the rules of corrections and withdrawals (the valid target, the reason catalog, when a withdrawal closes the thread).
 export { type CloseAlert, type CloseAlertDeps, type CloseAlertInput, type Closed, type ClosedReason } from "./application/closeAlert";
@@ -199,6 +200,8 @@ export interface FeedWiring {
 export function createResidentAlerts(db: Db): FeedAlerts {
   return {
     read: async (lang) => ({ threads: await readOpenThreads(db, lang), statuses: { buildings: new Map(), neighbourhoods: new Map() } }),
+    readClosed: (lang, slug) => readClosedThread(db, lang, slug),
+    readClosedSlugs: () => readClosedSlugs(db),
   };
 }
 

@@ -7,7 +7,7 @@ import { previewEntrySms } from "../../freezeEntry";
 import { buildings } from "../../places";
 import { composerOf } from "../pages";
 import { composerLocation } from "./editDraft";
-import { composerScreen, isFollowUpMode, isReplacingMode, missingComposer, modeOfFrom, type ComposerMode, type ComposerScreen, type MissingComposer } from "./view";
+import { composerScreen, isFollowUpMode, isReplacingMode, isResolveMode, missingComposer, modeOfFrom, type ComposerMode, type ComposerScreen, type MissingComposer } from "./view";
 
 export interface ComposerQuery {
   alert?: string | string[];
@@ -41,7 +41,7 @@ export async function loadComposer(mode: ComposerMode, query: ComposerQuery, now
         }
       : null;
   // An update shows the running alert it adds to, and what it changes about who the alert is for; a correction or a withdrawal also shows the entry it is about.
-  const summary = isFollowUpMode(mode) || isReplacingMode(mode) ? await alerting().threadSummary(alertId) : null;
+  const summary = isFollowUpMode(mode) || isReplacingMode(mode) || isResolveMode(mode) ? await alerting().threadSummary(alertId) : null;
   const replaced = isReplacingMode(mode) && entry.supersedesId ? await alerting().getEntry({ alertId, entryId: entry.supersedesId }) : null;
   const target = replaced ? { kind: replaced.kind, publishedAt: replaced.webPublishedAt, text: replaced.content.text } : null;
   return composerScreen({ mode, state, plans: await buildings().listFloorPlans(), preview, saved: first(query.saved) === "1", now, thread: summary, target });

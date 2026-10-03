@@ -6,7 +6,7 @@
 import { readFileSync } from "node:fs";
 import { z } from "zod";
 import type { FeedAlerts } from "../application/feed";
-import { assembleThreads, type ResidentEntryRow } from "../domain/residentThreads";
+import { assembleClosedThread, assembleThreads, type ResidentEntryRow } from "../domain/residentThreads";
 
 const TranslationSchema = z.strictObject({
   body: z.string().min(1),
@@ -35,7 +35,15 @@ const FixtureSchema = z.strictObject({
   feed_version: z.int().min(0),
   /** When the feed says it was built, so a screenshot's "Posted 20 minutes ago" is the same every day. Not given: the real time. */
   server_now: z.iso.datetime().optional(),
-  threads: z.array(z.strictObject({ id: z.uuid(), slug: z.string().min(1), entries: z.array(EntrySchema).min(1) })),
+  threads: z.array(
+    z.strictObject({
+      id: z.uuid(),
+      slug: z.string().min(1),
+      /** A thread that closed (S05.03): it is not in the feed, and R-07 shows it by its address with how it closed. */
+      closed: z.enum(["resolved", "expired", "withdrawn"]).optional(),
+      entries: z.array(EntrySchema).min(1),
+    }),
+  ),
 });
 
 export interface FeedFixture {
@@ -47,9 +55,12 @@ export interface FeedFixture {
 }
 
 /** The threads of a fixture file, as the database's resident rows would be for `lang`. */
-export function fixtureRows(text: string, lang: string): { version: number; now: Date | undefined; rows: ResidentEntryRow[] } {
+export function fixtureRows(text: string, lang: string, closed = false): { version: number; now: Date | undefined; rows: ResidentEntryRow[]; reasons: Map<string, string> } {
   const fixture = FixtureSchema.parse(JSON.parse(text));
-  const rows = fixture.threads.flatMap((thread) =>
+  // The open threads for the feed, or the closed ones (`closed`) for the address of a thread that closed.
+  const wanted = fixture.threads.filter((thread) => (thread.closed !== undefined) === closed);
+  const reasons = new Map(wanted.flatMap((thread) => (thread.closed === undefined ? [] : [[thread.id, thread.closed] as const])));
+  const rows = wanted.flatMap((thread) =>
     thread.entries.map((entry): ResidentEntryRow => {
       const translation = entry.translations[lang];
       return {
@@ -70,7 +81,7 @@ export function fixtureRows(text: string, lang: string): { version: number; now:
       };
     }),
   );
-  return { version: fixture.feed_version, now: fixture.server_now === undefined ? undefined : new Date(fixture.server_now), rows };
+  return { version: fixture.feed_version, now: fixture.server_now === undefined ? undefined : new Date(fixture.server_now), rows, reasons };
 }
 
 export function readFeedFixtureFile(file: string): FeedFixture {
@@ -82,6 +93,12 @@ export function readFeedFixtureFile(file: string): FeedFixture {
         threads: assembleThreads(fixtureRows(readFileSync(file, "utf8"), lang).rows, lang),
         statuses: { buildings: new Map(), neighbourhoods: new Map() },
       }),
+      readClosedSlugs: async () => [...new Set(fixtureRows(readFileSync(file, "utf8"), "en", true).rows.map((row) => row.slug))],
+      readClosed: async (lang, slug) => {
+        const { rows, reasons } = fixtureRows(readFileSync(file, "utf8"), lang, true);
+        const own = rows.filter((row) => row.slug === slug);
+        return assembleClosedThread(own, lang, own.length === 0 ? null : (reasons.get(own[0].threadId) ?? null));
+      },
     },
   };
 }

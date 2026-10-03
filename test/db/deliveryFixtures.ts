@@ -115,9 +115,33 @@ export function deliveryFixtures(owner: Sql) {
              where id = ${seeded.entryId}`;
   }
 
+  /**
+   * A pending `final` in the thread of `like` (S05.03): the entry whose approval closes a thread. The app's role may close a thread only beside the entry that closes
+   * it, approved in the same transaction (`alert_guard`), so a fixture that closes a thread as the app approves this entry (`approve`) in the closing transaction and
+   * names it (`closing_entry_id`). It is frozen like `like` and addressed as it is.
+   */
+  async function finalIn(like: SeededEntry): Promise<SeededEntry> {
+    const entryId = randomUUID();
+    const hash = randomBytes(32).toString("hex");
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.actor_id', ${like.authorId}, true)`;
+      await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
+      await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until, version, content_hash, sms_bodies, submitted_at, created_at)
+               select ${entryId}, alert_id, 'final', 'pending_approval', author_id, editor_ids, 'final text', types, audience, phase, valid_until, 1, ${hash}, sms_bodies, submitted_at, ${new Date(NOW.getTime() + 1000)}
+               from alert_entry where id = ${like.entryId}`;
+      await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
+    });
+    entryIds.push(entryId);
+    return { ...like, entryId };
+  }
+
   async function cleanup() {
     await owner`delete from delivery`;
     await owner.begin(async (tx) => {
+      // A thread that a close recorded the closing entry of refers to that entry (S05.03), and a closed thread never changes: the reference is cleared with the guard off.
+      await tx.unsafe("alter table alert disable trigger alert_guard");
+      for (const id of alertIds) await tx`update alert set closing_entry_id = null where id = ${id} and closing_entry_id is not null`;
+      await tx.unsafe("alter table alert enable trigger alert_guard");
       for (const id of entryIds) {
         await tx`delete from alert_entry_translation where entry_id = ${id}`;
         await tx`delete from alert_entry where id = ${id}`;
@@ -130,7 +154,7 @@ export function deliveryFixtures(owner: Sql) {
     entryIds.length = 0;
   }
 
-  return { staff, entry, approve, cleanup };
+  return { staff, entry, finalIn, approve, cleanup };
 }
 
 /** A fake E.164 number the tests look for in places it must never be (obviously not a real one). */

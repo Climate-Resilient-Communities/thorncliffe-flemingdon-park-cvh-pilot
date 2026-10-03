@@ -282,11 +282,16 @@
     background-color: var(--surface-raised);
   }
 
-  .alert-unavailable__body {
+  .alert-unavailable__body,
+  .alert-note__body {
     display: flex;
     flex-direction: column;
     gap: var(--gap-subline);
     min-inline-size: 0;
+  }
+
+  .alert-note__title {
+    font-weight: 700;
   }
 
   .alert-back {

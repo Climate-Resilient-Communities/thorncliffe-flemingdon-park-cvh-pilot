@@ -39,6 +39,12 @@ export interface RecipientSmsBody {
 export interface RecipientEntry {
   entryId: string;
   alertId: string;
+  /**
+   * The entry's kind. A `final` (S05.03) has no target and captures the thread union (epic E05, "Final recipients"): the union, deduplicated by recipient and
+   * channel, of the recipients of every entry of `alertId` on the channels each was sent on, plus the final's own audience; opt-outs never remove anyone, and the
+   * language is each recipient's current language. It is called after the close has stopped the queued texts of the thread's other entries, so the union is read
+   * from those entries' recorded recipients whatever became of their texts.
+   */
   kind: string;
   /** A drill goes only to the drill roster (AD-6). */
   isDrill: boolean;

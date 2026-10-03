@@ -36,13 +36,21 @@ describe("what is running, on the Hub home", () => {
         note: null,
         drill: false,
         link: { href: `/staff/alerts/update?alert=${ALERT}`, label: "Add an update" },
-        // S05.02: a running alert can be corrected, or an entry of it withdrawn.
+        // S05.02: a running alert can be corrected, or an entry of it withdrawn; S05.03: it can be marked resolved, which closes it.
         more: [
           { href: `/staff/alerts/correct?alert=${ALERT}`, label: "Correct an entry" },
           { href: `/staff/alerts/withdraw?alert=${ALERT}`, label: "Withdraw an entry" },
+          { href: `/staff/alerts/resolve?alert=${ALERT}`, label: "Mark resolved" },
         ],
       },
     ]);
+  });
+
+  it('draws the link to "Mark resolved" beside the others, and none for a Director', () => {
+    const out = renderToStaticMarkup(<IncidentsList view={incidentsView(none, "coordinator", undefined, [thread()])} />);
+    expect(out).toMatch(/<a class="tap hub-link" href="\/staff\/alerts\/resolve\?alert=[^"]*" data-testid="item-more">Mark resolved<\/a>/);
+    const readOnly = renderToStaticMarkup(<IncidentsList view={incidentsView(none, "director", undefined, [thread()])} />);
+    expect(readOnly).not.toContain("/staff/alerts/resolve");
   });
 
   it("draws the links to correct and to withdraw beside the one to add to the alert", () => {

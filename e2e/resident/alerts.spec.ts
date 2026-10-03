@@ -11,6 +11,9 @@ import { catalogText, expectBaseline, isFallback, openResident } from "./helpers
 //   mnpqrstv  power and heat, not yet verified, no translation: English everywhere else
 //   xyzw2345  other: its valid-until has passed and nothing has closed it yet
 //   qrstvwxz  power: an acknowledgement that a correction replaced and an update that a withdrawal replaced (S05.02), the oldest news so the order of the others is what it was
+//   rslvdabc  power: closed resolved, with its final message (S05.03); not in the feed, which lists open threads only, but opened from its address
+//   expdabcd  other: closed expired (S05.03)
+//   wthdrabc  power: closed withdrawn, the acknowledgement withdrawn with a reason (S05.03)
 
 test.use({
   baseURL: ALERTS_URL,
@@ -21,6 +24,10 @@ const T1 = "kbcdfghj";
 const T2 = "mnpqrstv";
 const T3 = "xyzw2345";
 const T4 = "qrstvwxz";
+const RESOLVED = "rslvdabc";
+const EXPIRED = "expdabcd";
+const WITHDRAWN = "wthdrabc";
+const FINAL = "Power is back on all floors. If your power is still out, call Toronto Hydro at 416-542-8000.";
 const CORRECTION = "Power is out on floors 1 to 8 at 40 Gateway Blvd, not floors 1 to 6. We are finding out why.";
 const WITHDRAWN_ACK = "Power is out on floors 1 to 6 at 40 Gateway Blvd. We are finding out why.";
 const WITHDRAWAL_REASON = "This alert had wrong information. It has been withdrawn.";
@@ -412,6 +419,75 @@ test.describe("a corrected and a withdrawn entry (S05.02)", () => {
       expect(await tapViolations(page)).toEqual([]);
       await expectBaseline(page, `alert-en-corrected-${width}.png`);
     });
+  }
+});
+
+test.describe("a thread that closed (S05.03)", () => {
+  test("is not in the live feed, which lists open threads only, and has no card on home", async ({ page, request }) => {
+    const feed = FeedV1.parse(await (await request.get("/api/feed?lang=en")).json());
+    expect(feed.threads.map((thread) => thread.slug)).toEqual([T1, T2, T3, T4]);
+    await openResident(page, "/en", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+    for (const slug of [RESOLVED, EXPIRED, WITHDRAWN]) await expect(page.getByTestId(`alert-card-${slug}`)).toHaveCount(0);
+  });
+
+  test("opens from its address with how it closed: resolved, with the check icon, the time, the final message as what stands and every earlier entry", async ({ page }) => {
+    const response = await openResident(page, `/en/alerts/${RESOLVED}`, 390);
+
+    expect(response!.status()).toBe(200);
+    const closed = page.getByTestId("alert-closed");
+    await expect(closed).toHaveAttribute("data-reason", "resolved");
+    await expect(closed.locator(".alert-ico--check")).toBeVisible();
+    await expect(page.getByTestId("alert-closed-title")).toHaveText("Resolved 2 hours ago");
+    await expect(page.getByTestId("alert-closed-line")).toHaveText("This alert has ended. It was resolved 2 hours ago.");
+    await expect(page.getByTestId("alert-text")).toHaveText(FINAL);
+    const entries = page.getByTestId("alert-thread").locator("li");
+    await expect(entries).toHaveCount(3);
+    await expect(entries.nth(0)).toContainText("Final update");
+    await expect(entries.nth(1)).toContainText("Update");
+    await expect(entries.nth(2)).toContainText("First message");
+    await expect(entries.nth(2)).toContainText("Power is out on floors 1 to 6 at 40 Gateway Blvd.");
+    // It is over: no valid-until, and no "reached its end time" note beside the one that says how it ended.
+    await expect(page.getByTestId("alert-valid")).toHaveCount(0);
+    await expect(page.getByTestId("alert-ended")).toHaveCount(0);
+  });
+
+  test("says expired in words and with the clock icon, and withdrawn with the reason and the information icon: each its own", async ({ page }) => {
+    await openResident(page, `/en/alerts/${EXPIRED}`, 390);
+    await expect(page.getByTestId("alert-closed")).toHaveAttribute("data-reason", "expired");
+    await expect(page.getByTestId("alert-closed").locator(".alert-ico--clock")).toBeVisible();
+    await expect(page.getByTestId("alert-closed-title")).toHaveText("Expired 7 hours ago");
+    await expect(page.getByTestId("alert-closed-line")).toHaveText("This alert has ended. It expired 7 hours ago without a final update.");
+
+    await openResident(page, `/en/alerts/${WITHDRAWN}`, 390);
+    await expect(page.getByTestId("alert-closed")).toHaveAttribute("data-reason", "withdrawn");
+    await expect(page.getByTestId("alert-closed").locator(".alert-ico--info")).toBeVisible();
+    await expect(page.getByTestId("alert-closed-title")).toHaveText("Withdrawn");
+    await expect(page.getByTestId("alert-closed-line")).toHaveText(`The Hub withdrew this alert. ${WITHDRAWAL_REASON}`);
+  });
+
+  test("describes the page with the final message, and sets no cookie, in any language", async ({ request }) => {
+    const html = await (await request.get(`/en/alerts/${RESOLVED}`)).text();
+    expect((html.match(/<meta name="description" content="([^"]*)"/) ?? [])[1]).toBe(FINAL);
+    for (const { code } of LAUNCH_LANGUAGES) expect(noCookie(await request.get(`/${code}/alerts/${RESOLVED}`, { maxRedirects: 0 })), code).toEqual([]);
+  });
+
+  for (const [lang, slug, name] of [
+    ["en", RESOLVED, "closed-resolved"],
+    ["ur", RESOLVED, "closed-resolved"],
+    ["en", EXPIRED, "closed-expired"],
+    ["en", WITHDRAWN, "closed-withdrawn"],
+  ] as const) {
+    for (const width of lang === "en" || lang === "ur" ? ([390, 1280] as const) : ([390] as const)) {
+      test(`${lang} ${name} alert at ${width}px has no horizontal scrolling, every link is a tap target and it matches its baseline screenshot`, async ({ page }) => {
+        await openResident(page, `/${lang}/alerts/${slug}`, width, 900);
+        await showWholePage(page, width);
+
+        expect(await overflow(page)).toEqual({ page: 0, main: 0 });
+        expect(await tapViolations(page)).toEqual([]);
+        await expectBaseline(page, `alert-${lang}-${name}-${width}.png`);
+      });
+    }
   }
 });
 
