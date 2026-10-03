@@ -1518,7 +1518,7 @@ So that I can read them even when my phone is set to another language.
 
 ### Story S03.04 — Search finds published providers by meaning
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 3 h 15 min (started 2026-10-02 20:43 UTC, merged 2026-10-02 23:58 UTC)
 - **Traces:** FR-D2-Q, FR-M3 (search data), AR-15, AR-20 (`SearchV1`), AR-22, AR-26 · **Depends on:** S03.02, S03.03 · **Branch:** `e03-s04-search-endpoint`
 
 As a resident,
@@ -1596,7 +1596,7 @@ So that a question in any language finds an English-sourced listing.
 
 ### Story S03.05 — Questions in Pashto, Dari, Urdu and romanized text also search through English
 
-- **Size:** M · **Estimate:** 5 h · **Actual:** — (started 2026-10-03 00:37 UTC)
+- **Size:** M · **Estimate:** 5 h · **Actual:** 1 h 22 min (started 2026-10-03 00:37 UTC, merged 2026-10-03 01:59 UTC)
 - **Traces:** FR-D2-Q, AR-14 (question leg only), AR-15 · **Depends on:** S03.04 · **Branch:** `e03-s05-translated-question-leg`
 
 As a resident who writes in Pashto, Dari, Urdu or romanized Urdu,
@@ -1673,12 +1673,12 @@ So that I find help without knowing the provider's name.
 **And** if the refresh fails, it shows "Search results are being updated, try again" and the category list
 
 **Given** `emergency_first` is true
-**When** results are shown
-**Then** the one catalog 911 block appears above the results
+**When** results are shown, or there are none (including `status: no_clear_match`; the server sets `emergency_first` there too, decision 41)
+**Then** the one catalog 911 block appears above the results, or above the no-match state when there are none
 
 **Given** `status: no_clear_match`
 **When** shown (R-11)
-**Then** the resident sees "We couldn't find a clear match", the category list, the Hub's number as a `tel:` link and the general 911 line
+**Then** the resident sees "We could not find that yet" (the prototype's R-11 wording, which wins over any other wording under AD-16), the category list, the Hub's number as a `tel:` link and the general 911 line
 
 **Given** the phone is offline, the server is rate-limiting, or the server returns `search_unavailable`
 **When** the resident asks

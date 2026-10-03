@@ -347,6 +347,7 @@ stateDiagram-v2
 | dependency-cruiser | 18.5.0 |
 | vitest | 5.0.3 |
 | @playwright/test | 1.63.0 |
+| axe-core (end-to-end accessibility checks, dev only) | 4.13.0 |
 | Vercel | Hobby, region `yul1` |
 | Supabase | Free (one project, shared by production and previews), region `ca-central-1` |
 
