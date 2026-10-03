@@ -38,6 +38,15 @@ describe("ProviderView", () => {
     expect(html).toContain('href="mailto:food@example.org"');
   });
 
+  it("writes the day the Hub last confirmed a provider into its line in every language, the English way when the line fell back to English", () => {
+    // The catalog line is "Last confirmed by the Hub {date}": its date must always be filled, never probed for with no values
+    // (next-intl reports a FORMATTING_ERROR and gives back the key, so the line read as translated and its date as Urdu).
+    expect(ur.directory.lastConfirmed).toBe("[EN] Last confirmed by the Hub {date}");
+    expect(render("en", "P101")).toContain('data-testid="last-confirmed">Last confirmed by the Hub September 30, 2026<');
+    expect(render("ur", "P101")).toContain("[EN] Last confirmed by the Hub September 30, 2026<");
+    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant)).not.toContain("directory.lastConfirmed");
+  });
+
   it("writes a phone number with displayPhone, as an isolated left-to-right run, in a right-to-left page too", () => {
     for (const lang of ["en", "ur"] as const) {
       const html = render(lang, "P101");
