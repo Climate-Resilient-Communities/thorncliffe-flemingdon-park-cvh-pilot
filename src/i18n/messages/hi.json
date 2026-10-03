@@ -1366,7 +1366,8 @@
       "smsTest": "[EN] Test text",
       "buildings": "[EN] Buildings",
       "providers": "[EN] Providers",
-      "directory": "[EN] Directory"
+      "directory": "[EN] Directory",
+      "texts": "[EN] Pause texts"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4386,6 +4387,50 @@
       "errors": {
         "forbidden": "[EN] Only an Admin can publish the directory.",
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
+      }
+    },
+    "texts": {
+      "title": "[EN] Pause or resume texts",
+      "lead": "[EN] One switch for every text that has not yet been handed to the provider. Use it to stop a mistake or a provider problem at once.",
+      "running": "[EN] Texts are going out as normal.",
+      "whatPauseDoes": "[EN] Pausing stops every alert and every text to residents that has not yet been handed to the provider. They wait in the queue and go out, in order, when you resume. A text that was already handed over cannot be called back.",
+      "oncall": "[EN] Texts to on-call Admins still go out during a pause, so a problem with sending is still reported.",
+      "reason": "[EN] Why are you pausing texts?",
+      "reasonHint": "[EN] Everyone at the Hub sees this on every screen, with your name and the time. Up to 500 characters.",
+      "pause": "[EN] Pause all texts",
+      "pausing": "[EN] Pausing texts",
+      "resume": "[EN] Resume texts",
+      "resuming": "[EN] Resuming texts",
+      "resumeHint": "[EN] Texts go out again in their usual order. Each one is checked once more just before it is handed over: texts of an alert that was corrected, withdrawn or closed in the meantime, or whose valid-until time has passed, are cancelled or skipped. A final alert, and the withdrawal that closed an alert, are still sent.",
+      "paused": {
+        "banner": "[EN] Texts are paused",
+        "by": "[EN] Paused by {name} on {when}",
+        "someone": "[EN] an Admin",
+        "why": "[EN] Why: {reason}",
+        "handedOff": "[EN] {n} texts were already handed to the provider and cannot be recalled",
+        "handedOffOne": "[EN] 1 text was already handed to the provider and cannot be recalled",
+        "resumeLink": "[EN] Resume texts",
+        "approver": "[EN] Texts are paused; this will send when resumed"
+      },
+      "done": {
+        "paused": "[EN] Texts are paused.",
+        "waiting": "[EN] {n} texts are waiting and will go out when you resume.",
+        "waitingOne": "[EN] 1 text is waiting and will go out when you resume.",
+        "waitingNone": "[EN] No texts are waiting right now.",
+        "alreadyPaused": "[EN] Texts were already paused by {name}. Nothing changed.",
+        "resumed": "[EN] Texts resumed. {n} texts were waiting and now go out in order.",
+        "resumedOne": "[EN] Texts resumed. 1 text was waiting and now goes out in order.",
+        "resumedNone": "[EN] Texts resumed. No texts were waiting.",
+        "notPaused": "[EN] Texts were not paused. Nothing changed."
+      },
+      "errors": {
+        "reasonMissing": "[EN] Say why you are pausing texts.",
+        "reasonTooLong": "[EN] The reason can have at most 500 characters.",
+        "forbidden": "[EN] Only an Admin can pause or resume texts.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.",
+        "pauseFailed": "[EN] Texts were not paused. Try again. If it fails again, tell IT.",
+        "resumeFailed": "[EN] Texts were not resumed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT."
       }
     }
   },

@@ -1,6 +1,6 @@
 import type { ReactNode } from "react";
 
-export const HUB_NAV_ICONS = ["now", "pencil", "inbox", "person", "building", "phone", "ready", "layers"] as const;
+export const HUB_NAV_ICONS = ["now", "pencil", "inbox", "person", "building", "phone", "ready", "layers", "pause"] as const;
 
 export type HubNavIcon = (typeof HUB_NAV_ICONS)[number];
 

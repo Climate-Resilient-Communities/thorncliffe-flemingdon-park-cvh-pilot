@@ -40,7 +40,7 @@ describe("hubNavigation", () => {
     expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "Test text"]);
   });
 
   it("adds Coverage for exactly the roles whose policy allows coverage.view, with an icon no other item uses", () => {
@@ -74,8 +74,22 @@ describe("hubNavigation", () => {
       { id: "providers", label: "Providers", href: "/staff/providers", icon: "inbox" },
       { id: "directory", label: "Directory", href: "/staff/directory", icon: "layers" },
       { id: "buildings", label: "Buildings", href: "/staff/buildings", icon: "building" },
+      { id: "texts", label: "Pause texts", href: "/staff/texts", icon: "pause" },
       { id: "sms-test", label: "Test text", href: "/staff/sms-test", icon: "phone" },
     ]);
+  });
+
+  it("adds Pause texts for exactly the roles whose policy allows sending.pause, with a pause icon of its own that the shell's stylesheet draws", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/texts"), role).toBe(can(role, "sending.pause"));
+      expect(items(role).some((item) => item.href === "/staff/texts"), role).toBe(role === "admin");
+    }
+    const texts = items("admin").find((item) => item.href === "/staff/texts");
+    expect(texts?.icon).toBe("pause");
+    expect(items("admin").filter((item) => item.icon === "pause")).toHaveLength(1);
+    expect(HUB_NAV_ICONS).toContain("pause");
+    const stylesheet = readFileSync(path.join(__dirname, "..", "..", "ui", "hub", "hub-icons.css"), "utf8");
+    expect(stylesheet).toContain(".hub-ico--pause {");
   });
 
   it("adds the first-text spike's Test text for Admins only", () => {

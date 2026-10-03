@@ -1283,4 +1283,46 @@
     errors: {
       forbidden: 'Only an Admin can publish the directory.',
       aal2Required: 'An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code.' } } } });
+  /* Pausing and resuming texts (S06.06): the Pause texts page, the banner on every Hub screen and the approver's notice. Not a prototype screen. */
+  m(en, { hub: { nav: { texts: 'Pause texts' } },
+  staff: { texts: {
+    title: 'Pause or resume texts',
+    lead: 'One switch for every text that has not yet been handed to the provider. Use it to stop a mistake or a provider problem at once.',
+    running: 'Texts are going out as normal.',
+    whatPauseDoes: 'Pausing stops every alert and every text to residents that has not yet been handed to the provider. They wait in the queue and go out, in order, when you resume. A text that was already handed over cannot be called back.',
+    oncall: 'Texts to on-call Admins still go out during a pause, so a problem with sending is still reported.',
+    reason: 'Why are you pausing texts?',
+    reasonHint: 'Everyone at the Hub sees this on every screen, with your name and the time. Up to 500 characters.',
+    pause: 'Pause all texts',
+    pausing: 'Pausing texts',
+    resume: 'Resume texts',
+    resuming: 'Resuming texts',
+    resumeHint: 'Texts go out again in their usual order. Each one is checked once more just before it is handed over: texts of an alert that was corrected, withdrawn or closed in the meantime, or whose valid-until time has passed, are cancelled or skipped. A final alert, and the withdrawal that closed an alert, are still sent.',
+    paused: {
+      banner: 'Texts are paused',
+      by: 'Paused by {name} on {when}',
+      someone: 'an Admin',
+      why: 'Why: {reason}',
+      handedOff: '{n} texts were already handed to the provider and cannot be recalled',
+      handedOffOne: '1 text was already handed to the provider and cannot be recalled',
+      resumeLink: 'Resume texts',
+      approver: 'Texts are paused; this will send when resumed' },
+    done: {
+      paused: 'Texts are paused.',
+      waiting: '{n} texts are waiting and will go out when you resume.',
+      waitingOne: '1 text is waiting and will go out when you resume.',
+      waitingNone: 'No texts are waiting right now.',
+      alreadyPaused: 'Texts were already paused by {name}. Nothing changed.',
+      resumed: 'Texts resumed. {n} texts were waiting and now go out in order.',
+      resumedOne: 'Texts resumed. 1 text was waiting and now goes out in order.',
+      resumedNone: 'Texts resumed. No texts were waiting.',
+      notPaused: 'Texts were not paused. Nothing changed.' },
+    errors: {
+      reasonMissing: 'Say why you are pausing texts.',
+      reasonTooLong: 'The reason can have at most 500 characters.',
+      forbidden: 'Only an Admin can pause or resume texts.',
+      aal2Required: 'An Admin must sign in with their authenticator code to pause or resume texts. Sign in again and enter the code.',
+      pauseFailed: 'Texts were not paused. Try again. If it fails again, tell IT.',
+      resumeFailed: 'Texts were not resumed. Try again. If it fails again, tell IT.',
+      unreadable: 'The Hub could not read whether texts are paused. Reload the page. If this stays, tell IT.' } } } });
 })();
