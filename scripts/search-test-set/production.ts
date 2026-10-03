@@ -1,6 +1,6 @@
 // scripts/search-test-set: running the tuning questions against production's real search use case (S03.07).
 //
-//   search-test-set run --engine production --model <name> --translated-leg off|on|both --yes
+//   search-test-set run --engine production --model <name> --translated-leg off|on|both --yes | --plan-only
 //       [--release <n>] [--max-calls <n>] [--scores] [--summary-file <path>] [--date YYYY-MM-DD] [--out-dir <dir>] [--force]
 //
 // Each question goes through the use case behind /api/search (`createSearch`, productionEngine.ts): the current published
@@ -10,17 +10,25 @@
 // by the use case; no `search_log` row is written.
 //
 // The environment, by name only (never printed):
-//   SEARCH_TEST_DATABASE_URL     the production database: the app's own login (its DATABASE_URL) is enough, since the run only reads
-//                                directory_release and inserts spend_event; the workflow falls back to PRODUCTION_DATABASE_URL
+//   SEARCH_TEST_DATABASE_URL     the production database, as the app's own login (its DATABASE_URL), which is all the run needs: it
+//                                reads directory_release and spend_event and inserts spend_event. Not the superuser's URL.
 //   COHERE_API_KEY               Cohere's key; held only in production and in the workflow's production environment
 //   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY    the private bucket of the release files
 //   SEARCH_THRESHOLD, SEARCH_EMERGENCY_THRESHOLD, SEARCH_QUESTION_ROUTE, SEARCH_QUESTION_FALLBACK, SEARCH_FALLBACK_MIN_BUDGET_MS
 //                                optional: production's own values of these, resolved by the app's own parser (unset means the
 //                                default, as in production). The threshold the run measures is the release's own, recorded on it.
+//   SEARCH_TEST_MONTHLY_CALLS, SEARCH_TEST_RESERVE_CALLS
+//                                optional: the calls a month the Cohere key allows in all (default 1000) and the calls of it kept
+//                                for live search (default 200); see allowance.ts
 //
 // Usage allowance: production uses a free Cohere trial key that live search shares. A run prints the calls it plans per leg and
-// does nothing more without --yes; it paces its calls, never makes more than --max-calls (default DEFAULT_MAX_CALLS) and stops
-// cleanly, reporting partial results (exit 1); a 429 or another vendor failure is its own outcome and is never scored as a miss.
+// does nothing more without --yes (--plan-only prints the plan and stops, with exit 0); with --yes it first reads this month's
+// calls from spend_event and refuses to start when they and its own worst case would pass the allowance less the live-search
+// reserve (allowance.ts); it paces its calls, never makes more than --max-calls (default DEFAULT_MAX_CALLS) and stops cleanly,
+// reporting partial results (exit 1), when the cap, a vendor's quota, repeated vendor failures or repeated search failures say so;
+// once a leg has stopped the legs after it are not run; a 429 or another vendor failure is its own outcome and is never scored as
+// a miss. Each question's row is appended to a progress file as soon as it is made, and the file is removed when the reports are
+// written, so a run that ends badly leaves what it paid for.
 //
 // Only the tuning subset runs. The evaluation subset is acceptance evidence for S03.08 and never used for tuning, so it is
 // refused here, whatever flag is given; S03.08 runs it with its own change.
@@ -29,14 +37,15 @@
 // src/contracts/searchTuning.ts: per question and aggregates, both legs), and per leg {date}-{model}-leg-{on|off}-tuning.json (the
 // generic report, over the scored questions, so `--compare` shows the leg's effect per language). Question ids, provider ids,
 // scores and counts only, never a question's text. --summary-file writes a short markdown summary of the aggregates only.
-import { existsSync, mkdirSync, writeFileSync } from "node:fs";
+import { appendFileSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import type { TestQuestion } from "@/contracts/searchTestSet";
 import type { LegReport, TuningReport } from "@/contracts/searchTuning";
 import { EnvError, parseSearchEnv, type SearchSettings } from "@/platform/config/env";
+import { checkAllowance, formatAllowance, resolveAllowance } from "./allowance";
 import { formatPlan, planLeg, planningTranslator } from "./callPlan";
-import { buildReport, compareReports, formatReport, reportFileName, torontoDate, uncheckedQuestions, type LocatedQuestion } from "./lib";
-import { formatLeg, formatScores, markdownSummary } from "./tuningSummary";
+import { buildReport, compareReports, errorCode, formatReport, reportFileName, torontoDate, uncheckedQuestions, type LocatedQuestion } from "./lib";
+import { STOP_REASONS, formatLeg, formatScores, markdownSummary } from "./tuningSummary";
 import { CallBudget, DEFAULT_MAX_CALLS, legReport, runLeg, type Pace, type TuningEngine } from "./tuningRun";
 
 /** The variables a production run cannot do without, in the order they are reported missing. */
@@ -112,10 +121,12 @@ export type ProductionOptions = {
   scores: boolean;
   force: boolean;
   yes: boolean;
+  /** Print the plan and stop, successfully: nothing is connected to or called. */
+  planOnly: boolean;
 };
 
 const VALUE_FLAGS = ["--engine", "--model", "--release", "--translated-leg", "--split", "--max-calls", "--date", "--out-dir", "--summary-file"];
-const BOOLEAN_FLAGS = ["--scores", "--force", "--yes"];
+const BOOLEAN_FLAGS = ["--scores", "--force", "--yes", "--plan-only"];
 
 /** What the command line says about the evaluation subset: it is not run here. */
 export const EVALUATION_REFUSAL =
@@ -153,6 +164,7 @@ export function parseProductionOptions(argv: readonly string[]): { ok: true; opt
     }
     return { ok: false, usage: true, error: "" };
   }
+  if (argv.includes("--yes") && argv.includes("--plan-only")) return { ok: false, usage: false, error: "--plan-only prints the plan and stops, and --yes starts the run: give one of them." };
   const model = values.get("--model");
   const leg = values.get("--translated-leg");
   const release = values.get("--release");
@@ -180,6 +192,7 @@ export function parseProductionOptions(argv: readonly string[]): { ok: true; opt
       scores: argv.includes("--scores"),
       force: argv.includes("--force"),
       yes: argv.includes("--yes"),
+      planOnly: argv.includes("--plan-only"),
     },
   };
 }
@@ -189,6 +202,8 @@ export function parseProductionOptions(argv: readonly string[]): { ok: true; opt
 export type ProductionRunDeps = {
   loadQuestions: (root: string) => { questions: LocatedQuestion[]; errors: string[]; sha256: string };
   makeEngine: (env: ProductionEnv, options: { translatedLeg: boolean }) => Promise<TuningEngine>;
+  /** The Cohere calls (embedding and translation, every purpose) recorded in spend_event this calendar month (America/Toronto); connects, reads and closes. */
+  monthCalls: (env: ProductionEnv) => Promise<number>;
   usage: string;
   /** Test seams: the pause between questions. */
   sleep?: (ms: number) => Promise<void>;
@@ -223,9 +238,16 @@ export async function runProduction(argv: string[], env: Variables, root: string
     return 1;
   }
 
-  // The plan comes before anything is called, or even connected to: it needs only the questions and the route.
+  const allowance = resolveAllowance(env);
+  if (!allowance.ok) {
+    for (const problem of allowance.problems) console.error(annotate(env, "error", "Unusable setting", problem));
+    return 1;
+  }
+
+  // The plan comes before anything is called, or even connected to: it needs only the questions, the route and the allowance.
   const plans = options.legs.map((leg) => ({ leg, plan: planLeg(tuning, leg === "on" ? planningTranslator(settings.settings) : null) }));
-  for (const line of formatPlan(options.model, plans, options.maxCalls)) console.log(line);
+  for (const line of [...formatPlan(options.model, plans, options.maxCalls), formatAllowance(allowance.allowance)]) console.log(line);
+  if (options.planOnly) return 0;
   if (!options.yes) {
     console.error("Nothing was called. Add --yes to run it.");
     return 2;
@@ -239,12 +261,35 @@ export async function runProduction(argv: string[], env: Variables, root: string
   }
 
   const outDir = path.resolve(options.outDir ?? path.join(root, "data", "search-test-set", "reports"));
-  const reportFile = path.join(outDir, `${options.date}-${options.model.replace(/[^A-Za-z0-9._-]+/g, "-")}-production-tuning.json`);
+  const stem = `${options.date}-${options.model.replace(/[^A-Za-z0-9._-]+/g, "-")}-production-tuning`;
+  const reportFile = path.join(outDir, `${stem}.json`);
+  // Each asked question's row, as it is made: what was paid for if the run ends badly. Removed when the reports are written.
+  const progressFile = path.join(outDir, `${stem}-progress.jsonl`);
   const legFile = (leg: "off" | "on") => path.join(outDir, reportFileName(options.date, options.model, leg === "on", "tuning"));
-  const files = [reportFile, ...options.legs.map(legFile)];
-  const taken = files.find((file) => existsSync(file));
+  const taken = [reportFile, progressFile, ...options.legs.map(legFile)].find((file) => existsSync(file));
   if (taken && !options.force) {
     console.error(`${taken} already exists; pass --force to replace it, or a different --date.`);
+    return 1;
+  }
+
+  // The month's calls before the first one is made: the shared key must keep its reserve for live search.
+  let used: number;
+  try {
+    used = await deps.monthCalls(resolved.value);
+  } catch (error) {
+    console.error(annotate(env, "error", "This month's calls unknown", `could not read this month's Cohere calls from spend_event (${errorCode(error)}), and the run needs them to keep the live-search reserve: nothing was called.`));
+    return 1;
+  }
+  const month = checkAllowance(
+    allowance.allowance,
+    used,
+    plans.reduce((n, { plan }) => n + plan.worst, 0),
+    options.maxCalls,
+    torontoDate().slice(0, 7),
+  );
+  console.log(month.summary);
+  if (month.refusal !== null) {
+    console.error(annotate(env, "error", "Not enough of the month's calls left", month.refusal));
     return 1;
   }
 
@@ -252,10 +297,14 @@ export async function runProduction(argv: string[], env: Variables, root: string
   const legs: { off: LegReport | null; on: LegReport | null } = { off: null, on: null };
   const generic: Partial<Record<"off" | "on", ReturnType<typeof buildReport>>> = {};
   let facts: { release: number; model: string; threshold: number } | null = null;
+  let halted = false;
   mkdirSync(outDir, { recursive: true });
+  if (options.force) rmSync(progressFile, { force: true });
 
   try {
     for (const leg of options.legs) {
+      // A leg that stopped (the cap, a quota, repeated failures) says the next would stop as well, and a leg that translates is billed for what it asks.
+      if (halted) break;
       const engine = await deps.makeEngine(resolved.value, { translatedLeg: leg === "on" });
       try {
         if (engine.facts.model !== options.model) {
@@ -281,7 +330,9 @@ export async function runProduction(argv: string[], env: Variables, root: string
             if (outcome !== "hit" && outcome !== "miss" && outcome !== "no_clear_match" && outcome !== "not_run") console.log(`  ${id}: ${outcome}`);
             if ((index + 1) % 25 === 0 || index + 1 === of) console.log(`  ${index + 1} of ${of} questions done, ${budget.made} vendor calls made`);
           },
+          onRow: (row) => appendFileSync(progressFile, `${JSON.stringify({ leg, ...row })}\n`),
         });
+        halted = run.stopped !== null;
         legs[leg] = legReport(run, facts.threshold);
         generic[leg] = buildReport(run.scored, { date: options.date, release: String(facts.release), model: facts.model, threshold: facts.threshold, translatedLeg: leg === "on", questionsSha256: sha256 }, ["tuning"]);
         writeFileSync(legFile(leg), `${JSON.stringify(generic[leg], null, 2)}\n`);
@@ -291,8 +342,15 @@ export async function runProduction(argv: string[], env: Variables, root: string
     }
   } catch (error) {
     console.error(`The run failed: ${(error as Error).message}`);
+    // The calls were paid for whatever came of the run: say how many, and where the questions asked so far are.
+    console.error(`Vendor calls made before it failed: ${budget.made}.${existsSync(progressFile) ? ` The rows of the questions asked so far are in ${progressFile}.` : ""}`);
     return 1;
   }
+
+  // The legs that ran: a leg after one that stopped is not run, and has no report.
+  const ran = options.legs.filter((leg) => legs[leg] !== null);
+  const skipped = options.legs.filter((leg) => legs[leg] === null);
+  const files = [reportFile, ...ran.map(legFile)];
 
   const report: TuningReport = {
     v: 1,
@@ -318,7 +376,10 @@ export async function runProduction(argv: string[], env: Variables, root: string
     writeFileSync(options.summaryFile, `${markdownSummary(report).join("\n")}\n`);
   }
 
-  for (const leg of options.legs) {
+  // The reports are written: the progress file has done its work.
+  rmSync(progressFile, { force: true });
+
+  for (const leg of ran) {
     const g = generic[leg]!;
     for (const line of formatReport(g)) console.log(line);
     for (const line of formatLeg(legs[leg]!)) console.log(line);
@@ -331,12 +392,14 @@ export async function runProduction(argv: string[], env: Variables, root: string
   const unchecked = uncheckedQuestions(tuning).length;
   if (unchecked > 0) console.warn(`WARNING: ${unchecked} question(s) not yet checked by a second team member.`);
 
-  const partial = options.legs.filter((leg) => legs[leg]!.stopped !== null);
-  const unscored = options.legs.reduce((n, leg) => n + legs[leg]!.counts.rate_limited + legs[leg]!.counts.vendor_error + legs[leg]!.counts.search_failed, 0);
+  const partial = ran.filter((leg) => legs[leg]!.stopped !== null);
+  const unscored = ran.reduce((n, leg) => n + legs[leg]!.counts.rate_limited + legs[leg]!.counts.vendor_error + legs[leg]!.counts.search_failed, 0);
   if (unscored > 0) console.warn(annotate(env, "warning", "Questions not scored", `${unscored} question(s) got no usable answer (rate limited, vendor error or search failure) and are left out of the rates.`));
   console.log(`\nReports written to ${outDir}: ${files.map((f) => path.basename(f)).join(", ")}`);
   if (partial.length > 0) {
-    console.error(annotate(env, "error", "Partial results", `the run stopped early (${partial.map((leg) => `${leg}: ${legs[leg]!.stopped}`).join(", ")}); ${budget.made} of ${options.maxCalls} calls made.`));
+    const stops = partial.map((leg) => `${leg}: ${legs[leg]!.stopped} (${STOP_REASONS[legs[leg]!.stopped!]})`).join(", ");
+    const after = skipped.length > 0 ? `; the translated-question leg ${skipped.join(" and ")} was not run after it` : "";
+    console.error(annotate(env, "error", "Partial results", `the run stopped early (${stops})${after}; ${budget.made} of ${options.maxCalls} calls made.`));
     return 1;
   }
   return 0;

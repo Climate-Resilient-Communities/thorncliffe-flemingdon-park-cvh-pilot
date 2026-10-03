@@ -225,7 +225,7 @@ describe("the production engine", () => {
       expect(engine.plan(urdu)).toMatchObject({ embeddings: 1, translations: 0, model: null });
     });
 
-    it("retries once with the model SEARCH_QUESTION_FALLBACK names when the routed model is past its limit, counts the 429, and still scores the question: the fallback did the leg", async () => {
+    it("retries once with the model SEARCH_QUESTION_FALLBACK names when the routed model is past its limit, counts the 429 (as the quota, which the run stops at), and still scores the question: the fallback did the leg", async () => {
       const chat = chatClient({ refuse: { [NORTH]: vendorError(429, "You are past the per-month request limit for this model") } });
       const { parts } = setup({ chat, settings: { questionFallback: { ...DEFAULT_SEARCH_SETTINGS.questionFallback, ps: COMMAND_A } } });
       const engine = await engineFrom(parts, { translatedLeg: true });
@@ -234,7 +234,7 @@ describe("the production engine", () => {
 
       expect(chat.requests.map((r) => r.model)).toEqual([NORTH, COMMAND_A]);
       expect(asked.observation).toMatchObject({ translatedLeg: "used" });
-      expect(asked.trace.failures).toEqual([{ kind: "translation", model: NORTH, class: "limit" }]);
+      expect(asked.trace.failures).toEqual([{ kind: "translation", model: NORTH, class: "quota" }]); // past the month's limit: the translation module's own `quota`
       expect(asked.trace.translationModels).toEqual([NORTH, COMMAND_A]); // the report shows which model translated
       expect(outcomeOf(question("ps-01", PASHTO), asked)).toBe("hit");
       expect(engine.usage().translation).toMatchObject({ calls: 2, rate_limited: 1, by_model: { [NORTH]: { calls: 1, rate_limited: 1 }, [COMMAND_A]: { calls: 1, rate_limited: 0 } } });
@@ -264,7 +264,7 @@ describe("the production engine", () => {
   });
 
   describe("a vendor failure", () => {
-    it("is told apart: a 429 from the embedding endpoint is a limit, any other failure an error, and the search fails with search_unavailable rather than answering wrong", async () => {
+    it("is told apart: a 429 from the embedding endpoint is a limit (a transient one, or the quota when it says it is past the month's), any other failure an error, and the search fails with search_unavailable rather than answering wrong", async () => {
       const embed = embedClient({ fail: (text) => (text === "free legal help" ? vendorError(429, "Too Many Requests") : text === "see a doctor" ? vendorError(500, "boom") : undefined) });
       const { parts } = setup({ embed });
       const engine = await engineFrom(parts, { translatedLeg: false });

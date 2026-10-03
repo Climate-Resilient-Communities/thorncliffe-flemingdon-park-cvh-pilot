@@ -6,10 +6,16 @@ name: Search test set
 # emergency accuracy, p50 and p95 per question, the vendor usage and the threshold the tuning scores suggest (S03.07). Manual
 # only; it runs from main, never from a branch.
 #
-# What it costs: Cohere calls on the free trial key that live search shares (about 1,000 calls a month in all). The run prints
-# the calls it plans, paces them, never makes more than max_calls (default 500) and reports partial results if it has to stop. The
-# use case counts them in spend_event as purpose test_set. It writes no search_log row and changes no release. Only the tuning
-# subset runs: the evaluation subset is S03.08's acceptance evidence, and the command line refuses it as well.
+# It prints the plan and stops unless `confirm` is ticked: the first run of a month, or any run after a change, is best looked at
+# as a plan first (the calls it would make, the allowance). With `confirm` it starts, and before its first call it reads this
+# month's Cohere calls from spend_event and refuses to start when they and its own worst case would pass the key's allowance
+# less the calls kept for live search (docs/config.md).
+#
+# What it costs: Cohere calls on the free trial key that live search shares (about 1,000 calls a month in all). The run paces
+# them, never makes more than max_calls (default 500), stops at a vendor's quota or when calls keep failing, and reports partial
+# results if it has to stop. The use case counts them in spend_event as purpose test_set. It writes no search_log row and
+# changes no release. Only the tuning subset runs: the evaluation subset is S03.08's acceptance evidence, and the command line
+# refuses it as well.
 on:
   workflow_dispatch:
     inputs:
@@ -29,6 +35,11 @@ on:
           - "off"
           - "on"
           - both
+      confirm:
+        description: "Start the run (calls Cohere). Left unticked it only prints the plan: the calls it would make and the allowance"
+        type: boolean
+        required: false
+        default: false
       max_calls:
         description: "The most Cohere calls (embedding and translation together) this run may make; empty is 500. A run of both legs plans about 440"
         type: string
@@ -52,13 +63,16 @@ jobs:
     name: Search test set
     if: github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    # The run step has its own limit below this one, so that a run that takes too long fails that step and the steps that keep
+    # the reports still run: a job that hits its own limit is cancelled, and a cancelled job skips them.
+    timeout-minutes: 35
     # The production environment holds the secrets and accepts runs from main only (repository settings > Environments).
     environment: production
     # Inputs reach the shell only as environment variables, never interpolated into a script.
     env:
       SPLIT: ${{ inputs.split }}
       LEG: ${{ inputs.leg }}
+      CONFIRM: ${{ inputs.confirm }}
       MAX_CALLS: ${{ inputs.max_calls }}
     steps:
       - name: Check the inputs
@@ -69,14 +83,17 @@ jobs:
           fi
           [ "$SPLIT" = tuning ] || { echo "::error title=Search test set not run::Only the tuning subset can be run here; the evaluation subset is S03.08's and is refused."; exit 1; }
           case "$LEG" in off | on | both) ;; *) echo "::error title=Search test set not run::Unknown leg."; exit 1 ;; esac
+          case "$CONFIRM" in true | false) ;; *) echo "::error title=Search test set not run::confirm must be true or false."; exit 1 ;; esac
           if [ -n "$MAX_CALLS" ] && ! [[ "$MAX_CALLS" =~ ^[1-9][0-9]{0,5}$ ]]; then
             echo "::error title=Search test set not run::max_calls must be a whole number of at least 1, or empty."
             exit 1
           fi
-      # The exact commit this run was started on, which is main's head.
+      # The exact commit this run was started on, which is main's head. The token is not kept in the checkout's git config: the
+      # steps after this one, which hold the secrets, have no use for it (the head of main is read without it, the repository is public).
       - uses: actions/checkout@v7
         with:
           ref: ${{ github.sha }}
+          persist-credentials: false
       - name: Check this commit is still the head of main
         run: |
           head=$(git ls-remote origin refs/heads/main | cut -f1)
@@ -88,7 +105,7 @@ jobs:
       # false: the values never do, and are never printed.
       - name: Check the production environment has what the run needs
         env:
-          HAVE_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL != '' || secrets.PRODUCTION_DATABASE_URL != '' }}
+          HAVE_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL != '' }}
           HAVE_COHERE_API_KEY: ${{ secrets.COHERE_API_KEY != '' }}
           HAVE_SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY != '' }}
           HAVE_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL != '' }}
@@ -101,7 +118,7 @@ jobs:
               missing=1
             fi
           }
-          check HAVE_DATABASE_URL secret PRODUCTION_DATABASE_URL
+          check HAVE_DATABASE_URL secret SEARCH_TEST_DATABASE_URL
           check HAVE_COHERE_API_KEY secret COHERE_API_KEY
           check HAVE_SUPABASE_SECRET_KEY secret SUPABASE_SECRET_KEY
           check HAVE_SUPABASE_URL variable NEXT_PUBLIC_SUPABASE_URL
@@ -112,13 +129,16 @@ jobs:
           cache: npm
       # No secret is in the environment while the dependencies install.
       - run: npm ci
-      # The secrets are in this step's environment and no other step's. The database is the optional SEARCH_TEST_DATABASE_URL
-      # (the app's own login, which can do all this run does) or else PRODUCTION_DATABASE_URL. The optional SEARCH_* variables are
-      # production's own values (Vercel's), copied to the same names so the run resolves the route, the fallback and the
-      # emergency threshold as production does; unset, they are blank and mean the defaults, as in production.
+      # The secrets are in this step's environment and no other step's. The database is SEARCH_TEST_DATABASE_URL: production's own
+      # app login (its DATABASE_URL), which can do all this run does (read the release and the spend, write spend rows), and not
+      # the superuser's. The optional SEARCH_* variables are production's own values (Vercel's), copied to the same names so the
+      # run resolves the route, the fallback and the emergency threshold as production does; unset, they are blank and mean the
+      # defaults, as in production. SEARCH_TEST_MONTHLY_CALLS and SEARCH_TEST_RESERVE_CALLS are this run's own: the key's calls a
+      # month (default 1000) and the calls of them kept for live search (default 200).
       - name: Run the search test set
+        timeout-minutes: 25
         env:
-          SEARCH_TEST_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL || secrets.PRODUCTION_DATABASE_URL }}
+          SEARCH_TEST_DATABASE_URL: ${{ secrets.SEARCH_TEST_DATABASE_URL }}
           COHERE_API_KEY: ${{ secrets.COHERE_API_KEY }}
           SUPABASE_SECRET_KEY: ${{ secrets.SUPABASE_SECRET_KEY }}
           NEXT_PUBLIC_SUPABASE_URL: ${{ vars.NEXT_PUBLIC_SUPABASE_URL }}
@@ -127,14 +147,19 @@ jobs:
           SEARCH_QUESTION_ROUTE: ${{ vars.SEARCH_QUESTION_ROUTE }}
           SEARCH_QUESTION_FALLBACK: ${{ vars.SEARCH_QUESTION_FALLBACK }}
           SEARCH_FALLBACK_MIN_BUDGET_MS: ${{ vars.SEARCH_FALLBACK_MIN_BUDGET_MS }}
+          SEARCH_TEST_MONTHLY_CALLS: ${{ vars.SEARCH_TEST_MONTHLY_CALLS }}
+          SEARCH_TEST_RESERVE_CALLS: ${{ vars.SEARCH_TEST_RESERVE_CALLS }}
         run: |
-          set -o pipefail
           out="$RUNNER_TEMP/search-test-set"
           mkdir -p "$out"
-          args=(run --engine production --model embed-v4.0 --translated-leg "$LEG" --split "$SPLIT" --scores --yes --out-dir "$out" --summary-file "$out/summary.md")
+          args=(run --engine production --model embed-v4.0 --translated-leg "$LEG" --split "$SPLIT" --scores --out-dir "$out" --summary-file "$out/summary.md")
+          if [ "$CONFIRM" = true ]; then args+=(--yes); else args+=(--plan-only); fi
           if [ -n "$MAX_CALLS" ]; then args+=(--max-calls "$MAX_CALLS"); fi
-          npm run search-test-set -- "${args[@]}" 2>&1 | tee "$out/log.txt"
-      # The reports and the log hold question ids, provider ids, scores and counts, never a question's text.
+          # The output goes to the job log, where GitHub masks the secrets. It is not saved to a file: a file in an artifact is
+          # not masked, and the artifact of a public repository can be downloaded by anyone signed in to GitHub.
+          npm run search-test-set -- "${args[@]}"
+      # The JSON reports hold question ids, provider ids, scores and counts, never a question's text; a run that ended badly leaves
+      # a progress file of the same kind. Nothing that was printed is in the folder.
       - name: Upload the reports
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
@@ -154,6 +179,8 @@ jobs:
               cat "$RUNNER_TEMP/search-test-set/summary.md"
               echo
               echo "The per-question report is in the uploaded artifact."
+            elif [ "$CONFIRM" != true ]; then
+              echo "Plan only: nothing was called. The plan is in the job log; run it again with confirm ticked to start."
             else
               echo "The run produced no summary; see the job log."
             fi

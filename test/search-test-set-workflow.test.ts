@@ -7,6 +7,7 @@ import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
 import { parse } from "yaml";
+import { resolveAllowance } from "../scripts/search-test-set/allowance";
 import { parseProductionOptions, REQUIRED_VARIABLES } from "../scripts/search-test-set/production";
 import { parseSearchEnv } from "@/platform/config/env";
 
@@ -20,6 +21,7 @@ interface Step {
   uses?: string;
   run?: string;
   if?: string;
+  "timeout-minutes"?: number;
   env?: Record<string, string>;
   with?: Record<string, string>;
 }
@@ -40,9 +42,11 @@ describe("search-test-set workflow", () => {
     expect(step(/Check the inputs/).run).toContain('"$GITHUB_REF" != refs/heads/main');
   });
 
-  it("checks out the exact commit it was started on, which must still be the head of main", () => {
-    expect(steps.find((s) => s.uses?.startsWith("actions/checkout"))!.with).toEqual({ ref: "${{ github.sha }}" });
+  it("checks out the exact commit it was started on, which must still be the head of main, and does not keep the token in the checkout (the steps that hold the secrets have no use for it)", () => {
+    expect(steps.find((s) => s.uses?.startsWith("actions/checkout"))!.with).toEqual({ ref: "${{ github.sha }}", "persist-credentials": false });
     expect(step(/still the head of main/).run).toContain("git ls-remote origin refs/heads/main");
+    // The head of main is read without a token: nothing in the job hands one to a step.
+    expect(text).not.toMatch(/GITHUB_TOKEN|github\.token/);
   });
 
   it("has least privilege: read-only permissions, none added to the job, and a non-cancelling concurrency group", () => {
@@ -51,6 +55,30 @@ describe("search-test-set workflow", () => {
     expect(workflow.concurrency.group).toBe("search-test-set");
     expect(workflow.concurrency["cancel-in-progress"]).toBe(false);
     expect(job["timeout-minutes"]).toBeGreaterThan(0);
+  });
+
+  it("limits the run step below the job, so that a run that takes too long fails that step and the steps that keep the reports still run (a cancelled job skips them)", () => {
+    const run = step(/Run the search test set/);
+    expect(run["timeout-minutes"]).toBeGreaterThan(0);
+    expect(run["timeout-minutes"]!).toBeLessThan(job["timeout-minutes"] - 5);
+    for (const name of [/Upload the reports/, /Write the summary/]) expect(step(name).if).toBe("${{ !cancelled() }}");
+    // A step that fails is not a cancelled job: nothing after the run step is conditional on its success.
+    expect(text).not.toMatch(/continue-on-error|if:\s*success\(\)|if:\s*always\(\)/);
+  });
+
+  it("only prints the plan unless confirm is ticked: the input is a boolean that defaults to false, and --yes is passed only for confirm", () => {
+    const confirm = workflow.on.workflow_dispatch.inputs.confirm;
+    expect(confirm.type).toBe("boolean");
+    expect(confirm.default).toBe(false);
+    expect(confirm.required).toBe(false);
+    const run = step(/Run the search test set/).run!;
+    expect(run).toContain('if [ "$CONFIRM" = true ]; then args+=(--yes); else args+=(--plan-only); fi');
+    expect(run.match(/--yes/g)).toHaveLength(1);
+    expect(step(/Check the inputs/).run).toContain('case "$CONFIRM" in true | false) ;;');
+    // Both forms are ones the command line accepts, and the plan-only one is not a run.
+    const base = ["run", "--engine", "production", "--model", "embed-v4.0", "--translated-leg", "both", "--split", "tuning", "--scores", "--out-dir", "/tmp/x", "--summary-file", "/tmp/x/summary.md"];
+    expect(parseProductionOptions([...base, "--plan-only"])).toMatchObject({ ok: true, options: { planOnly: true, yes: false } });
+    expect(parseProductionOptions([...base, "--yes"])).toMatchObject({ ok: true, options: { planOnly: false, yes: true } });
   });
 
   it("offers the tuning subset only, and refuses any other in its own check (the evaluation subset is S03.08's)", () => {
@@ -76,13 +104,11 @@ describe("search-test-set workflow", () => {
     for (const s of steps) {
       if (s.run !== undefined) expect(s.run, s.name ?? s.run).not.toContain("${{");
     }
-    expect(job.env).toEqual({ SPLIT: "${{ inputs.split }}", LEG: "${{ inputs.leg }}", MAX_CALLS: "${{ inputs.max_calls }}" });
+    expect(job.env).toEqual({ SPLIT: "${{ inputs.split }}", LEG: "${{ inputs.leg }}", CONFIRM: "${{ inputs.confirm }}", MAX_CALLS: "${{ inputs.max_calls }}" });
     const expressions = [...text.matchAll(/\$\{\{\s*([^}]+?)\s*\}\}/g)].map((m) => m[1]!);
     const secret = "secrets\\.[A-Z_]+( != '')?";
     for (const expression of expressions) {
-      expect(expression, expression).toMatch(
-        new RegExp(`^(inputs\\.(split|leg|max_calls)|${secret}( \\|\\| ${secret})?|vars\\.[A-Z_]+( != '')?|github\\.(sha|run_id)|runner\\.temp|!cancelled\\(\\))$`),
-      );
+      expect(expression, expression).toMatch(new RegExp(`^(inputs\\.(split|leg|confirm|max_calls)|${secret}|vars\\.[A-Z_]+( != '')?|github\\.(sha|run_id)|runner\\.temp|!cancelled\\(\\))$`));
     }
   });
 
@@ -94,7 +120,7 @@ describe("search-test-set workflow", () => {
     for (const value of Object.values(check.env!)) expect(value).toMatch(/!= ''/);
     expect(
       [...text.matchAll(/secrets\.([A-Z_]+)/g)].map((m) => m[1]).filter((name, index, all) => all.indexOf(name) === index).sort(),
-    ).toEqual(["COHERE_API_KEY", "PRODUCTION_DATABASE_URL", "SEARCH_TEST_DATABASE_URL", "SUPABASE_SECRET_KEY"]);
+    ).toEqual(["COHERE_API_KEY", "SEARCH_TEST_DATABASE_URL", "SUPABASE_SECRET_KEY"]);
     const install = steps.findIndex((s) => s.run === "npm ci");
     expect(install).toBeGreaterThan(-1);
     expect(steps[install]!.env).toBeUndefined();
@@ -102,7 +128,7 @@ describe("search-test-set workflow", () => {
 
   it("names a missing secret or variable without printing any value, and stops before anything is installed or called", () => {
     const check = step(/has what the run needs/);
-    for (const name of ["PRODUCTION_DATABASE_URL", "COHERE_API_KEY", "SUPABASE_SECRET_KEY", "NEXT_PUBLIC_SUPABASE_URL"]) expect(check.run).toContain(name);
+    for (const name of ["SEARCH_TEST_DATABASE_URL", "COHERE_API_KEY", "SUPABASE_SECRET_KEY", "NEXT_PUBLIC_SUPABASE_URL"]) expect(check.run).toContain(name);
     expect(check.run).toContain('"${!have}" != true');
     expect(check.run).toContain("exit $missing");
     expect(steps.indexOf(check)).toBeLessThan(steps.findIndex((s) => s.run === "npm ci"));
@@ -112,8 +138,9 @@ describe("search-test-set workflow", () => {
 
   it("gives the command line what it requires, under the names it reads", () => {
     const run = step(/Run the search test set/);
-    // The app's own login when the owner adds it, else the production login the seeds use.
-    expect(run.env!.SEARCH_TEST_DATABASE_URL).toBe("${{ secrets.SEARCH_TEST_DATABASE_URL || secrets.PRODUCTION_DATABASE_URL }}");
+    // The app's own login, which can do all the run does: never the superuser's production URL, which the seeds use.
+    expect(run.env!.SEARCH_TEST_DATABASE_URL).toBe("${{ secrets.SEARCH_TEST_DATABASE_URL }}");
+    expect(text).not.toContain("PRODUCTION_DATABASE_URL");
     expect(run.env!.COHERE_API_KEY).toBe("${{ secrets.COHERE_API_KEY }}");
     expect(run.env!.SUPABASE_SECRET_KEY).toBe("${{ secrets.SUPABASE_SECRET_KEY }}");
     expect(run.env!.NEXT_PUBLIC_SUPABASE_URL).toBe("${{ vars.NEXT_PUBLIC_SUPABASE_URL }}");
@@ -122,10 +149,16 @@ describe("search-test-set workflow", () => {
 
   it("forwards production's own SEARCH_* values under their own names, and the app's parser takes them (blank is unset)", () => {
     const run = step(/Run the search test set/);
-    const forwarded = Object.keys(run.env!).filter((name) => name.startsWith("SEARCH_") && name !== "SEARCH_TEST_DATABASE_URL");
+    const forwarded = Object.keys(run.env!).filter((name) => name.startsWith("SEARCH_") && !name.startsWith("SEARCH_TEST_"));
     expect(forwarded.sort()).toEqual(["SEARCH_EMERGENCY_THRESHOLD", "SEARCH_FALLBACK_MIN_BUDGET_MS", "SEARCH_QUESTION_FALLBACK", "SEARCH_QUESTION_ROUTE", "SEARCH_THRESHOLD"]);
     for (const name of forwarded) expect(run.env![name]).toBe(`\${{ vars.${name} }}`);
     expect(() => parseSearchEnv(Object.fromEntries(forwarded.map((name) => [name, ""])))).not.toThrow();
+  });
+
+  it("forwards the allowance's two variables (the key's calls a month and the calls kept for live search) as variables, and the command line takes them blank", () => {
+    const run = step(/Run the search test set/);
+    for (const name of ["SEARCH_TEST_MONTHLY_CALLS", "SEARCH_TEST_RESERVE_CALLS"]) expect(run.env![name]).toBe(`\${{ vars.${name} }}`);
+    expect(resolveAllowance({ SEARCH_TEST_MONTHLY_CALLS: "", SEARCH_TEST_RESERVE_CALLS: "" })).toMatchObject({ ok: true, allowance: { monthly: 1000, reserve: 200 } });
   });
 
   it("runs the package script with arguments the command line accepts: the production engine, the model, the leg and the tuning split from the environment, --yes, and the files in the temp folder", () => {
@@ -140,10 +173,16 @@ describe("search-test-set workflow", () => {
     expect(text).not.toContain("--threshold");
   });
 
-  it("uploads the per-question report, and writes only the aggregates to the job summary", () => {
+  it("uploads the per-question report, never the printed output (an artifact is not masked, and this repository is public), and writes only the aggregates to the job summary", () => {
     const upload = steps.find((s) => s.uses?.startsWith("actions/upload-artifact"))!;
     expect(upload.if).toBe("${{ !cancelled() }}");
     expect(upload.with!.path).toBe("${{ runner.temp }}/search-test-set");
+    // What the command prints stays in the job log: it is not piped to a file anywhere, least of all one in the uploaded folder.
+    const run = step(/Run the search test set/).run!;
+    expect(run).not.toMatch(/\btee\b|>\s*"?\$out|log\.txt/);
+    expect(text).not.toContain("log.txt");
+    expect(run).toContain('npm run search-test-set -- "${args[@]}"');
+    expect(run.trimEnd().endsWith('npm run search-test-set -- "${args[@]}"')).toBe(true);
     const summary = step(/Write the summary/).run!;
     expect(summary).toContain('>> "$GITHUB_STEP_SUMMARY"');
     expect(summary).toContain("summary.md");

@@ -27,8 +27,12 @@ const Count = z.number().int().min(0);
 export const VendorFailureSchema = z.strictObject({
   kind: z.enum(["embedding", "translation"]),
   model: z.string().min(1),
-  /** `limit`: HTTP 429 (quota or rate limit); `error`: any other failure; `aborted`: cancelled by the search's own deadline (not a vendor failure). */
-  class: z.enum(["limit", "error", "aborted"]),
+  /**
+   * `limit`: HTTP 429 that says it is transient (a per-minute limit); `quota`: HTTP 429 past the vendor's limit for the model, in
+   * practice the month's, or one that does not say it is transient (the translation module's own classification, `classifyCohereError`);
+   * `error`: any other failure; `aborted`: cancelled by the search's own deadline (not a vendor failure).
+   */
+  class: z.enum(["limit", "quota", "error", "aborted"]),
 });
 export type VendorFailure = z.infer<typeof VendorFailureSchema>;
 
@@ -67,7 +71,7 @@ export type TuningRow = z.infer<typeof TuningRowSchema>;
 const ModelUsageSchema = z.strictObject({
   /** Calls made, whatever came of them. */
   calls: Count,
-  /** Of them: refused with HTTP 429, failed otherwise, cancelled by the search's deadline (it may still have been billed). */
+  /** Of them: refused with HTTP 429 (a rate limit or the quota), failed otherwise, cancelled by the search's deadline (it may still have been billed). */
   rate_limited: Count,
   failed: Count,
   aborted: Count,
@@ -101,21 +105,31 @@ export type ThresholdEffect = z.infer<typeof ThresholdEffectSchema>;
 /**
  * The threshold the scores suggest (S03.07's rule): the value that keeps every tuning no-match question below it while losing
  * the fewest hits. It suggests; it sets nothing. `threshold` is null, with the reason, when the scores cannot give one.
+ *
+ * Every value above the highest no-match similarity keeps the no-match questions below it, and the fewest hits are not always lost
+ * by the lowest of them: with the translated-question leg on, raising the threshold can take a competing provider out of one leg,
+ * which lowers its fused score and lets the expected provider back into the top five. So the suggestion is the best of the values
+ * above it at which a question's top five can change: the fewest hits lost, then the most hits kept, then the lowest value. It is
+ * `lowest_clearing` when nothing does better.
  */
 export const ThresholdSuggestionSchema = z.strictObject({
   threshold: z.number().nullable(),
   reason: z.string().nullable(),
   no_match_questions: Count,
-  /** The highest similarity of any provider to any no-match question: the suggestion is just above it. */
+  /** The highest similarity of any provider to any no-match question: the suggestion is above it. */
   highest_no_match: z.number().nullable(),
+  /** The lowest value, to four places, that keeps every no-match question below it: just above `highest_no_match`. */
+  lowest_clearing: z.number().nullable(),
   /** The similarity of the weakest hit the suggestion keeps; null when it keeps none. */
   lowest_kept_hit: z.number().nullable(),
-  /** The room between the two: `lowest_kept_hit` minus `highest_no_match`. Any value in it loses the same hits. */
+  /** `lowest_kept_hit` minus `highest_no_match`: how far the weakest kept hit stands above the highest no-match question. */
   hit_margin: z.number().nullable(),
   /** Questions that are not no_match and are answerable, and those of them that are a hit with no threshold at all. */
   answerable_questions: Count,
   hits_without_threshold: Count,
   at_suggested: ThresholdEffectSchema.nullable(),
+  /** What `lowest_clearing` does, to compare with the suggestion (the same as `at_suggested` when they are the same value). */
+  at_lowest_clearing: ThresholdEffectSchema.nullable(),
   at_release: ThresholdEffectSchema,
   /** Questions where ranking at the release's threshold again, with the use case's own function, gave another answer than the use case did. Always 0 unless something is wrong. */
   replay_mismatches: Count,
@@ -125,8 +139,12 @@ export type ThresholdSuggestion = z.infer<typeof ThresholdSuggestionSchema>;
 export const LegReportSchema = z.strictObject({
   /** The translated-question leg setting this run used. */
   translated_leg: z.boolean(),
-  /** Why the run stopped before its last question; null when it asked them all. */
-  stopped: z.enum(["max_calls", "vendor_failures"]).nullable(),
+  /**
+   * Why the run stopped before its last question; null when it asked them all. `max_calls`: the next question could pass the cap;
+   * `quota`: a vendor refused a call as past its monthly limit; `vendor_failures`: calls kept being refused or failing, in a row;
+   * `search_failures`: the search itself kept failing, in a row (a deadline, the database, the bucket).
+   */
+  stopped: z.enum(["max_calls", "quota", "vendor_failures", "search_failures"]).nullable(),
   counts: z.strictObject({
     questions: Count,
     asked: Count,
@@ -149,6 +167,11 @@ export const LegReportSchema = z.strictObject({
     by_language: z.record(z.string(), MetricsSchema),
     by_language_kind: z.record(z.string(), MetricsSchema),
   }),
+  /**
+   * The time per question over every question that was asked, scored or not. The questions that failed at the search's deadline are
+   * the slowest, and the aggregates above leave them out. `search_failed` counts the asked questions that ended with that outcome.
+   */
+  time_asked: z.strictObject({ questions: Count, p50: z.number().min(0).nullable(), p95: z.number().min(0).nullable(), search_failed: Count }),
   usage: VendorUsageSchema,
   threshold_suggestion: ThresholdSuggestionSchema,
   rows: z.array(TuningRowSchema),

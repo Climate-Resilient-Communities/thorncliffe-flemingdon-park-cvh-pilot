@@ -7,7 +7,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { searchResponse, type SearchRouteDeps } from "../../src/app/api/search/handler";
 import { migrate } from "../../scripts/db/migrate.mjs";
 import { runQuestions } from "../../scripts/search-test-set/lib";
-import { engineFrom } from "../../scripts/search-test-set/productionEngine";
+import { cohereCallsThisMonth, engineFrom } from "../../scripts/search-test-set/productionEngine";
 import { CallBudget, legReport, runLeg } from "../../scripts/search-test-set/tuningRun";
 import { SearchErrorSchema } from "@/contracts/search";
 import { SearchV1Schema, TestQuestionSchema } from "@/contracts/searchTestSet";
@@ -1173,6 +1173,26 @@ describe("search", () => {
       expect(run.rows[0]).toMatchObject({ outcome: "hit", translated_leg: "used", legs_used: ["direct", "translated"], calls: { embedding: 2, translation: 1 } });
       expect((await rows("spend_event")).map((r) => [r.kind, r.purpose]).sort()).toEqual([["embed", "test_set"], ["embed", "test_set"], ["translate", "test_set"]]);
       expect(await rows("search_log")).toEqual([]);
+    });
+
+    it("counts the month's Cohere calls for the allowance with the app's own login: embedding and translation, every purpose, the calendar month in America/Toronto, and nothing else", async () => {
+      await sql.unsafe("delete from spend_event");
+      const monthStart = "(date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto')";
+      await sql.unsafe(`
+        insert into spend_event (at, kind, purpose, model, calls, tokens) values
+          (now(), 'embed', 'search', 'embed-v4.0', 3, 10),
+          (now(), 'embed', 'test_set', 'embed-v4.0', 2, 10),
+          (now(), 'translate', 'alert', 'north-small-translate-09-2026', 4, 10),
+          (now(), 'translate', 'search', 'north-small-translate-09-2026', 1, 10),
+          (${monthStart}, 'embed', 'publish', 'embed-v4.0', 5, 10),
+          (${monthStart} - interval '1 second', 'embed', 'publish', 'embed-v4.0', 100, 10),
+          (now() - interval '45 days', 'translate', 'search', 'north-small-translate-09-2026', 100, 10),
+          (now() + interval '45 days', 'embed', 'search', 'embed-v4.0', 100, 10),
+          (now(), 'sms', 'alert', 'twilio', 100, 0)`);
+
+      expect(await cohereCallsThisMonth(app, new Date())).toBe(15);
+      await sql.unsafe("delete from spend_event");
+      expect(await cohereCallsThisMonth(app, new Date())).toBe(0);
     });
 
     it("tells a 429 from a miss: the question is rate_limited, left out of the rates, and nothing is billed for the refused call", async () => {

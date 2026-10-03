@@ -9,6 +9,14 @@ const ms = (x: number | null) => (x === null ? "-" : String(x));
 const num = (x: number | null) => (x === null ? "-" : x.toFixed(4));
 const legName = (leg: LegReport) => (leg.translated_leg ? "on" : "off");
 
+/** Why a leg stopped, in words (the report's `stopped`). */
+export const STOP_REASONS: Record<NonNullable<LegReport["stopped"]>, string> = {
+  max_calls: "the next question could pass --max-calls",
+  quota: "a vendor refused a call as past its monthly limit",
+  vendor_failures: "the vendors kept refusing or failing",
+  search_failures: "the search kept failing: a deadline, the database or the bucket",
+};
+
 const modelCounts = (usage: KindUsage) =>
   Object.entries(usage.by_model)
     .sort(([a], [b]) => a.localeCompare(b))
@@ -22,14 +30,21 @@ export function formatUsage(leg: LegReport): string[] {
   return ["Vendor calls:", line("embedding", leg.usage.embedding), line("translation", leg.usage.translation)];
 }
 
+/** The time per question over every question that was asked, with how many ended without an answer (the slowest ones, which the scored figures leave out). */
+export function formatTimeAsked(leg: LegReport): string {
+  const t = leg.time_asked;
+  return `time per question over all ${t.questions} asked, those that failed included: p50 ${ms(t.p50)} ms, p95 ${ms(t.p95)} ms; ${t.search_failed} of them ended without an answer (search_failed), which the figures per language leave out`;
+}
+
 export function formatCounts(leg: LegReport): string[] {
   const c = leg.counts;
   const lines = [
     `${c.questions} questions: ${c.asked} asked, ${c.scored} scored (${c.hit} hit, ${c.miss} miss, ${c.no_clear_match} no_clear_match)`,
     `not scored: ${c.rate_limited} rate_limited, ${c.vendor_error} vendor_error, ${c.search_failed} search_failed; not run: ${c.not_run}`,
+    formatTimeAsked(leg),
   ];
   if (leg.stopped !== null) {
-    lines.push(`PARTIAL RESULTS: the run stopped (${leg.stopped === "max_calls" ? "the next question could pass --max-calls" : "the vendors kept failing"}); ${c.not_run} questions were not asked.`);
+    lines.push(`PARTIAL RESULTS: the run stopped (${STOP_REASONS[leg.stopped]}); ${c.not_run} questions were not asked.`);
   }
   if (c.rate_limited + c.vendor_error + c.search_failed > 0) {
     lines.push("Questions that were not scored are left out of every rate below and are never counted as misses; run them again to complete the measurement.");
@@ -52,13 +67,22 @@ export function formatSuggestion(s: ThresholdSuggestion, ids = true, translatedL
   const lines: string[] = [];
   if (s.threshold === null || s.at_suggested === null) {
     lines.push(`Suggested threshold: none (${s.reason})`);
-  } else {
+  } else if (s.at_lowest_clearing === null || s.threshold === s.lowest_clearing) {
     lines.push(`Suggested threshold: ${s.threshold} (just above the highest no-match similarity ${num(s.highest_no_match)}, over ${s.no_match_questions} no-match questions)`);
     lines.push(`  ${effectLine("at", s.at_suggested, s, ids)}`);
+  } else {
+    // A higher value loses fewer hits than the lowest one that clears the no-match questions (two legs fused by rank: dropping a competitor from one leg can bring the expected provider back into the top five).
+    lines.push(
+      `Suggested threshold: ${s.threshold} (above the highest no-match similarity ${num(s.highest_no_match)}, over ${s.no_match_questions} no-match questions; the lowest value that clears them, ${s.lowest_clearing}, loses more hits)`,
+    );
+    lines.push(`  ${effectLine("at", s.at_suggested, s, ids)}`);
+    lines.push(`  ${effectLine("at the lowest value that clears the no-match questions", s.at_lowest_clearing, s, ids)}`);
+  }
+  if (s.threshold !== null && s.at_suggested !== null) {
     lines.push(
       s.hit_margin === null
         ? "  margin: it keeps no hit at all"
-        : `  margin: ${num(s.hit_margin)} between the highest no-match similarity and the weakest hit it keeps (${num(s.lowest_kept_hit)}); any value from there up to that hit loses the same hits`,
+        : `  margin: ${num(s.hit_margin)} between the highest no-match similarity and the weakest hit it keeps (${num(s.lowest_kept_hit)})`,
     );
   }
   lines.push(`  ${effectLine("at the release's threshold", s.at_release, s, ids)}`);
@@ -99,12 +123,13 @@ export function markdownSummary(report: TuningReport): string[] {
     const c = leg.counts;
     lines.push(`### Translated-question leg ${legName(leg)}`, "");
     lines.push(`${c.questions} questions: ${c.scored} scored (${c.hit} hit, ${c.miss} miss, ${c.no_clear_match} no clear match); not scored: ${c.rate_limited} rate limited, ${c.vendor_error} vendor errors, ${c.search_failed} search failed; not run: ${c.not_run}.`);
-    if (leg.stopped !== null) lines.push("", `**Partial results:** the run stopped (${leg.stopped === "max_calls" ? "call cap" : "vendor failures"}).`);
+    if (leg.stopped !== null) lines.push("", `**Partial results:** the run stopped (${STOP_REASONS[leg.stopped]}).`);
     lines.push("", "| Language | Questions | Hit top 3 | Hit top 5 | No match | Emergency | p50 ms | p95 ms |", "| --- | ---: | ---: | ---: | ---: | ---: | ---: | ---: |");
     for (const [lang, m] of Object.entries(leg.aggregates.by_language)) lines.push(metricsRow(lang, m));
     lines.push(metricsRow("all", leg.aggregates.overall));
     const o = leg.aggregates.overall;
     lines.push("", `No-match accuracy ${pct(o.no_match)} (${o.no_match.hits} of ${o.no_match.of}), emergency accuracy ${pct(o.emergency)} (${o.emergency.hits} of ${o.emergency.of}), false 911 ${pct(o.false_emergency_rate)}.`);
+    lines.push(`${formatTimeAsked(leg)}.`);
     if (leg.translated_leg) {
       const t = leg.translated_leg_counts;
       lines.push(`Translated-question leg: used ${t.used} (${leg.fallback_translations} by a fallback model), failed ${t.failed}, timed out ${t.timed_out}, not needed ${t.not_needed}.`);

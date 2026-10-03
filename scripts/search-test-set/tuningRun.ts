@@ -3,8 +3,9 @@
 // tests give it a fake. What this file adds to the generic runner (lib.ts `runQuestions`):
 //
 //  - Usage allowance: calls are paced (sequential, with a pause that keeps each vendor's calls under the trial key's per-minute
-//    limits), counted against a call budget that is checked before each question with its worst case (its retry included), and the
-//    run stops cleanly when the next question could pass it, or when the vendors keep refusing; the questions it did not ask are
+//    limits, and a longer one after any call a vendor refused for a limit), counted against a call budget that is checked before
+//    each question with its worst case (its retry included), and the run stops cleanly when the next question could pass it, when a
+//    vendor says the monthly quota is spent, or when the vendors or the search keep failing; the questions it did not ask are
 //    `not_run` and the partial results are reported.
 //  - A vendor failure is its own outcome. A question whose answer a vendor failure took a part of (a 429, any other failed call
 //    that no fallback covered) is `rate_limited` or `vendor_error`, is left out of every rate, and is counted; it is never
@@ -13,8 +14,8 @@
 // Rows hold ids, scores and counts, never a question's text.
 import type { SearchObservation } from "@/modules/directory";
 import type { SearchV1, TestQuestion } from "@/contracts/searchTestSet";
-import { SCORED_OUTCOMES, type LegReport, type TuningOutcome, type TuningRow, type VendorUsage } from "@/contracts/searchTuning";
-import { measureSubset, type QuestionResult } from "./lib";
+import { SCORED_OUTCOMES, type LegReport, type TuningOutcome, type TuningRow, type VendorFailure, type VendorUsage } from "@/contracts/searchTuning";
+import { measureSubset, percentile, type QuestionResult } from "./lib";
 import type { QuestionPlan } from "./callPlan";
 import { worstCalls } from "./callPlan";
 import { maxSimilarity, suggestThreshold, type ThresholdInput } from "./threshold";
@@ -63,8 +64,9 @@ export class CallBudget {
 /**
  * The default for --max-calls. The free trial key allows about 1,000 calls a month in all and live search shares it; a run of
  * both legs over the 155 tuning questions plans about 440 calls (embedding and translation together, 456 with every retry), so
- * this leaves the rest of the month to live search and is still enough for one full run of both. A run that needs more says so
- * in its plan, and stops at the cap.
+ * this is enough for one full run of both. It does not know how much of the month is already spent: the run reads that from
+ * spend_event before it starts and refuses a run that would not leave the live-search reserve (allowance.ts). A run that needs
+ * more than the cap says so in its plan, and stops at the cap.
  */
 export const DEFAULT_MAX_CALLS = 500;
 
@@ -79,9 +81,15 @@ export type Pace = { embedGapMs: number; translateGapMs: number; rateLimitBackof
 /** This many vendor failures in a row end the run (a monthly quota that is spent fails every call after it, and each call counts). */
 export const MAX_CONSECUTIVE_VENDOR_FAILURES = 5;
 
+/** This many searches in a row that could not answer end the run: the database or the bucket is down, or the deadline is never met, and a leg that translates is billed for each question anyway. */
+export const MAX_CONSECUTIVE_SEARCH_FAILURES = 5;
+
 const sleepFor = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms));
 const round1 = (x: number) => Math.round(x * 10) / 10;
 const round6 = (x: number) => Math.round(x * 1e6) / 1e6;
+
+/** A call the vendor refused for a limit: a rate limit, or past its quota (both are HTTP 429). */
+const isRefusal = (f: VendorFailure) => f.class === "limit" || f.class === "quota";
 
 /**
  * How the question came out. A vendor failure that took part of the answer away (any call that failed, except a call the search
@@ -91,7 +99,7 @@ export function outcomeOf(question: Pick<TestQuestion, "expected">, asked: Asked
   const failed = asked.trace.failures.filter((f) => f.class !== "aborted");
   const rescued = asked.observation?.translatedLeg === "used";
   const unrescued = rescued ? failed.filter((f) => f.kind !== "translation") : failed;
-  if (unrescued.length > 0) return unrescued.some((f) => f.class === "limit") ? "rate_limited" : "vendor_error";
+  if (unrescued.length > 0) return unrescued.some(isRefusal) ? "rate_limited" : "vendor_error";
   const answer = asked.answer;
   if (!answer || answer.status === "unavailable") return "search_failed";
   if (answer.status === "no_clear_match") return "no_clear_match";
@@ -137,6 +145,8 @@ export interface LegRunOptions {
   pace?: Partial<Pace>;
   /** Told after each question, for a progress line: the question's id and how it came out, never its text. */
   onQuestion?: (done: { id: string; outcome: TuningOutcome; index: number; of: number }) => void;
+  /** Handed each asked question's row as soon as it is made (the questions not run have none), so that what was paid for is kept if the run ends badly. */
+  onRow?: (row: TuningRow) => void;
 }
 
 export interface LegRun {
@@ -145,7 +155,7 @@ export interface LegRun {
   /** The scored questions, as the generic report measures them. */
   scored: QuestionResult[];
   inputs: ThresholdInput[];
-  stopped: "max_calls" | "vendor_failures" | null;
+  stopped: LegReport["stopped"];
   usage: VendorUsage;
 }
 
@@ -160,7 +170,8 @@ export async function runLeg(questions: readonly TestQuestion[], engine: TuningE
   const scored: QuestionResult[] = [];
   const inputs: ThresholdInput[] = [];
   let stopped: LegRun["stopped"] = null;
-  let consecutiveFailures = 0;
+  let consecutiveVendorFailures = 0;
+  let consecutiveSearchFailures = 0;
 
   for (const [index, question] of questions.entries()) {
     const missing = question.expected.filter((id) => known.get(id) === false);
@@ -176,26 +187,48 @@ export async function runLeg(questions: readonly TestQuestion[], engine: TuningE
     const asked = await engine.ask(question);
     options.budget.spend(asked.trace.embedding + asked.trace.translation);
     const outcome = outcomeOf(question, asked);
-    rows.push(rowOf(question, outcome, asked));
+    const row = rowOf(question, outcome, asked);
+    rows.push(row);
+    options.onRow?.(row);
     const isScored = SCORED_OUTCOMES.includes(outcome);
-    inputs.push({ ...input, observation: isScored ? asked.observation : null, answer: isScored ? asked.answer : null });
+    // The translated-question leg was needed and did not complete: the similarities are the direct leg's only.
+    const translatedLegLost = isScored && (asked.observation?.translatedLeg === "failed" || asked.observation?.translatedLeg === "timed_out");
+    inputs.push({ ...input, observation: isScored ? asked.observation : null, answer: isScored ? asked.answer : null, translatedLegLost });
     if (isScored && asked.answer) {
       scored.push({ question, status: asked.answer.status, emergency_first: asked.answer.emergency_first, results: asked.answer.results, query_lang: asked.answer.query_lang, ms: asked.ms, missing });
     }
     options.onQuestion?.({ id: question.id, outcome, index, of: questions.length });
 
-    const vendorFailure = outcome === "rate_limited" || outcome === "vendor_error";
-    consecutiveFailures = vendorFailure ? consecutiveFailures + 1 : 0;
-    if (consecutiveFailures >= MAX_CONSECUTIVE_VENDOR_FAILURES) {
+    // A vendor that says the quota is spent refuses every call after it, and each is counted: stop at once, rescued or not (a
+    // question whose routed model was past its quota but whose fallback model answered is scored, and is the last one asked).
+    if (asked.trace.failures.some((f) => f.class === "quota")) {
+      stopped = "quota";
+      continue;
+    }
+    consecutiveVendorFailures = outcome === "rate_limited" || outcome === "vendor_error" ? consecutiveVendorFailures + 1 : 0;
+    consecutiveSearchFailures = outcome === "search_failed" ? consecutiveSearchFailures + 1 : 0;
+    if (consecutiveVendorFailures >= MAX_CONSECUTIVE_VENDOR_FAILURES) {
       stopped = "vendor_failures";
       continue;
     }
+    if (consecutiveSearchFailures >= MAX_CONSECUTIVE_SEARCH_FAILURES) {
+      stopped = "search_failures";
+      continue;
+    }
     if (index < questions.length - 1) {
-      const wait = outcome === "rate_limited" ? pace.rateLimitBackoffMs : Math.max(asked.trace.embedding * pace.embedGapMs, asked.trace.translation * pace.translateGapMs);
+      // After any call a vendor refused for a limit, even one that a fallback model then covered: the per-minute window has to pass.
+      const refused = asked.trace.failures.some(isRefusal);
+      const wait = refused ? pace.rateLimitBackoffMs : Math.max(asked.trace.embedding * pace.embedGapMs, asked.trace.translation * pace.translateGapMs);
       if (wait > 0) await sleep(wait);
     }
   }
   return { translatedLeg: options.translatedLeg, rows, scored, inputs, stopped, usage: engine.usage() };
+}
+
+/** The time per question over every question that was asked, scored or not: the ones that failed at the deadline are the slowest. */
+function timeAsked(rows: readonly TuningRow[]): LegReport["time_asked"] {
+  const times = rows.flatMap((r) => (r.ms === null ? [] : [r.ms]));
+  return { questions: times.length, p50: percentile(times, 50), p95: percentile(times, 95), search_failed: rows.filter((r) => r.ms !== null && r.outcome === "search_failed").length };
 }
 
 /** The report of one leg's run: counts by outcome, the aggregates over the scored questions, the usage and the threshold it suggests. */
@@ -221,6 +254,7 @@ export function legReport(run: LegRun, releaseThreshold: number): LegReport {
     translated_leg_counts: { not_needed: leg("not_needed"), used: leg("used"), failed: leg("failed"), timed_out: leg("timed_out") },
     fallback_translations: run.rows.filter((r) => r.translated_leg === "used" && r.translation_models.length > 1).length,
     aggregates: { overall: subset.overall, by_language: subset.by_language, by_language_kind: subset.by_language_kind },
+    time_asked: timeAsked(run.rows),
     usage: run.usage,
     threshold_suggestion: suggestThreshold(run.inputs, releaseThreshold),
     rows: run.rows,

@@ -16,6 +16,7 @@
 // What differs from the app: no `after()` (the writes still pending when an answer is ready are waited for when the run ends),
 // no ops events, and no monthly-limit warning (those are the app's).
 import {
+  EMBED_SPEND_KIND,
   SearchFailure,
   cohereQueryEmbedder,
   createSearch,
@@ -27,7 +28,8 @@ import {
   type SearchDeps,
   type SearchObservation,
 } from "@/modules/directory";
-import { cohereTranslator, createQuestionTranslator, type CohereChatClient } from "@/modules/translation";
+import { monthlyUsage } from "@/modules/spend";
+import { TRANSLATE_SPEND_KIND, cohereTranslator, createQuestionTranslator, type CohereChatClient } from "@/modules/translation";
 import { SearchV1Schema } from "@/contracts/searchTestSet";
 import type { SearchSettings } from "@/platform/config/env";
 import { createDb, type Db } from "@/platform/db";
@@ -119,6 +121,28 @@ export async function engineFrom(parts: EngineParts, options: { translatedLeg: b
       await parts.db.$client.end({ timeout: 5 });
     },
   };
+}
+
+/**
+ * The Cohere calls recorded in spend_event in the calendar month (America/Toronto) that `now` falls in: embedding and translation,
+ * whoever made them (live search, a publish, an alert's translation, an earlier test-set run), because the key's limit is the
+ * key's and not a purpose's. The same count the translation quota watch uses (`monthlyUsage`, without a purpose). The count is
+ * the app's own record, so it can miss a call that never reached it; the vendor's own count is the one that decides.
+ */
+export async function cohereCallsThisMonth(db: Db, now: Date = new Date()): Promise<number> {
+  const embedding = await monthlyUsage(db, EMBED_SPEND_KIND, now);
+  const translation = await monthlyUsage(db, TRANSLATE_SPEND_KIND, now);
+  return embedding.calls + translation.calls;
+}
+
+/** Connects with the run's database login, counts the month's Cohere calls and closes the connection. */
+export async function readCohereCallsThisMonth(env: ProductionEnv): Promise<number> {
+  const db = createDb(env.databaseUrl, { max: 1 });
+  try {
+    return await cohereCallsThisMonth(db);
+  } finally {
+    await db.$client.end({ timeout: 5 }).catch(() => undefined);
+  }
 }
 
 /** The real engine: the production database, Cohere and the private bucket, from the run's settings. */

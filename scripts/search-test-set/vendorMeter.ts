@@ -2,7 +2,8 @@
 // vendor refused with HTTP 429 (its adapters keep only a code), and the run needs that to report a rate limit as its own
 // outcome instead of scoring it as a miss, and to count every call against the usage allowance. So the Cohere clients the
 // adapters are given are wrapped here, at the vendor boundary: each call is counted when it starts, by model, and settled as
-// answered (with the tokens the vendor reported), refused for a limit, failed, or cancelled by the search's own deadline.
+// answered (with the tokens the vendor reported), refused for a limit (a rate limit, or past the quota), failed, or cancelled by
+// the search's own deadline.
 // The wrapper changes no request and no answer, and keeps nothing of either: no text, and not the vendor's words, only a class.
 import type { CohereEmbedClient } from "@/modules/directory";
 import { classifyCohereError, isLimitFailure, type CohereChatClient } from "@/modules/translation";
@@ -55,10 +56,13 @@ export function meterVendor(clients: { embed: CohereEmbedClient; chat: CohereCha
         }
       },
       failed(error: unknown, signal: AbortSignal | undefined) {
-        const failureClass: VendorFailure["class"] = signal?.aborted ? "aborted" : isLimitFailure(classifyCohereError(error)) ? "limit" : "error";
+        // The translation module's own classification of the vendor's error: `quota` (past the model's limit, in practice the
+        // month's) is kept apart from `rate_limited` (a transient limit), because the run waits for the one and stops at the other.
+        const code = classifyCohereError(error);
+        const failureClass: VendorFailure["class"] = signal?.aborted ? "aborted" : code === "quota" ? "quota" : isLimitFailure(code) ? "limit" : "error";
         for (const u of both) {
           if (failureClass === "aborted") u.aborted += 1;
-          else if (failureClass === "limit") u.rate_limited += 1;
+          else if (failureClass === "limit" || failureClass === "quota") u.rate_limited += 1;
           else u.failed += 1;
         }
         mine.failures.push({ kind, model, class: failureClass });

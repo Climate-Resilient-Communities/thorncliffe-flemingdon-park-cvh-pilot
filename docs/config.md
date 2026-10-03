@@ -72,7 +72,7 @@ app made them; the vendor's own count is the one that decides, so set the limit 
 
 | Environment | Secrets and variables | Rules |
 |---|---|---|
-| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (both for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
+| `production` | `VERCEL_TOKEN` (replaced 2026-10-02), `PRODUCTION_DATABASE_URL` (as `postgres`, session pooler, port 5432), `VERCEL_AUTOMATION_BYPASS_SECRET`, `SEARCH_TEST_DATABASE_URL`, `COHERE_API_KEY` and `SUPABASE_SECRET_KEY` (the three for the "Search test set" workflow, S03.07: not set yet); variables `VERCEL_ORG_ID`, `VERCEL_PROJECT_ID`, `PRODUCTION_URL`, `NEXT_PUBLIC_SUPABASE_URL` (for the same workflow: not set yet) | deploys from `main` only |
 | `preview` | `VERCEL_TOKEN` (replaced 2026-10-02), `VERCEL_AUTOMATION_BYPASS_SECRET` | previews only for branches with an open pull request |
 
 `VERCEL_TOKEN` must be a personal token of a member of the Vercel team that owns the project,
@@ -90,20 +90,46 @@ environment, and the evaluation subset is refused (S03.08's).
 
 Add to the GitHub `production` environment (repository settings > Environments > production), once:
 
-- secrets `COHERE_API_KEY` (production's key) and `SUPABASE_SECRET_KEY` (reads the private release bucket); `PRODUCTION_DATABASE_URL` is already there and is what the run uses, as `postgres`, unless you also add `SEARCH_TEST_DATABASE_URL` set to production's app `DATABASE_URL` (the app's own login, which can do all this run does, so it is the narrower choice);
+- secrets `COHERE_API_KEY` (production's key), `SUPABASE_SECRET_KEY` (reads the private release bucket) and `SEARCH_TEST_DATABASE_URL`, set to production's app `DATABASE_URL` (the app's own login, `cvh_app`, which can do all this run does: read the release and the spend, write spend rows). The run does not take `PRODUCTION_DATABASE_URL`, the superuser's, and the workflow stops if `SEARCH_TEST_DATABASE_URL` is not set;
 - variable `NEXT_PUBLIC_SUPABASE_URL`;
-- only if production sets them in Vercel, variables of the same names and values: `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, and `SEARCH_THRESHOLD` (checked only: the run measures the threshold the current release recorded). Unset means the defaults, as in production.
+- only if production sets them in Vercel, variables of the same names and values: `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS`, `SEARCH_EMERGENCY_THRESHOLD`, and `SEARCH_THRESHOLD` (checked only: the run measures the threshold the current release recorded). Unset means the defaults, as in production;
+- optional variables `SEARCH_TEST_MONTHLY_CALLS` (the calls a month the Cohere key allows in all: 1000, the free trial key's) and `SEARCH_TEST_RESERVE_CALLS` (the calls of them kept for live search, which no run uses: 200). Set the first if the key is upgraded.
 
-The workflow names any missing one and stops before it calls anything. The key stays out of Vercel's Preview and Development and out of
+The workflow names any missing secret or variable and stops before it calls anything. The key stays out of Vercel's Preview and Development and out of
 the repository; the run does not use the app's environment check, which is unchanged.
 
+Before a run, look at the month. The trial key is shared with live search, and a key that runs out gives every resident's question a
+429 until the month turns (search then answers "unavailable"). A run of both legs plans about 440 calls, 44% of the month. The run
+checks it too: once it is told to go, and before its first call, it reads this month's Cohere calls (embedding and translation, every
+purpose, the calendar month in America/Toronto) from `spend_event`, prints them with the allowance and what is left, and refuses to
+start when those calls and its own worst case (its plan with every retry, never more than `max_calls`) would pass the allowance less
+the reserve: with the defaults, 1000 - 200 = 800 calls. To see the count yourself, in the production database (the SQL editor, read only):
+
+```sql
+select kind, purpose, sum(calls) as calls
+from spend_event
+where kind in ('embed', 'translate')
+  and at >= (date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto')
+group by kind, purpose
+order by kind, purpose;
+```
+
+`spend_event` is the app's own record, so it can miss a call that never reached it (a process that died): the vendor's own count, in
+Cohere's dashboard, is the one that decides. Check that too before the first run of a month.
+
 To run it: Actions > Search test set > Run workflow, on `main`: `split` tuning, `leg` `both` (off, then on), `max_calls` empty (500).
-The trial key is shared with live search (about 1,000 calls a month in all): a run of both legs plans about 440 calls, which the
-log prints first; calls are paced, never pass `max_calls`, and a run that has to stop reports partial results and fails. A 429 or
-another vendor failure is its own outcome in the report, never a miss. The use case records each call as `test_set` spend and no
-`search_log` row is written. The job summary holds aggregates only; the per-question report (ids, scores and counts, never a question's
-text) is in the run's artifact, and the report and the chosen threshold are committed afterwards (provisional until S03.08). From a
-shell, with the same values exported (the database as `SEARCH_TEST_DATABASE_URL`): `npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg both --yes`; without `--yes` it only prints the plan.
+`confirm` is unticked by default: the run then only prints the plan (the calls per leg and the allowance) and succeeds, and calls
+nothing. Run it that way first, read the plan, then run it again with `confirm` ticked. Calls are paced, never pass `max_calls`, and
+a run stops, reports partial results and fails when the cap, a vendor's monthly quota, repeated vendor failures or repeated search
+failures say so (the leg after a leg that stopped is not run). A 429 or another vendor failure is its own outcome in the report,
+never a miss. The use case records each call as `test_set` spend and no `search_log` row is written. The job summary holds
+aggregates only; the per-question report (ids, scores and counts, never a question's text) is in the run's artifact, and the
+report and the chosen threshold are committed afterwards (provisional until S03.08). The printed output stays in the job log, where GitHub
+masks the secrets; it is not uploaded, because an artifact of this public repository can be downloaded by anyone signed in to GitHub.
+A run that ends badly (an error, or the step's 25-minute limit) leaves a progress file of the questions asked so far in the artifact,
+with the same kind of content. From a shell, with the same values exported (the database as `SEARCH_TEST_DATABASE_URL`):
+`npm run search-test-set -- run --engine production --model embed-v4.0 --translated-leg both --yes`; `--plan-only` prints the plan
+and stops, and without either flag it prints the plan and exits 2.
 
 ### Rolling out a change to what the directory listing shows (for example the AD-11 pilot change, PR #60)
 
