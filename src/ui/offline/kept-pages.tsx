@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react";
 import { ResidentText } from "../text/resident-text";
 import { listKeptPages, type KeptPage } from "./support";
-import "./offline.css";
+
+// Its styles (offline.css) come with globals.css (see offline-support.tsx).
 
 /**
  * The offline page's list of the pages of `lang` this phone can read without signal (S02.12), read from the service

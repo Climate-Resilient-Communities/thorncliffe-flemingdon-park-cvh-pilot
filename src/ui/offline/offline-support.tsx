@@ -7,7 +7,6 @@ import { agoText } from "../home/feed-poll";
 import { ResidentText } from "../text/resident-text";
 import { SW_SCOPE, SW_URL, type PageMessage } from "./protocol";
 import { askPersistOnce, askServed, keptAt } from "./support";
-import "./offline.css";
 
 const subscribeOnline = (change: () => void) => {
   window.addEventListener("online", change);
@@ -39,6 +38,9 @@ function registerWorker(): void {
       // No worker (blocked, a private window, no storage): the CVH keeps working online.
     });
 }
+
+// Its stylesheet (offline.css) comes with globals.css, like the shell's: the layout draws it, and a stylesheet the layout
+// imported before globals.css would declare the `components` layer before Tailwind's layer order.
 
 /**
  * Offline reading for every resident page (S02.12), mounted once by the resident layout. It registers the service worker,

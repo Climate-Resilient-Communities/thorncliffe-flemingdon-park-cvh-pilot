@@ -1,6 +1,7 @@
 import tokens from "../../../../design/prototype/ds/cvrh/tokens.json";
 import type { LaunchLanguage } from "@/i18n/languages";
-import { FALLBACK_MARKER } from "@/ui";
+// Not "@/ui": the layout imports this file, and the index would bring the layout primitives' stylesheets with it.
+import { FALLBACK_MARKER } from "@/ui/text/resident-text";
 
 type Colour = { name: string; value: string | { light: string; dark: string } };
 
