@@ -163,6 +163,7 @@ Gutter and insets are the same in basic mode (G2). Asymmetric card padding shown
 | `--size-logo-hub`, `--size-symbol-hub` | `var(--app-logo-hub)`, `var(--app-symbol-hub)` | 36px, 28px |
 | `--size-header-resident-min` | `var(--app-min-header-resident)` | 56px |
 | `--size-topbar-hub-min` | `var(--app-min-topbar-hub)` | 60px |
+| `--size-actions-max` | `var(--app-max-actions)` | 50dvh |
 | `--size-nav-item-resident-min`, `--size-nav-item-resident-min-basic` | `var(--app-min-nav-item-resident)`, `var(--app-min-nav-item-resident-basic)` | 64px, 80px |
 | `--size-page-staff` | `var(--app-page-staff)` | 1040px |
 | `--size-page-staff-review` | `var(--app-page-staff-review)` | 1080px |

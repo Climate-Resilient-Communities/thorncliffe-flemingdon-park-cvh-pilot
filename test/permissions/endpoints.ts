@@ -104,6 +104,7 @@ const SUBMIT_KEY = "0f0e0d0c-0b0a-4908-8706-050403020100";
 const NO_SUCH_ALERT = "01900000-0000-7000-8000-00000000a1e7";
 const PROVIDER_ACTIONS = "src/app/staff/providers/actions.ts";
 const DIRECTORY_ACTIONS = "src/app/staff/directory/actions.ts";
+const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -147,6 +148,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     expected: WIDE_AUTHORS,
   },
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   {
     id: "page /staff/setup/password",
     kind: "page",
@@ -453,6 +455,33 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     export: "publishDirectoryAction",
     route: "/staff/directory",
     action: "guide.publish",
+    writes: "business",
+    gate: "hub",
+    form: {},
+    expected: ADMIN_ONLY,
+  },
+  // S06.06: "Pause all texts" and "Resume texts" (policy action `sending.pause`, Admins at aal2). Called as an allowed Admin, the pause
+  // really pauses texts and the resume ends it (test/db/permissions.db.test.ts clears the switch before each call); no text can go out
+  // from here: the test wires no sender, and starting one after a resume is a no-op.
+  {
+    id: `action ${TEXTS_ACTIONS}#pauseTextsAction`,
+    kind: "action",
+    file: TEXTS_ACTIONS,
+    export: "pauseTextsAction",
+    route: "/staff/texts",
+    action: "sending.pause",
+    writes: "business",
+    gate: "hub",
+    form: { reason: "Wrong alert sent to a building" },
+    expected: ADMIN_ONLY,
+  },
+  {
+    id: `action ${TEXTS_ACTIONS}#resumeTextsAction`,
+    kind: "action",
+    file: TEXTS_ACTIONS,
+    export: "resumeTextsAction",
+    route: "/staff/texts",
+    action: "sending.pause",
     writes: "business",
     gate: "hub",
     form: {},

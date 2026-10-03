@@ -1,10 +1,11 @@
-// The messaging module's public interface (AD-2, AD-8, AD-21). It holds S04.06's renderer (the one builder of an
-// alert's text message body, its encoding and segment count, and the cost estimate), the outbox (S06.01: every
-// outbound text is one `delivery` row, written before it is sent and never holding a phone number; the states, the
-// idempotent queue, the ContactResolver port), the sender (S06.02: the dispatcher: the sender lease, the claim order,
-// the hand-off point, the pace, the outcomes) with the Messaging Service check, and S01.15's first-text spike: one
-// test text from production to an approved phone, through the Twilio adapter. E06's sender replaces the spike (and
-// nothing else may call the SMS adapter then: a dependency rule enforces that no other module imports an SMS adapter).
+// The messaging module's public interface (AD-2, AD-8, AD-21). It holds S04.06's renderer (the one builder of an alert's text
+// message body, its encoding and segment count, and the cost estimate), the outbox (S06.01: every outbound text is one `delivery`
+// row, written before it is sent and never holding a phone number; the states, the idempotent queue, the ContactResolver
+// port), the sender (S06.02: the dispatcher: the sender lease, the claim order, the hand-off point, the pace, the outcomes) with
+// the Messaging Service check, and S01.15's first-text spike: one test text from production to an approved phone, through the
+// Twilio adapter. S06.06 adds the pause: the one switch an Admin sets to stop every text not yet handed to the provider.
+// E06's sender replaces the spike (and nothing else may call the SMS adapter then: a dependency rule enforces that no other
+// module imports an SMS adapter).
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
 import { drizzleDeliveryStore } from "./adapters/deliveryStore";
@@ -16,6 +17,7 @@ import {
   numberKeyFromSecret,
   type TestTextAudit,
   type TestTextConfig,
+  type TestTextDeps,
   type TestTextLog,
   type TestTextService,
   type UnknownAttempt,
@@ -28,6 +30,8 @@ import type { DispatchStore, Dispatcher, DispatcherDeps } from "./application/di
 import { drizzleCallbackStore } from "./adapters/callbackStore";
 import { createStatusCallbacks as createStatusCallbacksService, type CallbackStore, type StatusCallbackDeps, type StatusCallbacks } from "./application/statusCallback";
 import { createMessagingServiceCheck, type MessagingServiceCheck, type MessagingServiceCheckDeps } from "./application/serviceCheck";
+import { drizzlePauseStore } from "./adapters/pauseStore";
+import { createMessagingPause as createMessagingPauseService, type MessagingPause, type PauseAudit, type PauseStore } from "./application/messagingPause";
 
 export interface DeliveryQueueWiring {
   /** Test seams. */
@@ -78,15 +82,36 @@ export function createServiceCheck(wiring: MessagingServiceCheckWiring): Messagi
   return createMessagingServiceCheck(wiring);
 }
 
+export interface MessagingPauseWiring {
+  db: Db;
+  /** Test seams: another store, and the audit writer. */
+  store?: PauseStore;
+  audit?: PauseAudit;
+}
+
+/**
+ * The pause (S06.06): an Admin's one switch that stops every text not yet handed to the provider, and what it says now. The use
+ * cases run in their own transactions (the pause or resume and its audit record, together). Who may call them is the staff guard's rule
+ * (`sending.pause`, Admins at aal2), asked by the caller before it comes here.
+ */
+export function createMessagingPause(wiring: MessagingPauseWiring): MessagingPause {
+  return createMessagingPauseService({
+    db: wiring.db,
+    store: wiring.store ?? drizzlePauseStore,
+    audit: wiring.audit ?? { record: audit.record, recordRefusal: audit.recordRefusal },
+  });
+}
+
 export interface TestTextWiring {
   db: Db;
   config: TestTextConfig;
   /** Twilio's account; absent where there are no credentials (then nothing can be sent). */
   twilio?: { accountSid: string; authToken: string };
-  /** Test seams: another provider (a fake), the audit writer and the operational log. */
+  /** Test seams: another provider (a fake), the audit writer, the operational log and the reading of the pause switch. */
   provider?: SmsProvider;
   audit?: TestTextAudit;
   log?: TestTextLog;
+  isPaused?: TestTextDeps["isPaused"];
 }
 
 /** Structured, one JSON line per event, and never a number: the events carry ids and codes only. */
@@ -113,6 +138,13 @@ export function createTestText(wiring: TestTextWiring): TestTextService {
       return numberKeyFromSecret(twilio.authToken);
     },
     log: wiring.log ?? consoleLog,
+    // The pause (S06.06) stops this text too. A missing switch counts as paused, as it does for the sender.
+    isPaused:
+      wiring.isPaused ??
+      (async () => {
+        const row = await drizzlePauseStore.read(db);
+        return row === null || row.paused;
+      }),
   });
 }
 
@@ -195,6 +227,7 @@ export { looksLikePhoneNumber, maskForLog, maskPhoneNumbers } from "./domain/pho
 export { twilioMessageSubmitter, twilioMessagingServiceReader, notSentReason } from "./adapters/twilioMessagingService";
 export type { TwilioServiceConfig } from "./adapters/twilioMessagingService";
 export { drizzleDispatchStore } from "./adapters/dispatchStore";
+export { drizzlePauseStore } from "./adapters/pauseStore";
 export { CampaignReaderNotWired, MESSAGING_OPS_EVENT_KINDS } from "./application/dispatcherPorts";
 export type {
   AlertStandingReader,
@@ -291,7 +324,12 @@ export {
   type UnknownCause,
 } from "./domain/dispatchRules";
 
-// The alert text renderer (S04.06).
+// The pause (S06.06).
+export { MessagingControlInconsistent, MessagingControlMissing } from "./application/messagingPause";
+export type { MessagingPause, PauseAudit, PauseOutcome, PauseRow, PauseStatus, PauseStore, PausedStatus, ResumeOutcome } from "./application/messagingPause";
+export { PAUSE_REASON_MAX_CHARS, cleanPauseReason, type CleanedReason, type PauseReasonProblem } from "./domain/pauseRules";
+
+// The renderer (S04.06).
 export {
   NINE_ONE_ONE_FIRST_TYPES,
   alertLink,

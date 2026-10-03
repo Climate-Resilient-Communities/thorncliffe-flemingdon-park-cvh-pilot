@@ -27,6 +27,7 @@
   --app-logo-hub: 36px;
   --app-symbol-hub: 28px;
   --app-min-header-resident: 56px;
+  --app-max-actions: 50dvh;
   --app-min-topbar-hub: 60px;
   --app-min-nav-item-resident: 64px;
   --app-min-nav-item-resident-basic: 80px;

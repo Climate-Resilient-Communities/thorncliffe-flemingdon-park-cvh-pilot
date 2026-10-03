@@ -30,3 +30,12 @@ export async function readStaffStanding(executor: DbExecutor, staffId: string): 
   if (!row) return null;
   return { role: row.role, status: row.status, assignments: await readAssignments(executor, staffId) };
 }
+
+/**
+ * The name a staff member goes by in the Hub, their first and last name, for a screen that says who did something (who paused texts).
+ * Null when there is no such account. A suspended or removed person keeps their name: the screen still says who paused.
+ */
+export async function readStaffName(executor: DbExecutor, staffId: string): Promise<string | null> {
+  const [row] = await executor.select({ firstName: staffAccount.firstName, lastName: staffAccount.lastName }).from(staffAccount).where(eq(staffAccount.id, staffId));
+  return row ? `${row.firstName} ${row.lastName}` : null;
+}

@@ -7,6 +7,11 @@ import type { HubNavSection } from "@/ui/hub/hub-nav";
 import { DirectoryRelease, type DirectoryReleaseView } from "@/app/staff/directory/DirectoryRelease";
 import { SendTestTextFormView } from "@/app/staff/sms-test/SendTestTextFormView";
 import { SmsTestView } from "@/app/staff/sms-test/SmsTestView";
+import { PauseBanner } from "@/app/staff/PauseBanner";
+import type { PauseBannerView } from "@/app/staff/pauseBanner";
+import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
+import { TextsView } from "@/app/staff/texts/TextsView";
+import type { PausedView } from "@/app/staff/texts/view";
 import type { ComponentProps, ReactNode } from "react";
 import { AuthenticatorCodeForm } from "@/app/staff/AuthenticatorCodeForm";
 import { SignOutButton } from "@/app/staff/SignOutButton";
@@ -760,6 +765,56 @@ export function SmsTestFixture({
     >
       <Screen surface="staff" testId="screen">
         <SmsTestView availability={availability} unknownAttempts={unknownAttempts} form={availability === "ready" ? <SendTestTextFormView {...form} /> : null} />
+      </Screen>
+    </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Pause texts screen (S06.06), as an Admin sees it: the real body (TextsView) and the real, behaviour-free
+ * controls (PauseTextsFormView) with the state a press would leave, and, while texts are paused, the banner the Hub layout puts above
+ * every Hub screen (PauseBanner), here above this one. Nothing here is a phone number.
+ */
+export function TextsFixture({
+  texts,
+  brand,
+  paused,
+  unreadable,
+  form,
+  banner,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  paused: PausedView | null;
+  unreadable?: boolean;
+  form: ComponentProps<typeof PauseTextsFormView>;
+  banner?: PauseBannerView;
+}) {
+  return (
+    <HubShell
+      user={{ displayName: texts.personName, role: "admin" }}
+      navigation={texts.navigation}
+      currentPath="/staff/texts"
+      labels={{
+        appName: texts.appName,
+        menu: texts.menu,
+        closeMenu: texts.closeMenu,
+        signedInAs: texts.signedInAs,
+        roles: { ambassador: texts.role, coordinator: texts.role, director: texts.role, admin: texts.role },
+        logoAlt: texts.logoAlt,
+      }}
+      signOut={
+        <form method="post" action="/api/staff/sign-out">
+          <button type="submit" className="hub-button hub-button--secondary">
+            {texts.signOut}
+          </button>
+        </form>
+      }
+      brand={brand}
+    >
+      {banner ? <PauseBanner view={banner} /> : null}
+      <Screen surface="staff" testId="screen">
+        <TextsView paused={paused} unreadable={unreadable} form={<PauseTextsFormView {...form} />} />
       </Screen>
     </HubShell>
   );

@@ -25,6 +25,7 @@ const REFUSAL_KEYS: Record<TestTextRefusal, string> = {
   invalid: "staff.smsTest.errors.invalid",
   not_available: "staff.smsTest.errors.notAvailable",
   not_allowlisted: "staff.smsTest.errors.notAllowlisted",
+  paused: "staff.smsTest.errors.paused",
   duplicate_number: "staff.smsTest.errors.duplicateNumber",
   duplicate_request: "staff.smsTest.errors.duplicateRequest",
 };
