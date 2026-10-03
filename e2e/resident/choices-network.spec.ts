@@ -1,6 +1,8 @@
 import { expect, test, type Request } from "@playwright/test";
 import { BUILDINGS, FLOOR, seedChoices, stubBuildingList } from "./choices-fixture";
+import { stubFeed } from "./home-fixture";
 import { openResident } from "./helpers";
+import { feedWithAlerts, THREADS } from "./tailored-fixture";
 
 // S02.03, AD-3: the saved selection stays on the phone. A resident with saved choices goes through every screen of the
 // epic so far, and no request carries what was saved: not the buildings or floors, the groups, the muted topics or basic
@@ -24,8 +26,11 @@ const SECRETS = [BUILDING_A, BUILDING_B, FLOOR.milepost2, FLOOR.overlea1, "senio
 
 type Seen = { method: string; url: string; headers: string; body: string };
 
+// S04.09: the feed answers with alerts, some of them for this phone's buildings and groups, so home orders them, marks them and adds advice on the
+// phone while the test watches every request: the saved selection still travels nowhere.
 test("no request carries the saved selection, and the only data requests are the same ones every visitor makes", async ({ page }) => {
   await stubBuildingList(page);
+  await stubFeed(page, [feedWithAlerts()]);
   await seedChoices(page, JSON.stringify(SAVED));
   const pending: Promise<Seen>[] = [];
   page.context().on("request", (request: Request) => {
@@ -33,10 +38,19 @@ test("no request carries the saved selection, and the only data requests are the
   });
 
   // Every screen of the epic, as a returning resident with saved choices, and the first-run steps again.
-  for (const path of ["/en", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/terms"]) {
+  for (const path of ["/en", "/ur", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/terms"]) {
     await openResident(page, path, 390);
     await page.waitForLoadState("networkidle");
   }
+  // Home had alerts, and this phone's own were put first, marked and given their advice there: the tailoring ran, on the phone only.
+  await openResident(page, "/en", 390);
+  await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+  await expect(page.getByTestId("home-threads").locator("> li")).toHaveCount(4);
+  expect(await page.getByTestId("home-threads").locator("> li > a").evaluateAll((links) => links.map((link) => link.getAttribute("data-testid")))).toEqual(
+    [THREADS.FAR, THREADS.MINE, THREADS.SENIORS_AREA, THREADS.FAMILIES_AREA].map((slug) => `alert-card-${slug}`),
+  );
+  await expect(page.locator("a.alert-card--mine")).toHaveCount(3);
+  await expect(page.locator('[data-testid^="alert-advice-"][data-testid$="-line"]')).toHaveCount(3);
   // And the actions: change groups, pick another building, remove one, clear nothing.
   await openResident(page, "/en/choices/groups", 390);
   await page.getByTestId("group-families").check();
