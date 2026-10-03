@@ -37,6 +37,10 @@ export const TestQuestionSchema = z
     /** Provider ids that answer the question: empty for no_match, one or more for every other intent. */
     expected: z.array(z.string().min(1)).refine((ids) => new Set(ids).size === ids.length, "must not repeat a provider id"),
     split: z.enum(QUESTION_SPLITS),
+    /**
+     * Who wrote the question. `dev-agent` wrote the S03.01 starter set. `claude-draft` means machine-written by
+     * Claude for search tuning: not checked by a native speaker or ambassador, and never in the evaluation split.
+     */
     author: HandleSchema,
     added: DateSchema,
     /** The second team member who checked the question and the expected providers; null until someone has. */

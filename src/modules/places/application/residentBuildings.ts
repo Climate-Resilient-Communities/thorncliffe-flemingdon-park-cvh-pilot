@@ -15,6 +15,9 @@ export interface ResidentBuilding {
   address: string;
   neighbourhoodId: string;
   neighbourhood: string;
+  /** The register's point, for the building's pin on the map (S02.07). */
+  lat: number;
+  lng: number;
   /** Lowest first. */
   floors: ResidentFloor[];
 }
@@ -28,7 +31,7 @@ export function createResidentBuildings(deps: { db: Db }) {
      */
     async list(): Promise<ResidentBuilding[]> {
       const rows = await db
-        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name })
+        .select({ rsn: building.rsn, address: building.address, neighbourhoodId: building.neighbourhoodId, neighbourhood: neighbourhood.name, lat: building.latitude, lng: building.longitude })
         .from(building)
         .innerJoin(neighbourhood, eq(neighbourhood.id, building.neighbourhoodId))
         .orderBy(asc(neighbourhood.name), asc(building.address), asc(building.rsn));

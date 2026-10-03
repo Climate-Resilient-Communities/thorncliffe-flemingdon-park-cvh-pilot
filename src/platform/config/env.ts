@@ -81,6 +81,9 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        `publish` only, while Cohere's price is unknown. Questions and
  *                                                        test-set runs have allowances of their own. The publish job refuses
  *                                                        to embed past it. Defaults 500 calls and 2,000,000 tokens
+ * MAP_TILE_*           build    optional                 the resident map's tile provider, its credit and whether and how long a
+ *                                                        phone may keep viewed tiles: read by src/platform/config/mapTiles.ts
+ *                                                        when the map pages are built, not here (S02.07)
  * CVH_FAKE_IDENTITY_FILE
  *                      server   optional; local development only (start-up fails on Vercel): the staff surface signs
  *                                                        in against the in-memory identity fake kept in this file instead of

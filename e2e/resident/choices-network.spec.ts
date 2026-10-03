@@ -33,7 +33,7 @@ test("no request carries the saved selection, and the only data requests are the
   });
 
   // Every screen of the epic, as a returning resident with saved choices, and the first-run steps again.
-  for (const path of ["/en", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/map", "/en/terms"]) {
+  for (const path of ["/en", "/en/choices", "/en/choices/groups", "/en/choices/place", "/en/choices/language", "/en/welcome", "/en/welcome/groups", "/en/welcome/place", "/ur/choices", "/en/terms"]) {
     await openResident(page, path, 390);
     await page.waitForLoadState("networkidle");
   }

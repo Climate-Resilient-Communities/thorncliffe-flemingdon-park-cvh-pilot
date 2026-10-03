@@ -4440,6 +4440,24 @@
     "backToList": "All services and organisations",
     "suggestApply": "Show only {place}"
   },
+  "map": {
+    "lead": "Services, organisations and apartment buildings in Thorncliffe Park and Flemingdon Park. Tap a pin to see what it is.",
+    "service": "Service or organisation",
+    "building": "Apartment building",
+    "pinName": "{name}: {kind}",
+    "noSignal": "The map is not available without signal",
+    "noSignalBody": "The list shows every place the map has.",
+    "notSaved": "This part of the map is not saved on your phone",
+    "notSavedBody": "Parts of the map you looked at with signal stay on your phone. The pins and the list still work.",
+    "listTitle": "Places on this part of the map",
+    "listLead": "The same places the map shows. Move or zoom the map to change this list.",
+    "listEmpty": "Nothing on this part of the map. Move or zoom the map, or show the whole area.",
+    "wholeArea": "Show the whole area",
+    "buildings": "Apartment buildings",
+    "buildingsCount": "{n} buildings",
+    "buildingsCountOne": "1 building",
+    "filtered": "Showing only the places that match the filters you chose in the directory."
+  },
   "guides": {
     "reviewed": "Reviewed by the Hub, last updated {date}"
   }
