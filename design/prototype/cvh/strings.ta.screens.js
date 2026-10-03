@@ -1360,4 +1360,6 @@
    "reviewed": "மையம் சரிபார்த்தது, கடைசியாகப் புதுப்பித்தது {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "இயந்திர மொழிபெயர்ப்பு; எந்த நபரும் இதைச் சரிபார்க்கவில்லை" } });
 })();

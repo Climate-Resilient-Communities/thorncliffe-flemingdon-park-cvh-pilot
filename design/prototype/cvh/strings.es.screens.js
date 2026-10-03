@@ -1360,4 +1360,6 @@
    "reviewed": "Revisado por el Hub, última actualización el {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "Traducción automática; no revisada por una persona" } });
 })();

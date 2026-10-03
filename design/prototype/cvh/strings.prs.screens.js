@@ -1349,4 +1349,6 @@
    "reviewed": "مرکز بررسی کرده است، آخرین تغییر {date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "ترجمه ماشینی؛ توسط کدام شخص بررسی نشده است" } });
 })();

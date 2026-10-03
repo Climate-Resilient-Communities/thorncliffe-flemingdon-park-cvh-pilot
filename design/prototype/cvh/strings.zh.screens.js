@@ -1360,4 +1360,6 @@
    "reviewed": "已由中心审核，最后更新于{date}"
   }
  });
+  /* AD-11 pilot change (2026-10-03): the label of a directory description a model translated and no person has reviewed. AI-generated (Claude), not yet checked by native readers. */
+  m(t, { "x04": { "unreviewed": "机器翻译，未经人工审核" } });
 })();

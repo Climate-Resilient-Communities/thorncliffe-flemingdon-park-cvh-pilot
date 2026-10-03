@@ -138,7 +138,7 @@
     "unavailableBody": "此内容尚未翻译成{lang}。",
     "showSource": "用{lang}阅读",
     "original": "原文（{lang}）",
-    "unreviewed": "[EN] Machine-translated; not reviewed by a person"
+    "unreviewed": "机器翻译，未经人工审核"
   },
   "x05": {
     "title": "用您的语言接收警报和获得帮助",
