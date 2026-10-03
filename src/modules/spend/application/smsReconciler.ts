@@ -3,7 +3,9 @@
 //  1. the interval is exact (the Toronto calendar month, in UTC) and the month must have ended: a reconciliation is complete for good, so a
 //     month still running could never take the messages that are yet to be sent in it;
 //  2. a complete reconciliation is not run again (nothing is listed, nothing changes);
-//  3. the matching rule is re-run over every unretired estimate first, so an actual imported earlier retires an estimate found later;
+//  3. the matching rule is re-run over every unretired estimate first, so an actual imported earlier retires an estimate found later (and
+//     `reconcileDue` runs it once at the start of every run, even when every month is complete, so a late provider id whose own matching
+//     failed is recovered by the next daily run and not by the next month's reconciliation);
 //  4. the provider's Messages API is listed through a port, page after page, following `next_page_uri` until it is empty (smsListing.ts);
 //  5. the listing is COMPLETE only when it ended by itself and every outbound message of the interval has a price this app can convert
 //     (domain/smsActuals.ts). Otherwise (the listing failed, was cut short, a message has no price yet, a price is unusable, a message is
@@ -12,6 +14,9 @@
 //  6. a complete listing is applied in ONE transaction that holds the reconciliation's lock: each message's price is recorded once by its
 //     MessageSid (one imported by another reconciliation is left as it is), converted to CAD at the configured rate and labelled, the
 //     matching rule retires the estimates the new actuals answer for, and the reconciliation is marked complete.
+// A run (`reconcileDue`) has ONE time budget for all its months, so it ends inside the job route's limit however many months are due: the
+// listing of each month is given the run's deadline, a page is asked for no longer than the time left, and a month whose turn comes after the
+// time is spent is cut short (pending, tried again by the next run) without being asked for.
 // Twilio is reached only through the `SmsMessageLister` port (a fake in every test; the real adapter is built by messaging and is called
 // only by the job that wires it in production). No message's number or body is ever read: the port gives the id, the direction, the instant
 // sent and the price.
@@ -28,6 +33,7 @@ import {
   recordPendingReconciliation,
   retireSmsEstimates,
   startSmsReconciliation,
+  unreconciledEstimateMonths,
   unretiredSmsEstimateDeliveries,
   type ProviderIdPair,
 } from "./smsSpend";
@@ -54,7 +60,7 @@ export interface SmsReconcilerDeps {
   usdToCadRate: number;
   now(): Date;
   log: SpendLog;
-  /** One run's limits (test seams): the pages it will read and how long it will list for. Defaults: 200 pages of up to 1,000 messages, 45 seconds. */
+  /** One run's limits (test seams): the pages each month's listing will read and how long the whole run will list for. Defaults: 200 pages of up to 1,000 messages, 45 seconds. */
   limits?: Partial<ListingLimits>;
 }
 
@@ -89,8 +95,10 @@ export interface SmsReconciler {
   /** Reconciles one month by its id (`month:{YYYY-MM}`). Never throws for a listing that fails: that is a pending reconciliation. */
   reconcile(id: string): Promise<ReconcileResult>;
   /**
-   * What is due: the month before this one and every month whose reconciliation is still pending (or the months asked for), oldest first.
-   * One month failing (a database error) never stops the others; it is reported as `failed`.
+   * What is due: the month before this one, every month whose reconciliation is still pending and every ended month with text message
+   * estimates and no complete reconciliation (one the job never reached), or the months asked for, oldest first. The matching rule runs once
+   * first over every unretired estimate. One month failing (a database error) never stops the others; it is reported as `failed`. The
+   * months share one time budget (`limits.deadlineMs`).
    */
   reconcileDue(months?: readonly MonthKey[]): Promise<{ id: string; result: ReconcileResult }[]>;
 }
@@ -117,7 +125,7 @@ export function createSmsReconciler(deps: SmsReconcilerDeps): SmsReconciler {
     return { status: "pending", reason };
   }
 
-  async function reconcile(id: string): Promise<ReconcileResult> {
+  async function reconcileBy(id: string, deadlineAt: Date): Promise<ReconcileResult> {
     const interval = parseReconciliationId(id);
     if (!interval) return { status: "refused", reason: "id_invalid" };
     if (deps.now() < interval.endUtc) {
@@ -132,6 +140,7 @@ export function createSmsReconciler(deps: SmsReconcilerDeps): SmsReconciler {
     const listing = await listMessages(lister, interval, {
       now: deps.now,
       limits,
+      deadlineAt,
       onFailure: ({ reason, page, error }) => log.error(`reconcile.${reason}`, { reconciliation: id, page, error }),
     });
     if (listing.kind === "pending") return pending(interval, listing.reason);
@@ -167,13 +176,37 @@ export function createSmsReconciler(deps: SmsReconcilerDeps): SmsReconciler {
     return result;
   }
 
+  const deadlineFrom = (start: Date) => new Date(start.getTime() + limits.deadlineMs);
+
+  async function reconcile(id: string): Promise<ReconcileResult> {
+    return reconcileBy(id, deadlineFrom(deps.now()));
+  }
+
+  /** The months a run reconciles when it is not told which: the one before this, those still pending and those with estimates that no complete reconciliation covers. */
+  async function dueMonths(): Promise<MonthKey[]> {
+    const current = monthOf(deps.now());
+    const ended = (await unreconciledEstimateMonths(db)).filter((month) => month < current);
+    return [...new Set([previousMonth(current), ...(await pendingReconciliationMonths(db)), ...ended])].sort();
+  }
+
   async function reconcileDue(months?: readonly MonthKey[]) {
-    const wanted = months ?? [...new Set([previousMonth(monthOf(deps.now())), ...(await pendingReconciliationMonths(db))])].sort();
+    // One budget for the whole run, from its start.
+    const deadlineAt = deadlineFrom(deps.now());
+    // The matching rule once, whatever is due: a reconciliation that is already complete never runs it, and a late provider id whose own
+    // matching failed (or an estimate and an actual committed at the same moment) would otherwise wait for the next month's reconciliation.
+    // A failure here costs only this recovery, so it is logged and the months are still reconciled; the next run tries again.
+    try {
+      const rematched = await db.transaction((tx) => matchUnretiredEstimates(tx, providerIds));
+      if (rematched > 0) log.info("reconcile.rematched", { retired: rematched });
+    } catch (error) {
+      log.error("reconcile.match_failed", { error: nameOf(error) });
+    }
+    const wanted = months ?? (await dueMonths());
     const results: { id: string; result: ReconcileResult }[] = [];
     for (const month of wanted) {
       const id = `month:${month}`;
       try {
-        results.push({ id, result: await reconcile(id) });
+        results.push({ id, result: await reconcileBy(id, deadlineAt) });
       } catch (error) {
         log.error("reconcile.failed", { reconciliation: id, error: nameOf(error) });
         results.push({ id, result: { status: "failed", error: nameOf(error) } });

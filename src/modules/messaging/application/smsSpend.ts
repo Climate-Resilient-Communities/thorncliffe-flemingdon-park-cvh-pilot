@@ -7,7 +7,10 @@
 // the text went to the drill roster. The estimate therefore commits with the outcome or not at all. A text that was not accepted and goes
 // back to the queue (HTTP 429, a connection that failed before sending) has no such outcome, so it writes nothing and a retried text is
 // counted once, when it is finally accepted; a text that never is writes nothing. The spend module's unique estimate per delivery makes a
-// replay harmless.
+// replay harmless. Only the estimate belongs to that transaction: the matching rule that follows it runs in a savepoint, so a failure of
+// the matching (logged as `spend.match_failed`) loses only its own writes and never the provider's outcome, which would otherwise roll back
+// and leave an `unknown` row and an on-call event for a text that was accepted. The reconciliation repeats the matching over every
+// unretired estimate, so nothing is lost by it.
 //
 // `afterProviderId(tx, delivery)` runs when a delivery's provider id is recorded later than its outcome (a late callback stored the id an
 // `unknown` row never got, or a slow response was written onto a row the sweep had already made `unknown`): it runs the matching rule for
@@ -22,7 +25,7 @@
 import type { DbTransaction } from "../../../platform/db";
 import { recordSmsEstimate, retireSmsEstimates } from "../../spend";
 import { estimateSmsCost, priceInThousandthsOfCent } from "../domain/smsCost";
-import type { DeliveryView } from "./deliveryPorts";
+import type { DeliveryView, MessagingLog } from "./deliveryPorts";
 
 /** The provider id a delivery carries now, read in the caller's transaction. */
 export interface ProviderIdReader {
@@ -35,6 +38,8 @@ export interface SmsSpendDeps {
   pricePerSegmentCents: number;
   /** A test seam: the instant stamped on an estimate. Production leaves it out, and the estimate takes the database's clock. */
   now?: () => Date;
+  /** Where a failed matching step is reported (`spend.match_failed`: the hook, the delivery's id and the error's name, never a message). */
+  log: Pick<MessagingLog, "error">;
 }
 
 export interface SmsSpendHooks {
@@ -46,6 +51,8 @@ export interface SmsSpendHooks {
 export function smsEstimateCents(segments: number, lang: string, pricePerSegmentCents: number): number {
   return estimateSmsCost({ segmentsByLanguage: { [lang]: segments }, recipientsByLanguage: { [lang]: 1 }, pricePerSegmentCents, basis: "snapshot" }).cents;
 }
+
+const nameOf = (error: unknown) => (error instanceof Error ? error.name : "NonError");
 
 export function createSmsSpendHooks(deps: SmsSpendDeps): SmsSpendHooks {
   // Checked once, so a misconfigured price stops the app where it starts and not in the middle of an outcome write.
@@ -68,7 +75,12 @@ export function createSmsSpendHooks(deps: SmsSpendDeps): SmsSpendHooks {
         purpose: delivery.kind,
         ...(deps.now ? { at: deps.now() } : {}),
       });
-      await retireFor(tx, delivery.id);
+      // The matching is a recovery step, not part of the count: in a savepoint, it can fail without taking the outcome and the estimate with it.
+      try {
+        await tx.transaction((savepoint) => retireFor(savepoint, delivery.id));
+      } catch (error) {
+        deps.log.error("spend.match_failed", { hook: "outcome", delivery_id: delivery.id, error: nameOf(error) });
+      }
     },
 
     async afterProviderId(tx, delivery) {

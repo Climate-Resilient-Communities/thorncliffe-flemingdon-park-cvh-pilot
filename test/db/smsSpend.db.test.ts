@@ -25,6 +25,8 @@ import {
   monthInterval,
   recordSmsEstimate,
   smsMonthReport,
+  unreconciledEstimateMonths,
+  type ListOptions,
   type MessagePage,
   type ProviderMessage,
   type SmsMessageLister,
@@ -48,7 +50,7 @@ const RATE = 1.4;
 const OCTOBER = new Date("2026-10-15T15:00:00Z");
 
 let spendAt: Date | undefined = OCTOBER;
-const hooks = createSmsSpend({ pricePerSegmentCents: PRICE, now: () => spendAt ?? new Date() });
+const hooks = createSmsSpend({ pricePerSegmentCents: PRICE, now: () => spendAt ?? new Date(), log: { error: (evt, fields) => world.log.error(evt, fields) } });
 const spendSeams = { afterOutcome: hooks.afterOutcome, afterProviderId: hooks.afterProviderId };
 
 beforeAll(async () => {
@@ -72,6 +74,8 @@ afterAll(async () => {
   await clearSpend();
   await owner.unsafe("drop trigger if exists scratch_refuse_estimate on spend_event");
   await owner.unsafe("drop function if exists scratch_refuse_estimate()");
+  await owner.unsafe("drop trigger if exists scratch_refuse_retirement on sms_estimate_retirement");
+  await owner.unsafe("drop function if exists scratch_refuse_retirement()");
   await app.$client.end({ timeout: 5 });
   await appSql.end({ timeout: 5 });
   await owner.unsafe("alter role cvh_app_login password null");
@@ -163,6 +167,19 @@ async function refuseEstimateFor(deliveryId: string) {
   };
 }
 
+/** From now on the database refuses every retirement (a scratch trigger): the matching rule then fails wherever it runs, and nothing else does. */
+async function refuseRetirements() {
+  await owner.unsafe(`create or replace function scratch_refuse_retirement() returns trigger language plpgsql as $$
+    begin
+      raise exception 'scratch: the retirement insert is refused';
+    end $$`);
+  await owner.unsafe("drop trigger if exists scratch_refuse_retirement on sms_estimate_retirement");
+  await owner.unsafe("create trigger scratch_refuse_retirement before insert on sms_estimate_retirement for each row execute function scratch_refuse_retirement()");
+  return async () => {
+    await owner.unsafe("drop trigger if exists scratch_refuse_retirement on sms_estimate_retirement");
+  };
+}
+
 // --- the provider's listing, as a fake ------------------------------------------------------------------------------
 
 const message = (sid: string, over: Partial<ProviderMessage> = {}): ProviderMessage => ({
@@ -178,21 +195,25 @@ const message = (sid: string, over: Partial<ProviderMessage> = {}): ProviderMess
  * Twilio's Messages API as a fake: every message of the account, served the way the adapter asks (the messages sent within a second of the
  * range, in pages, each page naming the next). It records every request and can fail on a page. It never touches a network.
  */
-function fakeTwilio(initial: ProviderMessage[], options: { pageSize?: number } = {}) {
-  const state = { messages: initial, pageSize: options.pageSize ?? 1000, failOnPage: null as number | null, requests: [] as string[] };
+function fakeTwilio(initial: ProviderMessage[], options: { pageSize?: number; onPage?: () => void } = {}) {
+  // `timeouts` is what each request was told it may wait (the time left in the run); `onPage` is the time a page takes, for a test that moves its clock.
+  const state = { messages: initial, pageSize: options.pageSize ?? 1000, failOnPage: null as number | null, requests: [] as string[], timeouts: [] as (number | undefined)[] };
   let served: ProviderMessage[] = [];
   const pageAt = (n: number): MessagePage => {
     if (state.failOnPage === n) throw new Error("twilio unavailable");
+    options.onPage?.();
     return { messages: served.slice((n - 1) * state.pageSize, n * state.pageSize), nextPageUri: n * state.pageSize < served.length ? `/fake/Messages.json?page=${n + 1}` : null };
   };
   const lister: SmsMessageLister = {
-    async first({ startUtc, endUtc }) {
+    async first({ startUtc, endUtc }, listOptions?: ListOptions) {
       state.requests.push(`first ${startUtc.toISOString()} ${endUtc.toISOString()}`);
+      state.timeouts.push(listOptions?.timeoutMs);
       served = state.messages.filter((m) => m.dateSent === null || (m.dateSent.getTime() >= startUtc.getTime() - 1000 && m.dateSent.getTime() <= endUtc.getTime() + 1000));
       return pageAt(1);
     },
-    async next(uri) {
+    async next(uri, listOptions?: ListOptions) {
       state.requests.push(`next ${uri}`);
+      state.timeouts.push(listOptions?.timeoutMs);
       return pageAt(Number(new URL(uri, "https://twilio.invalid").searchParams.get("page")));
     },
   };
@@ -390,9 +411,12 @@ describe("the estimate of a text (S06.08)", () => {
     expect(await estimateOf(id)).toHaveLength(1);
   });
 
-  it("is not written for a text that is never accepted (429 three times, then failed), nor for one the provider refuses for good", async () => {
+  it.each([
+    ["429 Too Many Requests, with Twilio's error body, on every attempt", { kind: "rejected", httpStatus: 429, errorCode: 20429, message: "Too Many Requests" } as const],
+    ["a connection that never reaches the provider, on every attempt", { kind: "not_sent", reason: "connection_refused" } as const],
+  ])("is not written for a text that is never accepted (%s: the first try and three retries, then failed), nor for one the provider refuses for good", async (_name, answer) => {
     const [retried] = await world.seedTransactional(1);
-    world.provider.answer({ kind: "not_sent", reason: "connection_refused" });
+    world.provider.answer(answer);
     for (const waitMs of [0, 31_000, 121_000, 601_000]) {
       world.clock.advance(waitMs);
       await dispatcher().run();
@@ -496,6 +520,31 @@ describe("a failing hook (S06.08, with the real hook)", () => {
     await expect(reconciler(twilio).reconcile(OCT)).resolves.toMatchObject({ status: "complete", messages: 1, retired: 0 });
     const report = await smsMonthReport(app, "2026-10");
     expect(report).toMatchObject({ status: "complete", actual: { count: 1, cents: 1.106 }, unmatchedActuals: { count: 1, cents: 1.106 }, unresolvedEstimates: { count: 0 } });
+  });
+
+  it("in the matching that follows the estimate loses only the matching: the outcome and the estimate are recorded, nothing becomes unknown, and the next run retires the estimate", async () => {
+    // Twilio has billed message 1 and the actual is imported already (a reconciliation can run between a text's acceptance and its first callback).
+    await reconciler(fakeTwilio([message(sidOf(1))])).reconcile(OCT);
+    const [id] = await world.seedTransactional(1);
+    world.provider.answer(accepted(sidOf(1)));
+    const restore = await refuseRetirements();
+    try {
+      await dispatcher().run();
+    } finally {
+      await restore();
+    }
+    const row = await world.rowOf(id);
+    expect([row.state, row.provider_message_id]).toEqual(["submitted", sidOf(1)]);
+    expect(await estimateOf(id)).toHaveLength(1);
+    expect(await retiredBy(id)).toBeNull();
+    // The outcome was not rolled back: no `outcome_unrecorded`, no unknown row, nothing for on-call.
+    expect(world.lines.some((line) => line.evt === "dispatch.outcome_unrecorded")).toBe(false);
+    expect(await world.opsEvents("delivery.unknown")).toEqual([]);
+    expect(world.lines.find((line) => line.evt === "spend.match_failed")?.fields).toMatchObject({ hook: "outcome", delivery_id: id });
+    expect(JSON.stringify(world.lines)).not.toMatch(/scratch|retirement insert/);
+    // The daily run's matching, over every unretired estimate, does what the failed step did not.
+    await reconciler(fakeTwilio([])).reconcileDue();
+    expect(await retiredBy(id)).toBe(sidOf(1));
   });
 
   it("never undoes the status of a callback when the hook fails: the status stays, nothing is counted, and the failure is logged by hook and error name", async () => {
@@ -690,6 +739,135 @@ describe("a reconciliation (S06.08)", () => {
     await sendOne({}, accepted(sidOf(90)));
     expect((await broken.reconcileDue(["2026-08", "2026-07"])).map((entry) => entry.result.status)).toEqual(["failed", "failed"]);
     expect(spendLines.filter((line) => line.evt === "reconcile.failed")).toHaveLength(2);
+  });
+});
+
+describe("what a daily run does (S06.08)", () => {
+  it("runs the matching rule even when every month is complete: a late provider id whose own matching failed is recovered by the next run, not by the next month's reconciliation", async () => {
+    // An ambiguous send: unknown, no provider id. Twilio billed it, and October's reconciliation imported the actual as an unmatched one.
+    const id = await sendOne({}, { kind: "no_answer", reason: "timeout" });
+    const twilio = fakeTwilio([message(sidOf(7))]);
+    await reconciler(twilio).reconcile(OCT);
+    // Its late callback records the id, but the matching that runs with it fails (the database refuses the retirement): the id stays.
+    const restore = await refuseRetirements();
+    try {
+      await callbacks().handle(await callbackFor(id, "delivered", sidOf(7)));
+    } finally {
+      await restore();
+    }
+    expect((await world.rowOf(id)).provider_message_id).toBe(sidOf(7));
+    expect(world.lines.find((line) => line.evt === "callback.spend_hook_failed")?.fields).toMatchObject({ hook: "provider_id", delivery_id: id });
+    expect(await retiredBy(id)).toBeNull();
+    expect(await smsMonthReport(app, "2026-10")).toMatchObject({ unmatchedActuals: { count: 1 }, unresolvedEstimates: { count: 1 } });
+    // October is complete and nothing else is due (it is the month before), so a run lists nothing; but it runs the matching, at once.
+    twilio.state.requests.length = 0;
+    const results = await reconciler(twilio).reconcileDue();
+    expect(results.map((entry) => [entry.id, entry.result.status])).toEqual([[OCT, "already_complete"]]);
+    expect(twilio.state.requests).toEqual([]);
+    expect(await retiredBy(id)).toBe(sidOf(7));
+    expect(spendLines.find((line) => line.evt === "reconcile.rematched")).toMatchObject({ level: "info", fields: { retired: 1 } });
+    expect(await smsMonthReport(app, "2026-10")).toMatchObject({ unmatchedActuals: { count: 0 }, unresolvedEstimates: { count: 0 }, retiredEstimates: { count: 1, cents: 2 } });
+    // A run with nothing to retire says nothing about it.
+    spendLines.length = 0;
+    await reconciler(twilio).reconcileDue();
+    expect(spendLines.some((line) => line.evt === "reconcile.rematched")).toBe(false);
+  });
+
+  it("still reconciles the months when the matching at the start of the run fails: the failure is logged by error name and the next run tries again", async () => {
+    await sendOne({}, accepted(sidOf(90)));
+    const twilio = fakeTwilio([message(sidOf(1))]);
+    const flaky = createSmsReconciler({
+      db: app,
+      lister: twilio.lister,
+      // The matching reads the provider ids of the estimates it checks: this fails once, for the run's first step only.
+      providerIds: { ofDeliveries: async (tx, ids) => (spendLines.length === 0 ? Promise.reject(new RangeError("boom")) : deliveryProviderIds.ofDeliveries(tx, ids)) },
+      usdToCadRate: RATE,
+      now: () => reconcilerNow,
+      log: spendLog,
+    });
+    const results = await flaky.reconcileDue();
+    // The failed step logged first, so the month's own matching (and everything after it) ran with the real ids.
+    expect(spendLines[0]).toMatchObject({ level: "error", evt: "reconcile.match_failed", fields: { error: "RangeError" } });
+    expect(results.map((entry) => [entry.id, entry.result.status])).toEqual([[OCT, "complete"]]);
+    expect(await actuals()).toHaveLength(1);
+  });
+
+  it("reconciles a month the job never reached: every ended month with estimates and no complete reconciliation is due, with the month before and the pending ones, and the month that has not ended is not", async () => {
+    // The job did not run in October or in November: September and October have estimates and no row at all. December is the month now.
+    spendAt = new Date("2026-09-15T15:00:00Z");
+    const september = await sendOne({}, accepted(sidOf(1)));
+    spendAt = OCTOBER;
+    const october = await sendOne({}, accepted(sidOf(2)));
+    spendAt = new Date("2026-12-10T15:00:00Z");
+    const december = await sendOne({}, accepted(sidOf(3)));
+    reconcilerNow = new Date("2026-12-12T12:00:00Z");
+    expect(await unreconciledEstimateMonths(app)).toEqual(["2026-09", "2026-10", "2026-12"]);
+    const twilio = fakeTwilio([message(sidOf(1), { dateSent: new Date("2026-09-15T15:00:05Z") }), message(sidOf(2))]);
+    const results = await reconciler(twilio).reconcileDue();
+    // Oldest first: September and October (estimates, never reached) and November (the month before this one, with nothing in it).
+    expect(results.map((entry) => [entry.id, entry.result.status])).toEqual([
+      ["month:2026-09", "complete"],
+      [OCT, "complete"],
+      [NOV, "complete"],
+    ]);
+    expect(await retiredBy(september)).toBe(sidOf(1));
+    expect(await retiredBy(october)).toBe(sidOf(2));
+    // December has not ended: no row, no listing of it, and its estimate stays counted as an unresolved one.
+    expect(await reconciliationRow("month:2026-12")).toBeNull();
+    expect(await retiredBy(december)).toBeNull();
+    expect(twilio.state.requests.filter((request) => request.startsWith("first"))).toHaveLength(3);
+    // The next run has only the month before this one to look at, and finds it complete.
+    expect((await reconciler(twilio).reconcileDue()).map((entry) => [entry.id, entry.result.status])).toEqual([[NOV, "already_complete"]]);
+    expect(await unreconciledEstimateMonths(app)).toEqual(["2026-12"]);
+  });
+
+  it("reconciles only the months it is told to when it is told which, whatever else is due", async () => {
+    await appSql`insert into sms_reconciliation (id, interval_start, interval_end, pending_reason, attempts) values ('month:2026-09', '2026-09-01T04:00:00Z', '2026-10-01T04:00:00Z', 'listing_failed', 1)`;
+    const twilio = fakeTwilio([message(sidOf(1))]);
+    const results = await reconciler(twilio).reconcileDue(["2026-10"]);
+    expect(results.map((entry) => entry.id)).toEqual([OCT]);
+    expect(twilio.state.requests.filter((request) => request.startsWith("first"))).toHaveLength(1);
+    expect(await reconciliationRow("month:2026-09")).toMatchObject({ state: "pending", attempts: 1 });
+  });
+
+  it("shares one time budget between its months: each page is asked for no longer than the time left in the run, however many months there are", async () => {
+    // September is pending (its listing failed before), October is the month before this one; each page takes 10 seconds.
+    await appSql`insert into sms_reconciliation (id, interval_start, interval_end, pending_reason, attempts) values ('month:2026-09', '2026-09-01T04:00:00Z', '2026-10-01T04:00:00Z', 'listing_failed', 1)`;
+    const twilio = fakeTwilio([message(sidOf(1), { dateSent: new Date("2026-09-15T15:00:00Z") }), message(sidOf(3), { dateSent: new Date("2026-09-16T15:00:00Z") }), message(sidOf(2))], {
+      pageSize: 1,
+      onPage: () => void (reconcilerNow = new Date(reconcilerNow.getTime() + 10_000)),
+    });
+    const results = await reconciler(twilio).reconcileDue();
+    expect(results.map((entry) => [entry.id, entry.result.status])).toEqual([
+      ["month:2026-09", "complete"],
+      [OCT, "complete"],
+    ]);
+    // September took two pages (the run had 45 s, then 35 s) and October's first page found 25 s left: one budget, not 45 s a month.
+    expect(twilio.state.timeouts).toEqual([45_000, 35_000, 25_000]);
+  });
+
+  it("cuts a month short, without asking for anything, when the run's time is spent before its turn: it stays pending and the next run, with a fresh budget, completes it", async () => {
+    await appSql`insert into sms_reconciliation (id, interval_start, interval_end, pending_reason, attempts) values ('month:2026-09', '2026-09-01T04:00:00Z', '2026-10-01T04:00:00Z', 'listing_failed', 1)`;
+    let pageTakes = 50_000;
+    const twilio = fakeTwilio([message(sidOf(1), { dateSent: new Date("2026-09-15T15:00:00Z") }), message(sidOf(2))], {
+      onPage: () => void (reconcilerNow = new Date(reconcilerNow.getTime() + pageTakes)),
+    });
+    const results = await reconciler(twilio).reconcileDue();
+    // September's single page took longer than the whole budget; it ended by itself, so September completes. October's turn comes after the time.
+    expect(results.map((entry) => [entry.id, entry.result])).toEqual([
+      ["month:2026-09", expect.objectContaining({ status: "complete", messages: 1 })],
+      [OCT, { status: "pending", reason: "cut_short" }],
+    ]);
+    expect(twilio.state.requests).toEqual(["first 2026-09-01T04:00:00.000Z 2026-10-01T04:00:00.000Z"]);
+    expect(await reconciliationRow(OCT)).toMatchObject({ state: "pending", pending_reason: "cut_short", attempts: 1 });
+    expect(await smsMonthReport(app, "2026-10")).toMatchObject({ status: "pending", pending: { reason: "cut_short" } });
+    expect(spendLines.some((line) => line.evt === "reconcile.cut_short" && line.fields.reconciliation === OCT && line.fields.page === 0)).toBe(true);
+    // The next run: a fresh budget, and only October is left.
+    pageTakes = 1_000;
+    reconcilerNow = new Date("2026-11-03T12:00:00Z");
+    const next = await reconciler(twilio).reconcileDue();
+    expect(next.map((entry) => [entry.id, entry.result.status])).toEqual([[OCT, "complete"]]);
+    expect(await reconciliationRow(OCT)).toMatchObject({ state: "complete", attempts: 2, imported: 1 });
   });
 });
 
@@ -963,6 +1141,24 @@ describe("the month boundary (S06.08)", () => {
     expect(await retiredBy(id)).toBe(sidOf(1));
     expect(await smsMonthReport(app, "2026-11")).toMatchObject({ unresolvedEstimates: { count: 0, cents: 0 }, countedCents: 0 });
     expect(await smsMonthReport(app, "2026-10")).toMatchObject({ actual: { count: 1 }, retiredEstimates: { count: 1 }, unmatchedActuals: { count: 0 } });
+  });
+
+  it("names the months that have estimates by Toronto's calendar, in summer and in winter time, and leaves out a month that a complete reconciliation covers", async () => {
+    const make = (n: number, at: string) =>
+      recordSmsEstimate(app, { deliveryId: `01900000-0000-7000-8000-00000000000${n}`, entryId: null, lang: "en", isDrill: false, segments: 1, costCents: 2, purpose: "transactional", at: new Date(at) });
+    // 23:59:30 on the last day and 00:00:30 on the first, in daylight time (UTC-4) and in standard time (UTC-5): in UTC every one of them is a different date.
+    await make(1, "2026-07-31T23:59:30-04:00");
+    await make(2, "2026-08-01T00:00:30-04:00");
+    await make(3, "2026-12-31T23:59:30-05:00");
+    await make(4, "2027-01-01T00:00:30-05:00");
+    await make(5, OCTOBER.toISOString());
+    expect(await unreconciledEstimateMonths(app)).toEqual(["2026-07", "2026-08", "2026-10", "2026-12", "2027-01"]);
+    // Once a month is reconciled it is no longer named, and the others are.
+    await expect(reconciler(fakeTwilio([])).reconcile(OCT)).resolves.toMatchObject({ status: "complete" });
+    expect(await unreconciledEstimateMonths(app)).toEqual(["2026-07", "2026-08", "2026-12", "2027-01"]);
+    // A month with a reconciliation that is only pending is still named.
+    await expect(reconciler(fakeTwilio([message(sidOf(1), { dateSent: new Date("2026-08-15T15:00:00Z"), price: null })])).reconcile("month:2026-08")).resolves.toMatchObject({ status: "pending" });
+    expect(await unreconciledEstimateMonths(app)).toContain("2026-08");
   });
 
   it("puts a send at 23:59 and one at 00:01 Toronto time in different months, the month being the exact interval and not a calendar date in UTC", async () => {

@@ -1,5 +1,6 @@
 // The Messages listing adapter against a fake `fetch`: no network call is ever made, and the adapter is never given real credentials.
 import { describe, expect, it, vi } from "vitest";
+import { monthInterval } from "../../spend";
 import { MessageListError, twilioMessageLister } from "./twilioMessageList";
 
 // Obviously fake credentials.
@@ -29,7 +30,7 @@ function lister(respond: (url: string) => Response | Promise<Response>) {
 }
 
 describe("the Messages listing (S06.08)", () => {
-  it("asks for the account's messages sent a second either side of the interval, at the largest page size, with the credentials only in the header", async () => {
+  it("asks for the account's messages with Twilio's documented date filters (GMT dates, a day either side of the interval), at the largest page size, with the credentials only in the header", async () => {
     const { fetchMock, listing } = lister(() => json({ messages: [item(1)], next_page_uri: null }));
     await listing.first(RANGE);
 
@@ -37,7 +38,9 @@ describe("the Messages listing (S06.08)", () => {
     const [url, init] = fetchMock.mock.calls[0];
     const parsed = new URL(url);
     expect(`${parsed.origin}${parsed.pathname}`).toBe(`https://twilio.invalid${PATH}`);
-    expect(Object.fromEntries(parsed.searchParams)).toEqual({ PageSize: "1000", "DateSent>": "2026-10-01T03:59:59.000Z", "DateSent<": "2026-11-01T04:00:01.000Z" });
+    // Dates only (`YYYY-MM-DD`, GMT), as the SDK documents them: never a time or milliseconds. October in Toronto is [2026-10-01T04:00Z, 2026-11-01T04:00Z),
+    // so the request runs from the day before the first GMT date to the day after the last one.
+    expect(Object.fromEntries(parsed.searchParams)).toEqual({ PageSize: "1000", "DateSent>": "2026-09-30", "DateSent<": "2026-11-02" });
     expect(init?.method).toBe("GET");
     const headers = init?.headers as Record<string, string>;
     expect(headers.Authorization).toBe(`Basic ${Buffer.from(`${ACCOUNT_SID}:${AUTH_TOKEN}`).toString("base64")}`);
@@ -46,13 +49,32 @@ describe("the Messages listing (S06.08)", () => {
     expect(init?.body).toBeUndefined();
   });
 
+  it.each([
+    ["a month that starts in daylight time and ends in standard time", "2026-10", "2026-09-30", "2026-11-02"],
+    ["a month that ends on a date in GMT already the next month's", "2026-08", "2026-07-31", "2026-09-02"],
+    ["a month that starts when the clocks change back", "2026-11", "2026-10-31", "2026-12-02"],
+    ["a month across a new year", "2026-12", "2026-11-30", "2027-01-02"],
+  ])("asks only for GMT dates, one whole day beyond the interval on each side, for %s", async (_name, month, after, before) => {
+    const { fetchMock, listing } = lister(() => json({ messages: [], next_page_uri: null }));
+    const interval = monthInterval(month);
+    await listing.first({ startUtc: interval.startUtc, endUtc: interval.endUtc });
+    const params = new URL((fetchMock.mock.calls[0] as unknown as [string])[0]).searchParams;
+    expect(params.get("DateSent>")).toBe(after);
+    expect(params.get("DateSent<")).toBe(before);
+    for (const bound of [params.get("DateSent>"), params.get("DateSent<")]) expect(bound).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    // Whatever Twilio does with a bound (inclusive or not, by the day), the requested dates hold every instant of the interval: a day to spare either side.
+    expect(Date.parse(`${after}T23:59:59Z`)).toBeLessThan(interval.startUtc.getTime());
+    expect(Date.parse(`${before}T00:00:00Z`)).toBeGreaterThan(interval.endUtc.getTime());
+  });
+
   it("gives the id, direction, send time and price of each message, and nothing else: never a number or a body", async () => {
     const { listing } = lister(() => json({ messages: [item(1), item(2, { date_sent: null, price: null, price_unit: null, direction: "inbound" })], next_page_uri: `${PATH}?Page=1&PageToken=abc` }));
     const page = await listing.first(RANGE);
     expect(page.nextPageUri).toBe(`${PATH}?Page=1&PageToken=abc`);
+    // The status is a code (`delivered`, `failed`, ...): kept so a decision about messages Twilio never prices needs no change here.
     expect(page.messages).toEqual([
-      { sid: sid(1), direction: "outbound-api", dateSent: new Date("2026-10-15T14:00:00Z"), price: "-0.00790", priceUnit: "USD" },
-      { sid: sid(2), direction: "inbound", dateSent: null, price: null, priceUnit: null },
+      { sid: sid(1), direction: "outbound-api", dateSent: new Date("2026-10-15T14:00:00Z"), price: "-0.00790", priceUnit: "USD", status: "delivered" },
+      { sid: sid(2), direction: "inbound", dateSent: null, price: null, priceUnit: null, status: "delivered" },
     ]);
     expect(JSON.stringify(page)).not.toContain("5550123");
     expect(JSON.stringify(page)).not.toContain("Power is out");
@@ -116,7 +138,7 @@ describe("the Messages listing (S06.08)", () => {
 
   it("passes on a message with a field of the wrong type as one the reconciliation will find malformed, not as a failed listing", async () => {
     const { listing } = lister(() => json({ messages: [item(1, { sid: 12, date_sent: "not a date", price: 0.0079, direction: null })], next_page_uri: null }));
-    expect((await listing.first(RANGE)).messages).toEqual([{ sid: "", direction: "", dateSent: null, price: null, priceUnit: "USD" }]);
+    expect((await listing.first(RANGE)).messages).toEqual([{ sid: "", direction: "", dateSent: null, price: null, priceUnit: "USD", status: "delivered" }]);
   });
 
   it("waits for a page no longer than its timeout, and asks for smaller pages when told to", async () => {
@@ -129,6 +151,22 @@ describe("the Messages listing (S06.08)", () => {
       await lister(() => json({ messages: [], next_page_uri: null })).listing.first(RANGE);
       expect(waits).toEqual([1234, 15_000]);
       expect(new URL((fetchMock.mock.calls[0] as unknown as [string])[0]).searchParams.get("PageSize")).toBe("50");
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("waits for a page no longer than the time the run has left, never longer than its own timeout, and at least a millisecond", async () => {
+    const waits: number[] = [];
+    const spy = vi.spyOn(AbortSignal, "timeout").mockImplementation((ms) => (waits.push(ms), new AbortController().signal));
+    try {
+      const { listing } = lister(() => json({ messages: [], next_page_uri: null }));
+      await listing.first(RANGE, { timeoutMs: 2_500 });
+      await listing.next(`${PATH}?Page=1&PageToken=abc`, { timeoutMs: 700.9 });
+      await listing.first(RANGE, { timeoutMs: 60_000 });
+      await listing.first(RANGE, { timeoutMs: 0 });
+      await listing.first(RANGE, {});
+      expect(waits).toEqual([2_500, 700, 15_000, 1, 15_000]);
     } finally {
       spy.mockRestore();
     }

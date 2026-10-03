@@ -4,7 +4,7 @@ import type { DeliveryView } from "./deliveryPorts";
 
 // The spend module is replaced by a recorder: what the hooks ask it to write is the whole of what they do. The writes themselves, in a real
 // database, are proved by test/db/smsSpend.db.test.ts.
-const spend = vi.hoisted(() => ({ estimates: [] as unknown[], retirements: [] as unknown[][], fail: false }));
+const spend = vi.hoisted(() => ({ estimates: [] as unknown[], retirements: [] as unknown[][], fail: false, failRetire: false }));
 vi.mock("../../spend", () => ({
   recordSmsEstimate: async (_tx: unknown, input: unknown) => {
     if (spend.fail) throw new Error("the spend_event insert failed");
@@ -12,6 +12,7 @@ vi.mock("../../spend", () => ({
     return { recorded: true };
   },
   retireSmsEstimates: async (_tx: unknown, pairs: unknown[]) => {
+    if (spend.failRetire) throw Object.assign(new Error("the retirement insert failed, SM123 +14165550123"), { name: "PostgresError" });
     spend.retirements.push(pairs);
     return pairs.length;
   },
@@ -19,7 +20,21 @@ vi.mock("../../spend", () => ({
 
 const { createSmsSpendHooks, smsEstimateCents } = await import("./smsSpend");
 
-const TX = {} as DbTransaction;
+/** A transaction that opens a savepoint as a real one does: the callback's failure is the savepoint's, and rolls back its own writes only. */
+const savepoints = { opened: 0, rolledBack: 0 };
+const TX = {
+  transaction: async (run: (savepoint: DbTransaction) => Promise<unknown>) => {
+    savepoints.opened += 1;
+    try {
+      return await run(TX);
+    } catch (error) {
+      savepoints.rolledBack += 1;
+      throw error;
+    }
+  },
+} as unknown as DbTransaction;
+const logged: { evt: string; fields: Record<string, unknown> }[] = [];
+const log = { error: (evt: string, fields: Record<string, unknown>) => void logged.push({ evt, fields }) };
 const SID = `SM${"ab".repeat(16)}`;
 const delivery = (over: Partial<DeliveryView> = {}): DeliveryView =>
   ({
@@ -35,13 +50,17 @@ const delivery = (over: Partial<DeliveryView> = {}): DeliveryView =>
 
 const hooks = (providerId: string | null = SID, price = 1.5, now?: () => Date) => {
   const read = vi.fn(async () => providerId);
-  return { read, hooks: createSmsSpendHooks({ store: { providerIdOf: read }, pricePerSegmentCents: price, now }) };
+  return { read, hooks: createSmsSpendHooks({ store: { providerIdOf: read }, pricePerSegmentCents: price, now, log }) };
 };
 
 beforeEach(() => {
   spend.estimates.length = 0;
   spend.retirements.length = 0;
   spend.fail = false;
+  spend.failRetire = false;
+  savepoints.opened = 0;
+  savepoints.rolledBack = 0;
+  logged.length = 0;
 });
 
 describe("a text's estimate (S06.08)", () => {
@@ -108,6 +127,38 @@ describe("a text's estimate (S06.08)", () => {
     expect(spend.retirements).toEqual([]);
   });
 
+  it("runs the matching in a savepoint, so a matching that fails loses only its own writes: the estimate is written, the hook does not throw, and the failure is logged by hook, delivery and error name", async () => {
+    spend.failRetire = true;
+    const { hooks: spendHooks } = hooks();
+    await expect(spendHooks.afterOutcome(TX, delivery(), "submitted")).resolves.toBeUndefined();
+    // The provider's outcome and the estimate belong to the caller's transaction, which this does not undo.
+    expect(spend.estimates).toHaveLength(1);
+    expect(savepoints).toEqual({ opened: 1, rolledBack: 1 });
+    expect(logged).toEqual([{ evt: "spend.match_failed", fields: { hook: "outcome", delivery_id: "01900000-0000-7000-8000-0000000d0001", error: "PostgresError" } }]);
+    // Never the database's message, which can quote a provider id or a number.
+    expect(JSON.stringify(logged)).not.toMatch(/SM123|5550123|insert failed/);
+  });
+
+  it("opens that savepoint for every counted text, and logs nothing when the matching works", async () => {
+    const { hooks: spendHooks } = hooks();
+    await spendHooks.afterOutcome(TX, delivery(), "submitted");
+    await spendHooks.afterOutcome(TX, delivery(), "unknown");
+    expect(savepoints).toEqual({ opened: 2, rolledBack: 0 });
+    expect(logged).toEqual([]);
+  });
+
+  it("does not guard the matching of afterProviderId: its callers (the dispatcher and the callbacks) run it in their own savepoint and log it as their own", async () => {
+    spend.failRetire = true;
+    await expect(hooks().hooks.afterProviderId(TX, delivery())).rejects.toThrow("the retirement insert failed");
+    expect(logged).toEqual([]);
+  });
+
+  it("takes a delivery and an entry whose ids are not RFC-versioned uuids (any 8-4-4-4-12 hex the database's uuid column holds): the estimate rides in the outcome write and is never what fails it", async () => {
+    const { hooks: spendHooks } = hooks();
+    await spendHooks.afterOutcome(TX, delivery({ id: "00000000-0000-0000-0000-000000000001", entryId: "ffffffff-ffff-ffff-ffff-ffffffffffff" }), "submitted");
+    expect(spend.estimates).toMatchObject([{ deliveryId: "00000000-0000-0000-0000-000000000001", entryId: "ffffffff-ffff-ffff-ffff-ffffffffffff" }]);
+  });
+
   it("lets a failing write reach its caller, which owns the transaction and decides (the dispatcher rolls the outcome back; the sweep and the callbacks undo only the hook's writes)", async () => {
     spend.fail = true;
     await expect(hooks().hooks.afterOutcome(TX, delivery(), "submitted")).rejects.toThrow("the spend_event insert failed");
@@ -116,7 +167,7 @@ describe("a text's estimate (S06.08)", () => {
 
   it("refuses a price per segment that is not valid when it is built, so a misconfigured app stops where it starts", () => {
     for (const price of [0, -1, 1.2345, Number.NaN]) {
-      expect(() => createSmsSpendHooks({ store: { providerIdOf: async () => null }, pricePerSegmentCents: price }), String(price)).toThrow(RangeError);
+      expect(() => createSmsSpendHooks({ store: { providerIdOf: async () => null }, pricePerSegmentCents: price, log }), String(price)).toThrow(RangeError);
     }
   });
 });

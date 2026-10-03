@@ -28,6 +28,7 @@ import type { DispatchStore, Dispatcher, DispatcherDeps } from "./application/di
 import { drizzleCallbackStore } from "./adapters/callbackStore";
 import { createStatusCallbacks as createStatusCallbacksService, type CallbackStore, type StatusCallbackDeps, type StatusCallbacks } from "./application/statusCallback";
 import { createMessagingServiceCheck, type MessagingServiceCheck, type MessagingServiceCheckDeps } from "./application/serviceCheck";
+import { stdoutMessagingLog } from "./adapters/messagingLog";
 import { drizzleProviderIds } from "./adapters/providerIdStore";
 import { createSmsSpendHooks, type SmsSpendDeps, type SmsSpendHooks } from "./application/smsSpend";
 import { drizzleMeasureStore } from "./adapters/measureStore";
@@ -76,7 +77,7 @@ export function createStatusCallbacks(wiring: StatusCallbackWiring): StatusCallb
   return createStatusCallbacksService({ ...wiring, store: wiring.store ?? drizzleCallbackStore });
 }
 
-export type SmsSpendWiring = Omit<SmsSpendDeps, "store">;
+export type SmsSpendWiring = Omit<SmsSpendDeps, "store" | "log"> & { log?: SmsSpendDeps["log"] };
 
 /**
  * The spend seams of the sender and the status callbacks (S06.08): `afterOutcome` writes a text's estimate to `spend_event` in the
@@ -84,7 +85,7 @@ export type SmsSpendWiring = Omit<SmsSpendDeps, "store">;
  * root passes the same hooks to `createDispatcher` and `createStatusCallbacks`. Throws for a price per segment that is not valid.
  */
 export function createSmsSpend(wiring: SmsSpendWiring): SmsSpendHooks {
-  return createSmsSpendHooks({ ...wiring, store: drizzleProviderIds });
+  return createSmsSpendHooks({ log: stdoutMessagingLog, ...wiring, store: drizzleProviderIds });
 }
 
 /**

@@ -18,9 +18,10 @@ export const SMS_SEGMENTS_MAX = 24;
 
 export const SmsEstimateSchema = z
   .strictObject({
-    deliveryId: z.uuid(),
-    /** The alert entry the text belongs to; null for a transactional or campaign text. */
-    entryId: z.uuid().nullable(),
+    /** The delivery's id, as its `uuid` column holds it: any 8-4-4-4-12 hex (`guid`), not only an RFC-versioned one, so that an id seeded by hand never fails the outcome write it rides in. */
+    deliveryId: z.guid(),
+    /** The alert entry the text belongs to; null for a transactional or campaign text. Same form as the delivery's id. */
+    entryId: z.guid().nullable(),
     lang: z.string().regex(/^[A-Za-z]{2,3}(-[A-Za-z]{2,8})?$/),
     /** Whether the text went to the drill roster (a drill entry reaches the roster only, and a real one never does). */
     isDrill: z.boolean(),

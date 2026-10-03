@@ -16,7 +16,7 @@ are in `src/platform/config/env.ts`.
 | `SMS_MODE` | no | `live` (production only) | in progress |
 | `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
-| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
+| `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/reconcile-spend`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
 | `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
@@ -196,9 +196,10 @@ goes back to the queue (HTTP 429, a connection that failed before sending) write
 
 **The reconciliation** sets what Twilio actually billed against those estimates, month by month. `POST /api/jobs/reconcile-spend` (the job secret, like the dispatcher's) lists the Twilio
 Messages API for a Toronto calendar month, `[first instant of the month, first instant of the next)` converted to UTC, with the stable id `month:{YYYY-MM}`, and records each message's
-price once, by its `MessageSid`. With no body it reconciles the month before this one and every month still pending; `{"month":"2026-10"}` reconciles that month. It only reconciles a month that has ended, and it
-is idempotent: a complete month is not listed again, and nothing is recorded from a listing that failed, was cut short (200 pages or 45 seconds) or has a message with no price yet: that
-month shows as "pending reconciliation", with its estimates still counted, and the next run tries again. A pending month is visible in `sms_reconciliation` (`state`, `pending_reason`, `attempts`,
+price once, by its `MessageSid`. With no body it reconciles the month before this one, every month still pending and every ended month that has text message estimates but no complete reconciliation (a month the job never reached);
+`{"month":"2026-10"}` reconciles that month. Every run first re-runs the matching of estimates to actuals, even when every month is complete, so a late provider id whose own matching failed is recovered by the next daily run. It only reconciles a month
+that has ended, and it is idempotent: a complete month is not listed again, and nothing is recorded from a listing that failed, was cut short (200 pages a month, or 45 seconds for the whole run, shared by its months: a month whose turn comes after
+the time is spent waits for the next run) or has a message with no price yet: that month shows as "pending reconciliation", with its estimates still counted, and the next run tries again. A pending month is visible in `sms_reconciliation` (`state`, `pending_reason`, `attempts`,
 `last_attempt_at`) and in the log (`reconcile.pending`, with the reason). Outside production there is no Twilio account (no credentials exist elsewhere), so the route answers `{"status":"not_live"}`
 and reads nothing; the real Twilio adapter is built only for production and every test uses a fake.
 
@@ -222,9 +223,9 @@ By hand: `curl -X POST -H "Authorization: Bearer <JOB_SECRET>" -d '{"month":"202
 - *The exchange rate.* `SMS_USD_TO_CAD_RATE`, default `1.4` (provisional). Twilio bills in US dollars; the CAD amount is the price × this rate, to the thousandth of a cent, and each actual keeps the rate it used.
 - *Where the reconciliation is triggered.* A job endpoint, not a script: the Twilio credentials exist only in production's environment, so a script run anywhere else would have none, and copying them out is what the secrets rules forbid.
 - *Only a month that has ended is reconciled.* A complete reconciliation never changes, so one run while the month still ran would be missing every message sent after it.
-- *Rounding.* An estimate is rounded up to whole cents per text, so a one-segment text at 1.5 cents is estimated at 2: an estimate may overstate by up to half a cent a text and never understates, until its actual replaces it.
+- *Rounding.* An estimate is rounded up to whole cents per text, so a one-segment text at 1.5 cents is estimated at 2: an estimate may overstate by less than a cent a text and never understates, until its actual replaces it.
 - *A message Twilio never prices.* A month with an outbound message that has no price keeps the whole month pending (its estimates stay counted). If Twilio leaves a failed or cancelled message unpriced for good, the owner decides whether that counts as zero.
-- *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<`, `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
+- *Before the first real run.* The Twilio adapter follows Twilio's documentation (the date filters `DateSent>` and `DateSent<` as GMT dates `YYYY-MM-DD`, widened by a day on each side because a date cannot say where in its day an instant is, with the exact interval applied afterwards; `next_page_uri`, `price` and `price_unit`) and has been tested only against a fake. IT checks the first real month's count and total against Twilio's usage page.
 
 ## GitHub: environments
 

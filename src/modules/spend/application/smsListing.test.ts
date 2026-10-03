@@ -108,4 +108,66 @@ describe("the listing of a reconciliation (S06.08)", () => {
     expect(requests).toHaveLength(1);
     expect(onFailure).toHaveBeenCalledWith({ reason: "cut_short", page: 1, error: "ListingLimit" });
   });
+
+  it("is cut short at the run's deadline when it is given one, whatever the limits say (the time is the whole run's, not this month's)", async () => {
+    const { lister, requests } = fakeLister({
+      first: { messages: [message(1)], nextPageUri: "/p2" },
+      "/p2": { messages: [message(2)], nextPageUri: null },
+    });
+    // The listing starts 40 seconds into a run whose budget ends at 45: its own limit (45 seconds) would allow 45 more, the run's deadline allows 5.
+    const deadlineAt = new Date(45_000);
+    const listing = await listMessages(lister, interval, { now: clockOf(40_000, 40_000, 46_000), limits, deadlineAt });
+    expect(listing).toEqual({ kind: "pending", reason: "cut_short", pages: 1 });
+    expect(requests).toHaveLength(1);
+  });
+
+  it("asks for nothing when the run's time is already spent: the month is cut short without a request, and says it read no page", async () => {
+    const { lister, requests } = fakeLister({ first: { messages: [message(1)], nextPageUri: null } });
+    const onFailure = vi.fn();
+    const listing = await listMessages(lister, interval, { now: () => new Date(45_000), limits, deadlineAt: new Date(45_000), onFailure });
+    expect(listing).toEqual({ kind: "pending", reason: "cut_short", pages: 0 });
+    expect(requests).toEqual([]);
+    expect(onFailure).toHaveBeenCalledWith({ reason: "cut_short", page: 0, error: "ListingLimit" });
+  });
+
+  it("asks for each page for no longer than the time left in the run", async () => {
+    const waits: (number | undefined)[] = [];
+    let at = 10_000;
+    const lister: SmsMessageLister = {
+      async first(_range, options) {
+        waits.push(options?.timeoutMs);
+        at += 12_000;
+        return { messages: [message(1)], nextPageUri: "/p2" };
+      },
+      async next(_uri, options) {
+        waits.push(options?.timeoutMs);
+        return { messages: [message(2)], nextPageUri: null };
+      },
+    };
+    // The run began at 0 with 45 seconds; this listing starts at 10 s and its first page takes 12 s.
+    const listing = await listMessages(lister, interval, { now: () => new Date(at), limits, deadlineAt: new Date(45_000) });
+    expect(listing.kind).toBe("complete");
+    expect(waits).toEqual([35_000, 23_000]);
+  });
+
+  it("gives a page that the run's own deadline cut off as the time limit (cut short), and any other failure as a failed listing", async () => {
+    let at = 0;
+    const slow: SmsMessageLister = {
+      async first() {
+        at = 45_000;
+        throw Object.assign(new Error("timed out"), { name: "MessageListError" });
+      },
+      async next() {
+        throw new Error("unreachable");
+      },
+    };
+    const onFailure = vi.fn();
+    expect(await listMessages(slow, interval, { now: () => new Date(at), limits, onFailure })).toEqual({ kind: "pending", reason: "cut_short", pages: 1 });
+    expect(onFailure).toHaveBeenCalledWith({ reason: "cut_short", page: 1, error: "MessageListError" });
+
+    // The same error well inside the time is a failed listing.
+    at = 0;
+    const quick: SmsMessageLister = { first: async () => Promise.reject(new Error("503")), next: async () => Promise.reject(new Error("503")) };
+    expect(await listMessages(quick, interval, { now: () => new Date(at), limits })).toEqual({ kind: "pending", reason: "listing_failed", pages: 1 });
+  });
 });

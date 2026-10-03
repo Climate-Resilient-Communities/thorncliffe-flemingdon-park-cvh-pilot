@@ -20,6 +20,11 @@ export interface ProviderMessage {
   price: string | null;
   /** The currency of the price ("USD"). */
   priceUnit: string | null;
+  /**
+   * The message's status as the provider reports it (`delivered`, `failed`, `canceled`, ...): a code, never personal data. The listing keeps it
+   * now so that a decision about messages the provider never prices (a failed or canceled one) needs no change to the adapter; nothing reads it yet.
+   */
+  status?: string | null;
 }
 
 /** One message's price as it is recorded: what the provider reported, the rate it was converted at, and the CAD amount in thousandths of a cent. */

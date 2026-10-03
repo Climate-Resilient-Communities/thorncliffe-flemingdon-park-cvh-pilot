@@ -20,7 +20,7 @@ export {
   type SmsReconcilerDeps,
   type SpendLog,
 } from "./application/smsReconciler";
-export { listMessages, type Listing, type ListingLimits, type MessagePage, type SmsMessageLister } from "./application/smsListing";
+export { listMessages, type ListOptions, type Listing, type ListingLimits, type MessagePage, type SmsMessageLister } from "./application/smsListing";
 export {
   completeSmsReconciliation,
   importSmsActuals,
@@ -33,6 +33,7 @@ export {
   smsMonthFigures,
   smsMonthReport,
   startSmsReconciliation,
+  unreconciledEstimateMonths,
   unretiredSmsEstimateDeliveries,
   type ProviderIdPair,
   type ReconciliationRow,

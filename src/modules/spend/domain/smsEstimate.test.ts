@@ -19,6 +19,15 @@ describe("the estimate of a text message (S06.08)", () => {
     expect(() => toSmsEstimate({ ...alert, purpose: "transactional" })).toThrow(SmsEstimateError);
   });
 
+  it("takes the ids as the database's uuid column holds them (any 8-4-4-4-12 hex), so an id seeded by hand never fails the outcome write the estimate rides in, and still refuses what is not an id", () => {
+    const hand = { deliveryId: "00000000-0000-0000-0000-000000000001", entryId: "FFFFFFFF-ffff-FFFF-ffff-ffffffffffff" };
+    expect(toSmsEstimate({ ...alert, ...hand })).toMatchObject(hand);
+    for (const bad of ["", "0000000000000000000000000000000", "00000000-0000-0000-0000-00000000000g", "00000000-0000-0000-0000-0000000000011", " 00000000-0000-0000-0000-000000000001"]) {
+      expect(() => toSmsEstimate({ ...alert, deliveryId: bad }), bad).toThrow(SmsEstimateError);
+      expect(() => toSmsEstimate({ ...alert, entryId: bad }), bad).toThrow(SmsEstimateError);
+    }
+  });
+
   it("can carry the instant it was made (a test gives it; production leaves it to the database)", () => {
     const at = new Date("2026-11-01T04:00:01Z");
     expect(toSmsEstimate({ ...alert, at }).at).toEqual(at);

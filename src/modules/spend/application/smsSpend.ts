@@ -5,7 +5,7 @@
 import { and, asc, eq, gt, isNotNull, sql } from "drizzle-orm";
 import type { DbExecutor, DbTransaction } from "@/platform/db";
 import { smsActual, smsReconciliation, spendEvent } from "../adapters/schema";
-import { monthInterval, type MonthKey, type PendingReason, type ReconciliationInterval } from "../domain/reconciliation";
+import { TORONTO, monthInterval, type MonthKey, type PendingReason, type ReconciliationInterval } from "../domain/reconciliation";
 import type { ActualInput } from "../domain/smsActuals";
 import { SMS_KIND, SMS_MODEL, toSmsEstimate, type SmsEstimateInput } from "../domain/smsEstimate";
 import { buildMonthReport, type MonthFigures, type SmsMonthReport } from "../domain/smsReport";
@@ -129,6 +129,23 @@ export async function readSmsReconciliation(executor: DbExecutor, id: string): P
 export async function pendingReconciliationMonths(executor: DbExecutor): Promise<MonthKey[]> {
   const rows = await executor.select({ id: smsReconciliation.id }).from(smsReconciliation).where(eq(smsReconciliation.state, "pending")).orderBy(asc(smsReconciliation.id));
   return rows.map((row) => row.id.slice("month:".length));
+}
+
+/**
+ * The Toronto months in which a text message's estimate was made and that have no complete reconciliation, oldest first: a month the daily
+ * job never reached (it did not run, or ran too late to be the month before) shows as "pending reconciliation (not_run)" until it is
+ * reconciled, so it is due as much as a month with a pending row. The caller leaves out the month that has not ended.
+ */
+export async function unreconciledEstimateMonths(executor: DbExecutor): Promise<MonthKey[]> {
+  const rows = await executor.execute<{ month: string }>(sql`
+    select distinct to_char(e.at at time zone ${TORONTO}::text, 'YYYY-MM') as month
+    from spend_event e
+    where e.kind = ${SMS_KIND}
+      and not exists (
+        select 1 from sms_reconciliation r
+        where r.state = 'complete' and r.id = 'month:' || to_char(e.at at time zone ${TORONTO}::text, 'YYYY-MM'))
+    order by 1`);
+  return rows.map((row) => row.month);
 }
 
 /** Records an attempt that did not complete: the reason and one more attempt, nothing else. A complete reconciliation is left as it is (returns false). */
