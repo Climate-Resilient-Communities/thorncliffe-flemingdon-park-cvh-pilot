@@ -46,6 +46,12 @@ describe("the suggested acknowledgement", () => {
     expect(text).toBe("Several things are wrong at 4 Milepost Pl: power is out and water is off. We are finding out more. More information to come.");
   });
 
+  it("reads a type it has no wording for as 'other' and does not throw, so the database's own list of types can refuse it", () => {
+    const where = buildings(["nonsense"], [{ rsn: "1", floors: null }]);
+    expect(suggestedAck(["nonsense"], where, PLANS)).toBe(suggestedAck(["other"], buildings(["other"], [{ rsn: "1", floors: null }]), PLANS));
+    expect(() => suggestedAck(["power", "nonsense"], buildings(["nonsense", "power"], [{ rsn: "1", floors: null }]), PLANS)).not.toThrow();
+  });
+
   it("falls back to the place's id for a place it has no name for", () => {
     expect(suggestedAck(["power"], buildings(["power"], [{ rsn: "999", floors: null }]), PLANS)).toContain("at 999.");
   });

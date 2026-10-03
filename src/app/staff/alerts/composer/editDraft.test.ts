@@ -1,5 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import type { AlertRefusal, EntryContent, EntryView } from "@/modules/alerting";
+import { draftFingerprint, type AlertRefusal, type EntryContent, type EntryView } from "@/modules/alerting";
 import { composeRefusalMessage, composerLocation, pullBackFromForm, saveDraftFromForm, type EditDeps } from "./editDraft";
 
 const ALERT = "01900000-0000-7000-8000-00000000a1e7";
@@ -82,7 +82,7 @@ describe("saving the draft from the composer's form", () => {
     const { saveDraft, wired } = deps();
     const state = await saveDraftFromForm(wired, session, form([...refs, ["text", "The elevator is out."], ["valid-mode", "resolved"]]));
 
-    expect(state).toEqual({ status: "saved", location: `/staff/alerts/ack?alert=${ALERT}&entry=${ENTRY}&saved=1` });
+    expect(state).toEqual({ status: "saved", location: `/staff/alerts/ack?alert=${ALERT}&entry=${ENTRY}&saved=1`, fingerprint: draftFingerprint(content) });
     const [actor, ref, saved] = saveDraft.mock.calls[0];
     expect(actor).toEqual(session);
     expect(ref).toEqual({ alertId: ALERT, entryId: ENTRY });
@@ -93,7 +93,18 @@ describe("saving the draft from the composer's form", () => {
   it("stays where it is when it is the first half of a submit", async () => {
     const { wired } = deps();
     const state = await saveDraftFromForm(wired, session, form([...refs, ["text", "x"], ["then", "submit"]]));
-    expect(state).toEqual({ status: "saved", location: `/staff/alerts/ack?alert=${ALERT}&entry=${ENTRY}` });
+    expect(state).toEqual({ status: "saved", location: `/staff/alerts/ack?alert=${ALERT}&entry=${ENTRY}`, fingerprint: draftFingerprint(content) });
+  });
+
+  it("answers with the fingerprint of the draft as saved, which a submit then names", async () => {
+    const saved = { ...content, text: "Saved text." } as EntryContent;
+    const { wired } = deps();
+    wired.alerting = () => ({ getEntry: async () => entryOf("ack"), saveDraft: async () => ({ ok: true as const, value: { ...entryOf("ack"), content: saved } }), returnEntry: async () => ({ ok: false as const, error: "NOT_ALLOWED" as const }) }) as unknown as ReturnType<EditDeps["alerting"]>;
+
+    const state = await saveDraftFromForm(wired, session, form([...refs, ["text", "Saved text."], ["then", "submit"]]));
+
+    expect(state).toMatchObject({ status: "saved", fingerprint: draftFingerprint(saved) });
+    expect(draftFingerprint(saved)).not.toBe(draftFingerprint(content));
   });
 
   it("goes back to the alert composer for an update", async () => {

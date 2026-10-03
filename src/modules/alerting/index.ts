@@ -75,6 +75,7 @@ export type {
   EntryView,
   LogDisruptionInput,
   NewAlertInput,
+  SubmitMode,
   SubmitStart,
   ThreadView,
 } from "./application/lifecycle";
@@ -94,12 +95,14 @@ export {
   VALID_UNTIL_MAX_DAYS,
   audienceBuildings,
   contentRefusal,
+  draftFingerprint,
   isWideContent,
   sameContent,
   validUntilRefusal,
   type ContentRefusal,
   type EntryContent,
   type Phase,
+  type ValidUntilMode,
   type ValidUntilRefusal,
 } from "./domain/content";
 export {

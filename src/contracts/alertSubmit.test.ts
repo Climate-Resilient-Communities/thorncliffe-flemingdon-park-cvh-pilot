@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  ATTEMPT_STALE_MS,
   ATTEMPT_STATES,
   EntryStateSchema,
   LANGUAGE_RESULTS,
@@ -46,6 +47,16 @@ describe("the submit request", () => {
     }
   });
 
+  it("may name the fingerprint of the draft the author saved and saw, which must be a SHA-256, and nothing else", () => {
+    const ok = { v: 1, alert_id: ALERT, entry_id: ENTRY, key: KEY };
+    expect(SubmitRequestSchema.safeParse({ ...ok, draft: HASH }).success).toBe(true);
+    for (const bad of ["abc", "A".repeat(64), `${HASH}0`, 5, null]) expect(SubmitRequestSchema.safeParse({ ...ok, draft: bad }).success, String(bad)).toBe(false);
+  });
+
+  it("is told how long an attempt may be taken to be alive: 90 s, which the browser also waits for a sign of its key", () => {
+    expect(ATTEMPT_STALE_MS).toBe(90_000);
+  });
+
   it("accepts a key of 16 to 64 letters, digits, hyphens and underscores", () => {
     expect(SUBMIT_KEY_PATTERN.test("a".repeat(16))).toBe(true);
     expect(SUBMIT_KEY_PATTERN.test("a".repeat(64))).toBe(true);
@@ -62,6 +73,10 @@ describe("the retranslate request", () => {
     expect(RetranslateRequestSchema.safeParse({ ...ok, seen_version: 0 }).success).toBe(false);
     expect(RetranslateRequestSchema.safeParse({ ...ok, seen_hash: "abc" }).success).toBe(false);
     expect(RetranslateRequestSchema.safeParse({ v: 1, alert_id: ALERT, entry_id: ENTRY, key: KEY }).success).toBe(false);
+  });
+
+  it("names no draft: it works on the pending version, so a fingerprint of a draft is refused", () => {
+    expect(RetranslateRequestSchema.safeParse({ v: 1, alert_id: ALERT, entry_id: ENTRY, key: KEY, seen_version: 2, seen_hash: HASH, draft: HASH }).success).toBe(false);
   });
 });
 

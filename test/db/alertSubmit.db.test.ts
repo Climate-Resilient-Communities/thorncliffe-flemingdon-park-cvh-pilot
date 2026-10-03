@@ -13,6 +13,7 @@ import {
   FROZEN_LANGS,
   createAlertSubmitter,
   createAlerting,
+  draftFingerprint,
   freezeContent,
   type AlertActor,
   type AlertLifecycle,
@@ -33,6 +34,7 @@ import {
   readTranslationRoutes,
   type SubmitTranslatorDeps,
 } from "../../src/modules/translation";
+import { suggestedAck } from "../../src/app/staff/alerts/suggestAck";
 import { createDb, type Db } from "../../src/platform/db";
 import { connect, serverUrl } from "./helpers";
 
@@ -110,7 +112,7 @@ interface Rig {
   gate(): { started: Promise<void>; release: () => void };
 }
 
-function rig(): Rig {
+function rig(over: Partial<AlertLifecycle> = {}): Rig {
   let behaviour: (call: { lang: string; model: string; attempt: number }) => Behaviour = ALL_GOOD;
   let readRoutes: SubmitTranslatorDeps["routes"] = () => readTranslationRoutes(app);
   let gate: Promise<void> | null = null;
@@ -132,7 +134,7 @@ function rig(): Rig {
     },
   };
   const submitter = createAlertSubmitter({
-    alerting,
+    alerting: { ...alerting, ...over },
     db: app,
     translator,
     translationConfigured: true,
@@ -294,11 +296,20 @@ describe("logging a disruption (O-11)", () => {
     expect(entry.content.text).toBe("Power is out (buildings).");
     expect(entry.content.types).toEqual(["power"]);
     expect(entry.content.phase).toBe("problem");
+    // Chosen as "until resolved", which the composer opens on.
+    expect(entry.content.validUntilMode).toBe("resolved");
+    expect((await entryRow(entry.id)).valid_until_mode).toBe("resolved");
     // 24 elapsed hours from now (the injected clock).
     expect(entry.content.validUntil).toEqual(new Date(NOW.getTime() + 24 * 3_600_000));
     // Floors ticked and a range, stored as floor ids, sorted and without repeats.
     expect(entry.content.audience).toEqual({ scope: "buildings", buildings: [{ rsn: RSN, floors: [floorId(3), floorId(4), floorId(5)] }], groups: [], types: ["power"] });
     expect((await auditRows()).map((row) => [row.action, row.outcome])).toEqual([["alert.created", "ok"]]);
+  });
+
+  it("starts a draft whose time was given as a date and time, not as 'until resolved'", async () => {
+    const result = await log(author, { validUntil: new Date("2026-10-02T03:00:00Z") });
+    if (!result.ok) throw new Error(`refused: ${result.error}`);
+    expect(result.value.entry.content).toMatchObject({ validUntil: new Date("2026-10-02T03:00:00Z"), validUntilMode: "at" });
   });
 
   it("takes several types, sorted, and a neighbourhood for the neighbourhood-wide ones", async () => {
@@ -339,6 +350,13 @@ describe("logging a disruption (O-11)", () => {
     expect(Number((await owner`select count(*) as n from alert`)[0].n)).toBe(0);
   });
 
+  it("refuses a type nobody knows with UNKNOWN_TYPE when the first text is the real suggested one: making it never throws before the database can refuse", async () => {
+    const result = await log(author, { types: ["nonsense"], textFor: (audience) => suggestedAck(["nonsense"], audience, []) });
+
+    expect(result).toEqual({ ok: false, error: "UNKNOWN_TYPE" });
+    expect(Number((await owner`select count(*) as n from alert`)[0].n)).toBe(0);
+  });
+
   it("refuses a Director, and an Ambassador for a neighbourhood or a building they are not assigned to, each recorded as a refusal", async () => {
     expect(await log(director)).toEqual({ ok: false, error: "NOT_ALLOWED" });
     expect(await log(ambassador, { types: ["heat"], place: { scope: "neighbourhood", neighbourhoodIds: ["TP"] } })).toEqual({ ok: false, error: "NOT_ALLOWED" });
@@ -358,6 +376,33 @@ describe("saving the composer's draft", () => {
     if (!saved.ok) throw new Error(`refused: ${saved.error}`);
     expect(saved.value.content.text).toBe("Power is out on floors 3 to 5.");
     expect([...saved.value.editorIds].sort()).toEqual([author.id, editor.id].sort());
+  });
+
+  it("keeps how the valid-until was chosen: 'until resolved' stays chosen through a save that does not say, and the audience pickers; a save that says changes it", async () => {
+    const ref = await newDraft();
+    expect((await entryRow(ref.entryId)).valid_until_mode).toBe("at");
+
+    const resolved = await alerting.saveDraft(actorOf(author), ref, content({ validUntil: new Date(NOW.getTime() + 24 * 3_600_000), validUntilMode: "resolved" }));
+    if (!resolved.ok) throw new Error(`refused: ${resolved.error}`);
+    expect(resolved.value.content.validUntilMode).toBe("resolved");
+    expect((await entryRow(ref.entryId)).valid_until_mode).toBe("resolved");
+
+    // A save that names no mode (the audience pickers go through the same write) leaves the author's choice.
+    const picked = await alerting.chooseAudiencePlace(actorOf(author), ref, { scope: "buildings", buildings: [{ rsn: OTHER_RSN, floors: null }] });
+    expect(picked.ok).toBe(true);
+    const unsaid = await alerting.saveDraft(actorOf(author), ref, { ...content({ text: "Edited." }), validUntilMode: undefined });
+    expect(unsaid.ok).toBe(true);
+    expect((await entryRow(ref.entryId)).valid_until_mode).toBe("resolved");
+
+    const at = await alerting.saveDraft(actorOf(author), ref, content({ validUntilMode: "at" }));
+    expect(at.ok).toBe(true);
+    expect((await alerting.getEntry(ref))?.content.validUntilMode).toBe("at");
+    await expect(
+      owner.begin(async (tx) => {
+        await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
+        await tx`update alert_entry set valid_until_mode = 'sometime' where id = ${ref.entryId}`;
+      }),
+    ).rejects.toThrow(/valid_until_mode/);
   });
 
   it("refuses a valid-until in the past, or more than 7 days ahead, and changes nothing", async () => {
@@ -547,6 +592,70 @@ describe("a submit whose outcome the browser did not see", () => {
     expect((await entryRow(ref.entryId)).version).toBe(1);
   });
 
+  it("when the freezing transaction commits and the call that made it then throws (the answer to COMMIT is lost), reports what the stored attempt says: committed, one pending version, no refusal audited and no failure raised", async () => {
+    const lostAnswer = rig({
+      completeSubmit: async (...args: Parameters<AlertLifecycle["completeSubmit"]>) => {
+        await alerting.completeSubmit(...args);
+        throw new Error("connection reset after COMMIT");
+      },
+    });
+    const ref = await newDraft();
+
+    const report = await lostAnswer.submitter.submit(actorOf(author), ref, KEYS.one);
+
+    expect(report).toEqual({ state: "committed", key: KEYS.one, outcome: null });
+    expect(await pendingCount(ref.alertId)).toBe(1);
+    expect((await attempts(ref.entryId)).map((a) => [a.key, a.state, a.outcome])).toEqual([[KEYS.one, "committed", null]]);
+    expect((await auditRows()).filter((row) => row.action === "entry.submitted").map((row) => row.outcome)).toEqual(["ok"]);
+    expect((await opsRows()).filter((row) => row.kind === "alert.submit_failed")).toEqual([]);
+    // The same key returns that first result.
+    expect(await r.submitter.submit(actorOf(author), ref, KEYS.one)).toEqual({ state: "committed", key: KEYS.one, outcome: null });
+    expect((await entryRow(ref.entryId)).version).toBe(1);
+  });
+
+  it("when the app's own database connections are killed right after the commit, the answer to COMMIT is really lost: there is still one pending version, and the same key returns it", async () => {
+    const killed = rig({
+      completeSubmit: async (...args: Parameters<AlertLifecycle["completeSubmit"]>) => {
+        const done = await alerting.completeSubmit(...args);
+        expect(done.ok).toBe(true);
+        // The server ends every backend of the app's role: whatever the call was about to read, it never reads.
+        await owner`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'cvh_app_login' and pid <> pg_backend_pid()`;
+        throw new Error("connection terminated after COMMIT");
+      },
+    });
+    const ref = await newDraft();
+
+    const report = await killed.submitter.submit(actorOf(author), ref, KEYS.one);
+
+    // Whether the submitter could still read the attempt's state through the pool it lost, what it reports is never a second version.
+    expect(["committed", "failed"]).toContain(report.state);
+    await new Promise((resolve) => setTimeout(resolve, 300));
+    expect(await pendingCount(ref.alertId)).toBe(1);
+    expect((await attempts(ref.entryId)).map((a) => [a.key, a.state])).toEqual([[KEYS.one, "committed"]]);
+    expect((await auditRows()).filter((row) => row.action === "entry.submitted" && row.outcome === "ok")).toHaveLength(1);
+    // The browser asks again with the same key (or fetches the state): the first attempt's result, nothing frozen twice.
+    expect(await r.submitter.submit(actorOf(author), ref, KEYS.one)).toEqual({ state: "committed", key: KEYS.one, outcome: null });
+    expect(await pendingCount(ref.alertId)).toBe(1);
+    expect((await entryRow(ref.entryId)).version).toBe(1);
+  });
+
+  it("when the freezing transaction throws before it commits, ends the attempt as failed with one refusal audited and one failure raised, and the entry is still a draft", async () => {
+    const refused = rig({
+      completeSubmit: async () => {
+        throw new Error("connection refused before COMMIT");
+      },
+    });
+    const ref = await newDraft();
+
+    expect(await refused.submitter.submit(actorOf(author), ref, KEYS.one)).toEqual({ state: "failed", key: KEYS.one, outcome: "PREPARATION_FAILED" });
+
+    expect(await pendingCount(ref.alertId)).toBe(0);
+    expect((await entryRow(ref.entryId)).status).toBe("draft");
+    expect((await attempts(ref.entryId)).map((a) => [a.state, a.outcome])).toEqual([["failed", "PREPARATION_FAILED"]]);
+    expect((await auditRows()).filter((row) => row.action === "entry.submitted").map((row) => row.outcome)).toEqual(["refused"]);
+    expect((await opsRows()).filter((row) => row.kind === "alert.submit_failed")).toMatchObject([{ detail: { reason: "commit_failed" } }]);
+  });
+
   it("refuses a second press with another key while one is running, so two presses never make two pending versions", async () => {
     const ref = await newDraft();
     const held = r.gate();
@@ -615,6 +724,34 @@ describe("what a submit refuses", () => {
     expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict" } }]);
     // Submit again: the new press freezes the text as it is now.
     expect(await r.submitter.submit(actorOf(author), ref, KEYS.two)).toMatchObject({ state: "committed" });
+  });
+
+  it("refuses a draft that is not the one the author saved and saw, when another editor saved between the author's save and the press: nothing is prepared, nothing is frozen, no attempt is made", async () => {
+    const ref = await newDraft();
+    const saved = await alerting.saveDraft(actorOf(author), ref, content({ text: "Saved and seen by the author." }));
+    if (!saved.ok) throw new Error(`refused: ${saved.error}`);
+    const seen = draftFingerprint(saved.value.content);
+    // Someone else saves in between the author's save and the moment the submit begins.
+    await alerting.saveDraft(actorOf(editor), ref, content({ text: "Someone else's words." }));
+
+    expect(await r.submitter.submit(actorOf(author), ref, KEYS.one, seen)).toEqual({ state: "refused", refusal: "DRAFT_CHANGED" });
+
+    expect(r.fake.calls).toHaveLength(0);
+    expect(await attempts(ref.entryId)).toEqual([]);
+    expect(await pendingCount(ref.alertId)).toBe(0);
+    expect((await entryRow(ref.entryId)).original_text).toBe("Someone else's words.");
+    expect((await auditRows()).filter((a) => a.action === "entry.submitted")).toEqual([{ action: "entry.submitted", outcome: "refused", meta: { reason: "conflict" } }]);
+    // Saving again, the author sees what is there and submits that: the fingerprint of the draft as it now is goes through.
+    const again = await alerting.saveDraft(actorOf(author), ref, content({ text: "Someone else's words." }));
+    if (!again.ok) throw new Error(`refused: ${again.error}`);
+    expect(await r.submitter.submit(actorOf(author), ref, KEYS.two, draftFingerprint(again.value.content))).toMatchObject({ state: "committed" });
+    expect((await entryRow(ref.entryId)).original_text).toBe("Someone else's words.");
+  });
+
+  it("takes the draft as it is when no fingerprint is named", async () => {
+    const ref = await newDraft();
+    await alerting.saveDraft(actorOf(editor), ref, content({ text: "Whatever is there." }));
+    expect(await r.submitter.submit(actorOf(author), ref, KEYS.one)).toMatchObject({ state: "committed" });
   });
 
   it("refuses with a message and an ops event when translation_route cannot be read in time (AlertRoutesUnavailableError): nothing is translated or frozen", async () => {
@@ -714,6 +851,35 @@ describe("a possible duplicate", () => {
     const mine = await submitted(author);
 
     expect((await entryRow(mine.entryId)).possible_duplicate_of).toBe(wide.alertId);
+  });
+
+  it("is only for a new thread's first entry: a later update on an older thread is not flagged as a duplicate of a newer thread that overlaps it", async () => {
+    const older = await otherThread(content());
+    const newer = await submitted(author, {}, KEYS.two);
+    expect((await entryRow(newer.entryId)).possible_duplicate_of).toBe(older.alertId);
+
+    // A second entry (an update) of the older thread, written the way the next stories will: the author's draft on the open thread.
+    const update = randomUUID();
+    await owner.begin(async (tx) => {
+      await tx`select set_config('cvh.actor_id', ${editor.id}, true)`;
+      await tx`insert into alert_entry (id, alert_id, kind, author_id, editor_ids, original_text, types, audience, phase, valid_until)
+               values (${update}, ${older.alertId}, 'update', ${editor.id}, ${[editor.id]}, ${ENGLISH_ALERT}, ${["power"]}, ${tx.json(buildingAudience(["power"]))}, 'problem', ${new Date("2026-10-02T15:00:00Z")})`;
+    });
+    const report = await r.submitter.submit(actorOf(editor), { alertId: older.alertId, entryId: update }, KEYS.three);
+
+    expect(report).toMatchObject({ state: "committed" });
+    expect((await entryRow(update)).possible_duplicate_of).toBeNull();
+  });
+
+  it("is only against an older thread: the older thread, submitted after the newer one, is not flagged as a duplicate of it", async () => {
+    const older = await newDraft(editor, content());
+    const newer = await submitted(author, {}, KEYS.two);
+    // Nothing of the older thread was submitted yet, so there was nothing for the newer one to duplicate.
+    expect((await entryRow(newer.entryId)).possible_duplicate_of).toBeNull();
+
+    expect(await r.submitter.submit(actorOf(editor), older, KEYS.three)).toMatchObject({ state: "committed" });
+
+    expect((await entryRow(older.entryId)).possible_duplicate_of).toBeNull();
   });
 
   it("is none when nothing overlaps, and is not set on a drill", async () => {

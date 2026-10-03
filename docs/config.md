@@ -74,7 +74,10 @@ The attempt timeouts and deadlines are provisional until S04.01 has measured lat
 are re-measured from the per-call times recorded in `spend_event` (kind `translate`, purpose `alert`, no text) after the pilot's
 first two weeks and whenever a model or route changes. The translation cache (`translation_cache`) needs no setting: its key holds the
 prompt version, the check version and, for zh-Hant, OpenCC's version and configuration, so a change to any of them makes a fresh
-translation and nothing older is reused.
+translation and nothing older is reused. `CVH_FAKE_TRANSLATOR=sample` (local development and the end-to-end tests only; the
+environment check refuses it on Vercel) answers every language with a fixed sample sentence that is not a translation of the alert:
+it is cached under a prompt version of its own (`PROMPT_VERSION` followed by `+sample`) and records no spend, so nothing it makes is
+ever served under the key of a real model.
 
 ## Supabase (Auth settings)
 

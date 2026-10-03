@@ -10,21 +10,21 @@
 //
 // A refusal rolls the transaction back and is audited as refused in its own transaction (S01.04).
 import { randomBytes } from "node:crypto";
-import { and, arrayOverlaps, desc, eq, inArray, ne, sql } from "drizzle-orm";
+import { and, arrayOverlaps, desc, eq, inArray, lt, ne, or, sql } from "drizzle-orm";
 import { decidePolicy, meetsAssurance } from "../../identity";
 import type { Db, DbTransaction } from "../../../platform/db";
 import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
 import { alert, alertEntry, alertEntryTranslation, alertSubmitAttempt, feedVersion } from "../adapters/schema";
 import { audienceRsns, type Audience } from "../../../contracts/audience";
-import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase } from "../domain/content";
+import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
 import { possibleDuplicateOf } from "../domain/duplicates";
 import { AUTHORED_KINDS, checkApproval, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
 import type { AlertRefusal } from "../domain/refusals";
 import { ENTRY_CHANNELS, SUBMIT_KEY_PATTERN, isStaleAttempt, type AttemptKind, type AttemptState } from "../domain/submitAttempt";
 import { FROZEN_LANGS } from "../domain/translations";
 import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
-import type { AlertActor, AlertAudit, AlertResult, EntryPreparer, FrozenContent, PrepareContext, StaffDirectory } from "./ports";
+import type { AlertActor, AlertAudit, AlertResult, FrozenContent, PrepareContext, StaffDirectory } from "./ports";
 import { AUDIT_REASON } from "./refusalReasons";
 import type { StaffStanding } from "../../identity";
 
@@ -135,6 +135,12 @@ export interface EntryState {
   translations: readonly { lang: string; status: string; machine: boolean }[];
 }
 
+/**
+ * How a press starts: a submit, with the fingerprint (`draftFingerprint`) of the draft the author saved and saw just before pressing, or a
+ * "Try translation again" of the pending version and hash the person was looking at.
+ */
+export type SubmitMode = { kind: "submit"; draft?: string } | { kind: "retranslate"; seen: ApprovalBinding };
+
 /** What starting a submit settled: an attempt already made with this key (its first result), or the work to do. */
 export type SubmitStart =
   | { kind: "replay"; attempt: AttemptView }
@@ -227,6 +233,7 @@ const contentOf = (row: EntryRow): EntryContent => ({
   audience: row.audience as Audience,
   phase: row.phase as Phase,
   validUntil: row.validUntil,
+  validUntilMode: row.validUntilMode as ValidUntilMode,
 });
 
 type AttemptRow = typeof alertSubmitAttempt.$inferSelect;
@@ -375,7 +382,15 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     await mustExist(tx, content.audience);
     const [saved] = await tx
       .update(alertEntry)
-      .set({ originalText: content.text, types: [...content.types], audience: content.audience, phase: content.phase, validUntil: content.validUntil })
+      .set({
+        originalText: content.text,
+        types: [...content.types],
+        audience: content.audience,
+        phase: content.phase,
+        validUntil: content.validUntil,
+        // A save that names no mode (the audience pickers) leaves the author's choice as it was.
+        ...(content.validUntilMode ? { validUntilMode: content.validUntilMode } : {}),
+      })
       .where(eq(alertEntry.id, entry.id))
       .returning();
     return entryOf(saved);
@@ -398,12 +413,12 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     thread: ThreadRow,
     actor: AlertActor,
     frozen: FrozenContent,
-    expected?: EntryContent,
-    duplicateOf: string | null = null,
+    expected: EntryContent,
+    duplicateOf: string | null,
   ): Promise<EntryView> {
     mustTransition(thread, entry, "pending_approval");
     const content = contentOf(entry);
-    if (expected && !sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
+    if (!sameContent(expected, content)) throw new Refused("DRAFT_CHANGED");
     const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, now());
     if (invalid) throw new Refused(invalid);
     await mustExist(tx, content.audience);
@@ -502,6 +517,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         audience: input.content.audience,
         phase: input.content.phase,
         validUntil: input.content.validUntil,
+        validUntilMode: input.content.validUntilMode ?? "at",
         createdAt: ids.createdAt,
       })
       .returning();
@@ -518,9 +534,26 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
 
   // ---- Submit attempts (S04.05) ---------------------------------------------------------------------------------------
 
-  /** The open, non-drill thread an entry of these types and this audience may duplicate (advisory: nothing is refused for it). */
-  async function findPossibleDuplicate(tx: DbTransaction, thread: ThreadRow, content: EntryContent): Promise<string | null> {
+  /**
+   * The open, non-drill thread an entry of these types and this audience may duplicate (advisory: nothing is refused for it). Only a new
+   * thread's first entry has one, and only an older thread can be what it duplicates: "a new thread overlapping an open ... thread"
+   * (spine, Duplicates). An update on a thread that is already running is not a new thread, and must not send the approver to a newer
+   * thread that overlaps it, which would point at withdrawing the wrong one.
+   */
+  async function findPossibleDuplicate(tx: DbTransaction, thread: ThreadRow, entry: EntryRow, content: EntryContent): Promise<string | null> {
     if (thread.isDrill) return null;
+    const [earlier] = await tx
+      .select({ id: alertEntry.id })
+      .from(alertEntry)
+      .where(
+        and(
+          eq(alertEntry.alertId, thread.id),
+          ne(alertEntry.id, entry.id),
+          or(lt(alertEntry.createdAt, entry.createdAt), and(eq(alertEntry.createdAt, entry.createdAt), lt(alertEntry.id, entry.id))),
+        ),
+      )
+      .limit(1);
+    if (earlier) return null;
     const rows = await tx
       .select({ alertId: alertEntry.alertId, audience: alertEntry.audience })
       .from(alertEntry)
@@ -530,6 +563,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           eq(alert.status, "open"),
           eq(alert.isDrill, false),
           ne(alert.id, thread.id),
+          lt(alert.createdAt, thread.createdAt),
           inArray(alertEntry.status, ["pending_approval", "approved"]),
           arrayOverlaps(alertEntry.types, [...content.types]),
         ),
@@ -554,7 +588,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     actor: AlertActor,
     ref: EntryRef,
     key: string,
-    mode: { kind: "submit" } | { kind: "retranslate"; seen: ApprovalBinding },
+    mode: SubmitMode,
   ): Promise<AlertResult<SubmitStart>> {
     return change(mode.kind === "submit" ? "entry.submitted" : "entry.returned", actor, { type: "alert_entry", id: ref.entryId }, async (tx): Promise<SubmitStart> => {
       if (!SUBMIT_KEY_PATTERN.test(key)) throw new Refused("SUBMIT_KEY_INVALID");
@@ -591,6 +625,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         mustAuthor(standing, actor.staffId, contentOf(row));
         mustTransition(thread, row, "pending_approval");
         content = contentOf(row);
+        // The draft the author saved and saw is the draft that is submitted: someone else saving in between is refused, nothing frozen.
+        if (mode.draft !== undefined && mode.draft !== draftFingerprint(content)) throw new Refused("DRAFT_CHANGED");
       } else {
         if (row.status !== "pending_approval") throw new Refused("ENTRY_NOT_PENDING");
         if (row.version !== mode.seen.version || row.contentHash !== mode.seen.contentHash) throw new Refused("ENTRY_CHANGED");
@@ -600,7 +636,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
       if (invalid) throw new Refused(invalid);
       await mustExist(tx, content.audience);
-      const duplicateOf = await findPossibleDuplicate(tx, thread, content);
+      const duplicateOf = await findPossibleDuplicate(tx, thread, row, content);
       const slug = thread.slug;
       if (slug === null) throw new Error("alerting: a thread has no slug");
       const [created] = await tx.insert(alertSubmitAttempt).values({ entryId: row.id, key, kind: mode.kind, actorId: actor.staffId }).returning();
@@ -620,18 +656,23 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /**
-   * Ends an attempt that did not freeze anything: `running` becomes `failed` with the reason. Only the person who pressed it can end
-   * it. It touches the attempt row alone (no thread lock), so it can never wait on, or deadlock with, the transaction that freezes
-   * the entry: whichever reaches the row first wins, and a freeze that comes second finds the attempt failed and is refused.
+   * Ends an attempt that did not freeze anything: `running` becomes `failed` with the reason, and the answer says whether this call did it
+   * (false: the attempt was no longer running, because it committed, ended already or was taken as abandoned, or the write could not be
+   * made). Only the person who pressed it can end it. It touches the attempt row alone (no thread lock), so it can never wait on, or
+   * deadlock with, the transaction that freezes the entry: whichever reaches the row first wins, and a freeze that comes second finds the
+   * attempt failed and is refused.
    */
-  async function markFailed(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal): Promise<void> {
+  async function markFailed(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal): Promise<boolean> {
     try {
-      await db
+      const ended = await db
         .update(alertSubmitAttempt)
         .set({ state: "failed", outcome })
-        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running"), eq(alertSubmitAttempt.actorId, actor.staffId)));
+        .where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key), eq(alertSubmitAttempt.state, "running"), eq(alertSubmitAttempt.actorId, actor.staffId)))
+        .returning({ key: alertSubmitAttempt.key });
+      return ended.length > 0;
     } catch {
       // The attempt stays `running` and reads as abandoned after the submit function's time limit: the entry is never stuck.
+      return false;
     }
   }
 
@@ -659,9 +700,13 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     return done;
   }
 
-  /** Ends an attempt that could not freeze anything (the preparation failed or was refused), and records the refusal (S01.04). */
-  async function failSubmit(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal, isDrill = false): Promise<void> {
-    await markFailed(actor, ref, key, outcome);
+  /**
+   * Ends an attempt that could not freeze anything (the preparation failed or was refused), and records the refusal (S01.04), both only
+   * when this call ended it: an attempt that had already committed (a freezing transaction whose answer was lost) or ended is left as it is,
+   * with no refusal added to its audit trail. True when this call ended the attempt.
+   */
+  async function failSubmit(actor: AlertActor, ref: EntryRef, key: string, outcome: AlertRefusal, isDrill = false): Promise<boolean> {
+    if (!(await markFailed(actor, ref, key, outcome))) return false;
     await audit.recordRefusal(db, {
       action: "entry.submitted",
       actorStaffId: UUID.test(actor.staffId) ? actor.staffId : null,
@@ -670,6 +715,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       isDrill,
       meta: { reason: AUDIT_REASON[outcome] },
     });
+    return true;
   }
 
   return {
@@ -727,6 +773,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           audience: resolved.value,
           phase: input.phase ?? "problem",
           validUntil: input.validUntil ?? new Date(createdAt.getTime() + UNTIL_RESOLVED_MS),
+          // The draft starts "until resolved" unless a time was given.
+          validUntilMode: input.validUntil ? "at" : "resolved",
         };
         const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, createdAt);
         if (invalid) throw new Refused(invalid);
@@ -781,21 +829,6 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const resolved = resolveGroups(groups);
         if (!resolved.ok) throw new Refused(resolved.error);
         return writeDraft(tx, standing, actor, entry!, { ...current, audience: { ...current.audience, groups: resolved.value } });
-      });
-    },
-
-    /**
-     * Submit: freezes the prepared content (translated, rendered and hashed outside any lock, by the
-     * caller) and moves the draft to `pending_approval` as the next version. `expected` is the
-     * content the preparation was made from; a draft that changed since is refused (DRAFT_CHANGED)
-     * and nothing is frozen.
-     */
-    async submitEntry(actor: AlertActor, ref: EntryRef, frozen: FrozenContent, expected?: EntryContent): Promise<AlertResult<EntryView>> {
-      return change("entry.submitted", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
-        const { thread, standing, entry } = await open(tx, actor, ref);
-        mustBeEditor(entry!, actor.staffId);
-        mustAuthor(standing, actor.staffId, contentOf(entry!));
-        return submitIn(tx, entry!, thread, actor, frozen, expected);
       });
     },
 
@@ -893,33 +926,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       });
     },
 
-    /**
-     * "Try translation again" on a pending entry, through the same attempt a submit makes. In one short transaction it returns the
-     * entry to draft (the caller names the version and hash it was looking at, so a changed entry is refused), adding the person to
-     * `editor_ids`: they can no longer approve it. Then, outside any lock, it re-translates, renders and hashes the draft through
-     * `preparer`. Then, in a second short transaction, it re-submits as the next version with the new hash, refusing if the draft
-     * changed meanwhile. If preparing fails or is refused the entry stays a draft (the person an editor) and Submit is still there.
-     */
-    async retryTranslation(actor: AlertActor, ref: EntryRef, seen: ApprovalBinding, preparer: EntryPreparer): Promise<AlertResult<EntryView>> {
-      const key = newId();
-      const started = await beginSubmit(actor, ref, key, { kind: "retranslate", seen });
-      if (!started.ok) return started;
-      if (started.value.kind !== "started") return { ok: false, error: "SUBMIT_IN_PROGRESS" };
-      const { expected, context, possibleDuplicateOf: duplicateOf } = started.value;
-      let prepared: Awaited<ReturnType<EntryPreparer["prepare"]>>;
-      try {
-        prepared = await preparer.prepare(expected, context);
-      } catch {
-        await failSubmit(actor, ref, key, "PREPARATION_FAILED", context.isDrill);
-        return { ok: false, error: "PREPARATION_FAILED" };
-      }
-      if (!prepared.ok) {
-        await failSubmit(actor, ref, key, prepared.error, context.isDrill);
-        return { ok: false, error: prepared.error };
-      }
-      return completeSubmit(actor, ref, key, prepared.value, expected, duplicateOf);
-    },
-
+    // Submit and "Try translation again" have one way in: beginSubmit, the preparation outside every lock, then completeSubmit (or
+    // failSubmit), run by createSubmitter (submit.ts). There is no other use case that freezes an entry, so none can skip the attempt table,
+    // the possible-duplicate check or the refusals of a translation that could not be made.
     beginSubmit,
     completeSubmit,
     failSubmit,

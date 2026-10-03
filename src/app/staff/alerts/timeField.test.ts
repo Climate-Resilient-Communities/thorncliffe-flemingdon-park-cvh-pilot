@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { fieldsOfInstant, foldQuestionValues, parseTimeFields, timeFieldsOf } from "./timeField";
+import { fieldsOfInstant, fieldsOfStoredInstant, foldQuestionValues, parseTimeFields, timeFieldsOf } from "./timeField";
 
 const form = (entries: Record<string, string>) => {
   const data = new FormData();
@@ -74,6 +74,31 @@ describe("fieldsOfInstant", () => {
     for (const iso of ["2026-10-04T13:30:00.000Z", "2026-12-31T04:59:00.000Z", "2026-07-01T00:00:00.000Z"]) {
       expect(parseTimeFields(fieldsOfInstant(new Date(iso)))).toEqual({ ok: true, instant: new Date(iso) });
     }
+  });
+});
+
+describe("fieldsOfStoredInstant", () => {
+  const EDT = new Date("2026-11-01T05:30:00.000Z");
+  const EST = new Date("2026-11-01T06:30:00.000Z");
+
+  it("is the same fields as fieldsOfInstant for a time that is not repeated", () => {
+    for (const iso of ["2026-10-04T13:30:00.000Z", "2026-12-04T02:15:00.000Z", "2026-11-01T04:30:00.000Z", "2026-11-01T07:30:00.000Z", "2026-03-08T06:59:00.000Z"]) {
+      expect(fieldsOfStoredInstant(new Date(iso)), iso).toEqual(fieldsOfInstant(new Date(iso)));
+    }
+  });
+
+  it("carries the answer to the clock-change question for a time in the repeated autumn hour, EDT as before and EST as after", () => {
+    expect(fieldsOfStoredInstant(EDT)).toEqual({ date: "2026-11-01", time: "01:30", fold: "before" });
+    expect(fieldsOfStoredInstant(EST)).toEqual({ date: "2026-11-01", time: "01:30", fold: "after" });
+    // Seconds (an "until resolved" time has them) do not change which of the two it is.
+    expect(fieldsOfStoredInstant(new Date("2026-11-01T05:30:42.000Z")).fold).toBe("before");
+    expect(fieldsOfStoredInstant(new Date("2026-11-01T06:30:42.000Z")).fold).toBe("after");
+  });
+
+  it("reads back, with no question asked, as the instant that was stored; the bare fields of that instant would ask again", () => {
+    expect(parseTimeFields(fieldsOfStoredInstant(EDT))).toEqual({ ok: true, instant: EDT });
+    expect(parseTimeFields(fieldsOfStoredInstant(EST))).toEqual({ ok: true, instant: EST });
+    expect(parseTimeFields(fieldsOfInstant(EST))).toMatchObject({ ok: false, problem: "ambiguous" });
   });
 });
 

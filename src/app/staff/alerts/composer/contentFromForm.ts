@@ -58,6 +58,7 @@ export function contentFromForm(form: FormData, current: EntryContent, now: Date
       audience,
       phase: (PHASES as readonly string[]).includes(String(phase)) ? (phase as Phase) : current.phase,
       validUntil,
+      validUntilMode: mode,
     },
   };
 }

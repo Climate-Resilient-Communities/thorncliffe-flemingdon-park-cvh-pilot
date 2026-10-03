@@ -48,6 +48,11 @@ describe("contentFromForm", () => {
     expect(content(contentFromForm(form([]), draft, NOW)).validUntil).toEqual(new Date(NOW.getTime() + UNTIL_RESOLVED_MS));
   });
 
+  it("records how the valid-until was chosen, so the composer opens on that choice and a later save means the same thing", () => {
+    expect(content(contentFromForm(form([["valid-mode", "resolved"]]), draft, NOW)).validUntilMode).toBe("resolved");
+    expect(content(contentFromForm(form([["valid-mode", "at"], ["valid-date", "2026-10-06"], ["valid-time", "17:45"]]), draft, NOW)).validUntilMode).toBe("at");
+  });
+
   it("reads a date and a time as Toronto time", () => {
     const result = content(contentFromForm(form([["valid-mode", "at"], ["valid-date", "2026-10-06"], ["valid-time", "17:45"]]), draft, NOW));
     expect(result.validUntil).toEqual(new Date("2026-10-06T21:45:00.000Z"));

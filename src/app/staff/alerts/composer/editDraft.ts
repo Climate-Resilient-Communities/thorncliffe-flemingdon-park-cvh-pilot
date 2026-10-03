@@ -1,7 +1,7 @@
 // Saving the composer's draft and pulling a submitted entry back to a draft (O-12, O-02, S04.05): what the forms send, as the use cases
 // take it, and what the person is told. The use cases judge everything that matters (who may change the entry, the text limit, the
 // valid-until in the future and at most 7 days ahead, the audience): this reads the form and turns refusals into words.
-import { ALERT_TEXT_MAX, type AlertLifecycle, type AlertRefusal } from "@/modules/alerting";
+import { ALERT_TEXT_MAX, draftFingerprint, type AlertLifecycle, type AlertRefusal } from "@/modules/alerting";
 import { englishText } from "@/i18n/text";
 import type { StaffSession } from "../../session";
 import { draftRefOf, type DraftRef } from "../audience/editAudience";
@@ -14,7 +14,8 @@ export type ComposeState =
   | { status: "refused"; message: string }
   /** The valid-until is in the repeated hour of the clock change: the person says before or after. */
   | { status: "ask"; question: string; before: string; after: string }
-  | { status: "saved"; location: string }
+  /** `fingerprint` is the saved draft's (`draftFingerprint`): a submit names it, so a draft someone else changed in between is refused. */
+  | { status: "saved"; location: string; fingerprint: string }
   | { status: "pulled_back"; location: string };
 
 export interface EditDeps {
@@ -53,7 +54,11 @@ export async function saveDraftFromForm(deps: EditDeps, session: Pick<StaffSessi
   if (!read.ok) return read.problem.kind === "ask" ? { status: "ask", ...read.problem } : { status: "refused", message: read.problem.message };
   const result = await deps.alerting().saveDraft({ staffId: session.staffId, aal: session.aal }, ref, read.content);
   if (!result.ok) return refused(result.error);
-  return { status: "saved", location: composerLocation(entry.kind, ref, form.get("then") === "submit" ? {} : { saved: "1" }) };
+  return {
+    status: "saved",
+    location: composerLocation(entry.kind, ref, form.get("then") === "submit" ? {} : { saved: "1" }),
+    fingerprint: draftFingerprint(result.value.content),
+  };
 }
 
 /** "Pull back to edit": returns a submitted entry to a draft, so the person can change it. It needs a new submit. */

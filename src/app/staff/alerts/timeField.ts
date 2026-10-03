@@ -46,6 +46,23 @@ export function fieldsOfInstant(instant: Date): TimeFields {
   return { ...torontoFields(instant), fold: "" };
 }
 
+/**
+ * The fields to show for a time the person typed and the Hub stored: its Toronto date and time and, when that wall-clock time occurs twice (the
+ * hour the clocks repeat), their answer to "before or after the clock change", read back from the instant (EDT is before, EST after). Without it
+ * the stored time would be ambiguous again, and every later Save or Submit would ask the question again.
+ */
+export function fieldsOfStoredInstant(instant: Date): TimeFields {
+  const shown = torontoFields(instant);
+  const local = parseLocalDateTime(shown.date, shown.time);
+  const converted = local === null ? null : fromToronto(local);
+  if (converted !== null && !converted.ok && converted.reason === "ambiguous") {
+    // The instants are on the minute; a stored one may carry seconds ("until resolved"), so compare by the minute.
+    const minute = Math.floor(instant.getTime() / 60_000);
+    return { ...shown, fold: Math.floor(converted.before.getTime() / 60_000) === minute ? "before" : "after" };
+  }
+  return { ...shown, fold: "" };
+}
+
 /** The question a repeated time asks, as the strings fill it: the time (with no zone), the date, and the two readings with their zones. */
 export function foldQuestionValues(parse: Extract<TimeParse, { problem: "ambiguous" }>): { time: string; date: string; before: string; after: string } {
   const withoutZone = (instant: Date) => formatTorontoTime(instant).replace(/\s*[A-Z]{3,4}$/, "");

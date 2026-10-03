@@ -1197,7 +1197,7 @@
       leadUnknown: 'Translating into every language and rendering the text messages. This can take up to a minute. You can leave this page: it carries on, and what happened will be here when you come back.',
       summary: '{done} of {total} languages done',
       lost: 'We lost the connection before we saw the result. Checking what happened.',
-      notReached: 'The request did not reach the server, so nothing was submitted. Press Submit for approval again.',
+      notReached: 'We could not confirm that the request reached the server, so we do not know yet whether the alert was submitted. Press Submit for approval again: it sends the same request, so the alert cannot be submitted twice.',
       waiting: 'Waiting' },
     result: { translated: 'Translated', script_converted: 'Converted from Mandarin', fallback_en: 'Not translated: English with "Translation not available"' },
     committed: {

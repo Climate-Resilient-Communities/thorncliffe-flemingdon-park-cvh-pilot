@@ -134,6 +134,44 @@ describe("finishing inside the budget", () => {
     expect(20_000 + STOP_AFTER_ROUTES_MS).toBeLessThanOrEqual(result.budgetMs - 2000);
   });
 
+  it("counts the stop from the press: what the press used before the models were asked (spentMs) and the route read come off the time they get", async () => {
+    // The routes take 700 ms to read and the transaction that began the attempt took 1.3 s: the stop is 2 s sooner, at the longest route deadline plus 1 s.
+    const t = setup({
+      deps: {
+        storeGraceMs: 120_000,
+        routes: async () => {
+          await new Promise((resolve) => setTimeout(resolve, 700));
+          return SEEDED_ROUTES;
+        },
+        zhHant: () => new Promise<ZhHantConverter>(() => {}),
+      },
+    });
+    let done = false;
+
+    const run = t.submit.translate({ english: ENGLISH_ALERT, spentMs: 1_300 }).then((result) => {
+      done = true;
+      return result;
+    });
+    // 700 ms of the route read, then the stop 20 s + 3 s - 2 s after it.
+    await vi.advanceTimersByTimeAsync(700 + 20_000 + STOP_AFTER_ROUTES_MS - 2_000 - 1);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(2);
+
+    expect(done).toBe(true);
+    expect((await run).stoppedAtBudget).toBe(true);
+  });
+
+  it("stops at once when the press has already used more than the models could be given", async () => {
+    const t = setup({ behaviour: () => ({ hang: true }) });
+
+    const run = t.submit.translate({ english: ENGLISH_ALERT, spentMs: 60_000 });
+    await vi.advanceTimersByTimeAsync(1);
+    const result = await run;
+
+    expect(result.stoppedAtBudget).toBe(true);
+    expect(result.translations.every((translated) => translated.status === "fallback_en")).toBe(true);
+  });
+
   it("is cancelled by its caller: what is still running ends as the English fallback, and that is not the budget's stop", async () => {
     const t = setup({ behaviour: () => ({ hang: true }) });
     const caller = new AbortController();

@@ -14,6 +14,8 @@
 --     `failed`): the same key returns the first attempt's result, a new key is allowed only after a confirmed failure,
 --     and a partial unique index lets only one attempt run per entry. It also holds each language's progress while
 --     the translation runs outside any lock.
+--  5. `alert_entry.valid_until_mode`: whether the author chose "until resolved" or a date and time for the valid-until,
+--     so the composer opens on the choice that was made.
 --
 -- New constraints on tables that already exist are NOT VALID (expand-only; see 20261002290000_alert_audience_shape.sql
 -- for why none is validated here): alert and alert_entry hold no row in any environment that has not been through
@@ -26,8 +28,12 @@
 -- 1. alert.slug
 -- ---------------------------------------------------------------------------------------------
 alter table alert add column slug text;
--- Threads made before this migration (none outside development databases) get a slug of their own, from their id.
+-- Threads made before this migration (none outside development databases) get a slug of their own, from their id. S04.03's guard
+-- refuses every update of a closed thread (ALERT_CLOSED), so it is off for this one statement: closed threads need a slug too, and the
+-- guard it replaces below is back on, in this same transaction, before anything else can write.
+alter table alert disable trigger alert_guard;
 update alert set slug = substr(md5(id::text), 1, 8) where slug is null;
+alter table alert enable trigger alert_guard;
 create unique index alert_slug_key on alert (slug);
 alter table alert add constraint alert_slug_valid check (slug is not null and slug ~ '^[a-z0-9]{6,16}$') not valid;
 
@@ -67,6 +73,13 @@ alter table alert_entry add constraint alert_entry_duplicate_not_self check (pos
 -- A draft holds nothing frozen, and the duplicate link is frozen with the entry at submit.
 alter table alert_entry add constraint alert_entry_draft_no_duplicate check (status <> 'draft' or possible_duplicate_of is null) not valid;
 grant update (possible_duplicate_of) on table alert_entry to cvh_app;
+-- How the author chose the valid-until: `resolved` ("until resolved": 24 elapsed hours from the press, renewed by each save and submit) or `at`
+-- (a date and time). The composer opens on the choice that was made, so a later Save or Submit keeps meaning what the author chose, and the
+-- next stories' composers default to the previous entry's choice (epic E04, Valid until). It is part of the draft's content, not of what is
+-- hashed: the valid-until instant is.
+alter table alert_entry add column valid_until_mode text not null default 'at';
+alter table alert_entry add constraint alert_entry_valid_until_mode_valid check (valid_until_mode in ('at', 'resolved')) not valid;
+grant update (valid_until_mode) on table alert_entry to cvh_app;
 
 -- The link is set by the submit that freezes the entry (draft to pending_approval) and cleared by the return to draft; it never
 -- changes in any other update (a pending entry cannot be changed at all, and an approval keeps what it approves). That is S04.03's
@@ -131,7 +144,8 @@ begin
     or new.types is distinct from old.types
     or new.audience is distinct from old.audience
     or new.phase is distinct from old.phase
-    or new.valid_until is distinct from old.valid_until;
+    or new.valid_until is distinct from old.valid_until
+    or new.valid_until_mode is distinct from old.valid_until_mode;
 
   if new.status = old.status then
     -- No transition: only a draft can change, and only its content.

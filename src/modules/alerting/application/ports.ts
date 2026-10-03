@@ -91,6 +91,11 @@ export interface PrepareHooks {
   onLanguage?: (translation: FrozenTranslation) => void;
   /** Called once the submit budget is known (the longest route deadline plus 5 s), before any model is asked. */
   onBudget?: (budgetMs: number) => void;
+  /**
+   * Milliseconds of the press already used when the preparation starts (the transaction that began the attempt). The budget is counted
+   * from the press, not from the models being asked, so the translation's stop comes that much sooner.
+   */
+  spentMs?: number;
 }
 
 /**

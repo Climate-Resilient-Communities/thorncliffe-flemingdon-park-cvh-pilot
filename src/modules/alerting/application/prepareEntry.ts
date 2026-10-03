@@ -21,6 +21,7 @@ export interface EntryTranslator {
     signal?: AbortSignal;
     onLanguage?: (translated: Translated) => void;
     onBudget?: (budgetMs: number) => void;
+    spentMs?: number;
   }): Promise<{ translations: readonly Translated[] }>;
 }
 
@@ -37,6 +38,7 @@ export function createEntryPreparer(deps: EntryPreparerDeps): EntryPreparer {
         english: content.text,
         signal: hooks.signal,
         onBudget: hooks.onBudget,
+        spentMs: hooks.spentMs,
         onLanguage: (translated) => {
           // Progress is for a screen: a text the mapper refuses here is refused again, loudly, when the whole set is mapped below.
           try {

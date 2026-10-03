@@ -49,16 +49,17 @@ const attempt = (over: Partial<AttemptView> = {}): AttemptView => ({
 const translation = (lang: string, status: FrozenTranslation["status"] = "translated"): FrozenTranslation => ({ lang, body: "b", machine: status !== "fallback_en", model: status === "fallback_en" ? null : "m", status, sourceHash: HASH });
 const FROZEN: FrozenContent = { contentHash: HASH, smsBodies: { en: { body: "x", encoding: "gsm7", segments: 1 } }, translations: [translation("ur"), translation("ps", "fallback_en")] };
 
-function setup(options: { begin?: unknown; prepare?: EntryPreparer["prepare"]; complete?: unknown; deps?: Partial<SubmitterDeps> } = {}) {
+function setup(options: { begin?: unknown; prepare?: EntryPreparer["prepare"]; complete?: unknown; failEnds?: boolean; entryState?: unknown; deps?: Partial<SubmitterDeps> } = {}) {
   const calls: string[] = [];
   const ops: OpsEvent[] = [];
   const lifecycle = {
     beginSubmit: vi.fn(async () => (calls.push("begin"), options.begin ?? { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null } })),
     completeSubmit: vi.fn(async () => (calls.push("complete"), options.complete ?? { ok: true, value: { version: 1 } })),
-    failSubmit: vi.fn(async () => void calls.push("fail")),
+    // True: this call ended the attempt (it was still running); false: it was no longer running.
+    failSubmit: vi.fn(async () => (calls.push("fail"), options.failEnds ?? true)),
     recordProgress: vi.fn<(ref: unknown, key: string, lang: string, status: string) => Promise<void>>(async () => undefined),
     recordBudget: vi.fn<(ref: unknown, key: string, budgetMs: number) => Promise<void>>(async () => undefined),
-    entryState: vi.fn(async () => null),
+    entryState: vi.fn(async () => options.entryState ?? null),
   };
   const preparer: EntryPreparer = { prepare: options.prepare ?? (async (_content, _context, hooks) => (calls.push("prepare"), hooks?.onBudget?.(25_000), hooks?.onLanguage?.(translation("ur")), hooks?.onLanguage?.(translation("ps", "fallback_en")), { ok: true, value: FROZEN } as FreezeResult)) };
   const submitter = createSubmitter({
@@ -131,6 +132,49 @@ describe("a submit that works", () => {
     expect(done).toBe(false);
     await vi.advanceTimersByTimeAsync(2);
 
+    expect(await run).toMatchObject({ state: "committed" });
+  });
+});
+
+describe("the budget is counted from the press", () => {
+  it("tells the preparation how much of the press the transaction that began the attempt used, so its stop comes that much sooner", async () => {
+    const seen: Array<number | undefined> = [];
+    const t = setup({ prepare: async (_content, _context, hooks) => (seen.push(hooks?.spentMs), { ok: true, value: FROZEN } as FreezeResult) });
+    t.lifecycle.beginSubmit.mockImplementation(async () => {
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      return { ok: true, value: { kind: "started", attempt: attempt(), expected: CONTENT, context: CONTEXT, possibleDuplicateOf: null } } as never;
+    });
+
+    const run = t.submitter.submit(ACTOR, REF, KEY);
+    await vi.advanceTimersByTimeAsync(1500);
+    await run;
+
+    expect(seen).toEqual([1500]);
+  });
+
+  it("does not wait for progress writes that are stuck once the budget leaves nothing to wait with", async () => {
+    // A budget of 2 s with 1 s kept for the freezing transaction: the preparation ends at 1.5 s, so only 0.5 s is left to wait with, less than the settle time.
+    const t = setup({
+      prepare: async (_content, _context, hooks) => {
+        hooks?.onBudget?.(2_000);
+        hooks?.onLanguage?.(translation("ur"));
+        await new Promise((resolve) => setTimeout(resolve, 1_500));
+        return { ok: true, value: FROZEN } as FreezeResult;
+      },
+    });
+    t.lifecycle.recordProgress.mockImplementation(() => new Promise<void>(() => {}));
+    let done = false;
+
+    const run = t.submitter.submit(ACTOR, REF, KEY).then((report) => {
+      done = true;
+      return report;
+    });
+    await vi.advanceTimersByTimeAsync(1_499);
+    expect(done).toBe(false);
+    await vi.advanceTimersByTimeAsync(2);
+
+    // Settled at once after the preparation (limit 2000 - 1000 - 1500 < 0): not 1 s later.
+    expect(done).toBe(true);
     expect(await run).toMatchObject({ state: "committed" });
   });
 });
@@ -211,6 +255,48 @@ describe("a submit that cannot freeze anything", () => {
     expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "PREPARATION_FAILED" });
     expect(t.lifecycle.failSubmit).toHaveBeenCalledWith(ACTOR, REF, KEY, "PREPARATION_FAILED", false);
     expect(t.ops).toMatchObject([{ kind: "alert.submit_failed", detail: { reason: "commit_failed" } }]);
+  });
+
+  it("reports a commit that went through as committed when the call that made it threw: no refusal audited, no failure raised, the fallback still noted", async () => {
+    // The connection dropped after COMMIT was sent: completeSubmit throws, the attempt can no longer be ended (it is committed), and the stored attempt says so.
+    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "committed", resultVersion: 1, resultHash: HASH }) } });
+    t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+
+    expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "committed", key: KEY, outcome: null });
+    expect(t.lifecycle.failSubmit).toHaveBeenCalledTimes(1);
+    expect(t.ops.filter((event) => event.kind === "alert.submit_failed")).toEqual([]);
+    expect(t.ops).toMatchObject([{ kind: "alert.translation_fallback" }]);
+  });
+
+  it("reports how the stored attempt ended when the freezing transaction threw and the attempt was no longer running for another reason", async () => {
+    const t = setup({ failEnds: false, entryState: { attempt: attempt({ state: "failed", outcome: "SUBMIT_ABANDONED" }) } });
+    t.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+
+    expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "SUBMIT_ABANDONED" });
+    expect(t.ops.filter((event) => event.kind === "alert.submit_failed")).toEqual([]);
+  });
+
+  it("does not take another key's attempt, or an unreadable state, for this one's commit: it is a failed preparation, and the browser fetches the state itself", async () => {
+    const other = setup({ failEnds: false, entryState: { attempt: attempt({ key: "0190a000-0000-7000-8000-0000000000ff", state: "committed" }) } });
+    other.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+    expect(await other.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "PREPARATION_FAILED" });
+
+    const unreadable = setup({ failEnds: false });
+    unreadable.lifecycle.completeSubmit.mockRejectedValue(new Error("connection reset"));
+    unreadable.lifecycle.entryState.mockRejectedValue(new Error("database down"));
+    expect(await unreadable.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "PREPARATION_FAILED" });
+  });
+
+  it("raises no ops event for a failure of an attempt it did not end (one that was no longer running)", async () => {
+    const t = setup({
+      failEnds: false,
+      prepare: async () => {
+        throw new AlertRoutesUnavailableError();
+      },
+    });
+
+    expect(await t.submitter.submit(ACTOR, REF, KEY)).toEqual({ state: "failed", key: KEY, outcome: "ROUTES_UNAVAILABLE" });
+    expect(t.ops).toEqual([]);
   });
 
   it("reports the refusal of the freezing transaction (the draft changed while it was prepared) and leaves ending the attempt to the lifecycle", async () => {

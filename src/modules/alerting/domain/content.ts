@@ -1,3 +1,4 @@
+import { createHash } from "node:crypto";
 import { canonicalAudience, type Audience } from "../../../contracts/audience";
 import { ALERT_TEXT_MAX, NEIGHBOURHOOD_ONLY_TYPES } from "../../../contracts/alertContent";
 import { RsnSchema } from "../../../contracts/places";
@@ -24,6 +25,9 @@ export const VALID_UNTIL_MAX_DAYS = 7;
 /** "Until resolved" is 24 elapsed hours from now (a duration, so milliseconds are right), renewed by each update (epic E04, Valid until). */
 export const UNTIL_RESOLVED_MS = 24 * 60 * 60 * 1000;
 
+/** How the author chose the valid-until: "until resolved" (24 elapsed hours from the press, renewed by each save and submit) or a date and time. */
+export type ValidUntilMode = "at" | "resolved";
+
 export interface EntryContent {
   /** English, the authoring language. */
   text: string;
@@ -33,6 +37,11 @@ export interface EntryContent {
   audience: Audience;
   phase: Phase;
   validUntil: Date;
+  /**
+   * How the valid-until was chosen: the composer opens on it. Not part of what is frozen or hashed (the instant is), nor of whether two
+   * contents are the same. Not given (a caller that has no such choice) means "at" for a new draft and the draft's own for a save.
+   */
+  validUntilMode?: ValidUntilMode;
 }
 
 export type ContentRefusal =
@@ -92,6 +101,22 @@ export function sameContent(a: EntryContent, b: EntryContent): boolean {
     [...a.types].sort().join("\n") === [...b.types].sort().join("\n") &&
     stableJson(a.audience) === stableJson(b.audience)
   );
+}
+
+/**
+ * A fingerprint of a draft's content (SHA-256 of its stable JSON): what saving a draft answers with and a submit names, so that a submit
+ * can refuse a draft that is no longer the one the author saved and saw (someone else saved in between). Two contents have the same
+ * fingerprint exactly when `sameContent` says they are the same.
+ */
+export function draftFingerprint(content: EntryContent): string {
+  const stable = stableJson({
+    text: content.text,
+    phase: content.phase,
+    validUntil: content.validUntil.getTime(),
+    types: [...content.types].sort(),
+    audience: content.audience,
+  });
+  return createHash("sha256").update(stable, "utf8").digest("hex");
 }
 
 /** JSON with object keys sorted, so equal values compare equal whatever their key order (jsonb reorders keys). */

@@ -11,21 +11,36 @@ import { LangCodeSchema } from "./lang";
 /** The key a browser makes for one press of Submit (`crypto.randomUUID()`): 16 to 64 letters, digits, hyphens and underscores. */
 export const SUBMIT_KEY_PATTERN = /^[A-Za-z0-9_-]{16,64}$/;
 
+/**
+ * How long a `running` attempt may be taken to be alive: the submit function's own time limit (`maxDuration` of the submit route, 60 s) and a
+ * margin. After that its function is gone, whatever the row says, and the server reads the attempt as failed (SUBMIT_ABANDONED). The
+ * browser waits this long, from the moment it lost an answer, for a sign of its key before it says the request could not be confirmed.
+ * test/submitBudget.test.ts keeps this above the function's limit.
+ */
+export const ATTEMPT_STALE_MS = 90_000;
+
 const Sha256 = z.string().regex(/^[0-9a-f]{64}$/);
 const SubmitKey = z.string().regex(SUBMIT_KEY_PATTERN);
 /** A refusal or failure code of the alerting module (`DRAFT_CHANGED`, `ROUTES_UNAVAILABLE`, ...). */
 const OutcomeCode = z.string().regex(/^[A-Z][A-Z0-9_]{2,40}$/);
 
-export const SubmitRequestSchema = z.strictObject({
+const RequestBase = z.strictObject({
   v: z.literal(1),
   alert_id: z.uuid(),
   entry_id: z.uuid(),
   key: SubmitKey,
 });
+
+/**
+ * Submit. `draft` is the fingerprint of the draft as the browser saved it just before pressing (the answer of the save): a draft that is
+ * not that when the submit begins (someone else saved in between) is refused with DRAFT_CHANGED, so nobody freezes text they never saw.
+ * Left out, the draft as it is when the submit begins is taken.
+ */
+export const SubmitRequestSchema = RequestBase.extend({ draft: Sha256.optional() });
 export type SubmitRequest = z.infer<typeof SubmitRequestSchema>;
 
 /** "Try translation again": the version and hash of the pending entry the person was looking at, so a changed entry is refused. */
-export const RetranslateRequestSchema = SubmitRequestSchema.extend({
+export const RetranslateRequestSchema = RequestBase.extend({
   seen_version: z.number().int().min(1),
   seen_hash: Sha256,
 });

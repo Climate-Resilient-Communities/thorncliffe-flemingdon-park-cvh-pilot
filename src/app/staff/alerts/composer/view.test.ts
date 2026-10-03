@@ -127,6 +127,29 @@ describe("a draft", () => {
     expect(screen.draft?.valid.mode).toBe("at");
   });
 
+  it("opens on how the author chose the valid-until: 'until resolved' is remembered, a date and time is the default", () => {
+    const resolved = stateOf();
+    (resolved.entry.content as { validUntilMode?: string }).validUntilMode = "resolved";
+    expect(composerScreen(input({ state: resolved })).draft?.valid.mode).toBe("resolved");
+    const at = stateOf();
+    (at.entry.content as { validUntilMode?: string }).validUntilMode = "at";
+    expect(composerScreen(input({ state: at })).draft?.valid.mode).toBe("at");
+  });
+
+  it("carries the answer to the clock-change question for a stored valid-until in the repeated autumn hour, so saving again does not ask again", () => {
+    for (const [iso, fold] of [["2026-11-01T05:30:00.000Z", "before"], ["2026-11-01T06:30:00.000Z", "after"]] as const) {
+      const state = stateOf();
+      state.entry.content = { ...state.entry.content, validUntil: new Date(iso) };
+      expect(composerScreen(input({ state })).draft?.valid.fields, iso).toEqual({ date: "2026-11-01", time: "01:30", fold });
+    }
+  });
+
+  it("names the key of the entry's latest attempt, whatever became of it, so a key the browser kept can be told confirmed", () => {
+    expect(composerScreen(input()).lastAttemptKey).toBeNull();
+    expect(composerScreen(input({ state: stateOf({ attempt: { state: "failed", outcome: "ROUTES_UNAVAILABLE", finishedAt: NOW } }) })).lastAttemptKey).toBe(KEY);
+    expect(composerScreen(input({ state: stateOf({ attempt: {} }) })).lastAttemptKey).toBe(KEY);
+  });
+
   it("lists the fifteen texts that are translated, in the launch order then Traditional Chinese, each waiting, none of them English", () => {
     const rows = composerScreen(input()).languages.rows;
     expect(rows).toHaveLength(15);
@@ -254,7 +277,9 @@ describe("the words the screen carries for the browser", () => {
       expect(messages.errors[code], code).toBeTruthy();
       expect(messages.errors[code], code).not.toMatch(/^[A-Z_]+$/);
     }
-    expect(messages.errors.NOT_REACHED).toContain("did not reach the server");
+    // It does not claim that nothing was submitted: the request may still be on its way, and the same key is sent again.
+    expect(messages.errors.NOT_REACHED).toContain("could not confirm that the request reached the server");
+    expect(messages.errors.NOT_REACHED).not.toContain("nothing was submitted");
     expect(messages.errors.invalid).toBeTruthy();
   });
 

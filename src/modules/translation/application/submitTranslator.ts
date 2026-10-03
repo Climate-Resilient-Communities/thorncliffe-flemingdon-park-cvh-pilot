@@ -5,7 +5,8 @@
 // The alert translator (alertTranslator.ts) already ends every language by its route deadline and every store wait by its grace;
 // its own worst case is the longest route deadline plus three graces (zh-Hant's converter, its cache read and the final flush of
 // writes). This wrapper adds the one thing a submit needs on top: a stop at the longest route deadline plus 3 s, counted from the
-// moment the models are first asked, which leaves 2 s of the 5 s for reading the routes before it and for rendering and freezing
+// press of Submit (what the press has used before the models are asked, the transaction that began the attempt and the route read,
+// comes off the time the models get), which leaves 2 s of the 5 s for the progress writes to settle and for rendering and freezing
 // after it. A language still running when the stop comes ends as the English fallback at once (a cancelled attempt, never used).
 //
 // Rejections are the alert translator's: AlertTranslationInputError for empty English; what `routes` threw (RouteConfigError for a
@@ -23,7 +24,10 @@ import {
   type AlertTranslatorDeps,
 } from "./alertTranslator";
 
-/** The stop comes this long after the longest route deadline: the budget's 5 s less 2 s for the route read and the freeze. */
+/**
+ * The stop comes this long after the longest route deadline, counted from the press of Submit: the budget's 5 s less 2 s for what must still
+ * happen after it (the progress writes settling, the render and the freezing transaction).
+ */
 export const STOP_AFTER_ROUTES_MS = 3_000;
 
 export interface SubmitTranslatorDeps extends Omit<AlertTranslatorDeps, "routes" | "onLanguage"> {
@@ -46,6 +50,8 @@ export interface SubmitTranslateInput {
   onLanguage?: (translated: Translated) => void;
   /** Called once the budget is known, before any model is asked. A failure in it is ignored. */
   onBudget?: (budgetMs: number) => void;
+  /** Milliseconds of the press already used before this call (the transaction that began the attempt); 0 when not given. */
+  spentMs?: number;
 }
 
 export interface SubmitTranslator {
@@ -73,8 +79,10 @@ function readRoutes(read: () => Promise<readonly TranslationRoute[]>, graceMs: n
 
 export function createSubmitTranslator(deps: SubmitTranslatorDeps): SubmitTranslator {
   const grace = deps.storeGraceMs ?? STORE_GRACE_MS;
+  const clock = deps.clock ?? (() => performance.now());
   return {
-    async translate({ english, signal, onLanguage, onBudget }) {
+    async translate({ english, signal, onLanguage, onBudget, spentMs = 0 }) {
+      const began = clock();
       const routes = await readRoutes(deps.routes, grace);
       const budgetMs = submitBudgetMs(routes);
       try {
@@ -87,10 +95,13 @@ export function createSubmitTranslator(deps: SubmitTranslatorDeps): SubmitTransl
       if (signal?.aborted) stop.abort();
       else signal?.addEventListener("abort", follow, { once: true });
       let stoppedAtBudget = false;
+      // The budget is counted from the press: what the press has already used (the transaction that began the attempt, reading the routes)
+      // comes off the time the models are given, so the stop lands at the longest route deadline plus 3 s after the press.
+      const used = Math.max(0, spentMs) + Math.max(0, clock() - began);
       const timer = setTimeout(() => {
         stoppedAtBudget = true;
         stop.abort();
-      }, longestRouteDeadlineMs(routes) + STOP_AFTER_ROUTES_MS);
+      }, Math.max(0, longestRouteDeadlineMs(routes) + STOP_AFTER_ROUTES_MS - used));
       try {
         const translator = createAlertTranslator({ ...deps, routes: async () => routes, onLanguage });
         const result = await translator.translate({ english, signal: stop.signal });

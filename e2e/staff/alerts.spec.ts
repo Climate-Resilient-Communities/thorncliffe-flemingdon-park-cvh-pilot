@@ -3,7 +3,9 @@
 // a Coordinator logs a disruption for a building, gets the acknowledgement composer with a suggested text, submits it for approval and
 // finds fifteen frozen translations, pulls it back and changes it; and the lost outcome: the browser's connection drops after the server
 // has the request, the screen says it is checking, fetches the entry's state and shows the pending entry, with exactly one version and
-// one attempt for the key, and a second press of Submit is not available (the entry is no longer a draft).
+// one attempt for the key, and a second press of Submit is not available (the entry is no longer a draft); a request that never arrives is
+// waited for an attempt's whole life and the next press sends the same key; a submit that fails with its response lost shows the draft and
+// the reason, and the next press makes a new key.
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
@@ -195,21 +197,82 @@ test("when the browser loses the answer to Submit, it checks the entry's state a
   expect(body.translations).toHaveLength(15);
 });
 
-test("when the request never reaches the server, the screen says nothing was submitted and the draft can be submitted again", async ({ page }) => {
+test("when the request never reaches the server, the screen waits out an attempt's whole life, says it could not confirm, and the next press sends the same key", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  await signIn(page, "coordinator");
+  const { entryId } = await logTheDisruption(page);
+  // Time is the page's own from here: it is moved forward below, instead of waiting a minute and a half.
+  await page.clock.install();
+
+  const keys: string[] = [];
+  await page.route("**/api/staff/alerts/entries/submit", async (route) => {
+    keys.push(JSON.parse(route.request().postData() ?? "{}").key as string);
+    if (keys.length === 1) await route.abort("connectionrefused");
+    else await route.continue();
+  });
+  await page.getByTestId("submit-button").click();
+
+  // The answer was not seen, so the screen does not say it knows: it says it is checking, and goes by the entry's state.
+  await expect(page.getByTestId("lost-note")).toBeVisible({ timeout: 30_000 });
+  expect(await attemptRows(entryId)).toHaveLength(0);
+  // Only after the whole life an attempt can have (90 s) without a sign of the key does it say it could not confirm the request.
+  await page.clock.fastForward(95_000);
+  await expect(page.locator("#composer-error")).toContainText("could not confirm that the request reached the server", { timeout: 30_000 });
+  expect(await attemptRows(entryId)).toHaveLength(0);
+  expect(await entryRow(entryId)).toMatchObject({ status: "draft", version: 0 });
+
+  // The next press sends the SAME key (the outcome of the first was never confirmed) and goes through, once.
+  await page.getByTestId("submit-button").click();
+  await expect(page.getByTestId("pending-panel")).toBeVisible({ timeout: 60_000 });
+  expect(keys).toHaveLength(2);
+  expect(keys[1]).toBe(keys[0]);
+  const attempts = await attemptRows(entryId);
+  expect(attempts).toHaveLength(1);
+  expect(attempts[0]).toMatchObject({ key: keys[0], state: "committed", result_version: 1 });
+});
+
+test("when a submit fails and the browser loses the answer, it shows the draft with the reason, nothing pending, and the next press makes a new key", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   await signIn(page, "coordinator");
   const { entryId } = await logTheDisruption(page);
 
-  await page.route("**/api/staff/alerts/entries/submit", (route) => route.abort("connectionrefused"), { times: 1 });
-  await page.getByTestId("submit-button").click();
-  await expect(page.locator("#composer-error")).toContainText("did not reach the server", { timeout: 30_000 });
-  expect(await attemptRows(entryId)).toHaveLength(0);
-  expect(await entryRow(entryId)).toMatchObject({ status: "draft", version: 0 });
+  // The routes the translation reads are made invalid for this one press: its rows of French disagree about the check they hold.
+  await sql`alter table translation_route disable trigger translation_route_shape`;
+  await sql`update translation_route set script = 'greek' where lang = 'fr' and position = 1`;
+  await sql`alter table translation_route enable trigger translation_route_shape`;
+  const keys: string[] = [];
+  try {
+    await page.route("**/api/staff/alerts/entries/submit", async (route) => {
+      keys.push(JSON.parse(route.request().postData() ?? "{}").key as string);
+      // The server has the request and ends the attempt as failed; the response never reaches the page.
+      await route.fetch();
+      await route.abort("connectionreset");
+    });
+    await page.getByTestId("submit-button").click();
 
-  // A new press makes a new key and goes through.
+    // The screen checks the state, finds the attempt failed, loads the draft again and says why.
+    await expect(page.locator("#composer-failure")).toContainText("translation settings are not valid", { timeout: 60_000 });
+    expect(keys).toHaveLength(1);
+    expect(await entryRow(entryId)).toMatchObject({ status: "draft", version: 0, content_hash: null });
+    expect(await translationCount(entryId)).toBe(0);
+    expect(await attemptRows(entryId)).toMatchObject([{ key: keys[0], state: "failed", outcome: "ROUTES_INVALID" }]);
+  } finally {
+    await sql`update translation_route set script = 'latin' where lang = 'fr' and position = 1`;
+  }
+
+  // The failure was confirmed (the state said so), so the next press makes a new key, and with the routes fixed it goes through, once.
+  await page.unroute("**/api/staff/alerts/entries/submit");
+  await page.route("**/api/staff/alerts/entries/submit", async (route) => {
+    keys.push(JSON.parse(route.request().postData() ?? "{}").key as string);
+    await route.continue();
+  });
   await page.getByTestId("submit-button").click();
   await expect(page.getByTestId("pending-panel")).toBeVisible({ timeout: 60_000 });
-  expect(await attemptRows(entryId)).toHaveLength(1);
+  expect(keys).toHaveLength(2);
+  expect(keys[1]).not.toBe(keys[0]);
+  const rows = await sql`select version, status from alert_entry where alert_id = (select alert_id from alert_entry where id = ${entryId})`;
+  expect(rows).toEqual([{ version: 1, status: "pending_approval" }]);
+  expect((await attemptRows(entryId)).map((attempt) => [attempt.state, attempt.outcome])).toEqual([["failed", "ROUTES_INVALID"], ["committed", null]]);
 });
 
 test("an Admin writes an alert from the alert composer's first step, and the audience pages lead back to it", async ({ page }) => {

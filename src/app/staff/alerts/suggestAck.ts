@@ -3,7 +3,7 @@
 // goes); a disruption of several types says so in one sentence. It is a suggestion, not a template that is checked or translated in
 // advance: the author's text, whatever it ends up as, is translated and checked at submit. Pure.
 import type { Audience } from "@/contracts/audience";
-import { ALERT_TEXT_MAX } from "@/modules/alerting";
+import { ALERT_TEXT_MAX, BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES } from "@/contracts/alertContent";
 import { englishText } from "@/i18n/text";
 import type { BuildingFloorPlan } from "@/modules/places";
 
@@ -35,13 +35,20 @@ function placePhrase(audience: Audience, plans: readonly BuildingFloorPlan[], t:
   return t("suggest.at", { place: joinWords(pieces) });
 }
 
-/** The text for these types in this place; never longer than the alert text limit (a long list of buildings is summarised). */
+const KNOWN_TYPES: readonly string[] = [...BUILDING_TYPES, ...NEIGHBOURHOOD_ONLY_TYPES];
+
+/**
+ * The text for these types in this place; never longer than the alert text limit (a long list of buildings is summarised). A type the
+ * catalog has no wording for (a crafted request: the screens list only known ones) reads as "other", so that the database's own list of
+ * types refuses it with UNKNOWN_TYPE and this never throws before it can.
+ */
 export function suggestedAck(types: readonly string[], audience: Audience, plans: readonly BuildingFloorPlan[], t: Text = (key, values) => englishText(`staff.compose.${key}`, values)): string {
   const prototype: Text = (key, values) => englishText(key, values);
+  const wording = types.map((type) => (KNOWN_TYPES.includes(type) ? type : "other"));
   const build = (brief: boolean) => {
     const where = placePhrase(audience, plans, t, brief);
-    if (types.length === 1) return prototype(`O12.acks.${types[0]}.text`, { on: where, in: where });
-    const list = joinWords(types.map((type) => lowerFirst(prototype(`O12.acks.${type}.headline`))));
+    if (wording.length === 1) return prototype(`O12.acks.${wording[0]}.text`, { on: where, in: where });
+    const list = joinWords(wording.map((type) => lowerFirst(prototype(`O12.acks.${type}.headline`))));
     return t("suggest.several", { on: where, list });
   };
   const full = build(false);

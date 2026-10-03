@@ -10,23 +10,16 @@
 // Only one attempt runs per entry (a unique index). A function that dies mid-attempt leaves a `running` row: after the
 // function's own time limit it is treated as failed (`SUBMIT_ABANDONED`), so the entry is never stuck.
 
-import { SUBMIT_KEY_PATTERN } from "../../../contracts/alertSubmit";
+import { ATTEMPT_STALE_MS, SUBMIT_KEY_PATTERN } from "../../../contracts/alertSubmit";
 
-/** The key a browser makes for one press of Submit (a UUID or any 16 to 64 letters, digits, hyphens and underscores): the wire contract's. */
-export { SUBMIT_KEY_PATTERN };
+/** The key a browser makes for one press of Submit (a UUID or any 16 to 64 letters, digits, hyphens and underscores), and how long a `running` attempt is taken to be alive: the wire contract's. */
+export { ATTEMPT_STALE_MS, SUBMIT_KEY_PATTERN };
 
 export const ATTEMPT_STATES = ["running", "committed", "failed"] as const;
 export type AttemptState = (typeof ATTEMPT_STATES)[number];
 
 export const ATTEMPT_KINDS = ["submit", "retranslate"] as const;
 export type AttemptKind = (typeof ATTEMPT_KINDS)[number];
-
-/**
- * How long a `running` attempt may be taken to be alive: the submit function's own time limit (`maxDuration` of
- * src/app/api/staff/alerts/entries/submit/route.ts, 60 s) and a margin. After that its function is gone, whatever the row says.
- * test/submitBudget.test.ts keeps this above the function's limit.
- */
-export const ATTEMPT_STALE_MS = 90_000;
 
 export function isStaleAttempt(startedAt: Date, now: Date): boolean {
   return now.getTime() - startedAt.getTime() > ATTEMPT_STALE_MS;

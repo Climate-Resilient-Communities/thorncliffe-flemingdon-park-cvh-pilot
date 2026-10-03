@@ -13,7 +13,7 @@ import type { RenderedSms } from "@/modules/messaging";
 import type { BuildingFloorPlan } from "@/modules/places";
 import { asideOf, type AsideView } from "../audience/view";
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "../audience/editAudience";
-import { fieldsOfInstant, type TimeFields } from "../timeField";
+import { fieldsOfStoredInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
 import { formatTorontoDateTime } from "@/platform/clock";
 
@@ -118,6 +118,8 @@ export interface ComposerScreen {
   aside: AsideView & { groupsLink: { href: string; label: string }; channelsTitle: string; channels: string[] };
   actions: { label: string; save: string; submit: string };
   resume: ResumeView | null;
+  /** The key of the entry's latest attempt, whatever became of it: a key the browser kept that equals it is confirmed (its outcome is on this screen). */
+  lastAttemptKey: string | null;
   messages: ComposerMessages;
   /** Where the page loads again from (a committed or failed attempt, a refusal): this composer's own address. */
   here: string;
@@ -273,12 +275,13 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     actions: { label: t("actionsLabel"), save: t("save"), submit: t("submit") },
     // A running attempt always leaves the entry a draft (a "Try translation again" returns it to draft first).
     resume: attempt?.state === "running" && entry.status === "draft" ? { key: attempt.key, kind: attempt.kind, budgetMs: attempt.budgetMs, progress: { ...attempt.progress } } : null,
+    lastAttemptKey: attempt?.key ?? null,
     messages,
     here,
   };
 
   if (status === "draft") {
-    const valid = fieldsOfInstant(content.validUntil);
+    const valid = fieldsOfStoredInstant(content.validUntil);
     screen.draft = {
       text: { label: t("textLabel"), hint: t("textHint", { max: ALERT_TEXT_MAX }), value: content.text, max: ALERT_TEXT_MAX, counter: t("counter", { n: "{n}", max: ALERT_TEXT_MAX }) },
       types:
@@ -298,7 +301,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
         dateLabel: englishText("staff.time.dateLabel"),
         timeLabel: englishText("staff.time.timeLabel"),
         foldLegend: englishText("staff.time.foldLegend"),
-        mode: "at",
+        mode: content.validUntilMode ?? "at",
         fields: valid,
       },
     };

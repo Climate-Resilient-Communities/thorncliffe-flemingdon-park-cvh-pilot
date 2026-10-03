@@ -97,6 +97,18 @@ describe("logging a disruption from the form", () => {
     expect(logDisruption).not.toHaveBeenCalled();
   });
 
+  it("refuses a type the screen never lists, with the reason, and makes nothing (a crafted request is not a server error)", async () => {
+    const { logDisruption, wired } = deps();
+    const state = await logDisruptionFromForm(wired, session, form([...valid.filter(([name]) => name !== "type"), ["type", "nonsense"]]));
+
+    expect(state).toEqual({ status: "refused", message: logRefusalMessage("UNKNOWN_TYPE") });
+    expect(logDisruption).not.toHaveBeenCalled();
+    // Every type the screen lists is still taken.
+    for (const type of [...BUILDING_TYPES, ...NEIGHBOURHOOD_TYPES]) {
+      expect((await logDisruptionFromForm(wired, session, form([...valid.filter(([name]) => name !== "type"), ["type", type]]))).status, type).toBe("logged");
+    }
+  });
+
   it("says to choose a type when none is chosen", async () => {
     const { wired } = deps();
     expect(await logDisruptionFromForm(wired, session, form(valid.filter(([name]) => name !== "type")))).toEqual({

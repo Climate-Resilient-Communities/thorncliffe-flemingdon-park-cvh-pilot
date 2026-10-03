@@ -1943,7 +1943,7 @@ So that the web and, later, texts reach exactly the people it is for.
 ### Story S04.05 — Hub staff log a disruption and write an acknowledgement or alert
 
 - **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A4, FR-A1, UX-DR16 (O-11, O-12, O-02), FR-M2 · **Depends on:** S04.02, S04.04 · **Branch:** `e04-s05-log-and-compose`
+- **Traces:** FR-A4, FR-A1, UX-DR16 (O-11, O-12, O-02), FR-M2 · **Depends on:** S04.02, S04.03, S04.04, S04.06 · **Branch:** `e04-s05-log-and-compose`
 
 As a Hub Coordinator,
 I want to log a disruption and post a short acknowledgement within minutes,

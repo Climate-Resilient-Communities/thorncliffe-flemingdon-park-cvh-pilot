@@ -15,6 +15,7 @@ import { suggestedAck } from "../suggestAck";
 // The disruption types O-11 lists: those a building can have, then the neighbourhood-wide ones (src/contracts/alertContent.ts).
 export { BUILDING_TYPES, NEIGHBOURHOOD_ONLY_TYPES as NEIGHBOURHOOD_TYPES };
 
+const KNOWN_TYPES: readonly string[] = [...BUILDING_TYPES, ...NEIGHBOURHOOD_ONLY_TYPES];
 
 /** What the form shows after a submission. A logged disruption sends the person on (`location`). */
 export type LogState =
@@ -49,7 +50,7 @@ export function logRefusalMessage(error: AlertRefusal): string {
 
 const refused = (message: string): LogState => ({ status: "refused", message });
 
-/** The types ticked: each id once, as sent. What the types are is the use case's to judge (an unknown one is UNKNOWN_TYPE). */
+/** The types ticked: each id once, as sent. */
 function typesOf(form: FormData): string[] {
   return [...new Set(form.getAll("type").filter((value): value is string => typeof value === "string" && value !== ""))];
 }
@@ -65,6 +66,8 @@ export async function logDisruptionFromForm(deps: LogDeps, session: Pick<StaffSe
   if (kind !== "ack" && kind !== "update") return refused(t("errors.invalid"));
   const types = typesOf(form);
   if (types.length === 0) return refused(t("errors.chooseType"));
+  // A crafted request can name a type the screen never lists: refused here with the reason, as the database's list of types would refuse it.
+  if (types.some((type) => !KNOWN_TYPES.includes(type))) return refused(logRefusalMessage("UNKNOWN_TYPE"));
   const place = placeChoiceFromForm(form);
   if (!place.ok) return place.state.status === "refused" ? refused(place.state.message) : refused(t("errors.invalid"));
   const reported = parseTimeFields(timeFieldsOf(form, "reported"));

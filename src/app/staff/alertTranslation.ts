@@ -21,11 +21,18 @@ import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
 
 /** The translation model of this environment, or null where there is none. */
-function model(): Translator | null {
-  const env = getEnv();
-  if (env.fakeTranslator === "sample") return sampleTranslator();
-  return env.cohereApiKey ? cohereTranslator({ apiKey: env.cohereApiKey }) : null;
+function model(sample: boolean): Translator | null {
+  if (sample) return sampleTranslator();
+  const { cohereApiKey } = getEnv();
+  return cohereApiKey ? cohereTranslator({ apiKey: cohereApiKey }) : null;
 }
+
+/**
+ * The prompt version a translation is cached under. The sample fake answers with fixed sentences that are not translations of the alert, and
+ * the cache keeps passing results under the route's real model ids, so the fake has a prompt version of its own: what it makes is never found
+ * under the key of a real model, however long the database is kept and whatever it is used for later.
+ */
+export const promptVersionOf = (sample: boolean): string => (sample ? `${PROMPT_VERSION}+sample` : PROMPT_VERSION);
 
 export interface AlertTranslation {
   translator: SubmitTranslator;
@@ -35,7 +42,8 @@ export interface AlertTranslation {
 
 /** The translation a submit uses. */
 export function alertTranslation(): AlertTranslation {
-  const translator = model();
+  const sample = getEnv().fakeTranslator === "sample";
+  const translator = model(sample);
   if (translator === null) return { translator: noTranslation(), configured: false };
   const db = getDb();
   return {
@@ -44,9 +52,10 @@ export function alertTranslation(): AlertTranslation {
       translator,
       routes: () => readTranslationRoutes(db),
       cache: drizzleTranslationCache(db),
-      recordSpend: (event) => recordSpendEvent(db, event),
+      // The fake costs nothing and calls no vendor: no spend is recorded for it, under the real models' names or any other.
+      recordSpend: sample ? async () => undefined : (event) => recordSpendEvent(db, event),
       zhHant: openccZhHant,
-      promptVersion: PROMPT_VERSION,
+      promptVersion: promptVersionOf(sample),
     }),
   };
 }

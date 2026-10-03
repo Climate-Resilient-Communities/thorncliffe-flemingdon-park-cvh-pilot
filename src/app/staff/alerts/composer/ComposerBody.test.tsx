@@ -257,3 +257,33 @@ describe("an entry that can no longer be changed here", () => {
     expect(out).not.toContain('class="layout-screen__actions"');
   });
 });
+
+describe("the valid-until as it was chosen", () => {
+  const withContent = (over: Record<string, unknown>) => {
+    const state = stateOf();
+    state.entry.content = { ...state.entry.content, ...over } as EntryState["entry"]["content"];
+    return state;
+  };
+
+  it("opens on 'until resolved' when that was the choice, with the date and time still shown but not editable", () => {
+    const out = html(screenOf(withContent({ validUntilMode: "resolved" })));
+    expect(out).toMatch(/<input [^>]*type="radio"[^>]*name="valid-mode"[^>]*checked=""[^>]*value="resolved"/);
+    expect(out).not.toMatch(/<input [^>]*name="valid-mode"[^>]*checked=""[^>]*value="at"/);
+    expect(out).toMatch(/<input [^>]*type="date"[^>]*disabled=""/);
+  });
+
+  it("opens on a date and time otherwise", () => {
+    const out = html(screenOf(withContent({ validUntilMode: "at" })));
+    expect(out).toMatch(/<input [^>]*name="valid-mode"[^>]*checked=""[^>]*value="at"/);
+    expect(out).not.toMatch(/<input [^>]*type="date"[^>]*disabled=""/);
+  });
+
+  it("carries a stored answer to the clock-change question with the form, so a stored time in the repeated hour is not asked about again", () => {
+    for (const [iso, fold] of [["2026-11-01T05:30:00.000Z", "before"], ["2026-11-01T06:30:00.000Z", "after"]] as const) {
+      const out = html(screenOf(withContent({ validUntil: new Date(iso), validUntilMode: "at" })));
+      expect(out, iso).toContain(`<input type="hidden" name="valid-fold" value="${fold}"/>`);
+    }
+    // A time that is not repeated carries none.
+    expect(html(screenOf(stateOf()))).not.toContain('name="valid-fold"');
+  });
+});

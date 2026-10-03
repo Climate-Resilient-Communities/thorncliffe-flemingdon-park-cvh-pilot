@@ -3,8 +3,10 @@
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
 import type { ComposeState } from "./editDraft";
-import { doneCount, initialSubmitUi, submitReducer, type SubmitKind } from "./submitMachine";
+import { doneCount, initialSubmitUi, submitReducer, unconfirmedOf, type SubmitKind } from "./submitMachine";
 import { submitApi, type SubmitApi } from "./submitClient";
+import { press } from "./submitPress";
+import { readUnconfirmed, reconcile, writeUnconfirmed } from "./submitStore";
 import type { ComposerScreen, DraftFormView, LanguageRowView, PendingView } from "./view";
 
 /** A composer form's server action (actions.ts): the form's last state and its data in, the new state out. */
@@ -67,7 +69,8 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
   const [validMode, setValidMode] = useState<"resolved" | "at">(form.valid.mode);
   const [date, setDate] = useState(form.valid.fields.date);
   const [time, setTime] = useState(form.valid.fields.time);
-  const [fold, setFold] = useState<"" | "before" | "after">("");
+  // The answer to "before or after the clock change" for a stored time in the repeated hour travels with the form until the time is edited.
+  const [fold, setFold] = useState<"" | "before" | "after">(form.valid.fields.fold);
   const [ticked, setTicked] = useState<ReadonlySet<string>>(new Set([...(form.types?.building ?? []), ...(form.types?.neighbourhood ?? [])].filter((item) => item.checked).map((item) => item.id)));
   const [phase, setPhase] = useState(form.phase?.items.find((item) => item.checked)?.id ?? "");
   const over = text.length > form.text.max;
@@ -174,6 +177,7 @@ function DraftFields({ form, state, errorId }: { form: DraftFormView; state: Com
               }}
             />
           </Inline>
+          {state.status !== "ask" && fold !== "" && <input type="hidden" name="valid-fold" value={fold} />}
           <p>{form.valid.hint}</p>
           {state.status === "ask" && (
             <fieldset aria-labelledby="composer-fold-legend">
@@ -253,13 +257,23 @@ export function ComposerBody({
   // What the direct call of Save (the first half of a submit) answered, when it did not save.
   const [direct, setDirect] = useState<ComposeState>(IDLE);
   const [pullState, pullAction] = useActionState(actions.pullBack, IDLE);
-  const [ui, dispatch] = useReducer(submitReducer, screen.resume, initialSubmitUi);
+  // Where the screen starts: an attempt that is still running, and a key kept in this tab whose outcome the server never confirmed (unless the
+  // server's own state, which this page was made from, already shows it).
+  const [ui, dispatch] = useReducer(submitReducer, null, () => initialSubmitUi(screen.resume, reconcile(readUnconfirmed(screen.ref.entryId), screen.lastAttemptKey)));
   const formRef = useRef<HTMLFormElement>(null);
   const { alertId, entryId } = screen.ref;
   const shown = direct.status !== "idle" ? direct : saveState;
   const errorId = "composer-error";
   const running = ui.phase === "running" ? ui : null;
   const busy = ui.phase === "saving" || ui.phase === "running";
+
+  // A key whose outcome is not known is kept in this tab (and forgotten once it is), so a page that is loaded again still sends the same key.
+  const pending = unconfirmedOf(ui);
+  const pendingKey = pending?.key ?? null;
+  const pendingKind = pending?.kind ?? null;
+  useEffect(() => {
+    writeUnconfirmed(entryId, pendingKey === null || pendingKind === null ? null : { key: pendingKey, kind: pendingKind });
+  }, [entryId, pendingKey, pendingKind]);
 
   // While an attempt runs, the entry's state is fetched every second: progress for this key, and the end of it, whether or not the
   // answer to the press was seen.
@@ -272,7 +286,7 @@ export function ComposerBody({
         .state(alertId, entryId)
         .catch(() => null)
         .then((state) => {
-          if (active) dispatch({ type: "polled", state });
+          if (active) dispatch({ type: "polled", state, at: performance.now() });
         });
     }, 1000);
     return () => {
@@ -286,34 +300,29 @@ export function ComposerBody({
     if (ui.phase === "ended") reload();
   }, [ui.phase, reload]);
 
-  async function press(kind: SubmitKind) {
+  function pressed(kind: SubmitKind) {
     if (busy) return;
-    if (kind === "submit") {
-      dispatch({ type: "saving" });
-      // The draft is saved first, from what the form holds now, so the submit freezes what the author sees.
-      const form = new FormData(formRef.current ?? undefined);
-      form.set("then", "submit");
-      const saved = await actions.save(IDLE, form).catch((): ComposeState => ({ status: "refused", message: screen.messages.errors.invalid }));
-      if (saved.status !== "saved") {
-        setDirect(saved);
-        dispatch({ type: "save_stopped" });
-        return;
-      }
-      setDirect(IDLE);
-    }
-    const key = crypto.randomUUID();
-    dispatch({ type: "sent", key, kind });
-    try {
-      const request = { v: 1 as const, alert_id: alertId, entry_id: entryId, key };
-      const result =
-        kind === "submit"
-          ? await api.submit(request)
-          : await api.retranslate({ ...request, seen_version: screen.pending?.version ?? 1, seen_hash: screen.pending?.contentHash ?? "" });
-      dispatch({ type: "answered", result });
-    } catch {
-      // The answer was not seen: the screen says so and goes by the entry's own state.
-      dispatch({ type: "lost" });
-    }
+    void press(
+      {
+        alertId,
+        entryId,
+        api,
+        // The draft is saved first, from what the form holds now, so the submit freezes what the author sees.
+        save: () => {
+          const form = new FormData(formRef.current ?? undefined);
+          form.set("then", "submit");
+          return actions.save(IDLE, form);
+        },
+        saveFailed: { status: "refused", message: screen.messages.errors.invalid },
+        showSave: setDirect,
+        seen: () => ({ version: screen.pending?.version ?? 1, hash: screen.pending?.contentHash ?? "" }),
+        dispatch,
+        newKey: () => crypto.randomUUID(),
+        now: () => performance.now(),
+      },
+      unconfirmedOf(ui),
+      kind,
+    );
   }
 
   const idleMessage = ui.phase === "idle" && ui.message ? (screen.messages.errors[ui.message] ?? screen.messages.errors.invalid) : null;
@@ -326,7 +335,7 @@ export function ComposerBody({
       <button className="hub-button hub-button--secondary" type="submit" form={FORM_ID} disabled={busy || savePending} data-testid="save-draft">
         {screen.actions.save}
       </button>
-      <button className="hub-button hub-button--primary" type="button" disabled={busy || savePending} onClick={() => void press("submit")} data-testid="submit-button">
+      <button className="hub-button hub-button--primary" type="button" disabled={busy || savePending} onClick={() => pressed("submit")} data-testid="submit-button">
         {screen.actions.submit}
       </button>
     </Inline>
@@ -337,7 +346,7 @@ export function ComposerBody({
         {screen.pending.pullBack.label}
       </button>
       {screen.pending.fallback && (
-        <button className="hub-button hub-button--primary" type="button" disabled={busy} onClick={() => void press("retranslate")} data-testid="retry-translation">
+        <button className="hub-button hub-button--primary" type="button" disabled={busy} onClick={() => pressed("retranslate")} data-testid="retry-translation">
           {screen.pending.fallback.retry}
         </button>
       )}

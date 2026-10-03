@@ -23,6 +23,6 @@ export const POST = staffRoute({ route: "/api/staff/alerts/entries/submit", acce
   if (!body.ok) return body.response;
   const ref = { alertId: body.value.alert_id, entryId: body.value.entry_id };
   const submitter = alertSubmitter();
-  const report = await submitter.submit({ staffId: session.staffId, aal: session.aal }, ref, body.value.key);
+  const report = await submitter.submit({ staffId: session.staffId, aal: session.aal }, ref, body.value.key, body.value.draft);
   return staffJson(submitResultBody(report, await submitter.state(ref), new Date()));
 });

@@ -6,7 +6,9 @@
 //                       recorded `running`;
 //   2. prepare          translate, render, count and hash, OUTSIDE any database lock and transaction. Each language that settles
 //                       is written to the attempt (progress), so a browser can show it; the budget is the longest route
-//                       deadline plus 5 s and a backstop ends the translation inside it (translation's submit translator);
+//                       deadline plus 5 s, counted from the press (what step 1 used is told to the translation, and the wait
+//                       for the progress writes is cut to what the budget has left), and a backstop ends the translation
+//                       inside it (translation's submit translator);
 //   3. completeSubmit   one short transaction: the attempt is still this one's, the draft has not changed since Submit was
 //                       pressed, then the frozen content is written as the next version with its hash, the entry moves to
 //                       `pending_approval` and the attempt is `committed`.
@@ -19,8 +21,8 @@ import { AlertRoutesUnavailableError, RouteConfigError } from "../../translation
 import { FROZEN_LANGS } from "../domain/translations";
 import type { AlertRefusal } from "../domain/refusals";
 import type { AttemptState } from "../domain/submitAttempt";
-import type { AlertActor, EntryPreparer, FreezeResult } from "./ports";
-import type { AlertLifecycle, ApprovalBinding, EntryRef, SubmitStart } from "./lifecycle";
+import type { AlertActor, EntryPreparer, FreezeResult, FrozenContent } from "./ports";
+import type { AlertLifecycle, ApprovalBinding, EntryRef, SubmitMode, SubmitStart } from "./lifecycle";
 import type { AlertSubmitFailureReason, OpsEvent } from "../../ops";
 
 /** How an attempt ended, or why none was made. */
@@ -41,6 +43,9 @@ export interface SubmitterDeps {
   /** How long to wait for the progress writes still pending when the preparation ends. Defaults to 1000. */
   settleMs?: number;
 }
+
+/** What the press keeps back for the freezing transaction when it caps the wait for the progress writes (the budget's 5 s hold 2 s after the translation's stop). */
+export const COMMIT_RESERVE_MS = 1_000;
 
 const REASON_OF: Partial<Record<AlertRefusal, AlertSubmitFailureReason>> = {
   ROUTES_UNAVAILABLE: "routes_unavailable",
@@ -70,55 +75,56 @@ export function createSubmitter(deps: SubmitterDeps) {
     }
   };
 
-  /** Waits for the writes still pending, no longer than `settleMs`: the progress of a language that is already settled is never worth a wait. */
-  async function settle(writes: readonly Promise<unknown>[]): Promise<void> {
-    if (writes.length === 0) return;
+  /** Waits for the writes still pending, no longer than `limitMs`: the progress of a language that is already settled is never worth a wait. */
+  async function settle(writes: readonly Promise<unknown>[], limitMs: number): Promise<void> {
+    if (writes.length === 0 || limitMs <= 0) return;
     let timer: ReturnType<typeof setTimeout> | undefined;
-    await Promise.race([Promise.allSettled(writes), new Promise<void>((resolve) => (timer = setTimeout(resolve, settleMs)))]);
+    await Promise.race([Promise.allSettled(writes), new Promise<void>((resolve) => (timer = setTimeout(resolve, limitMs)))]);
     clearTimeout(timer);
   }
 
-  async function run(actor: AlertActor, ref: EntryRef, key: string, mode: Parameters<AlertLifecycle["beginSubmit"]>[3]): Promise<SubmitReport> {
+  async function run(actor: AlertActor, ref: EntryRef, key: string, mode: SubmitMode): Promise<SubmitReport> {
+    // The budget (the longest route deadline plus 5 s) is counted from the press, so every step below is measured from here.
+    const pressedAt = now().getTime();
+    const elapsed = () => Math.max(0, Math.min(1_000_000, now().getTime() - pressedAt));
     const began = await lifecycle.beginSubmit(actor, ref, key, mode);
     if (!began.ok) return { state: "refused", refusal: began.error };
     const start: SubmitStart = began.value;
     if (start.kind === "replay") return { state: start.attempt.state, key, outcome: start.attempt.outcome };
 
-    const startedAt = now().getTime();
-    const elapsed = () => Math.max(0, Math.min(1_000_000, now().getTime() - startedAt));
     const failed = async (outcome: AlertRefusal): Promise<SubmitReport> => {
-      await lifecycle.failSubmit(actor, ref, key, outcome, start.context.isDrill);
-      const reason = REASON_OF[outcome];
-      if (reason) await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason, ms: elapsed() } });
+      // The refusal is audited, and an ops event is raised, only by the call that ended the attempt (one that was no longer running is not ended twice).
+      if (await lifecycle.failSubmit(actor, ref, key, outcome, start.context.isDrill)) {
+        const reason = REASON_OF[outcome];
+        if (reason) await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason, ms: elapsed() } });
+      }
       return { state: "failed", key, outcome };
     };
 
     const writes: Promise<unknown>[] = [];
     const track = (write: Promise<unknown>) => writes.push(write.catch(() => undefined));
+    let budgetMs: number | null = null;
+    /** What the press has left to settle the progress writes in: the budget less what the freezing transaction needs. */
+    const settleLimit = () => (budgetMs === null ? settleMs : Math.min(settleMs, budgetMs - COMMIT_RESERVE_MS - elapsed()));
     let prepared: FreezeResult;
     try {
       prepared = await preparer.prepare(start.expected, start.context, {
-        onBudget: (budgetMs) => track(lifecycle.recordBudget(ref, key, budgetMs)),
+        spentMs: elapsed(),
+        onBudget: (value) => {
+          budgetMs = value;
+          track(lifecycle.recordBudget(ref, key, value));
+        },
         onLanguage: (translation) => track(lifecycle.recordProgress(ref, key, translation.lang, translation.status)),
       });
     } catch (error) {
-      await settle(writes);
+      await settle(writes, settleLimit());
       return failed(refusalOfPreparationError(error));
     }
-    await settle(writes);
+    await settle(writes, settleLimit());
     if (!prepared.ok) return failed(prepared.error);
 
-    let done: Awaited<ReturnType<AlertLifecycle["completeSubmit"]>>;
-    try {
-      done = await lifecycle.completeSubmit(actor, ref, key, prepared.value, start.expected, start.possibleDuplicateOf);
-    } catch {
-      // The freezing transaction failed (the database, not a rule): nothing was frozen, and the attempt ends failed.
-      await lifecycle.failSubmit(actor, ref, key, "PREPARATION_FAILED", start.context.isDrill);
-      await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason: "commit_failed", ms: elapsed() } });
-      return { state: "failed", key, outcome: "PREPARATION_FAILED" };
-    }
-    // A refusal here (DRAFT_CHANGED: "This alert changed while it was being prepared. Submit again.") was audited and ended the attempt as failed.
-    if (!done.ok) return { state: "failed", key, outcome: done.error };
+    const frozen = await freeze(actor, ref, key, prepared.value, start, elapsed);
+    if (frozen.state === "failed") return { state: "failed", key, outcome: frozen.outcome };
 
     const fellBack = prepared.value.translations.filter((translation) => translation.status === "fallback_en").length;
     if (fellBack > 0 && deps.translationConfigured !== false) {
@@ -127,10 +133,44 @@ export function createSubmitter(deps: SubmitterDeps) {
     return { state: "committed", key, outcome: null };
   }
 
+  /**
+   * The freezing transaction. A refusal (DRAFT_CHANGED: "This alert changed while it was being prepared. Submit again.") was audited and ended
+   * the attempt as failed by the lifecycle. A transaction that threw (the connection dropped) may or may not have committed first, so the
+   * attempt is ended as failed only if it is still running; when it is not, the stored attempt says how it ended, and that is what is reported:
+   * a commit that went through is reported as committed, with no refusal audited and no failure raised for it.
+   */
+  async function freeze(
+    actor: AlertActor,
+    ref: EntryRef,
+    key: string,
+    frozen: FrozenContent,
+    start: Extract<SubmitStart, { kind: "started" }>,
+    elapsed: () => number,
+  ): Promise<{ state: "committed" } | { state: "failed"; outcome: AlertRefusal }> {
+    try {
+      const done = await lifecycle.completeSubmit(actor, ref, key, frozen, start.expected, start.possibleDuplicateOf);
+      return done.ok ? { state: "committed" } : { state: "failed", outcome: done.error };
+    } catch {
+      if (await lifecycle.failSubmit(actor, ref, key, "PREPARATION_FAILED", start.context.isDrill)) {
+        await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason: "commit_failed", ms: elapsed() } });
+        return { state: "failed", outcome: "PREPARATION_FAILED" };
+      }
+      const stored = await lifecycle.entryState(ref).then(
+        (state) => (state?.attempt?.key === key ? state.attempt : null),
+        () => null,
+      );
+      if (stored?.state === "committed") return { state: "committed" };
+      return { state: "failed", outcome: stored?.outcome ?? "PREPARATION_FAILED" };
+    }
+  }
+
   return {
-    /** One press of Submit: the draft is translated, rendered and frozen as the next version, or nothing is. The same key returns the first attempt's result. */
-    submit(actor: AlertActor, ref: EntryRef, key: string): Promise<SubmitReport> {
-      return run(actor, ref, key, { kind: "submit" });
+    /**
+     * One press of Submit: the draft is translated, rendered and frozen as the next version, or nothing is. The same key returns the first
+     * attempt's result. `draft` is the fingerprint of the draft the author saved and saw just before pressing; a draft that is not that is refused (DRAFT_CHANGED).
+     */
+    submit(actor: AlertActor, ref: EntryRef, key: string, draft?: string): Promise<SubmitReport> {
+      return run(actor, ref, key, draft === undefined ? { kind: "submit" } : { kind: "submit", draft });
     },
 
     /** "Try translation again" on a pending entry (S04.03): back to draft, translated again (what already passed comes from the cache) and re-submitted as the next version. */

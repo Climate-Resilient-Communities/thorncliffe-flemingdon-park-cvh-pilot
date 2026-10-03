@@ -78,12 +78,15 @@ export const alertEntry = pgTable(
     webPublishedAt: timestamp("web_published_at", { withTimezone: true }),
     /** S04.05: the open, non-drill thread this entry may duplicate, worked out at submit and frozen with it; advisory, not hashed. */
     possibleDuplicateOf: uuid("possible_duplicate_of").references(() => alert.id),
+    /** S04.05: how the author chose the valid-until, "until resolved" or a date and time; the composer opens on it. */
+    validUntilMode: text("valid_until_mode").notNull().default("at"),
     createdAt: timestamp("created_at", { withTimezone: true }).notNull().defaultNow(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     check("alert_entry_duplicate_not_self", sql`${t.possibleDuplicateOf} is null or ${t.possibleDuplicateOf} <> ${t.alertId}`),
     check("alert_entry_draft_no_duplicate", sql`${t.status} <> 'draft' or ${t.possibleDuplicateOf} is null`),
+    check("alert_entry_valid_until_mode_valid", sql`${t.validUntilMode} in ('at', 'resolved')`),
     index("alert_entry_possible_duplicate_of_idx").on(t.possibleDuplicateOf),
     check("alert_entry_kind_valid", sql`${t.kind} in ('ack', 'update', 'correction', 'withdrawal', 'final')`),
     check("alert_entry_status_valid", sql`${t.status} in ('draft', 'pending_approval', 'approved', 'discarded', 'superseded', 'published_system')`),
