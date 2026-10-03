@@ -2057,7 +2057,7 @@ So that what I approve is what residents get, byte for byte.
 
 ### Story S04.07 — A second person approves exactly what they reviewed, on a phone
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 26 min (started 2026-10-03 07:29 UTC, built 09:55 UTC), plus the E06 wiring
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 26 min (started 2026-10-03 07:29 UTC, built 09:55 UTC), plus the E06 wiring: 25 min (started 10:39 UTC, built 11:04 UTC)
 - **Traces:** FR-A15, FR-A3 (recipients per language), AR-19 (approval view), UX-DR16 (O-05, O-07), FR-M2 · **Depends on:** S04.03, S04.05, S04.06, S06.01 (the approval seam and the `delivery` table), S06.02 (`kickDispatcher`, which starts the sender after the approval), S06.06 (`pauseNoticeForApprover()`, the approver's notice while texts are paused) · **Branch:** `e04-s07-approval`
 
 As a Hub Coordinator,
@@ -2101,7 +2101,7 @@ So that a mistake is caught by a second person before residents see it.
 
 **Given** the outbox's approval seam (S06.01)
 **When** the approval transaction runs
-**Then** it calls `createDeliveryQueue().markApprovalTransaction(tx, entryId)` for the entry being approved before `captureRecipients(entry, tx)` writes anything, in the same transaction, and `captureRecipients` writes alert deliveries only through `enqueueAlertDeliveries(tx, entryId, texts)` with the entry's frozen body and segments for each recipient's language (the database refuses an `alert` delivery otherwise); the recipient count it audits and compares with the reviewed count is the number of texts returned (test with a fake `captureRecipients` that returns recipients, against real `delivery` rows)
+**Then** it calls `createDeliveryQueue().markApprovalTransaction(tx, entryId)` for the entry being approved before `captureRecipients(entry, tx)` is called, in the same transaction; `captureRecipients` writes nothing and returns the recipients (`{kind, id, lang}`), and the approval writes alert deliveries only through `enqueueAlertDeliveries(tx, entryId, texts)` with the entry's frozen body and segments for each recipient's language (the database refuses an `alert` delivery otherwise; deviation from the first wording, recorded in the spine's "As built (S04.07 with E06)"); the recipient count it audits and compares with the reviewed count is the number of texts returned (test with a fake `captureRecipients` that returns recipients, against real `delivery` rows)
 
 **Given** the sender (S06.02) and an approval that has just succeeded
 **When** the approval's transaction has committed
@@ -2488,7 +2488,7 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 **Depends on earlier epics:** S01.02 (production-only Twilio, `SMS_MODE`), S01.04 (audit), S01.10 (`aal2`), S01.12 (policy), S01.15 (spike, removed here), S04.03 (lifecycle and thread lock), S04.06 (frozen bodies and segments), S04.07 (approval transaction and `captureRecipients` hook), S05.02 to S05.04 (`cancelQueued`, closing entry, final recipients), S03.02 (`spend_event`). Each story creates only the tables it needs and names the stories it depends on.
 
-**Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim and hand-off rules, and repeats E05's final-delivery test with real deliveries. `captureRecipients` is implemented here for drills only (drill roster); E07 adds subscribers.
+**Handoffs.** This epic implements `cancelQueued(entryIds, tx)` and the claim and hand-off rules, and repeats E05's final-delivery test with real deliveries. `captureRecipients` is implemented here for drills only (drill roster; it returns the roster recipients and the approval writes their texts through `enqueueAlertDeliveries`); E07 adds subscribers.
 
 **What the sender guarantees.** It prevents automatic duplicate submissions: a text is handed to the provider at most once unless an Admin deliberately resends it (E09). It does not guarantee exactly-once delivery: a text whose outcome is unclear is marked `unknown`, never re-sent automatically, and may or may not have arrived.
 
@@ -2539,7 +2539,7 @@ Every outbound text goes through one queue and one sender: in a fixed priority o
 
 ### Story S06.01 — Every outbound text is one queued record, never a phone number
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 32 min (started 2026-10-03 02:51 UTC, built 04:23 UTC)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 25 min (started 2026-10-03 02:58 UTC, built 04:23 UTC)
 - **Traces:** AR-12, AR-17 (no phone in delivery), FR-A17 · **Depends on:** S04.03, S04.06 (built before S04.07, which depends on this story's approval seam below) · **Branch:** `e06-s01-outbox`
 
 As a Hub Admin,
@@ -2575,7 +2575,7 @@ So that we can always see what went out and nothing is submitted twice automatic
 
 **What is built, and the seams the other stories use.** S04.07 is not built, so the messaging side follows the spine and offers the smallest clearly named seam for each later story; `test/db/delivery.db.test.ts` tests every seam directly, with SQL as the app's credentials. Nothing here sends a text or reads a provider's credentials.
 
-- **Approval (S04.07).** The approval transaction calls `createDeliveryQueue().markApprovalTransaction(tx, entryId)` for the entry being approved, before `captureRecipients(entry, tx)` writes anything and in the same transaction; it sets the transaction-local setting `cvh.approval_entry_id`, which ends with the transaction. `captureRecipients` writes alert deliveries only through `enqueueAlertDeliveries(tx, entryId, texts)`: per text, the recipient (`{kind: 'subscriber' | 'roster', id}`), the language of the body (a recipient whose language has no frozen body gets a row in `en`), the entry's frozen `sms_bodies[lang]` body and segments, and the cost estimate in cents. The database refuses the row unless the marker names this entry, the entry is `pending_approval` or is `approved` by this same transaction (`approved_at = now()`, which the entry's own trigger sets when the approval's update runs: write the deliveries before or after that update in the transaction, never in a later one), the key is `entry_id:recipient_id:sms` and the body and segments equal the entry's frozen ones for that language. S04.07 must pass ids in lowercase (the ids the database gives are); an uppercase id is refused as `ID_INVALID`. The result lists every text with `created` (false for a recipient already given a text for this entry), so a repeated approval adds nothing and the recipient count audited by `entry.approved` is the number of texts. The rows are written after `alert`, `alert_entry` and `feed_version` are locked (AD-18). S06.01's own tests use the seam directly because S04.07 is not built.
+- **Approval (S04.07).** The approval transaction calls `createDeliveryQueue().markApprovalTransaction(tx, entryId)` for the entry being approved, before `captureRecipients(entry, tx)` is called and in the same transaction; it sets the transaction-local setting `cvh.approval_entry_id`, which ends with the transaction. `captureRecipients` returns the recipients and writes nothing; the approval writes alert deliveries only through `enqueueAlertDeliveries(tx, entryId, texts)`: per text, the recipient (`{kind: 'subscriber' | 'roster', id}`), the language of the body (a recipient whose language has no frozen body gets a row in `en`), the entry's frozen `sms_bodies[lang]` body and segments, and the cost estimate in cents. The database refuses the row unless the marker names this entry, the entry is `pending_approval` or is `approved` by this same transaction (`approved_at = now()`, which the entry's own trigger sets when the approval's update runs: write the deliveries before or after that update in the transaction, never in a later one), the key is `entry_id:recipient_id:sms` and the body and segments equal the entry's frozen ones for that language. S04.07 must pass ids in lowercase (the ids the database gives are); an uppercase id is refused as `ID_INVALID`. The result lists every text with `created` (false for a recipient already given a text for this entry), so a repeated approval adds nothing and the recipient count audited by `entry.approved` is the number of texts. The rows are written after `alert`, `alert_entry` and `feed_version` are locked (AD-18). S06.01's own tests use the seam directly because S04.07 is not built.
 - **Sender (S06.02), callbacks (S06.04).** `domain/deliveryState.ts` is the transition table (`canTransition`); the `delivery_guard` trigger enforces it, so a claim is `state = 'claimed'` with `claimed_by` and `claim_token` (the database times `claimed_at`), the hand-off is one update of `handed_off_at` while the row is claimed (the database times it; once only), a return to `queued` clears the claim, the lease and the hand-off, and a `queued` or claimed-but-not-handed-off row can be `cancelled` or `skipped` but a handed-off one cannot. No automatic second submission is the database's rule, not only the dispatcher's: a handed-off row returns to `queued` only with `attempts` raised (the provider did not accept it: HTTP 429, or a connection that failed before the request was sent), and `attempts` stops at 3, so a fourth return is refused and the row can only become `failed`, `unknown` or answered; a claimed row that was never handed off (a pause, an expired claim) returns with no attempt counted; a claimed row becomes `submitted`, `unknown`, `delivered` or `undelivered` only after `handed_off_at` was recorded (the lease expiry of a handed-off row is `unknown`, never `queued`; `failed` and `skipped_env` need no hand-off, for an unusable number and for `SMS_MODE=log`); a `queued` row holds no `provider_message_id`. `submitted`, `delivered` and `undelivered` need `provider_message_id`, which never changes once set; `due_at` is the backoff. The dispatcher asks `contactResolver()` (`src/app/messaging.ts`) for the number inside the hand-off transaction, and must read the delivery row's `recipient_kind` and `recipient_id` (the row is locked `FOR UPDATE` first) before it asks, because taking an `inbound_reply` number deletes that row and its `delivery_forget_recipient` trigger then clears `recipient_id` on the very row being handed off (the hand-off still commits; test). So a `signup_info` text whose number was taken is never retried (a 429 requeue finds no recipient, and the next hand-off skips it as `recipient_gone`), and its key becomes `detached:<id>` while it is in flight, so the original key is free again: a duplicate reply to one inbound message is stopped by `inbound_seen` (S07.04), not by the delivery key. S06.02 adds `dispatcher_lease` and `messaging_control`.
 - **Cancellation (S06.03).** `cancelQueued` sets `queued` and claimed-but-not-handed-off rows to `cancelled` (the trigger refuses anything else); `skipRecipientDeliveries(tx, recipient)` already does the same with `skipped` for a recipient's deletion and reports the rows already in flight.
 - **Recipient tables (S06.05 `drill_roster`, S06.07 `oncall_roster`, S07.02 `pending_signup`, S07.04 `subscriber` and `inbound_reply`).** Each recipient table has an `id` primary key and, in the migration that creates it, the trigger `create trigger <table>_forget_deliveries after delete on <table> for each row execute function delivery_forget_recipient('<recipient_kind>')`: `recipient_id` is not a foreign key, because the table it points to depends on `recipient_kind`, so this trigger is its `ON DELETE SET NULL` (it belongs in the migration that creates the table: `db:check-destructive` refuses a trigger added to an existing one; `staff_account` is never deleted, only marked removed, so `staff` needs none). It also replaces the row's key with `detached:<id>`, so a past delivery keeps no reference to the person. The deleting use case calls `skipRecipientDeliveries` first, in its transaction, then deletes the recipient. Each module adds its `RecipientNumberSource` to `ownerSources()` in `src/app/messaging.ts` (`numberOf(tx, recipientId, {consume})`; for `inbound_reply`, `consume` is true: lock the row `FOR UPDATE`, read the number, delete the row, all in `tx`). S06.05 also adds the drill trigger (a drill entry only to `roster`, a real one never), which this migration does not have.
@@ -2584,7 +2584,7 @@ So that we can always see what went out and nothing is submitted twice automatic
 
 ### Story S06.02 — One sender submits each text at most once, in priority order and at a shared pace
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 50 min (started 2026-10-03 04:23 UTC, built 06:13 UTC)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 48 min (started 2026-10-03 04:25 UTC, built 06:13 UTC)
 - **Traces:** AR-12, AR-19 (byte-for-byte), FR-M2 (delivery data) · **Depends on:** S06.01 · **Branch:** `e06-s02-dispatcher`
 
 As a Hub Coordinator,
@@ -2696,7 +2696,7 @@ So that nobody receives something we already took back, while the final word sti
 
 ### Story S06.04 — Delivery status comes only from signed provider callbacks
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 46 min (started 2026-10-03 06:13 UTC, built 07:59 UTC)
+- **Size:** M · **Estimate:** 6 h · **Actual:** 1 h 44 min (started 2026-10-03 06:15 UTC, built 07:59 UTC)
 - **Traces:** AR-12 (status webhooks), FR-M2, Consistency Conventions (webhook signatures) · **Depends on:** S06.02 · **Branch:** `e06-s04-status-webhooks`
 
 As a Hub Admin,
@@ -2764,7 +2764,7 @@ So that we practise sending without any chance of reaching residents.
 
 **Given** a drill entry is approved by a second person
 **When** `captureRecipients` runs
-**Then** it creates deliveries only for drill roster entries, each in the entry's frozen body for the roster member's language, with the exercise marker first
+**Then** it returns only drill roster entries as recipients, and the approval's texts for them (written through `enqueueAlertDeliveries`) are each in the entry's frozen body for the roster member's language, with the exercise marker first
 
 **Given** any attempt to create a delivery for a drill entry to a non-roster recipient, or for a real entry to a roster recipient
 **When** it reaches the database
@@ -2784,7 +2784,7 @@ So that we practise sending without any chance of reaching residents.
 
 ### Story S06.06 — An Admin can pause all sending at once
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 31 min (started 2026-10-03 06:13 UTC, built 08:44 UTC)
+- **Size:** S · **Estimate:** 4 h · **Actual:** 2 h 34 min (started 2026-10-03 06:10 UTC, built 08:44 UTC)
 - **Traces:** AR-12 (pause), NFR-N6 · **Depends on:** S06.02 · **Branch:** `e06-s06-pause`
 
 As a Hub Admin,
@@ -3206,7 +3206,7 @@ So that every text I get matters to me.
 
 **Given** an entry is approved
 **When** `captureRecipients(entry, tx)` runs inside the approval transaction
-**Then** it locks the matching subscriber rows `FOR SHARE` in lock order, creates one `alert` delivery per subscriber with the frozen body for the subscriber's current language (or the English fallback body with `translation.unavailable` for a fallback language), and returns the count to S04.07's reviewed-count check
+**Then** it locks the matching subscriber rows `FOR SHARE` in lock order, returns one recipient per subscriber with the subscriber's current language, writing no delivery; the approval turns each into one `alert` delivery through `enqueueAlertDeliveries` with the frozen body for that language, or the entry's English body for a language with none (`alerting/application/approvalTexts.ts`; the fallback text is a delivery in `en`; the approval does not write `translation.unavailable` on it, so S07.07 must say where that marker is kept before it relies on it), and S04.07's reviewed-count check compares the number of texts written
 **And** a subscriber who signs up, changes places or unsubscribes during approval is either fully included or fully excluded (concurrency test)
 
 **Given** a correction or withdrawal

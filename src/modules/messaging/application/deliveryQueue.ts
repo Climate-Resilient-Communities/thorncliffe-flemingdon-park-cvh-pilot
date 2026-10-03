@@ -68,7 +68,7 @@ export interface DeliveryQueue {
    */
   markApprovalTransaction(tx: DbTransaction, entryId: string): Promise<DeliveryResult<void>>;
   /**
-   * Writes the entry's alert deliveries (`captureRecipients`, S06.05 for drills, E07 for subscribers): each in the entry's
+   * Writes the entry's alert deliveries, called by the approval (`alerting`) with the recipients that `captureRecipients` (S06.05 for drills, E07 for subscribers) returned: each in the entry's
    * frozen SMS body for the recipient's language. All or none: one refused text refuses the batch. A recipient already
    * given a text for this entry is returned as it is.
    */
