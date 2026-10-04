@@ -49,6 +49,7 @@ export { PROVIDER_ERRORS, torontoDate, type ProviderError } from "./domain/provi
 export { TORONTO_BOUNDS, inToronto } from "@/contracts/torontoBounds";
 export { catalogueHash, catalogueVersion, gitCommitOf } from "./adapters/catalogueVersion";
 export { openccZhHant } from "./adapters/openccConverter";
+export { decodeVectorsBinary, encodeVectorsBinary } from "./domain/vectorsBinary";
 export { DIRECTORY_BUCKET, fileDirectoryStorage, memoryDirectoryStorage, supabaseDirectoryStorage } from "./adapters/releaseStorage";
 export {
   PUBLISH_FAILURE_CODES,

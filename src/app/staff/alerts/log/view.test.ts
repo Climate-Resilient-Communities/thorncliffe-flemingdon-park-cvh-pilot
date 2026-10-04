@@ -57,4 +57,14 @@ describe("the log screen", () => {
   it("has a refusal for a role that may not log", () => {
     expect(forbiddenMessage()).toBe("Only a Coordinator or an Admin can log a disruption.");
   });
+
+  it("is a drill's start (S06.05) with its own words and the exercise marker, and a real disruption's carries none", () => {
+    const drill = logScreen(PLANS, NOW, { kind: "ack", drill: true });
+    expect(drill.title).toBe("Start a drill");
+    expect(drill.submit).toBe("Continue to the drill acknowledgement");
+    expect(drill.benchmark).toBe("Practice only: no resident gets anything from a drill.");
+    expect(drill.exercise).toEqual({ title: "Exercise. This is practice.", sub: "Nothing here is sent to residents." });
+    expect(logScreen(PLANS, NOW, { kind: "ack" }).exercise).toBeNull();
+    expect(logScreen(PLANS, NOW, { kind: "update" }).exercise).toBeNull();
+  });
 });

@@ -12,6 +12,10 @@ import { HealthBanner } from "@/app/staff/HealthBanner";
 import type { HealthBannerView } from "@/app/staff/healthBannerModel";
 import { OncallFormsView } from "@/app/staff/oncall/OncallFormsView";
 import { OncallView } from "@/app/staff/oncall/OncallView";
+import { DrillsView } from "@/app/staff/drills/DrillsView";
+import type { DrillsView as DrillsModel } from "@/app/staff/drills/view";
+import { RosterFormsView } from "@/app/staff/drills/roster/RosterFormsView";
+import { RosterView } from "@/app/staff/drills/roster/RosterView";
 import type { PauseBannerView } from "@/app/staff/pauseBanner";
 import { PauseTextsFormView } from "@/app/staff/texts/PauseTextsFormView";
 import { TextsView } from "@/app/staff/texts/TextsView";
@@ -884,6 +888,46 @@ export function OncallFixture({
         <OncallView count={count} unreadable={unreadable} forms={<OncallFormsView {...form} />} />
       </Screen>
     </HubShell>
+  );
+}
+
+/**
+ * The Hub shell around the Drills screen (S06.05), as an Admin sees it: the real body (DrillsView) on a view built by the app's own view functions
+ * (e2e/hub/drills.spec.ts), with a fictional roster and counts.
+ */
+export function DrillsFixture({ texts, brand, view }: { texts: HubShellTexts; brand: { logoSrc: string; symbolSrc: string }; view: DrillsModel }) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/drills">
+      <Screen surface="staff" testId="screen">
+        <DrillsView view={view} />
+      </Screen>
+    </AroundTheScreen>
+  );
+}
+
+/**
+ * The Hub shell around the drill roster screen (S06.05), as an Admin sees it: the real body (RosterView) and the real, behaviour-free list and forms
+ * (RosterFormsView) with the state a press would leave. Every number is a fictional one masked to its last four digits.
+ */
+export function DrillRosterFixture({
+  texts,
+  brand,
+  count,
+  unreadable,
+  form,
+}: {
+  texts: HubShellTexts;
+  brand: { logoSrc: string; symbolSrc: string };
+  count: number;
+  unreadable?: boolean;
+  form: ComponentProps<typeof RosterFormsView>;
+}) {
+  return (
+    <AroundTheScreen texts={texts} brand={brand} signedIn current="/staff/drills/roster">
+      <Screen surface="staff" testId="screen">
+        <RosterView count={count} unreadable={unreadable} forms={<RosterFormsView {...form} />} />
+      </Screen>
+    </AroundTheScreen>
   );
 }
 

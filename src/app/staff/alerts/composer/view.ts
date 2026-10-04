@@ -17,6 +17,7 @@ import { composerPage, correctHref, withdrawHref, type ComposerFrom } from "../p
 import { GROUPS_PAGE, PLACE_PAGE, type DraftRef } from "../audience/editAudience";
 import { fieldsOfStoredInstant, type TimeFields } from "../timeField";
 import { typeName } from "../typeNames";
+import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
 import { formatTorontoDateTime } from "@/platform/clock";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
@@ -143,6 +144,8 @@ export interface ComposerScreen {
   ref: DraftRef;
   title: string;
   lead: string;
+  /** The exercise marker (X-10, S06.05) when the thread is a drill, so no composer of a drill passes for a real alert's; null otherwise. */
+  exercise: ExerciseWords | null;
   firstReport: string;
   benchmark: string;
   /** `new`: an update whose draft is not made yet (S05.01): saving makes it. */
@@ -385,6 +388,7 @@ export function composerScreen(input: ComposerInput): ComposerScreen {
     ref,
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
+    exercise: thread.isDrill ? exerciseWords() : null,
     firstReport: t("firstReport", { time: formatTorontoDateTime(thread.reportedAt) }),
     benchmark: t("benchmark"),
     status,
@@ -510,6 +514,7 @@ export function startScreen(input: StartInput): ComposerScreen {
     ref,
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
+    exercise: input.thread.thread.isDrill ? exerciseWords() : null,
     firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
     benchmark: "",
     status: "new",
@@ -613,6 +618,7 @@ export function replaceStartScreen(input: ReplaceStartInput): ComposerScreen {
     ref,
     title: TITLES[mode].title(t),
     lead: TITLES[mode].lead(t),
+    exercise: input.thread.thread.isDrill ? exerciseWords() : null,
     firstReport: t("firstReport", { time: formatTorontoDateTime(input.thread.thread.reportedAt) }),
     benchmark: "",
     status: "new",

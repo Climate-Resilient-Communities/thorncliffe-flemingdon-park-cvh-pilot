@@ -26,7 +26,7 @@
 import { and, desc, eq, isNotNull, sql, type SQL } from "drizzle-orm";
 import { monthlyUsage, recordSpendEvent, withSpendLock } from "@/modules/spend";
 import type { Db } from "@/platform/db";
-import { sha256Hex } from "@/platform/hash";
+import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { directoryRelease } from "../adapters/schema";
 import { RELEASE_LANGS, ReleaseSearchSchema, type ReleaseSearch, type SnapshotCategory, type SnapshotProvider } from "../domain/directoryRelease";
 import {
@@ -40,6 +40,7 @@ import {
   listingProviderIds,
   searchItems,
   searchPlan,
+  sortedVectorEntries,
   unknownEmergencyCategories,
   vectorsFileBody,
   vectorsProblems,
@@ -47,7 +48,9 @@ import {
   type ReleaseSearchRecord,
   type SearchPlan,
   type VectorEntry,
+  type VectorsFile,
 } from "../domain/searchData";
+import { VectorsBinaryError, decodeVectorsBinary, encodeVectorsBinary } from "../domain/vectorsBinary";
 import type { EmbeddedTexts, PublishDeps, SearchBuild } from "./ports";
 import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
 
@@ -63,6 +66,8 @@ export const EMBED_PUBLISH_PURPOSE = "publish";
 const CHUNK_KEY = "search_chunk_";
 
 export const vectorsPathOf = (release: number) => `releases/${release}/vectors.json`;
+/** The compact binary form of the same vectors, read first by the search where a release has it. */
+export const vectorsBinaryPathOf = (release: number) => `releases/${release}/vectors.bin`;
 
 /** Where a step runs: the clock, how long a claim lasts, and the time the whole publish may take. */
 export interface StepClock {
@@ -337,6 +342,19 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
   } catch {
     throw new PublishStepError("storage_unavailable", true);
   }
+  // The compact copy, for a fast cold start of the search. It is an addition, never a requirement: a store that keeps only text, or a
+  // write that fails, leaves the release with its JSON vectors alone (which every reader falls back to).
+  let binary: ReleaseSearchRecord["binary"];
+  if (deps.storage.putBytes) {
+    try {
+      const bytes = encodeVectorsBinary({ releaseV: claim.release, catalogueHash: row.catalogueHash, embedModel: plan.embed_model, entries: sortedVectorEntries(entries) }, sha256HexBytes);
+      const binaryPath = vectorsBinaryPathOf(claim.release);
+      await within(deps.storage.putBytes(binaryPath, bytes), build.vectorsPutTimeoutMs ?? DEFAULT_VECTORS_PUT_TIMEOUT_MS);
+      binary = { path: binaryPath, sha256: sha256HexBytes(bytes), bytes: bytes.length };
+    } catch {
+      binary = undefined;
+    }
+  }
   const record: ReleaseSearchRecord = {
     embed_model: plan.embed_model,
     embed_config: plan.embed_config,
@@ -350,6 +368,7 @@ export async function buildSearchData(db: Db, deps: PublishDeps, claim: ReleaseC
     emergency_categories: plan.emergency_categories,
     sha256: sha256Hex(file.body),
     bytes: Buffer.byteLength(file.body, "utf8"),
+    ...(binary ? { binary } : {}),
     reused,
     embedded: entries.length - reused,
     stored_at: step.clock().toISOString(),
@@ -371,6 +390,30 @@ export interface VerifiedSearch {
 }
 
 const mismatch = (...detail: string[]) => new PublishStepError("search_mismatch", false, detail);
+
+/** The compact vectors, read back: the recorded hash, a valid file, the same release, catalogue, model and providers as the JSON file, and its numbers (as Float32). */
+async function verifyBinary(deps: PublishDeps, binary: NonNullable<ReleaseSearchRecord["binary"]>, file: VectorsFile, catalogueHash: string): Promise<void> {
+  if (!deps.storage.getBytes) throw new PublishStepError("storage_unavailable", true);
+  let bytes: Uint8Array | null;
+  try {
+    bytes = await within(deps.storage.getBytes(binary.path), deps.search?.vectorsGetTimeoutMs ?? DEFAULT_VECTORS_GET_TIMEOUT_MS);
+  } catch {
+    throw new PublishStepError("storage_unavailable", true);
+  }
+  if (bytes === null) throw mismatch("binary_missing");
+  if (sha256HexBytes(bytes) !== binary.sha256) throw mismatch("binary_changed");
+  let decoded: ReturnType<typeof decodeVectorsBinary>;
+  try {
+    decoded = decodeVectorsBinary(bytes, sha256HexBytes);
+  } catch (error) {
+    throw mismatch(error instanceof VectorsBinaryError ? "binary_invalid" : "binary_unreadable");
+  }
+  const { header, vectors } = decoded;
+  if (header.release_v !== file.release_v || header.catalogue_hash !== catalogueHash || header.embed_model !== file.embed_model || header.dims !== file.dims) throw mismatch("binary_differs");
+  if (header.ids.length !== file.providers.length || file.providers.some((p, i) => p.id !== header.ids[i])) throw mismatch("binary_differs");
+  const same = file.providers.every((p, i) => p.vector.every((n, j) => vectors[i]![j] === Math.fround(n)));
+  if (!same) throw mismatch("binary_differs");
+}
 
 /**
  * Reads the release's vectors file back from the store and checks it against the release and against the listing files
@@ -424,6 +467,7 @@ export async function verifySearchData(db: Db, deps: PublishDeps, claim: Release
   if (record.data.catalogue_hash !== row.catalogueHash) problems.push("record:catalogue");
   if (record.data.vector_count !== file.data.providers.length || record.data.dims !== file.data.dims) problems.push("record:size");
   if (problems.length > 0) throw mismatch(...problems.slice(0, 20));
+  if (record.data.binary) await verifyBinary(deps, record.data.binary, file.data, row.catalogueHash);
 
   return {
     search: ReleaseSearchSchema.parse({

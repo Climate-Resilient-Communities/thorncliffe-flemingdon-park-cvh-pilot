@@ -27,8 +27,8 @@ describe("resident test image", () => {
   it("is the only place CI and the npm scripts name an image", () => {
     expect(manifest.scripts["test:resident:docker"]).toBe("scripts/resident-docker.sh");
     expect(manifest.scripts["test:resident:update"]).toBe("scripts/resident-docker.sh --update-snapshots=changed");
-    expect(read(".github/workflows/ci.yml")).not.toMatch(/mcr\.microsoft\.com\/playwright/);
-    expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:resident:docker/);
+    expect(read(".github/workflows/checks.yml")).not.toMatch(/mcr\.microsoft\.com\/playwright/);
+    expect(read(".github/workflows/checks.yml")).toMatch(/run: npm run test:resident:docker/);
   });
 
   it("is the image of the Hub shell's screenshot script too, which sets its own flag", () => {
@@ -39,7 +39,25 @@ describe("resident test image", () => {
     expect(manifest.scripts["test:hub:update"]).toBe("scripts/hub-docker.sh --update-snapshots=changed");
     expect(hub).toMatch(/-e HUB_PINNED_IMAGE=1/);
     expect(read("e2e/hub/helpers.ts")).toMatch(/process\.env\.HUB_PINNED_IMAGE === "1"/);
-    expect(read(".github/workflows/ci.yml")).toMatch(/run: npm run test:hub:docker/);
+    expect(read(".github/workflows/checks.yml")).toMatch(/run: npm run test:hub:docker/);
+  });
+
+  it("is the image of the layout and staff scripts too, so the runner installs no browser", () => {
+    for (const [name, config] of [
+      ["layout", "playwright.layout.config.ts"],
+      ["staff", "playwright.staff.config.ts"],
+    ] as const) {
+      const text = read(`scripts/${name}-docker.sh`);
+
+      expect([...text.matchAll(/mcr\.microsoft\.com\/playwright:([^"\s]+)"/g)].map((match) => match[1])).toEqual([`v${version}-noble`]);
+      expect(text).toContain(`playwright test -c ${config}`);
+      expect(manifest.scripts[`test:${name}:docker`]).toBe(`scripts/${name}-docker.sh`);
+    }
+    // The staff suite's server and browser share the container; the database is outside it.
+    expect(read("scripts/staff-docker.sh")).toMatch(/--network host/);
+    expect(read(".github/workflows/checks.yml")).toMatch(/run: npm run test:layout:docker/);
+    expect(read(".github/workflows/checks.yml")).toMatch(/run: npm run test:staff:docker/);
+    expect(read(".github/workflows/checks.yml")).not.toMatch(/playwright install/);
   });
 
   it("sets the flag that lets the screenshot assertions run", () => {

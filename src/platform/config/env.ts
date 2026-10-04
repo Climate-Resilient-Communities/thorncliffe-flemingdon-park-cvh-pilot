@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { parseUntranslatedKeys } from "../../i18n/untranslated";
 import { PRODUCTION_HOST } from "./hosts";
 
 /**
@@ -194,6 +195,13 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        with a fake model that answers every language with a fixed passing
  *                                                        sample text, so a submit can be run end to end with no Cohere key (the
  *                                                        end-to-end tests); never a real translation
+ * CVH_FAKE_UNTRANSLATED_KEYS
+ *                      server   optional; local development only (start-up fails on Vercel): comma-separated catalog
+ *                                                        keys (R31.title, ...) that every language but English shows as
+ *                                                        English behind "[EN] " on the pages rendered on request, so the
+ *                                                        resident page tests can measure the English fallback whatever is
+ *                                                        translated; read by src/i18n/untranslated.ts, which also ignores
+ *                                                        it on Vercel and during `next build`
  */
 
 /** A POSIX path from the root, or a Windows drive path. */
@@ -242,6 +250,7 @@ const rawSchema = z.object({
   CVH_FAKE_GUIDES_FILE: optionalText,
   CVH_FAKE_DIRECTORY_DIR: optionalText,
   CVH_FAKE_TRANSLATOR: optionalText,
+  CVH_FAKE_UNTRANSLATED_KEYS: optionalText,
   STAFF_PASSWORD_PEPPER: optionalText,
   JOB_SECRET: optionalText,
   JOB_SECRET_PREVIOUS: optionalText,
@@ -906,6 +915,13 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
     problems.push("CVH_FAKE_TRANSLATOR: the translation fake is only allowed in local development, never on Vercel");
   } else if (raw.CVH_FAKE_TRANSLATOR !== undefined && raw.CVH_FAKE_TRANSLATOR !== "sample") {
     problems.push('CVH_FAKE_TRANSLATOR: the only fake is "sample"');
+  }
+
+  if ((environment !== "development" || onVercel) && raw.CVH_FAKE_UNTRANSLATED_KEYS !== undefined) {
+    problems.push("CVH_FAKE_UNTRANSLATED_KEYS: the English-fallback test seam is only allowed in local development, never on Vercel");
+  } else if (raw.CVH_FAKE_UNTRANSLATED_KEYS !== undefined) {
+    const { problem } = parseUntranslatedKeys(raw.CVH_FAKE_UNTRANSLATED_KEYS);
+    if (problem !== undefined) problems.push(`CVH_FAKE_UNTRANSLATED_KEYS: ${problem}`);
   }
 
   const pepper = raw.STAFF_PASSWORD_PEPPER?.trim();

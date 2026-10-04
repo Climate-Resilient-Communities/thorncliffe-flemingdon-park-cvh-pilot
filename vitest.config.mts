@@ -9,6 +9,8 @@ export default defineConfig({
     // Database tests run separately against a disposable server (npm run test:db).
     exclude: ["test/db/**", "**/node_modules/**"],
     environment: "node",
+    // A translation next-intl cannot write (a missing {placeholder} value, a missing key) fails the test instead of logging.
+    setupFiles: ["./test/setup/intl-errors.ts"],
     // next-intl's middleware imports "next/server" without an extension, which Node's ESM resolution refuses.
     server: { deps: { inline: ["next-intl"] } },
   },

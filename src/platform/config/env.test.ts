@@ -246,6 +246,21 @@ describe("CVH_FAKE_GUIDES_FILE", () => {
   });
 });
 
+describe("CVH_FAKE_UNTRANSLATED_KEYS", () => {
+  it("is allowed only in local development, off Vercel", () => {
+    expect(() => parseEnv({ ...local, CVH_FAKE_UNTRANSLATED_KEYS: "R31.title, R31.lead" })).not.toThrow();
+    for (const base of [production, preview, { ...local, VERCEL_ENV: "development" }, { ...local, VERCEL: "1", VERCEL_ENV: "development" }]) {
+      expect(problemsOf({ ...base, CVH_FAKE_UNTRANSLATED_KEYS: "R31.title" })).toContain(
+        "CVH_FAKE_UNTRANSLATED_KEYS: the English-fallback test seam is only allowed in local development, never on Vercel",
+      );
+    }
+  });
+
+  it("names catalog keys", () => {
+    expect(problemsOf({ ...local, CVH_FAKE_UNTRANSLATED_KEYS: "R31.title,title" })).toContain('CVH_FAKE_UNTRANSLATED_KEYS: "title" is not a catalog key such as R31.title');
+  });
+});
+
 describe("CVH_FAKE_DIRECTORY_DIR", () => {
   it("is allowed only in local development, off Vercel", () => {
     expect(parseEnv({ ...local, CVH_FAKE_DIRECTORY_DIR: "/tmp/releases" }).fakeDirectoryDir).toBe("/tmp/releases");

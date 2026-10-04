@@ -10,20 +10,33 @@ import type { DirectoryStorage } from "../application/ports";
 /** The private bucket. Created private if it is missing; its files are read only through the app. */
 export const DIRECTORY_BUCKET = "directory-releases";
 
-/** A storage path is `releases/<number>/<lang>.json`: nothing else can name a file. */
-const STORAGE_PATH = /^releases\/[1-9][0-9]{0,8}\/[A-Za-z-]{2,10}\.json$/;
+/** A storage path is `releases/<number>/<lang>.json` or `releases/<number>/vectors.bin` (the compact vectors): nothing else can name a file. */
+const STORAGE_PATH = /^releases\/[1-9][0-9]{0,8}\/(?:[A-Za-z-]{2,10}\.json|vectors\.bin)$/;
+const BINARY_TYPE = "application/octet-stream";
+const BUCKET_FILE_LIMIT = 10 * 1024 * 1024;
 
 function checked(file: string): string {
   if (!STORAGE_PATH.test(file)) throw new Error("not a release file path");
   return file;
 }
 
-export function memoryDirectoryStorage(): DirectoryStorage & { files: Map<string, string>; puts: string[] } {
+export function memoryDirectoryStorage(): DirectoryStorage & { files: Map<string, string>; binaries: Map<string, Uint8Array>; puts: string[]; bytePuts: string[] } {
   const files = new Map<string, string>();
+  const binaries = new Map<string, Uint8Array>();
   const puts: string[] = [];
+  const bytePuts: string[] = [];
   return {
     files,
+    binaries,
     puts,
+    bytePuts,
+    async putBytes(file, body) {
+      binaries.set(checked(file), body.slice());
+      bytePuts.push(file);
+    },
+    async getBytes(file) {
+      return binaries.get(checked(file))?.slice() ?? null;
+    },
     async put(file, body) {
       files.set(checked(file), body);
       puts.push(file);
@@ -42,6 +55,19 @@ export function fileDirectoryStorage(root: string): DirectoryStorage {
       const target = resolve(file);
       await mkdir(path.dirname(target), { recursive: true });
       await writeFile(target, body, "utf8");
+    },
+    async putBytes(file, body) {
+      const target = resolve(file);
+      await mkdir(path.dirname(target), { recursive: true });
+      await writeFile(target, body);
+    },
+    async getBytes(file) {
+      try {
+        return new Uint8Array(await readFile(resolve(file)));
+      } catch (error) {
+        if ((error as { code?: unknown }).code === "ENOENT") return null;
+        throw error;
+      }
     },
     async get(file) {
       try {
@@ -94,9 +120,22 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
     const found = await client.storage.getBucket(bucket);
     if (!found.error) {
       if (found.data.public) throw new Error("the directory bucket is public; it must be private");
+      // A bucket made before the compact vectors only allows JSON: let it keep the binary file too. A failure here only means the
+      // binary upload is refused later, and the release is then published with its JSON vectors alone.
+      const allowed = found.data.allowed_mime_types;
+      if (Array.isArray(allowed) && allowed.length > 0 && !allowed.includes(BINARY_TYPE)) {
+        const limit = found.data.file_size_limit;
+        const updated = await client.storage.updateBucket(bucket, {
+          public: false,
+          allowedMimeTypes: [...allowed, BINARY_TYPE],
+          ...(limit ? { fileSizeLimit: limit } : {}),
+        });
+        // Safe line only: no vendor message. It tells the owner why vectors.bin is missing from a release.
+        if (updated.error) console.error(JSON.stringify({ event: "directory_bucket_update_failed", detail: "binary_type_not_allowed" }));
+      }
       return;
     }
-    const made = await client.storage.createBucket(bucket, { public: false, allowedMimeTypes: ["application/json"], fileSizeLimit: 10 * 1024 * 1024 });
+    const made = await client.storage.createBucket(bucket, { public: false, allowedMimeTypes: ["application/json", BINARY_TYPE], fileSizeLimit: BUCKET_FILE_LIMIT });
     // Another instance may have made it in the meantime.
     if (made.error && !/already exists|duplicate/i.test(made.error.message)) throw new Error("the directory bucket could not be made");
   };
@@ -119,17 +158,36 @@ export function supabaseDirectoryStorage(config: SupabaseDirectoryStorageConfig)
       });
       if (error) throw new Error("the directory file could not be stored");
     },
-    async get(file) {
+    async putBytes(file, body) {
       const key = checked(file);
-      // A read never makes or checks the bucket (that is the publish's job, in `put`): on the search's read path a bucket call
-      // would add two round trips to Storage to every cold request. A bucket that is not there answers not found.
-      const { data, error } = await (await getClient()).storage.from(bucket).download(key);
-      if (error) {
-        const status = (error as { status?: number | string; statusCode?: number | string }).status ?? (error as { statusCode?: number | string }).statusCode;
-        if (String(status) === "404" || /not.?found|does not exist/i.test(error.message)) return null;
-        throw new Error("the directory file could not be read");
-      }
-      return data.text();
+      await open();
+      const { error } = await (await getClient()).storage.from(bucket).upload(key, new Blob([body as BlobPart], { type: BINARY_TYPE }), {
+        upsert: true,
+        contentType: BINARY_TYPE,
+        cacheControl: "31536000",
+      });
+      if (error) throw new Error("the directory file could not be stored");
+    },
+    async getBytes(file) {
+      const data = await download(file);
+      return data === null ? null : new Uint8Array(await data.arrayBuffer());
+    },
+    async get(file) {
+      const data = await download(file);
+      return data === null ? null : data.text();
     },
   };
+
+  async function download(file: string): Promise<Blob | null> {
+    const key = checked(file);
+    // A read never makes or checks the bucket (that is the publish's job, in `put`): on the search's read path a bucket call
+    // would add two round trips to Storage to every cold request. A bucket that is not there answers not found.
+    const { data, error } = await (await getClient()).storage.from(bucket).download(key);
+    if (error) {
+      const status = (error as { status?: number | string; statusCode?: number | string }).status ?? (error as { statusCode?: number | string }).statusCode;
+      if (String(status) === "404" || /not.?found|does not exist/i.test(error.message)) return null;
+      throw new Error("the directory file could not be read");
+    }
+    return data;
+  }
 }

@@ -1,14 +1,16 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { NextIntlClientProvider } from "next-intl";
 import { getMessages, getTranslations, setRequestLocale } from "next-intl/server";
 import { notFound } from "next/navigation";
 import { preload } from "react-dom";
 import type { CSSProperties } from "react";
 import { ResidentShell, type NavItem } from "@/ui/shell";
+import { OfflineSupport } from "@/ui/offline";
 import { isLaunchCode, LAUNCH_CODES, LAUNCH_LANGUAGES, languageOf } from "@/i18n/languages";
 import "../globals.css";
 import "./fonts.generated.css";
 import { fontStack, PUBLIC_SANS_LATIN } from "./fonts";
+import { lightColour } from "./manifest.webmanifest/manifest";
 
 // AD-1: the resident surface is /[lang]/…, prerendered for each launch language. dynamicParams = false makes any
 // other first segment a plain 404 that is rendered for the request, not a page cached for a year (a language-shaped
@@ -23,8 +25,18 @@ export async function generateMetadata({ params }: LayoutProps<"/[lang]">): Prom
   const { lang } = await params;
   if (!isLaunchCode(lang)) return {};
   const t = await getTranslations({ locale: lang, namespace: "shell" });
-  return { title: t("cvhName") };
+  // S02.12: installable from the browser. Each language links its own manifest (named in the language, opening on its
+  // home); iOS reads the apple-* tags instead and needs an icon without transparency.
+  return {
+    title: t("cvhName"),
+    manifest: `/${lang}/manifest.webmanifest`,
+    icons: { icon: [{ url: "/icons/icon-192.png", sizes: "192x192", type: "image/png" }], apple: [{ url: "/icons/apple-touch-icon.png", sizes: "180x180" }] },
+    appleWebApp: { capable: true, title: "CVH", statusBarStyle: "default" },
+  };
 }
+
+/** The browser's bar in the header's colour (`surface-raised`), as the installed app's theme colour. */
+export const viewport: Viewport = { themeColor: lightColour("surface-raised") };
 
 /**
  * The root layout of the resident surface: <html lang dir> for the language in the URL, that language's font,
@@ -41,10 +53,15 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
   const language = languageOf(lang);
   const shell = await getTranslations({ locale: lang, namespace: "shell" });
   const r02 = await getTranslations({ locale: lang, namespace: "R02" });
-  // The only part of the catalog a client component of the resident surface reads: the 911 block of error.tsx, which must
-  // be able to draw itself in the page's language when a render fails. Nothing else is sent to the browser.
-  const { x01 } = (await getMessages({ locale: lang })) as { x01: Record<"text" | "call" | "short", string> };
-  const clientMessages = { x01: { text: x01.text, call: x01.call, short: x01.short } };
+  // The parts of the catalog the layout's client components read: the 911 block of error.tsx, which must be able to draw
+  // itself in the page's language when a render fails, and the offline note below. Nothing else is sent to the browser.
+  const { x01, shell: shellMessages, time } = (await getMessages({ locale: lang })) as {
+    x01: Record<"text" | "call" | "short", string>;
+    shell: Record<string, unknown>;
+    time: Record<string, unknown>;
+  };
+  // The offline note (S02.12): "You are offline. Showing what was last loaded {t}", with the time words it needs.
+  const clientMessages = { x01: { text: x01.text, call: x01.call, short: x01.short }, shell: { offline: shellMessages.offline }, time };
   // The prototype's destinations: home (R-03), find help (R-09), map (R-14), be ready (R-24). "Find help" opens the ask screen
   // (R-09, /search, S03.06), which links to the directory (S02.06). It is marked as the current item on both. An alert (R-07) and what
   // "verified" means (R-28) belong to Now, as in the prototype.
@@ -78,6 +95,7 @@ export default async function ResidentLayout({ children, params }: LayoutProps<"
           nav={{ label: shell("navLabel"), items: nav }}
         >
           <NextIntlClientProvider locale={lang} messages={clientMessages}>
+            <OfflineSupport />
             {children}
           </NextIntlClientProvider>
         </ResidentShell>

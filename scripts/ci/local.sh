@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# Runs what the "Checks" job of .github/workflows/ci.yml runs, in the same order,
+# Runs what the three checks jobs of .github/workflows/checks.yml (Static, Database,
+# Browser; ci.yml's "Checks" needs all three) run, one after the other in that order,
 # with the same commands, flags and environment, so nothing is pushed that CI
 # will reject. Run it on the merged result (the branch must contain origin/main).
 #
@@ -10,12 +11,11 @@
 #   --allow-unmerged  only warn about that, for quick local runs
 #
 # The step lines below (`step`, `always_step`, `replaced_step`) are compared with
-# the workflow by test/ci-local.test.ts: add a step to one and it fails until the
-# other has it. The Vercel preview and production jobs need secrets and are not
-# run here.
+# checks.yml by test/ci-local.test.ts: add a step to one and it fails until the
+# other has it. The tested-tree skip, the Vercel preview and production jobs need
+# GitHub and secrets and are not run here.
 set -euo pipefail
 
-CHROMIUM_DEFAULT=/opt/pw-browsers/chromium-1243/chrome-linux64/chrome
 POSTGRES_IMAGE=supabase/postgres:17.11.0.002
 SMOKE_PORT=3000
 
@@ -26,7 +26,7 @@ for arg in "$@"; do
     --install) INSTALL=1 ;;
     --require-merged) REQUIRE_MERGED=1 ;;
     --allow-unmerged) REQUIRE_MERGED=0 ;;
-    -h | --help) sed -n '2,15p' "$0"; exit 0 ;;
+    -h | --help) sed -n '2,16p' "$0"; exit 0 ;;
     *) echo "ci:local: unknown option $arg" >&2; exit 2 ;;
   esac
 done
@@ -54,7 +54,7 @@ die() { echo "ci:local: $*" >&2; exit 2; }
 warn() { printf '\n!!!!!!!! ci:local WARNING: %s\n\n' "$*" >&2; }
 
 # --- preflight ---------------------------------------------------------------
-echo "ci:local: the Vercel preview and production jobs need secrets and are not run here."
+echo "ci:local: the Vercel preview and production jobs need secrets and are not run here; the tested-tree skip is not applied (everything runs)."
 
 node_major=$(node -p 'process.versions.node.split(".")[0]')
 if [ "$node_major" != 22 ]; then
@@ -99,22 +99,10 @@ verify_install() {
 }
 install_or_verify() { if [ "$INSTALL" = 1 ]; then npm ci; else verify_install; fi; }
 
-# CI installs Chromium (Playwright's, v1243); locally the same build is used from
-# disk. `playwright install` is never run.
-export PLAYWRIGHT_CHROMIUM_EXECUTABLE=${PLAYWRIGHT_CHROMIUM_EXECUTABLE:-$CHROMIUM_DEFAULT}
-verify_chromium() {
-  if [ ! -x "$PLAYWRIGHT_CHROMIUM_EXECUTABLE" ]; then
-    echo "Chromium 1243 not found at $PLAYWRIGHT_CHROMIUM_EXECUTABLE. Put Playwright's chromium-1243 there or set PLAYWRIGHT_CHROMIUM_EXECUTABLE; playwright install is not run." >&2
-    return 1
-  fi
-  "$PLAYWRIGHT_CHROMIUM_EXECUTABLE" --version
-}
-verify_chromium >/dev/null || die "$(verify_chromium 2>&1 || true)"
-
 if (echo >"/dev/tcp/127.0.0.1/$SMOKE_PORT") 2>/dev/null; then
   die "port $SMOKE_PORT is in use; the smoke check starts the production server there."
 fi
-command -v docker >/dev/null || die "docker is required for the disposable database."
+command -v docker >/dev/null || die "docker is required for the disposable database and the pinned Playwright image."
 
 # --- the disposable database (CI's service container) --------------------------
 DB_PORT=$(node -e 'const s=require("net").createServer().listen(0,"127.0.0.1",()=>{console.log(s.address().port);s.close()})')
@@ -143,7 +131,7 @@ export GITHUB_SHA
 GITHUB_SHA=$(git rev-parse HEAD)
 export GITHUB_STEP_SUMMARY="$RUNNER_TEMP/step-summary.md"
 
-# --- steps, in the order of the Checks job -----------------------------------
+# --- steps, in the order of the three jobs (Static, Database, Browser) ------------
 names=()
 codes=()
 notes=()
@@ -186,6 +174,7 @@ replaced_step() {
   run_it "$label (as: $*)" "$@"
 }
 
+# Static. (Each CI job runs `npm ci` on its own runner; here one install serves all three.)
 replaced_step 'npm ci' install_or_verify
 step npm run lint
 step npm run typecheck
@@ -196,6 +185,9 @@ step npm run check:layers
 step npm run check:logical
 step npm test
 step npm run lint:deps
+always_step npm run check:strings
+
+# Database.
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:migrate -- --removals-report "$RUNNER_TEMP/migration-removals.json"
 MIGRATE_DATABASE_URL="$CI_DATABASE_URL" step npm run db:check
 TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:db
@@ -205,14 +197,12 @@ base=origin/main
 if [ "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)" ]; then base=HEAD~1; fi
 # A contract note needs the production release, so set PRODUCTION_URL to the production app's URL to check it.
 PRODUCTION_URL="${PRODUCTION_URL:-}" step npm run db:check-destructive -- --base "$base" --removals "$RUNNER_TEMP/migration-removals.json"
-always_step npm run check:strings
-replaced_step 'npx playwright install --with-deps chromium' verify_chromium
-step npm run test:layout
+
+# Browser. The layout, staff, resident and Hub suites run in the pinned Playwright image (scripts/*-docker.sh), as in CI.
 APP_VERSION="$GITHUB_SHA" step npm run build
-STAFF_TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:staff
-# The resident tests run in the pinned Playwright image (scripts/resident-docker.sh), as in CI.
+CI=true step npm run test:layout:docker
+CI=true STAFF_TEST_DATABASE_URL="$CI_DATABASE_URL" step npm run test:staff:docker
 CI=true step npm run test:resident:docker
-# The Hub shell's screenshots run in the same pinned image (scripts/hub-docker.sh), as in CI.
 CI=true step npm run test:hub:docker
 EXPECTED_VERSION="$GITHUB_SHA" step npm run test:smoke
 
@@ -230,4 +220,4 @@ if [ "$failed" = 1 ]; then
   echo "ci:local: FAILED: CI would reject this."
   exit 1
 fi
-echo "ci:local: all Checks steps passed."
+echo "ci:local: all Static, Database and Browser steps passed."

@@ -562,6 +562,34 @@ describe("sending.paused and sending.resumed (S06.06)", () => {
   });
 });
 
+describe("drill_roster.added, drill_roster.edited and drill_roster.removed (S06.05)", () => {
+  type RosterAction = "drill_roster.added" | "drill_roster.edited" | "drill_roster.removed";
+  const ACTIONS: RosterAction[] = ["drill_roster.added", "drill_roster.edited", "drill_roster.removed"];
+  const roster = (action: RosterAction, meta: Record<string, unknown>) =>
+    event({ action, subjectType: "drill_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);
+
+  it.each(ACTIONS)("%s records the change with the size of the roster afterwards and the roster row as the subject", (action) => {
+    expect(toAuditRecord(roster(action, { roster_size: 2 }), "ok")).toMatchObject({ action, actorStaffId: STAFF, subjectType: "drill_roster", outcome: "ok", meta: { roster_size: 2 } });
+  });
+
+  it.each(ACTIONS)("%s refuses an ok record without the size", (action) => {
+    expect(() => toAuditRecord(roster(action, {}), "ok")).toThrow("meta is missing roster_size");
+  });
+
+  it.each(ACTIONS)("%s has nowhere to put the number, the label or the language", (action) => {
+    expect(() => toAuditRecord(roster(action, { roster_size: 1, number: "+14165550123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(roster(action, { roster_size: 1, phone: "416 555 0123" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(roster(action, { roster_size: 1, label: "Hub phone" }), "ok")).toThrow(AuditRecordError);
+    expect(() => toAuditRecord(roster(action, { roster_size: 1, lang: "ur" }), "ok")).toThrow(AuditRecordError);
+  });
+
+  it.each(ACTIONS)("%s records a refusal with only its reason", (action) => {
+    for (const reason of ["validation", "duplicate", "conflict", "not_found"]) {
+      expect(toAuditRecord(roster(action, { reason }), "refused").meta).toEqual({ reason });
+    }
+  });
+});
+
 describe("oncall.added and oncall.removed (S06.07)", () => {
   const roster = (action: "oncall.added" | "oncall.removed", meta: Record<string, unknown>) =>
     event({ action, subjectType: "oncall_roster", subjectId: "0190c3f2-7a1b-7c3d-8e4f-a1b2c3d4e5f6", meta } as Partial<AuditEvent>);

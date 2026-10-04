@@ -20,22 +20,31 @@ export function AlertCard({
   t,
   highlighted = false,
   advice = null,
+  mayHaveEnded = false,
 }: {
   view: AlertView;
   lang: LaunchCode;
   t: Translate;
   highlighted?: boolean;
   advice?: string | null;
+  /** The card is read from a copy kept without signal and its valid-until has passed (S05.07): it says "may have ended" instead of being shown as current. */
+  mayHaveEnded?: boolean;
 }) {
   return (
-    <li className="alert-card-item" data-highlighted={highlighted ? "true" : undefined}>
-      <Link className={highlighted ? "alert-card alert-card--mine tap" : "alert-card tap"} href={`/${lang}/alerts/${view.slug}`} prefetch={false} data-testid={`alert-card-${view.slug}`}>
+    <li className="alert-card-item" data-highlighted={highlighted && !mayHaveEnded ? "true" : undefined} data-may-have-ended={mayHaveEnded ? "true" : undefined}>
+      <Link className={highlighted && !mayHaveEnded ? "alert-card alert-card--mine tap" : mayHaveEnded ? "alert-card alert-card--ended tap" : "alert-card tap"} href={`/${lang}/alerts/${view.slug}`} prefetch={false} data-testid={`alert-card-${view.slug}`}>
         <DisruptionTypes types={view.types} />
         <AlertText text={view.current.text} testId={`alert-card-text-${view.slug}`} />
         <OriginMark origin={view.origin} />
-        <ResidentText as="p" className="alert-caption">
-          {view.cardTime}
-        </ResidentText>
+        {mayHaveEnded ? (
+          <ResidentText as="p" className="alert-caption alert-card__ended" testId={`alert-card-ended-${view.slug}`}>
+            {view.mayHaveEnded}
+          </ResidentText>
+        ) : (
+          <ResidentText as="p" className="alert-caption">
+            {view.cardTime}
+          </ResidentText>
+        )}
         <span className="alert-card__open">
           <ResidentText>{t("R03.readAlert")}</ResidentText>
           <span className="shell-ico shell-ico--chevron shell-ico--mirror shell-ico--sm" aria-hidden="true" />

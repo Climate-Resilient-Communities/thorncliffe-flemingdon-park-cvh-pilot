@@ -2,9 +2,10 @@
 // reach residents. The first two are real now. The alerts are a port with an empty default, because approved alerts
 // reach residents only when S04.08 (the web publish) is built: it supplies `FeedAlerts`, and nothing else here changes.
 import { eq } from "drizzle-orm";
-import type { FeedThread, FeedV1 } from "../../../contracts/feed";
+import type { ArchiveThread, ArchiveV1, FeedThread, FeedV1 } from "../../../contracts/feed";
 import type { LangCode } from "../../../contracts/lang";
 import type { Db } from "../../../platform/db";
+import { ARCHIVE_PAGE_SIZE } from "../../../contracts/feed";
 import { feedVersion } from "../adapters/schema";
 import { buildFeed, type PlaceState } from "../domain/feed";
 import { statusesOf, type StatusThread } from "../domain/status";
@@ -37,6 +38,11 @@ export interface FeedAlerts {
    * address. It is not in `read`: the feed lists open threads only. Null when no closed thread has the slug. A source that has no closed threads leaves it out.
    */
   readClosed?(lang: LangCode, slug: string): Promise<FeedThread | null>;
+  /**
+   * One page of the archive (S05.07): the closed threads, newest closed first, `size` to a page, each as the feed shows a thread when live with how and when it closed.
+   * `page` is 1-based. A source that has no closed threads leaves it out.
+   */
+  readArchive?(lang: LangCode, page: number, size: number): Promise<{ threads: readonly ArchiveThread[]; hasMore: boolean }>;
   /** The slugs of the closed threads: the app asks this (cached) before `readClosed`, so a slug that is no closed thread's costs the database nothing more. */
   readClosedSlugs?(): Promise<string[]>;
 }
@@ -88,3 +94,23 @@ export function createFeedReader(deps: FeedReaderDeps) {
 }
 
 export type FeedReader = ReturnType<typeof createFeedReader>;
+
+export interface ArchiveReaderDeps {
+  alerts?: FeedAlerts;
+  now?: () => Date;
+}
+
+/** `GET /api/feed/archive` (S05.07): one page of the closed threads, the same for every resident, whoever asks (AD-3). With no alerts source it is empty. */
+export function createArchiveReader(deps: ArchiveReaderDeps) {
+  const alerts = deps.alerts ?? NO_ALERTS_YET;
+  const now = deps.now ?? (() => new Date());
+  return {
+    async read(lang: LangCode, page: number): Promise<ArchiveV1> {
+      const at = now();
+      const found = (await alerts.readArchive?.(lang, page, ARCHIVE_PAGE_SIZE)) ?? { threads: [], hasMore: false };
+      return { v: 1, page, has_more: found.hasMore, server_now: at.toISOString(), threads: [...found.threads] };
+    },
+  };
+}
+
+export type ArchiveReader = ReturnType<typeof createArchiveReader>;

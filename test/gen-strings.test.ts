@@ -420,16 +420,16 @@ describe("stale catalogs", () => {
   });
 
   it("runs the strings check even when an earlier CI step failed", () => {
-    const workflow = readFileSync(path.join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
-    const checks = workflow.slice(workflow.indexOf("  checks:"), workflow.indexOf("  preview:"));
+    const workflow = readFileSync(path.join(ROOT, ".github", "workflows", "checks.yml"), "utf8");
+    const staticJob = workflow.slice(workflow.indexOf("  static:"), workflow.indexOf("  database:"));
 
-    expect(checks).toMatch(/- if: \$\{\{ !cancelled\(\) \}\}\n\s+run: npm run check:strings/);
+    expect(staticJob).toMatch(/- if: \$\{\{ !cancelled\(\) \}\}\n\s+run: npm run check:strings/);
   });
 
-  it("is a step of the Checks job in CI", () => {
-    const workflow = readFileSync(path.join(ROOT, ".github", "workflows", "ci.yml"), "utf8");
-    const checks = workflow.slice(workflow.indexOf("  checks:"), workflow.indexOf("  preview:"));
+  it("is a step of the Static job of the checks in CI", () => {
+    const workflow = readFileSync(path.join(ROOT, ".github", "workflows", "checks.yml"), "utf8");
+    const staticJob = workflow.slice(workflow.indexOf("  static:"), workflow.indexOf("  database:"));
 
-    expect(checks).toContain("run: npm run check:strings");
+    expect(staticJob).toContain("run: npm run check:strings");
   });
 });

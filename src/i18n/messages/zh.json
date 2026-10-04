@@ -361,7 +361,7 @@
     "progress": "正在处理",
     "resolved": "已解决",
     "unknown": "不详",
-    "none": "[EN] Nothing active"
+    "none": "没有当前问题"
   },
   "groups": {
     "seniors": {
@@ -544,12 +544,12 @@
     "ambassadorHome": "联络员：我的楼宇",
     "ambassadorLine": "为 {building} 发布更新或进行巡查",
     "noBuildingLine": "您所在社区的警报会显示在这里。添加您的楼宇，优先查看它的警报。",
-    "currentAlerts": "[EN] Current alerts",
-    "noCurrentAlerts": "[EN] No current alerts",
-    "myBuildings": "[EN] Your buildings",
-    "checking": "[EN] Checking for alerts",
-    "feedFailed": "[EN] We could not check for alerts just now. A place that says \"Not known\" may still have an alert. We will try again.",
-    "feedFailedOld": "[EN] We could not check for new alerts. Showing what was last loaded {t}."
+    "currentAlerts": "当前警报",
+    "noCurrentAlerts": "目前没有警报",
+    "myBuildings": "您的楼宇",
+    "checking": "正在检查警报",
+    "feedFailed": "我们暂时无法检查警报。显示“不详”的地点可能仍有警报。我们会再试一次。",
+    "feedFailedOld": "我们无法检查新警报。显示的是{t}最后加载的内容。"
   },
   "R04": {
     "deviceLabel": "普通手机上的短信",
@@ -719,7 +719,8 @@
     "validLine": "有效期：{until}",
     "timeLine": "{posted}发布 · {updated}更新",
     "timeLineOne": "{posted}发布",
-    "basicMore": "较早的更新：{n}"
+    "basicMore": "较早的更新：{n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "已结束的警报",
@@ -729,7 +730,10 @@
     "emptyBody": "警报结束后会移到这里，仍然可以阅读。",
     "lead": "每条警报结束后都会保留在这里，可以阅读。",
     "endedOn": "{posted}发布",
-    "backHome": "返回“现在”"
+    "backHome": "返回“现在”",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "寻求帮助",
@@ -752,15 +756,15 @@
     "testTitle": "测试查询",
     "testNote": "供主持人使用：点击一项，运行简报中预设的搜索。居民看不到这部分。",
     "testGloss": "（达里语：{gloss}）",
-    "searching": "[EN] Searching",
-    "needsSignal": "[EN] Search needs signal",
-    "needsSignalBody": "[EN] You can still choose a topic below, or call the Hub.",
-    "busy": "[EN] Search is busy, try again in a few minutes",
-    "busyBody": "[EN] You can choose a topic below, or call the Hub.",
-    "updating": "[EN] Search results are being updated, try again",
-    "updatingBody": "[EN] You can choose a topic below while they are updated, or call the Hub.",
-    "browseAll": "[EN] See all services and organisations",
-    "loading": "[EN] Loading the topics"
+    "searching": "正在搜索",
+    "needsSignal": "搜索需要信号",
+    "needsSignalBody": "您仍可以在下方选择一个主题，或打电话给中心。",
+    "busy": "搜索繁忙，请几分钟后再试",
+    "busyBody": "您可以在下方选择一个主题，或打电话给中心。",
+    "updating": "搜索结果正在更新，请再试一次",
+    "updatingBody": "更新期间，您可以在下方选择一个主题，或打电话给中心。",
+    "browseAll": "查看所有服务和机构",
+    "loading": "正在加载主题"
   },
   "R10": {
     "title": "结果",
@@ -796,7 +800,7 @@
     "communityOffer": "社区提供",
     "inCat": "主题：{cat}",
     "helpEmpty": "没有能帮助处理此情况、又符合这些筛选条件的服务。",
-    "shownIn": "[EN] Shown in {lang}"
+    "shownIn": "以{lang}显示"
   },
   "R11": {
     "title": "我们暂时没有找到",
@@ -1236,7 +1240,13 @@
     "todayAt": "今天{time}",
     "dayAt": "{day} {time}",
     "linkLine": "最新更新和任何更正：{url}",
-    "sendLine": "您的手机会问您用哪个应用发送。"
+    "sendLine": "您的手机会问您用哪个应用发送。",
+    "copy": "[EN] Copy the message",
+    "copied": "[EN] Copied. You can paste it into any app.",
+    "copyFailed": "[EN] Your phone would not copy it. Press and hold the message above to copy it.",
+    "whatsapp": "[EN] Send on WhatsApp",
+    "noSheet": "[EN] Your phone does not offer share options here. Copy the message, or send it on WhatsApp.",
+    "placeMore": "以及另外 {n} 处"
   },
   "R30": {
     "deviceLabel": "WhatsApp 群里的警报",
@@ -1408,7 +1418,10 @@
     "floorsOne": "已选择 1 个楼层",
     "floorsMany": "已选择 {n} 个楼层",
     "buildingsNone": "未选择",
-    "removeItem": "删除：{item}"
+    "removeItem": "删除：{item}",
+    "offlineTitle": "没有信号时阅读",
+    "offlineHelp": "有信号时打开的页面会保存在这部手机上，以后没有信号也能再次阅读。电话号码始终会保存。第一次打开 CVH 需要信号。",
+    "offlineNote": "这部手机可能无法保存页面供离线使用"
   },
   "R35": {
     "title": "接收您楼宇的警报",
@@ -1486,7 +1499,8 @@
       "providers": "[EN] Providers",
       "directory": "[EN] Directory",
       "texts": "[EN] Pause texts",
-      "oncall": "[EN] On-call numbers"
+      "oncall": "[EN] On-call numbers",
+      "drills": "[EN] Drills"
     },
     "sections": {
       "disruption": "[EN] In a disruption",
@@ -4454,7 +4468,13 @@
         "unknownType": "[EN] That type of disruption does not exist. Reload the page.",
         "futureTime": "[EN] The first report cannot be later than now.",
         "invalid": "[EN] That disruption could not be logged. Reload the page and try again."
-      }
+      },
+      "drillTitle": "[EN] Start a drill",
+      "drillLead": "[EN] Say what the exercise is about, where, and when. The acknowledgement is written for you on the next screen. Everything started here is marked as an exercise, and its texts go only to the drill roster.",
+      "drillBenchmark": "[EN] Practice only: no resident gets anything from a drill.",
+      "drillSubmit": "[EN] Continue to the drill acknowledgement",
+      "drillForbidden": "[EN] Only an Admin can start a drill.",
+      "drillAal2Required": "[EN] An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code."
     },
     "compose": {
       "ackTitle": "[EN] Acknowledge the disruption",
@@ -4781,7 +4801,7 @@
         "titleCorrection": "[EN] The correction is out",
         "titleWithdrawal": "[EN] The withdrawal is out",
         "webWithdrawn": "[EN] Residents now read \"Withdrawn\" and the reason in the place of the entry.",
-        "leadDrill": "[EN] This is a drill. The rows below show what would have gone where.",
+        "leadDrill": "[EN] This is a drill. Its texts went only to the people on the drill roster.",
         "whereTitle": "[EN] What went where",
         "webLabel": "[EN] App and web",
         "webValue": "[EN] Live now for residents who follow this place, in {n} languages, each in their own words.",
@@ -4794,7 +4814,7 @@
         "textsLabel": "[EN] Text messages",
         "textsNotOpen": "[EN] Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in {n} languages and go out once texting is live.",
         "textsNone": "[EN] No text message was written for this entry.",
-        "textsDrill": "[EN] Not sent: practice only.",
+        "textsDrill": "[EN] Sent to the drill roster only. No resident gets them.",
         "textsLanguages": "[EN] Languages with a text ready",
         "validLabel": "[EN] Valid until",
         "nextTitle": "[EN] What happens next",
@@ -5131,6 +5151,105 @@
     },
     "expire": {
       "finalText": "[EN] This alert has expired without a further update. The problem may continue. Contact the Hub for current information."
+    },
+    "drills": {
+      "title": "[EN] Drills",
+      "lead": "[EN] Rehearse a real alert on the live system with staff phones only. A drill is marked as an exercise on every screen and in every text, and it can reach no one but the people on the drill roster.",
+      "start": "[EN] Start a drill",
+      "startLead": "[EN] A drill is written, approved by a second person and sent like a real alert. Its texts go only to the drill roster.",
+      "rosterLink": "[EN] Open the drill roster",
+      "roster": {
+        "none": "[EN] The drill roster is empty, so a drill reaches no one yet.",
+        "one": "[EN] 1 person is on the drill roster.",
+        "many": "[EN] {n} people are on the drill roster."
+      },
+      "recentTitle": "[EN] Recent drills",
+      "recentNone": "[EN] No drill has been run yet.",
+      "heading": "[EN] Drill reported {time}",
+      "status": {
+        "open": "[EN] Running",
+        "closed": "[EN] Ended"
+      },
+      "entries": "[EN] Entries: {entries}",
+      "entryLine": "{kind} ({state})",
+      "entryState": {
+        "draft": "[EN] draft",
+        "pending_approval": "[EN] waiting for approval",
+        "approved": "[EN] approved",
+        "superseded": "[EN] replaced",
+        "discarded": "[EN] discarded"
+      },
+      "results": {
+        "title": "[EN] What happened to the texts",
+        "none": "[EN] No text has been written for this drill yet.",
+        "removed": "[EN] Removed from the roster",
+        "handedOff": "[EN] Handed off: {n}",
+        "delivered": "[EN] Delivered: {n}",
+        "undelivered": "[EN] Undelivered: {n}",
+        "failed": "[EN] Failed: {n}",
+        "unknown": "[EN] Unknown: {n}",
+        "waiting": "[EN] Still waiting to be sent: {n}.",
+        "notSent": "[EN] Never sent: {n}.",
+        "unknownNote": "[EN] An unknown text may or may not have arrived. Find out what happened before launch.",
+        "apart": "[EN] Drill counts are kept apart from real alerts and never added to them."
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin can run drills.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to run drills. Sign in again and enter the code.",
+        "unreadable": "[EN] The Hub could not read the drills. Reload the page. If this stays, tell IT."
+      }
+    },
+    "drillRoster": {
+      "title": "[EN] Drill roster",
+      "lead": "[EN] The staff phones a drill is texted on. Each phone gets the drill text in the language chosen here. A drill never reaches a resident.",
+      "back": "[EN] Back to Drills",
+      "listHeading": "[EN] Phones that get drill texts",
+      "empty": "[EN] The drill roster is empty.",
+      "emptyConsequence": "[EN] A drill reaches no one until you add a phone.",
+      "count": "[EN] {n} phones on the roster",
+      "countOne": "[EN] 1 phone on the roster",
+      "hidden": "[EN] Only the last four digits of a number are shown. A number is never written to a record of what Admins did.",
+      "languageLine": "[EN] Drill text in {language}",
+      "english": "[EN] English",
+      "addHeading": "[EN] Add a phone",
+      "label": "[EN] Name or role",
+      "labelHint": "[EN] For example \"Hub phone\". Up to 40 characters. Shown only here.",
+      "number": "[EN] Mobile number",
+      "numberHint": "[EN] A Canadian number, for example 416-555-0123. It is stored for sending drill texts and shown here only as its last four digits.",
+      "language": "[EN] Language of the drill text",
+      "add": "[EN] Add phone",
+      "adding": "[EN] Adding phone",
+      "edit": "[EN] Edit",
+      "editFor": "[EN] Edit {label}",
+      "editNumberHint": "[EN] Leave empty to keep the number.",
+      "save": "[EN] Save changes",
+      "saving": "[EN] Saving changes",
+      "remove": "[EN] Remove",
+      "removing": "[EN] Removing",
+      "removeFor": "[EN] Remove {label}",
+      "done": {
+        "added": "[EN] {label} was added. The roster now has {n} phones.",
+        "addedOne": "[EN] {label} was added. The roster now has 1 phone.",
+        "edited": "[EN] {label} was changed.",
+        "removed": "[EN] {label} was removed. The roster now has {n} phones.",
+        "removedOne": "[EN] {label} was removed. The roster now has 1 phone.",
+        "removedNone": "[EN] {label} was removed. The roster is now empty.",
+        "skipped": "[EN] {n} waiting drill texts to that phone were cancelled.",
+        "skippedOne": "[EN] 1 waiting drill text to that phone was cancelled."
+      },
+      "errors": {
+        "label_missing": "[EN] Give the phone a name or role.",
+        "label_too_long": "[EN] The name or role can have at most 40 characters.",
+        "number_invalid": "[EN] That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.",
+        "number_duplicate": "[EN] That number is already on the roster.",
+        "language_invalid": "[EN] Choose a language from the list.",
+        "roster_full": "[EN] The roster is full: at most 20 phones. Remove one first.",
+        "not_found": "[EN] That phone is no longer on the roster. Reload the page.",
+        "forbidden": "[EN] Only an Admin can change the drill roster.",
+        "aal2Required": "[EN] An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.",
+        "failed": "[EN] The roster was not changed. Try again. If it fails again, tell IT.",
+        "unreadable": "[EN] The Hub could not read the drill roster. Reload the page. If this stays, tell IT."
+      }
     }
   },
   "building": {
@@ -5157,22 +5276,22 @@
     "providedByHub": "由中心提供，最后更新于{date}"
   },
   "directory": {
-    "title": "[EN] Services and organisations",
-    "lead": "[EN] What the Hub has confirmed in Thorncliffe Park and Flemingdon Park. Choose a topic or a neighbourhood to narrow the list.",
-    "count": "[EN] {n} services",
-    "countOne": "[EN] 1 service",
-    "topic": "[EN] Topic",
-    "emergency": "[EN] Helps in an emergency",
-    "emergencyRole": "[EN] Emergency role",
-    "lastConfirmed": "[EN] Last confirmed by the Hub {date}",
-    "lastUpdated": "[EN] Last updated {time}",
-    "loading": "[EN] Loading the directory",
-    "couldNotLoad": "[EN] The directory could not load",
-    "couldNotLoadBody": "[EN] The Hub can help you find a service by phone.",
-    "couldNotLoadNumbers": "[EN] The numbers page lists the other numbers you may need.",
-    "numbersLink": "[EN] See the essential numbers",
-    "backToList": "[EN] All services and organisations",
-    "suggestApply": "[EN] Show only {place}"
+    "title": "服务和机构",
+    "lead": "中心在 Thorncliffe Park 和 Flemingdon Park 确认过的服务和机构。选择一个主题或社区来缩小列表范围。",
+    "count": "{n} 项服务",
+    "countOne": "1 项服务",
+    "topic": "主题",
+    "emergency": "在紧急情况下提供帮助",
+    "emergencyRole": "紧急情况中的作用",
+    "lastConfirmed": "中心最后确认于{date}",
+    "lastUpdated": "最后更新于{time}",
+    "loading": "正在加载目录",
+    "couldNotLoad": "目录无法加载",
+    "couldNotLoadBody": "中心可以通过电话帮您找到服务。",
+    "couldNotLoadNumbers": "号码页面列出了您可能需要的其他号码。",
+    "numbersLink": "查看重要电话号码",
+    "backToList": "所有服务和机构",
+    "suggestApply": "只显示{place}"
   },
   "map": {
     "lead": "Thorncliffe Park 和 Flemingdon Park 的服务、机构和公寓楼。点击标记，查看它是什么。",
@@ -5210,5 +5329,11 @@
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub."
       }
     }
+  },
+  "offline": {
+    "title": "此页面未保存在您的手机上",
+    "body": "此页面还没有在这部手机上有信号时打开过，所以需要信号。电话号码始终保存在您的手机上。",
+    "available": "以下内容没有信号时也能阅读",
+    "none": "这部手机上还没有保存其他内容。有信号时打开的页面会保存下来，供以后阅读。"
   }
 }

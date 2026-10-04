@@ -896,7 +896,9 @@
   /* R29_Share.html */
   m(en, { R29: { lead: 'Your neighbours get the alert as the Hub wrote it, with where it came from and a link to the newest version.',
   postedAt: 'Posted {t}', updatedAt: 'Updated {t}', todayAt: 'today at {time}', dayAt: '{day} at {time}',
-  linkLine: 'Newest updates and any corrections: {url}', sendLine: 'Your phone will ask which app to send it with.' } });
+  linkLine: 'Newest updates and any corrections: {url}', sendLine: 'Your phone will ask which app to send it with.',
+  copy: 'Copy the message', copied: 'Copied. You can paste it into any app.', copyFailed: 'Your phone would not copy it. Press and hold the message above to copy it.',
+  whatsapp: 'Send on WhatsApp', noSheet: 'Your phone does not offer share options here. Copy the message, or send it on WhatsApp.', placeMore: 'and {n} more' } });
   /* R30_WhatsApp.html */
   m(en, { R30: { groupBuilding: '{building} neighbours', members: '{name}, Maria, you and 9 others', membersOut: 'Maria, Farhan and 10 others',
   today: 'Today', forwarded: 'Forwarded', you: 'You', askLine: 'Is anyone else\'s power out?', askLineOther: 'Does anyone know what is happening with the elevator?',
@@ -1709,7 +1711,7 @@
     titleAck: 'The acknowledgement is out', titleAlert: 'The alert is out', titleDrill: 'Practice publish: nothing was sent to residents',
     titleCorrection: 'The correction is out', titleWithdrawal: 'The withdrawal is out',
     webWithdrawn: 'Residents now read "Withdrawn" and the reason in the place of the entry.',
-    leadDrill: 'This is a drill. The rows below show what would have gone where.',
+    leadDrill: 'This is a drill. Its texts went only to the people on the drill roster.',
     whereTitle: 'What went where',
     webLabel: 'App and web',
     webValue: 'Live now for residents who follow this place, in {n} languages, each in their own words.',
@@ -1722,7 +1724,7 @@
     textsLabel: 'Text messages',
     textsNotOpen: 'Not yet. Text sign-up is not open, so no text goes out now. These texts are ready in {n} languages and go out once texting is live.',
     textsNone: 'No text message was written for this entry.',
-    textsDrill: 'Not sent: practice only.',
+    textsDrill: 'Sent to the drill roster only. No resident gets them.',
     textsLanguages: 'Languages with a text ready',
     validLabel: 'Valid until',
     nextTitle: 'What happens next',
@@ -1814,4 +1816,113 @@
     closedLine: '{reason} {time}',
     closedReason: { resolved: 'Resolved', expired: 'Expired', withdrawn: 'Withdrawn' },
     closedFinal: 'Final entry: {text}' } } });
+  /* Reading without signal (S02.12, NFR-N3): the page shown for a page this phone has not kept (with the numbers and what can be read without signal), and R-34's help text and note on whether this phone keeps pages. Not prototype screens; the note shown on a page without signal is the prototype's shell.offline. */
+  m(en, {
+    offline: {
+      title: 'This page is not saved on your phone',
+      body: 'It has not been opened on this phone with signal yet, so it needs signal. The numbers are always saved on your phone.',
+      available: 'You can read these without signal',
+      none: 'Nothing else is saved on this phone yet. Pages you open with signal are saved for later.' },
+    R34: {
+      offlineTitle: 'Reading without signal',
+      offlineHelp: 'Pages you open with signal are saved on this phone, so you can read them again without signal. The numbers are always saved. The first time, the CVH needs signal to open.',
+      offlineNote: 'This phone may not keep pages for offline use' } });
+  /* Drills (S06.05): the Hub's Drills page (start a drill, what became of each drill's texts), the drill roster page and "Start a drill". Not prototype screens:
+     the Hub's list-and-form pages in the on-call numbers page's words. A drill is rehearsed on the live system with staff phones only; its texts go to the
+     drill roster and to no one else. The exercise marker's words are the prototype's own (x10). A number is never shown but its last four digits. */
+  m(en, { hub: { nav: { drills: 'Drills' } },
+  staff: { log: {
+    drillTitle: 'Start a drill',
+    drillLead: 'Say what the exercise is about, where, and when. The acknowledgement is written for you on the next screen. Everything started here is marked as an exercise, and its texts go only to the drill roster.',
+    drillBenchmark: 'Practice only: no resident gets anything from a drill.',
+    drillSubmit: 'Continue to the drill acknowledgement',
+    drillForbidden: 'Only an Admin can start a drill.',
+    drillAal2Required: 'An Admin must sign in with their authenticator code to start a drill. Sign in again and enter the code.' },
+  drills: {
+    title: 'Drills',
+    lead: 'Rehearse a real alert on the live system with staff phones only. A drill is marked as an exercise on every screen and in every text, and it can reach no one but the people on the drill roster.',
+    start: 'Start a drill',
+    startLead: 'A drill is written, approved by a second person and sent like a real alert. Its texts go only to the drill roster.',
+    rosterLink: 'Open the drill roster',
+    roster: {
+      none: 'The drill roster is empty, so a drill reaches no one yet.',
+      one: '1 person is on the drill roster.',
+      many: '{n} people are on the drill roster.' },
+    recentTitle: 'Recent drills',
+    recentNone: 'No drill has been run yet.',
+    heading: 'Drill reported {time}',
+    status: { open: 'Running', closed: 'Ended' },
+    entries: 'Entries: {entries}',
+    entryLine: '{kind} ({state})',
+    entryState: { draft: 'draft', pending_approval: 'waiting for approval', approved: 'approved', superseded: 'replaced', discarded: 'discarded' },
+    results: {
+      title: 'What happened to the texts',
+      none: 'No text has been written for this drill yet.',
+      removed: 'Removed from the roster',
+      handedOff: 'Handed off: {n}',
+      delivered: 'Delivered: {n}',
+      undelivered: 'Undelivered: {n}',
+      failed: 'Failed: {n}',
+      unknown: 'Unknown: {n}',
+      waiting: 'Still waiting to be sent: {n}.',
+      notSent: 'Never sent: {n}.',
+      unknownNote: 'An unknown text may or may not have arrived. Find out what happened before launch.',
+      apart: 'Drill counts are kept apart from real alerts and never added to them.' },
+    errors: {
+      forbidden: 'Only an Admin can run drills.',
+      aal2Required: 'An Admin must sign in with their authenticator code to run drills. Sign in again and enter the code.',
+      unreadable: 'The Hub could not read the drills. Reload the page. If this stays, tell IT.' } },
+  drillRoster: {
+    title: 'Drill roster',
+    lead: 'The staff phones a drill is texted on. Each phone gets the drill text in the language chosen here. A drill never reaches a resident.',
+    back: 'Back to Drills',
+    listHeading: 'Phones that get drill texts',
+    empty: 'The drill roster is empty.',
+    emptyConsequence: 'A drill reaches no one until you add a phone.',
+    count: '{n} phones on the roster',
+    countOne: '1 phone on the roster',
+    hidden: 'Only the last four digits of a number are shown. A number is never written to a record of what Admins did.',
+    languageLine: 'Drill text in {language}',
+    english: 'English',
+    addHeading: 'Add a phone',
+    label: 'Name or role',
+    labelHint: 'For example "Hub phone". Up to 40 characters. Shown only here.',
+    number: 'Mobile number',
+    numberHint: 'A Canadian number, for example 416-555-0123. It is stored for sending drill texts and shown here only as its last four digits.',
+    language: 'Language of the drill text',
+    add: 'Add phone',
+    adding: 'Adding phone',
+    edit: 'Edit',
+    editFor: 'Edit {label}',
+    editNumberHint: 'Leave empty to keep the number.',
+    save: 'Save changes',
+    saving: 'Saving changes',
+    remove: 'Remove',
+    removing: 'Removing',
+    removeFor: 'Remove {label}',
+    done: {
+      added: '{label} was added. The roster now has {n} phones.',
+      addedOne: '{label} was added. The roster now has 1 phone.',
+      edited: '{label} was changed.',
+      removed: '{label} was removed. The roster now has {n} phones.',
+      removedOne: '{label} was removed. The roster now has 1 phone.',
+      removedNone: '{label} was removed. The roster is now empty.',
+      skipped: '{n} waiting drill texts to that phone were cancelled.',
+      skippedOne: '1 waiting drill text to that phone was cancelled.' },
+    errors: {
+      label_missing: 'Give the phone a name or role.',
+      label_too_long: 'The name or role can have at most 40 characters.',
+      number_invalid: 'That is not a Canadian mobile number. Use ten digits, for example 416-555-0123.',
+      number_duplicate: 'That number is already on the roster.',
+      language_invalid: 'Choose a language from the list.',
+      roster_full: 'The roster is full: at most 20 phones. Remove one first.',
+      not_found: 'That phone is no longer on the roster. Reload the page.',
+      forbidden: 'Only an Admin can change the drill roster.',
+      aal2Required: 'An Admin must sign in with their authenticator code to change the drill roster. Sign in again and enter the code.',
+      failed: 'The roster was not changed. Try again. If it fails again, tell IT.',
+      unreadable: 'The Hub could not read the drill roster. Reload the page. If this stays, tell IT.' } } } });
+  /* Alerts that have ended (S05.07). R-08 is a prototype screen; these four words are not in it: the withdrawn end line (the prototype has resolved and expired only), the control for the next page of the archive and its failure, and the note on an alert read from a kept copy whose time has passed. */
+  m(en, {
+    R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },
+    R07: { mayHaveEnded: 'This alert may have ended. Check again when you have signal' } });
 })();
