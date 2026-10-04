@@ -109,6 +109,23 @@ describe("an ambassador's post, sent from the open page (S08.02)", () => {
     expect(h.listening()).toBe(0);
   });
 
+  it("says a committed post is live when the server says residents already read it (a D-1 post, S08.03/S08.04), and not otherwise", async () => {
+    const entryState = (webPublished?: boolean) => ({
+      v: 1,
+      server_now: "2026-10-04T14:00:00.000Z",
+      entry: { id: BODY.entry_id, alert_id: BODY.alert_id, kind: "update", status: "pending_approval", version: 1, content_hash: "c".repeat(64), possible_duplicate_of: null, ...(webPublished === undefined ? {} : { web_published: webPublished }) },
+      attempt: null,
+      translations: [],
+    });
+    for (const [published, expected] of [[true, { kind: "done", live: true }], [false, { kind: "done" }], [undefined, { kind: "done" }]] as const) {
+      const h = harness();
+      h.answer(200, { v: 1, state: "committed", outcome: null, entry_state: entryState(published) });
+      h.sender.press(BODY);
+      await h.flush();
+      expect(h.sender.state()).toEqual(expected);
+    }
+  });
+
   it("treats a request that did not get through as unsent, and retries it with the same key, on the online event or after a while", async () => {
     const h = harness();
     h.dropConnection();
@@ -176,6 +193,19 @@ describe("an ambassador's post, sent from the open page (S08.02)", () => {
     h.sender.press(BODY);
     await h.flush();
     expect(h.sent.map((request) => (request.body as { key: string }).key)).toEqual(["press-key-00000001", "press-key-00000001"]);
+  });
+
+  it("makes a new key for a press about another entry after a server error, so one key never covers two requests", async () => {
+    const h = harness();
+    h.answer(500, {});
+    h.sender.press(BODY);
+    await h.flush();
+    h.answer(200, result("committed"));
+    h.sender.press({ ...BODY, entry_id: "01900000-0000-7000-8000-00000000e17b" });
+    await h.flush();
+    const keys = h.sent.map((request) => (request.body as { key: string }).key);
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
   });
 
   it("says a signed-out person, or one no longer assigned to the building, was not sent, and holds nothing", async () => {

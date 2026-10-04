@@ -9,7 +9,7 @@ import { startCorrectionFromForm, startWithdrawalFromForm } from "../composer/st
 
 // Starting a correction or a withdrawal (O-15, S05.02) is the policy action `alert.correct` or `alert.withdraw` (S01.12, AD-4): a Coordinator or an Admin, at
 // `aal2` (both are privileged actions, so the guard also refuses a session below it before the action's own code). An Ambassador corrects or withdraws only their
-// own pending entries (E08): the entry a request names is not read here, so the guard judges on a stand-in nobody wrote in this call, which refuses an Ambassador on the
+// own pending entries, on their own screen (S08.04, POST /api/staff/ambassador/follow): the entry a request names is not read here, so the guard judges on a stand-in nobody wrote in this call, which refuses an Ambassador on the
 // role's rule alone; and a Director is refused on their role. The use cases then judge the target and the role again in their own transaction, under the thread's lock.
 const REFUSAL_KEYS: Record<ActionRefusal, string> = {
   forbidden: "staff.compose.errors.replaceForbidden",

@@ -70,7 +70,7 @@ vi.mock("../../src/app/staff/identity", () => ({
   },
 }));
 // A provider change asks Next to refresh the list, which only a request inside Next can do.
-vi.mock("next/cache", () => ({ revalidatePath: () => {} }));
+vi.mock("next/cache", () => ({ revalidatePath: () => {}, revalidateTag: () => {} }));
 // The providers screen (S02.04) reads and writes through the app's database connection.
 // "Publish directory" (S02.05) writes its files to a store of this test's own, never to Supabase.
 vi.mock("../../src/app/staff/directory", () => ({ directoryDb: () => wired.db, directoryPublishDeps: () => wired.publish }));
@@ -80,7 +80,11 @@ vi.mock("../../src/app/staff/places", () => ({ buildings: () => wired.places }))
 vi.mock("../../src/app/staff/assignments", () => ({ assignments: () => wired.assignmentService }));
 // The Ambassador's home (S08.01), which an Ambassador gets at the Hub's home, reads the alerts and posts on the app's own connection; the guard is what this test is
 // about (the reads are test/db/ambassadorHome.db.test.ts).
-vi.mock("../../src/app/staff/ambassador/home", () => ({ loadAmbassadorHome: async () => ({ buildings: [], alerts: [], posts: [], round: null }) }));
+vi.mock("../../src/app/staff/ambassador/home", () => ({
+  loadAmbassadorHome: async () => ({ buildings: [], alerts: [], posts: [], round: null }),
+  loadPostStatus: async () => null,
+  loadResolvable: async () => null,
+}));
 // The audience pickers and their actions (S04.04) run the alert use cases on the app's own connection.
 // Submit and the entry state (S04.05) run on the same connection, with no translation model and nothing to freeze: the endpoints are called for a draft that does not exist.
 vi.mock("../../src/app/staff/alerts", () => ({ alerting: () => wired.alerting, alertSubmitter: () => wired.alertSubmitter }));

@@ -4,7 +4,7 @@
 // approver reviewed): this reads the form, runs the use case, does what must follow a commit, and turns refusals into words.
 import { decodeCounts, RETURN_NOTE_MAX, type RecipientCounts } from "@/contracts/alertApproval";
 import { englishText } from "@/i18n/text";
-import type { AlertLifecycle, AlertRefusal, ApprovalOutcome } from "@/modules/alerting";
+import type { AlertLifecycle, AlertRefusal, ApprovalOutcome, EntryView } from "@/modules/alerting";
 import type { StaffSession } from "../../session";
 import { draftRefOf } from "../audience/editAudience";
 import { approveHref } from "../pages";
@@ -24,6 +24,8 @@ export interface ApprovalDeps {
   alerting: () => Pick<AlertLifecycle, "approveEntry" | "returnEntry" | "discardEntry" | "review" | "refuseInvalidForm">;
   /** What must follow an approval that committed: the feed's tag is revalidated and the dispatcher kicked (S06.02). Never called for a refusal or a rollback. */
   afterApproval: (outcome: ApprovalOutcome) => Promise<void>;
+  /** What must follow the discard of an entry residents already read (S08.03): a system withdrawal took its place, so the feed's tag is revalidated. Never called for a refusal or a rollback. */
+  afterDiscard?: (entry: EntryView) => void;
   /** Cents CAD per segment (SMS_PRICE_PER_SEGMENT_CENTS). */
   pricePerSegmentCents: () => number;
 }
@@ -104,5 +106,7 @@ export async function discardFromForm(deps: ApprovalDeps, session: Pick<StaffSes
   const shown = shownOf(form);
   if (!shown) return invalidForm(deps, session, "discard", ref);
   const result = await deps.alerting().discardEntry({ staffId: session.staffId, aal: session.aal }, ref, { shown });
+  // An entry residents already read (a D-1 post) was superseded by a system withdrawal, not discarded: the web changed, so the feed is read again at once.
+  if (result.ok && result.value.status === "superseded") deps.afterDiscard?.(result.value);
   return result.ok ? { status: "done", location: approveHref(ref) } : refused(result.error);
 }

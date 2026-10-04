@@ -128,6 +128,11 @@ export interface ApprovalScreen {
    * the confirmation of an approval (the screen of an approved entry); null otherwise. It informs and never changes or refuses the approval.
    */
   pauseNotice: string | null;
+  /**
+   * Set for a pending post that residents already read on the web, marked "Not yet verified" (D-1, S08.03): the approver is told so, its texts go out only on approval,
+   * and it cannot be returned to its author (a web-published entry never returns to draft). Null for every other entry.
+   */
+  live: { text: string } | null;
   /** `update`: this is an update to an alert residents already read (S05.01); null for a thread's first entry. */
   header: { types: string; submitted: string; drill: string | null; exercise: ExerciseWords | null; by: string | null; update: string | null };
   english: { title: string; body: string };
@@ -288,6 +293,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
   const fallbackLangs = review.texts.filter((text) => text.status === "fallback_en").map((text) => text.lang as LangCode);
   const fallbackRecipients = open ? fallbackLangs.reduce((sum, lang) => sum + (review.recipients.byLanguage[lang] ?? 0), 0) : 0;
   const hasTexts = review.texts.length > 0;
+  const live = entry.status === "pending_approval" && entry.webPublishedAt !== null;
   const cost = estimatedCents(review.sms, review.recipients, input.pricePerSegmentCents);
 
   // What became of an entry that is not waiting for this person.
@@ -462,6 +468,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
             recipients: open && fallbackRecipients > 0 ? t("fallbackRecipients", { n: fallbackRecipients }) : null,
           }
         : null,
+    live: live ? { text: t("liveWeb") } : null,
     ...(published ? { published } : {}),
     ...(published && input.sending ? { sending: input.sending } : {}),
     allTranslated: hasTexts && fallbackLangs.length === 0 ? t("allTranslated") : null,
@@ -470,12 +477,12 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
     duplicate: entry.possibleDuplicateOf
       ? { text: t("duplicate"), link: review.duplicate?.entryId ? { href: approveHref({ alertId: review.duplicate.alertId, entryId: review.duplicate.entryId }), label: t("duplicateLink") } : null }
       : null,
-    cannotEdit: t("cannotEdit"),
+    cannotEdit: t(live ? "cannotEditLive" : "cannotEdit"),
     languages: { title: t("languagesTitle"), lead: t("languagesLead"), webLabel: t("webText"), rows: languageRows },
     binding: { version: entry.version, contentHash: entry.contentHash ?? "", reviewed: encodeCounts(review.recipients), ...(review.threadCoveringId === null ? {} : { covering: review.threadCoveringId }) },
     actions: { label: t("actionsLabel"), approve: t("approve"), approveConfirmed: t("approveConfirmed"), returnToAuthor: t("returnToAuthor"), discard: t("discard") },
     returnForm: { title: t("returnTitle"), hint: t("returnHint"), noteLabel: t("noteLabel"), max: RETURN_NOTE_MAX, counter: t("noteCounter", { n: "{n}", max: RETURN_NOTE_MAX }), send: t("sendBack"), cancel: t("cancel") },
-    discardForm: { title: t("discardTitle"), lead: t("discardLead"), confirm: t("discardConfirm"), cancel: t("cancel") },
+    discardForm: { title: t("discardTitle"), lead: t(live ? "discardLiveLead" : "discardLead"), confirm: t("discardConfirm"), cancel: t("cancel") },
     messages,
   };
 }

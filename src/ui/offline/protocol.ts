@@ -54,3 +54,6 @@ export type PageMessage =
 
 /** `cachedAt` is set when the worker answered this page's navigation from its cache (no signal, or too slow). */
 export type ServedAnswer = { cachedAt: number | null };
+
+/** One feed ask is given up by the page after this long (S02.11); the worker answers from its kept copy before that (app/offline/worker.ts). */
+export const FEED_TIMEOUT_MS = 20_000;

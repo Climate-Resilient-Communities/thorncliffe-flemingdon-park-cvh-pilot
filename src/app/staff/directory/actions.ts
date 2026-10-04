@@ -1,7 +1,8 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { englishText } from "@/i18n/text";
+import { DIRECTORY_RELEASE_TAG } from "../../releaseFileCache";
 import { staffAction, type ActionRefusal } from "../guard";
 import { directoryDb, directoryPublishDeps } from "../directory";
 import { publishFromForm, type PublishState } from "./publishRelease";
@@ -29,6 +30,8 @@ export const publishDirectoryAction = staffAction(
   // eslint-disable-next-line @typescript-eslint/no-unused-vars -- the form action's (previous state, form) pair; the button takes no input
   async (session, _previous: PublishState, _form: FormData): Promise<PublishState> => {
     const state = await publishFromForm(deps, session);
+    // A new release is current: the shared cache of the search's release files is expired too (its entries are named by release and hash, so this is belt and braces).
+    if (state.status === "done") revalidateTag(DIRECTORY_RELEASE_TAG, { expire: 0 });
     // The page shows the current release and the last failure: read them again.
     revalidatePath(ROUTE);
     return state;

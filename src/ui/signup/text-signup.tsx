@@ -498,7 +498,7 @@ export function TextSignup({ lang, languages, neighbourhoods, consentVersion, te
                 </p>
               )}
               <p className="choice-hint">
-                <Link className="signup-link" href={`/${lang}/terms`} target="_blank" rel="noopener" data-testid="signup-terms-link">
+                <Link className="signup-link tap" href={`/${lang}/terms`} target="_blank" rel="noopener" data-testid="signup-terms-link">
                   <ResidentText>{t("termsLink")}</ResidentText>
                 </Link>{" "}
                 <span data-testid="signup-terms-version">{withIsolated((version) => t("termsVersion", { version }), consentVersion)}</span>

@@ -38,6 +38,11 @@ export interface AudiencePlaces {
    * ambassador, {building}" (S08.02). Left out (a test's fake), the texts name the rsn.
    */
   addressesOf?(executor: DbExecutor, rsns: readonly string[]): Promise<ReadonlyMap<string, string>>;
+  /**
+   * What `disruption_type.direct` says of each type given, by id (S08.03): true, false or null (not decided). Left out (a test's fake), no type is direct, so no
+   * post is D-1: it fails closed.
+   */
+  directOf?(executor: DbExecutor, types: readonly string[]): Promise<ReadonlyMap<string, boolean | null>>;
 }
 
 /** One building of the picker's choice: the whole building (`floors: null`), or the floors ticked and the ranges chosen. */
