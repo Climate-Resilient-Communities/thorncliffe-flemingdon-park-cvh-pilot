@@ -56,7 +56,7 @@ describe("the confirmation of an approved final (O-06)", () => {
     expect(published.rows.map((row) => row.id)).not.toContain("valid");
     expect(published.rows[0].value).toMatch(/^This alert is no longer live\./);
     expect(published.next.lines).toEqual(["The alert is closed. Nothing more can be added to it."]);
-    expect(published.next.links.map((link) => link.id)).toEqual(["home"]);
+    expect(published.next.links.map((link) => link.id)).toEqual(["home", "sending"]);
   });
 
   it("keeps the drill's confirmation a drill's", () => {

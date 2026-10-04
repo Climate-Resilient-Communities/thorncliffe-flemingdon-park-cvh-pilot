@@ -40,19 +40,11 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        until each is re-issued
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID, TWILIO_FROM_NUMBER (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret.
- *                                                        TWILIO_FROM_NUMBER is the verified toll-free number (E.164) the S01.15
- *                                                        spike sends from; the page that sends the test text needs the account SID,
- *                                                        auth token and that number, and without them shows that Twilio is not set up.
+ *                                                        TWILIO_FROM_NUMBER is no longer read (the S01.15 spike that sent from it
+ *                                                        was removed by S06.09; texts go through the Messaging Service), but it is
+ *                                                        still refused outside production like the others.
  *                                                        TWILIO_AUTH_TOKEN also checks the signature of Twilio's status callbacks
  *                                                        (/api/twilio/status, S06.04): without it that route answers 503 and does nothing
- * SMS_TEST_ALLOWLIST   server   optional; production only (start-up fails if set elsewhere)
- *                                                        the E.164 numbers (comma-separated) the S01.15 test text may go to, set in
- *                                                        production's Vercel variables, never in the repository. Empty or unset:
- *                                                        no number is approved and nothing can be sent. Like the password pepper, a
- *                                                        malformed entry (or a malformed TWILIO_FROM_NUMBER) never stops the server:
- *                                                        smsTestProblem names the rule (never the value), no number is approved and
- *                                                        the page shows that texts are not set up. Set outside production it does
- *                                                        fail start-up: that is a secret-placement rule
  * JOB_SECRET, JOB_SECRET_PREVIOUS
  *                      server   optional at start-up     secret; at least 32 random bytes as hex or base64, like the pepper
  *                                                        (`openssl rand -hex 32`). The bearer secret of the job routes that
@@ -216,9 +208,6 @@ export const TWILIO_VARIABLES = [
   "TWILIO_FROM_NUMBER",
 ] as const;
 
-/** An E.164 number: "+", a non-zero country code digit, up to 14 more digits (at least 8 digits in all). */
-export const E164_PATTERN = /^\+[1-9][0-9]{7,14}$/;
-
 // Vercel and .env files leave unset variables as empty strings.
 const optionalText = z.preprocess(
   (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
@@ -239,7 +228,6 @@ const rawSchema = z.object({
   TWILIO_AUTH_TOKEN: optionalText,
   TWILIO_MESSAGING_SERVICE_SID: optionalText,
   TWILIO_FROM_NUMBER: optionalText,
-  SMS_TEST_ALLOWLIST: optionalText,
   SMS_PRICE_PER_SEGMENT_CENTS: optionalText,
   SMS_USD_TO_CAD_RATE: optionalText,
   SMS_TRANSACTIONAL_DAILY_CEILING: optionalText,
@@ -366,11 +354,7 @@ export interface Env {
   supabaseSecretKey?: string;
   supabaseUrl?: string;
   supabasePublishableKey?: string;
-  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string; fromNumber?: string };
-  /** The numbers the S01.15 test text may go to (E.164, production only); empty when none is approved. */
-  smsTestAllowlist: string[];
-  /** Why the test text is not set up although it was configured (names the rule, never a value); undefined when nothing is wrong. */
-  smsTestProblem?: string;
+  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
   /** Cents CAD per text message segment (at most three decimals): the price an alert's cost estimate uses (S04.06). */
   smsPricePerSegmentCents: number;
   /** Canadian dollars per US dollar (at most four decimals): the rate a reconciliation converts Twilio's prices at (S06.08). */
@@ -645,28 +629,6 @@ function parseJobSecrets(raw: Raw): { secrets: string[]; problem?: string } {
 
 export const SMS_SEGMENTS_PER_SECOND_DEFAULT = 3;
 
-export const SMS_TEST_ALLOWLIST_PROBLEM =
-  "SMS_TEST_ALLOWLIST: every entry must be an E.164 number such as +18885550100, separated by commas (the entries are not shown)";
-export const TWILIO_FROM_NUMBER_PROBLEM = "TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)";
-
-/**
- * SMS_TEST_ALLOWLIST (S01.15): comma-separated E.164 numbers, production only. Messages name the rule,
- * never an entry. Outside production the variable must be absent (numbers never go into a preview): that is a
- * secret-placement rule and stays fatal. A malformed entry is a typo in a spike variable and must not take the
- * whole site down at every cold start (the staffPasswordPepperProblem pattern): it returns the problem and an
- * empty allowlist, so nothing can be sent and the page says texts are not set up.
- */
-function parseSmsTestAllowlist(value: string | undefined, environment: AppEnvironment, problems: string[]): { allowlist: string[]; problem?: string } {
-  if (value === undefined) return { allowlist: [] };
-  if (environment !== "production") {
-    problems.push("SMS_TEST_ALLOWLIST: only allowed in production (the approved numbers are set in production's variables only)");
-    return { allowlist: [] };
-  }
-  const entries = value.split(",").map((entry) => entry.trim()).filter((entry) => entry !== "");
-  if (entries.some((entry) => !E164_PATTERN.test(entry))) return { allowlist: [], problem: SMS_TEST_ALLOWLIST_PROBLEM };
-  return { allowlist: [...new Set(entries)] };
-}
-
 const SMS_PRICE_PROBLEM = "SMS_PRICE_PER_SEGMENT_CENTS: must be a positive number of cents with at most three decimals, no more than 100, such as 1.5";
 
 /** The price of a text message segment in cents CAD: positive, at most three decimals, at most 100; the default when unset. */
@@ -884,12 +846,6 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
   const smsTransactionalDailyCeiling = positiveInteger("SMS_TRANSACTIONAL_DAILY_CEILING", raw.SMS_TRANSACTIONAL_DAILY_CEILING, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING, problems);
 
-  const allowlist = parseSmsTestAllowlist(raw.SMS_TEST_ALLOWLIST, environment, problems);
-  const smsTestAllowlist = allowlist.problem === undefined ? allowlist.allowlist : [];
-  const fromNumber = raw.TWILIO_FROM_NUMBER?.trim();
-  const fromNumberProblem = environment === "production" && fromNumber !== undefined && !E164_PATTERN.test(fromNumber);
-  const smsTestProblem = [allowlist.problem, fromNumberProblem ? TWILIO_FROM_NUMBER_PROBLEM : undefined].filter((p) => p !== undefined).join("; ") || undefined;
-
   const onVercel = raw.VERCEL !== undefined || raw.VERCEL_ENV !== undefined;
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_IDENTITY_FILE !== undefined) {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
@@ -973,11 +929,8 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
             accountSid: raw.TWILIO_ACCOUNT_SID,
             authToken: raw.TWILIO_AUTH_TOKEN,
             messagingServiceSid: raw.TWILIO_MESSAGING_SERVICE_SID,
-            fromNumber: fromNumberProblem ? undefined : fromNumber,
           }
         : undefined,
-    smsTestAllowlist,
-    smsTestProblem,
     smsPricePerSegmentCents,
     smsUsdToCadRate,
     smsTransactionalDailyCeiling,
@@ -1012,10 +965,6 @@ export function getEnv(): Env {
   } catch (error) {
     if (error instanceof EnvError) console.error(error.message);
     throw error;
-  }
-  // A misconfigured spike variable never stops the server; the rule is logged (never the value) so IT can fix it.
-  if (cached.smsTestProblem !== undefined) {
-    console.error(JSON.stringify({ level: "error", evt: "env.sms_test_not_configured", module: "platform", rule: cached.smsTestProblem }));
   }
   // Likewise a job secret that is too weak never stops the server: the job routes refuse until it is fixed.
   if (cached.jobSecretProblem !== undefined) {

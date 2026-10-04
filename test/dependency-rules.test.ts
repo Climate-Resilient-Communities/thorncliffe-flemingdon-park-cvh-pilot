@@ -144,8 +144,46 @@ describe("dependency rules", () => {
         },
       ]),
     );
-    // messaging's application code imports both adapters and breaks no rule.
+    // messaging's application code imports adapters (not Twilio's, which have their own rule below) and breaks no rule.
     expect(violations.filter((v) => v.from.includes("modules/messaging/"))).toEqual([]);
+  });
+
+  it("reject any import of a Twilio adapter other than messaging's own index.ts re-exporting it (S06.09)", async () => {
+    const { cruised, violations } = await check("deps-twilio-adapter");
+    const twilio = violations.filter((v) => v.rule === "twilio-adapter-only-for-the-sender");
+
+    expect(cruised).toBe(9);
+    expect(twilio).toHaveLength(2);
+    expect(twilio).toEqual(
+      expect.arrayContaining([
+        // messaging's own application code may not take it by file: only the index re-exports it
+        {
+          rule: "twilio-adapter-only-for-the-sender",
+          from: at("deps-twilio-adapter", "modules/messaging/application/rogue.ts"),
+          to: at("deps-twilio-adapter", "modules/messaging/adapters/twilioMessagingService.ts"),
+        },
+        // and no other module may
+        {
+          rule: "twilio-adapter-only-for-the-sender",
+          from: at("deps-twilio-adapter", "modules/alerting/application/notify.ts"),
+          to: at("deps-twilio-adapter", "modules/messaging/adapters/twilioMessageList.ts"),
+        },
+      ]),
+    );
+    // The index re-exporting them, an adapter using the other one and a non-Twilio adapter used by application code break nothing.
+    expect(twilio.filter((v) => v.from.endsWith("messaging/index.ts") || v.from.includes("/adapters/") || v.from.endsWith("dispatcher.ts"))).toEqual([]);
+  });
+
+  it("covers every Twilio adapter file of messaging, whatever else is named after it, and no file that is not one", () => {
+    const rule = options.ruleSet?.forbidden?.find((candidate) => candidate.name === "twilio-adapter-only-for-the-sender") as { to: { path: string } } | undefined;
+    expect(rule).toBeDefined();
+    const covers = (file: string) => new RegExp(rule?.to.path ?? "$^").test(file);
+    const twilioFiles = readdirSync("src/modules/messaging/adapters").filter((name) => /^twilio.*\.ts$/.test(name) && !name.endsWith(".test.ts"));
+    expect(twilioFiles.length).toBeGreaterThan(0);
+    for (const name of twilioFiles) expect(covers(`src/modules/messaging/adapters/${name}`), name).toBe(true);
+    for (const file of ["src/modules/messaging/adapters/dispatchStore.ts", "src/modules/messaging/adapters/schema.ts", "src/modules/messaging/application/dispatcher.ts", "src/modules/messaging/index.ts"]) {
+      expect(covers(file), file).toBe(false);
+    }
   });
 
   it("covers every file in messaging/adapters, whatever it is named, and nothing outside that folder", () => {

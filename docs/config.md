@@ -14,12 +14,11 @@ are in `src/platform/config/env.ts`.
 | `PUBLIC_BASE_URL` | no | `https://project-6qcs4.vercel.app` | yes |
 | `STAFF_PASSWORD_PEPPER` | yes | 32+ random bytes (`openssl rand -hex 32`); never change it once staff exist | 2026-10-02 |
 | `SMS_MODE` | no | `live` (production only) | in progress |
-| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN`, `TWILIO_FROM_NUMBER` | yes | production only; the from-number is the toll-free number in E.164. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
+| `TWILIO_ACCOUNT_SID`, `TWILIO_AUTH_TOKEN` | yes | production only. The auth token (the account's primary one) also checks the signature of Twilio's status callbacks (`/api/twilio/status`, S06.04): without it that route answers 503 and does nothing | in progress |
 | `TWILIO_MESSAGING_SERVICE_SID` | yes | production only; the Messaging Service (`MG…`) on the verified toll-free number that every sender request goes through (S06.02). With `SMS_MODE=live` and no Messaging Service the dispatcher refuses to run and claims nothing (`/api/jobs/dispatch` answers 503) | not yet |
 | `JOB_SECRET` | yes | production only; 32+ random bytes (`openssl rand -hex 32`). The bearer secret of the job routes pg_cron calls (`/api/jobs/dispatch`, `/api/jobs/messaging-config`, `/api/jobs/health`, `/api/jobs/reconcile-spend`, `/api/jobs/expire`); the same value is in the project's Vault (see "Messaging sender"). Until it is set the job routes answer 503 and run nothing | not yet |
 | `JOB_SECRET_PREVIOUS` | yes | only during a rotation: the old secret, accepted next to `JOB_SECRET` until the Vault holds the new one (AD-15); remove it afterwards | no |
 | `SMS_SEGMENTS_PER_SECOND` | no | the shared send pace, a whole number from 1 to 100; default `3` (Twilio's default toll-free rate). Leave it at the default until Twilio confirms a higher rate for the number | default |
-| `SMS_TEST_ALLOWLIST` | no, but never in the repository | comma-separated E.164 numbers for the S01.15 test text | in progress |
 | `RESIDENT_ALERTS_ENABLED` | no | `false` (also when unset): the launch gate of E04 (S04.08). While it is off the feed (`/api/feed`) returns no threads and no alert page opens, whatever has been approved. The code lock is released as of E05 (`RESIDENT_ALERTS_RELEASED` in `src/platform/config/env.ts` is true), so `true` now starts in production and turns the gate on. The switch is only this Vercel variable: an Admin sets it with a production redeploy and records it in the launch-readiness checklist. Previews and local development run with it on unless it is `false` | default (off) |
 | `SMS_PRICE_PER_SEGMENT_CENTS` | no | the price of one text message segment, in cents CAD: a positive number with at most three decimals, no more than 100. The estimated cost of an alert (S04.06) is segments × recipients × this price, rounded up to whole cents, and is always shown as an estimate. PROVISIONAL default `1.5` (about CAD 0.015 a segment): IT confirms it from Twilio's price for Canadian toll-free numbers and sets it here. Any environment may set it. Each text's own estimate in `spend_event` (S06.08) is its segments × this price, rounded up to whole cents | default |
 | `SMS_USD_TO_CAD_RATE` | no | the exchange rate, Canadian dollars per US dollar, that a reconciliation (S06.08) converts the prices Twilio reports (billed in US dollars) at: a positive number with at most four decimals, between 0.5 and 5. PROVISIONAL default `1.4`: the owner confirms it and sets it here. Each actual price keeps the rate it was converted at and is shown labelled with it. Any environment may set it (not a `TWILIO_` variable: it is no credential) | default |
@@ -46,7 +45,7 @@ The `MAP_TILE_*` variables choose the resident map's tile provider (S02.07; the 
 Positron are in the spine's "Map Tile Provider (S02.07)" record). They are read when the map pages are built, so a change
 takes effect with the next deploy, and the same values may be set in Preview. A set value that is not valid fails the
 build, naming the variable (`src/platform/config/mapTiles.ts`). The two `EMBED_PUBLISH_ALLOWANCE_*` variables and the `SEARCH_*` variables take effect once S03.02
-(release search data) is deployed; `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS` and `SEARCH_TRANSLATE_MONTHLY_CALLS` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio, `SMS_TEST_ALLOWLIST` and `COHERE_API_KEY` must not be set
+(release search data) is deployed; `SEARCH_QUESTION_ROUTE`, `SEARCH_QUESTION_FALLBACK`, `SEARCH_FALLBACK_MIN_BUDGET_MS` and `SEARCH_TRANSLATE_MONTHLY_CALLS` once S03.05 is, and only where `COHERE_API_KEY` is set. Twilio and `COHERE_API_KEY` must not be set
 in Preview or Development: start-up fails there.
 
 **When a translation model is past its limit.** Cohere answers HTTP 429 ("You are past the per-month request limit for this
@@ -246,8 +245,7 @@ cannot be recalled: the page says how many had been handed over when the pause w
 the usual order and checks each text again just before it is handed over, so a text of an alert that was corrected, withdrawn or closed meanwhile, or whose
 valid-until time has passed, is cancelled or skipped instead of sent (a final alert, and the withdrawal that closed an alert, are still sent). Pausing and
 resuming are audited (`sending.paused`, `sending.resumed`); the reason is kept on the switch only while the pause lasts. It is the first thing to do for a
-wrong alert, a provider problem, and before anyone changes the Messaging Service. The "Test text" page (S01.15, until S06.09 removes it) stops with the pause:
-it refuses to send while texts are paused. The pause stops only texts that have not yet been handed to Twilio, so it says how many had gone, but only for an
+wrong alert, a provider problem, and before anyone changes the Messaging Service. The pause stops only texts that have not yet been handed to Twilio, so it says how many had gone, but only for an
 alert that still had texts waiting: an alert that had finished sending when the pause was made is not reported (an owner decision is open on that). If the
 `messaging_control` row were ever missing, the sender would hold every text and every Hub screen would say "Texts are not going out ... Tell IT."; the
 migration makes the row and the app cannot delete it, so that means the database was changed by hand.
