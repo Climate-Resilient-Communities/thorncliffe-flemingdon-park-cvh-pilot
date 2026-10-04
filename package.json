@@ -85,7 +85,7 @@
     "dependency-cruiser": "18.5.0",
     "drizzle-kit": "0.31.11",
     "esbuild": "0.28.2",
-    "eslint": "9.39.5",
+    "eslint": "10.11.0",
     "eslint-config-next": "16.3.8",
     "postcss": "8.5.28",
     "supabase": "2.119.0",
