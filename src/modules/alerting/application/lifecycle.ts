@@ -22,6 +22,7 @@ import { NO_RECIPIENTS, RETURN_NOTE_MAX, sameRecipientCounts, type RecipientCoun
 import { audienceCoversBuilding, audienceRsns, type Audience } from "../../../contracts/audience";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
+import { isD1Eligible } from "../domain/d1";
 import { possibleDuplicateOf } from "../domain/duplicates";
 import { AUTHORED_KINDS, checkApproval, checkShownBinding, requestTransition, type EntryKind, type EntryStatus, type ReturnReason } from "../domain/lifecycle";
 import type { AlertRefusal } from "../domain/refusals";
@@ -82,6 +83,11 @@ export interface AlertLifecycleDeps {
    * with ONCALL_REQUIRED and nothing changes. Left out (the use case's own tests), the rule is off.
    */
   oncall?: { required: () => boolean; hasNumber: (tx: DbTransaction) => Promise<boolean> };
+  /**
+   * The catalog's words of the system withdrawal that takes the place of a web-published post when it is discarded (S08.03), in English: residents read them with
+   * "Withdrawn". `createAlerting` callers pass the catalog's (`staff.discard.withdrawnText`); the default is for the use case's own tests.
+   */
+  discardWithdrawalText?: () => string;
 }
 
 /** The entry as the Hub's screens and the next stories read it. */
@@ -515,6 +521,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   const markApproval = deps.markApproval ?? (async () => undefined);
   const queueAlertTexts = deps.queueAlertTexts;
   const cancelQueued = deps.cancelQueued ?? (async () => undefined);
+  const discardWithdrawalText = deps.discardWithdrawalText ?? (() => "This report was withdrawn.");
   const now = deps.now ?? (() => new Date());
   const newId = deps.newId ?? (() => uuidv7());
   const newSlug = deps.newSlug ?? randomSlug;
@@ -688,6 +695,70 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (!decision.ok) throw new Refused(decision.refusal);
   }
 
+  /** A pending, web-published entry's discard is allowed by the state machine as the supersession it is (S08.03): the same transition as a correction's, made by the system. */
+  function mustTransitionToSuperseded(thread: ThreadRow, entry: EntryRow) {
+    const decision = requestTransition({ from: entry.status as EntryStatus, to: "superseded", webPublished: entry.webPublishedAt !== null, threadOpen: thread.status === "open" });
+    if (!decision.ok) throw new Refused(decision.refusal);
+  }
+
+  /**
+   * The discard of a pending entry residents already read (a D-1 post, S08.03, AD-5 "Web publication"): it never returns to draft and is never `discarded`.
+   * In this one transaction, under the thread's lock, a system `withdrawal` (`published_system`: web-only, never approved, so no text is queued or captured for
+   * it) supersedes it, residents read "Withdrawn" in its place, `feed_version` goes up and, if no published, non-superseded substantive entry is left, the thread
+   * closes `withdrawn` beside it (`closeAlert`). The database makes the withdrawal only while `cvh.system_actor` is `discard` (set here, transaction-local) and the
+   * entry's discarder is acting. Locks, in the order of AD-18: the thread (held), every entry of it, then `feed_version`, then `closeAlert`'s own.
+   */
+  async function discardPublishedIn(tx: DbTransaction, entry: EntryRow, thread: ThreadRow, actor: AlertActor): Promise<EntryView> {
+    await tx.select({ id: alertEntry.id }).from(alertEntry).where(eq(alertEntry.alertId, thread.id)).orderBy(alertEntry.id).for("update");
+    await tx.execute(sql`select set_config('cvh.system_actor', 'discard', true)`);
+    const at = now();
+    const withdrawalId = newId();
+    await tx.insert(alertEntry).values({
+      id: withdrawalId,
+      alertId: thread.id,
+      kind: "withdrawal",
+      status: "published_system",
+      supersedesId: entry.id,
+      withdrawalReason: "other",
+      // The column is required and names an account: the discarded entry's author stands in; nobody acts as them.
+      authorId: entry.authorId,
+      editorIds: [entry.authorId],
+      originalText: discardWithdrawalText(),
+      types: [...entry.types],
+      audience: entry.audience,
+      phase: entry.phase,
+      // Like a person's withdrawal: "until resolved", 24 elapsed hours; a withdrawal notice never covers a thread.
+      validUntil: new Date(at.getTime() + UNTIL_RESOLVED_MS),
+      validUntilMode: "resolved",
+    });
+    const [superseded] = await tx.update(alertEntry).set({ status: "superseded" }).where(eq(alertEntry.id, entry.id)).returning();
+    const bumped = await tx.update(feedVersion).set({ version: sql`${feedVersion.version} + 1` }).where(eq(feedVersion.id, 1)).returning({ version: feedVersion.version });
+    if (bumped.length !== 1) throw new Error("alerting: feed_version has no row");
+    const reason = discardReasonOf(actor.staffId, entry.authorId);
+    await audit.record(tx, {
+      action: "entry.discarded",
+      actorStaffId: actor.staffId,
+      subjectType: "alert_entry",
+      subjectId: entry.id,
+      isDrill: thread.isDrill,
+      meta: { entry_id: entry.id, version: entry.version, from: "pending_approval", discard_reason: reason, withdrawn_by: withdrawalId },
+    });
+    await audit.record(tx, {
+      action: "entry.superseded",
+      actorStaffId: actor.staffId,
+      subjectType: "alert_entry",
+      subjectId: entry.id,
+      isDrill: thread.isDrill,
+      meta: { entry_id: entry.id, by: withdrawalId, by_kind: "withdrawal", withdrawal_reason: "other", system: true },
+    });
+    // A discard that leaves nothing residents can still act on closes the thread, as an approved withdrawal does; the system withdrawal is the entry that closes it.
+    const after = await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id));
+    if (!substantiveRemains(after.map((row) => ({ id: row.id, kind: row.kind as EntryKind, status: row.status as EntryStatus, webPublishedAt: row.webPublishedAt })), [entry.id])) {
+      await closeAlert(tx, actor, { alertId: thread.id, reason: "withdrawn", keepEntryId: withdrawalId, feedRaised: true });
+    }
+    return entryOf(superseded);
+  }
+
   /** Only an editor (the author or someone who changed the entry) acts on its draft or pulls its submit back. */
   const mustBeEditor = (entry: EntryRow, staffId: string) => {
     if (!entry.editorIds.includes(staffId)) throw new Refused("OUT_OF_SCOPE");
@@ -729,6 +800,17 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     if (refusal) throw new Refused(refusal);
   }
 
+  /**
+   * Whether this submit publishes the entry on the web at once, as "Not yet verified" (D-1, S08.03): `isD1Eligible` over the facts read under the lock. The author is
+   * the one who submits and the texts say "Building ambassador, {building}" (an entry another person submits is the Hub's, and waits); a place that cannot tell
+   * which types are direct (`places.directOf` left out) counts none as direct, so nothing is published.
+   */
+  async function isD1In(tx: DbTransaction, entry: EntryRow, thread: ThreadRow, standing: StaffStanding, actor: AlertActor, attribution: EntryAttribution): Promise<boolean> {
+    if (thread.isDrill || attribution.role !== "ambassador" || entry.authorId !== actor.staffId) return false;
+    const direct = (await places.directOf?.(tx, entry.types)) ?? new Map<string, boolean | null>();
+    return isD1Eligible({ authorRole: standing.role, isDrill: thread.isDrill, kind: entry.kind as EntryKind, types: entry.types, direct });
+  }
+
   async function submitIn(
     tx: DbTransaction,
     entry: EntryRow,
@@ -738,6 +820,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     expected: EntryContent,
     duplicateOf: string | null,
     attribution: EntryAttribution,
+    webPublish: boolean,
   ): Promise<EntryView> {
     mustTransition(thread, entry, "pending_approval");
     const content = contentOf(entry);
@@ -778,16 +861,23 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         possibleDuplicateOf: duplicateOf,
         // Who the texts just frozen say the entry is from (S08.02): the approval view and residents read this, never the author's role at the time.
         attributedRsn: rsnOfAttribution(attribution),
+        // D-1 (S08.03): residents read the post at once, as "Not yet verified". The entry trigger times it with the database's clock and repeats the rule's facts.
+        ...(webPublish ? { webPublishedAt: sql`now()` } : {}),
       })
       .where(eq(alertEntry.id, entry.id))
       .returning();
+    // The web shows something new: `feed_version` goes up in this same transaction (AD-17, after the thread's and the entry's locks: the lock order of AD-18).
+    if (webPublish) {
+      const bumped = await tx.update(feedVersion).set({ version: sql`${feedVersion.version} + 1` }).where(eq(feedVersion.id, 1)).returning({ version: feedVersion.version });
+      if (bumped.length !== 1) throw new Error("alerting: feed_version has no row");
+    }
     await audit.record(tx, {
       action: "entry.submitted",
       actorStaffId: actor.staffId,
       subjectType: "alert_entry",
       subjectId: entry.id,
       isDrill: thread.isDrill,
-      meta: { entry_id: entry.id, version: submitted.version, content_hash: frozen.contentHash },
+      meta: { entry_id: entry.id, version: submitted.version, content_hash: frozen.contentHash, ...(webPublish ? { web_published: true as const } : {}) },
     });
     return entryOf(submitted);
   }
@@ -1041,7 +1131,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       await mustHaveValidTarget(tx, thread, row);
       if (row.kind !== "withdrawal") await mustExist(tx, content.audience);
       // Who the texts say it is from (S08.02): an Ambassador's post is "Building ambassador, {building}" of its one building, the Hub's is the Hub's. The texts
-      // are frozen after Approval only ("Verified by the Hub"): an ambassador's post that residents read before approval is S08.03's.
+      // are frozen for approval ("Verified by the Hub"), and are queued only by it. An ambassador's post that is D-1 is on the web from the freezing transaction,
+      // marked "Not yet verified" (S08.03, `isD1In`); its texts still wait.
       const { attribution, sms: smsAttribution } = await attributionIn(tx, standing, content);
       const duplicateOf = await findPossibleDuplicate(tx, thread, row, content);
       const slug = thread.slug;
@@ -1108,7 +1199,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       // say something the entry no longer is, so nothing is frozen (DRAFT_CHANGED: submit again). Without one (a caller that froze no attribution), it is worked out now.
       const attributedNow = (await attributionIn(tx, standing, contentOf(entry!))).attribution;
       if (attributedAs !== undefined && !sameAttribution(attributedAs, attributedNow)) throw new Refused("DRAFT_CHANGED");
-      const view = await submitIn(tx, entry!, thread, actor, frozen, expected, duplicateOf, attributedNow);
+      const webPublish = await isD1In(tx, entry!, thread, standing, actor, attributedNow);
+      const view = await submitIn(tx, entry!, thread, actor, frozen, expected, duplicateOf, attributedNow, webPublish);
       await tx
         .update(alertSubmitAttempt)
         .set({ state: "committed", resultVersion: view.version, resultHash: frozen.contentHash })
@@ -1562,7 +1654,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     async discardEntry(actor: AlertActor, ref: EntryRef, options: ReviewAction = {}): Promise<AlertResult<EntryView>> {
       return change("entry.discarded", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
         const { thread, standing, entry } = await open(tx, actor, ref);
-        mustTransition(thread, entry!, "discarded");
+        // A pending entry that residents already read (D-1, S08.03) is not discarded: a system withdrawal takes its place (`discardPublishedIn`, below).
+        const published = entry!.webPublishedAt !== null && entry!.status === "pending_approval";
+        if (published) mustTransitionToSuperseded(thread, entry!);
+        else mustTransition(thread, entry!, "discarded");
         if (entry!.editorIds.includes(actor.staffId)) mustAuthor(standing, actor.staffId, contentOf(entry!));
         else if (entry!.status === "pending_approval") mustMayApprove(standing, actor, entry!);
         else if (entry!.status === "draft" && options.shown !== undefined) {
@@ -1571,6 +1666,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         } else throw new Refused("OUT_OF_SCOPE");
         mustMatchShown(entry!, options.shown);
         const from = entry!.status as "draft" | "pending_approval";
+        if (published) return discardPublishedIn(tx, entry!, thread, actor);
         // Why (S08.02): the author taking back their own entry, or anyone else (an approver, or the Hub having edited it) not sending it: only the second is
         // "Not sent by the Hub" on an ambassador's screens.
         const discardReason = discardReasonOf(actor.staffId, entry!.authorId);

@@ -3420,7 +3420,7 @@ So that the Hub and my neighbours know quickly.
 
 ### Story S08.03 — Lower-risk posts appear on the web at once as "Not yet verified"
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 10 min (started 2026-10-04 16:46 UTC, built 18:56 UTC)
 - **Traces:** FR-A15 (D-1), FR-A5, UX-DR16 (O-07), AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
 
 As a resident,

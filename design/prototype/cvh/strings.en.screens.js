@@ -1294,6 +1294,10 @@
     duplicate: 'This may duplicate another open alert for the same place and type.',
     duplicateLink: 'Open the other alert',
     cannotEdit: 'You cannot change this text: whoever changes it becomes an editor and cannot approve it. To change it, return it to its author with a note.',
+    /* S08.03: an ambassador's post of a lower-risk type residents already read, marked "Not yet verified" (D-1). Text messages wait for this approval. */
+    liveWeb: 'Residents already read this post on the web, marked "Not yet verified". Text messages go out only if you approve it.',
+    cannotEditLive: 'You cannot change this text: whoever changes it becomes an editor and cannot approve it. Residents already read it, so a change is a correction.',
+    discardLiveLead: 'Residents already read this post. Discarding it withdraws it: they see "Withdrawn" in its place, and no text message is sent.',
     languagesTitle: 'Other languages',
     languagesLead: 'Open a language to read its web text and its text message exactly as residents get them.',
     languageEnglish: 'English',
@@ -1816,6 +1820,9 @@
   // S05.04: the words of the system final the expire job adds when an alert runs past its valid-until (web only; shown in English until translated).
   m(en, { staff: { expire: {
     finalText: 'This alert has expired without a further update. The problem may continue. Contact the Hub for current information.' } } });
+  // S08.03: the words of the system withdrawal that takes the place of an ambassador's post residents already read when it is discarded (web only; shown in English until translated).
+  m(en, { staff: { discard: {
+    withdrawnText: 'This report was withdrawn. Contact the Hub for current information.' } } });
   m(en, { staff: { approve: {
     correctionTitle: 'Approve a correction', withdrawalTitle: 'Approve a withdrawal',
     correctionLead: 'Read exactly what residents will see in place of the entry below. You approve this version only. If it changes while you read, you review it again.',

@@ -132,7 +132,8 @@ export function createAmbassadorHome(db: Db) {
                     alertEntry.supersedesId,
                     own.map((entry) => entry.id),
                   ),
-                  inArray(alertEntry.status, ["approved", "superseded"]),
+                  // A replacer is approved (or superseded since), or is the system withdrawal that took the place of a web-published post that was discarded (S08.03): "Withdrawn".
+                  inArray(alertEntry.status, ["approved", "superseded", "published_system"]),
                 ),
               );
       const replacedBy = new Map<string, "correction" | "withdrawal">();
