@@ -6,6 +6,8 @@ import { useMemo } from "react";
 import { languageOf, type LaunchCode } from "@/i18n/languages";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
+import { singleNeighbourhood } from "../usage/nbhd";
+import { UsageView } from "../usage/usage";
 import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { formatMoment } from "./format";
@@ -35,6 +37,8 @@ export function ProviderPage({ lang, id }: { lang: LaunchCode; id: string }) {
 
   return (
     <Screen surface="resident" testId="provider-page">
+      {/* Counted once the provider is found, in the one neighbourhood the listing names, if it names one (S02.15). */}
+      <UsageView evt="listing_view" lang={lang} nbhd={provider ? singleNeighbourhood(provider.neighbourhood_ids) : undefined} ready={provider !== null} />
       <Stack gap="section-resident">
         {back}
         {directory.status === "loading" && (

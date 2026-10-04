@@ -108,7 +108,7 @@ describe("the confirmation of an approved correction or withdrawal (O-06)", () =
       expect(published.rows.map((row) => row.id)).not.toContain("valid");
       expect(published.rows[0].value).toBe('Residents now read "Withdrawn" and the reason in the place of the entry.');
       expect(published.next.lines).toEqual([]);
-      expect(published.next.links.map((link) => link.id)).toEqual(["home"]);
+      expect(published.next.links.map((link) => link.id)).toEqual(["home", "sending"]);
     }
   });
 });

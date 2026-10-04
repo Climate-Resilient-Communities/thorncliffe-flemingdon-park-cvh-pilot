@@ -63,6 +63,14 @@ module.exports = {
       to: { path: `${MODULES}messaging/adapters/` },
     },
     {
+      name: "twilio-adapter-only-for-the-sender",
+      comment:
+        "The Twilio adapters (every file named twilio*.ts in src/modules/messaging/adapters: the sender's Messaging Service client and the reconciliation's Messages listing) are imported only by messaging's own index.ts, which re-exports them, and by each other. Their callers are two composition roots, found by test/twilioAdapterCallers.test.ts: the dispatcher (src/app/dispatch.ts) and the reconciliation job (src/app/reconcile.ts). The E01 first-text spike, which called Twilio from a Hub page, is gone (S06.09), and no other module or route may take its place (AR-12)",
+      severity: "error",
+      from: { path: SRC, pathNot: [`${MODULES}messaging/index\\.ts$`, `${MODULES}messaging/adapters/`, "\\.test\\.tsx?$"] },
+      to: { path: `${MODULES}messaging/adapters/twilio[^/]*\\.ts$` },
+    },
+    {
       name: "sms-strings-only-from-the-renderer",
       comment:
         "The words of a text message (src/i18n/smsStrings.ts) are read by messaging's one renderer (messaging/domain/smsBody.ts) and by tests, and by nothing else, however the import is spelled (relative or the @/ alias): no other code can put a text message's lines together (AD-21, S04.06)",
