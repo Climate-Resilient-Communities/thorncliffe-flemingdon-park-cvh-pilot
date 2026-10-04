@@ -3084,8 +3084,8 @@ So that residents without the app can join, while still confirming for themselve
 
 ### Story S07.04 — Residents confirm, get a welcome, and STOP deletes them
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
-- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-inbound-router`
+- **Size:** M · **Estimate:** 7 h · **Actual:** in progress (started 2026-10-04 16:49 UTC)
+- **Traces:** FR-A2, FR-D-6, AR-13, AR-17 · **Depends on:** S07.02 · **Branch:** `e07-s04-confirm-stop`
 
 As a resident,
 I want my YES to start my alerts and STOP to remove me completely,
