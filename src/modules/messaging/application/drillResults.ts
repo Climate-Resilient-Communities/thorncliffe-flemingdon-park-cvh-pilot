@@ -8,6 +8,8 @@ import type { DbExecutor } from "../../../platform/db";
 import { drillDeliveryResult } from "../adapters/drillView";
 
 export interface DrillResultRow {
+  /** The thread entry (alert, update, correction, final) these texts belong to. */
+  entryId: string;
   /** The roster member (the id of their `drill_roster` row); null once they were removed from the roster. */
   recipientId: string | null;
   lang: string;
@@ -24,7 +26,7 @@ export interface DrillResultRow {
 }
 
 export interface DrillResults {
-  /** One row per roster member and language over every entry of the drill thread, members in a fixed order, then removed members. */
+  /** One row per entry of the drill thread, roster member and language, members in a fixed order, then removed members. */
   forAlert(executor: DbExecutor, alertId: string): Promise<DrillResultRow[]>;
 }
 
@@ -33,6 +35,7 @@ export const drillResults: DrillResults = {
     const sum = (column: AnyPgColumn) => sql<number>`coalesce(sum(${column}), 0)::int`;
     const rows = await executor
       .select({
+        entryId: drillDeliveryResult.entryId,
         recipientId: drillDeliveryResult.recipientId,
         lang: drillDeliveryResult.lang,
         waiting: sum(drillDeliveryResult.waiting),
@@ -45,8 +48,8 @@ export const drillResults: DrillResults = {
       })
       .from(drillDeliveryResult)
       .where(eq(drillDeliveryResult.alertId, alertId))
-      .groupBy(drillDeliveryResult.recipientId, drillDeliveryResult.lang)
-      .orderBy(drillDeliveryResult.recipientId, drillDeliveryResult.lang);
+      .groupBy(drillDeliveryResult.entryId, drillDeliveryResult.recipientId, drillDeliveryResult.lang)
+      .orderBy(drillDeliveryResult.entryId, drillDeliveryResult.recipientId, drillDeliveryResult.lang);
     return rows;
   },
 };

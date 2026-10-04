@@ -17,6 +17,7 @@ function world(options: { add?: DrillRosterAddOutcome | Error; edit?: DrillRoste
   const roster = {
     list: vi.fn(),
     labelsOf: vi.fn(),
+    size: vi.fn(),
     add: vi.fn(async () => {
       if (options.add instanceof Error) throw options.add;
       return options.add ?? { kind: "added" as const, id: MEMBER, label: "Hub phone", size: 1 };

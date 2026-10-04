@@ -298,6 +298,31 @@ describe("a drill approved by a second person", () => {
   });
 });
 
+describe("removing a member while an approval holds the member's row", () => {
+  it("waits for the approval to commit, then skips the text it wrote and counts it (nothing is left for a removed member)", async () => {
+    const member = await world.fx.rosterMember();
+    const entry = await world.fx.entry("pending_approval", { isDrill: true });
+    let removal: Promise<unknown> | null = null;
+    let removed = false;
+    await appSql.begin(async (tx) => {
+      // What the approval's capture and write do: lock the member's row FOR SHARE, then write the member's text under the approval marker.
+      await tx`select id from drill_roster where id = ${member} for share`;
+      await tx`select set_config('cvh.approval_entry_id', ${entry.entryId}, true)`;
+      await tx`insert into delivery (id, kind, recipient_kind, recipient_id, entry_id, created_by_module, lang, body, segments, cost_estimate_cents, idempotency_key)
+               values (${randomUUID()}, 'alert', 'roster', ${member}, ${entry.entryId}, 'alerting', 'en', ${entry.bodies.en.body}, ${entry.bodies.en.segments}, 2, ${`${entry.entryId}:${member}:sms`})`;
+      removal = roster.remove({ actorStaffId: admin.id, id: member }).then((outcome) => {
+        removed = true;
+        return outcome;
+      });
+      // The removal is held behind the approval's lock: it has not gone through while the approval is open.
+      await new Promise((resolve) => setTimeout(resolve, 500));
+      expect(removed).toBe(false);
+    });
+    expect(await removal).toMatchObject({ kind: "removed", skippedTexts: 1 });
+    expect(await owner`select state, recipient_id from delivery where entry_id = ${entry.entryId}`).toEqual([{ state: "skipped", recipient_id: null }]);
+  });
+});
+
 describe("the delivery trigger, by direct SQL (the app's role and the owner)", () => {
   /** One alert text for an entry, as the approval's transaction writes it (the marker set), by the app's role. */
   async function insertAs(connection: "app" | "owner", entry: SeededEntry, recipient: { kind: string; id: string }) {
@@ -469,6 +494,30 @@ describe("the drill view's counts", () => {
     expect(await owner`select column_name from information_schema.columns where table_name = 'drill_delivery_result' order by ordinal_position`).toEqual(
       ["alert_id", "entry_id", "recipient_id", "lang", "waiting", "handed_off", "delivered", "undelivered", "failed", "unknown", "not_sent"].map((column_name) => ({ column_name })),
     );
+  });
+
+  it("keeps the counts of each entry of a drill apart", async () => {
+    const member = await world.fx.rosterMember();
+    const first = await world.fx.entry("pending_approval", { isDrill: true });
+    const second = await world.fx.finalIn(first);
+    const insert = (entry: SeededEntry) =>
+      owner.begin(async (tx) => {
+        await tx`select set_config('cvh.approval_entry_id', ${entry.entryId}, true)`;
+        return tx`insert into delivery (id, kind, recipient_kind, recipient_id, entry_id, created_by_module, lang, body, segments, cost_estimate_cents, idempotency_key)
+                  values (${randomUUID()}, 'alert', 'roster', ${member}, ${entry.entryId}, 'alerting', 'en', ${entry.bodies.en.body}, ${entry.bodies.en.segments}, 2, ${`${entry.entryId}:${member}:sms`})
+                  returning id`;
+      });
+    const [a] = await insert(first);
+    await insert(second);
+    await appSql.begin(async (tx) => {
+      await transitionStatement(tx, a.id, "claimed");
+      await tx`update delivery set handed_off_at = now() where id = ${a.id}`;
+      await transitionStatement(tx, a.id, "unknown");
+    });
+    const results = await drillResults.forAlert(app, first.alertId);
+    expect(results).toHaveLength(2);
+    expect(results.find((row) => row.entryId === first.entryId)).toMatchObject({ recipientId: member, handedOff: 1, unknown: 1, waiting: 0 });
+    expect(results.find((row) => row.entryId === second.entryId)).toMatchObject({ recipientId: member, handedOff: 0, unknown: 0, waiting: 1 });
   });
 
   it("counts an unknown text, and a member removed from the roster as one row with no id", async () => {

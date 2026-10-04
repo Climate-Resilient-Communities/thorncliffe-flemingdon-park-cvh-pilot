@@ -59,7 +59,7 @@ export const drillRosterStore = {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext('drill_roster'))`);
   },
 
-  async size(tx: DbTransaction): Promise<number> {
+  async size(tx: DbExecutor): Promise<number> {
     const [row] = await tx.select({ n: count() }).from(drillRoster);
     return Number(row?.n ?? 0);
   },
@@ -73,6 +73,12 @@ export const drillRosterStore = {
   /** The row's label when it exists; never its number. Every change runs under `lockForChange`, so the row is still there when it is changed or deleted next. */
   async labelOf(tx: DbTransaction, id: string): Promise<string | null> {
     const [row] = await tx.select({ label: drillRoster.label }).from(drillRoster).where(eq(drillRoster.id, id));
+    return row?.label ?? null;
+  },
+
+  /** The row's label, taking the row's lock: it waits for an approval that holds the member `FOR SHARE` and commits behind it. */
+  async labelOfLocked(tx: DbTransaction, id: string): Promise<string | null> {
+    const [row] = await tx.select({ label: drillRoster.label }).from(drillRoster).where(eq(drillRoster.id, id)).for("update");
     return row?.label ?? null;
   },
 

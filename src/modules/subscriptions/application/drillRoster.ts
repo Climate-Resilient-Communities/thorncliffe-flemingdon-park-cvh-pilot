@@ -5,7 +5,8 @@
 //    in a `delivery` row; an error here carries a code, never an input. The approval reads only ids and languages (`members`).
 //  - `add`, `edit` and `remove` are one transaction each with their audit record (a change that cannot be audited is not made), under one lock, so the size
 //    limit and the duplicate check hold when two Admins press at once. `remove` first skips the member's waiting texts (`skipRecipientDeliveries`, S06.01)
-//    and then deletes the row; the trigger on the table detaches the rows already handed off.
+//    and then deletes the row; the trigger on the table detaches the rows already handed off. The member's row is locked FOR UPDATE
+//    before the skip, so an approval that holds it FOR SHARE has committed its texts by then and they are skipped too (none is left to be handed to a removed member).
 //  - Who may do this is the staff guard's rule (`drill.run`, Admins at aal2), asked by the caller before it comes here.
 import type { LangCode } from "../../../contracts/lang";
 import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
@@ -44,6 +45,8 @@ export interface DrillRosterDeps {
 
 export interface DrillRoster {
   list(executor?: DbExecutor): Promise<DrillRosterEntry[]>;
+  /** How many members there are (no number is read). */
+  size(executor?: DbExecutor): Promise<number>;
   /** The labels of some members by id, for the drill view (never a number). */
   labelsOf(ids: readonly string[], executor?: DbExecutor): Promise<Map<string, string>>;
   add(input: { actorStaffId: string; label: unknown; number: unknown; lang: unknown }): Promise<AddOutcome>;
@@ -74,6 +77,10 @@ export function createDrillRoster(deps: DrillRosterDeps): DrillRoster {
   return {
     async list(executor) {
       return (await drillRosterStore.list(executor ?? db)).map(entryOf);
+    },
+
+    async size(executor) {
+      return drillRosterStore.size(executor ?? db);
     },
 
     async labelsOf(ids, executor) {
@@ -137,9 +144,10 @@ export function createDrillRoster(deps: DrillRosterDeps): DrillRoster {
       }
       const outcome = await db.transaction(async (tx): Promise<RemoveOutcome> => {
         await drillRosterStore.lockForChange(tx);
-        const label = await drillRosterStore.labelOf(tx, id);
+        // The member's row is locked first: an approval that holds it FOR SHARE commits before this goes on, so the skip below sees the texts it wrote.
+        const label = await drillRosterStore.labelOfLocked(tx, id);
         if (label === null) return { kind: "refused", problem: "not_found" };
-        // The texts still waiting for this member are skipped first (S06.01), in this transaction, then the row goes.
+        // The texts still waiting for this member are skipped (S06.01), in this transaction, then the row goes.
         const skipped = await deps.skipRecipientDeliveries(tx, { kind: "roster", id });
         await drillRosterStore.delete(tx, id);
         const size = await drillRosterStore.size(tx);

@@ -42,9 +42,10 @@ const thread: DrillThreadSummary = {
     { id: "e3", kind: "correction", status: "pending_approval", approvedAt: null },
   ],
 };
-const result = (over: Partial<DrillResultRow>): DrillResultRow => ({ recipientId: A, lang: "en", waiting: 0, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 0, ...over });
+const result = (over: Partial<DrillResultRow>): DrillResultRow => ({ entryId: "e1", recipientId: A, lang: "en", waiting: 0, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 0, ...over });
 const RESULTS: DrillResultRow[] = [
-  result({ recipientId: A, lang: "en", handedOff: 3, delivered: 3 }),
+  result({ recipientId: A, lang: "en", handedOff: 1, delivered: 1 }),
+  result({ entryId: "e2", recipientId: A, lang: "en", handedOff: 2, delivered: 2 }),
   result({ recipientId: B, lang: "ur", handedOff: 3, delivered: 1, undelivered: 1, unknown: 1 }),
   result({ recipientId: null, lang: "en", handedOff: 0, notSent: 2, failed: 1 }),
   result({ recipientId: B, lang: "hi", waiting: 1 }),
@@ -122,7 +123,7 @@ for (const state of Object.keys(DRILLS_STATES) as (keyof typeof DRILLS_STATES)[]
       await expect(page.getByTestId("drills-roster-link")).toHaveAttribute("href", "/staff/drills/roster");
       if (state === "with-a-drill") {
         await expect(page.getByTestId("drill")).toHaveCount(1);
-        await expect(page.getByTestId("drill-result-row")).toHaveCount(4);
+        await expect(page.getByTestId("drill-result-row")).toHaveCount(5);
         await expect(page.getByTestId("drill-results")).toContainText("Handed off: 3");
         await expect(page.getByTestId("drill-results")).toContainText("Removed from the roster");
         await expect(page.getByTestId("drill-unknown-note")).toBeVisible();

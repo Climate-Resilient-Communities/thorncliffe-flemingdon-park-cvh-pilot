@@ -15,8 +15,8 @@ const thread: DrillThreadSummary = {
   entries: [{ id: "e1", kind: "ack", status: "approved", approvedAt: new Date("2026-10-05T14:40:00.000Z") }],
 };
 const rows: DrillResultRow[] = [
-  { recipientId: A, lang: "ur", waiting: 0, handedOff: 2, delivered: 1, undelivered: 0, failed: 0, unknown: 1, notSent: 0 },
-  { recipientId: null, lang: "en", waiting: 1, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 1 },
+  { entryId: "e1", recipientId: A, lang: "ur", waiting: 0, handedOff: 2, delivered: 1, undelivered: 0, failed: 0, unknown: 1, notSent: 0 },
+  { entryId: "e1", recipientId: null, lang: "en", waiting: 1, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 1 },
 ];
 const page = (drills: ReturnType<typeof drillView>[], size = 2) => renderToStaticMarkup(<DrillsView view={drillsView({ rosterSize: size, drills })} />);
 
@@ -26,6 +26,11 @@ describe("the Drills page with a drill", () => {
   it("starts a drill with the Hub's own button, in a form that opens the start page", () => {
     expect(html).toMatch(/<form[^>]*action="\/staff\/drills\/start"[^>]*method="get"/);
     expect(html).toMatch(/<button[^>]*class="hub-button hub-button--primary"[^>]*>Start a drill<\/button>/);
+  });
+
+  it("shows the exercise marker on the drill and the kind of text each count row is for", () => {
+    expect(html).toContain('data-testid="exercise-marker"');
+    expect(html).toContain('data-testid="drill-result-entry"');
   });
 
   it("says who a drill reaches and links to the roster", () => {

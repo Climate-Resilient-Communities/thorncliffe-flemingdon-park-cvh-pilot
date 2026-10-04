@@ -1,10 +1,12 @@
 import { Inline, Stack } from "@/ui";
+import { ExerciseMarker } from "../ExerciseMarker";
 import type { DrillView, DrillsView as DrillsModel } from "./view";
 
 function Drill({ drill }: { drill: DrillView }) {
   return (
     <li className="hub-list-item" data-testid="drill" data-status={drill.status.id}>
       <Stack gap="related">
+        <ExerciseMarker words={drill.exercise} />
         <Inline gap="related" align="baseline" wrap>
           <h3 className="hub-wrap">{drill.heading}</h3>
           <span data-testid="drill-status">{drill.status.text}</span>
@@ -23,6 +25,9 @@ function Drill({ drill }: { drill: DrillView }) {
                   <li key={row.key} data-testid="drill-result-row">
                     <Stack gap="subline">
                       <Inline gap="related" align="baseline" wrap>
+                        <span className="hub-wrap" data-testid="drill-result-entry">
+                          {row.entry}
+                        </span>
                         <strong className="hub-wrap">{row.member}</strong>
                         <span className="hub-wrap">{row.language}</span>
                       </Inline>

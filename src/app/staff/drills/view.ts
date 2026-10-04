@@ -5,6 +5,7 @@ import { englishText } from "@/i18n/text";
 import type { DrillThreadSummary } from "@/modules/alerting";
 import type { DrillResultRow } from "@/modules/messaging";
 import { formatTorontoDateTime } from "@/platform/clock";
+import { exerciseWords, type ExerciseWords } from "../ExerciseMarker";
 
 /** The Drills page, the drill roster page and "Start a drill". */
 export const DRILLS_PAGE = "/staff/drills";
@@ -21,6 +22,8 @@ export function languageName(lang: string, text: Text = (key, values) => english
 
 export interface DrillResultRowView {
   key: string;
+  /** The text of the thread these counts are for: Alert, Update, Correction... */
+  entry: string;
   member: string;
   language: string;
   /** The five counts the Hub reads, each as "Handed off: 3". */
@@ -30,6 +33,8 @@ export interface DrillResultRowView {
 export interface DrillView {
   id: string;
   heading: string;
+  /** The exercise marker (X-10): a drill's results are never read as a real alert's. */
+  exercise: ExerciseWords;
   status: { id: "open" | "closed"; text: string };
   entries: string;
   results: {
@@ -67,17 +72,27 @@ export function drillView(
   compose: Text = (key, values) => englishText(`staff.compose.${key}`, values),
 ): DrillView {
   const kinds = thread.entries.map((entry) => t("entryLine", { kind: compose(`thread.kind.${entry.kind}`), state: t(`entryState.${entry.status}`) }));
-  // Members in the order of their label, then the removed ones, each member's languages in order.
+  // Entries oldest first, in each the members in the order of their label, then the removed ones, each member's languages in order.
+  const entryIndex = (id: string) => {
+    const at = thread.entries.findIndex((entry) => entry.id === id);
+    return at < 0 ? thread.entries.length : at;
+  };
   const rows = [...results].sort((a, b) => {
+    if (a.entryId !== b.entryId) return entryIndex(a.entryId) - entryIndex(b.entryId) || a.entryId.localeCompare(b.entryId);
     const left = a.recipientId === null ? "￿" : (labels.get(a.recipientId) ?? "￿");
     const right = b.recipientId === null ? "￿" : (labels.get(b.recipientId) ?? "￿");
     return left.localeCompare(right) || a.lang.localeCompare(b.lang);
   });
+  const entryKind = (id: string) => {
+    const entry = thread.entries.find((candidate) => candidate.id === id);
+    return entry ? compose(`thread.kind.${entry.kind}`) : "-";
+  };
   const sum = (pick: (row: DrillResultRow) => number) => rows.reduce((total, row) => total + pick(row), 0);
   const waiting = sum((row) => row.waiting);
   const notSent = sum((row) => row.notSent);
   return {
     id: thread.id,
+    exercise: exerciseWords(),
     heading: t("heading", { time: formatTorontoDateTime(thread.reportedAt) }),
     status: { id: thread.status, text: t(`status.${thread.status}`) },
     entries: t("entries", { entries: kinds.length === 0 ? "-" : kinds.join(", ") }),
@@ -85,7 +100,8 @@ export function drillView(
       title: t("results.title"),
       none: rows.length === 0 ? t("results.none") : null,
       rows: rows.map((row, index) => ({
-        key: `${row.recipientId ?? "removed"}-${row.lang}-${index}`,
+        key: `${row.entryId}-${row.recipientId ?? "removed"}-${row.lang}-${index}`,
+        entry: entryKind(row.entryId),
         member: row.recipientId === null ? t("results.removed") : (labels.get(row.recipientId) ?? t("results.removed")),
         language: languageName(row.lang),
         counts: COUNTS.map((id) => ({ id, text: t(`results.${id}`, { n: row[id] }) })),

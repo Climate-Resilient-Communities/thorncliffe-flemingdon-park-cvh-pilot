@@ -9,15 +9,17 @@ export const RECENT_DRILLS = 10;
 
 export interface DrillsReads {
   threads: ReturnType<typeof drillThreads>;
-  roster: Pick<ReturnType<typeof drillRoster>, "list">;
+  roster: Pick<ReturnType<typeof drillRoster>, "size" | "labelsOf">;
   results: ReturnType<typeof drillResultsReader>;
 }
 
 const defaults = (): DrillsReads => ({ threads: drillThreads(), roster: drillRoster(), results: drillResultsReader() });
 
 export async function loadDrills(reads: DrillsReads = defaults()): Promise<DrillsView> {
-  const [threads, members] = await Promise.all([reads.threads.recent(RECENT_DRILLS), reads.roster.list()]);
-  const labels = new Map(members.map((member) => [member.id, member.label]));
-  const drills = await Promise.all(threads.map(async (thread) => drillView(thread, await reads.results.forAlert(thread.id), labels)));
-  return drillsView({ rosterSize: members.length, drills });
+  const [threads, rosterSize] = await Promise.all([reads.threads.recent(RECENT_DRILLS), reads.roster.size()]);
+  const results = await Promise.all(threads.map((thread) => reads.results.forAlert(thread.id)));
+  // Labels only, for the members the results name: the page never reads a number (not even to mask it).
+  const ids = [...new Set(results.flatMap((rows) => rows.flatMap((row) => (row.recipientId === null ? [] : [row.recipientId]))))];
+  const labels = await reads.roster.labelsOf(ids);
+  return drillsView({ rosterSize, drills: threads.map((thread, at) => drillView(thread, results[at], labels)) });
 }

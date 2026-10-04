@@ -22,7 +22,7 @@ const thread: DrillThreadSummary = {
   ],
 };
 
-const row = (over: Partial<DrillResultRow>): DrillResultRow => ({ recipientId: A, lang: "en", waiting: 0, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 0, ...over });
+const row = (over: Partial<DrillResultRow>): DrillResultRow => ({ entryId: "e1", recipientId: A, lang: "en", waiting: 0, handedOff: 0, delivered: 0, undelivered: 0, failed: 0, unknown: 0, notSent: 0, ...over });
 
 describe("a drill as the Drills page shows it", () => {
   it("says when it was reported (Toronto time), that it is running, and what was rehearsed with the state of each entry", () => {
@@ -64,6 +64,25 @@ describe("a drill as the Drills page shows it", () => {
     expect(view.results.waiting).toBe("Still waiting to be sent: 1.");
     expect(view.results.notSent).toBe("Never sent: 2.");
     expect(view.results.unknownNote).toBeNull();
+  });
+
+  it("keeps each entry's counts apart, entries oldest first, each row naming the kind of text", () => {
+    const view = drillView(
+      thread,
+      [row({ entryId: "e2", recipientId: A, handedOff: 1, delivered: 1 }), row({ entryId: "e1", recipientId: B, handedOff: 1, unknown: 1 }), row({ entryId: "e1", recipientId: A, handedOff: 1, delivered: 1 })],
+      labels,
+    );
+    expect(view.results.rows.map((r) => [r.entry, r.member])).toEqual([
+      ["Acknowledgement", "Hub phone"],
+      ["Acknowledgement", "Priya"],
+      ["Correction", "Priya"],
+    ]);
+    expect(view.results.rows[0].counts.map((count) => count.text)).toContain("Unknown: 1");
+    expect(view.results.rows[2].counts.map((count) => count.text)).toContain("Unknown: 0");
+  });
+
+  it("carries the exercise marker on each drill", () => {
+    expect(drillView(thread, [], labels).exercise.title).toBe("Exercise. This is practice.");
   });
 
   it("holds no phone number anywhere", () => {
