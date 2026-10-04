@@ -3477,7 +3477,7 @@ So that I hear about a power or water problem without waiting, and know how much
 
 ### Story S08.04 — Ambassadors follow their post and mark incidents resolved
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** —
+- **Size:** S · **Estimate:** 4 h · **Actual:** 1 h (started 2026-10-04 18:39 UTC, built 19:38 UTC)
 - **Traces:** FR-E2 (resolve), FR-A15, UX-DR17 (A-03) · **Depends on:** S08.03 · **Branch:** `e08-s04-post-status-resolve`
 
 As a building ambassador,
