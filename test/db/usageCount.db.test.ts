@@ -101,8 +101,9 @@ describe("usage_count (S02.15)", () => {
   });
 
   it("through the route: two phones with different addresses, agents and cookies leave one row, and none of what they sent is anywhere in the table", async () => {
+    // Each phone sends what the app's own sender sends (JSON), plus everything that could identify it.
     const send = (headers: Record<string, string>, body: object = { evt: "numbers_view", lang: "tl" }) =>
-      metricsResponse({ count: (event) => recordUsage(app, event, new Date("2026-10-05T16:00:00Z")) }, new Request("https://cvh.example/api/metrics", { method: "POST", body: JSON.stringify(body), headers }));
+      metricsResponse({ count: (event) => recordUsage(app, event, new Date("2026-10-05T16:00:00Z")) }, new Request("https://cvh.example/api/metrics", { method: "POST", body: JSON.stringify(body), headers: { "content-type": "application/json", ...headers } }));
 
     const first = await send({ "x-forwarded-for": "198.51.100.23", "user-agent": "PhoneOne/1.0", cookie: "sid=aaa111", referer: "https://cvh.example/en/buildings/55555" });
     const second = await send({ "x-forwarded-for": "203.0.113.77", "user-agent": "PhoneTwo/9.9", cookie: "sid=bbb222" });
