@@ -375,6 +375,21 @@ A change to which translations a release carries reaches residents only through 
 3. **Seed, then publish.** Run "Seed production" with `seed:providers` as a dry run, compare its report with the one
    in the pull request, then run it to apply. Then an Admin presses **Publish directory**. Nothing changes for
    residents until that publish: they keep the current release, built from the earlier seed.
+
+### Compact vectors for search (cold start)
+
+The publish job writes `releases/{n}/vectors.bin` beside `vectors.json`: little-endian Float32 behind a small JSON header
+(release, catalogue version, model, dimensions, provider order, sha256 of the numbers). The release record names it
+(`search.binary`, an optional field, with its own sha256). The search reads it first, checks its hash, and uses
+`vectors.json` when the binary is missing (a release published before this change, or a store that refused it), with the
+same errors (`vectors_missing`, `vectors_hash`, `vectors_release`). A binary that is there but does not match its
+recorded hash fails the search as `vectors_hash`, like the JSON file would.
+
+**Owner action: press Publish directory once after this is deployed.** Until then the current release has no binary, and a
+cold instance still downloads and parses the JSON file. The release is built from the same texts, so the publish copies
+the vectors from the current release and calls the embedding model for none of them. The first publish also lets the
+`directory-releases` bucket accept `application/octet-stream` (an existing bucket only allowed JSON); if that update is
+refused, the publish still succeeds with JSON vectors only.
 ## Translation of alerts (S04.02)
 
 Alerts are translated at submit by the routes in the `translation_route` table (spine AD-10). The routes are not an environment

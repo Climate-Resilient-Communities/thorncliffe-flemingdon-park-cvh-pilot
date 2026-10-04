@@ -3,13 +3,14 @@
 // whose answers can be slowed down or never come. Nothing here is a real database or a real store, and every wait is a
 // timer, so the tests run on vitest's fake clock.
 import { PgDialect } from "drizzle-orm/pg-core";
-import type { DirectoryStorage } from "@/modules/directory";
+import { encodeVectorsBinary, type DirectoryStorage } from "@/modules/directory";
 import type { Db } from "@/platform/db";
-import { sha256Hex } from "@/platform/hash";
+import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 
 export const RELEASE_V = 5;
 export const EMBED_MODEL = "embed-v4.0";
 export const VECTORS_PATH = `releases/${RELEASE_V}/vectors.json`;
+export const BINARY_PATH = `releases/${RELEASE_V}/vectors.bin`;
 export const LISTING_PATH = `releases/${RELEASE_V}/en.json`;
 const CATALOGUE_HASH = "c".repeat(64);
 
@@ -36,8 +37,24 @@ export function releaseFiles(): Map<string, string> {
   ]);
 }
 
+/** The compact binary form of the same two vectors (what a release published after the compact file has beside its JSON). */
+export function releaseBinary(): Uint8Array {
+  return encodeVectorsBinary(
+    {
+      releaseV: RELEASE_V,
+      catalogueHash: CATALOGUE_HASH,
+      embedModel: EMBED_MODEL,
+      entries: [
+        { id: "M001", vector: [1, 0] },
+        { id: "M002", vector: [0, 1] },
+      ],
+    },
+    sha256HexBytes,
+  );
+}
+
 /** The `directory_release` row of the current release, as the search's read selects it. */
-export function releaseRow(files = releaseFiles()) {
+export function releaseRow(files = releaseFiles(), binary?: Uint8Array) {
   const vectors = files.get(VECTORS_PATH)!;
   return {
     number: RELEASE_V,
@@ -55,6 +72,7 @@ export function releaseRow(files = releaseFiles()) {
       emergency_categories: [],
       sha256: sha256Hex(vectors),
       bytes: vectors.length,
+      ...(binary ? { binary: { path: BINARY_PATH, sha256: sha256HexBytes(binary), bytes: binary.length } } : {}),
       reused: 0,
       embedded: 2,
       stored_at: "2026-10-01T12:00:00.000Z",
@@ -97,13 +115,22 @@ export function releaseDb(options: { connect?: "never"; read?: "never"; readMs?:
 }
 
 /** The private store of the release's files: each read takes `ms` (default 10), or never answers. `gets` are the paths read, in order. */
-export function releaseStore(options: { ms?: number; never?: boolean; files?: Map<string, string> } = {}) {
+export function releaseStore(options: { ms?: number; never?: boolean; files?: Map<string, string>; bytes?: Map<string, Uint8Array> } = {}) {
   const files = options.files ?? releaseFiles();
   const gets: string[] = [];
   const storage: DirectoryStorage = {
     put: async () => {
       throw new Error("the search never writes to the store");
     },
+    ...(options.bytes
+      ? {
+          getBytes: (path: string) => {
+            gets.push(path);
+            if (options.never) return never();
+            return new Promise<Uint8Array | null>((resolve) => setTimeout(() => resolve(options.bytes!.get(path) ?? null), options.ms ?? 10));
+          },
+        }
+      : {}),
     get: (path) => {
       gets.push(path);
       if (options.never) return never();
