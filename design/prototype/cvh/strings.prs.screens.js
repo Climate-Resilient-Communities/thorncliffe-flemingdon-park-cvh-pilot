@@ -1405,7 +1405,7 @@
   });
   m(t, {"smsTexts": {"confirmation": "برای گرفتن هشدارهای CVH، جواب YES بفرستید. برای قطع، STOP بفرستید."}});
   /* S07.04: the welcome, the replies of the inbound router and the words for yes (YES, STOP and CVH stay in English). */
-  m(t, {"smsTexts": {"welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای تغییر ساختمان یا طبقه 1، برای تغییر زبان 2، برای پس گرفتن درخواست احوال‌پرسی 3، و برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.", "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.", "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.", "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."}, "smsKeywords": {"yes": "بله, بلی, هان"}});
+  m(t, {"smsTexts": {"welcome": "شما برای هشدارهای CVH ثبت نام شدید. کارمندان هب هر پیام را بررسی می‌کنند، پس شاید هشدارها در شب فرستاده نشوند. برای قطع و حذف اشتراک خود 0 بفرستید. برای قطع، STOP بفرستید.", "alreadySignedUp": "شما قبلاً برای هشدارهای CVH ثبت نام کرده‌اید.", "deletePrompt": "برای حذف اشتراک، در 10 دقیقه باز 0 بفرستید. بعد از آن پیامی نمی‌گیرید.", "signupInfo": "برای گرفتن هشدارهای CVH با پیام، اینجا ثبت نام کنید: {link} برای قطع، STOP بفرستید."}, "smsKeywords": {"yes": "بله, بلی, هان"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {

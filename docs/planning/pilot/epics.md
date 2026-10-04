@@ -3128,7 +3128,7 @@ So that I control whether I get texts.
 
 **Given** a pending sign-up and the reply YES from that number before it expires
 **When** it is handled
-**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice
+**Then** in one transaction the subscriber is created from the pending sign-up and the pending row deleted; a welcome text is queued in the subscriber's language explaining reply 1 (change building or floor), 2 (change language), 3 (withdraw check-in), 0 (stop and delete) and STOP, with the overnight notice (as built: 0, STOP and the overnight notice only until S07.05 ships the menus and adds 1, 2 and 3 back; product owner, 2026-10-04)
 **And** a repeated YES is answered "You are already signed up" and changes nothing
 
 **Given** YES with no pending sign-up, or after it expired
@@ -3203,6 +3203,8 @@ So that I can keep my alerts right without a smartphone.
 **Given** reply 3
 **When** handled
 **Then** it calls `checkins`' `withdrawRequest` port (E08); until then the reply is "You have no check-in request"
+
+**Handoff from S07.04.** Until the menus answer, S07.04's welcome text (`smsTexts.welcome`) offers only reply 0 and STOP, with the overnight notice (product owner, 2026-10-04): S07.05 puts replies 1 (building or floor), 2 (language) and 3 (withdraw a check-in request) back into the welcome in all 15 languages when it ships, and implements them behind S07.04's `MenuPort` (`noMenusYet` until then).
 
 ### Story S07.06 — Residents change or delete their subscription with a one-time web link
 

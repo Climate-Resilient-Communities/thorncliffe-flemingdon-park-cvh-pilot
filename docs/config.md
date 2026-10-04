@@ -352,7 +352,7 @@ needs and fixes:
 |---|---|---|
 | The inbound webhook | Twilio Console, the Messaging Service's Integration, "Send a webhook" | `PUBLIC_BASE_URL/api/twilio/inbound`, HTTP POST, exactly as written (the signature is checked against that URL, built from `PUBLIC_BASE_URL`). Signed with `TWILIO_AUTH_TOKEN`: without it the route answers 503 and does nothing; a wrong signature is 403 and counts toward the same on-call alert as the status callbacks'. |
 | Advanced Opt-Out | Twilio Console, the Messaging Service's Opt-Out Management | On. STOP, START and HELP are Twilio's to answer (its START and HELP replies carry the sign-up link, launch readiness). **YES must not be an opt-in (START) keyword**: a YES Twilio marks `OptOutType=START` is left to Twilio, and the sign-up is never confirmed. |
-| Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
+| Replies | catalog `smsTexts.welcome`, `smsTexts.alreadySignedUp`, `smsTexts.deletePrompt`, `smsTexts.signupInfo`, all 15 languages | `welcome` (after YES; purpose `welcome`; reply 0, STOP and the overnight notice, with replies 1, 2 and 3 added by S07.05), `alreadySignedUp` and `deletePrompt` (purpose `prompt_reply`, one text in every language), `signupInfo` (the sign-up link `/{lang}/text-alerts`, purpose `signup_info`, through a 30-minute `inbound_reply` row). |
 | The words for yes | catalog `smsKeywords.yes`, comma-separated | Accepted besides YES and Y, in the number's language (for example `oui`, `sí, si`, `ہاں, جی`). Read, never sent. |
 | The sign-up link to an unknown number | `SIGNUP_INFO_SCOPE` in `src/modules/subscriptions/application/inbound.ts` | At most once in 24 hours per number (a keyed hash in `rate_limit`, scope `signup_info`). |
 | Old message ids, reply rows and prompts | pg_cron job `subscriptions-purge-inbound` (migration `20261006010000_subscriber_inbound.sql`) | Every 15 minutes: `inbound_seen` hashes after 48 hours, `inbound_reply` rows past their 30 minutes, run-out `sms_prompt` rows. |
@@ -551,3 +551,6 @@ ever served under the key of a real model.
   provider must send exactly those bytes; Smart Encoding would rewrite characters after approval and change the segment
   count the estimate was made from (AD-21). It is checked daily (see "Messaging sender"), and every request also sets
   `SmartEncoded=false`.
+- Pre-launch checklist (S07.04, product owner 2026-10-04): on the Messaging Service, Advanced Opt-Out is on, its inbound webhook is
+  `PUBLIC_BASE_URL/api/twilio/inbound` (POST), and **YES is not an opt-in (START) keyword**: Twilio would mark a YES `OptOutType=START`
+  and answer it itself, and the resident's sign-up would never be confirmed. Test it on the verified number before launch.
