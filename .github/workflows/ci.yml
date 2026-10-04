@@ -62,7 +62,8 @@ jobs:
   checks:
     name: Checks
     needs: [tested-tree, suite]
-    if: ${{ always() }}
+    # not cancelled(): a run replaced by a newer push stays "cancelled" and is not reported as a failed Checks.
+    if: ${{ !cancelled() }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
@@ -88,7 +89,10 @@ jobs:
   production:
     name: Vercel production
     needs: checks
-    if: github.ref == 'refs/heads/main'
+    # Explicit on purpose: an `if` without a status function gets an implicit success() that also looks at the skipped
+    # `suite` job further up the chain (a tested tree), and production would be skipped while Checks passes.
+    # needs.checks.result is success only when the suite succeeded or was skipped for an already tested tree.
+    if: ${{ !cancelled() && github.ref == 'refs/heads/main' && needs.checks.result == 'success' }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     # The production environment holds VERCEL_TOKEN and PRODUCTION_DATABASE_URL and

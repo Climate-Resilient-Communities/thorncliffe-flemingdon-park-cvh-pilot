@@ -11,11 +11,6 @@ on:
 permissions:
   contents: read
 
-# One preview run a pull request: a newer push or label replaces a run that is still waiting for the checks or building.
-concurrency:
-  group: preview-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
-
 defaults:
   run:
     shell: bash
@@ -36,6 +31,11 @@ jobs:
       && contains(github.event.pull_request.labels.*.name, 'preview')
       && (github.event.action != 'labeled' || github.event.label.name == 'preview')
     runs-on: ubuntu-latest
+    # One preview run a pull request: a newer push or label replaces a run that is still waiting for the checks or building.
+    # Set on the job, not the workflow, so a run skipped for another label never cancels a running preview.
+    concurrency:
+      group: preview-${{ github.event.pull_request.number }}
+      cancel-in-progress: true
     # Up to 25 minutes of this are the wait for the checks (scripts/ci/preview-ready.sh).
     timeout-minutes: 45
     # Previews share the single Supabase project, so `vercel pull --environment=preview`
@@ -78,6 +78,7 @@ jobs:
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           ref: ${{ github.event.pull_request.head.sha }}
+          persist-credentials: false
       # The gates are the scripts that get a token before any branch code has
       # run, so they come from main, not from the branch being previewed.
       - name: Check out main's CI scripts

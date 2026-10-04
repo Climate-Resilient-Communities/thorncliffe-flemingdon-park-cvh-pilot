@@ -194,7 +194,8 @@ describe("where the one real search runs", () => {
   it("skips in the smoke spec unless SMOKE_SEARCH is on, so the checks' build and previews never spend a Cohere call", () => {
     const spec = read("e2e/smoke.spec.ts");
 
-    expect(spec).toMatch(/test\.skip\(process\.env\.SMOKE_SEARCH !== "on"/);
+    expect(spec).toMatch(/test\.skip\(\s*process\.env\.SMOKE_SEARCH !== "on"/);
+    expect(spec).toContain("retries: 0");
     expect(spec).toContain('lang: "en"');
   });
 
