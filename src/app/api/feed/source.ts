@@ -21,6 +21,7 @@ function fixturePlaces(file: string): FeedPlaces {
   return {
     buildings: buildings.map(({ rsn }) => rsn),
     neighbourhoods: Object.values(NEIGHBOURHOOD_IDS),
+    neighbourhoodOf: Object.fromEntries(buildings.flatMap(({ rsn, neighbourhoodName }) => (NEIGHBOURHOOD_IDS[neighbourhoodName] ? [[rsn, NEIGHBOURHOOD_IDS[neighbourhoodName]]] : []))),
   };
 }
 

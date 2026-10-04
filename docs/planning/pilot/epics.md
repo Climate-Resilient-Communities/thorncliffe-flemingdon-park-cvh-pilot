@@ -2387,7 +2387,7 @@ So that I am not worried by a problem that is long over.
 
 ### Story S05.06 — Residents see the status of each building and neighbourhood
 
-- **Size:** M · **Estimate:** 6 h · **Actual:** —
+- **Size:** M · **Estimate:** 6 h · **Actual:** 57 min (started 2026-10-03 22:34 UTC, built 23:31 UTC)
 - **Traces:** FR-D6, AR-24, FR-D4-P, UX-DR5 · **Depends on:** S05.03 · **Branch:** `e05-s06-derived-status`
 
 As a resident,

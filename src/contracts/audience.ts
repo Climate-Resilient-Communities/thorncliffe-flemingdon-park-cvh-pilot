@@ -88,6 +88,20 @@ export function audienceRsns(audience: Audience): string[] {
 }
 
 /**
+ * Whether an audience covers a building for the building's status (AD-19, S05.06): a buildings audience covers the buildings it names (whatever floors it lists:
+ * a status is the building's), and a neighbourhood audience covers every building in the neighbourhoods it names. `neighbourhoodId` is the building's own.
+ */
+export function audienceCoversBuilding(audience: Audience, building: { rsn: string; neighbourhoodId: string | null }): boolean {
+  if (audience.scope === "buildings") return audience.buildings.some((named) => named.rsn === building.rsn);
+  return building.neighbourhoodId !== null && audience.neighbourhood_ids.includes(building.neighbourhoodId);
+}
+
+/** Whether an audience covers a neighbourhood for its status: only a neighbourhood audience that names it (one building's problem is not the whole neighbourhood's). */
+export function audienceCoversNeighbourhood(audience: Audience, neighbourhoodId: string): boolean {
+  return audience.scope === "neighbourhood" && audience.neighbourhood_ids.includes(neighbourhoodId);
+}
+
+/**
  * What the matcher needs to know about one person, however it was learned: a subscriber row (SMS), the
  * device's choices (the phone), or a test. Nothing else about a person is ever used.
  *
