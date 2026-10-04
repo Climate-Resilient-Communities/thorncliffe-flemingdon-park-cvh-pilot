@@ -13,6 +13,10 @@ describe("formatServerTiming", () => {
     ).toBe("boot;dur=812.3, limiter;dur=40, snapshot;dur=1204;desc=cold, total;dur=3301");
   });
 
+  it("writes the cache flag for a cold instance served by the shared data cache", () => {
+    expect(formatServerTiming([{ phase: "snapshot", ms: 40, flag: "cache" }])).toBe("snapshot;dur=40;desc=cache");
+  });
+
   it("is empty for no phases", () => {
     expect(formatServerTiming([])).toBe("");
   });
@@ -31,7 +35,7 @@ describe("formatServerTiming", () => {
     const hostile = { phase: "snapshot", ms: 12, flag: "M001 a question in Urdu میری عمارت" } as unknown as TimingEntry;
     const header = formatServerTiming([hostile, { phase: "embed", ms: 150 }]);
     expect(header).toBe("snapshot;dur=12, embed;dur=150");
-    const allowed = new RegExp(`^(?:(?:${TIMING_PHASES.join("|")});dur=\\d+(?:\\.\\d)?(?:;desc=cold)?(?:, )?)*$`);
+    const allowed = new RegExp(`^(?:(?:${TIMING_PHASES.join("|")});dur=\\d+(?:\\.\\d)?(?:;desc=(?:cold|cache))?(?:, )?)*$`);
     expect(header).toMatch(allowed);
   });
 });

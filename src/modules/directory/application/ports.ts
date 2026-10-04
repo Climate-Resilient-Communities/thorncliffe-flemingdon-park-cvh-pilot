@@ -27,6 +27,16 @@ export interface DirectoryStorage {
   getBytes?(path: string): Promise<Uint8Array | null>;
 }
 
+/**
+ * A shared cache of a release's files for cold instances (Vercel Data Cache in production). A release's files never change, so an
+ * entry is named by the release number, the file's path and the sha256 the release records for it; the cache is only a faster place
+ * to read the same bytes from. `load` runs on a miss only and must reject (so nothing is cached) when it has nothing good to give.
+ * The reader checks the sha256 of what it gets back, whichever way it came. An entry too large for the cache is simply not kept.
+ */
+export interface ReleaseFileCache {
+  read(key: { release: number; path: string; sha256: string }, load: () => Promise<Uint8Array>): Promise<Uint8Array>;
+}
+
 /** The catalogue's source version a release records. */
 export interface CatalogueVersion {
   /** sha256 of the committed data/catalogue/ files. */

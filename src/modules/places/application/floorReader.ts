@@ -2,7 +2,7 @@
 // id and may not import places (AD-2), so the composition root hands identity this reader as its port.
 import { asc, eq, inArray } from "drizzle-orm";
 import type { DbExecutor } from "../../../platform/db";
-import { building, buildingFloor, neighbourhood } from "../adapters/schema";
+import { building, buildingFloor, disruptionType, neighbourhood } from "../adapters/schema";
 
 /** A floor as an assignment needs it: the stable id, the label people see, and the place in the building's order. */
 export interface FloorRecord {
@@ -54,4 +54,14 @@ export async function addressesOfBuildings(executor: DbExecutor, rsns: readonly 
   if (rsns.length === 0) return new Map();
   const rows = await executor.select({ rsn: building.rsn, address: building.address }).from(building).where(inArray(building.rsn, [...rsns]));
   return new Map(rows.map((row) => [row.rsn, row.address]));
+}
+
+/**
+ * What `disruption_type.direct` says of each type given, by id (a type that is not there is left out): whether an Ambassador's post of that type may appear on the
+ * web at once (D-1, S08.03). true for the lower-risk types, false for fire and "Other", null where it is not decided. alerting may not import the table, so it reads it here.
+ */
+export async function directnessOfTypes(executor: DbExecutor, types: readonly string[]): Promise<Map<string, boolean | null>> {
+  if (types.length === 0) return new Map();
+  const rows = await executor.select({ id: disruptionType.id, direct: disruptionType.direct }).from(disruptionType).where(inArray(disruptionType.id, [...types]));
+  return new Map(rows.map((row) => [row.id, row.direct]));
 }

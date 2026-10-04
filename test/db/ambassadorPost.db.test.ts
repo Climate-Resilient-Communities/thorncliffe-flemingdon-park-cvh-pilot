@@ -304,10 +304,12 @@ describe("the submit of a post (E04 exactly, attributed to its building)", () =>
     const contexts: PrepareContext[] = [];
     const key = randomUUID();
     const report = await submitterFor(contexts).submit(actorOf(ambassador), ref, key);
-    expect(report).toEqual({ state: "committed", key, outcome: null });
+    // Elevator and water are direct types: this post is D-1, on the web from its submit (S08.03); its texts still wait for the approval.
+    expect(report).toEqual({ state: "committed", key, outcome: null, webPublished: true });
     expect(contexts[0].attribution).toEqual({ role: "ambassador", building: ADDRESS });
     const row = await entryRow(ref.entryId);
-    expect(row).toMatchObject({ status: "pending_approval", version: 1, attributed_rsn: RSN, web_published_at: null });
+    expect(row).toMatchObject({ status: "pending_approval", version: 1, attributed_rsn: RSN });
+    expect(row.web_published_at).not.toBeNull();
     expect(row.sms_bodies.en.body).toContain(`Building ambassador, ${ADDRESS}`);
     expect(row.sms_bodies.en.body).toContain("Verified by the Hub");
     expect(row.sms_bodies.en.body).not.toMatch(/From the Hub/);
@@ -383,13 +385,20 @@ describe("an approved post, as the approver and residents read it", () => {
     expect(captured.at(-1)).toMatchObject({ entryId: ref.entryId, isDrill: false });
   });
 
-  it("clears the building with the other frozen fields when it is returned to its author", async () => {
+  it("clears the building with the other frozen fields when it is returned to its author, and a draft can never hold one", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    // A post that residents have not read (fire waits for the Hub): a D-1 post is on the web and never returns to draft (S08.03).
+    const ref = await submitted(ambassador, { types: ["fire"] });
     const row = await entryRow(ref.entryId);
     expect(await alerting.returnEntry(actorOf(coordinator), ref, "return", { shown: { version: row.version, contentHash: row.content_hash }, note: "Which floors exactly?" })).toMatchObject({ ok: true });
     expect(await entryRow(ref.entryId)).toMatchObject({ status: "draft", attributed_rsn: null, content_hash: null });
     expect((await alerting.review(ref))?.attribution).toBeNull();
+    await expect(
+      owner.begin(async (tx) => {
+        await tx`select set_config('cvh.actor_id', ${ambassador.id}, true)`;
+        await tx`update alert_entry set attributed_rsn = ${RSN} where id = ${ref.entryId}`;
+      }),
+    ).rejects.toThrow(/alert_entry_attributed_rsn_frozen/);
   });
 
   it("a Hub entry stays the Hub's: no building is stored and residents read it from the Hub", async () => {
@@ -525,7 +534,8 @@ describe("every discard says why", () => {
 
   it("is by_author when the author takes back their own post, which then is not shown as declined", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    // A post residents have not read: a D-1 post is withdrawn by a system entry instead (S08.03, test/db/d1WebFirst.db.test.ts).
+    const ref = await submitted(ambassador, { types: ["fire"] });
     expect(await alerting.discardEntry(actorOf(ambassador), ref)).toMatchObject({ ok: true, value: { status: "discarded", discardReason: "by_author" } });
     expect((await entryRow(ref.entryId)).discard_reason).toBe("by_author");
     expect((await auditRows()).at(-1)).toMatchObject({ action: "entry.discarded", meta: { discard_reason: "by_author", from: "pending_approval" } });
@@ -534,7 +544,7 @@ describe("every discard says why", () => {
 
   it("is declined when the Hub discards it, and only then is the post 'Not sent by the Hub'", async () => {
     await assign(ambassador, RSN);
-    const ref = await submitted();
+    const ref = await submitted(ambassador, { types: ["fire"] });
     const row = await entryRow(ref.entryId);
     expect(await alerting.discardEntry(actorOf(coordinator), ref, { shown: { version: row.version, contentHash: row.content_hash } })).toMatchObject({ ok: true });
     expect((await entryRow(ref.entryId)).discard_reason).toBe("declined");
@@ -544,7 +554,8 @@ describe("every discard says why", () => {
 
   it("is by_close when the alert closes with the post unread (a final's approval), which reads as ended, never declined", async () => {
     await assign(ambassador, RSN);
-    const thread = await hubThread();
+    // The thread is about fire, so the post in it is not D-1: residents have not read it when the thread closes.
+    const thread = await hubThread(false, ["fire"]);
     clock = new Date(NOW.getTime() + 60_000);
     const waiting = await submitted(ambassador, { into: thread.alertId });
     clock = new Date(NOW.getTime() + 120_000);
@@ -559,7 +570,7 @@ describe("every discard says why", () => {
     expect((await home(ambassador)).posts.find((item) => item.entryId === waiting.entryId)).toMatchObject({ state: "ended" });
   });
 
-  it("is from the catalog only, and a discard without one (the release before this one, live while the migration runs) is still accepted", async () => {
+  it("is required by the database for every new discard, from the catalog only, and never on an entry that is not discarded", async () => {
     await assign(ambassador, RSN);
     const ref = await post();
     const asAuthor = (statement: (tx: postgres.TransactionSql) => Promise<unknown>) =>
@@ -567,13 +578,11 @@ describe("every discard says why", () => {
         await tx`select set_config('cvh.actor_id', ${ambassador.id}, true)`;
         await statement(tx);
       });
+    await expect(asAuthor((tx) => tx`update alert_entry set status = 'discarded' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_status/);
     await expect(asAuthor((tx) => tx`update alert_entry set status = 'discarded', discard_reason = 'because' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_valid/);
+    await expect(asAuthor((tx) => tx`update alert_entry set discard_reason = 'declined' where id = ${ref.entryId}`)).rejects.toThrow(/alert_entry_discard_reason_status/);
     await asAuthor((tx) => tx`update alert_entry set status = 'discarded', discard_reason = 'by_author' where id = ${ref.entryId}`);
     expect(await entryRow(ref.entryId)).toMatchObject({ status: "discarded", discard_reason: "by_author" });
-    // The previous release's discard writes no reason: this migration must not break it (the check that requires one is a later migration's).
-    const older = await post();
-    await asAuthor((tx) => tx`update alert_entry set status = 'discarded' where id = ${older.entryId}`);
-    expect(await entryRow(older.entryId)).toMatchObject({ status: "discarded", discard_reason: null });
     // A discarded entry never changes again, its reason included (the entry guard).
     await expect(asAuthor((tx) => tx`update alert_entry set discard_reason = 'declined' where id = ${ref.entryId}`)).rejects.toThrow(/cannot be changed/);
   });

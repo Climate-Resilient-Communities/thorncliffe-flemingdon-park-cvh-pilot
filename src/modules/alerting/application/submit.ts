@@ -30,7 +30,7 @@ export type SubmitReport =
   /** Nothing was started (the draft cannot be submitted, or another attempt is running, or the key is not one): the entry is as it was. */
   | { state: "refused"; refusal: AlertRefusal }
   /** An attempt exists: it is running, committed or failed. For a failed one, `outcome` is why. */
-  | { state: AttemptState; key: string; outcome: AlertRefusal | null };
+  | { state: AttemptState; key: string; outcome: AlertRefusal | null; webPublished?: true };
 
 export interface SubmitterDeps {
   lifecycle: Pick<AlertLifecycle, "beginSubmit" | "completeSubmit" | "failSubmit" | "recordProgress" | "recordBudget" | "entryState">;
@@ -125,12 +125,13 @@ export function createSubmitter(deps: SubmitterDeps) {
 
     const frozen = await freeze(actor, ref, key, prepared.value, start, elapsed);
     if (frozen.state === "failed") return { state: "failed", key, outcome: frozen.outcome };
+    const webPublished = frozen.webPublished ? ({ webPublished: true } as const) : {};
 
     const fellBack = prepared.value.translations.filter((translation) => translation.status === "fallback_en").length;
     if (fellBack > 0 && deps.translationConfigured !== false) {
       await recordOps({ kind: "alert.translation_fallback", subjectType: "alert_entry", subjectId: ref.entryId, detail: { languages: Math.min(fellBack, FROZEN_LANGS.length) } });
     }
-    return { state: "committed", key, outcome: null };
+    return { state: "committed", key, outcome: null, ...webPublished };
   }
 
   /**
@@ -146,20 +147,20 @@ export function createSubmitter(deps: SubmitterDeps) {
     frozen: FrozenContent,
     start: Extract<SubmitStart, { kind: "started" }>,
     elapsed: () => number,
-  ): Promise<{ state: "committed" } | { state: "failed"; outcome: AlertRefusal }> {
+  ): Promise<{ state: "committed"; webPublished: boolean } | { state: "failed"; outcome: AlertRefusal }> {
     try {
       const done = await lifecycle.completeSubmit(actor, ref, key, frozen, start.expected, start.possibleDuplicateOf, start.attribution);
-      return done.ok ? { state: "committed" } : { state: "failed", outcome: done.error };
+      // A D-1 post is on the web from this commit (S08.03): the caller expires the feed's cache tag.
+      return done.ok ? { state: "committed", webPublished: done.value.webPublishedAt instanceof Date } : { state: "failed", outcome: done.error };
     } catch {
       if (await lifecycle.failSubmit(actor, ref, key, "PREPARATION_FAILED", start.context.isDrill)) {
         await recordOps({ kind: "alert.submit_failed", subjectType: "alert_entry", subjectId: ref.entryId, detail: { reason: "commit_failed", ms: elapsed() } });
         return { state: "failed", outcome: "PREPARATION_FAILED" };
       }
-      const stored = await lifecycle.entryState(ref).then(
-        (state) => (state?.attempt?.key === key ? state.attempt : null),
-        () => null,
-      );
-      if (stored?.state === "committed") return { state: "committed" };
+      const state = await lifecycle.entryState(ref).catch(() => null);
+      const stored = state?.attempt?.key === key ? state.attempt : null;
+      // A commit that went through may have web-published the post (S08.03): the feed's cache tag is expired for it as for any other commit.
+      if (stored?.state === "committed") return { state: "committed", webPublished: state?.entry.webPublishedAt instanceof Date };
       return { state: "failed", outcome: stored?.outcome ?? "PREPARATION_FAILED" };
     }
   }

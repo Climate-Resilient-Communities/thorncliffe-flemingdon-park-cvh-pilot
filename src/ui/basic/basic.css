@@ -1,0 +1,114 @@
+/*
+ * Basic mode (X-07, S02.14; the prototype's `.cvh-basic`). The type sizes, the 56 px target and the one-column grids come
+ * from tokens.generated.css, tap.css and grid.css, all keyed on <html data-basic="true">. This file holds what is about
+ * content: what basic mode leaves out (`hide-basic`), the button that brings back the earlier updates of an alert, and the
+ * switch that turns the mode on and off (X-07). Imported once by the app stylesheet.
+ */
+@layer components {
+  /* X-07 in the header: the prototype's `.cvh-switch` in `.cvh-rhead__tools`, full width. */
+  .shell-tools {
+    padding-block-start: var(--gap-tight);
+  }
+
+  .shell-switch {
+    display: flex;
+    align-items: center;
+    gap: var(--gap-target);
+    inline-size: 100%;
+    padding-block: var(--gap-subline);
+    padding-inline: var(--gap-tight);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-size: var(--type-caption-size);
+    font-weight: 700;
+    line-height: 1.2;
+    text-align: start;
+    cursor: pointer;
+  }
+
+  .shell-switch[aria-checked="true"] {
+    border-color: var(--accent-text);
+    background-color: color-mix(in srgb, var(--accent-text) 12%, var(--surface-raised));
+  }
+
+  .shell-switch:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+
+  .shell-switch__track {
+    position: relative;
+    flex: none;
+    inline-size: 44px;
+    block-size: 26px;
+    border-radius: 13px;
+    background-color: var(--text-muted);
+  }
+
+  .shell-switch__knob {
+    position: absolute;
+    inset-block-start: 3px;
+    inset-inline-start: 3px;
+    inline-size: 20px;
+    block-size: 20px;
+    border-radius: 50%;
+    background-color: var(--surface-raised);
+  }
+
+  .shell-switch[aria-checked="true"] .shell-switch__track {
+    background-color: var(--accent-text);
+  }
+
+  .shell-switch[aria-checked="true"] .shell-switch__knob {
+    inset-inline-start: 21px;
+  }
+
+  .shell-switch__text {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    overflow-wrap: anywhere;
+  }
+
+  .shell-switch__state {
+    font-weight: 400;
+  }
+}
+
+@layer utilities {
+  /* The prototype's `cvh-hide-basic`: a lead, a second line, a note that the plain layout drops. */
+  :root[data-basic="true"] .hide-basic {
+    display: none;
+  }
+
+  .basic-earlier__more {
+    display: none;
+  }
+
+  :root[data-basic="true"] .basic-earlier[data-all="false"] > .basic-earlier__more {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    margin-block-start: var(--gap-target);
+    padding-block: var(--gap-label);
+    padding-inline: var(--gap-stack);
+    border: 1.5px solid var(--control-border);
+    border-radius: var(--radius-card);
+    background-color: var(--surface-raised);
+    color: var(--ink);
+    font: inherit;
+    font-weight: 700;
+    cursor: pointer;
+  }
+
+  :root[data-basic="true"] .basic-earlier[data-all="false"] .basic-earlier__item {
+    display: none;
+  }
+
+  .basic-earlier__more:focus-visible {
+    outline: 2px solid var(--focus-ring);
+    outline-offset: 2px;
+  }
+}
