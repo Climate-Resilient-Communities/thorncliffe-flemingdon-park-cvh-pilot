@@ -1166,7 +1166,10 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const [taken] = await tx.select({ id: alertEntry.id }).from(alertEntry).where(eq(alertEntry.id, input.entryId));
         if (taken) throw new Refused("ENTRY_ID_INVALID");
         const content = await contentFor(standing, input.types);
-        return insertThread(tx, actor, { kind: "update", isDrill: false, reportedAt: at, content }, { alertId: input.alertId, entryId: input.entryId, createdAt: at });
+        // The report reached the Hub as it is posted: by the database's clock, which also times the thread's creation (a report is never after its thread).
+        const rows = await tx.execute<{ now: Date | string }>(sql`select now() as now`);
+        const reportedAt = new Date([...rows][0].now);
+        return insertThread(tx, actor, { kind: "update", isDrill: false, reportedAt, content }, { alertId: input.alertId, entryId: input.entryId, createdAt: at });
       }
 
       const { thread, standing } = await open(tx, actor, { alertId: threadId });

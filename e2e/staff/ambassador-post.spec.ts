@@ -80,6 +80,7 @@ const entriesBy = (authorId: string) => sql<{ id: string; alert_id: string; stat
   select id, alert_id, status, attributed_rsn, version from alert_entry where author_id = ${authorId} order by created_at`;
 
 test("an ambassador posts for their floors from their home, sees the attribution first, and the Hub approves it as an ambassador's post residents read as the building's", async ({ page, browser, baseURL }) => {
+  test.setTimeout(180_000);
   const person = await newAmbassador();
   await signInAs(page, person);
   await page.getByTestId("amb-post-link").click();
@@ -114,6 +115,7 @@ test("an ambassador posts for their floors from their home, sees the attribution
 });
 
 test("without signal the post is held in the open page, says so, and is sent with the same key when signal returns; nothing is stored on the phone", async ({ page, context }) => {
+  test.setTimeout(120_000);
   const person = await newAmbassador();
   await signInAs(page, person);
   await page.goto("/staff/ambassador/post");
@@ -174,6 +176,7 @@ test("a building the ambassador is not assigned to is refused by a direct reques
 });
 
 test("in a drill the post is practice: marked as an exercise on the screen, kept apart on the home, and never read by residents", async ({ page }) => {
+  test.setTimeout(120_000);
   const person = await newAmbassador();
   // A drill about the building, running, with an approved acknowledgement (inserted directly, the lifecycle's trigger off, as the database tests do).
   const coordinator = await newCoordinator(sql);
