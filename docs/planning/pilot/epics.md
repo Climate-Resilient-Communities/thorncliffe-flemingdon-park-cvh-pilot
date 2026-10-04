@@ -1324,7 +1324,7 @@ So that I have the numbers and my building's status when I need them most.
 
 ### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 5 h 5 min (started 2026-10-04 13:50 UTC, built 18:55 UTC; includes one full rebuild)
 - **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s14-basic-mode-a11y`
 
 As a resident who finds the full layout hard to use,
