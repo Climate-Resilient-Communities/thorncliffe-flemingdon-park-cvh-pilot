@@ -4,7 +4,7 @@ import realTerms from "../../../../data/catalogue/terms.json";
 import { termsReviewHash, type TermsSource } from "../domain/terms";
 import { bundledTermsInput } from "../adapters/bundledTerms";
 import { currentConsentVersion, currentPublishedTerms, termsPageView } from "../index";
-import { createTermsService, termsPageMode } from "./termsService";
+import { createTermsService, signupConsentVersion, termsPageMode } from "./termsService";
 
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
@@ -78,5 +78,25 @@ describe("what the page does with unpublished terms", () => {
     expect(termsPageMode({ status: "draft" }, "production")).toBe("hidden");
     expect(termsPageMode({ status: "draft" }, "preview")).toBe("draft");
     expect(termsPageMode({ status: "draft" }, "development")).toBe("draft");
+  });
+});
+
+describe("the terms version a sign-up records (S07.02)", () => {
+  it("is the published version everywhere, and the draft's outside production only; in production no sign-up is taken until the terms are published", () => {
+    for (const environment of ["production", "preview", "development"] as const) {
+      expect(signupConsentVersion({ status: "published", consentVersion: "2026-10-02.1" }, environment)).toBe("2026-10-02.1");
+    }
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "production")).toBeNull();
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "preview")).toBe("2026-10-02.1");
+    expect(signupConsentVersion({ status: "draft", consentVersion: "2026-10-02.1" }, "development")).toBe("2026-10-02.1");
+    expect(signupConsentVersion({ status: "draft", consentVersion: null }, "preview")).toBeNull();
+  });
+
+  it("is null for a draft whose version is not written YYYY-MM-DD.n, so a preview's sign-up page is a 404, not a form that answers 503", () => {
+    for (const environment of ["preview", "development"] as const) {
+      for (const version of ["v1", "2026-10-02", "2026-10-02.0", "", " 2026-10-02.1"]) {
+        expect(signupConsentVersion({ status: "draft", consentVersion: version }, environment), version).toBeNull();
+      }
+    }
   });
 });

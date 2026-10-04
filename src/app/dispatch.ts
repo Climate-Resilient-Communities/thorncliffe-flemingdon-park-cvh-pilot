@@ -11,6 +11,7 @@ import "server-only";
 import { after } from "next/server";
 import { alertStandingReader } from "@/modules/alerting";
 import {
+  createDeliveryQueue,
   createDispatcher,
   KICK_RUN_LIMIT_MS,
   createServiceCheck,
@@ -29,6 +30,7 @@ import {
   type ServiceCheckResult,
 } from "@/modules/messaging";
 import { recordOpsEvent, recordOpsEventUnlessBusy } from "@/modules/ops";
+import { forgetOptedOutSignup } from "@/modules/subscriptions";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
 import { contactResolver } from "./messaging";
@@ -125,7 +127,17 @@ export interface DispatcherParts {
   /** S06.08's spend seams (see DispatcherDeps): by default the app's own hooks, which write a text's estimate with its outcome (the status callbacks are given the same ones). */
   afterOutcome?: DispatcherDeps["afterOutcome"];
   afterProviderId?: DispatcherDeps["afterProviderId"];
+  /** S07.02's seam (see DispatcherDeps): by default `failureHooks`, the same the status callbacks are given. */
+  afterFailure?: DispatcherDeps["afterFailure"];
 }
+
+/**
+ * What a text refused for good means to the module that owns its recipient (the sender's and the status callbacks' `afterFailure`):
+ * subscriptions forgets a pending sign-up whose confirmation was refused because the number texted STOP (S07.02).
+ */
+export const failureHooks: NonNullable<DispatcherDeps["afterFailure"]> = forgetOptedOutSignup({
+  skipRecipientDeliveries: (tx, recipient) => createDeliveryQueue().skipRecipientDeliveries(tx, recipient),
+});
 
 /** The dispatcher on the real environment and database (every part can be replaced in a test). Throws SenderNotConfigured where live sending is not set up. */
 export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
@@ -144,6 +156,7 @@ export function appDispatcher(parts: DispatcherParts = {}): Dispatcher {
     runLimitMs: parts.runLimitMs,
     afterOutcome: parts.afterOutcome ?? spend.afterOutcome,
     afterProviderId: parts.afterProviderId ?? spend.afterProviderId,
+    afterFailure: parts.afterFailure ?? failureHooks,
   });
 }
 
