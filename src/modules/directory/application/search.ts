@@ -64,13 +64,14 @@ import {
   type QuestionTranslator,
 } from "@/modules/translation";
 import type { Db, DbExecutor } from "@/platform/db";
-import { sha256Hex } from "@/platform/hash";
+import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { SafeDetailError, classifyError, schemaFailure } from "@/platform/safeError";
 import type { PhaseTimings, TimingPhase } from "@/platform/serverTiming";
 import { directoryRelease, searchLog } from "../adapters/schema";
 import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/questionLanguage";
 import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
+import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
 import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder } from "./ports";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
@@ -203,7 +204,7 @@ export interface SnapshotData {
   dims: number | null;
   threshold: number;
   ids: string[];
-  vectors: number[][];
+  vectors: ArrayLike<number>[];
   known: ReadonlySet<string>;
   emergency: ReadonlySet<string>;
 }
@@ -359,21 +360,52 @@ export async function currentSearchFacts(db: Db, timeoutMs = 5_000): Promise<{ r
   return current?.search ? { release: current.number, model: current.search.embed_model, threshold: current.search.threshold } : null;
 }
 
-async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
-  // The English listing is downloaded beside the vectors (and while they are hashed and parsed); what is checked, and the order
-  // the faults are told in, are as if it were read after them.
-  const vectorsRead = storage.get(record.vectors_path);
-  vectorsRead.catch(() => undefined);
-  const entry = release.files.en;
-  const listingRead = entry ? storage.get(entry.path) : Promise.resolve(null);
-  listingRead.catch(() => undefined);
-  const vectorsBody = await vectorsRead;
+interface LoadedVectors {
+  ids: string[];
+  vectors: ArrayLike<number>[];
+}
+
+async function readVectors(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<LoadedVectors> {
+  const binary = record.binary;
+  if (binary && storage.getBytes) {
+    const bytesRead = storage.getBytes(binary.path);
+    bytesRead.catch(() => undefined);
+    // The JSON file is only downloaded when the binary turns out to be missing: start nothing else for it here.
+    const bytes = await bytesRead;
+    if (bytes !== null) {
+      if (sha256HexBytes(bytes) !== binary.sha256) throw new SafeDetailError("vectors_hash");
+      let decoded: ReturnType<typeof decodeVectorsBinary>;
+      try {
+        decoded = decodeVectorsBinary(bytes, sha256HexBytes);
+      } catch (error) {
+        throw new SafeDetailError(error instanceof VectorsBinaryError ? `vectors_schema:binary_${error.message}` : "vectors_schema:binary");
+      }
+      const { header } = decoded;
+      if (header.release_v !== release.number || header.embed_model !== record.embed_model || header.dims !== record.dims) throw new SafeDetailError("vectors_release");
+      return { ids: header.ids, vectors: decoded.vectors };
+    }
+  }
+  const vectorsBody = await storage.get(record.vectors_path);
   if (vectorsBody === null) throw new SafeDetailError("vectors_missing");
   if (sha256Hex(vectorsBody) !== record.sha256) throw new SafeDetailError("vectors_hash");
   const vectorsParsed = VectorsFileSchema.safeParse(JSON.parse(vectorsBody));
   if (!vectorsParsed.success) throw new SafeDetailError(schemaFailure("vectors_schema", vectorsParsed.error.issues));
   const vectors = vectorsParsed.data;
   if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new SafeDetailError("vectors_release");
+  return { ids: vectors.providers.map((p) => p.id), vectors: vectors.providers.map((p) => p.vector) };
+}
+
+async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
+  // The English listing is downloaded beside the vectors (and while they are hashed and parsed); what is checked, and the order
+  // the faults are told in, are as if it were read after them.
+  // The compact binary file is read where the release has one and the store can read bytes; a release published before it (or whose
+  // binary is not there) uses the JSON file, with the same checks and the same error codes.
+  const vectorsRead = readVectors(storage, release, record);
+  vectorsRead.catch(() => undefined);
+  const entry = release.files.en;
+  const listingRead = entry ? storage.get(entry.path) : Promise.resolve(null);
+  listingRead.catch(() => undefined);
+  const vectors = await vectorsRead;
 
   // Which providers are emergency results: the English listing of the same release names each provider's categories.
   const listingBody = await listingRead;
@@ -391,9 +423,9 @@ async function loadReleaseData(storage: DirectoryStorage, release: CurrentReleas
     model: record.embed_model,
     dims: record.embed_config.dims,
     threshold: record.threshold,
-    ids: vectors.providers.map((p) => p.id),
-    vectors: vectors.providers.map((p) => p.vector),
-    known: new Set(vectors.providers.map((p) => p.id)),
+    ids: vectors.ids,
+    vectors: vectors.vectors,
+    known: new Set(vectors.ids),
     emergency,
   };
 }
