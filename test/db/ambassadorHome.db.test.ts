@@ -75,7 +75,7 @@ async function seedThread(opts: { slug: string; drill?: boolean; closed?: boolea
   });
   const entryIds: string[] = [];
   // An entry discarded before S08.02 recorded why (no reason) is as production holds them: made with the check that requires a reason off, which is put back
-  // NOT VALID as its migration made it (20261005200000_alert_entry_discard_checks.sql).
+  // NOT VALID as its migration made it (20261005230000_alert_entry_discard_checks.sql).
   const beforeTheCheck = opts.entries.some((entry) => entry.status === "discarded" && entry.discardReason === null);
   await owner.begin(async (tx) => {
     await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
