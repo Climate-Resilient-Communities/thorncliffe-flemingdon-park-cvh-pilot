@@ -310,6 +310,18 @@ describe("the words the screen carries for the browser", () => {
   });
 });
 
+describe("a drill's composer (S06.05)", () => {
+  it("carries the exercise marker in the prototype's words, on the draft and once submitted, and a real alert's does not", () => {
+    const drill = (entry: Partial<EntryState["entry"]> = {}) => {
+      const state = stateOf({ entry });
+      return { ...state, thread: { ...state.thread, isDrill: true } };
+    };
+    expect(composerScreen(input({ state: drill() })).exercise).toEqual({ title: "Exercise. This is practice.", sub: "Nothing here is sent to residents." });
+    expect(composerScreen(input({ state: drill({ status: "pending_approval", version: 1, contentHash: "a".repeat(64) }) })).exercise).not.toBeNull();
+    expect(composerScreen(input()).exercise).toBeNull();
+  });
+});
+
 describe("the entry that is not there", () => {
   it("says so and offers the way back to the Hub", () => {
     expect(missingComposer()).toEqual({ kind: "missing", message: expect.stringContaining("not found"), back: { href: "/staff", label: "Back to the Hub" } });

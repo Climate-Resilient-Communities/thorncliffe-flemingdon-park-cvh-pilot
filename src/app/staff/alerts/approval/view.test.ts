@@ -110,6 +110,13 @@ describe("the approval view of an alert waiting for a second person (O-05)", () 
     expect(screen.header.drill).toBeNull();
   });
 
+  it("carries the exercise marker of a drill (S06.05) in the prototype's words, on the review and on the published confirmation, and a real alert's carries none", () => {
+    const marker = { title: "Exercise. This is practice.", sub: "Nothing here is sent to residents." };
+    expect(screenOf({ thread: { isDrill: true } }).header.exercise).toEqual(marker);
+    expect(screenOf({ thread: { isDrill: true }, entry: { status: "approved" } }).header.exercise).toEqual(marker);
+    expect(screen.header.exercise).toBeNull();
+  });
+
   it("lists no resident channel for a drill, whether or not texting is open, so the channels never contradict 'It never reaches residents'", () => {
     const drill = ["The drill roster only. A drill is never shown on the web app or texted to residents."];
     expect(screenOf({ thread: { isDrill: true } }).facts.channels.items).toEqual(drill);
@@ -323,10 +330,10 @@ describe("the published confirmation of an approved entry (O-06)", () => {
   it("says a drill reached no resident: nothing on the web, no text sent, in the drill's own words", () => {
     const published = approved({ thread: { isDrill: true } })!;
     expect(published.title).toBe("Practice publish: nothing was sent to residents");
-    expect(published.drill).toBe("This is a drill. The rows below show what would have gone where.");
+    expect(published.drill).toBe("This is a drill. Its texts went only to the people on the drill roster.");
     expect(published.rows.map((row) => [row.id, row.value])).toEqual([
       ["web", "Not shown to residents: a drill stays in the Hub."],
-      ["texts", "Not sent: practice only."],
+      ["texts", "Sent to the drill roster only. No resident gets them."],
       ["valid", expect.any(String)],
     ]);
     expect(approved()!.drill).toBeNull();

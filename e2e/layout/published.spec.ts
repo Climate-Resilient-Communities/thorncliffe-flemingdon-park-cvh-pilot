@@ -142,7 +142,7 @@ test.describe("what the confirmation says, with the app's own English words at 3
   test("says a drill reached nobody", async ({ page }) => {
     await open(page, PAGES[2], "en", "real");
     await expect(page.getByTestId("published-title")).toHaveText("Practice publish: nothing was sent to residents");
-    await expect(page.getByTestId("where-texts")).toContainText("Not sent: practice only.");
+    await expect(page.getByTestId("where-texts")).toContainText("Sent to the drill roster only. No resident gets them.");
     await expect(page.getByTestId("where-fallback")).toHaveCount(0);
   });
 

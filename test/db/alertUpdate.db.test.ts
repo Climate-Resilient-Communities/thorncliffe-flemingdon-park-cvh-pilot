@@ -208,10 +208,12 @@ const closeThread = (alertId: string, reason = "resolved") =>
 
 /** An approved acknowledgement (or alert) of the building: the thread an update is added to. */
 async function approvedThread(over: Partial<EntryContent> = {}, kind: "ack" | "update" = "ack", isDrill = false): Promise<{ ref: EntryRef; slug: string }> {
-  const created = await alerting.createAlert(actorOf(authorA), { kind, isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content(over) });
+  // An Admin starts a drill: only an Admin at aal2 may (S06.05).
+  const author = isDrill ? adminC : authorA;
+  const created = await alerting.createAlert(actorOf(author), { kind, isDrill, reportedAt: new Date("2026-10-01T14:50:00Z"), content: content(over) });
   if (!created.ok) throw new Error(`createAlert refused: ${created.error}`);
   const ref = { alertId: created.value.thread.id, entryId: created.value.entry.id };
-  const submitted = await seams.freeze(actorOf(authorA), ref, frozen("ack"));
+  const submitted = await seams.freeze(actorOf(author), ref, frozen("ack"));
   if (!submitted.ok) throw new Error(`freeze refused: ${submitted.error}`);
   const approved = await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("ack") });
   if (!approved.ok) throw new Error(`approve refused: ${approved.error}`);

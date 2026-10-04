@@ -1484,9 +1484,11 @@ describe("a possible duplicate", () => {
     over: Partial<EntryContent>,
     options: { drill?: boolean } = {},
   ): Promise<EntryRef> {
-    const ref = await newDraft(editor, over, options.drill === true);
+    // An Admin starts a drill: only an Admin at aal2 may (S06.05).
+    const by = options.drill === true ? approver : editor;
+    const ref = await newDraft(by, over, options.drill === true);
     const report = await r.submitter.submit(
-      actorOf(editor),
+      actorOf(by),
       ref,
       `0190b000-0000-7000-8000-${randomBytes(6).toString("hex")}`,
     );
@@ -1576,9 +1578,9 @@ describe("a possible duplicate", () => {
     expect((await entryRow(mine.entryId)).possible_duplicate_of).toBeNull();
 
     await otherThread(content());
-    const drill = await newDraft(author, {}, true);
+    const drill = await newDraft(approver, {}, true);
     expect(
-      (await r.submitter.submit(actorOf(author), drill, KEYS.three)).state,
+      (await r.submitter.submit(actorOf(approver), drill, KEYS.three)).state,
     ).toBe("committed");
     expect((await entryRow(drill.entryId)).possible_duplicate_of).toBeNull();
   });
