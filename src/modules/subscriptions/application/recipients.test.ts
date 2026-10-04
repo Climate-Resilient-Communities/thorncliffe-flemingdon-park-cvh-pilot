@@ -13,6 +13,19 @@ vi.mock("../adapters/drillRosterStore", () => ({
   },
 }));
 
+// A real entry reads the recipient query and the outbox's record of who earlier entries were texted to; both are stood in for here (test/db/subscriberFanout.db.test.ts
+// and test/db/recipientQuery.db.test.ts run the real ones).
+const reach = vi.hoisted(() => ({ people: [] as { id: string; lang: string }[], queued: [] as string[], calls: [] as unknown[][] }));
+vi.mock("../adapters/recipientStore", () => ({
+  recipientStore: {
+    reached: async (_executor: unknown, audience: unknown, earlier: readonly string[]) => (reach.calls.push(["reached", audience, earlier]), reach.people),
+    reachedForShare: async (_tx: unknown, audience: unknown, earlier: readonly string[]) => (reach.calls.push(["reachedForShare", audience, earlier]), reach.people),
+  },
+}));
+vi.mock("../../messaging", () => ({
+  subscribersQueuedFor: async (_executor: unknown, entryIds: readonly string[]) => (reach.calls.push(["queuedFor", entryIds]), reach.queued),
+}));
+
 const audience: Audience = { scope: "neighbourhood", neighbourhood_ids: ["TP"], groups: [], types: ["power"] };
 const entry = (over: Partial<RecipientEntry> = {}): RecipientEntry => ({
   entryId: "01900000-0000-7000-8000-00000000e177",
@@ -26,22 +39,60 @@ const entry = (over: Partial<RecipientEntry> = {}): RecipientEntry => ({
   ...over,
 });
 
-/** An executor that fails the test the moment anything touches it: before E07 the port reads and writes nothing. */
-const untouchable = new Proxy({}, { get: () => () => { throw new Error("the recipient port touched the database before E07"); } }) as unknown as DbExecutor & DbTransaction;
+/** An executor that fails the test the moment anything touches it: the stood-in stores are the only readers. */
+const untouchable = new Proxy({}, { get: () => () => { throw new Error("the recipient port touched the database itself"); } }) as unknown as DbExecutor & DbTransaction;
 
-describe("the recipient-count and snapshot port before E07 (S04.07)", () => {
-  it("says that texting is not open, with nobody in any language: what the approval view shows as 'Text sign-up is not open yet' and a count of 0", async () => {
-    expect(await countRecipients(entry(), untouchable)).toEqual({ open: false, total: 0, byLanguage: {} });
+describe("a real entry's recipients (S07.07, AD-7, AR-11)", () => {
+  const smsBodies = { en: { body: "e", encoding: "gsm7" as const, segments: 1 }, ur: { body: "u", encoding: "ucs2" as const, segments: 2 } };
+  const S1 = "01900000-0000-7000-8000-0000000000b1";
+  const S2 = "01900000-0000-7000-8000-0000000000b2";
+  const S3 = "01900000-0000-7000-8000-0000000000b3";
+
+  beforeEach(() => {
+    reach.people = [];
+    reach.queued = [];
+    reach.calls.length = 0;
+    roster.reads.length = 0;
   });
 
-  it("captures no recipients inside the approval's transaction and writes nothing: no recipient, so no delivery and a count of 0", async () => {
-    expect(await captureRecipients(entry(), untouchable)).toEqual([]);
+  it("counts the matching subscribers under the language of the text each gets, with texting open: their own where the entry has a text in it, else English", async () => {
+    reach.people = [{ id: S1, lang: "en" }, { id: S2, lang: "ur" }, { id: S3, lang: "ps" }];
+    expect(await countRecipients(entry({ smsBodies }), untouchable)).toEqual({ open: true, total: 3, byLanguage: { en: 2, ur: 1 } });
+    expect(reach.calls[1]).toEqual(["reached", audience, []]);
   });
 
-  it("answers nobody for a correction of a real alert too", async () => {
-    expect(await captureRecipients(entry({ kind: "correction", supersedesId: "01900000-0000-7000-8000-00000000e100" }), untouchable)).toEqual([]);
-    expect(await countRecipients(entry({ kind: "withdrawal", supersedesId: "01900000-0000-7000-8000-00000000e100" }), untouchable)).toEqual({ open: false, total: 0, byLanguage: {} });
+  it("counts nobody as open with a count of 0", async () => {
+    expect(await countRecipients(entry({ smsBodies }), untouchable)).toEqual({ open: true, total: 0, byLanguage: {} });
+    expect(await captureRecipients(entry({ smsBodies }), untouchable)).toEqual([]);
+  });
+
+  it("captures them as subscriber recipients with the language they have, locked, and never reads the roster", async () => {
+    reach.people = [{ id: S1, lang: "ur" }, { id: S2, lang: "zh" }];
+    expect(await captureRecipients(entry({ smsBodies }), untouchable)).toEqual([
+      { kind: "subscriber", id: S1, lang: "ur" },
+      { kind: "subscriber", id: S2, lang: "zh" },
+    ]);
+    expect(reach.calls.map((call) => call[0])).toEqual(["queuedFor", "reachedForShare"]);
     expect(roster.reads).toEqual([]);
+  });
+
+  it("adds the recipients of the entry a correction or a withdrawal replaces, and only theirs", async () => {
+    const target = "01900000-0000-7000-8000-00000000e100";
+    reach.queued = [S3];
+    await captureRecipients(entry({ kind: "correction", supersedesId: target }), untouchable);
+    await captureRecipients(entry({ kind: "withdrawal", supersedesId: target }), untouchable);
+    expect(reach.calls.filter((call) => call[0] === "queuedFor")).toEqual([["queuedFor", [target]], ["queuedFor", [target]]]);
+    expect(reach.calls.filter((call) => call[0] === "reachedForShare").map((call) => call[2])).toEqual([[S3], [S3]]);
+    // An ack and an update add nobody's.
+    reach.calls.length = 0;
+    await countRecipients(entry({ kind: "update", supersedesId: null }), untouchable);
+    expect(reach.calls[0]).toEqual(["queuedFor", []]);
+  });
+
+  it("adds the recipients of every other entry of the thread to a final's own, never the final's own entry", async () => {
+    const [first, second] = ["01900000-0000-7000-8000-00000000e101", "01900000-0000-7000-8000-00000000e102"];
+    await countRecipients(entry({ kind: "final", priorEntryIds: [first, entry().entryId, second] }), untouchable);
+    expect(reach.calls[0]).toEqual(["queuedFor", [first, second]]);
   });
 
   it("is offered as one port with both calls, which is what the approval is wired to", async () => {
@@ -89,9 +140,12 @@ describe("a drill's recipients (S06.05, AD-6)", () => {
     expect(await captureRecipients(entry({ isDrill: true }), untouchable)).toEqual([]);
   });
 
-  it("gives a real entry nobody, whatever is on the roster, and does not read the roster for it", async () => {
-    expect(await captureRecipients(entry({ isDrill: false }), untouchable)).toEqual([]);
-    expect(await countRecipients(entry({ isDrill: false }), untouchable)).toEqual({ open: false, total: 0, byLanguage: {} });
+  it("does not read the roster for a real entry, and does not read subscribers for a drill", async () => {
+    await captureRecipients(entry({ isDrill: false }), untouchable);
     expect(roster.reads).toEqual([]);
+    reach.calls.length = 0;
+    await captureRecipients(entry({ isDrill: true }), untouchable);
+    await countRecipients(entry({ isDrill: true }), untouchable);
+    expect(reach.calls).toEqual([]);
   });
 });

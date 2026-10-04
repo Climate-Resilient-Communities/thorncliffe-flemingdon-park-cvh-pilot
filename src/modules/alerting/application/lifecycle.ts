@@ -14,7 +14,7 @@ import { and, arrayOverlaps, desc, eq, inArray, lt, ne, or, sql } from "drizzle-
 import { decidePolicy, meetsAssurance } from "../../identity";
 import { recipientsPort, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "../../subscriptions";
 import { alertTextsOf, countsOfTexts, type AlertText } from "./approvalTexts";
-import type { Db, DbTransaction } from "../../../platform/db";
+import type { Db, DbExecutor, DbTransaction } from "../../../platform/db";
 import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
 import { alert, alertEntry, alertEntryTranslation, alertSubmitAttempt, feedVersion } from "../adapters/schema";
@@ -940,14 +940,20 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     return text;
   }
 
-  /** The entry as the recipient port takes it (S04.07): the audience and the frozen texts as stored, never from a request. */
-  const recipientEntryOf = (row: EntryRow, thread: ThreadRow): RecipientEntry => ({
+  /**
+   * The entry as the recipient port takes it (S04.07): the audience and the frozen texts as stored, never from a request. A correction or a withdrawal names the
+   * entry it replaces (S05.02), whose recipients the port adds to the entry's own; a final adds those of every other entry of its thread (S07.07), read here in the
+   * caller's transaction under the thread's lock.
+   */
+  const recipientEntryOf = async (executor: DbExecutor, row: EntryRow, thread: ThreadRow): Promise<RecipientEntry> => ({
     entryId: row.id,
     alertId: row.alertId,
     kind: row.kind,
     isDrill: thread.isDrill,
-    // A correction or a withdrawal names the entry it replaces (S05.02): E07's capture adds that entry's recipients to the entry's own.
     supersedesId: row.supersedesId,
+    ...(row.kind === "final" && !thread.isDrill
+      ? { priorEntryIds: (await executor.select({ id: alertEntry.id }).from(alertEntry).where(and(eq(alertEntry.alertId, row.alertId), ne(alertEntry.id, row.id)))).map((other) => other.id) }
+      : {}),
     audience: row.audience as Audience,
     types: row.types,
     smsBodies: (row.smsBodies ?? {}) as Record<string, RecipientSmsBody>,
@@ -1788,7 +1794,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         await markApproval(tx, row.id);
         // The snapshot, in this transaction (AD-7): who gets the text and in which language (`captureRecipients`), their texts queued through the
         // outbox (`enqueueAlertDeliveries`), and the number of texts it returns by language. What the approver reviewed is compared with that.
-        const snapshot = await queueSnapshot(tx, recipientEntryOf(approved, thread));
+        const snapshot = await queueSnapshot(tx, await recipientEntryOf(tx, approved, thread));
         const reviewed = shown.recipients ?? NO_RECIPIENTS;
         if (!sameRecipientCounts(reviewed, snapshot)) throw new Refused("RECIPIENT_COUNT_CHANGED", { recipients: snapshot, reviewed });
         await audit.record(tx, {
@@ -1957,7 +1963,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
           const author = await staff.standing(tx, entryRow.authorId);
           const thread = threadOf(threadRow);
           const reached: RecipientCount =
-            entryRow.status === "pending_approval" ? await recipients.count(recipientEntryOf(entryRow, threadRow), tx) : { open: false, ...NO_RECIPIENTS };
+            entryRow.status === "pending_approval" ? await recipients.count(await recipientEntryOf(tx, entryRow, threadRow), tx) : { open: false, ...NO_RECIPIENTS };
           let duplicate: EntryReview["duplicate"] = null;
           if (entryRow.possibleDuplicateOf) {
             const [other] = await tx

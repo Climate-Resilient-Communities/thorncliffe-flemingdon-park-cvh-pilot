@@ -259,10 +259,10 @@ describe("a drill approved by a second person", () => {
       ].sort(),
     );
     expect(await app.transaction(async (tx) => recipientsPort.capture(await entryOf(real.ref), tx))).toEqual([]);
-    expect(await recipientsPort.count(await entryOf(real.ref), app)).toEqual({ open: false, total: 0, byLanguage: {} });
+    expect(await recipientsPort.count(await entryOf(real.ref), app)).toEqual({ open: true, total: 0, byLanguage: {} });
   });
 
-  it("queues nothing for a real entry, whatever is on the roster, and approves it as it always did", async () => {
+  it("queues nothing for a real entry when no subscriber matches, whatever is on the roster", async () => {
     await addMember(0, "en");
     const { ref, frozen } = await pendingDrill(false);
     const approved = await alerting.approveEntry(actor(secondAdmin), ref, { version: 1, contentHash: frozen.contentHash });
