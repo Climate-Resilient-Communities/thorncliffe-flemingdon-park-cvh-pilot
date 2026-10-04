@@ -3682,7 +3682,7 @@ The Hub learns about problems before residents do, can deliberately resend texts
 
 ### Story S09.01 — The Hub hears about failures before residents do, even if texting is down
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** 0 h 45 min (started 2026-10-04 01:36 UTC, built 02:21 UTC)
+- **Size:** M · **Estimate:** 7 h · **Actual:** 45 min (started 2026-10-04 01:36 UTC, built 02:21 UTC)
 - **Traces:** AR-21, NFR-N4, NFR-N6 · **Depends on:** S06.07 · **Branch:** `e09-s01-failure-monitoring`
 
 As the on-call Admin,
