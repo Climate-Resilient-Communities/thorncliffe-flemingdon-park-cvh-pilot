@@ -17,7 +17,8 @@ import type { BuildingFloorPlan } from "@/modules/places";
 import { formatTorontoDateTime } from "@/platform/clock";
 import { changeView } from "../audience/change";
 import { asideOf } from "../audience/view";
-import { approveHref, updateHref } from "../pages";
+import { approveHref, sendingHref, updateHref } from "../pages";
+import type { SendingBlock } from "../sending/view";
 import { typeName } from "../typeNames";
 import { exerciseWords, type ExerciseWords } from "../../ExerciseMarker";
 
@@ -108,7 +109,7 @@ export interface PublishedView {
   drill: string | null;
   whereTitle: string;
   rows: PublishedRowView[];
-  next: { title: string; lines: string[]; links: { id: "home" | "update" | "promote"; href: string; label: string }[] };
+  next: { title: string; lines: string[]; links: { id: "home" | "update" | "promote" | "sending"; href: string; label: string }[] };
 }
 
 export interface ApprovalScreen {
@@ -144,6 +145,11 @@ export interface ApprovalScreen {
   };
   /** Set once the entry is approved (O-06): what went where. Absent for every other state. */
   published?: PublishedView;
+  /**
+   * Set for an approved entry of a real alert (S06.09): what became of its texts, per language, or a note that it could not be read. Absent for a drill (its
+   * results are on the Drills page) and for every entry that is not approved.
+   */
+  sending?: SendingBlock;
   /**
    * What a correction or a withdrawal replaces (S05.02): the entry as residents read it now, what they will see instead, and who it goes to (everyone who got the
    * original, and everyone in its audience now). `gone` is why it cannot be approved when the entry was corrected or withdrawn since; `closes` says the alert
@@ -187,6 +193,8 @@ export interface ApprovalInput {
   pauseNotice?: string | null;
   /** Whether residents are shown alerts at all (`residentAlertsEnabled()`): the launch switch. Left out, it is on. */
   residentAlertsEnabled?: boolean;
+  /** The sending progress of an approved entry (`sendingBlock()`, S06.09); left out, none is shown. */
+  sending?: SendingBlock | null;
   /** The words of the screen; the layout tests give the longest labels of a language here, in every place the screen shows text. */
   text?: Text;
 }
@@ -406,6 +414,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
         lines: open ? [ack ? t("published.nextPromote") : t("published.nextUpdate")] : final && !drill ? [t("published.nextFinal")] : [],
         links: [
           { id: "home", href: "/staff", label: t("published.toHome") },
+          ...(drill ? [] : [{ id: "sending" as const, href: sendingHref({ alertId: thread.id, entryId: entry.id }), label: t("published.toSending") }]),
           ...(open ? [{ id: ack ? ("promote" as const) : ("update" as const), href: updateHref(thread.id, ack), label: ack ? t("published.toPromote") : t("published.toUpdate") }] : []),
         ],
       },
@@ -454,6 +463,7 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
           }
         : null,
     ...(published ? { published } : {}),
+    ...(published && input.sending ? { sending: input.sending } : {}),
     allTranslated: hasTexts && fallbackLangs.length === 0 ? t("allTranslated") : null,
     replaces: replacesOf(review, t, compose),
     closing: closingOf(review, t),

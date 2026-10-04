@@ -1493,7 +1493,6 @@
       "decisions": "[EN] Decision log",
       "capacity": "[EN] Our capacity",
       "people": "[EN] People",
-      "smsTest": "[EN] Test text",
       "buildings": "[EN] Buildings",
       "ambassadorHome": "[EN] My building",
       "providers": "[EN] Providers",
@@ -4149,47 +4148,6 @@
         "unavailable": "[EN] The authenticator is not working right now. Try again in a few minutes."
       }
     },
-    "smsTest": {
-      "title": "[EN] Test text",
-      "lead": "[EN] Send one test text from production to an approved phone, to learn whether the Twilio account and the toll-free number work. Nothing is retried automatically.",
-      "previewOnly": "[EN] Texts are only sent from production",
-      "notConfigured": "[EN] Texts can go out from here, but the Twilio account, the toll-free number or the approved phones are not set, or one is not valid. Ask IT to check TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_FROM_NUMBER and SMS_TEST_ALLOWLIST in production.",
-      "number": "[EN] Send to",
-      "numberHint": "[EN] Only the approved phones are listed. The text is \"CVH test from production\".",
-      "submit": "[EN] Send test text",
-      "sent": {
-        "heading": "[EN] Twilio accepted the test text",
-        "response": "[EN] Twilio’s response: HTTP {http}, status {status}",
-        "messageId": "[EN] Message id: {id}",
-        "line": "[EN] Delivery is not tracked in this check: look at the phone."
-      },
-      "failed": {
-        "heading": "[EN] Twilio did not send the test text",
-        "withCode": "[EN] Twilio error {code}: {message}",
-        "withoutCode": "[EN] Twilio answered HTTP {http}: {message}",
-        "bare": "[EN] Twilio answered HTTP {http} without an error message.",
-        "line": "[EN] Nothing was retried. Fix the cause, then press the button again."
-      },
-      "noAnswer": {
-        "heading": "[EN] Twilio did not answer",
-        "line": "[EN] The text may or may not have been sent. Nothing was retried, and no second text can go to this phone for 5 minutes."
-      },
-      "unknown": {
-        "heading": "[EN] Outcome unknown",
-        "lead": "[EN] These attempts were started, but Twilio’s answer was never recorded, so the text may or may not have been sent. Look at the phone. No second text can go to the same phone for 5 minutes after an attempt.",
-        "item": "[EN] Attempt {id}, started {time} UTC: outcome unknown"
-      },
-      "errors": {
-        "forbidden": "[EN] Only an Admin can send a test text.",
-        "invalid": "[EN] That request was not understood. Reload the page and try again.",
-        "notAvailable": "[EN] Texts cannot be sent from here. Nothing was sent.",
-        "notAllowlisted": "[EN] That phone is not on the approved list. Nothing was sent.",
-        "paused": "[EN] Texts are paused, and this page stops with them. Nothing was sent. Resume texts first, then try again.",
-        "duplicateNumber": "[EN] A test text went to that phone in the last 5 minutes. Nothing was sent. Wait, then try again.",
-        "duplicateRequest": "[EN] This request was already sent. Nothing more was sent. Press the button again to send a new one.",
-        "unavailable": "[EN] The test text could not be sent right now. Nothing was sent."
-      }
-    },
     "buildings": {
       "title": "[EN] Buildings and floors",
       "lead": "[EN] The pilot buildings come from the City of Toronto register. For each one, check the floors, correct any label that is wrong, then mark the building confirmed.",
@@ -4867,6 +4825,7 @@
         "nextUpdate": "[EN] Residents keep reading the same alert. Add what you learn to it as an update.",
         "nextPromote": "[EN] When you know more, promote this to a full alert. Residents keep the same alert; nothing is re-entered.",
         "toHome": "[EN] Back to incidents",
+        "toSending": "[EN] See sending progress",
         "toUpdate": "[EN] Post an update",
         "toPromote": "[EN] Promote to a full alert",
         "titleFinal": "[EN] The alert is resolved",
@@ -5073,6 +5032,84 @@
       "errors": {
         "forbidden": "[EN] Only an Admin can publish the directory.",
         "aal2Required": "[EN] An Admin must sign in with their authenticator code to publish the directory. Sign in again and enter the code."
+      }
+    },
+    "sending": {
+      "title": "[EN] Sending progress",
+      "lead": "[EN] What became of the texts of this alert, by language. No phone numbers are shown.",
+      "english": "[EN] English",
+      "allLanguages": "[EN] All languages",
+      "summary": "[EN] {n} texts in all",
+      "summaryOne": "[EN] 1 text in all",
+      "none": "[EN] No texts have been made for this alert, so there is nothing to send.",
+      "refresh": "[EN] This page updates every 15 seconds while texts are going out.",
+      "refreshDone": "[EN] Nothing is waiting or in flight, so this page no longer updates by itself. Reload it to check again.",
+      "back": "[EN] Back to the alert",
+      "progressLink": "[EN] See sending progress",
+      "count": "{label}: {n}",
+      "counts": {
+        "waiting": "[EN] Waiting",
+        "inFlight": "[EN] In flight",
+        "delivered": "[EN] Delivered",
+        "undelivered": "[EN] Undelivered",
+        "failed": "[EN] Failed",
+        "unknown": "[EN] Unknown",
+        "cancelled": "[EN] Cancelled",
+        "skipped": "[EN] Skipped"
+      },
+      "legend": {
+        "title": "[EN] What the counts mean",
+        "waiting": "[EN] Waiting: not handed to the provider yet.",
+        "inFlight": "[EN] In flight: handed to the provider, and the carrier has not given a final answer.",
+        "delivered": "[EN] Delivered: the carrier confirmed it reached the phone.",
+        "undelivered": "[EN] Undelivered: the carrier could not deliver it.",
+        "failed": "[EN] Failed: the provider refused it, or it could not be handed over.",
+        "unknown": "[EN] Unknown: the outcome is unclear. It is never sent again by itself.",
+        "cancelled": "[EN] Cancelled: stopped before it went, by a correction, a withdrawal, a discard or a close.",
+        "skipped": "[EN] Skipped: it was not sent because the person left, it was too late, or texts are off in this environment."
+      },
+      "problems": {
+        "title": "[EN] Texts that did not arrive",
+        "lead": "[EN] Open a list to see, for each text, what happened to it.",
+        "failed": "[EN] See the failed texts ({n})",
+        "undelivered": "[EN] See the undelivered texts ({n})",
+        "unknown": "[EN] See the texts with an unknown outcome ({n})"
+      },
+      "drill": "[EN] This is a practice alert. What became of its texts is on the Drills page, apart from real alerts.",
+      "drillLink": "[EN] Open the Drills page",
+      "notApproved": "[EN] This entry has not been approved, so no texts have been made for it.",
+      "unavailable": "[EN] The sending progress could not be read just now. Reload the page. If this stays, tell IT.",
+      "list": {
+        "title": {
+          "failed": "[EN] Failed texts",
+          "undelivered": "[EN] Undelivered texts",
+          "unknown": "[EN] Texts with an unknown outcome"
+        },
+        "lead": "[EN] Each text shows why it did not arrive. No phone numbers are shown.",
+        "item": "[EN] Text {ref} · {language} · {when}",
+        "none": "[EN] No text is in this state.",
+        "more": "[EN] Only the {n} most recent texts are shown.",
+        "back": "[EN] Back to sending progress"
+      },
+      "meaning": {
+        "not_in_service": "[EN] Number not in service",
+        "invalid_number": "[EN] Not a valid phone number",
+        "landline": "[EN] A landline, or a number that cannot receive texts",
+        "phone_off": "[EN] The phone was off or out of reach",
+        "opted_out": "[EN] The person replied STOP, so no more texts can go to them",
+        "blocked": "[EN] Blocked by the carrier or the phone",
+        "sender_not_ready": "[EN] The CVH sending number is not allowed to send this text. Tell IT.",
+        "provider_busy": "[EN] The provider was too busy and dropped the text",
+        "carrier_error": "[EN] The carrier reported an error without details",
+        "other_code": "[EN] The provider reported error {code}",
+        "retries_exhausted": "[EN] It still failed after 3 retries",
+        "no_reason": "[EN] It failed and the provider gave no reason",
+        "undelivered_no_reason": "[EN] The carrier did not deliver it and gave no reason",
+        "unclear": "[EN] Outcome unclear; not re-sent"
+      },
+      "errors": {
+        "forbidden": "[EN] Only an Admin or a Coordinator can see sending progress.",
+        "missing": "[EN] That alert entry was not found."
       }
     },
     "texts": {

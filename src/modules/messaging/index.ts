@@ -2,27 +2,13 @@
 // message body, its encoding and segment count, and the cost estimate), the outbox (S06.01: every outbound text is one `delivery`
 // row, written before it is sent and never holding a phone number; the states, the idempotent queue, the ContactResolver
 // port), the sender (S06.02: the dispatcher: the sender lease, the claim order, the hand-off point, the pace, the outcomes) with
-// the Messaging Service check, and S01.15's first-text spike: one test text from production to an approved phone, through the
-// Twilio adapter. S06.06 adds the pause: the one switch an Admin sets to stop every text not yet handed to the provider.
-// E06's sender replaces the spike (and nothing else may call the SMS adapter then: a dependency rule enforces that no other
-// module imports an SMS adapter).
+// the Messaging Service check, the pause (S06.06: the one switch an Admin sets to stop every text not yet handed to the provider)
+// and the sending progress of an entry (S06.09). The sender replaced S01.15's first-text spike (S06.09 removed it): the Twilio
+// adapters are called only by the dispatcher (src/app/dispatch.ts) and the reconciliation job (src/app/reconcile.ts), and a
+// dependency rule and a test fail if any other file imports them.
 import type { Db } from "../../platform/db";
 import * as audit from "../audit";
 import { drizzleDeliveryStore } from "./adapters/deliveryStore";
-import { drizzleTestSendStore } from "./adapters/testSendStore";
-import { twilioSmsProvider } from "./adapters/twilioSms";
-import {
-  createTestTextService,
-  listUnknownAttempts as listUnknown,
-  numberKeyFromSecret,
-  type TestTextAudit,
-  type TestTextConfig,
-  type TestTextDeps,
-  type TestTextLog,
-  type TestTextService,
-  type UnknownAttempt,
-} from "./application/sendTestText";
-import type { SmsProvider } from "./application/ports";
 import { createDeliveryQueueService, type DeliveryQueue, type DeliveryQueueDeps } from "./application/deliveryQueue";
 import { drizzleDispatchStore } from "./adapters/dispatchStore";
 import { createDispatcher as createDispatcherService } from "./application/dispatcher";
@@ -125,6 +111,34 @@ export {
 // A drill's results (S06.05, FR-M4): per roster member and language, kept apart from every count of a real alert.
 export { drillResults, type DrillResultRow, type DrillResults } from "./application/drillResults";
 
+// The sending progress of an entry (S06.09, O-06): per language what became of its texts, and why the ones that did not arrive did not. Counts, languages and
+// codes only; a drill's texts are never counted (their own view is `drillResults`).
+import { drizzleProgressStore } from "./adapters/progressStore";
+import { createSendingProgress, PROBLEM_LIST_LIMIT, type SendingProgress } from "./application/sendingProgress";
+
+export const sendingProgress: SendingProgress = createSendingProgress({ store: drizzleProgressStore });
+export { PROBLEM_LIST_LIMIT };
+export type { ProblemRow, ProgressStore, SendingProgress } from "./application/sendingProgress";
+export {
+  PROBLEM_MEANINGS,
+  PROBLEM_STATES,
+  PROGRESS_COUNT_KEYS,
+  bucketOf,
+  emptyCounts,
+  isProblemState,
+  problemMeaning,
+  progressOf,
+  referenceOf,
+  sumOf,
+  totalOf,
+  type EntryProgress,
+  type LanguageProgress,
+  type ProblemMeaning,
+  type ProblemState,
+  type ProblemText,
+  type ProgressCounts,
+} from "./domain/sendingProgress";
+
 export type MessagingServiceCheckWiring = MessagingServiceCheckDeps;
 
 /** The daily check of the Messaging Service's Smart Encoding setting (S06.02). */
@@ -151,63 +165,6 @@ export function createMessagingPause(wiring: MessagingPauseWiring): MessagingPau
     audit: wiring.audit ?? { record: audit.record, recordRefusal: audit.recordRefusal },
   });
 }
-
-export interface TestTextWiring {
-  db: Db;
-  config: TestTextConfig;
-  /** Twilio's account; absent where there are no credentials (then nothing can be sent). */
-  twilio?: { accountSid: string; authToken: string };
-  /** Test seams: another provider (a fake), the audit writer, the operational log and the reading of the pause switch. */
-  provider?: SmsProvider;
-  audit?: TestTextAudit;
-  log?: TestTextLog;
-  isPaused?: TestTextDeps["isPaused"];
-}
-
-/** Structured, one JSON line per event, and never a number: the events carry ids and codes only. */
-const consoleLog: TestTextLog = {
-  error: (evt, fields) => console.log(JSON.stringify({ level: "error", evt, module: "messaging", ...fields })),
-};
-
-/** The first-text spike's use case, on the app's database and Twilio's REST API. */
-export function createTestText(wiring: TestTextWiring): TestTextService {
-  const { db, config, twilio } = wiring;
-  const provider = wiring.provider ?? (twilio ? twilioSmsProvider(twilio) : undefined);
-  return createTestTextService({
-    db,
-    store: drizzleTestSendStore,
-    provider,
-    audit: wiring.audit ?? { record: audit.record, recordRefusal: audit.recordRefusal },
-    config,
-    // The number's hash is keyed by the Twilio auth token. There is no fallback key: without credentials nothing can
-    // be sent, so the key is never asked for, and asking for it anyway is a bug that must fail loudly.
-    // TODO(E06): introduce a dedicated SMS_NUMBER_HASH_KEY instead of deriving the key from the Twilio auth token
-    // (rotating the token must not change the hashes the 5-minute rule compares).
-    numberKey: () => {
-      if (!twilio) throw new Error("The test text's number key needs Twilio's credentials");
-      return numberKeyFromSecret(twilio.authToken);
-    },
-    log: wiring.log ?? consoleLog,
-    // The pause (S06.06) stops this text too. A missing switch counts as paused, as it does for the sender.
-    isPaused:
-      wiring.isPaused ??
-      (async () => {
-        const row = await drizzlePauseStore.read(db);
-        return row === null || row.paused;
-      }),
-  });
-}
-
-/** The attempts claimed more than a minute ago whose answer was never recorded ("outcome unknown"); no numbers. */
-export function listUnknownAttempts(db: Db): Promise<UnknownAttempt[]> {
-  return listUnknown(db, drizzleTestSendStore);
-}
-
-export { maskNumber, maskedLabels, TEST_TEXT_BODY, DUPLICATE_WINDOW_MS, isE164, isRequestId } from "./domain/testText";
-export type { TestTextRefusal } from "./domain/testText";
-export { numberChoice, numberKeyFromSecret, resolveNumberChoice, UNKNOWN_AFTER_MS } from "./application/sendTestText";
-export type { SendTestTextInput, SendTestTextOutcome, TestTextConfig, TestTextLog, TestTextService, UnknownAttempt } from "./application/sendTestText";
-export type { ProviderAnswer, SmsProvider } from "./application/ports";
 
 // The outbox (S06.01).
 export { ContactNumberInvalid, ContactSourceNotWired, createContactResolver } from "./application/contactResolver";
@@ -271,7 +228,7 @@ export {
   type DeliveryState,
   type TransitionRow,
 } from "./domain/deliveryState";
-export { looksLikePhoneNumber, maskForLog, maskPhoneNumbers } from "./domain/phoneNumber";
+export { looksLikePhoneNumber, maskForLog, maskNumber, maskPhoneNumbers } from "./domain/phoneNumber";
 
 // The sender (S06.02).
 export { twilioMessageSubmitter, twilioMessagingServiceReader, notSentReason } from "./adapters/twilioMessagingService";

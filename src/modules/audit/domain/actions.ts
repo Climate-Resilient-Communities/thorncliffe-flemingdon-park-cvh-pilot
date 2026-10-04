@@ -61,11 +61,11 @@ export const REFUSAL_REASONS = [
   "publish_failed",
   /** A directory publish is already running (S02.05). */
   "publish_running",
-  /** S01.15: the test text cannot be sent here (not production with SMS_MODE live, or Twilio not set up). */
+  /** S01.15 (the removed first-text spike): kept so that audit records already written with this reason stay readable. */
   "not_available",
   /** A change to a thread that is closed (S04.03, ALERT_CLOSED). */
   "alert_closed",
-  /** S06.06: the test text was refused because all texts are paused. */
+  /** S06.06: refused because all texts are paused (the first-text spike, removed by S06.09, wrote it as well). */
   "paused",
 ] as const;
 
@@ -259,18 +259,6 @@ export const AUDIT_META = {
 
   // Seed scripts (S01.13, S02.04, S02.09): which seed, and counts by kind.
   "seed.run": meta({ seed: code, counts: z.record(code, count).optional(), warnings: count.optional(), failures: count.optional() }),
-
-  // First-text spike (S01.15): the provider's answer, never the number or the text. `twilio_sid` is the Twilio message SID
-  // (the subject is always the ledger row's id). `outcome_unknown` marks "no answer": the text may or may not have gone.
-  "sms.test_sent": meta({
-    http_status: z.number().int().min(100).max(599).optional(),
-    provider_status: code.optional(),
-    provider_error_code: z.number().int().nonnegative().max(999_999).optional(),
-    twilio_sid: z.string().regex(/^(SM|MM)[0-9a-f]{32}$/).optional(),
-    outcome_unknown: z.literal(true).optional(),
-  }),
-  // Written in the claim's own transaction, before Twilio is called: a send is never invisible to the audit trail.
-  "sms.test_attempted": meta({}),
 
   // The pause (S06.06): an Admin at aal2 pauses or resumes all texts. The subject is the one pause switch (type `messaging_control`,
   // id 1). `meta` holds counts only: the reason the Admin typed is free text, which an audit record never holds, so it lives on the

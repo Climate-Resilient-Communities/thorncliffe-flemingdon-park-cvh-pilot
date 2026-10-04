@@ -9,6 +9,8 @@ import { useBuildingList, useChoices } from "../choices/use-choices";
 import { Screen } from "../layout/screen";
 import { Stack } from "../layout/stack";
 import { Isolated, withIsolated } from "../text/isolated";
+import { singleNeighbourhood } from "../usage/nbhd";
+import { UsageView } from "../usage/usage";
 import { isEnglishFallbackMessage, ResidentText } from "../text/resident-text";
 import { CallHub } from "./call-hub";
 import { readFilters, saveFilters, tabStorage, withoutUnknownTopics } from "./filter-store";
@@ -68,6 +70,8 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
   const t = useTranslations();
   const directory = useDirectory(lang);
   const [applied, setApplied] = useState<FilterState>(() => readFilters(tabStorage()));
+  // The neighbourhood this visit began with, for the usage count (S02.15): the one filter in force when the page opened, if it names one place.
+  const [viewed] = useState(() => singleNeighbourhood(applied.neighbourhoods));
   const [panelOpen, setPanelOpen] = useState(false);
   const chosen = useChosenNeighbourhoods();
   const toggleButton = useRef<HTMLButtonElement>(null);
@@ -147,6 +151,7 @@ export function DirectoryBrowser({ lang }: { lang: LaunchCode }) {
 
   return (
     <Screen surface="resident" testId="directory-page">
+      <UsageView evt="directory_view" lang={lang} nbhd={viewed} />
       <Stack gap="section-resident">
         <Stack gap="related">
           <ResidentText as="h1">{t("directory.title")}</ResidentText>

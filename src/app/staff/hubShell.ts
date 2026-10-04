@@ -54,8 +54,7 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   if (can(role, "signup.assist")) sections[0].items = [...sections[0].items, { id: "text-signup", label: englishText("hub.nav.textSignup"), href: "/staff/text-signup", icon: "phone" }];
   // Each Administration page is shown to the roles whose policy action opens it (S01.12): the people page is
   // `accounts.manage`, the providers page `provider.manage` (S02.04), the directory release page `guide.publish` (S02.05),
-  // the buildings page `buildings.manage` (S01.13), the pause page `sending.pause` (S06.06) and the first-text spike's page
-  // (S01.15, E06 removes it) `sms.test_send`, all Admin only.
+  // the buildings page `buildings.manage` (S01.13) and the pause page `sending.pause` (S06.06), all Admin only.
   const admin: HubNavSection["items"][number][] = [];
   if (can(role, "accounts.manage")) admin.push({ id: "people", label: englishText("hub.nav.people"), href: "/staff/people", icon: "person" });
   if (can(role, "provider.manage")) admin.push({ id: "providers", label: englishText("hub.nav.providers"), href: "/staff/providers", icon: "inbox" });
@@ -66,7 +65,6 @@ export function hubNavigation(role: StaffRole): HubNavSection[] {
   if (can(role, "oncall.manage")) admin.push({ id: "oncall", label: englishText("hub.nav.oncall"), href: "/staff/oncall", icon: "phone" });
   // The Drills page (S06.05, start a drill, the drill roster, what became of each drill's texts) is `drill.run`, Admin only.
   if (can(role, "drill.run")) admin.push({ id: "drills", label: englishText("hub.nav.drills"), href: "/staff/drills", icon: "phone" });
-  if (can(role, "sms.test_send")) admin.push({ id: "sms-test", label: englishText("hub.nav.smsTest"), href: "/staff/sms-test", icon: "phone" });
   if (admin.length > 0) sections.push({ id: "admin", label: englishText("hub.sections.admin"), items: admin });
   return sections;
 }
