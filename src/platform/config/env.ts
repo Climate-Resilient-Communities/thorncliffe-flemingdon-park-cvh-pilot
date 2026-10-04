@@ -40,9 +40,10 @@ import { PRODUCTION_HOST } from "./hosts";
  *                                                        until each is re-issued
  * TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_MESSAGING_SERVICE_SID, TWILIO_FROM_NUMBER (and any other TWILIO_ variable)
  *                      server   optional; production only (start-up fails if set elsewhere); secret.
- *                                                        TWILIO_FROM_NUMBER is no longer read (the S01.15 spike that sent from it
- *                                                        was removed by S06.09; texts go through the Messaging Service), but it is
- *                                                        still refused outside production like the others.
+ *                                                        TWILIO_FROM_NUMBER is the verified toll-free number (E.164) residents are told
+ *                                                        to text START to (R-06, S07.02); texts themselves go through the Messaging
+ *                                                        Service. A malformed one never stops the server: it is dropped, the line on R-06
+ *                                                        names no number, and the rule is logged (twilioFromNumberProblem; never the value)
  *                                                        TWILIO_AUTH_TOKEN also checks the signature of Twilio's status callbacks
  *                                                        (/api/twilio/status, S06.04): without it that route answers 503 and does nothing
  * JOB_SECRET, JOB_SECRET_PREVIOUS
@@ -208,6 +209,9 @@ export const TWILIO_VARIABLES = [
   "TWILIO_FROM_NUMBER",
 ] as const;
 
+/** An E.164 number: "+", a non-zero country code digit, up to 14 more digits (at least 8 digits in all). */
+export const E164_PATTERN = /^\+[1-9][0-9]{7,14}$/;
+
 // Vercel and .env files leave unset variables as empty strings.
 const optionalText = z.preprocess(
   (v) => (typeof v === "string" && v.trim() === "" ? undefined : v),
@@ -354,7 +358,9 @@ export interface Env {
   supabaseSecretKey?: string;
   supabaseUrl?: string;
   supabasePublishableKey?: string;
-  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string };
+  twilio?: { accountSid: string; authToken: string; messagingServiceSid?: string; fromNumber?: string };
+  /** Why TWILIO_FROM_NUMBER is not used although it is set (names the rule, never the value); undefined when nothing is wrong. */
+  twilioFromNumberProblem?: string;
   /** Cents CAD per text message segment (at most three decimals): the price an alert's cost estimate uses (S04.06). */
   smsPricePerSegmentCents: number;
   /** Canadian dollars per US dollar (at most four decimals): the rate a reconciliation converts Twilio's prices at (S06.08). */
@@ -629,6 +635,8 @@ function parseJobSecrets(raw: Raw): { secrets: string[]; problem?: string } {
 
 export const SMS_SEGMENTS_PER_SECOND_DEFAULT = 3;
 
+export const TWILIO_FROM_NUMBER_PROBLEM = "TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)";
+
 const SMS_PRICE_PROBLEM = "SMS_PRICE_PER_SEGMENT_CENTS: must be a positive number of cents with at most three decimals, no more than 100, such as 1.5";
 
 /** The price of a text message segment in cents CAD: positive, at most three decimals, at most 100; the default when unset. */
@@ -846,6 +854,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
   const smsUsdToCadRate = parseSmsRate(raw.SMS_USD_TO_CAD_RATE, problems);
   const smsTransactionalDailyCeiling = positiveInteger("SMS_TRANSACTIONAL_DAILY_CEILING", raw.SMS_TRANSACTIONAL_DAILY_CEILING, DEFAULT_SMS_TRANSACTIONAL_DAILY_CEILING, problems);
 
+  // A typo in the number residents text START to must not take the whole site down at every cold start (the staffPasswordPepperProblem pattern): it is dropped.
+  const fromNumber = raw.TWILIO_FROM_NUMBER?.trim();
+  const fromNumberProblem = environment === "production" && fromNumber !== undefined && !E164_PATTERN.test(fromNumber);
+
   const onVercel = raw.VERCEL !== undefined || raw.VERCEL_ENV !== undefined;
   if ((environment !== "development" || onVercel) && raw.CVH_FAKE_IDENTITY_FILE !== undefined) {
     problems.push("CVH_FAKE_IDENTITY_FILE: the identity fake is only allowed in local development, never on Vercel");
@@ -929,8 +941,10 @@ export function parseEnv(source: Record<string, string | undefined>): Env {
             accountSid: raw.TWILIO_ACCOUNT_SID,
             authToken: raw.TWILIO_AUTH_TOKEN,
             messagingServiceSid: raw.TWILIO_MESSAGING_SERVICE_SID,
+            fromNumber: fromNumberProblem ? undefined : fromNumber,
           }
         : undefined,
+    twilioFromNumberProblem: fromNumberProblem ? TWILIO_FROM_NUMBER_PROBLEM : undefined,
     smsPricePerSegmentCents,
     smsUsdToCadRate,
     smsTransactionalDailyCeiling,
@@ -965,6 +979,10 @@ export function getEnv(): Env {
   } catch (error) {
     if (error instanceof EnvError) console.error(error.message);
     throw error;
+  }
+  // A misconfigured number residents text START to never stops the server; the rule is logged (never the value) so IT can fix it.
+  if (cached.twilioFromNumberProblem !== undefined) {
+    console.error(JSON.stringify({ level: "error", evt: "env.twilio_from_number_not_valid", module: "platform", rule: cached.twilioFromNumberProblem }));
   }
   // Likewise a job secret that is too weak never stops the server: the job routes refuse until it is fixed.
   if (cached.jobSecretProblem !== undefined) {

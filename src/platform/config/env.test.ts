@@ -526,8 +526,7 @@ describe("failClosedEnvironment (what the terms page uses to decide whether a dr
   });
 });
 
-describe("the removed first-text spike's variables (S01.15, removed by S06.09)", () => {
-  const FROM = "+18885550100";
+describe("the removed first-text spike's variable SMS_TEST_ALLOWLIST (S01.15, removed by S06.09)", () => {
   const ALLOWED = "+14165550101";
 
   it("no longer reads SMS_TEST_ALLOWLIST: it is ignored everywhere, neither approving a number nor failing start-up, and the environment has no field for it", () => {
@@ -550,8 +549,40 @@ describe("the removed first-text spike's variables (S01.15, removed by S06.09)",
     resetEnvCache();
   });
 
-  it("no longer reads TWILIO_FROM_NUMBER into the Twilio settings, but still refuses it outside production like every Twilio variable", () => {
-    expect(parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: FROM }).twilio).toEqual({ accountSid: "AC123", authToken: "token" });
+});
+
+describe("the number residents text START to (TWILIO_FROM_NUMBER, S07.02)", () => {
+  const FROM = "+18885550100";
+
+  it("is read with the Twilio credentials, in production, trimmed", () => {
+    expect(parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: ` ${FROM} ` }).twilio).toMatchObject({ accountSid: "AC123", fromNumber: FROM });
+    expect(parseEnv({ ...production, ...twilio }).twilioFromNumberProblem).toBeUndefined();
+  });
+
+  it("does not fail start-up when it is malformed: the number is dropped and the rule is named without the value", () => {
+    const env = parseEnv({ ...production, ...twilio, TWILIO_FROM_NUMBER: "9995550177" });
+    expect(env.twilioFromNumberProblem).toBe("TWILIO_FROM_NUMBER: must be an E.164 number such as +18885550100 (the value is not shown)");
+    expect(env.twilio?.fromNumber).toBeUndefined();
+    expect(env.twilio).toMatchObject({ accountSid: "AC123" });
+    expect(JSON.stringify(env.twilioFromNumberProblem)).not.toContain("9995550177");
+  });
+
+  it("logs the rule once, without the value, when getEnv reads a malformed one (and still returns the environment)", () => {
+    resetEnvCache();
+    for (const [k, v] of Object.entries({ ...production, ...twilio, TWILIO_FROM_NUMBER: "oops-4165550199" })) vi.stubEnv(k, v);
+    const log = vi.spyOn(console, "error").mockImplementation(() => {});
+    getEnv();
+    getEnv();
+    expect(log).toHaveBeenCalledTimes(1);
+    const line = String(log.mock.calls[0][0]);
+    expect(JSON.parse(line)).toMatchObject({ evt: "env.twilio_from_number_not_valid", rule: expect.stringMatching(/^TWILIO_FROM_NUMBER: must be an E\.164/) });
+    expect(line).not.toContain("5550199");
+    vi.unstubAllEnvs();
+    vi.restoreAllMocks();
+    resetEnvCache();
+  });
+
+  it("is refused outside production like every Twilio variable (a secret-placement rule)", () => {
     expect(problemsOf({ ...preview, TWILIO_FROM_NUMBER: FROM }).join("\n")).toMatch(/TWILIO_FROM_NUMBER: Twilio credentials are only allowed in production/);
   });
 });
