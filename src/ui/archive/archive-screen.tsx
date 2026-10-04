@@ -23,21 +23,22 @@ import "./archive.css";
  * it) with how and when it ended and when it was posted; each card is the link to the alert (R-07), which opens read-only with the final entry on top. The first page comes
  * with the page, so a copy of it kept for reading without signal has the alerts in it; "Show older alerts" asks for the next. Nothing about the resident is sent.
  */
-export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: ArchiveV1 }) {
+export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: ArchiveV1 | null }) {
   const t = useTranslations("R08");
   const x01 = useTranslations("x01");
   const all = useTranslations() as unknown as Translate;
-  const [pages, setPages] = useState<ArchiveV1[]>([initial]);
+  const [pages, setPages] = useState<ArchiveV1[]>(initial ? [initial] : []);
   const [loading, setLoading] = useState(false);
-  const [failed, setFailed] = useState(false);
-  const last = pages[pages.length - 1];
+  // With no first page (the server could not read it) the screen says so and the button asks for page 1.
+  const [failed, setFailed] = useState(initial === null);
+  const last = pages.at(-1) ?? null;
   const cards = joinPages(pages.map((page) => archiveCards(page.threads, { lang, serverNow: new Date(page.server_now), t: all })));
 
   const more = async () => {
     if (loading) return;
     setLoading(true);
     setFailed(false);
-    const next = await fetchArchivePage(lang, last.page + 1);
+    const next = await fetchArchivePage(lang, (last?.page ?? 0) + 1);
     setLoading(false);
     if (next === null) setFailed(true);
     else setPages((current) => [...current, next]);
@@ -57,7 +58,7 @@ export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: Ar
           <ResidentText as="p">{t("lead")}</ResidentText>
         </Stack>
 
-        {cards.length === 0 ? (
+        {cards.length === 0 && last !== null ? (
           <Stack gap="related">
             <div className="alert-note" data-testid="archive-empty">
               <div className="alert-note__body">
@@ -71,7 +72,7 @@ export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: Ar
               <ResidentText>{t("backHome")}</ResidentText>
             </Link>
           </Stack>
-        ) : (
+        ) : cards.length === 0 ? null : (
           <ul className="alert-card-list" aria-label={t("title")} data-testid="archive-list">
             {cards.map((card) => (
               <li className="alert-card-item" key={card.slug}>
@@ -97,7 +98,7 @@ export function ArchiveScreen({ lang, initial }: { lang: LaunchCode; initial: Ar
           </ul>
         )}
 
-        {last.has_more && (
+        {(last === null || last.has_more) && (
           <Stack gap="related">
             <button type="button" className="choice-btn choice-btn--secondary tap archive-more" onClick={more} disabled={loading} data-testid="archive-more">
               <ResidentText>{t("more")}</ResidentText>

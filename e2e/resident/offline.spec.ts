@@ -223,6 +223,25 @@ test.describe("an alert read without signal after its time (S05.07)", () => {
     await expect(page.getByTestId("alert-valid")).toBeVisible();
   });
 
+  test("signal back after opening from a kept home copy: an alert opened by a move inside the app is the server's page, never 'may have ended'", async ({ page }) => {
+    const phone = await signal(page);
+    await page.goto("/en");
+    await workerReady(page);
+    await page.reload();
+    await expect(page.getByTestId("alert-card-kbcdfghj")).toBeVisible();
+
+    await phone.off();
+    await page.clock.install({ time: new Date(Date.now() + EIGHT_HOURS) });
+    await page.reload();
+    await expect(page.getByTestId("feed-failed")).toBeVisible();
+
+    // Signal is back: the head still carries the kept copy's marker, but the page we move to comes from the server.
+    await phone.on();
+    await page.getByTestId("alert-card-kbcdfghj").click();
+    await expect(page.getByTestId("alert-valid")).toBeVisible();
+    await expect(page.getByTestId("alert-may-have-ended")).toHaveCount(0);
+  });
+
   test("a card on home says it may have ended when the kept feed is read after its time, and the others stay as they were", async ({ page }) => {
     const phone = await signal(page);
     await page.goto("/en");

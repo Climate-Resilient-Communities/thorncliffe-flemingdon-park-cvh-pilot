@@ -1,9 +1,9 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useKeptAt, useOnline } from "../offline/kept-state";
+import { useOnline, useServedKeptAt } from "../offline/kept-state";
 import { ResidentText } from "../text/resident-text";
-import { clockOffsetMs, mayHaveEnded } from "./may-have-ended";
+import { clockOffsetMs, isOfflineView, mayHaveEnded, receivedAtFor } from "./may-have-ended";
 import "./alert.css";
 
 /**
@@ -14,9 +14,10 @@ import "./alert.css";
  */
 export function ValidLine({ valid, validUntil, serverNow, note }: { valid: string | null; validUntil: string; serverNow: string; note: string }) {
   const online = useOnline();
-  const keptAt = useKeptAt();
+  const keptAt = useServedKeptAt();
+  const [mountedAt] = useState(() => Date.now());
   const [now, setNow] = useState<number | null>(null);
-  const offline = !online || keptAt !== null;
+  const offline = isOfflineView({ online, servedKeptAt: keptAt });
 
   useEffect(() => {
     if (!offline) return;
@@ -29,8 +30,8 @@ export function ValidLine({ valid, validUntil, serverNow, note }: { valid: strin
     };
   }, [offline]);
 
-  // When the phone got this page: the kept copy's own time, or when the document was loaded (the page was built just before).
-  const receivedAt = keptAt ?? (typeof performance === "undefined" ? 0 : performance.timeOrigin);
+  // When the phone got this page: the kept copy's own time, or when this view mounted (the page was built just before), not when the document loaded.
+  const receivedAt = receivedAtFor({ servedKeptAt: keptAt, mountedAt });
   if (offline && now !== null && mayHaveEnded(validUntil, { now, offsetMs: clockOffsetMs(serverNow, receivedAt) })) {
     return (
       <div className="alert-note" role="note" data-testid="alert-may-have-ended">

@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { useSyncExternalStore } from "react";
 import { KEPT_AT_META } from "./protocol";
 
@@ -28,3 +29,20 @@ export function keptAtMeta(): number | null {
 
 /** When the copy of this document the worker handed out was stored, or null when the network answered it (and always null on the server and in the first render). */
 export const useKeptAt = (): number | null => useSyncExternalStore(never, keptAtMeta, () => null);
+
+// The marker is in the head of the document the worker handed out, and the head outlives client-side moves, so it speaks for that document only: the path the app was loaded
+// at, and only until signal has come back (after which the pages come from the server).
+const loadedPath = typeof window === "undefined" ? null : window.location.pathname;
+let signalBack = false;
+if (typeof window !== "undefined") window.addEventListener("online", () => (signalBack = true));
+
+/** Whether a kept-at marker still describes the page on screen: it is the document it was written into, and signal has not come back since. Pure (unit-tested). */
+export const markerApplies = (input: { pathname: string; loadedPath: string | null; signalBack: boolean }): boolean => input.pathname === input.loadedPath && !input.signalBack;
+
+/** The kept-at marker, only while it describes the page on screen (see markerApplies); null otherwise, and always null on the server and in the first render. */
+export function useServedKeptAt(): number | null {
+  const pathname = usePathname();
+  const at = useKeptAt();
+  useOnline(); // re-render when signal changes (signalBack is read below)
+  return at !== null && markerApplies({ pathname, loadedPath, signalBack }) ? at : null;
+}

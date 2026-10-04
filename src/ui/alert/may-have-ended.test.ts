@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { clockOffsetMs, mayHaveEnded, serverTimeAt } from "./may-have-ended";
+import { clockOffsetMs, isOfflineView, mayHaveEnded, receivedAtFor, serverTimeAt } from "./may-have-ended";
 
 const VALID_UNTIL = "2026-10-01T19:00:00.000Z";
 const at = (iso: string) => Date.parse(iso);
@@ -44,5 +44,29 @@ describe("mayHaveEnded: an alert read from a kept copy, by the phone's clock adj
 
     expect(serverTimeAt(at("2026-10-01T20:00:00.000Z"), offsetMs)).toBe(at("2026-10-01T19:59:40.000Z"));
     expect(mayHaveEnded(VALID_UNTIL, { now: at("2026-10-01T20:00:00.000Z"), offsetMs })).toBe(true);
+  });
+});
+
+describe("isOfflineView and receivedAtFor (the alert page's offline decision)", () => {
+  it("is offline without signal, or while a kept copy still describes the page; with signal and the server's page it is not", () => {
+    expect(isOfflineView({ online: false, servedKeptAt: null })).toBe(true);
+    expect(isOfflineView({ online: true, servedKeptAt: 1 })).toBe(true);
+    expect(isOfflineView({ online: true, servedKeptAt: null })).toBe(false);
+  });
+
+  it("dates the page by the kept copy, else by when the view mounted, never by an earlier document load", () => {
+    expect(receivedAtFor({ servedKeptAt: 100, mountedAt: 900 })).toBe(100);
+    expect(receivedAtFor({ servedKeptAt: null, mountedAt: 900 })).toBe(900);
+  });
+
+  it("does not call a live alert ended after a move made later in the session (the offset is the mount's, not the load's)", () => {
+    const loadedAt = at("2026-10-01T09:00:00.000Z");
+    const mountedAt = at("2026-10-01T11:00:00.000Z");
+    const now = at("2026-10-01T11:05:00.000Z");
+    const serverNow = "2026-10-01T11:00:00.000Z";
+    const validUntil = "2026-10-01T12:00:00.000Z";
+
+    expect(mayHaveEnded(validUntil, { now, offsetMs: clockOffsetMs(serverNow, loadedAt) })).toBe(true);
+    expect(mayHaveEnded(validUntil, { now, offsetMs: clockOffsetMs(serverNow, receivedAtFor({ servedKeptAt: null, mountedAt })) })).toBe(false);
   });
 });

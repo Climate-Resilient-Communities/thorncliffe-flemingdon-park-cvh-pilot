@@ -19,3 +19,9 @@ export const serverTimeAt = (now: number, offsetMs: number): number => now + off
 export function mayHaveEnded(validUntil: Date | string, input: { now: number; offsetMs: number }): boolean {
   return new Date(validUntil).getTime() <= serverTimeAt(input.now, input.offsetMs);
 }
+
+/** Whether the page on screen is not the server's own answer: a kept copy still describing it, or the phone has lost signal. */
+export const isOfflineView = (input: { online: boolean; servedKeptAt: number | null }): boolean => !input.online || input.servedKeptAt !== null;
+
+/** The phone's clock when the page on screen was received: the kept copy's own time, else when this view mounted (never when the document loaded, which may be hours before). */
+export const receivedAtFor = (input: { servedKeptAt: number | null; mountedAt: number }): number => input.servedKeptAt ?? input.mountedAt;

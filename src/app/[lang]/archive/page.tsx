@@ -34,9 +34,11 @@ export default async function ArchivePage({ params }: PageProps<"/[lang]/archive
     R04: { fromHub: all.R04.fromHub },
     shell: { back: all.shell.back },
   };
+  // A database failure leaves the screen with its failure note and a button to ask again, not the generic error page (the API answers the same failure with a 503).
+  const initial = await readCachedArchive(lang, 1).catch(() => null);
   return (
     <NextIntlClientProvider locale={lang} messages={messages}>
-      <ArchiveScreen lang={lang} initial={await readCachedArchive(lang, 1)} />
+      <ArchiveScreen lang={lang} initial={initial} />
     </NextIntlClientProvider>
   );
 }
