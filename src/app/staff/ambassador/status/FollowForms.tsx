@@ -121,7 +121,9 @@ export function FollowForms({ screen, sender: givenSender, initial = {} }: { scr
     const found = new Set<FollowProblem>();
     if (reason === "") found.add("reason");
     if (reason === "other" && withdrawWords.trim() === "") found.add("words");
-    if (withdrawWords.trim().length > max) found.add("tooLong");
+    // The server joins the catalog wording of the reason to these words, so that wording counts against the same maximum.
+    const extra = words.withdraw.reasons.find((item) => item.id === reason)?.extra ?? 0;
+    if (withdrawWords.trim().length + extra > max) found.add("tooLong");
     send("withdraw", found, { v: 1, action: "withdraw", alert_id: screen.alertId, entry_id: screen.withdraw.entryId, target: screen.postId, reason, text: withdrawWords });
   }
 

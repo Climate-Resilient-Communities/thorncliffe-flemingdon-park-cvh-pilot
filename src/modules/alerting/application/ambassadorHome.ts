@@ -300,7 +300,7 @@ export async function readPostStatus(db: Db, scope: AmbassadorScope, entryId: st
     replacedBy: replacer === null ? null : (replacer.kind as "correction" | "withdrawal"),
   });
   if (state === null) return null;
-  const replacement = (row: Row): PostReplacement => ({ entryId: row.id, kind: row.kind as "correction" | "withdrawal", text: row.originalText, at: row.webPublishedAt ?? row.approvedAt ?? row.createdAt });
+  const replacement = (row: Row, withText = true): PostReplacement => ({ entryId: row.id, kind: row.kind as "correction" | "withdrawal", text: withText ? row.originalText : "", at: row.webPublishedAt ?? row.approvedAt ?? row.createdAt });
   const threadOpen = thread.status === "open";
   const waitingFinal = rows.some((row) => row.kind === "final" && row.status === "pending_approval");
   const resolvable = threadOpen && resolvableCovering(rows, assigned) !== null;
@@ -319,7 +319,8 @@ export async function readPostStatus(db: Db, scope: AmbassadorScope, entryId: st
     approvedAt: entry.approvedAt,
     validUntil: entry.validUntil,
     replacedWith: replacer === null ? null : replacement(replacer),
-    waitingReplacement: waiting === null ? null : replacement(waiting),
+    // What waits is not approved yet: the ambassador learns that it waits, never its words.
+    waitingReplacement: waiting === null ? null : replacement(waiting, false),
     waitingFinal,
     threadOpen,
     can: {

@@ -55,7 +55,7 @@ export interface FollowWords {
   phase: { legend: string; problem: string; progress: string; error: string };
   valid: { legend: string; resolved: string; at: string; date: string; time: string; hint: string };
   correct: { open: string; lead: string; label: string; button: string };
-  withdraw: { open: string; lead: string; reason: string; reasons: { id: string; label: string }[]; words: string; button: string; reasonError: string };
+  withdraw: { open: string; lead: string; reason: string; reasons: { id: string; label: string; extra: number }[]; words: string; button: string; reasonError: string };
   resolve: { open: string; lead: string; label: string; button: string };
   status: { unsent: string; unsentClose: string; sending: string };
   sent: { title: string; line: string; live: string; resolve: string };
@@ -83,7 +83,7 @@ export interface StatusScreen {
   waiting: string[];
   /** The texts' progress, once approved. */
   progress: null | { title: string; none: string | null; lines: { id: "waiting" | "inFlight" | "delivered" | "failed"; n: number; text: string }[]; hint: string | null };
-  yours: { title: string; types: string; floors: string; text: string; meta: string[]; residents: { href: string; label: string } };
+  yours: { title: string; types: string; floors: string; text: string; meta: string[]; residents: { href: string; label: string } | null };
   follow: FollowScreen | null;
 }
 
@@ -104,7 +104,7 @@ export function followWords(t: Text = catalogText): FollowWords {
       open: s("withdrawOpen"),
       lead: s("withdrawLead"),
       reason: s("withdrawReason"),
-      reasons: FOLLOW_REASONS.map((id) => ({ id, label: t(`staff.correct.reasons.${id}`) })),
+      reasons: FOLLOW_REASONS.map((id) => ({ id, label: t(`staff.correct.reasons.${id}`), extra: id === "other" ? 0 : t(`staff.correct.reasonText.${id}`).length + 1 })),
       words: s("withdrawWords"),
       button: s("withdrawButton"),
       reasonError: s("errors.WITHDRAWAL_REASON_INVALID"),
@@ -226,7 +226,7 @@ export function statusScreen(data: StatusData, t: Text = catalogText): StatusScr
         s("phaseLine", { phase: status.phase === "in_progress" ? t("A02.phaseProgress") : t("A02.phaseProblem") }),
         t("A02.appearsAs", { building: status.buildings.map((building) => data.addresses.get(building.rsn) ?? building.rsn).join(", ") }),
       ],
-      residents: { href: residentAlertHref(status.slug), label: s("seeResidents") },
+      residents: status.slug === "" ? null : { href: residentAlertHref(status.slug), label: s("seeResidents") },
     },
     follow: canFollow
       ? {

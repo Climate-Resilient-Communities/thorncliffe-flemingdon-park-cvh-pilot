@@ -81,6 +81,17 @@ describe("where a post stands (A-03, S08.04)", () => {
     }
   });
 
+  it("shows no link to what residents read when the thread has no page of its own", () => {
+    expect(statusScreen(data({ slug: "" })).yours.residents).toBeNull();
+    expect(statusScreen(data()).yours.residents).toMatchObject({ href: "/en/alerts/abcd2345" });
+  });
+
+  it("counts the catalog words of a withdrawal reason against the maximum", () => {
+    const { reasons } = followWords().withdraw;
+    expect(reasons.find((item) => item.id === "wrong_place")!.extra).toBeGreaterThan(10);
+    expect(reasons.find((item) => item.id === "other")!.extra).toBe(0);
+  });
+
   it("tells what else waits for the Hub: a correction, a withdrawal, a final message", () => {
     const waiting = (over: Partial<AmbassadorPostStatus>) => statusScreen(data(over)).waiting;
     expect(waiting({ waitingReplacement: { entryId: ALERT, kind: "correction", text: "x", at: new Date() } })).toEqual([expect.stringMatching(/Your correction is waiting for the Hub/)]);
@@ -132,10 +143,10 @@ describe("what the person may do about it (A-03, S08.04)", () => {
   it("keeps the reasons of a withdrawal equal to the alerting module's catalog, each with its English words", () => {
     expect([...FOLLOW_REASONS]).toEqual([...WITHDRAWAL_REASONS]);
     expect(followWords().withdraw.reasons).toEqual([
-      { id: "wrong_place", label: "Wrong place" },
-      { id: "wrong_information", label: "Wrong information" },
-      { id: "duplicate", label: "Duplicate of another alert" },
-      { id: "other", label: "Other (write the reason)" },
+      { id: "wrong_place", label: "Wrong place", extra: expect.any(Number) },
+      { id: "wrong_information", label: "Wrong information", extra: expect.any(Number) },
+      { id: "duplicate", label: "Duplicate of another alert", extra: expect.any(Number) },
+      { id: "other", label: "Other (write the reason)", extra: 0 },
     ]);
   });
 

@@ -65,6 +65,8 @@ export function createPostSender<B extends KeyedRequest = AmbassadorPostRequest>
   let current: SendState = { kind: "idle" };
   /** The key of the last press whose outcome is not known yet; null once it is. */
   let openKey: string | null = null;
+  /** The entry the open key was made for: a press about another entry never reuses it (one key is one press of one request). */
+  let openEntry: string | null = null;
   /** The request on its way; null when none is. */
   let inFlight: B | null = null;
   let cleanups: (() => void)[] = [];
@@ -80,6 +82,7 @@ export function createPostSender<B extends KeyedRequest = AmbassadorPostRequest>
   /** The outcome of the press is known: its key is retired and nothing is held any more. */
   const settle = (next: SendState) => {
     openKey = null;
+    openEntry = null;
     inFlight = null;
     clearWaits();
     set(next);
@@ -148,7 +151,12 @@ export function createPostSender<B extends KeyedRequest = AmbassadorPostRequest>
   return {
     press(body) {
       if (current.kind === "sending" || current.kind === "unsent" || current.kind === "working") return;
-      openKey ??= env.newKey();
+      const entry = (body as { entry_id?: string }).entry_id ?? null;
+      if (openKey !== null && entry !== openEntry) openKey = null;
+      if (openKey === null) {
+        openKey = env.newKey();
+        openEntry = entry;
+      }
       inFlight = { ...body, key: openKey } as unknown as B;
       void deliver();
     },

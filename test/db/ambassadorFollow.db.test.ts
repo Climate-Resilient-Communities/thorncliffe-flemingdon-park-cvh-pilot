@@ -321,7 +321,7 @@ describe("the status of an ambassador's own post (A-03)", () => {
     const correctionRef = { alertId: ref.alertId, entryId: correction.value.entry.id };
     await submit(ambassador, correctionRef);
     // Waiting: the original still stands, with a correction waiting; it cannot be corrected again meanwhile.
-    expect(await statusOf(ref.entryId)).toMatchObject({ state: "live", waitingReplacement: { entryId: correctionRef.entryId, kind: "correction" }, can: { replace: false } });
+    expect(await statusOf(ref.entryId)).toMatchObject({ state: "live", waitingReplacement: { entryId: correctionRef.entryId, kind: "correction", text: "" }, can: { replace: false } });
     expect((await approve(correctionRef)).ok).toBe(true);
     expect(await statusOf(ref.entryId)).toMatchObject({ state: "corrected", replacedWith: { kind: "correction", text: "Power is out on floors 1 to 3." }, waitingReplacement: null, can: { replace: false } });
     // The correction is itself a post of theirs, now approved.

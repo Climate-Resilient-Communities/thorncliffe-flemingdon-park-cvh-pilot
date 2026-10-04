@@ -84,9 +84,11 @@ export function StatusBody({ screen, followInitial }: { screen: StatusScreen; fo
                 ))}
               </Stack>
             </div>
-            <a className="tap hub-link" href={screen.yours.residents.href}>
-              {screen.yours.residents.label}
-            </a>
+            {screen.yours.residents && (
+              <a className="tap hub-link" href={screen.yours.residents.href}>
+                {screen.yours.residents.label}
+              </a>
+            )}
           </Stack>
         </section>
 
