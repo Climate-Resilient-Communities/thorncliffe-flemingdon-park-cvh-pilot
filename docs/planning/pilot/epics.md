@@ -3060,7 +3060,7 @@ So that I get alerts even when I am not using the app.
 
 ### Story S07.03 — Staff help a resident sign up at an event or the Hub desk
 
-- **Size:** S · **Estimate:** 4 h · **Actual:** in progress (started 2026-10-04 16:47 UTC)
+- **Size:** S · **Estimate:** 4 h · **Actual:** 57 min (started 2026-10-04 16:47 UTC, built 17:44 UTC)
 - **Traces:** FR-A2 (helped sign-up), AR-20, NFR-N5 (staff-assisted) · **Depends on:** S07.02 · **Branch:** `e07-s03-staff-signup`
 
 As a Hub Coordinator at a launch event,
