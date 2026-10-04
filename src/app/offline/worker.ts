@@ -29,7 +29,7 @@ import {
 
 /** How long a page may take before the kept copy is shown instead (the network answer still updates the copy). */
 export const PAGE_TIMEOUT_MS = 6_000;
-/** The same for the feed and the manifest: below the phone's own 8 s (directory) and 20 s (feed) limits. */
+/** The same for the directory manifest, below the phone's own 8 s limit. The feed has none here: the page owns its 20 s limit (S02.11, spine S02.12). */
 export const DATA_TIMEOUT_MS = 6_000;
 /** At most this many pages kept by the previous build are fetched again when a new build installs; the rest go. */
 export const REFRESH_LIMIT = 20;
@@ -84,18 +84,18 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
   const served = new Map<string, number>();
   const warming = new Map<LaunchCode, Promise<void>>();
 
-  /** The network's answer, or that it failed, or that it took longer than `ms` (`full` still settles later). */
-  function fetchWithin(request: Request | string, ms: number, init?: RequestInit): { first: Promise<NetResult>; full: Promise<Response> } {
+  /** The network's answer, or that it failed, or that it took longer than `ms` (`full` still settles later); null waits for the network. */
+  function fetchWithin(request: Request | string, ms: number | null, init?: RequestInit): { first: Promise<NetResult>; full: Promise<Response> } {
     const full = env.fetch(request, init);
     const first = new Promise<NetResult>((resolve) => {
-      const timer = setTimeout(() => resolve({ timedOut: true }), ms);
+      const timer = ms === null ? null : setTimeout(() => resolve({ timedOut: true }), ms);
       full.then(
         (response) => {
-          clearTimeout(timer);
+          if (timer !== null) clearTimeout(timer);
           resolve({ response });
         },
         (error: unknown) => {
-          clearTimeout(timer);
+          if (timer !== null) clearTimeout(timer);
           resolve({ error });
         },
       );
@@ -245,9 +245,9 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
     return "timedOut" in result ? full : Response.error();
   }
 
-  /** The feed and the manifest: the network's answer when there is one; the kept copy, marked, when there is not. */
-  async function networkFirst(request: Request, context: FetchContext, store: (response: Response) => Promise<unknown>): Promise<Response> {
-    const { first, full } = fetchWithin(request, dataTimeout);
+  /** The feed and the manifest: the network's answer when there is one; the kept copy, marked, when there is not or (manifest only) when it is slower than `timeoutMs`. */
+  async function networkFirst(request: Request, context: FetchContext, store: (response: Response) => Promise<unknown>, timeoutMs: number | null): Promise<Response> {
+    const { first, full } = fetchWithin(request, timeoutMs);
     const result = await first;
     if ("response" in result && result.response.ok) {
       context.waitUntil(store(result.response.clone()));
@@ -371,9 +371,9 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
         case "page":
           return page(request, handling.lang, context);
         case "feed":
-          return networkFirst(request, context, (response) => storeFeed(request.url, response));
+          return networkFirst(request, context, (response) => storeFeed(request.url, response), null);
         case "manifest":
-          return networkFirst(request, context, (response) => storeJson(request.url, response));
+          return networkFirst(request, context, (response) => storeJson(request.url, response), dataTimeout);
         case "directory":
           return directory(request, handling.release, context);
         case "static":
