@@ -36,11 +36,11 @@ describe("hubNavigation", () => {
   const items = (role: (typeof STAFF_ROLES)[number]) => hubNavigation(role).flatMap((section) => section.items);
 
   it("lists the pilot's disruption screens in the prototype's order, with the home first, the alert screens for the roles that write alerts, then Coverage for the roles that see it, and People, Providers, Directory and Buildings for Admins", () => {
-    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds"]);
-    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage"]);
+    expect(items("ambassador").map((item) => item.label)).toEqual(["My building", "Check-in rounds", "Text sign-up"]);
+    expect(items("coordinator").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Text sign-up"]);
     expect(items("director").map((item) => item.label)).toEqual(["Incidents", "Check-in rounds", "Coverage"]);
     expect(items("coordinator")[0]).toMatchObject({ href: "/staff", exact: true });
-    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "Test text"]);
+    expect(items("admin").map((item) => item.label)).toEqual(["Incidents", "Log a disruption", "Compose an alert", "Check-in rounds", "Coverage", "Text sign-up", "People", "Providers", "Directory", "Buildings", "Pause texts", "On-call numbers", "Drills", "Test text"]);
   });
 
   it("links Log a disruption and Compose an alert (S04.05) to their pages for exactly the roles whose policy allows alert.author_wide", () => {
@@ -60,6 +60,14 @@ describe("hubNavigation", () => {
     const coverage = items("admin").find((item) => item.id === "coverage");
     expect(coverage).toEqual({ id: "coverage", label: "Coverage", href: "/staff/coverage", icon: "ready" });
     expect(items("admin").filter((item) => item.icon === coverage?.icon)).toHaveLength(1);
+  });
+
+  it("adds Text sign-up (S07.03) for exactly the roles whose policy allows signup.assist: not a Director", () => {
+    for (const role of STAFF_ROLES) {
+      expect(items(role).some((item) => item.href === "/staff/text-signup"), role).toBe(can(role, "signup.assist"));
+    }
+    expect(items("director").some((item) => item.id === "text-signup")).toBe(false);
+    expect(items("ambassador").find((item) => item.id === "text-signup")).toEqual({ id: "text-signup", label: "Text sign-up", href: "/staff/text-signup", icon: "phone" });
   });
 
   it("has no MVP destination: no Moderation, partner space or readiness item or section", () => {

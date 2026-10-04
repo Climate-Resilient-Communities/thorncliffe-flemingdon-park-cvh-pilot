@@ -52,8 +52,9 @@ export {
 export { captureRecipients, countRecipients, recipientsPort, type AlertRecipient, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "./application/recipients";
 
 // The web sign-up (S07.02): the use case, the pending sign-up's number source for the ContactResolver, and the seam that forgets a sign-up
-// whose confirmation was refused because the number texted STOP.
+// whose confirmation was refused because the number texted STOP. S07.03 adds `assist`, the staff-assisted sign-up, to the same use case.
 export {
+  ASSISTED_SIGNUP_RATE_LIMIT,
   ConfirmationNotQueued,
   SIGNUP_RATE_LIMIT,
   TWILIO_OPTED_OUT_ERROR,
@@ -62,6 +63,7 @@ export {
   forgetOptedOutSignup,
   noSubscribersYet,
   pendingSignupNumberSource,
+  type AssistedSignupAudit,
   type Signup,
   type SignupChannel,
   type SignupDeps,

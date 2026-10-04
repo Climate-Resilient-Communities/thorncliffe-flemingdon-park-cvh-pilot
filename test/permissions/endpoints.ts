@@ -114,6 +114,12 @@ const TEXTS_ACTIONS = "src/app/staff/texts/actions.ts";
 const ONCALL_ACTIONS = "src/app/staff/oncall/actions.ts";
 const DRILL_ROSTER_ACTIONS = "src/app/staff/drills/roster/actions.ts";
 const DRILL_START_ACTIONS = "src/app/staff/drills/start/actions.ts";
+const TEXT_SIGNUP_ACTIONS = "src/app/staff/text-signup/actions.ts";
+/**
+ * Text sign-up (S07.03): `signup.assist`, for an Ambassador (whatever building they are assigned to: a sign-up has no building scope), a
+ * Coordinator and an Admin. A Director is refused.
+ */
+const SIGNUP_HELPERS = { ambassador: "allowed", coordinator: "allowed", director: "forbidden", admin: "allowed", ambassador_out_of_scope: "allowed" } as const;
 
 /** The provider the provider actions are aimed at (the DB test loads it). */
 export const PROVIDER_ID = "M001";
@@ -168,6 +174,7 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
   { id: "page /staff/directory", kind: "page", file: "src/app/staff/directory/page.tsx", export: "default", route: "/staff/directory", action: "guide.publish", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/texts", kind: "page", file: "src/app/staff/texts/page.tsx", export: "default", route: "/staff/texts", action: "sending.pause", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/oncall", kind: "page", file: "src/app/staff/oncall/page.tsx", export: "default", route: "/staff/oncall", action: "oncall.manage", writes: "none", gate: "hub", expected: ADMIN_ONLY },
+  { id: "page /staff/text-signup", kind: "page", file: "src/app/staff/text-signup/page.tsx", export: "default", route: "/staff/text-signup", action: "signup.assist", writes: "none", gate: "hub", expected: SIGNUP_HELPERS },
   { id: "page /staff/drills", kind: "page", file: "src/app/staff/drills/page.tsx", export: "default", route: "/staff/drills", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/roster", kind: "page", file: "src/app/staff/drills/roster/page.tsx", export: "default", route: "/staff/drills/roster", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
   { id: "page /staff/drills/start", kind: "page", file: "src/app/staff/drills/start/page.tsx", export: "default", route: "/staff/drills/start", action: "drill.run", writes: "none", gate: "hub", expected: ADMIN_ONLY },
@@ -683,6 +690,21 @@ export const STAFF_ENDPOINTS: StaffEndpoint[] = [
     gate: "hub",
     form: { kind: "ack" },
     expected: ADMIN_ONLY,
+  },
+  // S07.03: "Send the confirmation text" (policy action `signup.assist`, not privileged). Called as an allowed caller, the form is refused by the
+  // sign-up contract (the terms are not agreed), so no pending sign-up is written, no text queued and nothing counted; the refusal is audited.
+  {
+    id: `action ${TEXT_SIGNUP_ACTIONS}#assistedSignupAction`,
+    kind: "action",
+    file: TEXT_SIGNUP_ACTIONS,
+    export: "assistedSignupAction",
+    route: "/staff/text-signup",
+    action: "signup.assist",
+    writes: "business",
+    gate: "hub",
+    form: { phone: "416-555-0123", lang: "ur", neighbourhood: "TP", consent_version: "2026-10-02.1" },
+    forbiddenMessage: /^Only Coordinators, Ambassadors and Admins can /,
+    expected: SIGNUP_HELPERS,
   },
 ];
 

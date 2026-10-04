@@ -343,6 +343,7 @@ const AAL2_MESSAGE: Record<string, string> = {
 const FORBIDDEN_MESSAGE: Record<string, RegExp> = {
   "src/app/staff/alerts/approval/actions.ts": /^Only a Coordinator or an Admin who did not write or change this alert can approve it\./,
   "src/app/staff/alerts/correct/actions.ts": /^Only a Coordinator or an Admin can correct or withdraw an alert\./,
+  "src/app/staff/text-signup/actions.ts": /^Only Coordinators, Ambassadors and Admins can /,
 };
 
 describe.each(actionFiles.map((file) => [relative(file), file]))("server actions in %s", (_name, file) => {
