@@ -477,6 +477,9 @@ revoke all on function alert_entry_guard() from public, anon, authenticated, ser
 -- transaction: a caller that only inserts the notice would leave the post pending and visible beside a "Withdrawn" note.
 create unique index alert_entry_one_system_withdrawal on alert_entry (supersedes_id) where kind = 'withdrawal' and status = 'published_system';
 
+-- The release in production when this applies cannot insert a `published_system` withdrawal (its entry guard, 20261004070000, lets the
+-- system insert only a `final`), so this check never raises on its writes.
+-- contract: a4fb407432e0a077be629d0e8284225fcbc80aff
 create or replace function alert_system_withdrawal_check() returns trigger
 language plpgsql
 set search_path = ''
