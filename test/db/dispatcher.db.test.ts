@@ -1341,12 +1341,16 @@ describe("the hand-off point re-reads whether the row is still sendable", () => 
     await world.dispatcher().run();
     expect(await world.stateOf(drillToRoster.ids[0])).toBe("submitted");
 
+    // S06.05's trigger refuses a mismatch at insert (test/db/drills.db.test.ts shows each refusal); the hand-off is the second defence, shown here with the
+    // trigger switched off for the insert only, by the owner.
     await world.reset();
-    const mismatched = [
-      await world.seedAlert({ isDrill: true, recipientKind: "subscriber" }).catch(() => undefined),
-      await world.seedAlert({ isDrill: false, recipientKind: "roster" }).catch(() => undefined),
-    ].filter((seeded) => seeded !== undefined);
-    // S06.05's trigger refuses these at insert; until it exists the hand-off is the second defence.
+    await owner.unsafe("alter table delivery disable trigger delivery_insert_guard");
+    let mismatched: Awaited<ReturnType<typeof world.seedAlert>>[];
+    try {
+      mismatched = [await world.seedAlert({ isDrill: true, recipientKind: "subscriber" }), await world.seedAlert({ isDrill: false, recipientKind: "roster" })];
+    } finally {
+      await owner.unsafe("alter table delivery enable trigger delivery_insert_guard");
+    }
     await world.dispatcher().run();
     for (const seeded of mismatched) expect(await world.stateOf(seeded.ids[0])).toBe("skipped");
     expect(world.provider.calls).toHaveLength(0);

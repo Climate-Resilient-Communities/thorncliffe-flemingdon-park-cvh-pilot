@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Inline, Stack } from "@/ui";
+import { ExerciseMarker } from "../../ExerciseMarker";
 import { PlaceFields } from "../audience/AudienceForms";
 import type { LogState } from "./logDisruption";
 import type { LogScreen, TypeChoiceView } from "./view";
@@ -55,6 +56,7 @@ export function LogBody({ screen, action, initialState = IDLE }: { screen: LogSc
     // The page is one column with no grid cell around it: a word that cannot break (a long translated label) is wrapped here.
     <div className="hub-wrap">
       <Stack gap="section-hub-main">
+        {screen.exercise ? <ExerciseMarker words={screen.exercise} /> : null}
         <Stack gap="related">
           <h1>{screen.title}</h1>
           <p>{screen.lead}</p>

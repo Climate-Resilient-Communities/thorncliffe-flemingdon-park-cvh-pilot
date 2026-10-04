@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useReducer, useRef, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
+import { ExerciseMarker } from "../../ExerciseMarker";
 import type { ComposeState } from "./editDraft";
 import { doneCount, initialSubmitUi, submitReducer, unconfirmedOf, type SubmitKind } from "./submitMachine";
 import { submitApi, type SubmitApi } from "./submitClient";
@@ -386,6 +387,7 @@ export function ComposerBody({
 
   const header = (
     <Stack gap="related">
+      {screen.exercise ? <ExerciseMarker words={screen.exercise} /> : null}
       <h1>{screen.title}</h1>
       <p>{screen.lead}</p>
       <p data-testid="first-report">{screen.firstReport}</p>

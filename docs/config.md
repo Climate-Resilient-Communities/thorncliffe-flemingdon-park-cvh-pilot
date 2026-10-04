@@ -95,7 +95,9 @@ What it fixes in code and in the migration, so changing one is a change to both 
 The windows marked "proposed" are engineering proposals for the owner to confirm; the others are in the E06 definitions. A text still
 queued after its `send_by` is skipped at the hand-off point, not sent late. Logs show a phone number only as its last two digits
 (`+*********23`), whichever field it reaches. The sources that give the dispatcher a recipient's number are wired in
-`src/app/messaging.ts`; none exists until the stories that create the recipients' tables (S06.05, S06.07, S07.02, S07.04).
+`src/app/messaging.ts`; the drill roster's (S06.05) and the on-call roster's (S06.07) exist, and the others come with the stories that create the
+recipients' tables (S07.02, S07.04). The drill roster's numbers are entered by an Admin on `/staff/drills/roster` in the running system and are never in
+the repository or CI.
 
 ## Messaging sender (S06.02)
 

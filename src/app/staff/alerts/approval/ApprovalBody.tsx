@@ -2,6 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Grid, Inline, Screen, Stack } from "@/ui";
+import { ExerciseMarker } from "../../ExerciseMarker";
 import type { ApprovalState } from "./approveFromForm";
 import { confirmedCount } from "./countConfirmation";
 import { PublishedMain } from "./PublishedMain";
@@ -165,6 +166,7 @@ export function ApprovalBody({ screen, actions, initial }: { screen: ApprovalScr
     <Stack gap="section-hub-review">
       {/* Above the fold on a phone: what it is, the English text, what goes out and which languages fell back; the rest follows. */}
       <Stack gap="related">
+        {screen.header.exercise ? <ExerciseMarker words={screen.header.exercise} /> : null}
         <h1>{screen.title}</h1>
         <p data-testid="entry-header">
           <strong>{screen.header.types}</strong>

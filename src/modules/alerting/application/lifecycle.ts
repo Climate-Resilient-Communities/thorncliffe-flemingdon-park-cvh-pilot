@@ -762,6 +762,15 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /**
+   * Starting a drill (S06.05, AD-4, AD-6): the policy action `drill.run` (Admins), from an `aal2` session. A thread's `is_drill` is set here and never changes,
+   * so this is the only place a drill can begin; nobody else can make one by asking for `isDrill`, whatever the screen or the request said.
+   */
+  function mustMayRunDrill(standing: StaffStanding, actor: AlertActor) {
+    if (decidePolicy(standing.role, "drill.run") !== "allowed") throw new Refused("NOT_ALLOWED");
+    if (!meetsAssurance(standing.role, actor.aal, "drill.run")) throw new Refused("AAL2_REQUIRED");
+  }
+
+  /**
    * The approver was shown a version and hash of a pending entry (S04.07): an entry that changed since (pulled back to a draft, or edited and
    * submitted again while the approver read: ENTRY_CHANGED) or is not waiting any more (approved or discarded: ENTRY_NOT_PENDING) is refused.
    * Only judged where a person names what they saw.
@@ -1070,6 +1079,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const createdAt = now();
         const standing = await staff.standing(tx, actor.staffId);
         if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
+        if (input.isDrill) mustMayRunDrill(standing, actor);
         if (!(AUTHORED_KINDS as readonly string[]).includes(input.kind)) throw new Refused("ILLEGAL_TRANSITION");
         if (Number.isNaN(input.reportedAt.getTime()) || input.reportedAt.getTime() > createdAt.getTime()) throw new Refused("REPORTED_AT_INVALID");
         const invalid = contentRefusal(input.content) ?? validUntilProblem(input.content.validUntil, createdAt);
@@ -1096,6 +1106,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         const createdAt = now();
         const standing = await staff.standing(tx, actor.staffId);
         if (!standing || standing.status !== "active") throw new Refused("NOT_ALLOWED");
+        if (input.isDrill) mustMayRunDrill(standing, actor);
         if (!(AUTHORED_KINDS as readonly string[]).includes(input.kind)) throw new Refused("ILLEGAL_TRANSITION");
         if (Number.isNaN(input.reportedAt.getTime()) || input.reportedAt.getTime() > createdAt.getTime()) throw new Refused("REPORTED_AT_INVALID");
         const types = [...new Set(input.types)].sort();
