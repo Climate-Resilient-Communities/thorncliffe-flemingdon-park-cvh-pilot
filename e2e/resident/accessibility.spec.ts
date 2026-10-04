@@ -13,6 +13,11 @@ import { feedOf, stubArchive, stubFeed } from "./home-fixture";
 // touch targets of the right size at 320 px. Basic mode is the saved choice, so every page below is opened the way a
 // resident who turned it on opens it: with `basic` in cvh.choices and <html data-basic> set by the page before its first paint.
 
+// One test for each language and mode (and each page for the focus order), so the tests of this file run in parallel, on as many workers as the
+// run has: the file was the longest of the suite, on one worker. Each test makes its own contexts and stubs its own routes; the three servers of
+// the config are only read (fixed origins, no state a test writes), so tests of any workers may share them.
+test.describe.configure({ mode: "parallel" });
+
 const LANGS = ["en", "ur", "ta"] as const;
 type Lang = (typeof LANGS)[number];
 const SIGNED_BUILDING = BUILDINGS[0].rsn;
