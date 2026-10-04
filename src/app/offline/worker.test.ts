@@ -2,7 +2,8 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { FakeCaches } from "../../../test/helpers/fake-caches";
 import { TILE_CACHE_NAME } from "@/ui/map/tile-cache";
 import { CACHED_AT_HEADER, DATA_CACHE, FALLBACK_HEADER, KEPT_AT_META, TITLE_HEADER } from "@/ui/offline/protocol";
-import { createOfflineWorker, type FetchContext } from "./worker";
+import { FEED_TIMEOUT_MS } from "@/ui/offline/protocol";
+import { FEED_WORKER_TIMEOUT_MS, createOfflineWorker, type FetchContext } from "./worker";
 
 const ORIGIN = "https://cvh.example";
 const BUILD = "b2";
@@ -276,7 +277,12 @@ describe("the feed: never shown stale as fresh (S02.11, AD-17)", () => {
     expect((await response.json()).feed_version).toBe(7);
   });
 
-  it("leaves the time limit to the page: a feed slower than the worker's data limit is still the server's answer, unmarked, and kept", async () => {
+  it("answers from its kept copy before the page gives up on the feed, and the page owns the rest of the wait", () => {
+    expect(FEED_WORKER_TIMEOUT_MS).toBeLessThan(FEED_TIMEOUT_MS);
+    expect(FEED_WORKER_TIMEOUT_MS).toBeGreaterThan(6_000);
+  });
+
+  it("serves a feed slower than the data limit as the server's answer, unmarked, and keeps it", async () => {
     net.answers.set("/api/feed?lang=en", json(feed(7)));
     await respond(worker(), new Request(`${ORIGIN}/api/feed?lang=en`));
     let release: (r: Response) => void = () => {};
@@ -291,6 +297,15 @@ describe("the feed: never shown stale as fresh (S02.11, AD-17)", () => {
     expect(response?.headers.get(FALLBACK_HEADER)).toBeNull();
     expect((await response?.json()).feed_version).toBe(8);
     expect((await caches.match(`${ORIGIN}/api/feed?lang=en`))?.headers.get("x-cvh-feed-version")).toBe("8");
+  });
+
+  it("serves the kept feed, marked, when the network hangs past the feed limit (a resident on a very weak signal)", async () => {
+    net.answers.set("/api/feed?lang=en", json(feed(7)));
+    await respond(worker(), new Request(`${ORIGIN}/api/feed?lang=en`));
+    const hanging = createOfflineWorker({ caches: caches.asCacheStorage, fetch: () => new Promise<Response>(() => {}), origin: ORIGIN, build: BUILD, now: () => clock, feedTimeoutMs: 20 });
+    const response = await hanging.handle(new Request(`${ORIGIN}/api/feed?lang=en`), context());
+    expect(response?.headers.get(FALLBACK_HEADER)).toBe("1");
+    expect((await response?.json()).feed_version).toBe(7);
   });
 
   it("still gives up on a slow directory manifest after the data limit", async () => {
