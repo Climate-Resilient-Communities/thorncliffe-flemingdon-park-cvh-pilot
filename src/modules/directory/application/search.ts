@@ -72,7 +72,7 @@ import { detect, isClearlyEnglish, type QuestionLanguage } from "../domain/quest
 import { DEFAULT_EMERGENCY_THRESHOLD, cosine, emergencyFirst, emergencyInTop, rankLegs } from "../domain/searchRanking";
 import { ReleaseSearchRecordSchema, VectorsFileSchema, estimateTokens, type ReleaseSearchRecord } from "../domain/searchData";
 import { VectorsBinaryError, decodeVectorsBinary } from "../domain/vectorsBinary";
-import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder } from "./ports";
+import { QueryEmbedError, type DirectoryStorage, type QueryEmbedder, type ReleaseFileCache } from "./ports";
 
 /** The kind and purpose a question's embedding is counted under in spend_event. */
 export const SEARCH_SPEND_KIND = "embed";
@@ -250,6 +250,14 @@ export interface SearchDeps {
   /** Test seams. */
   snapshotFailureTtlMs?: number;
   snapshotLoadTimeoutMs?: number;
+  /**
+   * Where a cold instance reads the release's files from before it asks the store (Vercel Data Cache in the app). Every byte it gives
+   * back is checked against the release record's sha256 like a download; a cache that fails or gives wrong bytes is bypassed, so it
+   * can slow nothing down and serve nothing stale or wrong. Absent: the store is read directly.
+   */
+  fileCache?: ReleaseFileCache;
+  /** Test seam: how long one cache read (a miss includes its store download) may take before the store is read directly. */
+  fileCacheTimeoutMs?: number;
   /** Takes the request snapshot instead of the database and the store (a unit test of the legs and their timing). */
   snapshot?: () => Promise<SearchSnapshot>;
   /** Keeps the rows instead of writing them to the database. */
@@ -314,6 +322,8 @@ class RecentSnapshotFailure extends Error {}
 interface SnapshotProbe {
   release: number | null;
   cold: boolean;
+  /** Set once the data is in memory, when every file of a load came from the shared cache and none from the store: `snapshot` is then flagged `cache`, not `cold`. */
+  cached: boolean;
   /** When the read settled (on the service's clock), whichever way; null while it runs. A request that comes to wait for it later still reports how long it took. */
   settledAt: number | null;
 }
@@ -393,6 +403,80 @@ async function readVectors(storage: DirectoryStorage, release: CurrentRelease, r
   const vectors = vectorsParsed.data;
   if (vectors.release_v !== release.number || vectors.embed_model !== record.embed_model || vectors.dims !== record.dims) throw new SafeDetailError("vectors_release");
   return { ids: vectors.providers.map((p) => p.id), vectors: vectors.providers.map((p) => p.vector) };
+}
+
+/** How many of a load's file reads went to the store (a miss, a bypass or no cache) and how many were served by the shared cache. */
+interface LoadReads {
+  store: number;
+  cache: number;
+}
+
+/** A cache read slower than this is given up on and the store is read directly. */
+const FILE_CACHE_TIMEOUT_MS = 2_000;
+
+/**
+ * The store as one release's load reads it, through the shared cache for the files the release record names (each with the sha256
+ * it must have). The cache only ever supplies bytes that hash to that sha256: a miss loads from the store and refuses to keep
+ * anything else, a hit is checked again here, and a cache that fails or answers wrongly is bypassed with a direct read, so the
+ * checks of the load (and their error codes) see the store's own bytes in every fault.
+ */
+function throughCache(storage: DirectoryStorage, cache: ReleaseFileCache, release: CurrentRelease, record: ReleaseSearchRecord, reads: LoadReads, cacheReadTimeoutMs: number): DirectoryStorage {
+  const hashes = new Map<string, string>();
+  for (const entry of Object.values(release.files)) hashes.set(entry.path, entry.sha256);
+  hashes.set(record.vectors_path, record.sha256);
+  if (record.binary) hashes.set(record.binary.path, record.binary.sha256);
+  const encoder = new TextEncoder();
+
+  async function viaCache(file: string, direct: () => Promise<Uint8Array | null>): Promise<Uint8Array | null> {
+    const sha256 = hashes.get(file);
+    if (sha256 === undefined) {
+      reads.store += 1;
+      return direct();
+    }
+    let loaded = false;
+    let fetched: { body: Uint8Array | null } | undefined;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    try {
+      const read = cache.read({ release: release.number, path: file, sha256 }, async () => {
+        loaded = true;
+        const body = await direct();
+        fetched = { body };
+        if (body === null || sha256HexBytes(body) !== sha256) throw new SafeDetailError("not_cacheable");
+        return body;
+      });
+      read.catch(() => undefined);
+      const timeout = new Promise<never>((_, reject) => {
+        timer = setTimeout(() => reject(new Error("cache_timeout")), cacheReadTimeoutMs);
+      });
+      const bytes = await Promise.race([read, timeout]);
+      if (sha256HexBytes(bytes) === sha256) {
+        if (loaded) reads.store += 1;
+        else reads.cache += 1;
+        return bytes;
+      }
+    } catch {
+      // The cache failed, was too slow, or the store had nothing good: use the store's bytes, below.
+    } finally {
+      clearTimeout(timer);
+    }
+    reads.store += 1;
+    // The store was already read for the cache's miss: use those bytes (the load checks them and gives its own error code) rather than download again.
+    if (fetched) return (fetched as { body: Uint8Array | null }).body;
+    return direct();
+  }
+
+  return {
+    put: storage.put.bind(storage),
+    // A text file is cached as its UTF-8 bytes, which are the bytes its sha256 was taken over.
+    async get(file) {
+      const bytes = await viaCache(file, async () => {
+        const body = await storage.get(file);
+        return body === null ? null : encoder.encode(body);
+      });
+      return bytes === null ? null : new TextDecoder("utf-8", { ignoreBOM: true }).decode(bytes);
+    },
+    ...(storage.getBytes ? { getBytes: (file: string) => viaCache(file, () => storage.getBytes!(file)) } : {}),
+  };
 }
 
 async function loadReleaseData(storage: DirectoryStorage, release: CurrentRelease, record: ReleaseSearchRecord): Promise<SnapshotData> {
@@ -519,6 +603,8 @@ export function createSearch(deps: SearchDeps): SearchService {
   // The loads from the store that are still running: a request that finds its release's data here (it started the load, or
   // joined it) waited for the store, which the `snapshot` timing says as `cold`.
   const loading = new WeakSet<Promise<SnapshotData>>();
+  // Where each running or finished load read its files from (the shared cache or the store).
+  const readsOf = new WeakMap<Promise<SnapshotData>, LoadReads>();
   // What `warm` started for a request: that request's `search` takes it (once) instead of reading again.
   let warmed: { startedAt: number; at: number; reading: Promise<SearchSnapshot>; probe: SnapshotProbe } | undefined;
 
@@ -528,9 +614,13 @@ export function createSearch(deps: SearchDeps): SearchService {
       const until = failedUntil.get(release.number);
       if (until !== undefined && clock() < until) return Promise.reject(new RecentSnapshotFailure());
       failedUntil.delete(release.number);
-      loaded = capped(loadReleaseData(deps.storage(), release, record), loadTimeoutMs);
+      const reads: LoadReads = { store: 0, cache: 0 };
+      const source = deps.fileCache ? throughCache(deps.storage(), deps.fileCache, release, record, reads, deps.fileCacheTimeoutMs ?? FILE_CACHE_TIMEOUT_MS) : deps.storage();
+      if (!deps.fileCache) reads.store = 1;
+      loaded = capped(loadReleaseData(source, release, record), loadTimeoutMs);
       cache.set(release.number, loaded);
       const load = loaded;
+      readsOf.set(load, reads);
       loading.add(load);
       const settled = () => loading.delete(load);
       load.then(settled, settled);
@@ -560,8 +650,15 @@ export function createSearch(deps: SearchDeps): SearchService {
       probe.release = current.number;
       if (!current.search || !deps.embedder) return { releaseV: current.number, data: null };
       const data = dataOf(current, current.search);
-      if (loading.has(data)) probe.cold = true;
-      return { releaseV: current.number, data: await data };
+      const waited = loading.has(data);
+      if (waited) probe.cold = true;
+      const ready = await data;
+      // `cold` is the store's download; a load served whole by the shared cache says `cache`.
+      if (waited && deps.fileCache) {
+        const reads = readsOf.get(data);
+        if (reads && reads.store === 0 && reads.cache > 0) probe.cached = true;
+      }
+      return { releaseV: current.number, data: ready };
     } catch (error) {
       throw new StageError("snapshot_failed", error instanceof RecentSnapshotFailure, classifyError(error));
     } finally {
@@ -573,7 +670,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     // A test's snapshot, no key (every search answers `unavailable`), or a release's data already held or loading: nothing to start.
     if (deps.snapshot || !deps.embedder || cache.size > 0) return;
     try {
-      const probe: SnapshotProbe = { release: null, cold: false, settledAt: null };
+      const probe: SnapshotProbe = { release: null, cold: false, cached: false, settledAt: null };
       const reading = readSnapshot(startedAt + legMs, probe);
       // Nobody may be waiting for it (the count refused): that is not unhandled.
       reading.catch(() => undefined);
@@ -633,7 +730,7 @@ export function createSearch(deps: SearchDeps): SearchService {
     const state: { snapshot: SearchSnapshot | null; failure: SearchStageReason | null; repeat: boolean; detail: string | undefined } = { snapshot: null, failure: null, repeat: false, detail: undefined };
     const early = warmed !== undefined && warmed.startedAt === started ? warmed : undefined;
     if (early) warmed = undefined;
-    const probe: SnapshotProbe = early?.probe ?? { release: null, cold: false, settledAt: null };
+    const probe: SnapshotProbe = early?.probe ?? { release: null, cold: false, cached: false, settledAt: null };
     const snapshotFrom = early?.at ?? clock();
     const reading = early?.reading ?? readSnapshot(deadline, probe);
     // An abandoned read may still reject after the deadline: that is not unhandled.
@@ -653,7 +750,7 @@ export function createSearch(deps: SearchDeps): SearchService {
       }
       if (probe.release !== null) releaseV = probe.release;
       if (state.snapshot) releaseV = state.snapshot.releaseV;
-      timings?.record("snapshot", (probe.settledAt ?? clock()) - snapshotFrom, probe.cold ? "cold" : undefined);
+      timings?.record("snapshot", (probe.settledAt ?? clock()) - snapshotFrom, probe.cold ? (probe.cached ? "cache" : "cold") : undefined);
     })();
 
     const fail = async (reason: SearchStageReason, translatedLeg: TranslatedLeg, quiet = false, detail?: string): Promise<never> => {

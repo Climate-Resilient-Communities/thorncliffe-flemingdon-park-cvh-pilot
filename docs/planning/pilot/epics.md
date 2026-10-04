@@ -1324,7 +1324,7 @@ So that I have the numbers and my building's status when I need them most.
 
 ### Story S02.14 — Resident switches to basic mode and uses the CVH with a screen reader
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 5 h 5 min (started 2026-10-04 13:50 UTC, built 18:55 UTC; includes one full rebuild)
 - **Traces:** NFR-N2, UX-DR18, UX-DR19 · **Depends on:** S02.12 · **Branch:** `e02-s14-basic-mode-a11y`
 
 As a resident who finds the full layout hard to use,
@@ -1357,6 +1357,28 @@ So that I can use the CVH in the way that works for me.
 **Given** basic mode on, at 320 px, in `en`, `ur` and `ta`
 **When** the touch-target test runs
 **Then** every control meets the basic-mode target size
+
+**Screen-reader run (S02.14, done by a person; the owner fills in the device and date)**
+
+Setup: the production or preview URL of the CVH, a phone with the screen reader on, Safari on iOS (VoiceOver) or Chrome on Android (TalkBack), a fresh browser profile (no saved choices), speech rate the tester's own. Do the run once in English with basic mode off, once in Urdu (right to left) with basic mode off, and once in English with basic mode on (turn it on at step 4). Note anything the screen reader skips, reads in the wrong language or announces without a name or role.
+
+1. Open the CVH address. Expected: the page loads; the screen reader reads the first screen (choose language) with a heading and the list of languages as a group.
+2. Choose language. Swipe through the languages. Each one is read in its own name and language, as a radio button with its state (selected, not selected). Select one; then Continue. The next screen is announced by its heading.
+3. Choose building. Each building is a checkbox with its address read as text, and its floors are a group. Check one building; the state is announced as checked. Continue or skip; the home screen's heading is announced.
+4. On home, move to the top. Expected order: the logo (read as "Thorncliffe Park Community Hub"), the language button (named with the word for language and the language it shows), the switch "Bigger text, fewer things" announced as a switch with its state in words ("On" or "Off"). Double-tap the switch; the state changes in words and the layout becomes larger with fewer lines. (On a page opened already in basic mode the switch reads "Off" until the page has loaded; note it if heard.)
+5. Open the directory (Find help). The heading is announced; every filter and each listing link has a name; a link to a listing says the provider's name. Open a listing; its heading is announced, and phone, email and web links say what they are.
+6. Open numbers (Be ready, then Essential numbers). Every number is a link that says it is a call; the 911 notice is read as a note. Go back to the previous screen with the screen reader's back gesture; focus returns to a sensible place.
+7. Open the map. In basic mode it opens as a list; with basic mode off use the "List" button of the map: every place is reachable as a link. Pins are not needed to reach any place.
+8. Open an alert from home (if one is open) and read its thread: status is read in words (verified or not yet verified, valid until), and in basic mode the button "Earlier updates: n" brings the older entries.
+9. Open the language button; the sheet is announced as a dialog with its title, focus stays in it, and Close returns focus to the language button.
+
+Record (one row per run):
+
+| Screen reader and version | Device and OS | Language and mode | Date | Tester | Result and anything to fix |
+| --- | --- | --- | --- | --- | --- |
+| VoiceOver | (owner to fill in) | en, basic off | (owner to fill in) | | |
+| VoiceOver | (owner to fill in) | ur, basic off | (owner to fill in) | | |
+| TalkBack | (owner to fill in) | en, basic on | (owner to fill in) | | |
 
 ### Story S02.15 — Hub counts install events and directory use without tracking anyone
 
@@ -3420,7 +3442,7 @@ So that the Hub and my neighbours know quickly.
 
 ### Story S08.03 — Lower-risk posts appear on the web at once as "Not yet verified"
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 10 min (started 2026-10-04 16:46 UTC, built 18:56 UTC)
 - **Traces:** FR-A15 (D-1), FR-A5, UX-DR16 (O-07), AR-8 (D-1 predicate, system withdrawal), AR-24 · **Depends on:** S08.02, S05.02, S05.06 · **Branch:** `e08-s03-d1-web-first`
 
 As a resident,

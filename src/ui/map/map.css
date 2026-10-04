@@ -133,7 +133,8 @@
     overflow: hidden;
   }
 
-  .map-frame[hidden] {
+  .map-frame[hidden],
+  :root[data-basic="true"] .map-frame {
     display: none;
   }
 

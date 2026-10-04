@@ -96,6 +96,11 @@
     list-style: none;
   }
 
+  /* Basic mode: one column (the prototype's .cvh-basic .cvh-find-tiles); gaps and insets are those of normal mode. */
+  :root[data-basic="true"] .ask-topics {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
   .ask-topic {
     box-sizing: border-box;
     display: flex;

@@ -105,6 +105,6 @@ export {
   type TranslatedLeg,
 } from "./application/search";
 export { recordUsage, usageDay } from "./application/usageCount";
-export { QueryEmbedError, type QueryEmbedder } from "./application/ports";
+export { QueryEmbedError, type QueryEmbedder, type ReleaseFileCache } from "./application/ports";
 export { cohereQueryEmbedder, type CohereQueryEmbedderOptions } from "./adapters/cohereEmbedder";
 export { DEFAULT_EMERGENCY_THRESHOLD, MAX_RESULTS, RRF_K, cosine, emergencyFirst, emergencyInTop, rankLegs, type SearchHit } from "./domain/searchRanking";
