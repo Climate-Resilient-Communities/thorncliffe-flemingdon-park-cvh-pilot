@@ -235,6 +235,18 @@ test.describe("at 1280 px", () => {
     expect(column.height).toBeCloseTo(page_, 0);
   });
 
+  test("a navigation taller than the viewport scrolls inside its sticky box while the column fills the page", async ({ page }) => {
+    await page.setViewportSize({ width: 1280, height: 300 });
+    await open(page, { texts: longestTexts("ur") }, "ur");
+
+    const sticky = sideNav(page).locator(".hub-side__sticky");
+    const metrics = await sticky.evaluate((element) => ({ scrollHeight: element.scrollHeight, clientHeight: element.clientHeight, viewport: window.innerHeight }));
+    expect(metrics.clientHeight).toBeLessThanOrEqual(metrics.viewport);
+    expect(metrics.scrollHeight).toBeGreaterThan(metrics.clientHeight);
+    const [column, scrollHeight] = await Promise.all([box(sideNav(page)), page.evaluate(() => document.documentElement.scrollHeight)]);
+    expect(column.height).toBeCloseTo(scrollHeight, 0);
+  });
+
   test("the shell has the staff type set: 16 px body text and the Arabic-script line height of 1.9 in ur", async ({ page }) => {
     await page.setViewportSize({ width: 1280, height: 800 });
     await open(page, { texts: REAL_TEXTS });
