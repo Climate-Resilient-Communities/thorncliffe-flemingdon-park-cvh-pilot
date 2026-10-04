@@ -24,8 +24,6 @@ describe("audit actions", () => {
         "session.revoked",
         "permission.denied",
         "seed.run",
-        "sms.test_sent",
-        "sms.test_attempted",
       ]),
     );
     for (const family of ["account.", "password.", "factor.", "building.", "assignment."]) {
@@ -89,13 +87,7 @@ describe("toAuditRecord", () => {
     ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: [FLOOR] }],
     ["assignment.removed", { staff_id: STAFF, rsn: "4155426", floor_ids: null, reason: "role_changed" }],
     ["seed.run", { seed: "buildings", counts: { buildings: 43, floors: 812 }, warnings: 1 }],
-    ["sms.test_sent", { http_status: 201, provider_status: "queued" }],
-    ["sms.test_sent", { http_status: 400, provider_error_code: 30032, reason: "provider_error" }],
-    ["sms.test_sent", { http_status: 201, provider_status: "queued", twilio_sid: `SM${"0".repeat(32)}` }],
-    ["sms.test_sent", { reason: "provider_error", outcome_unknown: true }],
     // S06.06: the test text is refused while all texts are paused.
-    ["sms.test_sent", { reason: "paused" }],
-    ["sms.test_attempted", {}],
   ])("accepts %s with %j", (action, meta) => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "ok")).not.toThrow();
   });
@@ -148,18 +140,12 @@ describe("toAuditRecord", () => {
   it.each([
     ["a token", "auth.signed_in", { aal: "aal2", token: "eyJhbGciOi" }],
     ["an authenticator secret", "factor.enrolled", { secret: "JBSWY3DPEHPK3PXP" }],
-    ["a phone number", "sms.test_sent", { http_status: 201, to: "+14165550123" }],
+    ["a phone number", "sending.paused", { waiting: 1, to: "+14165550123" }],
     ["an email address", "account.created", { role: "admin", email: "jane@example.com" }],
-    ["a message body", "sms.test_sent", { body: "CVH test from production" }],
-    ["any field on the attempt record", "sms.test_attempted", { http_status: 201 }],
+    ["a message body", "sending.resumed", { waiting: 1, body: "Hub: power is out" }],
     ["a username", "auth.failed", { username: "jdoe" }],
   ])("rejects %s", (_, action, meta) => {
     expect(() => toAuditRecord(event({ action, meta } as Partial<AuditEvent>), "refused")).toThrow(/fields outside the schema/);
-  });
-
-  it("keeps outcome_unknown to true and the Twilio sid to a message sid (S01.15)", () => {
-    expect(() => toAuditRecord(event({ action: "sms.test_sent", meta: { outcome_unknown: false } } as unknown as Partial<AuditEvent>), "refused")).toThrow(AuditRecordError);
-    expect(() => toAuditRecord(event({ action: "sms.test_sent", meta: { twilio_sid: "+14165550123" } } as unknown as Partial<AuditEvent>), "ok")).toThrow(AuditRecordError);
   });
 
   describe("provider actions (S02.04)", () => {

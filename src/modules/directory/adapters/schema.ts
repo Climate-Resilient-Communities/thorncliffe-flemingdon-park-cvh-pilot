@@ -246,3 +246,26 @@ export const searchLog = pgTable(
     pgPolicy("search_log_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
   ],
 ).enableRLS();
+
+// ---------------------------------------------------------------- usage_count (S02.15)
+/** The daily count of each usage event by page language and neighbourhood ('' for none): no identifier, no time finer than the day (AR-26). Matches 20261005200000_usage_count.sql. */
+export const usageCount = pgTable(
+  "usage_count",
+  {
+    day: date({ mode: "string" }).notNull(),
+    evt: text().$type<"install" | "directory_view" | "listing_view" | "map_view" | "guide_view" | "numbers_view">().notNull(),
+    lang: text().notNull(),
+    nbhd: text().$type<"" | "TP" | "FP">().notNull().default(""),
+    n: bigint({ mode: "number" }).notNull().default(1),
+  },
+  (t) => [
+    primaryKey({ columns: [t.day, t.evt, t.lang, t.nbhd] }),
+    check("usage_count_evt", sql`${t.evt} in ('install', 'directory_view', 'listing_view', 'map_view', 'guide_view', 'numbers_view')`),
+    check("usage_count_lang_format", sql`${t.lang} ~ '^[A-Za-z]{2,3}(-[A-Za-z]{4})?$'`),
+    check("usage_count_nbhd", sql`${t.nbhd} in ('', 'TP', 'FP')`),
+    check("usage_count_n_positive", sql`${t.n} > 0`),
+    pgPolicy("usage_count_app_select", { for: "select", to: cvhApp, using: sql`true` }),
+    pgPolicy("usage_count_app_insert", { for: "insert", to: cvhApp, withCheck: sql`true` }),
+    pgPolicy("usage_count_app_update", { for: "update", to: cvhApp, using: sql`true`, withCheck: sql`true` }),
+  ],
+).enableRLS();

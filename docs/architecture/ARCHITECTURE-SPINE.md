@@ -431,7 +431,7 @@ scripts/                   # seed loaders, string and token generators, search t
 | places | `neighbourhood`, `building`, `building_floor`, `disruption_type` |
 | alerting | `alert`, `alert_entry`, `alert_entry_translation`, `alert_submit_attempt`, `feed_version` |
 | subscriptions | `subscriber`, `subscriber_place`, `subscriber_topic_optout`, `pending_signup`, `sms_prompt`, `subscription_edit_token`, `inbound_keyword_count`, `inbound_seen`, `inbound_reply`, `drill_roster`, `rate_limit`, `campaign` |
-| messaging | `delivery`, `messaging_control` (pause), `dispatcher_lease`, `sms_test_send` (S01.15's first-text spike; E06 removes it) |
+| messaging | `delivery`, `messaging_control` (pause), `dispatcher_lease`, `sms_test_send` (S01.15's first-text spike ledger: no code uses it since S06.09; a later migration with a contract note drops it) |
 | checkins | `checkin`, `checkin_tally` |
 | translation | `translation_cache`, `translation_route` |
 | directory | `provider`, `provider_location`, `category`, `provider_category`, `guide`, `essential_number`, `directory_release`, `catalogue_load`, `search_log`, `usage_count` |

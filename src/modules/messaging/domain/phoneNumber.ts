@@ -41,3 +41,11 @@ export function looksLikePhoneNumber(value: string): boolean {
   const digits = value.replace(/[^0-9]/g, "");
   return /^\+?[0-9 ().-]+$/.test(value) && digits.length >= 7 && digits.length <= 15;
 }
+
+/** A number as a Hub screen names it, with all but its last four digits hidden: `+1 ••• ••• 0101` (the on-call roster and the drill roster list their numbers so). */
+export function maskNumber(number: string): string {
+  const digits = number.slice(1);
+  const tail = digits.slice(-4);
+  const country = digits.length > 10 ? digits.slice(0, digits.length - 10) : "";
+  return `+${country}${country ? " " : ""}••• ••• ${tail}`;
+}

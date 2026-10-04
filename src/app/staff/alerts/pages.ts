@@ -74,3 +74,15 @@ export const APPROVE_PAGE = "/staff/alerts/approve";
 
 /** The approval view of an entry. */
 export const approveHref = (ref: { alertId: string; entryId: string }): string => `${APPROVE_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
+
+/** The sending progress of an approved entry (S06.09): per language what became of its texts. */
+export const SENDING_PAGE = "/staff/alerts/sending";
+
+/** The sending progress of an entry. */
+export const sendingHref = (ref: { alertId: string; entryId: string }): string => `${SENDING_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId }).toString()}`;
+
+/** The list of an entry's texts that failed, were undelivered or have an unknown outcome (S06.09): its own view, apart from the counts. */
+export const SENDING_TEXTS_PAGE = "/staff/alerts/sending/texts";
+
+export const sendingTextsHref = (ref: { alertId: string; entryId: string }, state: "failed" | "undelivered" | "unknown"): string =>
+  `${SENDING_TEXTS_PAGE}?${new URLSearchParams({ alert: ref.alertId, entry: ref.entryId, state }).toString()}`;
