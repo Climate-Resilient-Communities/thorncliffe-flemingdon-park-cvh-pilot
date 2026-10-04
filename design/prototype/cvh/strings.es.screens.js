@@ -1384,4 +1384,51 @@
     "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
    }
   });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Nada activo"
+   },
+   "R03": {
+    "currentAlerts": "Alertas actuales",
+    "noCurrentAlerts": "No hay alertas actuales",
+    "myBuildings": "Sus edificios",
+    "checking": "Buscando alertas",
+    "feedFailed": "No pudimos comprobar las alertas en este momento. Un lugar que dice \"No se sabe\" puede tener una alerta igualmente. Volveremos a intentarlo.",
+    "feedFailedOld": "No pudimos comprobar si hay alertas nuevas. Se muestra lo último que se cargó {t}."
+   },
+   "R09": {
+    "searching": "Buscando",
+    "needsSignal": "La búsqueda necesita señal",
+    "needsSignalBody": "Todavía puede elegir un tema abajo, o llamar al Hub.",
+    "busy": "La búsqueda está ocupada, inténtelo de nuevo en unos minutos",
+    "busyBody": "Puede elegir un tema abajo, o llamar al Hub.",
+    "updating": "Los resultados de búsqueda se están actualizando, inténtelo de nuevo",
+    "updatingBody": "Puede elegir un tema abajo mientras se actualizan, o llamar al Hub.",
+    "browseAll": "Ver todos los servicios y organizaciones",
+    "loading": "Cargando los temas"
+   },
+   "R10": {
+    "shownIn": "Se muestra en {lang}"
+   },
+   "directory": {
+    "title": "Servicios y organizaciones",
+    "lead": "Lo que el Hub ha confirmado en Thorncliffe Park y Flemingdon Park. Elija un tema o un barrio para acotar la lista.",
+    "count": "{n} servicios",
+    "countOne": "1 servicio",
+    "topic": "Tema",
+    "emergency": "Ayuda en una emergencia",
+    "emergencyRole": "Función en una emergencia",
+    "lastConfirmed": "Confirmado por el Hub por última vez el {date}",
+    "lastUpdated": "Última actualización: {time}",
+    "loading": "Cargando el directorio",
+    "couldNotLoad": "No se pudo cargar el directorio",
+    "couldNotLoadBody": "El Hub puede ayudarle a encontrar un servicio por teléfono.",
+    "couldNotLoadNumbers": "La página de números tiene los otros números que podría necesitar.",
+    "numbersLink": "Ver los números esenciales",
+    "backToList": "Todos los servicios y organizaciones",
+    "suggestApply": "Mostrar solo {place}"
+   }
+  });
 })();

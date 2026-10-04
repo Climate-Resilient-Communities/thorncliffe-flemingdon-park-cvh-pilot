@@ -1,42 +1,48 @@
 import { expect, test, type Page } from "@playwright/test";
-import { newServer, stubDirectory } from "./directory-fixture";
-import { catalogText, FALLBACK, isFallback, LANGUAGES, openResident, waitForFonts } from "./helpers";
+import { FALLBACK_KEYS, FALLBACK_URL } from "./fallback-server";
+import { catalogText, FALLBACK, LANGUAGES, openResident, waitForFonts } from "./helpers";
 
 // S02.02: a string that fell back to English ("[EN] ...") is English with lang="en" dir="ltr". When it is the whole
 // text of a heading or paragraph, those attributes sit on that element itself, so a right-to-left page does not reorder
 // it ("Nothing is happening [EN] / .right now"), its lines start at the left and wrap normally, and a screen reader
 // switches voice. (Inside otherwise-translated text the run is an inline <bdi>: see ResidentText.)
 //
-// These tests need a resident page that still shows English fallback text in a right-to-left language. They use the
-// directory (S02.06), whose own wording is not translated yet, and read from the catalog which of its blocks still fall
-// back, so translating one leaves the others tested. When none of them does any more, the tests fail and say so: point
-// them at another page with a string its catalog still marks [EN] (a unit test with a stub catalog cannot measure layout).
+// These tests need a resident page that shows English fallback text in a right-to-left language, and must not depend on
+// which strings happen to be untranslated. So they run against the second server of playwright.resident.config.ts: the
+// same production build, started with CVH_FAKE_UNTRANSLATED_KEYS (src/i18n/untranslated.ts, local development only),
+// which shows FALLBACK_KEYS as English behind the marker in every language but English, exactly as a key a catalog
+// lacks. The page is the essential numbers (S02.10): rendered on request, so the seam reaches it, with a heading and a
+// lead that are one catalog string each and a dated line. If the server stops showing them as fallback, every test here
+// fails and says so. (Unit tests with stub catalogs cover the components: resident-text.test.tsx, isolated.test.tsx.)
 
-/** The resident page with English fallback text, and the blocks on it that are one catalog string each. */
-const FALLBACK_PAGE = "directory";
+/** The resident page with English fallback text, on the fallback server, and the blocks on it that are one catalog string each. */
+const FALLBACK_PAGE = "ready/numbers";
 const BLOCKS = [
-  { selector: "main h1", key: "directory.title" },
-  { selector: "main h1 + p", key: "directory.lead" },
+  { selector: "main h1", key: "R31.title" },
+  { selector: "main h1 + p", key: "R31.lead" },
 ] as const;
+const DATED = { testId: "numbers-checked", key: "R31.checked" } as const;
 
-/** The blocks of FALLBACK_PAGE whose string is still English fallback in `code`, with that string. Fails when there are none. */
-function fallbackBlocks(code: string) {
-  const found = BLOCKS.map((block) => ({ ...block, text: catalogText(code, block.key) })).filter(({ text }) => isFallback(text));
-  if (found.length === 0) {
-    throw new Error(
-      `No English fallback left to test: ${BLOCKS.map(({ key }) => key).join(", ")} are translated in ${code}. ` +
-        `Point fallback.spec.ts at a resident page whose ${code} catalog strings still start with "${FALLBACK}".`,
-    );
-  }
-  return found;
+for (const key of [...BLOCKS.map((block) => block.key), DATED.key]) {
+  if (!(FALLBACK_KEYS as readonly string[]).includes(key)) throw new Error(`${key} is not one of the fallback server's FALLBACK_KEYS (fallback-server.ts)`);
 }
 
-/** Opens FALLBACK_PAGE in `code` with the directory's release answered, and waits until its list and fonts are drawn. */
+/** What the fallback server shows for a key in every language but English: the English string behind the marker. */
+const fallbackText = (key: string) => FALLBACK + catalogText("en", key);
+
+/** The blocks of FALLBACK_PAGE, with the English fallback text each shows. */
+const fallbackBlocks = () => BLOCKS.map((block) => ({ ...block, text: fallbackText(block.key) }));
+
+/** Opens FALLBACK_PAGE in `code` on the fallback server and waits until its fonts are drawn; fails loudly if it shows no fallback. */
 async function openFallbackPage(page: Page, code: string) {
-  await stubDirectory(page, newServer(7));
-  await openResident(page, `/${code}/${FALLBACK_PAGE}`, 390);
-  await expect(page.getByTestId("directory-list")).toBeVisible();
+  await openResident(page, `${FALLBACK_URL}/${code}/${FALLBACK_PAGE}`, 390);
   await waitForFonts(page);
+  for (const { selector, key, text } of fallbackBlocks()) {
+    await expect(
+      page.locator(selector),
+      `${key} must show as English fallback on the server started with CVH_FAKE_UNTRANSLATED_KEYS (${FALLBACK_URL}); if it does not, the test seam in src/i18n/untranslated.ts stopped working`,
+    ).toHaveText(text);
+  }
 }
 
 type Glyph = { char: string; left: number; right: number; top: number };
@@ -72,7 +78,7 @@ function readsLeftToRight(list: Glyph[]) {
 for (const code of ["ur", "ps", "prs"]) {
   test.describe(`${code}: English fallback text`, () => {
     test("is a left-to-right English block, and its full stop is at the visual end", async ({ page }) => {
-      const blocks = fallbackBlocks(code);
+      const blocks = fallbackBlocks();
       expect(
         blocks.some(({ text }) => text.endsWith(".")),
         `one of the fallback blocks tested (${blocks.map(({ key }) => key).join(", ")}) must end in a full stop`,
@@ -105,21 +111,20 @@ for (const code of ["ur", "ps", "prs"]) {
     });
 
     test("a date in a string that fell back to English is written the English way, in the English block", async ({ page }) => {
-      const template = catalogText(code, "directory.lastConfirmed");
-      expect(isFallback(template), `directory.lastConfirmed is translated in ${code}: point this test at a dated string the ${code} catalog still marks [EN]`).toBe(true);
+      const template = fallbackText(DATED.key);
       await openFallbackPage(page, code);
 
-      // The sample food bank was last confirmed on 2026-09-30.
-      const confirmed = page.getByTestId("provider-P101").getByTestId("last-confirmed");
-      await expect(confirmed).toHaveText(template.replace("{date}", "September 30, 2026"));
-      await expect(confirmed).toHaveAttribute("lang", "en");
-      await expect(confirmed).toHaveAttribute("dir", "ltr");
+      // The sample numbers were last updated on 2026-09-30 (fixtures/guides.json).
+      const checked = page.getByTestId(DATED.testId);
+      await expect(checked).toHaveText(template.replace("{date}", "September 30, 2026"));
+      await expect(checked).toHaveAttribute("lang", "en");
+      await expect(checked).toHaveAttribute("dir", "ltr");
     });
   });
 }
 
 test("the English block of a right-to-left page is a left-to-right block: its text starts at the left gutter", async ({ page }) => {
-  const [{ selector, key }] = fallbackBlocks("ur");
+  const [{ selector, key }] = fallbackBlocks();
   await openFallbackPage(page, "ur");
   // The block is drawn after the page loads (a failed attempt in CI had no node to select yet).
   await expect(page.locator(`${selector}[lang=en][dir=ltr]`)).toBeVisible();
@@ -136,11 +141,9 @@ test("the English block of a right-to-left page is a left-to-right block: its te
 
 for (const language of LANGUAGES) {
   test(`${language.code}: every string that fell back to English is in an element with lang="en" dir="ltr"`, async ({ page }) => {
-    await stubDirectory(page, newServer(7));
-    // The home screen, and a page that still has English fallback text in every language but English.
-    for (const path of [`/${language.code}`, `/${language.code}/${FALLBACK_PAGE}`]) {
+    // The home screen as it is, and the page the fallback server shows English fallback text on in every language but English.
+    for (const path of [`/${language.code}`, `${FALLBACK_URL}/${language.code}/${FALLBACK_PAGE}`]) {
       await openResident(page, path, 390);
-      if (path.endsWith(FALLBACK_PAGE)) await expect(page.getByTestId("directory-list"), path).toBeVisible();
 
       const { strays, runs } = await page.evaluate(() => {
         const bad: string[] = [];
@@ -157,8 +160,10 @@ for (const language of LANGUAGES) {
       });
 
       expect(strays, path).toEqual([]);
-      if (path.endsWith(FALLBACK_PAGE) && BLOCKS.some(({ key }) => isFallback(catalogText(language.code, key)))) {
-        expect(runs, `${path} shows its English fallback text`).toBeGreaterThan(0);
+      if (path.startsWith(FALLBACK_URL)) {
+        // English has no fallback; every other language shows at least the fallback server's keys.
+        if (language.code === "en") expect(runs, `${path} has no English fallback text`).toBe(0);
+        else expect(runs, `${path} shows its English fallback text (CVH_FAKE_UNTRANSLATED_KEYS)`).toBeGreaterThanOrEqual(BLOCKS.length + 1);
       }
     }
   });

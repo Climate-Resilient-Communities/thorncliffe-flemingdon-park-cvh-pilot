@@ -1384,4 +1384,51 @@
     "filtered": "केवल वही जगहें दिखाई जा रही हैं जो डायरेक्टरी में आपके चुने हुए फ़िल्टर से मेल खाती हैं।"
    }
   });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "कुछ भी सक्रिय नहीं"
+   },
+   "R03": {
+    "currentAlerts": "मौजूदा अलर्ट",
+    "noCurrentAlerts": "कोई मौजूदा अलर्ट नहीं",
+    "myBuildings": "आपकी बिल्डिंग",
+    "checking": "अलर्ट जाँचे जा रहे हैं",
+    "feedFailed": "हम अभी अलर्ट नहीं जाँच सके। जिस जगह पर \"पता नहीं\" लिखा है, वहाँ फिर भी कोई अलर्ट हो सकता है। हम फिर कोशिश करेंगे।",
+    "feedFailedOld": "हम नए अलर्ट नहीं जाँच सके। आखिरी बार {t} लोड हुई जानकारी दिखाई जा रही है।"
+   },
+   "R09": {
+    "searching": "खोजा जा रहा है",
+    "needsSignal": "खोजने के लिए सिग्नल चाहिए",
+    "needsSignalBody": "आप अब भी नीचे कोई विषय चुन सकते हैं, या हब को कॉल कर सकते हैं।",
+    "busy": "खोज अभी व्यस्त है, कुछ मिनट में फिर कोशिश करें",
+    "busyBody": "आप नीचे कोई विषय चुन सकते हैं, या हब को कॉल कर सकते हैं।",
+    "updating": "खोज के नतीजे अपडेट हो रहे हैं, फिर कोशिश करें",
+    "updatingBody": "जब तक नतीजे अपडेट हो रहे हैं, आप नीचे कोई विषय चुन सकते हैं, या हब को कॉल कर सकते हैं।",
+    "browseAll": "सभी सेवाएँ और संगठन देखें",
+    "loading": "विषय लोड हो रहे हैं"
+   },
+   "R10": {
+    "shownIn": "{lang} में दिखाया गया"
+   },
+   "directory": {
+    "title": "सेवाएँ और संगठन",
+    "lead": "Thorncliffe Park और Flemingdon Park में वे सेवाएँ और संगठन जिनकी हब ने पुष्टि की है। सूची छोटी करने के लिए कोई विषय या मोहल्ला चुनें।",
+    "count": "{n} सेवाएँ",
+    "countOne": "1 सेवा",
+    "topic": "विषय",
+    "emergency": "आपातकाल में मदद करती है",
+    "emergencyRole": "आपातकाल में भूमिका",
+    "lastConfirmed": "हब ने आखिरी बार {date} को पुष्टि की",
+    "lastUpdated": "आखिरी बार {time} अपडेट किया गया",
+    "loading": "डायरेक्टरी लोड हो रही है",
+    "couldNotLoad": "डायरेक्टरी लोड नहीं हो सकी",
+    "couldNotLoadBody": "हब फ़ोन पर कोई सेवा ढूँढने में आपकी मदद कर सकता है।",
+    "couldNotLoadNumbers": "नंबरों वाले पेज पर वे दूसरे नंबर हैं जिनकी आपको ज़रूरत पड़ सकती है।",
+    "numbersLink": "ज़रूरी नंबर देखें",
+    "backToList": "सभी सेवाएँ और संगठन",
+    "suggestApply": "सिर्फ़ {place} दिखाएँ"
+   }
+  });
 })();

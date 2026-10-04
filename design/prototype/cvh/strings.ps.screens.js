@@ -1373,4 +1373,51 @@
     "filtered": "یوازې هغه ځایونه ښودل کېږي چې په لارښود کې ستاسو له ټاکل شویو فلټرونو سره سمون لري."
    }
   });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "هېڅ شی فعال نه دی"
+   },
+   "R03": {
+    "currentAlerts": "اوسنۍ خبرتیاوې",
+    "noCurrentAlerts": "اوس هېڅ خبرتیا نشته",
+    "myBuildings": "ستاسو ودانۍ",
+    "checking": "د خبرتیاوو کتنه کېږي",
+    "feedFailed": "موږ همدا اوس خبرتیاوې ونه شوای کتلای. هغه ځای چې \"نامعلوم\" پرې لیکل شوي، کېدای شي بیا هم خبرتیا ولري. موږ به بیا هڅه وکړو.",
+    "feedFailedOld": "موږ نوې خبرتیاوې ونه شوای کتلای. هغه څه ښودل کېږي چې وروستی ځل {t} پورته شوي وو."
+   },
+   "R09": {
+    "searching": "لټون روان دی",
+    "needsSignal": "لټون سیګنال ته اړتیا لري",
+    "needsSignalBody": "تاسو لا هم کولای شئ لاندې یوه موضوع وټاکئ، یا مرکز ته زنګ ووهئ.",
+    "busy": "لټون بوخت دی، څو دقیقې وروسته بیا هڅه وکړئ",
+    "busyBody": "تاسو کولای شئ لاندې یوه موضوع وټاکئ، یا مرکز ته زنګ ووهئ.",
+    "updating": "د لټون پایلې تازه کېږي، بیا هڅه وکړئ",
+    "updatingBody": "تر هغه چې پایلې تازه کېږي، تاسو کولای شئ لاندې یوه موضوع وټاکئ، یا مرکز ته زنګ ووهئ.",
+    "browseAll": "ټول خدمتونه او سازمانونه وګورئ",
+    "loading": "موضوعګانې پورته کېږي"
+   },
+   "R10": {
+    "shownIn": "په {lang} ښودل شوی"
+   },
+   "directory": {
+    "title": "خدمتونه او سازمانونه",
+    "lead": "هغه خدمتونه او سازمانونه چې مرکز په Thorncliffe Park او Flemingdon Park کې تایید کړي دي. د لیست د لنډولو لپاره یوه موضوع یا سیمه وټاکئ.",
+    "count": "{n} خدمتونه",
+    "countOne": "1 خدمت",
+    "topic": "موضوع",
+    "emergency": "په بیړني حالت کې مرسته کوي",
+    "emergencyRole": "په بیړني حالت کې رول",
+    "lastConfirmed": "د مرکز وروستی تایید {date}",
+    "lastUpdated": "وروستی بدلون {time}",
+    "loading": "لارښود پورته کېږي",
+    "couldNotLoad": "لارښود پورته نه شو",
+    "couldNotLoadBody": "مرکز کولای شي د تلیفون له لارې د یو خدمت په موندلو کې ستاسو مرسته وکړي.",
+    "couldNotLoadNumbers": "د شمېرو په پاڼه کې نورې هغه شمېرې دي چې کېدای شي ورته اړتیا ولرئ.",
+    "numbersLink": "اړینې شمېرې وګورئ",
+    "backToList": "ټول خدمتونه او سازمانونه",
+    "suggestApply": "یوازې {place} وښیئ"
+   }
+  });
 })();
