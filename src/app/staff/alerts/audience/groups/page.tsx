@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { englishText } from "@/i18n/text";
 import { Screen } from "@/ui";
+import { ExerciseMarker } from "../../../ExerciseMarker";
 import { staffPage } from "../../../guard";
 import { saveGroupsAction, savePlaceAction } from "../actions";
 import { AudienceBody } from "../AudienceBody";
@@ -38,6 +39,7 @@ export default staffPage(
         : groupsScreen(draft.plans, draft.audience, draft.ref, { notice: savedNotice(query), from: draft.from });
     return (
       <Screen surface="staff" width="review">
+        {draft?.exercise ? <ExerciseMarker words={draft.exercise} /> : null}
         <AudienceBody screen={screen} actions={actions} />
       </Screen>
     );

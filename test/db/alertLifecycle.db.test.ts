@@ -271,7 +271,8 @@ describe("alert.is_drill and the nondrill_alert view", () => {
 
   it("shows only non-drill threads", async () => {
     const real = await newDraft(authorA);
-    const drill = await newDraft(authorA, {}, true);
+    // An Admin starts the drill: only an Admin at aal2 may (S06.05).
+    const drill = await newDraft(adminC, {}, true);
 
     const visible = await owner`select id from nondrill_alert`;
     expect(visible.map((row) => row.id)).toEqual([real.alertId]);
@@ -572,7 +573,7 @@ describe("approval", () => {
   });
 
   it("does not raise feed_version for a drill", async () => {
-    const ref = await newPending(authorA, "v1", true);
+    const ref = await newPending(adminC, "v1", true);
     const before = await feedVersion();
     expect(await alerting.approveEntry(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") })).toMatchObject({ ok: true });
     expect(await feedVersion()).toBe(before);
@@ -1026,8 +1027,8 @@ describe("the nondrill_alert view", () => {
 
 describe("a refused change on a drill", () => {
   it("is audited as a drill, once the thread has been read", async () => {
-    const ref = await newPending(authorA, "v1", true);
-    expect(await alerting.approveEntry(actorOf(authorA), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
+    const ref = await newPending(adminC, "v1", true);
+    expect(await alerting.approveEntry(actorOf(adminC), ref, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
     const real = await newPending(authorA, "v1", false);
     expect(await alerting.approveEntry(actorOf(authorA), real, { version: 1, contentHash: sha("v1") })).toEqual({ ok: false, error: "EDITOR_CANNOT_APPROVE" });
     const refusals = (await auditRows()).filter((row) => row.outcome === "refused");
@@ -1038,7 +1039,7 @@ describe("a refused change on a drill", () => {
   });
 
   it("is audited as a drill when the preparation of a retry fails", async () => {
-    const ref = await newPending(authorA, "v1", true);
+    const ref = await newPending(adminC, "v1", true);
     expect(await seams.retranslate(actorOf(coordB), ref, { version: 1, contentHash: sha("v1") }, failingPreparer)).toEqual({ ok: false, error: "PREPARATION_FAILED" });
     expect((await auditRows()).filter((row) => row.outcome === "refused")).toMatchObject([{ subject_id: ref.entryId, is_drill: true }]);
   });

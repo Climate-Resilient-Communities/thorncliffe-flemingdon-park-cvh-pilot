@@ -236,6 +236,8 @@ export function dispatcherWorld(owner: Sql, appSql: Sql, app: Db) {
     });
     const recipients = Array.isArray(options.recipients) ? options.recipients : Array.from({ length: options.recipients ?? 1 }, () => randomUUID());
     const recipientKind = options.recipientKind ?? (options.isDrill ? "roster" : "subscriber");
+    // A drill's texts go only to rows of the drill roster (S06.05's insert guard): the members are made first.
+    if (recipientKind === "roster") for (const recipient of recipients) await fx.rosterMember({ id: recipient });
     const bodies = options.bodies ?? DEFAULT_BODIES;
     const ids: string[] = [];
     await appSql.begin(async (tx: Tx) => {

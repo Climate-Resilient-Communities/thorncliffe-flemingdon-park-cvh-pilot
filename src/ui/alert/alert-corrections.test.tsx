@@ -51,7 +51,9 @@ describe("a corrected entry", () => {
     const v = view(entries);
     expect(v.current.id).toBe(ID(2));
     expect(v.current.text.body).toBe(CORRECTED);
-    expect(v.preview).toEqual({ title: "Elevator", description: `Correction: ${CORRECTED}` });
+    expect(v.preview.title).toBe("Elevator");
+    expect(v.preview.description.endsWith(` — Correction: ${CORRECTED}`)).toBe(true);
+    expect(v.preview.description).not.toContain(ORIGINAL);
     const card = renderToStaticMarkup(<AlertCard view={v} lang="en" t={en} />);
     expect(card).toContain(CORRECTED);
     expect(card).not.toContain(ORIGINAL);
@@ -91,7 +93,7 @@ describe("a withdrawn entry", () => {
     const v = view(entries);
     expect(v.current.id).toBe(ID(1));
     expect(v.current.text.body).toBe(ORIGINAL);
-    expect(v.preview.description).toBe(ORIGINAL);
+    expect(v.preview.description.endsWith(` — ${ORIGINAL}`)).toBe(true);
     expect(v.times).toBe("Posted 1 hour ago · Updated 40 minutes ago");
     // The card shows the standing acknowledgement, so it says when that was posted and not when the withdrawn update was.
     expect(v.cardTime).toBe("Posted 1 hour ago");
@@ -131,7 +133,7 @@ describe("an alert nothing was replaced in", () => {
     const v = view([ack, update]);
     expect(v.current.id).toBe(ID(2));
     expect(v.entries.every((e) => e.mark === null)).toBe(true);
-    expect(v.preview.description).toBe("Work is under way.");
+    expect(v.preview.description.endsWith(" — Work is under way.")).toBe(true);
     expect(detail([ack, update])).not.toContain("alert-mark");
   });
 });

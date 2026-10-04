@@ -6,11 +6,11 @@
 // A publisher expires the tag after its transaction commits (`revalidateTag(FEED_TAG, { expire: 0 })`, src/contracts/feed.ts), which
 // makes the next read here wait for a fresh answer. Server only.
 import { unstable_cache } from "next/cache";
-import { FEED_EDGE_MAX_AGE_SECONDS, FEED_TAG, type FeedV1 } from "@/contracts/feed";
+import { ARCHIVE_EDGE_MAX_AGE_SECONDS, FEED_EDGE_MAX_AGE_SECONDS, FEED_TAG, type ArchiveV1, type FeedV1 } from "@/contracts/feed";
 import type { LangCode } from "@/contracts/lang";
 import { getEnv } from "@/platform/config/env";
 import type { FeedThread } from "@/contracts/feed";
-import { readClosedAlert, readClosedSlugs, readFeed } from "./api/feed/source";
+import { readArchive, readClosedAlert, readClosedSlugs, readFeed } from "./api/feed/source";
 
 /**
  * Whether residents are told about any alert in this deployment (RESIDENT_ALERTS_ENABLED, the launch gate: off in production until
@@ -50,3 +50,13 @@ export async function readCachedClosedAlert(lang: LangCode, slug: string): Promi
     { revalidate: FEED_EDGE_MAX_AGE_SECONDS, tags: [FEED_TAG] },
   )();
 }
+
+/**
+ * One page of the archive (S05.07) from the data cache for ARCHIVE_EDGE_MAX_AGE_SECONDS, under the feed's tag: the approval that closes a thread expires the tag, so the
+ * archive in the app's own cache is as current as the feed; only the edge's copy (at most 60 seconds) can be older. A failure is thrown out of the cached function, never cached.
+ */
+export const readCachedArchive = (lang: LangCode, page: number): Promise<ArchiveV1> =>
+  unstable_cache(() => readArchive(lang, page), ["archive", lang, String(page), residentAlertsEnabled() ? "alerts-on" : "alerts-off", getEnv().publicBaseUrl], {
+    revalidate: ARCHIVE_EDGE_MAX_AGE_SECONDS,
+    tags: [FEED_TAG],
+  })();

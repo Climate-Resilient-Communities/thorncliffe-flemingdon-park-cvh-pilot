@@ -2,7 +2,7 @@ import { createHash } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { FeedThreadSchema } from "../../../contracts/feed";
 import type { LangCode } from "../../../contracts/lang";
-import { HUB_ATTRIBUTION, assembleClosedThread, assembleThreads, textOf, type ResidentEntryRow } from "./residentThreads";
+import { HUB_ATTRIBUTION, assembleArchive, assembleClosedThread, assembleThreads, textOf, type ResidentEntryRow } from "./residentThreads";
 
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 
@@ -259,5 +259,31 @@ describe("a closed thread (S05.03, R-07)", () => {
     const thread = assembleClosedThread([row({ entryId: E(1), superseded: true }), withdrawal], "en", "withdrawn")!;
     expect(thread).toMatchObject({ state: "closed", close_reason: "withdrawn" });
     expect(thread.entries.map((entry) => [entry.kind, entry.supersedes_id])).toEqual([["ack", undefined], ["withdrawal", E(1)]]);
+  });
+});
+
+describe("assembleArchive (S05.07)", () => {
+  const final = (threadId: string, slug: string) => row({ threadId, slug, kind: "final", phase: "resolved", entryId: E(threadId === T1 ? 1 : 2) });
+
+  it("keeps the order of the heads (newest closed first) and serialises closed_at", () => {
+    const heads = [
+      { threadId: T2, reason: "expired", closedAt: new Date("2026-10-03T10:00:00Z") },
+      { threadId: T1, reason: "resolved", closedAt: new Date("2026-10-02T10:00:00Z") },
+    ];
+    const threads = assembleArchive([final(T1, "kbcdfghj"), final(T2, "mnpqrstv")], "en", heads);
+
+    expect(threads.map((thread) => thread.slug)).toEqual(["mnpqrstv", "kbcdfghj"]);
+    expect(threads.map((thread) => thread.close_reason)).toEqual(["expired", "resolved"]);
+    expect(threads.map((thread) => thread.closed_at)).toEqual(["2026-10-03T10:00:00.000Z", "2026-10-02T10:00:00.000Z"]);
+    expect(threads.every((thread) => thread.state === "closed")).toBe(true);
+  });
+
+  it("leaves out a head with no published entry or an unknown reason, so a page can hold fewer threads than its size", () => {
+    const heads = [
+      { threadId: T2, reason: "resolved", closedAt: new Date("2026-10-03T10:00:00Z") },
+      { threadId: T1, reason: "archived", closedAt: new Date("2026-10-02T10:00:00Z") },
+    ];
+
+    expect(assembleArchive([final(T1, "kbcdfghj")], "en", heads)).toEqual([]);
   });
 });

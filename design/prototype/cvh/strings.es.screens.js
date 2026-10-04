@@ -893,7 +893,8 @@
    "todayAt": "hoy a las {time}",
    "dayAt": "{day} a las {time}",
    "linkLine": "Novedades más recientes y correcciones: {url}",
-   "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo."
+   "sendLine": "Su teléfono le preguntará con qué aplicación enviarlo.",
+   "placeMore": "y {n} más"
   },
   "R30": {
    "deviceLabel": "La alerta en un grupo de WhatsApp",
@@ -1382,6 +1383,67 @@
     "buildingsCount": "{n} edificios",
     "buildingsCountOne": "1 edificio",
     "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
+   }
+  });
+  /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
+     failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "status": {
+    "none": "Nada activo"
+   },
+   "R03": {
+    "currentAlerts": "Alertas actuales",
+    "noCurrentAlerts": "No hay alertas actuales",
+    "myBuildings": "Sus edificios",
+    "checking": "Buscando alertas",
+    "feedFailed": "No pudimos comprobar las alertas en este momento. Un lugar que dice \"No se sabe\" puede tener una alerta igualmente. Volveremos a intentarlo.",
+    "feedFailedOld": "No pudimos comprobar si hay alertas nuevas. Se muestra lo último que se cargó {t}."
+   },
+   "R09": {
+    "searching": "Buscando",
+    "needsSignal": "La búsqueda necesita señal",
+    "needsSignalBody": "Todavía puede elegir un tema abajo, o llamar al Hub.",
+    "busy": "La búsqueda está ocupada, inténtelo de nuevo en unos minutos",
+    "busyBody": "Puede elegir un tema abajo, o llamar al Hub.",
+    "updating": "Los resultados de búsqueda se están actualizando, inténtelo de nuevo",
+    "updatingBody": "Puede elegir un tema abajo mientras se actualizan, o llamar al Hub.",
+    "browseAll": "Ver todos los servicios y organizaciones",
+    "loading": "Cargando los temas"
+   },
+   "R10": {
+    "shownIn": "Se muestra en {lang}"
+   },
+   "directory": {
+    "title": "Servicios y organizaciones",
+    "lead": "Lo que el Hub ha confirmado en Thorncliffe Park y Flemingdon Park. Elija un tema o un barrio para acotar la lista.",
+    "count": "{n} servicios",
+    "countOne": "1 servicio",
+    "topic": "Tema",
+    "emergency": "Ayuda en una emergencia",
+    "emergencyRole": "Función en una emergencia",
+    "lastConfirmed": "Confirmado por el Hub por última vez el {date}",
+    "lastUpdated": "Última actualización: {time}",
+    "loading": "Cargando el directorio",
+    "couldNotLoad": "No se pudo cargar el directorio",
+    "couldNotLoadBody": "El Hub puede ayudarle a encontrar un servicio por teléfono.",
+    "couldNotLoadNumbers": "La página de números tiene los otros números que podría necesitar.",
+    "numbersLink": "Ver los números esenciales",
+    "backToList": "Todos los servicios y organizaciones",
+    "suggestApply": "Mostrar solo {place}"
+   }
+  });
+  /* Reading without signal (S02.12): the offline page and R-34's note. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "offline": {
+    "title": "Esta página no está guardada en su teléfono",
+    "body": "Todavía no se ha abierto en este teléfono con señal, así que necesita señal. Los números siempre están guardados en su teléfono.",
+    "available": "Puede leer esto sin señal",
+    "none": "Todavía no hay nada más guardado en este teléfono. Las páginas que abre con señal se guardan para después."
+   },
+   "R34": {
+    "offlineTitle": "Leer sin señal",
+    "offlineHelp": "Las páginas que abre con señal se guardan en este teléfono, para que pueda volver a leerlas sin señal. Los números siempre están guardados. La primera vez, el CVH necesita señal para abrirse.",
+    "offlineNote": "Es posible que este teléfono no guarde páginas para usarlas sin conexión"
    }
   });
 })();

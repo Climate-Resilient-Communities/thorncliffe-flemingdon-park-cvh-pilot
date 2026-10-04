@@ -59,6 +59,17 @@
     border-inline-start: 8px solid var(--accent-bar);
   }
 
+  /* An alert that has ended (the prototype's .cvh-acard--ended): a lighter edge than a live alert's. On the archive (R-08) and, in words as well, on a card read from a kept
+     copy whose time has passed (S05.07). */
+  .alert-card--ended {
+    border: 1.5px solid var(--control-border);
+  }
+
+  .alert-card__ended {
+    font-weight: 700;
+    color: var(--ink);
+  }
+
   /* X-12: the one line of advice, the prototype's .cvh-tailored. */
   .alert-tailored {
     display: flex;

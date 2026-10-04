@@ -525,6 +525,600 @@
           "translations": {}
         }
       ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0001",
+      "slug": "older01ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0101",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T21:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 1). It ended on its own.",
+          "published_at": "2026-09-30T20:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0002",
+      "slug": "older02ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0102",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T18:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 2). It ended on its own.",
+          "published_at": "2026-09-30T17:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0003",
+      "slug": "older03ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0103",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T15:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 3). It ended on its own.",
+          "published_at": "2026-09-30T14:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0004",
+      "slug": "older04ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0104",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T12:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 4). It ended on its own.",
+          "published_at": "2026-09-30T11:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0005",
+      "slug": "older05ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0105",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T09:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 5). It ended on its own.",
+          "published_at": "2026-09-30T08:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0006",
+      "slug": "older06ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0106",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-30T06:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 6). It ended on its own.",
+          "published_at": "2026-09-30T05:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0007",
+      "slug": "older07ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0107",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T21:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 7). It ended on its own.",
+          "published_at": "2026-09-29T20:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0008",
+      "slug": "older08ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0108",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T18:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 8). It ended on its own.",
+          "published_at": "2026-09-29T17:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0009",
+      "slug": "older09ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0109",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T15:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 9). It ended on its own.",
+          "published_at": "2026-09-29T14:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0010",
+      "slug": "older10ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0110",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T12:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 10). It ended on its own.",
+          "published_at": "2026-09-29T11:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0011",
+      "slug": "older11ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0111",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T09:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 11). It ended on its own.",
+          "published_at": "2026-09-29T08:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0012",
+      "slug": "older12ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0112",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-29T06:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 12). It ended on its own.",
+          "published_at": "2026-09-29T05:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0013",
+      "slug": "older13ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0113",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T21:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 13). It ended on its own.",
+          "published_at": "2026-09-28T20:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0014",
+      "slug": "older14ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0114",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T18:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 14). It ended on its own.",
+          "published_at": "2026-09-28T17:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0015",
+      "slug": "older15ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0115",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T15:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 15). It ended on its own.",
+          "published_at": "2026-09-28T14:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0016",
+      "slug": "older16ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0116",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T12:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 16). It ended on its own.",
+          "published_at": "2026-09-28T11:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0017",
+      "slug": "older17ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0117",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T09:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 17). It ended on its own.",
+          "published_at": "2026-09-28T08:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
+    },
+    {
+      "id": "0198a000-0000-7000-8000-0000000f0018",
+      "slug": "older18ended",
+      "closed": "expired",
+      "entries": [
+        {
+          "id": "0198a000-0000-7000-8000-0000000f0118",
+          "kind": "ack",
+          "phase": "problem",
+          "types": [
+            "power"
+          ],
+          "audience": {
+            "scope": "buildings",
+            "buildings": [
+              {
+                "rsn": "4154146",
+                "floors": null
+              }
+            ],
+            "groups": [],
+            "types": [
+              "power"
+            ]
+          },
+          "valid_until": "2026-09-28T06:00:00.000Z",
+          "original_text": "Power was out at 40 Gateway Blvd (earlier alert 18). It ended on its own.",
+          "published_at": "2026-09-28T05:00:00.000Z",
+          "verified": true,
+          "translations": {}
+        }
+      ]
     }
   ]
 }

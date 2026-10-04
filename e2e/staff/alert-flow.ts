@@ -73,6 +73,29 @@ export async function waitForFeedToList(request: APIRequestContext, lang: string
     .toContain(slug);
 }
 
+/**
+ * What a messaging app reads of the shared address `/a/{slug}?l={lang}` right now (S05.08): the status and the Open Graph title and description of the page the
+ * recipient would open, with no cookie and no redirect. The address is asked as the app asks it, straight after a change: the approving transaction expires the feed's
+ * cache (`revalidateTag(..., { expire: 0 })`), so a change shows at once, which is stricter than the 15 seconds the story allows.
+ */
+export async function sharedPreview(request: APIRequestContext, slug: string, lang = "en") {
+  // As a messaging app's crawler asks (WhatsApp is on Next's list of bots that get the tags in <head>, not streamed into the body); only <head> is read for the tags.
+  const response = await request.get(`/a/${slug}?l=${lang}`, { maxRedirects: 0, headers: { "user-agent": "WhatsApp/2.23.20.0 A" } });
+  const html = await response.text();
+  const head = /<head[\s>][\s\S]*?<\/head>/.exec(html)?.[0] ?? "";
+  const meta = (key: string) => {
+    const found = new RegExp(`<meta (?:name|property)="${key}" content="([^"]*)"`).exec(head);
+    return found?.[1].replace(/&#x27;|&#39;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/[  ]/g, " ");
+  };
+  return {
+    status: response.status(),
+    cookies: response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"),
+    title: meta("og:title"),
+    description: meta("og:description"),
+    html,
+  };
+}
+
 export interface EntryRef {
   alertId: string;
   entryId: string;

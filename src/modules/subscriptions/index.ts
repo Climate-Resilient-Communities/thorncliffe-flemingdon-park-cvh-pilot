@@ -49,3 +49,17 @@ export {
 
 // The approval's recipient-count and snapshot port (S04.07): empty until E07 opens text sign-up.
 export { captureRecipients, countRecipients, recipientsPort, type AlertRecipient, type RecipientCount, type RecipientEntry, type RecipientSmsBody, type RecipientsPort } from "./application/recipients";
+
+// S06.05: the drill roster, the staff phones a drill is texted on (composed in src/app/drills.ts), and the ContactResolver's source for `roster` recipients.
+export {
+  createDrillRoster,
+  drillNumberSource,
+  type AddOutcome as DrillRosterAddOutcome,
+  type DrillMember,
+  type DrillRoster,
+  type DrillRosterDeps,
+  type DrillRosterEntry,
+  type EditOutcome as DrillRosterEditOutcome,
+  type RemoveOutcome as DrillRosterRemoveOutcome,
+} from "./application/drillRoster";
+export { DRILL_LABEL_MAX_CHARS, DRILL_ROSTER_MAX, bodyLangOf, parseRosterLabel, parseRosterLang, parseRosterNumber, type DrillRosterRefusal } from "./domain/drillRoster";
