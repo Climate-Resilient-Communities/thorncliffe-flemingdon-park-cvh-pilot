@@ -1,11 +1,12 @@
 import { FeedV1, feedPath } from "@/contracts/feed";
-import { CACHED_AT_HEADER, FALLBACK_HEADER } from "../offline/protocol";
+import { CACHED_AT_HEADER, FALLBACK_HEADER, FEED_TIMEOUT_MS } from "../offline/protocol";
+
+export { FEED_TIMEOUT_MS };
 
 /** Home asks for the feed again this often while it is visible (AD-17). */
 export const FEED_POLL_MS = 60_000;
 
-/** One ask is given up after this long (below the poll interval, so a hanging network is a failure, not a wait). */
-export const FEED_TIMEOUT_MS = 20_000;
+// One ask is given up after FEED_TIMEOUT_MS (below the poll interval, so a hanging network is a failure, not a wait).
 
 /** An answer older than this is shown with the "last loaded" note even when no ask has failed. */
 export const FEED_OUTDATED_MS = 2 * FEED_POLL_MS;

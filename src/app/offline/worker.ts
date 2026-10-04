@@ -6,6 +6,7 @@ import {
   CACHED_AT_HEADER,
   DATA_CACHE,
   FALLBACK_HEADER,
+  FEED_TIMEOUT_MS,
   FEED_VERSION_HEADER,
   KEPT_AT_META,
   PAGES_CACHE_PREFIX,
@@ -29,8 +30,10 @@ import {
 
 /** How long a page may take before the kept copy is shown instead (the network answer still updates the copy). */
 export const PAGE_TIMEOUT_MS = 6_000;
-/** The same for the feed and the manifest: below the phone's own 8 s (directory) and 20 s (feed) limits. */
+/** The same for the directory manifest, below the phone's own 8 s limit. */
 export const DATA_TIMEOUT_MS = 6_000;
+/** The feed: the page owns the limit (S02.11, 20 s) so a slower answer is still current, but the worker answers from its kept copy 5 s before the page gives up, so a hanging network still shows the feed as last loaded. */
+export const FEED_WORKER_TIMEOUT_MS = FEED_TIMEOUT_MS - 5_000;
 /** At most this many pages kept by the previous build are fetched again when a new build installs; the rest go. */
 export const REFRESH_LIMIT = 20;
 /** Pages fetched at the same time while installing, so an older phone on weak signal is not flooded. */
@@ -46,6 +49,7 @@ export interface WorkerEnv {
   now?: () => number;
   pageTimeoutMs?: number;
   dataTimeoutMs?: number;
+  feedTimeoutMs?: number;
 }
 
 /** What the worker needs from a fetch event. */
@@ -79,6 +83,7 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
   const now = env.now ?? Date.now;
   const pageTimeout = env.pageTimeoutMs ?? PAGE_TIMEOUT_MS;
   const dataTimeout = env.dataTimeoutMs ?? DATA_TIMEOUT_MS;
+  const feedTimeout = env.feedTimeoutMs ?? FEED_WORKER_TIMEOUT_MS;
   const pages = pagesCache(env.build);
   const statics = staticCache(env.build);
   const served = new Map<string, number>();
@@ -245,9 +250,9 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
     return "timedOut" in result ? full : Response.error();
   }
 
-  /** The feed and the manifest: the network's answer when there is one; the kept copy, marked, when there is not. */
-  async function networkFirst(request: Request, context: FetchContext, store: (response: Response) => Promise<unknown>): Promise<Response> {
-    const { first, full } = fetchWithin(request, dataTimeout);
+  /** The feed and the manifest: the network's answer when there is one; the kept copy, marked, when there is not or when it is slower than `timeoutMs`. */
+  async function networkFirst(request: Request, context: FetchContext, store: (response: Response) => Promise<unknown>, timeoutMs: number): Promise<Response> {
+    const { first, full } = fetchWithin(request, timeoutMs);
     const result = await first;
     if ("response" in result && result.response.ok) {
       context.waitUntil(store(result.response.clone()));
@@ -371,9 +376,9 @@ export function createOfflineWorker(env: WorkerEnv): OfflineWorker {
         case "page":
           return page(request, handling.lang, context);
         case "feed":
-          return networkFirst(request, context, (response) => storeFeed(request.url, response));
+          return networkFirst(request, context, (response) => storeFeed(request.url, response), feedTimeout);
         case "manifest":
-          return networkFirst(request, context, (response) => storeJson(request.url, response));
+          return networkFirst(request, context, (response) => storeJson(request.url, response), dataTimeout);
         case "directory":
           return directory(request, handling.release, context);
         case "static":
