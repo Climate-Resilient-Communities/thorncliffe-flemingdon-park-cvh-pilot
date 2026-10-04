@@ -1579,7 +1579,7 @@
       provider_busy: 'The provider was too busy and dropped the text',
       carrier_error: 'The carrier reported an error without details',
       other_code: 'The provider reported error {code}',
-      retries_exhausted: 'The provider could not be reached after 3 tries',
+      retries_exhausted: 'It still failed after 3 retries',
       no_reason: 'It failed and the provider gave no reason',
       undelivered_no_reason: 'The carrier did not deliver it and gave no reason',
       unclear: 'Outcome unclear; not re-sent' },

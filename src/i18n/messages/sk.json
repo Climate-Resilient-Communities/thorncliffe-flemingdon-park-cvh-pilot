@@ -5056,7 +5056,7 @@
         "provider_busy": "[EN] The provider was too busy and dropped the text",
         "carrier_error": "[EN] The carrier reported an error without details",
         "other_code": "[EN] The provider reported error {code}",
-        "retries_exhausted": "[EN] The provider could not be reached after 3 tries",
+        "retries_exhausted": "[EN] It still failed after 3 retries",
         "no_reason": "[EN] It failed and the provider gave no reason",
         "undelivered_no_reason": "[EN] The carrier did not deliver it and gave no reason",
         "unclear": "[EN] Outcome unclear; not re-sent"

@@ -114,6 +114,13 @@ export async function loadProblemList(query: SendingQuery, deps: SendingDeps = l
   const review = await deps.review(ref);
   const missing: MissingSending = { kind: "missing", message: text("errors.missing"), back: { href: "/staff", label: englishText("staff.approve.back") } };
   if (!review || state === null || review.thread.isDrill || review.entry.status !== "approved") return missing;
-  const { texts, more } = await deps.progress.problemTexts(ref.entryId, state);
+  let found: Awaited<ReturnType<ProgressReader["problemTexts"]>>;
+  try {
+    found = await deps.progress.problemTexts(ref.entryId, state);
+  } catch (error) {
+    deps.logError("sending.problems_failed", { error: errorName(error) });
+    return { ...missing, message: unavailableNote(text) };
+  }
+  const { texts, more } = found;
   return { kind: "list", ref, heading: headingOf(review), list: problemListView({ ref, state, texts, more, limit: PROBLEM_LIST_LIMIT, text }) };
 }

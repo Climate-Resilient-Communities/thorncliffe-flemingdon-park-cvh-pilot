@@ -11,10 +11,10 @@ const waitingAndSent = progressOf([...rows("en", "queued", 3), ...rows("en", "de
 
 const approved: ReviewOptions = { entry: { status: "approved" } };
 
-function deps(options: { review?: ReviewOptions | null; progress?: EntryProgress; paused?: () => Promise<boolean>; forEntry?: () => Promise<EntryProgress> } = {}) {
+function deps(options: { review?: ReviewOptions | null; progress?: EntryProgress; paused?: () => Promise<boolean>; forEntry?: () => Promise<EntryProgress>; problemTexts?: () => Promise<never> } = {}) {
   const logError = vi.fn();
   const forEntry = vi.fn(options.forEntry ?? (async () => options.progress ?? waitingAndSent));
-  const problemTexts = vi.fn(async () => ({ texts: [{ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed" as const, meaning: "not_in_service" as const, code: null, at: new Date("2026-10-05T18:15:00Z") }], more: false }));
+  const problemTexts = vi.fn(options.problemTexts ?? (async () => ({ texts: [{ id: "01900000-0000-7000-8000-00000abc1234", reference: "abc123", lang: "ur", state: "failed" as const, meaning: "not_in_service" as const, code: null, at: new Date("2026-10-05T18:15:00Z") }], more: false })));
   const paused = vi.fn(options.paused ?? (async () => false));
   const review = vi.fn(async () => (options.review === null ? null : reviewOf(options.review ?? approved)));
   const wired: SendingDeps = { review, progress: { forEntry, problemTexts }, paused, logError };
@@ -108,6 +108,14 @@ describe("the list of the texts that did not arrive", () => {
     const screen = await loadProblemList({ ...query, state: "failed" }, d.wired);
     expect(d.problemTexts).toHaveBeenCalledWith(ENTRY, "failed");
     expect(screen).toMatchObject({ kind: "list", list: { state: "failed", items: [{ meaning: "Number not in service" }] } });
+  });
+
+  it("is logged by the error's name and becomes the unavailable note with the way back, never an exception", async () => {
+    const d = deps({ problemTexts: async () => Promise.reject(new TypeError("database is down")) });
+    const screen = await loadProblemList({ ...query, state: "failed" }, d.wired);
+    expect(screen).toMatchObject({ kind: "missing", message: expect.stringMatching(/could not be read/), back: { href: "/staff" } });
+    expect(d.logError).toHaveBeenCalledWith("sending.problems_failed", { error: "TypeError" });
+    expect(JSON.stringify(d.logError.mock.calls)).not.toContain("database is down");
   });
 
   it("understands the three states and nothing else", () => {

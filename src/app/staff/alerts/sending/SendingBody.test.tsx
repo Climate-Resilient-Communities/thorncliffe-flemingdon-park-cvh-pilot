@@ -101,7 +101,7 @@ describe("the list of the texts that did not arrive", () => {
     expect(out).toContain("Failed texts");
     expect(out.match(/data-testid="sending-list-item"/g)).toHaveLength(2);
     expect(out).toContain("Number not in service");
-    expect(out).toContain("The provider could not be reached after 3 tries");
+    expect(out).toContain("It still failed after 3 retries");
     expect(out).toContain('data-meaning="not_in_service"');
     expect(out).toContain("Text abc123");
     expect(out).not.toMatch(/\+\d{7,}/);

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { MAX_ATTEMPTS } from "./dispatchRules";
 import { DELIVERY_STATES, type DeliveryState } from "./deliveryState";
 import { PROBLEM_MEANINGS, PROBLEM_STATES, bucketOf, emptyCounts, isProblemState, problemMeaning, progressOf, referenceOf, sumOf, totalOf } from "./sendingProgress";
 
@@ -96,7 +97,8 @@ describe("what a text that did not arrive means", () => {
   });
 
   it("says why a failed text with no code failed: three tries, or no reason given; an undelivered one with no code was not delivered", () => {
-    expect(meaning("failed", null, 3).meaning).toBe("retries_exhausted");
+    expect(meaning("failed", null, MAX_ATTEMPTS).meaning).toBe("retries_exhausted");
+    expect(meaning("failed", null, MAX_ATTEMPTS - 1).meaning).toBe("no_reason");
     expect(meaning("failed", null, 1).meaning).toBe("no_reason");
     expect(meaning("undelivered", null).meaning).toBe("undelivered_no_reason");
   });

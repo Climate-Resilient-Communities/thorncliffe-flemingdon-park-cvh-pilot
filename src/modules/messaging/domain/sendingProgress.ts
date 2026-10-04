@@ -2,6 +2,7 @@
 // and why a text that did not arrive did not. Pure: no I/O, no clock. Counts, languages and codes only: a delivery row holds no phone number and no
 // number is read here.
 import type { DeliveryState } from "./deliveryState";
+import { MAX_ATTEMPTS } from "./dispatchRules";
 
 /**
  * The counts of one language (or of all of them). Every delivery of the entry is in exactly one:
@@ -103,7 +104,7 @@ export const isProblemState = (value: unknown): value is ProblemState => typeof 
  *  - `provider_busy`: the provider's queue was full and the text was dropped;
  *  - `carrier_error`: the carrier reported an error with no detail;
  *  - `other_code`: the provider reported a code this list does not know (the code is shown);
- *  - `retries_exhausted`: the provider could not be reached for it, three times;
+ *  - `retries_exhausted`: it was re-queued up to the sender's retry limit and still failed;
  *  - `no_reason`: the provider gave no reason for a failure;
  *  - `undelivered_no_reason`: the carrier did not deliver it and gave no reason;
  *  - `unclear`: the outcome is not known and the text was never re-sent ("Outcome unclear; not re-sent").
@@ -149,9 +150,6 @@ const MEANING_OF_CODE: ReadonlyMap<number, ProblemMeaning> = new Map<number, Pro
   [30008, "carrier_error"],
 ]);
 
-/** The attempts after which a text that was not accepted is given up on (the sender's retry limit). */
-const RETRY_LIMIT = 3;
-
 export interface ProblemFacts {
   state: ProblemState;
   providerErrorCode: number | null;
@@ -167,7 +165,7 @@ export function problemMeaning(facts: ProblemFacts): { meaning: ProblemMeaning; 
     return known === undefined ? { meaning: "other_code", code } : { meaning: known, code: null };
   }
   if (facts.state === "undelivered") return { meaning: "undelivered_no_reason", code: null };
-  return { meaning: facts.attempts >= RETRY_LIMIT ? "retries_exhausted" : "no_reason", code: null };
+  return { meaning: facts.attempts >= MAX_ATTEMPTS ? "retries_exhausted" : "no_reason", code: null };
 }
 
 /** One text that did not arrive, as the list shows it: no number, no body, only what it was and why. */
