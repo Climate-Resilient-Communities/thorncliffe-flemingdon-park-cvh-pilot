@@ -618,8 +618,9 @@ describe("a submit whose outcome the browser did not see", () => {
       completeSubmit: async (...args: Parameters<AlertLifecycle["completeSubmit"]>) => {
         const done = await alerting.completeSubmit(...args);
         expect(done.ok).toBe(true);
-        // The server ends every backend of the app's role: whatever the call was about to read, it never reads.
-        await owner`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'cvh_app_login' and pid <> pg_backend_pid()`;
+        // The server ends every backend of the app's role in this file's database: whatever the call was about to read, it
+        // never reads. Other test files run at the same time in their own databases, so their connections are left alone.
+        await owner`select pg_terminate_backend(pid) from pg_stat_activity where usename = 'cvh_app_login' and datname = current_database() and pid <> pg_backend_pid()`;
         throw new Error("connection terminated after COMMIT");
       },
     });
