@@ -79,6 +79,23 @@ describe("the post screen (A-02, S08.02)", () => {
     expect(html).toContain("This update goes in the alert: Drill: the elevator is out.");
   });
 
+  it("once sent, says 'Live. Not yet verified' for a post residents already read (S08.04), 'Waiting for the Hub' for one they do not, and links to where it stands", () => {
+    const live = renderToStaticMarkup(<PostForm screen={screen} sender={quiet} initial={{ state: { kind: "done", live: true } }} />);
+    expect(live).toContain('data-testid="post-done-title">Live. Not yet verified</h1>');
+    expect(live).toContain('Residents can read this on the web now, marked &quot;Not yet verified&quot;. Text messages go out only after the Hub approves it.');
+    expect(live).toContain('href="/staff/ambassador/status?entry=01900000-0000-7000-8000-00000000e17a" data-testid="post-done-status">Where it stands</a>');
+    const waiting = renderToStaticMarkup(<PostForm screen={screen} sender={quiet} initial={{ state: { kind: "done" } }} />);
+    expect(waiting).toContain('data-testid="post-done-title">Waiting for the Hub</h1>');
+    expect(waiting).not.toContain("Live. Not yet verified");
+    // A practice post has no status page and is never live.
+    const drill = postScreen(data({ thread: { id: "01900000-0000-7000-8000-00000000d111", isDrill: true, headline: "Drill.", types: ["elevator"] } }));
+    expect(drill.done.status).toBeNull();
+    expect(drill.done.live).toBeNull();
+    const practice = renderToStaticMarkup(<PostForm screen={drill} sender={quiet} initial={{ state: { kind: "done", live: true } }} />);
+    expect(practice).toContain("Practice post saved");
+    expect(practice).not.toContain("Live. Not yet verified");
+  });
+
   it("for an update to a real alert, waits for the Hub and says which alert it goes in", () => {
     const update = postScreen(data({ thread: { id: "01900000-0000-7000-8000-00000000a222", isDrill: false, headline: "Power is out.", types: ["power"] } }));
     expect(update.exercise).toBeNull();

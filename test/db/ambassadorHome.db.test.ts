@@ -203,6 +203,8 @@ describe("the open alerts about an Ambassador's buildings", () => {
         publishedAt: expect.any(Date),
         validUntil: VALID_UNTIL,
         buildings: [RSN_A],
+        // S08.04: an alert about exactly one building they are assigned to is theirs to mark resolved.
+        canResolve: true,
       },
     ]);
   });
@@ -214,6 +216,8 @@ describe("the open alerts about an Ambassador's buildings", () => {
 
     expect((await home()).alerts.map((alert) => alert.alertId)).toEqual([tp.alertId]);
     expect((await home()).alerts[0].buildings).toEqual([RSN_A]);
+    // A neighbourhood-wide alert is the Hub's: not theirs to mark resolved (S08.04).
+    expect((await home()).alerts[0].canResolve).toBe(false);
   });
 
   it("never lists a drill, a thread that is closed, or an entry residents cannot read yet (a draft, or a pending one that is not web-published)", async () => {

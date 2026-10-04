@@ -9,6 +9,7 @@ import type { AmbassadorAlert, AmbassadorDrill, AmbassadorPost } from "@/modules
 import { englishText } from "@/i18n/text";
 import { formatTorontoDateTime } from "@/platform/clock";
 import { typeName } from "../alerts/typeNames";
+import { resolveHref, statusHref } from "./status/view";
 
 export type Text = (key: string, values?: Record<string, string | number>) => string;
 
@@ -48,6 +49,8 @@ export interface AlertItemView {
   link: { href: string; label: string };
   /** S08.02: "Post an update about this" (A-02 for this alert), for an alert of the types an Ambassador posts; null for the Hub's neighbourhood-wide ones. */
   postLink: { href: string; label: string } | null;
+  /** S08.04: "Mark resolved" (the final message of this alert), for an alert about exactly one building they are assigned to; null otherwise. */
+  resolveLink: { href: string; label: string } | null;
 }
 
 /** An open drill about their buildings (S08.02), apart from the alerts: a practice post goes to the Hub only. */
@@ -68,6 +71,8 @@ export interface PostItemView {
   state: string;
   about: string;
   note: string | null;
+  /** S08.04: where the post stands and what can be done about it (A-03). */
+  link: { href: string; label: string };
 }
 
 export interface AmbassadorHomeView {
@@ -127,6 +132,7 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
         until: t("until", { time: formatTorontoDateTime(alert.validUntil) }),
         link: { href: residentAlertHref(alert.slug), label: t("residentsRead") },
         postLink: postable(alert.types) ? { href: ambassadorPostHref(alert.alertId), label: t("postUpdate") } : null,
+        resolveLink: alert.canResolve === true ? { href: resolveHref(alert.alertId), label: englishText("staff.ambassadorStatus.resolveLink") } : null,
       })),
     },
     posts: {
@@ -136,9 +142,16 @@ export function ambassadorHomeView(data: AmbassadorHomeData, t: Text = catalogTe
         key: `post-${post.entryId}`,
         title: t("postLine", { types: post.types.map(typeName).join(", "), time: formatTorontoDateTime(post.postedAt) }),
         text: post.text,
-        state: post.state === "returned" ? t("states.returned") : englishText(`A03.states.${post.state}`),
+        // "Withdrawn" and "Corrected" are the ambassador's own act as often as the Hub's (S08.04), so the list does not say "by the Hub" for them.
+        state:
+          post.state === "returned"
+            ? t("states.returned")
+            : post.state === "withdrawn" || post.state === "corrected"
+              ? englishText(`staff.ambassadorStatus.${post.state}Title`)
+              : englishText(`A03.states.${post.state}`),
         about: about(post.buildings),
         note: post.note === null ? null : t("returnedNote", { note: post.note }),
+        link: { href: statusHref(post.entryId), label: englishText("staff.ambassadorStatus.statusLink") },
       })),
     },
     round: {

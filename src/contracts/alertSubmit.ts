@@ -81,6 +81,8 @@ export const EntryStateSchema = z.strictObject({
     version: z.number().int().min(0),
     content_hash: Sha256.nullable(),
     possible_duplicate_of: z.uuid().nullable(),
+    /** Residents already read this entry on the web (S08.04: a D-1 post went live at its submit); absent in a body built before it existed. */
+    web_published: z.boolean().optional(),
   }),
   /** The latest attempt, if there is one. */
   attempt: AttemptSchema.nullable(),

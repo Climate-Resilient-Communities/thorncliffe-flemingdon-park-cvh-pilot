@@ -47,3 +47,8 @@ test("A-02 the post sent, waiting for the Hub, at 390px", async ({ page }) => {
   await open(page, DATA, 390, { state: { kind: "done" } });
   await expectBaseline(page, "ambassador-post-done-390.png", { fullPage: true });
 });
+
+test("A-02 the post sent and already live, not yet verified, at 390px (S08.04)", async ({ page }) => {
+  await open(page, DATA, 390, { state: { kind: "done", live: true } });
+  await expectBaseline(page, "ambassador-post-live-390.png", { fullPage: true });
+});

@@ -149,8 +149,16 @@ export function PostForm({ screen, sender: givenSender, initial = {} }: { screen
               {screen.exercise}
             </p>
           )}
-          <h1 tabIndex={-1}>{screen.done.title}</h1>
-          <p role="status">{screen.done.line}</p>
+          {/* S08.04: a post residents already read (a D-1 post, S08.03) says so: "Live. Not yet verified"; every other waits for the Hub. */}
+          <h1 tabIndex={-1} data-testid="post-done-title">
+            {state.live === true && screen.done.live ? screen.done.live.title : screen.done.title}
+          </h1>
+          <p role="status">{state.live === true && screen.done.live ? screen.done.live.line : screen.done.line}</p>
+          {screen.done.status && (
+            <a className="tap hub-link" href={screen.done.status.href} data-testid="post-done-status">
+              {screen.done.status.label}
+            </a>
+          )}
           <a className="tap hub-link" href={screen.back.href}>
             {screen.done.home}
           </a>
