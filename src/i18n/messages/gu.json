@@ -1644,7 +1644,44 @@
     "wholeWord": "આખું બિલ્ડિંગ",
     "errTypes": "શું થઈ રહ્યું છે તે પસંદ કરો.",
     "errFloors": "માળ પર ટેપ કરો, અથવા આખું બિલ્ડિંગ પસંદ કરો.",
-    "errLine": "\"અન્ય\" માટે એક લીટી જોઈએ: શું થઈ રહ્યું છે તે કહો."
+    "errLine": "\"અન્ય\" માટે એક લીટી જોઈએ: શું થઈ રહ્યું છે તે કહો.",
+    "building": "કયું બિલ્ડિંગ?",
+    "allFloorsLine": "બધા {n} માળ",
+    "listLabel": "થોડા માળ",
+    "listLine": "દરેક માળ પર ટિક કરો",
+    "rangeLabel": "સળંગ માળ",
+    "rangeLine": "એક માળથી બીજા માળ સુધી",
+    "fromFloor": "આ માળથી",
+    "toFloor": "આ માળ સુધી",
+    "chooseFloor": "પસંદ કરો",
+    "phaseTitle": "પરિસ્થિતિ શું છે",
+    "phaseProblem": "એક સમસ્યા છે",
+    "phaseProgress": "કામ ચાલુ છે",
+    "validTitle": "ક્યાં સુધી?",
+    "validResolved": "ઠીક થાય ત્યાં સુધી (હમણાંથી 24 કલાક)",
+    "validAt": "કોઈ તારીખ અને સમય સુધી",
+    "dateLabel": "તારીખ",
+    "timeLabel": "સમય (ટોરોન્ટોનો સમય)",
+    "validHint": "વધુમાં વધુ 7 દિવસ આગળ.",
+    "textLabel": "શું થઈ રહ્યું છે, અંગ્રેજીમાં",
+    "textHint": "વધુમાં વધુ {max} અક્ષર. રહેવાસીઓ તે પોતાની ભાષામાં વાંચે છે; હબ પહેલા તે તપાસે છે.",
+    "inAlert": "આ અપડેટ આ ચેતવણીમાં જશે: {headline}",
+    "typesFixed": "શું થઈ રહ્યું છે: {types}",
+    "unsent": "હજી મોકલાયું નથી. આ પેજ ખુલ્લું રાખો; સિગ્નલ આવે ત્યારે તે મોકલાશે.",
+    "unsentClose": "જો તમે આ પેજ બંધ કરશો, તો આ અપડેટ ખોવાઈ જશે.",
+    "sending": "હબને મોકલાઈ રહ્યું છે...",
+    "errPhase": "પરિસ્થિતિ શું છે તે પસંદ કરો.",
+    "errText": "શું થઈ રહ્યું છે તે અંગ્રેજીમાં કહો.",
+    "errTextLong": "આ ઘણું લાંબું છે. વધુમાં વધુ {max} અક્ષર વાપરો.",
+    "errValid": "તારીખ અને સમય લખો.",
+    "errValidPast": "તે સમય વીતી ગયો છે. પછીનો સમય પસંદ કરો.",
+    "errValidFar": "વધુમાં વધુ 7 દિવસ આગળનો સમય પસંદ કરો.",
+    "errValidSkipped": "તે રાત્રે ઘડિયાળ બદલાય છે, તેથી તે સમય સ્પષ્ટ નથી. બીજો સમય પસંદ કરો.",
+    "errRange": "પહેલો માળ છેલ્લા માળથી ઉપર છે. નીચેનો માળ પહેલા મૂકો.",
+    "errNotAssigned": "તમે હમણાં આ બિલ્ડિંગ માટે નિયુક્ત નથી, તેથી તમે તેના માટે પોસ્ટ કરી શકતા નથી.",
+    "errClosed": "આ ચેતવણી પૂરી થઈ ગઈ છે. તેના બદલે નવું અપડેટ પોસ્ટ કરો.",
+    "errSignedOut": "તમે સાઇન આઉટ થઈ ગયા હતા, તેથી આ મોકલાયું નથી. ફરી સાઇન ઇન કરો, પછી તેને ફરી પોસ્ટ કરો.",
+    "errFailed": "આ મોકલાયું નથી. ફરી પ્રયાસ કરો. જો આવું થતું રહે, તો હબને કૉલ કરો."
   },
   "A03": {
     "liveTitle": "પોસ્ટ થયું",
@@ -1668,7 +1705,8 @@
       "verified": "હબે ચકાસ્યું",
       "withdrawn": "હબે પાછું ખેંચ્યું",
       "corrected": "હબે સુધાર્યું",
-      "exercise": "કવાયત. રહેવાસીઓને મોકલ્યું નથી"
+      "exercise": "કવાયત. રહેવાસીઓને મોકલ્યું નથી",
+      "ended": "મોકલાયું નથી: હબ તપાસે તે પહેલાં ચેતવણી પૂરી થઈ ગઈ"
     },
     "queuedTitle": "તમારા ફોન પર સચવાયું",
     "queued": "તમારા ફોન પર સચવાયું. સિગ્નલ આવે ત્યારે તે મોકલાશે.",
@@ -4341,7 +4379,14 @@
       "roundTitle": "[EN] Your round",
       "roundCount": "[EN] {n} check-in requests on your floors",
       "roundCountOne": "[EN] 1 check-in request on your floors",
-      "roundNone": "[EN] No check-in round right now. It starts when the Hub sends a heat or power alert for your building."
+      "roundNone": "[EN] No check-in round right now. It starts when the Hub sends a heat or power alert for your building.",
+      "postUpdate": "[EN] Post an update about this",
+      "drillsTitle": "[EN] Exercises in your buildings",
+      "drillsLead": "[EN] Practice only. What you post here goes to the Hub, never to residents.",
+      "practicePost": "[EN] Post a practice update"
+    },
+    "ambassadorPost": {
+      "hubNote": "[EN] Building ambassadors post updates for their buildings here. Hub staff log a disruption from the Hub's home."
     },
     "audience": {
       "placeTitle": "[EN] Who is this alert for? The place",
@@ -5330,6 +5375,35 @@
         "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "મેં શરતો અને ગોપનીયતાનું પાનું વાંચ્યું છે, અને હું સંમત છું.",
+    "termsLink": "શરતો અને ગોપનીયતાનું પાનું વાંચો",
+    "termsVersion": "શરતોની આવૃત્તિ {version}",
+    "age": "મારી ઉંમર 16 વર્ષ કે તેથી વધુ છે, અથવા માતા-પિતા કે વાલી મને મદદ કરે છે.",
+    "missingTerms": "શરતો માટે તમારી સંમતિ",
+    "missingAge": "ઉંમર વિશેનું નિવેદન",
+    "sending": "મોકલી રહ્યા છીએ...",
+    "onItsWay": "જો આ નંબર પર ટેક્સ્ટ આવી શકતા હોય, તો એક મેસેજ આવી રહ્યો છે.",
+    "expect": "ચેતવણીઓ મેળવવાનું શરૂ કરવા 48 કલાકની અંદર એ મેસેજનો જવાબ YES લખીને આપો. તમે YES જવાબ ન આપો ત્યાં સુધી તમને ટેક્સ્ટથી કોઈ ચેતવણી નહીં મળે.",
+    "howChange": "પછીથી તમારું બિલ્ડિંગ, માળ કે ભાષા બદલવા, હબના કોઈ પણ ટેક્સ્ટના જવાબમાં 1 કે 2 લખો.",
+    "startHelp": "5 મિનિટમાં કોઈ ટેક્સ્ટ ન આવ્યો? {number} પર START ટેક્સ્ટ કરો, પછી ફરીથી સાઇન અપ કરો.",
+    "startHelpNoNumber": "5 મિનિટમાં કોઈ ટેક્સ્ટ ન આવ્યો? જે નંબર પરથી અમારા ટેક્સ્ટ આવે છે તેના પર START ટેક્સ્ટ કરો, પછી ફરીથી સાઇન અપ કરો.",
+    "error": {
+      "invalid_request": "ફોર્મમાંથી કંઈક વાંચી શકાયું નહીં. પાનું ફરી લોડ કરો અને ફરી પ્રયત્ન કરો.",
+      "phone_not_canadian": "10 અંકનો કેનેડાનો ફોન નંબર વાપરો, જેમ કે 416 555 0123.",
+      "neighbourhood_missing": "તમારો વિસ્તાર પસંદ કરો.",
+      "terms_not_agreed": "સાઇન અપ કરવા, શરતો સાથે સંમત થાઓ.",
+      "age_not_confirmed": "સાઇન અપ કરવા, ઉંમર વિશેના નિવેદનની પુષ્ટિ કરો.",
+      "terms_changed": "આ પાનું ખુલ્લું હતું ત્યારે શરતો બદલાઈ. તે ફરી વાંચો, પછી સંમત થાઓ.",
+      "place_unknown": "તમારું કોઈ બિલ્ડિંગ કે માળ હવે યાદીમાં નથી. તમારાં બિલ્ડિંગ તપાસો અને ફરી પ્રયત્ન કરો.",
+      "rate_limited": "આ કનેક્શન પરથી ઘણાં બધાં સાઇન અપ આવ્યાં છે. એક કલાક પછી ફરી પ્રયત્ન કરો.",
+      "signup_unavailable": "ટેક્સ્ટ માટે સાઇન અપ હમણાં ઉપલબ્ધ નથી. પછીથી ફરી પ્રયત્ન કરો.",
+      "network": "અમે CVH સુધી પહોંચી શક્યા નહીં. તમારું કનેક્શન તપાસો અને ફરી પ્રયત્ન કરો."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "CVH ચેતવણીઓ મેળવવા YES લખીને જવાબ આપો. બંધ કરવા STOP લખીને જવાબ આપો."
   },
   "offline": {
     "title": "આ પેજ તમારા ફોન પર સાચવેલું નથી",

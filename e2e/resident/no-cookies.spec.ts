@@ -1,11 +1,12 @@
 import { expect, test } from "@playwright/test";
+import terms from "../../data/catalogue/terms.json";
 import { ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { LANGUAGES } from "./helpers";
 
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
 // middleware matches only /staff/** and /api/staff/**). No response under /{lang}/** carries Set-Cookie.
 
-const PATHS = ["", "/map", "/search", "/ready", "/ready/power", "/ready/numbers", "/ready/no-such-guide", "/terms", "/buildings/123", "/directory", "/directory/P101", "/does-not-exist"];
+const PATHS = ["", "/map", "/search", "/ready", "/ready/power", "/ready/numbers", "/ready/no-such-guide", "/terms", "/text-alerts", "/buildings/123", "/directory", "/directory/P101", "/does-not-exist"];
 
 test("no response to a /{lang}/** page request sets a cookie", async ({ request }) => {
   const checked: string[] = [];
@@ -166,3 +167,20 @@ test("the usage endpoint sets no cookie and is not cacheable, for a valid event,
   expect(get.status()).toBe(405);
   expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
 });
+
+// S07.02: the sign-up POST carries a number and places (AD-3's exception) and still sets no cookie, whatever it answers: a refusal of the
+// form, and (this server has no database) a sign-up that cannot be made. Never cacheable; a GET is refused.
+test("the sign-up endpoint sets no cookie and is not cacheable, whether it refuses or cannot answer", async ({ request }) => {
+  const valid = { v: 1, phone: "416 555 0123", lang: "en", neighbourhood: "TP", places: [], groups: [], consent_version: terms.consentVersion, terms_agreed: true, age_confirmed: true };
+  for (const data of [{}, { ...valid, phone: "212 555 0123" }, { ...valid, terms_agreed: false }, valid]) {
+    const response = await request.post("/api/signup", { data, maxRedirects: 0 });
+
+    expect([400, 503], JSON.stringify(data)).toContain(response.status());
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), JSON.stringify(data)).toEqual([]);
+    expect(response.headers()["cache-control"]).toBe("no-store");
+  }
+  const get = await request.get("/api/signup", { maxRedirects: 0 });
+  expect(get.status()).toBe(405);
+  expect(get.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie")).toEqual([]);
+});
+

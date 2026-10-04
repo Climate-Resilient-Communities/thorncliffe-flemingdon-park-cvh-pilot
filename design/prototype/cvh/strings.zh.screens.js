@@ -1385,6 +1385,36 @@
     "filtered": "只显示与您在目录中所选筛选条件相符的地点。"
    }
   });
+  /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "signup": {
+    "termsAgree": "我已阅读条款和隐私页面，并且同意。",
+    "termsLink": "阅读条款和隐私页面",
+    "termsVersion": "条款版本 {version}",
+    "age": "我年满 16 岁，或有父母或监护人在帮我。",
+    "missingTerms": "您对条款的同意",
+    "missingAge": "年龄声明",
+    "sending": "正在发送……",
+    "onItsWay": "如果这个号码可以接收短信，一条短信正在发出。",
+    "expect": "请在 48 小时内对这条短信回复 YES，即可开始接收警报。回复 YES 之前，您不会收到任何短信警报。",
+    "howChange": "以后如要更改楼宇、楼层或语言，请对中心的任何一条短信回复 1 或 2。",
+    "startHelp": "5 分钟内没有收到短信？请发送 START 到 {number}，然后重新登记。",
+    "startHelpNoNumber": "5 分钟内没有收到短信？请向我们发短信的号码发送 START，然后重新登记。",
+    "error": {
+     "invalid_request": "表格中的某些内容无法读取。请重新加载页面后再试。",
+     "phone_not_canadian": "请使用 10 位数字的加拿大电话号码，例如 416 555 0123。",
+     "neighbourhood_missing": "请选择您的社区。",
+     "terms_not_agreed": "如要登记，请同意条款。",
+     "age_not_confirmed": "如要登记，请确认年龄声明。",
+     "terms_changed": "在此页面打开期间，条款已更改。请重新阅读，然后同意。",
+     "place_unknown": "您的某个楼宇或楼层已不在列表中。请检查您的楼宇后再试。",
+     "rate_limited": "来自此连接的登记太多。请一小时后再试。",
+     "signup_unavailable": "短信登记暂时无法使用。请稍后再试。",
+     "network": "无法连接到 CVH。请检查网络连接后再试。"
+    }
+   }
+  });
+  m(t, {"smsTexts": {"confirmation": "回复 YES 接收 CVH 警报。回复 STOP 停止。"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1444,6 +1474,53 @@
     "offlineTitle": "没有信号时阅读",
     "offlineHelp": "有信号时打开的页面会保存在这部手机上，以后没有信号也能再次阅读。电话号码始终会保存。第一次打开 CVH 需要信号。",
     "offlineNote": "这部手机可能无法保存页面供离线使用"
+   }
+  });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "哪栋楼？",
+    "allFloorsLine": "全部 {n} 个楼层",
+    "listLabel": "部分楼层",
+    "listLine": "勾选每个楼层",
+    "rangeLabel": "连续的几个楼层",
+    "rangeLine": "从一个楼层到另一个楼层",
+    "fromFloor": "从",
+    "toFloor": "到",
+    "chooseFloor": "选择",
+    "phaseTitle": "目前情况",
+    "phaseProblem": "出现了问题",
+    "phaseProgress": "正在处理",
+    "validTitle": "持续到什么时候？",
+    "validResolved": "直到解决（从现在起 24 小时）",
+    "validAt": "到某个日期和时间",
+    "dateLabel": "日期",
+    "timeLabel": "时间（多伦多时间）",
+    "validHint": "最多 7 天之内。",
+    "textLabel": "发生了什么（用英文写）",
+    "textHint": "最多 {max} 个字符。居民会用自己的语言阅读；中心会先核查。",
+    "inAlert": "这条更新会加入这条警报：{headline}",
+    "typesFixed": "发生了什么：{types}",
+    "unsent": "还没有发出。请保持此页面打开；有信号时会发出。",
+    "unsentClose": "如果关闭此页面，这条更新就会丢失。",
+    "sending": "正在发送给中心……",
+    "errPhase": "请选择目前情况。",
+    "errText": "请用英文说明发生了什么。",
+    "errTextLong": "内容太长。最多使用 {max} 个字符。",
+    "errValid": "请输入日期和时间。",
+    "errValidPast": "这个时间已经过去。请选择更晚的时间。",
+    "errValidFar": "请选择 7 天之内的时间。",
+    "errValidSkipped": "那天晚上要调整时钟，所以这个时间不明确。请选择其他时间。",
+    "errRange": "第一个楼层比最后一个楼层高。请把较低的楼层放在前面。",
+    "errNotAssigned": "您现在没有被分配到这栋楼，所以不能为它发布。",
+    "errClosed": "这条警报已经结束。请改为发布一条新的更新。",
+    "errSignedOut": "您已被登出，所以这条没有发出。请重新登录，然后再发布一次。",
+    "errFailed": "这条没有发出。请再试一次。如果一直这样，请打电话给中心。"
+   },
+   "A03": {
+    "states": {
+     "ended": "未发送：中心核查前警报已结束"
+    }
    }
   });
 })();

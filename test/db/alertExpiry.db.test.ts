@@ -465,7 +465,7 @@ describe("the database and the system final", () => {
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until)
                select ${randomUUID()}, alert_id, 'final', 'published_system', author_id, editor_ids, 'System words', types, audience, phase, valid_until
                from alert_entry where id = ${seeded.entryId}`;
-      await tx`update alert_entry set status = 'discarded' where id = ${draft}`;
+      await tx`update alert_entry set status = 'discarded', discard_reason = 'by_close' where id = ${draft}`;
     });
     expect((await owner`select status from alert_entry where id = ${draft}`)[0].status).toBe("discarded");
   });

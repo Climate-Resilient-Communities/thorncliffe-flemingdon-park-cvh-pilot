@@ -3015,7 +3015,7 @@ So that I can decide whether to sign up.
 
 ### Story S07.02 — Resident signs up for texts on the web
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 47 min (started 2026-10-04 01:36 UTC, built 03:23 UTC)
 - **Traces:** FR-A2, FR-A9 (SMS), FR-A12, AR-13, AR-20, UX-DR9 (R-05, R-06) · **Depends on:** S07.01, S06.07 · **Branch:** `e07-s02-web-signup`
 
 As a resident,
@@ -3388,7 +3388,7 @@ So that I know what residents are seeing and what I have posted.
 
 ### Story S08.02 — An ambassador posts an update or incident for their floors
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 1 h 50 min (started 2026-10-04 01:30 UTC, built 03:20 UTC)
 - **Traces:** FR-E2, FR-A1, FR-A15, UX-DR17 (A-02) · **Depends on:** S08.01, S04.05 · **Branch:** `e08-s02-ambassador-post`
 
 As a building ambassador,

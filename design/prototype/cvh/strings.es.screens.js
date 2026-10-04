@@ -1385,6 +1385,36 @@
     "filtered": "Solo se muestran los lugares que coinciden con los filtros que eligió en el directorio."
    }
   });
+  /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "signup": {
+    "termsAgree": "He leído la página de términos y privacidad, y estoy de acuerdo.",
+    "termsLink": "Leer la página de términos y privacidad",
+    "termsVersion": "Versión de los términos {version}",
+    "age": "Tengo 16 años o más, o me ayuda mi madre, mi padre o mi tutor.",
+    "missingTerms": "su acuerdo con los términos",
+    "missingAge": "la declaración de edad",
+    "sending": "Enviando...",
+    "onItsWay": "Si este número puede recibir mensajes de texto, hay un mensaje en camino.",
+    "expect": "Responda YES a ese mensaje en un plazo de 48 horas para empezar a recibir alertas. Hasta que responda YES, no recibirá alertas por mensaje de texto.",
+    "howChange": "Para cambiar más adelante su edificio, piso o idioma, responda 1 o 2 a cualquier mensaje del Hub.",
+    "startHelp": "¿No le llegó un mensaje en 5 minutos? Envíe START al {number} y luego vuelva a inscribirse.",
+    "startHelpNoNumber": "¿No le llegó un mensaje en 5 minutos? Envíe START al número desde el que llegan nuestros mensajes y luego vuelva a inscribirse.",
+    "error": {
+     "invalid_request": "No se pudo leer algo del formulario. Vuelva a cargar la página e inténtelo de nuevo.",
+     "phone_not_canadian": "Use un número de teléfono canadiense de 10 dígitos, como 416 555 0123.",
+     "neighbourhood_missing": "Elija su barrio.",
+     "terms_not_agreed": "Para inscribirse, acepte los términos.",
+     "age_not_confirmed": "Para inscribirse, confirme la declaración de edad.",
+     "terms_changed": "Los términos cambiaron mientras esta página estaba abierta. Vuelva a leerlos y luego acéptelos.",
+     "place_unknown": "Uno de sus edificios o pisos ya no está en la lista. Revise sus edificios e inténtelo de nuevo.",
+     "rate_limited": "Llegaron demasiadas inscripciones desde esta conexión. Inténtelo de nuevo dentro de una hora.",
+     "signup_unavailable": "La inscripción por mensaje de texto no está disponible ahora. Inténtelo más tarde.",
+     "network": "No pudimos conectar con el CVH. Revise su conexión e inténtelo de nuevo."
+    }
+   }
+  });
+  m(t, {"smsTexts": {"confirmation": "Responda YES para recibir alertas del CVH. Responda STOP para dejar de recibirlas."}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1444,6 +1474,53 @@
     "offlineTitle": "Leer sin señal",
     "offlineHelp": "Las páginas que abre con señal se guardan en este teléfono, para que pueda volver a leerlas sin señal. Los números siempre están guardados. La primera vez, el CVH necesita señal para abrirse.",
     "offlineNote": "Es posible que este teléfono no guarde páginas para usarlas sin conexión"
+   }
+  });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "¿Qué edificio?",
+    "allFloorsLine": "Los {n} pisos",
+    "listLabel": "Algunos pisos",
+    "listLine": "Marque cada piso",
+    "rangeLabel": "Varios pisos seguidos",
+    "rangeLine": "De un piso a otro",
+    "fromFloor": "Desde el piso",
+    "toFloor": "Hasta el piso",
+    "chooseFloor": "Elegir",
+    "phaseTitle": "Cómo están las cosas",
+    "phaseProblem": "Hay un problema",
+    "phaseProgress": "Se está trabajando en ello",
+    "validTitle": "¿Hasta cuándo?",
+    "validResolved": "Hasta que se arregle (24 horas desde ahora)",
+    "validAt": "Hasta una fecha y hora",
+    "dateLabel": "Fecha",
+    "timeLabel": "Hora (hora de Toronto)",
+    "validHint": "Como máximo 7 días a partir de ahora.",
+    "textLabel": "Qué está pasando, en inglés",
+    "textHint": "Como máximo {max} caracteres. Los residentes lo leen en su idioma; el Hub lo revisa primero.",
+    "inAlert": "Esta novedad va en la alerta: {headline}",
+    "typesFixed": "Qué está pasando: {types}",
+    "unsent": "Todavía no se ha enviado. Mantenga esta página abierta; se enviará cuando tenga señal.",
+    "unsentClose": "Si cierra esta página, esta novedad se pierde.",
+    "sending": "Enviando al Hub...",
+    "errPhase": "Elija cómo están las cosas.",
+    "errText": "Diga qué está pasando, en inglés.",
+    "errTextLong": "Es demasiado largo. Use como máximo {max} caracteres.",
+    "errValid": "Escriba una fecha y una hora.",
+    "errValidPast": "Esa hora ya pasó. Elija una hora posterior.",
+    "errValidFar": "Elija una hora dentro de los próximos 7 días como máximo.",
+    "errValidSkipped": "Esa noche cambia la hora, así que esa hora no está clara. Elija otra hora.",
+    "errRange": "El primer piso está por encima del último. Ponga primero el piso más bajo.",
+    "errNotAssigned": "Ahora no está asignado a este edificio, así que no puede publicar para él.",
+    "errClosed": "Esta alerta terminó. Mejor publique una novedad nueva.",
+    "errSignedOut": "Se cerró su sesión, así que esto no se envió. Vuelva a iniciar sesión y publíquelo otra vez.",
+    "errFailed": "Esto no se envió. Inténtelo de nuevo. Si sigue pasando, llame al Hub."
+   },
+   "A03": {
+    "states": {
+     "ended": "No enviado: la alerta terminó antes de que el Hub la revisara"
+    }
    }
   });
 })();

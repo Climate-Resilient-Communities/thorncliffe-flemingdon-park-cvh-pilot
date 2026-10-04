@@ -22,6 +22,13 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
             ))}
           </Stack>
         )}
+        {view.post && (
+          <p>
+            <a className="tap hub-link" href={view.post.href} data-testid="amb-post-link">
+              {view.post.label}
+            </a>
+          </p>
+        )}
       </Stack>
       <section aria-labelledby="amb-active-title" data-testid="amb-active">
         <Stack gap="related">
@@ -42,9 +49,16 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
                     <p className="hub-wrap">{item.meta}</p>
                     <p className="hub-wrap">{item.about}</p>
                     <p className="hub-wrap">{item.until}</p>
-                    <a className="tap hub-link" href={item.link.href}>
-                      {item.link.label}
-                    </a>
+                    {item.link && (
+                      <a className="tap hub-link" href={item.link.href}>
+                        {item.link.label}
+                      </a>
+                    )}
+                    {item.postLink && (
+                      <a className="tap hub-link" href={item.postLink.href} data-testid="amb-alert-post">
+                        {item.postLink.label}
+                      </a>
+                    )}
                   </Stack>
                 </li>
               ))}
@@ -84,6 +98,36 @@ export function AmbassadorHomeBody({ view }: { view: AmbassadorHomeView }) {
           )}
         </Stack>
       </section>
+      {view.drills && (
+        <section aria-labelledby="amb-drills-title" data-testid="amb-drills">
+          <Stack gap="related">
+            <h2 id="amb-drills-title" className="hub-wrap">
+              {view.drills.title}
+            </h2>
+            <p className="hub-flag hub-wrap" role="note">
+              {view.drills.lead}
+            </p>
+            <Stack as="ul" gap="related">
+              {view.drills.items.map((item) => (
+                <li key={item.key} className="hub-list-item" data-testid="amb-drill">
+                  <Stack gap="subline">
+                    <p className="hub-wrap">
+                      <strong>{item.title}</strong>
+                    </p>
+                    <p className="hub-wrap hub-preline">{item.headline}</p>
+                    <p className="hub-wrap">{item.about}</p>
+                    {item.link && (
+                      <a className="tap hub-link" href={item.link.href}>
+                        {item.link.label}
+                      </a>
+                    )}
+                  </Stack>
+                </li>
+              ))}
+            </Stack>
+          </Stack>
+        </section>
+      )}
       <section aria-labelledby="amb-round-title" data-testid="amb-round">
         <Stack gap="related">
           <h2 id="amb-round-title" className="hub-wrap">

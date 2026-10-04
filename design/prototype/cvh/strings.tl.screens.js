@@ -1374,6 +1374,36 @@
     "filtered": "Ipinapakita lang ang mga lugar na tugma sa mga filter na pinili mo sa direktoryo."
    }
   });
+  /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "signup": {
+    "termsAgree": "Nabasa ko ang pahina ng mga tuntunin at privacy, at pumapayag ako.",
+    "termsLink": "Basahin ang pahina ng mga tuntunin at privacy",
+    "termsVersion": "Bersyon ng mga tuntunin {version}",
+    "age": "Ako ay 16 taong gulang o higit pa, o tinutulungan ako ng magulang o tagapag-alaga.",
+    "missingTerms": "ang pagpayag ninyo sa mga tuntunin",
+    "missingAge": "ang pahayag tungkol sa edad",
+    "sending": "Ipinapadala...",
+    "onItsWay": "Kung nakakatanggap ng text ang numerong ito, may mensaheng papunta na.",
+    "expect": "Sumagot ng YES sa mensaheng iyon sa loob ng 48 oras para magsimulang makatanggap ng alerto. Hangga't hindi kayo sumasagot ng YES, wala kayong matatanggap na alerto sa text.",
+    "howChange": "Para palitan ang inyong gusali, palapag o wika sa ibang pagkakataon, sumagot ng 1 o 2 sa anumang text mula sa Hub.",
+    "startHelp": "Walang text sa loob ng 5 minuto? Mag-text ng START sa {number}, pagkatapos ay mag-sign up ulit.",
+    "startHelpNoNumber": "Walang text sa loob ng 5 minuto? Mag-text ng START sa numerong pinanggagalingan ng aming mga text, pagkatapos ay mag-sign up ulit.",
+    "error": {
+     "invalid_request": "May bahagi ng form na hindi mabasa. I-reload ang pahina at subukan ulit.",
+     "phone_not_canadian": "Gumamit ng numero ng telepono sa Canada na may 10 digit, tulad ng 416 555 0123.",
+     "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
+     "terms_not_agreed": "Para mag-sign up, pumayag sa mga tuntunin.",
+     "age_not_confirmed": "Para mag-sign up, kumpirmahin ang pahayag tungkol sa edad.",
+     "terms_changed": "Nagbago ang mga tuntunin habang bukas ang pahinang ito. Basahin ulit ang mga ito, pagkatapos ay pumayag.",
+     "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
+     "rate_limited": "Masyadong maraming sign-up ang nanggaling sa koneksyong ito. Subukan ulit pagkalipas ng isang oras.",
+     "signup_unavailable": "Hindi magagamit ngayon ang pag-sign up para sa text. Subukan ulit mamaya.",
+     "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+    }
+   }
+  });
+  m(t, {"smsTexts": {"confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {
@@ -1433,6 +1463,53 @@
     "offlineTitle": "Pagbasa nang walang signal",
     "offlineHelp": "Ang mga pahinang binubuksan mo nang may signal ay sine-save sa teleponong ito, kaya mababasa mo ulit ang mga ito nang walang signal. Laging naka-save ang mga numero. Sa unang pagkakataon, kailangan ng CVH ng signal para bumukas.",
     "offlineNote": "Maaaring hindi mag-save ang teleponong ito ng mga pahina para magamit nang walang signal"
+   }
+  });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "Aling gusali?",
+    "allFloorsLine": "Lahat ng {n} palapag",
+    "listLabel": "Ilang palapag",
+    "listLine": "Lagyan ng tsek ang bawat palapag",
+    "rangeLabel": "Sunud-sunod na mga palapag",
+    "rangeLine": "Mula sa isang palapag hanggang sa isa pa",
+    "fromFloor": "Mula sa palapag",
+    "toFloor": "Hanggang sa palapag",
+    "chooseFloor": "Pumili",
+    "phaseTitle": "Ano ang lagay",
+    "phaseProblem": "May problema",
+    "phaseProgress": "Inaayos na",
+    "validTitle": "Hanggang kailan?",
+    "validResolved": "Hanggang maayos ito (24 oras mula ngayon)",
+    "validAt": "Hanggang sa isang petsa at oras",
+    "dateLabel": "Petsa",
+    "timeLabel": "Oras (oras sa Toronto)",
+    "validHint": "Hanggang 7 araw mula ngayon lamang.",
+    "textLabel": "Ano ang nangyayari, sa Ingles",
+    "textHint": "Hanggang {max} titik. Binabasa ito ng mga residente sa kanilang wika; sinusuri muna ito ng Hub.",
+    "inAlert": "Mapupunta ang update na ito sa alerto: {headline}",
+    "typesFixed": "Ano ang nangyayari: {types}",
+    "unsent": "Hindi pa naipapadala. Panatilihing bukas ang pahinang ito; ipapadala ito kapag may signal ka na.",
+    "unsentClose": "Kapag isinara mo ang pahinang ito, mawawala ang update na ito.",
+    "sending": "Ipinapadala sa Hub...",
+    "errPhase": "Piliin kung ano ang lagay.",
+    "errText": "Sabihin kung ano ang nangyayari, sa Ingles.",
+    "errTextLong": "Masyadong mahaba ito. Gumamit ng hanggang {max} titik lamang.",
+    "errValid": "Maglagay ng petsa at oras.",
+    "errValidPast": "Lumipas na ang oras na iyon. Pumili ng mas huling oras.",
+    "errValidFar": "Pumili ng oras na hanggang 7 araw mula ngayon lamang.",
+    "errValidSkipped": "Nagbabago ang orasan sa gabing iyon, kaya hindi malinaw ang oras na iyon. Pumili ng ibang oras.",
+    "errRange": "Mas mataas ang unang palapag kaysa sa huli. Unahin ang mas mababang palapag.",
+    "errNotAssigned": "Hindi ka naka-assign sa gusaling ito ngayon, kaya hindi ka makakapag-post para dito.",
+    "errClosed": "Natapos na ang alertong ito. Mag-post na lang ng bagong update.",
+    "errSignedOut": "Na-sign out ka, kaya hindi ito naipadala. Mag-sign in ulit, saka i-post ito ulit.",
+    "errFailed": "Hindi ito naipadala. Subukan ulit. Kung patuloy itong mangyari, tawagan ang Hub."
+   },
+   "A03": {
+    "states": {
+     "ended": "Hindi naipadala: natapos ang alerto bago ito nasuri ng Hub"
+    }
    }
   });
 })();

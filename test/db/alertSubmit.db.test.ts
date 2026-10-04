@@ -1459,10 +1459,10 @@ describe("what a submit refuses", () => {
       state: "refused",
       refusal: "OUT_OF_SCOPE",
     });
-    // An Ambassador's post is attributed to their building and not yet verified (E08): not through these texts, which say "from the Hub".
+    // An Ambassador submits their own posts (S08.02), never someone else's draft: they are not an editor of it.
     expect(
       await r.submitter.submit(actorOf(ambassador), ref, KEYS.one),
-    ).toEqual({ state: "refused", refusal: "NOT_ALLOWED" });
+    ).toEqual({ state: "refused", refusal: "OUT_OF_SCOPE" });
     expect(await attempts(ref.entryId)).toEqual([]);
   });
 
@@ -1640,7 +1640,7 @@ describe("a possible duplicate", () => {
     });
     await owner.begin(async (tx) => {
       await tx`select set_config('cvh.actor_id', ${author.id}, true)`;
-      await tx`update alert_entry set status = 'discarded' where id = ${mine.entryId}`;
+      await tx`update alert_entry set status = 'discarded', discard_reason = 'by_author' where id = ${mine.entryId}`;
     });
     expect(await entryRow(mine.entryId)).toMatchObject({
       status: "discarded",

@@ -7,7 +7,7 @@ import "server-only";
 import { createStatusCallbacks, stdoutMessagingLog, type MessagingLog, type OpsRecorder, type StatusCallbackDeps, type StatusCallbacks } from "@/modules/messaging";
 import { getEnv, type Env } from "@/platform/config/env";
 import { getDb, type Db } from "@/platform/db";
-import { opsRecorder } from "./dispatch";
+import { failureHooks, opsRecorder } from "./dispatch";
 import { appSmsSpend } from "./smsSpend";
 
 export interface StatusCallbackParts {
@@ -18,6 +18,8 @@ export interface StatusCallbackParts {
   /** S06.08's spend seams (see StatusCallbackDeps): by default the app's own hooks, the same ones `appDispatcher` is given. */
   afterOutcome?: StatusCallbackDeps["afterOutcome"];
   afterProviderId?: StatusCallbackDeps["afterProviderId"];
+  /** S07.02's seam (see StatusCallbackDeps): by default the dispatcher's `failureHooks`. */
+  afterFailure?: StatusCallbackDeps["afterFailure"];
 }
 
 /** The status callbacks on the real environment and database (every part can be replaced in a test). */
@@ -35,5 +37,6 @@ export function appStatusCallbacks(parts: StatusCallbackParts = {}): StatusCallb
     publicBaseUrl: env.publicBaseUrl,
     afterOutcome: parts.afterOutcome ?? spend.afterOutcome,
     afterProviderId: parts.afterProviderId ?? spend.afterProviderId,
+    afterFailure: parts.afterFailure ?? failureHooks,
   });
 }
