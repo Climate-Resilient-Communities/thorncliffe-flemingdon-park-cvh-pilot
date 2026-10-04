@@ -5,4 +5,6 @@
 @import "../../src/ui/hub/hub-shell.css";
 @import "../../src/ui/hub/hub-forms.css";
 @import "../../src/ui/hub/hub-content.css";
+/* The 911 block (src/ui/emergency) imports its own stylesheet, which a page gets from Next; the harness compiles it here (A-02 draws it, S08.02). */
+@import "../../src/ui/emergency/not-911.css";
 @source inline("tap text-{caption,body,alert,lead,h3,h2,h1}");

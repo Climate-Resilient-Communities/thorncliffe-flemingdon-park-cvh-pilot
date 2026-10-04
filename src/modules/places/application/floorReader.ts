@@ -45,3 +45,13 @@ export async function neighbourhoodsOfBuildings(executor: DbExecutor, rsns: read
   const rows = await executor.select({ rsn: building.rsn, neighbourhoodId: building.neighbourhoodId }).from(building).where(inArray(building.rsn, [...rsns]));
   return new Map(rows.map((row) => [row.rsn, row.neighbourhoodId]));
 }
+
+/**
+ * The address of each building given, by rsn, read through the executor given (a building that is not there is left out): what an ambassador's post names
+ * in its texts, "Building ambassador, {building}" (S08.02). alerting may not import the table, so it reads it here.
+ */
+export async function addressesOfBuildings(executor: DbExecutor, rsns: readonly string[]): Promise<Map<string, string>> {
+  if (rsns.length === 0) return new Map();
+  const rows = await executor.select({ rsn: building.rsn, address: building.address }).from(building).where(inArray(building.rsn, [...rsns]));
+  return new Map(rows.map((row) => [row.rsn, row.address]));
+}

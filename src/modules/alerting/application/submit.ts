@@ -148,7 +148,7 @@ export function createSubmitter(deps: SubmitterDeps) {
     elapsed: () => number,
   ): Promise<{ state: "committed" } | { state: "failed"; outcome: AlertRefusal }> {
     try {
-      const done = await lifecycle.completeSubmit(actor, ref, key, frozen, start.expected, start.possibleDuplicateOf);
+      const done = await lifecycle.completeSubmit(actor, ref, key, frozen, start.expected, start.possibleDuplicateOf, start.attribution);
       return done.ok ? { state: "committed" } : { state: "failed", outcome: done.error };
     } catch {
       if (await lifecycle.failSubmit(actor, ref, key, "PREPARATION_FAILED", start.context.isDrill)) {

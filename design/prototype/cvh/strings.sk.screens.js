@@ -1476,4 +1476,51 @@
     "offlineNote": "Tento telefón nemusí uchovávať stránky na použitie bez signálu"
    }
   });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "Ktorá budova?",
+    "allFloorsLine": "Všetky poschodia ({n})",
+    "listLabel": "Niektoré poschodia",
+    "listLine": "Označte každé poschodie",
+    "rangeLabel": "Poschodia za sebou",
+    "rangeLine": "Od jedného poschodia po druhé",
+    "fromFloor": "Od poschodia",
+    "toFloor": "Po poschodie",
+    "chooseFloor": "Vybrať",
+    "phaseTitle": "Aká je situácia",
+    "phaseProblem": "Je tu problém",
+    "phaseProgress": "Prebieha práca",
+    "validTitle": "Dokedy?",
+    "validResolved": "Kým sa to neopraví (24 hodín odteraz)",
+    "validAt": "Do určitého dátumu a času",
+    "dateLabel": "Dátum",
+    "timeLabel": "Čas (torontský čas)",
+    "validHint": "Najviac 7 dní dopredu.",
+    "textLabel": "Čo sa deje, po anglicky",
+    "textHint": "Najviac {max} znakov. Obyvatelia si to prečítajú vo svojom jazyku; Hub to najprv skontroluje.",
+    "inAlert": "Táto aktualizácia pôjde do upozornenia: {headline}",
+    "typesFixed": "Čo sa deje: {types}",
+    "unsent": "Ešte to nie je odoslané. Nechajte túto stránku otvorenú; odošle sa, keď budete mať signál.",
+    "unsentClose": "Ak túto stránku zatvoríte, táto aktualizácia sa stratí.",
+    "sending": "Posiela sa do Hubu...",
+    "errPhase": "Vyberte, aká je situácia.",
+    "errText": "Napíšte po anglicky, čo sa deje.",
+    "errTextLong": "Je to príliš dlhé. Použite najviac {max} znakov.",
+    "errValid": "Zadajte dátum a čas.",
+    "errValidPast": "Ten čas už prešiel. Vyberte neskorší čas.",
+    "errValidFar": "Vyberte čas najviac 7 dní dopredu.",
+    "errValidSkipped": "V tú noc sa mení čas, takže tento čas nie je jasný. Vyberte iný čas.",
+    "errRange": "Prvé poschodie je nad posledným. Dajte nižšie poschodie na prvé miesto.",
+    "errNotAssigned": "Teraz nie ste priradený k tejto budove, takže za ňu nemôžete zverejňovať.",
+    "errClosed": "Toto upozornenie sa skončilo. Radšej zverejnite novú aktualizáciu.",
+    "errSignedOut": "Boli ste odhlásený, takže sa to neodoslalo. Znova sa prihláste a potom to zverejnite znova.",
+    "errFailed": "Toto sa neodoslalo. Skúste to znova. Ak sa to bude opakovať, zavolajte do Hubu."
+   },
+   "A03": {
+    "states": {
+     "ended": "Neodoslané: upozornenie sa skončilo skôr, ako ho Hub skontroloval"
+    }
+   }
+  });
 })();

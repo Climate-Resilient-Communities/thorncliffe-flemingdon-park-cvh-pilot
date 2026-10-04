@@ -1287,7 +1287,7 @@ describe("the hand-off point re-reads whether the row is still sendable", () => 
       await owner.begin(async (tx) => {
         await tx.unsafe("alter table alert_entry disable trigger alert_entry_guard");
         // A discarded entry holds no approval (the table's check); a superseded one keeps the approval it had.
-        if (status === "discarded") await tx`update alert_entry set status = 'discarded', approved_by = null, approved_at = null, approved_version = null, approved_hash = null where id = ${entry.entryId}`;
+        if (status === "discarded") await tx`update alert_entry set status = 'discarded', discard_reason = 'declined', approved_by = null, approved_at = null, approved_version = null, approved_hash = null where id = ${entry.entryId}`;
         else await tx`update alert_entry set status = ${status} where id = ${entry.entryId}`;
         await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
       });

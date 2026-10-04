@@ -1089,7 +1089,12 @@
     postLine: '{types} · Posted {time}', returnedNote: 'Note from the Hub: {note}',
     states: { returned: 'Sent back to you by the Hub' },
     roundTitle: 'Your round', roundCount: '{n} check-in requests on your floors', roundCountOne: '1 check-in request on your floors',
-    roundNone: 'No check-in round right now. It starts when the Hub sends a heat or power alert for your building.' } } });
+    roundNone: 'No check-in round right now. It starts when the Hub sends a heat or power alert for your building.',
+    /* S08.02: posting (A-02) from the home, and the open drills about their buildings, apart, where a practice post goes. */
+    postUpdate: 'Post an update about this',
+    drillsTitle: 'Exercises in your buildings', drillsLead: 'Practice only. What you post here goes to the Hub, never to residents.',
+    practicePost: 'Post a practice update' },
+  ambassadorPost: { hubNote: 'Building ambassadors post updates for their buildings here. Hub staff log a disruption from the Hub\'s home.' } } });
   /* Who an alert is for (S04.04, O-03 the place and O-04 the groups), the pilot's staff version: one shared rule (AD-7). */
   m(en, { staff: { audience: {
     placeTitle: 'Who is this alert for? The place', groupsTitle: 'Who is this alert for? The groups',
@@ -1858,6 +1863,30 @@
     closedLine: '{reason} {time}',
     closedReason: { resolved: 'Resolved', expired: 'Expired', withdrawn: 'Withdrawn' },
     closedFinal: 'Final entry: {text}' } } });
+  /* An ambassador's post (S08.02, A-02 "Post a building update"), the pilot's version: one building, its floors as a range, a list or the whole building,
+     what is happening, where things stand, until when and the English text; everything waits for the Hub's second person. A post pressed without signal is
+     held only in the open page's memory and sent when signal returns (this replaces the prototype's "Saved on your phone"). A03.states.ended: a post whose
+     alert closed before the Hub checked it is not "Not sent by the Hub". */
+  m(en, { A02: {
+    building: 'Which building?', allFloorsLine: 'All {n} floors',
+    listLabel: 'Some floors', listLine: 'Tick each floor', rangeLabel: 'A range of floors', rangeLine: 'From one floor to another',
+    fromFloor: 'From floor', toFloor: 'To floor', chooseFloor: 'Choose',
+    phaseTitle: 'Where things stand', phaseProblem: 'There is a problem', phaseProgress: 'Work is under way',
+    validTitle: 'Until when?', validResolved: 'Until it is fixed (24 hours from now)', validAt: 'Until a date and time',
+    dateLabel: 'Date', timeLabel: 'Time (Toronto time)', validHint: 'At most 7 days ahead.',
+    textLabel: 'What is happening, in English', textHint: 'At most {max} characters. Residents read it in their language; the Hub checks it first.',
+    inAlert: 'This update goes in the alert: {headline}', typesFixed: 'What is happening: {types}',
+    unsent: 'Not sent yet. Keep this page open; it sends when you have signal.', unsentClose: 'If you close this page, this update is lost.',
+    sending: 'Sending to the Hub...',
+    errPhase: 'Choose where things stand.', errText: 'Say what is happening, in English.', errTextLong: 'This is too long. Use at most {max} characters.',
+    errValid: 'Enter a date and a time.', errValidPast: 'That time has passed. Choose a later time.', errValidFar: 'Choose a time at most 7 days ahead.',
+    errValidSkipped: 'The clocks change that night, so that time is not clear. Choose another time.',
+    errRange: 'The first floor is above the last one. Put the lower floor first.',
+    errNotAssigned: 'You are not assigned to this building now, so you cannot post for it.',
+    errClosed: 'This alert has ended. Post a new update instead.',
+    errSignedOut: 'You were signed out, so this was not sent. Sign in again, then post it again.',
+    errFailed: 'This was not sent. Try again. If it keeps happening, call the Hub.' },
+  A03: { states: { ended: 'Not sent: the alert ended before the Hub checked it' } } });
   /* S07.02: the web sign-up for text alerts (R-05, R-06 as built) and the confirmation text. The keywords residents text (YES, STOP,
      START) and "CVH" stay in English in every language. */
   m(en, { signup: {

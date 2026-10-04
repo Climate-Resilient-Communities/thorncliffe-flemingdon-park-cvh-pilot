@@ -85,6 +85,8 @@ async function loadRenderer(): Promise<Render> {
     jsx: "automatic",
     tsconfig: path.join(ROOT, "tsconfig.json"),
     plugins: [providerActionsStub],
+    // A component's own stylesheet (the 911 block's) is compiled into app.css; the bundle carries none.
+    loader: { ".css": "empty" },
     external: ["react", "react-dom"],
     write: false,
     logLevel: "silent",
@@ -122,6 +124,7 @@ async function loadClientBundle(): Promise<string> {
     jsx: "automatic",
     tsconfig: path.join(ROOT, "tsconfig.json"),
     plugins: [providerActionsStub],
+    loader: { ".css": "empty" },
     define: { "process.env.NODE_ENV": '"production"' },
     minify: true,
     write: false,

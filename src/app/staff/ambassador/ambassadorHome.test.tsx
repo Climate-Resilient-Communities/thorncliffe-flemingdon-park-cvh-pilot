@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import type { AmbassadorAlert, AmbassadorPost } from "@/modules/alerting";
+import { AMBASSADOR_POST_STATES, type AmbassadorAlert, type AmbassadorPost } from "@/modules/alerting";
 import { AmbassadorHomeBody } from "./AmbassadorHomeBody";
 import { ambassadorHomeView, type AmbassadorHomeData } from "./view";
 
@@ -84,9 +84,14 @@ describe("the Ambassador's home (A-01)", () => {
   });
 
   it("words every state an own post can be in", () => {
-    for (const state of ["live", "waiting", "approved", "verified", "returned", "declined", "withdrawn", "corrected"] as const) {
-      expect(ambassadorHomeView(data({ posts: [post({ state })] })).posts.items[0].state, state).not.toBe("");
+    for (const state of AMBASSADOR_POST_STATES) {
+      const words = ambassadorHomeView(data({ posts: [post({ state })] })).posts.items[0].state;
+      expect(words, state).not.toBe("");
+      expect(words, state).not.toMatch(/^A03\.|^staff\./);
     }
+    // S08.02: a post its alert's close discarded is not "Not sent by the Hub".
+    expect(ambassadorHomeView(data({ posts: [post({ state: "ended" })] })).posts.items[0].state).toBe("Not sent: the alert ended before the Hub checked it");
+    expect(ambassadorHomeView(data({ posts: [post({ state: "declined" })] })).posts.items[0].state).toBe("Not sent by the Hub");
     expect(ambassadorHomeView(data({ posts: [post({ state: "live" })] })).posts.items[0].state).toBe("Live. Not yet verified");
   });
 
@@ -124,8 +129,38 @@ describe("the Ambassador's home as drawn", () => {
     expect(html).toContain("Note from the Hub: Which floors?");
   });
 
-  it("offers no link to post or to a round: those pages are other stories' (S08.02 and the round stories)", () => {
-    expect(html.match(/<a /g)).toHaveLength(1);
+  it("links to posting (S08.02): a new building update, and an update about each alert of the types an Ambassador posts; no link to a round yet", () => {
+    expect(html).toContain('<a class="tap hub-link" href="/staff/ambassador/post" data-testid="amb-post-link">Post a building update</a>');
+    expect(html).toContain(`href="/staff/ambassador/post?alert=${ALERT}" data-testid="amb-alert-post">Post an update about this</a>`);
+    expect(html.match(/<a /g)).toHaveLength(3);
     expect(html).not.toContain("<button");
+  });
+
+  it("offers no update link on a neighbourhood-wide alert (heat), whose updates are the Hub's, and none to a person assigned to no building", () => {
+    const heat = renderToStaticMarkup(<AmbassadorHomeBody view={ambassadorHomeView(data({ alerts: [alert({ types: ["heat"] })] }))} />);
+    expect(heat).not.toContain('data-testid="amb-alert-post"');
+    expect(ambassadorHomeView(data({ buildings: [] })).post).toBeNull();
+  });
+
+  it("says when the alert residents read is a building ambassador's post, not the Hub's", () => {
+    expect(ambassadorHomeView(data({ alerts: [alert({ fromAmbassador: true })] })).active.items[0].meta).toMatch(/^From a building ambassador · /);
+    expect(ambassadorHomeView(data({ alerts: [alert()] })).active.items[0].meta).toMatch(/^From the Hub · /);
+  });
+
+  it("lists the open drills about their buildings apart (S08.02), each with a practice post link, and no drills section without one", () => {
+    const view = ambassadorHomeView(data({ drills: [{ alertId: ALERT, types: ["elevator"], headline: "Drill: the elevator is out.", buildings: ["7001"] }] }));
+    expect(view.drills).toMatchObject({ title: "Exercises in your buildings", items: [{ title: "Elevator", about: "About 4 Milepost Pl", link: { href: `/staff/ambassador/post?alert=${ALERT}`, label: "Post a practice update" } }] });
+    expect(renderToStaticMarkup(<AmbassadorHomeBody view={view} />)).toContain('data-testid="amb-drills"');
+    expect(ambassadorHomeView(data()).drills).toBeNull();
+  });
+
+  it("lists a drill of a type an Ambassador may not post (heat, smoke, winter) without a practice post link", () => {
+    for (const types of [["heat"], ["smoke"], ["winter"], ["elevator", "heat"]]) {
+      const view = ambassadorHomeView(data({ drills: [{ alertId: ALERT, types, headline: "Drill.", buildings: ["7001"] }] }));
+      expect(view.drills?.items[0].link).toBeNull();
+      const html = renderToStaticMarkup(<AmbassadorHomeBody view={view} />);
+      expect(html).toContain('data-testid="amb-drill"');
+      expect(html).not.toContain("Post a practice update");
+    }
   });
 });

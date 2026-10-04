@@ -6,7 +6,7 @@ import type { FeedThread } from "../../../contracts/feed";
 import { isSubstantive } from "./thread";
 
 /** The state of one of an Ambassador's own posts, as A-01 and A-03 word it. */
-export const AMBASSADOR_POST_STATES = ["live", "waiting", "approved", "verified", "returned", "declined", "withdrawn", "corrected"] as const;
+export const AMBASSADOR_POST_STATES = ["live", "waiting", "approved", "verified", "returned", "declined", "ended", "withdrawn", "corrected"] as const;
 export type AmbassadorPostState = (typeof AMBASSADOR_POST_STATES)[number];
 
 /**
@@ -50,6 +50,8 @@ export interface PostFacts {
   approvedAt: Date | null;
   webPublishedAt: Date | null;
   returnedFor: string | null;
+  /** Why a discarded entry was discarded (S08.02): `by_author`, `declined` or `by_close`; null for one discarded before the reason was kept. */
+  discardReason?: string | null;
   /** The kind of an approved correction or withdrawal that replaces this entry, when there is one. */
   replacedBy: "correction" | "withdrawal" | null;
 }
@@ -60,12 +62,17 @@ export interface PostFacts {
  *  - live: web-published at submit and still "Not yet verified" (a D-1 post, E08);
  *  - approved: approved, and published at its approval;
  *  - verified: approved after it was already live, so the Hub has now verified it;
- *  - returned: sent back to the author with a note; declined: not sent by the Hub;
+ *  - returned: sent back to the author with a note;
+ *  - declined: not sent by the Hub (an approver discarded it); ended: its alert closed before the Hub sent it. A post its author took back, or one discarded
+ *    before the reason was kept, is not shown: only the Hub's own decision is ever "Not sent by the Hub" (S08.02);
  *  - corrected, withdrawn: replaced by an approved correction or withdrawal.
  */
 export function postState(facts: PostFacts): AmbassadorPostState | null {
   if (facts.status === "draft") return facts.returnedFor === "return" ? "returned" : null;
-  if (facts.status === "discarded") return facts.submittedAt !== null ? "declined" : null;
+  if (facts.status === "discarded") {
+    if (facts.submittedAt === null) return null;
+    return facts.discardReason === "declined" ? "declined" : facts.discardReason === "by_close" ? "ended" : null;
+  }
   if (facts.status === "pending_approval") return facts.webPublishedAt !== null ? "live" : "waiting";
   if (facts.status === "approved" || facts.status === "superseded") {
     if (facts.replacedBy === "correction") return "corrected";

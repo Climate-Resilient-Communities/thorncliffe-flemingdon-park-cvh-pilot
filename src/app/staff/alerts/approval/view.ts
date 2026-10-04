@@ -276,7 +276,9 @@ export function approvalScreen(input: ApprovalInput): ApprovalScreen {
   const { review } = input;
   const { entry, thread } = review;
   const ref = { alertId: thread.id, entryId: entry.id };
-  const variant = review.authorRole === "ambassador" ? "ambassador" : "alert";
+  // O-07 is a post whose frozen texts say "Building ambassador, {building}" (S08.02): what was frozen at submit, never the author's role now, so a role changed
+  // since cannot show one view over texts that say the other. A draft has no texts yet: its author's role says.
+  const variant = (review.attribution ? review.attribution.role === "ambassador" : review.authorRole === "ambassador") ? "ambassador" : "alert";
   const open = review.recipients.open;
   const aside = asideOf(entry.content.audience, input.plans, { href: "", label: "" }, audienceText);
   // An update says what it changes about who the thread is for, in the audience catalog's words (S05.01); nothing is said when it changes nothing.

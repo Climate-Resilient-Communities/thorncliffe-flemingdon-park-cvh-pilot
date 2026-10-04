@@ -19,7 +19,7 @@ import { addTorontoDays } from "../../../platform/clock";
 import { uuidv7 } from "../../../platform/ids";
 import { alert, alertEntry, alertEntryTranslation, alertSubmitAttempt, feedVersion } from "../adapters/schema";
 import { NO_RECIPIENTS, RETURN_NOTE_MAX, sameRecipientCounts, type RecipientCounts } from "../../../contracts/alertApproval";
-import { audienceRsns, type Audience } from "../../../contracts/audience";
+import { audienceCoversBuilding, audienceRsns, type Audience } from "../../../contracts/audience";
 import type { StaffRole } from "../../../contracts/staffRoles";
 import { UNTIL_RESOLVED_MS, VALID_UNTIL_MAX_DAYS, audienceBuildings, contentRefusal, draftFingerprint, isWideContent, sameContent, validUntilRefusal, type EntryContent, type Phase, type ValidUntilMode } from "../domain/content";
 import { possibleDuplicateOf } from "../domain/duplicates";
@@ -30,8 +30,9 @@ import { FROZEN_LANGS } from "../domain/translations";
 import { coveringEntry, isPublished, updateStart } from "../domain/thread";
 import { isSupersedingKind, isWithdrawalReason, substantiveRemains, targetRefusal, type TargetFacts, type WithdrawalReason } from "../domain/corrections";
 import { createCloseAlert } from "./closeAlert";
+import { attributionFor, attributionOfRsn, discardReasonOf, rsnOfAttribution, sameAttribution, type DiscardReason, type EntryAttribution } from "../domain/ambassadorPost";
 import { Refused } from "./refused";
-import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type PlaceChoice } from "./audience";
+import { placeRefusal, resolveGroups, resolvePlace, type AudiencePlaces, type BuildingChoice, type PlaceChoice } from "./audience";
 import type { AlertActor, AlertAudit, AlertResult, FrozenContent, FrozenSmsBody, PrepareContext, StaffDirectory } from "./ports";
 import { publishedSummaries, readClosedThreads, readRunningThreads, readThreadSummary, type ClosedThread, type RunningThread, type ThreadSummary } from "./threads";
 import { AUDIT_REASON, INVALID_FORM_AUDIT_ACTION, INVALID_FORM_CODE, INVALID_FORM_REASON, type InvalidFormAction } from "./refusalReasons";
@@ -107,6 +108,10 @@ export interface EntryView {
   supersedesId?: string | null;
   /** Why a withdrawal was made, from the catalog (S05.02); null or absent for every other entry. */
   withdrawalReason?: WithdrawalReason | null;
+  /** Why it was discarded (S08.02): its author took it back, the Hub declined it, or its thread closed first; null for an entry that is not discarded (or was discarded before the reason was kept). */
+  discardReason?: DiscardReason | null;
+  /** The building an ambassador's post is attributed to, frozen at submit with its texts (S08.02); null for the Hub's entries and for a draft. */
+  attributedRsn?: string | null;
 }
 
 export interface ThreadView {
@@ -182,6 +187,11 @@ export interface EntryReview {
   thread: ThreadView;
   entry: EntryView;
   authorRole: StaffRole | null;
+  /**
+   * Who the entry is from, as frozen at submit with its texts (S08.02): an ambassador's post is the building's, whatever the author's role is now. Null for an
+   * entry that holds no frozen texts (a draft): the view then goes by `authorRole`.
+   */
+  attribution: EntryAttribution | null;
   texts: readonly ReviewedText[];
   sms: Readonly<Record<string, FrozenSmsBody>>;
   recipients: RecipientCount;
@@ -304,6 +314,28 @@ export interface AddUpdateInput {
 }
 
 /**
+ * An ambassador's post (S08.02, A-02): what they chose on the one screen. The page makes the ids when it draws the form, so that a press sent again (twice,
+ * or by a page that held it until signal came back) makes one thread and one entry.
+ */
+export interface AmbassadorPostInput {
+  /** The open thread the post is an update to (a practice post in a drill, or an update about an alert), or null for a new thread: its first entry. */
+  into: string | null;
+  /** The id the new thread takes when `into` is null (made by the page); ignored otherwise. */
+  alertId: string;
+  /** The id the new entry takes (made by the page). */
+  entryId: string;
+  /** The one building the post is for, and its floors: the whole building, a list, or a range from one floor to another by the building's order. */
+  place: BuildingChoice;
+  /** What is happening: the types an Ambassador may post (power, water, elevator, fire, flood, other). An update to a thread keeps the thread's, whatever is sent. */
+  types: readonly string[];
+  phase: Phase;
+  validUntil: Date;
+  validUntilMode: ValidUntilMode;
+  /** The English text, as the post's author wrote it. */
+  text: string;
+}
+
+/**
  * What a correction is made of (S05.02): the corrected English wording, where things stand (required, as for an update), and the valid-until the author chose.
  * The types and the audience are not here: they start as the thread's, from the entry that covers it, and change only through the pickers afterwards.
  */
@@ -354,6 +386,8 @@ export type SubmitStart =
       context: PrepareContext;
       /** The open, non-drill thread this entry may duplicate, or null. */
       possibleDuplicateOf: string | null;
+      /** Who the texts say the entry is from (S08.02), as worked out under the lock: the freezing transaction checks it is still so and stores it. */
+      attribution: EntryAttribution;
     };
 
 const SLUG_ALPHABET = "23456789bcdfghjkmnpqrstvwxz";
@@ -402,6 +436,15 @@ function refusalOfDatabaseError(error: unknown): AlertRefusal | null {
   return null;
 }
 
+/** A unique key that another transaction took first (Postgres 23505), anywhere in the error's causes: the race of two presses of one new post (S08.02). */
+function isUniqueViolation(error: unknown): boolean {
+  for (let current = error, depth = 0; current && typeof current === "object" && depth < 5; depth += 1) {
+    if ((current as { code?: unknown }).code === "23505") return true;
+    current = (current as { cause?: unknown }).cause;
+  }
+  return false;
+}
+
 type EntryRow = typeof alertEntry.$inferSelect;
 type ThreadRow = typeof alert.$inferSelect;
 
@@ -424,6 +467,8 @@ const entryOf = (row: EntryRow): EntryView => ({
   possibleDuplicateOf: row.possibleDuplicateOf,
   supersedesId: row.supersedesId,
   withdrawalReason: row.withdrawalReason as WithdrawalReason | null,
+  discardReason: row.discardReason as DiscardReason | null,
+  attributedRsn: row.attributedRsn,
 });
 
 const contentOf = (row: EntryRow): EntryContent => ({
@@ -574,6 +619,18 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
   }
 
   /**
+   * Who an entry's texts say it is from when this person submits it (S08.02): the Hub, or for an Ambassador "Building ambassador, {building}" of the one
+   * building the post is for (ONE_BUILDING_ONLY otherwise), with the building's address as the texts name it. Read under the use case's lock.
+   */
+  async function attributionIn(tx: DbTransaction, standing: StaffStanding, content: EntryContent): Promise<{ attribution: EntryAttribution; sms: PrepareContext["attribution"] }> {
+    const attribution = attributionFor(standing.role, content.audience);
+    if (attribution === "ONE_BUILDING_ONLY") throw new Refused("ONE_BUILDING_ONLY");
+    if (attribution.role === "hub") return { attribution, sms: { role: "hub" } };
+    const address = (await places.addressesOf?.(tx, [attribution.rsn]))?.get(attribution.rsn) ?? attribution.rsn;
+    return { attribution, sms: { role: "ambassador", building: address } };
+  }
+
+  /**
    * Replaces a draft's content: the shape, the actor's authority over the draft as it is now and for the new scope and
    * buildings, the places, then the write. Whoever saves a change becomes an editor (the trigger adds them). Shared by saving a draft and by
    * choosing its audience, so both are judged by the one rule.
@@ -680,6 +737,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     frozen: FrozenContent,
     expected: EntryContent,
     duplicateOf: string | null,
+    attribution: EntryAttribution,
   ): Promise<EntryView> {
     mustTransition(thread, entry, "pending_approval");
     const content = contentOf(entry);
@@ -718,6 +776,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         returnedFor: null,
         returnedNote: null,
         possibleDuplicateOf: duplicateOf,
+        // Who the texts just frozen say the entry is from (S08.02): the approval view and residents read this, never the author's role at the time.
+        attributedRsn: rsnOfAttribution(attribution),
       })
       .where(eq(alertEntry.id, entry.id))
       .returning();
@@ -737,7 +797,7 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
     mustTransition(thread, entry, "draft");
     const [returned] = await tx
       .update(alertEntry)
-      .set({ status: "draft", returnedFor: reason, returnedNote: note, contentHash: null, smsBodies: null, submittedAt: null, possibleDuplicateOf: null })
+      .set({ status: "draft", returnedFor: reason, returnedNote: note, contentHash: null, smsBodies: null, submittedAt: null, possibleDuplicateOf: null, attributedRsn: null })
       .where(eq(alertEntry.id, entry.id))
       .returning();
     await audit.record(tx, {
@@ -956,9 +1016,6 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         if (!isStaleAttempt(running.startedAt, at)) throw new Refused("SUBMIT_IN_PROGRESS");
         await markAbandoned(running.key);
       }
-      // TODO(E08): an Ambassador's post is attributed to their building ("Building ambassador, {building}") and is not yet
-      // verified (D-1); this epic's texts say "from the Hub", "Verified by the Hub", so only Hub staff submit through here.
-      if (standing.role === "ambassador") throw new Refused("NOT_ALLOWED");
       let content: EntryContent;
       if (mode.kind === "submit") {
         mustBeEditor(row, actor.staffId);
@@ -983,6 +1040,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       // A correction or a withdrawal of an entry that is no longer a valid target is refused before anything is paid for or frozen (S05.02).
       await mustHaveValidTarget(tx, thread, row);
       if (row.kind !== "withdrawal") await mustExist(tx, content.audience);
+      // Who the texts say it is from (S08.02): an Ambassador's post is "Building ambassador, {building}" of its one building, the Hub's is the Hub's. The texts
+      // are frozen after Approval only ("Verified by the Hub"): an ambassador's post that residents read before approval is S08.03's.
+      const { attribution, sms: smsAttribution } = await attributionIn(tx, standing, content);
       const duplicateOf = await findPossibleDuplicate(tx, thread, row, content);
       const slug = thread.slug;
       if (slug === null) throw new Error("alerting: a thread has no slug");
@@ -996,9 +1056,9 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         channels: ENTRY_CHANNELS,
         slug,
         verified: true,
-        attribution: { role: "hub" },
+        attribution: smsAttribution,
       };
-      return { kind: "started", attempt: attemptOf(created, at), expected: content, context, possibleDuplicateOf: duplicateOf };
+      return { kind: "started", attempt: attemptOf(created, at), expected: content, context, possibleDuplicateOf: duplicateOf, attribution };
     });
   }
 
@@ -1029,14 +1089,26 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
    * changed while it was being prepared. Submit again.", nothing frozen), writes the frozen content as the next version with its
    * hash, moves the entry to `pending_approval` and records the attempt as committed. Any refusal ends the attempt as failed.
    */
-  async function completeSubmit(actor: AlertActor, ref: EntryRef, key: string, frozen: FrozenContent, expected: EntryContent, duplicateOf: string | null): Promise<AlertResult<EntryView>> {
+  async function completeSubmit(
+    actor: AlertActor,
+    ref: EntryRef,
+    key: string,
+    frozen: FrozenContent,
+    expected: EntryContent,
+    duplicateOf: string | null,
+    attributedAs?: EntryAttribution,
+  ): Promise<AlertResult<EntryView>> {
     const done = await change("entry.submitted", actor, { type: "alert_entry", id: ref.entryId }, async (tx) => {
       const { thread, standing, entry } = await open(tx, actor, ref);
       const [attempt] = await tx.select().from(alertSubmitAttempt).where(and(eq(alertSubmitAttempt.entryId, ref.entryId), eq(alertSubmitAttempt.key, key))).for("update");
       if (!attempt || attempt.actorId !== actor.staffId || attempt.state !== "running") throw new Refused("SUBMIT_ABANDONED");
       mustBeEditor(entry!, actor.staffId);
       mustAuthor(standing, actor.staffId, contentOf(entry!));
-      const view = await submitIn(tx, entry!, thread, actor, frozen, expected, duplicateOf);
+      // The texts being frozen name who the entry is from as `beginSubmit` worked it out (`attributedAs`); if the person's role changed in between, they would
+      // say something the entry no longer is, so nothing is frozen (DRAFT_CHANGED: submit again). Without one (a caller that froze no attribution), it is worked out now.
+      const attributedNow = (await attributionIn(tx, standing, contentOf(entry!))).attribution;
+      if (attributedAs !== undefined && !sameAttribution(attributedAs, attributedNow)) throw new Refused("DRAFT_CHANGED");
+      const view = await submitIn(tx, entry!, thread, actor, frozen, expected, duplicateOf, attributedNow);
       await tx
         .update(alertSubmitAttempt)
         .set({ state: "committed", resultVersion: view.version, resultHash: frozen.contentHash })
@@ -1063,6 +1135,83 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
       meta: { reason: AUDIT_REASON[outcome], refusal: outcome },
     });
     return true;
+  }
+
+  /** One try of an ambassador's post (`postFromAmbassador`), in its own transaction under the thread's lock. */
+  async function postOnce(actor: AlertActor, input: AmbassadorPostInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+    const creating = input.into === null;
+    const threadId = input.into ?? input.alertId;
+    const subject = creating ? { type: "alert" as const, id: input.alertId } : { type: "alert_entry" as const, id: input.entryId };
+    return change(creating ? "alert.created" : "entry.created", actor, subject, async (tx) => {
+      if (!UUID.test(threadId) || !UUID.test(input.entryId)) throw new Refused("ENTRY_ID_INVALID");
+      // AD-18: the thread is locked first. A new thread's row does not exist yet, so its id (the page's) is locked instead, for the transaction: the same
+      // post sent twice at once makes it once, the second press waiting and then finding it.
+      if (creating) await tx.execute(sql`select pg_advisory_xact_lock(hashtextextended(${`alert:${threadId}`}, 0))`);
+      // ... then the thread's row, when it exists (made by an earlier press of the same post, or the open thread an update goes in).
+      const [existingThread] = await tx.select({ id: alert.id }).from(alert).where(eq(alert.id, threadId)).for("update");
+      const at = now();
+      const contentFor = async (standing: StaffStanding, types: readonly string[]): Promise<EntryContent> => {
+        const sorted = [...new Set(types)].sort();
+        if (sorted.length !== types.length) throw new Refused("TYPES_REPEATED");
+        if (sorted.length === 0) throw new Refused("TYPES_EMPTY");
+        const choice: PlaceChoice = { scope: "buildings", buildings: [input.place] };
+        // The policy first, on the building asked for, so someone who may not post there learns nothing of its floors.
+        mustAuthor(standing, actor.staffId, { types: sorted, audience: askedFor(choice, { groups: [], types: sorted }) });
+        const resolved = await resolvePlace(tx, places, choice, { groups: [], types: sorted });
+        if (!resolved.ok) throw new Refused(resolved.error);
+        const content: EntryContent = { text: input.text, types: sorted, audience: resolved.value, phase: input.phase, validUntil: input.validUntil, validUntilMode: input.validUntilMode };
+        const invalid = contentRefusal(content) ?? validUntilProblem(content.validUntil, at);
+        if (invalid) throw new Refused(invalid);
+        mustAuthor(standing, actor.staffId, content);
+        return content;
+      };
+
+      if (!existingThread) {
+        if (!creating) throw new Refused("ALERT_NOT_FOUND");
+        drillOf.set(tx, false);
+        const standing = await staff.standing(tx, actor.staffId);
+        if (!standing || standing.status !== "active" || standing.role !== "ambassador") throw new Refused("NOT_ALLOWED");
+        // An entry id another thread already holds is not this post's.
+        const [taken] = await tx.select({ id: alertEntry.id }).from(alertEntry).where(eq(alertEntry.id, input.entryId));
+        if (taken) throw new Refused("ENTRY_ID_INVALID");
+        const content = await contentFor(standing, input.types);
+        // The report reached the Hub as it is posted: by the database's clock, which also times the thread's creation (a report is never after its thread).
+        const rows = await tx.execute<{ now: Date | string }>(sql`select now() as now`);
+        const reportedAt = new Date([...rows][0].now);
+        return insertThread(tx, actor, { kind: "update", isDrill: false, reportedAt, content }, { alertId: input.alertId, entryId: input.entryId, createdAt: at });
+      }
+
+      const { thread, standing } = await open(tx, actor, { alertId: threadId });
+      if (standing.role !== "ambassador") throw new Refused("NOT_ALLOWED");
+      const [existing] = await tx.select().from(alertEntry).where(eq(alertEntry.id, input.entryId)).for("update");
+      if (existing) {
+        if (existing.alertId !== thread.id || existing.authorId !== actor.staffId || existing.kind !== "update") throw new Refused("ENTRY_ID_INVALID");
+        // The same press again: what it made stands. A draft (its submit failed, or never ran) takes what was sent now, its types kept.
+        if (existing.status !== "draft") return { thread: threadOf(thread), entry: entryOf(existing) };
+        const content = await contentFor(standing, existing.types);
+        return { thread: threadOf(thread), entry: await writeDraft(tx, standing, actor, existing, content, { checkValidUntil: true }) };
+      }
+      // The page made a new thread's id that is already a thread: not this post's.
+      if (creating) throw new Refused("ENTRY_ID_INVALID");
+      // An update to a running thread starts from what covers it (S05.01): its types; the place is the ambassador's, for their building.
+      const covering = coveringEntry(publishedSummaries(await tx.select().from(alertEntry).where(eq(alertEntry.alertId, thread.id))));
+      if (covering === null) throw new Refused("NO_PUBLISHED_ENTRY");
+      const content = await contentFor(standing, covering.types);
+      // The thread must be about the building the post is for (one they are assigned to: `contentFor` checked it), so a request naming another thread's id
+      // cannot put a post in an alert about somewhere else; the page only offers the threads about their buildings, the server holds to it.
+      const neighbourhoodId = (await places.neighbourhoodsOf(tx, [input.place.rsn])).get(input.place.rsn) ?? null;
+      if (!audienceCoversBuilding(covering.audience as Audience, { rsn: input.place.rsn, neighbourhoodId })) throw new Refused("OUT_OF_SCOPE");
+      const row = await insertEntry(tx, actor, { alertId: thread.id, entryId: input.entryId, createdAt: at }, "update", content);
+      await audit.record(tx, {
+        action: "entry.created",
+        actorStaffId: actor.staffId,
+        subjectType: "alert_entry",
+        subjectId: row.id,
+        isDrill: thread.isDrill,
+        meta: { entry_id: row.id, kind: "update", types: [...content.types] },
+      });
+      return { thread: threadOf(thread), entry: entryOf(row) };
+    });
   }
 
   return {
@@ -1177,6 +1326,30 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         return { thread: threadOf(thread), entry: entryOf(row) };
       });
     },
+
+    /**
+     * An ambassador's post (A-02, S08.02): makes the draft the ambassador's screen submits next, in one transaction under the thread's lock, either as a new
+     * thread's first entry (an `update`: they say what is happening, the Hub's acknowledgement step is the Hub's) or as an `update` to an open thread (`into`:
+     * an alert about their building, or a drill, where it is a practice post). It is for exactly one building, one they are assigned to now (the policy's
+     * `alert.author`, `assigned_building`), with its floors as a range, a list or the whole building, and for the types an Ambassador may post (heat, smoke and
+     * winter storm are neighbourhood alerts: `NOT_ALLOWED`); an update keeps its thread's types. No groups: everyone in the place.
+     *
+     * The ids are the page's: a request that names this person's own post again changes nothing when it was submitted already (the same press, sent again),
+     * and when it is still a draft (a press whose submit failed, pressed again) the draft takes what was sent now. An id that is someone else's, or another
+     * thread's, is refused (`ENTRY_ID_INVALID`). Only an Ambassador posts here (`NOT_ALLOWED` for anyone else: the Hub writes on its own screens). Audited as
+     * `alert.created` for a new thread and `entry.created` for an update; the submit, translation, freeze and second-person approval that follow are E04's, unchanged.
+     */
+    async postFromAmbassador(actor: AlertActor, input: AmbassadorPostInput): Promise<AlertResult<{ thread: ThreadView; entry: EntryView }>> {
+      // The same new post sent twice at once waits on the lock of the new thread's id (`postOnce`); should a press still lose a race on a primary key (the
+      // entry's id), it is rolled back whole and runs once again, and then finds what the other made (the same press).
+      try {
+        return await postOnce(actor, input);
+      } catch (error) {
+        if (!isUniqueViolation(error)) throw error;
+        return postOnce(actor, input);
+      }
+    },
+
 
     /**
      * "Correct" (O-15, S05.02): makes a draft `correction` that names `ref.targetId`, in one transaction under the thread's lock. The target must be a valid
@@ -1398,14 +1571,17 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
         } else throw new Refused("OUT_OF_SCOPE");
         mustMatchShown(entry!, options.shown);
         const from = entry!.status as "draft" | "pending_approval";
-        const [discarded] = await tx.update(alertEntry).set({ status: "discarded" }).where(eq(alertEntry.id, entry!.id)).returning();
+        // Why (S08.02): the author taking back their own entry, or anyone else (an approver, or the Hub having edited it) not sending it: only the second is
+        // "Not sent by the Hub" on an ambassador's screens.
+        const discardReason = discardReasonOf(actor.staffId, entry!.authorId);
+        const [discarded] = await tx.update(alertEntry).set({ status: "discarded", discardReason }).where(eq(alertEntry.id, entry!.id)).returning();
         await audit.record(tx, {
           action: "entry.discarded",
           actorStaffId: actor.staffId,
           subjectType: "alert_entry",
           subjectId: entry!.id,
           isDrill: thread.isDrill,
-          meta: { entry_id: entry!.id, version: entry!.version, from },
+          meta: { entry_id: entry!.id, version: entry!.version, from, discard_reason: discardReason },
         });
         return entryOf(discarded);
       });
@@ -1734,6 +1910,8 @@ export function createAlertLifecycle(deps: AlertLifecycleDeps) {
             thread,
             entry: entryOf(entryRow),
             authorRole: author?.role ?? null,
+            // A frozen entry is from whom its texts say (S08.02); a draft has no texts yet.
+            attribution: entryRow.status === "draft" ? null : attributionOfRsn(entryRow.attributedRsn),
             texts,
             sms: (entryRow.smsBodies ?? {}) as Record<string, FrozenSmsBody>,
             recipients: reached,

@@ -33,6 +33,11 @@ export interface AudiencePlaces {
   neighbourhoodIds(executor: DbExecutor): Promise<readonly string[]>;
   /** The neighbourhood of each building given, by rsn (a building that is not there is left out): the possible-duplicate check of S04.05 compares a neighbourhood audience with a building one by it. */
   neighbourhoodsOf(executor: DbExecutor, rsns: readonly string[]): Promise<ReadonlyMap<string, string>>;
+  /**
+   * The address of each building given, by rsn (a building that is not there is left out): what an ambassador's post names in its texts, "Building
+   * ambassador, {building}" (S08.02). Left out (a test's fake), the texts name the rsn.
+   */
+  addressesOf?(executor: DbExecutor, rsns: readonly string[]): Promise<ReadonlyMap<string, string>>;
 }
 
 /** One building of the picker's choice: the whole building (`floors: null`), or the floors ticked and the ranges chosen. */

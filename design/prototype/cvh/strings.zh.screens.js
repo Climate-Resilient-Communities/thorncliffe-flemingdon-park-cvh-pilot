@@ -1476,4 +1476,51 @@
     "offlineNote": "这部手机可能无法保存页面供离线使用"
    }
   });
+  /* S08.02: an ambassador's post (A-02): the one screen's new words (an unsent post is held only in the open page's memory), and A03.states.ended. AI-generated, not yet checked by native readers. */
+  m(t, {
+   "A02": {
+    "building": "哪栋楼？",
+    "allFloorsLine": "全部 {n} 个楼层",
+    "listLabel": "部分楼层",
+    "listLine": "勾选每个楼层",
+    "rangeLabel": "连续的几个楼层",
+    "rangeLine": "从一个楼层到另一个楼层",
+    "fromFloor": "从",
+    "toFloor": "到",
+    "chooseFloor": "选择",
+    "phaseTitle": "目前情况",
+    "phaseProblem": "出现了问题",
+    "phaseProgress": "正在处理",
+    "validTitle": "持续到什么时候？",
+    "validResolved": "直到解决（从现在起 24 小时）",
+    "validAt": "到某个日期和时间",
+    "dateLabel": "日期",
+    "timeLabel": "时间（多伦多时间）",
+    "validHint": "最多 7 天之内。",
+    "textLabel": "发生了什么（用英文写）",
+    "textHint": "最多 {max} 个字符。居民会用自己的语言阅读；中心会先核查。",
+    "inAlert": "这条更新会加入这条警报：{headline}",
+    "typesFixed": "发生了什么：{types}",
+    "unsent": "还没有发出。请保持此页面打开；有信号时会发出。",
+    "unsentClose": "如果关闭此页面，这条更新就会丢失。",
+    "sending": "正在发送给中心……",
+    "errPhase": "请选择目前情况。",
+    "errText": "请用英文说明发生了什么。",
+    "errTextLong": "内容太长。最多使用 {max} 个字符。",
+    "errValid": "请输入日期和时间。",
+    "errValidPast": "这个时间已经过去。请选择更晚的时间。",
+    "errValidFar": "请选择 7 天之内的时间。",
+    "errValidSkipped": "那天晚上要调整时钟，所以这个时间不明确。请选择其他时间。",
+    "errRange": "第一个楼层比最后一个楼层高。请把较低的楼层放在前面。",
+    "errNotAssigned": "您现在没有被分配到这栋楼，所以不能为它发布。",
+    "errClosed": "这条警报已经结束。请改为发布一条新的更新。",
+    "errSignedOut": "您已被登出，所以这条没有发出。请重新登录，然后再发布一次。",
+    "errFailed": "这条没有发出。请再试一次。如果一直这样，请打电话给中心。"
+   },
+   "A03": {
+    "states": {
+     "ended": "未发送：中心核查前警报已结束"
+    }
+   }
+  });
 })();

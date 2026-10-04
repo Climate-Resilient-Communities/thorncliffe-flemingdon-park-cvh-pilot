@@ -5,6 +5,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import type postgres from "postgres";
 import type { DeliveryState } from "../../src/modules/messaging";
+import { inDays } from "./helpers";
 
 export type Sql = postgres.Sql;
 export type Tx = postgres.TransactionSql;
@@ -102,18 +103,18 @@ export function deliveryFixtures(owner: Sql) {
         await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                           version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at, created_at)
                  values (${targetId}, ${alertId}, 'ack', 'approved', ${author}, ${[author]}, 'original', ${types},
-                         ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2030-10-04T15:00:00Z")},
+                         ${tx.json(audience)}, 'problem', ${options.validUntil ?? inDays(30)},
                          1, ${hash}, ${tx.json(bodies as never)}, ${NOW}, ${approver}, ${NOW}, 1, ${hash}, ${NOW}, ${new Date(NOW.getTime() - 1000)})`;
       }
       await tx`insert into alert_entry (id, alert_id, kind, status, author_id, editor_ids, original_text, types, audience, phase, valid_until,
                                         version, content_hash, sms_bodies, submitted_at, approved_by, approved_at, approved_version, approved_hash, web_published_at,
-                                        supersedes_id, withdrawal_reason)
+                                        supersedes_id, withdrawal_reason, discard_reason)
                values (${entryId}, ${alertId}, ${options.kind ?? "ack"}, ${status}, ${author}, ${[author]}, 'text', ${types},
-                       ${tx.json(audience)}, 'problem', ${options.validUntil ?? new Date("2030-10-04T15:00:00Z")},
+                       ${tx.json(audience)}, 'problem', ${options.validUntil ?? inDays(30)},
                        ${frozen ? 1 : 0}, ${frozen ? hash : null}, ${frozen ? tx.json(bodies as never) : null}, ${frozen ? NOW : null},
                        ${status === "approved" ? approver : null}, ${status === "approved" ? NOW : null}, ${status === "approved" ? 1 : null},
                        ${status === "approved" ? hash : null}, ${status === "approved" ? NOW : null},
-                       ${targetId}, ${options.kind === "withdrawal" ? "wrong_information" : null})`;
+                       ${targetId}, ${options.kind === "withdrawal" ? "wrong_information" : null}, ${status === "discarded" ? "declined" : null})`;
       await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
       if (targetId !== null) replacedIds.push(targetId);
     });

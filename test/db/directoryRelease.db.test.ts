@@ -38,6 +38,11 @@ import { createDb, type Db } from "@/platform/db";
 import { sha256Hex, sha256HexBytes } from "@/platform/hash";
 import { connect, serverUrl } from "./helpers";
 
+// The publish's moment, on the real clock: the database stamps its spend rows with its own now() and the month they count in is
+// the app clock's, so a fixed calendar day here would put the two in different months once that day's month is over.
+const T0 = new Date(Math.floor(Date.now() / 1000) * 1000);
+const at = (minutes: number, seconds = 0) => new Date(T0.getTime() + (minutes * 60 + seconds) * 1000);
+
 // The real audit module writes audit_event; the spy only lets a test make it fail once.
 vi.mock("@/modules/audit", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@/modules/audit")>();
@@ -160,7 +165,7 @@ describe("the directory release (S02.05)", () => {
       zhHant: async () => ({ convert: (text: string) => text.replaceAll("软", "軟").replaceAll("务", "務"), openccVersion: "1.4.2", config: "test s2twp" }),
       onFailure: async (failure) => void failures.push(failure),
       sleep: async () => {},
-      now: () => new Date("2026-10-02T15:00:00Z"),
+      now: () => at(0),
       ...change,
       storage,
     };
@@ -284,8 +289,8 @@ describe("the directory release (S02.05)", () => {
       });
       const version = { hash: "b".repeat(64), gitCommit: "abc1234def" };
       await seedProviders(owner, catalogue("An older English text."), version);
-      await confirmProvider(app, staffId, "M010", "2026-09-30", { now: () => new Date("2026-10-02T15:00:00Z") });
-      await publishProvider(app, staffId, "M010", { now: () => new Date("2026-10-02T15:00:00Z") });
+      await confirmProvider(app, staffId, "M010", "2026-09-30", { now: () => at(0) });
+      await publishProvider(app, staffId, "M010", { now: () => at(0) });
       const d = deps();
 
       const first = await publish(d);
@@ -312,7 +317,7 @@ describe("the directory release (S02.05)", () => {
       expect(row.git_commit).toBe("abc1234def");
       expect(row.started_by).toBe(staffId);
       expect(row.search).toBeNull();
-      expect(row.published_at).toEqual(new Date("2026-10-02T15:00:00Z"));
+      expect(row.published_at).toEqual(at(0));
       for (const lang of LANG_CODES) {
         const entry = row.files[lang];
         expect(entry.path).toBe(`releases/1/${lang}.json`);
@@ -409,7 +414,7 @@ describe("the directory release (S02.05)", () => {
 
       // Later, the claim has expired: the next run resumes release 2, writing only the files that are missing.
       const putsBefore = first.storage.puts.length;
-      const later = deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") });
+      const later = deps({ storage: first.storage, now: () => at(10) });
       const result = await publish(later);
 
       expect(result).toMatchObject({ ok: true, release: 2, attempts: 2, resumedFiles: 5 });
@@ -441,7 +446,7 @@ describe("the directory release (S02.05)", () => {
       await sleepMs(100);
       expect(await unpublishProvider(app, staffId, "M002")).toMatchObject({ ok: true });
 
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10) }));
 
       expect(result).toMatchObject({ ok: true, release: 1, resumedFiles: 3 });
       // The release is the complete set as of its snapshot: M002 is in every file, including the ones written after the change.
@@ -461,7 +466,7 @@ describe("the directory release (S02.05)", () => {
       await sleepMs(100);
       await unpublishProvider(app, staffId, "M002");
 
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T18:00:00Z") }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(180) }));
 
       expect(result).toMatchObject({ ok: true, release: 2, resumedFiles: 0 });
       expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "abandoned" }, { number: 2, status: "complete", is_current: true }]);
@@ -563,7 +568,7 @@ describe("the directory release (S02.05)", () => {
       await sleepMs(100);
       await sql`update directory_release set attempts = 3 where number = 1`;
 
-      const d = deps({ storage: first.storage, now: () => new Date("2026-10-02T15:05:00Z") });
+      const d = deps({ storage: first.storage, now: () => at(5) });
       const result = await publish(d);
 
       // The Admin is told, in this press: nothing is built in the same breath.
@@ -662,7 +667,7 @@ describe("the directory release (S02.05)", () => {
       // The app is deployed with another catalogue and the seed has loaded it.
       await loaded("c".repeat(64), "9999999");
 
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), catalogue: async () => ({ hash: "c".repeat(64), gitCommit: "9999999" }) }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10), catalogue: async () => ({ hash: "c".repeat(64), gitCommit: "9999999" }) }));
 
       expect(result).toMatchObject({ ok: true, release: 2, resumedFiles: 0 });
       expect(await releases()).toMatchObject([{ number: 1, status: "failed", failure: "abandoned" }, { number: 2, status: "complete", is_current: true }]);
@@ -682,7 +687,7 @@ describe("the directory release (S02.05)", () => {
       await sleepMs(100);
       await loaded("c".repeat(64));
 
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10) }));
 
       expect(result).toMatchObject({ ok: false, reason: "catalogue_not_loaded" });
       expect(await releases()).toMatchObject([{ number: 1, status: "building" }]);
@@ -713,7 +718,7 @@ describe("the directory release (S02.05)", () => {
       const takerHeld = gate();
       const takerAt = gate();
       const taker = deps({
-        now: () => new Date("2026-10-02T15:10:00Z"),
+        now: () => at(10),
         hook: async (point, detail) => {
           if (point === "file_stored" && detail.lang === LANG_CODES[0]) {
             takerAt.open();
@@ -740,7 +745,7 @@ describe("the directory release (S02.05)", () => {
     });
 
     it("stops retrying when the time budget is spent: the lease is let go, ops hears of it, the release stays building and the next press resumes it", async () => {
-      let t = Date.parse("2026-10-02T15:00:00Z");
+      let t = T0.getTime();
       const slept: number[] = [];
       const d = failingStore(
         deps({
@@ -768,7 +773,7 @@ describe("the directory release (S02.05)", () => {
     });
 
     it("also stops after a slow file when the clock has run past the budget, leaving the files stored so far for the next press", async () => {
-      let t = Date.parse("2026-10-02T15:00:00Z");
+      let t = T0.getTime();
       const d = deps({ now: () => new Date(t), budgetMs: 40_000 });
       const put = d.storage.put.bind(d.storage);
       d.storage.put = async (path, body) => {
@@ -1158,7 +1163,7 @@ describe("the directory release (S02.05)", () => {
       const first = deps({ search: searchOf(model.embedder) });
       await publish(first);
       await sql`update provider set name = 'Flemingdon Family Health Centre' where id = 'M002'`;
-      expect(await publishProvider(app, staffId, "M003", { now: () => new Date("2026-10-02T15:00:00Z") })).toMatchObject({ ok: true });
+      expect(await publishProvider(app, staffId, "M003", { now: () => at(0) })).toMatchObject({ ok: true });
       expect(await unpublishProvider(app, staffId, "M001")).toMatchObject({ ok: true });
 
       const result = await publish(deps({ storage: first.storage, search: searchOf(model.embedder) }));
@@ -1258,7 +1263,7 @@ describe("the directory release (S02.05)", () => {
 
       // The claim expires: the next run embeds only what the kept chunk lacks.
       const later = fakeEmbedder();
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), search: searchOf(later.embedder, { chunkSize: 1 }) }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10), search: searchOf(later.embedder, { chunkSize: 1 }) }));
 
       expect(result).toMatchObject({ ok: true, release: 2, attempts: 2, search: { vectors: 2, embedded: 2 } });
       expect(later.calls).toEqual([[M002_TEXT]]);
@@ -1322,7 +1327,7 @@ describe("the directory release (S02.05)", () => {
       const model = fakeEmbedder();
       const d = deps({
         // The listing files are stored in time; the clock then runs past the budget before the first call.
-        now: () => new Date(Date.parse("2026-10-02T15:00:00Z") + (late ? 60 * 1000 : 0)),
+        now: () => new Date(T0.getTime() + (late ? 60 * 1000 : 0)),
         hook: async (point, detail) => {
           if (point === "file_stored" && detail.lang === LANG_CODES[LANG_CODES.length - 1]) late = true;
         },
@@ -1339,7 +1344,7 @@ describe("the directory release (S02.05)", () => {
 
     // ---------------------------------------------------------- the usage allowance
     it("refuses to embed when the month's calls would pass the allowance, before any call is made", async () => {
-      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'publish', ${MODEL}, 3, 1000)`;
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (now(), 'embed', 'publish', ${MODEL}, 3, 1000)`;
       const model = fakeEmbedder();
       const d = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 3, tokensPerMonth: 1_000_000 } }) });
 
@@ -1368,8 +1373,8 @@ describe("the directory release (S02.05)", () => {
     });
 
     it("counts the calendar month in Toronto: last month's usage and a call that is only allowed once more are not over the line", async () => {
-      // 2026-10-01 00:30 UTC is still September 30th in Toronto: last month's usage does not count against this month.
-      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T00:30:00Z")}, 'embed', 'publish', ${MODEL}, 50, 900000)`;
+      // Half an hour before this month began in Toronto (whatever the UTC calendar says): last month's usage does not count against this month.
+      await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values ((date_trunc('month', now() at time zone 'America/Toronto') at time zone 'America/Toronto') - interval '30 minutes', 'embed', 'publish', ${MODEL}, 50, 900000)`;
       const model = fakeEmbedder();
       const d = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 1, tokensPerMonth: 1_000_000 } }) });
 
@@ -1466,7 +1471,7 @@ describe("the directory release (S02.05)", () => {
     });
 
     // ---------------------------------------------------------- the review of S03.02
-    const LATER = () => new Date("2026-10-02T15:10:00Z");
+    const LATER = () => at(10);
     const never = () => new Promise<never>(() => {});
     /** A build that stops for good after its first chunk (M001's) is kept: the next release stays building, its claim run out by LATER. */
     async function stopAfterFirstChunk(first: Harness, change: Partial<NonNullable<PublishDeps["search"]>> = {}) {
@@ -1572,7 +1577,7 @@ describe("the directory release (S02.05)", () => {
       });
 
       it("counts the publish's own usage only: questions and test-set runs do not use up the publish allowance", async () => {
-        await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (${new Date("2026-10-01T14:00:00Z")}, 'embed', 'search', ${MODEL}, 500, 9000000), (${new Date("2026-10-01T15:00:00Z")}, 'embed', 'test_set', ${MODEL}, 500, 9000000)`;
+        await sql`insert into spend_event (at, kind, purpose, model, calls, tokens) values (now(), 'embed', 'search', ${MODEL}, 500, 9000000), (now(), 'embed', 'test_set', ${MODEL}, 500, 9000000)`;
         const model = fakeEmbedder();
         const first = deps({ search: searchOf(model.embedder, { allowance: { callsPerMonth: 3, tokensPerMonth: 100_000 } }) });
 
@@ -1780,7 +1785,7 @@ describe("the directory release (S02.05)", () => {
         await stopAfterFirstChunk(first);
         const next = fakeEmbedder();
 
-        const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:40:01Z"), search: searchOf(next.embedder, { chunkSize: 1 }) }));
+        const result = await publish(deps({ storage: first.storage, now: () => at(40, 1), search: searchOf(next.embedder, { chunkSize: 1 }) }));
 
         expect(await releases()).toMatchObject([{ number: 1 }, { number: 2, status: "failed", failure: "abandoned" }, { number: 3, status: "complete" }]);
         expect(result).toMatchObject({ ok: true, release: 3, search: { vectors: 2, reused: 1, embedded: 1 } });
@@ -1845,7 +1850,7 @@ describe("the directory release (S02.05)", () => {
       await sleepMs(200);
 
       const other = fakeEmbedder({ model: "embed-multilingual-v3.0" });
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z"), search: searchOf(other.embedder) }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10), search: searchOf(other.embedder) }));
 
       expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["embed_model_changed"] });
       expect(other.calls).toHaveLength(0);
@@ -1864,7 +1869,7 @@ describe("the directory release (S02.05)", () => {
       while ((await sql`select count(*)::int as n from directory_release`)[0].n < 1) await sleepMs(20);
       await sleepMs(200);
 
-      const result = await publish(deps({ storage: first.storage, now: () => new Date("2026-10-02T15:10:00Z") }));
+      const result = await publish(deps({ storage: first.storage, now: () => at(10) }));
 
       expect(result).toMatchObject({ ok: false, reason: "search_config_invalid", detail: ["search_not_configured"] });
       expect((await currentManifest(app))).toBeNull();
@@ -1911,7 +1916,7 @@ describe("the directory release (S02.05)", () => {
       const running = publish(slow);
       await reached.promise;
       // Another instance takes the expired claim over and finishes the release.
-      const taker = deps({ storage: slow.storage, now: () => new Date("2026-10-02T15:05:00Z") });
+      const taker = deps({ storage: slow.storage, now: () => at(5) });
       const taken = await publish(taker);
       held.open();
       const stopped = await running;
@@ -1973,7 +1978,7 @@ describe("the directory release (S02.05)", () => {
       await reached.promise;
 
       const unpublishing = unpublishProvider(app, staffId, "M002");
-      const confirming = confirmProvider(app, staffId, "M001", "2026-10-01", { now: () => new Date("2026-10-02T15:00:00Z") });
+      const confirming = confirmProvider(app, staffId, "M001", "2026-10-01", { now: () => at(0) });
       expect(await stillPending(unpublishing)).toBe(true);
       expect(await stillPending(confirming, 100)).toBe(true);
       expect((await sql`select published from provider where id = 'M002'`)[0].published).toBe(true);

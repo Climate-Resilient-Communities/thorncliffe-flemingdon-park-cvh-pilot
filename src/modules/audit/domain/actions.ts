@@ -210,6 +210,8 @@ export const AUDIT_META = {
     version: count.optional(),
     from: z.enum(["draft", "pending_approval"]).optional(),
     by_close: z.literal(true).optional(),
+    // S08.02: why it was discarded: its author took it back (`by_author`), the Hub did not send it (`declined`), or its thread closed first (`by_close`).
+    discard_reason: z.enum(["by_author", "declined", "by_close"]).optional(),
     refusal: refusalCode.optional(),
   }),
   "entry.approved": meta({ entry_id: id.optional(), version: count.optional(), content_hash: sha256.optional(), recipient_count: count.optional(), reviewed_count: count.optional(), refusal: refusalCode.optional() }),
