@@ -27,7 +27,6 @@ export {
 export { createOncallRoster, hasOncallNumber, oncallNumberSource, type AddOutcome, type OncallEntry, type OncallRoster, type OncallRosterDeps, type RemoveOutcome } from "./application/oncallRoster";
 export {
   activeHealthConditions,
-  activeSenderConditions,
   createHealthJob,
   oncallText,
   readHeartbeat,

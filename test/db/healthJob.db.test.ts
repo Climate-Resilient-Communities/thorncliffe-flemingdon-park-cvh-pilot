@@ -13,7 +13,6 @@ import { lastPublishedAt } from "../../src/modules/directory";
 import {
   HEALTH_CONDITIONS,
   activeHealthConditions,
-  activeSenderConditions,
   createHealthJob,
   createOncallRoster,
   oncallNumberSource,
@@ -518,6 +517,10 @@ describe("with nobody on call", () => {
 });
 
 describe("the Hub's banner when the sender itself fails", () => {
+  // The banner leads with these two (healthBannerModel's isSender); the others mean the sender is still sending.
+  const activeSenderConditions = async (executor: Db) =>
+    (await activeHealthConditions(executor)).filter((row) => row.condition === "queue_stuck" || row.condition === "sender_stalled");
+
   it("shows while the stuck-queue or no-sender condition holds, and goes when the job records the recovery", async () => {
     await addOncall(1);
     await renewLease();

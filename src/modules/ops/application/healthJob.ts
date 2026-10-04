@@ -38,7 +38,6 @@ import { oncallStore } from "../adapters/oncallStore";
 import {
   FALLBACK_WINDOW_MS,
   JOB_FAILURE_WINDOW_MS,
-  SENDER_CONDITIONS,
   SIGNATURE_FAILURE_LIMIT,
   SIGNATURE_WINDOW_MS,
   decide,
@@ -237,18 +236,6 @@ export function createHealthJob(deps: HealthJobDeps): HealthJob {
       return { conditions, heartbeat };
     },
   };
-}
-
-/**
- * The conditions that mean the sender is not sending, as the Hub's banner shows them (S06.07): from what the last run remembered, not from a
- * fresh judgement, so the banner is one cheap read on every Hub screen. Empty when sending is healthy or the job has not noticed.
- */
-export async function activeSenderConditions(executor: DbExecutor): Promise<{ condition: (typeof SENDER_CONDITIONS)[number]; since: Date }[]> {
-  const active = await healthStore.active(executor);
-  return active.flatMap((row) => {
-    const condition = (SENDER_CONDITIONS as readonly string[]).includes(row.condition) ? (row.condition as (typeof SENDER_CONDITIONS)[number]) : null;
-    return condition === null ? [] : [{ condition, since: row.since }];
-  });
 }
 
 /** A condition the health job last found holding, and since when (S09.01: every Admin and Coordinator screen names each). */

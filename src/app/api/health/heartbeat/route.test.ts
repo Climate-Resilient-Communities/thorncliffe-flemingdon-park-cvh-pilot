@@ -5,11 +5,12 @@ vi.mock("@/modules/ops", () => ({ readHeartbeat: () => fresh() }));
 vi.mock("@/platform/db", () => ({ getDb: () => ({}) }));
 
 const { GET, HEAD } = await import("./route");
-const { heartbeatStatus } = await import("@/app/heartbeat");
+const { HEARTBEAT_CACHE_MS, cachedHeartbeatStatus, forgetHeartbeatAnswer, heartbeatStatus } = await import("@/app/heartbeat");
 
 describe("GET /api/health/heartbeat (S09.01)", () => {
   beforeEach(() => {
     fresh.mockReset();
+    forgetHeartbeatAnswer();
     vi.spyOn(console, "log").mockImplementation(() => {});
   });
 
@@ -28,6 +29,7 @@ describe("GET /api/health/heartbeat (S09.01)", () => {
   it("answers 503 with nothing else when the health job has not completed for 3 minutes, or never has", async () => {
     for (const reading of [{ completedAt: new Date(Date.now() - 200_000), fresh: false }, { completedAt: null, fresh: false }]) {
       fresh.mockResolvedValue(reading);
+      forgetHeartbeatAnswer();
       const response = await GET();
       expect(response.status).toBe(503);
       expect(await response.text()).toBe("");
@@ -47,5 +49,28 @@ describe("GET /api/health/heartbeat (S09.01)", () => {
     expect(logError).toHaveBeenCalledWith({ error: "TypeError" });
     expect(await heartbeatStatus({ fresh: () => new Promise(() => {}), timeoutMs: 10, logError })).toBe(503);
     expect(logError).toHaveBeenLastCalledWith({ error: "HeartbeatTimeout" });
+  });
+
+  it("reads the database once for calls within 10 s, shares a read in progress, and reads again after", async () => {
+    let clock = 1_000_000;
+    const now = () => clock;
+    fresh.mockResolvedValue({ completedAt: new Date(), fresh: true });
+
+    expect((await GET()).status).toBe(200);
+    expect((await HEAD()).status).toBe(200);
+    expect(fresh).toHaveBeenCalledTimes(1);
+
+    forgetHeartbeatAnswer();
+    fresh.mockClear();
+    expect(await Promise.all([cachedHeartbeatStatus(now), cachedHeartbeatStatus(now)])).toEqual([200, 200]);
+    expect(fresh).toHaveBeenCalledTimes(1);
+
+    fresh.mockResolvedValue({ completedAt: null, fresh: false });
+    clock += HEARTBEAT_CACHE_MS - 1;
+    expect(await cachedHeartbeatStatus(now)).toBe(200);
+    expect(fresh).toHaveBeenCalledTimes(1);
+    clock += 1;
+    expect(await cachedHeartbeatStatus(now)).toBe(503);
+    expect(fresh).toHaveBeenCalledTimes(2);
   });
 });

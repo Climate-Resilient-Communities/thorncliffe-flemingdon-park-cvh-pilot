@@ -150,7 +150,8 @@ Vercel and deploy; `select vault.update_secret((select id from vault.secrets whe
 **The health job (S06.07, S09.01, `/api/jobs/health`).** Every minute it judges every condition of AD-23: texts queued and due for more than 5 minutes
 outside a pause; a delivery that became `unknown`, or a text handed off with no outcome for 10 minutes; no renewal of the sender lease for 3 minutes while
 texts are due; Smart Encoding found on; more than 5 webhook signature failures in 10 minutes (S06.07); and (S09.01) a scheduled job that failed in the last
-10 minutes (a failed run in `cron.job_run_details`, or a job's call in `net._http_response` that did not answer 2xx, timed out or could not connect); an alert
+10 minutes (a failed run in `cron.job_run_details`, or a job's call in `net._http_response` that did not answer 2xx, timed out or could not connect; pg_net
+records no URL, so every failed pg_net call counts, and pg_net must be used for nothing but the jobs' calls to `/api/jobs/`); an alert
 submitted with a whole language in English in the last 24 hours; a directory publish that failed with none succeeding since; more non-alert texts today
 than `SMS_TRANSACTIONAL_DAILY_CEILING`; and a spending cap overrun this month (`spend.cap_overrun`, which S07.08 records). It records an `ops_event` (no
 personal data) when it texts the on-call Admins and when a condition clears, and queues one text per number on the on-call roster, at most once per

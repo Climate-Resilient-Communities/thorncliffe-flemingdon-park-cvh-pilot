@@ -11,7 +11,8 @@
 --  - `health_job_failures(ms)`: how many pg_cron runs failed (`cron.job_run_details`) and how many of the jobs' HTTP calls did not answer 2xx
 --    (`net._http_response`, pg_net's record of the answers, kept by pg_net for a few hours) in the last `ms` milliseconds, at most 24 hours. The
 --    app's role cannot read the `cron` schema (its jobs' commands name the Vault secrets), so this function, owned by the migration's role,
---    gives it a count and nothing else. A source the database does not have counts 0.
+--    gives it a count and nothing else. A source the database does not have counts 0. pg_net's answers carry no URL, so every answer
+--    counts: pg_net is for the scheduled jobs' calls to /api/jobs/ only, and anything else that used it would raise `job_failed`.
 --
 -- Supabase's default privileges grant every new table to anon, authenticated and service_role, so each is taken back.
 

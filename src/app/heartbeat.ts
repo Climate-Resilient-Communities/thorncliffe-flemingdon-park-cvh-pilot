@@ -7,6 +7,12 @@ import "server-only";
 import { readHeartbeat } from "@/modules/ops";
 import { getDb } from "@/platform/db";
 
+/**
+ * How long one answer is reused. The route is public and the monitor calls it once a minute, so anyone calling it faster gets the same answer
+ * without a database read; the answer is at most this much older than the 3 minutes it judges.
+ */
+export const HEARTBEAT_CACHE_MS = 10_000;
+
 /** How long the heartbeat waits for the database before answering 503: a database that does not answer is a failure the monitor must see. */
 export const HEARTBEAT_READ_TIMEOUT_MS = 5000;
 
@@ -40,4 +46,27 @@ export async function heartbeatStatus(parts: HeartbeatParts = {}): Promise<200 |
 
 function logHeartbeatFailure(fields: Record<string, string>): void {
   console.log(JSON.stringify({ level: "error", evt: "health.heartbeat_unreadable", module: "app", ...fields }));
+}
+
+let lastAnswer: { status: 200 | 503; at: number } | undefined;
+let reading: Promise<200 | 503> | undefined;
+
+/** `heartbeatStatus`, read at most once per HEARTBEAT_CACHE_MS on this instance; calls that arrive during a read share it. */
+export function cachedHeartbeatStatus(now: () => number = Date.now): Promise<200 | 503> {
+  const startedAt = now();
+  if (lastAnswer !== undefined && startedAt - lastAnswer.at < HEARTBEAT_CACHE_MS) return Promise.resolve(lastAnswer.status);
+  reading ??= heartbeatStatus()
+    .then((status) => {
+      lastAnswer = { status, at: startedAt };
+      return status;
+    })
+    .finally(() => {
+      reading = undefined;
+    });
+  return reading;
+}
+
+/** Tests only: forget the reused answer. */
+export function forgetHeartbeatAnswer(): void {
+  lastAnswer = undefined;
 }
