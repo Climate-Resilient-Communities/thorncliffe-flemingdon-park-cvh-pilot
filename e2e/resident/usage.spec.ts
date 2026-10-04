@@ -231,13 +231,15 @@ test.describe("the install event", () => {
 
     await context.setOffline(true);
     await dispatchInstalled(page);
-    await page.waitForTimeout(500);
-    expect(seen.events).toEqual([]);
     expect(await flag(page)).toBeNull();
 
+    // Signal back. A known event is sent next; anything queued earlier would have been sent before it, so it must be the only one.
     await context.setOffline(false);
-    await page.waitForTimeout(500);
-    expect(seen.events).toEqual([]);
+    await page.goto("/en/ready/numbers");
+    await events(seen, 1);
+    await page.waitForLoadState("networkidle");
+    expect(seen.events).toEqual([{ evt: "numbers_view", lang: "en" }]);
+    expect(await flag(page)).toBeNull();
   });
 
   test("takes the flag back when it was not counted, so a later install is not lost", async ({ page }) => {

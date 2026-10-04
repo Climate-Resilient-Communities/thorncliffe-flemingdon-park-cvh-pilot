@@ -10,6 +10,10 @@ export interface SendDeps {
   fetcher?: typeof fetch;
   /** Whether the phone says it has signal. */
   online?: () => boolean;
+  /** Give up after this many milliseconds (default 5000), so a hung request neither holds the page nor the install flag. */
+  timeoutMs?: number;
+  /** Let the request outlive the page (one small request only, used for the install event). */
+  keepalive?: boolean;
 }
 
 const phoneOnline = (): boolean => typeof navigator === "undefined" || navigator.onLine !== false;
@@ -33,6 +37,8 @@ export async function sendUsage(event: UsageEvent, deps: SendDeps = {}): Promise
       credentials: "omit",
       cache: "no-store",
       referrerPolicy: "no-referrer",
+      signal: AbortSignal.timeout(deps.timeoutMs ?? 5000),
+      ...(deps.keepalive ? { keepalive: true } : {}),
     });
     // The body (an error answer has one) is always read, so a refusal does not leave the request open.
     await response.text().catch(() => "");

@@ -49,7 +49,7 @@ export function InstallCount({ lang }: { lang: LangCode }) {
         storage: phoneStorage(),
         online: () => navigator.onLine !== false,
         neighbourhood: chosenNeighbourhood,
-        send: (event) => sendUsage(event),
+        send: (event) => sendUsage(event, { keepalive: true }),
       });
     if (isStandalone(window)) report();
     window.addEventListener("appinstalled", report);

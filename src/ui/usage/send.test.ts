@@ -43,6 +43,23 @@ describe("sendUsage", () => {
     expect(refused).toHaveBeenCalledTimes(1);
   });
 
+  it("gives up on a request that hangs, so the page and the install flag are not held", async () => {
+    const hung = vi.fn<typeof fetch>((_url, init) => new Promise((_resolve, reject) => init?.signal?.addEventListener("abort", () => reject(new DOMException("timeout", "TimeoutError")))));
+
+    expect(await sendUsage({ evt: "install", lang: "en" }, { fetcher: hung, online: () => true, timeoutMs: 20 })).toBe(false);
+    expect(hung.mock.calls[0][1]?.signal).toBeDefined();
+  });
+
+  it("asks for keepalive only when told to", async () => {
+    const fetcher = ok();
+
+    await sendUsage({ evt: "install", lang: "en" }, { fetcher, online: () => true, keepalive: true });
+    await sendUsage({ evt: "map_view", lang: "en" }, { fetcher, online: () => true });
+
+    expect(fetcher.mock.calls[0][1]?.keepalive).toBe(true);
+    expect(fetcher.mock.calls[1][1]?.keepalive).toBeUndefined();
+  });
+
   it("rebuilds the body from the three allowed fields: anything extra in the object is refused, not sent", async () => {
     const fetcher = ok();
     const sneaky = { evt: "install", lang: "en", rsn: "123", groups: ["seniors"] } as unknown as UsageEvent;

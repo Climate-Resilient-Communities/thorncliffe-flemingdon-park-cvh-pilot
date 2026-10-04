@@ -7,7 +7,7 @@ import { metricsResponse } from "./handler";
 // S02.15, AR-26: POST /api/metrics counts one event and stores nothing else, sets no cookie, and reads nothing of the request but its body.
 
 function post(body: string | Uint8Array, headers: Record<string, string> = {}) {
-  return new Request("https://cvh.example/api/metrics", { method: "POST", body: body as BodyInit, headers });
+  return new Request("https://cvh.example/api/metrics", { method: "POST", body: body as BodyInit, headers: { "content-type": "application/json", ...headers } });
 }
 
 function counter() {
@@ -36,6 +36,18 @@ describe("POST /api/metrics (S02.15)", () => {
     for (const evt of USAGE_EVENTS) expect((await metricsResponse(deps, post(JSON.stringify({ evt, lang: "en" })))).status, evt).toBe(204);
 
     expect(counted).toEqual(USAGE_EVENTS.map((evt) => ({ evt, lang: "en" })));
+  });
+
+  it("refuses a body that is not sent as JSON (text/plain, a form, none), which a page on another site could send without a preflight", async () => {
+    const { counted, deps } = counter();
+    const valid = JSON.stringify({ evt: "install", lang: "en" });
+
+    for (const type of ["text/plain", "text/plain;charset=UTF-8", "application/x-www-form-urlencoded", "multipart/form-data", "application/jsonx"]) {
+      expect((await metricsResponse(deps, post(valid, { "content-type": type }))).status, type).toBe(400);
+    }
+    expect((await metricsResponse(deps, new Request("https://cvh.example/api/metrics", { method: "POST", body: new Uint8Array(Buffer.from(valid)) }))).status).toBe(400);
+    expect((await metricsResponse(deps, post(valid, { "content-type": "application/json; charset=utf-8" }))).status).toBe(204);
+    expect(counted).toHaveLength(1);
   });
 
   it("refuses an unknown event or language, an extra field, a bad neighbourhood and a body that is not JSON, counting nothing", async () => {
@@ -97,7 +109,7 @@ describe("POST /api/metrics (S02.15)", () => {
     expect(counted).toEqual([{ evt: "listing_view", lang: "en" }]);
     expect(Object.keys(counted[0]).sort()).toEqual(["evt", "lang"]);
     // The only header the handler looks at is the declared length of the body.
-    expect(read.mock.calls.map(([name]) => String(name).toLowerCase())).toEqual(["content-length"]);
+    expect(read.mock.calls.map(([name]) => String(name).toLowerCase())).toEqual(["content-type", "content-length"]);
     expect(JSON.stringify(counted)).not.toMatch(/203\.0\.113|Mozilla|secret|session|device|xyz|12345|token/);
   });
 
@@ -137,7 +149,7 @@ describe("the metrics route keeps nothing about the request (S02.15)", () => {
       .join("\n");
 
     expect(code).not.toMatch(/clientAddress|x-forwarded-for|x-real-ip|user-agent|userAgent|cookies?\b|\bip\b|getClientAddress|NextRequest|geo/i);
-    expect(code).not.toMatch(/request\.headers(?!\.get\("content-length"\))/);
+    expect(code).not.toMatch(/request\.headers(?!\.get\("content-(?:length|type)"\))/);
     expect(code).not.toMatch(/console\.(log|info|warn|error)\([^)]*request/);
   });
 });

@@ -1,7 +1,7 @@
 import { USAGE_BODY_MAX_BYTES, UsageEventSchema, type UsageEvent } from "@/contracts/usage";
 
 // The usage counter (S02.15, AR-26, FR-M1, FR-M3): POST /api/metrics takes one `{evt, lang, nbhd?}` and adds one to the day's count for
-// that combination (usage_count). Nothing else is read from the request or kept: this file never touches the request's headers, so the
+// that combination (usage_count). Nothing else is read from the request or kept: this file reads only the body and one header, Content-Type, which says nothing about the phone, so the
 // address, the user agent and any cookie never enter the app's code, let alone its log or its database. The answer sets no cookie
 // and is never cached. A body that is not exactly the event (an unknown event or language, an extra field, more than 256 bytes) is
 // refused with 400 and counts nothing.
@@ -38,6 +38,8 @@ async function readLimited(request: Request, limit: number): Promise<string | nu
 }
 
 export async function metricsResponse(deps: MetricsDeps, request: Request): Promise<Response> {
+  // Only JSON is taken. A page on another site can send text/plain without a CORS preflight, which the app never grants, so it cannot inflate the counts.
+  if (!/^application\/json\s*(;|$)/i.test(request.headers.get("content-type") ?? "")) return refused();
   const text = await readLimited(request, USAGE_BODY_MAX_BYTES).catch(() => null);
   if (text === null) return refused();
   let body: unknown;

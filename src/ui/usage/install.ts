@@ -5,7 +5,7 @@ import type { UsageEvent } from "@/contracts/usage";
 // The install event (S02.15, FR-M1): sent once when the browser says the app was installed (`appinstalled`), or, where it
 // does not say so, the first time the app is opened as an installed one (standalone display mode). A local flag, true or
 // absent and nothing else, stops this phone sending it again. These are "install events observed", not unique
-// installations: a reinstall or cleared storage counts again, and a browser that reports neither signal is not counted.
+// installations: an app installed before this shipped counts once on its first open after, a reinstall or cleared storage counts again, and a browser that reports neither signal is not counted.
 
 /** The localStorage key of the flag. Its value is the text "1": a yes, not an identifier. */
 export const INSTALL_FLAG_KEY = "cvh.install-reported";

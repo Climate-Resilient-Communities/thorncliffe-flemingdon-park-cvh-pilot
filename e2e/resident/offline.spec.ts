@@ -291,14 +291,17 @@ test("usage events pass the worker untouched: not kept, not queued, and no reque
   const before = (await Promise.all(pending)).filter((request) => isUsageRequest(request.url)).length;
   await offline.off();
   await page.goto("/en/ready/numbers");
-  await page.waitForLoadState("domcontentloaded");
-  await page.waitForTimeout(500);
+  // The page has opened and tried its event (dropped: no signal) before the signal is back.
+  await page.waitForLoadState("networkidle");
   await offline.on();
-  await page.waitForTimeout(500);
+  // A known event goes next: anything queued while offline would have been sent before it, so it is the only new one.
+  await page.goto("/en/ready/power");
+  await expect.poll(async () => (await Promise.all(pending)).filter((request) => isUsageRequest(request.url)).length).toBeGreaterThan(before);
+  await page.waitForLoadState("networkidle");
 
   const all = await Promise.all(pending);
   const sent = all.filter((request) => isUsageRequest(request.url));
-  expect(sent.length).toBe(before);
+  expect(sent.length).toBe(before + 1);
   expect(before).toBeGreaterThanOrEqual(2);
   for (const request of sent) expectUsageRequest(request);
   for (const request of all) {
