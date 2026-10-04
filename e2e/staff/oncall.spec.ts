@@ -292,6 +292,7 @@ test("every Admin and Coordinator screen names each open health condition in pla
 
 test("the heartbeat answers 200 only while the health job completed less than 3 minutes ago, else 503, with no body and no cookie (S09.01)", async ({ request }) => {
   // The route reuses one answer for up to 10 s (HEARTBEAT_CACHE_MS), so after each change the test waits for the new answer.
+  test.setTimeout(60_000);
   const expectBare = async (method: "get" | "head", status: number) => {
     await expect.poll(async () => (await request[method]("/api/health/heartbeat")).status(), { message: method, timeout: 15_000, intervals: [500, 1000] }).toBe(status);
     const response = await request[method]("/api/health/heartbeat");
