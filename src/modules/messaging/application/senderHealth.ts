@@ -29,6 +29,11 @@ export interface SenderHealth {
   unsettledHandOffs: number;
   /** The deliveries that are `unknown` now and became so within UNKNOWN_WINDOW_MS (newest first, at most UNKNOWN_IDS_LIMIT). */
   unknownDeliveryIds: string[];
+  /**
+   * `transactional` texts created since midnight in Toronto, except those to on-call numbers (S09.01, AD-22: the daily ceiling on non-alert texts,
+   * menus and prompts included; the on-call texts are the alarm itself and never count towards it).
+   */
+  transactionalToday: number;
 }
 
 export interface SenderHealthReader {

@@ -30,6 +30,7 @@ import { directoryRelease } from "@/modules/directory/adapters/schema";
 import { VectorsFileSchema } from "@/modules/directory/domain/searchData";
 import { decodeVectorsBinary } from "@/modules/directory/domain/vectorsBinary";
 import { catalogueTextId } from "@/modules/directory/adapters/hash";
+import { StorageWriteError } from "@/modules/directory/application/ports";
 import { PUBLISH_LOCK_KEY } from "@/modules/directory/application/publishLock";
 import { recordOpsEvent } from "@/modules/ops";
 import { SPEND_LOCK_KEY } from "@/modules/spend";
@@ -1030,6 +1031,47 @@ describe("the directory release (S02.05)", () => {
       expect(result).toMatchObject({ ok: true, release: 1, search: { vectors: 2 } });
       expect(d.storage.files.has("releases/1/vectors.json")).toBe(true);
       expect((await searchRow(1)).binary).toBeUndefined();
+    });
+
+    it("tells why in the result when the binary write fails: a safe classification, never the store's message, and the JSON is published", async () => {
+      const storage = memoryDirectoryStorage();
+      storage.putBytes = async () => {
+        throw new StorageWriteError("mime_not_allowed");
+      };
+      const d = deps({ search: searchOf(fakeEmbedder().embedder), storage: storage as Harness["storage"] });
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        const result = await publish(d);
+
+        expect(result).toMatchObject({ ok: true, release: 1, search: { vectors: 2, binary_issue: "binary_put_failed:mime_not_allowed" } });
+        expect(d.storage.files.has("releases/1/vectors.json")).toBe(true);
+        expect((await searchRow(1)).binary).toBeUndefined();
+        expect(String(logged.mock.calls[0][0])).toContain("binary_put_failed:mime_not_allowed");
+      } finally {
+        logged.mockRestore();
+      }
+    });
+
+    it("gives only a generic class for a binary write that fails with any other error, and none when the binary is written", async () => {
+      const refusing = memoryDirectoryStorage();
+      refusing.putBytes = async () => {
+        throw new Error("secret vendor text");
+      };
+      const logged = vi.spyOn(console, "error").mockImplementation(() => undefined);
+      try {
+        const failed = await publish(deps({ search: searchOf(fakeEmbedder().embedder), storage: refusing as Harness["storage"] }));
+        expect(failed).toMatchObject({ ok: true, search: { binary_issue: "binary_put_failed:error" } });
+        expect(JSON.stringify(failed)).not.toContain("secret vendor text");
+      } finally {
+        logged.mockRestore();
+      }
+    });
+
+    it("has no binary issue in the result when the binary is written", async () => {
+      const result = await publish(deps({ search: searchOf(fakeEmbedder().embedder) }));
+
+      expect(result).toMatchObject({ ok: true, search: { vectors: 2 } });
+      expect((result as { search: object }).search).not.toHaveProperty("binary_issue");
     });
 
     it("refuses to make a release current when its binary vectors are not the ones recorded", async () => {

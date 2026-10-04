@@ -1374,6 +1374,36 @@
     "filtered": "ডিরেক্টরিতে আপনার বেছে নেওয়া ফিল্টারের সঙ্গে মেলে এমন জায়গাগুলোই শুধু দেখানো হচ্ছে।"
    }
   });
+  /* S07.02: the web sign-up for text alerts and the confirmation text. YES, STOP, START and CVH stay in English. AI-generated (Claude), not yet checked by native readers. */
+  m(t, {
+   "signup": {
+    "termsAgree": "আমি শর্তাবলি ও গোপনীয়তার পাতা পড়েছি, এবং আমি রাজি।",
+    "termsLink": "শর্তাবলি ও গোপনীয়তার পাতা পড়ুন",
+    "termsVersion": "শর্তাবলির সংস্করণ {version}",
+    "age": "আমার বয়স 16 বছর বা তার বেশি, অথবা বাবা-মা বা অভিভাবক আমাকে সাহায্য করছেন।",
+    "missingTerms": "শর্তাবলিতে আপনার সম্মতি",
+    "missingAge": "বয়স সম্পর্কে বিবৃতি",
+    "sending": "পাঠানো হচ্ছে...",
+    "onItsWay": "এই নম্বরে টেক্সট আসতে পারলে, একটি মেসেজ আসছে।",
+    "expect": "সতর্কতা পাওয়া শুরু করতে 48 ঘণ্টার মধ্যে সেই মেসেজে YES লিখে উত্তর দিন। YES লিখে উত্তর না দেওয়া পর্যন্ত আপনি টেক্সটে কোনো সতর্কতা পাবেন না।",
+    "howChange": "পরে আপনার বিল্ডিং, ফ্লোর বা ভাষা বদলাতে, হাবের যেকোনো টেক্সটে 1 বা 2 লিখে উত্তর দিন।",
+    "startHelp": "5 মিনিটের মধ্যে কোনো টেক্সট আসেনি? {number} নম্বরে START টেক্সট করুন, তারপর আবার সাইন আপ করুন।",
+    "startHelpNoNumber": "5 মিনিটের মধ্যে কোনো টেক্সট আসেনি? যে নম্বর থেকে আমাদের টেক্সট আসে সেখানে START টেক্সট করুন, তারপর আবার সাইন আপ করুন।",
+    "error": {
+     "invalid_request": "ফর্মের কিছু একটা পড়া যায়নি। পাতাটি আবার লোড করে আবার চেষ্টা করুন।",
+     "phone_not_canadian": "10 অঙ্কের একটি কানাডার ফোন নম্বর দিন, যেমন 416 555 0123।",
+     "neighbourhood_missing": "আপনার পাড়া বেছে নিন।",
+     "terms_not_agreed": "সাইন আপ করতে, শর্তাবলিতে রাজি হন।",
+     "age_not_confirmed": "সাইন আপ করতে, বয়স সম্পর্কে বিবৃতিটি নিশ্চিত করুন।",
+     "terms_changed": "এই পাতা খোলা থাকার সময় শর্তাবলি বদলে গেছে। আবার পড়ুন, তারপর রাজি হন।",
+     "place_unknown": "আপনার একটি বিল্ডিং বা ফ্লোর আর তালিকায় নেই। আপনার বিল্ডিংগুলো দেখে আবার চেষ্টা করুন।",
+     "rate_limited": "এই সংযোগ থেকে অনেক বেশি সাইন আপ এসেছে। এক ঘণ্টা পরে আবার চেষ্টা করুন।",
+     "signup_unavailable": "টেক্সটের জন্য সাইন আপ এখন পাওয়া যাচ্ছে না। পরে আবার চেষ্টা করুন।",
+     "network": "আমরা CVH-এর সাথে যোগাযোগ করতে পারিনি। আপনার সংযোগ দেখে আবার চেষ্টা করুন।"
+    }
+   }
+  });
+  m(t, {"smsTexts": {"confirmation": "CVH সতর্কতা পেতে YES লিখে উত্তর দিন। বন্ধ করতে STOP লিখে উত্তর দিন।"}});
   /* The last resident wording that showed in English: the home's alert list and its failures (R03, status.none), the ask screen's waiting and
      failure states (R09, R10.shownIn) and the directory (S02.06). AI-generated (Claude), not yet checked by native readers. */
   m(t, {

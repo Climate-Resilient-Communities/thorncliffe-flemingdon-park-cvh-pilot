@@ -70,6 +70,7 @@ function world(
     failOps?: (event: MessagingOpsEvent) => boolean;
     afterOutcome?: (view: DeliveryView) => Promise<void>;
     afterProviderId?: (view: DeliveryView) => Promise<void>;
+    afterFailure?: (view: DeliveryView, errorCode: number | null) => Promise<void>;
   } = {},
 ) {
   let current = initial;
@@ -134,6 +135,12 @@ function world(
       ? async (_tx, view) => {
           hooked.push(`provider_id:${view.providerMessageId}`);
           await options.afterProviderId?.(view);
+        }
+      : undefined,
+    afterFailure: options.afterFailure
+      ? async (_tx, view, errorCode) => {
+          hooked.push(`failure:${view.state}:${errorCode}`);
+          await options.afterFailure?.(view, errorCode);
         }
       : undefined,
   });
@@ -411,6 +418,32 @@ describe("the spend seam", () => {
     await expect(w.service.handle(signed())).resolves.toMatchObject({ kind: "applied", to: "delivered" });
     expect(w.row()).toMatchObject({ state: "delivered", providerMessageId: SID });
     expect(w.lines.find((line) => line.evt === "callback.spend_hook_failed")?.fields).toEqual({ hook: "outcome", delivery_id: DELIVERY, error: "TypeError" });
+  });
+});
+
+describe("the failure hook (S07.02's afterFailure)", () => {
+  it("is told of a text the provider reports undelivered or failed, with its error code, and of nothing else", async () => {
+    for (const status of ["undelivered", "failed"]) {
+      const w = world(row({ state: "submitted", providerMessageId: SID }), { afterFailure: async () => undefined });
+      await expect(w.service.handle(signed(callbackForm({ MessageStatus: status, ErrorCode: "21610" })))).resolves.toMatchObject({ kind: "applied", to: status });
+      expect(w.hooked, status).toEqual([`failure:${status}:21610`]);
+    }
+    const delivered = world(row({ state: "submitted", providerMessageId: SID }), { afterFailure: async () => undefined });
+    await delivered.service.handle(signed());
+    expect(delivered.hooked).toEqual([]);
+  });
+
+  it("never undoes the outcome when it throws: the failed status and its error code are recorded, and the failure is logged by name", async () => {
+    const w = world(row({ state: "submitted", providerMessageId: SID }), {
+      afterFailure: async () => {
+        throw new RangeError("could not forget the sign-up of +14165550123");
+      },
+    });
+    await expect(w.service.handle(signed(callbackForm({ MessageStatus: "undelivered", ErrorCode: "21610" })))).resolves.toMatchObject({ kind: "applied", to: "undelivered" });
+    expect(w.row()).toMatchObject({ state: "undelivered", providerErrorCode: 21_610 });
+    expect(w.hooked).toEqual(["failure:undelivered:21610"]);
+    expect(w.lines.find((line) => line.evt === "callback.failure_hook_failed")?.fields).toEqual({ delivery_id: DELIVERY, error: "RangeError" });
+    expect(JSON.stringify(w.lines)).not.toContain("5550123");
   });
 });
 

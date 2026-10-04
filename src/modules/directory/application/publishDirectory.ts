@@ -31,7 +31,7 @@
 //    stays `building` and the next press resumes it from the files already stored.
 // Reads inside a transaction use the transaction (test/transaction-executor.test.ts).
 import { randomUUID } from "node:crypto";
-import { and, asc, desc, eq, inArray, isNotNull, sql } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, isNotNull, max, sql } from "drizzle-orm";
 import { record, recordRefusal } from "@/modules/audit";
 import type { Db, DbExecutor, DbTransaction } from "@/platform/db";
 import { sha256Hex } from "@/platform/hash";
@@ -48,7 +48,7 @@ import {
 } from "../domain/directoryRelease";
 import type { CatalogueMismatch, PublishDeps, PublishFailure, PublishFailureCode } from "./ports";
 import { PUBLISH_LOCK_KEY } from "./publishLock";
-import { LeaseLostError, PublishStepError, type ReleaseClaim } from "./publishSteps";
+import { LeaseLostError, PublishStepError, type BuiltSearch, type ReleaseClaim } from "./publishSteps";
 import { buildSearchData, keptOfStaged, keptOnClose, planSearch, verifySearchData } from "./releaseSearch";
 
 export { PUBLISH_LOCK_KEY };
@@ -75,7 +75,7 @@ export type PublishResult =
       attempts: number;
       resumedFiles: number;
       /** The release's search data: how many vectors it holds and how many were copied from the previous release; null for a release without search. */
-      search: { vectors: number; reused: number; embedded: number } | null;
+      search: BuiltSearch | null;
     }
   | {
       ok: false;
@@ -273,8 +273,8 @@ async function completeRelease(
   claim: Claim,
   actorStaffId: string,
   clock: () => Date,
-  built: { vectors: number; reused: number; embedded: number } | null,
-): Promise<{ counts: ReleaseCounts; report: ReleaseReport; search: { vectors: number; reused: number; embedded: number } | null }> {
+  built: BuiltSearch | null,
+): Promise<{ counts: ReleaseCounts; report: ReleaseReport; search: BuiltSearch | null }> {
   await deps.hook?.("before_current", { release: claim.release });
   // S03.02: the vectors file is read back from the store and checked against the listing files outside the transaction (it is a
   // call out, and the release's files are fixed by now); the transaction checks again, under the row lock, that it is still the
@@ -502,4 +502,13 @@ export async function currentReleaseSummary(db: DbExecutor): Promise<ReleaseSumm
 export async function latestReleaseSummary(db: DbExecutor): Promise<ReleaseSummary | null> {
   const [row] = await db.select(summaryColumns).from(directoryRelease).orderBy(desc(directoryRelease.number)).limit(1);
   return row ? summaryOf(row) : null;
+}
+
+/**
+ * When the last directory publish that succeeded completed (null: none has). The health job (ops, S09.01) holds `publish_failed` for the
+ * failures recorded after it, so a publish that succeeds clears the condition.
+ */
+export async function lastPublishedAt(db: DbExecutor): Promise<Date | null> {
+  const [row] = await db.select({ at: max(directoryRelease.publishedAt) }).from(directoryRelease).where(eq(directoryRelease.status, "complete"));
+  return row?.at == null ? null : new Date(row.at);
 }

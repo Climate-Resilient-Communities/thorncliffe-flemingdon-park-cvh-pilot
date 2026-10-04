@@ -5015,6 +5015,7 @@
       "done": "[EN] Release {number} is now current. Providers: {providers}. Languages: {languages}.",
       "resumed": "[EN] Files already stored when this publish continued: {files}.",
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
+      "searchNoBinary": "[EN] Search data was published without its compact copy, so search loads more slowly when it starts; check the storage bucket allows application/octet-stream. Reason: {reason}.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
       "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
@@ -5166,8 +5167,18 @@
     },
     "health": {
       "banner": "[EN] Sending is failing",
+      "bannerOther": "[EN] Something is not working",
       "queue_stuck": "[EN] Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.",
       "sender_stalled": "[EN] No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.",
+      "delivery_unknown": "[EN] Some texts may or may not have arrived: the provider did not say what happened to them.",
+      "smart_encoding_on": "[EN] Smart Encoding is on in the Twilio Messaging Service, so texts may arrive with characters changed.",
+      "signature_failures": "[EN] Many messages from Twilio failed the signature check in the last 10 minutes.",
+      "job_failed": "[EN] A scheduled job failed in the last 10 minutes, for example sending, closing expired alerts or this check.",
+      "translation_fallback": "[EN] An alert was submitted in the last 24 hours with a whole language in English, because its translation failed.",
+      "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
+      "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
+      "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
       "tell": "[EN] Tell IT now."
     },
@@ -5356,9 +5367,43 @@
         "delivery_unknown": "[EN] CVH: texts with an unknown outcome: {count}. Check the Hub.",
         "sender_stalled": "[EN] CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.",
         "smart_encoding_on": "[EN] CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.",
-        "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
+        "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.",
+        "job_failed": "[EN] CVH: scheduled jobs failed in the last 10 minutes: {count}. Check the Hub.",
+        "translation_fallback": "[EN] CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.",
+        "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
+        "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
+        "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "விதிமுறைகள் மற்றும் தனியுரிமைப் பக்கத்தைப் படித்தேன், ஒப்புக்கொள்கிறேன்.",
+    "termsLink": "விதிமுறைகள் மற்றும் தனியுரிமைப் பக்கத்தைப் படியுங்கள்",
+    "termsVersion": "விதிமுறைகளின் பதிப்பு {version}",
+    "age": "எனக்கு 16 வயது அல்லது அதற்கு மேல், அல்லது பெற்றோர் அல்லது பாதுகாவலர் எனக்கு உதவுகிறார்.",
+    "missingTerms": "விதிமுறைகளுக்கு உங்கள் ஒப்புதல்",
+    "missingAge": "வயது பற்றிய உறுதிமொழி",
+    "sending": "அனுப்புகிறோம்...",
+    "onItsWay": "இந்த எண்ணுக்குக் குறுஞ்செய்திகள் வர முடிந்தால், ஒரு செய்தி வந்துகொண்டிருக்கிறது.",
+    "expect": "எச்சரிக்கைகளைப் பெறத் தொடங்க, 48 மணி நேரத்துக்குள் அந்தச் செய்திக்கு YES என்று பதில் அனுப்புங்கள். YES என்று பதில் அனுப்பும் வரை, குறுஞ்செய்தி மூலம் எந்த எச்சரிக்கையும் வராது.",
+    "howChange": "பின்னர் உங்கள் கட்டடம், தளம் அல்லது மொழியை மாற்ற, மையத்திலிருந்து வரும் எந்தக் குறுஞ்செய்திக்கும் 1 அல்லது 2 என்று பதில் அனுப்புங்கள்.",
+    "startHelp": "5 நிமிடங்களில் குறுஞ்செய்தி வரவில்லையா? {number} எண்ணுக்கு START என்று அனுப்பிவிட்டு, மீண்டும் பதிவு செய்யுங்கள்.",
+    "startHelpNoNumber": "5 நிமிடங்களில் குறுஞ்செய்தி வரவில்லையா? எங்கள் குறுஞ்செய்திகள் வரும் எண்ணுக்கு START என்று அனுப்பிவிட்டு, மீண்டும் பதிவு செய்யுங்கள்.",
+    "error": {
+      "invalid_request": "படிவத்தில் உள்ள ஒன்றைப் படிக்க முடியவில்லை. பக்கத்தை மீண்டும் ஏற்றி, மீண்டும் முயலுங்கள்.",
+      "phone_not_canadian": "10 இலக்கங்கள் உள்ள கனடா தொலைபேசி எண்ணைப் பயன்படுத்துங்கள், எ.கா. 416 555 0123.",
+      "neighbourhood_missing": "உங்கள் பகுதியைத் தேர்ந்தெடுங்கள்.",
+      "terms_not_agreed": "பதிவு செய்ய, விதிமுறைகளை ஒப்புக்கொள்ளுங்கள்.",
+      "age_not_confirmed": "பதிவு செய்ய, வயது பற்றிய உறுதிமொழியை உறுதிப்படுத்துங்கள்.",
+      "terms_changed": "இந்தப் பக்கம் திறந்திருந்தபோது விதிமுறைகள் மாறிவிட்டன. மீண்டும் படித்துவிட்டு ஒப்புக்கொள்ளுங்கள்.",
+      "place_unknown": "உங்கள் கட்டடங்கள் அல்லது தளங்களில் ஒன்று இப்போது பட்டியலில் இல்லை. உங்கள் கட்டடங்களைச் சரிபார்த்து மீண்டும் முயலுங்கள்.",
+      "rate_limited": "இந்த இணைப்பிலிருந்து அதிகமான பதிவுகள் வந்துள்ளன. ஒரு மணி நேரம் கழித்து மீண்டும் முயலுங்கள்.",
+      "signup_unavailable": "குறுஞ்செய்திப் பதிவு இப்போது கிடைக்கவில்லை. பின்னர் மீண்டும் முயலுங்கள்.",
+      "network": "CVH-ஐ அடைய முடியவில்லை. உங்கள் இணைப்பைச் சரிபார்த்து மீண்டும் முயலுங்கள்."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "CVH எச்சரிக்கைகளைப் பெற YES என்று பதில் அனுப்புங்கள். நிறுத்த STOP என்று பதில் அனுப்புங்கள்."
   },
   "offline": {
     "title": "இந்தப் பக்கம் உங்கள் ஃபோனில் சேமிக்கப்படவில்லை",

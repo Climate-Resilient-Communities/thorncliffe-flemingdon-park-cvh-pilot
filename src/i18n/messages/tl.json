@@ -5015,6 +5015,7 @@
       "done": "[EN] Release {number} is now current. Providers: {providers}. Languages: {languages}.",
       "resumed": "[EN] Files already stored when this publish continued: {files}.",
       "searchData": "[EN] Search data: {vectors} providers, {reused} copied from the previous release, {embedded} made new.",
+      "searchNoBinary": "[EN] Search data was published without its compact copy, so search loads more slowly when it starts; check the storage bucket allows application/octet-stream. Reason: {reason}.",
       "searchNone": "[EN] This release has no search data, so search is not available to residents until a release has it.",
       "fallbacks": "[EN] Texts with no reviewed translation yet, shown in English: {count}.",
       "machine": "[EN] Descriptions sent out as machine translations no person has reviewed, labelled \"Machine-translated; not reviewed by a person\" for residents: {count}.",
@@ -5166,8 +5167,18 @@
     },
     "health": {
       "banner": "[EN] Sending is failing",
+      "bannerOther": "[EN] Something is not working",
       "queue_stuck": "[EN] Texts have waited more than 5 minutes to be sent. Texts to the on-call Admins may be late too.",
       "sender_stalled": "[EN] No sender has run for more than 3 minutes while texts are waiting. Texts to the on-call Admins may be late too.",
+      "delivery_unknown": "[EN] Some texts may or may not have arrived: the provider did not say what happened to them.",
+      "smart_encoding_on": "[EN] Smart Encoding is on in the Twilio Messaging Service, so texts may arrive with characters changed.",
+      "signature_failures": "[EN] Many messages from Twilio failed the signature check in the last 10 minutes.",
+      "job_failed": "[EN] A scheduled job failed in the last 10 minutes, for example sending, closing expired alerts or this check.",
+      "translation_fallback": "[EN] An alert was submitted in the last 24 hours with a whole language in English, because its translation failed.",
+      "publish_failed": "[EN] The last directory publish failed. Residents still see the previous directory.",
+      "transactional_ceiling": "[EN] More sign-up and reply texts were sent today than the daily limit. They keep sending. Someone may be misusing the sign-up form.",
+      "cap_overrun": "[EN] An approval this month went over the monthly text message spending cap. Texts keep sending.",
+      "stale": "[EN] The health check has not run for more than 3 minutes, so a new problem may not be shown here.",
       "since": "[EN] Since {when}",
       "tell": "[EN] Tell IT now."
     },
@@ -5356,9 +5367,43 @@
         "delivery_unknown": "[EN] CVH: texts with an unknown outcome: {count}. Check the Hub.",
         "sender_stalled": "[EN] CVH: no sender has run for over 3 minutes. Texts waiting: {count}. Check sending.",
         "smart_encoding_on": "[EN] CVH: Smart Encoding is on in the Twilio Messaging Service. Turn it off.",
-        "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub."
+        "signature_failures": "[EN] CVH: Twilio callbacks that failed the signature check in 10 minutes: {count}. Check the Hub.",
+        "job_failed": "[EN] CVH: scheduled jobs failed in the last 10 minutes: {count}. Check the Hub.",
+        "translation_fallback": "[EN] CVH: alerts with a whole language in English because translation failed, last 24 hours: {count}. Check the Hub.",
+        "publish_failed": "[EN] CVH: the directory publish failed. Residents still see the previous directory. Check the Hub.",
+        "transactional_ceiling": "[EN] CVH: sign-up and reply texts today passed the daily limit: {count}. They keep sending. Check the Hub.",
+        "cap_overrun": "[EN] CVH: an approval went over the monthly text spending cap. Texts keep sending. Check the Hub."
       }
     }
+  },
+  "signup": {
+    "termsAgree": "Nabasa ko ang pahina ng mga tuntunin at privacy, at pumapayag ako.",
+    "termsLink": "Basahin ang pahina ng mga tuntunin at privacy",
+    "termsVersion": "Bersyon ng mga tuntunin {version}",
+    "age": "Ako ay 16 taong gulang o higit pa, o tinutulungan ako ng magulang o tagapag-alaga.",
+    "missingTerms": "ang pagpayag ninyo sa mga tuntunin",
+    "missingAge": "ang pahayag tungkol sa edad",
+    "sending": "Ipinapadala...",
+    "onItsWay": "Kung nakakatanggap ng text ang numerong ito, may mensaheng papunta na.",
+    "expect": "Sumagot ng YES sa mensaheng iyon sa loob ng 48 oras para magsimulang makatanggap ng alerto. Hangga't hindi kayo sumasagot ng YES, wala kayong matatanggap na alerto sa text.",
+    "howChange": "Para palitan ang inyong gusali, palapag o wika sa ibang pagkakataon, sumagot ng 1 o 2 sa anumang text mula sa Hub.",
+    "startHelp": "Walang text sa loob ng 5 minuto? Mag-text ng START sa {number}, pagkatapos ay mag-sign up ulit.",
+    "startHelpNoNumber": "Walang text sa loob ng 5 minuto? Mag-text ng START sa numerong pinanggagalingan ng aming mga text, pagkatapos ay mag-sign up ulit.",
+    "error": {
+      "invalid_request": "May bahagi ng form na hindi mabasa. I-reload ang pahina at subukan ulit.",
+      "phone_not_canadian": "Gumamit ng numero ng telepono sa Canada na may 10 digit, tulad ng 416 555 0123.",
+      "neighbourhood_missing": "Piliin ang inyong kapitbahayan.",
+      "terms_not_agreed": "Para mag-sign up, pumayag sa mga tuntunin.",
+      "age_not_confirmed": "Para mag-sign up, kumpirmahin ang pahayag tungkol sa edad.",
+      "terms_changed": "Nagbago ang mga tuntunin habang bukas ang pahinang ito. Basahin ulit ang mga ito, pagkatapos ay pumayag.",
+      "place_unknown": "Wala na sa listahan ang isa sa inyong mga gusali o palapag. Tingnan ang inyong mga gusali at subukan ulit.",
+      "rate_limited": "Masyadong maraming sign-up ang nanggaling sa koneksyong ito. Subukan ulit pagkalipas ng isang oras.",
+      "signup_unavailable": "Hindi magagamit ngayon ang pag-sign up para sa text. Subukan ulit mamaya.",
+      "network": "Hindi namin maabot ang CVH. Tingnan ang inyong koneksyon at subukan ulit."
+    }
+  },
+  "smsTexts": {
+    "confirmation": "Sumagot ng YES para makatanggap ng CVH alert. Sumagot ng STOP para itigil."
   },
   "offline": {
     "title": "Hindi naka-save sa iyong telepono ang pahinang ito",

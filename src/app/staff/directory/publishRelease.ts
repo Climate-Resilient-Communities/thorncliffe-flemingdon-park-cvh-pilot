@@ -26,6 +26,7 @@ function done(result: Extract<PublishResult, { ok: true }>): PublishState {
       ? englishText("staff.directory.searchNone")
       : englishText("staff.directory.searchData", { vectors: result.search.vectors, reused: result.search.reused, embedded: result.search.embedded }),
   );
+  if (result.search?.binary_issue) notes.push(englishText("staff.directory.searchNoBinary", { reason: result.search.binary_issue }));
   return {
     status: "done",
     message: englishText("staff.directory.done", { number: result.release, providers: result.counts.providers, languages: result.counts.languages }),

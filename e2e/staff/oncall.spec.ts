@@ -1,7 +1,8 @@
 // The on-call numbers in a browser (S06.07), against the production build with the identity fake (playwright.staff.config.ts): an Admin at aal2 adds
 // and removes a number on "On-call numbers", the list shows only its last four digits, the change is audited without the number or the name, the
 // roles that cannot manage the list are told so and have no menu item, and every Hub screen carries "Sending is failing" while the health job has
-// found the sender failing. Every number is fictional (555). Nothing here sends a text: the server runs with SMS_MODE=log.
+// found the sender failing; every Admin and Coordinator screen names every open condition, and the heartbeat the outside check calls (S09.01).
+// Every number is fictional (555). Nothing here sends a text: the server runs with SMS_MODE=log.
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
@@ -18,6 +19,7 @@ let sql: postgres.Sql;
 async function clearState() {
   await sql`delete from oncall_roster`;
   await sql`update health_condition set active = false, since = null, last_alerted_at = null, last_event_id = null, checked_at = null`;
+  await sql`update health_heartbeat set completed_at = null`;
 }
 
 test.beforeAll(async () => {
@@ -81,7 +83,7 @@ async function expectNoHorizontalScroll(page: Page) {
 const audits = () => sql`select action, actor_staff_id, subject_type, subject_id, outcome, meta from audit_event where id > ${auditMark} and action like 'oncall.%' order by id`;
 const denials = (actor: string) => sql`select meta from audit_event where id > ${auditMark} and action = 'permission.denied' and actor_staff_id = ${actor} order by id`;
 const roster = () => sql`select label, phone, added_by from oncall_roster order by created_at, id`;
-const failingBanner = (page: Page) => page.getByTestId("sender-failing-banner");
+const failingBanner = (page: Page) => page.getByTestId("health-banner");
 
 test("an Admin adds on-call numbers, sees only their last four digits, and removes one; each change is audited without the number or the name", async ({ page }) => {
   await page.setViewportSize({ width: 1280, height: 900 });
@@ -245,9 +247,66 @@ test("every Hub screen says 'Sending is failing' while the health job has found 
   await page.goto("/staff");
   await expect(failingBanner(page)).toContainText("No sender has run for more than 3 minutes while texts are waiting.");
 
-  // The other conditions do not mean the sender is failing.
+  // The other conditions do not mean the sender is failing: an Ambassador is not shown them.
   await sql`update health_condition set active = false, since = null where condition in ('queue_stuck', 'sender_stalled')`;
-  await sql`update health_condition set active = true, since = now() where condition in ('delivery_unknown', 'smart_encoding_on', 'signature_failures')`;
+  await sql`update health_condition set active = true, since = now() where condition not in ('queue_stuck', 'sender_stalled')`;
   await page.goto("/staff");
   await expect(failingBanner(page)).toHaveCount(0);
+});
+
+test("every Admin and Coordinator screen names each open health condition in plain words until it clears, and says when the health check has stopped (S09.01)", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await signInToTheHub(page, "coordinator");
+  await expect(failingBanner(page)).toHaveCount(0);
+
+  await sql`update health_condition set active = true, since = now() - interval '20 minutes' where condition in ('publish_failed', 'job_failed', 'cap_overrun')`;
+  for (const path of ["/staff", "/staff/coverage"]) {
+    await page.goto(path);
+    await expect(failingBanner(page), path).toContainText("Something is not working");
+    await expect(failingBanner(page), path).toContainText("The last directory publish failed. Residents still see the previous directory.");
+    await expect(failingBanner(page), path).toContainText("A scheduled job failed in the last 10 minutes");
+    await expect(failingBanner(page), path).toContainText("went over the monthly text message spending cap");
+    await expect(failingBanner(page), path).toContainText("Tell IT now.");
+  }
+  await expectNoHorizontalScroll(page);
+
+  // It clears when the health job finds the conditions clear.
+  await sql`update health_condition set active = false, since = null`;
+  await page.goto("/staff");
+  await expect(failingBanner(page)).toHaveCount(0);
+
+  // A health check that ran and stopped (pg_cron stopped, or the job keeps failing) is named; one that never ran (this database) is not.
+  await sql`update health_heartbeat set completed_at = now() - interval '5 minutes'`;
+  await page.goto("/staff");
+  await expect(failingBanner(page)).toContainText("The health check has not run for more than 3 minutes");
+  await sql`update health_heartbeat set completed_at = now()`;
+  await page.goto("/staff");
+  await expect(failingBanner(page)).toHaveCount(0);
+
+  // An Admin sees the same.
+  await sql`update health_condition set active = true, since = now() where condition = 'translation_fallback'`;
+  await page.context().clearCookies();
+  await signInToTheHub(page, "admin");
+  await expect(failingBanner(page)).toContainText("with a whole language in English, because its translation failed");
+});
+
+test("the heartbeat answers 200 only while the health job completed less than 3 minutes ago, else 503, with no body and no cookie (S09.01)", async ({ request }) => {
+  // The route reuses one answer for up to 10 s (HEARTBEAT_CACHE_MS), so after each change the test waits for the new answer.
+  test.setTimeout(60_000);
+  const expectBare = async (method: "get" | "head", status: number) => {
+    await expect.poll(async () => (await request[method]("/api/health/heartbeat")).status(), { message: method, timeout: 15_000, intervals: [500, 1000] }).toBe(status);
+    const response = await request[method]("/api/health/heartbeat");
+    expect(response.status(), method).toBe(status);
+    expect(response.headers()["set-cookie"], method).toBeUndefined();
+    expect(response.headers()["cache-control"], method).toBe("no-store");
+    expect(await response.text(), method).toBe("");
+  };
+  // Never run.
+  await expectBare("get", 503);
+  await sql`update health_heartbeat set completed_at = now()`;
+  await expectBare("get", 200);
+  await expectBare("head", 200);
+  await sql`update health_heartbeat set completed_at = now() - interval '3 minutes 5 seconds'`;
+  await expectBare("get", 503);
+  await expectBare("head", 503);
 });

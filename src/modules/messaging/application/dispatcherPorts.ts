@@ -239,6 +239,13 @@ export interface DispatcherDeps {
    * reconciliation re-runs the matching over every unretired estimate). Not called when the row already had the id.
    */
   afterProviderId?: (tx: DbTransaction, delivery: DeliveryView) => Promise<void>;
+  /**
+   * S07.02's seam: called, in a savepoint of the transaction that records it, when the provider refused a text for good (`failed`: a
+   * permanent error, or the retries ran out), with the row and the provider's error code (null when there was none). The module that owns the
+   * recipient decides what that means: a confirmation refused because the number earlier texted STOP (Twilio 21610) deletes its pending
+   * sign-up. A hook that throws loses only its own writes (the outcome stays) and `dispatch.failure_hook_failed` is logged.
+   */
+  afterFailure?: (tx: DbTransaction, delivery: DeliveryView, errorCode: number | null) => Promise<void>;
 }
 
 /** What a run did, with no personal data: counts and a status the job route returns. */

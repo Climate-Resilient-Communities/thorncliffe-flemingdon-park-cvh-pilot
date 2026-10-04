@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ALERT_INTERVAL_MS, SENDER_CONDITIONS, decide, intervalPassed, type ConditionState } from "./health";
+import { ALERT_INTERVAL_MS, HEARTBEAT_STALE_AFTER_MS, SENDER_CONDITIONS, decide, heartbeatFresh, intervalPassed, type ConditionState } from "./health";
 
 const NOW = new Date("2026-10-04T12:00:00Z");
 const ago = (ms: number) => new Date(NOW.getTime() - ms);
@@ -72,5 +72,16 @@ describe("an event condition (an unknown delivery, Smart Encoding found on)", ()
 describe("the conditions that mean the sender itself is failing (the Hub's banner)", () => {
   it("are the stuck queue and the stalled sender", () => {
     expect([...SENDER_CONDITIONS]).toEqual(["queue_stuck", "sender_stalled"]);
+  });
+});
+
+describe("the heartbeat (S09.01)", () => {
+  it("is fresh for less than 3 minutes after the health job last judged every condition, and never before its first run", () => {
+    expect(HEARTBEAT_STALE_AFTER_MS).toBe(3 * MINUTE);
+    expect(heartbeatFresh(ago(0), NOW)).toBe(true);
+    expect(heartbeatFresh(ago(3 * MINUTE - 1), NOW)).toBe(true);
+    expect(heartbeatFresh(ago(3 * MINUTE), NOW)).toBe(false);
+    expect(heartbeatFresh(ago(60 * MINUTE), NOW)).toBe(false);
+    expect(heartbeatFresh(null, NOW)).toBe(false);
   });
 });
