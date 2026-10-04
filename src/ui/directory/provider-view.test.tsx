@@ -11,18 +11,21 @@ import { Inline911 } from "./listing-text";
 import { addressLines, postalText, ProviderView, type CategoryNames } from "./provider-view";
 
 const NBSP = "\u00a0";
-const wrap = (lang: "en" | "ur", node: ReactNode) =>
+// Urdu with the Hub's confirmation line as an English fallback, as a catalog that has not translated it holds it: the fallback tests
+// below stay true whatever has been translated since.
+const urFallback = { ...ur, directory: { ...ur.directory, lastConfirmed: "[EN] Last confirmed by the Hub {date}" } };
+const wrap = (lang: "en" | "ur", node: ReactNode, messages: unknown = lang === "ur" ? ur : en) =>
   renderToStaticMarkup(
-    <NextIntlClientProvider locale={lang} messages={(lang === "ur" ? ur : en) as unknown as AbstractIntlMessages}>
+    <NextIntlClientProvider locale={lang} messages={messages as AbstractIntlMessages}>
       {node}
     </NextIntlClientProvider>,
   );
 
-const render = (lang: "en" | "ur", id: string, variant: "card" | "page" = "card", change: Partial<ListingProvider> = {}) => {
+const render = (lang: "en" | "ur", id: string, variant: "card" | "page" = "card", change: Partial<ListingProvider> = {}, messages?: unknown) => {
   const listing = DirectoryListingV1.parse(buildListing(lang, 7));
   const categories: CategoryNames = new Map(listing.categories.map((c) => [c.id, c.name]));
   const provider = { ...listing.providers.find((p) => p.id === id)!, ...change };
-  return wrap(lang, <ProviderView provider={provider} categories={categories} lang={lang} variant={variant} />);
+  return wrap(lang, <ProviderView provider={provider} categories={categories} lang={lang} variant={variant} />, messages);
 };
 
 describe("ProviderView", () => {
@@ -41,10 +44,15 @@ describe("ProviderView", () => {
   it("writes the day the Hub last confirmed a provider into its line in every language, the English way when the line fell back to English", () => {
     // The catalog line is "Last confirmed by the Hub {date}": its date must always be filled, never probed for with no values
     // (next-intl reports a FORMATTING_ERROR and gives back the key, so the line read as translated and its date as Urdu).
-    expect(ur.directory.lastConfirmed).toBe("[EN] Last confirmed by the Hub {date}");
+    expect(urFallback.directory.lastConfirmed).toBe("[EN] Last confirmed by the Hub {date}");
     expect(render("en", "P101")).toContain('data-testid="last-confirmed">Last confirmed by the Hub September 30, 2026<');
-    expect(render("ur", "P101")).toContain("[EN] Last confirmed by the Hub September 30, 2026<");
-    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant)).not.toContain("directory.lastConfirmed");
+    expect(render("ur", "P101", "card", {}, urFallback)).toContain("[EN] Last confirmed by the Hub September 30, 2026<");
+    for (const variant of ["card", "page"] as const) expect(render("ur", "P101", variant, {}, urFallback)).not.toContain("directory.lastConfirmed");
+    // Translated, the line is Urdu and its date is written in Urdu.
+    const translated = render("ur", "P101");
+    expect(translated).not.toContain("[EN]");
+    expect(translated).not.toContain("directory.lastConfirmed");
+    expect(translated).not.toContain("September 30, 2026");
   });
 
   it("writes a phone number with displayPhone, as an isolated left-to-right run, in a right-to-left page too", () => {
