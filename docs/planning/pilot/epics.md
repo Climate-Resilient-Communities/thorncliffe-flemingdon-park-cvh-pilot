@@ -2749,7 +2749,7 @@ So that we know who received an alert and can follow up on failures.
 
 ### Story S06.05 — Admins run drills that reach only the drill roster
 
-- **Size:** M · **Estimate:** 7 h · **Actual:** —
+- **Size:** M · **Estimate:** 7 h · **Actual:** 2 h 18 min (started 2026-10-04 01:06 UTC, built 03:24 UTC)
 - **Traces:** FR-A17, AR-10, NFR-N6, FR-M4 (drills) · **Depends on:** S06.03, S06.04 · **Branch:** `e06-s05-drills`
 
 As a Hub Admin,
