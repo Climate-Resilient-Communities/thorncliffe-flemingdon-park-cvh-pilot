@@ -1808,4 +1808,8 @@
       offlineTitle: 'Reading without signal',
       offlineHelp: 'Pages you open with signal are saved on this phone, so you can read them again without signal. The numbers are always saved. The first time, the CVH needs signal to open.',
       offlineNote: 'This phone may not keep pages for offline use' } });
+  /* Alerts that have ended (S05.07). R-08 is a prototype screen; these four words are not in it: the withdrawn end line (the prototype has resolved and expired only), the control for the next page of the archive and its failure, and the note on an alert read from a kept copy whose time has passed. */
+  m(en, {
+    R08: { withdrawn: 'Withdrawn {t}', more: 'Show older alerts', moreFailed: 'We could not load older alerts. Check that you have signal and try again.' },
+    R07: { mayHaveEnded: 'This alert may have ended. Check again when you have signal' } });
 })();

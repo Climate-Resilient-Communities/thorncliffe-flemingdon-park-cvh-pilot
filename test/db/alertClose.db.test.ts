@@ -12,13 +12,14 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from
 import { migrate } from "../../scripts/db/migrate.mjs";
 import type { RecipientCounts } from "../../src/contracts/alertApproval";
 import type { Audience } from "../../src/contracts/audience";
-import { FeedThreadSchema } from "../../src/contracts/feed";
+import { ArchiveThreadSchema, FeedThreadSchema, FeedV1 } from "../../src/contracts/feed";
 import type { Translated } from "../../src/contracts/translated";
 import {
   FROZEN_LANGS,
   alertStandingReader,
   createAlerting,
   createEntryPreparer,
+  createFeed,
   createResidentAlerts,
   createSubmitter,
   freezeContent,
@@ -898,6 +899,65 @@ describe("what a resident reads of a thread that closed", () => {
     ]);
   });
 });
+
+// --- the feed and the archive after a close (S05.07) ---------------------------------------------------------------------------------------------
+
+describe("the feed and the archive when a thread closes", () => {
+  const places = async () => ({ buildings: [RSN], neighbourhoods: ["TP"], neighbourhoodOf: { [RSN]: "TP" } });
+  const feedNow = () => createFeed({ db: app, alertsEnabled: true, places, now: () => clock }).read("en");
+
+  it("takes the closed thread out of the live list and gives it to the archive in the same read: the feed version is higher, the building says resolved, and the archive entry is the thread as it was live", async () => {
+    const { ref, slug } = await approvedThread();
+    await approvedUpdate(ref.alertId);
+    const live = await feedNow();
+    const liveThread = live.threads.find((thread) => thread.slug === slug)!;
+    expect(liveThread.state).toBe("open");
+    expect(live.places.buildings[0]).toMatchObject({ rsn: RSN, status: "in_progress" });
+    expect((await createResidentAlerts(app).readArchive!("en", 1, 20)).threads).toEqual([]);
+
+    const final = await pendingFinal(ref.alertId);
+    expect(await alerting.approveEntry(actorOf(coordB), final, await shownOfRow(final))).toMatchObject({ ok: true });
+
+    // The very next read of the feed (the phone's next poll) has it gone, at a higher version, with the building's status derived from the closed thread.
+    const after = await feedNow();
+    expect(FeedV1.safeParse(after).success).toBe(true);
+    expect(after.feed_version).toBeGreaterThan(live.feed_version);
+    expect(after.threads.map((thread) => thread.slug)).not.toContain(slug);
+    expect(after.places.buildings[0]).toMatchObject({ rsn: RSN, status: "resolved" });
+    // The archive has it, every earlier entry as when live, then the final, with how and when it closed.
+    const archive = await createResidentAlerts(app).readArchive!("en", 1, 20);
+    expect(archive.hasMore).toBe(false);
+    const [entry] = archive.threads;
+    expect(ArchiveThreadSchema.safeParse(entry).success).toBe(true);
+    expect(entry).toMatchObject({ slug, state: "closed", close_reason: "resolved" });
+    expect(new Date(entry.closed_at).getTime()).toBeGreaterThan(0);
+    expect(entry.entries.slice(0, liveThread.entries.length)).toEqual(liveThread.entries);
+    expect(entry.entries.at(-1)).toMatchObject({ kind: "final" });
+  });
+
+  it("lists a thread closed withdrawn, with the withdrawal notice, and never a drill that closed or an open thread", async () => {
+    const withdrawn = await approvedThread();
+    const withdrawal = await pendingWithdrawalOf(withdrawn.ref);
+    expect(await alerting.approveEntry(actorOf(coordB), withdrawal, await shownOfRow(withdrawal))).toMatchObject({ ok: true });
+    const open = await approvedThread();
+    const drill = await approvedThread({}, 0, true);
+    const drillFinal = await pendingFinal(drill.ref.alertId);
+    expect(await alerting.approveEntry(actorOf(coordB), drillFinal, await shownOfRow(drillFinal))).toMatchObject({ ok: true });
+
+    for (const lang of ["en", "ur"] as const) {
+      const archive = await createResidentAlerts(app).readArchive!(lang, 1, 20);
+      expect(archive.threads.map((thread) => [thread.slug, thread.close_reason]), lang).toEqual([[withdrawn.slug, "withdrawn"]]);
+      expect(JSON.stringify(archive), lang).not.toContain(drill.slug);
+      expect(JSON.stringify(archive), lang).not.toContain(open.slug);
+    }
+  });
+});
+
+async function pendingWithdrawalOf(target: EntryRef) {
+  const made = await alerting.withdrawEntry(actorOf(authorA), { alertId: target.alertId, targetId: target.entryId }, { entryId: randomUUID(), reason: "other", text: "Sent for the wrong building." });
+  if (!made.ok) throw new Error("withdrawEntry refused");
+  return submitted({ alertId: target.alertId, entryId: made.value.entry.id });
+}
 
 // --- the sender after a close (S06.03) ---------------------------------------------------------------------------------------------------------
 // The real approval, the real `cancelQueued` and the real sender (the provider and the numbers are fakes): the texts a close stops never go, and the text that

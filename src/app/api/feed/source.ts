@@ -7,11 +7,11 @@
 // the resident page tests (the feed then lists those buildings and the two neighbourhoods, at version 0, all at status none), and
 // CVH_FAKE_FEED_FILE swaps the database's alerts for the threads in a JSON file (and says the feed version), so a page test can show
 // an alert with no database.
-import { createFeed, createResidentAlerts, readFeedFixtureFile, type FeedPlaces } from "@/modules/alerting";
+import { createArchive, createFeed, createResidentAlerts, readFeedFixtureFile, type FeedPlaces } from "@/modules/alerting";
 import { readBuildingsFixtureFile } from "@/modules/places";
 import { getEnv } from "@/platform/config/env";
 import { getDb } from "@/platform/db";
-import type { FeedThread, FeedV1 } from "@/contracts/feed";
+import type { ArchiveV1, FeedThread, FeedV1 } from "@/contracts/feed";
 import type { LangCode } from "@/contracts/lang";
 
 const NEIGHBOURHOOD_IDS: Record<string, string> = { "Thorncliffe Park": "TP", "Flemingdon Park": "FP" };
@@ -59,4 +59,16 @@ export async function readClosedAlert(lang: LangCode, slug: string): Promise<{ t
   if (fakeBuildingsFile) return null;
   const thread = (await createResidentAlerts(getDb()).readClosed?.(lang, slug)) ?? null;
   return thread ? { thread, serverNow: new Date() } : null;
+}
+
+/**
+ * One page of the archive for one language, read now (S05.07): the closed threads from the resident views (a drill never appears), or from a feed fake file's closed threads. With
+ * the launch gate off, or a buildings fake and no feed file (no database), it lists none, as the feed does. The cache in front of it is src/app/feedCache.ts.
+ */
+export async function readArchive(lang: LangCode, page: number): Promise<ArchiveV1> {
+  const { fakeBuildingsFile, fakeFeedFile, residentAlertsEnabled: alertsEnabled } = getEnv();
+  const fixture = fakeFeedFile ? readFeedFixtureFile(fakeFeedFile) : undefined;
+  const now = () => fixture?.now() ?? new Date();
+  if (fakeBuildingsFile && !fixture) return createArchive({ alertsEnabled, now }).read(lang, page);
+  return createArchive({ db: fixture ? undefined : getDb(), alerts: fixture?.alerts, alertsEnabled, now }).read(lang, page);
 }

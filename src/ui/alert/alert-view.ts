@@ -98,6 +98,11 @@ export interface AlertView {
   cardTime: string;
   /** "Valid until today at 3:00 p.m.", or null when the time has passed. */
   valid: string | null;
+  /** The thread's valid-until (ISO) and the feed's own clock when this was read (ISO): with them a phone with no signal says "may have ended" once the time passes (S05.07). */
+  validUntil: string;
+  serverNow: string;
+  /** "This alert may have ended. Check again when you have signal": said instead of the valid-until line (and of the card's "current" look) once a kept copy's time has passed. */
+  mayHaveEnded: string;
   /** Said when the alert's time has passed and the thread is not closed yet: "This alert reached its end time without a final update." */
   ended: string | null;
   /** Set when the thread closed (S05.03): how, and when; the alert is then no longer valid or live, and its final message is the entry on top. Null for an open thread. */
@@ -238,6 +243,9 @@ export function alertView(thread: FeedThread, input: { lang: LaunchCode; serverN
     times,
     cardTime: standing.id !== first.id ? t("R03.updated", { t: ago(standing.published_at) }) : t("R03.posted", { t: ago(first.published_at) }),
     valid,
+    validUntil: thread.valid_until,
+    serverNow: serverNow.toISOString(),
+    mayHaveEnded: t("R07.mayHaveEnded"),
     ended: closed === null && valid === null ? t("R07.expiredNote") : null,
     closed,
     unavailableTitle: t("x04.unavailable"),

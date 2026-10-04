@@ -719,7 +719,8 @@
     "validLine": "有效期：{until}",
     "timeLine": "{posted}发布 · {updated}更新",
     "timeLineOne": "{posted}发布",
-    "basicMore": "较早的更新：{n}"
+    "basicMore": "较早的更新：{n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "已结束的警报",
@@ -729,7 +730,10 @@
     "emptyBody": "警报结束后会移到这里，仍然可以阅读。",
     "lead": "每条警报结束后都会保留在这里，可以阅读。",
     "endedOn": "{posted}发布",
-    "backHome": "返回“现在”"
+    "backHome": "返回“现在”",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "寻求帮助",

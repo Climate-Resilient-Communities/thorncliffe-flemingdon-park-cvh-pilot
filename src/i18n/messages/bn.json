@@ -719,7 +719,8 @@
     "validLine": "বৈধ {until}",
     "timeLine": "পোস্ট করা হয়েছে {posted} · হালনাগাদ {updated}",
     "timeLineOne": "পোস্ট করা হয়েছে {posted}",
-    "basicMore": "আগের হালনাগাদ: {n}"
+    "basicMore": "আগের হালনাগাদ: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "যে সতর্কতা শেষ হয়েছে",
@@ -729,7 +730,10 @@
     "emptyBody": "কোনো সতর্কতা শেষ হলে তা এখানে চলে আসে এবং পড়া যায়।",
     "lead": "প্রতিটি সতর্কতা শেষ হওয়ার পরও এখানে পড়া যায়।",
     "endedOn": "পোস্ট করা হয়েছে {posted}",
-    "backHome": "\"এখন\" পাতায় ফিরে যান"
+    "backHome": "\"এখন\" পাতায় ফিরে যান",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "সাহায্য খুঁজুন",

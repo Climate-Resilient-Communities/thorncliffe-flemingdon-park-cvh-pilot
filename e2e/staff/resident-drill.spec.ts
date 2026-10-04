@@ -4,11 +4,13 @@
 // the alert detail and what "verified" means at the drill's own address, the building page of the building the drill covers, and every other
 // page and API a resident can reach, enumerated from the app's folders so a route added later is covered with nothing to remember. The drill
 // appears nowhere: not its words, its slug, its ids, in a body, a header or a link. A real alert beside it is the control: it is found, so the
-// test would notice if the pages simply showed nothing.
+// test would notice if the pages simply showed nothing. The archive (S05.07) is covered the same way: a drill thread that CLOSED, as complete as a
+// real one, is never listed by /api/feed/archive in any language or shown on the archive screen, and never opens at its address; a real closed
+// thread beside it is the control.
 import { createHash, randomBytes, randomUUID } from "node:crypto";
 import { expect, test } from "@playwright/test";
 import postgres from "postgres";
-import { FeedV1 } from "../../src/contracts/feed";
+import { ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { LANG_CODES } from "../../src/contracts/lang";
 import { openDatabase } from "./helpers";
 import { newBuilding, newCoordinator, waitForFeedToList } from "./alert-flow";
@@ -22,12 +24,14 @@ let approver: string;
 const RUN = randomBytes(4).toString("hex");
 const REAL = { slug: `real${RUN}`, text: "Power is out on floors 3 to 5. We are on it.", alertId: randomUUID(), entryId: randomUUID() };
 const DRILL = { slug: `drill${RUN}`, text: "EXERCISE ONLY: a drill alert that no resident may ever read.", alertId: randomUUID(), entryId: randomUUID() };
+const REAL_CLOSED = { slug: `realc${RUN}`, text: "The elevator at 77 Drill Test Dr is working again.", alertId: randomUUID(), entryId: randomUUID() };
+const DRILL_CLOSED = { slug: `drillc${RUN}`, text: "EXERCISE ONLY CLOSED: a closed drill that no resident may ever read in the archive.", alertId: randomUUID(), entryId: randomUUID() };
 const AUDIENCE = (building: string) => ({ scope: "buildings", buildings: [{ rsn: building, floors: null }], groups: [], types: ["power"] });
 const sha = (text: string) => createHash("sha256").update(text, "utf8").digest("hex");
 const TRANSLATED = ["ur", "ps", "tl", "prs", "gu", "ta", "el", "sk", "bn", "hi", "pa", "zh", "es", "fr"] as const;
 
 /** A thread and its one approved, web-published entry with a translation in every language, written directly (the lifecycle's triggers off). */
-async function insertThread(thread: typeof REAL, isDrill: boolean) {
+async function insertThread(thread: typeof REAL, isDrill: boolean, closed = false) {
   await sql.begin(async (tx) => {
     await tx`select set_config('cvh.actor_id', ${author}, true)`;
     await tx`insert into alert (id, is_drill, reported_at, created_by, slug) values (${thread.alertId}, ${isDrill}, now() - interval '30 minutes', ${author}, ${thread.slug})`;
@@ -47,6 +51,14 @@ async function insertThread(thread: typeof REAL, isDrill: boolean) {
     await tx.unsafe("alter table alert_entry enable trigger alert_entry_guard");
     await tx.unsafe("alter table alert_entry_translation enable trigger alert_entry_translation_guard");
   });
+  if (closed) {
+    // Closed the way a migration owner could: the alert's guard sets the closing time itself, and the thread's own rules would want a final entry.
+    await sql.begin(async (tx) => {
+      await tx.unsafe("alter table alert disable trigger alert_guard");
+      await tx`update alert set status = 'closed', closed_reason = 'resolved', closed_at = now() - interval '1 hour' where id = ${thread.alertId}`;
+      await tx.unsafe("alter table alert enable trigger alert_guard");
+    });
+  }
 }
 
 test.beforeAll(async () => {
@@ -56,6 +68,8 @@ test.beforeAll(async () => {
   approver = (await newCoordinator(sql)).id;
   await insertThread(REAL, false);
   await insertThread(DRILL, true);
+  await insertThread(REAL_CLOSED, false, true);
+  await insertThread(DRILL_CLOSED, true, true);
 });
 
 test.afterAll(async () => {
@@ -63,9 +77,9 @@ test.afterAll(async () => {
 });
 
 /** Everything that would give a drill away: its words, its slug, and its thread's and entry's ids. */
-const DRILL_MARKERS = [DRILL.slug, DRILL.alertId, DRILL.entryId, "EXERCISE ONLY", "drill alert that no resident"];
+const DRILL_MARKERS = [DRILL.slug, DRILL.alertId, DRILL.entryId, "EXERCISE ONLY", "drill alert that no resident", DRILL_CLOSED.slug, DRILL_CLOSED.alertId, DRILL_CLOSED.entryId, "closed drill that no resident"];
 const noDrill = (what: string, text: string, slugIsTheRequesters = false) => {
-  for (const marker of DRILL_MARKERS.filter((candidate) => !(slugIsTheRequesters && candidate === DRILL.slug))) expect(text, `${what} must not contain ${marker}`).not.toContain(marker);
+  for (const marker of DRILL_MARKERS.filter((candidate) => !(slugIsTheRequesters && (candidate === DRILL.slug || candidate === DRILL_CLOSED.slug)))) expect(text, `${what} must not contain ${marker}`).not.toContain(marker);
 };
 
 test("the drill is in the database as complete as an alert can be: approved, web-published, translated, and not a resident's", async () => {
@@ -146,7 +160,7 @@ test("every resident route and API, enumerated from the app, is without the dril
   const routes = residentRoutes(["en", "ur"], { slug: DRILL.slug, rsn, guide: "power", id: "P101", v: "1", file: "en.json" });
   // The routes the story names are among them, and so is every API a resident can reach: the list is read from the folders, not remembered.
   const urls = routes.map((route) => route.url);
-  for (const named of ["/api/feed", "/en", `/en/alerts/${DRILL.slug}`, `/en/alerts/${DRILL.slug}/verified`, `/en/buildings/${rsn}`, "/api/buildings"]) {
+  for (const named of ["/api/feed", "/api/feed/archive", "/en/archive", "/en", `/en/alerts/${DRILL.slug}`, `/en/alerts/${DRILL.slug}/verified`, `/en/buildings/${rsn}`, "/api/buildings"]) {
     expect(urls, `the enumeration includes ${named}`).toContain(named);
   }
   expect(routes.filter((route) => route.kind === "api").length).toBeGreaterThanOrEqual(4);
@@ -155,14 +169,14 @@ test("every resident route and API, enumerated from the app, is without the dril
   const seen: string[] = [];
   for (const route of routes) {
     // A route that takes a query is asked the way a resident would (the feed needs a language).
-    const url = route.url === "/api/feed" ? "/api/feed?lang=en" : route.url;
+    const url = route.url === "/api/feed" ? "/api/feed?lang=en" : route.url === "/api/feed/archive" ? "/api/feed/archive?lang=en" : route.url;
     const response = await request.get(url, { maxRedirects: 0 });
     const headers = response.headersArray().map(({ name, value }) => `${name}: ${value}`).join("\n");
 
     expect(response.status(), `${route.url} (${route.file})`).toBeLessThan(500);
     // An address that names the drill's slug is the requester's own word: the framework's own record of the route (the params in the page's
     // payload) may echo it, and that tells no one anything. Everything else about the drill is still looked for.
-    const echoed = route.url.includes(DRILL.slug);
+    const echoed = route.url.includes(DRILL.slug) || route.url.includes(DRILL_CLOSED.slug);
     noDrill(`headers of ${route.url}`, headers, echoed);
     noDrill(`body of ${route.url}`, await response.text(), echoed);
     seen.push(`${response.status()} ${route.url}`);
@@ -176,4 +190,51 @@ test("the real alert is what every route that tells of alerts shows, so the dril
   expect(detail).toContain(REAL.text);
   const feed = FeedV1.parse(await (await request.get("/api/feed?lang=ur")).json());
   expect(feed.threads.find((thread) => thread.slug === REAL.slug)?.entries[0].text.body).toContain("[ur]");
+});
+
+// --- the archive (S05.07) --------------------------------------------------------------------------------------------------------------------
+
+test("the archive lists the real closed thread and never the closed drill, in every language, newest first, with no cookie and at most 60 seconds at the edge", async ({ request }) => {
+  await expect
+    .poll(async () => ArchiveV1.parse(await (await request.get("/api/feed/archive?lang=en")).json()).threads.map((thread) => thread.slug), { timeout: 90_000, message: "the archive lists the real closed thread" })
+    .toContain(REAL_CLOSED.slug);
+  for (const lang of LANG_CODES) {
+    const response = await request.get(`/api/feed/archive?lang=${lang}`, { maxRedirects: 0 });
+
+    expect(response.status(), lang).toBe(200);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), lang).toEqual([]);
+    expect(response.headers()["cache-control"], lang).toBe("public, max-age=0, s-maxage=60");
+    const text = await response.text();
+    noDrill(`the ${lang} archive`, text);
+    const archive = ArchiveV1.parse(JSON.parse(text));
+    const slugs = archive.threads.map((thread) => thread.slug);
+    expect(slugs, lang).toContain(REAL_CLOSED.slug);
+    expect(slugs, lang).not.toContain(DRILL_CLOSED.slug);
+    // An open thread is not in the archive either, and the thread is read as when live.
+    expect(slugs, lang).not.toContain(REAL.slug);
+    const closed = archive.threads.find((thread) => thread.slug === REAL_CLOSED.slug)!;
+    expect(closed).toMatchObject({ state: "closed", close_reason: "resolved" });
+    expect(closed.entries[0].original.body, lang).toBe(REAL_CLOSED.text);
+    const times = archive.threads.map((thread) => Date.parse(thread.closed_at));
+    expect(times, lang).toEqual([...times].sort((a, b) => b - a));
+  }
+});
+
+test("the archive screen shows the real closed thread and never the closed drill, and the closed drill's address is a 404 with no detail", async ({ request }) => {
+  await expect
+    .poll(async () => (await (await request.get("/en/archive")).text()).includes(REAL_CLOSED.slug), { timeout: 90_000, message: "the archive screen lists the real closed thread" })
+    .toBe(true);
+  await expect.poll(async () => (await request.get(`/en/alerts/${REAL_CLOSED.slug}`, { maxRedirects: 0 })).status(), { timeout: 90_000, message: "the closed thread opens at its address" }).toBe(200);
+  for (const lang of ["en", "ur", "prs", "zh"]) {
+    const screen = await request.get(`/${lang}/archive`, { maxRedirects: 0 });
+
+    expect(screen.status(), lang).toBe(200);
+    noDrill(`the ${lang} archive screen`, await screen.text());
+    const drill = await request.get(`/${lang}/alerts/${DRILL_CLOSED.slug}`, { maxRedirects: 0 });
+    expect(drill.status(), lang).toBe(404);
+    const body = await drill.text();
+    for (const marker of [DRILL_CLOSED.alertId, DRILL_CLOSED.entryId, "EXERCISE ONLY CLOSED", "closed drill that no resident"]) expect(body, `404 of ${lang}`).not.toContain(marker);
+    // The real one opens, read-only, at its own address.
+    expect((await request.get(`/${lang}/alerts/${REAL_CLOSED.slug}`, { maxRedirects: 0 })).status(), lang).toBe(200);
+  }
 });

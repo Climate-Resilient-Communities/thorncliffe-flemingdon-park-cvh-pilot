@@ -719,7 +719,8 @@
     "validLine": "Ισχύει {until}",
     "timeLine": "Δημοσιεύτηκε {posted} · Ενημερώθηκε {updated}",
     "timeLineOne": "Δημοσιεύτηκε {posted}",
-    "basicMore": "Παλαιότερες ενημερώσεις: {n}"
+    "basicMore": "Παλαιότερες ενημερώσεις: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "Ειδοποιήσεις που έληξαν",
@@ -729,7 +730,10 @@
     "emptyBody": "Όταν λήγει μια ειδοποίηση, έρχεται εδώ και μπορείτε να τη διαβάσετε.",
     "lead": "Κάθε ειδοποίηση μένει εδώ για να τη διαβάζετε και αφού λήξει.",
     "endedOn": "Δημοσιεύτηκε {posted}",
-    "backHome": "Πίσω στο Τώρα"
+    "backHome": "Πίσω στο Τώρα",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "Βρείτε βοήθεια",

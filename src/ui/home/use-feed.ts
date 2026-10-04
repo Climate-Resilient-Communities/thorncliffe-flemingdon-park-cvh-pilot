@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useReducer, useState } from "react";
-import { FEED_POLL_MS, fetchFeedAnswer, isStale } from "./feed-poll";
-import { FEED_RETRY_MS, feedReducer, feedView, initialModel, shouldRetry, type FeedState } from "./feed-state";
+import { FEED_POLL_MS, fetchFeedAnswer } from "./feed-poll";
+import { FEED_RETRY_MS, feedReducer, feedView, initialModel, judgeAnswer, shouldRetry, type FeedState } from "./feed-state";
 
 export type { FeedState } from "./feed-state";
 
@@ -39,27 +39,20 @@ export function useFeed(lang: string): FeedState {
       const answer = await fetchFeedAnswer(lang, fetch, mine.signal);
       if (!current || mine.signal.aborted) return;
       setNow(Date.now());
-      if (answer === null) {
-        discards = 0;
-        dispatch({ type: "failed", lang });
-        return;
-      }
-      const { feed, keptAt } = answer;
-      // A copy the service worker kept (no signal): shown as last loaded at keptAt, unless older than a feed already seen.
-      if (keptAt !== null) {
-        discards = 0;
-        dispatch(isStale(highest, feed.feed_version) ? { type: "failed", lang } : { type: "kept", lang, feed, at: keptAt });
-        return;
-      }
-      if (isStale(highest, feed.feed_version)) {
+      // The one rule (judgeAnswer): a copy the service worker kept is shown as last loaded, unless older than a feed already seen; the server's answer older than one
+      // seen is discarded and asked for again; every other answer raises the highest version seen.
+      const verdict = judgeAnswer(highest, answer);
+      highest = verdict.highest;
+      if (verdict.kind === "discarded") {
         dispatch({ type: "discarded", lang });
         discards += 1;
         if (shouldRetry(discards)) retry = setTimeout(() => void load(), FEED_RETRY_MS);
         return;
       }
       discards = 0;
-      highest = feed.feed_version;
-      dispatch({ type: "answered", lang, feed, at: Date.now() });
+      if (answer === null || verdict.kind === "failed") dispatch({ type: "failed", lang });
+      else if (verdict.kind === "kept") dispatch({ type: "kept", lang, feed: answer.feed, at: answer.keptAt as number });
+      else dispatch({ type: "answered", lang, feed: answer.feed, at: Date.now() });
     };
 
     const poll = () => {

@@ -719,7 +719,8 @@
     "validLine": "اعتبار {until}",
     "timeLine": "خپور شو {posted} · بدلون {updated}",
     "timeLineOne": "خپور شو {posted}",
-    "basicMore": "پخواني خبرونه: {n}"
+    "basicMore": "پخواني خبرونه: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "هغه خبرتیاوې چې پای ته رسېدلې",
@@ -729,7 +730,10 @@
     "emptyBody": "کله چې یوه خبرتیا پای ته ورسېږي، دلته راځي او لوستل کېدای شي.",
     "lead": "هره خبرتیا له پای ته رسېدو وروسته دلته د لوستلو لپاره پاتې کېږي.",
     "endedOn": "خپور شو {posted}",
-    "backHome": "بېرته «اوس» ته"
+    "backHome": "بېرته «اوس» ته",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "مرسته ومومئ",

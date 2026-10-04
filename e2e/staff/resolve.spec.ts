@@ -8,7 +8,7 @@
 import { randomBytes, randomUUID } from "node:crypto";
 import { expect, test, type Page } from "@playwright/test";
 import postgres from "postgres";
-import { FeedV1 } from "../../src/contracts/feed";
+import { ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { approve, newBuilding, newCoordinator, personOnAPhone, signIn, submitAnAcknowledgement, type EntryRef } from "./alert-flow";
 import { identityFake, openDatabase, pepperedPassword } from "./helpers";
 
@@ -139,6 +139,10 @@ test("a Coordinator marks an alert resolved and a second Coordinator approves th
     // A resident: not in the live feed, but the closed alert opens at its address, resolved, with the final message on top and the acknowledgement below it.
     const feed = FeedV1.parse(await (await request.get("/api/feed?lang=en")).json());
     expect(feed.threads.map((thread) => thread.slug)).not.toContain(slug);
+    // The same read that dropped it from the live list has it first in the archive (S05.07): the approval expired the feed's tag, which the archive is cached under too.
+    const archive = ArchiveV1.parse(await (await request.get("/api/feed/archive?lang=en")).json());
+    expect(archive.threads[0]).toMatchObject({ slug, state: "closed", close_reason: "resolved" });
+    expect(archive.threads[0].entries.at(-1)).toMatchObject({ kind: "final" });
     await page.goto(`/en/alerts/${slug}`);
     await expect(page.getByTestId("alert-closed")).toHaveAttribute("data-reason", "resolved");
     await expect(page.getByTestId("alert-closed-title")).toContainText("Resolved ");

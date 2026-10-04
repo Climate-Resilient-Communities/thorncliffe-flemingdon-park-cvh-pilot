@@ -1,5 +1,5 @@
 import { expect, test } from "@playwright/test";
-import { FeedV1 } from "../../src/contracts/feed";
+import { ArchiveV1, FeedV1 } from "../../src/contracts/feed";
 import { LANGUAGES } from "./helpers";
 
 // S02.02, AD-3: resident routes set no cookies (next-intl runs with localeCookie: false, and Supabase
@@ -61,6 +61,21 @@ test("the feed sets no cookie, in any language, and is a valid FeedV1 with every
     expect(feed.threads, code).toEqual([]);
     expect(feed.places.buildings.length, code).toBeGreaterThan(0);
     expect([...feed.places.buildings, ...feed.places.neighbourhoods].every((place) => place.status === "none"), code).toBe(true);
+  }
+});
+
+// S05.07: the archive of closed alerts is public and the same for everyone, so it sets no cookie either, in any language, on any page of it, and is shared for at most 60 seconds.
+test("the archive API and the archive screen set no cookie, in any language, and the API is a valid ArchiveV1 shared for 60 seconds", async ({ request }) => {
+  for (const { code } of LANGUAGES) {
+    const response = await request.get(`/api/feed/archive?lang=${code}&page=2`, { maxRedirects: 0 });
+
+    expect(response.status(), code).toBe(200);
+    expect(response.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), code).toEqual([]);
+    expect(response.headers()["cache-control"], code).toBe("public, max-age=0, s-maxage=60");
+    expect(ArchiveV1.parse(await response.json()), code).toMatchObject({ page: 2, threads: [] });
+    const screen = await request.get(`/${code}/archive`, { maxRedirects: 0 });
+    expect(screen.status(), code).toBe(200);
+    expect(screen.headersArray().filter(({ name }) => name.toLowerCase() === "set-cookie"), code).toEqual([]);
   }
 });
 

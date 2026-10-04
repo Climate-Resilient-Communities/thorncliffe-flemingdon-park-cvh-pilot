@@ -719,7 +719,8 @@
     "validLine": "Válida {until}",
     "timeLine": "Publicado {posted} · Actualizado {updated}",
     "timeLineOne": "Publicado {posted}",
-    "basicMore": "Novedades anteriores: {n}"
+    "basicMore": "Novedades anteriores: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "Alertas que terminaron",
@@ -729,7 +730,10 @@
     "emptyBody": "Cuando una alerta termina, pasa aquí y se puede seguir leyendo.",
     "lead": "Cada alerta se puede seguir leyendo aquí después de terminar.",
     "endedOn": "Publicado {posted}",
-    "backHome": "Volver a Ahora"
+    "backHome": "Volver a Ahora",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "Buscar ayuda",

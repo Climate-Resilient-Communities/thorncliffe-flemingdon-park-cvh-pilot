@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { BUILDINGS, seedChoices, stubBuildingList } from "./choices-fixture";
-import { feedOf, stubFeed } from "./home-fixture";
+import { closedThread, feedOf, stubArchive, stubFeed } from "./home-fixture";
 import { catalogText, expectBaseline, openResident } from "./helpers";
 
 // S05.06: a resident sees the status of each building and neighbourhood as text and icon as well as colour ("Active problem", "Work in progress", "Resolved",
@@ -75,13 +75,68 @@ test.describe("the building page", () => {
     await expect(page.getByTestId("home-unverified")).toHaveCount(0);
   });
 
-  test("shows a resolved status with its words and no thread link (a closed thread is not in the feed)", async ({ page }) => {
+  test("shows a resolved status with its words and no thread link when the archive names no thread that covers the building (a closed thread is not in the feed)", async ({ page }) => {
     await stubFeed(page, [pageFeed("resolved")]);
+    await stubArchive(page, [closedThread("mnpqrstv", "700000010")]);
 
     await openResident(page, `/en/buildings/${PAGE_RSN}`, 390);
 
     await expect(page.getByTestId("building-status").getByTestId("home-status")).toHaveText(catalogText("en", "status.resolved"));
     await expect(page.getByTestId("building-status-threads")).toHaveCount(0);
+  });
+
+  test("links a resolved status to the closed thread (R-07), found in the archive (S05.07)", async ({ page }) => {
+    await stubFeed(page, [pageFeed("resolved")]);
+    const archive = await stubArchive(page, [closedThread(SLUG, PAGE_RSN)]);
+
+    await openResident(page, `/en/buildings/${PAGE_RSN}`, 390);
+
+    const status = page.getByTestId("building-status");
+    await expect(status.getByTestId("home-status")).toHaveText(catalogText("en", "status.resolved"));
+    const link = status.getByTestId(`status-thread-${SLUG}`);
+    await expect(link).toHaveText(catalogText("en", "x13.power"));
+    await expect(link).toHaveAttribute("href", `/en/alerts/${SLUG}`);
+    expect((await link.boundingBox())!.height).toBeGreaterThanOrEqual(44);
+    // The archive is asked the way everyone asks: the page language and the first page, no body, no cookie, nothing of the resident.
+    expect(archive.map((request) => new URL(request.url).search)).toEqual(["?lang=en&page=1"]);
+    expect(archive[0].body).toBe("");
+    expect(archive[0].headers.cookie).toBeUndefined();
+  });
+
+  test("names no closed thread once the 12 hours of the resolved status have passed by the archive's own clock, and no thread that expired or was withdrawn", async ({ page }) => {
+    await stubFeed(page, [pageFeed("resolved")]);
+    await stubArchive(page, [
+      closedThread("aaaaaaaa", PAGE_RSN, { closed_at: "2026-09-30T23:59:00.000Z" }),
+      closedThread("bbbbbbbb", PAGE_RSN, { close_reason: "expired" }),
+      closedThread("cccccccc", PAGE_RSN, { close_reason: "withdrawn" }),
+    ]);
+
+    await openResident(page, `/en/buildings/${PAGE_RSN}`, 390);
+
+    await expect(page.getByTestId("building-status").getByTestId("home-status")).toHaveText(catalogText("en", "status.resolved"));
+    await expect(page.getByTestId("building-status-threads")).toHaveCount(0);
+  });
+
+  test("keeps the resolved status and says nothing is wrong when the archive cannot be read: only the link is missing", async ({ page }) => {
+    await stubFeed(page, [pageFeed("resolved")]);
+    const archive = await stubArchive(page, "unavailable");
+
+    await openResident(page, `/en/buildings/${PAGE_RSN}`, 390);
+
+    await expect(page.getByTestId("building-status").getByTestId("home-status")).toHaveText(catalogText("en", "status.resolved"));
+    await expect.poll(() => archive.length).toBe(1);
+    await expect(page.getByTestId("building-status-threads")).toHaveCount(0);
+    await expect(page.getByTestId("feed-failed")).toHaveCount(0);
+  });
+
+  test("does not ask for the archive when no place is resolved", async ({ page }) => {
+    await stubFeed(page, [pageFeed("active")]);
+    const archive = await stubArchive(page, [closedThread(SLUG, PAGE_RSN)]);
+
+    await openResident(page, `/en/buildings/${PAGE_RSN}`, 390);
+    await expect(page.getByTestId("building-status").getByTestId("home-status")).toHaveText(catalogText("en", "status.active"));
+
+    expect(archive).toEqual([]);
   });
 
   test("says Not known, never 'Nothing active', when the feed cannot be read", async ({ page }) => {
@@ -132,6 +187,23 @@ test.describe("home", () => {
     const area = page.getByTestId("home-neighbourhood-TP");
     await expect(area.getByTestId("home-status")).toHaveText(catalogText("en", "status.active"));
     await expect(area.getByTestId("status-thread-mnpqrstv")).toHaveAttribute("href", "/en/alerts/mnpqrstv");
+  });
+
+  test("links a resolved building and neighbourhood to the closed thread behind them (S05.07)", async ({ page }) => {
+    await stubFeed(page, [feedOf(4, { buildings: { [MILEPOST]: { status: "resolved" } }, neighbourhoods: { TP: { status: "resolved" } } })]);
+    await stubArchive(page, [closedThread(SLUG, MILEPOST)]);
+    await choose(page);
+
+    await openResident(page, "/en", 390);
+    await expect(page.getByTestId("home-now")).toHaveAttribute("data-feed", "ready");
+
+    const own = page.getByTestId(`home-building-threads-${MILEPOST}`);
+    await expect(own.getByTestId(`status-thread-${SLUG}`)).toHaveAttribute("href", `/en/alerts/${SLUG}`);
+    // The thread covers the building and not the neighbourhood: the neighbourhood's row says resolved and names none.
+    await expect(page.getByTestId("home-neighbourhood-TP").getByTestId("home-status")).toHaveText(catalogText("en", "status.resolved"));
+    await expect(page.getByTestId("home-neighbourhood-threads-TP")).toHaveCount(0);
+    await own.getByTestId(`status-thread-${SLUG}`).click();
+    await expect(page).toHaveURL(new RegExp(`/en/alerts/${SLUG}$`));
   });
 
   test("shows no thread links for a place with nothing active", async ({ page }) => {

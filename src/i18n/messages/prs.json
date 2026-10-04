@@ -719,7 +719,8 @@
     "validLine": "معتبر {until}",
     "timeLine": "نشر شد {posted} · تازه شد {updated}",
     "timeLineOne": "نشر شد {posted}",
-    "basicMore": "خبرهای قبلی: {n}"
+    "basicMore": "خبرهای قبلی: {n}",
+    "mayHaveEnded": "[EN] This alert may have ended. Check again when you have signal"
   },
   "R08": {
     "title": "هشدارهایی که تمام شده‌اند",
@@ -729,7 +730,10 @@
     "emptyBody": "وقتی یک هشدار تمام شود، به اینجا می‌آید و قابل خواندن می‌ماند.",
     "lead": "هر هشدار پس از تمام شدن، اینجا قابل خواندن می‌ماند.",
     "endedOn": "نشر شد {posted}",
-    "backHome": "برگشت به «اکنون»"
+    "backHome": "برگشت به «اکنون»",
+    "withdrawn": "[EN] Withdrawn {t}",
+    "more": "[EN] Show older alerts",
+    "moreFailed": "[EN] We could not load older alerts. Check that you have signal and try again."
   },
   "R09": {
     "title": "یافتن کمک",

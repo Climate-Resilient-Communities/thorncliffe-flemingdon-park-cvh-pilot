@@ -24,6 +24,16 @@ describe("which requests the service worker answers (S02.12, AD-1)", () => {
     expect(kind(req("/en/directory", { headers: { accept: "text/html" } }))).toBe("page");
   });
 
+  it("leaves the archive's pages (/api/feed/archive, S05.07) to the network and never stores them: the archive screen is a kept page, its older pages are asked for with signal", () => {
+    const archive = req("/api/feed/archive?lang=en&page=2");
+
+    expect(classify(archive, ORIGIN)).toEqual({ kind: "pass", reason: "not-listed" });
+    expect(mayStore(`${ORIGIN}/api/feed/archive?lang=en&page=2`, ORIGIN)).toBe(false);
+    // The archive screen is a page of the language like any other.
+    expect(classify(page("/en/archive"), ORIGIN)).toEqual({ kind: "page", lang: "en" });
+    expect(mayStore(`${ORIGIN}/en/archive`, ORIGIN)).toBe(true);
+  });
+
   it("answers the feed, the manifest, release files and static files with their own rules", () => {
     expect(kind(req("/api/feed?lang=ur"))).toBe("feed");
     expect(kind(req("/api/directory/manifest"))).toBe("manifest");

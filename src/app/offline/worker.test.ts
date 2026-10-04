@@ -291,6 +291,35 @@ describe("the feed: never shown stale as fresh (S02.11, AD-17)", () => {
     expect((await respond(w, new Request(`${ORIGIN}/api/feed?lang=ur`))).type).toBe("error");
   });
 
+  it("keeps the highest feed_version of answers served out of order (S05.07), and without signal serves that one, whatever order they came in", async () => {
+    const w = worker();
+    for (const version of [9, 8, 11, 10, 7]) {
+      net.answers.set("/api/feed?lang=en", json(feed(version)));
+      await respond(w, new Request(`${ORIGIN}/api/feed?lang=en`));
+    }
+    net.down = true;
+
+    const kept = await respond(w, new Request(`${ORIGIN}/api/feed?lang=en`));
+
+    expect(kept.headers.get(FALLBACK_HEADER)).toBe("1");
+    expect(kept.headers.get("x-cvh-feed-version")).toBe("11");
+    expect((await kept.json()).feed_version).toBe(11);
+  });
+
+  it("takes an equal version again, which only refreshes when it was kept", async () => {
+    const w = worker();
+    net.answers.set("/api/feed?lang=en", json(feed(4)));
+    await respond(w, new Request(`${ORIGIN}/api/feed?lang=en`));
+    const first = clock;
+    clock += 5_000;
+    await respond(w, new Request(`${ORIGIN}/api/feed?lang=en`));
+    net.down = true;
+
+    const kept = await respond(w, new Request(`${ORIGIN}/api/feed?lang=en`));
+
+    expect(Number(kept.headers.get(CACHED_AT_HEADER))).toBe(first + 5_000);
+  });
+
   it("with nothing kept and no signal, fails as the network does", async () => {
     net.down = true;
     expect((await respond(worker(), new Request(`${ORIGIN}/api/feed?lang=en`))).type).toBe("error");
